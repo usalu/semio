@@ -800,8 +800,8 @@ const elementUiTranslationBundles = {
         },
         "duplicateType": {
           "label": {
-            "normal": "Typ duplizieren",
-            "beginner": "Typ duplizieren"
+            "normal": "Typ duplizieren (Hover)",
+            "beginner": "Typ duplizieren (Hover)"
           }
         },
         "addType": {
@@ -1027,6 +1027,12 @@ const elementUiTranslationBundles = {
               "label": {
                 "normal": "Erfahrung",
                 "beginner": "Waehlen Sie Ihr Erfahrungsniveau"
+              }
+            },
+            "device": {
+              "label": {
+                "normal": "Geraet",
+                "beginner": "Waehlen Sie das Eingabegeraet"
               }
             },
             "layout": {
@@ -3090,6 +3096,30 @@ const elementUiTranslationBundles = {
                   "beginner": "Fensterlayout geladen"
                 }
               }
+            },
+            "workbench": {
+              "types": {
+                "addPiece": {
+                  "label": {
+                    "normal": "Bauteil hinzufügen",
+                    "beginner": "Ein neues Bauteil dieses Typs zum Entwurf hinzufügen"
+                  }
+                },
+                "duplicateType": {
+                  "label": {
+                    "normal": "Typ duplizieren",
+                    "beginner": "Eine Kopie dieses Typs erstellen"
+                  }
+                }
+              },
+              "designs": {
+                "addPiece": {
+                  "label": {
+                    "normal": "Bauteil hinzufügen",
+                    "beginner": "Ein neues Bauteil dieses Entwurfs zum aktuellen Entwurf hinzufügen"
+                  }
+                }
+              }
             }
           },
           "gridSize": {
@@ -3264,6 +3294,36 @@ const elementUiTranslationBundles = {
             "label": {
               "normal": "Einstellungen",
               "beginner": "Einstellungen"
+            },
+            "theme": {
+              "label": {
+                "normal": "Design",
+                "beginner": "Farbschema waehlen"
+              }
+            },
+            "language": {
+              "label": {
+                "normal": "Sprache",
+                "beginner": "Sprache auswaehlen"
+              }
+            },
+            "device": {
+              "label": {
+                "normal": "Geraet",
+                "beginner": "Eingabegeraet waehlen"
+              }
+            },
+            "expertise": {
+              "label": {
+                "normal": "Erfahrung",
+                "beginner": "Erfahrungsniveau waehlen"
+              }
+            },
+            "mode": {
+              "label": {
+                "normal": "Modus",
+                "beginner": "Benutzer- oder Entwicklermodus waehlen"
+              }
             }
           },
           "navigation": {
@@ -3882,6 +3942,14 @@ const elementUiTranslationBundles = {
                     "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
                   },
+                  "ring": {
+                    "label": {
+                      "normal": "Ring",
+                      "beginner": "Position auf dem Diagrammring (0-1). Steuert, wo der Connector in der 2D-Diagrammansicht erscheint."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
                   "direction": {
                     "label": {
                       "normal": "",
@@ -3941,6 +4009,16 @@ const elementUiTranslationBundles = {
                       "manual": "type#connectors",
                       "tutorial": "hello-semio/model-brick-set"
                     }
+                  }
+                },
+                "connector": {
+                  "ring": {
+                    "label": {
+                      "normal": "Ring",
+                      "beginner": "Position auf dem Diagrammring (0-1). Steuert, wo der Connector in der 2D-Diagrammansicht erscheint."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
                   }
                 },
                 "attributes": {
@@ -4707,68 +4785,6 @@ const elementUiTranslationBundles = {
             "label": {
               "normal": "Einstellungen",
               "beginner": "Einstellungen"
-            }
-          }
-        },
-        "subtool": {
-          "select": {
-            "label": {
-              "normal": "Auswählen",
-              "beginner": "Auswählen"
-            }
-          },
-          "hand": {
-            "label": {
-              "normal": "Hand",
-              "beginner": "Hand"
-            }
-          },
-          "lasso": {
-            "label": {
-              "normal": "Lasso",
-              "beginner": "Lasso"
-            }
-          },
-          "additive": {
-            "label": {
-              "normal": "Additiv",
-              "beginner": "Additiv"
-            }
-          },
-          "subtractive": {
-            "label": {
-              "normal": "Subtraktiv",
-              "beginner": "Subtraktiv"
-            }
-          },
-          "intersect": {
-            "label": {
-              "normal": "Schnittmenge",
-              "beginner": "Schnittmenge"
-            }
-          },
-          "connector": {
-            "label": {
-              "normal": "Konnektor",
-              "beginner": "Konnektor"
-            }
-          },
-          "appSettings": {
-            "label": {
-              "normal": "App Einstellungen",
-              "beginner": "App Einstellungen"
-            }
-          },
-          "command": {
-            "label": {
-              "normal": "Befehl",
-              "beginner": "Befehl"
-            }
-          },
-          "tools": {
-            "label": {
-              "normal": "Werkzeuge",
-              "beginner": "Werkzeuge"
             }
           }
         }
@@ -5608,8 +5624,8 @@ const elementUiTranslationBundles = {
         },
         "duplicateType": {
           "label": {
-            "normal": "Duplicate Type",
-            "beginner": "Duplicate Type"
+            "normal": "Duplicate Type by Hover",
+            "beginner": "Duplicate Type by Hover"
           }
         },
         "addType": {
@@ -5943,7 +5959,7 @@ const elementUiTranslationBundles = {
           "settings": {
             "label": {
               "normal": "Settings",
-              "beginner": "Configure application settings"
+              "beginner": "Home settings"
             },
             "theme": {
               "label": {
@@ -5973,6 +5989,12 @@ const elementUiTranslationBundles = {
               "label": {
                 "normal": "Expertise",
                 "beginner": "Select your expertise level"
+              }
+            },
+            "device": {
+              "label": {
+                "normal": "Device",
+                "beginner": "Select the input device"
               }
             },
             "layout": {
@@ -6256,18 +6278,6 @@ const elementUiTranslationBundles = {
                 "normal": "Create",
                 "beginner": "Create a new kit"
               }
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Settings",
-              "beginner": "Home settings"
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "Chat",
-              "beginner": "Home chat"
             }
           }
         },
@@ -6891,8 +6901,8 @@ const elementUiTranslationBundles = {
           },
           "settings": {
             "label": {
-              "normal": "Kit Editor",
-              "beginner": "Kit editor settings"
+              "normal": "Settings",
+              "beginner": "Kit settings"
             },
             "diagram": {
               "chargeStrength": {
@@ -7073,18 +7083,6 @@ const elementUiTranslationBundles = {
                 "normal": "Hand",
                 "beginner": "Hand"
               }
-            }
-          },
-          "settings": {
-            "label": {
-              "normal": "Settings",
-              "beginner": "Kit settings"
-            }
-          },
-          "chat": {
-            "label": {
-              "normal": "Chat",
-              "beginner": "Kit chat"
             }
           }
         },
@@ -8041,6 +8039,30 @@ const elementUiTranslationBundles = {
                   "beginner": "Window Layout Loaded"
                 }
               }
+            },
+            "workbench": {
+              "types": {
+                "addPiece": {
+                  "label": {
+                    "normal": "Add Piece",
+                    "beginner": "Add a new piece of this type to the design"
+                  }
+                },
+                "duplicateType": {
+                  "label": {
+                    "normal": "Duplicate Type",
+                    "beginner": "Create a duplicate of this type"
+                  }
+                }
+              },
+              "designs": {
+                "addPiece": {
+                  "label": {
+                    "normal": "Add Piece",
+                    "beginner": "Add a new piece of this design to the current design"
+                  }
+                }
+              }
             }
           },
           "gridSize": {
@@ -8613,6 +8635,14 @@ const elementUiTranslationBundles = {
                     "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
                   },
+                  "ring": {
+                    "label": {
+                      "normal": "Ring",
+                      "beginner": "Position on the diagram ring (0-1). Controls where the connector appears in the 2D diagram view."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
                   "direction": {
                     "label": {
                       "normal": "",
@@ -8672,6 +8702,16 @@ const elementUiTranslationBundles = {
                       "manual": "type#connectors",
                       "tutorial": "hello-semio/model-brick-set"
                     }
+                  }
+                },
+                "connector": {
+                  "ring": {
+                    "label": {
+                      "normal": "Ring",
+                      "beginner": "Position on the diagram ring (0-1). Controls where the connector appears in the 2D diagram view."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
                   }
                 },
                 "attributes": {
@@ -9126,12 +9166,6 @@ const elementUiTranslationBundles = {
               }
             }
           },
-          "title": {
-            "label": {
-              "normal": "Title",
-              "beginner": "Title"
-            }
-          },
           "functions": {
             "label": {
               "normal": "Functions",
@@ -9178,6 +9212,36 @@ const elementUiTranslationBundles = {
             "label": {
               "normal": "Settings",
               "beginner": "Settings"
+            },
+            "theme": {
+              "label": {
+                "normal": "Theme",
+                "beginner": "Choose the color theme"
+              }
+            },
+            "language": {
+              "label": {
+                "normal": "Language",
+                "beginner": "Select the language"
+              }
+            },
+            "device": {
+              "label": {
+                "normal": "Device",
+                "beginner": "Select the input device"
+              }
+            },
+            "expertise": {
+              "label": {
+                "normal": "Expertise",
+                "beginner": "Select your expertise level"
+              }
+            },
+            "mode": {
+              "label": {
+                "normal": "Mode",
+                "beginner": "Select user or developer mode"
+              }
             }
           },
           "navigation": {
@@ -9504,18 +9568,6 @@ const elementUiTranslationBundles = {
           "view": "View",
           "actions": "Actions",
           "settings": "Settings"
-        },
-        "subtool": {
-          "select": "Select",
-          "hand": "Hand",
-          "lasso": "Lasso",
-          "additive": "Additive",
-          "subtractive": "Subtractive",
-          "intersect": "Intersect",
-          "connector": "Connector",
-          "appSettings": "App Settings",
-          "command": "Command",
-          "tools": "Tools"
         }
       },
       "tutorial": {
@@ -9740,6 +9792,58 @@ export function useLabel(id: string): string | undefined {
       }
       if ("beginner" in label && label.beginner !== undefined) {
         return String(label.beginner);
+      }
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Resolves a localized string from a raw translation value and expertise level.
+ * Pure function (non-hook) variant of useLabel for use outside React render context.
+ * Handles: string, {label: string}, {label: {normal, beginner}}, {normal, beginner}.
+ **/
+export function resolveTranslationLabel(value: unknown): string | undefined {
+  const expertise = _expertiseProvider ? _expertiseProvider() : Expertise.NORMAL;
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+
+    if ("label" in obj) {
+      const label = obj.label;
+
+      if (typeof label === "string") {
+        return label;
+      }
+
+      if (label && typeof label === "object") {
+        const labelObj = label as Record<string, unknown>;
+        if (expertise === Expertise.BEGINNER && "beginner" in labelObj && labelObj.beginner !== undefined) {
+          return String(labelObj.beginner);
+        }
+        if ("normal" in labelObj && labelObj.normal !== undefined) {
+          return String(labelObj.normal);
+        }
+        if ("beginner" in labelObj && labelObj.beginner !== undefined) {
+          return String(labelObj.beginner);
+        }
+      }
+    }
+
+    if ("normal" in obj || "beginner" in obj) {
+      if (expertise === Expertise.BEGINNER && "beginner" in obj && obj.beginner !== undefined) {
+        return String(obj.beginner);
+      }
+      if ("normal" in obj && obj.normal !== undefined) {
+        return String(obj.normal);
+      }
+      if ("beginner" in obj && obj.beginner !== undefined) {
+        return String(obj.beginner);
       }
     }
   }
@@ -10717,12 +10821,14 @@ interface LabelProps {
 export function Label({ id, rowId, label, labelElementId, className, children }: LabelProps) {
   const localizedLabel = useLabel(id);
   const resolvedLabel = label ?? localizedLabel;
-  const { level, isLastAtLevel, showLines, isTree } = React.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const isInsideTreeRow = React.useContext(TreeRowAlignmentContext);
+  const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);
   const propertyLabelElement = (
     <Tooltip>
       <TooltipTrigger asChild>
         {isTree ? (
-          <div data-slot="property-label-tree" className="min-w-0">
+          <div data-slot="property-label-tree" className="min-w-0" style={{ paddingLeft: `${treePropertyRowOffsetPx}px` }}>
             <div className="inline-flex min-w-0 h-[22px]">
               <span data-slot="property-label" id={labelElementId} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-left truncate cursor-pointer transition-colors hover:bg-hover-panel h-[22px] pl-[4px]">
                 {resolvedLabel}
@@ -10741,27 +10847,32 @@ export function Label({ id, rowId, label, labelElementId, className, children }:
     </Tooltip>
   );
 
-  if (isTree) {
-    return (
-      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0}>
-        <div id={rowId} data-slot="property-row" className={cn("group grid min-w-0 items-center gap-x-[8px] min-h-[24px] grid-cols-[96px_minmax(0,1fr)]", className)}>
-          {propertyLabelElement}
-          <div data-slot="property-control" className={detailPanelPropertyControlClassName}>
-            {children}
-          </div>
-        </div>
-      </TreeAlignedRow>
-    );
-  }
-
-  return (
-    <div id={rowId} data-slot="property-row" className={cn("group grid min-w-0 w-full items-center gap-x-[8px] min-h-[24px] grid-cols-[96px_1fr]", className)}>
+  const propertyRowElement = (
+    <div
+      id={rowId}
+      data-slot="property-row"
+      style={isTree ? { marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx > 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : "100%" } : undefined}
+      className={cn("group grid min-w-0 items-center gap-x-[8px] min-h-[24px]", isTree ? "grid-cols-[96px_minmax(0,1fr)]" : "w-full grid-cols-[96px_1fr]", className)}
+    >
       {propertyLabelElement}
       <div data-slot="property-control" className={detailPanelPropertyControlClassName}>
         {children}
       </div>
     </div>
   );
+
+  if (isTree) {
+    if (isInsideTreeRow) {
+      return propertyRowElement;
+    }
+    return (
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0}>
+        {propertyRowElement}
+      </TreeAlignedRow>
+    );
+  }
+
+  return propertyRowElement;
 }
 
 // #endregion Base Components
@@ -11633,6 +11744,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
 
   const actionElement = (
     <Comp
+      data-slot="action"
       type={Comp === "button" ? "button" : undefined}
       role={Comp === "div" && (props as any).onClick ? "button" : undefined}
       tabIndex={Comp === "div" && (props as any).onClick ? 0 : undefined}
@@ -13763,11 +13875,12 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
     <svg
       ref={svgRef}
       data-slot="ring"
+      data-detail-panel-control="fit"
       id={id}
       width={size}
       height={size}
       viewBox={`${-center} ${-center} ${size} ${size}`}
-      className={cn("touch-none select-none", className)}
+      className={cn("w-fit shrink-0 touch-none select-none", className)}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
@@ -14481,6 +14594,7 @@ const assertNoNestedTreeSections = (children: React.ReactNode, ownerName: "TreeS
 };
 
 const TreeContext = React.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isTree: boolean; indentMultiplier: number }>({ level: 0, isLastAtLevel: [], showLines: true, isTree: false, indentMultiplier: 1 });
+const TreeRowAlignmentContext = React.createContext(false);
 const detailPanelIndentPx = (level: number, multiplier = 1): number => level * 10 * multiplier;
 const detailPanelPropertyControlClassName =
   "min-w-0 w-full flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ml-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
@@ -14521,9 +14635,9 @@ const IndentationLines: React.FC<{ level: number; showLines: boolean }> = ({ lev
   if (!showLines || level === 0) return null;
 
   return (
-    <div className="absolute left-0 top-0 bottom-0 pointer-events-none">
+    <div data-slot="tree-guide" className="absolute left-0 top-0 bottom-0 pointer-events-none">
       <div className="absolute top-0 bottom-0" style={{ left: `${indentationLinePx(level - 1, indentMultiplier) - 0.5}px` }}>
-        <div className="w-px h-full bg-muted-foreground/40" />
+        <div data-tree-guide-line="" className="w-px h-full bg-muted-foreground/40 transition-[width,background-color] duration-150" />
       </div>
     </div>
   );
@@ -14548,11 +14662,11 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLi
   const gutterWidthPx = treeGutterWidthPx(level, indentMultiplier);
   const positionedSlot =
     hasSlot && React.isValidElement(slot) ? (
-      React.cloneElement(slot, {
-        ...slot.props,
-        "data-slot": slot.props["data-slot"] ?? "tree-gutter-slot",
-        className: cn("absolute top-1/2 -translate-y-1/2", slot.props.className),
-        style: { ...treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier), ...slot.props.style },
+      React.cloneElement(slot as React.ReactElement<any>, {
+        ...(slot as React.ReactElement<any>).props,
+        "data-slot": (slot as React.ReactElement<any>).props["data-slot"] ?? "tree-gutter-slot",
+        className: cn("absolute top-1/2 -translate-y-1/2", (slot as React.ReactElement<any>).props.className),
+        style: { ...treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier), ...(slot as React.ReactElement<any>).props.style },
       })
     ) : hasSlot ? (
       <span data-slot="tree-gutter-slot" className="pointer-events-none absolute top-1/2 -translate-y-1/2" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier)}>
@@ -14563,7 +14677,11 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLi
   return (
     <div data-slot="tree-gutter" className="relative min-h-full" style={{ width: `${gutterWidthPx}px`, minWidth: `${gutterWidthPx}px` }}>
       {showLines && level > 0 && connectCurrentLevel && (
-        <div data-slot="tree-branch-elbow" className="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2" style={{ left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }} />
+        <div
+          data-slot="tree-branch-elbow"
+          className="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2 transition-[height,background-color] duration-150"
+          style={{ left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }}
+        />
       )}
       {positionedSlot}
     </div>
@@ -14657,7 +14775,7 @@ const renderTreeHeaderActions = (actions: TreeSectionAction[]) => (
 );
 
 const TreeDragHandle: React.FC<{
-  attributes?: Record<string, unknown>;
+  attributes?: Record<string, unknown> | object;
   listeners?: Record<string, unknown>;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }> = ({ attributes, listeners, onClick }) => (
@@ -15801,6 +15919,9 @@ export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (chi
 
 /**
  * Leaf form row combining TreeItem and TreeContent into [Indent][Label][Control].
+ * When a label resolves (via id or explicit label prop), delegates to TreeItem for the standard header row.
+ * When no label resolves, wraps children in TreeAlignedRow so controls always get proper gutter alignment
+ * and tree guide lines regardless of whether the child control uses showLabel.
  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨treerow](repo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/TREE-ROW)
  **/
 export const TreeRow: React.FC<{
@@ -15812,25 +15933,76 @@ export const TreeRow: React.FC<{
   onClick?: (event: React.MouseEvent) => void;
   onDoubleClick?: (event: React.MouseEvent) => void;
   actions?: TreeSectionAction[];
-}> = ({ children, className, id, label, onClick, onDoubleClick, actions }) => (
-  <TreeItem className={className} id={id} label={label} onClick={onClick} onDoubleClick={onDoubleClick} actions={actions}>
-    {children}
-  </TreeItem>
-);
+}> = ({ children, className, id, label, onClick, onDoubleClick, actions }) => {
+  const localizedLabel = id ? useLabel(id) : undefined;
+  const resolvedLabel = label !== undefined ? label : localizedLabel;
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+
+  if (resolvedLabel) {
+    return (
+      <TreeItem className={className} id={id} label={label} onClick={onClick} onDoubleClick={onDoubleClick} actions={actions}>
+        {children}
+      </TreeItem>
+    );
+  }
+
+  if (!isTree) {
+    return (
+      <TreeRowAlignmentContext.Provider value={true}>
+        <div data-slot="tree-row" className={cn("min-w-0 w-full min-h-[24px]", className)}>
+          {children}
+        </div>
+      </TreeRowAlignmentContext.Provider>
+    );
+  }
+
+  return (
+    <TreeRowAlignmentContext.Provider value={true}>
+      <div data-slot="tree-row" className={cn("relative min-w-0 w-full", className)}>
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
+          {children}
+        </TreeAlignedRow>
+      </div>
+    </TreeRowAlignmentContext.Provider>
+  );
+};
 
 /**
  * Informational text row spanning the full control column width.
+ * When `propertyAligned` is true and inside a tree, renders content in the
+ * value-column of the shared property-row grid (same layout as Label).
  * [👤semio📚js🗃️sketchpad💻elementstsx🔖aggregationcomponents🔖tree🪨helperrow](repo://definition/SEMIO/JS/SKETCHPAD/ELEMENTS.TSX/AGGREGATION-COMPONENTS/TREE/HELPER-ROW)
  **/
-export const HelperRow: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
-  <TreeItem className={className}>
-    <TreeContent>
-      <div data-slot="helper-row" className="text-xs text-muted-foreground leading-tight py-[2px]">
-        {children}
-      </div>
-    </TreeContent>
-  </TreeItem>
-);
+export const HelperRow: React.FC<{ children: React.ReactNode; className?: string; propertyAligned?: boolean }> = ({ children, className, propertyAligned = false }) => {
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const helperContent = (
+    <div data-slot="helper-row" data-detail-panel-control="fill" className={cn("text-xs text-muted-foreground leading-tight py-[2px]", className)}>
+      {children}
+    </div>
+  );
+  if (propertyAligned && isTree) {
+    const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);
+    return (
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0}>
+        <div
+          data-slot="property-row"
+          style={{ marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx > 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : "100%" }}
+          className="grid min-w-0 items-center gap-x-[8px] min-h-[24px] grid-cols-[96px_minmax(0,1fr)]"
+        >
+          <div />
+          <div data-slot="property-control" className={detailPanelPropertyControlClassName}>
+            {helperContent}
+          </div>
+        </div>
+      </TreeAlignedRow>
+    );
+  }
+  return (
+    <TreeItem className={className}>
+      <TreeContent>{helperContent}</TreeContent>
+    </TreeItem>
+  );
+};
 
 const getTreeItemLabel = (item: TreeDataItem): React.ReactNode => {
   if (!item.description) {
@@ -15867,6 +16039,104 @@ export interface FileTreeNode {
   isFolder: boolean;
   children?: FileTreeNode[];
 }
+
+//#region 🔖TreeHoverPath
+// Branch containers that hold child rows and render IndentationLines.
+const treeBranchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content"]);
+// Row-level elements that own an elbow connector.
+const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "control-tree-row"]);
+const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="control-tree-row"], [data-slot="tree-content"]';
+const treeHoverPathBranchSelector = '[data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"]';
+const treeHoverPathAttr = "data-tree-hover-path";
+
+const clearTreeHoverPath = (root: HTMLElement) => {
+  root.querySelectorAll(`[${treeHoverPathAttr}]`).forEach((el) => el.removeAttribute(treeHoverPathAttr));
+};
+
+/**
+ * Derive the row element that owns a branch container.
+ * Handles all DOM shapes: tree-item-row/control-tree-row siblings,
+ * tree-section-row behind collapsible-content, tree-property-item parent.
+ */
+const rowForBranch = (branch: Element): Element | null => {
+  const prev = branch.previousElementSibling;
+  if (prev) {
+    const prevSlot = prev.getAttribute("data-slot");
+    if (prevSlot && treeRowSlots.has(prevSlot)) return prev;
+  }
+  const parent = branch.parentElement;
+  const parentSlot = parent?.getAttribute("data-slot");
+  if (parentSlot === "tree-property-item") return parent!;
+  if (parentSlot === "collapsible-content") {
+    const sectionRow = parent!.previousElementSibling;
+    if (sectionRow?.getAttribute("data-slot") === "tree-section-row") return sectionRow;
+  }
+  return null;
+};
+
+/**
+ * Resolve the conceptual tree row from a pointer target.
+ * First tries matching a known row slot via closest(). When no row wrapper
+ * exists (pass-through TreeRow, raw controls), falls back to the nearest
+ * branch container and returns its owner row.
+ */
+const resolveHoverRow = (target: HTMLElement, root: HTMLElement): Element | null => {
+  const direct = target.closest(treeHoverPathRowSelector);
+  if (direct && root.contains(direct)) return direct;
+  const branch = target.closest(treeHoverPathBranchSelector);
+  if (branch && root.contains(branch)) return rowForBranch(branch);
+  return null;
+};
+
+const markTerminalBranch = (row: Element) => {
+  const slot = row.getAttribute("data-slot");
+  if (slot === "tree-item-row" || slot === "control-tree-row") {
+    const next = row.nextElementSibling;
+    if (next) {
+      const nextSlot = next.getAttribute("data-slot");
+      if (nextSlot && treeBranchSlots.has(nextSlot)) {
+        next.setAttribute(treeHoverPathAttr, "branch");
+      }
+    }
+  } else if (slot === "tree-section-row") {
+    const next = row.nextElementSibling;
+    if (next?.getAttribute("data-slot") === "collapsible-content") {
+      for (const child of Array.from(next.children)) {
+        if (child.getAttribute("data-slot") === "tree-section-content") {
+          child.setAttribute(treeHoverPathAttr, "branch");
+          break;
+        }
+      }
+    }
+  } else if (slot === "tree-property-item") {
+    for (const child of Array.from(row.children)) {
+      if (child.getAttribute("data-slot") === "tree-property-content") {
+        child.setAttribute(treeHoverPathAttr, "branch");
+        break;
+      }
+    }
+  }
+};
+
+const applyTreeHoverPath = (row: Element, root: HTMLElement) => {
+  clearTreeHoverPath(root);
+  row.setAttribute(treeHoverPathAttr, "row");
+  markTerminalBranch(row);
+  let el: Element | null = row.parentElement;
+  while (el && el !== root) {
+    const slot = el.getAttribute("data-slot");
+    if (slot && treeBranchSlots.has(slot)) {
+      el.setAttribute(treeHoverPathAttr, "branch");
+      const ownerRow = rowForBranch(el);
+      if (ownerRow) {
+        ownerRow.setAttribute(treeHoverPathAttr, "row");
+        markTerminalBranch(ownerRow);
+      }
+    }
+    el = el.parentElement;
+  }
+};
+//#endregion 🔖TreeHoverPath
 
 /**
  * Hierarchical tree view component with optional file tree rendering.
@@ -16137,10 +16407,25 @@ export const Tree = (({
     );
   };
 
+  const treeRootRef = React.useRef<HTMLDivElement>(null);
+
+  const handleTreePointerOver = React.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const root = treeRootRef.current;
+    if (!root) return;
+    const row = resolveHoverRow(e.target as HTMLElement, root);
+    if (row) applyTreeHoverPath(row, root);
+    else clearTreeHoverPath(root);
+  }, []);
+
+  const handleTreePointerLeave = React.useCallback(() => {
+    const root = treeRootRef.current;
+    if (root) clearTreeHoverPath(root);
+  }, []);
+
   return (
     <TreeStateProvider>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier }}>
-        <div className={`w-full min-w-0 overflow-hidden ${className}`}>
+        <div ref={treeRootRef} className={`w-full min-w-0 overflow-hidden ${className}`} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
           {resolvedSections.map((section) => (
             <div key={section.id} data-slot="tree-section-wrapper">
               <DataSectionView section={section} />
@@ -18732,16 +19017,86 @@ const GeometryFile: React.FC<GeometryFileProps> = ({ src, environment, roughness
  **/
 interface GizmoProps {
   show?: boolean;
+  onAxisClick?: (direction: THREE.Vector3) => void;
 }
+
+type SceneProjectionKind = "camera" | "orthographic";
+
+type SceneSnapViewKind = "front" | "back" | "side" | "opposite-side" | "top" | "bottom";
+
+interface SceneGizmoSnapTarget {
+  axis: "x" | "y" | "z";
+  sign: 1 | -1;
+  view: SceneSnapViewKind;
+  cameraDirection: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  up: {
+    x: number;
+    y: number;
+    z: number;
+  };
+}
+
+/**
+ * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨resolvescenegizmosnaptarget](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/resolveSceneGizmoSnapTarget)
+ * resolveSceneGizmoSnapTarget holds the data fields for a resolveSceneGizmoSnapTarget record.
+ **/
+export const resolveSceneGizmoSnapTarget = (direction: Pick<THREE.Vector3, "x" | "y" | "z">): SceneGizmoSnapTarget => {
+  const dominantAxis = ([
+    { axis: "x" as const, magnitude: Math.abs(direction.x), raw: direction.x },
+    { axis: "y" as const, magnitude: Math.abs(direction.y), raw: direction.y },
+    { axis: "z" as const, magnitude: Math.abs(direction.z), raw: direction.z },
+  ].sort((a, b) => b.magnitude - a.magnitude)[0] ?? { axis: "x" as const, magnitude: 1, raw: 1 });
+  const sign = dominantAxis.raw >= 0 ? 1 : -1;
+
+  if (dominantAxis.axis === "x") {
+    return {
+      axis: "x",
+      sign,
+      view: sign > 0 ? "front" : "back",
+      cameraDirection: { x: sign, y: 0, z: 0 },
+      up: { x: 0, y: 1, z: 0 },
+    };
+  }
+
+  if (dominantAxis.axis === "y") {
+    return {
+      axis: "y",
+      sign,
+      view: sign > 0 ? "top" : "bottom",
+      cameraDirection: { x: 0, y: sign, z: 0 },
+      up: sign > 0 ? { x: 0, y: 0, z: -1 } : { x: 0, y: 0, z: 1 },
+    };
+  }
+
+  return {
+    axis: "z",
+    sign,
+    view: sign < 0 ? "side" : "opposite-side",
+    cameraDirection: { x: 0, y: 0, z: sign },
+    up: { x: 0, y: 1, z: 0 },
+  };
+};
+
+const updateSceneCameraProjection = (camera: THREE.Camera): void => {
+  if (camera instanceof THREE.OrthographicCamera || camera instanceof THREE.PerspectiveCamera) {
+    camera.updateProjectionMatrix();
+  }
+};
 
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨gizmo](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/Gizmo)
  * Gizmo holds the data fields for a Gizmo record.
  **/
-const Gizmo: React.FC<GizmoProps> = ({ show = true }) => {
+const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
   const [colors, setColors] = React.useState<[string, string, string]>(() => [getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
   const labels = React.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
-  const margin = React.useMemo(() => [80, 80] as [number, number], []);
+  const margin = React.useMemo(() => [124, 124] as [number, number], []);
+  const axisScale = React.useMemo(() => [1.35, 1.35, 1.35] as [number, number, number], []);
+  const labelColor = React.useMemo(() => getComputedColor("--foreground"), []);
 
   React.useEffect(() => {
     const updateColors = () => setColors([getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
@@ -18757,7 +19112,22 @@ const Gizmo: React.FC<GizmoProps> = ({ show = true }) => {
   if (!show) return null;
   return (
     <GizmoHelper alignment="bottom-right" margin={margin}>
-      <GizmoViewport labels={labels} axisColors={colors} />
+      <GizmoViewport
+        labels={labels}
+        axisColors={colors}
+        axisScale={axisScale}
+        axisHeadScale={1.35}
+        labelColor={labelColor}
+        font="20px Inter var, Arial, sans-serif"
+        onClick={
+          onAxisClick
+            ? (e) => {
+                onAxisClick(e.object.position.clone());
+                return null;
+              }
+            : undefined
+        }
+      />
     </GizmoHelper>
   );
 };
@@ -18770,18 +19140,33 @@ interface SceneInnerProps {
   children?: React.ReactNode;
   showGrid?: boolean;
   showGizmo?: boolean;
+  projection: SceneProjectionKind;
   camera?: Camera;
   onCameraChange?: (camera: Camera) => void;
+  onProjectionChange?: (projection: SceneProjectionKind) => void;
   focusedItemId?: string;
   onFocusComplete?: () => void;
   selectionOnDrag?: boolean;
+  onOrbitEnd?: () => void;
 }
 
 /**
  * [👤semio📚js🗃️sketchpad💻elements🔖windowcomponents🔖scene🪨sceneinner](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Window%20Components/s/Scene/d/i/SceneInner)
  * SceneInner holds the data fields for a SceneInner record.
  **/
-const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, showGizmo = true, camera: initialCamera, onCameraChange, focusedItemId, onFocusComplete, selectionOnDrag = false }) => {
+const SceneInner: React.FC<SceneInnerProps> = ({
+  children,
+  showGrid = true,
+  showGizmo = true,
+  projection,
+  camera: initialCamera,
+  onCameraChange,
+  onProjectionChange,
+  focusedItemId,
+  onFocusComplete,
+  selectionOnDrag = false,
+  onOrbitEnd,
+}) => {
   const [gridColors, setGridColors] = React.useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
@@ -18808,21 +19193,44 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
   const prevCameraStringRef = React.useRef<string | undefined>(initialCamera ? JSON.stringify(initialCamera) : undefined);
   const cameraRestoredRef = React.useRef(false);
   const restoredCameraStringRef = React.useRef<string | undefined>(undefined);
-
-  const cameraRef = React.useRef<THREE.OrthographicCamera>(threeCamera as THREE.OrthographicCamera);
+  const previousProjectionRef = React.useRef<SceneProjectionKind>(projection);
+  const cameraRef = React.useRef<THREE.Camera>(threeCamera as THREE.Camera);
+  const [pendingSnapTarget, setPendingSnapTarget] = React.useState<SceneGizmoSnapTarget | null>(null);
 
   React.useEffect(() => {
-    const cam = cameraRef.current;
-    if (cam && cam instanceof THREE.OrthographicCamera) {
-      cam.zoom = 50;
-      cam.updateProjectionMatrix();
+    cameraRef.current = threeCamera as THREE.Camera;
+    const currentCamera = cameraRef.current;
+    if (projection === "orthographic" && currentCamera instanceof THREE.OrthographicCamera) {
+      currentCamera.zoom = 50;
     }
-  }, []);
+    updateSceneCameraProjection(currentCamera);
+  }, [projection, threeCamera]);
+
+  const emitCameraChange = React.useCallback(() => {
+    if (!cameraRef.current || !controlsRef.current || !onCameraChange) return;
+    const position = cameraRef.current.position;
+    const target = controlsRef.current.target;
+    const forwardVector = new THREE.Vector3().subVectors(target, position);
+    if (forwardVector.lengthSq() < 0.001) return;
+    const forward = forwardVector.normalize();
+    const up = cameraRef.current.up.clone().normalize();
+    onCameraChange({
+      position: { x: position.x, y: position.y, z: position.z },
+      forward: { x: forward.x, y: forward.y, z: forward.z },
+      up: { x: up.x, y: up.y, z: up.z },
+    });
+  }, [onCameraChange]);
 
   React.useEffect(() => {
     if (!cameraRef.current || !controlsRef.current) return;
 
     const currentCameraString = initialCamera ? JSON.stringify(initialCamera) : undefined;
+
+    if (previousProjectionRef.current !== projection) {
+      previousProjectionRef.current = projection;
+      cameraRestoredRef.current = false;
+      restoredCameraStringRef.current = undefined;
+    }
 
     if (prevCameraStringRef.current !== currentCameraString) {
       cameraRestoredRef.current = false;
@@ -18852,7 +19260,10 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
         cameraRef.current.up.set(initialCamera.up.x, initialCamera.up.y, initialCamera.up.z);
         const target = new THREE.Vector3(initialCamera.position.x + initialCamera.forward.x, initialCamera.position.y + initialCamera.forward.y, initialCamera.position.z + initialCamera.forward.z);
         controlsRef.current.target.copy(target);
-        cameraRef.current.updateProjectionMatrix();
+        if (projection === "orthographic" && cameraRef.current instanceof THREE.OrthographicCamera) {
+          cameraRef.current.zoom = 50;
+        }
+        updateSceneCameraProjection(cameraRef.current);
         controlsRef.current.update();
 
         setTimeout(() => {
@@ -18869,7 +19280,10 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
         cameraRef.current.position.set(10, 10, 10);
         cameraRef.current.up.set(0, 1, 0);
         controlsRef.current.target.set(0, 0, 0);
-        cameraRef.current.updateProjectionMatrix();
+        if (projection === "orthographic" && cameraRef.current instanceof THREE.OrthographicCamera) {
+          cameraRef.current.zoom = 50;
+        }
+        updateSceneCameraProjection(cameraRef.current);
         controlsRef.current.update();
 
         setTimeout(() => {
@@ -18880,27 +19294,76 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       cameraRestoredRef.current = true;
       restoredCameraStringRef.current = currentCameraString;
     }
-  }, [initialCamera]);
+  }, [initialCamera, projection]);
+
+  React.useEffect(() => {
+    if (!pendingSnapTarget || !cameraRef.current || !controlsRef.current) return;
+
+    const currentCamera = cameraRef.current;
+    const controls = controlsRef.current;
+    const currentTarget = controls.target.clone();
+    const currentPosition = currentCamera.position.clone();
+    const currentUp = currentCamera.up.clone().normalize();
+    const nextDirection = new THREE.Vector3(pendingSnapTarget.cameraDirection.x, pendingSnapTarget.cameraDirection.y, pendingSnapTarget.cameraDirection.z).normalize();
+    const nextUp = new THREE.Vector3(pendingSnapTarget.up.x, pendingSnapTarget.up.y, pendingSnapTarget.up.z).normalize();
+    const nextPosition = currentTarget.clone().add(nextDirection.multiplyScalar(Math.max(currentPosition.distanceTo(currentTarget), 1)));
+    const animationDurationMs = 280;
+
+    isUpdatingCameraRef.current = true;
+
+    const animateSnap = (startTime: number) => {
+      const frame = (now: number) => {
+        if (!cameraRef.current || !controlsRef.current) {
+          setPendingSnapTarget(null);
+          isUpdatingCameraRef.current = false;
+          return;
+        }
+
+        const progress = Math.min(1, (now - startTime) / animationDurationMs);
+        const easedProgress = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+        cameraRef.current.position.lerpVectors(currentPosition, nextPosition, easedProgress);
+        cameraRef.current.up.lerpVectors(currentUp, nextUp, easedProgress).normalize();
+        controlsRef.current.target.copy(currentTarget);
+
+        if (projection === "orthographic" && cameraRef.current instanceof THREE.OrthographicCamera) {
+          cameraRef.current.zoom = 50;
+        }
+        updateSceneCameraProjection(cameraRef.current);
+        controlsRef.current.update();
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+          return;
+        }
+
+        emitCameraChange();
+        onProjectionChange?.("orthographic");
+        setPendingSnapTarget(null);
+        isUpdatingCameraRef.current = false;
+      };
+
+      requestAnimationFrame(frame);
+    };
+
+    requestAnimationFrame(animateSnap);
+  }, [emitCameraChange, onProjectionChange, pendingSnapTarget, projection]);
+
+  const handleGizmoAxisClick = React.useCallback((direction: THREE.Vector3) => {
+    setPendingSnapTarget(resolveSceneGizmoSnapTarget(direction));
+  }, []);
+
+  const handleStart = React.useCallback(() => {
+    if (isUpdatingCameraRef.current || projection !== "orthographic") return;
+    emitCameraChange();
+    onProjectionChange?.("camera");
+  }, [emitCameraChange, onProjectionChange, projection]);
 
   const handleEnd = React.useCallback(() => {
     if (isUpdatingCameraRef.current) return;
-    if (cameraRef.current && controlsRef.current && onCameraChange) {
-      const position = cameraRef.current.position;
-      const target = controlsRef.current.target;
-      const forwardVec = new THREE.Vector3().subVectors(target, position);
-
-      if (forwardVec.lengthSq() < 0.001) return;
-
-      const forward = forwardVec.normalize();
-      const up = cameraRef.current.up;
-      const newCamera = {
-        position: { x: position.x, y: position.y, z: position.z },
-        forward: { x: forward.x, y: forward.y, z: forward.z },
-        up: { x: up.x, y: up.y, z: up.z },
-      };
-      onCameraChange(newCamera);
-    }
-  }, [onCameraChange]);
+    onOrbitEnd?.();
+    emitCameraChange();
+  }, [emitCameraChange, onOrbitEnd]);
 
   React.useEffect(() => {
     if (!focusedItemId || !cameraRef.current || !controlsRef.current) return;
@@ -18949,7 +19412,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
         const t = 0.1;
         camera.position.lerp(newPosition, t);
         controlsRef.current.target.lerp(center, t);
-        camera.updateProjectionMatrix();
+        updateSceneCameraProjection(camera);
         controlsRef.current.update();
 
         const distanceToTarget = camera.position.distanceTo(newPosition);
@@ -18974,6 +19437,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       <OrbitControls
         ref={controlsRef}
         enableDamping={false}
+        onStart={handleStart}
         mouseButtons={
           selectionOnDrag
             ? {
@@ -18992,7 +19456,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       <ambientLight intensity={1} />
       {children}
       {showGrid && <Grid infiniteGrid={true} sectionColor={gridColors.sectionColor} cellColor={gridColors.cellColor} />}
-      {showGizmo && <Gizmo />}
+      {showGizmo && <Gizmo onAxisClick={handleGizmoAxisClick} />}
     </>
   );
 };
@@ -19014,8 +19478,8 @@ interface SceneProps {
   className?: string;
   focusedItemId?: string;
   onFocusComplete?: () => void;
-  projection?: "camera" | "orthographic";
-  onProjectionChange?: (projection: "camera" | "orthographic") => void;
+  projection?: SceneProjectionKind;
+  onProjectionChange?: (projection: SceneProjectionKind) => void;
   selectionOnDrag?: boolean;
 }
 
@@ -19031,20 +19495,34 @@ export const Scene: React.FC<SceneProps> = ({
   onCameraChange,
   onDoubleClickCapture,
   onPointerMissed,
-  orthographic = true,
+  orthographic = false,
   shadows = false,
   className = "",
   focusedItemId,
   onFocusComplete,
-  projection = "orthographic",
+  projection = "camera",
   onProjectionChange,
   selectionOnDrag = false,
 }) => {
+  const [resolvedProjection, setResolvedProjection] = React.useState<SceneProjectionKind>(projection ?? (orthographic ? "orthographic" : "camera"));
+
+  React.useEffect(() => {
+    setResolvedProjection(projection ?? (orthographic ? "orthographic" : "camera"));
+  }, [orthographic, projection]);
+
+  const handleProjectionChange = React.useCallback(
+    (nextProjection: SceneProjectionKind) => {
+      setResolvedProjection(nextProjection);
+      onProjectionChange?.(nextProjection);
+    },
+    [onProjectionChange],
+  );
+
   const projectionOptions: ActionDropdownOption[] = [
     {
       value: "camera",
       icon: <CameraIcon className="size-3" />,
-      label: "Camera",
+      label: "Perspective",
     },
     {
       value: "orthographic",
@@ -19055,21 +19533,29 @@ export const Scene: React.FC<SceneProps> = ({
 
   return (
     <div className={`relative h-full w-full ${className}`} style={{ minHeight: "100%", minWidth: "100%" }} onDoubleClick={onDoubleClickCapture}>
-      {onProjectionChange && (
-        <div className="absolute top-1 right-1 z-panel">
-          <ActionDropdown id="scene-projection" options={projectionOptions} value={projection} onValueChange={(value) => onProjectionChange(value as "camera" | "orthographic")} />
-        </div>
-      )}
+      <div className="absolute top-1 right-1 z-panel">
+        <ActionDropdown id="scene-projection" options={projectionOptions} value={resolvedProjection} onValueChange={(value) => handleProjectionChange(value as SceneProjectionKind)} />
+      </div>
       <ThreeCanvas
         onPointerMissed={onPointerMissed}
-        orthographic={orthographic}
+        orthographic={resolvedProjection === "orthographic"}
         shadows={shadows}
         frameloop="demand"
-        camera={orthographic ? { zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 } : undefined}
+        camera={resolvedProjection === "orthographic" ? { zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 } : { fov: 75, position: [10, 10, 10], near: 0.1, far: 10000 }}
         style={{ width: "100%", height: "100%" }}
       >
         <SceneFrameControl />
-        <SceneInner showGrid={showGrid} showGizmo={showGizmo} camera={camera} onCameraChange={onCameraChange} focusedItemId={focusedItemId} onFocusComplete={onFocusComplete} selectionOnDrag={selectionOnDrag}>
+        <SceneInner
+          showGrid={showGrid}
+          showGizmo={showGizmo}
+          projection={resolvedProjection}
+          camera={camera}
+          onCameraChange={onCameraChange}
+          onProjectionChange={handleProjectionChange}
+          focusedItemId={focusedItemId}
+          onFocusComplete={onFocusComplete}
+          selectionOnDrag={selectionOnDrag}
+        >
           {children}
         </SceneInner>
       </ThreeCanvas>
@@ -21009,13 +21495,15 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-gutter"');
       expect(markup).toContain("grid-template-columns:24px minmax(0, 1fr)");
       expect(markup).toContain('data-slot="property-label-tree" class="min-w-0"');
-      expect(markup).toContain('data-slot="property-row" class="group grid min-w-0 items-center gap-x-[8px] min-h-[24px] grid-cols-[96px_minmax(0,1fr)]"');
+      expect(markup).toContain('data-slot="property-row"');
+      expect(markup).toContain("margin-left:-10px");
+      expect(markup).toContain("width:calc(100% + 10px)");
+      expect(markup).toContain("grid-cols-[96px_minmax(0,1fr)]");
       expect(markup).toContain('data-slot="property-control"');
       expect(markup).toContain("justify-end");
       expect(markup).toContain("data-detail-panel-control");
+      expect(markup).toContain("padding-left:10px");
       expect(markup).not.toContain("margin-left:13px");
-      expect(markup).not.toContain("margin-left:-10px");
-      expect(markup).not.toContain("padding-left:10px");
       expect(markup).not.toContain("gap-[6px]");
     });
 
@@ -21122,6 +21610,18 @@ if (treeVitest) {
       expect(toggleMarkup).toContain("w-fit shrink-0");
     });
 
+    it("anchors ring controls to the shared property edge and exposes the ring label", () => {
+      const ringMarkup = renderToStaticMarkup(<Ring id="semio.sketchpad.app.type.panel.details.section.connector.ring" orbs={[{ id: "connector-1", t: 0.25, selected: true }]} showLabel />);
+
+      expect(ringMarkup).toContain('data-slot="property-control"');
+      expect(ringMarkup).toContain("justify-end");
+      expect(ringMarkup).toContain('data-slot="ring"');
+      expect(ringMarkup).toContain('data-detail-panel-control="fit"');
+      expect(ringMarkup).toContain("w-fit shrink-0");
+      expect(ringMarkup).toContain('id="semio.sketchpad.app.type.panel.details.section.connector.ring-label"');
+      expect(ringMarkup).toContain(">Ring<");
+    });
+
     it("marks combobox and select triggers as fill-width detail controls", () => {
       const comboboxMarkup = renderToStaticMarkup(
         <Combobox
@@ -21204,9 +21704,9 @@ if (treeVitest) {
       expect(markup).not.toContain('data-slot="tree-gutter-slot" class="absolute inset-y-0 left-0 flex items-center justify-center"');
       expect(markup).toContain('data-slot="tree-gutter-slot"');
       expect(markup).toContain("absolute top-1/2 -translate-y-1/2");
-      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2" style="left:7px;width:3px"');
+      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2 transition-[height,background-color] duration-150" style="left:7px;width:3px"');
       expect(markup).not.toContain('data-slot="tree-branch-stem"');
-      expect(markup.match(/w-px h-full bg-muted-foreground\/40/g)?.length ?? 0).toBe(3);
+      expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40/g)?.length ?? 0).toBe(3);
       expect(markup).not.toContain('data-slot="tree-content" class="relative" style="padding-top:3px;padding-bottom:3px;padding-left:');
       expect(markup).not.toContain('data-slot="tree-property-label" class="relative min-w-0" style="padding-left:');
       expect(markup).toContain('data-slot="tree-section-content"');
@@ -21313,6 +21813,60 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
       expect(markup).toContain('data-testid="add-icon"');
+    });
+  });
+
+  describe("scene helpers", () => {
+    it("maps dominant gizmo axes to stable orthographic snap targets", () => {
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(1, 0.2, 0.1))).toEqual({
+        axis: "x",
+        sign: 1,
+        view: "front",
+        cameraDirection: { x: 1, y: 0, z: 0 },
+        up: { x: 0, y: 1, z: 0 },
+      });
+
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0.1, 1, 0.2))).toEqual({
+        axis: "y",
+        sign: 1,
+        view: "top",
+        cameraDirection: { x: 0, y: 1, z: 0 },
+        up: { x: 0, y: 0, z: -1 },
+      });
+
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0.1, 0.2, -1))).toEqual({
+        axis: "z",
+        sign: -1,
+        view: "side",
+        cameraDirection: { x: 0, y: 0, z: -1 },
+        up: { x: 0, y: 1, z: 0 },
+      });
+    });
+
+    it("preserves opposite-side views for negative axis clicks", () => {
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(-1, 0, 0))).toEqual({
+        axis: "x",
+        sign: -1,
+        view: "back",
+        cameraDirection: { x: -1, y: 0, z: 0 },
+        up: { x: 0, y: 1, z: 0 },
+      });
+
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0, -1, 0))).toEqual({
+        axis: "y",
+        sign: -1,
+        view: "bottom",
+        cameraDirection: { x: 0, y: -1, z: 0 },
+        up: { x: 0, y: 0, z: 1 },
+      });
+
+      expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0, 0, 1))).toEqual({
+        axis: "z",
+        sign: 1,
+        view: "opposite-side",
+        cameraDirection: { x: 0, y: 0, z: 1 },
+        up: { x: 0, y: 1, z: 0 },
+      });
     });
   });
 

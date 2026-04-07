@@ -173,6 +173,7 @@ import {
   Geometry,
   getBezierPath,
   Handle,
+  HelperRow,
   HorizontalWindows,
   HoverCard,
   HoverCardContent,
@@ -201,6 +202,7 @@ import {
   Position,
   ReactFlowProvider,
   rectIntersection,
+  resolveTranslationLabel,
   Ring,
   Route,
   Routes,
@@ -345,8 +347,8 @@ export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui
 export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, SyncBinaryPersistenceProvider } from "../studio/studio";
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
-import type { Locator, Page as PlaywrightPage } from "@playwright/test";
-import { importKit as importKitArchive } from "@semio/js";
+  import type { Locator, Page as PlaywrightPage } from "@playwright/test";
+  import { importKit as importKitArchive } from "@semio/js";
 // #endregion 🔖Imports
 
 // #region 🔖Shared
@@ -1186,9 +1188,6 @@ export interface PanelSection {
     id: string; // "selection", "filter", "create", "view", "actions"
     labelId?: string;
     order?: number;
-    subToolId?: string;
-    subToolLabelId?: string;
-    subToolIcon?: ReactNode;
     onActivate?: () => void;
   };
   actions?: Array<{
@@ -2786,10 +2785,7 @@ export function createTogglePanelHandler<TAppKey extends string, TAppState exten
       return {
         [config.appKey]: {
           ...app,
-          panelVisibility: {
-            ...app.panelVisibility,
-            [event.panel]: !app.panelVisibility[event.panel],
-          },
+          panelVisibility: getNextPanelVisibilityFromToggle(app.panelVisibility, event.panel),
         },
       };
     },
@@ -2938,10 +2934,7 @@ export function createKeyedTogglePanelHandler<TAppKey extends string, TAppState 
           ...apps,
           [key]: {
             ...app,
-            panelVisibility: {
-              ...app.panelVisibility,
-              [event.panel]: !app.panelVisibility[event.panel],
-            },
+            panelVisibility: getNextPanelVisibilityFromToggle(app.panelVisibility, event.panel),
           },
         },
       };
@@ -3283,7 +3276,7 @@ export function createSingleKeyTogglePanelHandler<TAppKey extends string, TAppSt
     action: (context: any, event: any) => {
       const key = event[keyField];
       const app = context[appKey][key] || createDefaultState();
-      return { [appKey]: { ...context[appKey], [key]: { ...app, panelVisibility: { ...app.panelVisibility, [event.panel]: !app.panelVisibility[event.panel] } } } };
+      return { [appKey]: { ...context[appKey], [key]: { ...app, panelVisibility: getNextPanelVisibilityFromToggle(app.panelVisibility, event.panel) } } };
     },
   });
 }
@@ -5899,6 +5892,78 @@ export const resolveKitDiagramProximityAnchor = (nodeId: string, node: KitDiagra
 // #region 🔖Utilities
 // [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities)
 // Utilities MUST provide the utilities functionality.
+
+// #region 🔖SharedLayoutTransition
+// FLIP-based shared layout transition hook for smooth toolbar resizing.
+
+type SharedLayoutRect = { left: number; top: number; width: number; height: number };
+const sharedLayoutRectCache = new Map<string, SharedLayoutRect>();
+
+/**
+ * Applies a FLIP (First-Last-Invert-Play) animation to an element whenever
+ * its bounding rect changes between React render cycles. Uses transform-based
+ * animation (translate + scale) via the Web Animations API for compositor-friendly
+ * performance. Respects prefers-reduced-motion.
+ *
+ * Specs: Measures previous rect (stored in ref), measures new rect in
+ * useLayoutEffect (after DOM mutation, before paint), computes inverse
+ * transform, then animates back to identity. Cancels in-flight animations
+ * on re-trigger to avoid visual jumps.
+ **/
+function useSharedLayoutTransition(ref: React.RefObject<HTMLElement | null>, transformOrigin: string = "center center", sharedKey?: string): void {
+  const prevRectRef = useRef<SharedLayoutRect | null>(null);
+  const animRef = useRef<Animation | null>(null);
+  const reducedMotionRef = useRef(typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) {
+      prevRectRef.current = null;
+      return;
+    }
+
+    if (animRef.current) {
+      animRef.current.cancel();
+      animRef.current = null;
+    }
+
+    const nextRect = el.getBoundingClientRect();
+    const next: SharedLayoutRect = { left: nextRect.left, top: nextRect.top, width: nextRect.width, height: nextRect.height };
+
+    const prevFromCache = sharedKey ? (sharedLayoutRectCache.get(sharedKey) ?? null) : null;
+    const prev = prevRectRef.current ?? prevFromCache;
+
+    prevRectRef.current = next;
+    if (sharedKey) sharedLayoutRectCache.set(sharedKey, next);
+
+    if (!prev || reducedMotionRef.current) return;
+    if (next.width === 0 || next.height === 0 || prev.width === 0 || prev.height === 0) return;
+
+    const dx = prev.left - next.left;
+    const dy = prev.top - next.top;
+    const sx = prev.width / next.width;
+    const sy = prev.height / next.height;
+
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(sx - 1) < 0.01 && Math.abs(sy - 1) < 0.01) return;
+
+    animRef.current = el.animate(
+      [
+        { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, transformOrigin },
+        { transform: "none", transformOrigin },
+      ],
+      { duration: 200, easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
+    );
+  });
+
+  useEffect(() => {
+    return () => {
+      animRef.current?.cancel();
+    };
+  }, []);
+}
+
+// #endregion 🔖SharedLayoutTransition
+
 /**
  * getToolbarGroupIcon holds the data fields for a getToolbarGroupIcon record.
  **/
@@ -5907,10 +5972,10 @@ export const resolveKitDiagramProximityAnchor = (nodeId: string, node: KitDiagra
  * [👤semio📚js🗃️sketchpad💻sketchpad🔖utilities🛠️gettoolbargroupicon](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Utilities/d/i/getToolbarGroupIcon)
  **/
 function getToolbarGroupIcon(groupId: string): ReactNode {
-  if (groupId === "open") return <FolderIcon size={16} />;
-  if (groupId === "selection") return <FocusIcon size={16} />;
-  if (groupId === "filter") return <SearchIcon size={16} />;
-  if (groupId === "create") return <LayoutIcon size={16} />;
+  if (groupId === "open") return <FolderIcon className="size-tiny" />;
+  if (groupId === "selection") return <FocusIcon className="size-tiny" />;
+  if (groupId === "filter") return <SearchIcon className="size-tiny" />;
+  if (groupId === "create") return <LayoutIcon className="size-tiny" />;
   return null;
 }
 
@@ -7146,6 +7211,7 @@ type KitFileState = {
   blobs: Map<string, Blob>;
   objectUrls: Map<string, string>;
   providerUrls: Map<string, string>;
+  pendingBlobDownloads: Map<string, Promise<string | null>>;
   providerFactory?: FileProviderFactory;
   provider?: FileProvider;
   providerKitGuid?: string;
@@ -7164,6 +7230,7 @@ const getOrCreateKitFileState = (kitStore: KitStore): KitFileState => {
       blobs: new Map(),
       objectUrls: new Map(),
       providerUrls: new Map(),
+      pendingBlobDownloads: new Map(),
     };
   }
   return storeWithFiles.__semioKitFileState;
@@ -7454,20 +7521,37 @@ export class CollaborativeKitStore {
     return file.remote && isBrowserReadableFileUrl(file.remote) ? file.remote : null;
   }
   async getFileBlobUrl(guid: string): Promise<string | null> {
-    const kit = this._kitStore.getSnapshot().kit;
     const fileState = getOrCreateKitFileState(this._kitStore);
     const cachedBlobUrl = fileState.objectUrls.get(guid);
     if (cachedBlobUrl) {
       return cachedBlobUrl;
     }
 
+    const pending = fileState.pendingBlobDownloads.get(guid);
+    if (pending) {
+      return pending;
+    }
+
+    const downloadPromise = this._downloadFileBlobUrl(guid, fileState);
+    fileState.pendingBlobDownloads.set(guid, downloadPromise);
+    try {
+      return await downloadPromise;
+    } finally {
+      fileState.pendingBlobDownloads.delete(guid);
+    }
+  }
+  private async _downloadFileBlobUrl(guid: string, fileState: KitFileState): Promise<string | null> {
+    const kit = this._kitStore.getSnapshot().kit;
+
     const cachedBlob = fileState.blobs.get(guid);
     if (cachedBlob) {
+      console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): using cached blob`);
       return createKitFileObjectUrl(this._kitStore, guid, cachedBlob);
     }
 
     const file = kit.files?.find((existingFile) => existingFile.guid === guid);
     if (!file) {
+      console.warn(`[DEBUG] _downloadFileBlobUrl(${guid}): file not found in kit`);
       return null;
     }
 
@@ -7477,35 +7561,47 @@ export class CollaborativeKitStore {
       try {
         const blob = await binaryStore.readFile(storagePath);
         if (blob) {
+          console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): loaded from binary store, size=${blob.size}`);
           fileState.blobs.set(guid, blob);
           return createKitFileObjectUrl(this._kitStore, guid, blob);
         }
-      } catch (error) { }
+      } catch (error) {
+        console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): binary store read failed:`, error);
+      }
     }
 
     const provider = await getKitFileProvider(this._kitStore, kit.guid);
     if (provider) {
       try {
         const blob = await provider.download(kit.guid, file.guid, storagePath);
+        console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): loaded from provider, size=${blob.size}`);
         fileState.blobs.set(guid, blob);
         const providerUrl = provider.getUrl(kit.guid, file.guid, storagePath);
         if (providerUrl) {
           fileState.providerUrls.set(guid, providerUrl);
         }
         return createKitFileObjectUrl(this._kitStore, guid, blob);
-      } catch (error) { }
+      } catch (error) {
+        console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): provider download failed:`, error);
+      }
+    } else {
+      console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): no provider available`);
     }
 
     const readableUrl = getReadableKitFileUrl(fileState, file);
     if (readableUrl) {
+      console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): trying readable URL: ${readableUrl}`);
       const blob = await fetchReadableKitFileBlob(readableUrl);
       if (blob) {
+        console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): fetched from readable URL, size=${blob.size}`);
         fileState.blobs.set(guid, blob);
         return createKitFileObjectUrl(this._kitStore, guid, blob);
       }
     }
 
-    return this.getFileUrl(guid);
+    const fallbackUrl = this.getFileUrl(guid);
+    console.debug(`[DEBUG] _downloadFileBlobUrl(${guid}): all methods exhausted, fallback URL: ${fallbackUrl}`);
+    return fallbackUrl;
   }
   subscribe(listener: () => void): () => void {
     return this._kitStore.subscribe(listener);
@@ -11714,7 +11810,6 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
       const designs = kit.designs?.map((d: Design) => d.guid);
       const qualities = kit.qualities?.map((q: Quality) => q.name);
       const ports = kit.ports?.map((p: Port) => p.guid);
-      const concepts = kit.concepts?.map((c: Concept) => c.guid);
       const files = kit.files?.map((f: SemioFile) => f.name);
       const folders = kit.folders?.map((f: Folder) => f.guid);
       const authors = kit.authors?.map((a: Author) => a.name);
@@ -11723,7 +11818,6 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
       if (designs && designs.length > 0) allSelection.designs = designs;
       if (qualities && qualities.length > 0) allSelection.qualities = qualities;
       if (ports && ports.length > 0) allSelection.ports = ports;
-      if (concepts && concepts.length > 0) allSelection.concepts = concepts;
       if (files && files.length > 0) allSelection.files = files;
       if (folders && folders.length > 0) allSelection.folders = folders;
       if (authors && authors.length > 0) allSelection.authors = authors;
@@ -12664,6 +12758,19 @@ export const kitAppCommands = {
       },
     };
   },
+  "semio.kitApp.addTypeAfter": (context: KitAppCommandContext, type: Type, afterGuid: Guid): KitAppCommandResult => {
+    const currentTypes = context.kit.types ?? [];
+    const afterIndex = currentTypes.findIndex((t) => t.guid === afterGuid);
+    const insertIndex = afterIndex === -1 ? currentTypes.length : afterIndex + 1;
+    const reordered = [...currentTypes.slice(0, insertIndex), type, ...currentTypes.slice(insertIndex)];
+    const allGuids = currentTypes.map((t) => ({ guid: t.guid }));
+    return {
+      diff: {},
+      kitDiff: {
+        types: { removed: allGuids, added: reordered },
+      },
+    };
+  },
   "semio.kitApp.addTypes": (context: KitAppCommandContext, types: Type[]): KitAppCommandResult => {
     return {
       diff: {},
@@ -12865,13 +12972,13 @@ const KitKindToggles: FC = () => {
 
   return (
     <ToolbarGroup>
-      <Toggle pressed={selectedKinds.has("designs")} onPressedChange={() => toggleKind("designs")} id="semio.sketchpad.app.kit.toolbar.showDesigns" icon={<LayoutIcon />} text={labelDesigns} />
-      <Toggle pressed={selectedKinds.has("types")} onPressedChange={() => toggleKind("types")} id="semio.sketchpad.app.kit.toolbar.showTypes" icon={<TypeIcon />} text={labelTypes} />
-      <Toggle pressed={selectedKinds.has("qualities")} onPressedChange={() => toggleKind("qualities")} id="semio.sketchpad.app.kit.toolbar.showQualities" icon={<AwardIcon />} text={labelQualities} />
-      <Toggle pressed={selectedKinds.has("ports")} onPressedChange={() => toggleKind("ports")} id="semio.sketchpad.app.kit.toolbar.showPorts" icon={<PortIcon />} text={labelPorts} />
-      <Toggle pressed={selectedKinds.has("files")} onPressedChange={() => toggleKind("files")} id="semio.sketchpad.app.kit.toolbar.showFiles" icon={<DocumentIcon />} text={labelFiles} />
-      <Toggle pressed={selectedKinds.has("folders")} onPressedChange={() => toggleKind("folders")} id="semio.sketchpad.app.kit.toolbar.showFolders" icon={<FolderIcon />} text={labelFolders} />
-      <Toggle pressed={selectedKinds.has("authors")} onPressedChange={() => toggleKind("authors")} id="semio.sketchpad.app.kit.toolbar.showAuthors" icon={<UserIcon />} text={labelAuthors} />
+      <Toggle pressed={selectedKinds.has("designs")} onPressedChange={() => toggleKind("designs")} id="semio.sketchpad.app.kit.toolbar.showDesigns" icon={<LayoutIcon className="size-tiny" />} text={labelDesigns} />
+      <Toggle pressed={selectedKinds.has("types")} onPressedChange={() => toggleKind("types")} id="semio.sketchpad.app.kit.toolbar.showTypes" icon={<TypeIcon className="size-tiny" />} text={labelTypes} />
+      <Toggle pressed={selectedKinds.has("qualities")} onPressedChange={() => toggleKind("qualities")} id="semio.sketchpad.app.kit.toolbar.showQualities" icon={<AwardIcon className="size-tiny" />} text={labelQualities} />
+      <Toggle pressed={selectedKinds.has("ports")} onPressedChange={() => toggleKind("ports")} id="semio.sketchpad.app.kit.toolbar.showPorts" icon={<PortIcon className="size-tiny" />} text={labelPorts} />
+      <Toggle pressed={selectedKinds.has("files")} onPressedChange={() => toggleKind("files")} id="semio.sketchpad.app.kit.toolbar.showFiles" icon={<DocumentIcon className="size-tiny" />} text={labelFiles} />
+      <Toggle pressed={selectedKinds.has("folders")} onPressedChange={() => toggleKind("folders")} id="semio.sketchpad.app.kit.toolbar.showFolders" icon={<FolderIcon className="size-tiny" />} text={labelFolders} />
+      <Toggle pressed={selectedKinds.has("authors")} onPressedChange={() => toggleKind("authors")} id="semio.sketchpad.app.kit.toolbar.showAuthors" icon={<UserIcon className="size-tiny" />} text={labelAuthors} />
     </ToolbarGroup>
   );
 };
@@ -12892,7 +12999,6 @@ const KitCreateActions: FC = () => {
   const defaultTypeName = useLabel("semio.sketchpad.app.kit.defaultTypeName");
   const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
   const defaultPortName = useLabel("semio.sketchpad.app.port.defaultName");
-  const defaultConceptName = useLabel("semio.sketchpad.app.concept.defaultName");
   const defaultFolderName = useLabel("semio.sketchpad.app.folder.defaultName");
 
   const setKindActive = (kind: ArtifactKind) => {
@@ -12972,11 +13078,11 @@ const KitCreateActions: FC = () => {
 
   return (
     <ToolbarGroup>
-      <Button onClick={() => handleCreateArtifact("designs")} id="semio.sketchpad.app.kit.toolbar.createDesign" icon={<LayoutIcon />} text={labelDesign} />
-      <Button onClick={() => handleCreateArtifact("types")} id="semio.sketchpad.app.kit.toolbar.createType" icon={<TypeIcon />} text={labelType} />
-      <Button onClick={() => handleCreateArtifact("qualities")} id="semio.sketchpad.app.kit.toolbar.createQuality" icon={<AwardIcon />} text={labelQuality} />
-      <Button onClick={() => handleCreateArtifact("ports")} id="semio.sketchpad.app.kit.toolbar.createPort" icon={<PortIcon />} text={labelPort} />
-      <Button onClick={() => handleCreateArtifact("folders")} id="semio.sketchpad.app.kit.toolbar.createFolder" icon={<FolderIcon />} text={labelFolder} />
+      <Button onClick={() => handleCreateArtifact("designs")} id="semio.sketchpad.app.kit.toolbar.createDesign" icon={<LayoutIcon className="size-tiny" />} text={labelDesign} />
+      <Button onClick={() => handleCreateArtifact("types")} id="semio.sketchpad.app.kit.toolbar.createType" icon={<TypeIcon className="size-tiny" />} text={labelType} />
+      <Button onClick={() => handleCreateArtifact("qualities")} id="semio.sketchpad.app.kit.toolbar.createQuality" icon={<AwardIcon className="size-tiny" />} text={labelQuality} />
+      <Button onClick={() => handleCreateArtifact("ports")} id="semio.sketchpad.app.kit.toolbar.createPort" icon={<PortIcon className="size-tiny" />} text={labelPort} />
+      <Button onClick={() => handleCreateArtifact("folders")} id="semio.sketchpad.app.kit.toolbar.createFolder" icon={<FolderIcon className="size-tiny" />} text={labelFolder} />
     </ToolbarGroup>
   );
 };
@@ -13157,8 +13263,8 @@ const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-base/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-2 text-center">
             <DocumentIcon className="h-12 w-12 text-muted-foreground" />
-            <p className="text-lg font-medium">{t("semio.sketchpad.app.kit.dropzone.label")}</p>
-            <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.dropzone.description")}</p>
+            <p className="text-lg font-medium">{resolveTranslationLabel(t("semio.sketchpad.app.kit.dropzone.label"))}</p>
+            <p className="text-sm text-muted-foreground">{resolveTranslationLabel(t("semio.sketchpad.app.kit.dropzone.description"))}</p>
           </div>
         </div>
       )}
@@ -13225,7 +13331,6 @@ const AppContent: FC = () => {
   const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
   const defaultFolderName = useLabel("semio.sketchpad.app.folder.defaultName");
   const defaultPortName = useLabel("semio.sketchpad.app.port.defaultName");
-  const defaultConceptName = useLabel("semio.sketchpad.app.concept.defaultName");
   const kitLoadingLabel = useLabel("semio.sketchpad.app.kit.loading");
 
   const labelSearch = useLabel("semio.sketchpad.common.search");
@@ -15311,7 +15416,6 @@ interface KitDiagramNode extends Record<string, unknown> {
   kind: KitDiagramNodeKind;
   icon?: string | React.ReactNode;
   parentGuid?: string;
-  concepts?: string[];
 }
 
 /**
@@ -15644,7 +15748,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
   const kindGroups: KitDiagramNodeKind[] = ["type", "design", "quality", "port", "file", "folder", "author"];
 
   for (const kind of kindGroups) {
-    let items: Array<{ guid: string; name: string; icon?: any; parentGuid?: string; concepts?: string[] }> = [];
+    let items: Array<{ guid: string; name: string; icon?: any; parentGuid?: string }> = [];
 
     switch (kind) {
       case "type":
@@ -15653,7 +15757,6 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
           name: t.name,
           icon: t.icon,
           parentGuid: t.parent?.guid,
-          concepts: (t.concepts ?? []).map((c: any) => (typeof c === "string" ? c : c?.guid)).filter((guid): guid is string => Boolean(guid)),
         }));
         break;
       case "design":
@@ -15662,7 +15765,6 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
           name: d.name,
           icon: d.icon,
           parentGuid: d.parent?.guid,
-          concepts: (d.concepts ?? []).map((c: any) => (typeof c === "string" ? c : c?.guid)).filter((guid): guid is string => Boolean(guid)),
         }));
         break;
       case "quality":
@@ -15697,7 +15799,6 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
           kind,
           icon: item.icon,
           parentGuid: item.parentGuid,
-          concepts: item.concepts,
         },
       });
 
@@ -15753,6 +15854,73 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
     }
   }
 
+  const portToTypes = new Map<string, Set<string>>();
+  const typeByGuid = new Map((kit.types ?? []).map((typeRecord) => [typeRecord.guid, typeRecord]));
+  const resolveTypeLineage = (typeGuid: string): string[] => {
+    const lineage: string[] = [];
+    const visited = new Set<string>();
+    let currentGuid: string | undefined = typeGuid;
+    while (currentGuid && !visited.has(currentGuid)) {
+      visited.add(currentGuid);
+      lineage.push(currentGuid);
+      const currentType = typeByGuid.get(currentGuid);
+      currentGuid = currentType?.parent?.guid;
+    }
+    return lineage;
+  };
+  for (const type of kit.types ?? []) {
+    for (const connector of type.connectors ?? []) {
+      const portGuid = connector.port?.guid;
+      if (portGuid) {
+        const sourceId = `port:${portGuid}`;
+        for (const relatedTypeGuid of resolveTypeLineage(type.guid)) {
+          const targetId = `type:${relatedTypeGuid}`;
+          const edgeId = `ref-${sourceId}-${targetId}`;
+          if (!edges.some((e) => e.id === edgeId)) {
+            edges.push({
+              id: edgeId,
+              source: sourceId,
+              target: targetId,
+              type: "floating",
+              style: edgeStyle["reference"],
+              data: { relationship: "reference" },
+            });
+          }
+          if (!portToTypes.has(portGuid)) portToTypes.set(portGuid, new Set());
+          portToTypes.get(portGuid)!.add(relatedTypeGuid);
+        }
+      }
+    }
+  }
+
+  const portGroups = createPortGroupMap(kit.ports ?? []);
+  const groupToTypes = new Map<string, Set<string>>();
+  for (const [portGuid, typeGuids] of portToTypes) {
+    const groupRoot = portGroups.get(portGuid) ?? portGuid;
+    if (!groupToTypes.has(groupRoot)) groupToTypes.set(groupRoot, new Set());
+    for (const typeGuid of typeGuids) groupToTypes.get(groupRoot)!.add(typeGuid);
+  }
+  for (const typeGuids of groupToTypes.values()) {
+    const arr = Array.from(typeGuids);
+    for (let i = 0; i < arr.length; i++) {
+      for (let j = i + 1; j < arr.length; j++) {
+        const sourceId = `type:${arr[i]}`;
+        const targetId = `type:${arr[j]}`;
+        const edgeId = `compat-${sourceId}-${targetId}`;
+        if (!edges.some((e) => e.id === edgeId)) {
+          edges.push({
+            id: edgeId,
+            source: sourceId,
+            target: targetId,
+            type: "floating",
+            style: edgeStyle["reference"],
+            data: { relationship: "reference" },
+          });
+        }
+      }
+    }
+  }
+
   return { nodes, edges };
 };
 
@@ -15762,7 +15930,6 @@ const hasAnySelection = (selection: KitAppSelection): boolean =>
   (selection.qualities?.length ?? 0) > 0 ||
   (selection.ports?.length ?? 0) > 0 ||
   (selection.tags?.length ?? 0) > 0 ||
-  (selection.concepts?.length ?? 0) > 0 ||
   (selection.files?.length ?? 0) > 0 ||
   (selection.folders?.length ?? 0) > 0 ||
   (selection.authors?.length ?? 0) > 0;
@@ -15772,7 +15939,6 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
   const selectedDesignGuids = new Set(selection.designs ?? []);
   const selectedPortGuids = new Set(selection.ports ?? []);
   const selectedTagGuids = new Set(selection.tags ?? []);
-  const selectedConceptGuids = new Set(selection.concepts ?? []);
   const selectedFileIds = new Set(selection.files ?? []);
   const selectedFolderGuids = new Set(selection.folders ?? []);
   const selectedAuthorIds = new Set(selection.authors ?? []);
@@ -15811,7 +15977,6 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
   const designs = (kit.designs ?? []).filter((d) => allDesignGuids.has(d.guid));
   const ports = (kit.ports ?? []).filter((p) => selectedPortGuids.has(p.guid));
   const tags = (kit.tags ?? []).filter((t) => selectedTagGuids.has(t.guid));
-  const concepts = (kit.concepts ?? []).filter((c) => selectedConceptGuids.has(c.guid));
   const files = (kit.files ?? []).filter((f) => selectedFileIds.has(f.guid));
   const folders = (kit.folders ?? []).filter((f) => selectedFolderGuids.has(f.guid));
   const authors = (kit.authors ?? []).filter((a) => selectedAuthorIds.has(a.guid));
@@ -15822,7 +15987,6 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
     designs,
     ports,
     tags,
-    concepts,
     files,
     folders,
     authors,
@@ -16520,9 +16684,6 @@ const MultiWindowApp: FC = () => {
         id: "selection",
         labelId: "semio.sketchpad.toolbar.parent.selection",
         order: 10,
-        subToolId: "select",
-        subToolLabelId: "semio.sketchpad.toolbar.subtool.select",
-        subToolIcon: <MousePointerIcon className="size-tiny" />,
       },
       content: () => (
         <KitScopeProvider guid={kitGuid}>
@@ -16741,11 +16902,7 @@ export function useKitAppFilterSearch(): HookResult<string> {
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram🔖tools🪨kitfilters](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/s/Tools/d/i/KitFilters)
  **/
 export const KitFilters: FC = () => {
-  return (
-    <ToolbarGroup>
-      <KitKindToggles />
-    </ToolbarGroup>
-  );
+  return <KitKindToggles />;
 };
 
 /**
@@ -16830,7 +16987,7 @@ export const KitToolbarSelection: FC = () => {
 
 // #region Details
 // [👤semio📚js🗃️sketchpad💻kittsx🔖internalstatemanagement🔖canvas🔖panels🔖right🔖details](semiorepo://section/SEMIO/JS/SKETCHPAD/KIT.TSX/INTERNAL-STATE-MANAGEMENT/CANVAS/PANELS/RIGHT/DETAILS)
-// Details MUST render the Kit app detail panels for kit, type, port, tag, concept, design, file, folder, and multi-artifact sections.
+// Details MUST render the Kit app detail panels for kit, type, port, tag, design, file, folder, and multi-artifact sections.
 
 /**
  * Detail section component for the currently open kit.
@@ -16855,9 +17012,9 @@ const KitSectionForm: FC = () => {
     const kit = useKit() as Kit;
     if (!kit) {
       return (
-        <TreeRow>
+        <HelperRow propertyAligned>
           <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notAvailable")}</p>
-        </TreeRow>
+        </HelperRow>
       );
     }
     const kitDataSource = useKitAppStore() as any;
@@ -16930,9 +17087,9 @@ const KitSectionForm: FC = () => {
     );
   } catch (error) {
     return (
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
-      </TreeRow>
+      </HelperRow>
     );
   }
 };
@@ -17001,13 +17158,13 @@ const MultipleTypesSection: FC<{ typeGuids: string[] }> = ({ typeGuids }) => {
   const types = typeGuids.map((guid) => kit?.types?.find((t) => t.guid === guid)).filter((t) => t !== undefined) as Type[];
   return (
     <>
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.types.multipleSelected")}</p>
-      </TreeRow>
+      </HelperRow>
       {types.map((type) => (
-        <TreeRow key={type.guid}>
-          <p className="text-sm font-medium">{type.name}</p>
-        </TreeRow>
+        <HelperRow key={type.guid} propertyAligned>
+          <p className="text-sm font-medium text-foreground">{type.name}</p>
+        </HelperRow>
       ))}
     </>
   );
@@ -17043,12 +17200,12 @@ const SinglePortSection: FC<{ portGuid: string }> = ({ portGuid }) => {
         <Input id="semio.sketchpad.app.kit.panel.details.section.port.name" value={iface.name} readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Textarea id="semio.sketchpad.app.kit.panel.details.section.port.description" value={iface.description || ""} placeholder={t("semio.sketchpad.app.kit.port.descriptionPlaceholder.label")} readOnly showLabel />
+        <Textarea id="semio.sketchpad.app.kit.panel.details.section.port.description" value={iface.description || ""} placeholder={resolveTranslationLabel(t("semio.sketchpad.app.kit.port.descriptionPlaceholder.label"))} readOnly showLabel />
       </TreeRow>
       <TreeRow>
         <Input
           id="semio.sketchpad.app.kit.panel.details.section.port.compatible"
-          value={compatibleCount === 0 ? t("semio.sketchpad.app.kit.port.allCompatible") : `${compatibleCount} ${t("semio.sketchpad.app.kit.port.compatiblePorts")}`}
+          value={compatibleCount === 0 ? (resolveTranslationLabel(t("semio.sketchpad.app.kit.port.allCompatible")) ?? "") : `${compatibleCount} ${resolveTranslationLabel(t("semio.sketchpad.app.kit.port.compatiblePorts")) ?? ""}`}
           readOnly
           showLabel
         />
@@ -17067,13 +17224,13 @@ const MultiplePortsSection: FC<{ portGuids: string[] }> = ({ portGuids }) => {
   const ports = portGuids.map((guid) => kit?.ports?.find((i) => i.guid === guid)).filter((i) => i !== undefined) as Port[];
   return (
     <>
-      <TreeRow>
-        <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.ports.multipleSelected")}</p>
-      </TreeRow>
+      <HelperRow propertyAligned>
+        <p className="text-sm text-muted-foreground">{resolveTranslationLabel(t("semio.sketchpad.app.kit.ports.multipleSelected"))}</p>
+      </HelperRow>
       {ports.map((iface) => (
-        <TreeRow key={iface.guid}>
-          <p className="text-sm font-medium">{iface.name}</p>
-        </TreeRow>
+        <HelperRow key={iface.guid} propertyAligned>
+          <p className="text-sm font-medium text-foreground">{iface.name}</p>
+        </HelperRow>
       ))}
     </>
   );
@@ -17108,7 +17265,7 @@ const SingleTagSection: FC<{ tagGuid: string }> = ({ tagGuid }) => {
         <Input id="semio.sketchpad.app.kit.panel.details.section.tag.name" value={tag.name} readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Textarea id="semio.sketchpad.app.kit.panel.details.section.tag.description" value={tag.description || ""} placeholder={t("semio.sketchpad.app.kit.tag.descriptionPlaceholder.label")} readOnly showLabel />
+        <Textarea id="semio.sketchpad.app.kit.panel.details.section.tag.description" value={tag.description || ""} placeholder={resolveTranslationLabel(t("semio.sketchpad.app.kit.tag.descriptionPlaceholder.label"))} readOnly showLabel />
       </TreeRow>
     </>
   );
@@ -17124,13 +17281,13 @@ const MultipleTagsSection: FC<{ tagGuids: string[] }> = ({ tagGuids }) => {
   const tags = tagGuids.map((guid) => kit?.tags?.find((t) => t.guid === guid)).filter((t) => t !== undefined) as Tag[];
   return (
     <>
-      <TreeRow>
-        <p className="text-sm text-muted-foreground">{t("semio.sketchpad.app.kit.tags.multipleSelected")}</p>
-      </TreeRow>
+      <HelperRow propertyAligned>
+        <p className="text-sm text-muted-foreground">{resolveTranslationLabel(t("semio.sketchpad.app.kit.tags.multipleSelected"))}</p>
+      </HelperRow>
       {tags.map((tag) => (
-        <TreeRow key={tag.guid}>
-          <p className="text-sm font-medium">{tag.name}</p>
-        </TreeRow>
+        <HelperRow key={tag.guid} propertyAligned>
+          <p className="text-sm font-medium text-foreground">{tag.name}</p>
+        </HelperRow>
       ))}
     </>
   );
@@ -17295,13 +17452,13 @@ const MultipleDesignsSection: FC<{ designGuids: string[] }> = ({ designGuids }) 
   const designs = designGuids.map((guid) => kit?.designs?.find((d) => d.guid === guid)).filter((d) => d !== undefined) as Design[];
   return (
     <>
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.designs.multipleSelected")}</p>
-      </TreeRow>
+      </HelperRow>
       {designs.map((design) => (
-        <TreeRow key={design.guid}>
-          <p className="text-sm font-medium">{design.name}</p>
-        </TreeRow>
+        <HelperRow key={design.guid} propertyAligned>
+          <p className="text-sm font-medium text-foreground">{design.name}</p>
+        </HelperRow>
       ))}
     </>
   );
@@ -17482,9 +17639,9 @@ export const MultipleArtifactsSection: FC = () => {
   if (authorsCount > 0) kinds.push(t("semio.sketchpad.app.kit.authors.multipleTitle", { count: authorsCount }));
   if (kinds.length <= 1) return null;
   return (
-    <TreeRow>
+    <HelperRow propertyAligned>
       <p className="text-sm text-muted-foreground">{kinds.join(", ")}</p>
-    </TreeRow>
+    </HelperRow>
   );
 };
 
@@ -19265,6 +19422,7 @@ export class SketchpadStore {
   private kitShallowsCache?: KitShallow[];
   private kitShallowsVersion: number = 0;
   private kitShallowsCacheVersion: number = -1;
+  private readonly collaborativeKitStoreCache: Map<string, CollaborativeKitStore> = new Map();
   private readonly kitCreatedSubscribers: Set<() => void>;
   private readonly kitDeletedSubscribers: Set<() => void>;
   private readonly kitAppCreatedSubscribers: Set<() => void>;
@@ -19800,6 +19958,7 @@ export class SketchpadStore {
         }
       });
       this.kits.delete(guid);
+      this.collaborativeKitStoreCache.delete(guid);
       this.kitShallowsVersion++;
       this.schedulePersistKitsToStorage();
       this.kitDeletedSubscribers.forEach((subscriber) => subscriber());
@@ -20181,7 +20340,12 @@ export class SketchpadStore {
     if (!kitStore) {
       throw new Error(`Kit with guid ${guid} not found`);
     }
-    return new CollaborativeKitStore(kitStore);
+    let cached = this.collaborativeKitStoreCache.get(guid);
+    if (!cached || cached.store !== kitStore) {
+      cached = new CollaborativeKitStore(kitStore);
+      this.collaborativeKitStoreCache.set(guid, cached);
+    }
+    return cached;
   }
 
   kitStore(guid: string): KitStore {
@@ -21440,10 +21604,7 @@ export function useAppCommands() {
       case "docs":
         return {
           togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
-            updateDocsPanelVisibilityState((prev) => ({
-              ...prev,
-              [panelKey]: !prev[panelKey],
-            }));
+            updateDocsPanelVisibilityState((prev) => getNextPanelVisibilityFromToggle(prev, panelKey));
           },
           execute: (_origin: string, _command: string, ..._args: any[]) => { },
         };
@@ -22115,7 +22276,7 @@ const PanelSectionContext = createContext<PanelSectionContextValue | null>(null)
 const areToolbarGroupsEquivalent = (left?: PanelSection["toolbarGroup"], right?: PanelSection["toolbarGroup"]): boolean => {
   if (left === right) return true;
   if (!left || !right) return !left && !right;
-  return left.id === right.id && left.labelId === right.labelId && left.order === right.order && left.subToolId === right.subToolId && left.subToolLabelId === right.subToolLabelId;
+  return left.id === right.id && left.labelId === right.labelId && left.order === right.order;
 };
 
 const arePanelSectionsEquivalent = (left: PanelSection, right: PanelSection): boolean => {
@@ -24083,16 +24244,20 @@ const PanelToggles: FC = ({ }) => {
   const LeftIcon = leftTabs[0]?.icon;
   const RightIcon = rightTabs[0]?.icon;
 
-  if (!hasLeftTabs && !hasRightTabs) return null;
-
   return (
-    <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
-      {hasLeftTabs && <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.leftSidePanel" pressed={isLeftOpen} onPressedChange={handleLeftToggle} className="!border-0" icon={LeftIcon ? <LeftIcon size={16} /> : <LayoutIcon size={16} />} />}
-      {hasRightTabs && (
-        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.rightSidePanel" pressed={isRightOpen} onPressedChange={handleRightToggle} className="!border-0" icon={RightIcon ? <RightIcon size={16} /> : <DocumentIcon size={16} />} />
+    <div className="flex items-stretch gap-single">
+      {(hasLeftTabs || hasRightTabs) && (
+        <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
+          {hasLeftTabs && <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.leftSidePanel" pressed={isLeftOpen} onPressedChange={handleLeftToggle} className="!border-0" icon={LeftIcon ? <LeftIcon size={16} /> : <LayoutIcon size={16} />} />}
+          {hasRightTabs && (
+            <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.rightSidePanel" pressed={isRightOpen} onPressedChange={handleRightToggle} className="!border-0" icon={RightIcon ? <RightIcon size={16} /> : <DocumentIcon size={16} />} />
+          )}
+        </div>
       )}
-      <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.chat" pressed={isChatOpen} onPressedChange={handleChatToggle} className="!border-0" icon={<ChatIcon size={16} />} />
-      <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.settings" pressed={isSettingsOpen} onPressedChange={handleSettingsToggle} className="!border-0" icon={<SettingsIcon size={16} />} />
+      <div className="flex items-stretch border border-element overflow-hidden h-medium divide-x divide-element">
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.chat" pressed={isChatOpen} onPressedChange={handleChatToggle} className="!border-0" icon={<ChatIcon size={16} />} />
+        <Toggle kind="icon" id="semio.sketchpad.navbar.panelToggle.settings" pressed={isSettingsOpen} onPressedChange={handleSettingsToggle} className="!border-0" icon={<SettingsIcon size={16} />} />
+      </div>
     </div>
   );
 };
@@ -25446,6 +25611,11 @@ const LayoutWrapper: FC = () => {
   const [activeDragData, setActiveDragData] = useState<any>(null);
   const [activeToolbarGroup, setActiveToolbarGroup] = useState<string | null>(null);
 
+  const toolbarToolsZoneRef = useRef<HTMLDivElement>(null);
+  const toolbarSettingsZoneRef = useRef<HTMLDivElement>(null);
+  useSharedLayoutTransition(toolbarToolsZoneRef, "right center", "semio.sketchpad.toolbar.zone.tools");
+  useSharedLayoutTransition(toolbarSettingsZoneRef, "left center", "semio.sketchpad.toolbar.zone.settings");
+
   const toolbarGroups = useMemo(() => {
     const groups: Record<string, PanelSection[]> = {};
     toolbarSections.forEach((section) => {
@@ -25485,13 +25655,6 @@ const LayoutWrapper: FC = () => {
       }
       return next;
     });
-  }, []);
-
-  const [activeSubToolByGroup, setActiveSubToolByGroup] = useState<Record<string, string>>({});
-
-  const setSubTool = useCallback((groupId: string, subToolId: string) => {
-    setActiveSubToolByGroup((prev) => ({ ...prev, [groupId]: subToolId }));
-    setActiveToolbarGroup(groupId);
   }, []);
 
   const getGroupIcon = useCallback((groupId: string) => {
@@ -25759,59 +25922,12 @@ const LayoutWrapper: FC = () => {
                   toolbarSections.length > 0 ? (
                     <div role="toolbar" id="semio.sketchpad.toolbar" className="absolute bottom-1.5 left-0 right-0 h-[40px] pointer-events-none px-2">
                       <div id="semio.sketchpad.toolbar.seam" className="absolute left-1/2 top-0 h-full w-0 -translate-x-1/2">
-                        <div id="semio.sketchpad.toolbar.zone.tools" className="absolute right-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
+                        <div ref={toolbarToolsZoneRef} id="semio.sketchpad.toolbar.zone.tools" className="absolute right-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
                           <LevelProvider level="panel">
                             <ToolbarZone>
                               {["hand", "selection", "filter", "create", "view", "actions"].map((groupId) => {
                                 if (!toolbarGroups[groupId]) return null;
                                 const isActive = activeToolbarGroup === groupId;
-
-                                if (groupId === "selection") {
-                                  const activeSubToolId = activeSubToolByGroup[groupId] || toolbarGroups[groupId].find((s) => s.toolbarGroup?.subToolId)?.toolbarGroup?.subToolId;
-                                  const uniqueSubTools = Array.from(new Set(toolbarGroups[groupId].map((s) => s.toolbarGroup?.subToolId).filter(Boolean))) as string[];
-                                  if (uniqueSubTools.length === 0) {
-                                    return (
-                                      <Toggle
-                                        key={groupId}
-                                        kind="single"
-                                        id={`semio.sketchpad.toolbar.group.${groupId}`}
-                                        pressed={isActive}
-                                        onPressedChange={() => toggleToolbarGroup(groupId)}
-                                        icon={getGroupIcon(groupId)}
-                                        text={i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`)}
-                                      />
-                                    );
-                                  }
-
-                                  return (
-                                    <Toggle
-                                      key={groupId}
-                                      kind="dropdown"
-                                      id={`semio.sketchpad.toolbar.group.${groupId}`}
-                                      value={activeSubToolId}
-                                      pressed={isActive}
-                                      onPressedChange={(pressed) => {
-                                        setActiveToolbarGroup(pressed ? groupId : null);
-                                      }}
-                                      onValueChange={(val) => val && setSubTool(groupId, val)}
-                                      dropdownSide="top"
-                                      dropdownAlign="end"
-                                      dropdownSideOffset={2}
-                                      dropdownAvoidCollisions={false}
-                                      dropdownInstant={true}
-                                      dropdownContentClassName="w-[10.5rem] min-w-[10.5rem] p-0 overflow-hidden border transition-none"
-                                      items={uniqueSubTools.map((subToolId) => {
-                                        const section = toolbarGroups[groupId].find((s) => s.toolbarGroup?.subToolId === subToolId);
-                                        return {
-                                          value: subToolId,
-                                          label: section?.toolbarGroup?.subToolIcon || <FocusIcon className="size-tiny" />,
-                                          text: section?.toolbarGroup?.subToolLabelId ? i18n.t(section.toolbarGroup.subToolLabelId) : subToolId,
-                                          id: `semio.sketchpad.toolbar.subtool.${subToolId}`,
-                                        };
-                                      })}
-                                    />
-                                  );
-                                }
 
                                 return (
                                   <Toggle
@@ -25821,7 +25937,7 @@ const LayoutWrapper: FC = () => {
                                     pressed={isActive}
                                     onPressedChange={() => toggleToolbarGroup(groupId)}
                                     icon={getGroupIcon(groupId)}
-                                    text={i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`)}
+                                    text={resolveTranslationLabel(i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`))}
                                   />
                                 );
                               })}
@@ -25830,16 +25946,11 @@ const LayoutWrapper: FC = () => {
                         </div>
 
                         {activeToolbarGroup && toolbarGroups[activeToolbarGroup] && (
-                          <div id="semio.sketchpad.toolbar.zone.settings" className="absolute left-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
+                          <div ref={toolbarSettingsZoneRef} id="semio.sketchpad.toolbar.zone.settings" className="absolute left-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
                             <LevelProvider level="panel">
                               <ToolbarZone className="flex-nowrap min-w-0">
                                 <ToolbarScopeWrapper>
                                   {toolbarGroups[activeToolbarGroup]?.map((section) => {
-                                    if (activeToolbarGroup === "selection") {
-                                      const activeSubToolId = activeSubToolByGroup["selection"] || toolbarGroups["selection"].find((s) => s.toolbarGroup?.subToolId)?.toolbarGroup?.subToolId;
-                                      const hasSelectionSubTools = toolbarGroups["selection"]?.some((s) => Boolean(s.toolbarGroup?.subToolId));
-                                      if (hasSelectionSubTools && section.toolbarGroup?.subToolId !== activeSubToolId) return null;
-                                    }
                                     return <ToolbarItem key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</ToolbarItem>;
                                   })}
                                 </ToolbarScopeWrapper>
@@ -26071,7 +26182,7 @@ const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
 
 // #region Constants
 // [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖constants](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Constants)
-// Constants MUST define artifact kinds and toolbar sub-tool configurations for the Kit app.
+// Constants MUST define artifact kinds for the Kit app.
 
 /**
  * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖constants🪨artifactkinds](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Constants/d/i/artifactKinds)
@@ -27449,6 +27560,7 @@ export function useKitAppCommands(id?: KitAppId) {
       toggleTypesFullscreen: noOp,
       toggleDesignsFullscreen: noOp,
       addType: noOp,
+      addTypeAfter: noOp,
       addTypes: noOp,
       removeType: noOp,
       removeTypes: noOp,
@@ -27515,6 +27627,7 @@ export function useKitAppCommands(id?: KitAppId) {
     toggleTypesFullscreen: () => controller.execute("semio.kitApp.toggleTypesFullscreen", getOrigin()),
     toggleDesignsFullscreen: () => controller.execute("semio.kitApp.toggleDesignsFullscreen", getOrigin()),
     addType: (type: Type) => controller.execute("semio.kitApp.addType", getOrigin(), type),
+    addTypeAfter: (type: Type, afterGuid: Guid) => controller.execute("semio.kitApp.addTypeAfter", getOrigin(), type, afterGuid),
     addTypes: (types: Type[]) => controller.execute("semio.kitApp.addTypes", getOrigin(), types),
     removeType: (guid: Guid) => controller.execute("semio.kitApp.removeType", getOrigin(), guid),
     removeTypes: (typeIds: Guid[]) => controller.execute("semio.kitApp.removeTypes", getOrigin(), typeIds),
@@ -31826,7 +31939,7 @@ export const DesignSelectSettings: FC = () => {
   const handLabel = useLabel("semio.sketchpad.app.design.tools.select.navigation.hand");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Toggle
         id="semio.sketchpad.app.design.tools.select.mode.additive"
         icon={<AddIcon className="size-tiny" />}
@@ -31869,7 +31982,7 @@ export const DesignSelectSettings: FC = () => {
         pressed={activeTool === ToolKind.HAND}
         onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.HAND : ToolKind.SELECTION_NORMAL)}
       />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -31901,7 +32014,7 @@ export const DesignLassoSettings: FC = () => {
   const freeformLabel = useLabel("semio.sketchpad.app.design.tools.lasso.freeform");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <ToggleGroup
         items={[
           { value: String(ToolKind.LASSO_RECTANGULAR), icon: <DiagramIcon className="size-tiny" />, text: rectangularLabel, id: "semio.sketchpad.app.design.tools.lasso.rectangular" },
@@ -31911,7 +32024,7 @@ export const DesignLassoSettings: FC = () => {
         onValueChange={(vals: string[]) => vals[0] && setActiveTool && setActiveTool(Number(vals[0]) as unknown as ToolKind)}
         kind="single"
       />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -33269,14 +33382,14 @@ const PiecesSectionForm: FC = () => {
   return (
     <>
       {hasNoValidPieces ? (
-        <TreeRow>
+        <HelperRow propertyAligned>
           <p className="text-sm text-muted-foreground">No valid pieces found in selection.</p>
-        </TreeRow>
+        </HelperRow>
       ) : null}
       {!hasNoValidPieces && hasMixedTypes ? (
-        <TreeRow>
+        <HelperRow propertyAligned>
           <p className="text-sm text-muted-foreground">{mixedSelectionMessageLabel}</p>
-        </TreeRow>
+        </HelperRow>
       ) : !hasNoValidPieces ? (
         <TreeItem id="semio.sketchpad.app.design.panel.details.section.piece.pieceInfo" defaultOpen={true}>
           {isDesignPiece ? (
@@ -33463,7 +33576,7 @@ const PiecesSectionForm: FC = () => {
             </TreeItem>
           )}
           {((isSingle && piece && !piece.plane) || (!isSingle && hasUnfixedPieces)) && (
-            <TreeRow>
+            <HelperRow propertyAligned>
               <div className="flex flex-col gap-single">
                 <p className="text-sm text-muted-foreground">{connectedPieceInfoLabel}</p>
                 <Button id="semio.sketchpad.app.design.piece.fixPiece" onClick={fixPieces}>
@@ -33471,7 +33584,7 @@ const PiecesSectionForm: FC = () => {
                   {fixPieceLabel}
                 </Button>
               </div>
-            </TreeRow>
+            </HelperRow>
           )}
           {hasPlane && (
             <TreeItem id="semio.sketchpad.app.design.piece.plane" defaultOpen={true}>
@@ -33743,9 +33856,9 @@ const ConnectionsSectionForm: FC<{
   }
   return (
     <>
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{(multipleEditingLabel || "").replace("{{count}}", String(connections.length))}</p>
-      </TreeRow>
+      </HelperRow>
       <TreeRow>
         <Textarea
           lazy
@@ -33828,9 +33941,9 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
 
   if (!piece || !type || !connector) {
     return (
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{connectorNotFoundLabel}</p>
-      </TreeRow>
+      </HelperRow>
     );
   }
 
@@ -35611,13 +35724,14 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
           return null;
         }
 
-        const type = findTypeInKit(kit, typeof piece.type === "string" ? piece.type : piece.type?.guid);
+        const typeGuid = typeof piece.type === "string" ? piece.type : piece.type?.guid;
+        const type = (kit.types ?? []).find((t: Type) => t.guid === typeGuid);
         if (!type) {
           const fallbackType: Type = {
-            guid: `fallback-${piece.type}`,
-            name: `Unknown-${piece.type}`,
+            guid: `fallback-${typeGuid}`,
+            name: `Unknown-${typeGuid}`,
             unit: "m",
-            description: `Missing type: ${piece.type}`,
+            description: `Missing type: ${typeGuid}`,
             connectors: [],
             models: [],
           };
@@ -36148,7 +36262,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         if (!droppedType) return;
         transaction?.start();
         const pieceGuid = guid();
-        const piece = { guid: pieceGuid, type: { guid: droppedType.guid }, center, plane };
+        const piece = { guid: pieceGuid, id_: pieceGuid, type: { guid: droppedType.guid }, center, plane };
         addPiece?.(piece);
         transaction?.finalize();
       } else if (dragData.type === "design" && dragData.designGuid) {
@@ -36158,6 +36272,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         const pieceGuid = guid();
         const piece = {
           guid: pieceGuid,
+          id_: pieceGuid,
           design: { guid: droppedDesign.guid },
           center,
           plane,
@@ -37623,6 +37738,25 @@ const OBJMesh: FC<{ url: string; highlightColor: string | null } & DesignMeshEve
   return <primitive object={clonedScene} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />;
 };
 
+class MeshErrorBoundary extends React.Component<{ children: ReactNode; fallback: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode; fallback: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    console.debug(`[DEBUG] [MeshErrorBoundary] Caught error loading 3D model:`, error.message);
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
 const LoadedPieceMesh: FC<{ url: string; fileExtension: string; highlightColor: string | null } & DesignMeshEventProps> = ({ url, fileExtension, highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) => {
   const ext = fileExtension.toLowerCase();
   if (ext === "glb" || ext === "gltf") {
@@ -37646,8 +37780,14 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const prevModelGuidRef = useRef<string | null>(null);
 
+  useEffect(() => {
+    const typeRef = typeof piece.type === "string" ? piece.type : piece.type?.guid;
+    console.log("[DEBUG] [PieceMesh] piece.guid:", piece.guid, "piece.type:", piece.type, "typeRef:", typeRef, "resolvedType:", type?.guid, type?.name, "models:", type?.models?.length, "files:", files?.length);
+  }, [piece.guid, piece.type, type, files]);
+
   const { modelUrl, fileExtension, fileGuid, modelGuid, selectionReason } = useMemo(() => {
     if (!type?.models || type.models.length === 0) {
+      console.log("[DEBUG] [PieceMesh] No models for type:", type?.guid, type?.name, "type object:", type);
       return { modelUrl: null, fileExtension: "", fileGuid: null, modelGuid: null, selectionReason: "no-models" };
     }
 
@@ -37703,39 +37843,52 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   }, [modelGuid, selectionReason, type]);
 
   useEffect(() => {
+    setBlobUrl(modelUrl ?? null);
     if (!fileGuid) {
-      setBlobUrl(null);
       return;
     }
     let cancelled = false;
-    let currentBlobUrl: string | null = null;
-    (async () => {
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let retryCount = 0;
+    const maxRetries = 3;
+    const load = async () => {
       try {
         const url = await kitStore.getFileBlobUrl(fileGuid);
         if (!cancelled && url) {
-          currentBlobUrl = url;
           setBlobUrl(url);
+        } else if (!cancelled && !url && retryCount < maxRetries) {
+          retryCount++;
+          console.debug(`[DEBUG] [PieceMesh] No URL for file ${fileGuid}, retry ${retryCount}/${maxRetries}`);
+          retryTimer = setTimeout(load, 1000 * retryCount);
         } else if (!cancelled && !url) {
-          console.warn("[PieceMesh] No URL available for file:", fileGuid);
+          console.warn("[PieceMesh] No URL available for file after retries:", fileGuid);
         }
       } catch (error) {
         console.error("[PieceMesh] Failed to get blob URL:", error);
       }
-    })();
+    };
+    load();
 
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [fileGuid, kitStore]);
+  }, [fileGuid, kitStore, modelUrl]);
 
-  if (!blobUrl) {
-    return null;
+  const renderUrl = blobUrl ?? modelUrl;
+
+  if (!renderUrl) {
+    return <Geometry hovered={false} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} showEdges={true} />;
   }
 
+  const fallbackGeometry = <Geometry hovered={false} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} showEdges={true} />;
+
   return (
-    <Suspense fallback={null}>
-      <LoadedPieceMesh url={blobUrl} fileExtension={fileExtension} highlightColor={highlightColor} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />
-    </Suspense>
+    <MeshErrorBoundary fallback={fallbackGeometry}>
+      <Suspense fallback={null}>
+        <LoadedPieceMesh url={renderUrl} fileExtension={fileExtension} highlightColor={highlightColor} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} />
+      </Suspense>
+    </MeshErrorBoundary>
   );
 };
 
@@ -38094,14 +38247,11 @@ const DesignAppScene: FC = () => {
   const [toggleAccesslFullscreen] = useDesignAppToggleAccesslFullscreen();
   const [, setCamera] = useDesignAppCamera();
   const [clearFocus] = useDesignAppClearFocus();
-  const [fullscreenValue] = useDesignAppFullscreen();
-  const fullscreen = fullscreenValue === DesignAppFullscreenWindow.Accessl;
   const [camera] = useDesignAppCamera();
   const [activeTool] = useDesignAppActiveTool();
   const selectionOnDrag = activeTool !== ToolKind.HAND;
   const [focusedPieceGuid] = useDesignAppFocusedPieceGuid();
-  const [panelVisibility] = useDesignAppPanelVisibility();
-  const [projection, setProjection] = React.useState<"camera" | "orthographic">("orthographic");
+  const [projection, setProjection] = React.useState<"camera" | "orthographic">("camera");
   const sceneTypes = useKitTypes();
   const sceneDesigns = useKitDesigns();
   const { setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
@@ -38154,14 +38304,38 @@ const DesignAppScene: FC = () => {
       const actualUp = { x: upX / upLen, y: upY / upLen, z: upZ / upLen };
       const halfWidth = dropZoneBounds.width / (2 * zoom);
       const halfHeight = dropZoneBounds.height / (2 * zoom);
-      const rayOrigin = {
-        x: camPos.x + right.x * ndcX * halfWidth + actualUp.x * ndcY * halfHeight,
-        y: camPos.y + right.y * ndcX * halfWidth + actualUp.y * ndcY * halfHeight,
-        z: camPos.z + right.z * ndcX * halfWidth + actualUp.z * ndcY * halfHeight,
-      };
-      const t = Math.abs(fwd.y) > 0.0001 ? -rayOrigin.y / fwd.y : 0;
-      const threeX = rayOrigin.x + fwd.x * t;
-      const threeZ = rayOrigin.z + fwd.z * t;
+      const perspectiveFieldOfViewRadians = (75 * Math.PI) / 180;
+      const perspectiveAspectRatio = dropZoneBounds.width / Math.max(dropZoneBounds.height, 1);
+      const perspectiveHalfHeight = Math.tan(perspectiveFieldOfViewRadians / 2);
+      const perspectiveHalfWidth = perspectiveHalfHeight * perspectiveAspectRatio;
+      const rayOrigin =
+        projection === "orthographic"
+          ? {
+              x: camPos.x + right.x * ndcX * halfWidth + actualUp.x * ndcY * halfHeight,
+              y: camPos.y + right.y * ndcX * halfWidth + actualUp.y * ndcY * halfHeight,
+              z: camPos.z + right.z * ndcX * halfWidth + actualUp.z * ndcY * halfHeight,
+            }
+          : camPos;
+      const rayDirection =
+        projection === "orthographic"
+          ? fwd
+          : (() => {
+              const perspectiveDirection = {
+                x: fwd.x + right.x * ndcX * perspectiveHalfWidth + actualUp.x * ndcY * perspectiveHalfHeight,
+                y: fwd.y + right.y * ndcX * perspectiveHalfWidth + actualUp.y * ndcY * perspectiveHalfHeight,
+                z: fwd.z + right.z * ndcX * perspectiveHalfWidth + actualUp.z * ndcY * perspectiveHalfHeight,
+              };
+              const perspectiveDirectionLength = Math.sqrt(perspectiveDirection.x ** 2 + perspectiveDirection.y ** 2 + perspectiveDirection.z ** 2);
+              return {
+                x: perspectiveDirection.x / perspectiveDirectionLength,
+                y: perspectiveDirection.y / perspectiveDirectionLength,
+                z: perspectiveDirection.z / perspectiveDirectionLength,
+              };
+            })();
+      if (Math.abs(rayDirection.y) <= 0.0001) return;
+      const t = -rayOrigin.y / rayDirection.y;
+      const threeX = rayOrigin.x + rayDirection.x * t;
+      const threeZ = rayOrigin.z + rayDirection.z * t;
       const semioX = threeX;
       const semioY = -threeZ;
       const semioZ = 0;
@@ -38187,7 +38361,7 @@ const DesignAppScene: FC = () => {
       setActiveDraggedType(null);
       setActiveDraggedDesign(null);
     },
-    [sceneTypes, sceneDesigns, camera, transaction, addPiece, setActiveDraggedType, setActiveDraggedDesign],
+    [sceneTypes, sceneDesigns, camera, projection, transaction, addPiece, setActiveDraggedType, setActiveDraggedDesign],
   );
 
   useEffect(() => {
@@ -38226,7 +38400,7 @@ const DesignAppScene: FC = () => {
   return (
     <div ref={sceneDropZoneRef} data-drop-zone="scene" data-drop-zone-id={sceneId} className="h-full w-full">
       <SceneComponent
-        showGizmo={fullscreen && !!panelVisibility.toolbar}
+        showGizmo={true}
         camera={camera}
         onCameraChange={onCameraChange}
         onDoubleClickCapture={onDoubleClickCapture}
@@ -38543,29 +38717,6 @@ const DesignWindowApp: FC<AppProps> = () => {
   const appType = useAppType();
 
   useEffect(() => {
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.design.settings",
-      icon: SettingsIcon,
-      order: 100,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.design.settings.content", label: null, content: <DesignSettingsContent /> }]} />
-        </TreeStateProvider>
-      ),
-    });
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.design.chat",
-      icon: ChatIcon,
-      order: 101,
-      content: () => <BasicChatPanel id="semio.sketchpad.app.design.chat" title="Design" />,
-    });
-    return () => {
-      removeSidePanelTab("right", "semio.sketchpad.app.design.settings");
-      removeSidePanelTab("right", "semio.sketchpad.app.design.chat");
-    };
-  }, [addSidePanelTab, removeSidePanelTab]);
-
-  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!setActiveTool || !isSelectionToolKind(activeTool)) return;
       const nextToolKind = toSelectionToolKind(
@@ -38728,9 +38879,9 @@ const DesignWindowApp: FC<AppProps> = () => {
           specificity: 30,
           order: 20,
           content: () => (
-            <TreeRow>
+            <HelperRow propertyAligned>
               <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.design.selectOnlyPiecesOrConnections")}</p>
-            </TreeRow>
+            </HelperRow>
           ),
         });
       }
@@ -39092,10 +39243,11 @@ const DesignWindowApp: FC<AppProps> = () => {
             icon: <AddIcon size={12} />,
             onClick: () => {
               if (disabled) return;
+              const pieceGuid = guid();
               const center = { u: 6, v: -7 };
               const plane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
               transaction?.start();
-              addPiece?.({ guid: guid(), design: { guid: design.guid }, center, plane });
+              addPiece?.({ guid: pieceGuid, id_: pieceGuid, design: { guid: design.guid }, center, plane });
               transaction?.finalize();
             },
             id: "semio.sketchpad.app.design.panel.workbench.designs.addPiece",
@@ -40795,32 +40947,39 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   }, [modelGuid, selectionReason, typeGuid, typeModels]);
 
   useEffect(() => {
+    setBlobUrl(modelUrl ?? null);
     if (!fileGuid) {
-      setBlobUrl(null);
       return;
     }
 
     let cancelled = false;
-    let currentBlobUrl: string | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let retryCount = 0;
+    const maxRetries = 3;
 
-    (async () => {
+    const load = async () => {
       try {
         const url = await kitDataSource.getFileBlobUrl(fileGuid);
         if (!cancelled && url) {
-          currentBlobUrl = url;
           setBlobUrl(url);
+        } else if (!cancelled && !url && retryCount < maxRetries) {
+          retryCount++;
+          console.debug(`[DEBUG] [TypeMesh] No URL for file ${fileGuid}, retry ${retryCount}/${maxRetries}`);
+          retryTimer = setTimeout(load, 1000 * retryCount);
         } else if (!cancelled && !url) {
-          console.warn("[TypeMesh] No URL available for file:", fileGuid);
+          console.warn("[TypeMesh] No URL available for file after retries:", fileGuid);
         }
       } catch (error) {
         console.error("[TypeMesh] Failed to get blob URL:", error);
       }
-    })();
+    };
+    load();
 
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [fileGuid, kitDataSource]);
+  }, [fileGuid, kitDataSource, modelUrl]);
 
   const resolveMeshIntersection = useCallback(
     (clientX: number, clientY: number) => {
@@ -40904,14 +41063,18 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
 
-  if (!blobUrl) {
+  const renderUrl = blobUrl ?? modelUrl;
+
+  if (!renderUrl) {
     return null;
   }
 
   return (
-    <Suspense fallback={null}>
-      <LoadedTypeMesh url={blobUrl} fileExtension={fileExtension} onSceneReady={handleSceneReady} />
-    </Suspense>
+    <MeshErrorBoundary fallback={null}>
+      <Suspense fallback={null}>
+        <LoadedTypeMesh url={renderUrl} fileExtension={fileExtension} onSceneReady={handleSceneReady} />
+      </Suspense>
+    </MeshErrorBoundary>
   );
 };
 // [👤semio📚js🗃️sketchpad💻type🔖scene🪨selecttypeports](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Scene/d/i/selectTypePorts)
@@ -41585,6 +41748,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { point: { x: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                       <TreeRow>
@@ -41595,6 +41759,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { point: { y: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                       <TreeRow>
@@ -41605,6 +41770,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { point: { z: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                     </TreeItem>
@@ -41617,6 +41783,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { direction: { x: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                       <TreeRow>
@@ -41627,6 +41794,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { direction: { y: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                       <TreeRow>
@@ -41637,6 +41805,7 @@ const ConnectorsListSectionForm: FC = () => {
                             updatePort(connector.guid, { direction: { z: value } });
                           }}
                           step={0.1}
+                          showLabel
                         />
                       </TreeRow>
                     </TreeItem>
@@ -41922,7 +42091,7 @@ const AttributesSectionForm: FC = () => {
 export const TypeConnectorSection: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
-  return <ConnectorSectionForm connectorGuid={connectorGuid} />;
+  return <TypeConnectorSectionForm connectorGuid={connectorGuid} />;
 };
 // [👤semio📚js🗃️sketchpad💻type🔖panels🔖right🔖details🪨connectorsectionform](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Type.tsx/s/Panels/s/Right/s/Details/d/i/ConnectorSectionForm)
 /**
@@ -41938,9 +42107,9 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
 
   if (!connector) {
     return (
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.connectorNotFound")}</p>
-      </TreeRow>
+      </HelperRow>
     );
   }
 
@@ -42018,6 +42187,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { point: { x: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42028,6 +42198,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { point: { y: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42038,6 +42209,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { point: { z: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
       </TreeItem>
@@ -42050,6 +42222,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { direction: { x: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42060,6 +42233,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { direction: { y: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42070,6 +42244,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
               updatePort(connector.guid, { direction: { z: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
       </TreeItem>
@@ -42117,9 +42292,9 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
 
   if (connectors.length === 0) {
     return (
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.connectorsNotFound")}</p>
-      </TreeRow>
+      </HelperRow>
     );
   }
 
@@ -42196,6 +42371,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.x", { point: { x: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42206,6 +42382,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.y", { point: { y: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42216,6 +42393,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.z", { point: { z: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
       </TreeItem>
@@ -42228,6 +42406,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.x", { direction: { x: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42238,6 +42417,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.y", { direction: { y: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
         <TreeRow>
@@ -42248,6 +42428,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
               updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.z", { direction: { z: value } });
             }}
             step={0.1}
+            showLabel
           />
         </TreeRow>
       </TreeItem>
@@ -42440,7 +42621,7 @@ export const TypeSelectSettings: FC = () => {
   const subtractiveLabel = useLabel("semio.sketchpad.app.type.tools.select.subtractive");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Toggle
         id="semio.sketchpad.app.type.tools.select.additive"
         icon={<AddIcon className="size-tiny" />}
@@ -42455,7 +42636,7 @@ export const TypeSelectSettings: FC = () => {
         pressed={activeTool === ToolKind.SELECTION_SUBTRACTIVE}
         onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_SUBTRACTIVE : ToolKind.SELECTION_NORMAL)}
       />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -42485,9 +42666,9 @@ export const TypeConnectorSettings: FC = () => {
   const connectorLabel = useLabel("semio.sketchpad.app.type.tools.connector");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Toggle id="semio.sketchpad.app.type.tools.connector" pressed={activeTool === ToolKind.CONNECTOR} onPressedChange={() => setActiveTool && setActiveTool(ToolKind.CONNECTOR)} icon={<ConnectorIcon className="size-tiny" />} text={connectorLabel} />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -42865,8 +43046,8 @@ const TypeKindToggles: FC = () => {
 
   return (
     <ToolbarGroup>
-      <Toggle pressed={isActive("connectors")} onPressedChange={() => toggleKind("connectors")} id="semio.sketchpad.app.type.toolbar.showConnectors" icon={<ConnectorIcon />} text={labelConnectors} />
-      <Toggle pressed={isActive("models")} onPressedChange={() => toggleKind("models")} id="semio.sketchpad.app.type.toolbar.showModels" icon={<SceneIcon />} text={labelModels} />
+      <Toggle pressed={isActive("connectors")} onPressedChange={() => toggleKind("connectors")} id="semio.sketchpad.app.type.toolbar.showConnectors" icon={<ConnectorIcon className="size-tiny" />} text={labelConnectors} />
+      <Toggle pressed={isActive("models")} onPressedChange={() => toggleKind("models")} id="semio.sketchpad.app.type.toolbar.showModels" icon={<SceneIcon className="size-tiny" />} text={labelModels} />
     </ToolbarGroup>
   );
 };
@@ -42916,9 +43097,6 @@ const TypeApp: FC = () => {
         id: "hand",
         labelId: "semio.sketchpad.toolbar.parent.hand",
         order: 30,
-        subToolId: ToolKind.HAND,
-        subToolLabelId: "semio.sketchpad.toolbar.subtool.hand",
-        subToolIcon: <HandIcon className="size-tiny" />,
       },
       content: <TypeHandSettings />,
     });
@@ -42931,9 +43109,6 @@ const TypeApp: FC = () => {
         id: "create",
         labelId: "semio.sketchpad.toolbar.parent.create",
         order: 40,
-        subToolId: ToolKind.CONNECTOR,
-        subToolLabelId: "semio.sketchpad.toolbar.subtool.connector",
-        subToolIcon: <ConnectorIcon className="size-tiny" />,
         onActivate: () => commandsRef.current.setActiveTool(ToolKind.CONNECTOR),
       },
       content: <TypeConnectorSettings />,
@@ -44913,7 +45088,7 @@ export const QualitySelectSettings: FC = () => {
   const subtractiveLabel = useLabel("semio.sketchpad.app.quality.tools.select.subtractive");
   const intersectLabel = useLabel("semio.sketchpad.app.quality.tools.select.intersect");
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Toggle
         id="semio.sketchpad.app.quality.tools.select.additive"
         icon={<AddIcon className="size-tiny" />}
@@ -44935,7 +45110,7 @@ export const QualitySelectSettings: FC = () => {
         pressed={activeTool === ToolKind.SELECTION_INTERSECT}
         onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_INTERSECT : ToolKind.SELECTION_NORMAL)}
       />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -45284,30 +45459,6 @@ const QualityApp: FC<QualityAppProps> = () => {
     };
     return removeWorkbenchWindowFromLayout(windowLayout);
   }, [windowLayout]);
-
-  useEffect(() => {
-    if (appType !== "quality") return;
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.quality.settings",
-      icon: SettingsIcon,
-      order: 100,
-      content: () => (
-        <TreeStateProvider>
-          <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.quality.settings.content", label: null, content: <QualitySettingsContent /> }]} />
-        </TreeStateProvider>
-      ),
-    });
-    addSidePanelTab("right", {
-      id: "semio.sketchpad.app.quality.chat",
-      icon: ChatIcon,
-      order: 101,
-      content: () => <BasicChatPanel id="semio.sketchpad.app.quality.chat" title="Quality" />,
-    });
-    return () => {
-      removeSidePanelTab("right", "semio.sketchpad.app.quality.settings");
-      removeSidePanelTab("right", "semio.sketchpad.app.quality.chat");
-    };
-  }, [appType, addSidePanelTab, removeSidePanelTab]);
 
   const defaultLayout = useMemo(() => {
     return {
@@ -47395,9 +47546,9 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
   const kitShallow = kitShallows.find((k) => k.guid === kitId);
   if (!kitShallow) {
     return (
-      <TreeRow>
+      <HelperRow propertyAligned>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
-      </TreeRow>
+      </HelperRow>
     );
   }
   return (
@@ -47777,9 +47928,11 @@ const HomeToolbarFilters: FC = () => {
 
   return (
     <ToolbarGroup>
-      {availableKitKinds.temporary && <Toggle pressed={selectedKind === "temporary"} onPressedChange={() => toggleKind("temporary")} id="semio.sketchpad.app.home.toolbar.showTemporary" icon={<TemporaryKitIcon />} text={labelTemporary} />}
-      {availableKitKinds.local && <Toggle pressed={selectedKind === "local"} onPressedChange={() => toggleKind("local")} id="semio.sketchpad.app.home.toolbar.showLocal" icon={<LocalKitIcon />} text={labelLocal} />}
-      {availableKitKinds.remote && <Toggle pressed={selectedKind === "remote"} onPressedChange={() => toggleKind("remote")} id="semio.sketchpad.app.home.toolbar.showRemote" icon={<RemoteKitIcon />} text={labelRemote} />}
+      {availableKitKinds.temporary && (
+        <Toggle pressed={selectedKind === "temporary"} onPressedChange={() => toggleKind("temporary")} id="semio.sketchpad.app.home.toolbar.showTemporary" icon={<TemporaryKitIcon className="size-tiny" />} text={labelTemporary} />
+      )}
+      {availableKitKinds.local && <Toggle pressed={selectedKind === "local"} onPressedChange={() => toggleKind("local")} id="semio.sketchpad.app.home.toolbar.showLocal" icon={<LocalKitIcon className="size-tiny" />} text={labelLocal} />}
+      {availableKitKinds.remote && <Toggle pressed={selectedKind === "remote"} onPressedChange={() => toggleKind("remote")} id="semio.sketchpad.app.home.toolbar.showRemote" icon={<RemoteKitIcon className="size-tiny" />} text={labelRemote} />}
     </ToolbarGroup>
   );
 };
@@ -49298,7 +49451,7 @@ const FeedbackToolbar: FC = () => {
   return (
     <ToolbarGroup>
       <Button id="semio.sketchpad.app.feedback.toolbar.send" onClick={handleSendClick} className="gap-single">
-        <CheckIcon className="size-small" />
+        <CheckIcon className="size-tiny" />
         {submitLabel}
       </Button>
     </ToolbarGroup>
@@ -49374,10 +49527,10 @@ export { FeedbackIcon };
 
 // --- Combined from index.tsx and index.ts ---
 
-import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
-import type { KitJsonFileAdapter } from "../studio/studio";
-import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
-import "./globals.css";
+  import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
+  import type { KitJsonFileAdapter } from "../studio/studio";
+  import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
+  import "./globals.css";
 
 export { createJsonFileKitStore, JsonFileKitStore };
 export type { BlobAssetStore, KitJsonFileAdapter, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };
@@ -50294,30 +50447,34 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     await page.waitForTimeout(2000);
   }
 
-  async function getSceneModelResolutionForPiece(page: PlaywrightPage, pieceGuid: string): Promise<{ hasResolvedModel: boolean; typeGuid: string | null; modelGuid: string | null }> {
-    return await page.evaluate((targetPieceGuid) => {
+  async function getSceneModelResolutionForPiece(page: PlaywrightPage, pieceGuid: string): Promise<{ hasResolvedModel: boolean; typeGuid: string | null; modelGuid: string | null; renderUrl: string | null }> {
+    return await page.evaluate(async (targetPieceGuid) => {
       const store = (window as any).__SEMIO_STORE__;
-      if (!store) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!store) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
-      if (kitGuids.length === 0) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (kitGuids.length === 0) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const kitStore = store.kit(kitGuids[0]);
-      if (!kitStore) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!kitStore) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const kit = kitStore.snapshot();
       const url = window.location.pathname;
       const designGuidMatch = url.match(/\/designs\/([^/]+)/);
       const designGuid = designGuidMatch?.[1];
       const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs?.length - 1];
-      if (!design) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!design) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const piece = (design.pieces ?? []).find((p: any) => p.guid === targetPieceGuid);
-      if (!piece) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!piece) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const typeGuid = typeof piece.type === "string" ? piece.type : (piece.type?.guid ?? piece.typeGuid ?? piece.kind?.guid ?? piece.kindGuid ?? null);
-      if (!typeGuid) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!typeGuid) return { hasResolvedModel: false, typeGuid: null, modelGuid: null, renderUrl: null };
       const type = (kit.types ?? []).find((t: any) => t.guid === typeGuid);
-      if (!type || !type.models || type.models.length === 0) return { hasResolvedModel: false, typeGuid, modelGuid: null };
+      if (!type || !type.models || type.models.length === 0) return { hasResolvedModel: false, typeGuid, modelGuid: null, renderUrl: null };
       const defaultModel = type.models.find((m: any) => !m.tags || m.tags.length === 0) ?? type.models[0];
-      if (!defaultModel) return { hasResolvedModel: false, typeGuid, modelGuid: null };
+      if (!defaultModel) return { hasResolvedModel: false, typeGuid, modelGuid: null, renderUrl: null };
       const fileGuid = typeof defaultModel.file === "string" ? defaultModel.file : defaultModel.file?.guid;
-      return { hasResolvedModel: !!fileGuid, typeGuid, modelGuid: fileGuid ?? null };
+      if (!fileGuid) return { hasResolvedModel: false, typeGuid, modelGuid: null, renderUrl: null };
+      const directUrl = typeof kitStore.getFileUrl === "function" ? kitStore.getFileUrl(fileGuid) : null;
+      const blobUrl = !directUrl && typeof kitStore.getFileBlobUrl === "function" ? await kitStore.getFileBlobUrl(fileGuid) : null;
+      const renderUrl = directUrl ?? blobUrl ?? null;
+      return { hasResolvedModel: Boolean(renderUrl), typeGuid, modelGuid: fileGuid, renderUrl };
     }, pieceGuid);
   }
 
@@ -50575,20 +50732,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     const chatToggleCount = await page.locator('[id="semio.sketchpad.navbar.panelToggle.chat"]').count();
     console.log(`[${appName}] Navbar panel toggles: left=${leftToggleCount}, right=${rightToggleCount}, settings=${settingsToggleCount}, chat=${chatToggleCount}`);
 
-    if (leftToggleCount + rightToggleCount === 0) {
-      // Check if React crashed
-      const rootChildCount = await page.evaluate(() => document.querySelector("#root")?.children.length ?? 0).catch(() => -1);
-      console.log(`[${appName}] React root child count: ${rootChildCount}`);
-      if (rootChildCount === 0) {
-        // React tree crashed, skip assertion for this app
-        console.log(`[${appName}] React tree appears crashed, skipping panel toggle check`);
-        return;
-      }
-    }
-
-    expect(leftToggleCount + rightToggleCount).toBeGreaterThan(0);
-    expect(settingsToggleCount).toBe(0);
-    expect(chatToggleCount).toBe(0);
+    // Chat and settings are always present in navbar as dedicated toggle buttons
+    expect(settingsToggleCount).toBeGreaterThan(0);
+    expect(chatToggleCount).toBeGreaterThan(0);
   }
 
   async function expectClassicNavbarChrome(page: PlaywrightPage, appName: string): Promise<void> {
@@ -51685,19 +51831,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             const selectedQualitiesClick = afterClickSelection?.qualities || [];
             const selectedPortsClick = afterClickSelection?.ports || [];
             const selectedTagsClick = afterClickSelection?.tags || [];
-            const selectedConceptsClick = afterClickSelection?.concepts || [];
             const selectedFilesClick = afterClickSelection?.files || [];
             const selectedAuthorsClick = afterClickSelection?.authors || [];
             const totalSelected =
-              selectedTypesClick.length +
-              selectedDesignsClick.length +
-              selectedFoldersClick.length +
-              selectedQualitiesClick.length +
-              selectedPortsClick.length +
-              selectedTagsClick.length +
-              selectedConceptsClick.length +
-              selectedFilesClick.length +
-              selectedAuthorsClick.length;
+              selectedTypesClick.length + selectedDesignsClick.length + selectedFoldersClick.length + selectedQualitiesClick.length + selectedPortsClick.length + selectedTagsClick.length + selectedFilesClick.length + selectedAuthorsClick.length;
             console.log(`[Kit] Total selected: ${totalSelected} (types: ${selectedTypesClick.length}, designs: ${selectedDesignsClick.length}, folders: ${selectedFoldersClick.length})`);
             expect(totalSelected).toBeGreaterThan(0);
             console.log("[Kit] Diagram node click selection test complete");
@@ -51836,7 +51973,6 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                 qualities: kit.qualities?.length || 0,
                 ports: kit.ports?.length || 0,
                 tags: kit.tags?.length || 0,
-                concepts: kit.concepts?.length || 0,
                 files: visibleFileCount,
                 folders: visibleFolderCount,
                 authors: kit.authors?.length || 0,
@@ -51847,7 +51983,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             console.log(`[Kit] Kit data: ${JSON.stringify(kitData)}`);
 
             if (kitData) {
-              const totalArtifacts = kitData.types + kitData.designs + kitData.qualities + kitData.ports + kitData.tags + kitData.concepts + kitData.files + kitData.folders + kitData.authors;
+              const totalArtifacts = kitData.types + kitData.designs + kitData.qualities + kitData.ports + kitData.tags + kitData.files + kitData.folders + kitData.authors;
               console.log(`[Kit] Expected total visible artifacts: ${totalArtifacts} (files: ${kitData.files}/${kitData.totalFiles}, folders: ${kitData.folders}/${kitData.totalFolders})`);
               expect(nodeCountAll).toBe(totalArtifacts);
             }
@@ -51962,6 +52098,34 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         expect(Math.abs(pan1Duration - avgPanTime)).toBeLessThan(100);
         expect(Math.abs(pan2Duration - avgPanTime)).toBeLessThan(100);
         expect(Math.abs(pan3Duration - avgPanTime)).toBeLessThan(100);
+
+        const sceneProjection = page.locator('[id="scene-projection"]').first();
+        await expect(sceneProjection).toBeVisible({ timeout: 5000 });
+        await expect.poll(async () => ((await sceneProjection.textContent()) ?? "").toLowerCase(), { timeout: 5000 }).toContain("perspective");
+
+        const gizmoCandidatePoints = [
+          { x: canvasBox.x + canvasBox.width - 84, y: canvasBox.y + canvasBox.height - 84 },
+          { x: canvasBox.x + canvasBox.width - 104, y: canvasBox.y + canvasBox.height - 84 },
+          { x: canvasBox.x + canvasBox.width - 84, y: canvasBox.y + canvasBox.height - 104 },
+        ];
+        let gizmoSnapTriggered = false;
+        for (const point of gizmoCandidatePoints) {
+          await page.mouse.click(point.x, point.y);
+          await page.waitForTimeout(500);
+          const projectionText = ((await sceneProjection.textContent()) ?? "").toLowerCase();
+          console.log(`[Type Test] Projection after gizmo click at ${point.x},${point.y}: ${projectionText}`);
+          if (projectionText.includes("orthographic")) {
+            gizmoSnapTriggered = true;
+            break;
+          }
+        }
+        expect(gizmoSnapTriggered).toBe(true);
+
+        await page.mouse.move(centerX, centerY);
+        await page.mouse.down();
+        await page.mouse.move(centerX + 120, centerY + 40);
+        await page.mouse.up();
+        await expect.poll(async () => ((await sceneProjection.textContent()) ?? "").toLowerCase(), { timeout: 5000 }).toContain("perspective");
       }
 
       await page.waitForTimeout(500);
@@ -52217,6 +52381,16 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         console.log(`[Type Test] Type properties section label visible: ${hasTypePropertiesSection}`);
         expect(hasTypePropertiesSection).toBe(true);
 
+        const connectorsRingControl = typeRightSidePanel.locator('[id="semio.sketchpad.app.type.panel.details.section.connectors.ring"]').first();
+        const connectorsRingLabel = typeRightSidePanel.locator('[id="semio.sketchpad.app.type.panel.details.section.connectors.ring-label"]').first();
+        const hasConnectorsRingControl = await connectorsRingControl.isVisible({ timeout: 5000 }).catch(() => false);
+        const hasConnectorsRingLabel = await connectorsRingLabel.isVisible({ timeout: 5000 }).catch(() => false);
+        const connectorsRingLabelText = hasConnectorsRingLabel ? ((await connectorsRingLabel.textContent()) ?? "").trim() : "";
+        console.log(`[Type Test] Connectors ring visible: ${hasConnectorsRingControl}, label visible: ${hasConnectorsRingLabel}, label text: ${connectorsRingLabelText}`);
+        expect(hasConnectorsRingControl).toBe(true);
+        expect(hasConnectorsRingLabel).toBe(true);
+        expect(connectorsRingLabelText).toBe("Ring");
+
         const firstConnectorItem = typeRightSidePanel.locator('[id="semio.sketchpad.app.type.connector"]').first();
         const hasFirstConnectorItem = await firstConnectorItem.isVisible({ timeout: 5000 }).catch(() => false);
         console.log(`[Type Test] Connector list item visible: ${hasFirstConnectorItem}`);
@@ -52229,6 +52403,16 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           const hasConnectorPropertiesSection = await connectorPropertiesSection.isVisible({ timeout: 5000 }).catch(() => false);
           console.log(`[Type Test] Connector properties section label visible: ${hasConnectorPropertiesSection}`);
           expect(hasConnectorPropertiesSection).toBe(true);
+
+          const connectorRingControl = typeRightSidePanel.locator('[id="semio.sketchpad.app.type.panel.details.section.connector.ring"]').first();
+          const connectorRingLabel = typeRightSidePanel.locator('[id="semio.sketchpad.app.type.panel.details.section.connector.ring-label"]').first();
+          const hasConnectorRingControl = await connectorRingControl.isVisible({ timeout: 5000 }).catch(() => false);
+          const hasConnectorRingLabel = await connectorRingLabel.isVisible({ timeout: 5000 }).catch(() => false);
+          const connectorRingLabelText = hasConnectorRingLabel ? ((await connectorRingLabel.textContent()) ?? "").trim() : "";
+          console.log(`[Type Test] Single connector ring visible: ${hasConnectorRingControl}, label visible: ${hasConnectorRingLabel}, label text: ${connectorRingLabelText}`);
+          expect(hasConnectorRingControl).toBe(true);
+          expect(hasConnectorRingLabel).toBe(true);
+          expect(connectorRingLabelText).toBe("Ring");
         }
       }
 
@@ -53036,7 +53220,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           // #endregion 🔖Workbench Add Piece
 
           // #region 🔖Workbench Duplicate Type
-          console.log("[Design] Testing workbench duplicate button clones type as sibling named 'typename Copy'");
+          console.log("[Design] Testing workbench duplicate button clones type as sibling named 'typename Duplicate'");
           const typeForDuplicate = await page.evaluate(
             ({ typeGuid }: { typeGuid: string }) => {
               const store = (window as any).__SEMIO_STORE__;
@@ -53072,7 +53256,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
               const newType = { ...sourceType, guid: crypto.randomUUID(), name: copyName, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
               kitStore.execute("semio.kit.createType", "semio.sketchpad.test.workbench.duplicateType", newType);
             },
-            { sourceType: typeForDuplicate, copyName: `${typeName} Copy` },
+            { sourceType: typeForDuplicate, copyName: `${typeName} Duplicate` },
           );
           await expect
             .poll(
@@ -53098,14 +53282,14 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
               if (!kitStore) return null;
               return (kitStore.snapshot().types ?? []).find((t: any) => t.name === copyName) ?? null;
             },
-            { copyName: `${typeName} Copy` },
+            { copyName: `${typeName} Duplicate` },
           );
           expect(duplicatedType).toBeTruthy();
-          expect(duplicatedType?.name).toBe(`${typeName} Copy`);
+          expect(duplicatedType?.name).toBe(`${typeName} Duplicate`);
           const sourceParentGuid = typeof typeForDuplicate?.parent === "string" ? typeForDuplicate.parent : (typeForDuplicate?.parent?.guid ?? null);
           const copyParentGuid = typeof duplicatedType?.parent === "string" ? duplicatedType.parent : (duplicatedType?.parent?.guid ?? null);
           expect(copyParentGuid).toBe(sourceParentGuid);
-          console.log(`[Design] Duplicate type: '${typeName} Copy' created as sibling ✓`);
+          console.log(`[Design] Duplicate type: '${typeName} Duplicate' created as sibling ✓`);
           // #endregion 🔖Workbench Duplicate Type
         } else {
           console.log("[Design] No source type guid available for store add-piece verification, skipping");
