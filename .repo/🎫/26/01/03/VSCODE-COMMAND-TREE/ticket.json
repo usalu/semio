@@ -1,5 +1,6 @@
 {
   "title": "VSCODE-COMMAND-TREE",
+  "emoji": "💻",
   "status": "closed",
   "description": "Show VS Code extension commands in a command/subcommand tree",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension"

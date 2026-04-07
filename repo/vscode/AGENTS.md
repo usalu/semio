@@ -2,7 +2,7 @@
 technology: repo
 bundle:
  name: vscode
- emoji: 🖱️
+ emoji: 🧩
  description: The vscode bundle for repo.
  kind: ui
 ---

@@ -1,5 +1,6 @@
 {
   "title": "Consolidate Semio Js Into Single Index Ts",
+  "emoji": "🧹",
   "status": "closed",
   "description": "Consolidate semio.ts, tests.ts, benchmarks.ts all into index.ts. Vitest must run. Benchmarks must not be part of regular exported code.",
   "summary": "Consolidated semio.ts, tests.ts, and benchmarks.ts into a single index.ts file in semio/js/. Deleted old semio.ts, tests.ts, benchmarks.ts. Updated vite.config.ts, tsconfig.json, package.json exports. Fixed all external imports referencing @semio/js/semio across sketchpad, coda, and engine. Resolved circular dependency with Sketchpad/coda imports via dynamic imports in test blocks. Added TEST_TOLERANCE (0.001) for flatten comparison tests (domain TOLERANCE is 1e-5). Fixed semio.test.py → main.py reference in cross-implementation export test. All 79 tests pass.",

@@ -1,5 +1,6 @@
 {
   "title": "Auto Format After Agent Code Edit Hook",
+  "emoji": "🪝",
   "status": "closed",
   "description": "Add automatic code formatting after every agent post-edit of code in the PostToolUse hook handler. When HookAgentToolCodeEditEnded fires, run the formatter on the edited file using the existing runFormatterAfterAutofix infrastructure.",
   "summary": "Decoupled formatter from autofix. Added runFormatterForFile which only runs the language-appropriate formatter (no fallback text cleanup). The HookAgentToolCodeEditEnded dispatch now calls runFormatterForFile instead of runFormatterAfterAutofix.",

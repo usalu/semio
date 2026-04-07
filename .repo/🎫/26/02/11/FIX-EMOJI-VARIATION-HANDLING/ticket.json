@@ -1,5 +1,6 @@
 {
   "title": "Fix Emoji Variation Handling",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix the mechanism where all emojis with a variation selector (such as VS15 / text presentation) should be removed and instead show the colorful emoji. Extend existing tests.",
   "summary": "Bulk close",

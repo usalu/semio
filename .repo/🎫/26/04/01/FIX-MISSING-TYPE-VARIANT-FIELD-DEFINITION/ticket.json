@@ -1,5 +1,6 @@
 {
   "title": "Fix Missing TypeVariantField Definition",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The TypeVariantField class was removed from the codebase but is still being imported/used in main.py lines 3632 and 3656, causing a NameError. Need to either:\n1. Remove the references to TypeVariantField from TypeContext and Type classes, or\n2. Restore the TypeVariantField class definition if it's still needed.\n\nCheck if variant functionality is still required in the system before deciding which approach to take.",
   "summary": "Fixed the missing TypeVariantField definition by:\n1. Added the TypeVariantField class definition after TypeStockField in main.py\n2. Updated TypeId class to inherit from TypeVariantField since variant is part of type identity\n3. Verified the fix resolves the NameError: name 'TypeVariantField' is not defined",

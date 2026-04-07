@@ -1,5 +1,6 @@
 {
   "title": "Add Agent Thinking Hook Events",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add new repo hook events agent.thinking.starting and agent.thinking.ended for thinking agents. Map cursor afterAgentThought to agent.thinking.ended instead of agent.ended. Add HookResultAgentThinkingStarting and HookResultAgentThinkingEnded result types with message field containing thinking text. Update all tests.",
   "summary": "Added report field support for agent.ended hook events by extracting report/tool_info.response payloads and exposing report in HookResultAgentEnded; extended hook tests for report extraction/population.",

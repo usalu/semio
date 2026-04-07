@@ -1,9 +1,10 @@
-// #region 🔖Header
+// This file has been automatically migrated to valid ESM format by Storybook.
+// #region 🧲Header
 // 💻 semio/ui/.storybook/main.ts
 // Specs: Keep Storybook wiring aligned with elements/ui.
 // Summary: Configures Storybook for the semio ui bundle.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import type { StorybookConfig } from "@storybook/react-vite";
 import { createRequire } from "node:module";

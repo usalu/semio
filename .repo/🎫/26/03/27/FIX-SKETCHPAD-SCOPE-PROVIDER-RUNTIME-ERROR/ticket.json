@@ -1,5 +1,6 @@
 {
   "title": "Fix Sketchpad Scope Provider Runtime Error",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix semio/sketchpad runtime failure where SketchpadScopeProvider references getDefaultSketchpadScopeId but the helper is not defined. Patch the sketchpad source, extend the existing sketchpad test coverage for the scope-id fallback behavior, and verify the affected build/tests.",
   "summary": "Restored a deterministic default sketchpad scope id so standalone sketchpad boots without the missing helper crash, fixed the provider hook-order violation by keeping hook execution unconditional after hydration, and added an existing-file regression test covering fallback scope-id boot and reload stability.",

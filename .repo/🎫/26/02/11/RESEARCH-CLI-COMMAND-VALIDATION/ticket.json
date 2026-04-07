@@ -1,5 +1,6 @@
 {
   "title": "Research Cli Command Validation",
+  "emoji": "📋",
   "status": "closed",
   "description": "Research all command validation logic in main.go",
   "summary": "Complete inventory of all cobra commands with validation logic",

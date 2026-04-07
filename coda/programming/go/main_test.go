@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda📦programming🥼maintest](repo://p/r/coda/b/l/programming/f/main_test.go)
+// #region 🧲Header
 //
 // Summary: Tests for programming validator.
 //

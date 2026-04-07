@@ -1,5 +1,6 @@
 {
   "title": "Refactor Semio Diagram Control Modes",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Extend the semio/ui Diagram component to support controlled and uncontrolled modes for selection, diff, pan, and zoom. Make each feature optional so it can be disabled independently. Preserve current minimal rendering and interaction behavior where enabled, update stories as needed, and verify semio/ui type-check and Storybook build.",
   "summary": "Adjusted Diagram viewport defaults so uncontrolled diagrams fit the changed subset when a diff is present, and double-click reset returns to that diff-focused view. Explicit default and controlled pan/zoom behavior remains intact. Re-verified semio/ui type-check and Storybook build.",

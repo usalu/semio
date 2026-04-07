@@ -1,0 +1,10 @@
+{
+  "title": "Fix Selection Bounds Alignment",
+  "status": "closed",
+  "description": "Correct 3D selection AABB to use same anchor as ScenePiece (plane origin). Increase diagram overlay padding to match selected circle + stroke extent.",
+  "summary": "Fixed the Flatten story's diff and output windows by correcting the AlgorithmContextValue wiring. The root cause was that `design` and `diffDesign` were both set to `baseDesign` (the flattened result) instead of `rawDesign` (the original design). This caused: 1) The diff window to show no changes because it was diffing the flattened design against itself, 2) The output window to show the same as the diff. Fix: set `design: rawDesign` (so DESIGN_INPUT shows the original hierarchical design) and `diffDesign: rawDesign` (so DESIGN_DIFF_OUTPUT correctly shows all connections removed and all connected pieces modified against the original). `outputDesign` remains `baseDesign` (the flattened result with no connections). All 230 tests pass, Storybook builds successfully.",
+  "goal": "🎯semioui",
+  "sessions": [
+    "⚪14a4b8bda8a0476ba565e7dbd3cb8b53"
+  ]
+}

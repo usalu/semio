@@ -1,5 +1,6 @@
 {
   "title": "Fix Sketchpad Playwright Tests",
+  "emoji": "🔧",
   "status": "open",
   "description": "Get all sketchpad playwright tests passing without removing functionality from the tests. Fix any compilation or runtime failures.",
   "github": {

@@ -1,5 +1,6 @@
 {
   "title": "Fix Elements Tsx Code Breachs",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix ALL 169 code breachs in semio/js/sketchpad/elements.tsx by adding section summaries, definition summaries, and spec comments with RFC2119 keywords.",
   "summary": "Fixed all 170 code breachs in elements.tsx: 57 section summaries+requirements, 112 definition summaries, 1 orphan fix. Analyzer now reports 0 breachs.",

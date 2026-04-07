@@ -1,5 +1,6 @@
 {
   "title": "Add Test Command with Testable Entity ID Scope",
+  "emoji": "🧪",
   "status": "closed",
   "description": "Introduce a general `test [{{testable-id-or-uri}}]*` command that runs all tests for all given entities. Add DefinitionKindTest (🧪) as a new definition kind for test functions in test files. Implement entity ID resolution for projects, bundles, files, sections, and test definitions to determine scope. Group test files by language/runtime and run with appropriate test runner (go test, pytest, vitest/jest, dotnet test, cargo test). Add tests for the new command and definition kind.",
   "summary": "Implemented the test [testable-id-or-uri]* command for the repo CLI. Added DefinitionKindTest (🧪) as a new definition kind with code t and integer 3 for SQLite. Updated buildDefinitionID to auto-detect test functions in lab files. Implemented full scope resolution from emoji IDs at project/bundle/file/section/definition levels with language-aware test runners (Go/Rust/C#/TypeScript/Python). Registered testCommand in NewRootWithConfig. Added comprehensive tests. All tests pass.",

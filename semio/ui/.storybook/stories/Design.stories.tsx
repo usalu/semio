@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/ui/.storybook/stories/Design.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly. Kit is optional for 3D models.
 // Summary: Design stories: Default, Diff, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { applyDesignDiff, flattenDesign, type Connection, type Design, type Kit, type Piece } from "@semio/js";
 import { SemioDesign as DesignView } from "@semio/ui";
@@ -12,7 +12,7 @@ import * as React from "react";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.semio.json";
 
-// #region 🔖Data
+// #region 🖥️Data
 
 const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as Design;
 const flattenChange = flattenDesign(metabolismKit as unknown as Kit, rawDesign.guid);
@@ -31,9 +31,9 @@ const usedFileGuids = new Set(minimalTypes.flatMap((t: any) => (t.models ?? []).
 const minimalFiles = (metabolismKit.files ?? []).filter((f: any) => usedFileGuids.has(f.guid));
 const minimalKit = { types: minimalTypes, files: minimalFiles } as any;
 
-// #endregion 🔖Data
+// #endregion 🖥️Data
 
-// #region 🔖Design
+// #region 📌Design
 
 const meta: Meta<typeof DesignView> = {
   title: "semio/Design",
@@ -132,4 +132,4 @@ export const ZoomNone: Story = {
   render: (args) => frame(<DesignView {...args} />),
 };
 
-// #endregion 🔖Design
+// #endregion 📌Design

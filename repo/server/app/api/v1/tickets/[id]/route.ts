@@ -1,9 +1,8 @@
-// #region 🔖Header
-// [🧰repo⌨️server🛅app🛅api🛅v1🛅tickets🛅id💻route](repo://p/i/repo/b/b/server/f/app/api/v1/tickets/[id]/route.ts)
+// #region 🧲Header
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0
 // Ticket detail and claims endpoint.
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { NextRequest, NextResponse } from "next/server";
 import { getTicket, listClaimsByTicket } from "@/lib/db";

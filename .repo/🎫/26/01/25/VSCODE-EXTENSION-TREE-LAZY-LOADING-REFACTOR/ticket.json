@@ -1,5 +1,6 @@
 {
   "title": "Vscode Extension Tree Lazy Loading Refactor",
+  "emoji": "♻️",
   "status": "closed",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/194"

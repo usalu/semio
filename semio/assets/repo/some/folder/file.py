@@ -1,10 +1,10 @@
-# region Header
+# #region 📊Header
 
 # 💻semio/assets/repo/some/folder/file.py
 
 # 2025 Test User <test@test.com>
 
-# region License
+# #region 📧License
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -20,14 +20,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-# endregion License
+# #endregion 📧License
 
-# region Requirements
-# endregion Requirements
+# #region 🎯Requirements
+# #endregion 🎯Requirements
 
-# endregion Header
+# #endregion 📊Header
 
-# region Functions
+# #region 🐯Functions
 
 
 def hello_world():
@@ -38,4 +38,4 @@ def add(a: int, b: int) -> int:
     return a + b
 
 
-# endregion Functions
+# #endregion 🐯Functions

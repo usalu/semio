@@ -1,5 +1,6 @@
 {
   "title": "Session Json For Agent Sessions",
+  "emoji": "📋",
   "status": "open",
   "description": "Create session.json per session folder to store session-level metadata such as client, llm, and start time without duplicating event payloads.",
   "github": {

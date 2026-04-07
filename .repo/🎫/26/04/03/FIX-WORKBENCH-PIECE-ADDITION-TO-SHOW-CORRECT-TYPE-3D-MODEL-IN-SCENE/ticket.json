@@ -1,5 +1,6 @@
 {
   "title": "Fix Workbench Piece Addition to Show Correct Type 3D Model in Scene",
+  "emoji": "🔧",
   "status": "open",
   "description": "When adding a piece from the Workbench in the Sketchpad Design app, the scene window shows a default sphere model instead of the correct 3D model associated with the piece's type. Refactor to load and display the proper type representation model.",
   "github": {

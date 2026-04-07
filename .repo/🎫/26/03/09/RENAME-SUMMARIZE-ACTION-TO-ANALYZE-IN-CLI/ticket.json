@@ -1,5 +1,6 @@
 {
   "title": "Rename Summarize Action to Analyze in CLI",
+  "emoji": "🏷️",
   "status": "closed",
   "description": "Rename the `summarize` CLI command to `analyze` in repo/cli/main.go. Update function name, Use string, Short description, region comment, and all references.",
   "summary": "Renamed `summarize` CLI command to `analyze`. The existing `analyzeCommand` (policy breach analysis) was renamed to `auditCommand` with Use: \"audit\" to avoid conflict. Updated all registrations in NewRoot and region comments.",

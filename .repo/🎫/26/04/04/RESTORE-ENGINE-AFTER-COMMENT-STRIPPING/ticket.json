@@ -1,5 +1,6 @@
 {
   "title": "Restore Engine After Comment Stripping",
+  "emoji": "💬",
   "status": "closed",
   "description": "Fix engine and dependencies broken by repo-wide comment stripping.",
   "summary": "Restored corrupted Python after aggressive comment stripping: semio/engine/main.py from 80bfd6772, semio/py/main.py and coda/engine/coda.py from 41b248ef4. Engine imports cleanly; semio/engine/engine.test.py 174 tests pass.",

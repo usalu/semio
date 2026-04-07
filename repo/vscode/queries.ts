@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🧰repo🖱️vscode💻queries](repo://p/i/repo/b/u/vscode/f/queries.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,17 +6,15 @@
 
 // GraphQL query document constants for the VS Code extension.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-//#region 🔖Queries
-// [🧰repo🖱️vscode💻queries🔖queries](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries)
+//#region ⌛Queries
 // Typed GraphQL document constants MUST use generated graphql tag functions.
 
 import { graphql } from "./generated/gql";
 
 /**
  * GraphQL document for querying the full repo structure with technologies and bundles.
- * [🧰repo🖱️vscode💻queries🔖queries🪨repostructuredocument](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries/d/i/RepoStructureDocument)
  **/
 export const RepoStructureDocument = graphql(`
   query RepoStructure {
@@ -57,7 +54,6 @@ export const RepoStructureDocument = graphql(`
 
 /**
  * GraphQL document for querying recent repo checkpoints.
- * [🧰repo🖱️vscode💻queries🔖queries🪨repocheckpointsdocument](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries/d/i/RepoCheckpointsDocument)
  **/
 export const RepoCheckpointsDocument = graphql(`
   query RepoCheckpoints {
@@ -74,7 +70,6 @@ export const RepoCheckpointsDocument = graphql(`
 
 /**
  * GraphQL document for querying folder contents by path.
- * [🧰repo🖱️vscode💻queries🔖queries🪨foldercontentdocument](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries/d/i/FolderContentDocument)
  **/
 export const FolderContentDocument = graphql(`
   query FolderContent($path: String!) {
@@ -95,7 +90,6 @@ export const FolderContentDocument = graphql(`
 
 /**
  * GraphQL document for querying all bundles in the repo.
- * [🧰repo🖱️vscode💻queries🔖queries🪨bundlesdocument](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries/d/i/BundlesDocument)
  **/
 export const BundlesDocument = graphql(`
   query Bundles {
@@ -115,7 +109,6 @@ export const BundlesDocument = graphql(`
 
 /**
  * GraphQL document for querying tickets with filtering by date and status.
- * [🧰repo🖱️vscode💻queries🔖queries🪨ticketsdocument](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries/d/i/TicketsDocument)
  **/
 export const TicketsDocument = graphql(`
   query Tickets($year: Int, $month: Int, $day: Int, $status: TicketStatus) {
@@ -157,7 +150,6 @@ export const TicketsDocument = graphql(`
 
 /**
  * GraphQL document for querying policies and their statutes.
- * [🧰repo🖱️vscode💻queries🔖queries🪨policiesdocument](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries/d/i/PoliciesDocument)
  **/
 export const PoliciesDocument = graphql(`
   query Policies {
@@ -181,7 +173,6 @@ export const PoliciesDocument = graphql(`
 
 /**
  * GraphQL document for querying contributors with their contributions.
- * [🧰repo🖱️vscode💻queries🔖queries🪨contributorsdocument](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries/d/i/ContributorsDocument)
  **/
 export const ContributorsDocument = graphql(`
   query Contributors {
@@ -244,7 +235,6 @@ export const ContributorsDocument = graphql(`
 
 /**
  * GraphQL document for running codebase analysis with optional scope.
- * [🧰repo🖱️vscode💻queries🔖queries🪨analyzedocument](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries/d/i/AnalyzeDocument)
  **/
 export const AnalyzeDocument = graphql(`
   query Analyze($scope: String) {
@@ -283,7 +273,6 @@ export const AnalyzeDocument = graphql(`
 
 /**
  * GraphQL mutation document for applying autofixes with optional scope.
- * [🧰repo🖱️vscode💻queries🔖queries🪨fixdocument](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries/d/i/FixDocument)
  **/
 export const FixDocument = graphql(`
   mutation Fix($scope: String) {
@@ -302,7 +291,6 @@ export const FixDocument = graphql(`
 
 /**
  * GraphQL document for querying file content with sections and definitions.
- * [🧰repo🖱️vscode💻queries🔖queries🪨filecontentdocument](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries/d/i/FileContentDocument)
  **/
 export const FileContentDocument = graphql(`
   query FileContent($path: String!) {
@@ -370,7 +358,6 @@ export const FileContentDocument = graphql(`
 
 /**
  * GraphQL document for querying all goals in the repo.
- * [🧰repo🖱️vscode💻queries🔖queries🪨goalsdocument](repo://p/i/repo/b/u/vscode/f/queries.ts/s/Queries/d/i/GoalsDocument)
  **/
 export const GoalsDocument = graphql(`
   query Goals {
@@ -390,4 +377,4 @@ export const GoalsDocument = graphql(`
   }
 `);
 
-//#endregion Queries
+//#endregion ⌛Queries

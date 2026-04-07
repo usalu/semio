@@ -1,5 +1,6 @@
 {
   "title": "Fix Extension Uninstall on Reload",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Extension uninstall not fully clearing on window reload; ensure stale repo extension is removed before reinstall and caches/registries are reset.",
   "summary": "Cleared VS Code extension caches during uninstall and documented the updated cache reset behavior.",

@@ -1,5 +1,6 @@
 {
   "title": "Fix Goal Tree Hierarchy and Sorting",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The goal tree command shows all goals flat without parent-child hierarchy. Goals stored in nested directories (e.g. R26-02/RUNNING-SKETCHPAD) should be rendered as children. Also sort goals by due date, then by creation date.",
   "summary": "Fixed goal tree to display parent-child hierarchy from slash-separated goal IDs and sort by due date then creation date. Added createdAt field to Goal GraphQL schema. Rewrote formatGoalTree to build goal hierarchy, sort goals, and render nested tree with proper connectors.",

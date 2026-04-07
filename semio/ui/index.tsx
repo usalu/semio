@@ -1,18 +1,13 @@
-// #region 🔖Header
-
-// 💻 semio/ui/index.tsx
-
+// #region 🧲Header
+// semio/ui/index.tsx
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// Shared export surface for semio ui components.
-
-// #endregion 🔖Header
+// 🖱️Shared semio ui components.
+// #endregion 🧲Header
 
 import { Breadcrumb, Button, Section } from "@elements/ui/elements";
 import { Bounds, Clone, Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useBounds, useGLTF } from "@react-three/drei";
-import { Canvas as ThreeCanvas, useThree } from "@react-three/fiber";
+import { Canvas as ThreeCanvas, useFrame, useThree } from "@react-three/fiber";
 import {
   applyDesignDiff,
   designWithDiff,
@@ -24,6 +19,7 @@ import {
   type Attribute,
   type Camera,
   type Connection,
+  type Connector,
   type Coord,
   type Design,
   type DesignDiff,
@@ -38,7 +34,7 @@ import * as React from "react";
 import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 
-// #region 🔖ControllableState
+// #region 💻ControllableState
 // Specs: Semio UI components MUST support controlled/uncontrolled and partial/full control.
 // This hook is the shared mechanism used by multiple components for interactive state that can
 // be externally controlled while still supporting internal defaults.
@@ -72,17 +68,17 @@ const useInteractiveControllableValue = <T,>(value: T | undefined, defaultValue:
   return [resolvedValue, setValue, isControlled] as const;
 };
 
-// #endregion 🔖ControllableState
+// #endregion 💻ControllableState
 
-// #region 🔖Exports
+// #region 🗃️Exports
 
 // Re-export the runtime-safe ui primitives from @elements/ui/elements.
 
 export * from "@elements/ui/elements";
 
-// #endregion 🔖Exports
+// #endregion 🗃️Exports
 
-// #region 🔖Kit
+// #region ⏱️Kit
 // Specs: Kit provides a kit-scoped artifact picker (designs, kinds, kit-level ports, type connectors)
 // with the standard Semio UI controllable-state pattern: partial/full controlled/uncontrolled for
 // both available data and selection. It supports partial/full select via per-group enable flags.
@@ -904,18 +900,43 @@ export const SemioKit: React.FC<KitProps> = ({
   );
 };
 
-// #endregion 🔖Kit
+// #endregion ⏱️Kit
 
-// #region 🔖Diagram
+// #region 🧫Diagram
 
 const DEFAULT_DIAGRAM_PADDING = 12;
-const DEFAULT_DIAGRAM_PIECE_RADIUS = 1.75;
+// Specs: Node geometry is measured in the same u / v units as piece centers and the origin rulers.
+// Summary: Default radius 0.5 → on-screen diameter 1 after multiplying by scale*resolvedZoom.
+const DEFAULT_DIAGRAM_PIECE_RADIUS = 0.5;
+const DIAGRAM_PIECE_HOVER_RADIUS_EXTRA = 0.06;
+const DIAGRAM_PIECE_SELECTED_RADIUS_EXTRA = 0.12;
 const DEFAULT_DIAGRAM_STROKE_WIDTH = 1;
 const DEFAULT_DIAGRAM_ZOOM = 1;
-const MIN_DIAGRAM_ZOOM = 1;
+/** Lower bound for wheel zoom and fit-to-bounds (smaller = zoom out further). */
+const MIN_DIAGRAM_ZOOM = 0.15;
 const MAX_DIAGRAM_ZOOM = 12;
 const DIAGRAM_ZOOM_STEP = 0.0015;
 const MIN_DIAGRAM_SPAN = 1;
+
+// #region 🔖DiagramOrigin
+// Specs: Diagram maps piece (u, v) with screen Y = -v; the layout origin is u=0, v=0 (diagram Y=0).
+// Summary: Resolves origin and unit-length (1 along u, 1 along v) axis tips in SVG pixel space.
+
+/** Resolves diagram origin (u=0, v=0) into SemioDiagram SVG pixel coordinates. */
+const resolveSemioDiagramOriginPixels = (toPixelX: (u: number) => number, toPixelY: (diagramY: number) => number): { x: number; y: number } => ({
+  x: toPixelX(0),
+  y: toPixelY(0),
+});
+
+/** Tips of unit segments from the origin: +1 in u at v=0, +1 in v (diagramY is -v so tip at diagramY=-1). */
+const resolveSemioDiagramUnitAxisTips = (
+  toPixelX: (u: number) => number,
+  toPixelY: (diagramY: number) => number,
+): { uTip: { x: number; y: number }; vTip: { x: number; y: number } } => ({
+  uTip: { x: toPixelX(1), y: toPixelY(0) },
+  vTip: { x: toPixelX(0), y: toPixelY(-1) },
+});
+// #endregion 🔖DiagramOrigin
 
 export type ZoomTarget = "design" | "diff" | "none";
 
@@ -974,9 +995,12 @@ export interface SemioDiagramProps {
   onZoomChange?: (zoom: number) => void;
   className?: string;
   padding?: number;
+  /** Radius of piece nodes in diagram u/v units (default 0.5 → diameter 1). */
   pieceRadius?: number;
   strokeWidth?: number;
   title?: string;
+  /** When true, draws origin + unit-length u/v markers (length 1 in piece u,v) behind edges and nodes. */
+  showOrigin?: boolean;
   onPieceClick?: (piece: Piece) => void;
   onConnectionClick?: (connection: Connection) => void;
 }
@@ -1018,10 +1042,10 @@ interface DiagramBounds {
 }
 
 const getEntityStatusColor = (status: DiagramEntityStatus): string => {
-  if (status === "removed") return "var(--color-removed)";
-  if (status === "added") return "var(--color-new)";
-  if (status === "modified") return "var(--color-modified)";
-  return "currentColor";
+  if (status === "removed") return "var(--color-removed, #ef4444)";
+  if (status === "added") return "var(--color-new, #22c55e)";
+  if (status === "modified") return "var(--color-modified, #f59e0b)";
+  return "var(--foreground, #1b1a17)";
 };
 
 const getInteractiveEntityColor = (status: DiagramEntityStatus, isSelected: boolean, isHovered: boolean): string => {
@@ -1033,6 +1057,48 @@ const getInteractiveEntityColor = (status: DiagramEntityStatus, isSelected: bool
   }
   return getEntityStatusColor(status);
 };
+
+// #region 🎯SelectionBoundsOverlay
+
+// Specs: Diagram SVG overlay and scene AABB use the same accent-relative fill and stroke opacity so selection reads identically in 2D and 3D.
+// Summary: Shared opacity tokens for semitransparent selection bounds.
+
+const SEMIO_SELECTION_BOUNDS_FILL_OPACITY = 0.18;
+const SEMIO_SELECTION_BOUNDS_STROKE_OPACITY = 0.55;
+
+const computeDiagramSelectionOverlayRect = (
+  snapshot: DiagramSnapshot,
+  selectedPieceGuids: Set<string>,
+  selectedConnectionGuids: Set<string>,
+  toPixelX: (u: number) => number,
+  toPixelY: (diagramY: number) => number,
+  piecePadPx: number,
+  connectionPadPx: number,
+): { x: number; y: number; width: number; height: number } | null => {
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const point of snapshot.points) {
+    if (!selectedPieceGuids.has(point.guid)) continue;
+    xs.push(toPixelX(point.u));
+    ys.push(toPixelY(-point.v));
+  }
+  for (const line of snapshot.lines) {
+    if (!selectedConnectionGuids.has(line.guid)) continue;
+    xs.push(toPixelX(line.source.u), toPixelX(line.target.u));
+    ys.push(toPixelY(-line.source.v), toPixelY(-line.target.v));
+  }
+  if (xs.length === 0) return null;
+  const hasPieceSelection = snapshot.points.some((p) => selectedPieceGuids.has(p.guid));
+  const hasConnectionSelection = snapshot.lines.some((l) => selectedConnectionGuids.has(l.guid));
+  const pad = hasPieceSelection && hasConnectionSelection ? Math.max(piecePadPx, connectionPadPx) : hasPieceSelection ? piecePadPx : connectionPadPx;
+  const minX = Math.min(...xs) - pad;
+  const maxX = Math.max(...xs) + pad;
+  const minY = Math.min(...ys) - pad;
+  const maxY = Math.max(...ys) + pad;
+  return { x: minX, y: minY, width: Math.max(maxX - minX, 1), height: Math.max(maxY - minY, 1) };
+};
+
+// #endregion 🎯SelectionBoundsOverlay
 
 const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: DesignDiff): DiagramSnapshot => {
   const merged = designDiff ? designWithDiff(design, designDiff) : design;
@@ -1149,6 +1215,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   pieceRadius = DEFAULT_DIAGRAM_PIECE_RADIUS,
   strokeWidth = DEFAULT_DIAGRAM_STROKE_WIDTH,
   title = "Design Diagram",
+  showOrigin = true,
   onPieceClick,
   onConnectionClick,
 }) => {
@@ -1223,6 +1290,38 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   const applyViewportY = (y: number) => centerY + resolvedPan.y + resolvedZoom * (y - centerY);
   const toPixelX = (u: number) => applyViewportX(toBasePixelX(u));
   const toPixelY = (y: number) => applyViewportY(toBasePixelY(y));
+  const pxPerDiagramUnit = scale * resolvedZoom;
+
+  const diagramSelectionOverlay = React.useMemo(() => {
+    if (!effectiveSelectionEnabled) return null;
+    const piecePxPerUnit = scale * resolvedZoom;
+    const selectedStrokePx = Math.max(1, 0.1 * piecePxPerUnit);
+    // Match selected node: r=(pieceRadius+DIAGRAM_PIECE_SELECTED_RADIUS_EXTRA)*pxPerUnit, stroke ~0.1*px → outer r+stroke/2.
+    const selectedNodeOuterRadiusPx = (pieceRadius + DIAGRAM_PIECE_SELECTED_RADIUS_EXTRA) * piecePxPerUnit + selectedStrokePx / 2;
+    const piecePadPx = selectedNodeOuterRadiusPx + 8;
+    const selectedEdgeHalfThicknessPx = ((strokeWidth + 1.5) * resolvedZoom) / 2;
+    const connectionPadPx = selectedEdgeHalfThicknessPx + 8;
+    const vpX = (x: number) => centerX + resolvedPan.x + resolvedZoom * (x - centerX);
+    const vpY = (y: number) => centerY + resolvedPan.y + resolvedZoom * (y - centerY);
+    const toPxX = (u: number) => vpX(offsetX + (u - snapshot.minU) * scale);
+    const toPxY = (diagramY: number) => vpY(offsetY + (diagramY - snapshot.minY) * scale);
+    return computeDiagramSelectionOverlayRect(snapshot, selectedPieceGuids, selectedConnectionGuids, toPxX, toPxY, piecePadPx, connectionPadPx);
+  }, [
+    centerX,
+    centerY,
+    effectiveSelectionEnabled,
+    offsetX,
+    offsetY,
+    resolvedPan.x,
+    resolvedPan.y,
+    resolvedZoom,
+    scale,
+    selectedConnectionGuids,
+    selectedPieceGuids,
+    snapshot,
+    pieceRadius,
+    strokeWidth,
+  ]);
 
   const fittedPanX = fittedViewport.pan.x;
   const fittedPanY = fittedViewport.pan.y;
@@ -1408,8 +1507,20 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
     [effectiveConnectionSelectionEnabled, resolvedSelection.connectionGuids, resolvedSelection.pieceGuids, setResolvedSelection],
   );
 
+  const { x: originOx, y: originOy } = resolveSemioDiagramOriginPixels(toPixelX, toPixelY);
+  const { uTip, vTip } = resolveSemioDiagramUnitAxisTips(toPixelX, toPixelY);
+  const originStrokePx = showOrigin ? Math.max(1, 0.85 * resolvedZoom) : 0;
+  const originLabelPx = showOrigin ? Math.max(10, Math.min(18, 10 + resolvedZoom)) : 0;
+  const originLabelOff = showOrigin ? Math.max(3, 4 * Math.min(resolvedZoom, 2)) : 0;
+  const uDirLen = Math.hypot(uTip.x - originOx, uTip.y - originOy) || 1;
+  const uNx = (uTip.x - originOx) / uDirLen;
+  const uNy = (uTip.y - originOy) / uDirLen;
+  const vDirLen = Math.hypot(vTip.x - originOx, vTip.y - originOy) || 1;
+  const vNx = (vTip.x - originOx) / vDirLen;
+  const vNy = (vTip.y - originOy) / vDirLen;
+
   return (
-    <div ref={ref} className={`h-full w-full ${className}`} onDoubleClick={handleDoubleClick} tabIndex={0} style={{ outline: "none" }}>
+    <div ref={ref} className={`h-full w-full ${className}`} onDoubleClick={handleDoubleClick} tabIndex={0} style={{ outline: "none", position: "relative" }}>
       <svg
         aria-label={title}
         className="h-full w-full overflow-visible text-foreground"
@@ -1421,6 +1532,33 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
         style={{ cursor: panEnabled ? (isPanning ? "grabbing" : "grab") : "default", touchAction: panEnabled ? "none" : "auto" }}
         onClick={handleSvgClick}
       >
+        {diagramSelectionOverlay ? (
+          <rect
+            fill="var(--accent)"
+            fillOpacity={SEMIO_SELECTION_BOUNDS_FILL_OPACITY}
+            height={diagramSelectionOverlay.height}
+            pointerEvents="none"
+            stroke="var(--accent)"
+            strokeOpacity={SEMIO_SELECTION_BOUNDS_STROKE_OPACITY}
+            strokeWidth={Math.max(1, 1.25 * resolvedZoom)}
+            width={diagramSelectionOverlay.width}
+            x={diagramSelectionOverlay.x}
+            y={diagramSelectionOverlay.y}
+          />
+        ) : null}
+        {showOrigin ? (
+          <g aria-hidden="true" className="text-muted-foreground" pointerEvents="none">
+            <circle cx={originOx} cy={originOy} fill="currentColor" fillOpacity={0.5} r={Math.max(1.25, 1.75 * resolvedZoom)} />
+            <line stroke="currentColor" strokeOpacity={0.65} strokeWidth={originStrokePx} x1={originOx} x2={uTip.x} y1={originOy} y2={uTip.y} />
+            <line stroke="currentColor" strokeOpacity={0.65} strokeWidth={originStrokePx} x1={originOx} x2={vTip.x} y1={originOy} y2={vTip.y} />
+            <text dominantBaseline="middle" fill="currentColor" fillOpacity={0.88} fontSize={originLabelPx} textAnchor="middle" x={uTip.x + uNx * originLabelOff} y={uTip.y + uNy * originLabelOff}>
+              u
+            </text>
+            <text dominantBaseline="middle" fill="currentColor" fillOpacity={0.88} fontSize={originLabelPx} textAnchor="middle" x={vTip.x + vNx * originLabelOff} y={vTip.y + vNy * originLabelOff}>
+              v
+            </text>
+          </g>
+        ) : null}
         {snapshot.lines.map((line) => {
           const selected = isSelected(line.guid, selectedConnectionGuids);
           const hovered = hoveredConnectionGuid === line.guid;
@@ -1430,10 +1568,10 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
               onClick={
                 onConnectionClick || effectiveConnectionSelectionEnabled
                   ? (event) => {
-                    event.stopPropagation();
-                    selectConnection(line.guid);
-                    onConnectionClick?.(line.connection);
-                  }
+                      event.stopPropagation();
+                      selectConnection(line.guid);
+                      onConnectionClick?.(line.connection);
+                    }
                   : undefined
               }
               pointerEvents="stroke"
@@ -1463,17 +1601,23 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
               onClick={
                 onPieceClick || effectivePieceSelectionEnabled
                   ? (event) => {
-                    event.stopPropagation();
-                    selectPiece(point.guid);
-                    onPieceClick?.(point.piece);
-                  }
+                      event.stopPropagation();
+                      selectPiece(point.guid);
+                      onPieceClick?.(point.piece);
+                    }
                   : undefined
               }
               onPointerEnter={effectivePieceHoverEnabled ? () => setHoveredPiece(point.guid) : undefined}
               onPointerLeave={effectivePieceHoverEnabled ? () => setHoveredPiece((resolvedHover.pieceGuid ?? null) === point.guid ? null : (resolvedHover.pieceGuid ?? null)) : undefined}
-              r={(selected ? pieceRadius + 0.75 : hovered ? pieceRadius + 0.35 : pieceRadius) * resolvedZoom}
+              r={
+                (selected
+                  ? pieceRadius + DIAGRAM_PIECE_SELECTED_RADIUS_EXTRA
+                  : hovered
+                    ? pieceRadius + DIAGRAM_PIECE_HOVER_RADIUS_EXTRA
+                    : pieceRadius) * pxPerDiagramUnit
+              }
               stroke={selected || hovered ? getInteractiveEntityColor(point.status, selected, hovered) : "none"}
-              strokeWidth={(selected ? 1.5 : hovered ? 1 : 0) * resolvedZoom}
+              strokeWidth={selected ? Math.max(1, 0.1 * pxPerDiagramUnit) : hovered ? Math.max(1, 0.06 * pxPerDiagramUnit) : 0}
               style={{ cursor: onPieceClick || effectivePieceSelectionEnabled ? "pointer" : "default" }}
             />
           );
@@ -1483,12 +1627,12 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   );
 };
 
-// #endregion 🔖Diagram
+// #endregion 🧫Diagram
 
-// #region 🔖PieceSelection
+// #region 📩PieceSelection
 
 /**
- * PieceSelection is a constrained Diagram configuration that only supports selecting pieces.
+ * ⚙️PieceSelection is a constrained Diagram configuration that only supports selecting pieces.
  *
  * Specs:
  * - Connection selection is always disabled (no connection hover/click selection state).
@@ -1518,18 +1662,17 @@ export const PieceSelection: React.FC<PieceSelectionProps> = ({ selection, defau
       onSelectionChange={
         onSelectionChange
           ? (next) => {
-            onSelectionChange({ pieceGuids: next.pieceGuids ?? [] });
-          }
+              onSelectionChange({ pieceGuids: next.pieceGuids ?? [] });
+            }
           : undefined
       }
     />
   );
 };
 
-// #endregion 🔖PieceSelection
+// #endregion 📩PieceSelection
 
-// #region 🔖ConnectionSelection
-// [🔖semio/ui/index.tsx#ConnectionSelection](repo://section/semio/ui/index.tsx/CONNECTIONSELECTION)
+// #region 🔧ConnectionSelection
 // Constrained Diagram wrapper that only supports selecting connections.
 
 export interface ConnectionSelectionState {
@@ -1556,20 +1699,20 @@ export const ConnectionSelection: React.FC<ConnectionSelectionProps> = ({ select
       onSelectionChange={
         onSelectionChange
           ? (next) => {
-            onSelectionChange({ connectionGuids: next.connectionGuids ?? [] });
-          }
+              onSelectionChange({ connectionGuids: next.connectionGuids ?? [] });
+            }
           : undefined
       }
     />
   );
 };
 
-// #endregion 🔖ConnectionSelection
+// #endregion 🔧ConnectionSelection
 
-// #region 🔖Selection
+// #region 🎵Selection
 
 /**
- * DiagramSelection is a constrained Diagram wrapper that supports selecting both pieces and connections.
+ * 🔌DiagramSelection is a constrained Diagram wrapper that supports selecting both pieces and connections.
  */
 export interface DiagramSelectionState {
   pieceGuids?: string[];
@@ -1589,9 +1732,9 @@ export const DiagramSelection: React.FC<DiagramSelectionProps> = ({ selection, d
   return <SemioDiagram {...rest} pieceSelectionEnabled={true} connectionSelectionEnabled={true} selection={mappedSelection} defaultSelection={mappedDefaultSelection} onSelectionChange={onSelectionChange} />;
 };
 
-// #endregion 🔖Selection
+// #endregion 🎵Selection
 
-// #region 🔖Clipboard
+// #region ⚗️Clipboard
 // Specs: Pure logic to compute clipboard data from a design, optional diff, and optional selection.
 // When no diff and no selection: copy the full design.
 // When no diff and selection present: copy only selected pieces and connections.
@@ -1616,7 +1759,7 @@ export const buildDesignClipboardData = (design: Design, designDiff: DesignDiff 
   }
 
   if (!hasDiff && hasSelection) {
-    // No diff, selection present: copy selected pieces and connections
+    // 🔌No diff, selection present: copy selected pieces and connections
     const pieces = (design.pieces ?? []).filter((p) => selectedPieceGuids.has(p.guid));
     const connections = (design.connections ?? []).filter((c) => selectedConnectionGuids.has(c.guid));
     return {
@@ -1633,7 +1776,7 @@ export const buildDesignClipboardData = (design: Design, designDiff: DesignDiff 
     return { design, designDiff };
   }
 
-  // Diff and selection present: copy only selected parts of the diff
+  // 🧹Diff and selection present: copy only selected parts of the diff
   const filteredDiff: DesignDiff = { ...designDiff };
   if (designDiff!.pieces) {
     filteredDiff.pieces = {
@@ -1660,7 +1803,7 @@ const useDesignClipboard = (containerRef: React.RefObject<HTMLElement | null>, d
     if (!element) return;
     const handler = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "c") {
-        // Don't override native text selection copy
+        // 📋Don't override native text selection copy
         const windowSelection = window.getSelection();
         if (windowSelection && windowSelection.toString().length > 0) return;
         event.preventDefault();
@@ -1673,9 +1816,9 @@ const useDesignClipboard = (containerRef: React.RefObject<HTMLElement | null>, d
   }, [containerRef, design, designDiff, selection]);
 };
 
-// #endregion 🔖Clipboard
+// #endregion ⚗️Clipboard
 
-// #region 🔖Vec
+// #region 🏪Vec
 
 // Specs: SVG 2D vector input with draggable handle, visible origin and axes.
 // Summary: Draggable XY pad mapping pointer position to a {u,v} vector in a bounded domain.
@@ -1832,9 +1975,9 @@ export const Vec: React.FC<VecProps> = ({ id, vec, minU = -1, maxU = 1, minV = -
   );
 };
 
-// #endregion 🔖Vec
+// #endregion 🏪Vec
 
-// #region 🔖Vector
+// #region 🔤Vector
 
 // Specs: Semio 3D vector component supporting display/select modes with partial/full
 // controlled/uncontrolled behavior. Supports per-axis enable flags for partial selection.
@@ -1999,21 +2142,31 @@ export const Vector: React.FC<VectorProps> = ({
   );
 };
 
-// #endregion 🔖Vector
+// #endregion 🔤Vector
 
-// #region 🔖Scene
+// #region 📍Scene
 
 // Specs: Minimal 3D scene rendering a design from a kit. Uses React Three Fiber Canvas
-// with orthographic camera, grid, gizmo, and orbit controls. Pieces are rendered as
-// positioned box geometries via their plane data. Fully iframe compatible (no window.top
-// access, no cross-origin assumptions). frameloop="demand" for performance.
-// Summary: Lightweight 3D scene viewer that renders a design's pieces as positioned boxes.
+// with orthographic camera, grid, gizmo, and orbit controls. Pieces use kit GLTF or unit boxes;
+// selection hull unions mesh AABBs from registered scene roots (not planes). frameloop="demand".
+// Summary: Lightweight 3D scene viewer with model-accurate selection bounds.
 
 const SCENE_BOX_SIZE = 1;
 
+// Specs: Small world-space inflate on the union of mesh AABBs so the highlight stroke does not coincide exactly with geometry facets.
+// Summary: Padding after model-derived scene selection hull.
+
+const SCENE_SELECTION_BOUNDS_EXPAND = 0.04;
+
 const getSceneComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 const resolveSceneColor = (cssValue: string, fallback: string): string => {
-  if (cssValue.startsWith("var(")) return getSceneComputedColor(cssValue.replace("var(", "").replace(")", "")) || fallback;
+  if (cssValue.startsWith("var(")) {
+    const variableExpression = cssValue.slice(4, -1);
+    const [variableNameRaw, inlineFallbackRaw] = variableExpression.split(",");
+    const variableName = variableNameRaw?.trim() ?? "";
+    const inlineFallback = inlineFallbackRaw?.trim();
+    return (variableName ? getSceneComputedColor(variableName) : "") || inlineFallback || fallback;
+  }
   if (cssValue === "currentColor") return fallback;
   return cssValue;
 };
@@ -2059,9 +2212,7 @@ const isSceneGltfSource = (source?: string, modelName?: string): boolean => {
 const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: DiagramEntityStatus }>): ScenePieceAsset[] => {
   const kindsByGuid = new Map((kit.types ?? []).map((kind) => [kind.guid, kind] as const));
   const filesByGuid = new Map((kit.files ?? []).map((file) => [file.guid, file] as const));
-  console.debug(`[DEBUG] buildScenePieceAssets: kit.types=${kit.types?.length ?? 0} kit.files=${kit.files?.length ?? 0} pieces=${pieces.length}`);
   const withPlaneAndCenter = pieces.filter(({ piece }) => piece.plane && piece.center);
-  console.debug(`[DEBUG] buildScenePieceAssets: pieces with plane+center=${withPlaneAndCenter.length}`);
   const result = withPlaneAndCenter.map(({ piece, status }) => {
     const kindGuid = piece.type?.guid;
     const kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
@@ -2085,8 +2236,6 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
       modelSource: getSceneFileSource(file),
     };
   });
-  const withModel = result.filter((a) => a.modelSource);
-  console.debug(`[DEBUG] buildScenePieceAssets: assets with modelSource=${withModel.length}/${result.length} first=${withModel[0]?.modelSource?.slice(0, 80)}`);
   return result;
 };
 
@@ -2134,7 +2283,134 @@ const toScenePieceMatrix = (plane: Plane): THREE.Matrix4 => {
   return new THREE.Matrix4().multiplyMatrices(SEMIO_TO_THREE_BASIS, planeMatrix).multiply(THREE_TO_SEMIO_BASIS);
 };
 
-// #region 🔖SceneModelMaterials
+// Specs: Union of {@link THREE.Box3.setFromObject} on registered roots — pieces use transform groups that wrap GLTF or placeholders; connections use cylinder meshes. Excludes abstract planes/connectors.
+// Summary: World AABB for selected rendered scene objects only.
+
+const computeSceneSelectionUnionBox = (
+  rootsByGuid: Map<string, THREE.Object3D>,
+  selectedPieceGuids: Set<string>,
+  selectedConnectionGuids: Set<string>,
+): THREE.Box3 | null => {
+  const box = new THREE.Box3();
+  let any = false;
+  const unionObject = (obj: THREE.Object3D) => {
+    const b = new THREE.Box3().setFromObject(obj);
+    if (!Number.isFinite(b.min.x) || !Number.isFinite(b.max.x) || b.isEmpty()) return;
+    if (!any) {
+      box.copy(b);
+      any = true;
+    } else {
+      box.union(b);
+    }
+  };
+  for (const guid of selectedPieceGuids) {
+    const obj = rootsByGuid.get(guid);
+    if (obj) unionObject(obj);
+  }
+  for (const guid of selectedConnectionGuids) {
+    const obj = rootsByGuid.get(guid);
+    if (obj) unionObject(obj);
+  }
+  if (!any) return null;
+  box.expandByScalar(SCENE_SELECTION_BOUNDS_EXPAND);
+  return box;
+};
+
+// #region 🎯SceneSelectionBounds
+
+// Specs: Registry maps piece/connection guids to Object3D roots; hull updates under demand frameloop via invalidate + useFrame.
+// Summary: Provider and model-driven selection overlay mesh.
+
+type SceneModelBoundsRegistryValue = {
+  registerBoundsRoot: (guid: string, root: THREE.Object3D) => void;
+  unregisterBoundsRoot: (guid: string) => void;
+  rootsRef: React.MutableRefObject<Map<string, THREE.Object3D>>;
+};
+
+const SceneModelBoundsRegistryContext = React.createContext<SceneModelBoundsRegistryValue | null>(null);
+
+const SceneModelBoundsRegistryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const rootsRef = React.useRef(new Map<string, THREE.Object3D>());
+  const value = React.useMemo<SceneModelBoundsRegistryValue>(
+    () => ({
+      registerBoundsRoot: (guid: string, root: THREE.Object3D) => {
+        rootsRef.current.set(guid, root);
+      },
+      unregisterBoundsRoot: (guid: string) => {
+        rootsRef.current.delete(guid);
+      },
+      rootsRef,
+    }),
+    [],
+  );
+  return <SceneModelBoundsRegistryContext.Provider value={value}>{children}</SceneModelBoundsRegistryContext.Provider>;
+};
+
+const SceneSelectionBoundsFromModels: React.FC<{
+  selectionEnabled: boolean;
+  selectedPieceGuids: Set<string>;
+  selectedConnectionGuids: Set<string>;
+}> = ({ selectionEnabled, selectedPieceGuids, selectedConnectionGuids }) => {
+  const registry = React.useContext(SceneModelBoundsRegistryContext);
+  const { invalidate } = useThree();
+  const groupRef = React.useRef<THREE.Group>(null);
+  const meshRef = React.useRef<THREE.Mesh>(null);
+  const [accent, setAccent] = React.useState(() => getSceneComputedColor("--accent") || "#3b82f6");
+  React.useEffect(() => {
+    const sync = () => setAccent(getSceneComputedColor("--accent") || "#3b82f6");
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  const selectionNonEmpty = selectedPieceGuids.size > 0 || selectedConnectionGuids.size > 0;
+  const selectionKey = React.useMemo(
+    () => `${Array.from(selectedPieceGuids).sort().join(",")}|${Array.from(selectedConnectionGuids).sort().join(",")}`,
+    [selectedPieceGuids, selectedConnectionGuids],
+  );
+
+  React.useLayoutEffect(() => {
+    if (!selectionEnabled || !selectionNonEmpty) return;
+    invalidate();
+  }, [invalidate, selectionEnabled, selectionKey, selectionNonEmpty]);
+
+  useFrame(() => {
+    if (!registry || !selectionEnabled || !selectionNonEmpty) {
+      if (groupRef.current) groupRef.current.visible = false;
+      return;
+    }
+    const computed = computeSceneSelectionUnionBox(registry.rootsRef.current, selectedPieceGuids, selectedConnectionGuids);
+    if (!computed || computed.isEmpty()) {
+      if (groupRef.current) groupRef.current.visible = false;
+      return;
+    }
+    const g = groupRef.current;
+    const mesh = meshRef.current;
+    if (!g || !mesh) return;
+    g.visible = true;
+    const c = new THREE.Vector3();
+    const s = new THREE.Vector3();
+    computed.getCenter(c);
+    computed.getSize(s);
+    g.position.copy(c);
+    mesh.scale.set(Math.max(s.x, 0.06), Math.max(s.y, 0.06), Math.max(s.z, 0.06));
+  });
+
+  return (
+    <group ref={groupRef} raycast={() => null} visible={false}>
+      <mesh ref={meshRef} raycast={() => null}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={accent} depthWrite={false} metalness={0} opacity={SEMIO_SELECTION_BOUNDS_FILL_OPACITY} roughness={1} transparent />
+        <Edges color={accent} opacity={SEMIO_SELECTION_BOUNDS_STROKE_OPACITY} threshold={18} transparent />
+      </mesh>
+    </group>
+  );
+};
+
+// #endregion 🎯SceneSelectionBounds
+
+// #region 🔗SceneModelMaterials
 // Specs: Imported scene assets in semio/ui MUST ignore embedded mesh, line, and point colors.
 // The runtime replaces them with homogeneous scene materials so status and interaction colors stay consistent.
 // Summary: Shared helpers that normalize imported scene materials and recolor them consistently.
@@ -2222,7 +2498,7 @@ const getSceneModelColorState = (status: DiagramEntityStatus, isSelected: boolea
   };
 };
 
-// #endregion 🔖SceneModelMaterials
+// #endregion 🔗SceneModelMaterials
 
 interface ScenePieceModelProps {
   modelSource: string;
@@ -2233,15 +2509,17 @@ interface ScenePieceModelProps {
 
 const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, isSelected, isHovered }) => {
   // Disable Draco and meshopt to avoid WebAssembly CSP violations in MCP App iframes.
-  // drei defaults meshopt to true which calls WebAssembly.instantiate() violating script-src wasm-eval.
+  // 🔷drei defaults meshopt to true which calls WebAssembly.instantiate() violating script-src wasm-eval.
   const gltf = useGLTF(modelSource, false, false);
+  const { invalidate } = useThree();
   const clone = React.useMemo(() => {
     return cloneSceneModelWithHomogeneousMaterials(gltf.scene, "#888888", "#888888");
   }, [gltf.scene]);
 
   React.useEffect(() => {
     applySceneModelColorState(clone, getSceneModelColorState(status, isSelected, isHovered));
-  }, [clone, status, isHovered, isSelected]);
+    invalidate();
+  }, [clone, invalidate, status, isHovered, isSelected]);
 
   return <Clone object={clone} />;
 };
@@ -2268,6 +2546,9 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
     return toScenePieceMatrix(piece.plane as Plane);
   }, [piece.plane, piece.center]);
 
+  const boundsRegistry = React.useContext(SceneModelBoundsRegistryContext);
+  const pieceBoundsRootRef = React.useRef<THREE.Group>(null);
+
   const meshColor = isSelected ? activeColor : isHovered ? hoverColor : defaultColor;
   const edgeColor = meshColor;
   const isRemoved = status === "removed";
@@ -2276,29 +2557,36 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
 
   const canRenderModel = isSceneGltfSource(modelSource, modelName);
 
+  React.useLayoutEffect(() => {
+    if (!boundsRegistry || !piece.guid) return;
+    const n = pieceBoundsRootRef.current;
+    if (n) boundsRegistry.registerBoundsRoot(piece.guid, n);
+    return () => boundsRegistry.unregisterBoundsRoot(piece.guid);
+  }, [boundsRegistry, piece.guid, matrix, canRenderModel, modelSource]);
+
   const handleClick = onClick
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onClick();
-    }
+        event.stopPropagation();
+        onClick();
+      }
     : undefined;
 
   const handlePointerEnter = onPointerEnter
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onPointerEnter();
-    }
+        event.stopPropagation();
+        onPointerEnter();
+      }
     : undefined;
 
   const handlePointerLeave = onPointerLeave
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onPointerLeave();
-    }
+        event.stopPropagation();
+        onPointerLeave();
+      }
     : undefined;
 
   return (
-    <group matrix={matrix} matrixAutoUpdate={false}>
+    <group ref={pieceBoundsRootRef} matrix={matrix} matrixAutoUpdate={false}>
       {canRenderModel && modelSource ? (
         <group onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
           <React.Suspense fallback={null}>
@@ -2333,6 +2621,9 @@ const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePie
   const activeColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, true, false), "#3b82f6"), [status]);
   const hoverColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa"), [status]);
 
+  const boundsRegistry = React.useContext(SceneModelBoundsRegistryContext);
+  const connectionMeshRef = React.useRef<THREE.Mesh>(null);
+
   const start = React.useMemo(() => (sourcePiece.plane && sourcePiece.center ? toSceneVector(sourcePiece.plane.origin) : null), [sourcePiece.plane, sourcePiece.center]);
   const end = React.useMemo(() => (targetPiece.plane && targetPiece.center ? toSceneVector(targetPiece.plane.origin) : null), [targetPiece.plane, targetPiece.center]);
   const transform = React.useMemo(() => {
@@ -2350,29 +2641,44 @@ const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePie
   const color = isSelected ? activeColor : isHovered ? hoverColor : defaultColor;
   const radius = isSelected ? 0.14 : isHovered ? 0.11 : 0.08;
 
+  React.useLayoutEffect(() => {
+    if (!boundsRegistry || !connection.guid) return;
+    const n = connectionMeshRef.current;
+    if (n) boundsRegistry.registerBoundsRoot(connection.guid, n);
+    return () => boundsRegistry.unregisterBoundsRoot(connection.guid);
+  }, [boundsRegistry, connection.guid, transform, radius]);
+
   const handleClick = onClick
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onClick();
-    }
+        event.stopPropagation();
+        onClick();
+      }
     : undefined;
 
   const handlePointerEnter = onPointerEnter
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onPointerEnter();
-    }
+        event.stopPropagation();
+        onPointerEnter();
+      }
     : undefined;
 
   const handlePointerLeave = onPointerLeave
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onPointerLeave();
-    }
+        event.stopPropagation();
+        onPointerLeave();
+      }
     : undefined;
 
   return (
-    <mesh name={connection.guid} position={transform.midpoint} quaternion={transform.quaternion} onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
+    <mesh
+      ref={connectionMeshRef}
+      name={connection.guid}
+      position={transform.midpoint}
+      quaternion={transform.quaternion}
+      onClick={handleClick}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+    >
       <cylinderGeometry args={[radius, radius, transform.length, 12]} />
       <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.2 : 0.05} transparent={status === "removed"} opacity={status === "removed" ? 0.35 : 1} />
     </mesh>
@@ -2386,8 +2692,9 @@ interface SceneGizmoProps {
 
 const SceneGizmo: React.FC<SceneGizmoProps> = ({ show, onAxisClick }) => {
   const [colors, setColors] = React.useState<[string, string, string]>(() => [getSceneComputedColor("--accent") || "#ef4444", getSceneComputedColor("--accent-tertiary") || "#22c55e", getSceneComputedColor("--accent-secondary") || "#3b82f6"]);
-  const margin = React.useMemo(() => [124, 124] as [number, number], []);
-  const axisScale = React.useMemo(() => [1.35, 1.35, 1.35] as [number, number, number], []);
+  // GizmoViewport axis box uses boxGeometry args [length, thickness, thickness]; uniform scale yields a chunky cube.
+  const margin = React.useMemo(() => [80, 80] as [number, number], []);
+  const axisScale = React.useMemo(() => [0.88, 0.036, 0.036] as [number, number, number], []);
   const labelColor = React.useMemo(() => getSceneComputedColor("--foreground") || "#111827", []);
 
   React.useEffect(() => {
@@ -2405,10 +2712,18 @@ const SceneGizmo: React.FC<SceneGizmoProps> = ({ show, onAxisClick }) => {
         labels={["X", "Z", "-Y"]}
         axisColors={colors}
         axisScale={axisScale}
-        axisHeadScale={1.35}
+        axisHeadScale={0.92}
+        hideNegativeAxes
         labelColor={labelColor}
-        font="20px Inter var, Arial, sans-serif"
-        onClick={onAxisClick ? (e) => { onAxisClick(e.object.position.clone()); return null; } : undefined}
+        font="16px Inter var, Arial, sans-serif"
+        onClick={
+          onAxisClick
+            ? (e) => {
+                onAxisClick(e.object.position.clone());
+                return null;
+              }
+            : undefined
+        }
       />
     </GizmoHelper>
   );
@@ -2697,10 +3012,13 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   const pieceAssets = React.useMemo(() => buildScenePieceAssets(kit ?? ({ guid: "", name: "", types: [], files: [] } as unknown as Kit), snapshot.pieces), [kit, snapshot.pieces]);
 
   const gizmoSnappedRef = React.useRef(false);
-  const handleAxisClick = React.useCallback((_direction: THREE.Vector3) => {
-    gizmoSnappedRef.current = true;
-    onProjectionChange?.("orthographic");
-  }, [onProjectionChange]);
+  const handleAxisClick = React.useCallback(
+    (_direction: THREE.Vector3) => {
+      gizmoSnappedRef.current = true;
+      onProjectionChange?.("orthographic");
+    },
+    [onProjectionChange],
+  );
   const handleOrbitEnd = React.useCallback(() => {
     if (gizmoSnappedRef.current) {
       gizmoSnappedRef.current = false;
@@ -2711,8 +3029,23 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   return (
     <div className={`h-full w-full ${className}`} aria-label={title}>
       <ThreeCanvas onPointerMissed={clearSelection} orthographic frameloop="demand" camera={{ zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 }} style={{ width: "100%", height: "100%" }}>
-        <SceneInnerContent showGrid={showGrid} showGizmo={showGizmo} zoomTarget={effectiveZoomTarget} snapshot={snapshot} camera={camera} onCameraChange={onCameraChange} onAxisClick={onProjectionChange ? handleAxisClick : undefined} onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}>
-          {snapshot.connections.map(({ connection, sourcePiece, targetPiece, status }) => (
+        <SceneModelBoundsRegistryProvider>
+          <SceneInnerContent
+            showGrid={showGrid}
+            showGizmo={showGizmo}
+            zoomTarget={effectiveZoomTarget}
+            snapshot={snapshot}
+            camera={camera}
+            onCameraChange={onCameraChange}
+            onAxisClick={onProjectionChange ? handleAxisClick : undefined}
+            onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}
+          >
+            <SceneSelectionBoundsFromModels
+              selectedConnectionGuids={selectedConnectionGuids}
+              selectedPieceGuids={selectedPieceGuids}
+              selectionEnabled={selectionEnabled}
+            />
+            {snapshot.connections.map(({ connection, sourcePiece, targetPiece, status }) => (
             <SceneConnection
               key={connection.guid}
               connection={connection}
@@ -2724,9 +3057,9 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
               onClick={
                 effectiveConnectionSelectionEnabled || onConnectionClick
                   ? () => {
-                    handleSelectConnection(connection.guid);
-                    onConnectionClick?.(connection);
-                  }
+                      handleSelectConnection(connection.guid);
+                      onConnectionClick?.(connection);
+                    }
                   : undefined
               }
               onPointerEnter={effectiveConnectionHoverEnabled ? () => handleHoverConnection(connection.guid) : undefined}
@@ -2745,9 +3078,9 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
               onClick={
                 effectivePieceSelectionEnabled || onPieceClick
                   ? () => {
-                    handleSelectPiece(piece.guid);
-                    onPieceClick?.(piece);
-                  }
+                      handleSelectPiece(piece.guid);
+                      onPieceClick?.(piece);
+                    }
                   : undefined
               }
               onPointerEnter={effectivePieceHoverEnabled ? () => handleHoverPiece(piece.guid) : undefined}
@@ -2755,14 +3088,15 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
             />
           ))}
         </SceneInnerContent>
+        </SceneModelBoundsRegistryProvider>
       </ThreeCanvas>
     </div>
   );
 };
 
-// #endregion 🔖Scene
+// #endregion 📍Scene
 
-// #region 🔖Model
+// #region 🖋️Model
 
 // Specs: Model is a direct alias of SemioScene with a different default title.
 // Summary: 3D model viewer alias of SemioScene.
@@ -2771,9 +3105,334 @@ export type SemioModelProps = SemioSceneProps;
 
 export const SemioModel: React.FC<SemioModelProps> = (props) => <SemioScene {...props} title={props.title ?? "Design Model"} />;
 
-// #endregion 🔖Model
+// #endregion 🖋️Model
 
-// #region 🔖Design
+// #region 🧱Type
+// Specs: Type is a single-kind 3D surface that mirrors the design scene interaction pattern for
+// one kind. It renders the best available model from the kit at the origin and overlays the kind
+// connectors as selectable/hoverable 3D arrows.
+// Summary: Single-kind 3D scene with model preview and interactive connectors.
+
+export interface TypeSelection {
+  connectorGuids?: string[];
+}
+
+export interface TypeHover {
+  connectorGuid?: string | null;
+}
+
+export interface SemioTypeProps {
+  type: SemioKind;
+  kit?: Kit;
+  selection?: TypeSelection;
+  defaultSelection?: TypeSelection;
+  selectionEnabled?: boolean;
+  connectorSelectionEnabled?: boolean;
+  onSelectionChange?: (selection: TypeSelection) => void;
+  hover?: TypeHover;
+  defaultHover?: TypeHover;
+  hoverEnabled?: boolean;
+  connectorHoverEnabled?: boolean;
+  onHoverChange?: (hover: TypeHover) => void;
+  onConnectorClick?: (connector: Connector) => void;
+  showModel?: boolean;
+  showConnectors?: boolean;
+  showGrid?: boolean;
+  showGizmo?: boolean;
+  camera?: Camera;
+  onCameraChange?: (camera: Camera) => void;
+  onProjectionChange?: (projection: "camera" | "orthographic") => void;
+  className?: string;
+  title?: string;
+}
+
+interface TypeModelAsset {
+  modelName?: string;
+  modelSource?: string;
+}
+
+const TYPE_CONNECTOR_ARROW_LENGTH = 0.45;
+const TYPE_FALLBACK_BOX_SIZE = 1;
+const TYPE_ZOOM_ORIGIN = new THREE.Vector3(0, 0, 0);
+const TYPE_ZOOM_PADDING = 0.35;
+
+const normalizeTypeSelection = (selection?: TypeSelection): TypeSelection => ({
+  connectorGuids: selection?.connectorGuids ?? [],
+});
+
+const normalizeTypeHover = (hover?: TypeHover): TypeHover => ({
+  connectorGuid: hover?.connectorGuid ?? null,
+});
+
+const buildTypeModelAsset = (kind: SemioKind, kit?: Kit): TypeModelAsset => {
+  const models = kind.models ?? [];
+  if (models.length === 0) return {};
+
+  const filesByGuid = new Map((kit?.files ?? []).map((file) => [file.guid, file] as const));
+
+  let selectedModel = selectBestModel(models, []);
+  let file = selectedModel?.file?.guid ? filesByGuid.get(selectedModel.file.guid) : undefined;
+  if (!isSceneGltfSource(getSceneFileSource(file), file?.name)) {
+    for (const candidateModel of models) {
+      const candidateFile = candidateModel.file?.guid ? filesByGuid.get(candidateModel.file.guid) : undefined;
+      if (candidateFile && isSceneGltfSource(getSceneFileSource(candidateFile), candidateFile.name)) {
+        selectedModel = candidateModel;
+        file = candidateFile;
+        break;
+      }
+    }
+  }
+
+  if (!selectedModel) return {};
+  return {
+    modelName: file?.name,
+    modelSource: getSceneFileSource(file),
+  };
+};
+
+const buildTypeZoomBox = (kind: SemioKind): THREE.Box3 => {
+  const box = new THREE.Box3();
+  let hasPoints = false;
+
+  (kind.connectors ?? []).forEach((connector) => {
+    const start = toSceneVector(connector.point);
+    const directionSource = new THREE.Vector3(connector.direction.x, connector.direction.y, connector.direction.z);
+    const direction = directionSource.lengthSq() > 0.000001 ? directionSource.applyMatrix4(SEMIO_TO_THREE_BASIS).normalize() : new THREE.Vector3(0, 0, 1);
+    const end = start.clone().add(direction.multiplyScalar(TYPE_CONNECTOR_ARROW_LENGTH));
+    box.expandByPoint(start);
+    box.expandByPoint(end);
+    hasPoints = true;
+  });
+
+  if (!hasPoints) {
+    box.expandByPoint(TYPE_ZOOM_ORIGIN.clone().addScalar(-TYPE_FALLBACK_BOX_SIZE * 0.5));
+    box.expandByPoint(TYPE_ZOOM_ORIGIN.clone().addScalar(TYPE_FALLBACK_BOX_SIZE * 0.5));
+    return box;
+  }
+
+  box.expandByScalar(TYPE_ZOOM_PADDING);
+  return box;
+};
+
+const TypeSceneAutoFit: React.FC<{ kind: SemioKind }> = ({ kind }) => {
+  const bounds = useBounds();
+  const fittedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    fittedRef.current = false;
+  }, [kind.guid]);
+
+  React.useEffect(() => {
+    if (fittedRef.current) return;
+    bounds.refresh(buildTypeZoomBox(kind)).fit();
+    fittedRef.current = true;
+  }, [bounds, kind]);
+
+  return null;
+};
+
+interface TypeConnectorVisualProps {
+  connector: Connector;
+  isSelected: boolean;
+  isHovered: boolean;
+  onClick?: () => void;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
+}
+
+const TypeConnectorVisual: React.FC<TypeConnectorVisualProps> = ({ connector, isSelected, isHovered, onClick, onPointerEnter, onPointerLeave }) => {
+  const defaultColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor("default", false, false), "#888888"), []);
+  const selectedColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor("default", true, false), "#3b82f6"), []);
+  const hoveredColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor("default", false, true), "#60a5fa"), []);
+
+  const start = React.useMemo(() => toSceneVector(connector.point), [connector.point]);
+  const direction = React.useMemo(() => {
+    const baseDirection = new THREE.Vector3(connector.direction.x, connector.direction.y, connector.direction.z);
+    if (baseDirection.lengthSq() <= 0.000001) return new THREE.Vector3(0, 0, 1);
+    return baseDirection.applyMatrix4(SEMIO_TO_THREE_BASIS).normalize();
+  }, [connector.direction]);
+  const end = React.useMemo(() => start.clone().add(direction.clone().multiplyScalar(TYPE_CONNECTOR_ARROW_LENGTH)), [direction, start]);
+
+  const color = isSelected ? selectedColor : isHovered ? hoveredColor : defaultColor;
+  const stemRadius = isSelected ? 0.045 : isHovered ? 0.04 : 0.035;
+  const tipRadius = isSelected ? 0.075 : isHovered ? 0.07 : 0.06;
+  const rootRadius = isSelected ? 0.06 : isHovered ? 0.055 : 0.05;
+
+  const handleClick = onClick
+    ? (event: { stopPropagation: () => void }) => {
+        event.stopPropagation();
+        onClick();
+      }
+    : undefined;
+
+  const handlePointerEnter = onPointerEnter
+    ? (event: { stopPropagation: () => void }) => {
+        event.stopPropagation();
+        onPointerEnter();
+      }
+    : undefined;
+
+  const handlePointerLeave = onPointerLeave
+    ? (event: { stopPropagation: () => void }) => {
+        event.stopPropagation();
+        onPointerLeave();
+      }
+    : undefined;
+
+  return (
+    <group name={connector.guid} onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
+      <mesh position={start.toArray() as [number, number, number]}>
+        <sphereGeometry args={[rootRadius, 24, 24]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.4 : isHovered ? 0.2 : 0.08} />
+      </mesh>
+      <mesh position={end.toArray() as [number, number, number]}>
+        <sphereGeometry args={[tipRadius, 24, 24]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.4 : isHovered ? 0.2 : 0.08} />
+      </mesh>
+      <mesh position={start.clone().add(end).multiplyScalar(0.5)} quaternion={new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), end.clone().sub(start).normalize())}>
+        <cylinderGeometry args={[stemRadius, stemRadius, start.distanceTo(end), 12]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.4 : isHovered ? 0.2 : 0.08} />
+      </mesh>
+    </group>
+  );
+};
+
+const TypeFallbackModel: React.FC = () => {
+  const color = React.useMemo(() => resolveSceneColor("var(--muted-foreground)", "#888888"), []);
+  return (
+    <mesh>
+      <boxGeometry args={[TYPE_FALLBACK_BOX_SIZE, TYPE_FALLBACK_BOX_SIZE, TYPE_FALLBACK_BOX_SIZE]} />
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.05} />
+      <Edges scale={1.001} color={color} />
+    </mesh>
+  );
+};
+
+export const SemioType: React.FC<SemioTypeProps> = ({
+  type: kind,
+  kit,
+  selection,
+  defaultSelection,
+  selectionEnabled = true,
+  connectorSelectionEnabled = true,
+  onSelectionChange,
+  hover,
+  defaultHover,
+  hoverEnabled = true,
+  connectorHoverEnabled = true,
+  onHoverChange,
+  onConnectorClick,
+  showModel = true,
+  showConnectors = true,
+  showGrid = true,
+  showGizmo = true,
+  camera,
+  onCameraChange,
+  onProjectionChange,
+  className = "",
+  title = "Type",
+}) => {
+  const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeTypeSelection(defaultSelection), onSelectionChange);
+  const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeTypeHover(defaultHover), onHoverChange);
+  const selectedConnectorGuids = React.useMemo(() => new Set(selectionEnabled ? (resolvedSelection.connectorGuids ?? []) : []), [resolvedSelection.connectorGuids, selectionEnabled]);
+  const hoveredConnectorGuid = hoverEnabled && connectorHoverEnabled ? (resolvedHover.connectorGuid ?? null) : null;
+  const effectiveConnectorSelectionEnabled = selectionEnabled && connectorSelectionEnabled;
+  const effectiveConnectorHoverEnabled = hoverEnabled && connectorHoverEnabled && (effectiveConnectorSelectionEnabled || !!onConnectorClick);
+  const modelAsset = React.useMemo(() => buildTypeModelAsset(kind, kit), [kind, kit]);
+  const canRenderModel = React.useMemo(() => isSceneGltfSource(modelAsset.modelSource, modelAsset.modelName), [modelAsset.modelName, modelAsset.modelSource]);
+
+  const clearSelection = React.useCallback(() => {
+    if (!selectionEnabled) return;
+    setResolvedSelection({ connectorGuids: [] });
+  }, [selectionEnabled, setResolvedSelection]);
+
+  const handleSelectConnector = React.useCallback(
+    (connectorGuid: string) => {
+      if (!effectiveConnectorSelectionEnabled) return;
+      const nextConnectorGuids = new Set(resolvedSelection.connectorGuids ?? []);
+      if (nextConnectorGuids.has(connectorGuid)) {
+        nextConnectorGuids.delete(connectorGuid);
+      } else {
+        nextConnectorGuids.add(connectorGuid);
+      }
+      setResolvedSelection({ connectorGuids: Array.from(nextConnectorGuids) });
+    },
+    [effectiveConnectorSelectionEnabled, resolvedSelection.connectorGuids, setResolvedSelection],
+  );
+
+  const handleHoverConnector = React.useCallback(
+    (connectorGuid: string | null) => {
+      if (!effectiveConnectorHoverEnabled) return;
+      setResolvedHover({ connectorGuid });
+    },
+    [effectiveConnectorHoverEnabled, setResolvedHover],
+  );
+
+  const gizmoSnappedRef = React.useRef(false);
+  const handleAxisClick = React.useCallback(
+    (_direction: THREE.Vector3) => {
+      gizmoSnappedRef.current = true;
+      onProjectionChange?.("orthographic");
+    },
+    [onProjectionChange],
+  );
+  const handleOrbitEnd = React.useCallback(() => {
+    if (gizmoSnappedRef.current) {
+      gizmoSnappedRef.current = false;
+      onProjectionChange?.("camera");
+    }
+  }, [onProjectionChange]);
+
+  return (
+    <div className={`h-full w-full ${className}`} aria-label={title}>
+      <ThreeCanvas onPointerMissed={clearSelection} orthographic frameloop="demand" camera={{ zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 }} style={{ width: "100%", height: "100%" }}>
+        <SceneInnerContent
+          showGrid={showGrid}
+          showGizmo={showGizmo}
+          zoomTarget="none"
+          snapshot={{ pieces: [], connections: [] }}
+          camera={camera}
+          onCameraChange={onCameraChange}
+          onAxisClick={onProjectionChange ? handleAxisClick : undefined}
+          onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}
+        >
+          {!camera && <TypeSceneAutoFit kind={kind} />}
+          {showModel &&
+            (canRenderModel && modelAsset.modelSource ? (
+              <React.Suspense fallback={null}>
+                <ScenePieceModel modelSource={modelAsset.modelSource} status="default" isSelected={false} isHovered={false} />
+              </React.Suspense>
+            ) : (
+              <TypeFallbackModel />
+            ))}
+          {showConnectors &&
+            (kind.connectors ?? []).map((connector) => (
+              <TypeConnectorVisual
+                key={connector.guid}
+                connector={connector}
+                isSelected={selectedConnectorGuids.has(connector.guid)}
+                isHovered={hoveredConnectorGuid === connector.guid}
+                onClick={
+                  effectiveConnectorSelectionEnabled || onConnectorClick
+                    ? () => {
+                        handleSelectConnector(connector.guid);
+                        onConnectorClick?.(connector);
+                      }
+                    : undefined
+                }
+                onPointerEnter={effectiveConnectorHoverEnabled ? () => handleHoverConnector(connector.guid) : undefined}
+                onPointerLeave={effectiveConnectorHoverEnabled ? () => handleHoverConnector((resolvedHover.connectorGuid ?? null) === connector.guid ? null : (resolvedHover.connectorGuid ?? null)) : undefined}
+              />
+            ))}
+        </SceneInnerContent>
+      </ThreeCanvas>
+    </div>
+  );
+};
+
+// #endregion 🧱Type
+
+// #region 📌Design
 
 // Specs: Split-view design viewer with Diagram on the right and Scene on the left.
 // Uses CSS grid for layout. Fully iframe compatible. Selection state is shared between
@@ -2787,7 +3446,7 @@ export const SemioModel: React.FC<SemioModelProps> = (props) => <SemioScene {...
 export type SemioDesignSplitLayout = "auto" | "always";
 
 /**
- * Pure layout rule for {@link SemioDesign} grid columns — unit-tested so MCP cannot regress to diagram-only full width.
+ * 📋Pure layout rule for {@link SemioDesign} grid columns — unit-tested so MCP cannot regress to diagram-only full width.
  */
 export function semioDesignGridTemplateColumns(splitLayout: SemioDesignSplitLayout, hasPlanes: boolean, sceneRatio: number): string {
   const scenePercent = Math.max(0.1, Math.min(0.9, sceneRatio)) * 100;
@@ -2889,11 +3548,12 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
       style={{
         display: "grid",
         gridTemplateColumns,
+        gridTemplateRows: "100%",
         outline: "none",
       }}
     >
       {showSceneColumn && (
-        <div className="h-full w-full overflow-hidden border-r border-border">
+        <div style={{ width: "100%", height: "100%", overflow: "hidden", borderRight: "1px solid var(--color-border, var(--border))" }}>
           <SemioScene
             design={design}
             kit={kit}
@@ -2920,7 +3580,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
           />
         </div>
       )}
-      <div className="h-full w-full overflow-hidden">
+      <div style={{ width: "100%", height: "100%", overflow: "hidden" }}>
         <SemioDiagram
           design={design}
           designDiff={resolvedDesignDiff}
@@ -2945,19 +3605,18 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
   );
 };
 
-// #endregion 🔖Design
+// #endregion 📌Design
 
-// #region 🔖McpApp
-// [👤semio📚ui💻index🔖mcpapp](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp)
+// #region 🗿McpApp
 // Specs: MCP App design viewer component using the official @modelcontextprotocol/ext-apps/react
 // protocol. Communicates with the MCP host via useApp hook. Receives pre-computed diagram data
 // (points and lines) from tool results as JSON text content. Renders pure SVG diagram.
 // Summary: MCP App React component for rendering semio diagrams inside MCP host iframes.
 
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
-import { useApp, useDocumentTheme, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
+import { useApp, useDocumentTheme } from "@modelcontextprotocol/ext-apps/react";
 
-// #region 🔖McpApp Types
+// #region 🔗McpApp Types
 
 interface McpDiagramPoint {
   guid: string;
@@ -2979,7 +3638,6 @@ interface McpDiagramLine {
 /**
  * Payload structure sent as JSON text content in MCP tool results.
  * Contains pre-computed diagram points and lines from the server.
- * [👤semio📚ui💻index🔖mcpapp🪨mcpdiagrampayload](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/McpDiagramPayload)
  **/
 export interface McpDiagramPayload {
   points: McpDiagramPoint[];
@@ -2998,11 +3656,10 @@ export interface McpDiagramPayload {
   fetchUrl?: string;
 }
 
-// #endregion 🔖McpApp Types
+// #endregion 🔗McpApp Types
 
 /**
  * True when `kitArtifacts` is missing usable data (hosts may send a shell object after stripping nested arrays).
- * [👤semio📚ui💻index🔖mcpapp🛠️isemptykitartifactsdata](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/isEmptyKitArtifactsData)
  **/
 const isEmptyKitArtifactsData = (ka: unknown): boolean => {
   if (ka === null || ka === undefined) return true;
@@ -3052,11 +3709,9 @@ const normalizeMcpDiagramPayload = (raw: Record<string, unknown>): McpDiagramPay
 
 /**
  * Prefer the richest tool payload when hosts duplicate data in `structuredContent` (often truncated) and `content` text (full JSON).
- * [👤semio📚ui💻index🔖mcpapp🛠️scoremcpdiagrampayload](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/scoreMcpDiagramPayload)
  **/
 /**
  * Prefer MCP tool payloads whose embedded {@link Design} includes full piece/connection lists (hosts often truncate `structuredContent`).
- * [👤semio📚ui💻index🔖mcpapp🛠️mcpdesignrichness](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mcpDesignRichness)
  **/
 const mcpDesignRichness = (p: McpDiagramPayload): number => {
   const d = p.design;
@@ -3070,7 +3725,6 @@ const mcpDesignRichness = (p: McpDiagramPayload): number => {
 /**
  * Count pieces that have both plane and center — required for {@link SemioDesign} to show the 3D scene panel.
  * Strips often keep piece guids for diagram but drop nested plane data; hosts then merge a high piece-count shell that loses the scene.
- * [👤semio📚ui💻index🔖mcpapp🛠️mcpscenegeometryrichness](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mcpSceneGeometryRichness)
  **/
 const mcpSceneGeometryRichness = (p: McpDiagramPayload): number => {
   const d = p.design;
@@ -3115,7 +3769,6 @@ const scoreMcpDiagramPayload = (p: McpDiagramPayload): number => {
 
 /**
  * Decide whether McpDesignViewer should render SemioKit as a fallback.
- * [👤semio📚ui💻index🔖mcpapp🛠️candisplaykitartifactsfallback](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/canDisplayKitArtifactsFallback)
  *
  * Specs:
  * - Only diagram/selection modes may fall back to SemioKit when the diagram is empty.
@@ -3130,7 +3783,6 @@ const canDisplayKitArtifactsFallback = (mode: string | undefined, hasDiagram: bo
 
 /**
  * After scoring, take the richest `design` among all parse candidates (same tool result, different channels).
- * [👤semio📚ui💻index🔖mcpapp🛠️mergerichestdesignfromcandidates](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mergeRichestDesignFromCandidates)
  **/
 const _DESIGN_INTENT_MODES_FOR_MERGE = new Set(["show-design", "show-scene", "show-diff", "show-diagram-diff"]);
 
@@ -3161,7 +3813,7 @@ const mergeRichestDesignFromCandidates = (candidates: Array<McpDiagramPayload | 
   const dg = merged.design && typeof merged.design === "object" ? (merged.design as { guid?: string }).guid : undefined;
   if (typeof dg === "string" && dg.length > 0) {
     // MCP intent mapping: an explicit `show-scene` request must win over `show-design`,
-    // otherwise the host can accidentally keep diagram-mode / design-mode payloads.
+    // 📦otherwise the host can accidentally keep diagram-mode / design-mode payloads.
     const priority: Record<string, number> = { "show-scene": 1, "show-design": 2, "show-diff": 3, "show-diagram-diff": 4 };
     let picked: string | undefined;
     let pickedPri = 999;
@@ -3240,7 +3892,6 @@ const bestMcpDiagramPayload = (candidates: Array<McpDiagramPayload | null | unde
 
 /**
  * True when {@link McpKitViewer} has enough {@link KitData} to render SemioKit (not a stripped host shell).
- * [👤semio📚ui💻index🔖mcpapp🛠️iskitviewerpayloadsufficient](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/isKitViewerPayloadSufficient)
  **/
 const isKitViewerPayloadSufficient = (p: McpDiagramPayload | null): boolean => {
   if (!p?.kitArtifacts) return false;
@@ -3249,7 +3900,6 @@ const isKitViewerPayloadSufficient = (p: McpDiagramPayload | null): boolean => {
 
 /**
  * Some MCP hosts never send `ui/notifications/tool-input` with arguments; the path may only appear nested in host context.
- * [👤semio📚ui💻index🔖mcpapp🛠️deepfindkittoolarguments](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/deepFindKitToolArguments)
  **/
 const deepFindKitToolArguments = (obj: unknown, depth = 0): Record<string, unknown> | null => {
   if (depth > 12 || obj === null || typeof obj !== "object") return null;
@@ -3276,7 +3926,6 @@ const deepFindKitToolArguments = (obj: unknown, depth = 0): Record<string, unkno
 
 /**
  * Deep-scans nested objects for a payload shape (some hosts nest JSON under extra keys).
- * [👤semio📚ui💻index🔖mcpapp🛠️deepfinddiagrampayload](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/deepFindDiagramPayload)
  **/
 const deepFindDiagramPayload = (obj: unknown, depth = 0): McpDiagramPayload | null => {
   if (depth > 12 || obj === null || typeof obj !== "object") return null;
@@ -3300,7 +3949,6 @@ const deepFindDiagramPayload = (obj: unknown, depth = 0): McpDiagramPayload | nu
 /**
  * Parses MCP `CallToolResult` (or host copies) into {@link McpDiagramPayload}.
  * Supports `content` text blocks and `structuredContent` (used by several MCP hosts instead of text).
- * [👤semio📚ui💻index🔖mcpapp🛠️parsediagrampayloadfromtoolresult](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/parseDiagramPayloadFromToolResult)
  **/
 export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPayload | null => {
   if (!result || typeof result !== "object") return null;
@@ -3373,7 +4021,6 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
  * MCP App design viewer that renders a semio diagram using the official MCP Apps protocol.
  * Uses useApp from @modelcontextprotocol/ext-apps/react for host communication.
  * Receives pre-computed diagram data (points and lines) from tool results.
- * [👤semio📚ui💻index🔖mcpapp🛠️mcpdesignviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/McpDesignViewer)
  *
  * Specs:
  * - Connects to MCP host via useApp hook with PostMessageTransport.
@@ -3384,7 +4031,7 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
  * - Sends selection changes back to host via updateModelContext.
  **/
 /**
- * Resolves which {@link SemioDesign} / {@link SemioScene} / {@link SemioDiagram} shell to mount.
+ * 🔗Resolves which {@link SemioDesign} / {@link SemioScene} / {@link SemioDiagram} shell to mount.
  * `mode` wins over `surface` when hosts merge stale `surface: diagram` with `show-design` payloads.
  * Exported for unit tests.
  */
@@ -3402,7 +4049,7 @@ export function mcpEffectiveSurface(p: McpDiagramPayload | null | undefined): "d
 }
 
 /**
- * Maps a normalized {@link McpDiagramPayload} to props for semio/ui shells ({@link SemioDesign}, {@link SemioScene}, {@link SemioDiagram}, {@link SemioKit} fallback).
+ * 👁️Maps a normalized {@link McpDiagramPayload} to props for semio/ui shells ({@link SemioDesign}, {@link SemioScene}, {@link SemioDiagram}, {@link SemioKit} fallback).
  * Single place for flatten + diagram fallback so {@link McpDesignViewer} stays a thin host bridge.
  */
 export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
@@ -3434,7 +4081,7 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
   } as unknown as Design;
   // Prefer JS-flattened design (correct cytoscape BFS centers) over raw Python-enriched design, over points fallback.
   // If the chosen design has no pieces with centers, fall back to the pre-computed points/lines
-  // which always have coordinates (hosts may truncate the design or flatten may fail).
+  // 🔷which always have coordinates (hosts may truncate the design or flatten may fail).
   const candidateDesign = (designFlat ?? design) as Design | undefined;
   const candidateHasCenters = candidateDesign?.pieces?.some((pc) => pc.center) ?? false;
   const diagramDesign = (candidateHasCenters ? candidateDesign! : hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign)) as Design;
@@ -3452,7 +4099,7 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
 }
 
 /**
- * Storybook's Design flow flattens a kit-backed design so pieces carry `plane+center`.
+ * 🔶Storybook's Design flow flattens a kit-backed design so pieces carry `plane+center`.
  * MCP viewers often receive a `kit` shell without the referenced `design` entry, even though
  * `payload.design` is present. In that case we augment `kit.designs` with the provided design
  * so {@link flattenDesign} can locate it by guid.
@@ -3465,11 +4112,6 @@ export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undef
   const merged = diff ? designWithDiff(design, diff) : design;
   if (!merged?.guid) return merged;
 
-  const piecesBeforeCount = merged.pieces?.length ?? 0;
-  const piecesWithCenter = merged.pieces?.filter((p) => p.center).length ?? 0;
-  const piecesWithPlane = merged.pieces?.filter((p) => p.plane).length ?? 0;
-  console.debug(`[DEBUG] mcpFlattenDesignForSemioSurface: surface=${surface} pieces=${piecesBeforeCount} withCenter=${piecesWithCenter} withPlane=${piecesWithPlane}`);
-
   try {
     const kitDesigns = (kit.designs ?? []) as Design[];
     const kitForFlatten: Kit = {
@@ -3479,14 +4121,10 @@ export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undef
 
     const fc = flattenDesign(kitForFlatten, merged.guid);
     const piecesDiff = fc.forward?.pieces;
-    console.debug(`[DEBUG] mcpFlattenDesignForSemioSurface: flattenDesign updatedPieces=${(piecesDiff as any)?.updated?.length ?? 0} piecesDiff=${JSON.stringify(piecesDiff)?.slice(0, 200)}`);
     if (!piecesDiff) return merged;
     const result = applyDesignDiff(merged, { pieces: piecesDiff });
-    const resultWithCenter = result.pieces?.filter((p) => p.center).length ?? 0;
-    console.debug(`[DEBUG] mcpFlattenDesignForSemioSurface: result pieces=${result.pieces?.length ?? 0} withCenter=${resultWithCenter}`);
     return result;
-  } catch (e) {
-    console.debug(`[DEBUG] mcpFlattenDesignForSemioSurface failed: ${(e as Error)?.message ?? String(e)}`);
+  } catch {
     return merged;
   }
 }
@@ -3497,7 +4135,7 @@ export const McpDesignViewer: React.FC = () => {
   const [selectedConnections, setSelectedConnections] = React.useState<Set<string>>(new Set());
   const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
   const appRef = React.useRef<McpApp | null>(null);
-  const tryRefetchRef = React.useRef<() => void>(() => { });
+  const tryRefetchRef = React.useRef<() => void>(() => {});
   const lastDiagramPayloadScoreRef = React.useRef<number>(-1);
 
   const mergeDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
@@ -3576,13 +4214,13 @@ export const McpDesignViewer: React.FC = () => {
           mergeDiagramPayload(parsed);
         }
       };
-      a.ontoolcancelled = () => { };
+      a.ontoolcancelled = () => {};
       a.onteardown = async () => ({});
       a.onerror = console.error;
     },
   });
 
-  useHostStyles(app, app?.getHostContext());
+  /* Host styles intentionally not applied — semio uses its own theme from globals.css. */
 
   React.useEffect(() => {
     if (!app) return;
@@ -3605,7 +4243,7 @@ export const McpDesignViewer: React.FC = () => {
     return () => ids.forEach(clearTimeout);
   }, [app, isConnected]);
 
-  // Sync MCP host theme with semio's .dark class convention.
+  // 🏛️Sync MCP host theme with semio's .dark class convention.
   const mcpTheme = useDocumentTheme();
   React.useEffect(() => {
     const el = document.documentElement;
@@ -3647,7 +4285,7 @@ export const McpDesignViewer: React.FC = () => {
 
   if (error) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-danger, #dc2626)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)", background: "var(--base)", color: "var(--destructive-foreground)" }}>
         <p>Error: {error.message}</p>
       </div>
     );
@@ -3655,7 +4293,7 @@ export const McpDesignViewer: React.FC = () => {
 
   if (!isConnected || !app) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)", background: "var(--base)", color: "var(--muted-foreground)" }}>
         <p>Connecting to host…</p>
       </div>
     );
@@ -3663,7 +4301,7 @@ export const McpDesignViewer: React.FC = () => {
 
   if (!payload) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)", background: "var(--base)", color: "var(--muted-foreground)" }}>
         <p>Waiting for design data…</p>
       </div>
     );
@@ -3700,22 +4338,13 @@ export const McpDesignViewer: React.FC = () => {
   if (vm.surface === "design") {
     if (!vm.design) {
       return (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)", background: "var(--base)", color: "var(--muted-foreground)" }}>
           <p>Loading {mode === "show-design" ? "design" : "diff"}…</p>
         </div>
       );
     }
-    // [DEBUG] Log design/diagram info for split view
-    const _dbgDes = (vm.designFlat ?? vm.design) as Design | undefined;
-    const _dbgPcs = _dbgDes?.pieces?.length ?? 0;
-    const _dbgCtr = _dbgDes?.pieces?.filter((p: any) => p.center).length ?? 0;
-    const _dbgNZ = _dbgDes?.pieces?.filter((p: any) => p.center && (p.center.u !== 0 || p.center.v !== 0)).length ?? 0;
-    const _dbgPts = payload.points?.length ?? 0;
     return (
       <div style={{ width: "100%", height: "100vh", position: "relative" }}>
-        <div style={{ position: "absolute", top: 4, left: 4, zIndex: 9999, background: "rgba(0,0,0,0.7)", color: "#fff", fontSize: 11, padding: "4px 8px", borderRadius: 4, fontFamily: "monospace", pointerEvents: "none", lineHeight: 1.5 }}>
-          [DEBUG] split pieces={_dbgPcs} w/center={_dbgCtr} non-zero={_dbgNZ} pts={_dbgPts} flat={String(!!vm.designFlat)}
-        </div>
         <SemioDesign design={(vm.designFlat ?? vm.design) as Design} kit={vm.kit} designDiff={vm.isDiff ? vm.designDiff : undefined} splitLayout="always" {...selectionProps} />
       </div>
     );
@@ -3724,7 +4353,7 @@ export const McpDesignViewer: React.FC = () => {
   if (vm.surface === "scene") {
     if (!vm.design) {
       return (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)", color: "var(--color-text-secondary, #737373)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)", background: "var(--base)", color: "var(--muted-foreground)" }}>
           <p>Loading scene…</p>
         </div>
       );
@@ -3738,7 +4367,7 @@ export const McpDesignViewer: React.FC = () => {
 
   if (vm.forKitFallback && payload.kitArtifacts) {
     return (
-      <div style={{ width: "100%", height: "100vh", overflow: "auto", padding: 12, background: "var(--base, var(--color-background-primary, #ffffff))", color: "var(--foreground)" }}>
+      <div style={{ width: "100%", height: "100vh", overflow: "auto", padding: 12, background: "var(--base)", color: "var(--foreground)" }}>
         <SemioKit data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit Artifacts" />
       </div>
     );
@@ -3754,7 +4383,6 @@ export const McpDesignViewer: React.FC = () => {
 /**
  * MCP App kit viewer: renders only {@link SemioKit} from tool results (kit artifact payload).
  * Used when the MCP host loads `ui://semio/kit-viewer` after kit-scoped tools such as start_working_in_local_kit.
- * [👤semio📚ui💻index🔖mcpapp🛠️mcpkitviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/McpKitViewer)
  *
  * Specs:
  * - Same host connection as {@link McpDesignViewer} but no diagram; kit selection sync only.
@@ -3765,7 +4393,7 @@ export const McpKitViewer: React.FC = () => {
   const appRef = React.useRef<McpApp | null>(null);
   const toolInputArgsRef = React.useRef<Record<string, unknown> | null>(null);
   const gotPayloadRef = React.useRef(false);
-  const tryRefetchRef = React.useRef<() => void>(() => { });
+  const tryRefetchRef = React.useRef<() => void>(() => {});
 
   const mergeKitToolArguments = React.useCallback((): Record<string, unknown> | null => {
     const client = appRef.current;
@@ -3840,13 +4468,13 @@ export const McpKitViewer: React.FC = () => {
           applyKitPayload(parsed);
         }
       };
-      a.ontoolcancelled = () => { };
+      a.ontoolcancelled = () => {};
       a.onteardown = async () => ({});
       a.onerror = console.error;
     },
   });
 
-  useHostStyles(app, app?.getHostContext());
+  /* Host styles intentionally not applied — semio uses its own theme from globals.css. */
 
   React.useEffect(() => {
     if (!app) return;
@@ -3917,18 +4545,17 @@ export const McpKitViewer: React.FC = () => {
     padding: 16,
     textAlign: "center",
     fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)",
-    backgroundColor: "var(--color-background-primary, #1e1e1e)",
-    /* Fixed fallbacks: some hosts set CSS variables to values that hide text in the MCP sandbox. */
-    color: "var(--color-text-primary, #e5e5e5)",
+    backgroundColor: "var(--base)",
+    color: "var(--foreground)",
   };
 
   const mutedStyle: React.CSSProperties = {
-    color: "#a3a3a3",
+    color: "var(--muted-foreground)",
   };
 
   if (error) {
     return (
-      <div style={{ ...shellStyle, color: "#f87171" }}>
+      <div style={{ ...shellStyle, color: "var(--destructive-foreground)" }}>
         <p>Error: {error.message}</p>
       </div>
     );
@@ -3967,8 +4594,8 @@ export const McpKitViewer: React.FC = () => {
         overflow: "auto",
         padding: 12,
         boxSizing: "border-box",
-        backgroundColor: "var(--color-background-primary, #1e1e1e)",
-        color: "var(--color-text-primary, #fafafa)",
+        backgroundColor: "var(--base)",
+        color: "var(--foreground)",
       }}
     >
       <SemioKit data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit" className="min-h-0 text-foreground" />
@@ -3976,14 +4603,13 @@ export const McpKitViewer: React.FC = () => {
   );
 };
 
-// #region 🔖McpSceneViewer
+// #region 🎇McpSceneViewer
 // Specs: Dedicated MCP App scene viewer — always renders SemioScene (3D only), ignoring payload surface/mode.
 // Summary: Standalone 3D-scene-only MCP viewer component.
 
 /**
- * MCP App scene viewer: always renders {@link SemioScene} from tool results.
+ * 🎨MCP App scene viewer: always renders {@link SemioScene} from tool results.
  * Used when the MCP host loads `ui://semio/scene-viewer` (show_scene tool).
- * [👤semio📚ui💻index🔖mcpapp🔖mcpsceneviewer🛠️mcpsceneviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/s/McpSceneViewer/d/i/McpSceneViewer)
  *
  * Specs:
  * - Dedicated viewer for scene-only tools (show_scene).
@@ -3993,7 +4619,7 @@ export const McpKitViewer: React.FC = () => {
 export const McpSceneViewer: React.FC = () => {
   const [payload, setPayload] = React.useState<McpDiagramPayload | null>(null);
   const appRef = React.useRef<McpApp | null>(null);
-  const tryRefetchRef = React.useRef<() => void>(() => { });
+  const tryRefetchRef = React.useRef<() => void>(() => {});
 
   const mergeDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
     setPayload((cur) => {
@@ -4052,13 +4678,13 @@ export const McpSceneViewer: React.FC = () => {
         const p = parseDiagramPayloadFromToolResult(result);
         if (p) mergeDiagramPayload(p);
       };
-      a.ontoolcancelled = () => { };
+      a.ontoolcancelled = () => {};
       a.onteardown = async () => ({});
       a.onerror = console.error;
     },
   });
 
-  useHostStyles(app, app?.getHostContext());
+  /* Host styles intentionally not applied — semio uses its own theme from globals.css. */
 
   React.useEffect(() => {
     if (!app) return;
@@ -4088,23 +4714,23 @@ export const McpSceneViewer: React.FC = () => {
     else el.classList.remove("dark");
   }, [mcpTheme]);
 
-  const shellStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)" };
+  const shellStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)", background: "var(--base)" };
   if (error)
     return (
-      <div style={{ ...shellStyle, color: "var(--color-text-danger, #dc2626)" }}>
+      <div style={{ ...shellStyle, color: "var(--destructive-foreground)" }}>
         <p>Error: {error.message}</p>
       </div>
     );
   if (!isConnected || !app)
     return (
       <div style={shellStyle}>
-        <p style={{ color: "var(--color-text-secondary, #737373)" }}>Connecting to host…</p>
+        <p style={{ color: "var(--muted-foreground)" }}>Connecting to host…</p>
       </div>
     );
   if (!payload)
     return (
       <div style={shellStyle}>
-        <p style={{ color: "var(--color-text-secondary, #737373)" }}>Waiting for design data…</p>
+        <p style={{ color: "var(--muted-foreground)" }}>Waiting for design data…</p>
       </div>
     );
 
@@ -4114,7 +4740,7 @@ export const McpSceneViewer: React.FC = () => {
   if (!designFlat)
     return (
       <div style={shellStyle}>
-        <p style={{ color: "var(--color-text-secondary, #737373)" }}>Loading scene…</p>
+        <p style={{ color: "var(--muted-foreground)" }}>Loading scene…</p>
       </div>
     );
 
@@ -4125,16 +4751,15 @@ export const McpSceneViewer: React.FC = () => {
   );
 };
 
-// #endregion 🔖McpSceneViewer
+// #endregion 🎇McpSceneViewer
 
-// #region 🔖McpDiagramViewer
+// #region 🗼McpDiagramViewer
 // Specs: Dedicated MCP App diagram viewer — always renders SemioDiagram (2D only), ignoring payload surface/mode.
 // Summary: Standalone 2D-diagram-only MCP viewer component.
 
 /**
- * MCP App diagram viewer: always renders {@link SemioDiagram} from tool results.
+ * 🎨MCP App diagram viewer: always renders {@link SemioDiagram} from tool results.
  * Used when the MCP host loads `ui://semio/diagram-viewer` (show_diagram tool).
- * [👤semio📚ui💻index🔖mcpapp🔖mcpdiagramviewer🛠️mcpdiagramviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/s/McpDiagramViewer/d/i/McpDiagramViewer)
  *
  * Specs:
  * - Dedicated viewer for diagram-only tools (show_diagram).
@@ -4146,7 +4771,7 @@ export const McpDiagramViewer: React.FC = () => {
   const [selectedPieces, setSelectedPieces] = React.useState<Set<string>>(new Set());
   const [selectedConnections, setSelectedConnections] = React.useState<Set<string>>(new Set());
   const appRef = React.useRef<McpApp | null>(null);
-  const tryRefetchRef = React.useRef<() => void>(() => { });
+  const tryRefetchRef = React.useRef<() => void>(() => {});
 
   const mergeDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
     setPayload((cur) => {
@@ -4205,13 +4830,13 @@ export const McpDiagramViewer: React.FC = () => {
         const p = parseDiagramPayloadFromToolResult(result);
         if (p) mergeDiagramPayload(p);
       };
-      a.ontoolcancelled = () => { };
+      a.ontoolcancelled = () => {};
       a.onteardown = async () => ({});
       a.onerror = console.error;
     },
   });
 
-  useHostStyles(app, app?.getHostContext());
+  /* Host styles intentionally not applied — semio uses its own theme from globals.css. */
 
   React.useEffect(() => {
     if (!app) return;
@@ -4252,23 +4877,23 @@ export const McpDiagramViewer: React.FC = () => {
     appRef.current.updateModelContext({ content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceGuids: Array.from(pieces), connectionGuids: Array.from(connections) } }) }] });
   }, []);
 
-  const shellStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)" };
+  const shellStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)", background: "var(--base)" };
   if (error)
     return (
-      <div style={{ ...shellStyle, color: "var(--color-text-danger, #dc2626)" }}>
+      <div style={{ ...shellStyle, color: "var(--destructive-foreground)" }}>
         <p>Error: {error.message}</p>
       </div>
     );
   if (!isConnected || !app)
     return (
       <div style={shellStyle}>
-        <p style={{ color: "var(--color-text-secondary, #737373)" }}>Connecting to host…</p>
+        <p style={{ color: "var(--muted-foreground)" }}>Connecting to host…</p>
       </div>
     );
   if (!payload)
     return (
       <div style={shellStyle}>
-        <p style={{ color: "var(--color-text-secondary, #737373)" }}>Waiting for design data…</p>
+        <p style={{ color: "var(--muted-foreground)" }}>Waiting for design data…</p>
       </div>
     );
 
@@ -4314,12 +4939,11 @@ export const McpDiagramViewer: React.FC = () => {
   );
 };
 
-// #endregion 🔖McpDiagramViewer
+// #endregion 🗼McpDiagramViewer
 
 /**
  * Mount the MCP design viewer as a standalone app.
  * Call this from the entry point TSX file after importing react-dom/client.
- * [👤semio📚ui💻index🔖mcpapp🛠️mountmcpdesignviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mountMcpDesignViewer)
  **/
 export const mountMcpDesignViewer = (createRoot: (container: HTMLElement) => { render: (element: React.ReactNode) => void }) => {
   const root = document.getElementById("root");
@@ -4333,7 +4957,6 @@ export const mountMcpDesignViewer = (createRoot: (container: HTMLElement) => { r
 
 /**
  * Mount the MCP scene viewer (SemioScene only) as a standalone app.
- * [👤semio📚ui💻index🔖mcpapp🛠️mountmcpsceneviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mountMcpSceneViewer)
  **/
 export const mountMcpSceneViewer = (createRoot: (container: HTMLElement) => { render: (element: React.ReactNode) => void }) => {
   const root = document.getElementById("root");
@@ -4347,7 +4970,6 @@ export const mountMcpSceneViewer = (createRoot: (container: HTMLElement) => { re
 
 /**
  * Mount the MCP diagram viewer (SemioDiagram only) as a standalone app.
- * [👤semio📚ui💻index🔖mcpapp🛠️mountmcpdiagramviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mountMcpDiagramViewer)
  **/
 export const mountMcpDiagramViewer = (createRoot: (container: HTMLElement) => { render: (element: React.ReactNode) => void }) => {
   const root = document.getElementById("root");
@@ -4361,7 +4983,6 @@ export const mountMcpDiagramViewer = (createRoot: (container: HTMLElement) => { 
 
 /**
  * Mount the MCP kit viewer (SemioKit only) as a standalone app.
- * [👤semio📚ui💻index🔖mcpapp🛠️mountmcpkitviewer](repo://p/u/semio/b/l/ui/f/index.tsx/s/McpApp/d/i/mountMcpKitViewer)
  **/
 export const mountMcpKitViewer = (createRoot: (container: HTMLElement) => { render: (element: React.ReactNode) => void }) => {
   const root = document.getElementById("root");
@@ -4373,7 +4994,7 @@ export const mountMcpKitViewer = (createRoot: (container: HTMLElement) => { rend
   );
 };
 
-// #endregion 🔖McpApp
+// #endregion 🗿McpApp
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -4784,7 +5405,7 @@ if (import.meta.vitest) {
       } as unknown as Design;
 
       // Kit has the types container but intentionally omits `designs` for dg-1,
-      // mimicking common MCP payload shells.
+      // 📦mimicking common MCP payload shells.
       const kit = {
         name: "K",
         types: [],
@@ -5065,6 +5686,87 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("buildTypeModelAsset", () => {
+    it("selects the untagged default model for a kind when the kit provides matching files", () => {
+      const asset = buildTypeModelAsset(
+        {
+          guid: "kind-1",
+          models: [
+            { guid: "model-tagged", file: { guid: "file-tagged" }, tags: [{ guid: "tag-1" }] },
+            { guid: "model-default", file: { guid: "file-default" } },
+          ],
+        } as unknown as SemioKind,
+        {
+          files: [
+            { guid: "file-tagged", name: "tagged.glb", blob: "data:model/gltf-binary;base64,AAA" },
+            { guid: "file-default", name: "default.glb", blob: "data:model/gltf-binary;base64,BBB" },
+          ],
+        } as unknown as Kit,
+      );
+
+      expect(asset).toEqual({
+        modelName: "default.glb",
+        modelSource: "data:model/gltf-binary;base64,BBB",
+      });
+    });
+
+    it("prefers a gltf file when the default selection points at a non-gltf source", () => {
+      const asset = buildTypeModelAsset(
+        {
+          guid: "kind-1",
+          models: [
+            { guid: "model-default", file: { guid: "file-default" } },
+            { guid: "model-gltf", file: { guid: "file-gltf" }, tags: [{ guid: "tag-1" }] },
+          ],
+        } as unknown as SemioKind,
+        {
+          files: [
+            { guid: "file-default", name: "default.obj", blob: "data:model/obj;base64,AAA" },
+            { guid: "file-gltf", name: "fallback.glb", blob: "data:model/gltf-binary;base64,BBB" },
+          ],
+        } as unknown as Kit,
+      );
+
+      expect(asset).toEqual({
+        modelName: "fallback.glb",
+        modelSource: "data:model/gltf-binary;base64,BBB",
+      });
+    });
+  });
+
+  describe("buildTypeZoomBox", () => {
+    it("covers connector roots and arrow tips in scene space", () => {
+      const connector = {
+        guid: "connector-1",
+        point: { x: 1, y: 2, z: 3 },
+        direction: { x: 0, y: 1, z: 0 },
+      } as unknown as Connector;
+      const box = buildTypeZoomBox({
+        guid: "kind-1",
+        connectors: [connector],
+      } as unknown as SemioKind);
+
+      const start = toSceneVector(connector.point);
+      const end = start.clone().add(new THREE.Vector3(connector.direction.x, connector.direction.y, connector.direction.z).applyMatrix4(SEMIO_TO_THREE_BASIS).normalize().multiplyScalar(TYPE_CONNECTOR_ARROW_LENGTH));
+
+      expect(box.containsPoint(start)).toBe(true);
+      expect(box.containsPoint(end)).toBe(true);
+      expect(box.min.x).toBeLessThan(start.x);
+      expect(box.min.y).toBeLessThan(Math.min(start.y, end.y));
+      expect(box.min.z).toBeLessThan(Math.min(start.z, end.z));
+      expect(box.max.x).toBeGreaterThan(start.x);
+      expect(box.max.y).toBeGreaterThan(Math.max(start.y, end.y));
+      expect(box.max.z).toBeGreaterThan(Math.max(start.z, end.z));
+    });
+
+    it("falls back to a centered placeholder box when the kind has no connectors", () => {
+      const box = buildTypeZoomBox({ guid: "kind-1", connectors: [] } as unknown as SemioKind);
+
+      expect(box.min.toArray()).toEqual([-0.5, -0.5, -0.5]);
+      expect(box.max.toArray()).toEqual([0.5, 0.5, 0.5]);
+    });
+  });
+
   describe("toScenePieceMatrix", () => {
     it("converts semio planes into Three coordinates without tipping GLTF local axes onto their side", () => {
       const matrix = toScenePieceMatrix(testPlane);
@@ -5173,7 +5875,7 @@ if (import.meta.vitest) {
         expect(removedState.opacity).toBe(0.35);
       } finally {
         if (originalDocument === undefined) {
-          delete (globalThis as typeof globalThis & { document?: Document }).document;
+          Reflect.deleteProperty(globalThis as Record<string, unknown>, "document");
         } else {
           Object.defineProperty(globalThis, "document", {
             value: originalDocument,
@@ -5181,7 +5883,7 @@ if (import.meta.vitest) {
           });
         }
         if (originalGetComputedStyle === undefined) {
-          delete (globalThis as typeof globalThis & { getComputedStyle?: typeof globalThis.getComputedStyle }).getComputedStyle;
+          Reflect.deleteProperty(globalThis as Record<string, unknown>, "getComputedStyle");
         } else {
           Object.defineProperty(globalThis, "getComputedStyle", {
             value: originalGetComputedStyle,
@@ -5376,6 +6078,79 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("resolveSemioDiagramOriginPixels", () => {
+    it("uses u=0 and diagramY=0 (piece v=0)", () => {
+      expect(
+        resolveSemioDiagramOriginPixels(
+          (u) => 100 + u * 2,
+          (y) => 200 + y * 3,
+        ),
+      ).toEqual({ x: 100, y: 200 });
+    });
+  });
+
+  describe("resolveSemioDiagramUnitAxisTips", () => {
+    it("maps +1 u at v=0 and +1 v as diagramY -1", () => {
+      expect(
+        resolveSemioDiagramUnitAxisTips(
+          (u) => u * 10,
+          (y) => 100 + y * 5,
+        ),
+      ).toEqual({
+        uTip: { x: 10, y: 100 },
+        vTip: { x: 0, y: 95 },
+      });
+    });
+  });
+
+  describe("computeDiagramSelectionOverlayRect", () => {
+    it("returns null when no pieces or connections are selected", () => {
+      const design = {
+        guid: "d",
+        pieces: [{ guid: "a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece],
+        connections: [],
+      } as unknown as Design;
+      const snapshot = buildDiagramSnapshot(design, 12, undefined);
+      expect(computeDiagramSelectionOverlayRect(snapshot, new Set(), new Set(), (u) => u, (y) => y, 2, 2)).toBeNull();
+    });
+
+    it("wraps selected piece centers with padding in pixel space", () => {
+      const design = {
+        guid: "d",
+        pieces: [
+          { guid: "a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece,
+          { guid: "b", type: { guid: "k" }, plane: testPlane, center: { u: 10, v: 4 } } as unknown as Piece,
+        ],
+        connections: [],
+      } as unknown as Design;
+      const snapshot = buildDiagramSnapshot(design, 12, undefined);
+      const r = computeDiagramSelectionOverlayRect(snapshot, new Set(["a", "b"]), new Set(), (u) => u * 10, (y) => y * 10, 5, 2);
+      expect(r).toEqual({ x: -5, y: -45, width: 110, height: 50 });
+    });
+  });
+
+  describe("computeSceneSelectionUnionBox", () => {
+    it("returns null when no roots match selected guids", () => {
+      const roots = new Map<string, THREE.Object3D>();
+      expect(computeSceneSelectionUnionBox(roots, new Set(["missing"]), new Set())).toBeNull();
+    });
+
+    it("unions world-axis-aligned bounds from registered Object3D roots", () => {
+      const roots = new Map<string, THREE.Object3D>();
+      const g = new THREE.Group();
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2));
+      g.add(mesh);
+      g.position.set(5, 0, 0);
+      g.updateMatrixWorld(true);
+      roots.set("a", g);
+      const box = computeSceneSelectionUnionBox(roots, new Set(["a"]), new Set());
+      expect(box).not.toBeNull();
+      const c = new THREE.Vector3();
+      box!.getCenter(c);
+      expect(c.x).toBeCloseTo(5, 4);
+    });
+  });
+
   describe("buildDesignClipboardData", () => {
     const baseDesign: Design = {
       guid: "design-1",
@@ -5485,7 +6260,7 @@ if (import.meta.vitest) {
   });
 }
 
-// #region 🔖AlgorithmApp
+// #region 📸AlgorithmApp
 
 // Specs: Reusable algorithm app shell. Each algorithm declares typed windows (VecInput,
 // PiecesSelectionInput, DesignDiffOutput, DesignOutput) and an AlgorithmApp creates
@@ -5499,12 +6274,14 @@ import {
   cn,
   createDefaultLayout,
   createWindowLayout,
+  TreeItem,
   TreeRow,
   TreeSection,
   UI,
   WindowKind,
   type FooterItem,
   type SidePanelTabConfig,
+  type TreeHeaderAction,
   type UIAppConfig,
   type UIWindowKindDefinition,
   type UIWindowLayout,
@@ -5545,9 +6322,224 @@ interface AlgorithmRuntimeContextValue extends AlgorithmContextValue {
   diagramViewport: AlgorithmDiagramViewportState;
   onDiagramViewportPanChange: (kind: AlgorithmDiagramWindowKind, pan: DiagramPan) => void;
   onDiagramViewportZoomChange: (kind: AlgorithmDiagramWindowKind, zoom: number) => void;
+  filteredDesignDiff?: DesignDiff;
+  diffTreeCategories: AlgorithmDiffTreeCategory[];
+  setDiffEntriesChecked: (entryIds: string[], checked: boolean) => void;
 }
 
 const AlgorithmContext = React.createContext<AlgorithmRuntimeContextValue | null>(null);
+
+type AlgorithmDiffEntryGroupKind = "pieces" | "connections";
+type AlgorithmDiffEntryChangeKind = "added" | "removed" | "updated";
+
+interface AlgorithmDiffTreeEntry {
+  id: string;
+  label: string;
+  checked: boolean;
+}
+
+interface AlgorithmDiffTreeGroup {
+  id: string;
+  label: string;
+  groupKind: AlgorithmDiffEntryGroupKind;
+  changeKind: AlgorithmDiffEntryChangeKind;
+  entries: AlgorithmDiffTreeEntry[];
+  totalCount: number;
+  checkedCount: number;
+}
+
+interface AlgorithmDiffTreeCategory {
+  id: string;
+  label: string;
+  groups: AlgorithmDiffTreeGroup[];
+  totalCount: number;
+  checkedCount: number;
+}
+
+const formatAlgorithmDiffGuid = (value: string | undefined, fallback: string): string => (value && value.length > 0 ? value : fallback);
+
+const buildAlgorithmDiffEntryId = (groupKind: AlgorithmDiffEntryGroupKind, changeKind: AlgorithmDiffEntryChangeKind, guid: string): string => `${groupKind}:${changeKind}:${guid}`;
+
+const resolveAlgorithmPieceDiffGuid = (pieceLike: unknown, fallbackIndex: number): string => {
+  if (pieceLike && typeof pieceLike === "object" && "guid" in pieceLike && typeof pieceLike.guid === "string") {
+    return formatAlgorithmDiffGuid(pieceLike.guid, `piece-${fallbackIndex}`);
+  }
+  return `piece-${fallbackIndex}`;
+};
+
+const resolveAlgorithmConnectionDiffGuid = (connectionLike: unknown, fallbackIndex: number): string => {
+  if (connectionLike && typeof connectionLike === "object") {
+    if ("guid" in connectionLike && typeof connectionLike.guid === "string") {
+      return formatAlgorithmDiffGuid(connectionLike.guid, `connection-${fallbackIndex}`);
+    }
+    const connectedPieceGuid =
+      "connected" in connectionLike &&
+      connectionLike.connected &&
+      typeof connectionLike.connected === "object" &&
+      "piece" in connectionLike.connected &&
+      connectionLike.connected.piece &&
+      typeof connectionLike.connected.piece === "object" &&
+      "guid" in connectionLike.connected.piece &&
+      typeof connectionLike.connected.piece.guid === "string"
+        ? connectionLike.connected.piece.guid
+        : undefined;
+    const connectingPieceGuid =
+      "connecting" in connectionLike &&
+      connectionLike.connecting &&
+      typeof connectionLike.connecting === "object" &&
+      "piece" in connectionLike.connecting &&
+      connectionLike.connecting.piece &&
+      typeof connectionLike.connecting.piece === "object" &&
+      "guid" in connectionLike.connecting.piece &&
+      typeof connectionLike.connecting.piece.guid === "string"
+        ? connectionLike.connecting.piece.guid
+        : undefined;
+    if (connectedPieceGuid || connectingPieceGuid) {
+      return `${connectedPieceGuid ?? "from"}-${connectingPieceGuid ?? "to"}`;
+    }
+  }
+  return `connection-${fallbackIndex}`;
+};
+
+const resolveAlgorithmPieceDiffLabel = (design: Design | undefined, pieceLike: unknown, fallbackIndex: number): string => {
+  const pieceGuid = resolveAlgorithmPieceDiffGuid(pieceLike, fallbackIndex);
+  const sourcePiece = (pieceLike && typeof pieceLike === "object" ? (pieceLike as { name?: string }).name : undefined) || design?.pieces?.find((piece) => piece.guid === pieceGuid)?.name;
+  return sourcePiece && sourcePiece.length > 0 ? sourcePiece : pieceGuid;
+};
+
+const resolveAlgorithmConnectionDiffLabel = (design: Design | undefined, connectionLike: unknown, fallbackIndex: number): string => {
+  const connectionGuid = resolveAlgorithmConnectionDiffGuid(connectionLike, fallbackIndex);
+  const sourceConnection = design?.connections?.find((connection) => {
+    if (connection.guid && connection.guid === connectionGuid) return true;
+    return false;
+  });
+  const connectedPieceGuid =
+    (connectionLike &&
+    typeof connectionLike === "object" &&
+    "connected" in connectionLike &&
+    connectionLike.connected &&
+    typeof connectionLike.connected === "object" &&
+    "piece" in connectionLike.connected &&
+    connectionLike.connected.piece &&
+    typeof connectionLike.connected.piece === "object" &&
+    "guid" in connectionLike.connected.piece &&
+    typeof connectionLike.connected.piece.guid === "string"
+      ? connectionLike.connected.piece.guid
+      : undefined) ?? sourceConnection?.connected?.piece?.guid;
+  const connectingPieceGuid =
+    (connectionLike &&
+    typeof connectionLike === "object" &&
+    "connecting" in connectionLike &&
+    connectionLike.connecting &&
+    typeof connectionLike.connecting === "object" &&
+    "piece" in connectionLike.connecting &&
+    connectionLike.connecting.piece &&
+    typeof connectionLike.connecting.piece === "object" &&
+    "guid" in connectionLike.connecting.piece &&
+    typeof connectionLike.connecting.piece.guid === "string"
+      ? connectionLike.connecting.piece.guid
+      : undefined) ?? sourceConnection?.connecting?.piece?.guid;
+
+  const connectedPieceName = connectedPieceGuid ? (design?.pieces?.find((piece) => piece.guid === connectedPieceGuid)?.name ?? connectedPieceGuid) : undefined;
+  const connectingPieceName = connectingPieceGuid ? (design?.pieces?.find((piece) => piece.guid === connectingPieceGuid)?.name ?? connectingPieceGuid) : undefined;
+  if (connectedPieceName || connectingPieceName) {
+    return `${connectedPieceName ?? "Unknown"} -> ${connectingPieceName ?? "Unknown"}`;
+  }
+  return connectionGuid;
+};
+
+const buildAlgorithmDiffEntries = (design: Design | undefined, groupKind: AlgorithmDiffEntryGroupKind, changeKind: AlgorithmDiffEntryChangeKind, items: unknown[] | undefined, uncheckedEntryIds: Set<string>): AlgorithmDiffTreeGroup | undefined => {
+  const safeItems = items ?? [];
+  if (safeItems.length === 0) return undefined;
+  const entries = safeItems.map((item, index) => {
+    const guid =
+      groupKind === "pieces"
+        ? resolveAlgorithmPieceDiffGuid(changeKind === "updated" && item && typeof item === "object" && "piece" in item ? (item as { piece?: unknown }).piece : item, index)
+        : resolveAlgorithmConnectionDiffGuid(changeKind === "updated" && item && typeof item === "object" && "connection" in item ? (item as { connection?: unknown }).connection : item, index);
+    const label =
+      groupKind === "pieces"
+        ? resolveAlgorithmPieceDiffLabel(design, changeKind === "updated" && item && typeof item === "object" && "piece" in item ? (item as { piece?: unknown }).piece : item, index)
+        : resolveAlgorithmConnectionDiffLabel(design, changeKind === "updated" && item && typeof item === "object" && "connection" in item ? (item as { connection?: unknown }).connection : item, index);
+    const id = buildAlgorithmDiffEntryId(groupKind, changeKind, guid);
+    return { id, label, checked: !uncheckedEntryIds.has(id) };
+  });
+  const checkedCount = entries.filter((entry) => entry.checked).length;
+  return {
+    id: `${groupKind}.${changeKind}`,
+    label: changeKind,
+    groupKind,
+    changeKind,
+    entries,
+    totalCount: entries.length,
+    checkedCount,
+  };
+};
+
+const buildAlgorithmDiffTreeCategories = (design: Design | undefined, designDiff: DesignDiff | undefined, uncheckedEntryIds: Set<string>): AlgorithmDiffTreeCategory[] => {
+  if (!designDiff) return [];
+  const categories: AlgorithmDiffTreeCategory[] = [];
+
+  const pieceGroups = [
+    buildAlgorithmDiffEntries(design, "pieces", "added", designDiff.pieces?.added as unknown[] | undefined, uncheckedEntryIds),
+    buildAlgorithmDiffEntries(design, "pieces", "removed", designDiff.pieces?.removed as unknown[] | undefined, uncheckedEntryIds),
+    buildAlgorithmDiffEntries(design, "pieces", "updated", designDiff.pieces?.updated as unknown[] | undefined, uncheckedEntryIds),
+  ].filter((group): group is AlgorithmDiffTreeGroup => Boolean(group));
+  if (pieceGroups.length > 0) {
+    categories.push({
+      id: "pieces",
+      label: "pieces",
+      groups: pieceGroups,
+      totalCount: pieceGroups.reduce((sum, group) => sum + group.totalCount, 0),
+      checkedCount: pieceGroups.reduce((sum, group) => sum + group.checkedCount, 0),
+    });
+  }
+
+  const connectionGroups = [
+    buildAlgorithmDiffEntries(design, "connections", "added", designDiff.connections?.added as unknown[] | undefined, uncheckedEntryIds),
+    buildAlgorithmDiffEntries(design, "connections", "removed", designDiff.connections?.removed as unknown[] | undefined, uncheckedEntryIds),
+    buildAlgorithmDiffEntries(design, "connections", "updated", designDiff.connections?.updated as unknown[] | undefined, uncheckedEntryIds),
+  ].filter((group): group is AlgorithmDiffTreeGroup => Boolean(group));
+  if (connectionGroups.length > 0) {
+    categories.push({
+      id: "connections",
+      label: "connections",
+      groups: connectionGroups,
+      totalCount: connectionGroups.reduce((sum, group) => sum + group.totalCount, 0),
+      checkedCount: connectionGroups.reduce((sum, group) => sum + group.checkedCount, 0),
+    });
+  }
+
+  return categories;
+};
+
+const getAlgorithmDiffEntryIds = (categories: AlgorithmDiffTreeCategory[]): string[] => categories.flatMap((category) => category.groups.flatMap((group) => group.entries.map((entry) => entry.id)));
+
+const filterAlgorithmDesignDiffByUncheckedEntryIds = (designDiff: DesignDiff | undefined, uncheckedEntryIds: Set<string>): DesignDiff | undefined => {
+  if (!designDiff) return undefined;
+  if (uncheckedEntryIds.size === 0) return designDiff;
+
+  return {
+    ...designDiff,
+    pieces: designDiff.pieces
+      ? {
+          ...designDiff.pieces,
+          added: (designDiff.pieces.added ?? []).filter((piece, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("pieces", "added", resolveAlgorithmPieceDiffGuid(piece, index)))),
+          removed: (designDiff.pieces.removed ?? []).filter((piece, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("pieces", "removed", resolveAlgorithmPieceDiffGuid(piece, index)))),
+          updated: (designDiff.pieces.updated ?? []).filter((pieceUpdate, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("pieces", "updated", resolveAlgorithmPieceDiffGuid((pieceUpdate as { piece?: unknown }).piece, index)))),
+        }
+      : undefined,
+    connections: designDiff.connections
+      ? {
+          ...designDiff.connections,
+          added: (designDiff.connections.added ?? []).filter((connection, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("connections", "added", resolveAlgorithmConnectionDiffGuid(connection, index)))),
+          removed: (designDiff.connections.removed ?? []).filter((connection, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("connections", "removed", resolveAlgorithmConnectionDiffGuid(connection, index)))),
+          updated: (designDiff.connections.updated ?? []).filter(
+            (connectionUpdate, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("connections", "updated", resolveAlgorithmConnectionDiffGuid((connectionUpdate as { connection?: unknown }).connection, index))),
+          ),
+        }
+      : undefined,
+  };
+};
 
 /**
  * Hook to access algorithm context from inside algorithm windows.
@@ -5565,6 +6557,7 @@ export interface AlgorithmWindowDef {
   id: string;
   kind: WindowKind;
   label?: string;
+  component?: React.FC;
 }
 
 type AlgorithmWindowKind = WindowKind.VEC_INPUT | WindowKind.PIECES_SELECTION_INPUT | WindowKind.SELECTION_INPUT | WindowKind.DESIGN_INPUT | WindowKind.DESIGN_DIFF_OUTPUT | WindowKind.DESIGN_OUTPUT | WindowKind.SCENE;
@@ -5733,7 +6726,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     component: SemioDiagram,
     createProps: (context) => ({
       design: context.diffDesign ?? context.design,
-      designDiff: context.designDiff,
+      designDiff: context.filteredDesignDiff,
       diffEnabled: true,
       zoomTarget: "design" as ZoomTarget,
       selectionEnabled: false,
@@ -5797,6 +6790,13 @@ export function getAlgorithmWindowBehavior(kind: WindowKind): AlgorithmWindowBeh
 
 export function createAlgorithmWindowKinds(windows: AlgorithmWindowDef[]): UIWindowKindDefinition[] {
   return windows.map((windowDef) => {
+    if (windowDef.component) {
+      return {
+        id: windowDef.id,
+        label: windowDef.label ?? windowDef.id,
+        component: windowDef.component,
+      };
+    }
     const behavior = getAlgorithmWindowBehavior(windowDef.kind);
     return {
       id: windowDef.id,
@@ -5807,7 +6807,7 @@ export function createAlgorithmWindowKinds(windows: AlgorithmWindowDef[]): UIWin
 }
 
 /**
- * Builds the standard IPO canvas layout: one column for all input window kinds (tab stack),
+ * 🆕Builds the standard IPO canvas layout: one column for all input window kinds (tab stack),
  * one for diff output, one for final design output. Matches the semio UI shell used in elements/UI stories.
  */
 export function createIpoAlgorithmLayout(windows: AlgorithmWindowDef[]): UIWindowLayout {
@@ -5818,7 +6818,7 @@ export function createIpoAlgorithmLayout(windows: AlgorithmWindowDef[]): UIWindo
 
   const columns: Array<UIWindowLayoutAxisNode | UIWindowLayoutStackNode> = [];
   if (inputWindows.length > 1) {
-    // Multiple input windows: arrange as a column with VEC_INPUT at 20% and others at 80%.
+    // 📝Multiple input windows: arrange as a column with VEC_INPUT at 20% and others at 80%.
     const vecWindows = inputWindows.filter((w) => w.kind === WindowKind.VEC_INPUT);
     const otherInputWindows = inputWindows.filter((w) => w.kind !== WindowKind.VEC_INPUT);
     const inputRows: UIWindowLayoutStackNode[] = [];
@@ -5881,7 +6881,7 @@ export function createAlgorithmLayout(windows: AlgorithmWindowDef[], defaultLayo
   return defaultLayout ?? createIpoAlgorithmLayout(windows);
 }
 
-// #region 🔖AlgorithmDetailsPanel
+// #region ⏲️AlgorithmDetailsPanel
 
 /**
  * Details panel for algorithms showing context, selected pieces, vec, and error state.
@@ -5893,6 +6893,9 @@ const AlgorithmDetailsPanel: React.FC = () => {
   const design = ctx.design;
   const allPieces = design?.pieces ?? [];
   const selectedPieces = allPieces.filter((p) => ctx.selectedPieceGuids.includes(p.guid));
+  const visibleDiffCategories = ctx.diffTreeCategories;
+  const visibleDiffCount = visibleDiffCategories.reduce((sum, category) => sum + category.checkedCount, 0);
+  const totalDiffCount = visibleDiffCategories.reduce((sum, category) => sum + category.totalCount, 0);
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
@@ -5968,33 +6971,78 @@ const AlgorithmDetailsPanel: React.FC = () => {
           </TreeRow>
         )}
         {ctx.designDiff && (
-          <>
-            <TreeRow id="algorithm.details.output.diff.added" label={null}>
-              <div className="flex items-center justify-between w-full px-2 py-0.5">
-                <span className="text-xs text-muted-foreground">added</span>
-                <span className="text-xs font-mono text-success">{ctx.designDiff.pieces?.added?.length ?? 0}</span>
-              </div>
-            </TreeRow>
-            <TreeRow id="algorithm.details.output.diff.removed" label={null}>
-              <div className="flex items-center justify-between w-full px-2 py-0.5">
-                <span className="text-xs text-muted-foreground">removed</span>
-                <span className="text-xs font-mono text-destructive">{ctx.designDiff.pieces?.removed?.length ?? 0}</span>
-              </div>
-            </TreeRow>
-            <TreeRow id="algorithm.details.output.diff.updated" label={null}>
-              <div className="flex items-center justify-between w-full px-2 py-0.5">
-                <span className="text-xs text-muted-foreground">updated</span>
-                <span className="text-xs font-mono text-warning">{(ctx.designDiff.pieces?.updated as any[])?.length ?? 0}</span>
-              </div>
-            </TreeRow>
-          </>
+          <TreeItem id="algorithm.details.output.diff" label={`Diff (${visibleDiffCount}/${totalDiffCount})`} defaultOpen={true}>
+            {visibleDiffCategories.map((category) => {
+              const categoryEntryIds = category.groups.flatMap((group) => group.entries.map((entry) => entry.id));
+              const categoryActions: TreeHeaderAction[] = [
+                {
+                  kind: "checkbox",
+                  id: `algorithm.details.output.diff.${category.id}.checkbox`,
+                  title: `Toggle ${category.label}`,
+                  checked: category.totalCount > 0 && category.checkedCount === category.totalCount,
+                  onCheckedChange: (checked) => ctx.setDiffEntriesChecked(categoryEntryIds, checked),
+                },
+              ];
+
+              return (
+                <TreeItem key={category.id} id={`algorithm.details.output.diff.${category.id}`} label={`${category.label} (${category.checkedCount}/${category.totalCount})`} actions={categoryActions} defaultOpen={true}>
+                  {category.groups.map((group) => {
+                    const groupActions: TreeHeaderAction[] = [
+                      {
+                        kind: "checkbox",
+                        id: `algorithm.details.output.diff.${category.id}.${group.changeKind}.checkbox`,
+                        title: `Toggle ${category.label} ${group.changeKind}`,
+                        checked: group.totalCount > 0 && group.checkedCount === group.totalCount,
+                        onCheckedChange: (checked) =>
+                          ctx.setDiffEntriesChecked(
+                            group.entries.map((entry) => entry.id),
+                            checked,
+                          ),
+                      },
+                    ];
+                    const groupToneClassName = group.changeKind === "added" ? "text-success" : group.changeKind === "removed" ? "text-destructive" : "text-warning";
+
+                    return (
+                      <TreeItem
+                        key={group.id}
+                        id={`algorithm.details.output.diff.${category.id}.${group.changeKind}`}
+                        label={
+                          <div className="flex min-w-0 items-center justify-between gap-2">
+                            <span className="truncate">{group.label}</span>
+                            <span className={cn("text-xs font-mono", groupToneClassName)}>
+                              {group.checkedCount}/{group.totalCount}
+                            </span>
+                          </div>
+                        }
+                        actions={groupActions}
+                        defaultOpen={true}
+                      >
+                        {group.entries.map((entry) => {
+                          const entryActions: TreeHeaderAction[] = [
+                            {
+                              kind: "checkbox",
+                              id: `algorithm.details.output.diff.entry.${entry.id}`,
+                              title: `Toggle ${entry.label}`,
+                              checked: entry.checked,
+                              onCheckedChange: (checked) => ctx.setDiffEntriesChecked([entry.id], checked),
+                            },
+                          ];
+                          return <TreeItem key={entry.id} id={`algorithm.details.output.diff.entry.${entry.id}`} label={entry.label} actions={entryActions} />;
+                        })}
+                      </TreeItem>
+                    );
+                  })}
+                </TreeItem>
+              );
+            })}
+          </TreeItem>
         )}
       </TreeSection>
     </div>
   );
 };
 
-// #endregion 🔖AlgorithmDetailsPanel
+// #endregion ⏲️AlgorithmDetailsPanel
 
 /**
  * Props for <AlgorithmApp />.
@@ -6015,6 +7063,7 @@ export interface AlgorithmAppProps {
  **/
 export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, defaultLayout, context, className }) => {
   const [diagramViewport, setDiagramViewport] = React.useState<AlgorithmDiagramViewportState>({});
+  const [uncheckedDiffEntryIds, setUncheckedDiffEntryIds] = React.useState<string[]>([]);
 
   const handleDiagramViewportPanChange = React.useCallback((kind: AlgorithmDiagramWindowKind, pan: DiagramPan) => {
     setDiagramViewport((current) => mergeAlgorithmDiagramViewportState(current, kind, { pan }));
@@ -6024,14 +7073,42 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
     setDiagramViewport((current) => mergeAlgorithmDiagramViewportState(current, kind, { zoom }));
   }, []);
 
+  const uncheckedDiffEntryIdSet = React.useMemo(() => new Set(uncheckedDiffEntryIds), [uncheckedDiffEntryIds]);
+  const diffTreeCategories = React.useMemo(() => buildAlgorithmDiffTreeCategories(context.design, context.designDiff, uncheckedDiffEntryIdSet), [context.design, context.designDiff, uncheckedDiffEntryIdSet]);
+  const availableDiffEntryIds = React.useMemo(() => new Set(getAlgorithmDiffEntryIds(diffTreeCategories)), [diffTreeCategories]);
+
+  React.useEffect(() => {
+    setUncheckedDiffEntryIds((current) => {
+      const next = current.filter((entryId) => availableDiffEntryIds.has(entryId));
+      return next.length === current.length ? current : next;
+    });
+  }, [availableDiffEntryIds]);
+
+  const setDiffEntriesChecked = React.useCallback((entryIds: string[], checked: boolean) => {
+    setUncheckedDiffEntryIds((current) => {
+      const next = new Set(current);
+      entryIds.forEach((entryId) => {
+        if (checked) next.delete(entryId);
+        else next.add(entryId);
+      });
+      const nextIds = Array.from(next);
+      return nextIds.length === current.length && nextIds.every((entryId, index) => entryId === current[index]) ? current : nextIds;
+    });
+  }, []);
+
+  const filteredDesignDiff = React.useMemo(() => filterAlgorithmDesignDiffByUncheckedEntryIds(context.designDiff, uncheckedDiffEntryIdSet), [context.designDiff, uncheckedDiffEntryIdSet]);
+
   const runtimeContext = React.useMemo<AlgorithmRuntimeContextValue>(
     () => ({
       ...context,
       diagramViewport,
       onDiagramViewportPanChange: handleDiagramViewportPanChange,
       onDiagramViewportZoomChange: handleDiagramViewportZoomChange,
+      filteredDesignDiff,
+      diffTreeCategories,
+      setDiffEntriesChecked,
     }),
-    [context, diagramViewport, handleDiagramViewportPanChange, handleDiagramViewportZoomChange],
+    [context, diagramViewport, handleDiagramViewportPanChange, handleDiagramViewportZoomChange, filteredDesignDiff, diffTreeCategories, setDiffEntriesChecked],
   );
 
   const windowKinds: UIWindowKindDefinition[] = React.useMemo(() => createAlgorithmWindowKinds(windows), [windows]);
@@ -6062,14 +7139,14 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
       },
       ...(context.error
         ? [
-          {
-            id: `${id}.footer.error`,
-            icon: <AlertCircleIcon size={12} />,
-            text: "Error",
-            order: 1,
-            className: "text-destructive",
-          },
-        ]
+            {
+              id: `${id}.footer.error`,
+              icon: <AlertCircleIcon size={12} />,
+              text: "Error",
+              order: 1,
+              className: "text-destructive",
+            },
+          ]
         : []),
     ],
     [id, context.selectedPieceGuids.length, pieceCount, context.error],
@@ -6098,7 +7175,7 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
   );
 };
 
-// #endregion 🔖AlgorithmApp
+// #endregion 📸AlgorithmApp
 
 const algorithmVitest = (
   import.meta as ImportMeta & {
@@ -6185,6 +7262,9 @@ if (algorithmVitest) {
         diagramViewport: { pan, zoom, sourceKind: WindowKind.DESIGN_INPUT },
         onDiagramViewportPanChange: () => undefined,
         onDiagramViewportZoomChange: () => undefined,
+        filteredDesignDiff: undefined,
+        diffTreeCategories: [],
+        setDiffEntriesChecked: () => undefined,
       };
 
       const pieceSelectionProps = getAlgorithmWindowBehavior(WindowKind.PIECES_SELECTION_INPUT)?.createProps(runtimeContext);
@@ -6291,6 +7371,44 @@ if (algorithmVitest) {
             },
           ],
         },
+      });
+    });
+
+    it("filters unchecked diff entries before wiring the diff output window", () => {
+      const design: Design = {
+        guid: "design-1",
+        name: "Design",
+        pieces: [{ guid: "piece-a", name: "Piece A", type: { guid: "type-a" }, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "piece-b", name: "Piece B", type: { guid: "type-a" }, center: { u: 1, v: 0 } } as unknown as Piece],
+        connections: [{ guid: "connection-a", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection],
+      };
+      const diff: DesignDiff = {
+        pieces: {
+          added: [{ guid: "piece-c", name: "Piece C", type: { guid: "type-a" }, center: { u: 2, v: 0 } } as unknown as Piece],
+          removed: [{ guid: "piece-b" }],
+          updated: [{ piece: { guid: "piece-a" }, diff: { name: "Renamed Piece A" } }],
+        },
+        connections: {
+          added: [{ guid: "connection-b", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-c" } } } as unknown as Connection],
+          removed: [{ guid: "connection-a" }],
+          updated: [],
+        },
+      };
+
+      const filtered = filterAlgorithmDesignDiffByUncheckedEntryIds(diff, new Set([buildAlgorithmDiffEntryId("pieces", "removed", "piece-b"), buildAlgorithmDiffEntryId("connections", "added", "connection-b")]));
+      const categories = buildAlgorithmDiffTreeCategories(design, diff, new Set([buildAlgorithmDiffEntryId("pieces", "removed", "piece-b")]));
+
+      expect(filtered?.pieces?.removed).toEqual([]);
+      expect(filtered?.pieces?.added?.map((piece) => piece.guid)).toEqual(["piece-c"]);
+      expect(filtered?.connections?.added).toEqual([]);
+      expect(filtered?.connections?.removed?.map((connection) => connection.guid)).toEqual(["connection-a"]);
+      expect(categories.map((category) => ({ id: category.id, checked: category.checkedCount, total: category.totalCount }))).toEqual([
+        { id: "pieces", checked: 2, total: 3 },
+        { id: "connections", checked: 2, total: 2 },
+      ]);
+      expect(categories[0]?.groups.find((group) => group.changeKind === "removed")?.entries[0]).toMatchObject({
+        id: buildAlgorithmDiffEntryId("pieces", "removed", "piece-b"),
+        label: "Piece B",
+        checked: false,
       });
     });
   });

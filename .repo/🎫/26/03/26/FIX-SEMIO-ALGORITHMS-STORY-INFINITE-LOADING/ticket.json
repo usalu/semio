@@ -1,5 +1,6 @@
 {
   "title": "Fix Semio Algorithms Story Infinite Loading",
+  "emoji": "🔧",
   "status": "open",
   "description": "The drag story (and possibly other stories) in semio/algorithms Storybook infinitely loads and only killing the tab resolves it. Not even refreshing works. Need to find root cause and fix.",
   "github": {

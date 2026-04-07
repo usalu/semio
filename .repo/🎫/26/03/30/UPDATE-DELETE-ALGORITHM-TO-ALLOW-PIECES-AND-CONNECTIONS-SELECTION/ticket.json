@@ -1,5 +1,6 @@
 {
   "title": "Update Delete Algorithm To Allow Pieces And Connections Selection",
+  "emoji": "🗑️",
   "status": "closed",
   "description": "The semio algorithms delete input selection should allow both pieces and connections to be selected.",
   "summary": "Fixed MCP design viewer fallback so design-intent tool results no longer render SemioKit when diagram is empty/mode is non-diagram. Added unit coverage for the fallback gating. Also refactored engine MCP session storage from WeakKeyDictionary to plain dicts so non-weakref-able session ids (used by tests/hosts) work reliably; engine tests now pass.",

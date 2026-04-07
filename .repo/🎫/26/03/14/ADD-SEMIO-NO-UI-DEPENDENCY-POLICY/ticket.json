@@ -1,5 +1,6 @@
 {
   "title": "Add Semio No Ui Dependency Policy",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add a new semio policy with a NoUiDependency statute (not autofixable). Check that all semio.* files are self-contained and don't import from any UI dependency. Examples: semio.ts imports from tailwind-merge, semio.test.ts imports from elements/ui.",
   "summary": "Added new \"semio\" policy with BreachSemioNoUiDependency statute (not autofixable, HIGH priority). The statute checks that all semio.* files are self-contained and do not import UI dependencies (clsx, tailwind-merge, three, react, elements/ui, etc.). Added 10 comprehensive tests. Also fixed case-sensitivity bug in GraphQL Policy resolver.",

@@ -1,5 +1,6 @@
 {
   "title": "Fix Repo MCP for all IDEs",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix schema validation errors in MCP tools (missing items in array) and ensure tool availability in all IDEs.",
   "summary": "Bulk close",

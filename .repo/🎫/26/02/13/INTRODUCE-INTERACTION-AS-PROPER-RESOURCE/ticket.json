@@ -1,5 +1,6 @@
 {
   "title": "Introduce Interaction as Proper Resource",
+  "emoji": "📋",
   "status": "closed",
   "description": "Introduce `interaction` as a proper resource. Interactions are aggregated from other resources that have interactions (e.g. tickets and goals). Add it to GraphQL schema. Add `interaction list` to the CLI (not MCP) that lists all interactions. With `--sorted` the list is not streamed but sorted by date. Add `interaction tree` to the CLI (not MCP) showing interactions within the parent tree (goal -\u003e ticket tree extended with interaction items).",
   "summary": "Introduced InteractionResource as a proper first-class resource. Added InteractionResource struct with source metadata, ListInteractions/StreamInteractions aggregation functions, interaction list/tree CLI commands, interactions GraphQL query, and interactions field on Goal type. Updated schema.graphql accordingly. All tests pass.",

@@ -1,5 +1,6 @@
 {
   "title": "Fix Local Kit Startup Resolution",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Investigate and fix start_working_in_local_kit so local kit folders with files and a .semio/kit.db-style sqlite file load correctly instead of being rejected as missing. Extend existing tests to cover local folder startup paths and ensure they pass.",
   "summary": "Fixed local kit startup to load folder-backed kits from .semio/kit.db via the core folder importer, added regression coverage for metabolism folder startup, restored the /app/design-viewer HTML endpoint, and aligned the flat design-construction test with the flat MCP tool surface. Verified with the full semio/engine test file.",

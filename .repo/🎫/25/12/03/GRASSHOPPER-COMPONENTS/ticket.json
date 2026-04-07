@@ -1,5 +1,6 @@
 {
   "title": "Fix Grasshopper entity components to match semio.ts schema",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix Grasshopper entity components to match semio.ts schema",
   "goal": "🎯r2603🎯runningnet🎯runninggrasshopper"

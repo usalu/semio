@@ -1,5 +1,6 @@
 {
   "title": "UPDATE-TEMP-DATA-LOCATION-DOCS",
+  "emoji": "🔄",
   "status": "closed",
   "description": "Update docs to state temporary data should live in active ticket folder (not temp/).",
   "summary": "Bulk close",

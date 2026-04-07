@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🧰repo⌨️server🛅app🛅api🛅v1🛅tickets💻route](repo://p/i/repo/b/b/server/f/app/api/v1/tickets/route.ts)
+// #region 🧲Header
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0
 // Ticket lifecycle API: open, close, reopen, list, detail.
@@ -9,9 +8,9 @@
 // - GET /api/v1/tickets lists tickets, optionally filtered by status.
 // - All mutating operations require authenticated trusted developer.
 // - Events are published for all lifecycle transitions.
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Imports
+// #region ⛩️Imports
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
@@ -24,9 +23,9 @@ import {
 } from "@/lib/db";
 import { requireAuth, isAuthError } from "@/lib/auth";
 import { publishEvent } from "@/lib/events";
-// #endregion 🔖Imports
+// #endregion ⛩️Imports
 
-// #region 🔖Schemas
+// 🎫#region 🎄Schemas
 const TicketOpenSchema = z.object({
   action: z.literal("open"),
   ticket_id: z.string().min(1),
@@ -55,9 +54,9 @@ const TicketReopenSchema = z.object({
   title: z.string().default(""),
   client: z.string().default(""),
 });
-// #endregion 🔖Schemas
+// #endregion 🎄Schemas
 
-// #region 🔖Handlers
+// 🎯#region 🪄Handlers
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (isAuthError(auth)) return auth;
@@ -173,4 +172,4 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "unknown action" }, { status: 400 });
   }
 }
-// #endregion 🔖Handlers
+// #endregion 🪄Handlers

@@ -1,5 +1,6 @@
 {
   "title": "Refactor Semio UI to Use Elements UI Only",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Extend Semio Ui Components For Iframe And Create Scene And Design Components",
   "summary": "Refactored semio/ui to inherit styling from elements/ui by removing semio/ui-owned CSS vars, moving them into elements/ui/globals.css, and rewriting KitArtifactSelect to compose elements/ui primitives (Section, Button, ToggleGroup) instead of inline styles + Tailwind strings.",

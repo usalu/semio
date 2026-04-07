@@ -1,23 +1,23 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // 💻semio/assets/repo/some/folder/file.tsx
 
 // 2025 Test User <test@test.com>
 
-// #region 🔖License
+// #region 🪬License
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖License
+// #endregion 🪬License
 
-// #region 🔖Requirements
-// #endregion 🔖Requirements
+// #region 🎯Requirements
+// #endregion 🎯Requirements
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { JSX } from "react";
 
-// #region 🔖Types
+// #region ⚙️Types
 
 interface TestType {
   name: string;
@@ -26,9 +26,9 @@ interface TestType {
 
 type TestKind = "a" | "b" | "c";
 
-// #endregion 🔖Types
+// #endregion ⚙️Types
 
-// #region 🔖Components
+// #region 🎖️Components
 
 function TestComponent(): JSX.Element {
   return <div>Test</div>;
@@ -44,9 +44,9 @@ class TestClass {
   }
 }
 
-// #endregion 🔖Components
+// #endregion 🎖️Components
 
-// #region 🔖Constants
+// #region 🎞️Constants
 
 const TEST_CONSTANT = "test";
 
@@ -55,4 +55,4 @@ enum TestEnum {
   B = "b",
 }
 
-// #endregion 🔖Constants
+// #endregion 🎞️Constants

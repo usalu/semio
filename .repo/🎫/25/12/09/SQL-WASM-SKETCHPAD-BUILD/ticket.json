@@ -1,5 +1,6 @@
 {
   "title": "Fix sql-wasm.wasm not being included in sketchpad production build",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix sql-wasm.wasm not being included in sketchpad production build",
   "goal": "🎯r2602🎯runningsketchpad"

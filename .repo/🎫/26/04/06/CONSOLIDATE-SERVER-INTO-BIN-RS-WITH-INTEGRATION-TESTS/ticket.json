@@ -1,5 +1,6 @@
 {
   "title": "Consolidate Server Into Bin Rs With Integration Tests",
+  "emoji": "🧹",
   "status": "open",
   "description": "Consolidate the semio/server/src/ modular files into a single semio/server/bin.rs file. Add integration tests that run a backend, connect several frontends, and use the metabolism asset and nakagin capsule tower diff for realistic scenarios.",
   "github": {

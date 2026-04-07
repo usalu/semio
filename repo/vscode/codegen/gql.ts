@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // 💻repo/vscode/codegen/gql.ts
 
@@ -6,10 +6,10 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or \(at your option\) any later version\. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\.  See the GNU Affero General Public License for more details\. You should have received a copy of the GNU Affero General Public License along with this program\.  If not, see <https://www\.gnu\.org/licenses/>\.
 
-// #region 🔖Requirements
-// #endregion 🔖Requirements
+// #region 🎯Requirements
+// #endregion 🎯Requirements
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 
 import * as types from './graphql';
@@ -20,7 +20,7 @@ export function graphql(source: "\n  query Tickets($year: Int, $month: Int, $day
 /**
  *  function graphql(source: "\n  query Policies {\n    repo {\n      policies { id name description scopes statutes { id priority autofixable reason solution } }\n    }\n  }\n"): (typeof documents)["\n  query Policies {\n    repo {\n      policies { id name description scopes statutes { id priority autofixable reason solution } }\n    }\n  }\n"];
 /**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ * 🕸️The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query Contributors {\n    repo {\n      contributors {\n        id github name emails\n        links { name url }\n        icons { avatar avatarRound github }\n        metrics { checkpoints tickets bundles folders files sections definitions lines }\n      }\n    }\n  }\n"): (typeof documents)["\n  query Contributors {\n    repo {\n      contributors {\n        id github name emails\n        links { name url }\n        icons { avatar avatarRound github }\n        metrics { checkpoints tickets bundles folders files sections definitions lines }\n      }\n    }\n  }\n"];
 /**

@@ -1,5 +1,6 @@
 {
   "title": "Fix Sketchpad Plane Section Layout in Detail Panel",
+  "emoji": "🔧",
   "status": "open",
   "description": "Fix sketchpad design app detail panel: plane section and its tree items/rows are breaking when selecting a fixed base piece. Make plane section visually consistent with rest of detail panel - proper spacing, alignment, no overlaps. All input fields single-row, fully visible, editable, with consistent sizing matching the rest of the panel.",
   "summary": "Fixed the Plane section layout in the Sketchpad Design app detail panel. Root cause: deep nesting (level 4 TreeRow \u003e Stepper showLabel) caused the Label component 2-column grid to squeeze labels via cumulative paddingLeft from tree indentation. Fix: replaced TreeRow \u003e Stepper showLabel pattern with TreeItem layoutKind property expandable false plus DetailInlineAxisStepper children for Origin, X Axis, Y Axis sub-groups. This reduces nesting by one level and uses compact axis labels, matching the ConnectionInfoField pattern. Build verified, 105 tests pass.",

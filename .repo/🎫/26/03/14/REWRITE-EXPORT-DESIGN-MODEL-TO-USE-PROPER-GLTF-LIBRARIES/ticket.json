@@ -1,5 +1,6 @@
 {
   "title": "Rewrite Export Design Model to Use Proper Gltf Libraries",
+  "emoji": "🎨",
   "status": "open",
   "description": "Rewrite all export_design_model implementations to use proper glTF libraries instead of manual binary construction: @gltf-transform/core for TypeScript, trimesh for Python, SharpGLTF for C#, qmuntal/gltf for Go, gltf-rs/gltf for Rust.",
   "github": {

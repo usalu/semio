@@ -1,5 +1,6 @@
 {
   "title": "Add Selection Box for Multi-Select in Scene and Diagram",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add selection box (marquee/rubber band) that selects multiple pieces/connections simultaneously in both Scene and Diagram views of the semio UI elements.",
   "summary": "Added selection box (marquee/rubber band) multi-select support for the Scene (3D) view. The Diagram (2D) already had this via ReactFlow's built-in selectionOnDrag. For the Scene, the DreiSelect box component from @react-three/drei was already in place but OrbitControls was capturing left-click for rotation, blocking box selection. Added selectionOnDrag prop to Scene/SceneInner/SceneProps that when true remaps OrbitControls to middle/right mouse for rotation, freeing left mouse for DreiSelect box selection. DesignAppScene now reads activeTool and passes selectionOnDrag={activeTool !== ToolKind.HAND} to Scene.",

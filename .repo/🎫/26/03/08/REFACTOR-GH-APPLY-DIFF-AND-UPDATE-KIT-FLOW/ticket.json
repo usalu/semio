@@ -1,5 +1,6 @@
 {
   "title": "Refactor Gh Apply Diff and Update Kit Flow",
+  "emoji": "♻️",
   "status": "closed",
   "description": "semio gh: there must be an apply diff for every entity, all apply components must not be persistent, and only Update Kit takes a kit diff and optional directory and updates static kit with sqlite.",
   "summary": "Refactored Grasshopper diff application flow: added non-persistent apply-diff components for core entities, removed persistent Apply Kit Diff behavior, and introduced Update Kit as the only component that accepts KitDiff+optional directory and updates both in-memory static kit state and sqlite via KitSqlite.SaveKit.",

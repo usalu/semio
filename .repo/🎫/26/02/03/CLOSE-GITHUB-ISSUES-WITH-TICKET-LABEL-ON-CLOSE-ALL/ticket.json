@@ -1,5 +1,6 @@
 {
   "title": "Close GitHub Issues with Ticket Label on Close All",
+  "emoji": "🎫",
   "status": "closed",
   "description": "Modify ticket close --all to also browse GitHub for all issues with the label 'ticket' and close them without a comment",
   "summary": "Added ghListOpenIssuesWithLabel function and modified TicketClose to close all open GitHub issues with 'ticket' label when --all flag is used",

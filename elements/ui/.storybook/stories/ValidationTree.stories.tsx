@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda🖱️desktop🥼validationtree.stories](repo://p/r/coda/b/u/desktop/f/ValidationTree.stories.tsx)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Storybook stories for ValidationTree component with Treppenraum_A example.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Stories
-// [🔬coda🖱️desktop🥼validationtree.stories🔖stories](repo://p/r/coda/b/u/desktop/f/ValidationTree.stories.tsx/s/Stories)
+// #region 📮Stories
 // Storybook stories exercising the validation tree viewer with real evaluation data.
 // Stories MUST use the Treppenraum_A example from the OWL ontology validation.
 
@@ -19,7 +17,7 @@ import { ValidationTree } from "@coda/desktop/renderer";
 import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
 
-// #region 🔖CodaThemeWrapper
+// 🎨#region 🏷️CodaThemeWrapper
 const CodaThemeWrapper = ({ children }: { children: React.ReactNode }) => (
   <div
     style={{
@@ -43,10 +41,10 @@ const CodaThemeWrapper = ({ children }: { children: React.ReactNode }) => (
     {children}
   </div>
 );
-// #endregion 🔖CodaThemeWrapper
+// #endregion 🏷️CodaThemeWrapper
 
-// #region 🔖TreppenraumReport
-// The full Treppenraum_A validation report as JSON-compatible data.
+// #region 🖼️TreppenraumReport
+// 📋The full Treppenraum_A validation report as JSON-compatible data.
 const treppenraumReport: ValidationReport = {
   instance: "Treppenraum_A",
   expression: "not (verbindet exactly 2 (Geschoss and (verbundenZu some Rettungsweg) and (in exactly 1 (Nutzungseinheit and (bruttoGrundfläche some xsd:float[<= 200.0f])))))",
@@ -329,10 +327,10 @@ const treppenraumReport: ValidationReport = {
     ],
   },
 };
-// #endregion 🔖TreppenraumReport
+// #endregion 🖼️TreppenraumReport
 
-// #region 🔖IncompleteDataReport
-// Example with unknown (gray) nodes due to incomplete data.
+// #region 📔IncompleteDataReport
+// 🌿Example with unknown (gray) nodes due to incomplete data.
 const incompleteDataReport: ValidationReport = {
   instance: "Treppenraum_B",
   expression: "not (verbindet exactly 2 (Geschoss and (verbundenZu some Rettungsweg) and (in exactly 1 (Nutzungseinheit and (bruttoGrundfläche some xsd:float[<= 200.0f])))))",
@@ -474,9 +472,9 @@ const incompleteDataReport: ValidationReport = {
     ],
   },
 };
-// #endregion 🔖IncompleteDataReport
+// #endregion 📔IncompleteDataReport
 
-// #region 🔖ValidationTreeMeta
+// 🌳#region ✏️ValidationTreeMeta
 const validationMeta = {
   title: "elements/ValidationTree",
   component: ValidationTree,
@@ -496,7 +494,7 @@ const validationMeta = {
 export default validationMeta;
 
 type ValidationStory = StoryObj<typeof validationMeta>;
-// #endregion 🔖ValidationTreeMeta
+// #endregion ✏️ValidationTreeMeta
 
 /**
  * Full Treppenraum_A evaluation: NOT is false because inner EXACTLY 2 is true.
@@ -617,6 +615,6 @@ export const MultipleWitnessAlternatives: ValidationStory = {
     defaultExpanded: true,
   },
 };
-// #endregion 🔖ValidationTreeStories
+// #endregion 📮ValidationTreeStories
 
-// #endregion 🔖Stories
+//#endregion 📮Stories

@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio📚js⚙️viteconfig](repo://p/u/semio/b/l/js/f/vite.config.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Vitest configuration for the semio domain workspace.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [👤semio📚js⚙️viteconfig🔖configuration](repo://p/u/semio/b/l/js/f/vite.config.ts/s/Configuration)
+// #region 🗄️Configuration
 import { defineConfig } from "vitest/config";
 
 // Vitest configuration for the domain-only semio package.
@@ -24,4 +22,4 @@ export default defineConfig({
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],
   },
 });
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

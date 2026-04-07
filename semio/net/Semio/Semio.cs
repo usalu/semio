@@ -1,5 +1,4 @@
-#region 🔖Header
-// [👤semio📚net🛅semio💻semio](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs)
+#region 📱Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Core .NET library implementing the semio domain model and serialization.
 
-#endregion 🔖Header
+#endregion 📱Header
 
-#region 🔖Imports
-// [👤semio📚net🛅semio💻semio🔖imports](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Imports)
+#region ⌛Imports
 // Callers MUST import all required namespaces listed here.
 using System.Collections;
 using System.Collections.Immutable;
@@ -46,16 +44,14 @@ using SharpGLTF.Scenes;
 using GltfModel = SharpGLTF.Schema2.ModelRoot;
 using GltfNode = SharpGLTF.Schema2.Node;
 
-#endregion 🔖Imports
+#endregion ⌛Imports
 
-#region 🔖Namespace
-// [👤semio📚net🛅semio💻semio🔖namespace](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Namespace)
+#region ✨Namespace
 // Implementations MUST reside in this namespace.
 namespace Semio;
-#endregion 🔖Namespace
+#endregion ✨Namespace
 
-#region 🔖Constants
-// [👤semio📚net🛅semio💻semio🔖constants](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Constants)
+#region 🎠Constants
 // Consumers MUST use these shared constants for configuration.
 
 public static class Constants
@@ -114,10 +110,9 @@ public enum DiffStatus
     Modified
 }
 
-#endregion 🔖Constants
+#endregion 🎠Constants
 
-#region 🔖Utility
-// [👤semio📚net🛅semio💻semio🔖utility](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Utility)
+#region 🎇Utility
 // Callers MUST use these utility functions for encoding and serialization.
 
 public static class Utility
@@ -409,14 +404,11 @@ public static class Utility
     }
 }
 
-#region 🔖Expressions
-// [👤semio📚net🛅semio💻semio🔖utility🔖expressions](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Utility/s/Expressions)
+#region ❄️Expressions
 // Implementations MUST evaluate expression trees through the Operator.Apply contract.
 
-/// <summary>Abstract base for all expression tree nodes.</summary>
+/// <summary>🌳Abstract base for all expression tree nodes.</summary>
 /// <remarks>
-/// Implementations MUST be immutable value types within expression trees.
-/// [👤semio📚net🛅semio💻semio🔖utility🔖expressions🛠️symbol](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Utility/s/Expressions/d/i/Symbol)
 /// </remarks>
 public abstract class Symbol { }
 public abstract class Term : Symbol { }
@@ -1469,17 +1461,14 @@ public class Expression
     }
 }
 
-#endregion 🔖Expressions
+#endregion ❄️Expressions
 
-#endregion 🔖Utility
+#endregion 🎇Utility
 
-#region 🔖Entitying
-// [👤semio📚net🛅semio💻semio🔖entitying](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying)
+#region 🔓Entitying
 // Implementations MUST extend Entity for equality, validation, and diff support.
 
 /// Abstract generic base class providing equality, hashing, cloning, and validation.
-/// Implementations MUST override equality based on serialized representation.
-/// [👤semio📚net🛅semio💻semio🔖entitying🛠️entity](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/Entity)
 public abstract class Entity<T> where T : Entity<T>
 {
     public override string ToString() => GetType().Name;
@@ -1528,8 +1517,6 @@ public abstract class Entity<T> where T : Entity<T>
 }
 
 /// FluentValidation validator base for Entity subclasses.
-/// Implementations MUST define validation rules in the constructor.
-/// [👤semio📚net🛅semio💻semio🔖entitying🛠️entityvalidator](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/EntityValidator)
 public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
 {
     public EntityValidator()
@@ -1537,8 +1524,7 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
     }
 }
 
-#region 🔖SemioValidation
-// [👤semio📚net🛅semio💻semio🔖entitying🔖semiovalidation](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/SemioValidation)
+#region ✨SemioValidation
 // Callers MUST use ValidationResult to report kit-level validation issues.
 
 public class SemioValidationFix
@@ -1812,11 +1798,107 @@ public static class SemioValidator
             }
         }
 
+        issues.AddRange(CheckDescriptionMissingEmoji(kit));
+        issues.AddRange(CheckDescriptionEmojiUnique(kit));
+
         return new ValidationResult { Issues = issues };
+    }
+
+    public static string? ExtractFirstEmoji(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return null;
+        var enumerator = StringInfo.GetTextElementEnumerator(text);
+        if (!enumerator.MoveNext()) return null;
+        var grapheme = enumerator.GetTextElement();
+        foreach (var rune in grapheme.EnumerateRunes())
+        {
+            if (Rune.GetUnicodeCategory(rune) == UnicodeCategory.OtherSymbol ||
+                (rune.Value >= 0x1F600 && rune.Value <= 0x1F64F) ||
+                (rune.Value >= 0x1F300 && rune.Value <= 0x1F5FF) ||
+                (rune.Value >= 0x1F680 && rune.Value <= 0x1F6FF) ||
+                (rune.Value >= 0x1F900 && rune.Value <= 0x1F9FF) ||
+                (rune.Value >= 0x1FA00 && rune.Value <= 0x1FA6F) ||
+                (rune.Value >= 0x1FA70 && rune.Value <= 0x1FAFF) ||
+                (rune.Value >= 0x2600 && rune.Value <= 0x26FF) ||
+                (rune.Value >= 0x2700 && rune.Value <= 0x27BF) ||
+                (rune.Value >= 0x1F1E0 && rune.Value <= 0x1F1FF))
+                return grapheme;
+        }
+        return null;
+    }
+
+    public static List<Issue> CheckDescriptionMissingEmoji(Kit kit)
+    {
+        var issues = new List<Issue>();
+        void Check(string entityKind, string entityGuid, string? description)
+        {
+            if (string.IsNullOrEmpty(description)) return;
+            var emoji = ExtractFirstEmoji(description);
+            if (emoji == null)
+                issues.Add(new Issue { ConstraintId = "description-missing-emoji", Message = $"Description of {entityKind} \"{entityGuid}\" must start with an emoji.", EntityKind = entityKind, EntityGuid = entityGuid });
+        }
+        Check("Kit", kit.Guid, kit.Description);
+        foreach (var t in kit.Types)
+        {
+            Check("Type", t.Guid, t.Description);
+            foreach (var c in t.Connectors) Check("Connector", c.Guid, c.Description);
+            foreach (var m in t.Models) Check("Model", m.Guid, m.Description);
+        }
+        foreach (var d in kit.Designs)
+        {
+            Check("Design", d.Guid, d.Description);
+            foreach (var p in d.Pieces) Check("Piece", p.Guid, p.Description);
+            foreach (var c in d.Connections) Check("Connection", c.Guid, c.Description);
+        }
+        foreach (var q in kit.Qualities) Check("Quality", q.Guid, q.Description);
+        foreach (var p in kit.Ports) Check("Port", p.Guid, p.Description);
+        foreach (var fo in kit.Folders) Check("Folder", fo.Guid, fo.Description);
+        return issues;
+    }
+
+    public static List<Issue> CheckDescriptionEmojiUnique(Kit kit)
+    {
+        var issues = new List<Issue>();
+        void CheckSiblings(string entityKind, IEnumerable<(string guid, string? description)> siblings)
+        {
+            var emojiMap = new Dictionary<string, List<string>>();
+            foreach (var (guid, description) in siblings)
+            {
+                var emoji = ExtractFirstEmoji(description);
+                if (emoji == null) continue;
+                if (!emojiMap.ContainsKey(emoji)) emojiMap[emoji] = new List<string>();
+                emojiMap[emoji].Add(guid);
+            }
+            foreach (var kvp in emojiMap)
+            {
+                if (kvp.Value.Count <= 1) continue;
+                foreach (var guid in kvp.Value.Skip(1))
+                    issues.Add(new Issue { ConstraintId = "description-emoji-unique", Message = $"Duplicate leading emoji \"{kvp.Key}\" in {entityKind} descriptions among siblings.", EntityKind = entityKind, EntityGuid = guid });
+            }
+        }
+        foreach (var group in kit.Types.GroupBy(t => t.Parent?.Guid))
+            CheckSiblings("Type", group.Select(t => (t.Guid, t.Description)));
+        foreach (var group in kit.Designs.GroupBy(d => d.Parent?.Guid))
+            CheckSiblings("Design", group.Select(d => (d.Guid, d.Description)));
+        foreach (var d in kit.Designs)
+        {
+            CheckSiblings("Piece", d.Pieces.Select(p => (p.Guid, p.Description)));
+            CheckSiblings("Connection", d.Connections.Select(c => (c.Guid, c.Description)));
+        }
+        CheckSiblings("Quality", kit.Qualities.Select(q => (q.Guid, q.Description)));
+        CheckSiblings("Port", kit.Ports.Select(p => (p.Guid, p.Description)));
+        foreach (var group in kit.Folders.GroupBy(f => f.Parent))
+            CheckSiblings("Folder", group.Select(f => (f.Guid, f.Description)));
+        foreach (var t in kit.Types)
+        {
+            CheckSiblings("Connector", t.Connectors.Select(c => (c.Guid, c.Description)));
+            CheckSiblings("Model", t.Models.Select(m => (m.Guid, m.Description)));
+        }
+        return issues;
     }
 }
 
-#endregion 🔖SemioValidation
+#endregion ✨SemioValidation
 
 public class AttributeDiffUpdate
 {
@@ -1957,9 +2039,7 @@ public class KitDiffUpdate
     public KitId Kit { get; set; } = new();
     public KitDiff? Diff { get; set; }
 }
-// [👤semio📚net🛅semio💻semio🔖entitying🛠️change](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/d/i/Change)
-/// <summary>Change holds the data fields for a Change record.</summary>
-/// Change MUST perform the Change operation.
+/// <summary>💿Change holds the data fields for a Change record.</summary>
 public class Change<TEntity, TDiff>
 {
     public TDiff Forward { get; set; } = default!;
@@ -1992,8 +2072,7 @@ public class StatChange : Change<Stat, StatDiff> { }
 public class DesignChange : Change<Design, DesignDiff> { }
 public class KitChange : Change<Kit, KitDiff> { }
 
-#region 🔖Attribute
-// [👤semio📚net🛅semio💻semio🔖entitying🔖attribute](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Attribute)
+#region 🧲Attribute
 // Implementations MUST provide key-value metadata for annotating entities.
 
 public class AttributeId : Entity<AttributeId>
@@ -2119,10 +2198,9 @@ public class Attribute : Entity<Attribute>
     public override string ToString() => $"Atr({ToHumanIdString()})";
 }
 
-#endregion 🔖Attribute
+#endregion 🧲Attribute
 
-#region 🔖Coord
-// [👤semio📚net🛅semio💻semio🔖entitying🔖coord](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Coord)
+#region 🌥️Coord
 // Implementations MUST share X, Y, Z coordinate fields for spatial types.
 
 public class Coord : Entity<Coord>
@@ -2137,10 +2215,9 @@ public class Coord : Entity<Coord>
     }
 }
 
-#endregion 🔖Coord
+#endregion 🌥️Coord
 
-#region 🔖Point
-// [👤semio📚net🛅semio💻semio🔖entitying🔖point](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Point)
+#region 🧩Point
 // Implementations MUST represent a 3D point with X, Y, Z coordinates.
 
 public class Point : Entity<Point>
@@ -2150,10 +2227,9 @@ public class Point : Entity<Point>
     public double Z { get; set; } = 0;
 }
 
-#endregion 🔖Point
+#endregion 🧩Point
 
-#region 🔖Vector
-// [👤semio📚net🛅semio💻semio🔖entitying🔖vector](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Vector)
+#region 🤖Vector
 // Implementations MUST represent a 3D vector with X, Y, Z components.
 
 public class Vector : Entity<Vector>
@@ -2185,10 +2261,9 @@ public class Vector : Entity<Vector>
     }
 }
 
-#endregion 🔖Vector
+#endregion 🤖Vector
 
-#region 🔖Plane
-// [👤semio📚net🛅semio💻semio🔖entitying🔖plane](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Plane)
+#region 🌡️Plane
 // Implementations MUST define a 3D plane by origin and X/Y direction vectors.
 
 public class Plane : Entity<Plane>
@@ -2219,10 +2294,9 @@ public class Plane : Entity<Plane>
     }
 }
 
-#endregion 🔖Plane
+#endregion 🌡️Plane
 
-#region 🔖Location
-// [👤semio📚net🛅semio💻semio🔖entitying🔖location](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Location)
+#region ⏲️Location
 // Implementations MUST combine a plane with rotation and elevation for placement.
 
 public class LocationId : Entity<LocationId>
@@ -2246,10 +2320,9 @@ public class Location : Entity<Location>
     public override string ToString() => $"Loc({ToHumanIdString()})";
 }
 
-#endregion 🔖Location
+#endregion ⏲️Location
 
-#region 🔖Author
-// [👤semio📚net🛅semio💻semio🔖entitying🔖author](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Author)
+#region 🤸Author
 // Implementations MUST provide author identity with name and contact.
 
 public class AuthorId : Entity<AuthorId>
@@ -2367,10 +2440,9 @@ public class AuthorsDiff : Entity<AuthorsDiff>
     public static implicit operator AuthorsDiff(List<Author> authors) => new() { Updated = authors.Select(a => new AuthorDiffUpdate { Author = a, Diff = (AuthorDiff)a }).ToList() };
 }
 
-#endregion 🔖Author
+#endregion 🤸Author
 
-#region 🔖File
-// [👤semio📚net🛅semio💻semio🔖entitying🔖file](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/File)
+#region 🪨File
 // Implementations MUST reference a file with URI, MIME type, and optional content.
 
 public class FileId : Entity<FileId>
@@ -2477,10 +2549,9 @@ public class File : Entity<File>
     public static implicit operator File(FileDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Remote = diff.Remote, Folder = diff.Folder, Size = diff.Size, Hash = diff.Hash, Blob = diff.Blob, CreatedAt = diff.CreatedAt ?? default, CreatedBy = diff.CreatedBy, UpdatedAt = diff.UpdatedAt ?? default, UpdatedBy = diff.UpdatedBy };
     public static implicit operator FileDiff(File file) => new() { Guid = file.Guid, Name = file.Name, Remote = file.Remote, Folder = file.Folder, Size = file.Size, Hash = file.Hash, Blob = file.Blob, CreatedAt = file.CreatedAt, CreatedBy = file.CreatedBy, UpdatedAt = file.UpdatedAt, UpdatedBy = file.UpdatedBy };
 }
-#endregion 🔖File
+#endregion 🪨File
 
-#region 🔖Folder
-// [👤semio📚net🛅semio💻semio🔖entitying🔖folder](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Folder)
+#region 🪩Folder
 // Implementations MUST reference a folder with name and optional parent.
 
 public class FolderId : Entity<FolderId>
@@ -2590,10 +2661,9 @@ public class Folder : Entity<Folder>
     }
 }
 
-#endregion 🔖Folder
+#endregion 🪩Folder
 
-#region 🔖Benchmark
-// [👤semio📚net🛅semio💻semio🔖entitying🔖benchmark](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Benchmark)
+#region 💾Benchmark
 // Implementations MUST capture benchmark metadata for performance measurement.
 
 public class BenchmarkId : Entity<BenchmarkId>
@@ -2651,10 +2721,9 @@ public class BenchmarkDiff : Entity<BenchmarkDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 🔖Benchmark
+#endregion 💾Benchmark
 
-#region 🔖QualityKind
-// [👤semio📚net🛅semio💻semio🔖entitying🔖qualitykind](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/QualityKind)
+#region 🖨️QualityKind
 // Implementations MUST categorize quality metrics by kind.
 
 [Flags]
@@ -2668,10 +2737,9 @@ public enum QualityKind
     Connector = 16,
 }
 
-#endregion 🔖QualityKind
+#endregion 🖨️QualityKind
 
-#region 🔖Quality
-// [👤semio📚net🛅semio💻semio🔖entitying🔖quality](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Quality)
+#region 🎊Quality
 // Implementations MUST combine kind, name, value, and unit for quality metrics.
 
 public class QualityId : Entity<QualityId>
@@ -2755,10 +2823,9 @@ public class Quality : Entity<Quality>
 
 }
 
-#endregion 🔖Quality
+#endregion 🎊Quality
 
-#region 🔖Tag
-// [👤semio📚net🛅semio💻semio🔖entitying🔖tag](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Tag)
+#region 🪄Tag
 // Implementations MUST provide lightweight labels for categorizing entities.
 
 public class TagId : Entity<TagId>
@@ -2815,10 +2882,9 @@ public class TagsDiff : Entity<TagsDiff>
     public List<TagDiffUpdate> Updated { get; set; } = new();
 }
 
-#endregion 🔖Tag
+#endregion 🪄Tag
 
-#region 🔖Concept
-// [👤semio📚net🛅semio💻semio🔖entitying🔖concept](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Concept)
+#region 🎑Concept
 // Implementations MUST link a semantic concept name to description and icon.
 
 public class ConceptId : Entity<ConceptId>
@@ -2885,10 +2951,9 @@ public class ConceptsDiff : Entity<ConceptsDiff>
     }
 }
 
-#endregion 🔖Concept
+#endregion 🎑Concept
 
-#region 🔖Port
-// [👤semio📚net🛅semio💻semio🔖entitying🔖port](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Port)
+#region 🎀Port
 // Implementations MUST define connection ports as typed interfaces on a type.
 
 public class PortId : Entity<PortId>
@@ -3004,10 +3069,9 @@ public class Port : Entity<Port>
     }
 }
 
-#endregion 🔖Port
+#endregion 🎀Port
 
-#region 🔖Prop
-// [👤semio📚net🛅semio💻semio🔖entitying🔖prop](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Prop)
+#region 🎆Prop
 // Implementations MUST bind a property name to an expression value.
 
 public class PropId : Entity<PropId>
@@ -3054,10 +3118,9 @@ public class PropDiff : Entity<PropDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 🔖Prop
+#endregion 🎆Prop
 
-#region 🔖Model
-// [👤semio📚net🛅semio💻semio🔖entitying🔖model](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Model)
+#region 🧊Model
 // Implementations MUST reference a 3D model with URI, MIME type, and local plane.
 
 public class ModelId : Entity<ModelId>
@@ -3211,10 +3274,9 @@ public class Model : Entity<Model>
     }
 }
 
-#endregion 🔖Model
+#endregion 🧊Model
 
-#region 🔖Connector
-// [👤semio📚net🛅semio💻semio🔖entitying🔖connector](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Connector)
+#region 🦀Connector
 // Implementations MUST define located interface points on a type.
 
 public class ConnectorId : Entity<ConnectorId>
@@ -3499,10 +3561,9 @@ public class Connector : Entity<Connector>
     }
 }
 
-#endregion 🔖Connector
+#endregion 🦀Connector
 
-#region 🔖Type
-// [👤semio📚net🛅semio💻semio🔖entitying🔖type](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Type)
+#region 🐘Type
 // Implementations MUST compose ports, connectors, and models into a parametric type.
 
 public class TypeId : Entity<TypeId>
@@ -3879,10 +3940,9 @@ public class Type : Entity<Type>
     }
 }
 
-#endregion 🔖Type
+#endregion 🐘Type
 
-#region 🔖Layer
-// [👤semio📚net🛅semio💻semio🔖entitying🔖layer](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Layer)
+#region ⏳Layer
 // Implementations MUST organize pieces into named layers within a design.
 
 public class LayerId : Entity<LayerId>
@@ -3937,10 +3997,9 @@ public class LayerDiff : Entity<LayerDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 🔖Layer
+#endregion ⏳Layer
 
-#region 🔖Group
-// [👤semio📚net🛅semio💻semio🔖entitying🔖group](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Group)
+#region 🔍Group
 // Implementations MUST group pieces by name within a design.
 
 public class GroupId : Entity<GroupId>
@@ -3991,10 +4050,9 @@ public class GroupDiff : Entity<GroupDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 🔖Group
+#endregion 🔍Group
 
-#region 🔖Piece
-// [👤semio📚net🛅semio💻semio🔖entitying🔖piece](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Piece)
+#region 🎈Piece
 // Implementations MUST place an instantiated type within a design hierarchy.
 
 public class PieceId : Entity<PieceId>
@@ -4158,9 +4216,8 @@ public class Piece : Entity<Piece>
     }
 }
 
-#endregion 🔖Piece
-#region 🔖Side
-// [👤semio📚net🛅semio💻semio🔖entitying🔖side](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Side)
+#endregion 🎈Piece
+#region 🎺Side
 // Implementations MUST reference a piece and connector as a connection endpoint.
 
 public class SideDiff : Entity<SideDiff>
@@ -4254,10 +4311,9 @@ public class Side : Entity<Side>
     public override string ToString() => $"Sde({Piece.Guid}" + (Connector.Guid != "" ? ":" + Connector.Guid : "") + ")";
 }
 
-#endregion 🔖Side
+#endregion 🎺Side
 
-#region 🔖Connection
-// [👤semio📚net🛅semio💻semio🔖entitying🔖connection](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Connection)
+#region 💡Connection
 // Implementations MUST link two sides to connect pieces in a design.
 
 public class ConnectionId : Entity<ConnectionId>
@@ -4532,10 +4588,9 @@ public class Connection : Entity<Connection>
     }
 }
 
-#endregion 🔖Connection
+#endregion 💡Connection
 
-#region 🔖Stat
-// [👤semio📚net🛅semio💻semio🔖entitying🔖stat](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Stat)
+#region 🪵Stat
 // Implementations MUST associate statistical metrics with a design.
 
 public class StatId : Entity<StatId>
@@ -4590,10 +4645,9 @@ public class StatDiff : Entity<StatDiff>
     public bool ShouldSerializeMaxExcluded() => _setProperties.Contains("MaxExcluded");
 }
 
-#endregion 🔖Stat
+#endregion 🪵Stat
 
-#region 🔖Design
-// [👤semio📚net🛅semio💻semio🔖entitying🔖design](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Design)
+#region 🧬Design
 // Implementations MUST compose pieces, connections, and metadata into a layout.
 
 public class DesignsDiff : Entity<DesignsDiff>
@@ -6143,20 +6197,513 @@ text {
             diff.Connections = new ConnectionsDiff { Removed = connectionsRemoved };
         return diff;
     }
+
+    /// <summary>
+    /// 📋Copies a selection of pieces and connections from a design into a standalone design.
+    /// </summary>
+    /// <remarks>
+    /// Specs: A selection is a set of piece guids and connection guids.
+    /// - Fixed selected pieces are added as-is.
+    /// - Internal-connected pieces (selected, parent piece selected, parent connection selected) are added as-is.
+    /// - Parent-piece-exclusive parent-connection-inclusive pieces get semio.center and semio.plane attributes from the flat design.
+    /// - Orphaned connections, parent-exclusive child-inclusive connections, and parent-inclusive child-exclusive connections
+    ///   are added with their external pieces marked with semio.piece.origin = "external".
+    /// - Internal connections are added as-is.
+    /// </remarks>
+    public static Design CopyDesign(Kit kit, Design design, List<string> pieceGuids, List<string> connectionGuids)
+    {
+        var selectedPieceSet = new HashSet<string>(pieceGuids);
+        var selectedConnectionSet = new HashSet<string>(connectionGuids);
+
+        // Build parent map: child guid -> (parent guid, connection)
+        var parentMap = new Dictionary<string, (string parentGuid, Connection connection)>();
+        foreach (var conn in design.Connections)
+        {
+            parentMap[conn.Connecting.Piece.Guid] = (conn.Connected.Piece.Guid, conn);
+        }
+
+        // Flatten the design to get absolute planes/centers
+        var flatDiff = Kit.FlattenDesign(kit, design.Guid);
+        var flatDesign = Design.ApplyDiff(Entity<Design>.DeepClone(design)!, flatDiff);
+        var flatPieceMap = flatDesign.Pieces.ToDictionary(p => p.Guid);
+
+        var copyPieces = new List<Piece>();
+        var addedPieceGuids = new HashSet<string>();
+        var copyConnections = new List<Connection>();
+
+        // Process selected pieces
+        foreach (var pieceGuid in pieceGuids)
+        {
+            var piece = design.Pieces.First(p => p.Guid == pieceGuid);
+            var isFixed = piece.Plane is not null;
+            var isConnected = parentMap.ContainsKey(pieceGuid);
+
+            bool isInternalConnected = false;
+            bool isInternalFixed = isFixed && selectedPieceSet.Contains(pieceGuid);
+            bool isPpExclPcIncl = false;
+
+            if (isConnected)
+            {
+                var (parentGuid, parentConn) = parentMap[pieceGuid];
+                var parentPieceSelected = selectedPieceSet.Contains(parentGuid);
+                var parentConnSelected = selectedConnectionSet.Contains(parentConn.Guid);
+                isInternalConnected = parentPieceSelected && parentConnSelected;
+                isPpExclPcIncl = !parentPieceSelected && parentConnSelected;
+            }
+
+            var isInternal = isInternalConnected || isInternalFixed;
+
+            if (isInternalFixed || isInternalConnected)
+            {
+                copyPieces.Add(Entity<Piece>.DeepClone(piece)!);
+                addedPieceGuids.Add(pieceGuid);
+            }
+            else if (isPpExclPcIncl)
+            {
+                var copied = Entity<Piece>.DeepClone(piece)!;
+                // Add semio.center and semio.plane from flattened design
+                if (flatPieceMap.TryGetValue(pieceGuid, out var flatPiece))
+                {
+                    var centerValue = flatPiece.Center is not null
+                        ? Utility.Serialize(flatPiece.Center)
+                        : Utility.Serialize(new Coord());
+                    var planeValue = flatPiece.Plane is not null
+                        ? Utility.Serialize(flatPiece.Plane)
+                        : Utility.Serialize(new Plane());
+                    copied.Attributes = new List<Attribute>(copied.Attributes)
+                    {
+                        new() { Key = "semio.center", Value = centerValue },
+                        new() { Key = "semio.plane", Value = planeValue }
+                    };
+                }
+                copyPieces.Add(copied);
+                addedPieceGuids.Add(pieceGuid);
+            }
+        }
+
+        // Process selected connections
+        foreach (var connGuid in connectionGuids)
+        {
+            var conn = design.Connections.First(c => c.Guid == connGuid);
+            var connectedGuid = conn.Connected.Piece.Guid;
+            var connectingGuid = conn.Connecting.Piece.Guid;
+            var connectedSelected = selectedPieceSet.Contains(connectedGuid);
+            var connectingSelected = selectedPieceSet.Contains(connectingGuid);
+
+            var isInternal = connectedSelected && connectingSelected;
+            var isOrphaned = !connectedSelected && !connectingSelected;
+            var isParentExclChildIncl = !connectedSelected && connectingSelected;
+            var isParentInclChildExcl = connectedSelected && !connectingSelected;
+
+            if (isInternal)
+            {
+                copyConnections.Add(Entity<Connection>.DeepClone(conn)!);
+            }
+            else if (isOrphaned || isParentExclChildIncl || isParentInclChildExcl)
+            {
+                copyConnections.Add(Entity<Connection>.DeepClone(conn)!);
+
+                // Add external pieces
+                var externalGuids = new List<string>();
+                if (!connectedSelected) externalGuids.Add(connectedGuid);
+                if (!connectingSelected) externalGuids.Add(connectingGuid);
+
+                foreach (var extGuid in externalGuids)
+                {
+                    if (!addedPieceGuids.Contains(extGuid))
+                    {
+                        var extPiece = Entity<Piece>.DeepClone(design.Pieces.First(p => p.Guid == extGuid))!;
+                        var extAttrs = new List<Attribute>(extPiece.Attributes)
+                        {
+                            new() { Key = "semio.piece.origin", Value = "external" }
+                        };
+                        if (flatPieceMap.TryGetValue(extGuid, out var flatExtPiece))
+                        {
+                            var extCenterValue = flatExtPiece.Center is not null
+                                ? Utility.Serialize(flatExtPiece.Center)
+                                : Utility.Serialize(new Coord());
+                            extAttrs.Add(new Attribute { Key = "semio.center", Value = extCenterValue });
+                        }
+                        extPiece.Attributes = extAttrs;
+                        copyPieces.Add(extPiece);
+                        addedPieceGuids.Add(extGuid);
+                    }
+                }
+            }
+        }
+
+        return new Design
+        {
+            Guid = "",
+            Name = "",
+            Pieces = copyPieces,
+            Connections = copyConnections
+        };
+    }
+
+    /// <summary>
+    /// 📋Pastes a copied design into a target design, returning a DesignDiff.
+    /// </summary>
+    /// <remarks>
+    /// Specs: Anchoring determines the reference point within the bounding rectangle of the source.
+    /// - Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
+    /// - Connected pieces with non-external parents are added as-is.
+    /// - Connected pieces with external-origin parents: if a matching piece with a matching connector is found in target,
+    ///   the parent connection is remapped; otherwise treated as fixed using semio.center/semio.plane attributes.
+    /// - Internal connections (neither piece is external) are added as-is.
+    /// - Orphaned connections and external-origin pieces are not added.
+    /// </remarks>
+    public static DesignDiff PasteDesign(
+        Kit kit,
+        Design source,
+        Design target,
+        string anchoring = "bottomLeft",
+        Coord? coord = null)
+    {
+        var types = (kit.Types ?? new List<Type>()).ToDictionary(t => t.Guid);
+        var ports = (kit.Ports ?? new List<Port>()).ToDictionary(p => p.Guid);
+
+        // Classify source pieces
+        var externalOriginGuids = new HashSet<string>();
+        foreach (var piece in source.Pieces)
+        {
+            if (piece.Attributes.Any(a => a.Key == "semio.piece.origin" && a.Value == "external"))
+                externalOriginGuids.Add(piece.Guid);
+        }
+
+        var sourcePieceMap = source.Pieces.ToDictionary(p => p.Guid);
+        var sourceParentMap = new Dictionary<string, (string parentGuid, Connection connection)>();
+        foreach (var conn in source.Connections)
+        {
+            var childGuid = conn.Connecting.Piece.Guid;
+            var parentGuid = conn.Connected.Piece.Guid;
+            if (!sourceParentMap.TryGetValue(childGuid, out var prev))
+            {
+                sourceParentMap[childGuid] = (parentGuid, conn);
+                continue;
+            }
+            var prevStub = externalOriginGuids.Contains(prev.parentGuid);
+            var nextStub = externalOriginGuids.Contains(parentGuid);
+            if (prevStub != nextStub && nextStub)
+                sourceParentMap[childGuid] = (parentGuid, conn);
+        }
+
+        // Compute flat planes/centers for source pieces that need it
+        // For pp_excl_pc_incl pieces, the semio.center and semio.plane attributes have the flat values
+
+        // Compute bounding rectangle from flat centers
+        var centerCoords = new List<Coord>();
+        foreach (var piece in source.Pieces)
+        {
+            if (externalOriginGuids.Contains(piece.Guid)) continue;
+
+            Coord? center = piece.Center;
+            if (center is null)
+            {
+                // Try to get from semio.center attribute
+                var centerAttr = piece.Attributes.FirstOrDefault(a => a.Key == "semio.center");
+                if (centerAttr?.Value is not null)
+                    center = Utility.Deserialize<Coord>(centerAttr.Value);
+            }
+            if (center is not null)
+                centerCoords.Add(center);
+        }
+
+        // Also add centers for external pieces referenced by connections
+        foreach (var conn in source.Connections)
+        {
+            var connectedGuid = conn.Connected.Piece.Guid;
+            var connectingGuid = conn.Connecting.Piece.Guid;
+            if (externalOriginGuids.Contains(connectedGuid) && sourcePieceMap.TryGetValue(connectedGuid, out var extPiece1))
+            {
+                Coord? c = extPiece1.Center;
+                if (c is null)
+                {
+                    var attr = extPiece1.Attributes.FirstOrDefault(a => a.Key == "semio.center");
+                    if (attr?.Value is not null) c = Utility.Deserialize<Coord>(attr.Value);
+                }
+                if (c is not null) centerCoords.Add(c);
+            }
+            if (externalOriginGuids.Contains(connectingGuid) && sourcePieceMap.TryGetValue(connectingGuid, out var extPiece2))
+            {
+                Coord? c = extPiece2.Center;
+                if (c is null)
+                {
+                    var attr = extPiece2.Attributes.FirstOrDefault(a => a.Key == "semio.center");
+                    if (attr?.Value is not null) c = Utility.Deserialize<Coord>(attr.Value);
+                }
+                if (c is not null) centerCoords.Add(c);
+            }
+        }
+
+        if (centerCoords.Count == 0)
+            centerCoords.Add(new Coord());
+
+        var minU = centerCoords.Min(c => c.U);
+        var maxU = centerCoords.Max(c => c.U);
+        var minV = centerCoords.Min(c => c.V);
+        var maxV = centerCoords.Max(c => c.V);
+
+        Coord anchor;
+        switch (anchoring)
+        {
+            case "middle":
+                anchor = new Coord { U = (minU + maxU) / 2, V = (minV + maxV) / 2 };
+                break;
+            case "centroid":
+                anchor = new Coord { U = centerCoords.Average(c => c.U), V = centerCoords.Average(c => c.V) };
+                break;
+            case "bottomLeft":
+                anchor = new Coord { U = minU, V = minV };
+                break;
+            case "bottomRight":
+                anchor = new Coord { U = maxU, V = minV };
+                break;
+            case "topLeft":
+                anchor = new Coord { U = minU, V = maxV };
+                break;
+            case "topRight":
+                anchor = new Coord { U = maxU, V = maxV };
+                break;
+            default: // "original"
+                anchor = new Coord { U = 0, V = 0 };
+                break;
+        }
+
+        // Build target piece maps for matching
+        var targetPiecesByName = new Dictionary<string, List<Piece>>();
+        foreach (var tp in target.Pieces)
+        {
+            if (!targetPiecesByName.ContainsKey(tp.Name))
+                targetPiecesByName[tp.Name] = new List<Piece>();
+            targetPiecesByName[tp.Name].Add(tp);
+        }
+
+        // Helper: check port compatibility
+        bool ArePortsCompatible(string? portGuid1, string? portGuid2)
+        {
+            if (portGuid1 is null || portGuid2 is null) return false;
+            if (portGuid1 == portGuid2) return true;
+            if (!ports.TryGetValue(portGuid1, out var port1) || !ports.TryGetValue(portGuid2, out var port2))
+                return false;
+            return port1.CompatiblePorts.Any(cp => cp.Guid == portGuid2) ||
+                   port2.CompatiblePorts.Any(cp => cp.Guid == portGuid1);
+        }
+
+        // Helper: check connector compatibility
+        bool AreConnectorsCompatible(Connector c1, Connector c2)
+        {
+            return ArePortsCompatible(c1.Port?.Guid, c2.Port?.Guid);
+        }
+
+        // Helper: find matching connector on a type
+        Connector? FindMatchingConnector(string typeGuid, Connector sourceConnector)
+        {
+            if (!types.TryGetValue(typeGuid, out var type)) return null;
+            return type.Connectors.FirstOrDefault(c =>
+                c.Name == sourceConnector.Name && AreConnectorsCompatible(c, sourceConnector));
+        }
+
+        var addedPieces = new List<Piece>();
+        var addedConnections = new List<Connection>();
+        var remappedPieces = new Dictionary<string, string>(); // source external guid -> target piece guid
+
+        // Process source pieces
+        foreach (var piece in source.Pieces)
+        {
+            if (externalOriginGuids.Contains(piece.Guid)) continue;
+
+            var isFixed = piece.Plane is not null;
+            var isConnected = sourceParentMap.ContainsKey(piece.Guid);
+
+            if (isFixed && !isConnected)
+            {
+                // Fixed piece: apply -anchor offset, then +coord if given
+                var copied = Entity<Piece>.DeepClone(piece)!;
+                var center = copied.Center ?? new Coord();
+                center = new Coord { U = center.U - anchor.U, V = center.V - anchor.V };
+                if (coord is not null)
+                    center = new Coord { U = center.U + coord.U, V = center.V + coord.V };
+                copied.Center = center;
+                addedPieces.Add(copied);
+            }
+            else if (isConnected)
+            {
+                var (parentGuid, parentConn) = sourceParentMap[piece.Guid];
+                if (externalOriginGuids.Contains(parentGuid))
+                {
+                    // Parent is external-origin: try to match in target
+                    var externalParent = sourcePieceMap[parentGuid];
+                    var matched = false;
+
+                    if (targetPiecesByName.TryGetValue(externalParent.Name, out var candidates))
+                    {
+                        var isParentConnected = parentConn.Connected.Piece.Guid == parentGuid;
+                        var parentConnectorGuid = isParentConnected
+                            ? parentConn.Connected.Connector.Guid
+                            : parentConn.Connecting.Connector.Guid;
+
+                        // Get the external parent's type to find the connector
+                        Connector? sourceParentConnector = null;
+                        if (externalParent.Type is not null && types.TryGetValue(externalParent.Type.Guid, out var parentType))
+                        {
+                            sourceParentConnector = parentType.Connectors.FirstOrDefault(c => c.Guid == parentConnectorGuid);
+                        }
+
+                        if (sourceParentConnector is not null)
+                        {
+                            foreach (var candidate in candidates)
+                            {
+                                if (candidate.Type is null) continue;
+                                var matchingConnector = FindMatchingConnector(candidate.Type.Guid, sourceParentConnector);
+                                if (matchingConnector is not null)
+                                {
+                                    // Found a match! Remap the connection
+                                    matched = true;
+                                    remappedPieces[parentGuid] = candidate.Guid;
+
+                                    var copied = Entity<Piece>.DeepClone(piece)!;
+                                    addedPieces.Add(copied);
+
+                                    // Add the remapped connection
+                                    var copiedConn = Entity<Connection>.DeepClone(parentConn)!;
+                                    if (isParentConnected)
+                                    {
+                                        copiedConn.Connected = new Side
+                                        {
+                                            Piece = new PieceId { Guid = candidate.Guid },
+                                            Connector = new ConnectorId { Guid = matchingConnector.Guid }
+                                        };
+                                    }
+                                    else
+                                    {
+                                        copiedConn.Connecting = new Side
+                                        {
+                                            Piece = new PieceId { Guid = candidate.Guid },
+                                            Connector = new ConnectorId { Guid = matchingConnector.Guid }
+                                        };
+                                    }
+
+                                    if (coord is not null)
+                                    {
+                                        var connectedStub = externalOriginGuids.Contains(parentConn.Connected.Piece.Guid);
+                                        var connectingStub = externalOriginGuids.Contains(parentConn.Connecting.Piece.Guid);
+                                        var connMatchesParentage =
+                                            (parentConn.Connecting.Piece.Guid == piece.Guid && parentConn.Connected.Piece.Guid == parentGuid) ||
+                                            (parentConn.Connected.Piece.Guid == piece.Guid && parentConn.Connecting.Piece.Guid == parentGuid);
+                                        // Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
+                                        // internal–internal source edges (neither side a stub) must keep cloned u/v.
+                                        if (connMatchesParentage && connectedStub != connectingStub)
+                                        {
+                                            Coord? flatParentCenter = null;
+                                            if (flatPiecesByGuid_PassThrough(candidate, out var candCenter))
+                                                flatParentCenter = candCenter;
+                                            else if (flatPiecesByGuid_PassThrough(externalParent, out var epCenter))
+                                                flatParentCenter = epCenter;
+                                            Coord? flatChildCenter = null;
+                                            var childCenterAttr = piece.Attributes.FirstOrDefault(a => a.Key == "semio.center");
+                                            if (childCenterAttr?.Value is not null)
+                                                flatChildCenter = Utility.Deserialize<Coord>(childCenterAttr.Value);
+                                            if (flatChildCenter is null && piece.Center is not null)
+                                                flatChildCenter = piece.Center;
+
+                                            if (flatParentCenter is not null && flatChildCenter is not null)
+                                            {
+                                                var offsetU = flatParentCenter.U - (coord.U + (anchor.U - flatChildCenter.U));
+                                                var offsetV = flatParentCenter.V - (coord.V + (anchor.V - flatChildCenter.V));
+                                                copiedConn.U = offsetU;
+                                                copiedConn.V = offsetV;
+                                            }
+                                        }
+                                    }
+
+                                    addedConnections.Add(copiedConn);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!matched)
+                    {
+                        // Treat as fixed piece using semio.center and semio.plane attributes
+                        var copied = Entity<Piece>.DeepClone(piece)!;
+                        var centerAttr = piece.Attributes.FirstOrDefault(a => a.Key == "semio.center");
+                        var planeAttr = piece.Attributes.FirstOrDefault(a => a.Key == "semio.plane");
+                        if (centerAttr?.Value is not null)
+                            copied.Center = Utility.Deserialize<Coord>(centerAttr.Value);
+                        if (planeAttr?.Value is not null)
+                            copied.Plane = Utility.Deserialize<Plane>(planeAttr.Value);
+                        // Apply anchor offset
+                        var center = copied.Center ?? new Coord();
+                        center = new Coord { U = center.U - anchor.U, V = center.V - anchor.V };
+                        if (coord is not null)
+                            center = new Coord { U = center.U + coord.U, V = center.V + coord.V };
+                        copied.Center = center;
+                        addedPieces.Add(copied);
+                    }
+                }
+                else
+                {
+                    // Parent is not external: add connected piece as-is
+                    addedPieces.Add(Entity<Piece>.DeepClone(piece)!);
+                }
+            }
+        }
+
+        // Process source connections (non-external internal connections)
+        foreach (var conn in source.Connections)
+        {
+            var connectedGuid = conn.Connected.Piece.Guid;
+            var connectingGuid = conn.Connecting.Piece.Guid;
+
+            // Skip if either piece is external-origin (these are handled during piece processing)
+            if (externalOriginGuids.Contains(connectedGuid) || externalOriginGuids.Contains(connectingGuid))
+                continue;
+
+            // Skip orphaned connections (both pieces not in source non-external set)
+            var connectedIsAdded = addedPieces.Any(p => p.Guid == connectedGuid);
+            var connectingIsAdded = addedPieces.Any(p => p.Guid == connectingGuid);
+            if (!connectedIsAdded || !connectingIsAdded) continue;
+
+            addedConnections.Add(Entity<Connection>.DeepClone(conn)!);
+        }
+
+        // Build DesignDiff
+        var diff = new DesignDiff();
+        if (addedPieces.Count > 0 || addedConnections.Count > 0)
+        {
+            if (addedPieces.Count > 0)
+                diff.Pieces = new PiecesDiff { Added = addedPieces };
+            if (addedConnections.Count > 0)
+                diff.Connections = new ConnectionsDiff { Added = addedConnections };
+        }
+        return diff;
+    }
+
+    private static bool flatPiecesByGuid_PassThrough(Piece piece, out Coord? center)
+    {
+        var centerAttr = piece.Attributes.FirstOrDefault(a => a.Key == "semio.center");
+        if (centerAttr?.Value is not null)
+        {
+            center = Utility.Deserialize<Coord>(centerAttr.Value);
+            return true;
+        }
+        center = piece.Center;
+        return center is not null;
+    }
 }
 
-#endregion 🔖Design
+#endregion 🧬Design
 
-#region 🔖Kit
-// [👤semio📚net🛅semio💻semio🔖entitying🔖kit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit)
+#region 🧳Kit
 // Implementations MUST collect types and designs into a reusable library.
 
-#region 🔖KitKind
-// [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖kitkind](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/KitKind)
+#region 💧KitKind
 // KitKind discriminates the five persistence/transport forms of a Kit.
 
 /// <summary>
-/// Discriminator for the five kit persistence/transport forms.
+/// 🏷️Discriminator for the five kit persistence/transport forms.
 /// </summary>
 /// <remarks>
 /// Specs: Exactly five kit kinds exist:
@@ -6181,14 +6728,14 @@ public enum KitKind
     Temporary
 }
 
-/// <summary>Helpers for KitKind.</summary>
+/// <summary>🔷Helpers for KitKind.</summary>
 public static class KitKinds
 {
-    /// <summary>All valid KitKind values.</summary>
+    /// <summary>🔑All valid KitKind values.</summary>
     public static readonly KitKind[] All = (KitKind[])Enum.GetValues(typeof(KitKind));
 }
 
-#endregion 🔖KitKind
+#endregion 💧KitKind
 
 public class KitDiff : Entity<KitDiff>
 {
@@ -6728,8 +7275,7 @@ public class Kit : Entity<Kit>
         };
     }
 
-    #region 🔖Design Family Helpers
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖designfamilyhelpers](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Design%20Family%20Helpers)
+    #region 📻Design Family Helpers
     // Callers MUST use these helpers to traverse design parent-child hierarchies.
 
     public static Design FindDesignByGuid(Kit kit, string designGuid)
@@ -6788,10 +7334,9 @@ public class Kit : Entity<Kit>
             .ToList();
     }
 
-    #endregion 🔖Design Family Helpers
+    #endregion 📻Design Family Helpers
 
-    #region 🔖Type Family Helpers
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖typefamilyhelpers](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Type%20Family%20Helpers)
+    #region ⛅Type Family Helpers
     // Callers MUST use these helpers to traverse type parent-child hierarchies.
 
     public static Type FindTypeByGuid(Kit kit, string typeGuid)
@@ -6837,10 +7382,9 @@ public class Kit : Entity<Kit>
         return primitiveA.Guid == primitiveB.Guid;
     }
 
-    #endregion 🔖Type Family Helpers
+    #endregion ⛅Type Family Helpers
 
-    #region 🔖Kit Finders
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖kitfinders](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Kit%20Finders)
+    #region 📯Kit Finders
     // Callers MUST use these methods to locate entities within a kit by GUID.
 
     public static File FindFile(Kit kit, string fileGuid)
@@ -7043,20 +7587,19 @@ public class Kit : Entity<Kit>
         return sum;
     }
 
-    #endregion 🔖Kit Finders
+    #endregion 📯Kit Finders
 
-    #region 🔖Filter
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖filter](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Filter)
+    #region 🎠Filter
     // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
-    /// <summary>Glob filter with include and exclude patterns for name-based entity filtering.</summary>
+    /// <summary>🧩Glob filter with include and exclude patterns for name-based entity filtering.</summary>
     public class GlobFilter
     {
         public List<string>? Include { get; set; }
         public List<string>? Exclude { get; set; }
     }
 
-    /// <summary>General-purpose kit filter combining design-based transitive filtering with glob-based name filtering.</summary>
+    /// <summary>🧹General-purpose kit filter combining design-based transitive filtering with glob-based name filtering.</summary>
     public class KitFilter
     {
         public string? DesignGuid { get; set; }
@@ -7072,7 +7615,7 @@ public class Kit : Entity<Kit>
         public GlobFilter? Folders { get; set; }
     }
 
-    /// <summary>Matches a name against a glob pattern supporting * and ?. Case-insensitive.</summary>
+    /// <summary>🔤Matches a name against a glob pattern supporting * and ?. Case-insensitive.</summary>
     public static bool GlobMatch(string name, string pattern)
     {
         var regexStr = "^";
@@ -7089,7 +7632,7 @@ public class Kit : Entity<Kit>
         return System.Text.RegularExpressions.Regex.IsMatch(name, regexStr, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     }
 
-    /// <summary>Checks if a name passes a GlobFilter.</summary>
+    /// <summary>🧪Checks if a name passes a GlobFilter.</summary>
     public static bool MatchesGlobFilter(string name, GlobFilter? filter)
     {
         if (filter == null) return true;
@@ -7098,11 +7641,10 @@ public class Kit : Entity<Kit>
         return true;
     }
 
-    /// <summary>Filters a kit to only include entities related to a specific design.</summary>
+    /// <summary>📐Filters a kit to only include entities related to a specific design.</summary>
     /// <remarks>
     /// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
     /// files not used by selected models, and keeps at most one model per type according to the optional tags.
-    /// [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖filter🛠️filterkitbydesign](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Filter/d/i/FilterKitByDesign)
     /// </remarks>
     private static Kit FilterKitByDesign(Kit kit, string designGuid, string[]? tags = null)
     {
@@ -7227,9 +7769,8 @@ public class Kit : Entity<Kit>
         };
     }
 
-    /// <summary>General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.</summary>
+    /// <summary>❓General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.</summary>
     /// <remarks>
-    /// [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖filter🛠️filterkit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Filter/d/i/FilterKit)
     /// </remarks>
     public static Kit FilterKit(Kit kit, KitFilter filter)
     {
@@ -7270,10 +7811,9 @@ public class Kit : Entity<Kit>
         };
     }
 
-    #endregion 🔖Filter
+    #endregion 🎠Filter
 
-    #region 🔖Flatten Design
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖flattendesign](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Flatten%20Design)
+    #region 🕸️Flatten Design
     // Callers MUST use FlattenDesign to compute a DesignDiff that assigns world-space planes to all pieces.
 
     public static DesignDiff FlattenDesign(Kit kit, string designId)
@@ -7574,15 +8114,14 @@ public class Kit : Entity<Kit>
         };
     }
 
-    #endregion 🔖Flatten Design
+    #endregion 🕸️Flatten Design
 
-    #region 🔖Kit Model Export
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kit🔖kitmodelexport](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Kit/s/Kit%20Model%20Export)
+    #region 📡Kit Model Export
     // Callers MUST use ExportDesignModel to produce a valid 3D file from a design.
     // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
     // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
 
-    /// <summary>Supported export formats keyed by file extension.</summary>
+    /// <summary>📺Supported export formats keyed by file extension.</summary>
     public static Dictionary<string, string> ExportModelFormats => new()
     {
         { ".glb", "GL Transmission Format Binary" },
@@ -7793,7 +8332,7 @@ public class Kit : Entity<Kit>
         return ExportSceneBuilderToFormat(sceneBuilder, format);
     }
 
-    #region 🔖Kit Model Export Helpers
+    #region 🔩Kit Model Export Helpers
 
     private static System.Numerics.Matrix4x4 ExportPlaneToMatrix4x4(Plane p)
     {
@@ -8023,11 +8562,10 @@ public class Kit : Entity<Kit>
         }
     }
 
-    #region 🔖Geometric Insights
-    // [👤semio📚net🛅semio💻semio🔖geometricinsights](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Geometric%20Insights)
+    #region ⏱️Geometric Insights
     // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
-    /// <summary>Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).</summary>
+    /// <summary>🔷Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).</summary>
     public class GeometricInsights
     {
         public Point? BoundingBoxMin { get; set; }
@@ -8051,7 +8589,6 @@ public class Kit : Entity<Kit>
         public int EulerCharacteristic { get; set; }
     }
 
-    /// <summary>Computes key performance indicators for the geometry of a GLB/GLTF model. Model MUST be path (string) or raw bytes (byte[]).</summary>
     public static GeometricInsights GetGeometricInsightsForModel(object model)
     {
         GltfModel root;
@@ -8166,7 +8703,7 @@ public class Kit : Entity<Kit>
         return out_;
     }
 
-    #endregion 🔖Geometric Insights
+    #endregion ⏱️Geometric Insights
 
     private static byte[] ExportModelRootToObj(GltfModel model)
     {
@@ -8311,15 +8848,14 @@ public class Kit : Entity<Kit>
             ExportNodeToStlTriangles(child, worldMatrix, triangles);
     }
 
-    #endregion 🔖Kit Model Export Helpers
+    #endregion 🔩Kit Model Export Helpers
 
-    #endregion 🔖Kit Model Export
+    #endregion 📡Kit Model Export
 }
 
-#endregion 🔖Kit
+#endregion 🧳Kit
 
-#region 🔖Hash
-// [👤semio📚net🛅semio💻semio🔖hash](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Hash)
+#region 🎬Hash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
 // SHA-256 hex digest. Collections are hashed by sorting child hashes alphabetically.
 // Field order is alphabetical by JSON field name. Missing/null/empty fields are skipped.
@@ -9494,7 +10030,7 @@ public static class Hashing
         return w.Digest();
     }
 
-    // #region 🔖Hash Diffs
+    // #region 🔗Hash Diffs
     // Deterministic SHA-256 Merkle hash functions for all diff types.
     // Fields are ordered alphabetically by JSON field name. Guid is excluded from
     // diff hashes. Null markers (field name + WriteBool(false)) indicate explicit
@@ -9575,7 +10111,7 @@ public static class Hashing
         return w.Digest();
     }
 
-    // #region 🔖Hash Diff Value Types
+    // #region 🐹Hash Diff Value Types
 
     public static string HashCoordDiff(Coord c)
     {
@@ -9627,9 +10163,9 @@ public static class Hashing
         return w.Digest();
     }
 
-    // #endregion 🔖Hash Diff Value Types
+    // #endregion 🐹Hash Diff Value Types
 
-    // #region 🔖Hash Diff Entities
+    // #region ⚗️Hash Diff Entities
 
     public static string HashAttributeDiff(AttributeDiff d)
     {
@@ -10442,18 +10978,17 @@ public static class Hashing
             d.Added ?? new List<Kit>());
     }
 
-    // #endregion 🔖Hash Diff Entities
+    // #endregion ⚗️Hash Diff Entities
 
-    // #endregion 🔖Hash Diffs
+    // #endregion 🔗Hash Diffs
 }
 
-#endregion 🔖Hash
+#endregion 🎬Hash
 
-#region 🔖MetaShallow
-// [👤semio📚net🛅semio💻semio🔖entitying🔖metashallow](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/MetaShallow)
+#region 🔑MetaShallow
 // Meta classes strip List<> and heavy blob properties. Shallow classes replace List<> properties with Meta item lists.
 
-#region 🔖SubEntityMeta
+#region 🔷SubEntityMeta
 
 public class AttributeMeta
 {
@@ -10634,9 +11169,9 @@ public class StatMeta
     public bool? MaxExcluded { get; set; }
 }
 
-#endregion 🔖SubEntityMeta
+#endregion 🔷SubEntityMeta
 
-#region 🔖TypeMetaShallow
+#region 🪁TypeMetaShallow
 
 public class TypeMeta
 {
@@ -10682,9 +11217,9 @@ public class TypeShallow
     public List<AttributeMeta> Attributes { get; set; } = new();
 }
 
-#endregion 🔖TypeMetaShallow
+#endregion 🪁TypeMetaShallow
 
-#region 🔖DesignMetaShallow
+#region ✨DesignMetaShallow
 
 public class DesignMeta
 {
@@ -10733,9 +11268,9 @@ public class DesignShallow
     public List<ConceptId> Concepts { get; set; } = new();
 }
 
-#endregion 🔖DesignMetaShallow
+#endregion ✨DesignMetaShallow
 
-#region 🔖KitMetaShallow
+#region 🏗️KitMetaShallow
 
 public class KitMeta
 {
@@ -10779,9 +11314,9 @@ public class KitShallow
     public List<AttributeMeta> Attributes { get; set; } = new();
 }
 
-#endregion 🔖KitMetaShallow
+#endregion 🏗️KitMetaShallow
 
-#region 🔖MetaShallowConversions
+#region 🎠MetaShallowConversions
 
 public static class MetaShallowConversions
 {
@@ -11096,12 +11631,11 @@ public static class MetaShallowConversions
     };
 }
 
-#endregion 🔖MetaShallowConversions
+#endregion 🎠MetaShallowConversions
 
-#endregion 🔖MetaShallow
+#endregion 🔑MetaShallow
 
-#region 🔖Api
-// [👤semio📚net🛅semio💻semio🔖entitying🔖api](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/Api)
+#region 🎪Api
 // Callers MUST use these methods to communicate with the semio engine.
 
 public class PredictDesignBody
@@ -11226,11 +11760,10 @@ public class ServerException : Exception
     public ServerException(string message) : base(message) { }
 }
 
-#endregion 🔖Api
-// [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite)
+#endregion 🎪Api
 // Callers MUST use KitSqlite for direct CRUD operations on local static SQLite kit databases.
 
-/// <summary>Direct CRUD operations on local SQLite kit databases (.semio/kit.db).</summary>
+/// <summary>🗄️Direct CRUD operations on local SQLite kit databases (.semio/kit.db).</summary>
 public static class KitSqlite
 {
     private static string GetDbPath(string kitDirectory) => Path.Combine(kitDirectory, ".semio", "kit.db");
@@ -11289,8 +11822,7 @@ public static class KitSqlite
         return connection;
     }
 
-    #region 🔖KitSqliteLoad
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqliteload](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteLoad)
+    #region 🥈KitSqliteLoad
     // Load operations for reading a kit from a local SQLite database.
 
     public static Kit LoadKit(string kitDirectory)
@@ -12032,10 +12564,9 @@ public static class KitSqlite
         return attributes;
     }
 
-    #endregion 🔖KitSqliteLoad
+    #endregion 🥈KitSqliteLoad
 
-    #region 🔖KitSqliteSave
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqlitesave](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteSave)
+    #region 🏗️KitSqliteSave
     // Save operations for writing a kit to a local SQLite database.
 
     public static void SaveKit(string kitDirectory, Kit kit)
@@ -12631,10 +13162,9 @@ public static class KitSqlite
         }
     }
 
-    #endregion 🔖KitSqliteSave
+    #endregion 🏗️KitSqliteSave
 
-    #region 🔖KitSqliteChange
-    // [👤semio📚net🛅semio💻semio🔖entitying🔖kitsqlite🔖kitsqlitechange](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitSqlite/s/KitSqliteChange)
+    #region 🥁KitSqliteChange
     // Change-based CRUD commands returning KitChange for undo/redo support.
 
     public static KitChange ApplyKitDiff(string kitDirectory, KitDiff diff)
@@ -12760,13 +13290,12 @@ public static class KitSqlite
             System.IO.File.Delete(dbPath);
     }
 
-    #endregion 🔖KitSqliteChange
+    #endregion 🥁KitSqliteChange
 }
 
-#endregion 🔖KitSqlite
+#endregion 🔓KitSqlite
 
-#region 🔖ZipRoundtrip
-// [👤semio📚net🛅semio💻semio🔖entitying🔖ziproundtrip](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/ZipRoundtrip)
+#region 🎪ZipRoundtrip
 // Callers MUST use these methods to import and export kits as ZIP archives.
 
 public class KitImportResult
@@ -13108,10 +13637,9 @@ public static class ZipRoundtrip
     }
 }
 
-#endregion 🔖ZipRoundtrip
+#endregion 🎪ZipRoundtrip
 
-#region 🔖FileKit
-// [👤semio📚net🛅semio💻semio🔖entitying🔖filekit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/FileKit)
+#region 📷FileKit
 // Callers MUST use FileKit for JSON file kit import, export, and edit operations.
 
 public static class FileKit
@@ -13135,10 +13663,9 @@ public static class FileKit
     }
 }
 
-#endregion 🔖FileKit
+#endregion 📷FileKit
 
-#region 🔖FolderKit
-// [👤semio📚net🛅semio💻semio🔖entitying🔖folderkit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/FolderKit)
+#region 🏰FolderKit
 // Callers MUST use FolderKit for local folder kit import, export, and edit operations.
 
 public static class FolderKit
@@ -13233,10 +13760,9 @@ public static class FolderKit
     }
 }
 
-#endregion 🔖FolderKit
+#endregion 🏰FolderKit
 
-#region 🔖ArchiveKit
-// [👤semio📚net🛅semio💻semio🔖entitying🔖archivekit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/ArchiveKit)
+#region 📐ArchiveKit
 // Callers MUST use ArchiveKit for ZIP archive import, export, and edit operations.
 
 public static class ArchiveKit
@@ -13254,10 +13780,9 @@ public static class ArchiveKit
     }
 }
 
-#endregion 🔖ArchiveKit
+#endregion 📐ArchiveKit
 
-#region 🔖RemoteKit
-// [👤semio📚net🛅semio💻semio🔖entitying🔖remotekit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/RemoteKit)
+#region 🎆RemoteKit
 // Callers MUST use RemoteKit for HTTP-based JSON and ZIP kit import and in-memory edits.
 
 public static class RemoteKit
@@ -13295,10 +13820,9 @@ public static class RemoteKit
     }
 }
 
-#endregion 🔖RemoteKit
+#endregion 🎆RemoteKit
 
-#region 🔖TemporaryKit
-// [👤semio📚net🛅semio💻semio🔖entitying🔖temporarykit](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/TemporaryKit)
+#region 🔤TemporaryKit
 // Callers MUST use TemporaryKit for in-memory kit edits without persistence.
 
 public static class TemporaryKit
@@ -13310,10 +13834,9 @@ public static class TemporaryKit
     }
 }
 
-#endregion 🔖TemporaryKit
+#endregion 🔤TemporaryKit
 
-#region 🔖KitImporter
-// [👤semio📚net🛅semio💻semio🔖entitying🔖kitimporter](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitImporter)
+#region 📦KitImporter
 // Callers MUST use ImportFromZip for high-level kit import.
 
 public static class KitImporter
@@ -13324,10 +13847,9 @@ public static class KitImporter
     }
 }
 
-#endregion 🔖KitImporter
+#endregion 📦KitImporter
 
-#region 🔖KitExporter
-// [👤semio📚net🛅semio💻semio🔖entitying🔖kitexporter](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/KitExporter)
+#region 🪁KitExporter
 // Callers MUST use ExportToZip for high-level kit export.
 
 public static class KitExporter
@@ -13338,10 +13860,9 @@ public static class KitExporter
     }
 }
 
-#endregion 🔖KitExporter
+#endregion 🪁KitExporter
 
-#region 🔖SemioDiff
-// [👤semio📚net🛅semio💻semio🔖entitying🔖semiodiff](repo://p/u/semio/b/l/net/fd/req/Semio/f/Semio.cs/s/Entitying/s/SemioDiff)
+#region ❄️SemioDiff
 // Callers MUST use these methods for diff computation and application on kits.
 
 public static class SemioDiff
@@ -15358,4 +15879,4 @@ public static class SemioDiff
     }
 }
 
-#endregion 🔖SemioDiff
+#endregion ❄️SemioDiff

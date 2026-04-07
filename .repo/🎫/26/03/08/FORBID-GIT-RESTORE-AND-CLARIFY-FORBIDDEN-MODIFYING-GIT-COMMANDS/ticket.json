@@ -1,5 +1,6 @@
 {
   "title": "Forbid Git Restore And Clarify Forbidden Modifying Git Commands",
+  "emoji": "📝",
   "status": "closed",
   "description": "Make git restore forbidden and add explicit message to all forbidden modifying git commands because multiple developers and agents work concurrently in shared files.",
   "summary": "Expanded forbidden modifying git command coverage to all listed side-effect commands (add/restore/clean/rm/mv/commit/reset/revert/rebase/cherry-pick/merge/branch/switch/checkout/tag/push/pull/fetch/remote/init/clone/config plus stash) with shared concurrent-edit warning; updated hook blocking tests and pattern assertions.",

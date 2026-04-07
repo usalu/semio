@@ -1,5 +1,6 @@
 {
   "title": "Streaming Refactor",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Migrated from legacy files",
   "summary": "Bulk close",

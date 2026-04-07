@@ -1,5 +1,6 @@
 {
   "title": "Fix Python Ifc Geometry Axis Mapping",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Investigate semio/py IFC exporter geometry orientation bug where exported pieces lean to the side because Semio Z is being written as IFC Y. Fix the coordinate/axis mapping in the Python IFC exporter, extend the existing semio/py test file to cover the correct mapping, run the relevant tests, and close the ticket when done.",
   "summary": "Fixed the Python IFC exporter mesh axis mapping by converting GLB geometry from glTF coordinates into semio/IFC coordinates before creating IFC mesh representations. Added an end-to-end regression in semio/py/semio.test.py that builds a minimal GLB and asserts glTF +Y becomes IFC +Z and glTF +Z becomes IFC -Y. Verified with pytest semio/py/semio.test.py -k ifc -q and pytest semio/py/semio.test.py -q.",

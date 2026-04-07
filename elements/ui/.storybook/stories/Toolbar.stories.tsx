@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // .elements/ui/.storybook/stories/elements/Toolbar.stories.tsx
 
@@ -9,13 +9,13 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Eye, EyeOff, Hand, Maximize2, MousePointer, Move, RotateCcw, RotateCw, ZoomIn, ZoomOut } from "lucide-react";
 
-// #region 🔖Toolbar
+// #region 🌙Toolbar
 
 const meta = {
   title: "elements/Toolbar",
@@ -157,4 +157,4 @@ export const MultipleZones: Story = {
   ),
 };
 
-// #endregion 🔖Toolbar
+// #endregion 🌙Toolbar

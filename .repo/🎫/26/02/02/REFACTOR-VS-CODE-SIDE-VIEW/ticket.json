@@ -1,5 +1,6 @@
 {
   "title": "Refactor VS Code Side View",
+  "emoji": "♻️",
   "status": "closed",
   "description": "The  extension sideview should be changed/refactored/consolidated into two sections: Monorepo and Filter.",
   "summary": "Bulk close",

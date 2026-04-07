@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda🖱️desktop💻forgeenvd](repo://p/r/coda/b/u/desktop/f/forge.env.d.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Type declarations for Electron Forge environment variables.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Electron Fuses
-// [🔬coda🖱️desktop💻forgeenvd🔖electronfuses](repo://p/r/coda/b/u/desktop/f/forge.env.d.ts/s/Electron%20Fuses)
+// #region 🎮Electron Fuses
 // Type declarations for Electron Forge fuse options.
 // Consumers MUST use these enums for configuring fuse settings.
 
@@ -31,4 +29,4 @@ declare module "@electron/fuses" {
   }
 }
 
-// #endregion 🔖Electron Fuses
+// #endregion 🎮Electron Fuses

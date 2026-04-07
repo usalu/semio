@@ -1,16 +1,16 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/algorithms/nativeAlgorithmAdapter.ts
 // Specs: Route algorithm work to in-browser TypeScript or to the engine REST native-algorithms endpoint by language.
 // Summary: Single adapter: @semio/js for ts, POST /api/native-algorithms/execute for python, go, rust.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import type { Coord, Design, DesignChange, DesignDiff, Kit } from "@semio/js";
 
 /** Language toolbar values; MUST stay aligned with `.storybook/withLanguage` AlgorithmLanguage. */
 export type NativeAlgorithmLanguage = "ts" | "python" | "rust" | "go" | "csharp";
 
-export type NativeAlgorithmOperation = "flatten" | "delete" | "drag";
+export type NativeAlgorithmOperation = "flatten" | "delete" | "drag" | "copy" | "paste";
 
 export interface NativeAlgorithmExecutePayload {
   readonly operation: NativeAlgorithmOperation;
@@ -36,8 +36,7 @@ function engineOrigin(): string {
 }
 
 /**
- * POST body for semio engine `POST /api/native-algorithms/execute`.
- * [👤semio📚algorithms💻nativealgorithmadapter🔖restpayload](repo://p/u/semio/b/l/algorithms/f/nativeAlgorithmAdapter.ts/s/Native/d/i/RestPayload)
+ * 📨POST body for semio engine `POST /api/native-algorithms/execute`.
  */
 interface NativeAlgorithmRestRequestBody {
   language: Exclude<NativeAlgorithmLanguage, "ts">;
@@ -81,8 +80,7 @@ function asDesignDiff(value: unknown): DesignDiff {
 }
 
 /**
- * Runs flatten in the chosen language: TypeScript in-process or native backends via REST.
- * [👤semio📚algorithms💻nativealgorithmadapter🛠️nativeflattendesign](repo://p/u/semio/b/l/algorithms/f/nativeAlgorithmAdapter.ts/s/Native/d/i/nativeFlattenDesign)
+ * 🗣️Runs flatten in the chosen language: TypeScript in-process or native backends via REST.
  */
 export async function nativeFlattenDesign(kit: Kit, designGuid: string, language: NativeAlgorithmLanguage): Promise<DesignChange> {
   if (language === "ts") {
@@ -106,8 +104,7 @@ export async function nativeFlattenDesign(kit: Kit, designGuid: string, language
 }
 
 /**
- * Runs delete-pieces in the chosen language: TypeScript in-process or native backends via REST.
- * [👤semio📚algorithms💻nativealgorithmadapter🛠️nativedeletepieces](repo://p/u/semio/b/l/algorithms/f/nativeAlgorithmAdapter.ts/s/Native/d/i/nativeDeletePieces)
+ * 🗑️Runs delete-pieces in the chosen language: TypeScript in-process or native backends via REST.
  */
 export async function nativeDeletePieces(kit: Kit, design: Design, pieceGuids: readonly string[], connectionGuids: readonly string[], language: NativeAlgorithmLanguage): Promise<DesignDiff> {
   if (language === "ts") {
@@ -127,11 +124,10 @@ export async function nativeDeletePieces(kit: Kit, design: Design, pieceGuids: r
 }
 
 /**
- * Runs drag-pieces in TypeScript using dragPiecesInDesign from @semio/js.
+ * 🏷️Runs drag-pieces in TypeScript using dragPiecesInDesign from @semio/js.
  * Computes the drag diff on the flattened design, applies it to the raw design, then re-flattens
  * so that children move automatically with their parents.
  * Returns the new flattened design.
- * [👤semio📚algorithms💻nativealgorithmadapter🛠️nativedragpieces](repo://p/u/semio/b/l/algorithms/f/nativeAlgorithmAdapter.ts/s/Native/d/i/nativeDragPieces)
  */
 export async function nativeDragPieces(kit: Kit, rawDesign: Design, flatDesign: Design, pieceGuids: readonly string[], offset: Coord, _language: NativeAlgorithmLanguage): Promise<Design> {
   const { dragPiecesInDesign, applyDesignDiff, flattenDesign } = await import("@semio/js");
@@ -141,4 +137,44 @@ export async function nativeDragPieces(kit: Kit, rawDesign: Design, flatDesign: 
   const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === rawDesign.guid ? updatedRaw : d)) };
   const flatChange = flattenDesign(updatedKit, rawDesign.guid);
   return applyDesignDiff(updatedRaw, flatChange.forward);
+}
+
+/**
+ * 📋Runs copy-design in the chosen language: TypeScript in-process or native backends via REST.
+ */
+export async function nativeCopyDesign(kit: Kit, design: Design, pieceGuids: readonly string[], connectionGuids: readonly string[], language: NativeAlgorithmLanguage): Promise<Design> {
+  if (language === "ts") {
+    const { copyDesign } = await import("@semio/js");
+    return copyDesign(kit, design, [...pieceGuids], [...connectionGuids]);
+  }
+  const raw = await postNativeAlgorithm({
+    language,
+    operation: "copy",
+    kit,
+    design,
+    designGuid: design.guid,
+    pieceGuids: [...pieceGuids],
+    connectionGuids: [...connectionGuids],
+  });
+  return raw as Design;
+}
+
+/**
+ * 📋Runs paste-design in the chosen language: TypeScript in-process or native backends via REST.
+ */
+export async function nativePasteDesign(kit: Kit, source: Design, target: Design, anchoring: string, coord: Coord | undefined, language: NativeAlgorithmLanguage): Promise<DesignDiff> {
+  if (language === "ts") {
+    const { pasteDesign } = await import("@semio/js");
+    return pasteDesign(kit, source, target, anchoring, coord);
+  }
+  const raw = await postNativeAlgorithm({
+    language,
+    operation: "paste",
+    kit,
+    design: source,
+    designGuid: target.guid,
+    pieceGuids: [],
+    connectionGuids: [],
+  });
+  return asDesignDiff(raw);
 }

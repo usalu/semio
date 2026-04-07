@@ -1,5 +1,6 @@
 {
   "title": "Make UI elements transparent; only windows paint background",
+  "emoji": "🎨",
   "status": "closed",
   "description": "Remove per-element backgrounds so only Window surfaces have a background.",
   "goal": "🎯r2602🎯runningsketchpad"

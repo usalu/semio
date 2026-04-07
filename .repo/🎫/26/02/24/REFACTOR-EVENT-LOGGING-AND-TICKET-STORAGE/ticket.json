@@ -1,5 +1,6 @@
 {
   "title": "Refactor Event Logging and Ticket Storage",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Remove agent events and diffs from tickets. Change logging paths to use checkpoint-id and session-id based paths. Store semantic code diffs when checkpoints are created.",
   "summary": "Completed session event persistence refactor: agent and derived repo operation events now append to session.json events array, no standalone session event JSON files are written, session readers support events array, and existing hook tests were updated to validate session.json-only logging.",

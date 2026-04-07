@@ -1,5 +1,6 @@
 {
   "title": "Fix Tool Searching Display Format",
+  "emoji": "🔧",
   "status": "closed",
   "description": "All searching patterns with line numbers should be displayed like this: semio/js/sketchpad/Design.tsx#L532 for lines and semio/js/sketchpad/Design.tsx#L532-L771 for ranges instead of JSON outputs.",
   "summary": "Bulk close",

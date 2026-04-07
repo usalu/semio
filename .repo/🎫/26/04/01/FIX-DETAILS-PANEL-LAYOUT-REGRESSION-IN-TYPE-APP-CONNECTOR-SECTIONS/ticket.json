@@ -1,5 +1,6 @@
 {
   "title": "Fix Details Panel Layout Regression in Type App Connector Sections",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix the Details panel layout regression in the Type app connector sections",
   "summary": "Fixed Details panel layout regression in Type app connector sections by adding TreeRowAlignmentContext to prevent double TreeAlignedRow nesting, refactoring TreeRow to provide TreeAlignedRow when no label resolves, modifying Label to skip its own TreeAlignedRow when inside TreeRow, adding showLabel to all 18 connector Steppers across 3 forms, and fixing TypeConnectorSection reference bug.",

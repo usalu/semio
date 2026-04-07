@@ -1,5 +1,6 @@
 {
   "title": "Remove Redundant Fields from Ticket JSON",
+  "emoji": "🗑️",
   "status": "closed",
   "description": "Remove status, started, finished, and prompt fields from ticket.json. Status should be derived from whether the last interaction was finished or not.",
   "summary": "Bulk close",

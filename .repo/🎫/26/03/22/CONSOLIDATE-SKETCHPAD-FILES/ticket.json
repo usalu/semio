@@ -1,5 +1,6 @@
 {
   "title": "Consolidate Sketchpad Files",
+  "emoji": "🧹",
   "status": "closed",
   "description": "Consolidate Sketchpad.tsx and index.ts into index.tsx",
   "summary": "Consolidated Sketchpad files",

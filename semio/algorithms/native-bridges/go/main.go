@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/algorithms/native-bridges/go/main.go
 // Specs: Read JSON op+payload from stdin; write JSON {ok,result,error} to stdout.
 // Summary: Go native bridge for algorithms Storybook proxy using semio/go library only.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 package main
 

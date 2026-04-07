@@ -1,5 +1,6 @@
 {
   "title": "Implement Type App Filters",
+  "emoji": "🔨",
   "status": "closed",
   "description": "Implement filter in the type app similar to the design app but with different elements according to the Type app. e.g. Filter connector",
   "summary": "Bulk close",

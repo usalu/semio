@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Flatten.stories.tsx
 // Specs: Uses the AlgorithmApp shell with DESIGN_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
 // Summary: Flatten story using nativeFlattenDesign with the Storybook language toolbar.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import type { DesignChange } from "@semio/js";
 import { applyDesignDiff } from "@semio/js";
@@ -29,33 +29,43 @@ function FlattenFrame() {
   const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const [change, setChange] = React.useState<DesignChange | null>(null);
-  const [baseDesign, setBaseDesign] = React.useState<any | null>(null);
+  const [flatDesign, setFlatDesign] = React.useState<any | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
     setChange(null);
-    setBaseDesign(null);
+    setFlatDesign(null);
     void nativeFlattenDesign(kit, rawDesign.guid, language).then((ch) => {
       if (cancelled) return;
       setChange(ch);
-      setBaseDesign(applyDesignDiff(rawDesign, ch.forward) as any);
+      setFlatDesign(applyDesignDiff(rawDesign, ch.forward) as any);
     });
     return () => {
       cancelled = true;
     };
   }, [kit, language]);
 
+  const inputDesign = React.useMemo(() => {
+    if (!flatDesign) return null;
+    return { ...flatDesign, connections: rawDesign.connections ?? [] };
+  }, [flatDesign]);
+
+  const connectionsOnlyDiff = React.useMemo(() => {
+    if (!change) return undefined;
+    return { connections: change.forward.connections };
+  }, [change]);
+
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: baseDesign ?? rawDesign,
+      design: inputDesign ?? rawDesign,
       selectedPieceGuids: [],
-      designDiff: change?.forward,
-      diffDesign: baseDesign ?? rawDesign,
-      outputDesign: baseDesign ?? rawDesign,
-      error: !change || !baseDesign ? `Loading flatten (${language})…` : undefined,
+      designDiff: connectionsOnlyDiff,
+      diffDesign: inputDesign ?? rawDesign,
+      outputDesign: flatDesign ?? rawDesign,
+      error: !change || !flatDesign ? `Loading flatten (${language})…` : undefined,
     }),
-    [kit, baseDesign, change, language],
+    [kit, inputDesign, flatDesign, connectionsOnlyDiff, change, language],
   );
 
   return <AlgorithmApp id="flatten" label="Flatten" windows={WINDOWS} context={context} className="h-full w-full" />;

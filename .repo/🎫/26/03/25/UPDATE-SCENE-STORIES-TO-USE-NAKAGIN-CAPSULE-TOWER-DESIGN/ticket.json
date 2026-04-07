@@ -1,5 +1,6 @@
 {
   "title": "Update Scene Stories to Use Nakagin Capsule Tower Design",
+  "emoji": "🎬",
   "status": "open",
   "description": "All stories with Scenes should use Nakagin Capsule Tower as design instead of the current Flat design. Update the Scene.stories.tsx file to use the Nakagin Capsule Tower design GUID from the metabolism kit.",
   "github": {

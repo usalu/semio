@@ -1,5 +1,6 @@
 {
   "title": "Fix KitSelectionHelper Breachs",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix all 56 code breachs in semio/js/sketchpad/kitSelectionHelper.ts by adding section summaries and definition summaries/requirements",
   "summary": "Fixed all 52 code breachs in kitSelectionHelper.ts: added 4 section summary comments with MUST keywords (Imports, Types, Generic Utilities, Kit Diagram Geometry), 48 definition summary comments for all exported types/interfaces/consts/functions, and 8 spec comments with RFC2119 keywords on export function definitions. 0 breachs remaining.",

@@ -1,5 +1,6 @@
 {
   "title": "Fix Semio Play Globals Css Import Path",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix the broken CSS import in semio/sites/play/globals.css — the relative path ../../elements/ui/globals.css is wrong (resolves inside semio/ instead of workspace root). Should be ../../../elements/ui/globals.css. Then verify play site loads without errors.",
   "summary": "Fixed CSS import path and added Tailwind source directives for play and docs sites",

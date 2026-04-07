@@ -1,0 +1,11 @@
+{
+  "title": "Test Goal text LifecycleTest 1775640933816277179",
+  "description": "Test Goal Description",
+  "prompt": "Test Goal Prompt",
+  "status": "open",
+  "dates": {
+    "due": "2025-12-31"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro"
+}

@@ -1,5 +1,6 @@
 {
   "title": "Fix Projects And Goals Loading",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Projects and Goals are not loading in the repo vscode extension. Fix.",
   "summary": "Fixed VS Code Projects/Goals loading by making repo CLI interaction author parsing backward-compatible for legacy ticket JSON author objects, with regression tests and docs updates.",

@@ -2,7 +2,7 @@
 technology: repo
 bundle:
  name: postgres
- emoji: 📚
+ emoji: 🐘
  description: The postgres bundle for repo.
  kind: library
 ---

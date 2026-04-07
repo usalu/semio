@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 //
 // 💻semio/assets/repo/some/folder/file_invalid.go
 //
@@ -16,18 +16,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Package
+// #region 🔑Package
 
 package invalid
 
-// #endregion 🔖Package
+// #endregion 🔑Package
 
-// #region 🔖Functions
+// #region ⚗️Functions
 
 func InvalidValue() int {
 return 1
 }
 
-// #endregion 🔖Functions
+// #endregion ⚗️Functions

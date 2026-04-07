@@ -1,5 +1,6 @@
 {
   "title": "Commit Based Codebase Diffs",
+  "emoji": "📝",
   "status": "closed",
   "description": "Change the codebase diff mechanism. Instead of computing diffs on ticket close, require files on ticket open and close (accept path, id and uri). Remove diff computation from ticket interactions. Introduce a git hook that adds the commit message as a commit under .repo/commits/YYYY/MM/DD/SLUGGED-MESSAGE with the complete codebase diff covering all diffable entities.",
   "summary": "Bulk close",

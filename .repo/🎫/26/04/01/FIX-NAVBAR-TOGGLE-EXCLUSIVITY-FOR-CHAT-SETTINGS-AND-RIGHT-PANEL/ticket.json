@@ -1,5 +1,6 @@
 {
   "title": "Fix Navbar Toggle Exclusivity for Chat Settings and Right Panel",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix the sketchpad navbar toggle buttons (chat, settings, right panel) so only one can be active at a time. When clicking one, all others must deactivate.",
   "summary": "Fixed navbar toggle exclusivity for chat, settings, and right panel. Updated createTogglePanelHandler, createKeyedTogglePanelHandler, createSingleKeyTogglePanelHandler, and the docs case in useAppCommands to use getNextPanelVisibilityFromToggle instead of simple boolean toggles. Now activating any of rightSidePanel/chat/settings automatically deactivates the other two.",

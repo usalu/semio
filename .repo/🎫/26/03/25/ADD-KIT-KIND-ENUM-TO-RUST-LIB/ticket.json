@@ -1,5 +1,6 @@
 {
   "title": "Add KitKind Enum to Rust Lib",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add KitKind Enum to Rust Lib",
   "summary": "Added KitKind enum with 5 variants (File, Folder, Archive, Remote, Temporary) serializing to lowercase strings. Added ALL_KIT_KINDS constant. Added 5 tests: completeness, serialization, deserialization, Kit JSON roundtrip, in-memory modification. All tests pass.",

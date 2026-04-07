@@ -1231,7 +1231,7 @@
   -webkit-app-region: window-drag;
 } */
 
-/* #region 🔖TreeSpacing */
+/* #region ❄️TreeSpacing
 /* Structure-driven spacing for tree inspector hierarchy.
  * Tier 1 – Rows within the same property group: gap-y-[2px] (Tailwind, unchanged).
  * Tier 2 – Sibling nested groups: extra padding-top so indent lines stay continuous.
@@ -1263,9 +1263,9 @@
 [data-slot="tree-property-content"] > [data-slot="tree-property-item"] + [data-slot="tree-property-item"] {
   padding-top: 8px;
 }
-/* #endregion */
+/* #endregion ❄️*/
 
-/* #region 🔖TreeHoverPath */
+/* #region 🎃TreeHoverPath
 /* Tree hover path highlight: when a row is hovered, ancestor branch containers
  * receive [data-tree-hover-path="branch"] and ancestor/active rows receive
  * [data-tree-hover-path="row"]. Guide lines and elbows on the path are rendered
@@ -1280,4 +1280,4 @@
   height: 1.5px !important;
   background-color: color-mix(in srgb, var(--muted-foreground) 80%, transparent) !important;
 }
-/* #endregion 🔖TreeHoverPath */
+/* #endregion 🎃TreeHoverPath */

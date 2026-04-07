@@ -1,5 +1,6 @@
 {
   "title": "Consolidate Engine Into Main",
+  "emoji": "🧹",
   "status": "closed",
   "description": "Rename engine.py to main.py in semio/engine/. Update all references: pyproject.toml, build.ts, generate-schemas.ts, package.json, README.md, conftest.py, .mcp.json, .vscode/mcp.json, .vscode/settings.json, engine.test.py. Guard test-only imports. Remove engine module name from GRAPHQLTYPES dict.",
   "summary": "Renamed semio/engine/engine.py to semio/engine/main.py. Fixed self-import conflict by using importlib.util to explicitly load semio/py/main.py as 'semio_core'. Updated engine.test.py to use importlib for loading the engine module under pytest --import-mode=importlib. Updated GRAPHQLTYPES dict entries from engine.X to main.X. Updated all config/reference files: pyproject.toml, build.ts, generate-schemas.ts, package.json, README.md, conftest.py, .mcp.json, .vscode/mcp.json, .vscode/settings.json, .windsurf/mcp.json, .cursor/mcp.json, .claude/settings.json, coda example project.json. 142/143 tests pass (1 pre-existing failure unrelated to rename).",

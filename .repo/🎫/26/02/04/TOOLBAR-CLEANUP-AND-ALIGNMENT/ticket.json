@@ -1,5 +1,6 @@
 {
   "title": "Toolbar Cleanup And Alignment",
+  "emoji": "🔧",
   "status": "closed",
   "summary": "Fixed toolbar visibility by correcting container width calculation while keeping overflow clipped and dropdown alignment intact.",
   "github": {

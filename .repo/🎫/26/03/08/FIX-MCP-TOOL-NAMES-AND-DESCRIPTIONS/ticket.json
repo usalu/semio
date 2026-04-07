@@ -1,5 +1,6 @@
 {
   "title": "Fix MCP Tool Names and Descriptions",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The MCP toolnames and descriptions are out of date with the CLI commands. Update the MCP tool definitions to match the current CLI commands and their parameters.",
   "summary": "Rebuilt the repo CLI binary and restarted MCP server processes so runtime discovery reflects the 7-tool MCP whitelist.",

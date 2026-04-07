@@ -1,5 +1,6 @@
 {
   "title": "Add Dev Command for Launching 3dm UI in VSCode",
+  "emoji": "➕",
   "status": "open",
   "description": "Add a dev command for launching the 3dm UI in VSCode. The command should open the UI development server (which runs on port 5174) in a VSCode browser preview or similar mechanism for easy development.",
   "github": {

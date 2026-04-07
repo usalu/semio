@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🖱️vscode💻webview](repo://p/u/semio/b/u/vscode/f/webview.tsx)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -12,10 +11,9 @@
 
 // Webview app for the semio VS Code kit editor.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Entrypoint
-// [👤semio🖱️vscode💻webview🔖entrypoint](repo://p/u/semio/b/u/vscode/f/webview.tsx/s/Entrypoint)
+// #region 🛎️Entrypoint
 // Webview entrypoint MUST mount Sketchpad with a JsonFileKitStore backed by VS Code messaging.
 
 import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "@semio/sketchpad";
@@ -44,7 +42,7 @@ async function boot() {
   const vscodeApi = window.__SEMIO_VSCODE_API__;
   const initialJson = window.__SEMIO_KIT_JSON__ ?? null;
 
-  // Create a file adapter that bridges to the VS Code extension host.
+  // 🔄Create a file adapter that bridges to the VS Code extension host.
   const adapter: KitJsonFileAdapter = {
     async read(): Promise<string | null> {
       return initialJson;
@@ -66,7 +64,7 @@ async function boot() {
     }
   };
 
-  // Auto-save on changes with debounce.
+  // ♻️Auto-save on changes with debounce.
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   store.subscribe(() => {
     const snapshot = store.getSnapshot();
@@ -78,7 +76,7 @@ async function boot() {
     }
   });
 
-  // File kit store factory for creating new kits as JSON files via VS Code messaging.
+  // 🏭File kit store factory for creating new kits as JSON files via VS Code messaging.
   const fileKitStoreFactory: SketchpadKitStoreFactory = async (kit) => {
     const kitAdapter: KitJsonFileAdapter = {
       async read(): Promise<string | null> {
@@ -100,4 +98,4 @@ async function boot() {
 
 boot();
 
-// #endregion 🔖Entrypoint
+// #endregion 🛎️Entrypoint

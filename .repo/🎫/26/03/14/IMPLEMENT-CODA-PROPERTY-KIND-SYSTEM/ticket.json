@@ -1,5 +1,6 @@
 {
   "title": "Implement Coda Property Kind System",
+  "emoji": "🔨",
   "status": "closed",
   "description": "Implement coda property system with property kinds number/object/array/level/category and kind-specific measure kinds (number: increase/decrease, level: raise/lower, etc). Update runtime resources and config so properties expose their measure kinds.",
   "summary": "Implemented canonical Coda property kind system with number/object/array/level/category and kind-specific measure kinds. Added runtime normalization in coda.py so legacy type-based configs map to canonical kind + measure_kinds recursively. Updated target/property resources and sidecar target API to return normalized properties. Refactored coda.json to define property_kinds and canonical property definitions, added measure entries with measure kind metadata, and fixed invalid Berlin target rule structure so the config is parseable.",

@@ -1,5 +1,6 @@
 {
   "title": "Pure Markdown Cli Output",
+  "emoji": "📋",
   "status": "closed",
   "description": "All CLI commands must return pure markdown output instead of JSON/NDJSON. Format: [\u003cid\u003ee](\u003curi\u003ee) - \u003cproperty1\u003ee - \u003cproperty2\u003ee. List/tree commands use markdown lists. All tests must verify syntactically correct markdown output.",
   "summary": "Eliminated all JSON/NDJSON fallback from markdown and text CLI output. All commands return pure markdown or human-readable text via generic inferEntityKind dispatch. Added renderEntityMarkdownLink, formatMarkdownFile, isList streaming detection. Comprehensive unit tests (130+ subtests) covering all entity kinds, mutations, lists, and edge cases.",

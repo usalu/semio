@@ -1,5 +1,6 @@
 {
   "title": "Metabolism Folder Kit Hydration And Duplicate Mcp Tool Payload Resource",
+  "emoji": "🔌",
   "status": "closed",
   "description": "Hydrate design JSON from parent of folder kit path; duplicate full JSON in EmbeddedResource; parse each content block; sync session design without downgrading piece count.",
   "summary": "Root cause: nakagin-capsule-tower.shallow.design.semio.json sits in semio/assets/semio/ while metabolism folder kit path is semio/assets/semio/metabolism — hydration only searched inside the folder. Now search kit dir + parent. _sync_session_design_and_type no longer replaces a hydrated design with a shallower kit row (fewer pieces). _as_mcp_app_tool_result adds EmbeddedResource duplicate JSON; parseDiagramPayloadFromToolResult parses each text/resource segment separately. Tests: engine hydrate parent, vitest dual content blocks. Rebuilt dist/mcp-app.html.",

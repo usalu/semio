@@ -1,5 +1,6 @@
 {
   "title": "Relative Dates in Markdown and Text Output",
+  "emoji": "📋",
   "status": "closed",
   "description": "Make sure that all tree and list commands with --md and --text format never display absolute dates but only relative (yesterday, ago, etc). Use an approriate library. Onyl return date in --json.",
   "summary": "Implemented relative date formatting for CLI Markdown and Text outputs using go-humanize while preserving absolute dates in JSON.",

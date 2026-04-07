@@ -1,5 +1,6 @@
 {
   "title": "Introduce Sessions Entity",
+  "emoji": "📋",
   "status": "closed",
   "description": "Introduce sessions as a first-class entity to the repo ID/URI system with emoji-based IDs, URI schemes, GetArtifactID, GetArtifactURI, IdToUri, UriToId, EntityKinds, tree building, and streaming support including session kinds (running, completed, interrupted) with proper tests.",
   "summary": "Implemented sessions as first-class entity in the repo CLI. Added Session struct, SessionKind (running/completed/interrupted), StreamSessions discovery, emoji constants (⚪🟡🟢🔴), GetArtifactID/GetArtifactURI for sessions/session, IdToUri/UriToId bidirectional conversion, treeNodeKindToEntityKind mapping, BuildMonorepoTree integration with sorted session nodes. All tests pass including TestSpecExactIDs, TestIdToUri, TestUriToId, and 8 session-specific test functions.",

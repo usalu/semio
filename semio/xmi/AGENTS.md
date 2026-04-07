@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: xmi
- emoji: 📚
+ emoji: 📦
  description: The xmi bundle for semio.
  kind: library
 ---

@@ -1,5 +1,6 @@
 {
   "title": "Add Kiro and Gemini Launch Entries",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add two VS Code launch configurations to .vscode/launch.json: one named 🚀kiro running `kiro-cli chat --trust-all-tools`, and one named 🚀gemini running `gemini --yolo`. Preserve existing launch configurations and local unrelated edits. Validate the JSON after editing.",
   "summary": "Added two VS Code launch entries in .vscode/launch.json for Kiro (`kiro-cli chat --trust-all-tools`) and Gemini (`gemini --yolo`) using node-terminal launchers, preserving existing local edits. Validated the file after editing; remaining diagnostics are unrelated pre-existing `console` schema warnings on other launch entries.",

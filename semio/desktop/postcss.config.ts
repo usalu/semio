@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🖱️desktop⚙️postcssconfig](repo://p/u/semio/b/u/desktop/f/postcss.config.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // PostCSS configuration for the desktop app with Tailwind and autoprefixer.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [👤semio🖱️desktop⚙️postcssconfig🔖configuration](repo://p/u/semio/b/u/desktop/f/postcss.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // PostCSS plugin configuration for the desktop application.
 // Configuration MUST use postcss-import and postcss-nesting plugins.
 
@@ -18,7 +16,6 @@ import { Config } from "postcss-load-config";
 
 /**
  * PostCSS configuration with import and nesting plugins.
-// [👤semio🖱️desktop⚙️postcssconfig🔖configuration🪨config](repo://p/u/semio/b/u/desktop/f/postcss.config.ts/s/Configuration/d/i/config)
  * Config MUST include postcss-import and postcss-nesting plugins.
  **/
 const config: Config = {
@@ -31,4 +28,4 @@ const config: Config = {
 // Default export of the PostCSS configuration.
 // Export MUST be the config object.
 export default config;
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

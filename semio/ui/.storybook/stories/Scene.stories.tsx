@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/ui/.storybook/stories/Scene.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly. Kit is optional for 3D models.
 // Summary: Scene stories: Default, Diff, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { applyDesignDiff, flattenDesign, type Connection, type Design, type Kit, type Piece } from "@semio/js";
 import { SemioScene as Scene } from "@semio/ui";
@@ -12,7 +12,7 @@ import * as React from "react";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.semio.json";
 
-// #region 🔖Data
+// #region 🖥️Data
 
 const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as Design;
 const flattenChange = flattenDesign(metabolismKit as unknown as Kit, rawDesign.guid);
@@ -20,7 +20,7 @@ const nakaginDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward
 const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
 const designDiff = nakaginDiff as any;
 
-// Build minimal kit with only types and files referenced by the design.
+// 🏗️Build minimal kit with only types and files referenced by the design.
 const usedTypeGuids = new Set((nakaginDesign.pieces ?? []).map((p) => p.type?.guid).filter(Boolean));
 const minimalTypes = (metabolismKit.types ?? [])
   .filter((t: any) => usedTypeGuids.has(t.guid))
@@ -32,9 +32,9 @@ const usedFileGuids = new Set(minimalTypes.flatMap((t: any) => (t.models ?? []).
 const minimalFiles = (metabolismKit.files ?? []).filter((f: any) => usedFileGuids.has(f.guid));
 const minimalKit = { types: minimalTypes, files: minimalFiles } as any;
 
-// #endregion 🔖Data
+// #endregion 🖥️Data
 
-// #region 🔖Scene
+// #region 📍Scene
 
 const meta: Meta<typeof Scene> = {
   title: "semio/Scene",
@@ -132,4 +132,4 @@ export const ZoomNone: Story = {
   render: (args) => frame(<Scene {...args} />),
 };
 
-// #endregion 🔖Scene
+// #endregion 📍Scene

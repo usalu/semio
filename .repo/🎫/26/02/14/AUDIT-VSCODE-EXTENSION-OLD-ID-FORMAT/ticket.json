@@ -1,5 +1,6 @@
 {
   "title": "Audit Vscode Extension Old Id Format",
+  "emoji": "📋",
   "status": "closed",
   "description": "Search the VS Code extension files for any code that directly constructs, parses, or pattern-matches on the old ID format and report findings.",
   "summary": "Audited VS Code extension for old ID format references. Extension is a passive consumer of CLI-generated IDs. Found old-format test data at extension.test.ts lines 839,848,920-927. No ID construction/parsing in the extension itself. All changes needed are in Go CLI GetID() methods.",

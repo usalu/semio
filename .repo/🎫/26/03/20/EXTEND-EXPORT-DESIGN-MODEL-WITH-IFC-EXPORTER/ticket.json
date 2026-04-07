@@ -1,5 +1,6 @@
 {
   "title": "Extend Export Design Model with Ifc Exporter",
+  "emoji": "📐",
   "status": "closed",
   "description": "Extend the export_design_model function in semio/py/semio.py with an IFC exporter using ifcopenshell. Map Kit→IfcProject, Design→IfcElementAssembly, Type→IfcBuildingElementProxyType, Piece→IfcBuildingElementProxy, Model→shared mesh representation, Connector→IfcPort, Connection→IfcRelConnectsPorts, Plane→IfcLocalPlacement, Attributes→IfcPropertySet. Add ifcopenshell as a dependency. Add tests.",
   "summary": "Extended export_design_model with IFC exporter using ifcopenshell. Added .ifc to EXPORT_MODEL_FORMATS. Maps Kit→IfcProject, Design→IfcElementAssembly, Type→IfcBuildingElementProxyType with shared mesh geometry, Piece→IfcBuildingElementProxy, Connector→IfcDistributionPort, Connection→IfcRelConnectsPorts+IfcRelConnectsElements. All 23 tests pass.",

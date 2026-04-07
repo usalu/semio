@@ -1,5 +1,6 @@
 {
   "title": "Align Kit Ports and Connectors in Ui and Engine",
+  "emoji": "🎨",
   "status": "closed",
   "description": "Separate Kit ports (Port entities) from type connectors in SemioKit and MCP kitArtifacts; ensure naming matches Kit schema.",
   "summary": "Separated kit-level Port entities from type Connector rows in SemioKit and MCP kitArtifacts: UI KitData now has ports + connectors, hierarchy uses kind port vs connector, selection adds connectorGuids. Engine _build_kit_artifact_data emits meta[\"ports\"] from kit ports and meta[\"connectors\"] from flattened type connectors with port ref normalization. Extended engine and UI tests. mcpEffectiveSurface now honors surface design/scene when mode is show-diagram (fixes unit test).",

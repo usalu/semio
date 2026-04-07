@@ -1,5 +1,6 @@
 {
   "title": "Add goal and ticket change commands",
+  "emoji": "➕",
   "status": "closed",
   "description": "Implement goal change and ticket change commands in CLI and GraphQL, and fix milestone date propagation",
   "summary": "Implemented goal change and ticket change commands",

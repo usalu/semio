@@ -1,0 +1,10 @@
+{
+  "title": "External Stub Paste Rematch Story And Test",
+  "status": "closed",
+  "description": "Copy-paste when t_f1_b_c1 and parent connection omitted: t_f2 rematches to target t_f1. Story default selection filters; vitest; pasteDesign ordering.",
+  "summary": "Port self-compatibility in paste rematch (arePortsCompatible pg1===pg2) in JS/Go/Py/C#/Rs. Clipboard sourceParentMap prefers stub-parent edge when multiple connections share the same connecting piece. CopyAndPaste story omits t_f1 + b1ecc6c5; vitest asserts ddf9e0e4 remaps to target t_f1. Full semio/js vitest 156 passed; cargo check rs ok.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯designapp",
+  "sessions": [
+    "⚪186b37b8be094b0faffb3b7fadc27600"
+  ]
+}

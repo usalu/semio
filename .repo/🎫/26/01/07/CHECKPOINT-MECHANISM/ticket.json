@@ -1,5 +1,6 @@
 {
   "title": "CHECKPOINT-MECHANISM",
+  "emoji": "📋",
   "status": "closed",
   "description": "Refactor ticket system from interactions to checkpoints. Checkpoints are created when todos complete, require files, compute git diffs, and track affected sections/definitions.",
   "goal": "🎯aioptimizedrepo"

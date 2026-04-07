@@ -1,5 +1,6 @@
 {
   "title": "Sync C# unit tests with JS semio.ts tests using same fixtures",
+  "emoji": "🔄",
   "status": "closed",
   "description": "Sync C# unit tests with JS semio.ts tests using same fixtures",
   "goal": "🎯r2603🎯runningnet"

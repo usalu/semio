@@ -1,5 +1,6 @@
 {
   "title": "Update Website Paths To Sites Folder",
+  "emoji": "🔄",
   "status": "closed",
   "description": "Websites were moved into semio/sites. Update all config/path references so website roots and related routes/build settings point to semio/sites/* and keep semio/sketchpad reserved for future non-website use.",
   "summary": "Updated workspace and IDE config paths for moved website apps under semio/sites. Adjusted lockfile and site package/tsconfig/vite path references so docs/play resolve from semio/sites while keeping semio/sketchpad reserved and addressable.",

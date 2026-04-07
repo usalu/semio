@@ -1,5 +1,6 @@
 {
   "title": "Subagent Session ID Fallback",
+  "emoji": "📋",
   "status": "closed",
   "description": "Map agent_id to session id for subagents across all platforms",
   "summary": "Parent now resolves to a real parent session ID or empty string; removed subagent/session fallbacks, added nested parent extraction, and updated hook tests for parent normalization.",

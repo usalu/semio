@@ -1,6 +1,5 @@
 #!/usr/bin/env tsx
-// #region 🔖Header
-// [👤semio📚engine📜build](repo://p/u/semio/b/l/engine/f/build.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -8,10 +7,9 @@
 
 // Build script for the semio engine Python package.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Build
-// [👤semio📚engine💻build🔖build](repo://p/u/semio/b/l/engine/f/build.ts/s/Build)
+// #region 🐹Build
 // Build script for the engine binary. MUST bundle the engine via PyInstaller.
 
 import { execSync } from "child_process";
@@ -20,7 +18,6 @@ import { join } from "path";
 
 /**
  * Engine build working directory.
-// [👤semio📚engine💻build🔖build🪨cwd](repo://p/u/semio/b/l/engine/f/build.ts/s/Build/d/i/cwd)
  * MUST resolve to the engine folder.
  **/
 const cwd = __dirname;
@@ -40,7 +37,6 @@ if (existsSync(join(cwd, "dist"))) {
 
 /**
  * PyInstaller CLI arguments for bundling the engine binary.
-// [👤semio📚engine💻build🔖build🪨args](repo://p/u/semio/b/l/engine/f/build.ts/s/Build/d/i/args)
  * MUST include all required metadata and hidden imports.
  **/
 const args = [
@@ -71,4 +67,4 @@ if (!process.argv.includes("--skip-post-build")) {
 
 console.log("✅ Build complete");
 
-// #endregion 🔖Build
+// #endregion 🐹Build

@@ -1,5 +1,6 @@
 {
   "title": "Fix Bundle Tree Display",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The bundle tree command is not showing properly as a tree of project-\u003eebundle relationships. Currently showing a flat list instead of a hierarchical tree structure.",
   "summary": "Fixed bundle tree command to properly display project-\u003eebundle hierarchy. The tree now groups bundles by their parent project and shows them nested underneath, with proper tree connectors for both projects and bundles.",

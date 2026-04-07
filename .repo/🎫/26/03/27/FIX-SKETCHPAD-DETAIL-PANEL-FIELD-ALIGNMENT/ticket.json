@@ -1,5 +1,6 @@
 {
   "title": "Fix Sketchpad Detail Panel Field Alignment",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Analyze and fix the sketchpad detail panel wrong render for selected element piece fields so labels like Attributes, Origin, X Axis, and Y Axis align on the same vertical level as their input fields. Extend existing tests and verify the panel rendering path.",
   "summary": "Refactored the shared detail-tree gutter spacing so depth now lives in the gutter only: removed the extra content-side negative-margin and tree-label padding offsets, tightened the gutter-to-content gap to a single 6px rhythm, and kept the fixed switcher slot behavior for expandable and leaf siblings. Extended the inline elements/ui tree regressions to assert the new no-compensation layout and sibling gutter alignment. Verification: `npm test --workspace elements/ui` passed (21 tests) and `npm run lint --workspace elements/ui` passed.",

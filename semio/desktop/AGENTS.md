@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: desktop
- emoji: 🖱️
+ emoji: 🖥️
  description: The desktop bundle for semio.
  kind: ui
 ---

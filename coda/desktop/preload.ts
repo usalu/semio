@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda🖱️desktop💻preload](repo://p/r/coda/b/u/desktop/f/preload.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Electron preload script exposing safe APIs to the renderer process.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Preload
-// [🔬coda🖱️desktop💻preload🔖preload](repo://p/r/coda/b/u/desktop/f/preload.ts/s/Preload)
+// #region 🎋Preload
 // Electron preload script exposing window controls, OS APIs, coda sidecar bridge, and event system.
 // Preload MUST use contextBridge to safely expose IPC methods.
 // Preload MUST expose event listener registration for sidecar events and connection status.
@@ -55,4 +53,4 @@ contextBridge.exposeInMainWorld("project", {
   open: (folder: string) => ipcRenderer.invoke("project-open", folder),
   create: (name: string, folder: string) => ipcRenderer.invoke("project-create", name, folder),
 });
-// #endregion 🔖Preload
+// #endregion 🎋Preload

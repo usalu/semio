@@ -1,5 +1,6 @@
 {
   "title": "Fix Canvas Export Order in Sketchpad",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Sketchpad.tsx exports Canvas, HorizontalWindows, VerticalWindows at line 11365 before they are imported at line 11406, causing a babel parse error. Need to fix the export/import order.",
   "summary": "Fixed babel parse error where Canvas, HorizontalWindows, VerticalWindows were exported before being imported. Changed bare `export { Canvas, HorizontalWindows, VerticalWindows }` to `export { Canvas, HorizontalWindows, VerticalWindows } from \"@semio/ui\"` (re-export syntax) and removed the now-redundant separate import statement.",

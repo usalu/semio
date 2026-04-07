@@ -1,5 +1,6 @@
 {
   "title": "Complete Monorepo Migration Configs",
+  "emoji": "📋",
   "status": "closed",
   "description": "Find all outdated configs after monorepo restructuring: git configs, formatters, tools, settings, MCP, devcontainer setup, etc.",
   "summary": "Bulk close",

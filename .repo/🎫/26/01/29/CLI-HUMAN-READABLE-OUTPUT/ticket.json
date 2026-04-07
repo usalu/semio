@@ -1,5 +1,6 @@
 {
   "title": "CLI Human Readable Output",
+  "emoji": "📋",
   "status": "closed",
   "description": "Ensure CLI commands return colored, compact text output by default, and JSON only with --json flag.",
   "summary": "Bulk close",

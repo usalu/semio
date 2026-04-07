@@ -1,5 +1,6 @@
 {
   "title": "ADD-RUST-RUBY-LANGUAGES",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add Rust and Ruby as languages to the repo CLI. Use regions and modules for sections.",
   "goal": "🎯aioptimizedrepo"

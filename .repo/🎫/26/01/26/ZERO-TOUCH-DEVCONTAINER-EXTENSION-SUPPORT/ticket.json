@@ -1,5 +1,6 @@
 {
   "title": "Zero Touch Devcontainer Extension Support",
+  "emoji": "🤝",
   "status": "closed",
   "summary": "Uninstall repo extension before installs, clear Cursor caches, and document uninstall-first devcontainer flow.",
   "github": {

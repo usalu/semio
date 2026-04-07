@@ -1,5 +1,6 @@
 {
   "title": "Native Analyze Code Lens",
+  "emoji": "📋",
   "status": "closed",
   "description": "Dont add Analyze on top of emoji docstrings, but implement it for every programming language using native detection of definitions.",
   "summary": "Implemented native definition detection for Analyze CodeLens using DocumentSymbolProvider",

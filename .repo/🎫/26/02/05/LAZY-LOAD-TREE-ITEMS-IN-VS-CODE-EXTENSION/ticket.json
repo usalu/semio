@@ -1,5 +1,6 @@
 {
   "title": "Lazy Load Tree Items in VS Code Extension",
+  "emoji": "🔌",
   "status": "closed",
   "description": "Refactor the vscode extension to be clean. It should always lazy load the tree items and only load more items when the user expands the tree item. Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.",
   "summary": "Bulk close",

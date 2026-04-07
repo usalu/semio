@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: rs
- emoji: 📚
+ emoji: 🦀
  description: The rs bundle for semio.
  kind: library
 ---

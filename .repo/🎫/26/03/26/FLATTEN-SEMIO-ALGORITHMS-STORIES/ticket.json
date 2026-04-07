@@ -1,5 +1,6 @@
 {
   "title": "Flatten Semio Algorithms Stories",
+  "emoji": "📋",
   "status": "closed",
   "description": "The stories in semio/algorithms should be flat and not inside Design/ folder in Storybook titles.",
   "summary": "Flattened Storybook story titles in semio/algorithms to remove the 'Design/' folder nesting.",

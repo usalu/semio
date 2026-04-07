@@ -1,5 +1,6 @@
 {
   "title": "Add Mobile Layout to Elements UI",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add a mobile layout variant to the UI component. In mobile mode: no left/right panels, only one full-width panel with all tabs merged. No resizable panels. Add a Mobile story to the UI stories.",
   "summary": "Mobile panel now renders on top (above canvas) with border-b. Mobile mode overrides window layout using createTabStackLayout which places all windows in a single golden-layout stack as tabs instead of side-by-side columns.",

@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: liveblocks
- emoji: 📚
+ emoji: 🧱
  description: The liveblocks bundle for semio.
  kind: library
 ---

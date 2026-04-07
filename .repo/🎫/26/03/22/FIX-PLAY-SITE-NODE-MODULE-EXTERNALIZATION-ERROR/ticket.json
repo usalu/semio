@@ -1,5 +1,6 @@
 {
   "title": "Fix Play Site Node Module Externalization Error",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The Play site crashes with \"Module node:child_process has been externalized for browser compatibility\" because semio/js/index.ts has top-level imports of Node.js modules (child_process, fs, path, url) that are only used in test code. Convert these to dynamic imports within the test functions.",
   "summary": "Converted top-level Node.js module imports (node:child_process, node:fs, node:fs/promises, node:path, node:url) in semio/js/index.ts to dynamic imports inside test functions. These imports were only used by test code but were causing Vite browser externalization errors when the Play site loaded @semio/js. Also updated test helper functions (writeExportReport, runExportReportCommand, getTestNodePaths) to be async and updated all call sites. All 79 tests pass.",

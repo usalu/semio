@@ -1,5 +1,6 @@
 {
   "title": "Refactor Kit Hierarchy Navigation in Semio UI",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Refactor semio UI kit view to add a dynamic hierarchy breadcrumb, metadata display for the selected breadcrumb node, and an open-artifact button. Update existing tests rather than creating new ones, and validate behavior end-to-end.",
   "summary": "Refactored SemioKit from flat toggle groups into a dynamic hierarchy browser with breadcrumb navigation, metadata display, and artifact-open support. Extended the existing Kit story surface and added inline hierarchy tests. Verified with semio/ui Vitest and Storybook build.",

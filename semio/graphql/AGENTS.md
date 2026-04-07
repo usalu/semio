@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: graphql
- emoji: 🛂
+ emoji: 🔗
  description: The graphql bundle for semio.
  kind: schema
 ---

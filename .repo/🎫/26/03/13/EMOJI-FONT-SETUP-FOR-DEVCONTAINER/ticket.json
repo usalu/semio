@@ -1,5 +1,6 @@
 {
   "title": "Emoji Font Setup for Devcontainer",
+  "emoji": "⚙️",
   "status": "closed",
   "description": "All GUI apps inside the devcontainer render emoji glyphs as placeholders. Add zero-touch emoji font installation and fontconfig defaults to the devcontainer, and apply the same fix in the running container without a rebuild.",
   "summary": "Installed Noto Color Emoji in the devcontainer image, enforced fontconfig fallback through lifecycle scripts, refreshed caches in the running container, and verified emoji codepoints resolve correctly for GUI apps.",

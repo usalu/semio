@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/algorithms/native-bridges/csharp/Program.cs
 // Specs: Read JSON op+payload from stdin; write JSON {ok,result,error} to stdout.
 // Summary: C# native bridge for algorithms Storybook proxy using semio/net Semio library only.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

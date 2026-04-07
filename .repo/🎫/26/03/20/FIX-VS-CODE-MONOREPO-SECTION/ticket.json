@@ -1,5 +1,6 @@
 {
   "title": "Fix VS Code Monorepo Section",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix the monorepo section not showing any items in the VS Code extension",
   "summary": "Fixed extractRepoResult returning empty object instead of data property",

@@ -1,5 +1,6 @@
 {
   "title": "Introduce General Formatters",
+  "emoji": "📋",
   "status": "closed",
   "description": "Introduce general formatters for all languages in monorepo and ensure autofix always runs formatter after file edits; update configs and existing tests accordingly.",
   "summary": "Introduced language-aware formatter plans in CLI autofix, ensured formatter runs after each edited file, added deterministic formatter fallback, and extended existing tests for formatter execution/coverage plus updated stale kind-set expectations.",

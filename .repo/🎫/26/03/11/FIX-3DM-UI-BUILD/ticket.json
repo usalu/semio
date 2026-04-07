@@ -1,5 +1,6 @@
 {
   "title": "Fix 3dm UI Build",
+  "emoji": "🔧",
   "status": "open",
   "description": "Fix vite build errors in 3dm ui",
   "github": {

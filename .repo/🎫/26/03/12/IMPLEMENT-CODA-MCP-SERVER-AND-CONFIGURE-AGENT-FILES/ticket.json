@@ -1,5 +1,6 @@
 {
   "title": "Implement Coda MCP Server and Configure Agent Files",
+  "emoji": "🔨",
   "status": "open",
   "description": "Implement the coda MCP server fully: fix bugs, implement proper subagent orchestration tools, configure the agent files for the example project, and update the mcp.json path.",
   "summary": "Added semio and coda MCP server entries across monorepo settings and devcontainer-generated MCP configs.",

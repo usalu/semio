@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // .elements/ui/.storybook/stories/elements/navigation/PageNavigation.stories.tsx
 
@@ -9,13 +9,13 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { PageNavigation } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { MemoryRouter } from "react-router";
 
-// #region 🔖PageNavigation
+// #region 🪩PageNavigation
 
 const meta = {
   title: "elements/PageNavigation",
@@ -63,4 +63,4 @@ export const WithSections: Story = {
   },
 };
 
-// #endregion 🔖PageNavigation
+// #endregion 🪩PageNavigation

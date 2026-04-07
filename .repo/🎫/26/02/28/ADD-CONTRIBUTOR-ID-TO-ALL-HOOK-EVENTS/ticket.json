@@ -1,5 +1,6 @@
 {
   "title": "Add Contributor Id to All Hook Events",
+  "emoji": "➕",
   "status": "closed",
   "description": "All hook log events must include the contributor id field (e.g. \"🧑‍💻ueli\") in the event JSON blob. Currently the HookResultAgentBase and version event structs do not include contributor. Add contributor field to all events by populating it from contributorGithubToSemioID(GetGitAuthorGithub()) in logHook when building the eventMap. Update tests to verify contributor is present.",
   "summary": "Fixed TodoWrite/manage_todo_list post-tool mapping to use plan-specific event instead of generic agent.tool.ended. Added TodoWrite plan classification and updated existing hook-mapping tests for resolvePostToolUse and real-data mapping cases.",

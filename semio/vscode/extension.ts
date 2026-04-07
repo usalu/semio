@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🖱️vscode💻extension](repo://p/u/semio/b/u/vscode/f/extension.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -12,16 +11,15 @@
 
 // VS Code extension providing a sketchpad-based custom editor for semio kit JSON files.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Imports
+// #region ⛩️Imports
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-// #endregion 🔖Imports
+// #endregion ⛩️Imports
 
-// #region 🔖KitFileDetection
-// [👤semio🖱️vscode💻extension🔖kitfiledetection](repo://p/u/semio/b/u/vscode/f/extension.ts/s/KitFileDetection)
+// #region 🛕KitFileDetection
 // Kit file detection MUST match the naming conventions used across the semio workspace.
 // Specs: Matches `*.kit.json`, `kit_*.json`, `kit-*.json`, and nested `.semio/kit.json` files.
 // Detection is path-based so the extension can route known kit files into the custom editor
@@ -29,7 +27,6 @@ import * as vscode from "vscode";
 
 /**
  * Returns whether a file path should be treated as a semio kit JSON file.
- * [👤semio🖱️vscode💻extension🔖kitfiledetection🛠️islikelykitjsonfilepath](repo://p/u/semio/b/u/vscode/f/extension.ts/s/KitFileDetection/d/i/isLikelyKitJsonFilePath)
  *
  * Specs: Normalizes path separators and matches the workspace kit filename conventions.
  * Supports `*.kit.json`, `kit_*.json`, `kit-*.json`, and nested `.semio/kit.json` files.
@@ -43,10 +40,9 @@ export function isLikelyKitJsonFilePath(filePath: string): boolean {
   if (/^kit[_-].+\.json$/u.test(baseName)) return true;
   return false;
 }
-// #endregion 🔖KitFileDetection
+// #endregion 🛕KitFileDetection
 
-// #region 🔖SketchpadDist
-// [👤semio🖱️vscode💻extension🔖sketchpaddist](repo://p/u/semio/b/u/vscode/f/extension.ts/s/SketchpadDist)
+// #region 🌈SketchpadDist
 // Sketchpad asset resolution MUST support both packaged extensions and local development.
 // Specs: The extension first prefers bundled `sketchpad-dist`, then falls back to the
 // workspace sketchpad build at `../sketchpad/dist`. Resolution succeeds only when webview.html exists.
@@ -54,7 +50,6 @@ export function isLikelyKitJsonFilePath(filePath: string): boolean {
 
 /**
  * Returns the candidate sketchpad dist folders for the current extension path.
- * [👤semio🖱️vscode💻extension🔖sketchpaddist🛠️getsketchpaddistcandidatepaths](repo://p/u/semio/b/u/vscode/f/extension.ts/s/SketchpadDist/d/i/getSketchpadDistCandidatePaths)
  *
  * Specs: Candidate order prefers the extension-bundled dist and then the sibling workspace dist.
  * Returned paths are absolute and not filtered for existence.
@@ -65,7 +60,6 @@ export function getSketchpadDistCandidatePaths(extensionPath: string): string[] 
 
 /**
  * Resolves the first usable sketchpad dist folder.
- * [👤semio🖱️vscode💻extension🔖sketchpaddist🛠️resolvesketchpaddistpath](repo://p/u/semio/b/u/vscode/f/extension.ts/s/SketchpadDist/d/i/resolveSketchpadDistPath)
  *
  * Specs: A folder is usable only when `webview.html` exists inside it.
  * Returns null when neither the bundled nor sibling workspace dist is available.
@@ -79,10 +73,9 @@ export function resolveSketchpadDistPath(extensionPath: string): string | null {
 
   return null;
 }
-// #endregion 🔖SketchpadDist
+// #endregion 🌈SketchpadDist
 
-// #region 🔖MessageProtocol
-// [👤semio🖱️vscode💻extension🔖messageprotocol](repo://p/u/semio/b/u/vscode/f/extension.ts/s/MessageProtocol)
+// #region ⏲️MessageProtocol
 // Message protocol between extension host and sketchpad webview.
 // Specs: Messages use a `kind` discriminator. Extension sends kit data to webview.
 // Webview sends save requests back. The protocol is intentionally thin — the
@@ -90,20 +83,17 @@ export function resolveSketchpadDistPath(extensionPath: string): string | null {
 
 /**
  * Messages from extension host to webview.
- * [👤semio🖱️vscode💻extension🔖messageprotocol🛠️extensiontowebviewmessage](repo://p/u/semio/b/u/vscode/f/extension.ts/s/MessageProtocol/d/i/ExtensionToWebviewMessage)
  **/
 type ExtensionToWebviewMessage = { kind: "kit.load"; content: string } | { kind: "kit.externalUpdate"; content: string };
 
 /**
  * Messages from webview to extension host.
- * [👤semio🖱️vscode💻extension🔖messageprotocol🛠️webviewtoextensionmessage](repo://p/u/semio/b/u/vscode/f/extension.ts/s/MessageProtocol/d/i/WebviewToExtensionMessage)
  **/
 type WebviewToExtensionMessage = { kind: "kit.save"; content: string } | { kind: "kit.ready" };
 
-// #endregion 🔖MessageProtocol
+// #endregion ⏲️MessageProtocol
 
-// #region 🔖KitEditor
-// [👤semio🖱️vscode💻extension🔖kiteditor](repo://p/u/semio/b/u/vscode/f/extension.ts/s/KitEditor)
+// #region 📜KitEditor
 // Kit editor MUST provide a custom editor for semio kit JSON files using the sketchpad webview.
 // Specs: Opens known semio kit file conventions in a webview panel that loads the sketchpad app.
 // File changes are bridged between the VS Code filesystem and the webview via messaging.
@@ -111,7 +101,6 @@ type WebviewToExtensionMessage = { kind: "kit.save"; content: string } | { kind:
 
 /**
  * Custom editor provider that renders kit JSON files using the sketchpad webview.
- * [👤semio🖱️vscode💻extension🔖kiteditor🪨kiteditorprovider](repo://p/u/semio/b/u/vscode/f/extension.ts/s/KitEditor/d/i/KitEditorProvider)
  *
  * Specs: Implements VS Code CustomTextEditorProvider. Loads the sketchpad app in a webview
  * and bridges file reads/writes via postMessage. Watches for external file changes.
@@ -143,13 +132,13 @@ class KitEditorProvider implements vscode.CustomTextEditorProvider {
     html = html.replace(/href="\//g, `href="${baseUri.toString()}/`);
 
     // Inject the kit data loading script before closing </body> tag.
-    // The webview script will listen for messages and create a JsonFileKitStore.
+    // 🆕The webview script will listen for messages and create a JsonFileKitStore.
     const kitBootScript = `
 <script>
   (function() {
     // Bridge between VS Code extension and sketchpad webview.
     // The webview receives kit JSON via postMessage and uses it
-    // to initialize/update an in-memory kit store.
+    // 🔁to initialize/update an in-memory kit store.
     const vscode = acquireVsCodeApi();
 
     // Store the initial kit content for the sketchpad to pick up.
@@ -172,10 +161,10 @@ class KitEditorProvider implements vscode.CustomTextEditorProvider {
     html = html.replace(/<\/head>/, `${kitBootScript}\n</head>`);
     webviewPanel.webview.html = html;
 
-    // Track whether we are applying our own edit to avoid feedback loops.
+    // 🔷Track whether we are applying our own edit to avoid feedback loops.
     let isApplyingEdit = false;
 
-    // Listen for document changes (from external sources like git, other editors).
+    // ♻️Listen for document changes (from external sources like git, other editors).
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument((e) => {
       if (e.document.uri.toString() === document.uri.toString() && !isApplyingEdit) {
         webviewPanel.webview.postMessage({
@@ -228,15 +217,13 @@ class KitEditorProvider implements vscode.CustomTextEditorProvider {
 </body></html>`;
   }
 }
-// #endregion 🔖KitEditor
+// #endregion 📜KitEditor
 
-// #region 🔖Activation
-// [👤semio🖱️vscode💻extension🔖activation](repo://p/u/semio/b/u/vscode/f/extension.ts/s/Activation)
+// #region 🏷️Activation
 // MUST register the custom editor provider on activation.
 
 /**
  * Activates the semio VS Code extension.
- * [👤semio🖱️vscode💻extension🔖activation🛠️activate](repo://p/u/semio/b/u/vscode/f/extension.ts/s/Activation/d/i/activate)
  **/
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.window.registerCustomEditorProvider(KitEditorProvider.viewType, new KitEditorProvider(context), { webviewOptions: { retainContextWhenHidden: true } }));
@@ -244,7 +231,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 /**
  * Deactivates the semio VS Code extension.
- * [👤semio🖱️vscode💻extension🔖activation🛠️deactivate](repo://p/u/semio/b/u/vscode/f/extension.ts/s/Activation/d/i/deactivate)
  **/
 export function deactivate() { }
-// #endregion 🔖Activation
+// #endregion 🏷️Activation

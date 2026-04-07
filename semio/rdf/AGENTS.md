@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: rdf
- emoji: 🛂
+ emoji: 🕸️
  description: The rdf bundle for semio.
  kind: schema
 ---

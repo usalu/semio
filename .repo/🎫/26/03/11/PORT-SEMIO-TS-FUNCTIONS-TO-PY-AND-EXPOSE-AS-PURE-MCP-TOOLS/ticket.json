@@ -1,5 +1,6 @@
 {
   "title": "Port Semio Ts Functions to Py and Expose as Pure Mcp Tools",
+  "emoji": "🔌",
   "status": "closed",
   "description": "Port all functions from semio.ts (flatten, replaceTypesForPieces, family helpers, cluster, expand, kit query helpers, piecesMetadata, etc.) to semio.py and expose them in the engine MCP server. The MCP server should be pure/stateless - taking kit as input and returning kit diffs or results. Remove stateful MCP tools.",
   "summary": "Ported 22 Dict-based functions from semio.ts to semio.py Kit Operations region. Added Kit class methods (get_design_siblings, get_design_children, get_type_siblings, get_type_children). Refactored engine MCP to pure stateless: removed 9 stateful tools, added 22 new pure tools. Updated tests. All 70 tests pass.",

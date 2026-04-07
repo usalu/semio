@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/ui/.storybook/stories/Diagram.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly (no kit/designGuid).
 // Summary: Diagram stories: Default, Diff, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { applyDesignDiff, flattenDesign, type Design, type Kit } from "@semio/js";
 import { SemioDiagram as Diagram } from "@semio/ui";
@@ -12,7 +12,7 @@ import * as React from "react";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.semio.json";
 
-// #region 🔖Data
+// #region 🖥️Data
 
 const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as Design;
 const flattenChange = flattenDesign(metabolismKit as unknown as Kit, rawDesign.guid);
@@ -20,9 +20,9 @@ const nakaginDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward
 const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
 const designDiff = nakaginDiff as any;
 
-// #endregion 🔖Data
+// #endregion 🖥️Data
 
-// #region 🔖Diagram
+// #region 🧫Diagram
 
 const meta: Meta<typeof Diagram> = {
   title: "semio/Diagram",
@@ -118,4 +118,4 @@ export const ZoomNone: Story = {
   render: (args) => frame(<Diagram {...args} />),
 };
 
-// #endregion 🔖Diagram
+// #endregion 🧫Diagram

@@ -1,5 +1,6 @@
 {
   "title": "Refactor Cli Output Templates",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Refactor all outputs to use templates for rendering (markdown and text). Use go embed for templates.",
   "summary": "Refactored all CLI rendering outputs to use Go embed templates (text.tpl and markdown.tpl). Converted renderEntityHuman, renderEntityMarkdownLink, renderEntityMarkdown, HumanRenderer.Render, formatResult, MarkdownRenderer.Render, formatMarkdownResult, renderEventsToMarkdown, renderTreeNodeMarkdown, and renderPromptTemplate to use template-based rendering. Fixed pre-existing commit-to-checkpoint rename in tests. Updated fixture file URIs from old semiorepo://file/ and semiorepo://section/ formats to new structured semiorepo://p/u/.../b/a/.../f/... format. All tests pass.",

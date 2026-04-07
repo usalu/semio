@@ -1,10 +1,10 @@
--- #region 🔖Header
+-- #region 🧲Header
 
 -- sql/sqlite/repo/schema.sql
 
 -- 2025 Ueli Saluz <ueli@semio-tech.com>
 
--- #region 🔖License
+-- #region 🪬License
 
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU Affero General Public License as
@@ -20,12 +20,12 @@
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
--- #endregion 🔖License
+-- #endregion 🪬License
 
--- #region 🔖Requirements
--- #endregion 🔖Requirements
+-- #region 🎯Requirements
+-- #endregion 🎯Requirements
 
--- #endregion 🔖Header
+-- #endregion 🧲Header
 CREATE TABLE IF NOT EXISTS repo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,

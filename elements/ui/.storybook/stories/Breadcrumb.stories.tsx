@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // 🥼︎ semio/js/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx
 
@@ -6,14 +6,14 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { Breadcrumb, BreadcrumbItemData, NotFound, PageNavigation } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { AlertCircle, Home } from "lucide-react";
 import { MemoryRouter } from "react-router";
 
-// #region 🔖Breadcrumb
+// 📖#region 💡Breadcrumb
 const meta = {
   title: "elements/Breadcrumb",
   component: Breadcrumb,
@@ -93,9 +93,9 @@ const defaultItems: BreadcrumbItemData[] = [
   { id: "breadcrumb-page", content: "Capsule J" },
 ];
 
-// #endregion 🔖Breadcrumb
+// #endregion 💡Breadcrumb
 
-// #region 🔖NotFound
+// 🔷#region 🎍NotFound
 export const NotFoundDefault: Story = {
   args: { items: defaultItems },
   render: () => (
@@ -117,9 +117,9 @@ export const NotFoundMinimal: Story = {
     </MemoryRouter>
   ),
 };
-// #endregion 🔖NotFound
+// #endregion 🎍NotFound
 
-// #region 🔖PageNavigation
+// 🔷#region 🪩PageNavigation
 export const PageNavigationDefault: Story = {
   args: { items: defaultItems },
   render: () => (
@@ -141,4 +141,4 @@ export const PageNavigationNextOnly: Story = {
     </MemoryRouter>
   ),
 };
-// #endregion 🔖PageNavigation
+// #endregion 🪩PageNavigation

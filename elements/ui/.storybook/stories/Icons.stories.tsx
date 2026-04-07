@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // 🥼︎ semio/js/.storybook/stories/elements/display/Icons.stories.tsx
 
@@ -6,13 +6,13 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { Cursor, LoadingRow, Spinner } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box } from "lucide-react";
 
-// #region 🔖Icons
+// 🖼️#region 🛒Icons
 const meta = {
   title: "elements/Icons",
   component: Cursor,
@@ -45,9 +45,9 @@ export const Default: Story = {
   ),
 };
 
-// #endregion 🔖Icons
+// #endregion 🛒Icons
 
-// #region 🔖Spinner
+// 🔷#region 🎹Spinner
 export const SpinnerSizes: Story = {
   args: { color: "#000000" },
   render: () => (
@@ -58,9 +58,9 @@ export const SpinnerSizes: Story = {
     </div>
   ),
 };
-// #endregion 🔖Spinner
+// #endregion 🎹Spinner
 
-// #region 🔖LoadingRow
+// 🔷#region 🎺LoadingRow
 export const LoadingRowDefault: Story = {
   args: { color: "#000000" },
   render: () => (
@@ -71,4 +71,4 @@ export const LoadingRowDefault: Story = {
     </div>
   ),
 };
-// #endregion 🔖LoadingRow
+// #endregion 🎺LoadingRow

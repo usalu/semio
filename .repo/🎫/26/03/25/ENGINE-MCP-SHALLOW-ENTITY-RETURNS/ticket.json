@@ -1,5 +1,6 @@
 {
   "title": "Engine MCP Shallow Entity Returns",
+  "emoji": "🔌",
   "status": "open",
   "description": "Make all MCP tool return values use shallow entities instead of full entities. Ensure consistency across all platforms/APIs.",
   "github": {

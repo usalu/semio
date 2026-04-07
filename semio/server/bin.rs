@@ -1,10 +1,9 @@
-mod header { // 🔖Header
-// [👤semio📚server💻semio-session](repo://p/u/semio/b/l/server/f/bin.rs)
+mod header { // 🧲Header
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 // AGPL-3.0
 // Specs: Single-binary session-backend consolidating domain, command, event, state, error, schema, persistence, actor, directory, API, and WS modules.
 // Summary: Consolidated session-backend service for semio. PostgreSQL-backed, single-writer actor per session, HTTP+WS API with axum, in-memory state with typed entity structs, property-clock conflict resolution.
-} // 🔖Header
+} // 🧲Header
 
 
 
@@ -30,7 +29,7 @@ pub use tokio::sync::{broadcast, mpsc, oneshot};
 pub use uuid::Uuid;
 
 
-mod domain { // 🔖Domain
+mod domain { // 🗿Domain
 // Specs: Newtype IDs wrap Uuid for session-scoped identity. FieldPatch distinguishes no-change/set/clear. PropertyKey enumerates all mutable properties. ConflictPolicy defines per-property merge behaviour.
 // Summary: Session domain newtypes, FieldPatch, PropertyKey, ConflictPolicy, EntityKind, Lifecycle, SessionStatus.
 
@@ -56,7 +55,7 @@ pub struct PersonId(pub Uuid);
 pub type DomainVersion = i64;
 pub type SemioVersion = i64;
 
-mod field_patch { // 🔖FieldPatch
+mod field_patch { // 📭FieldPatch
 
 
 use super::*;
@@ -99,7 +98,7 @@ impl<T> RequiredFieldPatch<T> {
     }
 }
 
-} // 🔖FieldPatch
+} // 📭FieldPatch
 pub use field_patch::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -178,10 +177,10 @@ pub enum SessionStatus {
     Closed,
 }
 
-} // 🔖Domain
+} // 🗿Domain
 pub use domain::*;
 
-mod lookback { // 🔖Lookback
+mod lookback { // 🎏Lookback
 // Specs: Named lookback points define retention boundaries for kit history. Each token maps to seconds.
 // Summary: Configurable lookback points for historical kit snapshot retention and auto-compaction.
 
@@ -210,10 +209,10 @@ pub fn lookback_tokens() -> Vec<&'static str> {
     LOOKBACK_POINTS.iter().map(|(t, _)| *t).collect()
 }
 
-} // 🔖Lookback
+} // 🎏Lookback
 pub use lookback::*;
 
-mod command { // 🔖Command
+mod command { // 🪆Command
 // Specs: CommandEnvelope carries per-command metadata. DomainCommand enumerates all CRUD variants. SemioCommand handles presence mutations. CommandResult reports outcome.
 // Summary: Explicit command types for domain and semio mutations.
 
@@ -316,10 +315,10 @@ pub struct ConflictDetail {
     pub reason: String,
 }
 
-} // 🔖Command
+} // 🪆Command
 pub use command::*;
 
-mod event { // 🔖Event
+mod event { // 🏗️Event
 // Specs: SessionEvent enumerates all broadcastable events. EntityChange describes domain mutations. SemioUpdate describes semio state changes.
 // Summary: Broadcast event types for domain and semio state changes.
 
@@ -351,10 +350,10 @@ pub enum SemioUpdate {
     PresenceCleared,
 }
 
-} // 🔖Event
+} // 🏗️Event
 pub use event::*;
 
-mod state { // 🔖State
+mod state { // 🖋️State
 // Specs: SessionState holds full typed in-memory state for one session. Entity states mirror canonical DB rows.
 // Summary: In-memory session state loaded from and persisted to PostgreSQL.
 
@@ -494,10 +493,10 @@ pub struct SemioPersonState {
 #[derive(Debug, Clone)]
 pub struct LookState { pub position: [f64; 3], pub forward: [f64; 3], pub up: [f64; 3] }
 
-} // 🔖State
+} // 🖋️State
 pub use state::*;
 
-mod error { // 🔖Error
+mod error { // 🎼Error
 // Specs: SessionError covers all service error cases. ErrorBody serializes error details for HTTP responses.
 // Summary: Error types and HTTP response mapping for the session backend.
 
@@ -542,10 +541,10 @@ impl IntoResponse for SessionError {
     }
 }
 
-} // 🔖Error
+} // 🎼Error
 pub use error::*;
 
-mod schema { // 🔖Schema
+mod schema { // 🎞️Schema
 // Specs: Migrations create all schemas, enums, and tables on startup. Schema names: runtime, core, history, semio.
 // Summary: SQL schema creation and migration for the session backend.
 
@@ -875,10 +874,10 @@ async fn create_history_tables(pool: &PgPool) {
     )", "history.compaction_config").await;
 }
 
-} // 🔖Schema
+} // 🎞️Schema
 pub use schema::*;
 
-mod persistence { // 🔖Persistence
+mod persistence { // 🔮Persistence
 // Specs: Pool creates a connection pool from DATABASE_URL. Session CRUD creates, loads, and updates session metadata.
 // Summary: PostgreSQL persistence: pool creation, session CRUD, snapshot loading.
 
@@ -1135,7 +1134,7 @@ pub async fn mark_command_accepted(pool: &PgPool, command_id: Uuid, accepted_ver
     Ok(())
 }
 
-mod history { // 🔖History
+mod history { // 🔩History
 // Specs: History persistence stores domain commits with timestamps, full kit snapshots at baselines, and
 // incremental entity change logs. Supports lookback-based kit reconstruction and auto-compaction.
 // Summary: History storage: domain commits, kit snapshots, entity change logs, lookback reconstruction, compaction.
@@ -1446,13 +1445,13 @@ pub struct CompactionResult {
     pub logs_deleted: u64,
 }
 
-} // 🔖History
+} // 🔩History
 pub use history::*;
 
-} // 🔖Persistence
+} // 🔮Persistence
 pub use persistence::*;
 
-mod actor { // 🔖Actor
+mod actor { // 🎹Actor
 // Specs: ActorMessage is the inbox message kind. SessionActor processes commands one at a time in arrival order.
 // Summary: Session actor: single-writer task processing commands sequentially.
 
@@ -1675,10 +1674,10 @@ impl SessionActor {
     }
 }
 
-} // 🔖Actor
+} // 🎹Actor
 pub use actor::*;
 
-mod directory { // 🔖Directory
+mod directory { // 🎯Directory
 // Specs: SessionHandle holds the sender to an active session actor. SessionDirectory provides get-or-create semantics.
 // Summary: Session directory: process-global registry mapping SessionId to actor handles.
 
@@ -1725,10 +1724,10 @@ impl SessionDirectory {
     pub fn remove(&self, session_id: &Uuid) { self.sessions.remove(session_id); }
 }
 
-} // 🔖Directory
+} // 🎯Directory
 pub use directory::*;
 
-mod api { // 🔖Api
+mod api { // 🛕Api
 // Specs: AppState holds shared resources. Router defines all HTTP endpoints.
 // Summary: HTTP API routes for session management and command submission.
 
@@ -1858,10 +1857,10 @@ async fn handler_get_lookback_tokens() -> Json<Vec<&'static str>> {
     Json(lookback_tokens())
 }
 
-} // 🔖Api
+} // 🛕Api
 pub use api::*;
 
-mod ws { // 🔖Ws
+mod ws { // 🤖Ws
 // Specs: WebSocket handler upgrades HTTP to WS and streams session events.
 // Summary: WebSocket handler for real-time session event streaming.
 
@@ -1895,7 +1894,7 @@ async fn handle_socket(socket: WebSocket, state: AppState, session_id: Uuid) {
     tracing::debug!("ws connection closed for session {}", session_id);
 }
 
-} // 🔖Ws
+} // 🤖Ws
 pub use ws::*;
 
 // 🔖Main
@@ -1930,10 +1929,10 @@ async fn main() {
 // Summary: Comprehensive tests for all domain types, serialization, error mapping, and integration with real asset data.
 
 
-mod tests { // 🔖Tests
+mod tests { // 📐Tests
 
 use super::*;
-    mod domain_tests { // 🔖Domain Tests
+    mod domain_tests { // 👓Domain Tests
 
 
 use super::*;
@@ -2023,10 +2022,10 @@ use super::*;
         assert_eq!(format!("{:?}", s), "Active");
     }
 
-    } // 🔖Domain Tests
+    } // 👓Domain Tests
     pub use domain_tests::*;
 
-    mod command_tests { // 🔖Command Tests
+    mod command_tests { // 📜Command Tests
 
 
 use super::*;
@@ -2130,10 +2129,10 @@ use super::*;
         assert!(json.contains("5"));
     }
 
-    } // 🔖Command Tests
+    } // 📜Command Tests
     pub use command_tests::*;
 
-    mod error_tests { // 🔖Error Tests
+    mod error_tests { // 🌤️Error Tests
 
 
 use super::*;
@@ -2176,10 +2175,10 @@ use super::*;
         assert_eq!(status_of(SessionError::Internal("oops".into())), StatusCode::INTERNAL_SERVER_ERROR);
     }
 
-    } // 🔖Error Tests
+    } // 🌤️Error Tests
     pub use error_tests::*;
 
-    mod event_tests { // 🔖Event Tests
+    mod event_tests { // 🔮Event Tests
 
 
 use super::*;
@@ -2244,10 +2243,10 @@ use super::*;
         }
     }
 
-    } // 🔖Event Tests
+    } // 🔮Event Tests
     pub use event_tests::*;
 
-    mod state_tests { // 🔖State Tests
+    mod state_tests { // 📝State Tests
 
 
 use super::*;
@@ -2317,10 +2316,10 @@ use super::*;
         assert_eq!(ds.connections.len(), 1);
     }
 
-    } // 🔖State Tests
+    } // 📝State Tests
     pub use state_tests::*;
 
-    mod metabolism_integration_tests { // 🔖Metabolism Integration Tests
+    mod metabolism_integration_tests { // 🔐Metabolism Integration Tests
 
 
 use super::*;
@@ -2409,10 +2408,10 @@ use super::*;
         assert!(json.contains("Capsule"));
     }
 
-    } // 🔖Metabolism Integration Tests
+    } // 🔐Metabolism Integration Tests
     pub use metabolism_integration_tests::*;
 
-    mod nakagin_integration_tests { // 🔖Nakagin Integration Tests
+    mod nakagin_integration_tests { // 🎵Nakagin Integration Tests
 
 
 use super::*;
@@ -2556,10 +2555,10 @@ use super::*;
         assert_eq!(commands.len(), 179, "should create 179 CreateConnection commands");
     }
 
-    } // 🔖Nakagin Integration Tests
+    } // 🎵Nakagin Integration Tests
     pub use nakagin_integration_tests::*;
 
-    mod multi_frontend_tests { // 🔖Multi-Frontend Tests
+    mod multi_frontend_tests { // 🗽Multi-Frontend Tests
 
 
 use super::*;
@@ -2689,10 +2688,10 @@ use super::*;
         assert_eq!(f3_count, 10);
     }
 
-    } // 🔖Multi-Frontend Tests
+    } // 🗽Multi-Frontend Tests
     pub use multi_frontend_tests::*;
 
-    mod full_metabolism_nakagin_session_test { // 🔖Full Metabolism + Nakagin Session Test
+    mod full_metabolism_nakagin_session_test { // 🌦️Full Metabolism + Nakagin Session Test
 
 
 use super::*;
@@ -2795,10 +2794,10 @@ use super::*;
         assert_eq!(state.domain_version, 409);
     }
 
-    } // 🔖Full Metabolism + Nakagin Session Test
+    } // 🌦️Full Metabolism + Nakagin Session Test
     pub use full_metabolism_nakagin_session_test::*;
 
-    mod metabolism_diff_tests { // 🔖Metabolism Diff Tests
+    mod metabolism_diff_tests { // 📹Metabolism Diff Tests
 
 
 use super::*;
@@ -2849,10 +2848,10 @@ use super::*;
         assert!(matches!(back, DomainCommand::Batch(_)));
     }
 
-    } // 🔖Metabolism Diff Tests
+    } // 📹Metabolism Diff Tests
     pub use metabolism_diff_tests::*;
 
-    mod lookback_tests { // 🔖Lookback Tests
+    mod lookback_tests { // 🧫Lookback Tests
 
 
 use super::*;
@@ -2895,10 +2894,10 @@ use super::*;
         }
     }
 
-    } // 🔖Lookback Tests
+    } // 🧫Lookback Tests
     pub use lookback_tests::*;
 
-    mod history_unit_tests { // 🔖History Unit Tests
+    mod history_unit_tests { // 💊History Unit Tests
 
 
 use super::*;
@@ -3047,10 +3046,10 @@ use super::*;
         assert!(json.contains("logs_deleted"));
     }
 
-    } // 🔖History Unit Tests
+    } // 💊History Unit Tests
     pub use history_unit_tests::*;
 
-    mod e2_e_testcontainer_tests { // 🔖E2E Testcontainer Tests
+    mod e2_e_testcontainer_tests { // 🌊E2E Testcontainer Tests
 
     /// Check if Docker/testcontainers are available at runtime.
 
@@ -3380,6 +3379,6 @@ use super::*;
         assert!(msg2.is_ok(), "ws2 should receive event");
     }
 
-    } // 🔖E2E Testcontainer Tests
+    } // 🌊E2E Testcontainer Tests
     pub use e2_e_testcontainer_tests::*;
-} // 🔖Tests
+} // 📐Tests

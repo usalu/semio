@@ -1,13 +1,12 @@
-// #region 🔖Header
-// [🧰repo🖱️vscode🥼extensiontest](repo://p/i/repo/b/u/vscode/f/extension.test.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Imports
+// #region ⛩️Imports
 import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
@@ -39,9 +38,9 @@ import {
   treeNodeToItem,
 } from "./extension";
 
-// #endregion 🔖Imports
+// #endregion ⛩️Imports
 
-// #region 🔖Constants
+// 🔒#region 🎞️Constants
 const EXPECTED_COMMANDS = [
   "semio.analyze",
   "semio.analyzeFile",
@@ -106,9 +105,9 @@ const EXPECTED_CONSTRAINTS = [
 ];
 const EXPECTED_VIEWS = ["semio.monorepo", "semio.filter"];
 
-// #endregion 🔖Constants
+// #endregion 🎞️Constants
 
-// #region 🔖Utilities
+// 🌱#region 🎼Utilities
 function getWorkspaceRoot(): string {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? path.join(__dirname, "../../../..");
 }
@@ -288,18 +287,18 @@ async function getCodeLenses(document: vscode.TextDocument): Promise<vscode.Code
   return (await vscode.commands.executeCommand<vscode.CodeLens[]>("vscode.executeCodeLensProvider", document.uri)) ?? [];
 }
 
-// #endregion 🔖Utilities
+// #endregion 🎼Utilities
 
-// #region 🔖Extension Activation
+// #region 🖇️Extension Activation
 suiteSetup(async function () {
   this.timeout(30000);
   await openFixture("semio/metabolism.kit.semio.json");
   await new Promise((resolve) => setTimeout(resolve, 2000));
 });
 
-// #endregion 🔖Extension Activation
+// #endregion 🖇️Extension Activation
 
-// #region 🔖RepoEvent Parsing Tests
+// #region 🗺️RepoEvent Parsing Tests
 suite("RepoEvent Parsing Test Suite", () => {
   test("parseRepoEvents handles result field correctly", () => {
     const output = '{"kind":"result","result":{"data":{"breachs":[{"id":"v1"}]}}}';
@@ -367,9 +366,9 @@ suite("RepoEvent Parsing Test Suite", () => {
   });
 });
 
-// #endregion 🔖RepoEvent Parsing Tests
+// #endregion 🗺️RepoEvent Parsing Tests
 
-// #region 🔖Command Registration Tests
+// #region 🌙Command Registration Tests
 suite("Command Registration Test Suite", () => {
   test("All expected commands are registered", async () => {
     const extension = vscode.extensions.getExtension("usalu.repo");
@@ -383,9 +382,9 @@ suite("Command Registration Test Suite", () => {
   });
 });
 
-// #endregion 🔖Command Registration Tests
+// #endregion 🌙Command Registration Tests
 
-// #region 🔖Kit Validation Tests
+// #region ⛅Kit Validation Tests
 suite("Kit Validation Test Suite", function () {
   this.timeout(15000);
 
@@ -468,9 +467,9 @@ suite("Kit Validation Test Suite", function () {
   });
 });
 
-// #endregion 🔖Kit Validation Tests
+// #endregion ⛅Kit Validation Tests
 
-// #region 🔖Repo Diagnostics Tests
+// #region 🎃Repo Diagnostics Tests
 suite("Repo Diagnostics Test Suite", function () {
   this.timeout(30000);
 
@@ -538,9 +537,9 @@ suite("Repo Diagnostics Test Suite", function () {
   });
 });
 
-// #endregion 🔖Repo Diagnostics Tests
+// #endregion 🎃Repo Diagnostics Tests
 
-// #region 🔖Refresh Diagnostics Tests
+// #region 🏆Refresh Diagnostics Tests
 suite("Refresh Diagnostics Test Suite", function () {
   this.timeout(15000);
 
@@ -557,9 +556,9 @@ suite("Refresh Diagnostics Test Suite", function () {
   });
 });
 
-// #endregion 🔖Refresh Diagnostics Tests
+// #endregion 🏆Refresh Diagnostics Tests
 
-// #region 🔖Sidebar View Tests
+// #region 🌊Sidebar View Tests
 suite("Sidebar View Test Suite", function () {
   this.timeout(15000);
 
@@ -666,9 +665,9 @@ suite("Sidebar View Test Suite", function () {
   });
 });
 
-// #endregion 🔖Sidebar View Tests
+// #endregion 🌊Sidebar View Tests
 
-// #region 🔖Sections View Tests
+// #region 🎯Sections View Tests
 suite("Sections View Test Suite", function () {
   this.timeout(30000);
 
@@ -742,7 +741,7 @@ suite("Sections View Test Suite", function () {
   });
 });
 
-// #endregion 🔖Sections View Tests
+// #endregion 🎯Sections View Tests
 
 suite("Filter Provider Test Suite", () => {
   test("FilterProvider initializes correctly", () => {
@@ -1037,7 +1036,7 @@ suite("Data Structures Test Suite", () => {
   });
 });
 
-// #region 🔖CLI Tree Helper Tests
+// #region 🌈CLI Tree Helper Tests
 suite("extractLeadingEmoji Test Suite", () => {
   test("Extracts single emoji from start", () => {
     assert.strictEqual(extractLeadingEmoji("💻coda/engine/coda.py"), "💻");
@@ -1211,9 +1210,9 @@ suite("buildCliTreeArgs Test Suite", () => {
   });
 });
 
-// #endregion 🔖CLI Tree Helper Tests
+// #endregion 🌈CLI Tree Helper Tests
 
-// #region 🔖RepoEvent Extended Tests
+// #region 🐍RepoEvent Extended Tests
 suite("RepoEvent Extended Parsing Test Suite", () => {
   test("parseRepoEvents handles multiple lines", () => {
     const output = '{"kind":"start"}\n{"kind":"result","result":{"data":"hello"}}\n{"kind":"done"}\n';
@@ -1249,9 +1248,9 @@ suite("RepoEvent Extended Parsing Test Suite", () => {
   });
 });
 
-// #endregion 🔖RepoEvent Extended Tests
+// #endregion 🐍RepoEvent Extended Tests
 
-// #region 🔖URI Resolution Tests
+// #region 📮URI Resolution Tests
 suite("slugify Test Suite", () => {
   test("Converts text to uppercase slug", () => {
     assert.strictEqual(slugify("Hello World"), "HELLO-WORLD");
@@ -1631,9 +1630,9 @@ suite("Navigation Commands Test Suite", function () {
   });
 });
 
-// #endregion 🔖URI Resolution Tests
+// #endregion 📮URI Resolution Tests
 
-// #region 🔖Entity Emoji Registry Tests
+// #region 🎋Entity Emoji Registry Tests
 suite("Entity Emoji Registry Test Suite", () => {
   test("ENTITY_EMOJIS contains all technology kind emojis", () => {
     assert.ok(ENTITY_EMOJIS.has("👤"), "should contain user technology emoji");
@@ -1748,9 +1747,9 @@ suite("Entity Emoji Registry Test Suite", () => {
   });
 });
 
-// #endregion 🔖Entity Emoji Registry Tests
+// #endregion 🎋Entity Emoji Registry Tests
 
-// #region 🔖Entity ID Regex Matching Tests
+// #region 📹Entity ID Regex Matching Tests
 suite("Entity ID Regex Matching Test Suite", () => {
   test("matches bare infrastructure technology ID (🧰)", () => {
     const regex = buildEntityIdRegex();
@@ -1881,9 +1880,9 @@ suite("Entity ID Regex Matching Test Suite", () => {
   });
 });
 
-// #endregion 🔖Entity ID Regex Matching Tests
+// #endregion 📹Entity ID Regex Matching Tests
 
-// #region 🔖CodeLens Behavior Tests
+// #region 🔋CodeLens Behavior Tests
 suite("CodeLens Behavior Test Suite", function () {
   this.timeout(15000);
 
@@ -1992,4 +1991,4 @@ suite("Semio VS Code Kit Editor Test Suite", () => {
   });
 });
 
-// #endregion 🔖CodeLens Behavior Tests
+// #endregion 🔋CodeLens Behavior Tests

@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda🖱️desktop⚙️viterendererconfig](repo://p/r/coda/b/u/desktop/f/vite.renderer.config.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -9,10 +8,9 @@
 // Pre-bundles all dependencies from elements.tsx to prevent module waterfall
 // stalls in Electron's HTTP/1.1 connection-limited renderer.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [🔬coda🖱️desktop⚙️viterendererconfig🔖configuration](repo://p/r/coda/b/u/desktop/f/vite.renderer.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // Vite configuration for the Electron renderer process with React and Tailwind.
 // Configuration MUST enable the React and Tailwind CSS plugins.
 // Configuration MUST pre-bundle heavy dependencies to avoid white screen in Electron.
@@ -113,4 +111,4 @@ const configuration: UserConfig = {
 
 export default configuration;
 
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

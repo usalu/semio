@@ -1,5 +1,6 @@
 {
   "title": "Fix Coda Desktop White Screen Due to Vite Dep Scan Failure",
+  "emoji": "🔧",
   "status": "open",
   "description": "The coda desktop dev mode shows a white window because Vite dep pre-bundling fails when dist/index.html exists alongside index.html. Without pre-bundling, Electron hits ERR_INSUFFICIENT_RESOURCES loading 124+ ESM modules over HTTP/1.1's 6-connection limit.",
   "summary": "Fixed warmup URL path resolution in main.ts: replaced __dirname (which resolves to desktop/.vite/build in dev) with app.getAppPath() (which resolves to desktop/) for correct elements.tsx path. This ensures the Vite module graph warmup actually pre-transforms elements.tsx before the browser requests it, preventing HTTP/1.1 connection pool stalls. Also removed all [DEBUG] diagnostic code from both main.ts (network error logger, console-message handler, 20s diagnostic setTimeout) and renderer.tsx (__moduleStarted/__moduleFinished markers).",

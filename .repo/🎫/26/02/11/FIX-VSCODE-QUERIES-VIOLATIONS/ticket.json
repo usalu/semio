@@ -1,5 +1,6 @@
 {
   "title": "Fix Vscode Queries Breachs",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix all code breachs in repo/vscode/queries.ts: 12 orphan definitions and 11 missing summary comments. Add a Queries section wrapping all definitions and add summary comments before each definition.",
   "summary": "Added //#region 🔖Queries section wrapping all 11 exported const definitions with section summary comment. Added individual summary comments before each definition: RepoStructureDocument, RepoCommitsDocument, FolderContentDocument, BundlesDocument, TicketsDocument, PoliciesDocument, ContributorsDocument, AnalyzeDocument, FixDocument, FileContentDocument, GoalsDocument. Fixes 12 orphan-definition and 11 missing-summary breachs.",

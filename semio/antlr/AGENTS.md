@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: antlr
- emoji: 🛂
+ emoji: 🔤
  description: The antlr bundle for semio.
  kind: schema
 ---

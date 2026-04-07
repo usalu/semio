@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: engine
- emoji: 📚
+ emoji: ⚙️
  description: The engine bundle for semio.
  kind: library
 ---

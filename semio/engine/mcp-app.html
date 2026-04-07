@@ -3,41 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light dark" />
-    <title>semio design viewer</title>
+    <title>semio</title>
     <style>
-      :root {
-        --foreground: #1b1a17;
-        --accent: #b8860b;
-        --accent-secondary: #d4a843;
-        --success-border: #22c55e;
-        --warning-border: #f59e0b;
-        --destructive-border: #ef4444;
-        --color-new: #22c55e;
-        --color-modified: #f59e0b;
-        --color-removed: #ef4444;
-        --color-changed-selected: #b8860b;
-        --color-changed-hovered: #d4a843;
-        --border: rgba(27, 26, 23, 0.12);
-        color-scheme: light;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --foreground: #e8e4da;
-          --accent: #d4a843;
-          --accent-secondary: #b8860b;
-          --success-border: #4ade80;
-          --warning-border: #fbbf24;
-          --destructive-border: #f87171;
-          --color-new: #4ade80;
-          --color-modified: #fbbf24;
-          --color-removed: #f87171;
-          --color-changed-selected: #d4a843;
-          --color-changed-hovered: #b8860b;
-          --border: rgba(232, 228, 218, 0.12);
-          color-scheme: dark;
-        }
-      }
       * {
         margin: 0;
         padding: 0;
@@ -51,14 +18,8 @@
         overflow: hidden;
       }
       body {
-        font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
-        color: var(--color-text-primary, var(--foreground));
-        background: var(--color-background-primary, #ffffff);
-      }
-      @media (prefers-color-scheme: dark) {
-        body {
-          background: var(--color-background-primary, #1e1e1e);
-        }
+        background-color: var(--base);
+        color: var(--foreground);
       }
     </style>
   </head>

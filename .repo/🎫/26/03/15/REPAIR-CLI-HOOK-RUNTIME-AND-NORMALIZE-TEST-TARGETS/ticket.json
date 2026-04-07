@@ -1,5 +1,6 @@
 {
   "title": "Repair CLI Hook Runtime And Normalize Test Targets",
+  "emoji": "📏",
   "status": "open",
   "description": "Repair repo cli/main.go hook runtime after tail corruption, restore dispatcher/logging helpers, and normalize test-start events to emit labs for full runs and tests for subset runs without fake file entries.",
   "github": {

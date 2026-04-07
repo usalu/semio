@@ -45,7 +45,7 @@
       "stock": 2147483647,
       "icon": "icons/base.svg",
       "image": "images/base.png",
-      "description": "A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
+      "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.034Z",
       "name": "Base",
@@ -60,7 +60,7 @@
         "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
       },
       "image": "images/base_blob.png",
-      "description": "A blobby two storey office building with an entrance hall and access to the staircases and elevators of the round cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
+      "description": "🏩 A blobby two storey office building with an entrance hall and access to the staircases and elevators of the round cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.052Z",
       "name": "Blob",
@@ -72,7 +72,7 @@
       "stock": 2147483647,
       "icon": "",
       "image": "images/bridge.png",
-      "description": "A bridge with two segments an addition on the west along the main path.",
+      "description": "🏢 A bridge with two segments an addition on the west along the main path.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.108Z",
       "name": "Bridge",
@@ -84,7 +84,7 @@
       "stock": 2147483647,
       "icon": "icons/capital.svg",
       "image": "images/capital.png",
-      "description": "A roof that has the skin of a cut extruded cuboid.",
+      "description": "🏗 A roof that has the skin of a cut extruded cuboid.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.111Z",
       "name": "Capital",
@@ -96,7 +96,7 @@
       "stock": 2147483647,
       "icon": "icons/cylindric-capital.svg",
       "image": "images/cylindric-capital.png",
-      "description": "A roof that has the skin of a cut extruded cylinder.",
+      "description": "🏥 A roof that has the skin of a cut extruded cylinder.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.113Z",
       "name": "Cylindric Capital",
@@ -114,7 +114,7 @@
         "guid": "71749140-9db9-43f6-bd81-d89011667b80"
       },
       "image": "images/capsule_backslash.png",
-      "description": "An apartment capsule for one person. It has the entrance on the back and has the view to the front.",
+      "description": "🏛 An apartment capsule for one person. It has the entrance on the back and has the view to the front.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.115Z",
       "name": "\\",
@@ -129,7 +129,7 @@
         "guid": "71749140-9db9-43f6-bd81-d89011667b80"
       },
       "image": "images/capsule_slash.png",
-      "description": "An apartment capsule for one person. It has the entrance on the back and has the view to the front. It is mirrored compared to the normal one.",
+      "description": "🌉 An apartment capsule for one person. It has the entrance on the back and has the view to the front. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.117Z",
       "name": "/",
@@ -144,7 +144,7 @@
         "guid": "71749140-9db9-43f6-bd81-d89011667b80"
       },
       "image": "images/capsule_q.png",
-      "description": "An apartment capsule for one person. It has the entrance on the back and has the view to the side.",
+      "description": "🗼 An apartment capsule for one person. It has the entrance on the back and has the view to the side.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.119Z",
       "name": "q",
@@ -159,7 +159,7 @@
         "guid": "71749140-9db9-43f6-bd81-d89011667b80"
       },
       "image": "images/capsule_p.png",
-      "description": "An apartment capsule for one person. It has the entrance on the back and has the view to the side. It is mirrored compared to the normal one.",
+      "description": "🏭 An apartment capsule for one person. It has the entrance on the back and has the view to the side. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.121Z",
       "name": "p",
@@ -174,7 +174,7 @@
         "guid": "71749140-9db9-43f6-bd81-d89011667b80"
       },
       "image": "images/capsule_J.png",
-      "description": "An apartment capsule for one person. It has the entrance on the side and has the view to the front.",
+      "description": "🏬 An apartment capsule for one person. It has the entrance on the side and has the view to the front.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.123Z",
       "name": "J",
@@ -189,7 +189,7 @@
         "guid": "71749140-9db9-43f6-bd81-d89011667b80"
       },
       "image": "images/capsule_L.png",
-      "description": "An apartment capsule for one person. It has the entrance on the side and has the view to the front. It is mirrored compared to the normal one.",
+      "description": "🏨 An apartment capsule for one person. It has the entrance on the side and has the view to the front. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.125Z",
       "name": "L",
@@ -204,7 +204,7 @@
         "guid": "71749140-9db9-43f6-bd81-d89011667b80"
       },
       "image": "images/capsule_s.png",
-      "description": "An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
+      "description": "🏪 An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.128Z",
       "name": "s",
@@ -219,7 +219,7 @@
         "guid": "71749140-9db9-43f6-bd81-d89011667b80"
       },
       "image": "images/capsule_z.png",
-      "description": "An apartment capsule for one person. It has the entrance on the side and has the view to the side. It is mirrored compared to the normal one.",
+      "description": "🏫 An apartment capsule for one person. It has the entrance on the side and has the view to the side. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.131Z",
       "name": "z",
@@ -234,7 +234,7 @@
         "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
       },
       "image": "images/capsule-with-balcony_backslash.png",
-      "description": "An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front.",
+      "description": "🏦 An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.133Z",
       "name": "\\",
@@ -249,7 +249,7 @@
         "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
       },
       "image": "images/capsule-with-balcony_slash.png",
-      "description": "An apartment capsule of the variant / with a balcony for one person. It has the entrance on theback and has the view to the front. It is mirrored compared to the normal one.",
+      "description": "🏣 An apartment capsule of the variant / with a balcony for one person. It has the entrance on theback and has the view to the front. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.136Z",
       "name": "/",
@@ -264,7 +264,7 @@
         "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
       },
       "image": "images/capsule-with-balcony_q.png",
-      "description": "An apartment capsule of the variant q with a balcony for one person. It has the entrance on theback and has the view to the side.",
+      "description": "🏤 An apartment capsule of the variant q with a balcony for one person. It has the entrance on theback and has the view to the side.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.139Z",
       "name": "q",
@@ -279,7 +279,7 @@
         "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
       },
       "image": "images/capsule-with-balcony_p.png",
-      "description": "An apartment capsule of the variant p with a balcony for one person. It has the entrance on theback and has the view to the side. It is mirrored compared to the normal one.",
+      "description": "🏚 An apartment capsule of the variant p with a balcony for one person. It has the entrance on theback and has the view to the side. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.144Z",
       "name": "p",
@@ -294,7 +294,7 @@
         "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
       },
       "image": "images/capsule-with-balcony_J.png",
-      "description": "An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
+      "description": "🏘 An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.149Z",
       "name": "J",
@@ -309,7 +309,7 @@
         "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
       },
       "image": "images/capsule-with-balcony_L.png",
-      "description": "An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
+      "description": "🏙 An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.151Z",
       "name": "L",
@@ -324,7 +324,7 @@
         "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
       },
       "image": "images/capsule-with-balcony_s.png",
-      "description": "An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
+      "description": "🕌 An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.205Z",
       "name": "s",
@@ -339,7 +339,7 @@
         "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
       },
       "image": "images/capsule-with-balcony_z.png",
-      "description": "An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
+      "description": "🕍 An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.207Z",
       "name": "z",
@@ -354,7 +354,7 @@
         "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
       },
       "image": "images/ellipsoid-capsule_backslash.png",
-      "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
+      "description": "🕋 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.21Z",
       "name": "\\",
@@ -369,7 +369,7 @@
         "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
       },
       "image": "images/ellipsoid-capsule_slash.png",
-      "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
+      "description": "🛕 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.212Z",
       "name": "/",
@@ -384,7 +384,7 @@
         "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
       },
       "image": "images/ellipsoid-capsule_q.png",
-      "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
+      "description": "🏡 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.214Z",
       "name": "q",
@@ -399,7 +399,7 @@
         "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
       },
       "image": "images/ellipsoid-capsule_p.png",
-      "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
+      "description": "🛖 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.216Z",
       "name": "p",
@@ -414,7 +414,7 @@
         "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
       },
       "image": "images/ellipsoid-capsule_J.png",
-      "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
+      "description": "🔧 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.218Z",
       "name": "J",
@@ -429,7 +429,7 @@
         "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
       },
       "image": "images/ellipsoid-capsule_L.png",
-      "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
+      "description": "🔨 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.22Z",
       "name": "L",
@@ -444,7 +444,7 @@
         "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
       },
       "image": "images/ellipsoid-capsule_s.png",
-      "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
+      "description": "🪛 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.222Z",
       "name": "s",
@@ -459,7 +459,7 @@
         "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
       },
       "image": "images/ellipsoid-capsule_z.png",
-      "description": "An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
+      "description": "🪜 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.224Z",
       "name": "z",
@@ -474,7 +474,7 @@
         "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
       },
       "image": "images/trapezoid-capsule_backslash.png",
-      "description": "An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front.",
+      "description": "🧱 An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.227Z",
       "name": "\\",
@@ -489,7 +489,7 @@
         "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
       },
       "image": "images/trapezoid-capsule_slash.png",
-      "description": "An apartment capsule of the variant / with a balcony for one person. It has the entrance on theback and has the view to the front. It is mirrored compared to the normal one.",
+      "description": "🪵 An apartment capsule of the variant / with a balcony for one person. It has the entrance on theback and has the view to the front. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.228Z",
       "name": "/",
@@ -504,7 +504,7 @@
         "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
       },
       "image": "images/trapezoid-capsule_q.png",
-      "description": "An apartment capsule of the variant q with a balcony for one person. It has the entrance on theback and has the view to the side.",
+      "description": "🔩 An apartment capsule of the variant q with a balcony for one person. It has the entrance on theback and has the view to the side.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.23Z",
       "name": "q",
@@ -519,7 +519,7 @@
         "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
       },
       "image": "images/trapezoid-capsule_p.png",
-      "description": "An apartment capsule of the variant p with a balcony for one person. It has the entrance on theback and has the view to the side. It is mirrored compared to the normal one.",
+      "description": "🧰 An apartment capsule of the variant p with a balcony for one person. It has the entrance on theback and has the view to the side. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.232Z",
       "name": "p",
@@ -534,7 +534,7 @@
         "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
       },
       "image": "images/trapezoid-capsule_J.png",
-      "description": "An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
+      "description": "🪓 An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.234Z",
       "name": "J",
@@ -549,7 +549,7 @@
         "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
       },
       "image": "images/trapezoid-capsule_L.png",
-      "description": "An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
+      "description": "🔑 An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.236Z",
       "name": "L",
@@ -564,7 +564,7 @@
         "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
       },
       "image": "images/trapezoid-capsule_s.png",
-      "description": "An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
+      "description": "🗝 An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.238Z",
       "name": "s",
@@ -579,7 +579,7 @@
         "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
       },
       "image": "images/trapezoid-capsule_z.png",
-      "description": "An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
+      "description": "🚪 An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.24Z",
       "name": "z",
@@ -591,7 +591,7 @@
       "stock": 2147483647,
       "icon": "icons/tambour.svg",
       "image": "images/tambour.svg",
-      "description": "An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
+      "description": "🏰 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.247Z",
       "name": "Tambour",
@@ -606,7 +606,7 @@
         "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
       },
       "image": "images/tambour_first-storey.svg",
-      "description": "An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
+      "description": "🪟 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.251Z",
       "name": "First Storey",
@@ -621,7 +621,7 @@
         "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
       },
       "image": "images/tambour_last-storey.svg",
-      "description": "An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
+      "description": "🛗 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.268Z",
       "name": "Last Storey",
@@ -636,7 +636,7 @@
         "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
       },
       "image": "images/tambour_single-storey.svg",
-      "description": "An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
+      "description": "🪤 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.272Z",
       "name": "Single Storey",
@@ -648,7 +648,7 @@
       "stock": 2147483647,
       "icon": "icons/cylindric-tambour.svg",
       "image": "images/cylindric-tambour.svg",
-      "description": "An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
+      "description": "🛏 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.276Z",
       "name": "Cylindric Tambour",
@@ -666,7 +666,7 @@
         "guid": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7"
       },
       "image": "images/cylindric-tambour_first-storey.svg",
-      "description": "An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
+      "description": "🪑 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.28Z",
       "name": "First Storey",
@@ -681,7 +681,7 @@
         "guid": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7"
       },
       "image": "images/cylindric-tambour_last-storey.svg",
-      "description": "An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
+      "description": "🚿 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.284Z",
       "name": "Last Storey",
@@ -696,7 +696,7 @@
         "guid": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7"
       },
       "image": "images/cylindric-tambour_single-storey.svg",
-      "description": "An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
+      "description": "🛁 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.288Z",
       "name": "Single Storey",
@@ -714,7 +714,7 @@
     }
   ],
   "image": "images/metabolism.png",
-  "description": "Everything for metabolistic architecture.",
+  "description": "🏗 Everything for metabolistic architecture.",
   "createdAt": "2025-11-23T01:10:21.03Z",
   "remote": "https://github.com/usalu/metabolism/archive/refs/tags/r25.07-1.zip",
   "name": "Metabolism",
@@ -725,7 +725,7 @@
       "icon": "icons/nakagin-capsule-tower.svg",
       "updatedAt": "2025-11-23T01:10:21.335Z",
       "createdAt": "2025-11-23T01:10:21.335Z",
-      "description": "The digital shadow of the former Nakagin Capsule Tower which was a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan. Completed in 1972, the building was a rare remaining example of Japanese Metabolism, an architectural movement emblematic of Japan's postwar cultural resurgence.",
+      "description": "🏺 The digital shadow of the former Nakagin Capsule Tower which was a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan. Completed in 1972, the building was a rare remaining example of Japanese Metabolism, an architectural movement emblematic of Japan's postwar cultural resurgence.",
       "unit": "m",
       "image": "images/nakagin-capsule-tower.png"
     },
@@ -738,7 +738,7 @@
         "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
       },
       "image": "images/nakagin-capsule-tower_slanted.png",
-      "description": "A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
+      "description": "🚕 A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
       "createdAt": "2025-11-23T01:10:21.875Z",
       "updatedAt": "2025-11-23T01:10:21.875Z"
     },
@@ -751,7 +751,7 @@
         "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
       },
       "image": "images/nakagin-capsule-tower_twisted.png",
-      "description": "A twisted variant of the Nakagin Capsule Tower where the capsules are trapezoids and towers are round with the floors twisting in one direction.",
+      "description": "🚙 A twisted variant of the Nakagin Capsule Tower where the capsules are trapezoids and towers are round with the floors twisting in one direction.",
       "createdAt": "2025-11-23T01:10:22.324Z",
       "updatedAt": "2025-11-23T01:10:22.324Z"
     },
@@ -764,7 +764,7 @@
         "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
       },
       "image": "images/nakagin-capsule-tower_dancing_axonometry_explosion.png",
-      "description": "The expolsion axonometry of a futuristic variant of the Nakagin Capsule Tower where two towers are dancing with each other. The capsules are ellipsoids around a round shaft and a blob base.",
+      "description": "🚓 The expolsion axonometry of a futuristic variant of the Nakagin Capsule Tower where two towers are dancing with each other. The capsules are ellipsoids around a round shaft and a blob base.",
       "createdAt": "2025-11-23T01:10:22.721Z",
       "updatedAt": "2025-11-23T01:10:22.721Z"
     },
@@ -774,7 +774,7 @@
       "icon": "icons/capsule-dream.svg",
       "updatedAt": "2025-11-23T01:10:23.177Z",
       "createdAt": "2025-11-23T01:10:23.177Z",
-      "description": "A wild dream of capsule towers.",
+      "description": "🚗 A wild dream of capsule towers.",
       "unit": "m",
       "image": "images/capsule-dream.png"
     },
@@ -787,7 +787,7 @@
         "guid": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8"
       },
       "image": "images/capsule-dream.png",
-      "description": "A wild dream of capsule towers.",
+      "description": "🚒 A wild dream of capsule towers.",
       "createdAt": "2025-11-23T01:11:03.4Z",
       "updatedAt": "2025-11-23T01:11:03.4Z"
     },
@@ -800,7 +800,7 @@
         "guid": "c3ee87b6-7453-49bc-8d7b-9405892f9452"
       },
       "image": "images/nakagin-capsule-tower_dancing_axonometry_explosion.png",
-      "description": "The expolsion axonometry of a futuristic variant of the Nakagin Capsule Tower where two towers are dancing with each other. The capsules are ellipsoids around a round shaft and a blob base.",
+      "description": "🛻 The expolsion axonometry of a futuristic variant of the Nakagin Capsule Tower where two towers are dancing with each other. The capsules are ellipsoids around a round shaft and a blob base.",
       "createdAt": "2025-11-23T01:11:04.468Z",
       "updatedAt": "2025-11-23T01:11:04.468Z"
     },
@@ -813,7 +813,7 @@
         "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
       },
       "image": "images/nakagin-capsule-tower.png",
-      "description": "The digital shadow of the former Nakagin Capsule Tower which was a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan. Completed in 1972, the building was a rare remaining example of Japanese Metabolism, an architectural movement emblematic of Japan's postwar cultural resurgence.",
+      "description": "🚑 The digital shadow of the former Nakagin Capsule Tower which was a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan. Completed in 1972, the building was a rare remaining example of Japanese Metabolism, an architectural movement emblematic of Japan's postwar cultural resurgence.",
       "createdAt": "2025-11-23T01:11:04.537Z",
       "updatedAt": "2025-11-23T01:11:04.537Z"
     },
@@ -826,7 +826,7 @@
         "guid": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf"
       },
       "image": "images/nakagin-capsule-tower_slanted.png",
-      "description": "A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
+      "description": "🚚 A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
       "createdAt": "2025-11-23T01:11:04.613Z",
       "updatedAt": "2025-11-23T01:11:04.613Z"
     },
@@ -839,7 +839,7 @@
         "guid": "38f0f014-ceba-42df-9339-4aab84bfbc1f"
       },
       "image": "images/nakagin-capsule-tower_twisted.png",
-      "description": "A twisted variant of the Nakagin Capsule Tower where the capsules are trapezoids and towers are round with the floors twisting in one direction.",
+      "description": "🚛 A twisted variant of the Nakagin Capsule Tower where the capsules are trapezoids and towers are round with the floors twisting in one direction.",
       "createdAt": "2025-11-23T01:11:04.687Z",
       "updatedAt": "2025-11-23T01:11:04.687Z"
     }
@@ -3016,7 +3016,7 @@
       "guid": "c3326230-4951-5e08-9752-d934dbc5a88f",
       "key": "construction cost",
       "name": "construction cost",
-      "unit": "\u20ac"
+      "unit": "€"
     },
     {
       "guid": "7ed15c6b-b191-5da7-94a8-4443649d3593",
@@ -3095,7 +3095,7 @@
       "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2",
       "key": "effective floor area",
       "name": "effective floor area",
-      "unit": "m\u00b2",
+      "unit": "m²",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
@@ -3159,7 +3159,7 @@
       "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a",
       "key": "income",
       "name": "income",
-      "unit": "\u20ac/a"
+      "unit": "€/a"
     },
     {
       "guid": "9a71931b-2837-571d-9169-83229724d78f",
@@ -3172,7 +3172,7 @@
       "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77",
       "key": "maintenance expenses",
       "name": "maintenance expenses",
-      "unit": "\u20ac/a"
+      "unit": "€/a"
     },
     {
       "guid": "d275c0f3-ca32-5d4f-bb0a-b376c227696d",
@@ -3183,13 +3183,13 @@
       "guid": "cebf60ec-cdac-50be-947a-227fbe6ffae7",
       "key": "operational cost",
       "name": "operational cost",
-      "unit": "\u20ac/a"
+      "unit": "€/a"
     },
     {
       "guid": "6d49703d-3f1a-5657-be01-bb9893094695",
       "key": "operational energy cost",
       "name": "operational energy cost",
-      "unit": "\u20ac/a"
+      "unit": "€/a"
     },
     {
       "guid": "ab3f6488-2804-5a2a-af74-65618a218f44",
@@ -3236,7 +3236,7 @@
       "guid": "eded115b-256c-5752-8756-923d0aecf8fd",
       "key": "return",
       "name": "return",
-      "unit": "\u20ac/a"
+      "unit": "€/a"
     },
     {
       "guid": "49e9512a-b7f7-5c60-bdee-b52871c9a14a",
@@ -3248,14 +3248,14 @@
       "guid": "aed5edc4-5c23-5d5e-852b-e8670ad517ee",
       "key": "specific energy demand",
       "name": "specific energy demand",
-      "unit": "kWh/m\u00b2a",
+      "unit": "kWh/m²a",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
       "guid": "65d42370-990c-533d-a2ed-386714af2f46",
       "key": "specific operational global warming potential",
       "name": "specific operational global warming potential",
-      "unit": "kgCO2e/m\u00b2a",
+      "unit": "kgCO2e/m²a",
       "uri": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     },
     {

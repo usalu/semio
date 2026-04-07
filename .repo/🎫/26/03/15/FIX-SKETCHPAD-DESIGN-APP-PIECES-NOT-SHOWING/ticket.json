@@ -1,5 +1,6 @@
 {
   "title": "Fix Sketchpad Design App Pieces Not Showing",
+  "emoji": "🔧",
   "status": "closed",
   "description": "No pieces are showing in the sketchpad design app. E.g. nakagin capsule tower shows empty diagram and model. Investigate and fix the rendering of pieces in Design.tsx.",
   "summary": "Fixed pieces not rendering in the 3D scene of the Design app. Root cause: R3F v9 creates a separate React reconciler root, so DOM-tree React contexts (DesignScopeContext, KitScopeContext, SketchpadScopeContext, DesignAppScopeContext, DesignAppActorContext, DesignFilterContext, HoverIntentContext, TransactionPiecesContext, HoverPiecesContext) were not available inside the R3F Canvas. All hooks (useDesign, usePiece, useType, useKitStore, useKitFiles, etc.) returned null inside R3F, causing ModelDesign to render zero pieces. Fix: Created a SceneContextBridge component that reads all context values in the DOM tree (DesignAppScene) and re-provides them inside the R3F tree via nested Context.Provider wrappers. Exported DesignScopeContext, KitScopeContext, SketchpadScopeContext from Sketchpad.tsx. Added useSketchpadScope import to Design.tsx. Verified 180 pieces render with blob URLs in the 3D scene. All 21 tests pass.",

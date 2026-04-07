@@ -1,9 +1,8 @@
-// #region 🔖Header
-// [🧰repo⌨️server🛅app💻layout](repo://p/i/repo/b/b/server/f/app/layout.tsx)
+// #region 🧲Header
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0
 // Root layout for the repo server web app.
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 export const metadata = {
   title: "semio repo",

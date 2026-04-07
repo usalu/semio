@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda📦blnbo💻main](repo://p/r/coda/b/l/blnbo/f/main.go)
+// #region 🧲Header
 //
 // Summary: Go validator for blnbo (Berlin Building Code) target. Validates staircase placement and building height rules.
 //
@@ -15,8 +14,7 @@ import (
 	"os"
 )
 
-// #region 🔖Translation
-// [🔬coda📦blnbo💻main🔖translation](repo://p/r/coda/b/l/blnbo/f/main.go/s/Translation)
+// #region 🗄️Translation
 // Translation input from semio-to-blnbo translator.
 
 type Translation struct {
@@ -56,8 +54,7 @@ type Staircase struct {
 
 // #endregion
 
-// #region 🔖Report
-// [🔬coda📦blnbo💻main🔖report](repo://p/r/coda/b/l/blnbo/f/main.go/s/Report)
+// #region 🎃Report
 // Validation report output.
 
 type Report struct {
@@ -99,8 +96,7 @@ func run() error {
 	return nil
 }
 
-// #region 🔖Validate
-// [🔬coda📦blnbo💻main🔖validate](repo://p/r/coda/b/l/blnbo/f/main.go/s/Validate)
+// #region 🧬Validate
 // Validate MUST apply all Berlin Building Code rules and return a report.
 
 func validate(trans Translation) Report {
@@ -114,8 +110,7 @@ func validate(trans Translation) Report {
 
 // #endregion
 
-// #region 🔖StaircaseLocated
-// [🔬coda📦blnbo💻main🔖staircaselocated](repo://p/r/coda/b/l/blnbo/f/main.go/s/StaircaseLocated)
+// #region 🗡️StaircaseLocated
 // StaircaseLocated MUST check that necessary staircases are in separate stairwells (BauO Bln §35).
 // Exemptions: external staircases, building classes 1/2, staircases connecting ≤2 storeys
 // within a single usage unit ≤200m² GFA with separate escape routes per storey.
@@ -288,8 +283,7 @@ func staircaseRequiresSeparateStairwell(clauses []Clause) bool {
 
 // #endregion
 
-// #region 🔖BuildingHeightLimit
-// [🔬coda📦blnbo💻main🔖buildingheightlimit](repo://p/r/coda/b/l/blnbo/f/main.go/s/BuildingHeightLimit)
+// #region 🐘BuildingHeightLimit
 // BuildingHeightLimit MUST check that the building height is less than 21m (BauO Bln §2 high-rise threshold).
 
 const maxBuildingHeight = 21.0

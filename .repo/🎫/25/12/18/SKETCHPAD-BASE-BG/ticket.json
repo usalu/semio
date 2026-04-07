@@ -1,5 +1,6 @@
 {
   "title": "Restore base background for Sketchpad canvas",
+  "emoji": "✏️",
   "status": "closed",
   "description": "Sketchpad needs to have base background",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"

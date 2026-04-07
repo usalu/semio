@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/ui/.storybook/preview.ts
 // Specs: Match elements/ui Storybook globals and decorators.
 // Summary: Defines global Storybook preview parameters for semio ui.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import type { Preview } from "@storybook/react-vite";
 import { withLevel } from "./withLevel";

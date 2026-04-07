@@ -1,5 +1,6 @@
 {
   "title": "Complete Kiro Cli Integration",
+  "emoji": "📋",
   "status": "closed",
   "description": "Add Kiro CLI as a fully supported client with all trusted permissions. Update GEMINI.md, CLAUDE.md, repo/cli/templates/agents/system.tpl with kiro-cli in Available Clients. Add devcontainer kiro mount. Build and verify Go CLI compiles.",
   "summary": "Completed Kiro CLI integration: updated Available Clients in AGENTS.md, GEMINI.md, CLAUDE.md, system.tpl to include kiro-cli. Added devcontainer volume mount for ~/.kiro. Verified .kiro/agents/semio.json and .kiro/settings/mcp.json. Verified Go CLI KiroCliEditorProvider, AllowedClients, generateKiroCliConfig, resolveKiroCliEvent. Build and tests pass.",

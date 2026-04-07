@@ -18,7 +18,7 @@ test.describe('Test group', () => {
     await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(2000);
 
-    // Import kit via zip upload
+    // 📥Import kit via zip upload
     const zipPath = path.resolve(__dirname, "semio/assets/semio/metabolism.zip");
     const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
     await expect(fileInput).toBeAttached({ timeout: 10000 });
@@ -27,12 +27,12 @@ test.describe('Test group', () => {
       el.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
-    // Wait for Metabolism kit to appear
+    // 📝Wait for Metabolism kit to appear
     const metabolismText = page.getByText("Metabolism", { exact: true }).first();
     await metabolismText.waitFor({ state: "visible", timeout: 60000 });
     await page.waitForTimeout(500);
 
-    // Navigate to kit
+    // 📊Navigate to kit
     const tableRow = page.locator("tr[data-row-id]").filter({ hasText: "Metabolism" }).first();
     const isTableRowVisible = await tableRow.isVisible().catch(() => false);
     if (isTableRowVisible) {
@@ -44,7 +44,7 @@ test.describe('Test group', () => {
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(3000);
 
-    // Find and navigate to design
+    // 🔷Find and navigate to design
     const allRowIds = await page.evaluate(() => {
       return Array.from(document.querySelectorAll("[data-row-id]"))
         .map((el) => el.getAttribute("data-row-id"));

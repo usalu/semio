@@ -1,0 +1,13 @@
+{
+  "title": "Fix Paste Target Size And Story Layout",
+  "status": "closed",
+  "description": "Fix paste target design to be 9 pieces / 8 connections (flat tambour + capsules). Fix story layout: target below source, two diff outputs (WithCoord + WithoutCoord) in one story.",
+  "summary": "Fixed windows not showing in CopyAndPaste story. Root cause: custom LAYOUT used `id` and `label` on window nodes but UIWindowLayoutWindowNode requires `windowKindId` and `title`. convertWindowLayoutNodeToGoldenConfig reads `child.windowKindId` for GoldenLayout componentName — with `id` it was undefined, so no windows rendered. Also fixed TypeScript error on metabolismKit.designs cast.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1300"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪51ac6caa28dd4ebfbdc7cea5e40f564b"
+  ]
+}

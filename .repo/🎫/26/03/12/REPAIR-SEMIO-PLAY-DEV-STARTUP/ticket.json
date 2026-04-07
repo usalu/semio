@@ -1,5 +1,6 @@
 {
   "title": "Repair Semio Play Dev Startup",
+  "emoji": "📋",
   "status": "closed",
   "description": "Restore corrupted semio/play code and configuration so dev server starts and runs correctly, then verify runtime.",
   "summary": "Restored semio play dev startup by switching watcher mode to polling to avoid ENOSPC watcher-limit failures; also fixed corrupted ticket file exclusion logic in CLI that prevented ticket closure.",

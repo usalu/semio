@@ -1,11 +1,10 @@
-#region 🔖Header
-// [👤semio📚net🛅semiotests💻tests](repo://p/u/semio/b/l/net/fd/req/Semio.Tests/f/Tests.cs)
+#region 📱Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion 🔖Header
+#endregion 📱Header
 
 using Semio;
 using Newtonsoft.Json;
@@ -611,6 +610,92 @@ public class Tests
         }
     }
 
+    public class CopyAndPaste
+    {
+        private sealed class Selection
+        {
+            public List<PieceId> Pieces { get; set; } = new();
+            public List<ConnectionId> Connections { get; set; } = new();
+        }
+
+        [Fact]
+        public void Nakagin_Capsule_Tower_Copy_Paste_Roundtrip()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var pasteTargetDesign = Tests.LoadAsset<Design>("nakagin-capsule-tower.paste.design.semio.json");
+            var selection = Tests.LoadAsset<Selection>("nakagin-capsule-tower.copy.design.selection.semio.json");
+
+            var pieceGuids = selection.Pieces.Select(p => p.Guid).ToList();
+            var connectionGuids = selection.Connections.Select(c => c.Guid).ToList();
+
+            // Compute CopyDesign
+            var copyDesign = Design.CopyDesign(kit, design, pieceGuids, connectionGuids);
+
+            // Compute PasteDesign without coord (paste into the second storey target design)
+            var pasteDiff = Design.PasteDesign(kit, copyDesign, pasteTargetDesign, "original");
+
+            // Compute PasteDesign with coord
+            var pasteWithCoordDiff = Design.PasteDesign(kit, copyDesign, pasteTargetDesign, "original", new Coord { U = 10, V = 10 });
+
+            // Save the generated files for cross-language comparison
+            var copyJson = Utility.Serialize(copyDesign, "  ");
+            var pasteJson = Utility.Serialize(pasteDiff, "  ");
+            var pasteWithCoordJson = Utility.Serialize(pasteWithCoordDiff, "  ");
+            System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "nakagin-capsule-tower.copy.design.semio.json"), copyJson);
+            System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "nakagin-capsule-tower.paste.design.diff.semio.json"), pasteJson);
+            System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "nakagin-capsule-tower.paste.with-coord.design.diff.semio.json"), pasteWithCoordJson);
+
+            // Verify copy piece and connection counts
+            Assert.Equal(11, copyDesign.Pieces.Count);
+            Assert.Equal(9, copyDesign.Connections.Count);
+
+            // Verify each piece guid exists
+            var copyPieceGuids = new HashSet<string>(copyDesign.Pieces.Select(p => p.Guid));
+            foreach (var g in pieceGuids)
+                Assert.True(copyPieceGuids.Contains(g), $"Selected piece {g} not found in copy output");
+
+            // Verify external pieces have semio.piece.origin and semio.center attributes
+            var externalPieces = copyDesign.Pieces.Where(p => p.Attributes.Any(a => a.Key == "semio.piece.origin" && a.Value == "external")).ToList();
+            Assert.Single(externalPieces);
+            foreach (var ext in externalPieces)
+            {
+                Assert.True(ext.Attributes.Any(a => a.Key == "semio.center"), $"External piece {ext.Guid} missing semio.center");
+            }
+
+            // Verify pp_excl_pc_incl pieces have semio.center and semio.plane attributes
+            var ppExclPcInclPieces = copyDesign.Pieces.Where(p =>
+                p.Attributes.Any(a => a.Key == "semio.center") && !p.Attributes.Any(a => a.Key == "semio.piece.origin")).ToList();
+            Assert.Single(ppExclPcInclPieces);
+            foreach (var pp in ppExclPcInclPieces)
+            {
+                Assert.True(pp.Attributes.Any(a => a.Key == "semio.plane"), $"Pp-excl-pc-incl piece {pp.Guid} missing semio.plane");
+            }
+
+            // Verify paste without coord
+            Assert.NotNull(pasteDiff.Pieces);
+            Assert.NotNull(pasteDiff.Pieces!.Added);
+            foreach (var addedPiece in pasteDiff.Pieces.Added)
+            {
+                Assert.False(addedPiece.Attributes.Any(a => a.Key == "semio.piece.origin" && a.Value == "external"),
+                    $"External-origin piece {addedPiece.Guid} should not be in paste output");
+            }
+            Assert.NotNull(pasteDiff.Connections);
+            Assert.NotNull(pasteDiff.Connections!.Added);
+
+            // Verify paste with coord
+            Assert.NotNull(pasteWithCoordDiff.Pieces);
+            Assert.NotNull(pasteWithCoordDiff.Pieces!.Added);
+            foreach (var addedPiece in pasteWithCoordDiff.Pieces.Added)
+            {
+                Assert.False(addedPiece.Attributes.Any(a => a.Key == "semio.piece.origin" && a.Value == "external"),
+                    $"External-origin piece {addedPiece.Guid} should not be in paste with-coord output");
+            }
+            Assert.NotNull(pasteWithCoordDiff.Connections);
+            Assert.NotNull(pasteWithCoordDiff.Connections!.Added);
+        }
+    }
+
     public class DesignModel
     {
         private static Model? SelectBestModelLikeSemioTs(List<Model> models, List<string> selectedTagGuids)
@@ -1030,7 +1115,7 @@ public class Tests
         }
     }
 
-    #region 🔖Hash
+    #region 🎬Hash
     // Hash tests for Merkle hash functions.
 
     public class HashTests
@@ -1041,7 +1126,7 @@ public class Tests
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
 
             var hash = Hashing.HashKit(kit);
-            Assert.Equal("4a8b056c2e80616afd25addb1bc31204da9879714c78ef2ec213df691a043160", hash);
+            Assert.Equal("d786ae5cd2cb18d78f0d80df92ded94905adf708df077206f72162d43dd8767c", hash);
         }
 
         [Fact]
@@ -1213,9 +1298,9 @@ public class Tests
         }
     }
 
-    #endregion 🔖Hash
+    #endregion 🎬Hash
 
-    #region 🔖MaxChildren
+    #region 🐙MaxChildren
 
     public class MaxChildrenTests
     {
@@ -1290,6 +1375,6 @@ public class Tests
         }
     }
 
-    #endregion 🔖MaxChildren
+    #endregion 🐙MaxChildren
 
 }

@@ -1,5 +1,6 @@
 {
   "title": "Move Semio Server Compose Setup Into Semio",
+  "emoji": "📦",
   "status": "closed",
   "description": "Move semio server setup that is wrongly stored under the repo technology into the semio bundle so semio-specific compose infrastructure only lives inside semio. Update existing references and verify the compose configuration from its new semio location.",
   "summary": "Moved the semio server compose setup out of the repo technology and into semio/server/compose.yml. Updated all relative paths for the new location, removed the misplaced repo/compose.yml, and replaced the broken Dockerfile.session build reference with a direct Rust-based session service command so the compose file is internally consistent from its semio-owned location. Validated the moved file by parsing it with the local Node YAML library and confirming the expected services are present.",

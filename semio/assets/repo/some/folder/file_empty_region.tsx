@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [💻semio/assets/repo/some/folder/file_empty_region.tsx](repo://file/semio/assets/repo/some/folder/file_empty_region.tsx)
+// #region 🧲Header
 
 // 2025 Test User <test@test.com>
 
@@ -7,10 +6,10 @@
 
 // An empty region TypeScript file for testing.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Content
+// #region 🖇️Content
 
 const CONTENT = "has content";
 
-// #endregion 🔖Content
+// #endregion 🖇️Content

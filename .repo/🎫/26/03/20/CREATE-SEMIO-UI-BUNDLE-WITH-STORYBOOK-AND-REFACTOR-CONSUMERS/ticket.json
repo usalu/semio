@@ -1,5 +1,6 @@
 {
   "title": "Create Semio UI Bundle with Storybook and Refactor Consumers",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Create a new bundle semio/ui that holds reusable UI components. Make sure that all general UI dependencies such as react, tailwind, etc are defined there. Create a storybook for it. Refactor sketchpad and algorithms to use the ui package.",
   "summary": "Created @semio/ui bundle that re-exports @elements/ui and holds all general UI dependencies (react, tailwind, storybook). Added storybook configuration with theme/level decorators and a Button story. Refactored sketchpad and algorithms to use @semio/ui instead of @elements/ui. All TypeScript checks pass clean.",

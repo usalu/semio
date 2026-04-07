@@ -1,5 +1,6 @@
 {
   "title": "node-tests-fix",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
   "goal": "🎯aioptimizedrepo"

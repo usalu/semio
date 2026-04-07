@@ -1,5 +1,6 @@
 {
   "title": "Refactor Semio UI Components Stories and API Consistency",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Refactor semio/ui cleanly: 1) Use general UI elements/configs from elements/ui, 2) All stories must have same naming patterns (first story is always Default with max features minimal setup), 3) All components must use minimal data (Diagram only design, Scene only filtered kit with one model and file per type), 4) All stories must work (Kit is broken), 5) Design, Diagram, Scene must have equal API and Story layout and naming.",
   "summary": "Fixed semio engine MCP kit payload generation so real-data kitArtifacts preserve design and kind parent references, allowing SemioKit breadcrumb dependency chains to build the same way they do in the UI story. Added regression coverage for metabolism folder loading and direct payload building.",

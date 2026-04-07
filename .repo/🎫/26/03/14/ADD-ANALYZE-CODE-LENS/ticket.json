@@ -1,5 +1,6 @@
 {
   "title": "Add Analyze Code Lens",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add Analyze Code Lens on top of every definition to run analyze command and show markdown output.",
   "summary": "Added Analyze Code Lens on top of every definition and implemented semio.analyze command to show markdown output. Also fixed several preexisting TS syntax errors in extension.ts and semio.ts.",

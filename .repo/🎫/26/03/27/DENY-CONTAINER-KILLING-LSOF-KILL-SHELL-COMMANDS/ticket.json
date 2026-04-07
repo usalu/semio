@@ -1,5 +1,6 @@
 {
   "title": "Deny Container-Killing lsof/kill Shell Commands",
+  "emoji": "📋",
   "status": "closed",
   "description": "When invoking commands like `kill $(lsof -t -i:9876)` (any port), the devcontainer is killed and all running work stops. Update agent hooks to deny this pattern (and equivalent variants) and return a meaningful reason, suggesting safer alternatives.",
   "summary": "Blocked container-killing terminal commands like `kill $(lsof -t -i:PORT)` in agent shell hooks via `IsToolBlocked`/`isCommandSegmentBlocked`, with a clear denial reason. Added regression tests and fixed repo/cli build by restoring missing `EditorHookMapping` alias + `EditorProvider` interface methods.",

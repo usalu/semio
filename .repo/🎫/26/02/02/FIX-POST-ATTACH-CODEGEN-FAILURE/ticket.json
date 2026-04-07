@@ -1,5 +1,6 @@
 {
   "title": "Fix Post-Attach Codegen Failure",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix post-attach codegen failure: duplicate identifier 'filterProvider' in repo/vscode/extension.ts during graphql-codegen.",
   "summary": "Resolved codegen failure by consolidating sidebar view registration to a single filter provider, restoring monorepo view wiring, and documenting the sidebar registration expectations.",

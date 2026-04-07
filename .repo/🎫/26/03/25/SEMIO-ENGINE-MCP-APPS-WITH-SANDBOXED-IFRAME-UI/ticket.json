@@ -1,5 +1,6 @@
 {
   "title": "Semio Engine MCP Apps with Sandboxed Iframe UI",
+  "emoji": "🎨",
   "status": "closed",
   "description": "Extend the semio engine MCP server with apps. Add ConnectionSelection component, 8 MCP app tools (show_design, show_diagram, show_scene, show_diff, show_diagram_diff, select_pieces, select_connections, select_pieces_and_connections), session selection state, and sandboxed iframe widget support.",
   "summary": "Extended semio engine MCP server with full app support: (1) Added ConnectionSelection component to semio/ui as constrained SemioDiagram wrapper for connection-only selection. (2) Added session-scoped selection and camera state. (3) Added 3 selection tools. (4) Added 8 MCP app tools. (5) Added sandboxed iframe HTML widget at /api/app/design-viewer. (6) Added 23 new tests.",

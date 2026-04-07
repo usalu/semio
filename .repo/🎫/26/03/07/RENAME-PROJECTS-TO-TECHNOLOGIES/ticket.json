@@ -1,5 +1,6 @@
 {
   "title": "Rename Projects to Technologies",
+  "emoji": "🏷️",
   "status": "open",
   "description": "Rename the Project entity to Technology throughout the repo codebase including GraphQL schema, SQLite schema, Go code, tests, and documentation",
   "github": {

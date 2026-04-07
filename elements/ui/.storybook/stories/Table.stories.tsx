@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // 🥼︎ semio/js/.storybook/stories/elements/window/Table.stories.tsx
 
@@ -6,13 +6,13 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { Table, TableAvatar, TableColumn, TableSkeleton } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { FileCode, FileImage, FolderIcon } from "lucide-react";
 
-// #region 🔖Table
+// 📊#region 🛎️Table
 const meta = {
   title: "elements/Table",
   component: Table,
@@ -214,9 +214,9 @@ export const WithIconAvatars: Story = {
   },
 };
 
-// #endregion 🔖Table
+// #endregion 🛎️Table
 
-// #region 🔖TableSkeleton
+// 📊#region ⏰TableSkeleton
 export const SkeletonDefault: Story = {
   args: { columns: [], data: [] },
   render: () => (
@@ -234,4 +234,4 @@ export const SkeletonMinimal: Story = {
     </div>
   ),
 };
-// #endregion 🔖TableSkeleton
+// #endregion ⏰TableSkeleton

@@ -1,5 +1,6 @@
 {
   "title": "Optimize TypeApp state management to fix overfetching and overrendering",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Optimize TypeApp state management to fix overfetching and overrendering",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"

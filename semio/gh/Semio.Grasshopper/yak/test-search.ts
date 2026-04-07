@@ -1,6 +1,5 @@
 #!/usr/bin/env tsx
-// #region 🔖Header
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜testsearch](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-search.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -8,10 +7,9 @@
 
 // Tests Yak package search functionality for the Grasshopper plugin.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Script
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearch🔖script](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-search.ts/s/Script)
+// #region 🪙Script
 // Test script for searching the Yak package manager test server.
 // Script MUST execute yak search against the test.yak.rhino3d.com server.
 
@@ -19,9 +17,8 @@ import { execSync } from "child_process";
 
 /**
  * Path to the Yak package manager executable.
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻testsearch🔖script🪨yak](repo://p/u/semio/b/l/gh/fd/req/Semio.Grasshopper/fd/org/yak/f/test-search.ts/s/Script/d/i/yak)
  * Yak path MUST point to the Rhino 8 System directory.
  **/
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 execSync(`"${yak}" search --source https://test.yak.rhino3d.com --all --prerelease semio`, { stdio: "inherit" });
-// #endregion 🔖Script
+// #endregion 🪙Script

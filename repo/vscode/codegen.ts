@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🧰repo🖱️vscode💻codegen](repo://p/i/repo/b/u/vscode/f/codegen.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Code generation script for VS Code extension GraphQL types.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [🧰repo🖱️vscode💻codegen🔖configuration](repo://p/i/repo/b/u/vscode/f/codegen.ts/s/Configuration)
+// #region 🗄️Configuration
 // GraphQL code generation configuration for the VS Code extension.
 // Configuration MUST generate typed client code from the GraphQL schema.
 
@@ -18,7 +16,6 @@ import type { CodegenConfig } from "@graphql-codegen/cli";
 
 /**
  * GraphQL codegen configuration targeting the schema and query documents.
-// [🧰repo🖱️vscode💻codegen🔖configuration🪨config](repo://p/i/repo/b/u/vscode/f/codegen.ts/s/Configuration/d/i/config)
  * Config MUST reference the GraphQL schema and generate client preset output.
  **/
 const config: CodegenConfig = {
@@ -37,4 +34,4 @@ const config: CodegenConfig = {
 };
 
 export default config;
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

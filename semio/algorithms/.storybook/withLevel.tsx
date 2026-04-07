@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/algorithms/.storybook/withLevel.tsx
 // Specs: Keep level decorator behavior consistent with .elements/ui.
 // Summary: Wraps stories with optional level-aware backgrounds.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { type Level, LevelProvider, getLevelBgClass } from "@elements/ui";
 import type { Decorator } from "@storybook/react";

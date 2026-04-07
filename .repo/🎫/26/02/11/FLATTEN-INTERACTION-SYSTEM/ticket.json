@@ -1,5 +1,6 @@
 {
   "title": "Flatten Interaction System",
+  "emoji": "📋",
   "status": "closed",
   "description": "Interactions should be flattened from nested system object to flat system and client strings. Migrate all existing goals.json and tickets.json to the new format.",
   "summary": "Bulk close",

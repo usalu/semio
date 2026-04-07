@@ -1,5 +1,6 @@
 {
   "title": "Fix D3 Force Simulation To Match Canonical Example",
+  "emoji": "🔧",
   "status": "closed",
   "summary": "Implemented D3 force simulation drag behavior matching the canonical example at https://d3js.org/d3-force. Added isDragReheatActiveRef to track drag-initiated reheats, updated drag handlers to check simulation alpha before reheating (equivalent to event.active check), and only cool down if we initiated the reheat. The simulation now properly responds to drag with connected and nearby nodes moving in real-time through force calculations.",
   "github": {

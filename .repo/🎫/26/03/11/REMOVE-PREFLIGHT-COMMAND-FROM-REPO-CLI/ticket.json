@@ -1,5 +1,6 @@
 {
   "title": "Remove Preflight Command From Repo Cli",
+  "emoji": "🗑️",
   "status": "closed",
   "description": "Remove the repo CLI preflight command entirely, including command registration, runtime handlers, tests, and references in docs/help expectations.",
   "summary": "Removed preflight command entirely from repo CLI by deleting command registration, preflight command implementation, and preflight dry-run flag wiring.",

@@ -1,5 +1,6 @@
 {
   "title": "Refactor Id System With Entity Emoji Prefix",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Update the ID system in repo cli, vscode and server to use entity emoji prefix, kind emoji after entity, and remove separators for fixed-length inputs. Implement interactions properly.",
   "summary": "Refactored ID system to entity-emoji-prefix format. Updated GetArtifactID, GetArtifactURI, IdToUri, UriToId, all struct GetID methods, Node resolver. Added interaction support. Fixed URI consistency. All Go tests pass.",

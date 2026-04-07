@@ -1,5 +1,6 @@
 {
   "title": "Implement Merkle Hash Functions for All Entities",
+  "emoji": "🔨",
   "status": "closed",
   "description": "Define hash* function for every entity. Use hashes of the collections for the children. Build a merkle hash tree. Hence hashKit calls hashDesign that calls hashPiece, etc. Extend a test Kit/Hash. Implement it for every programming language. They all MUST return the same hash.",
   "summary": "Fixed scene pieces showing red in all states by removing the hardcoded SCENE_SEMIO_COLOR (#ff344f brand red) as the base mesh color. ScenePieceModel now uses a neutral gray (--muted-foreground) for default pieces and the appropriate status color (red/green/yellow) for diffed pieces. ScenePiece box fallback now uses meshColor (gray for default, status color for diffed, accent for selected/hovered) matching the SceneConnection pattern. Removed the unused SCENE_SEMIO_COLOR constant.",

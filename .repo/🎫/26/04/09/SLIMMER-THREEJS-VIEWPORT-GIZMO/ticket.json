@@ -1,0 +1,10 @@
+{
+  "title": "Slimmer Threejs Viewport Gizmo",
+  "status": "closed",
+  "description": "Make semio ui SceneGizmo (drei GizmoViewport) thinner and cleaner: reduce axis scale, head scale, margins; avoid chunky cube appearance.",
+  "summary": "Fixed chunky GizmoViewport: axisScale was [1.35,1.35,1.35] which replaces drei's [length,thickness,thickness] default with a fat cube. Set [0.88,0.036,0.036], axisHeadScale 0.92, hideNegativeAxes, margin 80, font 16px in semio/ui SceneGizmo and elements/ui Gizmo. semio/ui vitest 230 passed; elements/ui 25 passed.",
+  "goal": "🎯uipolish",
+  "sessions": [
+    "⚪782c1113673c4af1a1ebec6d15010bee"
+  ]
+}

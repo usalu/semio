@@ -1,5 +1,6 @@
 {
   "title": "STATE-MANAGEMENT-REFACTOR",
+  "emoji": "♻️",
   "status": "closed",
   "description": "\"Implement state management refactor plan: fix hasInitialized patterns, remove duplicate handlers, replace useKit() overfetch with narrow hooks, fix effect dependencies, remove window module cache patterns\"",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"

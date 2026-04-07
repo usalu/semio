@@ -1,5 +1,6 @@
 {
   "title": "Fix All Codebase Breachs",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix all breachs from all statutes. Summarize, document and migrate existing requirements into most specific location for the complete codebase. Add missing sections, etc. Only stop once analyze returns an empty list.",
   "summary": "Fixed all 14014 breachs to 0.",

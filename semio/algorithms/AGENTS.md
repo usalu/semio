@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: algorithms
- emoji: 📚
+ emoji: 🧬
  description: The algorithms bundle for semio.
  kind: library
 ---

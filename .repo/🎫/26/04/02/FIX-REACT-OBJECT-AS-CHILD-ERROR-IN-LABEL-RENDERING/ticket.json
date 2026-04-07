@@ -1,5 +1,6 @@
 {
   "title": "Fix React Object as Child Error in Label Rendering",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix the React error: Objects are not valid as a React child (found: object with keys {label}) in span component",
   "summary": "Fixed Objects not valid as React child error. Added resolveTranslationLabel() utility to safely extract strings from i18n translation objects. Wrapped all problematic t()/i18n.t() calls in the sketchpad toolbar, dropzone, and port/tag sections.",

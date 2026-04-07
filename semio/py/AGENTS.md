@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: py
- emoji: 📚
+ emoji: 🐍
  description: The py bundle for semio.
  kind: library
 ---

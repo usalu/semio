@@ -1,5 +1,6 @@
 {
   "title": "Allow Glob Patterns in Files Godfile",
+  "emoji": "✨",
   "status": "closed",
   "description": "Extend .repo/files.json to allow for glob patterns.",
   "summary": "Added glob support for .repo/files.json in file policy with exact+glob matcher and tests.",

@@ -1,5 +1,6 @@
 {
   "title": "Fix Add Piece and Duplicate in Workbench",
+  "emoji": "🔧",
   "status": "open",
   "description": "Fix two issues in the sketchpad workbench: (1) Add piece should place the new piece at world origin (0,0,0) visible in both diagram and scene. (2) Duplicate should add a new piece of the same type/design named \"typename + Copy\", placed below the existing piece in the diagram/scene.",
   "github": {

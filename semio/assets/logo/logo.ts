@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🏪assets🛅logo💻logo](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -9,22 +8,19 @@
 
 // Generates animated SVG logo from static SVG input with keyframe sequences.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-//#region 🔖Imports
-// [👤semio🏪assets🛅logo💻logo🔖imports](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Imports)
+//#region ⛩️Imports
 // MUST import Node.js file system, DOM parsing, and path resolution modules.
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
 import * as path from "path";
-//#endregion 🔖Imports
+//#endregion ⛩️Imports
 
-//#region 🔖Types
+//#region ⚙️Types
 // Types MUST provide the types functionality.
-// [👤semio🏪assets🛅logo💻logo🔖types](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types)
 /**
 // TransformData holds the data fields for a TransformData record.
- * [👤semio🏪assets🛅logo💻logo🔖types✂️transformdata](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/TransformData)
  **/
 interface TransformData {
   translate: { x: number; y: number };
@@ -34,7 +30,6 @@ interface TransformData {
 
 /**
  * GroupData holds the data fields for a GroupData record.
- * [👤semio🏪assets🛅logo💻logo🔖types✂️groupdata](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/GroupData)
  **/
 interface GroupData {
   id: string;
@@ -48,20 +43,16 @@ interface GroupData {
 }
 
 * KeyframeData holds the data fields for a KeyframeData record.
- * [👤semio🏪assets🛅logo💻logo🔖types✂️keyframedata](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Types/d/i/KeyframeData)
  **/
 interface KeyframeData {
   groups: GroupData[];
 }
-//#endregion 🔖Types
+//#endregion ⚙️Types
 
-//#region 🔖Logo Generation
+//#region 🧿Logo Generation
 // Logo Generation MUST provide the logo generation functionality.
-// [👤semio🏪assets🛅logo💻logo🔖logogeneration](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation)
 
 /**
- * [👤semio🏪assets🛅logo💻logo🔖logogeneration](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation)
-// [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️transformtomatrix](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/transformToMatrix)
  * Functions for parsing SVG files and generating animated SVG logos.
  **/
 function transformToMatrix(translate: { x: number; y: number }, rotate: { angle: number; cx: number; cy: number }, scale: { x: number; y: number }): string {
@@ -115,8 +106,6 @@ function transformToMatrix(translate: { x: number; y: number }, rotate: { angle:
     return `${a} ${b} ${c} ${d} ${e} ${f}`;
   }
 
-  // [👤semio🏪assets🛅logo💻logo🔖logogeneration🛠️parsetransform](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
-  * [👤semio🏪assets🛅logo💻logo🔖logogeneration🪨parsetransform](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/d/i/parseTransform)
  * parseTransform holds the data fields for a parseTransform record.
  **/
 function parseTransform(transformStr: string): TransformData {
@@ -214,10 +203,9 @@ function parseTransform(transformStr: string): TransformData {
       return result;
     }
 
-//#region 🔖Parse SVG
-// [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖parsesvg](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Parse%20SVG)
+//#region 🎈Parse SVG
 // MUST read SVG content and extract all group transforms and path attributes.
-// Parses an SVG file and returns keyframe data with group transforms and paths.
+// 🔄Parses an SVG file and returns keyframe data with group transforms and paths.
 function parseSVGFile(filePath: string): KeyframeData {
   const svgContent = fs.readFileSync(filePath, "utf-8");
   const dom = new JSDOM(svgContent, { contentType: "text/xml" });
@@ -248,12 +236,11 @@ function parseSVGFile(filePath: string): KeyframeData {
 
   return { groups };
 }
-//#endregion 🔖Parse SVG
+//#endregion 🎈Parse SVG
 
-//#region 🔖Generate Keyframe Sequence
-// [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖generatekeyframesequence](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Generate%20Keyframe%20Sequence)
+//#region 📮Generate Keyframe Sequence
 // MUST produce forward and reverse sequence for smooth animation looping.
-// Generates a palindromic keyframe sequence with triple repetition per frame.
+// 🔷Generates a palindromic keyframe sequence with triple repetition per frame.
 function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
   const sequence: KeyframeData[] = [];
 
@@ -271,12 +258,11 @@ function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
 
     return sequence;
   }
-  //#endregion 🔖Generate Keyframe Sequence
+  //#endregion 📮Generate Keyframe Sequence
 
-  //#region 🔖Create Animated SVG
-  // [👤semio🏪assets🛅logo💻logo🔖logogeneration🔖createanimatedsvg](repo://p/u/semio/b/a/assets/fd/req/logo/f/logo.ts/s/Logo%20Generation/s/Create%20Animated%20SVG)
+  //#region 📻Create Animated SVG
   // MUST generate translate, rotate, scale, fill, stroke, and stroke-width animations.
-  // Creates an animated SVG file with SMIL animations from keyframe data.
+  // 🆕Creates an animated SVG file with SMIL animations from keyframe data.
   function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void {
     const sequence = generateKeyframeSequence(keyframes);
     const totalFrames = sequence.length;
@@ -408,7 +394,7 @@ function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
     fs.writeFileSync(outputPath, svgContent);
     console.log(`Animated SVG created: ${outputPath}`);
   }
-  //#endregion 🔖Create Animated SVG
+  //#endregion 📻Create Animated SVG
 
   function main(): void {
     const logoDir = path.dirname(__filename);
@@ -441,4 +427,4 @@ function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
   }
 
   export { createAnimatedSVG, generateKeyframeSequence, parseSVGFile };
-//#endregion 🔖Logo Generation
+//#endregion 🧿Logo Generation

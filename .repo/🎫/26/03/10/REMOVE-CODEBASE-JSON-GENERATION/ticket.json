@@ -1,5 +1,6 @@
 {
   "title": "Remove Codebase.json Generation",
+  "emoji": "🗑️",
   "status": "closed",
   "description": "Remove the codebase.json file generation from the repo CLI. The codebase.json is currently being generated in the 📊 directory but should be removed.",
   "summary": "Successfully removed codebase.json generation from the CLI. The lines that generated codebase.json in the 📊 directory have been removed from main.go while preserving the BuildCodebase functionality for other tool operations.",

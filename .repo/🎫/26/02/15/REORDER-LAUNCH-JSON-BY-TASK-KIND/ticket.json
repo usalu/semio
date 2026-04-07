@@ -1,5 +1,6 @@
 {
   "title": "Reorder Launch Json by Task Kind",
+  "emoji": "📋",
   "status": "closed",
   "description": "Reorder .vscode/launch.json configurations by task kind (BUILD, PUBLISH:TEST, PUBLISH, DEV) instead of by package name. Rename generic language debuggers (Go → Go dev, Python → Python dev). Unify repo/vscode package into build.",
   "github": {

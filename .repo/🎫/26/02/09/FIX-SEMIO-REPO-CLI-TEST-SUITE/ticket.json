@@ -1,5 +1,6 @@
 {
   "title": "Fix repo/cli Test Suite",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix failing tests in repo/cli due to schema mismatches and missing logic",
   "summary": "Fixed test suite failures",

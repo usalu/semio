@@ -1,5 +1,6 @@
 {
   "title": "Fix Model Object To Group Input Kind and Recursive Layer Grouping",
+  "emoji": "🔧",
   "status": "closed",
   "description": "ModelObject to Group does not handle Rhino ModelObject output of Import Model. Input 1 must accept Rhino ModelObject, support list inputs, recursively bundle all layers into a group, and accept Model Objects in general.",
   "summary": "Fixed unlayered ModelObject-to-Group inflation by resolving imported fallback object IDs deterministically and flattening no-layer geometry to root; added regression coverage for 459 unlayered imports.",

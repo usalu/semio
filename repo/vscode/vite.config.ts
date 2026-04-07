@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🧰repo🖱️vscode⚙️viteconfig](repo://p/i/repo/b/u/vscode/f/vite.config.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Vite build configuration for the VS Code extension bundling.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [🧰repo🖱️vscode⚙️viteconfig🔖configuration](repo://p/i/repo/b/u/vscode/f/vite.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // Vite build configuration for the VS Code extension.
 // Configuration MUST output a CJS bundle targeting Node 18.
 
@@ -20,13 +18,11 @@ import { defineConfig } from "vite";
 
 /**
  * Absolute file path of the current module.
-// [🧰repo🖱️vscode⚙️viteconfig🔖configuration🪨filename](repo://p/i/repo/b/u/vscode/f/vite.config.ts/s/Configuration/d/i/__filename)
  * Path MUST be derived from import.meta.url.
  **/
 const __filename = fileURLToPath(import.meta.url);
 /**
  * Absolute directory path of the current module.
-// [🧰repo🖱️vscode⚙️viteconfig🔖configuration🪨dirname](repo://p/i/repo/b/u/vscode/f/vite.config.ts/s/Configuration/d/i/__dirname)
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);
@@ -65,4 +61,4 @@ export default defineConfig({
     },
   },
 });
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

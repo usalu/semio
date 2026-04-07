@@ -1,5 +1,6 @@
 {
   "title": "Semio Coda Desktop",
+  "emoji": "🖥️",
   "status": "closed",
   "description": "Create an Electron UI similar to semio desktop for visualizing and interacting with coda (ACC design assistant). Must be complete. Include: project view, runs/iterations, report, breachs, measures, targets, platforms. Mirror semio desktop architecture (Electron Forge, Vite, React, Tailwind). Add MCP bridge to call coda resources and tools.",
   "summary": "Created complete Electron UI for coda: project, runs, iterations, report, breachs, measures, targets, platforms. Mirrors semio desktop (Electron Forge, Vite, React, Tailwind). MCP bridge for resources/read and tools/call. Actions: start_run, start_iteration, translate, validate per target.",

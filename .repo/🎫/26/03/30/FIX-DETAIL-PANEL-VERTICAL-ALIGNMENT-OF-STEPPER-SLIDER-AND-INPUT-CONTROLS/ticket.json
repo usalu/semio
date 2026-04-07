@@ -1,5 +1,6 @@
 {
   "title": "Fix Detail Panel Vertical Alignment of Stepper, Slider, and Input Controls",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The detail panel property rows show misalignment between labels and controls (stepper, slider, input). The property-control div lacks flex/items-center so controls don't vertically center within the grid cell.",
   "github": {

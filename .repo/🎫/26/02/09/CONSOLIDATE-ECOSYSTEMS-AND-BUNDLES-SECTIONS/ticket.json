@@ -1,5 +1,6 @@
 {
   "title": "Consolidate Ecosystems And Bundles Sections",
+  "emoji": "🧹",
   "status": "closed",
   "description": "Replace the Ecosystems and Bundles sections in README.md with compact reference tables pointing to bundle READMEs",
   "summary": "Superseded by CONSOLIDATE-ECOSYSTEMS-AND-BUNDLES-SECTIONS-IN-README",

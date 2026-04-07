@@ -1,0 +1,104 @@
+// #region 🧲Header
+// 💻 semio/ui/.storybook/stories/Type.stories.tsx
+// Specs: One component per stories file. First story is Default with max features and minimal setup. Uses a type prop directly. Kit is optional for 3D models.
+// Summary: Type stories: Default, ConnectorsOnly, ModelOnly, Selection, FeaturesDisabled.
+// 2026 Ueli Saluz <ueli@semio-tech.com>
+// #endregion 🧲Header
+
+import type { Connector, Kit, Type as SemioKind } from "@semio/js";
+import { SemioType as TypeView } from "@semio/ui";
+import type { Meta, StoryObj } from "@storybook/react";
+import * as React from "react";
+import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
+
+// #region 🖥️Data
+
+const rawKind = (metabolismKit.types ?? []).find((kind) => kind.name === 'Tambour')! as SemioKind;
+const storyKind: SemioKind = {
+  ...rawKind,
+  models: (rawKind.models ?? []).slice(0, 1),
+} as SemioKind;
+
+const usedFileGuids = new Set((storyKind.models ?? []).map((model) => model.file?.guid).filter(Boolean));
+const minimalKit: Kit = {
+  guid: (metabolismKit as any).guid,
+  name: (metabolismKit as any).name,
+  types: [storyKind],
+  files: (metabolismKit.files ?? []).filter((file: any) => usedFileGuids.has(file.guid)),
+} as Kit;
+
+const firstConnectorGuid = (storyKind.connectors ?? [])[0]?.guid ?? "";
+
+// #endregion 🖥️Data
+
+// #region 🧱Type
+
+const meta: Meta<typeof TypeView> = {
+  title: "semio/Type",
+  component: TypeView,
+  tags: ["autodocs"],
+  parameters: { layout: "centered" },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof TypeView>;
+
+const frame = (node: React.ReactNode) => <div className="h-96 w-96 rounded-md border border-border bg-card text-foreground shadow-sm">{node}</div>;
+
+export const Default: Story = {
+  args: {
+    type: storyKind,
+    kit: minimalKit,
+    defaultSelection: { connectorGuids: firstConnectorGuid ? [firstConnectorGuid] : [] },
+    title: "Type",
+    onConnectorClick: (connector: Connector) => console.info("Connector clicked", connector.guid),
+  },
+  render: (args) => frame(<TypeView {...args} />),
+};
+
+export const ConnectorsOnly: Story = {
+  args: {
+    type: storyKind,
+    showModel: false,
+    title: "Connectors Only",
+    defaultSelection: { connectorGuids: firstConnectorGuid ? [firstConnectorGuid] : [] },
+  },
+  render: (args) => frame(<TypeView {...args} />),
+};
+
+export const ModelOnly: Story = {
+  args: {
+    type: storyKind,
+    kit: minimalKit,
+    showConnectors: false,
+    title: "Model Only",
+  },
+  render: (args) => frame(<TypeView {...args} />),
+};
+
+export const Selection: Story = {
+  args: {
+    type: storyKind,
+    kit: minimalKit,
+    defaultSelection: { connectorGuids: firstConnectorGuid ? [firstConnectorGuid] : [] },
+    hoverEnabled: true,
+    title: "Selection",
+  },
+  render: (args) => frame(<TypeView {...args} />),
+};
+
+export const FeaturesDisabled: Story = {
+  args: {
+    type: storyKind,
+    kit: minimalKit,
+    selectionEnabled: false,
+    hoverEnabled: false,
+    showGrid: false,
+    showGizmo: false,
+    title: "Features Disabled",
+  },
+  render: (args) => frame(<TypeView {...args} />),
+};
+
+// #endregion 🧱Type

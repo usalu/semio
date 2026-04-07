@@ -1,5 +1,6 @@
 {
   "title": "Fix Diagram Zoom and Scroll Behavior in MCP",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix Diagram Zoom and Scroll Behavior in MCP",
   "summary": "Fixed diagram zoom/scroll behavior by attaching non-passive wheel listeners and setting preventScrolling. This ensures zooming the diagram doesn't scroll the parent chat window in MCP hosts.",

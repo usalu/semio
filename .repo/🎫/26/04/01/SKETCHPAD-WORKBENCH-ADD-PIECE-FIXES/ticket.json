@@ -1,5 +1,6 @@
 {
   "title": "Sketchpad Workbench Add Piece Fixes",
+  "emoji": "➕",
   "status": "open",
   "description": "Fix the hover label for the \"Add Piece\" action in the Sketchpad workbench to show a friendly name instead of the technical ID. Also ensure that pieces added via the workbench (both drag-drop and \"+\" button) correctly link to their type models so they don't render as spheres in the scene.",
   "github": {

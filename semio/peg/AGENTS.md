@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: peg
- emoji: 📚
+ emoji: 🧮
  description: The peg bundle for semio.
  kind: library
 ---

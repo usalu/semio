@@ -1,5 +1,6 @@
 {
   "title": "Fix Go Relative Dates Complete",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Complete the refactoring for relative dates in the Go CLI. Implement a flexible time parser that handles both RFC3339 and YYYY-MM-DD formats. Update template functions and tree rendering logic to use this parser for consistent relative dates across goals and tickets.",
   "summary": "Bulk close",

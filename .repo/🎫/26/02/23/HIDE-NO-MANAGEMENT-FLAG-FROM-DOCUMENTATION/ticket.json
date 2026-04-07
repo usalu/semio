@@ -1,5 +1,6 @@
 {
   "title": "Hide No-Management Flag from Documentation",
+  "emoji": "📋",
   "status": "closed",
   "description": "Remove all documentation about `--no-management` CLI flag and `noManagement` MCP parameter. The feature should remain functional but be hidden from help text and MCP tool descriptions. Use Cobra's MarkHidden for CLI flags and remove noManagement from MCP tool parameter descriptions.",
   "summary": "Hidden --no-management from all CLI help output using MarkHidden on 8 cobra flag registrations (ticket open/close/reopen/change and goal open/close/reopen/change). Removed noManagement from MCP ticket_open tool parameter list. Feature remains fully functional for users who know it.",

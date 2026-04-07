@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🧰repo🖱️vscode⚙️eslintconfig](repo://p/i/repo/b/u/vscode/f/eslint.config.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // ESLint configuration for the VS Code extension linting rules.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [🧰repo🖱️vscode⚙️eslintconfig🔖configuration](repo://p/i/repo/b/u/vscode/f/eslint.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // ESLint flat configuration for the VS Code extension package.
 // Configuration MUST export a valid ESLint flat config array.
 
@@ -45,4 +43,4 @@ export default tseslint.config(
     }
 );
 
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

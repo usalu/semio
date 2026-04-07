@@ -1,5 +1,6 @@
 {
   "title": "Design Parity Migration",
+  "emoji": "🎨",
   "status": "closed",
   "summary": "Restored Details panel visibility/content by default in Design app state and unified navbar panel toggles to a single definition-driven icon strip with correct hover/active placement."
 }

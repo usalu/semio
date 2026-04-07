@@ -1,5 +1,6 @@
 {
   "title": "Sync Hover Between Diagram and Scene Windows",
+  "emoji": "📊",
   "status": "open",
   "description": "Implement bidirectional hover synchronization between the diagram window and scene window in the design app. Currently hovering a piece in the diagram does not hover it in the scene and vice versa. The hover state must be visually clear, distinguishable from selection, and must not cause flickering or performance issues.",
   "github": {

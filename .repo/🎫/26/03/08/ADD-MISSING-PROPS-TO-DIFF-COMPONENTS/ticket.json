@@ -1,5 +1,6 @@
 {
   "title": "Add Missing Props to Diff Components",
+  "emoji": "➕",
   "status": "open",
   "description": "Add missing properties to components like DesignDiff and KitDiff. All components MUST expose all information that is directly involved in the function.",
   "github": {

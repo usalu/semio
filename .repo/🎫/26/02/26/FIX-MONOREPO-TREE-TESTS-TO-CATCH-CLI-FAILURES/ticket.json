@@ -1,5 +1,6 @@
 {
   "title": "Fix Monorepo Tree Tests to Catch CLI Failures",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The monorepo tree tests silently pass when the CLI fails because they use if(children.length===0) return. Fix the tests to assert non-empty results when CLI binary is available and assert the search command rather than the old tree command.",
   "summary": "Bulk close",

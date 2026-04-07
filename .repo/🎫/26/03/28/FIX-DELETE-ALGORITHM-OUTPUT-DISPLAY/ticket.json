@@ -1,5 +1,6 @@
 {
   "title": "Fix Delete Algorithm Output Display",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix Delete Algorithm Output Display",
   "summary": "Fixed delete algorithm output display. The issue was that deletePiecesAndConnectionsInDesign was resetting fixed pieces' center to (0,0), which moved them to the origin in the 2D diagram. Since the algorithm works on flattened designs with absolute centers, fixed pieces should keep their existing center positions. Removed center reset from the diff — only the 3D plane is reset to identity for fixed pieces. Updated fixture JSON and test assertions accordingly.",

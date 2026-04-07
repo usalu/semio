@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // .elements/ui/.storybook/stories/elements/display/Steps.stories.tsx
 
@@ -9,12 +9,12 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { Steps } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
-// #region 🔖Steps
+// #region 🪬Steps
 
 const meta = {
   title: "elements/Steps",
@@ -42,4 +42,4 @@ export const Default: Story = {
   },
 };
 
-// #endregion 🔖Steps
+// #endregion 🪬Steps

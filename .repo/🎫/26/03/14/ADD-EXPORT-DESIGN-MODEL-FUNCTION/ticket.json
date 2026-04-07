@@ -1,5 +1,6 @@
 {
   "title": "Add Export Design Model Function",
+  "emoji": "➕",
   "status": "open",
   "description": "Add export_design_model(format='.glb', tags=[], options={}) that exports the 3D model of a design. Implement for all programming languages (TypeScript, Python, C#/Grasshopper, Rust, Go). Each language must support GLB and expose all native framework export formats. Use block definitions for types and instances for pieces. Translate connection hierarchy to scene graph and planes to relative transformation matrices.",
   "github": {

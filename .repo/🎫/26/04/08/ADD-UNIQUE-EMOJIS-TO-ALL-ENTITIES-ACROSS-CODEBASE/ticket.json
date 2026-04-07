@@ -1,0 +1,12 @@
+{
+  "title": "Add Unique Emojis To All Entities Across Codebase",
+  "status": "open",
+  "description": "Every single entity MUST have a unique emoji among the siblings inside the same parent. No white space after the emoji. Add emojis to Technologies, Bundles, Folders (AGENTS.md frontmatter), Files (header description), Sections (region names), Definitions (docstring). Adjust repo implementation, tests, and extend all entities and source code.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1293"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪2a437ce8a9014fe4a8c862df13447a6d"
+  ]
+}

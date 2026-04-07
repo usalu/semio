@@ -9,7 +9,7 @@
         "x": 0,
         "z": 0.9166667
       },
-      "description": "The bottom system center of the elevator.",
+      "description": "🏮 The bottom system center of the elevator.",
       "t": 0.5,
       "direction": {
         "y": 0,
@@ -29,7 +29,7 @@
         "x": 0,
         "z": 3.6666667
       },
-      "description": "The top system center of the elevator.",
+      "description": "🧧 The top system center of the elevator.",
       "t": 0,
       "direction": {
         "y": 0,
@@ -49,7 +49,7 @@
         "x": 2.75,
         "z": 0.2
       },
-      "description": "The first door of the side plattform in the east facade.",
+      "description": "🎀 The first door of the side plattform in the east facade.",
       "t": 0.2,
       "direction": {
         "y": 0,
@@ -69,7 +69,7 @@
         "x": 0.9,
         "z": 0.2
       },
-      "description": "The second door of the side plattform in the north facade.",
+      "description": "🎁 The second door of the side plattform in the north facade.",
       "t": 0.05,
       "direction": {
         "y": 1,
@@ -89,7 +89,7 @@
         "x": -0.9,
         "z": 0.2
       },
-      "description": "The third door of the side plattform in the north facade.",
+      "description": "🎄 The third door of the side plattform in the north facade.",
       "t": 0.95,
       "direction": {
         "y": 1,
@@ -109,7 +109,7 @@
         "x": -2.75,
         "z": 0.2
       },
-      "description": "The fourth door of the side plattform in the west facade.",
+      "description": "🎊 The fourth door of the side plattform in the west facade.",
       "t": 0.8,
       "direction": {
         "y": 0,
@@ -129,7 +129,7 @@
         "x": -2.75,
         "z": 1.1166667
       },
-      "description": "The first door of the main plattform in the west facade.",
+      "description": "🎉 The first door of the main plattform in the west facade.",
       "t": 0.7,
       "direction": {
         "y": 0,
@@ -149,7 +149,7 @@
         "x": -0.9,
         "z": 1.1166667
       },
-      "description": "The second door of the main plattform in the south facade.",
+      "description": "🎃 The second door of the main plattform in the south facade.",
       "t": 0.55,
       "direction": {
         "y": -1,
@@ -169,7 +169,7 @@
         "x": 0.9,
         "z": 2.0333333
       },
-      "description": "The first door of the main plattform in the south facade.",
+      "description": "🎈 The first door of the main plattform in the south facade.",
       "t": 0.45,
       "direction": {
         "y": -1,
@@ -189,7 +189,7 @@
         "x": 2.75,
         "z": 2.0333333
       },
-      "description": "The second door of the main plattform in the east facade.",
+      "description": "🎎 The second door of the main plattform in the east facade.",
       "t": 0.3,
       "direction": {
         "y": 0,
@@ -211,7 +211,7 @@
     }
   ],
   "image": "images/tambour.svg",
-  "description": "An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
+  "description": "🏰 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
   "virtual": false,
   "createdAt": "2025-11-23T01:10:21.247Z",
   "name": "Tambour",
@@ -321,7 +321,7 @@
         "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
       },
       "value": "24.21",
-      "unit": "m\u00b2"
+      "unit": "m²"
     },
     {
       "guid": "3bb43296-3f61-4423-bd45-0b0734b0f5a2",
@@ -329,7 +329,7 @@
         "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
       },
       "value": "217800",
-      "unit": "\u20ac"
+      "unit": "€"
     },
     {
       "guid": "ba190223-e122-4c2e-996a-dbfbf8966dd2",
@@ -361,7 +361,7 @@
         "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
       },
       "value": "1016",
-      "unit": "\u20ac/a"
+      "unit": "€/a"
     },
     {
       "guid": "409c35f7-49df-409b-943b-28563db10769",

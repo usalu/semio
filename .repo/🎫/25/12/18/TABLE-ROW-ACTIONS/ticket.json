@@ -1,5 +1,6 @@
 {
   "title": "Right-align table create actions and show tags strip between name and action",
+  "emoji": "🆕",
   "status": "closed",
   "description": "Create actions in table rows are not right aligned; tags strip should appear between name and action.",
   "goal": "🎯r2602🎯runningsketchpad"

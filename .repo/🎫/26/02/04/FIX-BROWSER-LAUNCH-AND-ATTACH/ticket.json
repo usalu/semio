@@ -1,5 +1,6 @@
 {
   "title": "Fix Browser Launch and Attach",
+  "emoji": "🔧",
   "status": "closed",
   "summary": "Provisioned Playwright browsers in devcontainer setup and documented shared cache expectations.",
   "github": {

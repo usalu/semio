@@ -1,5 +1,6 @@
 {
   "title": "Research Autofix System and Policy Functions",
+  "emoji": "📋",
   "status": "closed",
   "description": "Research the TestFixApplyAutofixes test and autofix system. Document fixture files, header policy, section policy, and ID/URI generation functions.",
   "summary": "Researched autofix/policy system.",

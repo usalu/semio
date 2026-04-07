@@ -1,5 +1,6 @@
 {
   "title": "Fix Semio Algorithms Story Infinite Loading",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Investigate and fix the semio algorithms Storybook loading forever. Resolve the preview startup/runtime failure causing 404 index.tsx and outdated optimized dependency 504 errors, extend existing tests only, verify runtime behavior, and close the ticket with the worked files.",
   "summary": "Stopped the semio algorithms Storybook stories from loading forever by replacing the unstable semio/ui and semio/js runtime path with a local algorithms Storybook shell and runtime-safe story data. Verified the Flatten story renders successfully in a headless browser. `npm test` for @semio/algorithms still fails because the repo-wide vitest target imports the broken consolidated elements/ui index bundle.",

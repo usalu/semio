@@ -1,5 +1,6 @@
 {
   "title": "Fix Detail Panel Stepper Alignment and Label Consistency in Sketchpad",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix alignment issues in the sketchpad detail panel where stepper rows are misaligned with other input fields, and item labels (like center and plane in piece detail) behave differently from the rest of the detail panel structure. Apply a structured solution for all elements.",
   "summary": "Removed tree-level-based indentation (paddingLeft, IndentationLines, treeItemLabelStyle marginLeft) from Label component's tree-mode property-row rendering. Property rows now render flat labels with consistent `pl-[4px]` padding regardless of tree depth. Controls vertically align across all nesting levels in the detail panel. Updated unit test assertion to expect absence of tree indentation styles. All 105 unit tests pass.",

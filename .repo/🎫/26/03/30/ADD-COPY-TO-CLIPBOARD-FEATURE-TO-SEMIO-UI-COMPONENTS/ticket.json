@@ -1,5 +1,6 @@
 {
   "title": "Add Copy to Clipboard Feature to Semio UI Components",
+  "emoji": "➕",
   "status": "open",
   "description": "Add a copy to clipboard (Ctrl+C) feature to all semio UI components for Design:\n- When no diff + no selection is present: Copy design\n- When no diff + selection is present: Copy selection (pieces and connections)\n- When diff is present + no selection is present: Copy diff\n- When diff and selection is present: Copy only selected parts of the diff",
   "github": {

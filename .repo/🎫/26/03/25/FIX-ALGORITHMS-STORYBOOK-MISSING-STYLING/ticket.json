@@ -1,5 +1,6 @@
 {
   "title": "Fix Algorithms Storybook Missing Styling",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix missing styling in refactored algorithm stories. Root cause: corrupted elements/ui/index.tsx (concatenated configs + stories) broke Vite; restored clean index from 76680d50c, pointed package exports at tailwind/postcss/eslint/vitest files, UIFind guard fix, js duplicate filterKitWithDesign + vitest syntax fix. AlgorithmApp: toolbar + typed diff count.",
   "github": {

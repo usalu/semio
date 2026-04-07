@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: openapi
- emoji: 🛂
+ emoji: 📡
  description: The openapi bundle for semio.
  kind: schema
 ---

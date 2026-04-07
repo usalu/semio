@@ -6,7 +6,9 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
-  "runArgs": ["--shm-size=1gb"],
+  "runArgs": [
+    "--shm-size=1gb"
+  ],
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "24"
@@ -215,7 +217,9 @@
         "python.analysis.typeCheckingMode": "off",
         "python.testing.pytestEnabled": true,
         "python.testing.unittestEnabled": false,
-        "python.testing.pytestArgs": ["."],
+        "python.testing.pytestArgs": [
+          "."
+        ],
         "python.testing.cwd": "${containerWorkspaceFolder}",
         "python.analysis.languageServerMode": "full",
         "sqltools.useNodeRuntime": true,
@@ -233,8 +237,15 @@
         "[svg]": {
           "editor.defaultFormatter": "jock.svg"
         },
-        "rust-analyzer.linkedProjects": ["semio/rs/Cargo.toml"],
-        "terminal.integrated.defaultProfile.linux": "bash"
+        "rust-analyzer.linkedProjects": [
+          "semio/rs/Cargo.toml"
+        ],
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "github.copilot.chat.commitMessageGeneration.instructions": [
+          {
+            "file": ".agents/skills/committing.SKILL.md"
+          }
+        ]
       }
     }
   }

@@ -1,5 +1,6 @@
 {
   "title": "Updated sketchpad E2E tests for new sidepanel toggle architecture",
+  "emoji": "🧪",
   "status": "closed",
   "description": "The new sidepanel toggles are not visible. Adjust the sketchpad tests and make sure the are toggleable and check for the individual task in the apps. Dont create new test, just extend the app tests.",
   "goal": "🎯r2602🎯runningsketchpad"

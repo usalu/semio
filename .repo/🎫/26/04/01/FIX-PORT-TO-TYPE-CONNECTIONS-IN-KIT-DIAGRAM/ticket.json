@@ -1,5 +1,6 @@
 {
   "title": "Fix Port to Type Connections in Kit Diagram",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Port nodes in the kit diagram are not connected to their corresponding type nodes. Types have connectors that reference ports (via connector.port.guid), but buildKitDiagramData does not create edges for these relationships. Need to add reference edges from port nodes to type nodes, following the same styling as design-type reference edges.",
   "summary": "Added port-to-type reference edges in buildKitDiagramData. When a type has connectors that reference ports (via connector.port.guid), the diagram now draws dashed reference edges from the port node to the type node, following the same styling pattern used for design-to-type edges (edgeStyle[\"reference\"] with floating edge type). This makes port-type relationships visible in the kit diagram, consistent with how designs and types are already connected.",

@@ -1,5 +1,6 @@
 {
   "title": "Fix TypeScript Errors in Index Files",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix pre-existing TypeScript errors: missing variant/view properties on schema types, missing id on locator type, missing Coord type, and KitKindData requiring variant.",
   "summary": "Fixed dragPiecesInDesign across all 4 languages (JS/TS, Go, C#, Rust) to match spec:\n\n1. **Fixed piece check**: Changed from checking only `center` to checking `center AND plane` for identifying fixed pieces that get piece diffs.\n\n2. **Descendant filtering**: Replaced BFS-from-rootMovers approach with ancestor-walk approach. Now for each non-fixed selected piece, walks up the connection tree to check if ANY ancestor is also selected (not just fixed pieces). If so, the piece is ignored. Otherwise adds drag offset to parent connection.\n\n3. **Added tests**: Added drag test to Go (TestDrag) and Rust (tests::drag::design_pieces_offset_diff_design) test suites.\n\n4. **Updated docs**: Updated algorithm description in semio/algorithms/AGENTS.md and docstrings in JS/Go implementations.\n\nAll tests pass: JS (108/108), Go (all pass), C# (46/46), Rust (41/41).",

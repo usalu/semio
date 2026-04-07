@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio📚3dm🖱️ui🗃️src💻index](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Single-file source for the semio 3dm React UI embedded in Rhino WebView2.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Imports
-// [👤semio📚3dm🖱️ui🗃️src💻index🔖imports](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/Imports)
+// #region ⛩️Imports
 // Imports MUST include React, semio types, Lucide icons from assets, and ReactDOM.
 
 import React, { useCallback, useState } from "react";
@@ -20,10 +18,9 @@ import { importKit } from "@semio/js";
 import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio/assets";
 import "../globals.css";
 
-// #endregion 🔖Imports
+// #endregion ⛩️Imports
 
-// #region 🔖WebViewGlobal
-// [👤semio📚3dm🖱️ui🗃️src💻index🔖webviewglobal](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/WebViewGlobal)
+// #region ⚗️WebViewGlobal
 // Global type augmentation for the WebView2 chrome.webview API.
 
 declare global {
@@ -38,10 +35,9 @@ declare global {
     }
 }
 
-// #endregion 🔖WebViewGlobal
+// #endregion ⚗️WebViewGlobal
 
-// #region 🔖BridgeProtocol
-// [👤semio📚3dm🖱️ui🗃️src💻index🔖bridgeprotocol](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/BridgeProtocol)
+// #region 🎛️BridgeProtocol
 // Bridge protocol types MUST match the C# BridgeRequest/BridgeResponse/BridgeEvent types.
 
 export interface BridgeRequest {
@@ -67,10 +63,9 @@ export interface BridgeEvent {
     payload?: unknown;
 }
 
-// #endregion 🔖BridgeProtocol
+// #endregion 🎛️BridgeProtocol
 
-// #region 🔖BridgeClient
-// [👤semio📚3dm🖱️ui🗃️src💻index🔖bridgeclient](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/BridgeClient)
+// #region 🌊BridgeClient
 // Bridge client MUST route all native calls through WebView2 postMessage.
 
 let requestCounter = 0;
@@ -78,7 +73,7 @@ const pendingRequests = new Map<string, { resolve: (value: unknown) => void; rej
 const eventListeners = new Map<string, Set<(payload: unknown) => void>>();
 
 /**
- * Initializes the bridge message listener.
+ * 📋Initializes the bridge message listener.
  * MUST be called once at app startup.
  */
 export function initBridge(): void {
@@ -110,7 +105,7 @@ export function initBridge(): void {
 }
 
 /**
- * Sends a typed bridge request to the native host.
+ * 📨Sends a typed bridge request to the native host.
  * MUST return a promise that resolves with the typed result.
  */
 export async function callBridge<T>(binding: string, method: string, params?: unknown): Promise<T> {
@@ -134,7 +129,7 @@ export async function callBridge<T>(binding: string, method: string, params?: un
 }
 
 /**
- * Subscribes to a native bridge event.
+ * 📡Subscribes to a native bridge event.
  */
 export function onBridgeEvent(event: string, callback: (payload: unknown) => void): () => void {
     if (!eventListeners.has(event)) {
@@ -147,10 +142,9 @@ export function onBridgeEvent(event: string, callback: (payload: unknown) => voi
     };
 }
 
-// #endregion 🔖BridgeClient
+// #endregion 🌊BridgeClient
 
-// #region 🔖TypedApis
-// [👤semio📚3dm🖱️ui🗃️src💻index🔖typedapis](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/TypedApis)
+// #region ⚙️TypedApis
 // Typed API wrappers MUST expose domain-specific operations only.
 
 export const appApi = {
@@ -176,10 +170,9 @@ export const importApi = {
     openImportKitDialog: () => callBridge<{ dialogKind: string }>("import", "openImportKitDialog"),
 };
 
-// #endregion 🔖TypedApis
+// #endregion ⚙️TypedApis
 
-// #region 🔖TreeNodeKind
-// [👤semio📚3dm🖱️ui🗃️src💻index🔖treenodekind](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/TreeNodeKind)
+// #region 🧬TreeNodeKind
 // Tree node kind MUST distinguish between structural folders and selectable items.
 
 type TreeNodeKind = "kits" | "kit" | "types" | "type" | "models" | "model" | "designs" | "design";
@@ -192,10 +185,9 @@ interface TreeNode {
     data?: unknown;
 }
 
-// #endregion 🔖TreeNodeKind
+// #endregion 🧬TreeNodeKind
 
-// #region 🔖BuildTree
-// [👤semio📚3dm🖱️ui🗃️src💻index🔖buildtree](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/BuildTree)
+// #region 🎍BuildTree
 // Tree builder MUST convert Kit[] into the specified tree structure.
 
 function buildTree(kits: Kit[]): TreeNode {
@@ -249,10 +241,9 @@ function buildTree(kits: Kit[]): TreeNode {
     };
 }
 
-// #endregion 🔖BuildTree
+// #endregion 🎍BuildTree
 
-// #region 🔖TreeNodeComponent
-// [👤semio📚3dm🖱️ui🗃️src💻index🔖treenodecomponent](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/TreeNodeComponent)
+// #region 🌪️TreeNodeComponent
 // Tree node component MUST render expandable/collapsible nodes with action buttons.
 
 function TreeNodeIcon({ kind }: { kind: TreeNodeKind }) {
@@ -306,10 +297,9 @@ function TreeNodeView({ node, depth, onImportKit, onImportModel }: { node: TreeN
     );
 }
 
-// #endregion 🔖TreeNodeComponent
+// #endregion 🌪️TreeNodeComponent
 
-// #region 🔖RhinoPanel
-// [👤semio📚3dm🖱️ui🗃️src💻index🔖rhinopanel](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/RhinoPanel)
+// #region 🔑RhinoPanel
 // RhinoPanel MUST manage loaded kits and dispatch import actions.
 
 export function RhinoPanel() {
@@ -421,14 +411,13 @@ export function RhinoPanel() {
     );
 }
 
-// #endregion 🔖RhinoPanel
+// #endregion 🔑RhinoPanel
 
-// #region 🔖Entrypoint
-// [👤semio📚3dm🖱️ui🗃️src💻index🔖entrypoint](repo://p/u/semio/b/u/3dm/fd/req/ui/fd/org/src/f/index.tsx/s/Entrypoint)
+// #region 🛎️Entrypoint
 // Entrypoint MUST initialize the bridge and render the RhinoPanel component.
 
 initBridge();
 
 createRoot(document.getElementById("root")!).render(<RhinoPanel />);
 
-// #endregion 🔖Entrypoint
+// #endregion 🛎️Entrypoint

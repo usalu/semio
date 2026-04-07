@@ -1,5 +1,6 @@
 {
   "title": "Sketchpad windows have 1-unit margins and continuous borders",
+  "emoji": "✏️",
   "status": "closed",
   "description": "Every window should have a single unit margin between the window and the border of the canvas or between windows. Every window has a continuous border around it.",
   "goal": "🎯r2602🎯runningsketchpad"

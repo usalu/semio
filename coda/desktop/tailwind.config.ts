@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda🖱️desktop⚙️tailwindconfig](repo://p/r/coda/b/u/desktop/f/tailwind.config.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Tailwind CSS configuration for the coda desktop app styling.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [🔬coda🖱️desktop⚙️tailwindconfig🔖configuration](repo://p/r/coda/b/u/desktop/f/tailwind.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // Tailwind CSS configuration for the coda desktop application.
 // Configuration MUST include content glob patterns.
 
@@ -18,7 +16,6 @@ import type { Config } from "tailwindcss";
 
 /**
  * Tailwind CSS configuration with content paths for the coda desktop app.
-// [🔬coda🖱️desktop⚙️tailwindconfig🔖configuration🪨config](repo://p/r/coda/b/u/desktop/f/tailwind.config.ts/s/Configuration/d/i/config)
  * Config MUST include content glob patterns.
  **/
 const config: Pick<Config, "content" | "presets"> = {
@@ -26,4 +23,4 @@ const config: Pick<Config, "content" | "presets"> = {
 };
 
 export default config;
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

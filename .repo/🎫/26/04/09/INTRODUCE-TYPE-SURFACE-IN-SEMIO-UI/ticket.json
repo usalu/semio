@@ -1,0 +1,10 @@
+{
+  "title": "Introduce Type Surface in Semio Ui",
+  "status": "closed",
+  "description": "Introduce a Type surface in semio UI. It should be the same concept as the design scene but for a single type, and should resemble Sketchpad TypeApp by showing the connectors. Update the existing UI and extend existing tests without creating new test files. Validate runtime behavior and make tests pass.",
+  "summary": "Added a reusable semio/ui Type surface that renders a single kind as a 3D scene with interactive connectors, model fallback/render selection, and connector auto-fit behavior. Extended the existing inline semio/ui test file with Type-specific model-selection and zoom-box coverage, fixed CSS var scene-color parsing, and normalized kit-diff equality semantics in semio/js so fixture diffs treat omitted default zero/false fields the same as explicit defaults. Verified with `npm test` in `semio/ui` (225/225 passing).",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningtypeapp",
+  "sessions": [
+    "⚪11767e1f25924f248234377ff4159bbc"
+  ]
+}

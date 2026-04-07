@@ -1,5 +1,6 @@
 {
   "title": "Fix Kit App Detail Panels Against Schema",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix remaining Kit app detail panel sections against JS schemas. SingleDesignSection: remove variant/view not in schema, add parent/isAbstract/folder/canScale/canMirror. FileSection: add remote/folder/hash/createdBy/updatedBy. FolderSection: add parent.",
   "summary": "Fixed remaining Kit app detail panel sections against JS schemas. SingleDesignSection: removed variant/view (not in schema), added parent/isAbstract/folder/canScale/canMirror. FileSection: added remote/folder/hash/createdBy/updatedBy. FolderSection: added parent. KitSectionForm verified complete.",

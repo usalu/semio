@@ -1,5 +1,6 @@
 {
   "title": "VIOLATION-TREE-STRUCTURE",
+  "emoji": "📋",
   "status": "closed",
   "description": "The statutes should be extended to have an arbitrary tree structure. E.g. Header, Section and Comment policies should be consolidated into a single policy called Code. Adjust repo, mcp and vscode extension.",
   "goal": "🎯aioptimizedrepo"

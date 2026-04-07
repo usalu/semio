@@ -1,5 +1,6 @@
 {
   "title": "Refactor Goal and Ticket Hierarchy to use Folder Nesting",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Refactor the goal and ticket system so that hierarchy is defined by folder structure instead of metadata keys. Move folders when assigning parents. Nest existing goals to match the specified tree.",
   "summary": "Refactored hierarchy to use folder nesting, implemented bulk 'ticket close --all', updated CLI with issue/milestone flags, fixed 'goal tree' display, and bulk closed legacy tickets.",

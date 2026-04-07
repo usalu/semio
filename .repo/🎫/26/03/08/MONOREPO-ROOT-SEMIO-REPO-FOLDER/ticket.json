@@ -1,5 +1,6 @@
 {
   "title": "Monorepo Root Semio Repo Folder",
+  "emoji": "📂",
   "status": "closed",
   "description": "repo cli: The .repo folder should be only created once at the monoreporoot. Regardless if for caching, testing, etc",
   "summary": "Fixed remaining root leak: findRepoRoot now prefers monorepo marker (repo/cli/main.go) over local go.mod roots, ensuring cache/meta paths resolve to monorepo root. Added tests for monorepo marker resolution and cache dir anchoring.",

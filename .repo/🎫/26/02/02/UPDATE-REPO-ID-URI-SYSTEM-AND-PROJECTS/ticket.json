@@ -1,5 +1,6 @@
 {
   "title": "Update Repo ID URI System and Projects",
+  "emoji": "📂",
   "status": "closed",
   "description": "Update ID/URI system, implement project commands, support multi-package bundles, and update vscode extension projects view.",
   "summary": "Bulk close",

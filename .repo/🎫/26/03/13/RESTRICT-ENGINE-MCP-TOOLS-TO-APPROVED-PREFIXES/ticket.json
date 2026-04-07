@@ -1,5 +1,6 @@
 {
   "title": "Restrict Engine MCP Tools to Approved Prefixes",
+  "emoji": "🔌",
   "status": "open",
   "description": "Update semio engine MCP surface so only tools matching start*, finish*, transaction*, and sum_qu* remain exposed; align tests and validate.",
   "github": {

@@ -1,5 +1,6 @@
 {
   "title": "Fix D3 Simulation Update",
+  "emoji": "🔧",
   "status": "closed",
   "summary": "Added aggressive logging to D3 simulation events and fixed broken drag handler logic.",
   "github": {

@@ -1,5 +1,6 @@
 {
   "title": "Implement ExportDesignModel in C#",
+  "emoji": "🔨",
   "status": "closed",
   "description": "Add ExportDesignModel static method to Kit class in Semio.cs and ExportDesignModelComponent Grasshopper wrapper in Semio.Grasshopper.cs. Build connection graph, BFS for world planes, construct GLB binary.",
   "summary": "Implemented ExportDesignModel as a static method on the Kit class in Semio.cs and ExportDesignModelComponent Grasshopper wrapper in Semio.Grasshopper.cs. The implementation: (1) builds an adjacency graph from connections, (2) BFS from root pieces to compute world planes, (3) finds matching GLB models per type via tag matching, (4) parses and merges source GLB files with offset remapping, (5) creates fallback box meshes for types without models, (6) builds a scene graph with relative transformation matrices, (7) produces a valid GLB binary. Both projects compile successfully.",

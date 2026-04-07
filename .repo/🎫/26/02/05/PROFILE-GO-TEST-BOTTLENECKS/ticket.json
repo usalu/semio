@@ -1,5 +1,6 @@
 {
   "title": "Profile Go Test Bottlenecks",
+  "emoji": "🧪",
   "status": "closed",
   "description": "Run Go tests individually, identify bottlenecks, and propose an equivalent faster strategy.",
   "summary": "Profiled per-test runtimes in repo/cli, identified dominant bottlenecks (tree/markdown/nodes/lifecycle/list/e2e paths), and documented a fast-lane + slow-sharded strategy that preserves full behavioral coverage while reducing wall-clock feedback time.",

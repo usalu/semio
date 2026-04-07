@@ -1,5 +1,6 @@
 {
   "title": "Derive Artifact Kinds From Source",
+  "emoji": "📋",
   "status": "closed",
   "description": "Derive bundle kind from package.json, folder kind from folder name and presence of certain files, file kind from general and repo-specific knowledge, and definition kind from language processor",
   "github": {

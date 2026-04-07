@@ -1,5 +1,6 @@
 {
   "title": "Coda Desktop Welcome Screen on Current Codebase",
+  "emoji": "🖥️",
   "status": "closed",
   "description": "Re-implement the welcome screen (create/open project) on the current simplified main.ts (HTTP-based MCP, no sidecar). Must not spawn any sidecar process. Add dialog and project IPC handlers, preload bridges, and WelcomePage component.",
   "summary": "Fixed uncaught ENOENT exception when sidecar binary (coda) is not found. Added sidecar.on('error') handler in startSidecar() to gracefully handle spawn failures instead of crashing the Electron app with an uncaught exception dialog.",

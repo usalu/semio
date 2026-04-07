@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda📦programming💻main](repo://p/r/coda/b/l/programming/f/main.go)
+// #region 🧲Header
 //
 // Summary: Go validator for programming target. Validates space programs (area constraints) and adjacency matrices.
 //
@@ -16,7 +15,7 @@ import (
 	"path/filepath"
 )
 
-// #region 🔖Translation
+// #region 🗄️Translation
 // Translation input from semio-to-programming translator.
 
 type Translation struct {
@@ -35,7 +34,7 @@ type Room struct {
 
 // #endregion
 
-// #region 🔖Requirements
+// #region 🎯Requirements
 // Program requirements config (space program + adjacency matrix).
 
 type Requirements struct {
@@ -69,7 +68,7 @@ type AdjacencyRule struct {
 
 // #endregion
 
-// #region 🔖Report
+// #region 🎃Report
 // Validation report output.
 
 type Report struct {

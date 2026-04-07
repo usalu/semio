@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: net
- emoji: 📚
+ emoji: 🔷
  description: The net bundle for semio.
  kind: library
 ---

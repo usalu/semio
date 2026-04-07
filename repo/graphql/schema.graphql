@@ -369,6 +369,7 @@ type Range {
 type Contributor implements Node {
   id: ID!
   github: String!
+  emoji: String
   name: String!
   names: [String!]!
   email: String!
@@ -478,6 +479,7 @@ type Ticket implements Node {
   day: Int!
   slug: String!
   title: String!
+  emoji: String
   path: String!
   uri: String!
   prompt: String!

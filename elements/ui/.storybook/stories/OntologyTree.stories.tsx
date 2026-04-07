@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda🖱️desktop🥼ontologytree.stories](repo://p/r/coda/b/u/desktop/f/OntologyTree.stories.tsx)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Storybook stories for OntologyTree and ValidationTree components.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Stories
-// [🔬coda🖱️desktop🥼ontologytree.stories🔖stories](repo://p/r/coda/b/u/desktop/f/OntologyTree.stories.tsx/s/Stories)
+// #region 📮Stories
 // Storybook stories exercising ontology and validation tree viewers.
 // Stories MUST provide example data matching the OWL Treppenraum ontology.
 
@@ -19,8 +17,8 @@ import { OntologyTree } from "@coda/desktop/renderer";
 import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
 
-// #region 🔖CodaThemeWrapper
-// Provides the coda-specific CSS variables needed by tree components.
+// #region 🏷️CodaThemeWrapper
+// 🎨Provides the coda-specific CSS variables needed by tree components.
 const CodaThemeWrapper = ({ children }: { children: React.ReactNode }) => (
   <div
     style={{
@@ -44,9 +42,9 @@ const CodaThemeWrapper = ({ children }: { children: React.ReactNode }) => (
     {children}
   </div>
 );
-// #endregion 🔖CodaThemeWrapper
+// #endregion 🏷️CodaThemeWrapper
 
-// #region 🔖OntologyTreeExampleData
+// #region 🗡️OntologyTreeExampleData
 // Ontology tree for NecessaryStaircaseInSeparateStairwell (English OWL example).
 
 const necessaryStaircaseOntology: OntologyTreeNode = {
@@ -195,9 +193,9 @@ const necessaryStaircaseOntology: OntologyTreeNode = {
     },
   ],
 };
-// #endregion 🔖OntologyTreeExampleData
+// #endregion 🗡️OntologyTreeExampleData
 
-// #region 🔖OntologyTreeStory
+// 🌳#region 🌧️OntologyTreeStory
 const ontologyMeta = {
   title: "elements/OntologyTree",
   component: OntologyTree,
@@ -256,6 +254,6 @@ export const SimpleClass: OntologyStory = {
     title: "Simple Class",
   },
 };
-// #endregion 🔖OntologyTreeStory
+// #endregion 🌧️OntologyTreeStory
 
-// #endregion 🔖Stories
+// #endregion 📮Stories

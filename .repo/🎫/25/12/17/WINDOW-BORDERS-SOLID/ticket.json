@@ -1,5 +1,6 @@
 {
   "title": "Fix window borders and revert to solid style",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Still no bottom and right border. Remove the dashed border.",
   "goal": "🎯r2602🎯runningsketchpad"

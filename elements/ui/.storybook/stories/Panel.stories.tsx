@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // .elements/ui/.storybook/stories/elements/Panel.stories.tsx
 
@@ -9,14 +9,14 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { BottomPanel, Panel, PanelSection, SidePanel } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Info, Layers, Settings } from "lucide-react";
 import { useState } from "react";
 
-// #region 🔖Panel
+// #region 🦉Panel
 
 const meta = {
   title: "elements/Panel",
@@ -120,4 +120,4 @@ export const SidePanelRight: Story = {
   },
 };
 
-// #endregion 🔖Panel
+// #endregion 🦉Panel

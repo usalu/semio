@@ -1,5 +1,6 @@
 {
   "title": "Ensure panels use panel background and panel level context",
+  "emoji": "📋",
   "status": "closed",
   "description": "The panel base needs to have panel background color",
   "goal": "🎯r2602🎯runningsketchpad"

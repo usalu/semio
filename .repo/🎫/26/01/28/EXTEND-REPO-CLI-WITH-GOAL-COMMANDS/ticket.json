@@ -1,5 +1,6 @@
 {
   "title": "Extend Repo CLI with Goal Commands",
+  "emoji": "📐",
   "status": "closed",
   "description": "Extend repo CLI, VS Code extension, and GraphQL to support enhanced ticket commands (goal, parent, no-github) and new goal commands.",
   "summary": "Bulk close",

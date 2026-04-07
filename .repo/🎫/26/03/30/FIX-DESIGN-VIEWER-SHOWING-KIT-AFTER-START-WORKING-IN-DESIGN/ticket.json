@@ -1,5 +1,6 @@
 {
   "title": "Fix Design Viewer Showing Kit After Start Working In Design",
+  "emoji": "🔧",
   "status": "closed",
   "description": "McpDesignViewer still shows SemioKit when invoking start_working_in_design with design-viewer resource. Root cause: payload merge keeps stale show-diagram mode from kit-scored candidate while design is merged from another channel. Fix merge to prefer design-intent mode when design guid matches; never use kit fallback when payload has design guid.",
   "summary": "Fixed McpDesignViewer still showing SemioKit after start_working_in_design: (1) mergeRichestDesignFromCandidates now picks design-intent mode (show-design/show-scene/show-diff/show-diagram-diff) from any candidate whose design guid matches merged.design after best-by-score selection; (2) canDisplayKitArtifactsFallback returns false when a design guid is present; (3) McpDesignViewer coerces show-diagram to show-design when a design guid exists and diagram points are empty. Added regression tests for merge+parse and kit fallback. Verified semio/ui vitest and engine pytest.",

@@ -1,5 +1,6 @@
 {
   "title": "Make Semio Diagram Zoom Uniform",
+  "emoji": "📊",
   "status": "closed",
   "description": "Adjust the semio/ui Diagram zoom behavior so zooming scales the entire drawing uniformly. The shape must not change while zooming; lines, circles, and selection outlines should all grow and shrink together. Re-verify semio/ui type-check and Storybook build.",
   "summary": "Adjusted semio/ui Diagram zoom so it scales the entire drawing uniformly. Line widths, circle radii, and selection outlines now zoom with the geometry, so zooming only magnifies the same shape instead of changing its appearance. Re-verified semio/ui type-check and Storybook build.",

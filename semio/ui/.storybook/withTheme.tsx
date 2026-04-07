@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/ui/.storybook/withTheme.tsx
 // Specs: Use same theme decorator behavior as elements/ui.
 // Summary: Applies global Storybook light/dark/system theme handling.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import type { Decorator } from "@storybook/react";
 import { useEffect } from "react";

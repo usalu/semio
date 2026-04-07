@@ -1,5 +1,6 @@
 {
   "title": "TICKET-ITERATION-FILE-FILTER",
+  "emoji": "🎫",
   "status": "closed",
   "description": "Scope interaction and ticket line diffs to declared ticket files",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism"

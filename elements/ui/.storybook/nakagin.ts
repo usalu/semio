@@ -1,13 +1,13 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // 🥼 elements/ui/.storybook/nakagin.ts
 
 // Nakagin Capsule Tower example data for Storybook stories (dev-only)
 // Sourced from semio/assets/semio/nakagin-capsule-tower.meta.design.semio.json
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Design
+// #region 📌Design
 
 export const nakagin = {
   name: "Nakagin Capsule Tower",
@@ -15,9 +15,9 @@ export const nakagin = {
   unit: "m",
 } as const;
 
-// #endregion 🔖Design
+// #endregion 📌Design
 
-// #region 🔖Architects
+// #region 🎺Architects
 
 export const architects = [
   { id: "1", name: "Kisho Kurokawa", icon: "https://github.com/shadcn.png", role: "Lead Architect", email: "kisho@metabolism.jp" },
@@ -27,9 +27,9 @@ export const architects = [
   { id: "5", name: "Kiyonori Kikutake", role: "Marine Architect", email: "kiyonori@kikutake.jp" },
 ] as const;
 
-// #endregion 🔖Architects
+// #endregion 🎺Architects
 
-// #region 🔖Types
+// #region ⚙️Types
 
 export const pieceKinds = [
   { id: "capsule", label: "Capsule", icon: "box" },
@@ -40,9 +40,9 @@ export const pieceKinds = [
   { id: "bridge", label: "Bridge", icon: "git-branch" },
 ] as const;
 
-// #endregion 🔖Types
+// #endregion ⚙️Types
 
-// #region 🔖Properties
+// #region 🕹️Properties
 
 export const properties = [
   { id: "gfa", label: "Gross Floor Area", value: "2349.53", unit: "m²" },
@@ -53,9 +53,9 @@ export const properties = [
   { id: "energy-demand", label: "Energy Demand", value: "99.44", unit: "kWh/m²a" },
 ] as const;
 
-// #endregion 🔖Properties
+// #endregion 🕹️Properties
 
-// #region 🔖Layers
+// #region 📱Layers
 
 export const layers = [
   { id: "tower", path: "tower" },
@@ -72,9 +72,9 @@ export const layers = [
   { id: "tower-10", path: "tower/10" },
 ] as const;
 
-// #endregion 🔖Layers
+// #endregion 📱Layers
 
-// #region 🔖Breadcrumbs
+// #region 🤖Breadcrumbs
 
 export const breadcrumbs = [
   { label: "Home", href: "/" },
@@ -83,4 +83,4 @@ export const breadcrumbs = [
   { label: "Capsule J", href: "/metabolism/types/capsule-j" },
 ] as const;
 
-// #endregion 🔖Breadcrumbs
+// #endregion 🤖Breadcrumbs

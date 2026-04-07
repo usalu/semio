@@ -1,5 +1,6 @@
 {
   "title": "Migrate Devcontainer Docs to Bundle README",
+  "emoji": "📝",
   "status": "closed",
   "description": "Migrate Devcontainer Persistence, Extension Install, and Playwright Browser Cache sections from root README.md to .devcontainer/README.md bundle docs.",
   "summary": "Appended three doc sections (Devcontainer Persistence, Devcontainer Extension Install, Playwright Browser Cache) from root README.md to .devcontainer/README.md Docs section",

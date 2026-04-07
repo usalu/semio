@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx
 // Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
 // Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import type { DesignChange, Design, DesignDiff } from "@semio/js";
 import { applyDesignDiff } from "@semio/js";

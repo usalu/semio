@@ -1,5 +1,6 @@
 {
   "title": "Test Ticket Assignment",
+  "emoji": "🧪",
   "status": "closed",
   "description": "Testing that the ticket is automatically assigned to the creator",
   "summary": "Test completed - assignment works correctly",

@@ -1,5 +1,6 @@
 {
   "title": "Change Default Output Format to Markdown",
+  "emoji": "📋",
   "status": "closed",
   "description": "Change the default output format of the repo cli cli to be markdown. The format options should be --format md for llms, --format text for humans and --format json for api or simply -md, -text, -json.",
   "summary": "Bulk close",

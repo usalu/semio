@@ -1,5 +1,6 @@
 {
   "title": "Cache Tree Build for CLI Performance",
+  "emoji": "🔨",
   "status": "closed",
   "description": "The CLI tree command is incredibly slow (~100s). The issue is that BuildMonorepoTree rescans the entire filesystem every time. Need to cache the serialized TreeNode tree to disk using the git fingerprint for invalidation, so cached tree loads in \u003c5s on cache hit.",
   "summary": "Implemented tree caching with gzip JSON disk cache, in-memory fuzzy search replacing Bleve, git command timeouts, and ToolGoalList/ToolTicketList/ToolPolicyList parity fixes. Tree returns in under 5s on warm cache. All test regressions fixed.",

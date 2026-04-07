@@ -1,5 +1,6 @@
 {
   "title": "Update Repo Logic for Projects",
+  "emoji": "📂",
   "status": "closed",
   "description": "Refactor repo/cli to support Project entity, new ID system, and new URI scheme.",
   "summary": "Refactored VSCode sidebar to Monorepo and Filter views, fixing build configuration.",

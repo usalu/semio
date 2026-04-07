@@ -1,5 +1,6 @@
 {
   "title": "Refactor Provider Abstractions",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Generalize all hardcoded dependencies into composable providers: SourceControlProvider, ManagementProvider, SandboxProvider, LanguageProvider, EditorProvider. Each provider uses native CLI and provides configure method. Abstract GitHub issue/milestone code to ManagementProvider. Abstract agent hooks to EditorProvider.",
   "summary": "Refactored hardcoded provider dependencies into composable provider interfaces. Implemented SourceControlProvider, ManagementProvider, SandboxProvider, EditorProvider interfaces with GitHub, Devcontainer, and 7 editor implementations. Wired 54 lifecycle gh calls through ManagementProvider. Renamed GitHub-specific identifiers to management-generic. Added 10 provider tests.",

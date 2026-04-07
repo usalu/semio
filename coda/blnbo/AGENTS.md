@@ -2,7 +2,7 @@
 technology: coda
 bundle:
  name: blnbo
- emoji: 📚
+ emoji: 🏗️
  description: The blnbo bundle for coda.
  kind: library
 ---

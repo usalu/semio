@@ -1,9 +1,8 @@
-// #region 🔖Header
-// [🧰repo⌨️server🛅app💻page](repo://p/i/repo/b/b/server/f/app/page.tsx)
+// #region 🧲Header
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0
 // Dashboard landing page for the repo server.
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 export default function DashboardPage() {
   return (

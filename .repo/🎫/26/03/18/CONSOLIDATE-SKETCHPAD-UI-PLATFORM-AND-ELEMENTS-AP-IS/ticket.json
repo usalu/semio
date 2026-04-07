@@ -1,5 +1,6 @@
 {
   "title": "Consolidate Sketchpad UI Platform And Elements APIs",
+  "emoji": "🧹",
   "status": "closed",
   "description": "Refactor elements/ui, semio/sketchpad, and coda/desktop so all basic domain-agnostic UI infrastructure lives in elements and all sketchpad functionality consumes that API cleanly. Implement and validate components, styling, i18n, hotkeys, multi-device layout behavior, drag and drop from panels into trees where domain-agnostic, and extend existing stories with interaction tests. Use the VS Code API surface as an architectural reference for clean workbench-style APIs. Update existing tests and stories in place, avoid new standalone test files where possible, and get the relevant test suites passing.",
   "summary": "Added reusable command-hotkey and responsive media-query hooks to elements/ui, refactored sketchpad to consume the shared command-hotkey API, wired coda desktop to the shared hotkey and responsive-shell hooks, and extended the existing UI and Tree Storybook stories with interaction coverage for panel toggles, command palettes, mobile panels, and generic tree drag-and-drop.",

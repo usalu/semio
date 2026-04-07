@@ -1,5 +1,6 @@
 {
   "title": "Fix TypeScript Policy Breachs in JS and Desktop Files",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix code policy breachs in TypeScript/TSX files by adding sections around orphan code and summary+spec comments before definitions in: semio/js/dev.ts, semio/js/i18n.ts, semio/js/index.ts, semio/js/playwright.config.ts, semio/desktop/main.ts, semio/desktop/renderer.tsx, semio/js/semio.benchmark.ts, semio/js/sketchpad/portColor.ts",
   "summary": "Bulk close",

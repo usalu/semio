@@ -1,5 +1,6 @@
 {
   "title": "Research Hook Architecture",
+  "emoji": "🪝",
   "status": "closed",
   "description": "Research the repo CLI codebase to understand the current event and hook architecture, file structure, types, and testing approach",
   "summary": "Comprehensive research of hook and event architecture in repo CLI. All event types, structs, functions, config files, test coverage, and data flows documented.",

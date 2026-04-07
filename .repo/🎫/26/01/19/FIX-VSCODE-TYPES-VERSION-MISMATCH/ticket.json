@@ -1,5 +1,6 @@
 {
   "title": "fix-vscode-types-version-mismatch",
+  "emoji": "🔧",
   "status": "closed",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/151"

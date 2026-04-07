@@ -1,5 +1,6 @@
 {
   "title": "Fix Sketchpad Scene Window Loading",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The sketchpad scene window isn't loading. flattenDesign skips connections because pieces aren't found, and blob URLs for 3D models fail to load causing WebGL context loss.",
   "summary": "Fixed sketchpad scene window not loading 3D models. Root cause: race condition in concurrent getFileBlobUrl calls where multiple PieceMesh components sharing the same fileGuid would independently download the same blob and call createKitFileObjectUrl, which revokes the previous blob URL before creating a new one — causing ERR_FILE_NOT_FOUND and WebGL context loss. Fixes: (1) Added pendingBlobDownloads Map to KitFileState for download deduplication so concurrent calls share a single download Promise. (2) Added retry logic (3 retries with exponential backoff) in PieceMesh and TypeMesh for timing gaps between kit data availability and file blob availability. (3) Added MeshErrorBoundary class component wrapping each piece's mesh loading to catch Three.js errors per-piece without crashing the entire scene. (4) Consolidated flattenDesign warning logs into a single summary instead of per-connection warnings. (5) Added [DEBUG] prefixed logging throughout _downloadFileBlobUrl for runtime tracing. All 134 vitest tests pass.",

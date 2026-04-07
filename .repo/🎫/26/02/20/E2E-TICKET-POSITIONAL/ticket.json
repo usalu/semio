@@ -1,5 +1,6 @@
 {
   "title": "E2E Ticket Positional",
+  "emoji": "🧪",
   "description": "E2E prompt positional",
   "goal": "TEST-GOAL",
   "interactions": [
@@ -120,32 +121,32 @@
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:00:57Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli tree \"event hook agent tool terminal search code edit test build plan prompt compacting\""
+          "query": "cd /workspaces/semio && ./repo/cli/cli tree \"event hook agent tool terminal search code edit test build plan prompt compacting\""
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-24T14:01:05Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli tree \"event hook agent tool terminal search code edit test build plan prompt compacting\""
+          "query": "cd /workspaces/semio && ./repo/cli/cli tree \"event hook agent tool terminal search code edit test build plan prompt compacting\""
         },
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:01:13Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli --help 2\u003e\u00261 | head -50"
+          "query": "cd /workspaces/semio && ./repo/cli/cli --help 2>&1 | head -50"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-24T14:01:20Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli --help 2\u003e\u00261 | head -50"
+          "query": "cd /workspaces/semio && ./repo/cli/cli --help 2>&1 | head -50"
         },
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:01:25Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli search \"event hook agent tool terminal search code edit test build plan prompt compacting\" 2\u003e\u00261 | head -200"
+          "query": "cd /workspaces/semio && ./repo/cli/cli search \"event hook agent tool terminal search code edit test build plan prompt compacting\" 2>&1 | head -200"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-24T14:01:52Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli search \"event hook agent tool terminal search code edit test build plan prompt compacting\" 2\u003e\u00261 | head -200"
+          "query": "cd /workspaces/semio && ./repo/cli/cli search \"event hook agent tool terminal search code edit test build plan prompt compacting\" 2>&1 | head -200"
         },
         {
           "kind": "agent.tool.ended",
@@ -275,7 +276,7 @@
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:15:57Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli ticket open \"SHIPPABLE/CLI-FOUNDATION\" \"Refactor Event Hook Architecture\" \"Refactor the event and hook architecture in repo CLI to match the new layout with renamed events (searching→search.starting, code.editing→code.edit.starting, etc.) and new events (test, build). Update all HookEvent constants, HookResult types, dispatch logic, tool classification, editor providers, configure command, and tests.\" \"copilot-chat\" \"opus-4-6\" 2\u003e\u00261"
+          "query": "cd /workspaces/semio && ./repo/cli/cli ticket open \"SHIPPABLE/CLI-FOUNDATION\" \"Refactor Event Hook Architecture\" \"Refactor the event and hook architecture in repo CLI to match the new layout with renamed events (searching→search.starting, code.editing→code.edit.starting, etc.) and new events (test, build). Update all HookEvent constants, HookResult types, dispatch logic, tool classification, editor providers, configure command, and tests.\" \"copilot-chat\" \"opus-4-6\" 2>&1"
         },
         {
           "kind": "agent.tool.searching.ended",
@@ -326,12 +327,12 @@
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:02:59Z",
-          "query": "cd /workspaces/semio \u0026\u0026 find repo/cli -type f -name \"*.go\" | head -80"
+          "query": "cd /workspaces/semio && find repo/cli -type f -name \"*.go\" | head -80"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-24T14:03:06Z",
-          "query": "cd /workspaces/semio \u0026\u0026 find repo/cli -type f -name \"*.go\" | head -80"
+          "query": "cd /workspaces/semio && find repo/cli -type f -name \"*.go\" | head -80"
         },
         {
           "kind": "agent.tool.searching",
@@ -600,67 +601,67 @@
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:08:47Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli ticket open \"\" \"Research Hook Architecture\" \"Research the repo CLI codebase to understand the current event and hook architecture\" \"copilot-chat\" \"opus-4-6\""
+          "query": "cd /workspaces/semio && ./repo/cli/cli ticket open \"\" \"Research Hook Architecture\" \"Research the repo CLI codebase to understand the current event and hook architecture\" \"copilot-chat\" \"opus-4-6\""
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-24T14:08:55Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli ticket open \"\" \"Research Hook Architecture\" \"Research the repo CLI codebase to understand the current event and hook architecture\" \"copilot-chat\" \"opus-4-6\""
+          "query": "cd /workspaces/semio && ./repo/cli/cli ticket open \"\" \"Research Hook Architecture\" \"Research the repo CLI codebase to understand the current event and hook architecture\" \"copilot-chat\" \"opus-4-6\""
         },
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:08:59Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli tree \"goals tickets hook event\" 2\u003e\u00261 | head -60"
+          "query": "cd /workspaces/semio && ./repo/cli/cli tree \"goals tickets hook event\" 2>&1 | head -60"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-24T14:09:06Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli tree \"goals tickets hook event\" 2\u003e\u00261 | head -60"
+          "query": "cd /workspaces/semio && ./repo/cli/cli tree \"goals tickets hook event\" 2>&1 | head -60"
         },
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:09:14Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli --help 2\u003e\u00261 | head -30"
+          "query": "cd /workspaces/semio && ./repo/cli/cli --help 2>&1 | head -30"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-24T14:09:21Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli --help 2\u003e\u00261 | head -30"
+          "query": "cd /workspaces/semio && ./repo/cli/cli --help 2>&1 | head -30"
         },
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:09:25Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli goal list --json 2\u003e\u00261 | head -30"
+          "query": "cd /workspaces/semio && ./repo/cli/cli goal list --json 2>&1 | head -30"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-24T14:09:32Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli goal list --json 2\u003e\u00261 | head -30"
+          "query": "cd /workspaces/semio && ./repo/cli/cli goal list --json 2>&1 | head -30"
         },
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:09:35Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli query \"goal\" --json 2\u003e\u00261 | head -30"
+          "query": "cd /workspaces/semio && ./repo/cli/cli query \"goal\" --json 2>&1 | head -30"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-24T14:09:46Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli query \"goal\" --json 2\u003e\u00261 | head -30"
+          "query": "cd /workspaces/semio && ./repo/cli/cli query \"goal\" --json 2>&1 | head -30"
         },
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:09:52Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ls .repo/🎯/ 2\u003e/dev/null | head -10"
+          "query": "cd /workspaces/semio && ls .repo/🎯/ 2>/dev/null | head -10"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-24T14:09:59Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ls .repo/🎯/ 2\u003e/dev/null | head -10"
+          "query": "cd /workspaces/semio && ls .repo/🎯/ 2>/dev/null | head -10"
         },
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-24T14:10:04Z",
-          "query": "cd /workspaces/semio \u0026\u0026 ./repo/cli/cli ticket open \"AI-OPTIMIZED-REPO\" \"Research Hook Architecture\" \"Research the repo CLI codebase to understand the current event and hook architecture, file structure, types, and testing approach\" \"copilot-chat\" \"opus-4-6\""
+          "query": "cd /workspaces/semio && ./repo/cli/cli ticket open \"AI-OPTIMIZED-REPO\" \"Research Hook Architecture\" \"Research the repo CLI codebase to understand the current event and hook architecture, file structure, types, and testing approach\" \"copilot-chat\" \"opus-4-6\""
         },
         {
           "kind": "agent.ended",
@@ -669,6 +670,4 @@
       ]
     }
   ]
-}
-]
 }

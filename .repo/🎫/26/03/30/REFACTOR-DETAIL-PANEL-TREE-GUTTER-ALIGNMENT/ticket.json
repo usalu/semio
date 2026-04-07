@@ -1,5 +1,6 @@
 {
   "title": "Refactor Detail Panel Tree Gutter Alignment",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Refactor the semio sketchpad Details panel tree layout so TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, and property-layout tree items render with a dedicated hierarchy gutter and one shared content start column. Preserve TreeContext behavior, PanelSection usage, property row/value-column layout, actions, expand-collapse, drag reorder, and data model. Keep tree guides continuous across subtree height and independent from row gaps.",
   "summary": "Increased the default right-side inspector width, made steppers fill the shared value column and always render their current numeric value, and normalized shared property-control stretching so nested inspector rows keep one consistent control width without flattening the tree.",

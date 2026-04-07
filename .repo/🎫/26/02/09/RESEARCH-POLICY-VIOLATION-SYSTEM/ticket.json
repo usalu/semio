@@ -1,5 +1,6 @@
 {
   "title": "Research Policy Breach System",
+  "emoji": "📋",
   "status": "closed",
   "description": "Research the existing policy/breach system in the Go repo CLI including BreachCode constants, Policy structs, CheckPoliciesWithContext, test patterns, and applyAutofixes mechanism",
   "summary": "Researched the complete policy/breach system in main.go: documented all 31 BreachCode constants, the Policy/PolicyDef/PolicyContext/Breach/StatuteMeta structs, 4 registered policies, CheckPoliciesWithContext flow, applyAutofixes mechanism, and 7 test patterns.",

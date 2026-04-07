@@ -1,5 +1,6 @@
 {
   "title": "Refactor Contributor Identification to Alias",
+  "emoji": "♻️",
   "status": "open",
   "description": "Contributors are no longer identified by their GitHub name but with their alias from contributor.json. Refactor all code, data, test to use alias-based IDs (e.g. 🧑‍💻ueli instead of 🧑‍💻httpsgithubcomusalu or 🧑‍💻usalu). Update Go CLI contributor loading, ID generation, conversion functions, all JSON data files, and all tests.",
   "github": {

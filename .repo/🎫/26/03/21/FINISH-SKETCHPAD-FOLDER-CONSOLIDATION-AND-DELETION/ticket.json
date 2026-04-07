@@ -1,5 +1,6 @@
 {
   "title": "Finish Sketchpad Folder Consolidation and Deletion",
+  "emoji": "✏️",
   "status": "open",
   "description": "Consolidate all remaining non-config files in semio/sketchpad/sketchpad/ (Design.tsx, Type.tsx, Kit.tsx, Quality.tsx, Docs.tsx, Home.tsx, Feedback.tsx, kitSelectionHelper.ts, kitSelectionHelpers.ts) into Sketchpad.tsx. Then move Sketchpad.tsx and supporting directories (locales, pages) up one level and delete the sketchpad subfolder. Update all imports. Verify build and playwright tests pass.",
   "github": {

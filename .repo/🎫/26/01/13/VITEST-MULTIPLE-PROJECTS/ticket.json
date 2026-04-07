@@ -1,5 +1,6 @@
 {
   "title": "vitest-multiple-projects",
+  "emoji": "📋",
   "status": "closed",
   "description": "Investigate Vitest multiple projects warning and suggest solutions",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoprojectmechanism"

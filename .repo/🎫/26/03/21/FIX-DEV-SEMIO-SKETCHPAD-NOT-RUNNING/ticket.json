@@ -1,5 +1,6 @@
 {
   "title": "Fix dev semio sketchpad not running",
+  "emoji": "🔧",
   "status": "open",
   "description": "dev semio sketchpad is not running",
   "github": {

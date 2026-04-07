@@ -1,5 +1,6 @@
 {
   "title": "Streaming NDJSON for Json List Commands",
+  "emoji": "📋",
   "status": "closed",
   "description": "All --json list commands should return just pure data in streaming ndjson.",
   "summary": "Implemented pure NDJSON streaming output for list commands and updated VS Code extension to handle unwrapped data events while maintaining compatibility.",

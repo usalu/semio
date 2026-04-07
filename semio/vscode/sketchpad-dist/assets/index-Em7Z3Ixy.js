@@ -179,7 +179,7 @@ var JsonValue;
         return isJsonObject(value);
     }
     JsonValue.isJson = isJson;
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // 🏷️eslint-disable-next-line @typescript-eslint/ban-types
     function isJsonObject(value) {
         return !Array.isArray(value) && value !== null && typeof value === 'object';
     }
@@ -322,7 +322,7 @@ function ensureElementPositionAbsolute(element) {
     }
 }
 /**
- * Replacement for JQuery $.extend(true, target, obj)
+ * 🔍Replacement for JQuery $.extend(true, target, obj)
  * @internal
 */
 function deepExtend(target, obj) {
@@ -414,7 +414,7 @@ function getErrorMessage(e) {
 }
 
 /**
- * Minifies and unminifies configs by replacing frequent keys
+ * ⚙️Minifies and unminifies configs by replacing frequent keys
  * and values with one letter substitutes. Config options must
  * retain array position/index, add new options at the end.
  * @internal
@@ -495,7 +495,7 @@ var ConfigMinifier;
         const length = from.length;
         const to = new Array(length);
         for (let i = 0; i < length; i++) {
-            // In original code, array indices were numbers and not translated
+            // 🔢In original code, array indices were numbers and not translated
             const fromValue = from[i];
             to[i] = translateValue(fromValue, minify);
         }
@@ -1039,7 +1039,7 @@ var ResolvedLayoutConfig;
     }
     ResolvedLayoutConfig.copyOpenPopouts = copyOpenPopouts;
     /**
-     * Takes a GoldenLayout configuration object and
+     * 🔷Takes a GoldenLayout configuration object and
      * replaces its keys and values recursively with
      * one letter counterparts
      */
@@ -1048,7 +1048,7 @@ var ResolvedLayoutConfig;
     }
     ResolvedLayoutConfig.minifyConfig = minifyConfig;
     /**
-     * Takes a configuration Object that was previously minified
+     * 🔶Takes a configuration Object that was previously minified
      * using minifyConfig and returns its original version
      */
     function unminifyConfig(minifiedConfig) {
@@ -1264,7 +1264,7 @@ var HeaderedItemConfig;
     /** @internal */
     function resolveIdAndMaximised(config) {
         let id;
-        // To support legacy configs with Id saved as an array of string, assign config.id to a type which includes string array
+        // 🔤To support legacy configs with Id saved as an array of string, assign config.id to a type which includes string array
         let legacyId = config.id;
         let legacyMaximised = false;
         if (legacyId === undefined) {
@@ -1636,7 +1636,7 @@ var RootItemConfig;
     }
     RootItemConfig.fromResolvedOrUndefined = fromResolvedOrUndefined;
 })(RootItemConfig || (RootItemConfig = {}));
-/** Use to specify LayoutConfig with defaults or deserialise a LayoutConfig.
+/** 🔹Use to specify LayoutConfig with defaults or deserialise a LayoutConfig.
  * Deserialisation will handle backwards compatibility.
  * Note that LayoutConfig should be used for serialisation (not LayoutConfig)
  * @public
@@ -1947,7 +1947,7 @@ function formatUndefinableSize(size, sizeUnit) {
 }
 
 /**
- * A generic and very fast EventEmitter implementation. On top of emitting the actual event it emits an
+ * 📡A generic and very fast EventEmitter implementation. On top of emitting the actual event it emits an
  * {@link (EventEmitter:namespace).ALL_EVENT} event for every event triggered. This allows to hook into it and proxy events forwards
  * @public
  */
@@ -2272,7 +2272,7 @@ class ComponentContainer extends EventEmitter {
                 return false;
             }
             else {
-                // ancestorItem is Row or Column
+                // 🔖ancestorItem is Row or Column
                 const direction = ancestorItem.isColumn ? 'height' : 'width';
                 const currentSize = this[direction];
                 if (currentSize === null) {
@@ -2547,7 +2547,7 @@ class ComponentContainer extends EventEmitter {
 }
 
 /**
- * Pops a content item out into a new browser window.
+ * 🔸Pops a content item out into a new browser window.
  * This is achieved by
  *
  *    - Creating a new configuration with the content item as root element
@@ -2645,7 +2645,7 @@ class BrowserPopout extends EventEmitter {
         }
     }
     /**
-     * Returns the popped out item to its original position. If the original
+     * 🔺Returns the popped out item to its original position. If the original
      * parent isn't available anymore it falls back to the layout's topmost element
      */
     popIn() {
@@ -2704,13 +2704,13 @@ class BrowserPopout extends EventEmitter {
     createWindow() {
         const url = this.createUrl();
         /**
-         * Bogus title to prevent re-usage of existing window with the
+         * 📌Bogus title to prevent re-usage of existing window with the
          * same title. The actual title will be set by the new window's
          * GoldenLayout instance if it detects that it is in subWindowMode
          */
         const target = Math.floor(Math.random() * 1000000).toString(36);
         /**
-         * The options as used in the window.open string
+         * 📬The options as used in the window.open string
          */
         const features = this.serializeWindowFeatures({
             width: this._initialWindowSize.width,
@@ -2836,7 +2836,7 @@ class BrowserPopout extends EventEmitter {
 }
 
 /**
- * This is the baseclass that all content items inherit from.
+ * 🏛️This is the baseclass that all content items inherit from.
  * Most methods provide a subset of what the sub-classes do.
  *
  * It also provides a number of functions for tree traversal
@@ -2892,7 +2892,7 @@ class ContentItem extends EventEmitter {
         return item.isStack || item.isGround;
     }
     /**
-     * Removes a child node (and its children) from the tree
+     * ➖Removes a child node (and its children) from the tree
      * @param contentItem - The child item to remove
      * @param keepChild - Whether to destroy the removed item
      */
@@ -2964,7 +2964,7 @@ class ContentItem extends EventEmitter {
      * @internal
      */
     replaceChild(oldChild, newChild, destroyOldChild = false) {
-        // Do not try to replace ComponentItem - will not work
+        // 💼Do not try to replace ComponentItem - will not work
         const index = this._contentItems.indexOf(oldChild);
         const parentNode = oldChild._element.parentNode;
         if (index === -1) {
@@ -4009,7 +4009,7 @@ class RowOrColumn extends ContentItem {
             }
             else {
                 /**
-                 * Evenly reduce all columns that are over the min item width to make up the difference.
+                 * 🔻Evenly reduce all columns that are over the min item width to make up the difference.
                  */
                 const reducePercent = totalUnderMin / totalOverMin;
                 let remainingSize = totalUnderMin;
@@ -4198,7 +4198,7 @@ class RowOrColumn extends ContentItem {
 })(RowOrColumn || (RowOrColumn = {}));
 
 /**
- * GroundItem is the ContentItem whose one child is the root ContentItem (Root is planted in Ground).
+ * 🌱GroundItem is the ContentItem whose one child is the root ContentItem (Root is planted in Ground).
  * (Previously it was called root however this was incorrect as its child is the root item)
  * There is only one instance of GroundItem and it is automatically created by the Layout Manager
  * @internal
@@ -4209,7 +4209,7 @@ class GroundItem extends ComponentParentableItem {
         this.isGround = true;
         this._childElementContainer = this.element;
         this._containerElement = containerElement;
-        // insert before any pre-existing content elements
+        // ⬛insert before any pre-existing content elements
         let before = null;
         while (true) {
             const prev = before ? before.previousSibling : this._containerElement.lastChild;
@@ -4246,7 +4246,7 @@ class GroundItem extends ComponentParentableItem {
         }
     }
     clearRoot() {
-        // Remove existing root if it exists
+        // 🚚Remove existing root if it exists
         const contentItems = this.contentItems;
         switch (contentItems.length) {
             case 0: {
@@ -4394,7 +4394,7 @@ class GroundItem extends ComponentParentableItem {
     onDrop(contentItem, area) {
         if (contentItem.isComponent) {
             const itemConfig = ResolvedStackItemConfig.createDefault();
-            // since ResolvedItemConfig.contentItems not set up, we need to add header from Component
+            // 🗃️since ResolvedItemConfig.contentItems not set up, we need to add header from Component
             const component = contentItem;
             itemConfig.header = ResolvedHeaderedItemConfig.Header.createCopy(component.headerConfig);
             const stack = this.layoutManager.createAndInitContentItem(itemConfig, this);
@@ -4566,7 +4566,7 @@ class HeaderButton {
 }
 
 /**
- * Represents an individual tab within a Stack's header
+ * 📚Represents an individual tab within a Stack's header
  * @public
  */
 class Tab {
@@ -4953,7 +4953,7 @@ class TabsContainer {
                 const tabWidth = tabElement.offsetWidth + tabMarginRight;
                 cumulativeTabWidth += tabWidth;
                 //Include the active tab's width if it isn't already
-                //This is to ensure there is room to show the active tab
+                //⬜This is to ensure there is room to show the active tab
                 let visibleTabWidth = 0;
                 if (activeIndex <= i) {
                     visibleTabWidth = cumulativeTabWidth;
@@ -4968,7 +4968,7 @@ class TabsContainer {
                     //Once allowance is exceeded, all remaining tabs go to menu.
                     if (!tabOverlapAllowanceExceeded) {
                         //No overlap for first tab or active tab
-                        //Overlap spreads among non-active, non-first tabs
+                        //📖Overlap spreads among non-active, non-first tabs
                         let overlap;
                         if (activeIndex > 0 && activeIndex <= i) {
                             overlap = (visibleTabWidth - availableWidth) / (i - 1);
@@ -5051,7 +5051,7 @@ class TabsContainer {
 }
 
 /**
- * This class represents a header above a Stack ContentItem.
+ * 🟥This class represents a header above a Stack ContentItem.
  * @public
  */
 class Header extends EventEmitter {
@@ -5423,7 +5423,7 @@ class Stack extends ComponentParentableItem {
         this._headerConfig = config.header;
         const layoutHeaderConfig = layoutManager.layoutConfig.header;
         const configContent = config.content;
-        // If stack has only one component, then we can also check this for header settings
+        // ✔️If stack has only one component, then we can also check this for header settings
         let componentHeaderConfig;
         if (configContent.length !== 1) {
             componentHeaderConfig = undefined;
@@ -5434,7 +5434,7 @@ class Stack extends ComponentParentableItem {
         }
         this._initialWantMaximise = config.maximised;
         this._initialActiveItemIndex = (_a = config.activeItemIndex) !== null && _a !== void 0 ? _a : 0; // make sure defined
-        // check for defined value for each item in order of Stack (this Item), Component (first child), Manager.
+        // 🟧check for defined value for each item in order of Stack (this Item), Component (first child), Manager.
         const show = (_d = (_c = (_b = this._headerConfig) === null || _b === void 0 ? void 0 : _b.show) !== null && _c !== void 0 ? _c : componentHeaderConfig === null || componentHeaderConfig === void 0 ? void 0 : componentHeaderConfig.show) !== null && _d !== void 0 ? _d : layoutHeaderConfig.show;
         const popout = (_g = (_f = (_e = this._headerConfig) === null || _e === void 0 ? void 0 : _e.popout) !== null && _f !== void 0 ? _f : componentHeaderConfig === null || componentHeaderConfig === void 0 ? void 0 : componentHeaderConfig.popout) !== null && _g !== void 0 ? _g : layoutHeaderConfig.popout;
         const maximise = (_k = (_j = (_h = this._headerConfig) === null || _h === void 0 ? void 0 : _h.maximise) !== null && _j !== void 0 ? _j : componentHeaderConfig === null || componentHeaderConfig === void 0 ? void 0 : componentHeaderConfig.maximise) !== null && _k !== void 0 ? _k : layoutHeaderConfig.maximise;
@@ -5650,7 +5650,7 @@ class Stack extends ComponentParentableItem {
             if (!stackWillBeDeleted) {
                 // At this point we're already sure we have at least one content item left *after*
                 // removing contentItem, so we can safely assume index 1 is a valid one if
-                // the index of contentItem is 0, otherwise we just use the previous content item.
+                // 🟨the index of contentItem is 0, otherwise we just use the previous content item.
                 const newActiveComponentIdx = index === 0 ? 1 : index - 1;
                 this.setActiveComponentItem(this.contentItems[newActiveComponentIdx], false);
             }
@@ -5750,7 +5750,7 @@ class Stack extends ComponentParentableItem {
         }
     }
     /**
-     * Ok, this one is going to be the tricky one: The user has dropped a {@link (ContentItem:class)} onto this stack.
+     * 👤Ok, this one is going to be the tricky one: The user has dropped a {@link (ContentItem:class)} onto this stack.
      *
      * It was dropped on either the stacks header or the top, right, bottom or left bit of the content area
      * (which one of those is stored in this._dropSegment). Now, if the user has dropped on the header the case
@@ -6021,7 +6021,7 @@ class Stack extends ComponentParentableItem {
         const visibleTabsLength = this._header.lastVisibleTabIndex + 1;
         const tabsContainerElement = this._header.tabsContainerElement;
         const tabsContainerElementChildNodes = tabsContainerElement.childNodes;
-        // Create shallow copy of childNodes list, excluding DropPlaceHolder, as we will be modifying the childNodes list
+        // 🆕Create shallow copy of childNodes list, excluding DropPlaceHolder, as we will be modifying the childNodes list
         const visibleTabElements = new Array(visibleTabsLength);
         let tabIndex = 0;
         let tabCount = 0;
@@ -6051,7 +6051,7 @@ class Stack extends ComponentParentableItem {
         }
         else {
             let tabIndex = 0;
-            // This indicates whether our cursor is exactly over a tab
+            // 🟩This indicates whether our cursor is exactly over a tab
             let isAboveTab = false;
             let tabTop;
             let tabLeft;
@@ -6234,7 +6234,7 @@ class Stack extends ComponentParentableItem {
 })(Stack || (Stack = {}));
 
 /**
- * This class creates a temporary container
+ * 📦This class creates a temporary container
  * for the component whilst it is being dragged
  * and handles drag events
  * @internal
@@ -6366,7 +6366,7 @@ class DragProxy extends EventEmitter {
         }
     }
     /**
-     * Callback when the drag has finished. Determines the drop area
+     * 🟦Callback when the drag has finished. Determines the drop area
      * and adds the child to it
      * @internal
      */
@@ -6446,7 +6446,7 @@ class DragProxy extends EventEmitter {
 }
 
 /**
- * Allows for any DOM item to create a component on drag
+ * 🟪Allows for any DOM item to create a component on drag
  * start to be dragged into the Layout
  * @public
  */
@@ -6535,7 +6535,7 @@ class DragSource {
         // Create a dummy ContentItem only for drag purposes
         // All ContentItems (except for GroundItem) need a parent.  When dragging, the parent is not used.
         // Instead of allowing null parents (as Javascript version did), use a temporary dummy GroundItem parent and add ContentItem to that
-        // If this does not work, need to create alternative GroundItem class
+        // 🟫If this does not work, need to create alternative GroundItem class
         const resolvedItemConfig = ComponentItemConfig.resolve(dragSourceItemConfig, false);
         const componentItem = new ComponentItem(this._layoutManager, resolvedItemConfig, this._dummyGroundContentItem);
         this._dummyGroundContentItem.contentItems.push(componentItem);
@@ -6670,7 +6670,7 @@ class TransitionIndicator {
 }
 
 /**
- * An EventEmitter singleton that propagates events
+ * 📤An EventEmitter singleton that propagates events
  * across multiple windows. This is a little bit trickier since
  * windows are allowed to open childWindows in their own right.
  *
@@ -7297,7 +7297,7 @@ class LayoutManager extends EventEmitter {
                         throw new UnreachableCaseError('LMAIALU98881733', parentItem.type);
                 }
                 if (ItemConfig.isComponent(itemConfig)) {
-                    // see if stack was inserted
+                    // 💠see if stack was inserted
                     const item = parentItem.contentItems[addIdx];
                     if (ContentItem.isStack(item)) {
                         parentItem = item;
@@ -7457,7 +7457,7 @@ class LayoutManager extends EventEmitter {
     /** @internal */
     createPopoutFromContentItem(item, window, parentId, indexInParent) {
         /**
-         * If the item is the only component within a stack or for some
+         * 🔳If the item is the only component within a stack or for some
          * other reason the only child of its parent the parent will be destroyed
          * when the child is removed.
          *
@@ -7780,7 +7780,7 @@ class LayoutManager extends EventEmitter {
     calculateItemAreas() {
         const allContentItems = this.getAllContentItems();
         /**
-         * If the last item is dragged out, highlight the entire container size to
+         * 🔲If the last item is dragged out, highlight the entire container size to
          * allow to re-drop it. this.ground.contentiItems.length === 0 at this point
          *
          * Don't include ground into the possible drop areas though otherwise since it
@@ -7792,7 +7792,7 @@ class LayoutManager extends EventEmitter {
         }
         else {
             if (allContentItems.length === 1) {
-                // No root ContentItem (just Ground ContentItem)
+                // ▪️No root ContentItem (just Ground ContentItem)
                 const groundArea = groundItem.getElementArea();
                 if (groundArea === null) {
                     throw new UnexpectedNullError('LMCIARA44365');
@@ -8042,13 +8042,13 @@ class LayoutManager extends EventEmitter {
                     throw new UnexpectedUndefinedError('LMACR77412');
                 }
                 else {
-                    // If there is only one column, do nothing.
+                    // ▫️If there is only one column, do nothing.
                     const columnCount = this._groundItem.contentItems[0].contentItems.length;
                     if (columnCount <= 1) {
                         return;
                     }
                     else {
-                        // If they all still fit, do nothing.
+                        // ◾If they all still fit, do nothing.
                         const minItemWidth = this.layoutConfig.dimensions.defaultMinItemWidth;
                         const totalMinWidth = columnCount * minItemWidth;
                         if (totalMinWidth <= this._width) {
@@ -8057,7 +8057,7 @@ class LayoutManager extends EventEmitter {
                         else {
                             // Prevent updates while it is already happening.
                             this._updatingColumnsResponsive = true;
-                            // Figure out how many columns to stack, and put them all in the first stack container.
+                            // ◽Figure out how many columns to stack, and put them all in the first stack container.
                             const finalColumnCount = Math.max(Math.floor(this._width / minItemWidth), 1);
                             const stackColumnCount = columnCount - finalColumnCount;
                             const rootContentItem = this._groundItem.contentItems[0];
@@ -8068,7 +8068,7 @@ class LayoutManager extends EventEmitter {
                             else {
                                 const firstStackContainer = allStacks[0];
                                 for (let i = 0; i < stackColumnCount; i++) {
-                                    // Stack from right.
+                                    // ◻️Stack from right.
                                     const column = rootContentItem.contentItems[rootContentItem.contentItems.length - 1];
                                     this.addChildContentItemsToContainer(firstStackContainer, column);
                                 }
@@ -8547,7 +8547,7 @@ class VirtualLayout extends LayoutManager {
             }
             else {
                 // There is no component registered for this type, and we don't have a getComponentEvent defined.
-                // This might happen when the user pops out a dialog and the component types are not registered upfront.
+                // 💬This might happen when the user pops out a dialog and the component types are not registered upfront.
                 const text = i18nStrings[2 /* ComponentTypeNotRegisteredAndBindComponentEventHandlerNotAssigned */];
                 const message = `${text}: ${JSON.stringify(itemConfig)}`;
                 throw new BindError(message);
@@ -8573,7 +8573,7 @@ class VirtualLayout extends LayoutManager {
 }
 /** @public */
 (function (VirtualLayout) {
-    /** @internal
+    /** ◼️@internal
      * Veriable to hold the state whether we already checked if we are running in a sub window.
      * Fixes popout and creation of nested golden-layouts.
      */
@@ -8781,7 +8781,7 @@ class GoldenLayout extends VirtualLayout {
         let result;
         if (instantiator !== undefined) {
             const virtual = instantiator.virtual;
-            // handle case where component is obtained by name or component constructor callback
+            // 🧱handle case where component is obtained by name or component constructor callback
             let componentState;
             if (itemConfig.componentState === undefined) {
                 componentState = undefined;

@@ -1,5 +1,6 @@
 {
   "title": "Analyze Python Definition Format",
+  "emoji": "📋",
   "status": "closed",
   "description": "Analyze how Python definitions are currently documented and how the CLI detects them, to understand what would need to change for triple-quote docstring support",
   "summary": "Analysis of Python definition format across all 4 Python files and Go CLI detection/autofix code. No code changes made.",

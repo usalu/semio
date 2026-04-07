@@ -1,5 +1,6 @@
 {
   "title": "Repo Binary Fixes: Ticket Path, CLI Flags, Title Updates, and GitHub Integration",
+  "emoji": "📂",
   "status": "closed",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/172"

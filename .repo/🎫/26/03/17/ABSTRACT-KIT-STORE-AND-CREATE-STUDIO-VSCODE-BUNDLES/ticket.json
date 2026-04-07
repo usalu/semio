@@ -1,5 +1,6 @@
 {
   "title": "Abstract Kit Store and Create Studio Vscode Bundles",
+  "emoji": "🆕",
   "status": "closed",
   "description": "Abstract the Kit Store completely from sketchpad. Create a new semio bundle called studio that has the yjs kit provider. Pass it as a root prop to Sketchpad. Remove the yjs dependency completely from sketchpad. Create File store (JSON sync) and Folder store (sqlite sync). Create a semio vscode bundle that opens sketchpad when a JSON kit file is opened.",
   "summary": "Created @semio/studio bundle with Y.js re-exports and persistence providers (IndexeddbPersistence, JSON file, SQLite folder). Moved yjs imports from sketchpad to studio. Created separate @semio/vscode extension for kit.json editing with CustomTextEditorProvider. Reverted repo/vscode changes. All builds pass, all 22 tests pass.",

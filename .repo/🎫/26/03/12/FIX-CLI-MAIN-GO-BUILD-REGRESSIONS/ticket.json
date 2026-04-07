@@ -1,5 +1,6 @@
 {
   "title": "Fix CLI Main Go Build Regressions",
+  "emoji": "🔧",
   "status": "open",
   "description": "Repair compile regressions in repo/cli/main.go introduced by malformed edits; restore build and tests to passing.",
   "github": {

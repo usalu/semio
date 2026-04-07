@@ -1,5 +1,6 @@
 {
   "title": "Transform Search View to Filter View and Restore Codebase View",
+  "emoji": "📋",
   "status": "closed",
   "description": "Replace Search view with Filter view and restore Codebase view functionality",
   "summary": "Bulk close",

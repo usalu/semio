@@ -1,5 +1,6 @@
 {
   "title": "Tree Text Short IDs",
+  "emoji": "📋",
   "status": "closed",
   "description": "Fix --text to show only tree part of IDs",
   "summary": "Fixed renderTreeNodeText to temporarily clear parentId before calling renderEntityHuman so tree text output shows only the own ID segment instead of full hierarchical chains. Added tests for nested goal short IDs and parentId restoration.",

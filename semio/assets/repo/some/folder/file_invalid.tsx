@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // GNU Affero General Public License
 // MIT License
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 // #region
 
@@ -11,18 +11,18 @@ const unnamedRegionValue = 1;
 
 // #endregion
 
-// #region 🔖MissingEnd
+// #region 📷MissingEnd
 
 const missingEnd = 2;
 
 const mismatchName = 3;
 
-// #endregion 🔖MissingEnd
+// #endregion 📷MissingEnd
 
-// #region 🔖Empty
+// #region 🧮Empty
 
 const insideComments = 4;
 
-// #endregion 🔖Empty
+// #endregion 🧮Empty
 
 const orphanValue = 5;

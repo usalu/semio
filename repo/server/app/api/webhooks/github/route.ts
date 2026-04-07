@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🧰repo⌨️server🛅app🛅api🛅webhooks🛅github💻route](repo://p/i/repo/b/b/server/f/app/api/webhooks/github/route.ts)
+// #region 🧲Header
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0
 // GitHub webhook handler for issue events and push events.
@@ -8,7 +7,7 @@
 // - Verifies HMAC-SHA256 signature when GITHUB_WEBHOOK_SECRET is set.
 // - Caches issue comments for correlating close/reopen events.
 // - Processes push events for contributor work tracking.
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
@@ -17,7 +16,7 @@ import { removeContributorWorkForCheckpoint } from "@/lib/db";
 
 const GITHUB_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
 
-// In-memory comment cache (same as Go server)
+// 💬In-memory comment cache (same as Go server)
 const commentCache = new Map<
   string,
   { body: string; actor: string; repo: string; issue: number; time: Date }

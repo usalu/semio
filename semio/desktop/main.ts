@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🖱️desktop💻main](repo://p/u/semio/b/u/desktop/f/main.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Entry point for the Electron main process managing windows and lifecycle.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Main Process
-// [👤semio🖱️desktop💻main🔖mainprocess](repo://p/u/semio/b/u/desktop/f/main.ts/s/Main%20Process)
+// #region 🐙Main Process
 // Electron main process that creates the browser window and registers IPC handlers.
 // MUST quit on all windows closed except on macOS.
 
@@ -36,7 +34,6 @@ if (process.env.REMOTE_CONTAINERS || process.env.CODESPACES || process.env.CONTA
 
 /**
  * Creates the main Electron browser window with preload and vite integration.
-// [👤semio🖱️desktop💻main🔖mainprocess🛠️createwindow](repo://p/u/semio/b/u/desktop/f/main.ts/s/Main%20Process/d/i/createWindow)
  * MUST load the vite dev server URL in development and the built file in production.
  **/
 const createWindow = () => {
@@ -101,7 +98,7 @@ app.whenReady().then(() => {
     return os.userInfo().username;
   });
 
-  // #region 🔖FolderIPC
+  // #region 🗂️FolderIPC
   // IPC handlers for folder-based kit storage.
   ipcMain.handle("select-folder", async () => {
     const result = await dialog.showOpenDialog({
@@ -200,7 +197,7 @@ app.whenReady().then(() => {
     recent = [folderPath, ...recent.filter((f: string) => f !== folderPath)].slice(0, 10);
     fs.writeFileSync(configPath, JSON.stringify(recent), "utf-8");
   });
-  // #endregion 🔖FolderIPC
+  // #endregion 🗂️FolderIPC
 });
 
-// #endregion 🔖Main Process
+// #endregion 🐙Main Process

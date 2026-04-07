@@ -1,5 +1,6 @@
 {
   "title": "Unify Sketchpad Panel Toggles With Elements UI",
+  "emoji": "🎨",
   "status": "open",
   "description": "Consolidate all sketchpad tests into one test per app (Home, Kit, Design, Type, Docs, Feedback). Make sure all tests cover the same functionality and pass.",
   "summary": "Merged sketchpad Playwright coverage down to one test per app by converting auxiliary app tests into helper flows invoked from the primary Home, Kit, Type, and Design tests. Preserved the merged coverage and adjusted stale duplicate panel/toolbar assertions to tolerate current runtime paths where specific controls are not mounted.",

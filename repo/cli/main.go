@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🧰repo⌨️cli💻main](repo://p/i/repo/b/b/cli/f/main.go)
+// #region 🧲Header
 
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Monorepo CLI tool for repository management, analysis and code generation.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Preamble
-// [🧰repo⌨️cli💻main🔖preamble](repo://p/i/repo/b/b/cli/f/main.go/s/Preamble)
+// #region 🤸Preamble
 // Package declaration and dependency imports for the repo CLI.
 
 package main
@@ -65,32 +63,26 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// #endregion 🔖Preamble
+// #endregion 🤸Preamble
 
-// #region 🔖Templates
-// [🧰repo⌨️cli💻main🔖templates](repo://p/i/repo/b/b/cli/f/main.go/s/Templates)
+// #region 🎁Templates
 // Embedded template files and initialization for text and markdown rendering.
-// [🧰repo⌨️cli💻main🔖templates🪨texttemplatecontent](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/textTemplateContent)
 //
 //go:embed templates/renderers/text.tpl
 var textTemplateContent string
 
-// [🧰repo⌨️cli💻main🔖templates🪨markdowntemplatecontent](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/markdownTemplateContent)
 //
 //go:embed templates/renderers/markdown.tpl
 var markdownTemplateContent string
 
-// [🧰repo⌨️cli💻main🔖templates🪨prompttemplatesfs](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/promptTemplatesFS)
 //
 //go:embed templates/prompts/*.tpl
 var promptTemplatesFS embed.FS
 
-// [🧰repo⌨️cli💻main🔖templates🪨agenttemplatesfs](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/agentTemplatesFS)
 //
 //go:embed templates/agents/*.tpl
 var agentTemplatesFS embed.FS
 
-// [🧰repo⌨️cli💻main🔖templates🪨summarytemplatesfs](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/summaryTemplatesFS)
 //
 //go:embed templates/summaries/*.tpl
 var summaryTemplatesFS embed.FS
@@ -100,8 +92,7 @@ var (
 	mdTpl   *template.Template
 )
 
-// [🧰repo⌨️cli💻main🔖templates🛠️templatefuncmap](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/templateFuncMap)
-// templateFuncMap holds the data fields for a templateFuncMap record.
+// 💿templateFuncMap holds the data fields for a templateFuncMap record.
 func templateFuncMap() template.FuncMap {
 	fm := sprig.TxtFuncMap()
 	fm["colorize"] = func(s, color string, isTTY bool) string {
@@ -124,8 +115,7 @@ func templateFuncMap() template.FuncMap {
 	return fm
 }
 
-// [🧰repo⌨️cli💻main🔖templates🛠️colornametoansi](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/colorNameToANSI)
-// colorNameToANSI holds the data fields for a colorNameToANSI record.
+// 🎨colorNameToANSI holds the data fields for a colorNameToANSI record.
 func colorNameToANSI(name string) string {
 	switch name {
 	case "red":
@@ -145,14 +135,11 @@ func colorNameToANSI(name string) string {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖templates🛠️inittemplates](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/initTemplates)
 func initTemplates() {
 	textTpl = template.Must(template.New("text").Funcs(templateFuncMap()).Parse(textTemplateContent))
 	mdTpl = template.Must(template.New("md").Funcs(templateFuncMap()).Parse(markdownTemplateContent))
 }
 
-// [🧰repo⌨️cli💻main🔖templates🛠️rendertemplate](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/renderTemplate)
-// [🧰repo⌨️cli💻maingo🔖templates🛠️rendertemplate](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/renderTemplate)
 func renderTemplate(tpl *template.Template, name string, data interface{}) string {
 	var sb strings.Builder
 	if err := tpl.ExecuteTemplate(&sb, name, data); err != nil {
@@ -161,20 +148,17 @@ func renderTemplate(tpl *template.Template, name string, data interface{}) strin
 	return sb.String()
 }
 
-// init holds the data fields for a init record.
-// [🧰repo⌨️cli💻main🔖templates🛠️init](repo://p/i/repo/b/b/cli/f/main.go/s/Templates/d/i/init)
+// 🔸init holds the data fields for a init record.
 func init() {
 	initTemplates()
 }
 
-// #endregion 🔖Templates
+// #endregion 🎁Templates
 
-// #region 🔖Engine Events
-// [🧰repo⌨️cli💻main🔖engineevents](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events)
+// #region 🔑Engine Events
 // Event types and payload structures for the engine event stream.
 
-// Kind represents a kind value.
-// [🧰repo⌨️cli💻main🔖engineevents✂️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/Kind)
+// 🏷️Kind represents a kind value.
 type Kind string
 
 const (
@@ -187,8 +171,7 @@ const (
 	KindDone     Kind = "done"
 )
 
-// Event holds the data fields for a event record.
-// [🧰repo⌨️cli💻main🔖engineevents✂️event](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/Event)
+// 💿Event holds the data fields for a event record.
 type Event struct {
 	Kind     Kind            `json:"kind"`
 	Command  string          `json:"command,omitempty"`
@@ -202,8 +185,7 @@ type Event struct {
 	Done     *DonePayload    `json:"done,omitempty"`
 }
 
-// buildFolderRoots holds the data fields for a buildFolderRoots record.
-// [🧰repo⌨️cli💻main🔖engineevents✂️buildfolderroots](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/buildFolderRoots)
+// 📁buildFolderRoots holds the data fields for a buildFolderRoots record.
 func buildFolderRoots(folders []Folder) []*TreeNode {
 	type folderEntry struct {
 		folder *Folder
@@ -236,7 +218,6 @@ func buildFolderRoots(folders []Folder) []*TreeNode {
 	return roots
 }
 
-// [🧰repo⌨️cli💻main🔖engineevents🛠️attachfilestofolders](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/attachFilesToFolders)
 func attachFilesToFolders(root *TreeNode, files []File, fileNodes map[string]*TreeNode) {
 	folderNodeByPath := make(map[string]*TreeNode)
 	var walk func(node *TreeNode)
@@ -267,8 +248,7 @@ func attachFilesToFolders(root *TreeNode, files []File, fileNodes map[string]*Tr
 	}
 }
 
-// cloneTreeNode holds the data fields for a cloneTreeNode record.
-// [🧰repo⌨️cli💻main🔖engineevents🛠️clonetreenode](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/cloneTreeNode)
+// 🌳cloneTreeNode holds the data fields for a cloneTreeNode record.
 func cloneTreeNode(node *TreeNode) *TreeNode {
 	copyNode := *node
 	if node.Data != nil {
@@ -288,7 +268,6 @@ func cloneTreeNode(node *TreeNode) *TreeNode {
 	return &copyNode
 }
 
-// [🧰repo⌨️cli💻main🔖engineevents🛠️buildpolicyentitykindtree](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/buildPolicyEntityKindTree)
 func buildPolicyEntityKindTree(groups []Territory) []*TreeNode {
 	statutesByEntityKind := make(map[string]map[Statute]bool)
 	var collect func(entries []Territory)
@@ -382,8 +361,7 @@ func spansEntireFile(lines map[int]struct{}, content string, lineCount int) bool
 	return true
 }
 
-// [🧰repo⌨️cli💻main🔖engineevents🛠️inferentitykindfromstatute](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/inferEntityKindFromStatute)
-// inferEntityKindFromStatute holds the data fields for a inferEntityKindFromStatute record.
+// 🔷inferEntityKindFromStatute holds the data fields for a inferEntityKindFromStatute record.
 func inferEntityKindFromStatute(statute Statute) string {
 	path := string(statute)
 	switch {
@@ -404,8 +382,7 @@ func inferEntityKindFromStatute(statute Statute) string {
 	}
 }
 
-// Progress holds the data fields for a progress record.
-// [🧰repo⌨️cli💻main🔖engineevents✂️progress](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/Progress)
+// 🔶Progress holds the data fields for a progress record.
 type Progress struct {
 	Current int    `json:"current,omitempty"`
 	Total   int    `json:"total,omitempty"`
@@ -413,15 +390,13 @@ type Progress struct {
 	Step    string `json:"step,omitempty"`
 }
 
-// Artifact holds the data fields for a artifact record.
-// [🧰repo⌨️cli💻main🔖engineevents✂️artifact](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/Artifact)
+// 🏺Artifact holds the data fields for a artifact record.
 type Artifact struct {
 	Type string `json:"type"`
 	URI  string `json:"uri"`
 	Note string `json:"note,omitempty"`
 }
 
-// [🧰repo⌨️cli💻main🔖engineevents✂️errpayload](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/ErrPayload)
 type ErrPayload struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
@@ -429,21 +404,18 @@ type ErrPayload struct {
 	Fatal   bool   `json:"fatal,omitempty"`
 }
 
-// DonePayload holds the data fields for a done payload record.
-// [🧰repo⌨️cli💻main🔖engineevents✂️donepayload](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Events/d/i/DonePayload)
+// 📦DonePayload holds the data fields for a done payload record.
 type DonePayload struct {
 	ExitCode int    `json:"exit_code"`
 	Status   string `json:"status"`
 }
 
-// #endregion 🔖Engine Events
+// #endregion 🔑Engine Events
 
-// #region 🔖Engine Errors
-// [🧰repo⌨️cli💻main🔖engineerrors](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Errors)
+// #region 🕌Engine Errors
 // Error code constants for engine failure classification.
 
-// ErrorCode represents a error code value.
-// [🧰repo⌨️cli💻main🔖engineerrors✂️errorcode](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Errors/d/i/ErrorCode)
+// ❌ErrorCode represents a error code value.
 type ErrorCode string
 
 const (
@@ -454,14 +426,12 @@ const (
 	ErrAuth     ErrorCode = "E_AUTH"
 )
 
-// #endregion 🔖Engine Errors
+// #endregion 🕌Engine Errors
 
-// #region 🔖Engine Requests
-// [🧰repo⌨️cli💻main🔖enginerequests](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Requests)
+// #region 🎸Engine Requests
 // Request command types and argument structures for engine invocation.
 
-// Command represents a command value.
-// [🧰repo⌨️cli💻main🔖enginerequests✂️command](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Requests/d/i/Command)
+// 🔷Command represents a command value.
 type Command string
 
 const (
@@ -477,7 +447,6 @@ const (
 	CmdDef     Command = "definition"
 )
 
-// [🧰repo⌨️cli💻main🔖enginerequests✂️request](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Requests/d/i/Request)
 type Request struct {
 	Command  Command
 	Args     json.RawMessage
@@ -485,41 +454,35 @@ type Request struct {
 	Verbose  bool
 }
 
-// GraphQLArgs holds the data fields for a graph q l args record.
-// [🧰repo⌨️cli💻main🔖enginerequests✂️graphqlargs](repo://p/i/repo/b/b/cli/f/main.go/s/Engine%20Requests/d/i/GraphQLArgs)
+// 🕸️GraphQLArgs holds the data fields for a graph q l args record.
 type GraphQLArgs struct {
 	Query     string         `json:"query"`
 	Variables map[string]any `json:"variables,omitempty"`
 }
 
-// #endregion 🔖Engine Requests
+// #endregion 🎸Engine Requests
 
-// #region 🔖Engine
-// [🧰repo⌨️cli💻main🔖engine](repo://p/i/repo/b/b/cli/f/main.go/s/Engine)
+// #region 🎖️Engine
 // Core engine that dispatches requests and emits events over a channel.
 
-// GraphQLExecutor defines the interface contract for graph q l executor operations.
-// [🧰repo⌨️cli💻main🔖engine✂️graphqlexecutor](repo://p/i/repo/b/b/cli/f/main.go/s/Engine/d/i/GraphQLExecutor)
+// 🕸️GraphQLExecutor defines the interface contract for graph q l executor operations.
 type GraphQLExecutor interface {
 	Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error)
 }
 
-// Engine holds the data fields for a engine record.
-// [🧰repo⌨️cli💻main🔖engine✂️engine](repo://p/i/repo/b/b/cli/f/main.go/s/Engine/d/i/Engine)
+// 💿Engine holds the data fields for a engine record.
 type Engine struct {
 	GraphQL GraphQLExecutor
 }
 
-// NewEngine MUST initialize all required fields and return a valid Engine.
-// NewEngine creates and returns a new Engine instance.
-// [🧰repo⌨️cli💻main🔖engine🛠️newengine](repo://p/i/repo/b/b/cli/f/main.go/s/Engine/d/i/NewEngine)
+// 🔷NewEngine MUST initialize all required fields and return a valid Engine.
+// 🆕NewEngine creates and returns a new Engine instance.
 func NewEngine(graphql GraphQLExecutor) *Engine {
 	return &Engine{GraphQL: graphql}
 }
 
-// Run MUST emit start, result or error, and done events in order.
-// Run dispatches the request and returns an event channel.
-// [🧰repo⌨️cli💻main🔖engine🛠️run](repo://p/i/repo/b/b/cli/f/main.go/s/Engine/d/i/Run)
+// 📡Run MUST emit start, result or error, and done events in order.
+// 📤Run dispatches the request and returns an event channel.
 func (e *Engine) Run(ctx context.Context, req Request) <-chan Event {
 	out := make(chan Event)
 	go func() {
@@ -550,8 +513,7 @@ func (e *Engine) Run(ctx context.Context, req Request) <-chan Event {
 	return out
 }
 
-// runGraphQL holds the data fields for a runGraphQL record.
-// [🧰repo⌨️cli💻main🔖engine🪨rungraphql](repo://p/i/repo/b/b/cli/f/main.go/s/Engine/d/i/runGraphQL)
+// 🔶runGraphQL holds the data fields for a runGraphQL record.
 func (e *Engine) runGraphQL(ctx context.Context, req Request, out chan<- Event) {
 	var args GraphQLArgs
 	if err := json.Unmarshal(req.Args, &args); err != nil {
@@ -580,18 +542,15 @@ func (e *Engine) runGraphQL(ctx context.Context, req Request, out chan<- Event) 
 	e.emitDone(out, exitCodeOK, "ok")
 }
 
-// [🧰repo⌨️cli💻main🔖engine🛠️emitstart](repo://p/i/repo/b/b/cli/f/main.go/s/Engine/d/i/emitStart)
 func (e *Engine) emitStart(out chan<- Event, req Request) {
 	out <- Event{Kind: KindStart, Command: string(req.Command)}
 }
 
-// [🧰repo⌨️cli💻main🔖engine🛠️emiterror](repo://p/i/repo/b/b/cli/f/main.go/s/Engine/d/i/emitError)
-// emitError holds the data fields for a emitError record.
+// ❌emitError holds the data fields for a emitError record.
 func (e *Engine) emitError(out chan<- Event, req Request, payload ErrPayload) {
 	out <- Event{Kind: KindError, Command: string(req.Command), Error: &payload}
 }
 
-// [🧰repo⌨️cli💻main🔖engine🛠️emitdone](repo://p/i/repo/b/b/cli/f/main.go/s/Engine/d/i/emitDone)
 func (e *Engine) emitDone(out chan<- Event, code int, status string) {
 	out <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: code, Status: status}}
 }
@@ -603,14 +562,12 @@ const (
 	exitCodeCanceled = 130
 )
 
-// #endregion 🔖Engine
+// #endregion 🎖️Engine
 
-// #region 🔖Cli Adapter
-// [🧰repo⌨️cli💻main🔖cliadapter](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter)
+// #region 🌧️Cli Adapter
 // CLI adapter that wires cobra commands to the engine and renders output.
 
-// Config holds the data fields for a config record.
-// [🧰repo⌨️cli💻main🔖cliadapter✂️config](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/Config)
+// ⚙️Config holds the data fields for a config record.
 type Config struct {
 	Format  string
 	Verbose bool
@@ -618,55 +575,47 @@ type Config struct {
 	Timeout time.Duration
 }
 
-// IsJSON MUST return true only when the condition is met.
-// IsJSON reports whether the Config is j s o n.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️isjson](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/IsJSON)
+// 📋IsJSON MUST return true only when the condition is met.
+// ❓IsJSON reports whether the Config is j s o n.
 func (c *Config) IsJSON() bool {
 	return c.Format == "json"
 }
 
-// IsMarkdown MUST return true only when the condition is met.
-// IsMarkdown reports whether the Config is markdown.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️ismarkdown](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/IsMarkdown)
+// 📰IsMarkdown MUST return true only when the condition is met.
+// 🐙IsMarkdown reports whether the Config is markdown.
 func (c *Config) IsMarkdown() bool {
 	return c.Format == "md"
 }
 
-// IsText MUST return true only when the condition is met.
-// IsText reports whether the Config is text.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️istext](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/IsText)
+// 📝IsText MUST return true only when the condition is met.
+// 🔤IsText reports whether the Config is text.
 func (c *Config) IsText() bool {
 	return c.Format == "text"
 }
 
-// EngineFactory is a function type for engine factory callbacks.
-// [🧰repo⌨️cli💻main🔖cliadapter✂️enginefactory](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/EngineFactory)
+// 🏭EngineFactory is a function type for engine factory callbacks.
 type EngineFactory func(Config) (*Engine, error)
 
-// ExitError holds the data fields for a exit error record.
-// [🧰repo⌨️cli💻main🔖cliadapter✂️exiterror](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExitError)
+// 💿ExitError holds the data fields for a exit error record.
 type ExitError struct {
 	Code int
 }
 
-// Error MUST return a formatted string representation.
-// Error returns the string representation of the error.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️error](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/Error)
+// 🔤Error MUST return a formatted string representation.
+// ❌Error returns the string representation of the error.
 func (e ExitError) Error() string {
 	return fmt.Sprintf("exit status %d", e.Code)
 }
 
-// NewRoot MUST initialize all required fields and return a valid Root.
-// NewRoot creates and returns a new Root instance.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️newroot](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/NewRoot)
+// 🌱NewRoot MUST initialize all required fields and return a valid Root.
+// 🌱NewRoot creates and returns a new Root instance.
 func NewRoot(factory EngineFactory) *cobra.Command {
 	root, _ := NewRootWithConfig(factory)
 	return root
 }
 
-// NewRootWithConfig MUST initialize all required fields and return a valid RootWithConfig.
-// NewRootWithConfig creates and returns a new RootWithConfig instance.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️newrootwithconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/NewRootWithConfig)
+// 🔷NewRootWithConfig MUST initialize all required fields and return a valid RootWithConfig.
+// 🆕NewRootWithConfig creates and returns a new RootWithConfig instance.
 func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	config := Config{}
 	root := &cobra.Command{
@@ -726,15 +675,13 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	return root, &config
 }
 
-// Execute MUST delegate to the root command and propagate errors.
-// Execute runs the root command and returns any error.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️execute](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/Execute)
+// ❌Execute MUST delegate to the root command and propagate errors.
+// ⌨️Execute runs the root command and returns any error.
 func Execute(factory EngineFactory) error {
 	return NewRoot(factory).Execute()
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️defaultenginefactory](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/defaultEngineFactory)
-// defaultEngineFactory holds the data fields for a defaultEngineFactory record.
+// 🔶defaultEngineFactory holds the data fields for a defaultEngineFactory record.
 func defaultEngineFactory(config Config) (*Engine, error) {
 	repoRoot := config.Repo
 	if repoRoot == "" {
@@ -752,7 +699,6 @@ func defaultEngineFactory(config Config) (*Engine, error) {
 	return NewEngine(exec), nil
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️main](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/main)
 func main() {
 	if err := Execute(defaultEngineFactory); err != nil {
 		var exitErr ExitError
@@ -764,12 +710,10 @@ func main() {
 	}
 }
 
-// #region 🔖Auth Command
-// [🧰repo⌨️cli💻main🔖cliadapter🔖authcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Auth%20Command)
+// #region 🎵Auth Command
 // Auth command for server authentication.
 
-// authCommand creates the auth command with whoami subcommand.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖authcommand🛠️authcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Auth%20Command/d/i/authCommand)
+// 🆕authCommand creates the auth command with whoami subcommand.
 func authCommand(config *Config) *cobra.Command {
 	auth := &cobra.Command{
 		Use:   "auth",
@@ -822,10 +766,9 @@ func authCommand(config *Config) *cobra.Command {
 	return auth
 }
 
-// #endregion 🔖Auth Command
+// #endregion 🎵Auth Command
 
-// syncCommand holds the data fields for a syncCommand record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️synccommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/syncCommand)
+// 🔹syncCommand holds the data fields for a syncCommand record.
 func syncCommand(factory EngineFactory, config *Config) *cobra.Command {
 	sync := &cobra.Command{
 		Use:   "sync",
@@ -835,8 +778,7 @@ func syncCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return sync
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️syncmanagementcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/syncManagementCommand)
-// syncManagementCommand holds the data fields for a syncManagementCommand record.
+// 🔸syncManagementCommand holds the data fields for a syncManagementCommand record.
 func syncManagementCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "management",
@@ -848,8 +790,7 @@ func syncManagementCommand(factory EngineFactory, config *Config) *cobra.Command
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️mcpcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/mcpCommand)
-// mcpCommand holds the data fields for a mcpCommand record.
+// 🔺mcpCommand holds the data fields for a mcpCommand record.
 func mcpCommand(factory EngineFactory, config *Config) *cobra.Command {
 	var dryRun bool
 	cmd := &cobra.Command{
@@ -876,15 +817,13 @@ func mcpCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️servemcp](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/serveMcp)
 func serveMcp(ctx context.Context, engine *Engine) error {
 	_ = ctx
 	_ = engine
 	return runMcpServer(nil, nil)
 }
 
-// graphqlCommand holds the data fields for a graphqlCommand record.
-// [🧰repo⌨️cli💻main🔖cliadapter🪨graphqlcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/graphqlCommand)
+// 🕸️graphqlCommand holds the data fields for a graphqlCommand record.
 func graphqlCommand(factory EngineFactory, config *Config) *cobra.Command {
 	var query string
 	var variablesJSON string
@@ -929,8 +868,7 @@ func graphqlCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️auditcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/auditCommand)
-// auditCommand holds the data fields for a auditCommand record.
+// 🔻auditCommand holds the data fields for a auditCommand record.
 func auditCommand(factory EngineFactory, config *Config) *cobra.Command {
 	var scope string
 	cmd := &cobra.Command{
@@ -966,8 +904,7 @@ func auditCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️autofixcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/autofixCommand)
-// autofixCommand holds the data fields for a autofixCommand record.
+// 🔧autofixCommand holds the data fields for a autofixCommand record.
 func autofixCommand(factory EngineFactory, config *Config) *cobra.Command {
 	var scope string
 	cmd := &cobra.Command{
@@ -996,10 +933,7 @@ func autofixCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// #region 🔖Analyze Command
-// [🧰repo⌨️cli💻main🔖cliadapter🔖analyzecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Analyze%20Command)
-// [🧰repo⌨️cli💻main🔖cliadapter🔖analyzecommand🛠️analyzecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Analyze%20Command/d/i/analyzeCommand)
-// [🧰repo⌨️cli💻maingo🔖cliadapter🛠️analyzecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/analyzeCommand)
+// #region 🪅Analyze Command
 func analyzeCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "analyze <id>",
@@ -1064,12 +998,9 @@ func analyzeCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// #endregion 🔖Analyze Command
+// #endregion 🪅Analyze Command
 
-// #region 🔖Entity Emojis Command
-// [🧰repo⌨️cli💻main🔖cliadapter🔖entityemojiscommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Entity%20Emojis%20Command)
-// [🧰repo⌨️cli💻main🔖cliadapter🔖entityemojiscommand🛠️allentityemojis](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Entity%20Emojis%20Command/d/i/AllEntityEmojis)
-// [🧰repo⌨️cli💻maingo🔖cliadapter🛠️allentityemojis](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/AllEntityEmojis)
+// #region 🖥️Entity Emojis Command
 func AllEntityEmojis() []string {
 	seen := map[string]bool{}
 	var result []string
@@ -1143,8 +1074,6 @@ func AllEntityEmojis() []string {
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖entityemojiscommand🛠️entityemojiscommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Entity%20Emojis%20Command/d/i/entityEmojisCommand)
-// [🧰repo⌨️cli💻maingo🔖cliadapter🛠️entityemojiscommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/entityEmojisCommand)
 func entityEmojisCommand(config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "entity-emojis",
@@ -1169,9 +1098,8 @@ func entityEmojisCommand(config *Config) *cobra.Command {
 	return cmd
 }
 
-// #endregion 🔖Entity Emojis Command
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️searchcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/searchCommand)
-// searchCommand holds the data fields for a searchCommand record.
+// #endregion 🖥️Entity Emojis Command
+// ⌨️searchCommand holds the data fields for a searchCommand record.
 func searchCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "search [query]",
@@ -1216,8 +1144,7 @@ func searchCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️flattentreenodes](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/flattenTreeNodes)
-// flattenTreeNodes holds the data fields for a flattenTreeNodes record.
+// 🌳flattenTreeNodes holds the data fields for a flattenTreeNodes record.
 func flattenTreeNodes(node *TreeNode, out *[]*TreeNode) {
 	if node.Kind != TreeNodeCategory {
 		*out = append(*out, node)
@@ -1227,8 +1154,7 @@ func flattenTreeNodes(node *TreeNode, out *[]*TreeNode) {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️listcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/listCommand)
-// listCommand holds the data fields for a listCommand record.
+// ⬛listCommand holds the data fields for a listCommand record.
 func listCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [query]",
@@ -1322,7 +1248,6 @@ func listCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️bindtreeflags](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/bindTreeFlags)
 type boolFlagSpec struct {
 	Name  string
 	Usage string
@@ -1335,14 +1260,14 @@ type boolFlagPairSpec struct {
 	NoUsage   string
 }
 
-// bindBoolFlags MUST register all boolean flags from the input specs.
+// 🔘bindBoolFlags MUST register all boolean flags from the input specs.
 func bindBoolFlags(cmd *cobra.Command, specs []boolFlagSpec) {
 	for _, spec := range specs {
 		cmd.Flags().Bool(spec.Name, false, spec.Usage)
 	}
 }
 
-// bindOnlyNoFlagPairs MUST register only/no boolean flag pairs from the input specs.
+// 🚩bindOnlyNoFlagPairs MUST register only/no boolean flag pairs from the input specs.
 func bindOnlyNoFlagPairs(cmd *cobra.Command, specs []boolFlagPairSpec) {
 	for _, spec := range specs {
 		cmd.Flags().Bool(spec.OnlyName, false, spec.OnlyUsage)
@@ -1409,8 +1334,7 @@ func bindTreeFlags(cmd *cobra.Command) {
 	cmd.Flags().String("query", "", "Bleve full-text search query")
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️querycommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/queryCommand)
-// queryCommand holds the data fields for a queryCommand record.
+// 🔍queryCommand holds the data fields for a queryCommand record.
 func queryCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query [keywords]",
@@ -1436,8 +1360,7 @@ func queryCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// buildTreeFilterFromFlags holds the data fields for a buildTreeFilterFromFlags record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️buildtreefilterfromflags](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/buildTreeFilterFromFlags)
+// 🧹buildTreeFilterFromFlags holds the data fields for a buildTreeFilterFromFlags record.
 func buildTreeFilterFromFlags(cmd *cobra.Command) TreeFilter {
 	filter := TreeFilter{
 		OnlyKinds:       make(map[TreeNodeKind]bool),
@@ -1540,8 +1463,7 @@ func buildTreeFilterFromFlags(cmd *cobra.Command) TreeFilter {
 	return filter
 }
 
-// exportCommand holds the data fields for a exportCommand record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️exportcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/exportCommand)
+// 📤exportCommand holds the data fields for a exportCommand record.
 func exportCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "export [output]",
@@ -1572,11 +1494,9 @@ func exportCommand(factory EngineFactory, config *Config) *cobra.Command {
 	}
 }
 
-// #region 🔖Test Command
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command)
+// #region 🕸️Test Command
 
-// testScopeKind classifies the granularity of a testable entity scope.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand✂️testscopekind](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/testScopeKind)
+// 🔭testScopeKind classifies the granularity of a testable entity scope.
 type testScopeKind string
 
 const (
@@ -1588,8 +1508,7 @@ const (
 	testScopeDefinition testScopeKind = "definition"
 )
 
-// testScope carries resolved information for running tests within a specific entity boundary.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand✂️testscope](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/testScope)
+// 🧪testScope carries resolved information for running tests within a specific entity boundary.
 type testScope struct {
 	Kind       testScopeKind
 	BundleRoot string
@@ -1599,8 +1518,7 @@ type testScope struct {
 	Language   string
 }
 
-// detectBundleLanguage returns the primary language of a bundle by inspecting manifest files.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️detectbundlelanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/detectBundleLanguage)
+// 🗣️detectBundleLanguage returns the primary language of a bundle by inspecting manifest files.
 func detectBundleLanguage(bundleRoot string) string {
 	absRoot := bundleRoot
 	if !filepath.IsAbs(absRoot) {
@@ -1633,8 +1551,7 @@ func detectBundleLanguage(bundleRoot string) string {
 	return ""
 }
 
-// resolveTestScopes converts entity IDs or URIs to testScope entries.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️resolvetestscopes](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/resolveTestScopes)
+// 🔗resolveTestScopes converts entity IDs or URIs to testScope entries.
 func resolveTestScopes(ids []string) []testScope {
 	if len(ids) == 0 {
 		return []testScope{{Kind: testScopeAll}}
@@ -1646,8 +1563,7 @@ func resolveTestScopes(ids []string) []testScope {
 	return scopes
 }
 
-// resolveTestScope resolves a single entity ID or URI to a testScope.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️resolvetestscope](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/resolveTestScope)
+// 🔷resolveTestScope resolves a single entity ID or URI to a testScope.
 func resolveTestScope(raw string) testScope {
 	normalized := strings.ReplaceAll(raw, "\uFE0E", "")
 	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
@@ -1716,8 +1632,7 @@ func resolveTestScope(raw string) testScope {
 	return testScope{Kind: testScopeAll}
 }
 
-// findBundleByName holds the data fields for a findBundleByName record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️findbundlebyname](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/findBundleByName)
+// 💿findBundleByName holds the data fields for a findBundleByName record.
 func findBundleByName(name string) *Bundle {
 	bundles := LoadBundles()
 	for i := range bundles {
@@ -1728,8 +1643,7 @@ func findBundleByName(name string) *Bundle {
 	return nil
 }
 
-// resolveTestScopeFromBundleSubPath holds the data fields for a resolveTestScopeFromBundleSubPath record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️resolvetestscopefrombundlesubpath](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/resolveTestScopeFromBundleSubPath)
+// 📦resolveTestScopeFromBundleSubPath holds the data fields for a resolveTestScopeFromBundleSubPath record.
 func resolveTestScopeFromBundleSubPath(bundleRoot string, subPath string) testScope {
 	lang := detectBundleLanguage(bundleRoot)
 
@@ -1762,8 +1676,7 @@ func resolveTestScopeFromBundleSubPath(bundleRoot string, subPath string) testSc
 	return testScope{Kind: scopeKind, BundleRoot: bundleRoot, FilePath: filePath, Section: section, TestName: testName, Language: lang}
 }
 
-// resolveTestScopeFromFileSubPath holds the data fields for a resolveTestScopeFromFileSubPath record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️resolvetestscopefromfilesubpath](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/resolveTestScopeFromFileSubPath)
+// 📄resolveTestScopeFromFileSubPath holds the data fields for a resolveTestScopeFromFileSubPath record.
 func resolveTestScopeFromFileSubPath(filePath string, lang string, subPath string) testScope {
 	section := ""
 	testName := ""
@@ -1783,8 +1696,7 @@ func resolveTestScopeFromFileSubPath(filePath string, lang string, subPath strin
 	return testScope{Kind: scopeKind, FilePath: filePath, Section: section, TestName: testName, Language: lang}
 }
 
-// runTestScope executes tests for a resolved testScope and streams results.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️runtestscope](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/runTestScope)
+// 🔶runTestScope executes tests for a resolved testScope and streams results.
 func runTestScope(scope testScope, cmd *cobra.Command) error {
 	switch scope.Kind {
 	case testScopeAll:
@@ -1803,8 +1715,7 @@ func runTestScope(scope testScope, cmd *cobra.Command) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️runalltests](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/runAllTests)
-// runAllTests holds the data fields for a runAllTests record.
+// 🔹runAllTests holds the data fields for a runAllTests record.
 func runAllTests(cmd *cobra.Command) error {
 	bundles := LoadBundles()
 	var firstErr error
@@ -1820,8 +1731,7 @@ func runAllTests(cmd *cobra.Command) error {
 	return firstErr
 }
 
-// runTechnologyTests holds the data fields for a runTechnologyTests record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️runtechnologytests](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/runTechnologyTests)
+// 🛠️runTechnologyTests holds the data fields for a runTechnologyTests record.
 func runTechnologyTests(technologyName string, cmd *cobra.Command) error {
 	bundles := LoadBundles()
 	flatTechnology := Flat(technologyName)
@@ -1842,8 +1752,7 @@ func runTechnologyTests(technologyName string, cmd *cobra.Command) error {
 	return firstErr
 }
 
-// runBundleTests holds the data fields for a runBundleTests record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️runbundletests](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/runBundleTests)
+// 🔸runBundleTests holds the data fields for a runBundleTests record.
 func runBundleTests(bundleRoot string, lang string, fileFilter string, testFilter string, cmd *cobra.Command) error {
 	absRoot := bundleRoot
 	if !filepath.IsAbs(absRoot) {
@@ -1895,13 +1804,11 @@ func runBundleTests(bundleRoot string, lang string, fileFilter string, testFilte
 	return fmt.Errorf("unknown language %q for bundle %s", lang, bundleRoot)
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️uvexists](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/uvExists)
 func uvExists() bool {
 	_, err := exec.LookPath("uv")
 	return err == nil
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️detectjstestrunner](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/detectJSTestRunner)
 func detectJSTestRunner(absRoot string, testFilter string) (string, []string) {
 
 	pkgPath := filepath.Join(absRoot, "package.json")
@@ -1937,8 +1844,7 @@ func detectJSTestRunner(absRoot string, testFilter string) (string, []string) {
 	return "npx", args
 }
 
-// runFileTests holds the data fields for a runFileTests record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️runfiletests](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/runFileTests)
+// 🔺runFileTests holds the data fields for a runFileTests record.
 func runFileTests(filePath string, lang string, testFilter string, cmd *cobra.Command) error {
 	if lang == "" {
 		l := GetLanguage(filePath)
@@ -2002,7 +1908,6 @@ func runFileTests(filePath string, lang string, testFilter string, cmd *cobra.Co
 	return fmt.Errorf("unsupported language %q for file test", lang)
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️runsectiontests](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/runSectionTests)
 func runSectionTests(filePath string, lang string, section string, cmd *cobra.Command) error {
 
 	if lang == "" {
@@ -2035,8 +1940,7 @@ func runSectionTests(filePath string, lang string, section string, cmd *cobra.Co
 	}
 }
 
-// collectGoTestsInSection holds the data fields for a collectGoTestsInSection record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️collectgotestsinsection](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/collectGoTestsInSection)
+// 📑collectGoTestsInSection holds the data fields for a collectGoTestsInSection record.
 func collectGoTestsInSection(filePath string, sectionName string) string {
 	content, err := ReadTextFile(filePath)
 	if err != nil {
@@ -2082,8 +1986,7 @@ func collectGoTestsInSection(filePath string, sectionName string) string {
 	return "^(" + strings.Join(testNames, "|") + ")$"
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️rundefinitiontest](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/runDefinitionTest)
-// runDefinitionTest holds the data fields for a runDefinitionTest record.
+// 📖runDefinitionTest holds the data fields for a runDefinitionTest record.
 func runDefinitionTest(filePath string, lang string, bundleRoot string, testName string, cmd *cobra.Command) error {
 	if lang == "" {
 		l := GetLanguage(filePath)
@@ -2128,8 +2031,7 @@ func runDefinitionTest(filePath string, lang string, bundleRoot string, testName
 	}
 }
 
-// resolveTestFunctionName finds the actual function name in a file matching the flat name.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️resolvetestfunctionname](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/resolveTestFunctionName)
+// 🎯resolveTestFunctionName finds the actual function name in a file matching the flat name.
 func resolveTestFunctionName(absFilePath string, flatName string) string {
 	content, err := ReadTextFile(absFilePath)
 	if err != nil {
@@ -2144,8 +2046,7 @@ func resolveTestFunctionName(absFilePath string, flatName string) string {
 	return ""
 }
 
-// unflattenTestName reconstructs a probable PascalCase function name from a flat name.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️unflattentestname](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/unflattenTestName)
+// 🧱unflattenTestName reconstructs a probable PascalCase function name from a flat name.
 func unflattenTestName(flat string) string {
 	for _, prefix := range []string{"testbenchmark", "testfuzz", "benchmark", "fuzz", "test"} {
 		if strings.HasPrefix(flat, prefix) {
@@ -2161,8 +2062,7 @@ func unflattenTestName(flat string) string {
 	return flat
 }
 
-// runExternalCommand holds the data fields for a runExternalCommand record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️runexternalcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/runExternalCommand)
+// 🔻runExternalCommand holds the data fields for a runExternalCommand record.
 func runExternalCommand(dir string, name string, args []string, cmd *cobra.Command) error {
 	c := exec.Command(name, args...)
 	c.Dir = dir
@@ -2177,8 +2077,7 @@ func runExternalCommand(dir string, name string, args []string, cmd *cobra.Comma
 	return c.Run()
 }
 
-// testCommand holds the data fields for a testCommand record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖testcommand🛠️testcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Test%20Command/d/i/testCommand)
+// ⬛testCommand holds the data fields for a testCommand record.
 func testCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "test [testable-id-or-uri]...",
@@ -2207,9 +2106,8 @@ Supported entity scopes (narrowing order):
 	}
 }
 
-// #endregion 🔖Test Command
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️policycommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/policyCommand)
-// policyCommand holds the data fields for a policyCommand record.
+// #endregion 🕸️Test Command
+// ⌨️policyCommand holds the data fields for a policyCommand record.
 func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "policy", Short: "Policy management commands"}
 	checkCmd := &cobra.Command{
@@ -2263,7 +2161,6 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️extractllmfromargs](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/extractLLMFromArgs)
 func extractLLMFromArgs(cmd *cobra.Command, args []string) (string, []string) {
 
 	if llm, _ := cmd.Flags().GetString("llm"); llm != "" {
@@ -2305,8 +2202,7 @@ func extractLLMFromArgs(cmd *cobra.Command, args []string) (string, []string) {
 	return foundLLM, remaining
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️extractclientfromargs](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/extractClientFromArgs)
-// extractClientFromArgs holds the data fields for a extractClientFromArgs record.
+// 🧲extractClientFromArgs holds the data fields for a extractClientFromArgs record.
 func extractClientFromArgs(cmd *cobra.Command, args []string) (string, []string) {
 
 	if client, _ := cmd.Flags().GetString("client"); client != "" {
@@ -2348,24 +2244,21 @@ func extractClientFromArgs(cmd *cobra.Command, args []string) (string, []string)
 	return foundClient, remaining
 }
 
-// addLLMFlags holds the data fields for a addLLMFlags record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️addllmflags](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/addLLMFlags)
+// ➕addLLMFlags holds the data fields for a addLLMFlags record.
 func addLLMFlags(cmd *cobra.Command) {
 	for _, llm := range AllowedLLMs {
 		cmd.Flags().Bool(llm, false, fmt.Sprintf("Use %s as LLM", llm))
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️addclientflags](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/addClientFlags)
-// addClientFlags holds the data fields for a addClientFlags record.
+// 💻addClientFlags holds the data fields for a addClientFlags record.
 func addClientFlags(cmd *cobra.Command) {
 	for _, client := range AllowedClients {
 		cmd.Flags().Bool(client, false, fmt.Sprintf("Use %s as Client", client))
 	}
 }
 
-// draftCommand holds the data fields for a draftCommand record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️draftcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/draftCommand)
+// ⬜draftCommand holds the data fields for a draftCommand record.
 func draftCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "draft", Short: "Draft management commands"}
 	createCmd := &cobra.Command{
@@ -2421,8 +2314,7 @@ func draftCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// todoCommand holds the data fields for a todoCommand record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️todocommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/todoCommand)
+// ✅todoCommand holds the data fields for a todoCommand record.
 func todoCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "todo", Short: "Todo management commands"}
 	createCmd := &cobra.Command{
@@ -2533,8 +2425,7 @@ func todoCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️ticketcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ticketCommand)
-// ticketCommand holds the data fields for a ticketCommand record.
+// 🎫ticketCommand holds the data fields for a ticketCommand record.
 func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "ticket", Short: "Ticket management commands"}
 	openCmd := &cobra.Command{
@@ -2905,8 +2796,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// goalCommand holds the data fields for a goalCommand record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️goalcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/goalCommand)
+// ⛳goalCommand holds the data fields for a goalCommand record.
 func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "goal", Short: "Goal management commands"}
 	changeCmd := &cobra.Command{
@@ -3179,8 +3069,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️interactioncommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/interactionCommand)
-// interactionCommand holds the data fields for a interactionCommand record.
+// 🟥interactionCommand holds the data fields for a interactionCommand record.
 func interactionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "interaction", Short: "Interaction management commands"}
 	listCmd := &cobra.Command{
@@ -3297,8 +3186,7 @@ func interactionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️statutecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/statuteCommand)
-// statuteCommand holds the data fields for a statuteCommand record.
+// 🟧statuteCommand holds the data fields for a statuteCommand record.
 func statuteCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "statute", Short: "Statute management commands"}
 	listCmd := &cobra.Command{
@@ -3403,7 +3291,6 @@ func statuteCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️checkpointcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/checkpointCommand)
 func checkpointCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "checkpoint", Short: "Checkpoint management commands"}
 	listCmd := &cobra.Command{
@@ -3441,8 +3328,7 @@ func checkpointCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️contributorcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/contributorCommand)
-// contributorCommand holds the data fields for a contributorCommand record.
+// 🤝contributorCommand holds the data fields for a contributorCommand record.
 func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "contributor", Short: "Contributor management commands"}
 	addCmd := &cobra.Command{
@@ -3505,8 +3391,7 @@ func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// technologyCommand holds the data fields for a technologyCommand record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️technologycommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/technologyCommand)
+// 🛠️technologyCommand holds the data fields for a technologyCommand record.
 func technologyCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                "technology",
@@ -3555,12 +3440,10 @@ func technologyCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🪨headingemojire](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/headingEmojiRe)
-// headingEmojiRe holds the data fields for a headingEmojiRe record.
+// 😀headingEmojiRe holds the data fields for a headingEmojiRe record.
 var headingEmojiRe = regexp.MustCompile(`^[\x{1F000}-\x{1FFFF}\x{2600}-\x{27FF}\x{FE00}-\x{FE0F}]+\s*`)
 
-// ExtractMarkdownSection holds the data fields for a ExtractMarkdownSection record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️extractmarkdownsection](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractMarkdownSection)
+// 📑ExtractMarkdownSection holds the data fields for a ExtractMarkdownSection record.
 func ExtractMarkdownSection(content string, sectionName string) string {
 	lines := strings.Split(content, "\n")
 	headerRe := regexp.MustCompile(`^(#{1,6})\s+(.+?)\s*$`)
@@ -3588,8 +3471,7 @@ func ExtractMarkdownSection(content string, sectionName string) string {
 	return text
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️islicensetext](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/isLicenseText)
-// isLicenseText holds the data fields for a isLicenseText record.
+// 🗃️isLicenseText holds the data fields for a isLicenseText record.
 func isLicenseText(text string) bool {
 	lower := strings.ToLower(text)
 	return strings.Contains(lower, "gnu") ||
@@ -3600,8 +3482,7 @@ func isLicenseText(text string) bool {
 		strings.Contains(lower, "copyright")
 }
 
-// isHeaderMetaLine holds the data fields for a isHeaderMetaLine record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️isheadermetaline](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/isHeaderMetaLine)
+// 🟨isHeaderMetaLine holds the data fields for a isHeaderMetaLine record.
 func isHeaderMetaLine(text string) bool {
 	if strings.HasPrefix(text, "[") && strings.Contains(text, "](") {
 		return true
@@ -3620,7 +3501,6 @@ func isHeaderMetaLine(text string) bool {
 	return false
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️extractfileheadersummary](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractFileHeaderSummary)
 func ExtractFileHeaderSummary(filePath string) string {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
@@ -3693,8 +3573,7 @@ func ExtractFileHeaderSummary(filePath string) string {
 	return ""
 }
 
-// ExtractFileHeaderRequirements holds the data fields for a ExtractFileHeaderRequirements record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️extractfileheaderrequirements](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractFileHeaderRequirements)
+// 📄ExtractFileHeaderRequirements holds the data fields for a ExtractFileHeaderRequirements record.
 func ExtractFileHeaderRequirements(filePath string) string {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
@@ -3760,7 +3639,6 @@ func ExtractFileHeaderRequirements(filePath string) string {
 	return strings.TrimSpace(strings.Join(requirementsLines, "\n"))
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️extractsectionleadcomments](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractSectionLeadComments)
 func ExtractSectionLeadComments(content string, section Section, prefix string) (requirements string, summary string) {
 	lines := strings.Split(content, "\n")
 	lowerName := strings.ToLower(section.Name)
@@ -3796,8 +3674,7 @@ func ExtractSectionLeadComments(content string, section Section, prefix string) 
 	return strings.TrimSpace(strings.Join(specLines, "\n")), strings.TrimSpace(strings.Join(summaryLines, "\n"))
 }
 
-// ExtractDefinitionDocstring holds the data fields for a ExtractDefinitionDocstring record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️extractdefinitiondocstring](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/ExtractDefinitionDocstring)
+// 📖ExtractDefinitionDocstring holds the data fields for a ExtractDefinitionDocstring record.
 func ExtractDefinitionDocstring(content string, def Definition, prefix string) (requirements string, summary string) {
 	lines := strings.Split(content, "\n")
 	for i := def.StartLine - 2; i >= 0; i-- {
@@ -3821,8 +3698,7 @@ func ExtractDefinitionDocstring(content string, def Definition, prefix string) (
 	return strings.TrimSpace(requirements), strings.TrimSpace(summary)
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️findtechnologybyname](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/findTechnologyByName)
-// findTechnologyByName holds the data fields for a findTechnologyByName record.
+// 🟩findTechnologyByName holds the data fields for a findTechnologyByName record.
 func findTechnologyByName(name string) *Technology {
 	technologies := LoadTechnologies()
 	for i := range technologies {
@@ -3833,8 +3709,7 @@ func findTechnologyByName(name string) *Technology {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️walktechnologyfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/walkTechnologyFiles)
-// walkTechnologyFiles holds the data fields for a walkTechnologyFiles record.
+// 🟦walkTechnologyFiles holds the data fields for a walkTechnologyFiles record.
 func walkTechnologyFiles(technology *Technology) []File {
 	var files []File
 	for _, bundle := range technology.Bundles {
@@ -3873,15 +3748,13 @@ func walkTechnologyFiles(technology *Technology) []File {
 	return files
 }
 
-// EntityEntry holds the data fields for a EntityEntry record.
-// [🧰repo⌨️cli💻main🔖cliadapter✂️entityentry](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/EntityEntry)
+// 📍EntityEntry holds the data fields for a EntityEntry record.
 type EntityEntry struct {
 	ID   string
 	URI  string
 	Text string
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️generatetechnologyrequirements](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateTechnologyRequirements)
 func GenerateTechnologyRequirements(technologyName string) error {
 	technology := findTechnologyByName(technologyName)
 	if technology == nil {
@@ -3980,8 +3853,7 @@ func GenerateTechnologyRequirements(technologyName string) error {
 	return WriteTextFile(outputPath, sb.String())
 }
 
-// GenerateTechnologyDocs holds the data fields for a GenerateTechnologyDocs record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️generatetechnologydocs](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateTechnologyDocs)
+// 🟪GenerateTechnologyDocs holds the data fields for a GenerateTechnologyDocs record.
 func GenerateTechnologyDocs(technologyName string) error {
 	technology := findTechnologyByName(technologyName)
 	if technology == nil {
@@ -4095,8 +3967,7 @@ func GenerateTechnologyDocs(technologyName string) error {
 	return WriteTextFile(outputPath, sb.String())
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️generatetechnologytodos](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/GenerateTechnologyTodos)
-// GenerateTechnologyTodos holds the data fields for a GenerateTechnologyTodos record.
+// 🟫GenerateTechnologyTodos holds the data fields for a GenerateTechnologyTodos record.
 func GenerateTechnologyTodos(technologyName string) error {
 	technology := findTechnologyByName(technologyName)
 	if technology == nil {
@@ -4143,8 +4014,7 @@ func GenerateTechnologyTodos(technologyName string) error {
 	return WriteTextFile(outputPath, sb.String())
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️findfolderreadmes](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/findFolderReadmes)
-// findFolderReadmes holds the data fields for a findFolderReadmes record.
+// 📁findFolderReadmes holds the data fields for a findFolderReadmes record.
 func findFolderReadmes(bundleRoot string) []string {
 	var readmes []string
 	absRoot := filepath.Join(rootDir, bundleRoot)
@@ -4171,8 +4041,7 @@ func findFolderReadmes(bundleRoot string) []string {
 	return readmes
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️bundlecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/bundleCommand)
-// bundleCommand holds the data fields for a bundleCommand record.
+// 📦bundleCommand holds the data fields for a bundleCommand record.
 func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "bundle", Short: "Bundle management commands"}
 	listCmd := &cobra.Command{
@@ -4288,8 +4157,7 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️foldercommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/folderCommand)
-// folderCommand holds the data fields for a folderCommand record.
+// 💠folderCommand holds the data fields for a folderCommand record.
 func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "folder", Short: "Folder management commands"}
 	createCmd := &cobra.Command{
@@ -4360,8 +4228,7 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️bindstreamflags](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/bindStreamFlags)
-// bindStreamFlags holds the data fields for a bindStreamFlags record.
+// 🔳bindStreamFlags holds the data fields for a bindStreamFlags record.
 func bindStreamFlags(cmd *cobra.Command) {
 	bindBoolFlags(cmd, []boolFlagSpec{
 		{Name: "show-ignored", Usage: "Show ignored folders and files"},
@@ -4411,16 +4278,14 @@ func bindStreamFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("match-whole-word", false, "Match whole word for filter")
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️bindstatusflags](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/bindStatusFlags)
-// bindStatusFlags holds the data fields for a bindStatusFlags record.
+// 🔲bindStatusFlags holds the data fields for a bindStatusFlags record.
 func bindStatusFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("open", false, "Show only open items")
 	cmd.Flags().Bool("closed", false, "Show only closed items")
 	cmd.Flags().String("status", "", "Filter by status (open or closed)")
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️getstatusfilter](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/getStatusFilter)
-// getStatusFilter holds the data fields for a getStatusFilter record.
+// ▪️getStatusFilter holds the data fields for a getStatusFilter record.
 func getStatusFilter(cmd *cobra.Command) *string {
 	open, _ := cmd.Flags().GetBool("open")
 	closed, _ := cmd.Flags().GetBool("closed")
@@ -4440,8 +4305,7 @@ func getStatusFilter(cmd *cobra.Command) *string {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️getbundleswithopentickets](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/getBundlesWithOpenTickets)
-// getBundlesWithOpenTickets holds the data fields for a getBundlesWithOpenTickets record.
+// 📬getBundlesWithOpenTickets holds the data fields for a getBundlesWithOpenTickets record.
 func getBundlesWithOpenTickets() map[string]bool {
 	bundlesWithOpenTickets := make(map[string]bool)
 	tickets, err := ListTickets(nil, nil, nil)
@@ -4466,8 +4330,7 @@ func getBundlesWithOpenTickets() map[string]bool {
 	return bundlesWithOpenTickets
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️getstreamoptions](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/getStreamOptions)
-// getStreamOptions holds the data fields for a getStreamOptions record.
+// ▫️getStreamOptions holds the data fields for a getStreamOptions record.
 func getStreamOptions(cmd *cobra.Command) StreamOptions {
 	showIgnored, _ := cmd.Flags().GetBool("show-ignored")
 	showGenerated, _ := cmd.Flags().GetBool("show-generated")
@@ -4653,8 +4516,7 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️filecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/fileCommand)
-// fileCommand holds the data fields for a fileCommand record.
+// ◾fileCommand holds the data fields for a fileCommand record.
 func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "file", Short: "File management commands"}
 	createCmd := &cobra.Command{
@@ -4725,8 +4587,7 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// sectionCommand holds the data fields for a sectionCommand record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️sectioncommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/sectionCommand)
+// ◽sectionCommand holds the data fields for a sectionCommand record.
 func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "section", Short: "Section management commands"}
 	createCmd := &cobra.Command{
@@ -4896,8 +4757,7 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// definitionCommand holds the data fields for a definitionCommand record.
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️definitioncommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/definitionCommand)
+// ◻️definitionCommand holds the data fields for a definitionCommand record.
 func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "definition", Short: "Definition management commands"}
 	listCmd := &cobra.Command{
@@ -4944,8 +4804,7 @@ func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️movecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/moveCommand)
-// moveCommand holds the data fields for a moveCommand record.
+// 🚚moveCommand holds the data fields for a moveCommand record.
 func moveCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "move <source> <target>",
@@ -5012,7 +4871,6 @@ func moveCommand(factory EngineFactory, config *Config) *cobra.Command {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️integratecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/integrateCommand)
 func integrateCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "integrate [source] [target]",
@@ -5077,8 +4935,7 @@ func integrateCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🛠️extractcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/d/i/extractCommand)
-// extractCommand holds the data fields for a extractCommand record.
+// ◼️extractCommand holds the data fields for a extractCommand record.
 func extractCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "extract [source] [target]",
@@ -5139,11 +4996,9 @@ func extractCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// #region 🔖Utilities
-// [🧰repo⌨️cli💻main🔖cliadapter🔖utilities](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Utilities)
+// #region 🎼Utilities
 // General-purpose utility functions for time parsing and formatting.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖utilities🛠️parseflexibletime](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Utilities/d/i/parseFlexibleTime)
-// parseFlexibleTime holds the data fields for a parseFlexibleTime record.
+// ⏰parseFlexibleTime holds the data fields for a parseFlexibleTime record.
 func parseFlexibleTime(t string) (time.Time, error) {
 	if t == "" {
 		return time.Time{}, fmt.Errorf("empty time string")
@@ -5161,14 +5016,12 @@ func parseFlexibleTime(t string) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("could not parse time: %s", t)
 }
 
-// #endregion 🔖Utilities
+// #endregion 🎼Utilities
 
-// #region 🔖Models
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models)
+// #region 🎺Models
 // Data model types for tickets, goals, and tree representation.
 
-// TicketNode holds the data fields for a ticket node record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models✂️ticketnode](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/d/i/TicketNode)
+// 🎫TicketNode holds the data fields for a ticket node record.
 type TicketNode struct {
 	ID, Slug, Status string
 	Title, URI       string
@@ -5180,8 +5033,7 @@ type TicketNode struct {
 	Summary          string
 }
 
-// GoalNode holds the data fields for a goal node record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models✂️goalnode](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/d/i/GoalNode)
+// 💿GoalNode holds the data fields for a goal node record.
 type GoalNode struct {
 	ID, Title, Status  string
 	DueDate, CreatedAt string
@@ -5190,11 +5042,9 @@ type GoalNode struct {
 	Tickets            []*TicketNode
 }
 
-// #region 🔖Monorepo Tree Types
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types)
+// #region 🧨Monorepo Tree Types
 // Tree node kinds, filter criteria, and matching logic for monorepo tree queries.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🪨entitykinds](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/EntityKinds)
-// EntityKinds holds the data fields for a EntityKinds record.
+// 🏷️EntityKinds holds the data fields for a EntityKinds record.
 var EntityKinds = []string{
 	"root", "year", "month", "day", "hour", "minute", "second",
 	"technology", "bundle", "folder", "file", "line", "range",
@@ -5202,30 +5052,26 @@ var EntityKinds = []string{
 	"policy", "breach", "contributor", "checkpoint", "interaction", "session",
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🪨resourcekinds](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/ResourceKinds)
-// ResourceKinds holds the data fields for a ResourceKinds record.
+// 🎁ResourceKinds holds the data fields for a ResourceKinds record.
 var ResourceKinds = []string{
 	"repo", "technology", "bundle", "folder", "file", "section", "definition",
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🪨diffablekinds](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/DiffableKinds)
-// DiffableKinds holds the data fields for a DiffableKinds record.
+// 💿DiffableKinds holds the data fields for a DiffableKinds record.
 var DiffableKinds = []string{
 	"root", "year", "month", "day", "hour",
 	"technology", "bundle", "folder", "file", "section", "definition",
 	"goal", "ticket", "contributor", "checkpoint", "interaction", "session",
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🪨relatedtofilekinds](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/RelatedToFileKinds)
-// RelatedToFileKinds holds the data fields for a RelatedToFileKinds record.
+// 📄RelatedToFileKinds holds the data fields for a RelatedToFileKinds record.
 var RelatedToFileKinds = []string{
 	"root", "year", "month", "day", "hour", "minute", "second",
 	"technology", "bundle", "folder", "goal", "ticket", "draft", "todo",
 	"policy", "breach", "contributor", "checkpoint", "interaction", "session",
 }
 
-// TreeNodeKind represents a tree node kind value.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes✂️treenodekind](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/TreeNodeKind)
+// 🌳TreeNodeKind represents a tree node kind value.
 type TreeNodeKind string
 
 const (
@@ -5248,8 +5094,7 @@ const (
 	TreeNodeCategory    TreeNodeKind = "category"
 )
 
-// TreeNode holds the data fields for a tree node record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes✂️treenode](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/TreeNode)
+// 🌿TreeNode holds the data fields for a tree node record.
 type TreeNode struct {
 	Kind        TreeNodeKind
 	ID          string
@@ -5268,8 +5113,7 @@ type TreeNode struct {
 	matched     bool
 }
 
-// TreeFilter holds the data fields for a tree filter record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes✂️treefilter](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/TreeFilter)
+// 🧹TreeFilter holds the data fields for a tree filter record.
 type TreeFilter struct {
 	Query               string
 	OnlyKinds           map[TreeNodeKind]bool
@@ -5289,16 +5133,14 @@ type TreeFilter struct {
 	ExcludePolicies     []string
 }
 
-// HasOnlyKinds MUST return true only when the property is present.
-// HasOnlyKinds reports whether the TreeFilter has only kinds.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🛠️hasonlykinds](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/HasOnlyKinds)
+// 🏷️HasOnlyKinds MUST return true only when the property is present.
+// 🔍HasOnlyKinds reports whether the TreeFilter has only kinds.
 func (f *TreeFilter) HasOnlyKinds() bool {
 	return len(f.OnlyKinds) > 0
 }
 
-// IsKindVisible MUST return true only when the condition is met.
-// IsKindVisible reports whether the TreeFilter is kind visible.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🛠️iskindvisible](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/IsKindVisible)
+// 🔷IsKindVisible MUST return true only when the condition is met.
+// ❓IsKindVisible reports whether the TreeFilter is kind visible.
 func (f *TreeFilter) IsKindVisible(kind TreeNodeKind) bool {
 	if kind == TreeNodeCategory {
 		return true
@@ -5309,8 +5151,7 @@ func (f *TreeFilter) IsKindVisible(kind TreeNodeKind) bool {
 	return !f.ExcludeKinds[kind]
 }
 
-// MatchesSubKind MUST operate on the TreeFilter receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🛠️matchessubkind](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/MatchesSubKind)
+// 📥MatchesSubKind MUST operate on the TreeFilter receiver and return consistent results.
 func (f *TreeFilter) MatchesSubKind(kind TreeNodeKind, subKind string) bool {
 	if subKind == "" {
 		return true
@@ -5333,8 +5174,7 @@ func (f *TreeFilter) MatchesSubKind(kind TreeNodeKind, subKind string) bool {
 	return true
 }
 
-// MatchesDate MUST operate on the TreeFilter receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🛠️matchesdate](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/MatchesDate)
+// 🎯MatchesDate MUST operate on the TreeFilter receiver and return consistent results.
 func (f *TreeFilter) MatchesDate(year, month, day int) bool {
 	if len(f.OnlyYears) > 0 {
 		found := false
@@ -5390,8 +5230,7 @@ func (f *TreeFilter) MatchesDate(year, month, day int) bool {
 	return true
 }
 
-// MatchesStatus MUST operate on the TreeFilter receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🛠️matchesstatus](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/MatchesStatus)
+// 🔶MatchesStatus MUST operate on the TreeFilter receiver and return consistent results.
 func (f *TreeFilter) MatchesStatus(status string) bool {
 	if f.OnlyStatus == "" {
 		return true
@@ -5399,8 +5238,7 @@ func (f *TreeFilter) MatchesStatus(status string) bool {
 	return strings.EqualFold(f.OnlyStatus, status)
 }
 
-// MatchesContributor MUST operate on the TreeFilter receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖models🔖monorepotreetypes🛠️matchescontributor](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Models/s/Monorepo%20Tree%20Types/d/i/MatchesContributor)
+// 🤝MatchesContributor MUST operate on the TreeFilter receiver and return consistent results.
 func (f *TreeFilter) MatchesContributor(contributor string) bool {
 	if len(f.OnlyContributors) > 0 {
 		for _, c := range f.OnlyContributors {
@@ -5418,14 +5256,12 @@ func (f *TreeFilter) MatchesContributor(contributor string) bool {
 	return true
 }
 
-// #endregion 🔖Monorepo Tree Types
+// #endregion 🧨Monorepo Tree Types
 
-// #endregion 🔖Models
+// #endregion 🎺Models
 
-// #region 🔖Tree Logic
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic)
-// Tree construction, filtering, searching, and rendering for goals, sections, and monorepo nodes.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️buildgoaltree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/buildGoalTree)
+// #region 🏩Tree Logic
+// 🏢Tree construction, filtering, searching, and rendering for goals, sections, and monorepo nodes.
 func buildGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}) []*GoalNode {
 	goalMap := make(map[string]*GoalNode)
 
@@ -5553,7 +5389,6 @@ func buildGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}) []*GoalNode
 	return rootGoals
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️countopensubgoals](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/countOpenSubgoals)
 func countOpenSubgoals(g *GoalNode) int {
 	c := 0
 	for _, child := range g.Children {
@@ -5565,8 +5400,7 @@ func countOpenSubgoals(g *GoalNode) int {
 	return c
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️countopentickets](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/countOpenTickets)
-// countOpenTickets holds the data fields for a countOpenTickets record.
+// 🎫countOpenTickets holds the data fields for a countOpenTickets record.
 func countOpenTickets(g *GoalNode) int {
 	c := 0
 	var countT func(ts []*TicketNode)
@@ -5585,8 +5419,7 @@ func countOpenTickets(g *GoalNode) int {
 	return c
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️rendergoaltree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/renderGoalTree)
-// renderGoalTree holds the data fields for a renderGoalTree record.
+// 🎨renderGoalTree holds the data fields for a renderGoalTree record.
 func renderGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool, useMD bool) string {
 	roots := buildGoalTree(goalsRaw, ticketsRaw)
 	format := "text"
@@ -5596,8 +5429,7 @@ func renderGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 	return renderGoalTreeNodes(roots, format)
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️goalnodetodata](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/goalNodeToData)
-// goalNodeToData holds the data fields for a goalNodeToData record.
+// 💿goalNodeToData holds the data fields for a goalNodeToData record.
 func goalNodeToData(n *GoalNode) map[string]interface{} {
 	return map[string]interface{}{
 		"id":          n.ID,
@@ -5609,8 +5441,7 @@ func goalNodeToData(n *GoalNode) map[string]interface{} {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️ticketnodetodata](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/ticketNodeToData)
-// ticketNodeToData holds the data fields for a ticketNodeToData record.
+// 🌿ticketNodeToData holds the data fields for a ticketNodeToData record.
 func ticketNodeToData(n *TicketNode) map[string]interface{} {
 	data := map[string]interface{}{
 		"slug":     n.Slug,
@@ -5624,8 +5455,7 @@ func ticketNodeToData(n *TicketNode) map[string]interface{} {
 	return data
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️rendergoaltreenodes](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/renderGoalTreeNodes)
-// renderGoalTreeNodes holds the data fields for a renderGoalTreeNodes record.
+// ⛳renderGoalTreeNodes holds the data fields for a renderGoalTreeNodes record.
 func renderGoalTreeNodes(roots []*GoalNode, format string) string {
 	var sb strings.Builder
 
@@ -5699,7 +5529,6 @@ func renderGoalTreeNodes(roots []*GoalNode, format string) string {
 	return sb.String()
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🪨rendersectiontree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/renderSectionTree)
 func renderSectionTree(root *Section, isTTY bool, useMD bool) string {
 	var sb strings.Builder
 
@@ -5755,8 +5584,7 @@ func renderSectionTree(root *Section, isTTY bool, useMD bool) string {
 	return sb.String()
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🛠️renderticketlist](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/d/i/renderTicketList)
-// renderTicketList holds the data fields for a renderTicketList record.
+// 📋renderTicketList holds the data fields for a renderTicketList record.
 func renderTicketList(ticketsRaw []interface{}, isTTY bool, useMD bool) string {
 	var sb strings.Builder
 
@@ -5772,19 +5600,16 @@ func renderTicketList(ticketsRaw []interface{}, isTTY bool, useMD bool) string {
 	return sb.String()
 }
 
-// #region 🔖Monorepo Tree
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree)
+// #region 🩻Monorepo Tree
 // Monorepo tree builder that assembles all entity nodes into a unified tree.
 
-// TreeBuildOptions holds the data fields for a tree build options record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree✂️treebuildoptions](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/TreeBuildOptions)
+// 🌳TreeBuildOptions holds the data fields for a tree build options record.
 type TreeBuildOptions struct {
 	IncludeSections bool
 }
 
-// BuildMonorepoTree MUST assemble the monorepo tree from the available context data.
-// BuildMonorepoTree constructs and returns the monorepo tree structure.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️buildmonorepotree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/BuildMonorepoTree)
+// 🏢BuildMonorepoTree MUST assemble the monorepo tree from the available context data.
+// 🏢BuildMonorepoTree constructs and returns the monorepo tree structure.
 func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
 	var options TreeBuildOptions
 	if len(opts) > 0 {
@@ -5931,7 +5756,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Label:   p.Name,
 			URI:     p.GetURI(),
 			SubKind: string(p.Kind),
-			Data:    map[string]interface{}{"name": p.Name, "kind": string(p.Kind)},
+			Data:    map[string]interface{}{"name": p.Name, "kind": string(p.Kind), "emoji": p.Emoji},
 		}
 		sort.Slice(p.Bundles, func(i, j int) bool { return p.Bundles[i].Name < p.Bundles[j].Name })
 		for bi := range p.Bundles {
@@ -5942,7 +5767,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 				Label:   b.Name,
 				URI:     b.GetURI(),
 				SubKind: string(b.Kind),
-				Data:    map[string]interface{}{"name": b.Name, "root": b.Root, "kind": string(b.Kind)},
+				Data:    map[string]interface{}{"name": b.Name, "root": b.Root, "kind": string(b.Kind), "emoji": b.Emoji},
 			}
 
 			bundleRoot := b.Root
@@ -6202,8 +6027,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	return root
 }
 
-// PropagateParentIDs holds the data fields for a PropagateParentIDs record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️propagateparentids](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/PropagateParentIDs)
+// 💿PropagateParentIDs holds the data fields for a PropagateParentIDs record.
 func PropagateParentIDs(node *TreeNode, parentArtifactID string) {
 	if node.Data == nil {
 		node.Data = map[string]interface{}{}
@@ -6221,8 +6045,7 @@ func PropagateParentIDs(node *TreeNode, parentArtifactID string) {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️buildsectiontreenode](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/buildSectionTreeNode)
-// buildSectionTreeNode holds the data fields for a buildSectionTreeNode record.
+// 📑buildSectionTreeNode holds the data fields for a buildSectionTreeNode record.
 func buildSectionTreeNode(s *Section) *TreeNode {
 	sNode := &TreeNode{
 		Kind:  TreeNodeSection,
@@ -6250,8 +6073,7 @@ func buildSectionTreeNode(s *Section) *TreeNode {
 	return sNode
 }
 
-// buildStatuteTree holds the data fields for a buildStatuteTree record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree✂️buildstatutetree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/buildStatuteTree)
+// 🏗️buildStatuteTree holds the data fields for a buildStatuteTree record.
 func buildStatuteTree(kinds []Statute) []*TreeNode {
 	type treeEntry struct {
 		node     *TreeNode
@@ -6336,8 +6158,7 @@ func buildStatuteTree(kinds []Statute) []*TreeNode {
 	return buildNodes(rootEntries, orderedRootKeys)
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️buildterritorytree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/buildTerritoryTree)
-// buildTerritoryTree holds the data fields for a buildTerritoryTree record.
+// 🔷buildTerritoryTree holds the data fields for a buildTerritoryTree record.
 func buildTerritoryTree(groups []Territory) []*TreeNode {
 	var result []*TreeNode
 	for _, g := range groups {
@@ -6388,8 +6209,7 @@ func buildTerritoryTree(groups []Territory) []*TreeNode {
 	return result
 }
 
-// sortTreeChildren holds the data fields for a sortTreeChildren record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️sorttreechildren](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/sortTreeChildren)
+// 📶sortTreeChildren holds the data fields for a sortTreeChildren record.
 func sortTreeChildren(node *TreeNode) {
 	sort.Slice(node.Children, func(i, j int) bool {
 		a, b := node.Children[i], node.Children[j]
@@ -6407,9 +6227,8 @@ func sortTreeChildren(node *TreeNode) {
 	}
 }
 
-// FilterMonorepoTree MUST preserve the tree structure while removing non-matching nodes.
-// FilterMonorepoTree filters the monorepo tree based on the given criteria.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️filtermonorepotree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/FilterMonorepoTree)
+// 🧹FilterMonorepoTree MUST preserve the tree structure while removing non-matching nodes.
+// 🔍FilterMonorepoTree filters the monorepo tree based on the given criteria.
 func FilterMonorepoTree(root *TreeNode, filter *TreeFilter) *TreeNode {
 	if filter == nil {
 		return root
@@ -6427,7 +6246,6 @@ func FilterMonorepoTree(root *TreeNode, filter *TreeFilter) *TreeNode {
 	return filtered
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️filternode](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/filterNode)
 func filterNode(node *TreeNode, filter *TreeFilter) *TreeNode {
 	if node.Kind != TreeNodeCategory {
 		if !filter.IsKindVisible(node.Kind) {
@@ -6476,8 +6294,7 @@ func filterNode(node *TreeNode, filter *TreeFilter) *TreeNode {
 	return &copy
 }
 
-// collapseFilteredKinds holds the data fields for a collapseFilteredKinds record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🪨collapsefilteredkinds](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/collapseFilteredKinds)
+// 🏷️collapseFilteredKinds holds the data fields for a collapseFilteredKinds record.
 func collapseFilteredKinds(node *TreeNode, filter *TreeFilter) {
 	var newChildren []*TreeNode
 	for _, c := range node.Children {
@@ -6492,7 +6309,6 @@ func collapseFilteredKinds(node *TreeNode, filter *TreeFilter) {
 	node.Children = newChildren
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️searchmonorepotreewithcache](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/searchMonorepoTreeWithCache)
 func searchMonorepoTreeWithCache(ctx context.Context, root *TreeNode, query string) *TreeNode {
 	if query == "" {
 		return root
@@ -6500,8 +6316,8 @@ func searchMonorepoTreeWithCache(ctx context.Context, root *TreeNode, query stri
 	return searchTreeInMemory(root, query)
 }
 
-// SearchMonorepoTree MUST match case-insensitively against node labels and descriptions.
-// SearchMonorepoTree performs a text search across the monorepo tree.
+// 📝SearchMonorepoTree MUST match case-insensitively against node labels and descriptions.
+// 🔤SearchMonorepoTree performs a text search across the monorepo tree.
 func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 	if query == "" {
 		return root
@@ -6509,8 +6325,7 @@ func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 	return searchTreeInMemory(root, query)
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️levenshtein](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/levenshtein)
-// levenshtein holds the data fields for a levenshtein record.
+// 🔶levenshtein holds the data fields for a levenshtein record.
 func levenshtein(a, b string) int {
 	la, lb := len(a), len(b)
 	if la == 0 {
@@ -6548,8 +6363,7 @@ func levenshtein(a, b string) int {
 	return prev[lb]
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️fuzzycontains](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/fuzzyContains)
-// fuzzyContains holds the data fields for a fuzzyContains record.
+// 🔹fuzzyContains holds the data fields for a fuzzyContains record.
 func fuzzyContains(text, term string) bool {
 	if strings.Contains(text, term) {
 		return true
@@ -6579,8 +6393,7 @@ func fuzzyContains(text, term string) bool {
 	return false
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️searchtreeinmemory](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/searchTreeInMemory)
-// searchTreeInMemory holds the data fields for a searchTreeInMemory record.
+// 🔎searchTreeInMemory holds the data fields for a searchTreeInMemory record.
 func searchTreeInMemory(root *TreeNode, query string) *TreeNode {
 	terms := strings.Fields(strings.ToLower(query))
 	if len(terms) == 0 {
@@ -6654,14 +6467,12 @@ func searchTreeInMemory(root *TreeNode, query string) *TreeNode {
 	return pruned
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️pruneunmatched](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/pruneUnmatched)
-// pruneUnmatched holds the data fields for a pruneUnmatched record.
+// 🎯pruneUnmatched holds the data fields for a pruneUnmatched record.
 func pruneUnmatched(node *TreeNode, matchedIDs map[string]bool) *TreeNode {
 	return pruneUnmatchedInner(node, matchedIDs, false)
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️pruneunmatchedinner](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/pruneUnmatchedInner)
-// pruneUnmatchedInner holds the data fields for a pruneUnmatchedInner record.
+// 🔸pruneUnmatchedInner holds the data fields for a pruneUnmatchedInner record.
 func pruneUnmatchedInner(node *TreeNode, matchedIDs map[string]bool, ancestorMatched bool) *TreeNode {
 	docID := node.ID
 	if docID == "" {
@@ -6687,9 +6498,8 @@ func pruneUnmatchedInner(node *TreeNode, matchedIDs map[string]bool, ancestorMat
 	return nil
 }
 
-// RenderMonorepoTree MUST produce a complete monorepo tree output.
-// RenderMonorepoTree renders the monorepo tree into its output representation.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️rendermonorepotree](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/RenderMonorepoTree)
+// 🎨RenderMonorepoTree MUST produce a complete monorepo tree output.
+// 🎨RenderMonorepoTree renders the monorepo tree into its output representation.
 func RenderMonorepoTree(root *TreeNode) string {
 	var sb strings.Builder
 	for i, c := range root.Children {
@@ -6698,9 +6508,8 @@ func RenderMonorepoTree(root *TreeNode) string {
 	return sb.String()
 }
 
-// RenderMonorepoTreeMarkdown MUST produce a complete monorepo tree markdown output.
-// RenderMonorepoTreeMarkdown renders the monorepo tree markdown into its output representation.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️rendermonorepotreemarkdown](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/RenderMonorepoTreeMarkdown)
+// 📰RenderMonorepoTreeMarkdown MUST produce a complete monorepo tree markdown output.
+// 📰RenderMonorepoTreeMarkdown renders the monorepo tree markdown into its output representation.
 func RenderMonorepoTreeMarkdown(root *TreeNode) string {
 	var sb strings.Builder
 	for _, c := range root.Children {
@@ -6709,8 +6518,7 @@ func RenderMonorepoTreeMarkdown(root *TreeNode) string {
 	return sb.String()
 }
 
-// treeNodeKindToEntityKind holds the data fields for a treeNodeKindToEntityKind record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️treenodekindtoentitykind](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/treeNodeKindToEntityKind)
+// 🌿treeNodeKindToEntityKind holds the data fields for a treeNodeKindToEntityKind record.
 func treeNodeKindToEntityKind(k TreeNodeKind) string {
 	switch k {
 	case TreeNodeTechnology:
@@ -6749,8 +6557,7 @@ func treeNodeKindToEntityKind(k TreeNodeKind) string {
 	return ""
 }
 
-// renderTreeNodeText holds the data fields for a renderTreeNodeText record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️rendertreenodetext](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/renderTreeNodeText)
+// 🔺renderTreeNodeText holds the data fields for a renderTreeNodeText record.
 func renderTreeNodeText(sb *strings.Builder, node *TreeNode, prefix string, isLast bool, isRoot bool) {
 	connector := "├── "
 	if isLast {
@@ -6799,8 +6606,7 @@ func renderTreeNodeText(sb *strings.Builder, node *TreeNode, prefix string, isLa
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖monorepotree🛠️rendertreenodemarkdown](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Monorepo%20Tree/d/i/renderTreeNodeMarkdown)
-// renderTreeNodeMarkdown holds the data fields for a renderTreeNodeMarkdown record.
+// 🔻renderTreeNodeMarkdown holds the data fields for a renderTreeNodeMarkdown record.
 func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) {
 	if node.Kind == TreeNodeCategory {
 		sb.WriteString(renderTemplate(mdTpl, "md/tree_node_category", map[string]interface{}{
@@ -6829,17 +6635,14 @@ func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) 
 	}
 }
 
-// #endregion 🔖Monorepo Tree
+// #endregion 🩻Monorepo Tree
 
-// #region 🔖Query Cache
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache)
+// #region 🎊Query Cache
 // Local Bleve index under .repo/cache for keyword search. Uses composite git fingerprint (supertechnology HEAD, dirty state, submodule pointers and working state) for invalidation. Supports incremental updates via git diff.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🪨cacheschemaversion](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/cacheSchemaVersion)
-// cacheSchemaVersion holds the data fields for a cacheSchemaVersion record.
+// 📌cacheSchemaVersion holds the data fields for a cacheSchemaVersion record.
 const cacheSchemaVersion = 2
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache✂️cachemeta](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/cacheMeta)
-// cacheMeta holds the data fields for a cacheMeta record.
+// 💿cacheMeta holds the data fields for a cacheMeta record.
 type cacheMeta struct {
 	SchemaVersion     int               `json:"SchemaVersion"`
 	SuperHead         string            `json:"SuperHead"`
@@ -6852,15 +6655,13 @@ type cacheMeta struct {
 	Fingerprint       string            `json:"Fingerprint"`
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️getcachedir](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/getCacheDir)
-// getCacheDir holds the data fields for a getCacheDir record.
+// 💾getCacheDir holds the data fields for a getCacheDir record.
 func getCacheDir() string {
 	abs, _ := filepath.Abs(GetRootDir())
 	h := sha256.Sum256([]byte(abs))
 	return filepath.Join(GetRepoMetaDir(), "cache", hex.EncodeToString(h[:]))
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️computecompositefingerprint](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/computeCompositeFingerprint)
 func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 	meta = &cacheMeta{
 		SchemaVersion:     cacheSchemaVersion,
@@ -6911,10 +6712,10 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 	return fp, meta
 }
 
-// hashSemioMetaState MUST produce a stable hash for semio metadata state changes.
+// ♻️hashSemioMetaState MUST produce a stable hash for semio metadata state changes.
 // hashSemioMetaState computes and returns a hash for semio metadata content relevant to tree cache invalidation.
 // Only structural changes (new goals, tickets, policies, drafts) invalidate the cache.
-// Ephemeral data (agent session logs, ticket agent tracking updates) is excluded.
+// ✏️Ephemeral data (agent session logs, ticket agent tracking updates) is excluded.
 func hashSemioMetaState(repoRoot string) string {
 	metaRoot := filepath.Join(repoRoot, ".repo")
 	if !FileExists(metaRoot) {
@@ -6971,7 +6772,6 @@ func hashSemioMetaState(repoRoot string) string {
 	return hashString(strings.Join(entries, "|"))
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️treenodescopepath](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/treeNodeScopePath)
 func treeNodeScopePath(node *TreeNode) string {
 	if node.Data == nil {
 		return ""
@@ -6993,15 +6793,13 @@ func treeNodeScopePath(node *TreeNode) string {
 	return ""
 }
 
-// hashString holds the data fields for a hashString record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️hashstring](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/hashString)
+// 🔤hashString holds the data fields for a hashString record.
 func hashString(s string) string {
 	h := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(h[:])
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️loadcachemeta](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/loadCacheMeta)
-// loadCacheMeta holds the data fields for a loadCacheMeta record.
+// 🔷loadCacheMeta holds the data fields for a loadCacheMeta record.
 func loadCacheMeta() (*cacheMeta, error) {
 	p := filepath.Join(getCacheDir(), "meta.json")
 	data, err := os.ReadFile(p)
@@ -7018,8 +6816,7 @@ func loadCacheMeta() (*cacheMeta, error) {
 	return &m, nil
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️savecachemeta](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/saveCacheMeta)
-// saveCacheMeta holds the data fields for a saveCacheMeta record.
+// 🔶saveCacheMeta holds the data fields for a saveCacheMeta record.
 func saveCacheMeta(m *cacheMeta) error {
 	dir := getCacheDir()
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -7032,8 +6829,7 @@ func saveCacheMeta(m *cacheMeta) error {
 	return os.WriteFile(filepath.Join(dir, "meta.json"), data, 0644)
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️getchangedpathsfromgit](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/getChangedPathsFromGit)
-// getChangedPathsFromGit holds the data fields for a getChangedPathsFromGit record.
+// 🛤️getChangedPathsFromGit holds the data fields for a getChangedPathsFromGit record.
 func getChangedPathsFromGit(repoRoot string) []string {
 	statusOut, _, _ := ExecCommand("git", []string{"status", "--porcelain", "-z"}, repoRoot)
 	diffOut, _, _ := ExecCommand("git", []string{"diff", "--name-only", "HEAD"}, repoRoot)
@@ -7063,8 +6859,7 @@ func getChangedPathsFromGit(repoRoot string) []string {
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️expandpathswithancestors](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/expandPathsWithAncestors)
-// expandPathsWithAncestors holds the data fields for a expandPathsWithAncestors record.
+// 🔹expandPathsWithAncestors holds the data fields for a expandPathsWithAncestors record.
 func expandPathsWithAncestors(paths []string) []string {
 	technologies := LoadTechnologies()
 	bundleByPath := make(map[string]string)
@@ -7112,7 +6907,6 @@ func expandPathsWithAncestors(paths []string) []string {
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️pathtonodesmap](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/pathToNodesMap)
 func pathToNodesMap(root *TreeNode) map[string][]*TreeNode {
 	m := make(map[string][]*TreeNode)
 	var walk func(node *TreeNode)
@@ -7131,8 +6925,7 @@ func pathToNodesMap(root *TreeNode) map[string][]*TreeNode {
 	return m
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️ensurecacheindexed](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/ensureCacheIndexed)
-// ensureCacheIndexed holds the data fields for a ensureCacheIndexed record.
+// 🔸ensureCacheIndexed holds the data fields for a ensureCacheIndexed record.
 func ensureCacheIndexed(ctx context.Context, root *TreeNode) (bleve.Index, error) {
 	repoRoot := GetRootDir()
 	fp, newMeta := computeCompositeFingerprint(repoRoot)
@@ -7278,8 +7071,7 @@ func ensureCacheIndexed(ctx context.Context, root *TreeNode) (bleve.Index, error
 	return idx, nil
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖querycache🛠️querycacheindex](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Query%20Cache/d/i/queryCacheIndex)
-// queryCacheIndex holds the data fields for a queryCacheIndex record.
+// 🔍queryCacheIndex holds the data fields for a queryCacheIndex record.
 func queryCacheIndex(idx bleve.Index, query string, limit int) ([]string, error) {
 	if query == "" {
 		return nil, nil
@@ -7299,25 +7091,21 @@ func queryCacheIndex(idx bleve.Index, query string, limit int) ([]string, error)
 	return ids, nil
 }
 
-// #endregion 🔖Query Cache
+// #endregion 🎊Query Cache
 
-// #region 🔖Tree Cache
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖treecache](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache)
+// #region 📌Tree Cache
 // Gzip-compressed JSON cache of the full TreeNode tree under .repo/cache. Uses same git fingerprint as Query Cache for invalidation. Saves ~95% of tree build time on cache hit.
 
-// getTreeCachePath holds the data fields for a getTreeCachePath record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖treecache🛠️gettreecachepath](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache/d/i/getTreeCachePath)
+// 🌳getTreeCachePath holds the data fields for a getTreeCachePath record.
 func getTreeCachePath() string {
 	return filepath.Join(getCacheDir(), "tree.json.gz")
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖treecache🛠️gettreecachemetapath](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache/d/i/getTreeCacheMetaPath)
 func getTreeCacheMetaPath() string {
 	return filepath.Join(getCacheDir(), "tree-meta.json")
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖treecache🛠️savetreecache](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache/d/i/saveTreeCache)
-// saveTreeCache holds the data fields for a saveTreeCache record.
+// 💿saveTreeCache holds the data fields for a saveTreeCache record.
 func saveTreeCache(tree *TreeNode, meta *cacheMeta) error {
 	dir := getCacheDir()
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -7349,7 +7137,6 @@ func saveTreeCache(tree *TreeNode, meta *cacheMeta) error {
 	return os.WriteFile(getTreeCacheMetaPath(), metaData, 0644)
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖treecache🛠️loadtreecache](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache/d/i/loadTreeCache)
 func loadTreeCache() (*TreeNode, *cacheMeta, error) {
 	metaData, err := os.ReadFile(getTreeCacheMetaPath())
 	if err != nil {
@@ -7382,8 +7169,7 @@ func loadTreeCache() (*TreeNode, *cacheMeta, error) {
 	return &tree, &meta, nil
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖treelogic🔖treecache🛠️buildmonorepotreecached](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/Tree%20Logic/s/Tree%20Cache/d/i/BuildMonorepoTreeCached)
-// BuildMonorepoTreeCached holds the data fields for a BuildMonorepoTreeCached record.
+// 🏢BuildMonorepoTreeCached holds the data fields for a BuildMonorepoTreeCached record.
 func BuildMonorepoTreeCached(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
 	repoRoot := GetRootDir()
 
@@ -7410,27 +7196,23 @@ func BuildMonorepoTreeCached(ctx context.Context, opts ...TreeBuildOptions) *Tre
 	return tree
 }
 
-// #endregion 🔖Tree Cache
+// #endregion 📌Tree Cache
 
-// #endregion 🔖Tree Logic
+// #endregion 🏩Tree Logic
 
-// #region 🔖CLI Renderers
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers)
+// #region 🌩️CLI Renderers
 // Stream renderers that format engine events for NDJSON, human-readable, and markdown output.
 
-// StreamRenderer defines the interface contract for stream renderer operations.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers✂️streamrenderer](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/StreamRenderer)
+// 🔌StreamRenderer defines the interface contract for stream renderer operations.
 type StreamRenderer interface {
 	Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error)
 }
 
-// NDJSONRenderer holds the data fields for a n d j s o n renderer record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers✂️ndjsonrenderer](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/NDJSONRenderer)
+// 🎨NDJSONRenderer holds the data fields for a n d j s o n renderer record.
 type NDJSONRenderer struct{}
 
-// Render MUST produce a complete  output.
-// Render renders the  into its output representation.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️render](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/Render)
+// 🔷Render MUST produce a complete  output.
+// 💾Render renders the  into its output representation.
 func (r NDJSONRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	encoder := json.NewEncoder(out)
 	encoder.SetEscapeHTML(false)
@@ -7458,8 +7240,7 @@ func (r NDJSONRenderer) Render(ctx context.Context, out, errOut io.Writer, strea
 	return exitCode, nil
 }
 
-// #region 🔖ANSI
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖ansi](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/ANSI)
+// #region 🧊ANSI
 // ANSI escape code constants for terminal colorization.
 
 const (
@@ -7472,8 +7253,7 @@ const (
 	ColorBold   = "\033[1m"
 )
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖ansi🛠️colorize](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/ANSI/d/i/colorize)
-// colorize holds the data fields for a colorize record.
+// 💿colorize holds the data fields for a colorize record.
 func colorize(s string, color string, enabled bool) string {
 	if !enabled {
 		return s
@@ -7481,17 +7261,15 @@ func colorize(s string, color string, enabled bool) string {
 	return color + s + ColorReset
 }
 
-// #endregion 🔖ANSI
+// #endregion 🧊ANSI
 
-// HumanRenderer holds the data fields for a human renderer record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers✂️humanrenderer](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/HumanRenderer)
+// 💿HumanRenderer holds the data fields for a human renderer record.
 type HumanRenderer struct {
 	Verbose bool
 }
 
-// Render MUST produce a complete  output.
-// Render renders the  into its output representation.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️render](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/Render)
+// 🔶Render MUST produce a complete  output.
+// ⏹️Render renders the  into its output representation.
 func (r HumanRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	exitCode := 0
 	isTTY := false
@@ -7587,7 +7365,6 @@ func (r HumanRenderer) Render(ctx context.Context, out, errOut io.Writer, stream
 	return exitCode, nil
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️formatresult](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/formatResult)
 func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	var raw map[string]interface{}
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -7812,13 +7589,11 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	return renderEntityHuman("root", payload, isTTY) + "\n"
 }
 
-// MarkdownRenderer holds the data fields for a markdown renderer record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers✂️markdownrenderer](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/MarkdownRenderer)
+// 📰MarkdownRenderer holds the data fields for a markdown renderer record.
 type MarkdownRenderer struct{}
 
-// Render MUST produce a complete  output.
-// Render renders the  into its output representation.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️render](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/Render)
+// 🔹Render MUST produce a complete  output.
+// 🔢Render renders the  into its output representation.
 func (r MarkdownRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	exitCode := 0
 	for event := range stream {
@@ -7843,8 +7618,7 @@ func (r MarkdownRenderer) Render(ctx context.Context, out, errOut io.Writer, str
 	return exitCode, nil
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️formatmarkdownresult](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/formatMarkdownResult)
-// formatMarkdownResult holds the data fields for a formatMarkdownResult record.
+// 📋formatMarkdownResult holds the data fields for a formatMarkdownResult record.
 func formatMarkdownResult(command string, data json.RawMessage) string {
 	var raw map[string]interface{}
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -7995,8 +7769,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 	return renderEntityMarkdownLink("root", payload) + "\n"
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️formatmarkdownfile](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/formatMarkdownFile)
-// formatMarkdownFile holds the data fields for a formatMarkdownFile record.
+// 📄formatMarkdownFile holds the data fields for a formatMarkdownFile record.
 func formatMarkdownFile(file map[string]interface{}) string {
 	var sb strings.Builder
 	sb.WriteString(renderEntityMarkdownLink("file", file) + "\n")
@@ -8038,8 +7811,7 @@ func formatMarkdownFile(file map[string]interface{}) string {
 	return sb.String()
 }
 
-// renderStream holds the data fields for a renderStream record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🪨renderstream](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/renderStream)
+// 🔸renderStream holds the data fields for a renderStream record.
 func renderStream(cmd *cobra.Command, config *Config, stream <-chan Event) error {
 	var renderer StreamRenderer
 	if config.IsJSON() {
@@ -8060,8 +7832,7 @@ func renderStream(cmd *cobra.Command, config *Config, stream <-chan Event) error
 	return nil
 }
 
-// renderEventsToMarkdown holds the data fields for a renderEventsToMarkdown record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🪨rendereventstomarkdown](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/renderEventsToMarkdown)
+// 📡renderEventsToMarkdown holds the data fields for a renderEventsToMarkdown record.
 func renderEventsToMarkdown(events []Event) string {
 	var sb strings.Builder
 	for _, event := range events {
@@ -8077,24 +7848,21 @@ func renderEventsToMarkdown(events []Event) string {
 	return sb.String()
 }
 
-// toolErrorResult holds the data fields for a toolErrorResult record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️toolerrorresult](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/toolErrorResult)
+// ❌toolErrorResult holds the data fields for a toolErrorResult record.
 func toolErrorResult(err error) ToolResult {
 	output := NewOutput()
 	output.Error(fmt.Sprintf("Error: %v", err))
 	return ToolResult{Output: *output, Error: err.Error()}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️toolerrormsg](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/toolErrorMsg)
-// toolErrorMsg holds the data fields for a toolErrorMsg record.
+// 🔺toolErrorMsg holds the data fields for a toolErrorMsg record.
 func toolErrorMsg(msg string) ToolResult {
 	output := NewOutput()
 	output.Error(fmt.Sprintf("Error: %s", msg))
 	return ToolResult{Output: *output, Error: msg}
 }
 
-// toolResultFromEvents holds the data fields for a toolResultFromEvents record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️toolresultfromevents](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/toolResultFromEvents)
+// 🔻toolResultFromEvents holds the data fields for a toolResultFromEvents record.
 func toolResultFromEvents(events []Event, data interface{}) ToolResult {
 	text := renderEventsToMarkdown(events)
 	output := NewOutput()
@@ -8112,8 +7880,7 @@ func toolResultFromEvents(events []Event, data interface{}) ToolResult {
 	return ToolResult{Output: *output, Data: data}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️toolresultfromtreelist](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/toolResultFromTreeList)
-// toolResultFromTreeList holds the data fields for a toolResultFromTreeList record.
+// 🌳toolResultFromTreeList holds the data fields for a toolResultFromTreeList record.
 func toolResultFromTreeList(nodeKind TreeNodeKind) ToolResult {
 	ctx := context.Background()
 	tree := BuildMonorepoTreeCached(ctx, TreeBuildOptions{})
@@ -8136,8 +7903,7 @@ func toolResultFromTreeList(nodeKind TreeNodeKind) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️toolresultfromtreerender](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/toolResultFromTreeRender)
-// toolResultFromTreeRender holds the data fields for a toolResultFromTreeRender record.
+// ⬛toolResultFromTreeRender holds the data fields for a toolResultFromTreeRender record.
 func toolResultFromTreeRender(nodeKind TreeNodeKind) ToolResult {
 	ctx := context.Background()
 	tree := BuildMonorepoTreeCached(ctx, TreeBuildOptions{})
@@ -8149,8 +7915,7 @@ func toolResultFromTreeRender(nodeKind TreeNodeKind) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// runGraphQL holds the data fields for a runGraphQL record.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🛠️rungraphql](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/d/i/runGraphQL)
+// 🕸️runGraphQL holds the data fields for a runGraphQL record.
 func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query string, variables map[string]interface{}) error {
 	argsPayload := GraphQLArgs{Query: query, Variables: variables}
 	payloadBytes, err := json.Marshal(argsPayload)
@@ -8172,17 +7937,12 @@ func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query
 	return renderStream(cmd, config, stream)
 }
 
-// #region 🔖Mermaid
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid)
-// Mermaid diagram generation for LOC visualizations as treemap-beta strings.
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidescapelabel](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/mermaidEscapeLabel)
-// [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidescapelabel](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidEscapeLabel)
+// #region ⏲️Mermaid
+// 🧜Mermaid diagram generation for LOC visualizations as treemap-beta strings.
 func mermaidEscapeLabel(s string) string {
 	return strings.ReplaceAll(s, "\"", "'")
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidtechnologyemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/mermaidTechnologyEmoji)
-// [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidtechnologyemoji](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidTechnologyEmoji)
 func mermaidTechnologyEmoji(kind TechnologyKind) string {
 	switch kind {
 	case TechnologyKindInfrastructure:
@@ -8194,8 +7954,6 @@ func mermaidTechnologyEmoji(kind TechnologyKind) string {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidbundleemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/mermaidBundleEmoji)
-// [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidbundleemoji](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidBundleEmoji)
 func mermaidBundleEmoji(kind BundleKind) string {
 	switch kind {
 	case BundleKindSchema:
@@ -8213,8 +7971,6 @@ func mermaidBundleEmoji(kind BundleKind) string {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidfileemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/mermaidFileEmoji)
-// [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidfileemoji](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidFileEmoji)
 func mermaidFileEmoji(kind string) string {
 	switch kind {
 	case FileKindLab:
@@ -8236,8 +7992,6 @@ func mermaidFileEmoji(kind string) string {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbytechnologiesbundlesfoldersfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByTechnologiesBundlesFoldersFiles)
-// [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbytechnologiesbundlesfoldersfiles](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByTechnologiesBundlesFoldersFiles)
 func MermaidLocByTechnologiesBundlesFoldersFiles() string {
 	technologies := LoadTechnologies()
 	ctx := context.Background()
@@ -8389,8 +8143,6 @@ func MermaidLocByTechnologiesBundlesFoldersFiles() string {
 	return sb.String()
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbycontributors](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByContributors)
-// [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbycontributors](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByContributors)
 func MermaidLocByContributors() string {
 	bundles := GetTechnologies()
 	files, _ := ScopeToFiles(Scope{Kind: ScopeRepo}, bundles)
@@ -8426,8 +8178,6 @@ func MermaidLocByContributors() string {
 	return sb.String()
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidlocbylanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/MermaidLocByLanguage)
-// [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidlocbylanguage](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/MermaidLocByLanguage)
 func MermaidLocByLanguage() string {
 	ctx := context.Background()
 	fileCh := make(chan File)
@@ -8466,8 +8216,6 @@ func MermaidLocByLanguage() string {
 	return sb.String()
 }
 
-// [🧰repo⌨️cli💻main🔖cliadapter🔖clirenderers🔖mermaid🛠️mermaidcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Cli%20Adapter/s/CLI%20Renderers/s/Mermaid/d/i/mermaidCommand)
-// [🧰repo⌨️cli💻maingo🔖cliadapter🔖mermaid🛠️mermaidcommand](repo://definition/repo/cli/main.go/Cli%20Adapter/Mermaid/mermaidCommand)
 func mermaidCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{
 		Use:   "mermaid <visualization>",
@@ -8503,25 +8251,22 @@ func mermaidCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-// #endregion 🔖Mermaid
+// #endregion ⏲️Mermaid
 
-// #endregion 🔖CLI Renderers
+// #endregion 🌩️CLI Renderers
 
-// #endregion 🔖Cli Adapter
+// #endregion 🌧️Cli Adapter
 
-// #region 🔖GraphQL Types
-// [🧰repo⌨️cli💻main🔖graphqltypes](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types)
+// #region 💡GraphQL Types
 // GraphQL-facing domain types, enums, constants, and entity node implementations.
 
-// Node defines the interface contract for node operations.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️node](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Node)
+// 🔌Node defines the interface contract for node operations.
 type Node interface {
 	IsNode()
 	GetID() string
 }
 
-// DefinitionKind represents a definition kind value.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️definitionkind](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DefinitionKind)
+// 📖DefinitionKind represents a definition kind value.
 type DefinitionKind string
 
 const (
@@ -8531,9 +8276,8 @@ const (
 	DefinitionKindTest           DefinitionKind = "test"
 )
 
-// IsValid MUST return true only when the condition is met.
-// IsValid reports whether the DefinitionKind is valid.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isvalid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsValid)
+// 🔷IsValid MUST return true only when the condition is met.
+// ▶️IsValid reports whether the DefinitionKind is valid.
 func (e DefinitionKind) IsValid() bool {
 	switch e {
 	case DefinitionKindImplementation, DefinitionKindInterface, DefinitionKindConstant, DefinitionKindTest:
@@ -8542,16 +8286,14 @@ func (e DefinitionKind) IsValid() bool {
 	return false
 }
 
-// String MUST return the canonical string value.
-// String returns the string representation of the DefinitionKind.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️string](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
+// 🔤String MUST return the canonical string value.
+// 🔤String returns the string representation of the DefinitionKind.
 func (e DefinitionKind) String() string {
 	return string(e)
 }
 
-// DeriveDefinitionKind MUST return a valid value for any recognized input.
-// DeriveDefinitionKind infers and returns the definition kind from the given input.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️derivedefinitionkind](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveDefinitionKind)
+// 📝DeriveDefinitionKind MUST return a valid value for any recognized input.
+// 💾DeriveDefinitionKind infers and returns the definition kind from the given input.
 func DeriveDefinitionKind(rawKind string) DefinitionKind {
 	switch strings.ToLower(rawKind) {
 	case "interface", "type", "trait", "abstract",
@@ -8568,8 +8310,7 @@ func DeriveDefinitionKind(rawKind string) DefinitionKind {
 	}
 }
 
-// TicketStatus represents a ticket status value.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️ticketstatus](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketStatus)
+// 🎫TicketStatus represents a ticket status value.
 type TicketStatus string
 
 const (
@@ -8577,9 +8318,8 @@ const (
 	TicketStatusClosed TicketStatus = "closed"
 )
 
-// IsValid MUST return true only when the condition is met.
-// IsValid reports whether the TicketStatus is valid.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isvalid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsValid)
+// 🔶IsValid MUST return true only when the condition is met.
+// 🔑IsValid reports whether the TicketStatus is valid.
 func (e TicketStatus) IsValid() bool {
 	switch e {
 	case TicketStatusOpen, TicketStatusClosed:
@@ -8588,15 +8328,13 @@ func (e TicketStatus) IsValid() bool {
 	return false
 }
 
-// String MUST return the canonical string value.
-// String returns the string representation of the TicketStatus.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️string](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
+// 🔹String MUST return the canonical string value.
+// 📩String returns the string representation of the TicketStatus.
 func (e TicketStatus) String() string {
 	return string(e)
 }
 
-// BreachPriority represents a breach priority value.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️breachpriority](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/BreachPriority)
+// 🔸BreachPriority represents a breach priority value.
 type BreachPriority string
 
 const (
@@ -8605,9 +8343,8 @@ const (
 	BreachPriorityLow    BreachPriority = "low"
 )
 
-// IsValid MUST return true only when the condition is met.
-// IsValid reports whether the BreachPriority is valid.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isvalid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsValid)
+// 🔺IsValid MUST return true only when the condition is met.
+// ⚠️IsValid reports whether the BreachPriority is valid.
 func (e BreachPriority) IsValid() bool {
 	switch e {
 	case BreachPriorityHigh, BreachPriorityMedium, BreachPriorityLow:
@@ -8616,15 +8353,13 @@ func (e BreachPriority) IsValid() bool {
 	return false
 }
 
-// String MUST return the canonical string value.
-// String returns the string representation of the BreachPriority.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️string](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
+// 🔻String MUST return the canonical string value.
+// 🔷String returns the string representation of the BreachPriority.
 func (e BreachPriority) String() string {
 	return string(e)
 }
 
-// AllowedLLMs holds the allowed l l ms values.
-// [🧰repo⌨️cli💻main🔖graphqltypes🪨allowedllms](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/AllowedLLMs)
+// ⬛AllowedLLMs holds the allowed l l ms values.
 var AllowedLLMs = []string{
 	"opus-4-6",
 	"opus-4-5",
@@ -8645,8 +8380,7 @@ var AllowedLLMs = []string{
 	"swe-1-5",
 }
 
-// AllowedClients holds the allowed clients values.
-// [🧰repo⌨️cli💻main🔖graphqltypes🪨allowedclients](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/AllowedClients)
+// 💻AllowedClients holds the allowed clients values.
 var AllowedClients = []string{
 	"vscode",
 	"copilot-chat",
@@ -8662,23 +8396,20 @@ var AllowedClients = []string{
 	"kiro-cli",
 }
 
-// NormalizeLLMSlug MUST be idempotent for already-normalized values.
-// NormalizeLLMSlug normalizes the l l m slug to its canonical form.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️normalizellmslug](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/NormalizeLLMSlug)
+// ⬜NormalizeLLMSlug MUST be idempotent for already-normalized values.
+// 📝NormalizeLLMSlug normalizes the l l m slug to its canonical form.
 func NormalizeLLMSlug(llm string) string {
 	return strings.ToLower(Slugify(llm))
 }
 
-// NormalizeClientSlug MUST be idempotent for already-normalized values.
-// NormalizeClientSlug normalizes the client slug to its canonical form.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️normalizeclientslug](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/NormalizeClientSlug)
+// 🟥NormalizeClientSlug MUST be idempotent for already-normalized values.
+// ❓NormalizeClientSlug normalizes the client slug to its canonical form.
 func NormalizeClientSlug(client string) string {
 	return strings.ToLower(Slugify(client))
 }
 
-// ResolveAllowedLLM MUST return an error for unrecognized values.
-// ResolveAllowedLLM resolves and validates the allowed l l m against known values.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️resolveallowedllm](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ResolveAllowedLLM)
+// ❌ResolveAllowedLLM MUST return an error for unrecognized values.
+// 🔶ResolveAllowedLLM resolves and validates the allowed l l m against known values.
 func ResolveAllowedLLM(llm string) (string, error) {
 	llmSlug := NormalizeLLMSlug(llm)
 	bestMatch := ""
@@ -8695,9 +8426,8 @@ func ResolveAllowedLLM(llm string) (string, error) {
 	return bestMatch, nil
 }
 
-// ResolveAllowedClient MUST return an error for unrecognized values.
-// ResolveAllowedClient resolves and validates the allowed client against known values.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️resolveallowedclient](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ResolveAllowedClient)
+// 🟧ResolveAllowedClient MUST return an error for unrecognized values.
+// 🔹ResolveAllowedClient resolves and validates the allowed client against known values.
 func ResolveAllowedClient(client string) (string, error) {
 	uiSlug := NormalizeClientSlug(client)
 	bestMatch := ""
@@ -8714,91 +8444,79 @@ func ResolveAllowedClient(client string) (string, error) {
 	return bestMatch, nil
 }
 
-// Range holds the data fields for a range record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️range](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Range)
+// 💿Range holds the data fields for a range record.
 type Range struct {
 	Start int `json:"start"`
 	End   int `json:"end"`
 }
 
-// LineMetrics holds the data fields for a line metrics record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️linemetrics](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/LineMetrics)
+// 🟨LineMetrics holds the data fields for a line metrics record.
 type LineMetrics struct {
 	Added   int `yaml:"added" json:"added"`
 	Removed int `yaml:"removed" json:"removed"`
 }
 
-// DiffLines holds the data fields for a diff lines record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️difflines](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DiffLines)
+// 🟩DiffLines holds the data fields for a diff lines record.
 type DiffLines struct {
 	Added   []int
 	Removed []int
 }
 
-// CountMetrics holds the data fields for a count metrics record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️countmetrics](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/CountMetrics)
+// 🟦CountMetrics holds the data fields for a count metrics record.
 type CountMetrics struct {
 	Added   int `json:"added"`
 	Updated int `json:"updated"`
 	Removed int `json:"removed"`
 }
 
-// ContributorIcons holds the data fields for a contributor icons record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributoricons](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorIcons)
+// 🤝ContributorIcons holds the data fields for a contributor icons record.
 type ContributorIcons struct {
 	Avatar      *string `json:"avatar,omitempty"`
 	AvatarRound *string `json:"avatarRound,omitempty"`
 	Github      *string `json:"github,omitempty"`
 }
 
-// ContributorLink holds the data fields for a contributor link record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributorlink](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorLink)
+// 🔗ContributorLink holds the data fields for a contributor link record.
 type ContributorLink struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
 
-// TicketDate holds the data fields for a ticket date record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️ticketdate](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketDate)
+// 🟪TicketDate holds the data fields for a ticket date record.
 type TicketDate struct {
 	Created  time.Time  `json:"created"`
 	Finished *time.Time `json:"finished,omitempty"`
 }
 
-// TicketSectionMetrics holds the data fields for a ticket section metrics record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️ticketsectionmetrics](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketSectionMetrics)
+// 📑TicketSectionMetrics holds the data fields for a ticket section metrics record.
 type TicketSectionMetrics struct {
 	Range       *Range       `json:"range,omitempty"`
 	Definitions []string     `json:"definitions,omitempty"`
 	Lines       *LineMetrics `json:"lines,omitempty"`
 }
 
-// TicketFileMetricsEntry holds the data fields for a ticket file metrics entry record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️ticketfilemetricsentry](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketFileMetricsEntry)
+// 📍TicketFileMetricsEntry holds the data fields for a ticket file metrics entry record.
 type TicketFileMetricsEntry struct {
 	Path     string                          `json:"path"`
 	Lines    *LineMetrics                    `json:"lines,omitempty"`
 	Sections map[string]TicketSectionMetrics `json:"sections,omitempty"`
 }
 
-// AnalyzeMetrics holds the data fields for a analyze metrics record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️analyzemetrics](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/AnalyzeMetrics)
+// 🔬AnalyzeMetrics holds the data fields for a analyze metrics record.
 type AnalyzeMetrics struct {
 	Total       int            `json:"total"`
 	ByPriority  *PriorityCount `json:"byPriority"`
 	Autofixable int            `json:"autofixable"`
 }
 
-// PriorityCount holds the data fields for a priority count record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️prioritycount](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/PriorityCount)
+// 🟫PriorityCount holds the data fields for a priority count record.
 type PriorityCount struct {
 	High   int `json:"high"`
 	Medium int `json:"medium"`
 	Low    int `json:"low"`
 }
 
-// Repo holds the data fields for a repo record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️repo](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Repo)
+// 💠Repo holds the data fields for a repo record.
 type Repo struct {
 	ID           string       `json:"id"`
 	Name         string       `json:"name"`
@@ -8807,23 +8525,19 @@ type Repo struct {
 	Bundles      []Bundle     `json:"bundles"`
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Repo is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// 🌿IsNode MUST return true only when the condition is met.
+// 🐙IsNode reports whether the Repo is node.
 func (r *Repo) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Repo.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// 🏪GetID MUST return the stored value without modification.
+// 🔺GetID returns the i d of the Repo.
 func (r *Repo) GetID() string { return emojiText(EmojiRepo) }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Repo.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// 🔳GetURI MUST return the stored value without modification.
+// 🌐GetURI returns the u r i of the Repo.
 func (r *Repo) GetURI() string { return "repo://root" }
 
-// TechnologyKind represents a technology kind value.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️technologykind](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TechnologyKind)
+// 🛠️TechnologyKind represents a technology kind value.
 type TechnologyKind string
 
 const (
@@ -8833,15 +8547,13 @@ const (
 	TechnologyKindMono           TechnologyKind = "🌱"
 )
 
-// String MUST return the canonical string value.
-// String returns the string representation of the TechnologyKind.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️string](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
+// 🔲String MUST return the canonical string value.
+// 📺String returns the string representation of the TechnologyKind.
 func (e TechnologyKind) String() string {
 	return string(e)
 }
 
-// BundleKind represents a bundle kind value.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️bundlekind](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/BundleKind)
+// 📦BundleKind represents a bundle kind value.
 type BundleKind string
 
 const (
@@ -8854,9 +8566,8 @@ const (
 	BundleKindRepo    BundleKind = "repo"
 )
 
-// IsValid MUST return true only when the condition is met.
-// IsValid reports whether the BundleKind is valid.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isvalid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsValid)
+// ▪️IsValid MUST return true only when the condition is met.
+// 🔻IsValid reports whether the BundleKind is valid.
 func (e BundleKind) IsValid() bool {
 	switch e {
 	case BundleKindLibrary, BundleKindSchema, BundleKindBinary, BundleKindUI, BundleKindSite, BundleKindAssets, BundleKindRepo:
@@ -8865,16 +8576,14 @@ func (e BundleKind) IsValid() bool {
 	return false
 }
 
-// String MUST return the canonical string value.
-// String returns the string representation of the BundleKind.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️string](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
+// ▫️String MUST return the canonical string value.
+// ⬜String returns the string representation of the BundleKind.
 func (e BundleKind) String() string {
 	return string(e)
 }
 
-// DeriveTechnologyKind MUST return a valid value for any recognized input.
-// DeriveTechnologyKind infers and returns the technology kind from the given input.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️derivetechnologykind](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveTechnologyKind)
+// 🏷️DeriveTechnologyKind MUST return a valid value for any recognized input.
+// 🟥DeriveTechnologyKind infers and returns the technology kind from the given input.
 func DeriveTechnologyKind(name string) TechnologyKind {
 	switch name {
 	case "semio":
@@ -8890,9 +8599,8 @@ func DeriveTechnologyKind(name string) TechnologyKind {
 	return TechnologyKindUser
 }
 
-// DeriveBundleKind MUST return a valid value for any recognized input.
-// DeriveBundleKind infers and returns the bundle kind from the given input.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️derivebundlekind](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveBundleKind)
+// ◾DeriveBundleKind MUST return a valid value for any recognized input.
+// 🟧DeriveBundleKind infers and returns the bundle kind from the given input.
 func DeriveBundleKind(name string, root string) BundleKind {
 	absRoot := root
 	if !filepath.IsAbs(absRoot) {
@@ -8918,51 +8626,49 @@ func DeriveBundleKind(name string, root string) BundleKind {
 	return BundleKindLibrary
 }
 
-// Technology holds the data fields for a technology record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️technology](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Technology)
+// 📜Technology holds the data fields for a technology record.
 type Technology struct {
 	Name    string         `json:"name"`
 	Root    string         `json:"root"`
 	Kind    TechnologyKind `json:"kind"`
+	Emoji   string         `json:"emoji"`
 	Bundles []Bundle       `json:"bundles"`
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Technology is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// ◽IsNode MUST return true only when the condition is met.
+// 🔳IsNode reports whether the Technology is node.
 func (p *Technology) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Technology.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// ◻️GetID MUST return the stored value without modification.
+// 🔲GetID returns the i d of the Technology.
 func (p *Technology) GetID() string {
-	emoji := EmojiTechnologyUser
-	switch string(p.Kind) {
-	case "infrastructure":
-		emoji = EmojiTechnologyInfra
-	case "research":
-		emoji = EmojiTechnologyResearch
-	case "user":
-		emoji = EmojiTechnologyUser
-	default:
-		if strings.Contains(p.Name, "repo") {
+	emoji := p.Emoji
+	if emoji == "" {
+		switch string(p.Kind) {
+		case "infrastructure":
 			emoji = EmojiTechnologyInfra
-		} else if strings.HasPrefix(p.Name, "coda") {
+		case "research":
 			emoji = EmojiTechnologyResearch
+		case "user":
+			emoji = EmojiTechnologyUser
+		default:
+			if strings.Contains(p.Name, "repo") {
+				emoji = EmojiTechnologyInfra
+			} else if strings.HasPrefix(p.Name, "coda") {
+				emoji = EmojiTechnologyResearch
+			}
 		}
 	}
 	return emojiText(emoji) + Flat(p.Name)
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Technology.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// ◼️GetURI MUST return the stored value without modification.
+// ▪️GetURI returns the u r i of the Technology.
 func (p *Technology) GetURI() string {
 	return "repo://technology/" + p.GetID()
 }
 
-// Bundle holds the data fields for a bundle record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️bundle](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Bundle)
+// 🔵Bundle holds the data fields for a bundle record.
 type Bundle struct {
 	Name           string     `json:"name"`
 	Root           string     `json:"root"`
@@ -8970,11 +8676,11 @@ type Bundle struct {
 	TechnologyName string     `json:"technologyName"`
 	Tags           []string   `json:"tags,omitempty"`
 	Kind           BundleKind `json:"kind"`
+	Emoji          string     `json:"emoji"`
 	Packages       []Package  `json:"packages,omitempty"`
 }
 
-// Package holds the data fields for a package record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️package](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Package)
+// 🔴Package holds the data fields for a package record.
 type Package struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
@@ -8982,33 +8688,33 @@ type Package struct {
 	Kind    string `json:"kind"`
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Bundle is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// 🟠IsNode MUST return true only when the condition is met.
+// ▫️IsNode reports whether the Bundle is node.
 func (b *Bundle) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Bundle.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// 🟡GetID MUST return the stored value without modification.
+// ◾GetID returns the i d of the Bundle.
 func (b *Bundle) GetID() string {
-	emoji := EmojiBundleLibrary
-	switch string(b.Kind) {
-	case "schema":
-		emoji = EmojiBundleSchema
-	case "binary":
-		emoji = EmojiBundleBinary
-	case "ui":
-		emoji = EmojiBundleUI
-	case "site":
-		emoji = EmojiBundleSite
-	case "assets":
-		emoji = EmojiBundleAssets
-	case "library":
-		emoji = EmojiBundleLibrary
-	case "example":
-		emoji = EmojiBundleExample
-	case "repo":
-		emoji = EmojiBundleRepo
+	emoji := b.Emoji
+	if emoji == "" {
+		switch string(b.Kind) {
+		case "schema":
+			emoji = EmojiBundleSchema
+		case "binary":
+			emoji = EmojiBundleBinary
+		case "ui":
+			emoji = EmojiBundleUI
+		case "site":
+			emoji = EmojiBundleSite
+		case "assets":
+			emoji = EmojiBundleAssets
+		case "library":
+			emoji = EmojiBundleLibrary
+		case "example":
+			emoji = EmojiBundleExample
+		case "repo":
+			emoji = EmojiBundleRepo
+		}
 	}
 	parts := strings.SplitN(b.Name, "/", 2)
 	technologyCode := parts[0]
@@ -9016,19 +8722,17 @@ func (b *Bundle) GetID() string {
 	if len(parts) > 1 {
 		bundleCode = parts[1]
 	}
-	pKind := DeriveTechnologyKind(technologyCode)
-	return emojiText(string(pKind)) + Flat(technologyCode) + emojiText(emoji) + Flat(bundleCode)
+	techEmoji := resolveTechnologyEmoji(technologyCode)
+	return emojiText(techEmoji) + Flat(technologyCode) + emojiText(emoji) + Flat(bundleCode)
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Bundle.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// 🟢GetURI MUST return the stored value without modification.
+// ◽GetURI returns the u r i of the Bundle.
 func (b *Bundle) GetURI() string {
 	return "repo://bundle/" + b.GetID()
 }
 
-// normalizeBundleLabel holds the data fields for a normalizeBundleLabel record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️normalizebundlelabel](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/normalizeBundleLabel)
+// 🟣normalizeBundleLabel holds the data fields for a normalizeBundleLabel record.
 func normalizeBundleLabel(name string) string {
 	if name == "" {
 		return ""
@@ -9045,14 +8749,12 @@ func normalizeBundleLabel(name string) string {
 	return "semio/" + name
 }
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️normalizebundleid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/normalizeBundleID)
-// normalizeBundleID holds the data fields for a normalizeBundleID record.
+// 🟤normalizeBundleID holds the data fields for a normalizeBundleID record.
 func normalizeBundleID(name string) string {
 	return normalizeBundleLabel(name)
 }
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️bundlepathprefix](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/bundlePathPrefix)
-// bundlePathPrefix holds the data fields for a bundlePathPrefix record.
+// 🔧bundlePathPrefix holds the data fields for a bundlePathPrefix record.
 func bundlePathPrefix(name string) string {
 	if name == "" {
 		return ""
@@ -9066,8 +8768,7 @@ func bundlePathPrefix(name string) string {
 	return name + "/"
 }
 
-// FolderKind represents a folder kind value.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️folderkind](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/FolderKind)
+// 📁FolderKind represents a folder kind value.
 type FolderKind string
 
 const (
@@ -9076,9 +8777,8 @@ const (
 	FolderKindRoot         FolderKind = "root"
 )
 
-// IsValid MUST return true only when the condition is met.
-// IsValid reports whether the FolderKind is valid.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isvalid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsValid)
+// ⚪IsValid MUST return true only when the condition is met.
+// ◻️IsValid reports whether the FolderKind is valid.
 func (e FolderKind) IsValid() bool {
 	switch e {
 	case FolderKindOrganization, FolderKindRequired, FolderKindRoot:
@@ -9087,20 +8787,17 @@ func (e FolderKind) IsValid() bool {
 	return false
 }
 
-// String MUST return the canonical string value.
-// String returns the string representation of the FolderKind.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️string](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/String)
+// ⚫String MUST return the canonical string value.
+// ◼️String returns the string representation of the FolderKind.
 func (e FolderKind) String() string {
 	return string(e)
 }
 
-// DeriveFolderKind MUST return a valid value for any recognized input.
-// DeriveFolderKind infers and returns the folder kind from the given input.
-// [🧰repo⌨️cli💻main🔖graphqltypes🪨folderkindcache](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/folderKindCache)
+// 💾DeriveFolderKind MUST return a valid value for any recognized input.
+// 🟠DeriveFolderKind infers and returns the folder kind from the given input.
 var folderKindCache sync.Map
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️derivefolderkind](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveFolderKind)
-// DeriveFolderKind holds the data fields for a DeriveFolderKind record.
+// 🩵DeriveFolderKind holds the data fields for a DeriveFolderKind record.
 func DeriveFolderKind(path string) FolderKind {
 	base := filepath.Base(path)
 	if strings.HasPrefix(base, ".") {
@@ -9139,9 +8836,8 @@ func DeriveFolderKind(path string) FolderKind {
 	return kind
 }
 
-// IsGeneratedFolder MUST return true only when the condition is met.
-// IsGeneratedFolder reports whether the value is generated folder.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isgeneratedfolder](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsGeneratedFolder)
+// 🩶IsGeneratedFolder MUST return true only when the condition is met.
+// 🟡IsGeneratedFolder reports whether the value is generated folder.
 func IsGeneratedFolder(path string) bool {
 	parts := strings.Split(filepath.ToSlash(path), "/")
 	for _, part := range parts {
@@ -9162,8 +8858,7 @@ func IsGeneratedFolder(path string) bool {
 	return false
 }
 
-// Folder holds the data fields for a folder record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️folder](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Folder)
+// 🩷Folder holds the data fields for a folder record.
 type Folder struct {
 	ID        string     `json:"id"`
 	Path      string     `json:"path"`
@@ -9172,31 +8867,28 @@ type Folder struct {
 	ParentID  *string    `json:"parentId,omitempty"`
 	BundleID  *string    `json:"bundleId,omitempty"`
 	Kind      FolderKind `json:"kind"`
+	Emoji     string     `json:"emoji"`
 	Ignored   bool       `json:"ignored"`
 	Generated bool       `json:"generated"`
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Folder is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// 💜IsNode MUST return true only when the condition is met.
+// 🟢IsNode reports whether the Folder is node.
 func (f *Folder) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Folder.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// 💙GetID MUST return the stored value without modification.
+// ⚪GetID returns the i d of the Folder.
 func (f *Folder) GetID() string {
 	return buildFolderID(f.Path, f.BundleID)
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Folder.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// 💚GetURI MUST return the stored value without modification.
+// ⚫GetURI returns the u r i of the Folder.
 func (f *Folder) GetURI() string {
 	return buildFolderUriFromPath(f.Path)
 }
 
-// File holds the data fields for a file record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️file](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/File)
+// 📄File holds the data fields for a file record.
 type File struct {
 	ID        string  `json:"id"`
 	Path      string  `json:"path"`
@@ -9206,6 +8898,7 @@ type File struct {
 	FolderID  *string `json:"folderId,omitempty"`
 	BundleID  *string `json:"bundleId,omitempty"`
 	Kind      string  `json:"kind"`
+	Emoji     string  `json:"emoji"`
 	Ignored   bool    `json:"ignored"`
 	Generated bool    `json:"generated"`
 }
@@ -9308,9 +9001,8 @@ var (
 	EmojiStatute      = ""
 )
 
-// DeriveFileKind MUST return a valid value for any recognized input.
-// DeriveFileKind infers and returns the file kind from the given input.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️derivefilekind](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/DeriveFileKind)
+// 💛DeriveFileKind MUST return a valid value for any recognized input.
+// 🩶DeriveFileKind infers and returns the file kind from the given input.
 func DeriveFileKind(name string) string {
 	ext := strings.ToLower(filepath.Ext(name))
 	nameLower := strings.ToLower(name)
@@ -9405,14 +9097,12 @@ func DeriveFileKind(name string) string {
 	return FileKindResource
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the File is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// 🧡IsNode MUST return true only when the condition is met.
+// 💜IsNode reports whether the File is node.
 func (f *File) IsNode() {}
 
-// IsGenerated MUST return true only when the condition is met.
-// IsGenerated reports whether the value is generated.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isgenerated](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsGenerated)
+// ❤️IsGenerated MUST return true only when the condition is met.
+// 💙IsGenerated reports whether the value is generated.
 func IsGenerated(path string) bool {
 	base := strings.ToLower(filepath.Base(path))
 	if base == "package-lock.json" || base == "yarn.lock" || base == "pnpm-lock.yaml" || base == "go.sum" || base == "uv.lock" {
@@ -9430,9 +9120,8 @@ func IsGenerated(path string) bool {
 	return false
 }
 
-// IsSemanticallyIgnored MUST return true only when the condition is met.
-// IsSemanticallyIgnored reports whether the value is semantically ignored.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️issemanticallyignored](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsSemanticallyIgnored)
+// 🤍IsSemanticallyIgnored MUST return true only when the condition is met.
+// ⚡IsSemanticallyIgnored reports whether the value is semantically ignored.
 func IsSemanticallyIgnored(path string) bool {
 	base := filepath.Base(path)
 	if strings.HasPrefix(base, ".") && base != ".gitignore" && base != ".env" {
@@ -9446,27 +9135,25 @@ func IsSemanticallyIgnored(path string) bool {
 	return false
 }
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the File.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// 🖤GetID MUST return the stored value without modification.
+// 💚GetID returns the i d of the File.
 func (f *File) GetID() string {
 	return buildFileID(f.Path, f.BundleID)
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the File.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// 🤎GetURI MUST return the stored value without modification.
+// 💛GetURI returns the u r i of the File.
 func (f *File) GetURI() string {
 	return buildFileUriFromPath(f.Path)
 }
 
-// Section holds the data fields for a section record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️section](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Section)
+// 💗Section holds the data fields for a section record.
 type Section struct {
 	ID          string       `json:"id,omitempty"`
 	Name        string       `json:"name"`
 	Path        string       `json:"path,omitempty"`
 	FilePath    string       `json:"filePath,omitempty"`
+	Emoji       string       `json:"emoji"`
 	StartLine   int          `json:"startLine"`
 	EndLine     int          `json:"endLine"`
 	StartIndex  int          `json:"startIndex"`
@@ -9475,54 +9162,57 @@ type Section struct {
 	Definitions []Definition `json:"definitions,omitempty"`
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Section is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// 💖IsNode MUST return true only when the condition is met.
+// 🧡IsNode reports whether the Section is node.
 func (s *Section) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Section.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// 💝GetID MUST return the stored value without modification.
+// ❤️GetID returns the i d of the Section.
 func (s *Section) GetID() string {
 	if s.FilePath != "" {
 		fileID := buildFileID(s.FilePath, nil)
 		if s.Path != "" {
 			return buildSectionID(fileID, strings.Split(strings.ReplaceAll(s.Path, "#", "/"), "/"))
 		}
-		return buildSectionID(fileID, []string{s.Name})
+		segment := s.Name
+		if s.Emoji != "" {
+			segment = s.Emoji + s.Name
+		}
+		return buildSectionID(fileID, []string{segment})
 	}
-	return emojiText(EmojiSection) + Flat(s.Name)
+	emoji := s.Emoji
+	if emoji == "" {
+		emoji = EmojiSection
+	}
+	return emojiText(emoji) + Flat(s.Name)
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Section.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// 💘GetURI MUST return the stored value without modification.
+// 🤍GetURI returns the u r i of the Section.
 func (s *Section) GetURI() string {
 	return "repo://section/" + s.GetID()
 }
 
-// Definition holds the data fields for a definition record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️definition](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Definition)
+// 💕Definition holds the data fields for a definition record.
 type Definition struct {
 	ID          string         `json:"id,omitempty"`
 	Name        string         `json:"name"`
 	Kind        DefinitionKind `json:"kind"`
 	FilePath    string         `json:"filePath,omitempty"`
 	SectionPath string         `json:"sectionPath,omitempty"`
+	Emoji       string         `json:"emoji"`
 	StartLine   int            `json:"startLine"`
 	EndLine     int            `json:"endLine"`
 	StartIndex  int            `json:"startIndex"`
 	EndIndex    int            `json:"endIndex"`
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Definition is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// 🔖IsNode MUST return true only when the condition is met.
+// 🖤IsNode reports whether the Definition is node.
 func (d *Definition) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Definition.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// 🔖GetID MUST return the stored value without modification.
+// 🤎GetID returns the i d of the Definition.
 func (d *Definition) GetID() string {
 	if d.FilePath != "" {
 		fileID := buildFileID(d.FilePath, nil)
@@ -9536,18 +9226,17 @@ func (d *Definition) GetID() string {
 	return definitionKindEmoji(data) + Flat(d.Name)
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Definition.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// 🔖GetURI MUST return the stored value without modification.
+// 💖GetURI returns the u r i of the Definition.
 func (d *Definition) GetURI() string {
 	return "repo://definition/" + d.GetID()
 }
 
-// Contributor holds the data fields for a contributor record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributor](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Contributor)
+// 🔖Contributor holds the data fields for a contributor record.
 type Contributor struct {
 	Alias         string                          `yaml:"alias" json:"alias"`
 	Aliases       []string                        `yaml:"aliases,omitempty" json:"aliases,omitempty"`
+	Emoji         string                          `yaml:"emoji,omitempty" json:"emoji,omitempty"`
 	Github        string                          `yaml:"github" json:"github"`
 	Githubs       []string                        `yaml:"githubs,omitempty" json:"githubs,omitempty"`
 	Name          string                          `yaml:"name" json:"name"`
@@ -9560,74 +9249,64 @@ type Contributor struct {
 	Contributions ContributorContributionsStorage `yaml:"contributions,omitempty" json:"contributions,omitempty"`
 }
 
-// ContributorContributionsTree holds the data fields for a contributor contributions tree record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributorcontributionstree](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorContributionsTree)
+// 🌳ContributorContributionsTree holds the data fields for a contributor contributions tree record.
 type ContributorContributionsTree struct {
 	Checkpoints []*Checkpoint
 	Tickets     []*Ticket
 	Bundles     []*ContributorBundle
 }
 
-// ContributorBundle holds the data fields for a contributor bundle record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributorbundle](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorBundle)
+// 🔖ContributorBundle holds the data fields for a contributor bundle record.
 type ContributorBundle struct {
 	Name    string
 	Lines   LineMetrics
 	Folders []*ContributorFolder
 }
 
-// ContributorFolder holds the data fields for a contributor folder record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributorfolder](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorFolder)
+// 🔖ContributorFolder holds the data fields for a contributor folder record.
 type ContributorFolder struct {
 	Name  string
 	Lines LineMetrics
 	Files []*ContributorFile
 }
 
-// ContributorFile holds the data fields for a contributor file record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributorfile](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorFile)
+// 🔖ContributorFile holds the data fields for a contributor file record.
 type ContributorFile struct {
 	Name     string
 	Lines    LineMetrics
 	Sections []*ContributorSection
 }
 
-// ContributorSection holds the data fields for a contributor section record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributorsection](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorSection)
+// 🔖ContributorSection holds the data fields for a contributor section record.
 type ContributorSection struct {
 	Name        string
 	Lines       LineMetrics
 	Definitions []*ContributorDefinition
 }
 
-// ContributorDefinition holds the data fields for a contributor definition record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributordefinition](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorDefinition)
+// 🔖ContributorDefinition holds the data fields for a contributor definition record.
 type ContributorDefinition struct {
 	Name  string
 	Lines LineMetrics
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Contributor is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// 🔖IsNode MUST return true only when the condition is met.
+// 💝IsNode reports whether the Contributor is node.
 func (c *Contributor) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Contributor.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// 🔖GetID MUST return the stored value without modification.
+// 💘GetID returns the i d of the Contributor.
 func (c *Contributor) GetID() string {
 	return emojiText(EmojiContributor) + Flat(c.Alias)
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Contributor.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// 🔖GetURI MUST return the stored value without modification.
+// 🏵️GetURI returns the u r i of the Contributor.
 func (c *Contributor) GetURI() string {
 	return "repo://contributor/" + c.GetID()
 }
 
-// Checkpoint holds the data fields for a checkpoint record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️checkpoint](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Checkpoint)
+// ✔️Checkpoint holds the data fields for a checkpoint record.
 type Checkpoint struct {
 	ID       string    `json:"id"`
 	SHA      string    `json:"sha"`
@@ -9636,45 +9315,38 @@ type Checkpoint struct {
 	Date     time.Time `json:"date"`
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Checkpoint is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// 🔖IsNode MUST return true only when the condition is met.
+// 🔢IsNode reports whether the Checkpoint is node.
 func (c *Checkpoint) IsNode() {}
 
-// #region 🔖Drafts
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖drafts](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts)
+// #region 🎨Drafts
 // Draft management for creating, listing, and deleting draft file sets.
 
-// Draft holds the data fields for a draft record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖drafts✂️draft](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/Draft)
+// 💿Draft holds the data fields for a draft record.
 type Draft struct {
 	ID string `json:"id"`
 }
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Draft.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖drafts🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/GetID)
+// 🏪GetID MUST return the stored value without modification.
+// 📖GetID returns the i d of the Draft.
 func (d *Draft) GetID() string {
 	return emojiText(EmojiDraft) + Flat(d.ID)
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Draft.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖drafts🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/GetURI)
+// 🔗GetURI MUST return the stored value without modification.
+// 🌐GetURI returns the u r i of the Draft.
 func (d *Draft) GetURI() string {
 	return "repo://draft/" + d.GetID()
 }
 
-// GetDraftsPath MUST return the stored value without modification.
-// GetDraftsPath returns the drafts path of the value.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖drafts🛠️getdraftspath](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/GetDraftsPath)
+// 📝GetDraftsPath MUST return the stored value without modification.
+// 📦GetDraftsPath returns the drafts path of the value.
 func GetDraftsPath() string {
 	return GetRepoMetaPath("✍️")
 }
 
-// ListDrafts MUST return a consistent snapshot of available entries.
-// ListDrafts returns all available drafts entries.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖drafts🛠️listdrafts](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/ListDrafts)
+// 📸ListDrafts MUST return a consistent snapshot of available entries.
+// 📋ListDrafts returns all available drafts entries.
 func ListDrafts() ([]*Draft, error) {
 	draftsDir := GetDraftsPath()
 	if !IsDir(draftsDir) {
@@ -9693,9 +9365,8 @@ func ListDrafts() ([]*Draft, error) {
 	return drafts, nil
 }
 
-// CreateDraft MUST persist the new entity and return a reference to it.
-// CreateDraft creates a new draft and persists it.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖drafts🛠️createdraft](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/CreateDraft)
+// 🆕CreateDraft MUST persist the new entity and return a reference to it.
+// 📝CreateDraft creates a new draft and persists it.
 func CreateDraft(title string, files []string) (*Draft, error) {
 	id := Slugify(title)
 	if id == "" {
@@ -9721,9 +9392,8 @@ func CreateDraft(title string, files []string) (*Draft, error) {
 	return &Draft{ID: id}, nil
 }
 
-// DeleteDraft MUST remove all associated data for the entity.
-// DeleteDraft removes the specified draft.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖drafts🛠️deletedraft](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/Drafts/d/i/DeleteDraft)
+// 🗑️DeleteDraft MUST remove all associated data for the entity.
+// 🗑️DeleteDraft removes the specified draft.
 func DeleteDraft(id string) error {
 	draftPath := filepath.Join(GetDraftsPath(), id)
 	if !IsDir(draftPath) {
@@ -9732,28 +9402,26 @@ func DeleteDraft(id string) error {
 	return os.RemoveAll(draftPath)
 }
 
-// #endregion 🔖Drafts
+// #endregion 🎨Drafts
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Checkpoint.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// 🔖GetID MUST return the stored value without modification.
+// 🌸GetID returns the i d of the Checkpoint.
 func (c *Checkpoint) GetID() string { return emojiText(EmojiCheckpoint) + c.SHA }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Checkpoint.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// 🔖GetURI MUST return the stored value without modification.
+// 🌺GetURI returns the u r i of the Checkpoint.
 func (c *Checkpoint) GetURI() string {
 	return "repo://checkpoint/" + c.GetID()
 }
 
-// Ticket holds the data fields for a ticket record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️ticket](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Ticket)
+// 🔖Ticket holds the data fields for a ticket record.
 type Ticket struct {
 	Year          int                   `json:"-" yaml:"-"`
 	Month         int                   `json:"-" yaml:"-"`
 	Day           int                   `json:"-" yaml:"-"`
 	Slug          string                `json:"-" yaml:"-"`
 	Title         string                `json:"title" yaml:"title"`
+	Emoji         string                `json:"emoji,omitempty" yaml:"emoji,omitempty"`
 	Status        TicketStatus          `json:"status,omitempty" yaml:"status,omitempty"`
 	Description   string                `json:"description,omitempty" yaml:"description,omitempty"`
 	Summary       string                `json:"summary,omitempty" yaml:"summary,omitempty"`
@@ -9793,11 +9461,11 @@ func isTicketInteractionKind(kind string, expected string) bool {
 	return false
 }
 
-// UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️unmarshaljson](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/UnmarshalJSON)
+// 📋UnmarshalJSON MUST handle both legacy and current ticket JSON layouts.
 func (t *Ticket) UnmarshalJSON(data []byte) error {
 	type TicketAlias struct {
 		Title       string                `json:"title"`
+		Emoji       string                `json:"emoji,omitempty"`
 		Description string                `json:"description,omitempty"`
 		Status      TicketStatus          `json:"status,omitempty"`
 		Summary     string                `json:"summary,omitempty"`
@@ -9817,6 +9485,7 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 	}
 	*t = Ticket{
 		Title:       aux.Title,
+		Emoji:       aux.Emoji,
 		Description: aux.Description,
 		Status:      aux.Status,
 		Summary:     aux.Summary,
@@ -9893,8 +9562,7 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// MarshalJSON converts internal filesystem paths to repo emoji IDs for serialization.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️marshaljson](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/MarshalJSON)
+// 😀MarshalJSON converts internal filesystem paths to repo emoji IDs for serialization.
 func (t Ticket) MarshalJSON() ([]byte, error) {
 	type TicketAlias Ticket
 	alias := TicketAlias(t)
@@ -9908,20 +9576,18 @@ func (t Ticket) MarshalJSON() ([]byte, error) {
 	return json.Marshal(alias)
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Ticket is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// 🔖IsNode MUST return true only when the condition is met.
+// 🌻IsNode reports whether the Ticket is node.
 func (t *Ticket) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// 🔖GetID MUST return the stored value without modification.
+// 🌼GetID returns the i d of the Ticket.
 func (t *Ticket) GetID() string {
 	return emojiText(EmojiTicket) + Flat(t.Slug)
 }
 
-// ticketIdToParts extracts year, month, day, slug from a ticket emoji ID.
-// It walks all tickets to find the one whose ID matches.
+// 🧲ticketIdToParts extracts year, month, day, slug from a ticket emoji ID.
+// 🧩It walks all tickets to find the one whose ID matches.
 func ticketIdToParts(emojiId string) (year, month, day int, slug string) {
 	norm := func(s string) string {
 		r := strings.ReplaceAll(s, "\uFE0E", "")
@@ -9947,9 +9613,8 @@ func ticketIdToParts(emojiId string) (year, month, day int, slug string) {
 	return 0, 0, 0, ""
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// 🔖GetURI MUST return the stored value without modification.
+// 🌷GetURI returns the u r i of the Ticket.
 func (t *Ticket) GetURI() string {
 	data := map[string]interface{}{"slug": t.Slug}
 	if t.Goal != "" {
@@ -9958,16 +9623,14 @@ func (t *Ticket) GetURI() string {
 	return GetArtifactURI("ticket", data)
 }
 
-// GetTitle MUST return the stored value without modification.
-// GetTitle returns the title of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️gettitle](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetTitle)
+// 📌GetTitle MUST return the stored value without modification.
+// 🌹GetTitle returns the title of the Ticket.
 func (t *Ticket) GetTitle() string {
 	return t.Title
 }
 
-// GetPrompt MUST return the description or the first interaction prompt.
-// GetPrompt returns the prompt of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getprompt](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetPrompt)
+// 🔖GetPrompt MUST return the description or the first interaction prompt.
+// 🥀GetPrompt returns the prompt of the Ticket.
 func (t *Ticket) GetPrompt() string {
 	if t.Description != "" {
 		return t.Description
@@ -9978,9 +9641,8 @@ func (t *Ticket) GetPrompt() string {
 	return ""
 }
 
-// GetLatestPrompt MUST return the latest prompt from sessions or interactions.
-// GetLatestPrompt returns the latest prompt of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getlatestprompt](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetLatestPrompt)
+// 🪪GetLatestPrompt MUST return the latest prompt from sessions or interactions.
+// 🧪GetLatestPrompt returns the latest prompt of the Ticket.
 func (t *Ticket) GetLatestPrompt() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].Prompt
@@ -9988,9 +9650,8 @@ func (t *Ticket) GetLatestPrompt() string {
 	return t.Description
 }
 
-// GetLLM MUST return the LLM from the latest session or interaction.
-// GetLLM returns the l l m of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getllm](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetLLM)
+// 🧪GetLLM MUST return the LLM from the latest session or interaction.
+// 🪻GetLLM returns the l l m of the Ticket.
 func (t *Ticket) GetLLM() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].LLM
@@ -10001,9 +9662,8 @@ func (t *Ticket) GetLLM() string {
 	return ""
 }
 
-// GetClient MUST return the client from the latest session or interaction.
-// GetClient returns the client of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getclient](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetClient)
+// 🔖GetClient MUST return the client from the latest session or interaction.
+// 🪷GetClient returns the client of the Ticket.
 func (t *Ticket) GetClient() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].Client
@@ -10014,16 +9674,14 @@ func (t *Ticket) GetClient() string {
 	return ""
 }
 
-// GetStatus MUST return the stored value without modification.
-// GetStatus returns the status of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getstatus](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetStatus)
+// 🔖GetStatus MUST return the stored value without modification.
+// 🍁GetStatus returns the status of the Ticket.
 func (t *Ticket) GetStatus() TicketStatus {
 	return t.Status
 }
 
-// GetAuthor MUST return the author from the first session or interaction.
-// GetAuthor returns the author of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getauthor](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetAuthor)
+// ✍️GetAuthor MUST return the author from the first session or interaction.
+// 🔐GetAuthor returns the author of the Ticket.
 func (t *Ticket) GetAuthor() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Author
@@ -10034,9 +9692,8 @@ func (t *Ticket) GetAuthor() string {
 	return ""
 }
 
-// GetCheckpoint MUST return the checkpoint from the first interaction.
-// GetCheckpoint returns the checkpoint of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getcheckpoint](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetCheckpoint)
+// 🔖GetCheckpoint MUST return the checkpoint from the first interaction.
+// 🍂GetCheckpoint returns the checkpoint of the Ticket.
 func (t *Ticket) GetCheckpoint() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Checkpoint
@@ -10044,9 +9701,8 @@ func (t *Ticket) GetCheckpoint() string {
 	return ""
 }
 
-// GetSummary MUST return the stored value without modification.
-// GetSummary returns the summary of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getsummary](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetSummary)
+// 🔖GetSummary MUST return the stored value without modification.
+// 🍃GetSummary returns the summary of the Ticket.
 func (t *Ticket) GetSummary() string {
 	if t.Summary != "" {
 		return t.Summary
@@ -10059,9 +9715,8 @@ func (t *Ticket) GetSummary() string {
 	return ""
 }
 
-// GetDateStarted MUST return the earliest date from interactions or sessions.
-// GetDateStarted returns the date started of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getdatestarted](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetDateStarted)
+// ▶️GetDateStarted MUST return the earliest date from interactions or sessions.
+// 🌿GetDateStarted returns the date started of the Ticket.
 func (t *Ticket) GetDateStarted() time.Time {
 	for _, interaction := range t.Interactions {
 		if isTicketInteractionKind(interaction.Kind, "ticket.open") && interaction.Date != "" {
@@ -10084,9 +9739,8 @@ func (t *Ticket) GetDateStarted() time.Time {
 	return time.Date(t.Year, time.Month(t.Month), t.Day, 0, 0, 0, 0, time.UTC)
 }
 
-// GetDateFinished MUST return the stored value without modification.
-// GetDateFinished returns the date finished of the Ticket.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getdatefinished](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetDateFinished)
+// 🔖GetDateFinished MUST return the stored value without modification.
+// ⏹️GetDateFinished returns the date finished of the Ticket.
 func (t *Ticket) GetDateFinished() *time.Time {
 	for i := len(t.Interactions) - 1; i >= 0; i-- {
 		if isTicketInteractionKind(t.Interactions[i].Kind, "ticket.close") && t.Interactions[i].Date != "" {
@@ -10101,9 +9755,8 @@ func (t *Ticket) GetDateFinished() *time.Time {
 	return nil
 }
 
-// GetInteractionFiles MUST return the stored value without modification.
-// GetInteractionFiles returns all unique InteractionFile entries across all interactions.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getinteractionfiles](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetInteractionFiles)
+// 🔖GetInteractionFiles MUST return the stored value without modification.
+// ☘️GetInteractionFiles returns all unique InteractionFile entries across all interactions.
 func (t *Ticket) GetInteractionFiles() []InteractionFile {
 	seen := make(map[string]struct{})
 	var result []InteractionFile
@@ -10119,30 +9772,26 @@ func (t *Ticket) GetInteractionFiles() []InteractionFile {
 	return result
 }
 
-// TicketBundleContrib holds the data fields for a ticket bundle contrib record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️ticketbundlecontrib](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketBundleContrib)
+// 🔖TicketBundleContrib holds the data fields for a ticket bundle contrib record.
 type TicketBundleContrib struct {
 	BundleID string              `json:"bundleId"`
 	Files    []TicketFileContrib `json:"files"`
 }
 
-// TicketFileContrib holds the data fields for a ticket file contrib record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️ticketfilecontrib](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketFileContrib)
+// 🔖TicketFileContrib holds the data fields for a ticket file contrib record.
 type TicketFileContrib struct {
 	FileID   string                 `json:"fileId"`
 	Sections []TicketSectionContrib `json:"sections"`
 }
 
-// TicketSectionContrib holds the data fields for a ticket section contrib record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️ticketsectioncontrib](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/TicketSectionContrib)
+// 🔖TicketSectionContrib holds the data fields for a ticket section contrib record.
 type TicketSectionContrib struct {
 	SectionID   string       `json:"sectionId"`
 	Definitions []string     `json:"definitions"`
 	Metrics     *LineMetrics `json:"metrics"`
 }
 
-// Policy holds the data fields for a policy record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️policy](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/Policy)
+// 🔖Policy holds the data fields for a policy record.
 type Policy struct {
 	ID          string         `json:"id"`
 	Name        string         `json:"name"`
@@ -10152,28 +9801,24 @@ type Policy struct {
 	Statutes    []*StatuteMeta `json:"statutes"`
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Policy is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// 🔖IsNode MUST return true only when the condition is met.
+// 🍀IsNode reports whether the Policy is node.
 func (p *Policy) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Policy.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// 🔖GetID MUST return the stored value without modification.
+// 🪴GetID returns the i d of the Policy.
 func (p *Policy) GetID() string {
 	slug := strings.TrimPrefix(p.ID, "/")
 	return emojiText(EmojiPolicy) + Flat(slug)
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Policy.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// 🔖GetURI MUST return the stored value without modification.
+// 🌱GetURI returns the u r i of the Policy.
 func (p *Policy) GetURI() string {
 	return "repo://policy/" + p.GetID()
 }
 
-// StatuteMeta holds the data fields for a statute meta record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️statutemeta](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/StatuteMeta)
+// 🔖StatuteMeta holds the data fields for a statute meta record.
 type StatuteMeta struct {
 	Kind        Statute        `json:"kind"`
 	PolicyID    string         `json:"policyId"`
@@ -10192,42 +9837,36 @@ func normalizeStatuteMeta(meta *StatuteMeta) {
 	}
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the StatuteMeta is node.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/IsNode)
+// 🔖IsNode MUST return true only when the condition is met.
+// 📰IsNode reports whether the StatuteMeta is node.
 func (v *StatuteMeta) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the StatuteMeta.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetID)
+// 🔖GetID MUST return the stored value without modification.
+// 🌲GetID returns the i d of the StatuteMeta.
 func (v *StatuteMeta) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiStatute), StatutePathToIdValue(string(v.Kind)))
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the StatuteMeta.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/GetURI)
+// 🔖GetURI MUST return the stored value without modification.
+// 🔖GetURI returns the u r i of the StatuteMeta.
 func (v *StatuteMeta) GetURI() string {
 	return "repo://statute/" + v.GetID()
 }
 
-// AnalyzeResult holds the data fields for a analyze result record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️analyzeresult](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/AnalyzeResult)
+// 🔖AnalyzeResult holds the data fields for a analyze result record.
 type AnalyzeResult struct {
 	Breachs []*Breach       `json:"breachs"`
 	Metrics *AnalyzeMetrics `json:"metrics"`
 }
 
-// FixResult holds the data fields for a fix result record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️fixresult](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/FixResult)
+// 🔖FixResult holds the data fields for a fix result record.
 type FixResult struct {
 	Fixed     int       `json:"fixed"`
 	Remaining int       `json:"remaining"`
 	Breachs   []*Breach `json:"breachs"`
 }
 
-// ContributorContributions holds the data fields for a contributor contributions record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributorcontributions](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributorContributions)
+// 🔖ContributorContributions holds the data fields for a contributor contributions record.
 type ContributorContributions struct {
 	Bundles     []ContributionBundle     `json:"bundles"`
 	Folders     []ContributionFolder     `json:"folders"`
@@ -10236,43 +9875,37 @@ type ContributorContributions struct {
 	Definitions []ContributionDefinition `json:"definitions"`
 }
 
-// ContributionBundle holds the data fields for a contribution bundle record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributionbundle](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributionBundle)
+// 🔖ContributionBundle holds the data fields for a contribution bundle record.
 type ContributionBundle struct {
 	BundleID string        `json:"bundleId"`
 	Metrics  *CountMetrics `json:"metrics"`
 }
 
-// ContributionFolder holds the data fields for a contribution folder record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributionfolder](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributionFolder)
+// 🔖ContributionFolder holds the data fields for a contribution folder record.
 type ContributionFolder struct {
 	FolderID string        `json:"folderId"`
 	Metrics  *CountMetrics `json:"metrics"`
 }
 
-// ContributionFile holds the data fields for a contribution file record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributionfile](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributionFile)
+// 🔖ContributionFile holds the data fields for a contribution file record.
 type ContributionFile struct {
 	FileID  string       `json:"fileId"`
 	Metrics *LineMetrics `json:"metrics"`
 }
 
-// ContributionSection holds the data fields for a contribution section record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributionsection](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributionSection)
+// 🔖ContributionSection holds the data fields for a contribution section record.
 type ContributionSection struct {
 	SectionID string       `json:"sectionId"`
 	Metrics   *LineMetrics `json:"metrics"`
 }
 
-// ContributionDefinition holds the data fields for a contribution definition record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️contributiondefinition](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/ContributionDefinition)
+// 🔖ContributionDefinition holds the data fields for a contribution definition record.
 type ContributionDefinition struct {
 	DefinitionID string       `json:"definitionId"`
 	Metrics      *LineMetrics `json:"metrics"`
 }
 
-// SemanticChangeType represents a semantic change type value.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️semanticchangetype](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/SemanticChangeType)
+// ♻️SemanticChangeType represents a semantic change type value.
 type SemanticChangeType string
 
 const (
@@ -10282,8 +9915,7 @@ const (
 	SemanticChangeRenamed  SemanticChangeType = "renamed"
 )
 
-// SemanticChange holds the data fields for a semantic change record.
-// [🧰repo⌨️cli💻main🔖graphqltypes✂️semanticchange](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/SemanticChange)
+// 🔖SemanticChange holds the data fields for a semantic change record.
 type SemanticChange struct {
 	Kind     string
 	Status   SemanticChangeType
@@ -10293,8 +9925,7 @@ type SemanticChange struct {
 	Lines    LineMetrics
 }
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️newticketdiffset](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/newTicketDiffSet)
-// newTicketDiffSet holds the data fields for a newTicketDiffSet record.
+// 🗃️newTicketDiffSet holds the data fields for a newTicketDiffSet record.
 func newTicketDiffSet() TicketDiffSet {
 	return TicketDiffSet{
 		Deleted:  []TicketFile{},
@@ -10304,8 +9935,7 @@ func newTicketDiffSet() TicketDiffSet {
 	}
 }
 
-// newTicketDiffs holds the data fields for a newTicketDiffs record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️newticketdiffs](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/newTicketDiffs)
+// 🔖newTicketDiffs holds the data fields for a newTicketDiffs record.
 func newTicketDiffs() *TicketDiffs {
 	return &TicketDiffs{
 		Bundles:     newTicketDiffSet(),
@@ -10316,8 +9946,7 @@ func newTicketDiffs() *TicketDiffs {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️addticketdiffentry](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/addTicketDiffEntry)
-// addTicketDiffEntry holds the data fields for a addTicketDiffEntry record.
+// ➕addTicketDiffEntry holds the data fields for a addTicketDiffEntry record.
 func addTicketDiffEntry(set *TicketDiffSet, change SemanticChange) {
 	lines := &LineMetrics{Added: change.Lines.Added, Removed: change.Lines.Removed}
 	switch change.Status {
@@ -10332,8 +9961,7 @@ func addTicketDiffEntry(set *TicketDiffSet, change SemanticChange) {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️mergelinemetrics](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/mergeLineMetrics)
-// mergeLineMetrics holds the data fields for a mergeLineMetrics record.
+// 🔖mergeLineMetrics holds the data fields for a mergeLineMetrics record.
 func mergeLineMetrics(target *LineMetrics, add LineMetrics) {
 	if target == nil {
 		return
@@ -10342,8 +9970,7 @@ func mergeLineMetrics(target *LineMetrics, add LineMetrics) {
 	target.Removed += add.Removed
 }
 
-// computeLineMetricsForDiff holds the data fields for a computeLineMetricsForDiff record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️computelinemetricsfordiff](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/computeLineMetricsForDiff)
+// 🔖computeLineMetricsForDiff holds the data fields for a computeLineMetricsForDiff record.
 func computeLineMetricsForDiff(diff *DiffLines, baseCheckpoint, filePath string) LineMetrics {
 	if diff == nil {
 		return LineMetrics{}
@@ -10357,7 +9984,6 @@ func computeLineMetricsForDiff(diff *DiffLines, baseCheckpoint, filePath string)
 	return LineMetrics{Added: len(diff.Added), Removed: len(diff.Removed)}
 }
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️buildcodebasepathset](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/buildCodebasePathSet)
 func buildCodebasePathSet(codebase *Codebase) map[string]struct{} {
 	result := make(map[string]struct{})
 	if codebase == nil {
@@ -10381,8 +10007,7 @@ func buildCodebasePathSet(codebase *Codebase) map[string]struct{} {
 	return result
 }
 
-// buildFolderLineTotals holds the data fields for a buildFolderLineTotals record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️buildfolderlinetotals](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/buildFolderLineTotals)
+// 🏗️buildFolderLineTotals holds the data fields for a buildFolderLineTotals record.
 func buildFolderLineTotals(files []string, baseCheckpoint string, bundles []Bundle) (map[string]int, map[string]int) {
 	currentTotals := make(map[string]int)
 	baseTotals := make(map[string]int)
@@ -10399,8 +10024,7 @@ func buildFolderLineTotals(files []string, baseCheckpoint string, bundles []Bund
 	return currentTotals, baseTotals
 }
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️buildbundlelinetotals](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/buildBundleLineTotals)
-// buildBundleLineTotals holds the data fields for a buildBundleLineTotals record.
+// 🔖buildBundleLineTotals holds the data fields for a buildBundleLineTotals record.
 func buildBundleLineTotals(files []string, baseCheckpoint string, bundles []Bundle) (map[string]int, map[string]int) {
 	currentTotals := make(map[string]int)
 	baseTotals := make(map[string]int)
@@ -10416,8 +10040,7 @@ func buildBundleLineTotals(files []string, baseCheckpoint string, bundles []Bund
 	return currentTotals, baseTotals
 }
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️extractfileprefix](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/extractFilePrefix)
-// extractFilePrefix holds the data fields for a extractFilePrefix record.
+// 🔖extractFilePrefix holds the data fields for a extractFilePrefix record.
 func extractFilePrefix(path string) string {
 	if path == "" {
 		return ""
@@ -10431,8 +10054,7 @@ func extractFilePrefix(path string) string {
 	return path
 }
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️reconcilerenamepairs](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/reconcileRenamePairs)
-// reconcileRenamePairs holds the data fields for a reconcileRenamePairs record.
+// 🔖reconcileRenamePairs holds the data fields for a reconcileRenamePairs record.
 func reconcileRenamePairs(diffSet *TicketDiffSet, matchKey func(path string) string) {
 	if diffSet == nil {
 		return
@@ -10491,8 +10113,7 @@ func reconcileRenamePairs(diffSet *TicketDiffSet, matchKey func(path string) str
 	diffSet.Renamed = append(diffSet.Renamed, renamed...)
 }
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️buildsectiondiffs](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/buildSectionDiffs)
-// buildSectionDiffs holds the data fields for a buildSectionDiffs record.
+// 🔖buildSectionDiffs holds the data fields for a buildSectionDiffs record.
 func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint string, diffLines map[string]*DiffLines, bundles []Bundle) TicketDiffSet {
 	result := newTicketDiffSet()
 	ctx := &CodebaseContext{Bundles: bundles}
@@ -10570,8 +10191,7 @@ func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint s
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️builddefinitiondiffs](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/buildDefinitionDiffs)
-// buildDefinitionDiffs holds the data fields for a buildDefinitionDiffs record.
+// 🔖buildDefinitionDiffs holds the data fields for a buildDefinitionDiffs record.
 func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint string, diffLines map[string]*DiffLines, bundles []Bundle) TicketDiffSet {
 	result := newTicketDiffSet()
 	ctx := &CodebaseContext{Bundles: bundles}
@@ -10660,9 +10280,8 @@ func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoin
 	return result
 }
 
-// BuildSemanticDiffs MUST assemble the semantic diffs from the available context data.
-// BuildSemanticDiffs constructs and returns the semantic diffs structure.
-// [🧰repo⌨️cli💻main🔖graphqltypes🛠️buildsemanticdiffs](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/d/i/BuildSemanticDiffs)
+// 🔖BuildSemanticDiffs MUST assemble the semantic diffs from the available context data.
+// ⚖️BuildSemanticDiffs constructs and returns the semantic diffs structure.
 func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint string, diffLines map[string]*DiffLines, diffStatuses []GitDiffStatus, bundles []Bundle) *TicketDiffs {
 	result := newTicketDiffs()
 	ctx := &CodebaseContext{Bundles: bundles}
@@ -10793,20 +10412,17 @@ func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCheckpoint 
 	return result
 }
 
-// #region 🔖GraphQL Input Types
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types)
+// #region 🎡GraphQL Input Types
 // GraphQL mutation input types for tickets, goals, todos, and contributors.
 
-// FileListInput holds the data fields for a file list input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️filelistinput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/FileListInput)
+// 💿FileListInput holds the data fields for a file list input record.
 type FileListInput struct {
 	Updated []string `json:"updated,omitempty"`
 	Created []string `json:"created,omitempty"`
 	Removed []string `json:"removed,omitempty"`
 }
 
-// TicketOpenInput holds the data fields for a ticket open input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️ticketopeninput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/TicketOpenInput)
+// 🎫TicketOpenInput holds the data fields for a ticket open input record.
 type TicketOpenInput struct {
 	Title        string `json:"title"`
 	Prompt       string `json:"prompt"`
@@ -10820,15 +10436,13 @@ type TicketOpenInput struct {
 	Issue        string `json:"issue,omitempty"`
 }
 
-// DraftCreateInput holds the data fields for a draft create input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️draftcreateinput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/DraftCreateInput)
+// 🆕DraftCreateInput holds the data fields for a draft create input record.
 type DraftCreateInput struct {
 	Title string   `json:"title"`
 	Files []string `json:"files,omitempty"`
 }
 
-// GoalCreateInput holds the data fields for a goal create input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️goalcreateinput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/GoalCreateInput)
+// 📝GoalCreateInput holds the data fields for a goal create input record.
 type GoalCreateInput struct {
 	Title        string `json:"title"`
 	Description  string `json:"description"`
@@ -10841,8 +10455,7 @@ type GoalCreateInput struct {
 	Milestone    string `json:"milestone,omitempty"`
 }
 
-// GoalChangeInput holds the data fields for a goal change input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️goalchangeinput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/GoalChangeInput)
+// ♻️GoalChangeInput holds the data fields for a goal change input record.
 type GoalChangeInput struct {
 	ID           string  `json:"id"`
 	Title        *string `json:"title,omitempty"`
@@ -10852,16 +10465,14 @@ type GoalChangeInput struct {
 	NoManagement bool    `json:"noManagement,omitempty"`
 }
 
-// GoalCloseInput holds the data fields for a goal close input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️goalcloseinput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/GoalCloseInput)
+// 📪GoalCloseInput holds the data fields for a goal close input record.
 type GoalCloseInput struct {
 	ID           string `json:"id"`
 	Summary      string `json:"summary"`
 	NoManagement bool   `json:"noManagement,omitempty"`
 }
 
-// GoalReopenInput holds the data fields for a goal reopen input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️goalreopeninput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/GoalReopenInput)
+// 🔓GoalReopenInput holds the data fields for a goal reopen input record.
 type GoalReopenInput struct {
 	ID           string  `json:"id"`
 	Prompt       string  `json:"prompt"`
@@ -10874,15 +10485,13 @@ type GoalReopenInput struct {
 	NoManagement bool    `json:"noManagement,omitempty"`
 }
 
-// GoalDeleteInput holds the data fields for a goal delete input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️goaldeleteinput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/GoalDeleteInput)
+// 🗑️GoalDeleteInput holds the data fields for a goal delete input record.
 type GoalDeleteInput struct {
 	ID           string `json:"id"`
 	NoManagement bool   `json:"noManagement,omitempty"`
 }
 
-// TicketDeleteInput holds the data fields for a ticket delete input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️ticketdeleteinput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/TicketDeleteInput)
+// 🔷TicketDeleteInput holds the data fields for a ticket delete input record.
 type TicketDeleteInput struct {
 	Year         int    `json:"year"`
 	Month        int    `json:"month"`
@@ -10891,8 +10500,7 @@ type TicketDeleteInput struct {
 	NoManagement bool   `json:"noManagement,omitempty"`
 }
 
-// TicketCloseInput holds the data fields for a ticket close input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️ticketcloseinput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/TicketCloseInput)
+// 🔶TicketCloseInput holds the data fields for a ticket close input record.
 type TicketCloseInput struct {
 	Year         int      `json:"year"`
 	Month        int      `json:"month"`
@@ -10905,8 +10513,7 @@ type TicketCloseInput struct {
 	All          bool     `json:"all,omitempty"`
 }
 
-// TicketReopenInput holds the data fields for a ticket reopen input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️ticketreopeninput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/TicketReopenInput)
+// 📬TicketReopenInput holds the data fields for a ticket reopen input record.
 type TicketReopenInput struct {
 	Year         int     `json:"year"`
 	Month        int     `json:"month"`
@@ -10922,8 +10529,7 @@ type TicketReopenInput struct {
 	NoManagement bool    `json:"noManagement,omitempty"`
 }
 
-// TicketChangeInput holds the data fields for a ticket change input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️ticketchangeinput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/TicketChangeInput)
+// 🔹TicketChangeInput holds the data fields for a ticket change input record.
 type TicketChangeInput struct {
 	Year         int     `json:"year"`
 	Month        int     `json:"month"`
@@ -10938,8 +10544,7 @@ type TicketChangeInput struct {
 	NoManagement bool    `json:"noManagement,omitempty"`
 }
 
-// ContributorAddInput holds the data fields for a contributor add input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️contributoraddinput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/ContributorAddInput)
+// 🤝ContributorAddInput holds the data fields for a contributor add input record.
 type ContributorAddInput struct {
 	Github       string   `json:"github"`
 	Name         *string  `json:"name,omitempty"`
@@ -10950,8 +10555,7 @@ type ContributorAddInput struct {
 	Fingerprints []string `json:"fingerprints,omitempty"`
 }
 
-// FilterInput holds the data fields for a filter input record.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes✂️filterinput](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/FilterInput)
+// 🧹FilterInput holds the data fields for a filter input record.
 type FilterInput struct {
 	Filter         *string  `json:"filter,omitempty"`
 	Regex          *bool    `json:"regex,omitempty"`
@@ -10963,9 +10567,8 @@ type FilterInput struct {
 	IncludeKinds   []string `json:"includeKinds,omitempty"`
 }
 
-// ToStreamOptions MUST map all filter input fields to stream options.
-// ToStreamOptions converts the filter input into stream options.
-// [🧰repo⌨️cli💻main🔖graphqltypes🔖graphqlinputtypes🛠️tostreamoptions](repo://p/i/repo/b/b/cli/f/main.go/s/GraphQL%20Types/s/GraphQL%20Input%20Types/d/i/ToStreamOptions)
+// 🗺️ToStreamOptions MUST map all filter input fields to stream options.
+// 🔍ToStreamOptions converts the filter input into stream options.
 func (f *FilterInput) ToStreamOptions() StreamOptions {
 	if f == nil {
 		return StreamOptions{}
@@ -10994,20 +10597,17 @@ func (f *FilterInput) ToStreamOptions() StreamOptions {
 	return opts
 }
 
-// #endregion 🔖GraphQL Input Types
+// #endregion 🎡GraphQL Input Types
 
-// #endregion 🔖GraphQL Types
+// #endregion 💡GraphQL Types
 
-// #region 🔖Providers
-// [🧰repo⌨️cli💻maingo🔖providers](repo://section/repo/cli/main.go/Providers)
+// #region 🪵Providers
 // Composable provider interfaces and implementations for source control, management, sandbox, language, and editor integrations.
 
-// #region 🔖Provider Interfaces
-// [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces)
+// #region 🔭Provider Interfaces
 // Provider interfaces define contracts for composable integrations.
 
-// VersionControlProvider defines the interface for version control operations (Git, ...).
-// [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️versioncontrolprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/VersionControlProvider)
+// 🔌VersionControlProvider defines the interface for version control operations (Git, ...).
 type VersionControlProvider interface {
 	Kind() string
 	RepoURL() (string, error)
@@ -11027,8 +10627,7 @@ type VersionControlProvider interface {
 	StageAll(repoRoot string) error
 }
 
-// ManagementIssue holds the data fields for a management issue record.
-// [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️managementissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/ManagementIssue)
+// 💿ManagementIssue holds the data fields for a management issue record.
 type ManagementIssue struct {
 	URL       string `json:"url"`
 	State     string `json:"state"`
@@ -11043,8 +10642,7 @@ type ManagementIssue struct {
 	} `json:"labels"`
 }
 
-// ManagementMilestone holds the data fields for a management milestone record.
-// [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️managementmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/ManagementMilestone)
+// 🎯ManagementMilestone holds the data fields for a management milestone record.
 type ManagementMilestone struct {
 	Number      int    `json:"number"`
 	Title       string `json:"title"`
@@ -11054,14 +10652,12 @@ type ManagementMilestone struct {
 	State       string `json:"state"`
 }
 
-// ManagementLabel holds the data fields for a management label record.
-// [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️managementlabel](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/ManagementLabel)
+// 🏷️ManagementLabel holds the data fields for a management label record.
 type ManagementLabel struct {
 	Name string `json:"name"`
 }
 
-// ManagementProvider defines the interface for issue/milestone management operations (GitHub, Jira, Trello, Linear, ...).
-// [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️managementprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/ManagementProvider)
+// 🐙ManagementProvider defines the interface for issue/milestone management operations (GitHub, Jira, Trello, Linear, ...).
 type ManagementProvider interface {
 	Kind() string
 	CreateIssue(title, body string, milestone *int) (string, error)
@@ -11098,19 +10694,17 @@ type ManagementProvider interface {
 	GetCurrentUser() string
 }
 
-// SandboxProvider defines the interface for sandbox/container operations (Devcontainer, Podman, ...).
-// [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️sandboxprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/SandboxProvider)
+// 🐳SandboxProvider defines the interface for sandbox/container operations (Devcontainer, Podman, ...).
 type SandboxProvider interface {
 	Kind() string
 }
 
-// EditorHookMapping is a compatibility alias for editor hook configuration metadata.
+// ⚙️EditorHookMapping is a compatibility alias for editor hook configuration metadata.
 // It intentionally aliases `ClientHookMapping` so editor providers can define only the fields they need
-// (Client, ConfigPath) while keeping the richer mapping used by `configure`.
+// ⚙️(Client, ConfigPath) while keeping the richer mapping used by `configure`.
 type EditorHookMapping = ClientHookMapping
 
-// EditorProvider defines the interface for editor/agent operations (VSCode/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
-// [🧰repo⌨️cli💻main🔖providers🔖providerinterfaces✂️editorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Interfaces/d/i/EditorProvider)
+// 📝EditorProvider defines the interface for editor/agent operations (VSCode/Copilot, Cursor, Windsurf, Claude Code, Codex, Droid, Antigravity, ...).
 type EditorProvider interface {
 	Kind() string
 	Configure(repoRoot string) error
@@ -11121,57 +10715,48 @@ type EditorProvider interface {
 	HookMapping() EditorHookMapping
 }
 
-// #endregion 🔖Provider Interfaces
+// #endregion 🔭Provider Interfaces
 
-// #region 🔖GitHub Management Provider
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider)
+// #region 🎄GitHub Management Provider
 // GitHub implementation of ManagementProvider using the gh CLI.
 
-// GitHubManagementProvider holds the data fields for a github management provider record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider✂️githubmanagementprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GitHubManagementProvider)
+// 🔌GitHubManagementProvider holds the data fields for a github management provider record.
 type GitHubManagementProvider struct{}
 
-// Kind holds the data fields for a Kind record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Kind)
+// 💿Kind holds the data fields for a Kind record.
 func (p *GitHubManagementProvider) Kind() string { return "github" }
 
-// CreateIssue holds the data fields for a CreateIssue record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️createissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateIssue)
+// 🆕CreateIssue holds the data fields for a CreateIssue record.
 func (p *GitHubManagementProvider) CreateIssue(title, body string, milestone *int) (string, error) {
 	return ghCreateIssue(title, body, milestone)
 }
 
-// CloseIssue holds the data fields for a CloseIssue record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️closeissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CloseIssue)
+// 📪CloseIssue holds the data fields for a CloseIssue record.
 func (p *GitHubManagementProvider) CloseIssue(issueURL string) error {
 	return ghCloseIssue(issueURL)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️reopenissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ReopenIssue)
-// ReopenIssue holds the data fields for a ReopenIssue record.
+// 🔓ReopenIssue holds the data fields for a ReopenIssue record.
 func (p *GitHubManagementProvider) ReopenIssue(issueURL string) error {
 	return ghReopenIssue(issueURL)
 }
 
-// DeleteIssue holds the data fields for a DeleteIssue record.
+// 🗑️DeleteIssue holds the data fields for a DeleteIssue record.
 func (p *GitHubManagementProvider) DeleteIssue(issueURLOrNumber string) error {
 	return ghDeleteIssue(issueURLOrNumber)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updateissuetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueTitle)
-// UpdateIssueTitle holds the data fields for a UpdateIssueTitle record.
+// 🔁UpdateIssueTitle holds the data fields for a UpdateIssueTitle record.
 func (p *GitHubManagementProvider) UpdateIssueTitle(issueURL, title string) error {
 	return ghUpdateIssueTitle(issueURL, title)
 }
 
-// UpdateIssueBody holds the data fields for a UpdateIssueBody record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updateissuebody](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueBody)
+// 🔷UpdateIssueBody holds the data fields for a UpdateIssueBody record.
 func (p *GitHubManagementProvider) UpdateIssueBody(issueURL, body string) error {
 	return ghUpdateIssueBody(issueURL, body)
 }
 
-// GetIssueDetails holds the data fields for a GetIssueDetails record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getissuedetails](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueDetails)
+// 🔶GetIssueDetails holds the data fields for a GetIssueDetails record.
 func (p *GitHubManagementProvider) GetIssueDetails(issueURL string) (*ManagementIssue, error) {
 	issue, err := ghGetIssueDetails(issueURL)
 	if err != nil {
@@ -11192,84 +10777,70 @@ func (p *GitHubManagementProvider) GetIssueDetails(issueURL string) (*Management
 	return mi, nil
 }
 
-// GetIssueNodeID holds the data fields for a GetIssueNodeID record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getissuenodeid](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueNodeID)
+// 🌿GetIssueNodeID holds the data fields for a GetIssueNodeID record.
 func (p *GitHubManagementProvider) GetIssueNodeID(issueURL string) (string, error) {
 	return ghGetIssueNodeID(issueURL)
 }
 
-// GetIssueParentURL holds the data fields for a GetIssueParentURL record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getissueparenturl](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueParentURL)
+// 🌐GetIssueParentURL holds the data fields for a GetIssueParentURL record.
 func (p *GitHubManagementProvider) GetIssueParentURL(issueURL string) (string, error) {
 	return ghGetIssueParentURL(issueURL)
 }
 
-// AddComment holds the data fields for a AddComment record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addcomment](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddComment)
+// 💬AddComment holds the data fields for a AddComment record.
 func (p *GitHubManagementProvider) AddComment(issueURL, comment string) error {
 	return ghAddComment(issueURL, comment)
 }
 
-// AddLabels holds the data fields for a AddLabels record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addlabels](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddLabels)
+// 🏷️AddLabels holds the data fields for a AddLabels record.
 func (p *GitHubManagementProvider) AddLabels(issueURL string, labels []string) error {
 	return ghAddLabels(issueURL, labels)
 }
 
-// RemoveLabels holds the data fields for a RemoveLabels record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️removelabels](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/RemoveLabels)
+// 🚚RemoveLabels holds the data fields for a RemoveLabels record.
 func (p *GitHubManagementProvider) RemoveLabels(issueURL string, labels []string) error {
 	return ghRemoveLabels(issueURL, labels)
 }
 
-// AddIssueToProject holds the data fields for a AddIssueToProject record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addissuetoproject](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddIssueToProject)
+// ➕AddIssueToProject holds the data fields for a AddIssueToProject record.
 func (p *GitHubManagementProvider) AddIssueToProject(issueURL string) {
 	ghAddIssueToProject(issueURL)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️assignissuetocurrentuser](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AssignIssueToCurrentUser)
 func (p *GitHubManagementProvider) AssignIssueToCurrentUser(issueURL string) {
 	ghAssignIssueToCurrentUser(issueURL)
 }
 
-// AddSubIssue holds the data fields for a AddSubIssue record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addsubissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddSubIssue)
+// 🔹AddSubIssue holds the data fields for a AddSubIssue record.
 func (p *GitHubManagementProvider) AddSubIssue(parentIssueURL, childIssueURL string) error {
 	return ghAddSubIssue(parentIssueURL, childIssueURL)
 }
 
-// UpdateIssueMilestone holds the data fields for a UpdateIssueMilestone record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updateissuemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueMilestone)
+// 🎯UpdateIssueMilestone holds the data fields for a UpdateIssueMilestone record.
 func (p *GitHubManagementProvider) UpdateIssueMilestone(issueURL, milestoneTitle string) error {
 	return ghUpdateIssueMilestone(issueURL, milestoneTitle)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️clearissuemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ClearIssueMilestone)
 func (p *GitHubManagementProvider) ClearIssueMilestone(issueURL string) error {
 	return ghClearIssueMilestone(issueURL)
 }
 
-// CreateMilestone holds the data fields for a CreateMilestone record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️createmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateMilestone)
+// 🔸CreateMilestone holds the data fields for a CreateMilestone record.
 func (p *GitHubManagementProvider) CreateMilestone(title, description string) (int, error) {
 	return ghCreateMilestone(title, description)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updatemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateMilestone)
-// UpdateMilestone holds the data fields for a UpdateMilestone record.
+// 🔺UpdateMilestone holds the data fields for a UpdateMilestone record.
 func (p *GitHubManagementProvider) UpdateMilestone(number int, title, description, state, dueOn string) error {
 	return ghUpdateMilestone(number, title, description, state, dueOn)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️deletemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteMilestone)
-// DeleteMilestone holds the data fields for a DeleteMilestone record.
+// 🔻DeleteMilestone holds the data fields for a DeleteMilestone record.
 func (p *GitHubManagementProvider) DeleteMilestone(number int) error {
 	return ghDeleteMilestone(number)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetMilestone)
-// GetMilestone holds the data fields for a GetMilestone record.
+// ⬛GetMilestone holds the data fields for a GetMilestone record.
 func (p *GitHubManagementProvider) GetMilestone(number int) (*ManagementMilestone, error) {
 	m, err := ghGetMilestone(number)
 	if err != nil {
@@ -11278,13 +10849,11 @@ func (p *GitHubManagementProvider) GetMilestone(number int) (*ManagementMileston
 	return &ManagementMilestone{Number: m.Number, Title: m.Title, Description: m.Description, URL: m.URL, DueOn: m.DueOn, State: m.State}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getmilestonetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetMilestoneTitle)
-// GetMilestoneTitle holds the data fields for a GetMilestoneTitle record.
+// 📌GetMilestoneTitle holds the data fields for a GetMilestoneTitle record.
 func (p *GitHubManagementProvider) GetMilestoneTitle(number int) (string, error) {
 	return ghGetMilestoneTitle(number)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️findmilestonebytitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/FindMilestoneByTitle)
 func (p *GitHubManagementProvider) FindMilestoneByTitle(title string) (*ManagementMilestone, error) {
 	m, err := ghFindMilestoneByTitle(title)
 	if err != nil {
@@ -11296,8 +10865,7 @@ func (p *GitHubManagementProvider) FindMilestoneByTitle(title string) (*Manageme
 	return &ManagementMilestone{Number: m.Number, Title: m.Title, Description: m.Description, URL: m.URL, DueOn: m.DueOn, State: m.State}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️listissuesforlabelsync](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListIssuesForLabelSync)
-// ListIssuesForLabelSync holds the data fields for a ListIssuesForLabelSync record.
+// 📋ListIssuesForLabelSync holds the data fields for a ListIssuesForLabelSync record.
 func (p *GitHubManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, error) {
 	issues, err := ghListIssuesForLabelSync()
 	if err != nil {
@@ -11315,14 +10883,12 @@ func (p *GitHubManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, 
 	return result, nil
 }
 
-// ListOpenIssuesWithLabel holds the data fields for a ListOpenIssuesWithLabel record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️listopenissueswithlabel](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListOpenIssuesWithLabel)
+// 📬ListOpenIssuesWithLabel holds the data fields for a ListOpenIssuesWithLabel record.
 func (p *GitHubManagementProvider) ListOpenIssuesWithLabel(label string) ([]string, error) {
 	return ghListOpenIssuesWithLabel(label)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️listrepolabels](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListRepoLabels)
-// ListRepoLabels holds the data fields for a ListRepoLabels record.
+// ⬜ListRepoLabels holds the data fields for a ListRepoLabels record.
 func (p *GitHubManagementProvider) ListRepoLabels() ([]ManagementLabel, error) {
 	labels, err := ghListRepoLabels()
 	if err != nil {
@@ -11335,214 +10901,169 @@ func (p *GitHubManagementProvider) ListRepoLabels() ([]ManagementLabel, error) {
 	return result, nil
 }
 
-// CreateRepoLabel holds the data fields for a CreateRepoLabel record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️createrepolabel](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateRepoLabel)
+// 🟥CreateRepoLabel holds the data fields for a CreateRepoLabel record.
 func (p *GitHubManagementProvider) CreateRepoLabel(name string) error {
 	return ghCreateRepoLabel(name)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️deleterepolabel](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteRepoLabel)
-// DeleteRepoLabel holds the data fields for a DeleteRepoLabel record.
+// 🟧DeleteRepoLabel holds the data fields for a DeleteRepoLabel record.
 func (p *GitHubManagementProvider) DeleteRepoLabel(name string) error {
 	return ghDeleteRepoLabel(name)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️syncrepolabelcatalog](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/SyncRepoLabelCatalog)
 func (p *GitHubManagementProvider) SyncRepoLabelCatalog(validLabels map[string]bool) error {
 	return ghSyncRepoLabelCatalog(validLabels)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️creategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateGoalIssue)
-// CreateGoalIssue holds the data fields for a CreateGoalIssue record.
+// ⛳CreateGoalIssue holds the data fields for a CreateGoalIssue record.
 func (p *GitHubManagementProvider) CreateGoalIssue(title, description string, milestone *int) (string, error) {
 	return ghCreateGoalIssue(title, description, milestone)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateGoalIssue)
-// UpdateGoalIssue holds the data fields for a UpdateGoalIssue record.
+// 🟨UpdateGoalIssue holds the data fields for a UpdateGoalIssue record.
 func (p *GitHubManagementProvider) UpdateGoalIssue(issueURL, title, description string) error {
 	return ghUpdateGoalIssue(issueURL, title, description)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getcurrentuser](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetCurrentUser)
-// GetCurrentUser holds the data fields for a GetCurrentUser record.
+// 👤GetCurrentUser holds the data fields for a GetCurrentUser record.
 func (p *GitHubManagementProvider) GetCurrentUser() string {
 	return ghGetCurrentUser()
 }
 
-// NullManagementProvider is a no-op implementation of ManagementProvider.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider✂️nullmanagementprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/NullManagementProvider)
+// 💻NullManagementProvider is a no-op implementation of ManagementProvider.
 type NullManagementProvider struct{}
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Kind)
 func (p *NullManagementProvider) Kind() string { return "none" }
 
-// Configure holds the data fields for a Configure record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/Configure)
+// ⚙️Configure holds the data fields for a Configure record.
 func (p *NullManagementProvider) Configure(repoRoot string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️createissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateIssue)
-// CreateIssue holds the data fields for a CreateIssue record.
+// 🟩CreateIssue holds the data fields for a CreateIssue record.
 func (p *NullManagementProvider) CreateIssue(title, body string, milestone *int) (string, error) {
 	return "", nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️closeissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CloseIssue)
-// CloseIssue holds the data fields for a CloseIssue record.
+// 🟦CloseIssue holds the data fields for a CloseIssue record.
 func (p *NullManagementProvider) CloseIssue(issueURL string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️reopenissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ReopenIssue)
 func (p *NullManagementProvider) ReopenIssue(issueURL string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️deleteissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteIssue)
-// DeleteIssue holds the data fields for a DeleteIssue record.
+// 🟪DeleteIssue holds the data fields for a DeleteIssue record.
 func (p *NullManagementProvider) DeleteIssue(issueURLOrNumber string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updateissuetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueTitle)
-// UpdateIssueTitle holds the data fields for a UpdateIssueTitle record.
+// 🟫UpdateIssueTitle holds the data fields for a UpdateIssueTitle record.
 func (p *NullManagementProvider) UpdateIssueTitle(issueURL, title string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updateissuebody](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueBody)
 func (p *NullManagementProvider) UpdateIssueBody(issueURL, body string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getissuedetails](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueDetails)
 func (p *NullManagementProvider) GetIssueDetails(issueURL string) (*ManagementIssue, error) {
 	return nil, nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getissuenodeid](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueNodeID)
-// GetIssueNodeID holds the data fields for a GetIssueNodeID record.
+// 💠GetIssueNodeID holds the data fields for a GetIssueNodeID record.
 func (p *NullManagementProvider) GetIssueNodeID(issueURL string) (string, error) { return "", nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getissueparenturl](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetIssueParentURL)
-// GetIssueParentURL holds the data fields for a GetIssueParentURL record.
+// 🔳GetIssueParentURL holds the data fields for a GetIssueParentURL record.
 func (p *NullManagementProvider) GetIssueParentURL(issueURL string) (string, error) { return "", nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addcomment](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddComment)
-// AddComment holds the data fields for a AddComment record.
+// 🔲AddComment holds the data fields for a AddComment record.
 func (p *NullManagementProvider) AddComment(issueURL, comment string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addlabels](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddLabels)
 func (p *NullManagementProvider) AddLabels(issueURL string, labels []string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️removelabels](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/RemoveLabels)
-// RemoveLabels holds the data fields for a RemoveLabels record.
+// ➖RemoveLabels holds the data fields for a RemoveLabels record.
 func (p *NullManagementProvider) RemoveLabels(issueURL string, labels []string) error { return nil }
 
-// AddIssueToProject holds the data fields for a AddIssueToProject record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addissuetoproject](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddIssueToProject)
+// ▪️AddIssueToProject holds the data fields for a AddIssueToProject record.
 func (p *NullManagementProvider) AddIssueToProject(issueURL string) {}
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️assignissuetocurrentuser](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AssignIssueToCurrentUser)
 func (p *NullManagementProvider) AssignIssueToCurrentUser(issueURL string) {}
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️addsubissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/AddSubIssue)
-// AddSubIssue holds the data fields for a AddSubIssue record.
+// ▫️AddSubIssue holds the data fields for a AddSubIssue record.
 func (p *NullManagementProvider) AddSubIssue(parentIssueURL, childIssueURL string) error {
 	return nil
 }
 
-// UpdateIssueMilestone holds the data fields for a UpdateIssueMilestone record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updateissuemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateIssueMilestone)
+// ◾UpdateIssueMilestone holds the data fields for a UpdateIssueMilestone record.
 func (p *NullManagementProvider) UpdateIssueMilestone(issueURL, milestoneTitle string) error {
 	return nil
 }
 
-// ClearIssueMilestone holds the data fields for a ClearIssueMilestone record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️clearissuemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ClearIssueMilestone)
+// ◽ClearIssueMilestone holds the data fields for a ClearIssueMilestone record.
 func (p *NullManagementProvider) ClearIssueMilestone(issueURL string) error { return nil }
 
-// CreateMilestone holds the data fields for a CreateMilestone record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️createmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateMilestone)
+// ◻️CreateMilestone holds the data fields for a CreateMilestone record.
 func (p *NullManagementProvider) CreateMilestone(title, description string) (int, error) {
 	return 0, nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updatemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateMilestone)
-// UpdateMilestone holds the data fields for a UpdateMilestone record.
+// ◼️UpdateMilestone holds the data fields for a UpdateMilestone record.
 func (p *NullManagementProvider) UpdateMilestone(number int, title, description, state, dueOn string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️deletemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteMilestone)
-// DeleteMilestone holds the data fields for a DeleteMilestone record.
+// 🔵DeleteMilestone holds the data fields for a DeleteMilestone record.
 func (p *NullManagementProvider) DeleteMilestone(number int) error { return nil }
 
-// GetMilestone holds the data fields for a GetMilestone record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetMilestone)
+// 🔴GetMilestone holds the data fields for a GetMilestone record.
 func (p *NullManagementProvider) GetMilestone(number int) (*ManagementMilestone, error) {
 	return nil, nil
 }
 
-// GetMilestoneTitle holds the data fields for a GetMilestoneTitle record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getmilestonetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetMilestoneTitle)
+// 🟠GetMilestoneTitle holds the data fields for a GetMilestoneTitle record.
 func (p *NullManagementProvider) GetMilestoneTitle(number int) (string, error) { return "", nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️findmilestonebytitle](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/FindMilestoneByTitle)
 func (p *NullManagementProvider) FindMilestoneByTitle(title string) (*ManagementMilestone, error) {
 	return nil, nil
 }
 
-// ListIssuesForLabelSync holds the data fields for a ListIssuesForLabelSync record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️listissuesforlabelsync](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListIssuesForLabelSync)
+// 🟡ListIssuesForLabelSync holds the data fields for a ListIssuesForLabelSync record.
 func (p *NullManagementProvider) ListIssuesForLabelSync() ([]ManagementIssue, error) {
 	return nil, nil
 }
 
-// ListOpenIssuesWithLabel holds the data fields for a ListOpenIssuesWithLabel record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️listopenissueswithlabel](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListOpenIssuesWithLabel)
+// ⏹️ListOpenIssuesWithLabel holds the data fields for a ListOpenIssuesWithLabel record.
 func (p *NullManagementProvider) ListOpenIssuesWithLabel(label string) ([]string, error) {
 	return nil, nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️listrepolabels](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/ListRepoLabels)
 func (p *NullManagementProvider) ListRepoLabels() ([]ManagementLabel, error) { return nil, nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️createrepolabel](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateRepoLabel)
-// CreateRepoLabel holds the data fields for a CreateRepoLabel record.
+// 🟢CreateRepoLabel holds the data fields for a CreateRepoLabel record.
 func (p *NullManagementProvider) CreateRepoLabel(name string) error { return nil }
 
-// DeleteRepoLabel holds the data fields for a DeleteRepoLabel record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️deleterepolabel](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/DeleteRepoLabel)
+// 🟣DeleteRepoLabel holds the data fields for a DeleteRepoLabel record.
 func (p *NullManagementProvider) DeleteRepoLabel(name string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️syncrepolabelcatalog](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/SyncRepoLabelCatalog)
-// SyncRepoLabelCatalog holds the data fields for a SyncRepoLabelCatalog record.
+// 📜SyncRepoLabelCatalog holds the data fields for a SyncRepoLabelCatalog record.
 func (p *NullManagementProvider) SyncRepoLabelCatalog(validLabels map[string]bool) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️creategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/CreateGoalIssue)
 func (p *NullManagementProvider) CreateGoalIssue(title, description string, milestone *int) (string, error) {
 	return "", nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️updategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/UpdateGoalIssue)
-// UpdateGoalIssue holds the data fields for a UpdateGoalIssue record.
+// 🟤UpdateGoalIssue holds the data fields for a UpdateGoalIssue record.
 func (p *NullManagementProvider) UpdateGoalIssue(issueURL, title, description string) error {
 	return nil
 }
 
-// GetCurrentUser holds the data fields for a GetCurrentUser record.
-// [🧰repo⌨️cli💻main🔖providers🔖githubmanagementprovider🛠️getcurrentuser](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/GitHub%20Management%20Provider/d/i/GetCurrentUser)
+// ⚪GetCurrentUser holds the data fields for a GetCurrentUser record.
 func (p *NullManagementProvider) GetCurrentUser() string { return "" }
 
-// #endregion 🔖GitHub Management Provider
+// #endregion 🎄GitHub Management Provider
 
-// #region 🔖Git Version Control Provider
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider)
+// #region 🔒Git Version Control Provider
 // Git implementation of VersionControlProvider using git CLI commands.
 
-// GitVersionControlProvider holds the data fields for a git version control provider record.
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider✂️gitversioncontrolprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/GitVersionControlProvider)
+// 🔌GitVersionControlProvider holds the data fields for a git version control provider record.
 type GitVersionControlProvider struct{}
 
-// Kind holds the data fields for a Kind record.
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Kind)
+// 💿Kind holds the data fields for a Kind record.
 func (p *GitVersionControlProvider) Kind() string { return "git" }
 
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️repourl](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/RepoURL)
-// RepoURL holds the data fields for a RepoURL record.
+// 🌐RepoURL holds the data fields for a RepoURL record.
 func (p *GitVersionControlProvider) RepoURL() (string, error) {
 	out, err := exec.Command("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
 	if err != nil {
@@ -11551,12 +11072,10 @@ func (p *GitVersionControlProvider) RepoURL() (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-// Configure holds the data fields for a Configure record.
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Configure)
+// ⚙️Configure holds the data fields for a Configure record.
 func (p *GitVersionControlProvider) Configure(repoRoot string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️checkpoint](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Checkpoint)
-// Checkpoint holds the data fields for a Checkpoint record.
+// 💾Checkpoint holds the data fields for a Checkpoint record.
 func (p *GitVersionControlProvider) Checkpoint(repoRoot string, description string) (string, error) {
 	if _, _, exitCode := ExecCommand("git", []string{"diff", "--cached", "--quiet"}, repoRoot); exitCode == 0 {
 		if err := p.StageAll(repoRoot); err != nil {
@@ -11576,7 +11095,6 @@ func (p *GitVersionControlProvider) Checkpoint(repoRoot string, description stri
 	return sha, nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️currentcheckpoint](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/CurrentCheckpoint)
 func (p *GitVersionControlProvider) CurrentCheckpoint(repoRoot string) (string, error) {
 	stdout, stderr, exitCode := ExecCommand("git", []string{"rev-parse", "HEAD"}, repoRoot)
 	if exitCode != 0 {
@@ -11585,8 +11103,7 @@ func (p *GitVersionControlProvider) CurrentCheckpoint(repoRoot string) (string, 
 	return strings.TrimSpace(stdout), nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️checkin](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Checkin)
-// Checkin holds the data fields for a Checkin record.
+// ✔️Checkin holds the data fields for a Checkin record.
 func (p *GitVersionControlProvider) Checkin(repoRoot string, contributor string) error {
 	contributorBranch := contributor + "/latest"
 
@@ -11618,8 +11135,7 @@ func (p *GitVersionControlProvider) Checkin(repoRoot string, contributor string)
 	return nil
 }
 
-// Checkout holds the data fields for a Checkout record.
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️checkout](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/Checkout)
+// 🔷Checkout holds the data fields for a Checkout record.
 func (p *GitVersionControlProvider) Checkout(repoRoot string, contributor string, description string) (string, error) {
 	contributorBranch := contributor + "/latest"
 	now := time.Now().UTC()
@@ -11660,8 +11176,7 @@ func (p *GitVersionControlProvider) Checkout(repoRoot string, contributor string
 	return sha, nil
 }
 
-// CurrentBranch holds the data fields for a CurrentBranch record.
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️currentbranch](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/CurrentBranch)
+// 🌿CurrentBranch holds the data fields for a CurrentBranch record.
 func (p *GitVersionControlProvider) CurrentBranch(repoRoot string) (string, error) {
 	stdout, stderr, exitCode := ExecCommand("git", []string{"rev-parse", "--abbrev-ref", "HEAD"}, repoRoot)
 	if exitCode != 0 {
@@ -11670,8 +11185,7 @@ func (p *GitVersionControlProvider) CurrentBranch(repoRoot string) (string, erro
 	return strings.TrimSpace(stdout), nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️stagedfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/StagedFiles)
-// StagedFiles holds the data fields for a StagedFiles record.
+// 📄StagedFiles holds the data fields for a StagedFiles record.
 func (p *GitVersionControlProvider) StagedFiles(repoRoot string) ([]string, error) {
 	stdout, stderr, exitCode := ExecCommand("git", []string{"diff", "--cached", "--name-only"}, repoRoot)
 	if exitCode != 0 {
@@ -11686,8 +11200,7 @@ func (p *GitVersionControlProvider) StagedFiles(repoRoot string) ([]string, erro
 	return files, nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖gitversioncontrolprovider🛠️stageall](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Git%20Version%20Control%20Provider/d/i/StageAll)
-// StageAll holds the data fields for a StageAll record.
+// 🏷️StageAll holds the data fields for a StageAll record.
 func (p *GitVersionControlProvider) StageAll(repoRoot string) error {
 	_, stderr, exitCode := ExecCommand("git", []string{"add", "-A"}, repoRoot)
 	if exitCode != 0 {
@@ -11696,40 +11209,32 @@ func (p *GitVersionControlProvider) StageAll(repoRoot string) error {
 	return nil
 }
 
-// #endregion 🔖Git Version Control Provider
+// #endregion 🔒Git Version Control Provider
 
-// #region 🔖Devcontainer Sandbox Provider
-// [🧰repo⌨️cli💻main🔖providers🔖devcontainersandboxprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Devcontainer%20Sandbox%20Provider)
+// #region ⛑️Devcontainer Sandbox Provider
 // Devcontainer implementation of SandboxProvider.
 
-// DevcontainerSandboxProvider holds the data fields for a devcontainer sandbox provider record.
-// [🧰repo⌨️cli💻main🔖providers🔖devcontainersandboxprovider✂️devcontainersandboxprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Devcontainer%20Sandbox%20Provider/d/i/DevcontainerSandboxProvider)
+// 🐳DevcontainerSandboxProvider holds the data fields for a devcontainer sandbox provider record.
 type DevcontainerSandboxProvider struct{}
 
-// [🧰repo⌨️cli💻main🔖providers🔖devcontainersandboxprovider🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Devcontainer%20Sandbox%20Provider/d/i/Kind)
-// Kind holds the data fields for a Kind record.
+// 💿Kind holds the data fields for a Kind record.
 func (p *DevcontainerSandboxProvider) Kind() string { return "devcontainer" }
 
-// [🧰repo⌨️cli💻main🔖providers🔖devcontainersandboxprovider🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Devcontainer%20Sandbox%20Provider/d/i/Configure)
-// Configure holds the data fields for a Configure record.
+// ⚙️Configure holds the data fields for a Configure record.
 func (p *DevcontainerSandboxProvider) Configure(repoRoot string) error { return nil }
 
-// #endregion 🔖Devcontainer Sandbox Provider
+// #endregion ⛑️Devcontainer Sandbox Provider
 
-// #region 🔖Editor Providers
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers)
+// #region 🎆Editor Providers
 // Editor provider implementations for Copilot, Cursor, Windsurf, Claude Code, Droid, Codex, Antigravity.
 
-// CopilotEditorProvider holds the data fields for a copilot editor provider record.
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️copiloteditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/CopilotEditorProvider)
+// 🔌CopilotEditorProvider holds the data fields for a copilot editor provider record.
 type CopilotEditorProvider struct{}
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
-// Kind holds the data fields for a Kind record.
+// 💿Kind holds the data fields for a Kind record.
 func (p *CopilotEditorProvider) Kind() string { return "copilot-chat" }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
-// Configure holds the data fields for a Configure record.
+// ⚙️Configure holds the data fields for a Configure record.
 func (p *CopilotEditorProvider) Configure(repoRoot string) error {
 	content, err := p.GenerateHookConfig(repoRoot)
 	if err != nil {
@@ -11743,46 +11248,38 @@ func (p *CopilotEditorProvider) Configure(repoRoot string) error {
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
-// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// 📡ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CopilotEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveCopilotEvent(nativeEvent, toolKind)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
-// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// 📋FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *CopilotEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	return formatVSCodeHookOutput(hookEventName, result)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
-// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// 🔷NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *CopilotEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return vsCodeEventFromHookEvent(event, parentInfo)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
-// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// 🔶GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *CopilotEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateCopilotConfig(repoRoot)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
-// HookMapping holds the data fields for a HookMapping record.
+// 🗺️HookMapping holds the data fields for a HookMapping record.
 func (p *CopilotEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "copilot-chat", ConfigPath: ".github/hooks/repo.json"}
 }
 
-// CursorEditorProvider holds the data fields for a cursor editor provider record.
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️cursoreditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/CursorEditorProvider)
+// 📝CursorEditorProvider holds the data fields for a cursor editor provider record.
 type CursorEditorProvider struct{}
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
-// Kind holds the data fields for a Kind record.
+// 🏷️Kind holds the data fields for a Kind record.
 func (p *CursorEditorProvider) Kind() string { return "cursor-chat" }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
-// Configure holds the data fields for a Configure record.
+// 🔹Configure holds the data fields for a Configure record.
 func (p *CursorEditorProvider) Configure(repoRoot string) error {
 	content, err := p.GenerateHookConfig(repoRoot)
 	if err != nil {
@@ -11796,47 +11293,39 @@ func (p *CursorEditorProvider) Configure(repoRoot string) error {
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
-// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// 🔸ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CursorEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveCursorEvent(nativeEvent, toolKind)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
-// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// 🔺FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *CursorEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
-// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// 🔻NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *CursorEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
-// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// ⬛GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *CursorEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateCursorConfig(repoRoot)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
-// HookMapping holds the data fields for a HookMapping record.
+// ⬜HookMapping holds the data fields for a HookMapping record.
 func (p *CursorEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "cursor-chat", ConfigPath: ".cursor/hooks.json"}
 }
 
-// WindsurfEditorProvider holds the data fields for a windsurf editor provider record.
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️windsurfeditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/WindsurfEditorProvider)
+// 💻WindsurfEditorProvider holds the data fields for a windsurf editor provider record.
 type WindsurfEditorProvider struct{}
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
-// Kind holds the data fields for a Kind record.
+// 🟥Kind holds the data fields for a Kind record.
 func (p *WindsurfEditorProvider) Kind() string { return "windsurf-chat" }
 
-// Configure holds the data fields for a Configure record.
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
+// 🟧Configure holds the data fields for a Configure record.
 func (p *WindsurfEditorProvider) Configure(repoRoot string) error {
 	content, err := p.GenerateHookConfig(repoRoot)
 	if err != nil {
@@ -11850,47 +11339,39 @@ func (p *WindsurfEditorProvider) Configure(repoRoot string) error {
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
-// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// 🟨ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *WindsurfEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveWindsurfEvent(nativeEvent, toolKind)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
-// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// 🟩FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *WindsurfEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
-// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// 🟦NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *WindsurfEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
-// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// 🟪GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *WindsurfEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateWindsurfConfig(repoRoot)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
-// HookMapping holds the data fields for a HookMapping record.
+// 🟫HookMapping holds the data fields for a HookMapping record.
 func (p *WindsurfEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "windsurf-chat", ConfigPath: ".windsurf/hooks.json"}
 }
 
-// ClaudeCodeEditorProvider holds the data fields for a claude code editor provider record.
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️claudecodeeditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ClaudeCodeEditorProvider)
+// 💠ClaudeCodeEditorProvider holds the data fields for a claude code editor provider record.
 type ClaudeCodeEditorProvider struct{}
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
-// Kind holds the data fields for a Kind record.
+// 🔳Kind holds the data fields for a Kind record.
 func (p *ClaudeCodeEditorProvider) Kind() string { return "claude-code" }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
-// Configure holds the data fields for a Configure record.
+// 🔲Configure holds the data fields for a Configure record.
 func (p *ClaudeCodeEditorProvider) Configure(repoRoot string) error {
 	content, err := p.GenerateHookConfig(repoRoot)
 	if err != nil {
@@ -11904,47 +11385,39 @@ func (p *ClaudeCodeEditorProvider) Configure(repoRoot string) error {
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
-// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// ▪️ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *ClaudeCodeEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
-// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// ▫️FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *ClaudeCodeEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
-// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// ◾NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *ClaudeCodeEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
-// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// ◽GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *ClaudeCodeEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateClaudeCodeConfig(repoRoot)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
-// HookMapping holds the data fields for a HookMapping record.
+// ◻️HookMapping holds the data fields for a HookMapping record.
 func (p *ClaudeCodeEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "claude-code", ConfigPath: ".claude/settings.json"}
 }
 
-// DroidEditorProvider holds the data fields for a droid editor provider record.
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️droideditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/DroidEditorProvider)
+// ◼️DroidEditorProvider holds the data fields for a droid editor provider record.
 type DroidEditorProvider struct{}
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
-// Kind holds the data fields for a Kind record.
+// 🔵Kind holds the data fields for a Kind record.
 func (p *DroidEditorProvider) Kind() string { return "droid" }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
-// Configure holds the data fields for a Configure record.
+// 🔴Configure holds the data fields for a Configure record.
 func (p *DroidEditorProvider) Configure(repoRoot string) error {
 	content, err := p.GenerateHookConfig(repoRoot)
 	if err != nil {
@@ -11958,123 +11431,101 @@ func (p *DroidEditorProvider) Configure(repoRoot string) error {
 	return os.WriteFile(targetPath, []byte(content), 0644)
 }
 
-// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
+// 🟠ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *DroidEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
-// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// 🟡FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *DroidEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
-// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// 🟢NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *DroidEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
-// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// 🟣GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *DroidEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return generateDroidConfig(repoRoot)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
-// HookMapping holds the data fields for a HookMapping record.
+// 🟤HookMapping holds the data fields for a HookMapping record.
 func (p *DroidEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "droid", ConfigPath: ".factory/hooks.json"}
 }
 
-// CodexEditorProvider holds the data fields for a codex editor provider record.
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️codexeditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/CodexEditorProvider)
+// ⚪CodexEditorProvider holds the data fields for a codex editor provider record.
 type CodexEditorProvider struct{}
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
-// Kind holds the data fields for a Kind record.
+// ⚫Kind holds the data fields for a Kind record.
 func (p *CodexEditorProvider) Kind() string { return "codex" }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
-// Configure holds the data fields for a Configure record.
+// 🩵Configure holds the data fields for a Configure record.
 func (p *CodexEditorProvider) Configure(repoRoot string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
-// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// 🩶ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CodexEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
-// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// 🩷FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *CodexEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
-// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// 💜NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *CodexEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
-// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// 💙GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *CodexEditorProvider) GenerateHookConfig(repoRoot string) (string, error) { return "", nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
-// HookMapping holds the data fields for a HookMapping record.
+// 💚HookMapping holds the data fields for a HookMapping record.
 func (p *CodexEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "codex", ConfigPath: ""}
 }
 
-// AntigravityEditorProvider holds the data fields for an antigravity editor provider record.
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️antigravityeditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/AntigravityEditorProvider)
+// 💛AntigravityEditorProvider holds the data fields for an antigravity editor provider record.
 type AntigravityEditorProvider struct{}
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️kind](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Kind)
-// Kind holds the data fields for a Kind record.
+// 🧡Kind holds the data fields for a Kind record.
 func (p *AntigravityEditorProvider) Kind() string { return "antigravity-chat" }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️configure](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/Configure)
-// Configure holds the data fields for a Configure record.
+// ❤️Configure holds the data fields for a Configure record.
 func (p *AntigravityEditorProvider) Configure(repoRoot string) error { return nil }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️resolvenativeevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/ResolveNativeEvent)
-// ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
+// 🤍ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *AntigravityEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
 	return resolveClaudeCompatibleEvent(nativeEvent, toolKind)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️formathookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/FormatHookOutput)
-// FormatHookOutput holds the data fields for a FormatHookOutput record.
+// 🖤FormatHookOutput holds the data fields for a FormatHookOutput record.
 func (p *AntigravityEditorProvider) FormatHookOutput(hookEventName string, result HookResult) string {
 	out, _ := json.Marshal(result)
 	return string(out)
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️nativeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/NativeEventFromHookEvent)
-// NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
+// 🤎NativeEventFromHookEvent holds the data fields for a NativeEventFromHookEvent record.
 func (p *AntigravityEditorProvider) NativeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️generatehookconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/GenerateHookConfig)
-// GenerateHookConfig holds the data fields for a GenerateHookConfig record.
+// 💗GenerateHookConfig holds the data fields for a GenerateHookConfig record.
 func (p *AntigravityEditorProvider) GenerateHookConfig(repoRoot string) (string, error) {
 	return "", nil
 }
 
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders🛠️hookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/HookMapping)
-// HookMapping holds the data fields for a HookMapping record.
+// 💖HookMapping holds the data fields for a HookMapping record.
 func (p *AntigravityEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "antigravity-chat", ConfigPath: ""}
 }
 
-// KiroEditorProvider holds the data fields for a kiro editor provider record.
-// [🧰repo⌨️cli💻main🔖providers🔖editorproviders✂️kiroeditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Editor%20Providers/d/i/KiroEditorProvider)
+// 💝KiroEditorProvider holds the data fields for a kiro editor provider record.
 type KiroEditorProvider struct{}
 
 func (p *KiroEditorProvider) Kind() string { return "kiro-cli" }
@@ -12113,14 +11564,12 @@ func (p *KiroEditorProvider) HookMapping() EditorHookMapping {
 	return EditorHookMapping{Client: "kiro-cli", ConfigPath: ".kiro/agents/repo.json"}
 }
 
-// #endregion 🔖Editor Providers
+// #endregion 🎆Editor Providers
 
-// #region 🔖Provider Registry
-// [🧰repo⌨️cli💻main🔖providers🔖providerregistry](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry)
+// #region 🎖️Provider Registry
 // Registry functions for accessing all available providers.
 
-// AllEditorProviders returns all registered editor providers.
-// [🧰repo⌨️cli💻main🔖providers🔖providerregistry🛠️alleditorproviders](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/AllEditorProviders)
+// 🔌AllEditorProviders returns all registered editor providers.
 func AllEditorProviders() []EditorProvider {
 	return []EditorProvider{
 		&CopilotEditorProvider{},
@@ -12134,8 +11583,7 @@ func AllEditorProviders() []EditorProvider {
 	}
 }
 
-// GetEditorProvider returns the editor provider for the given client slug.
-// [🧰repo⌨️cli💻main🔖providers🔖providerregistry🛠️geteditorprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/GetEditorProvider)
+// 💻GetEditorProvider returns the editor provider for the given client slug.
 func GetEditorProvider(client string) EditorProvider {
 	for _, p := range AllEditorProviders() {
 		if p.Kind() == client {
@@ -12145,41 +11593,35 @@ func GetEditorProvider(client string) EditorProvider {
 	return nil
 }
 
-// DefaultManagementProvider returns the default management provider (GitHub).
-// [🧰repo⌨️cli💻main🔖providers🔖providerregistry🛠️defaultmanagementprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/DefaultManagementProvider)
+// 🐙DefaultManagementProvider returns the default management provider (GitHub).
 func DefaultManagementProvider() ManagementProvider {
 	return &GitHubManagementProvider{}
 }
 
-// DefaultVersionControlProvider returns the default version control provider (Git).
-// [🧰repo⌨️cli💻main🔖providers🔖providerregistry🛠️defaultversioncontrolprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/DefaultVersionControlProvider)
+// 📌DefaultVersionControlProvider returns the default version control provider (Git).
 func DefaultVersionControlProvider() VersionControlProvider {
 	return &GitVersionControlProvider{}
 }
 
-// DefaultSandboxProvider returns the default sandbox provider (Devcontainer).
-// [🧰repo⌨️cli💻main🔖providers🔖providerregistry🛠️defaultsandboxprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/DefaultSandboxProvider)
+// 🐳DefaultSandboxProvider returns the default sandbox provider (Devcontainer).
 func DefaultSandboxProvider() SandboxProvider {
 	return &DevcontainerSandboxProvider{}
 }
 
-// mgmtProvider holds the data fields for a mgmtProvider record.
-// [🧰repo⌨️cli💻main🔖providers🔖providerregistry🪨mgmtprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/mgmtProvider)
+// 💿mgmtProvider holds the data fields for a mgmtProvider record.
 var mgmtProvider ManagementProvider = DefaultManagementProvider()
 
-// [🧰repo⌨️cli💻main🔖providers🔖providerregistry🛠️getmanagementprovider](repo://p/i/repo/b/b/cli/f/main.go/s/Providers/s/Provider%20Registry/d/i/GetManagementProvider)
-// GetManagementProvider holds the data fields for a GetManagementProvider record.
+// 🔷GetManagementProvider holds the data fields for a GetManagementProvider record.
 func GetManagementProvider() ManagementProvider { return mgmtProvider }
 
-// #endregion 🔖Provider Registry
+// #endregion 🎖️Provider Registry
 
-// #endregion 🔖Providers
+// #endregion 🪵Providers
 
-// #region 🔖Types
-// [🧰repo⌨️cli💻main🔖types](repo://p/i/repo/b/b/cli/f/main.go/s/Types)
+// #region ⚙️Types
 // Scope, todo, breach, and ticket metric types for the repository model.
 
-// ToolKind represents a categorized tool execution kind.
+// 🏷️ToolKind represents a categorized tool execution kind.
 type ToolKind string
 
 const (
@@ -12192,8 +11634,7 @@ const (
 	ToolKindTerminal   ToolKind = "terminal"
 )
 
-// ScopeKind represents a scope kind value.
-// [🧰repo⌨️cli💻main🔖types✂️scopekind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/ScopeKind)
+// 🔭ScopeKind represents a scope kind value.
 type ScopeKind string
 
 const (
@@ -12205,8 +11646,7 @@ const (
 	ScopeDefinition ScopeKind = "definition"
 )
 
-// Scope holds the data fields for a scope record.
-// [🧰repo⌨️cli💻main🔖types✂️scope](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/Scope)
+// 💿Scope holds the data fields for a scope record.
 type Scope struct {
 	Raw            string    `json:"raw"`
 	Kind           ScopeKind `json:"kind"`
@@ -12216,24 +11656,21 @@ type Scope struct {
 	DefinitionName string    `json:"definitionName,omitempty"`
 }
 
-// TodoCreateInput holds the data fields for a todo create input record.
-// [🧰repo⌨️cli💻main🔖types✂️todocreateinput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/TodoCreateInput)
+// 🆕TodoCreateInput holds the data fields for a todo create input record.
 type TodoCreateInput struct {
 	ParentID    string `json:"parentId"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
-// TodoChangeInput holds the data fields for a todo change input record.
-// [🧰repo⌨️cli💻main🔖types✂️todochangeinput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/TodoChangeInput)
+// ♻️TodoChangeInput holds the data fields for a todo change input record.
 type TodoChangeInput struct {
 	ID          string  `json:"id"`
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 }
 
-// Todo holds the data fields for a todo record.
-// [🧰repo⌨️cli💻main🔖types✂️todo](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/Todo)
+// ✅Todo holds the data fields for a todo record.
 type Todo struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
@@ -12242,33 +11679,28 @@ type Todo struct {
 	Location    *Location `json:"location,omitempty"`
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Todo is node.
-// [🧰repo⌨️cli💻main🔖types🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/IsNode)
+// 🌿IsNode MUST return true only when the condition is met.
+// ❓IsNode reports whether the Todo is node.
 func (t *Todo) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Todo.
-// [🧰repo⌨️cli💻main🔖types🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/GetID)
+// 🏪GetID MUST return the stored value without modification.
+// 📖GetID returns the i d of the Todo.
 func (t *Todo) GetID() string { return emojiText(EmojiTodo) + Flat(t.ID) }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Todo.
-// [🧰repo⌨️cli💻main🔖types🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/GetURI)
+// 🔗GetURI MUST return the stored value without modification.
+// 🌐GetURI returns the u r i of the Todo.
 func (t *Todo) GetURI() string {
 	return "repo://todo/" + t.GetID()
 }
 
-// Location holds the data fields for a location record.
-// [🧰repo⌨️cli💻main🔖types✂️location](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/Location)
+// 🔷Location holds the data fields for a location record.
 type Location struct {
 	FilePath string `json:"filePath"`
 	Line     int    `json:"line"`
 	Column   int    `json:"column"`
 }
 
-// Breach holds the data fields for a breach record.
-// [🧰repo⌨️cli💻main🔖types✂️breach](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/Breach)
+// 🔶Breach holds the data fields for a breach record.
 type Breach struct {
 	ID      string  `json:"id"`
 	Summary string  `json:"summary"`
@@ -12279,59 +11711,49 @@ type Breach struct {
 	Excerpt string  `json:"excerpt,omitempty"`
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Breach is node.
-// [🧰repo⌨️cli💻main🔖types🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/IsNode)
+// 🔹IsNode MUST return true only when the condition is met.
+// ⚠️IsNode reports whether the Breach is node.
 func (v *Breach) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Breach.
-// [🧰repo⌨️cli💻main🔖types🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/GetID)
+// 🔸GetID MUST return the stored value without modification.
+// 🔑GetID returns the i d of the Breach.
 func (v *Breach) GetID() string { return fmt.Sprintf("%s%s", emojiText(EmojiBreach), v.ID) }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Breach.
-// [🧰repo⌨️cli💻main🔖types🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/GetURI)
+// 🔺GetURI MUST return the stored value without modification.
+// 🔹GetURI returns the u r i of the Breach.
 func (v *Breach) GetURI() string {
 	return "repo://breach/" + v.GetID()
 }
 
-// Priority MUST derive the value from the statute metadata.
-// Priority returns the priority of the breach from its kind metadata.
-// [🧰repo⌨️cli💻main🔖types🛠️priority](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/Priority)
+// 🔻Priority MUST derive the value from the statute metadata.
+// 📰Priority returns the priority of the breach from its kind metadata.
 func (v *Breach) Priority() BreachPriority {
 	return v.Kind.Info().Priority
 }
 
-// Autofixable MUST return true only for statutes that support auto-fix.
-// Autofixable reports whether the statute supports automatic fixing.
-// [🧰repo⌨️cli💻main🔖types🛠️autofixable](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/Autofixable)
+// 🔧Autofixable MUST return true only for statutes that support auto-fix.
+// 📜Autofixable reports whether the statute supports automatic fixing.
 func (v *Breach) Autofixable() bool {
 	return v.Kind.Info().Autofixable
 }
 
-// TicketFileMetrics holds the data fields for a ticket file metrics record.
-// [🧰repo⌨️cli💻main🔖types✂️ticketfilemetrics](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/TicketFileMetrics)
+// 🎫TicketFileMetrics holds the data fields for a ticket file metrics record.
 type TicketFileMetrics struct {
 	Sections map[string]TicketSectionMetrics `yaml:"sections" json:"sections"`
 }
 
-// TicketBundleMetrics holds the data fields for a ticket bundle metrics record.
-// [🧰repo⌨️cli💻main🔖types✂️ticketbundlemetrics](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/TicketBundleMetrics)
+// 📦TicketBundleMetrics holds the data fields for a ticket bundle metrics record.
 type TicketBundleMetrics struct {
 	Files map[string]TicketFileMetrics `yaml:"files" json:"files"`
 }
 
-// TicketBundles represents a ticket bundles value.
-// [🧰repo⌨️cli💻main🔖types✂️ticketbundles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/d/i/TicketBundles)
+// ⬛TicketBundles represents a ticket bundles value.
 type TicketBundles map[string]TicketBundleMetrics
 
-// #region 🔖Languages
-// [🧰repo⌨️cli💻main🔖types🔖languages](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages)
+// #region 🎽Languages
 // Language plugin registry with parsers for sections, definitions, comments, imports, and headers.
 
-// LanguagePlugin defines the interface contract for language plugin operations.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️languageplugin](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/LanguagePlugin)
+// 🔌LanguagePlugin defines the interface contract for language plugin operations.
 type LanguagePlugin interface {
 	Name() string
 	Extensions() []string
@@ -12360,8 +11782,7 @@ type LanguagePlugin interface {
 	ExtractPackage(content string) (string, string)
 }
 
-// DefinitionRange holds the data fields for a definition range record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️definitionrange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/DefinitionRange)
+// 📖DefinitionRange holds the data fields for a definition range record.
 type DefinitionRange struct {
 	Name    string
 	Kind    string
@@ -12370,8 +11791,7 @@ type DefinitionRange struct {
 	Excerpt string
 }
 
-// BaseLanguage holds the data fields for a base language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️baselanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/BaseLanguage)
+// 🗣️BaseLanguage holds the data fields for a base language record.
 type BaseLanguage struct {
 	name               string
 	extensions         []string
@@ -12396,48 +11816,37 @@ type BaseLanguage struct {
 	skipDirectives     []string
 }
 
-// Name MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️name](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Name)
+// 📥Name MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) Name() string { return l.name }
 
-// Extensions MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️extensions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Extensions)
+// 🔷Extensions MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) Extensions() []string { return l.extensions }
 
-// CommentPrefix MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️commentprefix](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/CommentPrefix)
+// 🔧CommentPrefix MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) CommentPrefix() string { return l.commentPrefix }
 
-// BlockCommentStart MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️blockcommentstart](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/BlockCommentStart)
+// 💬BlockCommentStart MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) BlockCommentStart() string { return l.blockCommentStart }
 
-// BlockCommentEnd MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️blockcommentend](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/BlockCommentEnd)
+// 🔶BlockCommentEnd MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) BlockCommentEnd() string { return l.blockCommentEnd }
 
-// UsesIndentScoping MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️usesindentscoping](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/UsesIndentScoping)
+// 🔹UsesIndentScoping MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) UsesIndentScoping() bool { return l.usesIndentScoping }
 
-// SupportsSections MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️supportssections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/SupportsSections)
+// 📑SupportsSections MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) SupportsSections() bool { return l.sectionStart != nil }
 
-// SupportsDefinitions MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️supportsdefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/SupportsDefinitions)
+// 🔸SupportsDefinitions MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) SupportsDefinitions() bool { return l.definitionRegexp != nil }
 
-// SupportsComments MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️supportscomments](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/SupportsComments)
+// 🔺SupportsComments MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) SupportsComments() bool { return l.commentPrefix != "" }
 
-// SupportsHeaders MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️supportsheaders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/SupportsHeaders)
+// 🔻SupportsHeaders MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) SupportsHeaders() bool { return l.supportsHeaders }
 
-// MatchesExtension MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️matchesextension](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/MatchesExtension)
+// 🎯MatchesExtension MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) MatchesExtension(ext string) bool {
 	ext = strings.ToLower(ext)
 	for _, langExt := range l.extensions {
@@ -12448,9 +11857,8 @@ func (l *BaseLanguage) MatchesExtension(ext string) bool {
 	return false
 }
 
-// FormatSectionStart MUST produce a well-formed section start string.
-// FormatSectionStart formats the section start into its string representation.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️formatsectionstart](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FormatSectionStart)
+// 🔤FormatSectionStart MUST produce a well-formed section start string.
+// 🖊️FormatSectionStart formats the section start into its string representation.
 func (l *BaseLanguage) FormatSectionStart(name string) string {
 	if l.sectionStartFmt == "" {
 		return ""
@@ -12458,9 +11866,8 @@ func (l *BaseLanguage) FormatSectionStart(name string) string {
 	return fmt.Sprintf(l.sectionStartFmt, name)
 }
 
-// FormatSectionEnd MUST produce a well-formed section end string.
-// FormatSectionEnd formats the section end into its string representation.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️formatsectionend](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FormatSectionEnd)
+// 📋FormatSectionEnd MUST produce a well-formed section end string.
+// ⏹️FormatSectionEnd formats the section end into its string representation.
 func (l *BaseLanguage) FormatSectionEnd(name string) string {
 	if l.sectionEndFmt == "" {
 		return ""
@@ -12468,9 +11875,8 @@ func (l *BaseLanguage) FormatSectionEnd(name string) string {
 	return fmt.Sprintf(l.sectionEndFmt, name)
 }
 
-// FormatSectionBoth MUST produce a well-formed section both string.
-// FormatSectionBoth formats the section both into its string representation.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️formatsectionboth](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FormatSectionBoth)
+// ⬛FormatSectionBoth MUST produce a well-formed section both string.
+// 🔤FormatSectionBoth formats the section both into its string representation.
 func (l *BaseLanguage) FormatSectionBoth(name string) string {
 	if l.sectionBothFmt == "" {
 		return ""
@@ -12481,9 +11887,8 @@ func (l *BaseLanguage) FormatSectionBoth(name string) string {
 	return fmt.Sprintf(l.sectionBothFmt, name, name)
 }
 
-// FormatHeader MUST produce a well-formed header string.
-// FormatHeader formats the header into its string representation.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️formatheader](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FormatHeader)
+// ⬜FormatHeader MUST produce a well-formed header string.
+// 🔢FormatHeader formats the header into its string representation.
 func (l *BaseLanguage) FormatHeader(fileId, fileUri, summary, contributors, license, requirements string) string {
 	if !l.supportsHeaders {
 		return ""
@@ -12532,8 +11937,7 @@ func (l *BaseLanguage) FormatHeader(fileId, fileUri, summary, contributors, lice
 	return b.String()
 }
 
-// PolicySectionStartMatch MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️policysectionstartmatch](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/PolicySectionStartMatch)
+// 📜PolicySectionStartMatch MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) PolicySectionStartMatch(line string) (bool, string) {
 	if l.policySectionStart == nil {
 		return false, ""
@@ -12544,13 +11948,13 @@ func (l *BaseLanguage) PolicySectionStartMatch(line string) (bool, string) {
 	}
 	name := ""
 	if len(match) > 1 {
-		name = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(match[1]), "🔖"))
+		_, name = extractEntityEmoji(strings.TrimSpace(match[1]))
+		name = strings.TrimSpace(name)
 	}
 	return true, name
 }
 
-// PolicySectionEndMatch MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️policysectionendmatch](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/PolicySectionEndMatch)
+// 🟥PolicySectionEndMatch MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) PolicySectionEndMatch(line string) (bool, string) {
 	if l.policySectionEnd == nil {
 		return false, ""
@@ -12561,14 +11965,14 @@ func (l *BaseLanguage) PolicySectionEndMatch(line string) (bool, string) {
 	}
 	name := ""
 	if len(match) > 1 {
-		name = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(match[1]), "🔖"))
+		_, name = extractEntityEmoji(strings.TrimSpace(match[1]))
+		name = strings.TrimSpace(name)
 	}
 	return true, name
 }
 
-// ParseSections MUST return an error when the input is malformed.
-// ParseSections parses the input and returns the sections result.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️parsesections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ParseSections)
+// ❌ParseSections MUST return an error when the input is malformed.
+// 📝ParseSections parses the input and returns the sections result.
 func (l *BaseLanguage) ParseSections(content string) []Section {
 	if l.sectionStart == nil {
 		return nil
@@ -12587,9 +11991,15 @@ func (l *BaseLanguage) ParseSections(content string) []Section {
 		lineStart := charIndex
 		lineNum := i + 1
 		if match := l.sectionStart.FindStringSubmatch(line); match != nil {
-			name := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(match[1]), "🔖"))
+			rawName := strings.TrimSpace(match[1])
+			emoji, name := extractEntityEmoji(rawName)
+			name = strings.TrimSpace(name)
+			if name == "" {
+				name = rawName
+			}
 			s := &Section{
 				Name:       name,
+				Emoji:      emoji,
 				StartLine:  lineNum,
 				EndLine:    len(lines),
 				StartIndex: lineStart,
@@ -12634,9 +12044,8 @@ func (l *BaseLanguage) ParseSections(content string) []Section {
 	return result
 }
 
-// ParseDefinitions MUST return an error when the input is malformed.
-// ParseDefinitions parses the input and returns the definitions result.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️parsedefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ParseDefinitions)
+// 🔬ParseDefinitions MUST return an error when the input is malformed.
+// ▶️ParseDefinitions parses the input and returns the definitions result.
 func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []DefinitionRange {
 	if l.definitionRegexp == nil {
 		return nil
@@ -12725,20 +12134,16 @@ func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []Defini
 	return defRanges
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖languages🪨arrowfuncpattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/arrowFuncPattern)
-// arrowFuncPattern holds the data fields for a arrowFuncPattern record.
+// 🧩arrowFuncPattern holds the data fields for a arrowFuncPattern record.
 var arrowFuncPattern = regexp.MustCompile(`=\s*(?:\([^)]*\)|[A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*[^=]+)?\s*=>\s*`)
 
-// funcExprPattern holds the data fields for a funcExprPattern record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🪨funcexprpattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/funcExprPattern)
+// 💿funcExprPattern holds the data fields for a funcExprPattern record.
 var funcExprPattern = regexp.MustCompile(`=\s*(?:async\s+)?function\b`)
 
-// [🧰repo⌨️cli💻main🔖types🔖languages🪨classexprpattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/classExprPattern)
-// classExprPattern holds the data fields for a classExprPattern record.
+// 🏛️classExprPattern holds the data fields for a classExprPattern record.
 var classExprPattern = regexp.MustCompile(`=\s*class\b`)
 
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️refinedefinitionkind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/refineDefinitionKind)
-// refineDefinitionKind holds the data fields for a refineDefinitionKind record.
+// 🏷️refineDefinitionKind holds the data fields for a refineDefinitionKind record.
 func refineDefinitionKind(rawKind string, line string) string {
 	lower := strings.ToLower(rawKind)
 	if lower == "const" || lower == "let" || lower == "var" {
@@ -12749,8 +12154,7 @@ func refineDefinitionKind(rawKind string, line string) string {
 	return rawKind
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️extractdefinitionkeyword](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/extractDefinitionKeyword)
-// extractDefinitionKeyword holds the data fields for a extractDefinitionKeyword record.
+// 🧲extractDefinitionKeyword holds the data fields for a extractDefinitionKeyword record.
 func extractDefinitionKeyword(fullMatch, name string) string {
 	modifiers := map[string]bool{
 		"public": true, "private": true, "protected": true, "internal": true,
@@ -12802,21 +12206,18 @@ func extractDefinitionKeyword(fullMatch, name string) string {
 	return "definition"
 }
 
-// ExtraOrphanDefinitions MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️extraorphandefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ExtraOrphanDefinitions)
+// 🟧ExtraOrphanDefinitions MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	return nil
 }
 
-// SkipDirectives MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️skipdirectives](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/SkipDirectives)
+// 🟨SkipDirectives MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) SkipDirectives() []string {
 	builtIn := []string{"TODO", "semio-ignore-"}
 	return append(builtIn, l.skipDirectives...)
 }
 
-// ScanComments MUST operate on the BaseLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️scancomments](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ScanComments)
+// 📡ScanComments MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Breach {
 	if l.commentPrefix == "" {
 		return nil
@@ -13134,40 +12535,34 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 	return breachs
 }
 
-// ExtractImports MUST return the extracted value without side effects.
-// ExtractImports extracts the imports from the given input.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️extractimports](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ExtractImports)
+// 💻ExtractImports MUST return the extracted value without side effects.
+// ⬛ExtractImports extracts the imports from the given input.
 func (l *BaseLanguage) ExtractImports(content string) ([]string, string) {
 	return []string{}, content
 }
 
-// FormatImports MUST produce a well-formed imports string.
-// FormatImports formats the imports into its string representation.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️formatimports](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FormatImports)
+// 🟩FormatImports MUST produce a well-formed imports string.
+// 📩FormatImports formats the imports into its string representation.
 func (l *BaseLanguage) FormatImports(imports []string) string {
 	return ""
 }
 
-// ExtractPackage MUST return the extracted value without side effects.
-// ExtractPackage extracts the package from the given input.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️extractpackage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ExtractPackage)
+// 🟦ExtractPackage MUST return the extracted value without side effects.
+// ⬜ExtractPackage extracts the package from the given input.
 func (l *BaseLanguage) ExtractPackage(content string) (string, string) {
 	return "", content
 }
 
-// #region 🔖TypeScript
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript)
+// #region 🎶TypeScript
 // TypeScript language plugin with section, definition, comment, and import support.
 
-// TypeScriptLanguage holds the data fields for a type script language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript✂️typescriptlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/TypeScriptLanguage)
+// 🗣️TypeScriptLanguage holds the data fields for a type script language record.
 type TypeScriptLanguage struct {
 	BaseLanguage
 }
 
-// NewTypeScriptLanguage MUST initialize all required fields and return a valid TypeScriptLanguage.
-// NewTypeScriptLanguage creates and returns a new TypeScriptLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🛠️newtypescriptlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/NewTypeScriptLanguage)
+// 🏷️NewTypeScriptLanguage MUST initialize all required fields and return a valid TypeScriptLanguage.
+// 🆕NewTypeScriptLanguage creates and returns a new TypeScriptLanguage instance.
 func NewTypeScriptLanguage() *TypeScriptLanguage {
 	return &TypeScriptLanguage{
 		BaseLanguage: BaseLanguage{
@@ -13190,8 +12585,7 @@ func NewTypeScriptLanguage() *TypeScriptLanguage {
 	}
 }
 
-// ScanComments MUST operate on the TypeScriptLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🛠️scancomments](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/ScanComments)
+// 📥ScanComments MUST operate on the TypeScriptLanguage receiver and return consistent results.
 func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Breach {
 	if DeriveFileKind(file) == FileKindConfig {
 		return nil
@@ -13409,9 +12803,8 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 	return breachs
 }
 
-// ExtractImports MUST return the extracted value without side effects.
-// ExtractImports extracts the imports from the given input.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🛠️extractimports](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/ExtractImports)
+// 🧲ExtractImports MUST return the extracted value without side effects.
+// 🧲ExtractImports extracts the imports from the given input.
 func (l *TypeScriptLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -13438,9 +12831,8 @@ func (l *TypeScriptLanguage) ExtractImports(content string) ([]string, string) {
 	return imports, strings.Join(bodyLines, "\n")
 }
 
-// FormatImports MUST produce a well-formed imports string.
-// FormatImports formats the imports into its string representation.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🛠️formatimports](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/FormatImports)
+// 🔤FormatImports MUST produce a well-formed imports string.
+// 🖊️FormatImports formats the imports into its string representation.
 func (l *TypeScriptLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -13456,19 +12848,16 @@ func (l *TypeScriptLanguage) FormatImports(imports []string) string {
 	return strings.Join(uniqueImports, "\n")
 }
 
-// #region 🔖Go
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖go](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go)
+// #region 🎚️Go
 // Go language plugin with section, definition, import, and package support.
 
-// GoLanguage holds the data fields for a go language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖go✂️golanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/GoLanguage)
+// 🗣️GoLanguage holds the data fields for a go language record.
 type GoLanguage struct {
 	BaseLanguage
 }
 
-// NewGoLanguage MUST initialize all required fields and return a valid GoLanguage.
-// NewGoLanguage creates and returns a new GoLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖go🛠️newgolanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/NewGoLanguage)
+// 🔷NewGoLanguage MUST initialize all required fields and return a valid GoLanguage.
+// 🆕NewGoLanguage creates and returns a new GoLanguage instance.
 func NewGoLanguage() *GoLanguage {
 	return &GoLanguage{
 		BaseLanguage: BaseLanguage{
@@ -13493,8 +12882,7 @@ func NewGoLanguage() *GoLanguage {
 	}
 }
 
-// ExtraOrphanDefinitions MUST operate on the GoLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖go🛠️extraorphandefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/ExtraOrphanDefinitions)
+// 📖ExtraOrphanDefinitions MUST operate on the GoLanguage receiver and return consistent results.
 func (l *GoLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	for i := 0; i < len(lines); i++ {
@@ -13526,9 +12914,8 @@ func (l *GoLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	return defs
 }
 
-// ExtractImports MUST return the extracted value without side effects.
-// ExtractImports extracts the imports from the given input.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖go🛠️extractimports](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/ExtractImports)
+// 🧲ExtractImports MUST return the extracted value without side effects.
+// 🧲ExtractImports extracts the imports from the given input.
 func (l *GoLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -13563,9 +12950,8 @@ func (l *GoLanguage) ExtractImports(content string) ([]string, string) {
 	return imports, strings.Join(bodyLines, "\n")
 }
 
-// FormatImports MUST produce a well-formed imports string.
-// FormatImports formats the imports into its string representation.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖go🛠️formatimports](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/FormatImports)
+// 🔤FormatImports MUST produce a well-formed imports string.
+// 📥FormatImports formats the imports into its string representation.
 func (l *GoLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -13587,9 +12973,8 @@ func (l *GoLanguage) FormatImports(imports []string) string {
 	return importBlock
 }
 
-// ExtractPackage MUST return the extracted value without side effects.
-// ExtractPackage extracts the package from the given input.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖go🛠️extractpackage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/ExtractPackage)
+// 💻ExtractPackage MUST return the extracted value without side effects.
+// 💾ExtractPackage extracts the package from the given input.
 func (l *GoLanguage) ExtractPackage(content string) (string, string) {
 	lines := strings.Split(content, "\n")
 	pkg := ""
@@ -13605,15 +12990,13 @@ func (l *GoLanguage) ExtractPackage(content string) (string, string) {
 	return pkg, strings.Join(bodyLines, "\n")
 }
 
-// PythonLanguage holds the data fields for a python language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖go✂️pythonlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/PythonLanguage)
+// 💿PythonLanguage holds the data fields for a python language record.
 type PythonLanguage struct {
 	BaseLanguage
 }
 
-// NewPythonLanguage MUST initialize all required fields and return a valid PythonLanguage.
-// NewPythonLanguage creates and returns a new PythonLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖go🛠️newpythonlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/NewPythonLanguage)
+// 🔶NewPythonLanguage MUST initialize all required fields and return a valid PythonLanguage.
+// 🔷NewPythonLanguage creates and returns a new PythonLanguage instance.
 func NewPythonLanguage() *PythonLanguage {
 	return &PythonLanguage{
 		BaseLanguage: BaseLanguage{
@@ -13636,9 +13019,8 @@ func NewPythonLanguage() *PythonLanguage {
 	}
 }
 
-// ExtractImports MUST return the extracted value without side effects.
-// ExtractImports extracts the imports from the given input.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖go🛠️extractimports](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/ExtractImports)
+// 📥ExtractImports MUST return the extracted value without side effects.
+// 📝ExtractImports extracts the imports from the given input.
 func (l *PythonLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -13654,9 +13036,8 @@ func (l *PythonLanguage) ExtractImports(content string) ([]string, string) {
 	return imports, strings.Join(bodyLines, "\n")
 }
 
-// FormatImports MUST produce a well-formed imports string.
-// FormatImports formats the imports into its string representation.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖go🛠️formatimports](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Go/d/i/FormatImports)
+// 📋FormatImports MUST produce a well-formed imports string.
+// 🖊️FormatImports formats the imports into its string representation.
 func (l *PythonLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -13673,21 +13054,18 @@ func (l *PythonLanguage) FormatImports(imports []string) string {
 	return strings.Join(uniqueImports, "\n")
 }
 
-// #endregion 🔖Go
+// #endregion 🎚️Go
 
-// #region 🔖C#
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖c](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/C/s/)
+// #region 📜C#
 // C# language plugin with section, definition, and import support.
 
-// CSharpLanguage holds the data fields for a c sharp language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖c✂️csharplanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/C/s//d/i/CSharpLanguage)
+// 🗣️CSharpLanguage holds the data fields for a c sharp language record.
 type CSharpLanguage struct {
 	BaseLanguage
 }
 
-// NewCSharpLanguage MUST initialize all required fields and return a valid CSharpLanguage.
-// NewCSharpLanguage creates and returns a new CSharpLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖c🛠️newcsharplanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/C/s//d/i/NewCSharpLanguage)
+// 🔷NewCSharpLanguage MUST initialize all required fields and return a valid CSharpLanguage.
+// 🆕NewCSharpLanguage creates and returns a new CSharpLanguage instance.
 func NewCSharpLanguage() *CSharpLanguage {
 	return &CSharpLanguage{
 		BaseLanguage: BaseLanguage{
@@ -13711,9 +13089,8 @@ func NewCSharpLanguage() *CSharpLanguage {
 	}
 }
 
-// ExtractImports MUST return the extracted value without side effects.
-// ExtractImports extracts the imports from the given input.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖c🛠️extractimports](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/C/s//d/i/ExtractImports)
+// 🧲ExtractImports MUST return the extracted value without side effects.
+// 🧲ExtractImports extracts the imports from the given input.
 func (l *CSharpLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -13729,9 +13106,8 @@ func (l *CSharpLanguage) ExtractImports(content string) ([]string, string) {
 	return imports, strings.Join(bodyLines, "\n")
 }
 
-// FormatImports MUST produce a well-formed imports string.
-// FormatImports formats the imports into its string representation.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖c🛠️formatimports](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/C/s//d/i/FormatImports)
+// 🔤FormatImports MUST produce a well-formed imports string.
+// 📥FormatImports formats the imports into its string representation.
 func (l *CSharpLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -13748,21 +13124,18 @@ func (l *CSharpLanguage) FormatImports(imports []string) string {
 	return strings.Join(uniqueImports, "\n")
 }
 
-// #endregion 🔖C#
+// #endregion 📜C#
 
-// #region 🔖JSON
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖json](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON)
+// #region 📭JSON
 // JSON language plugin with section parsing via embedded comment keys.
 
-// JSONLanguage holds the data fields for a j s o n language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖json✂️jsonlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/JSONLanguage)
+// 🗣️JSONLanguage holds the data fields for a j s o n language record.
 type JSONLanguage struct {
 	BaseLanguage
 }
 
-// NewJSONLanguage MUST initialize all required fields and return a valid JSONLanguage.
-// NewJSONLanguage creates and returns a new JSONLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖json🛠️newjsonlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/NewJSONLanguage)
+// 📋NewJSONLanguage MUST initialize all required fields and return a valid JSONLanguage.
+// 🆕NewJSONLanguage creates and returns a new JSONLanguage instance.
 func NewJSONLanguage() *JSONLanguage {
 	return &JSONLanguage{
 		BaseLanguage: BaseLanguage{
@@ -13774,45 +13147,37 @@ func NewJSONLanguage() *JSONLanguage {
 	}
 }
 
-// SupportsSections MUST operate on the JSONLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖json🛠️supportssections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/SupportsSections)
+// 📑SupportsSections MUST operate on the JSONLanguage receiver and return consistent results.
 func (l *JSONLanguage) SupportsSections() bool { return true }
 
-// SupportsDefinitions MUST operate on the JSONLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖json🛠️supportsdefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/SupportsDefinitions)
+// 📖SupportsDefinitions MUST operate on the JSONLanguage receiver and return consistent results.
 func (l *JSONLanguage) SupportsDefinitions() bool { return false }
 
-// SupportsComments MUST operate on the JSONLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖json🛠️supportscomments](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/SupportsComments)
+// 📥SupportsComments MUST operate on the JSONLanguage receiver and return consistent results.
 func (l *JSONLanguage) SupportsComments() bool { return false }
 
-// SupportsHeaders MUST operate on the JSONLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖json🛠️supportsheaders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/SupportsHeaders)
+// 🔷SupportsHeaders MUST operate on the JSONLanguage receiver and return consistent results.
 func (l *JSONLanguage) SupportsHeaders() bool { return false }
 
-// ParseSections MUST return an error when the input is malformed.
-// ParseSections parses the input and returns the sections result.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖json🛠️parsesections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/JSON/d/i/ParseSections)
+// ❌ParseSections MUST return an error when the input is malformed.
+// 💾ParseSections parses the input and returns the sections result.
 func (l *JSONLanguage) ParseSections(content string) []Section {
 	sections, _, _ := ParseJSONSectionsDetailed(content)
 	return sections
 }
 
-// #endregion 🔖JSON
+// #endregion 📭JSON
 
-// #region 🔖Markdown
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖markdown](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown)
+// #region 🛒Markdown
 // Markdown language plugin with heading-based section parsing.
 
-// MarkdownLanguage holds the data fields for a markdown language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖markdown✂️markdownlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/MarkdownLanguage)
+// 🗣️MarkdownLanguage holds the data fields for a markdown language record.
 type MarkdownLanguage struct {
 	BaseLanguage
 }
 
-// NewMarkdownLanguage MUST initialize all required fields and return a valid MarkdownLanguage.
-// NewMarkdownLanguage creates and returns a new MarkdownLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖markdown🛠️newmarkdownlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/NewMarkdownLanguage)
+// 📰NewMarkdownLanguage MUST initialize all required fields and return a valid MarkdownLanguage.
+// 🆕NewMarkdownLanguage creates and returns a new MarkdownLanguage instance.
 func NewMarkdownLanguage() *MarkdownLanguage {
 	return &MarkdownLanguage{
 		BaseLanguage: BaseLanguage{
@@ -13828,42 +13193,34 @@ func NewMarkdownLanguage() *MarkdownLanguage {
 	}
 }
 
-// SupportsSections MUST operate on the MarkdownLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖markdown🛠️supportssections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/SupportsSections)
+// 📑SupportsSections MUST operate on the MarkdownLanguage receiver and return consistent results.
 func (l *MarkdownLanguage) SupportsSections() bool { return true }
 
-// SupportsDefinitions MUST operate on the MarkdownLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖markdown🛠️supportsdefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/SupportsDefinitions)
+// 📖SupportsDefinitions MUST operate on the MarkdownLanguage receiver and return consistent results.
 func (l *MarkdownLanguage) SupportsDefinitions() bool { return false }
 
-// SupportsComments MUST operate on the MarkdownLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖markdown🛠️supportscomments](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/SupportsComments)
+// 📥SupportsComments MUST operate on the MarkdownLanguage receiver and return consistent results.
 func (l *MarkdownLanguage) SupportsComments() bool { return false }
 
-// ParseSections MUST return an error when the input is malformed.
-// ParseSections parses the input and returns the sections result.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖markdown🛠️parsesections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Markdown/d/i/ParseSections)
+// ❌ParseSections MUST return an error when the input is malformed.
+// 💾ParseSections parses the input and returns the sections result.
 func (l *MarkdownLanguage) ParseSections(content string) []Section {
 	return ParseMarkdownSectionsInternal(content)
 }
 
-// #endregion 🔖Markdown
+// #endregion 🛒Markdown
 
-// #region 🔖Rust
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust)
+// #region ⏳Rust
 // Rust language plugin with section, definition, and import support.
 
-// RustLanguage holds the data fields for a rust language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust✂️rustlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/RustLanguage)
+// 🗣️RustLanguage holds the data fields for a rust language record.
 type RustLanguage struct {
 	BaseLanguage
 }
 
-// NewRustLanguage MUST initialize all required fields and return a valid RustLanguage.
+// 📑NewRustLanguage MUST initialize all required fields and return a valid RustLanguage.
 // NewRustLanguage creates and returns a new RustLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️newrustlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/NewRustLanguage)
-// RustSectionNameToModName MUST convert a display section name to a valid Rust mod identifier.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️rustsectionnametomodname](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/RustSectionNameToModName)
+// ✔️RustSectionNameToModName MUST convert a display section name to a valid Rust mod identifier.
 func RustSectionNameToModName(name string) string {
 	var buf strings.Builder
 	runes := []rune(name)
@@ -13901,8 +13258,8 @@ func NewRustLanguage() *RustLanguage {
 		BaseLanguage: BaseLanguage{
 			name:               "rust",
 			extensions:         []string{".rs"},
-			sectionStart:       regexp.MustCompile(`(?i)^\s*(?:pub(?:\(crate\))?\s+)?mod\s+\w+\s*\{\s*//\s*(🔖.+?)\s*$`),
-			sectionEnd:         regexp.MustCompile(`(?i)^\s*\}\s*//\s*(🔖.+?)\s*$`),
+			sectionStart:       regexp.MustCompile(`(?i)^\s*(?:pub(?:\(crate\))?\s+)?mod\s+\w+\s*\{\s*//\s*(.+?)\s*$`),
+			sectionEnd:         regexp.MustCompile(`(?i)^\s*\}\s*//\s*(.+?)\s*$`),
 			definitionRegexp:   regexp.MustCompile(`^(?:pub\s+)?(?:fn|struct|enum|trait|impl|type|const|static)\s+([A-Za-z_][A-Za-z0-9_]*)`),
 			commentPrefix:      "//",
 			blockCommentStart:  "/*",
@@ -13912,33 +13269,29 @@ func NewRustLanguage() *RustLanguage {
 			sectionBothFmt:     "",
 			supportsHeaders:    true,
 			usesIndentScoping:  false,
-			policySectionStart: regexp.MustCompile(`(?i)^\s*(?:pub(?:\(crate\))?\s+)?mod\s+\w+\s*\{\s*//\s*(🔖\S.*?)\s*$`),
-			policySectionEnd:   regexp.MustCompile(`(?i)^\s*\}\s*//\s*(🔖\S.*?)\s*$`),
+			policySectionStart: regexp.MustCompile(`(?i)^\s*(?:pub(?:\(crate\))?\s+)?mod\s+\w+\s*\{\s*//\s*(\S.*?)\s*$`),
+			policySectionEnd:   regexp.MustCompile(`(?i)^\s*\}\s*//\s*(\S.*?)\s*$`),
 		},
 	}
 }
 
-// FormatSectionStart MUST produce a well-formed Rust mod section start string.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️formatsectionstart](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/FormatSectionStart)
+// 🔤FormatSectionStart MUST produce a well-formed Rust mod section start string.
 func (l *RustLanguage) FormatSectionStart(name string) string {
 	return fmt.Sprintf("mod %s { // 🔖%s", RustSectionNameToModName(name), name)
 }
 
-// FormatSectionEnd MUST produce a well-formed Rust mod section end string.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️formatsectionend](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/FormatSectionEnd)
+// 📋FormatSectionEnd MUST produce a well-formed Rust mod section end string.
 func (l *RustLanguage) FormatSectionEnd(name string) string {
 	return fmt.Sprintf("} // 🔖%s", name)
 }
 
-// FormatSectionBoth MUST produce a well-formed Rust mod section both string.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️formatsectionboth](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/FormatSectionBoth)
+// 🔷FormatSectionBoth MUST produce a well-formed Rust mod section both string.
 func (l *RustLanguage) FormatSectionBoth(name string) string {
 	modName := RustSectionNameToModName(name)
 	return fmt.Sprintf("\nmod %s { // 🔖%s\n\n} // 🔖%s\n", modName, name, name)
 }
 
-// FormatHeader MUST produce a well-formed Rust mod header string.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️formatheader](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/FormatHeader)
+// 🔶FormatHeader MUST produce a well-formed Rust mod header string.
 func (l *RustLanguage) FormatHeader(fileId, fileUri, summary, contributors, license, requirements string) string {
 	cp := l.commentPrefix
 	var b strings.Builder
@@ -13984,8 +13337,7 @@ func (l *RustLanguage) FormatHeader(fileId, fileUri, summary, contributors, lice
 	return b.String()
 }
 
-// ScanComments MUST detect legacy region comments in Rust files.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️scancomments](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/ScanComments)
+// 💬ScanComments MUST detect legacy region comments in Rust files.
 func (l *RustLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Breach {
 	breachs := l.BaseLanguage.ScanComments(ctx, file, content, lines)
 	legacyStart := regexp.MustCompile(`(?i)^\s*//\s*#region\b`)
@@ -14001,8 +13353,7 @@ func (l *RustLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 	return breachs
 }
 
-// ExtraOrphanDefinitions MUST operate on the RustLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖rust🛠️extraorphandefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Rust/d/i/ExtraOrphanDefinitions)
+// 📖ExtraOrphanDefinitions MUST operate on the RustLanguage receiver and return consistent results.
 func (l *RustLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	modRegexp := regexp.MustCompile(`^\s*(?:pub\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*;`)
@@ -14015,21 +13366,18 @@ func (l *RustLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange 
 	return defs
 }
 
-// #endregion 🔖Rust
+// #endregion ⏳Rust
 
-// #region 🔖Ruby
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖ruby](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Ruby)
+// #region 🪅Ruby
 // Ruby language plugin with section, definition, and import support.
 
-// RubyLanguage holds the data fields for a ruby language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖ruby✂️rubylanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Ruby/d/i/RubyLanguage)
+// 🗣️RubyLanguage holds the data fields for a ruby language record.
 type RubyLanguage struct {
 	BaseLanguage
 }
 
-// NewRubyLanguage MUST initialize all required fields and return a valid RubyLanguage.
-// NewRubyLanguage creates and returns a new RubyLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖ruby🛠️newrubylanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Ruby/d/i/NewRubyLanguage)
+// 🔷NewRubyLanguage MUST initialize all required fields and return a valid RubyLanguage.
+// 🆕NewRubyLanguage creates and returns a new RubyLanguage instance.
 func NewRubyLanguage() *RubyLanguage {
 	return &RubyLanguage{
 		BaseLanguage: BaseLanguage{
@@ -14052,9 +13400,8 @@ func NewRubyLanguage() *RubyLanguage {
 	}
 }
 
-// ParseDefinitions MUST return an error when the input is malformed.
-// ParseDefinitions parses the input and returns the definitions result.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖ruby🛠️parsedefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Ruby/d/i/ParseDefinitions)
+// 📖ParseDefinitions MUST return an error when the input is malformed.
+// 📖ParseDefinitions parses the input and returns the definitions result.
 func (l *RubyLanguage) ParseDefinitions(content string, lines []string) []DefinitionRange {
 	if l.definitionRegexp == nil {
 		return nil
@@ -14112,8 +13459,7 @@ func (l *RubyLanguage) ParseDefinitions(content string, lines []string) []Defini
 	return defRanges
 }
 
-// ExtraOrphanDefinitions MUST operate on the RubyLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖ruby🛠️extraorphandefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Ruby/d/i/ExtraOrphanDefinitions)
+// 📥ExtraOrphanDefinitions MUST operate on the RubyLanguage receiver and return consistent results.
 func (l *RubyLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	moduleRegexp := regexp.MustCompile(`^\s*module\s+([A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*)`)
@@ -14126,21 +13472,18 @@ func (l *RubyLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange 
 	return defs
 }
 
-// #endregion 🔖Ruby
+// #endregion 🪅Ruby
 
-// #region 🔖Shell
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖shell](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Shell)
+// #region 📊Shell
 // Shell language plugin with section and comment support.
 
-// ShellLanguage holds the data fields for a shell language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖shell✂️shelllanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Shell/d/i/ShellLanguage)
+// 🗣️ShellLanguage holds the data fields for a shell language record.
 type ShellLanguage struct {
 	BaseLanguage
 }
 
-// NewShellLanguage MUST initialize all required fields and return a valid ShellLanguage.
-// NewShellLanguage creates and returns a new ShellLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖shell🛠️newshelllanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/Shell/d/i/NewShellLanguage)
+// 🔷NewShellLanguage MUST initialize all required fields and return a valid ShellLanguage.
+// 🆕NewShellLanguage creates and returns a new ShellLanguage instance.
 func NewShellLanguage() *ShellLanguage {
 	return &ShellLanguage{
 		BaseLanguage: BaseLanguage{
@@ -14161,21 +13504,18 @@ func NewShellLanguage() *ShellLanguage {
 	}
 }
 
-// #endregion 🔖Shell
+// #endregion 📊Shell
 
-// #region 🔖TOML
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖toml](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML)
+// #region 📢TOML
 // TOML language plugin with section heading and comment support.
 
-// TomlLanguage holds the data fields for a toml language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖toml✂️tomllanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/TomlLanguage)
+// 🗣️TomlLanguage holds the data fields for a toml language record.
 type TomlLanguage struct {
 	BaseLanguage
 }
 
-// NewTomlLanguage MUST initialize all required fields and return a valid TomlLanguage.
-// NewTomlLanguage creates and returns a new TomlLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖toml🛠️newtomllanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/NewTomlLanguage)
+// 🔷NewTomlLanguage MUST initialize all required fields and return a valid TomlLanguage.
+// 🆕NewTomlLanguage creates and returns a new TomlLanguage instance.
 func NewTomlLanguage() *TomlLanguage {
 	return &TomlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -14194,37 +13534,30 @@ func NewTomlLanguage() *TomlLanguage {
 	}
 }
 
-// SupportsSections MUST operate on the TomlLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖toml🛠️supportssections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/SupportsSections)
+// 📑SupportsSections MUST operate on the TomlLanguage receiver and return consistent results.
 func (l *TomlLanguage) SupportsSections() bool { return true }
 
-// SupportsDefinitions MUST operate on the TomlLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖toml🛠️supportsdefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/SupportsDefinitions)
+// 📖SupportsDefinitions MUST operate on the TomlLanguage receiver and return consistent results.
 func (l *TomlLanguage) SupportsDefinitions() bool { return false }
 
-// SupportsComments MUST operate on the TomlLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖toml🛠️supportscomments](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/SupportsComments)
+// 📥SupportsComments MUST operate on the TomlLanguage receiver and return consistent results.
 func (l *TomlLanguage) SupportsComments() bool { return true }
 
-// SupportsHeaders MUST operate on the TomlLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖toml🛠️supportsheaders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/TOML/d/i/SupportsHeaders)
+// 🔶SupportsHeaders MUST operate on the TomlLanguage receiver and return consistent results.
 func (l *TomlLanguage) SupportsHeaders() bool { return false }
 
-// #endregion 🔖TOML
+// #endregion 📢TOML
 
-// #region 🔖YAML
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖yaml](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML)
+// #region 🤸YAML
 // YAML language plugin with section heading and comment support.
 
-// YamlLanguage holds the data fields for a yaml language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖yaml✂️yamllanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/YamlLanguage)
+// 🗣️YamlLanguage holds the data fields for a yaml language record.
 type YamlLanguage struct {
 	BaseLanguage
 }
 
-// NewYamlLanguage MUST initialize all required fields and return a valid YamlLanguage.
-// NewYamlLanguage creates and returns a new YamlLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖yaml🛠️newyamllanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/NewYamlLanguage)
+// 📃NewYamlLanguage MUST initialize all required fields and return a valid YamlLanguage.
+// 🆕NewYamlLanguage creates and returns a new YamlLanguage instance.
 func NewYamlLanguage() *YamlLanguage {
 	return &YamlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -14243,37 +13576,30 @@ func NewYamlLanguage() *YamlLanguage {
 	}
 }
 
-// SupportsSections MUST operate on the YamlLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖yaml🛠️supportssections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/SupportsSections)
+// 📑SupportsSections MUST operate on the YamlLanguage receiver and return consistent results.
 func (l *YamlLanguage) SupportsSections() bool { return true }
 
-// SupportsDefinitions MUST operate on the YamlLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖yaml🛠️supportsdefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/SupportsDefinitions)
+// 📖SupportsDefinitions MUST operate on the YamlLanguage receiver and return consistent results.
 func (l *YamlLanguage) SupportsDefinitions() bool { return false }
 
-// SupportsComments MUST operate on the YamlLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖yaml🛠️supportscomments](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/SupportsComments)
+// 📥SupportsComments MUST operate on the YamlLanguage receiver and return consistent results.
 func (l *YamlLanguage) SupportsComments() bool { return true }
 
-// SupportsHeaders MUST operate on the YamlLanguage receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖yaml🛠️supportsheaders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/YAML/d/i/SupportsHeaders)
+// 🔷SupportsHeaders MUST operate on the YamlLanguage receiver and return consistent results.
 func (l *YamlLanguage) SupportsHeaders() bool { return false }
 
-// #endregion 🔖YAML
+// #endregion 🤸YAML
 
-// #region 🔖SQL
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖sql](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/SQL)
+// #region 🕌SQL
 // SQL language plugin with section and comment support.
 
-// SqlLanguage holds the data fields for a sql language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖sql✂️sqllanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/SQL/d/i/SqlLanguage)
+// 🗣️SqlLanguage holds the data fields for a sql language record.
 type SqlLanguage struct {
 	BaseLanguage
 }
 
-// NewSqlLanguage MUST initialize all required fields and return a valid SqlLanguage.
-// NewSqlLanguage creates and returns a new SqlLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖sql🛠️newsqllanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/SQL/d/i/NewSqlLanguage)
+// 🔷NewSqlLanguage MUST initialize all required fields and return a valid SqlLanguage.
+// 🆕NewSqlLanguage creates and returns a new SqlLanguage instance.
 func NewSqlLanguage() *SqlLanguage {
 	return &SqlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -14294,21 +13620,18 @@ func NewSqlLanguage() *SqlLanguage {
 	}
 }
 
-// #endregion 🔖SQL
+// #endregion 🕌SQL
 
-// #region 🔖GraphQL
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖graphql](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/GraphQL)
+// #region 🎙️GraphQL
 // GraphQL language plugin with section and comment support.
 
-// GraphqlLanguage holds the data fields for a graphql language record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖graphql✂️graphqllanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/GraphQL/d/i/GraphqlLanguage)
+// 🕸️GraphqlLanguage holds the data fields for a graphql language record.
 type GraphqlLanguage struct {
 	BaseLanguage
 }
 
-// NewGraphqlLanguage MUST initialize all required fields and return a valid GraphqlLanguage.
-// NewGraphqlLanguage creates and returns a new GraphqlLanguage instance.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🔖graphql🛠️newgraphqllanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/s/GraphQL/d/i/NewGraphqlLanguage)
+// 🗣️NewGraphqlLanguage MUST initialize all required fields and return a valid GraphqlLanguage.
+// 🆕NewGraphqlLanguage creates and returns a new GraphqlLanguage instance.
 func NewGraphqlLanguage() *GraphqlLanguage {
 	return &GraphqlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -14329,10 +13652,9 @@ func NewGraphqlLanguage() *GraphqlLanguage {
 	}
 }
 
-// #endregion 🔖GraphQL
+// #endregion 🎙️GraphQL
 
-// languageRegistry holds the data fields for a languageRegistry record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🪨languageregistry](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/languageRegistry)
+// 💿languageRegistry holds the data fields for a languageRegistry record.
 var languageRegistry = []LanguagePlugin{
 	NewTypeScriptLanguage(),
 	NewGoLanguage(),
@@ -14348,9 +13670,8 @@ var languageRegistry = []LanguagePlugin{
 	NewGraphqlLanguage(),
 }
 
-// GetLanguage MUST return the stored value without modification.
-// GetLanguage returns the language of the value.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🛠️getlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/GetLanguage)
+// 🏪GetLanguage MUST return the stored value without modification.
+// 📖GetLanguage returns the language of the value.
 func GetLanguage(filePath string) LanguagePlugin {
 	ext := strings.ToLower(filepath.Ext(filePath))
 	for _, lang := range languageRegistry {
@@ -14361,9 +13682,8 @@ func GetLanguage(filePath string) LanguagePlugin {
 	return nil
 }
 
-// GetLanguageByName MUST return the stored value without modification.
-// GetLanguageByName returns the language by name of the value.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖typescript🛠️getlanguagebyname](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/TypeScript/d/i/GetLanguageByName)
+// 🔷GetLanguageByName MUST return the stored value without modification.
+// 🔤GetLanguageByName returns the language by name of the value.
 func GetLanguageByName(name string) LanguagePlugin {
 	for _, lang := range languageRegistry {
 		if lang.Name() == name {
@@ -14373,19 +13693,17 @@ func GetLanguageByName(name string) LanguagePlugin {
 	return nil
 }
 
-// #endregion 🔖TypeScript
+// #endregion 🎶TypeScript
 
-// GitAuthor holds the data fields for a git author record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️gitauthor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GitAuthor)
+// ✍️GitAuthor holds the data fields for a git author record.
 type GitAuthor struct {
 	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
 	Email  string `json:"email,omitempty" yaml:"email,omitempty"`
 	GitHub string `json:"github,omitempty" yaml:"github,omitempty"`
 }
 
-// String MUST return the canonical string value.
-// String returns the string representation of the GitAuthor.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️string](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/String)
+// 🟪String MUST return the canonical string value.
+// 🟩String returns the string representation of the GitAuthor.
 func (a GitAuthor) String() string {
 	if a.Email != "" {
 		return fmt.Sprintf("%s <%s>", a.Name, a.Email)
@@ -14393,7 +13711,6 @@ func (a GitAuthor) String() string {
 	return a.Name
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️parsegitauthor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/parseGitAuthor)
 func parseGitAuthor(s string) GitAuthor {
 	res := GitAuthor{}
 	if strings.Contains(s, " <") {
@@ -14406,9 +13723,8 @@ func parseGitAuthor(s string) GitAuthor {
 	return res
 }
 
-// FindAndUpdateContributor MUST return nil when no match is found.
-// FindAndUpdateContributor searches for and returns the matching and update contributor.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️findandupdatecontributor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FindAndUpdateContributor)
+// 🤝FindAndUpdateContributor MUST return nil when no match is found.
+// 🔎FindAndUpdateContributor searches for and returns the matching and update contributor.
 func FindAndUpdateContributor(authorStr string) string {
 	parsed := parseGitAuthor(authorStr)
 	if parsed.Name == "" && parsed.Email == "" {
@@ -14494,9 +13810,8 @@ func FindAndUpdateContributor(authorStr string) string {
 	return authorStr
 }
 
-// GetSystem MUST return the stored value without modification.
-// GetSystem returns the system of the value.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️getsystem](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetSystem)
+// 🏪GetSystem MUST return the stored value without modification.
+// 📦GetSystem returns the system of the value.
 func GetSystem() string {
 	switch runtime.GOOS {
 	case "darwin":
@@ -14508,16 +13823,14 @@ func GetSystem() string {
 	}
 }
 
-// InteractionFile holds a file reference with path, id and uri.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️interactionfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/InteractionFile)
+// 📄InteractionFile holds a file reference with path, id and uri.
 type InteractionFile struct {
 	Path string `json:"path" yaml:"path"`
 	ID   string `json:"id,omitempty" yaml:"id,omitempty"`
 	URI  string `json:"uri,omitempty" yaml:"uri,omitempty"`
 }
 
-// Interaction holds the data fields for a interaction record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️interaction](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Interaction)
+// 🟫Interaction holds the data fields for a interaction record.
 type Interaction struct {
 	Kind       string            `json:"kind" yaml:"kind"`
 	Date       string            `json:"date" yaml:"date"`
@@ -14531,15 +13844,13 @@ type Interaction struct {
 	Files      []InteractionFile `json:"files,omitempty" yaml:"files,omitempty"`
 }
 
-// CheckpointDiffRename holds a from/to pair for renamed entities.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️checkpointdiffrename](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/CheckpointDiffRename)
+// 💾CheckpointDiffRename holds a from/to pair for renamed entities.
 type CheckpointDiffRename struct {
 	From string `json:"from" yaml:"from"`
 	To   string `json:"to" yaml:"to"`
 }
 
-// CheckpointDiffStats holds deleted/renamed/modified/created lists for a diff category.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️checkpointdiffstats](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/CheckpointDiffStats)
+// 🆕CheckpointDiffStats holds deleted/renamed/modified/created lists for a diff category.
 type CheckpointDiffStats struct {
 	Deleted  []string               `json:"deleted,omitempty" yaml:"deleted,omitempty"`
 	Renamed  []CheckpointDiffRename `json:"renamed,omitempty" yaml:"renamed,omitempty"`
@@ -14547,8 +13858,7 @@ type CheckpointDiffStats struct {
 	Created  []string               `json:"created,omitempty" yaml:"created,omitempty"`
 }
 
-// CheckpointDiff holds diff stats for technologies, bundles, folders, files, sections, and definitions.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️checkpointdiff](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/CheckpointDiff)
+// 📁CheckpointDiff holds diff stats for technologies, bundles, folders, files, sections, and definitions.
 type CheckpointDiff struct {
 	Technologies CheckpointDiffStats `json:"technologies,omitempty" yaml:"technologies,omitempty"`
 	Bundles      CheckpointDiffStats `json:"bundles,omitempty" yaml:"bundles,omitempty"`
@@ -14558,8 +13868,7 @@ type CheckpointDiff struct {
 	Definitions  CheckpointDiffStats `json:"definitions,omitempty" yaml:"definitions,omitempty"`
 }
 
-// TicketAgentPlanStep holds a single step in an agent plan with optional timestamps.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️ticketagentplanstep](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketAgentPlanStep)
+// 🎫TicketAgentPlanStep holds a single step in an agent plan with optional timestamps.
 type TicketAgentPlanStep struct {
 	ID          string `json:"id" yaml:"id"`
 	Name        string `json:"name" yaml:"name"`
@@ -14571,14 +13880,12 @@ type TicketAgentPlanStep struct {
 	Abandoned   string `json:"abandoned,omitempty" yaml:"abandoned,omitempty"`
 }
 
-// TicketAgentPlan holds the plan steps for an agent.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️ticketagentplan](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketAgentPlan)
+// 💠TicketAgentPlan holds the plan steps for an agent.
 type TicketAgentPlan struct {
 	Steps []TicketAgentPlanStep `json:"steps,omitempty" yaml:"steps,omitempty"`
 }
 
-// TicketAgent holds an agent record with contributor and plan.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️ticketagent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketAgent)
+// 🔳TicketAgent holds an agent record with contributor and plan.
 type TicketAgent struct {
 	Session     string           `json:"session" yaml:"session"`
 	Contributor string           `json:"contributor,omitempty" yaml:"contributor,omitempty"`
@@ -14589,8 +13896,7 @@ type TicketAgent struct {
 	Plan        *TicketAgentPlan `json:"plan,omitempty" yaml:"plan,omitempty"`
 }
 
-// UnmarshalJSON MUST handle both legacy and current JSON layouts.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️unmarshaljson](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/UnmarshalJSON)
+// 🔲UnmarshalJSON MUST handle both legacy and current JSON layouts.
 func (i *Interaction) UnmarshalJSON(data []byte) error {
 	type Alias Interaction
 	raw := struct {
@@ -14650,8 +13956,7 @@ func (i *Interaction) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// resolveAuthorToAlias holds the data fields for a resolveAuthorToAlias record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️resolveauthortoalias](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/resolveAuthorToAlias)
+// 🔐resolveAuthorToAlias holds the data fields for a resolveAuthorToAlias record.
 func resolveAuthorToAlias(name, email string) string {
 	contributors, err := ListContributors()
 	if err == nil {
@@ -14687,8 +13992,7 @@ func resolveAuthorToAlias(name, email string) string {
 	return ""
 }
 
-// InteractionResource holds a flat interaction enriched with its source context.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️interactionresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/InteractionResource)
+// 🎁InteractionResource holds a flat interaction enriched with its source context.
 type InteractionResource struct {
 	Interaction
 	SourceKind string `json:"sourceKind"`
@@ -14697,8 +14001,7 @@ type InteractionResource struct {
 	TicketID   string `json:"ticketId,omitempty"`
 }
 
-// ListInteractions aggregates interactions from all tickets and goals.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️listinteractions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ListInteractions)
+// ⛳ListInteractions aggregates interactions from all tickets and goals.
 func ListInteractions() ([]InteractionResource, error) {
 	var result []InteractionResource
 	tickets, err := ListTickets(nil, nil, nil)
@@ -14719,8 +14022,7 @@ func ListInteractions() ([]InteractionResource, error) {
 	return result, nil
 }
 
-// StreamInteractions streams interactions from all tickets and goals.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️streaminteractions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/StreamInteractions)
+// ▪️StreamInteractions streams interactions from all tickets and goals.
 func StreamInteractions(ctx context.Context, out chan<- InteractionResource) {
 	defer close(out)
 	tickets, _ := ListTickets(nil, nil, nil)
@@ -14742,8 +14044,7 @@ func StreamInteractions(ctx context.Context, out chan<- InteractionResource) {
 	}
 }
 
-// TicketSection holds the data fields for a ticket section record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️ticketsection](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketSection)
+// ▫️TicketSection holds the data fields for a ticket section record.
 type TicketSection struct {
 	Name        string       `json:"name"`
 	Range       *Range       `json:"range,omitempty"`
@@ -14751,29 +14052,25 @@ type TicketSection struct {
 	Lines       *LineMetrics `json:"lines,omitempty"`
 }
 
-// TicketFile holds the data fields for a ticket file record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️ticketfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketFile)
+// ◾TicketFile holds the data fields for a ticket file record.
 type TicketFile struct {
 	Path  string       `json:"path"`
 	Lines *LineMetrics `json:"lines,omitempty"`
 }
 
-// TicketManagementData holds the data fields for a ticket github data record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️ticketmanagementdata](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketManagementData)
+// 🐙TicketManagementData holds the data fields for a ticket github data record.
 type TicketManagementData struct {
 	Issue string `json:"issue,omitempty"`
 }
 
-// TicketFileRenamed holds the data fields for a ticket file renamed record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️ticketfilerenamed](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketFileRenamed)
+// ◽TicketFileRenamed holds the data fields for a ticket file renamed record.
 type TicketFileRenamed struct {
 	From  string       `json:"from"`
 	To    string       `json:"to"`
 	Lines *LineMetrics `json:"lines,omitempty"`
 }
 
-// TicketDiffSet holds the data fields for a ticket diff set record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️ticketdiffset](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketDiffSet)
+// 🗃️TicketDiffSet holds the data fields for a ticket diff set record.
 type TicketDiffSet struct {
 	Deleted  []TicketFile        `json:"deleted"`
 	Renamed  []TicketFileRenamed `json:"renamed"`
@@ -14781,8 +14078,7 @@ type TicketDiffSet struct {
 	Added    []TicketFile        `json:"added"`
 }
 
-// TicketDiffs holds the data fields for a ticket diffs record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️ticketdiffs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketDiffs)
+// ◻️TicketDiffs holds the data fields for a ticket diffs record.
 type TicketDiffs struct {
 	Bundles     TicketDiffSet `json:"bundles"`
 	Folders     TicketDiffSet `json:"folders"`
@@ -14791,8 +14087,7 @@ type TicketDiffs struct {
 	Definitions TicketDiffSet `json:"definitions"`
 }
 
-// TicketData holds the data fields for a ticket data record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️ticketdata](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/TicketData)
+// ◼️TicketData holds the data fields for a ticket data record.
 type TicketData struct {
 	Title      string                `json:"title"`
 	Status     TicketStatus          `json:"status"`
@@ -14802,8 +14097,7 @@ type TicketData struct {
 	Parent     string                `json:"parent,omitempty"`
 }
 
-// Goal holds the data fields for a goal record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️goal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Goal)
+// 🔵Goal holds the data fields for a goal record.
 type Goal struct {
 	Title       string              `json:"title"`
 	Description string              `json:"description"`
@@ -14821,8 +14115,7 @@ type Goal struct {
 	Path string `json:"-"`
 }
 
-// MarshalJSON converts internal filesystem paths to repo emoji IDs for Goal serialization.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️marshaljson](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/MarshalJSON)
+// 😀MarshalJSON converts internal filesystem paths to repo emoji IDs for Goal serialization.
 func (g Goal) MarshalJSON() ([]byte, error) {
 	type GoalAlias Goal
 	alias := GoalAlias(g)
@@ -14833,46 +14126,37 @@ func (g Goal) MarshalJSON() ([]byte, error) {
 	return json.Marshal(alias)
 }
 
-// IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Goal is node.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️isnode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/IsNode)
+// 🌿IsNode MUST return true only when the condition is met.
+// 🔖IsNode reports whether the Goal is node.
 func (g *Goal) IsNode() {}
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Goal.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetID)
+// 🔴GetID MUST return the stored value without modification.
+// 🔑GetID returns the i d of the Goal.
 func (g *Goal) GetID() string { return goalArtifactID(g.ID) }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Goal.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetURI)
+// 🔗GetURI MUST return the stored value without modification.
+// 🌐GetURI returns the u r i of the Goal.
 func (g *Goal) GetURI() string {
 	return GetArtifactURI("goal", map[string]interface{}{"id": g.ID})
 }
 
-// GoalDates holds the data fields for a goal dates record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️goaldates](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GoalDates)
+// 🟠GoalDates holds the data fields for a goal dates record.
 type GoalDates struct {
 	Due string `json:"due,omitempty"`
 }
 
-// GoalManagementData holds the data fields for a goal github data record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️goalmanagementdata](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GoalManagementData)
+// 🟡GoalManagementData holds the data fields for a goal github data record.
 type GoalManagementData struct {
 	Milestone string `json:"milestone,omitempty"`
 	Issue     string `json:"issue,omitempty"`
 }
 
-// Statute represents a statute value.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️statute](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Statute)
+// 🟢Statute represents a statute value.
 type Statute string
 
 const (
 	BreachCodeFileMissingHeaderRegion                  Statute = "code/file/missing-header-region"
 	BreachCodeFileWrongHeaderRegionFormat              Statute = "code/file/wrong-header-region-format"
-	BreachCodeFileMissingIdentification                Statute = "code/file/missing-identification"
-	BreachCodeFileWrongIdentificationId                Statute = "code/file/wrong-identification/id"
-	BreachCodeFileWrongIdentificationUri               Statute = "code/file/wrong-identification/uri"
 	BreachCodeFileMissingContributors                  Statute = "code/file/missing-contributors"
 	BreachCodeFileMissingSummary                       Statute = "code/file/missing-summary"
 	BreachCodeFileMissingLicense                       Statute = "code/file/missing-license"
@@ -14884,9 +14168,6 @@ const (
 	BreachCodeSectionMissingStartName                  Statute = "code/section/missing-start-name"
 	BreachCodeSectionMissingEndName                    Statute = "code/section/missing-end-name"
 	BreachCodeSectionNameMismatch                      Statute = "code/section/name-mismatch"
-	BreachCodeSectionMissingIdentification             Statute = "code/section/missing-identification"
-	BreachCodeSectionWrongIdentificationId             Statute = "code/section/wrong-identification/id"
-	BreachCodeSectionWrongIdentificationUri            Statute = "code/section/wrong-identification/uri"
 	BreachCodeSectionWrongFormat                       Statute = "code/section/wrong-format"
 	BreachCodeSectionWrongFormatSummaryTooLong         Statute = "code/section/wrong-format/summary/too-long-summary"
 	BreachCodeSectionWrongFormatNewlineAfterRegion     Statute = "code/section/wrong-format/newline-after-region"
@@ -14895,9 +14176,6 @@ const (
 	BreachCodeSectionMissingSummary                    Statute = "code/section/missing-summary"
 	BreachCodeSectionMissingRequirements               Statute = "code/section/missing-requirements"
 	BreachCodeSectionMissingDocs                       Statute = "code/section/missing-docs"
-	BreachCodeDefMissingIdentification                 Statute = "code/definition/missing-identification"
-	BreachCodeDefWrongIdentificationId                 Statute = "code/definition/wrong-identification/id"
-	BreachCodeDefWrongIdentificationUri                Statute = "code/definition/wrong-identification/uri"
 	BreachCodeDefWrongFormat                           Statute = "code/definition/wrong-format"
 	BreachCodeDefNotNativeDocstring                    Statute = "code/definition/wrong-format/not-native-docstring"
 	BreachCodeDefMissingSummary                        Statute = "code/definition/missing-summary"
@@ -14933,11 +14211,12 @@ const (
 	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
 	BreachFileIllegalUseGodfile                        Statute = "file/illegal/use-godfile"
 	BreachSemioNoUiDependency                          Statute = "semio/import/no-ui-dependency"
+	BreachSemioDescriptionMissingEmoji                 Statute = "semio/description/missing-emoji"
+	BreachSemioDescriptionEmojiNotUnique               Statute = "semio/description/emoji-not-unique"
 	BreachCodeRustRegionComment                        Statute = "code/rust/region-comment-instead-of-mod"
 )
 
-// statuteInfoTable holds the data fields for a statuteInfoTable record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🪨statuteinfotable](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/statuteInfoTable)
+// 📊statuteInfoTable holds the data fields for a statuteInfoTable record.
 var statuteInfoTable = map[Statute]StatuteMeta{
 	BreachRepoMissingCommand: {
 		Kind:        BreachRepoMissingCommand,
@@ -14966,27 +14245,6 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Reason:      "Header region format is incorrect (missing License or Requirements subregion)",
 		Solution:    "Add License and Requirements subregions inside Header",
 		Autofixable: false,
-	},
-	BreachCodeFileMissingIdentification: {
-		Kind:        BreachCodeFileMissingIdentification,
-		Priority:    BreachPriorityLow,
-		Reason:      "File header must contain an artifact ID",
-		Solution:    "Add file artifact ID line in header",
-		Autofixable: true,
-	},
-	BreachCodeFileWrongIdentificationId: {
-		Kind:        BreachCodeFileWrongIdentificationId,
-		Priority:    BreachPriorityLow,
-		Reason:      "File header must contain the correct artifact ID",
-		Solution:    "Replace file identifier line with the correct artifact ID",
-		Autofixable: true,
-	},
-	BreachCodeFileWrongIdentificationUri: {
-		Kind:        BreachCodeFileWrongIdentificationUri,
-		Priority:    BreachPriorityLow,
-		Reason:      "File header must contain the correct artifact URI",
-		Solution:    "Replace URI in identification line with the correct artifact URI",
-		Autofixable: true,
 	},
 	BreachCodeFileMissingContributors: {
 		Kind:        BreachCodeFileMissingContributors,
@@ -15099,27 +14357,6 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Fix the section docs format",
 		Autofixable: false,
 	},
-	BreachCodeSectionMissingIdentification: {
-		Kind:        BreachCodeSectionMissingIdentification,
-		Priority:    BreachPriorityLow,
-		Reason:      "Section must have an identification comment after the region start",
-		Solution:    "Add [sectionId](sectionUri) comment after section region start marker",
-		Autofixable: true,
-	},
-	BreachCodeSectionWrongIdentificationId: {
-		Kind:        BreachCodeSectionWrongIdentificationId,
-		Priority:    BreachPriorityLow,
-		Reason:      "Section identification must use the correct artifact ID",
-		Solution:    "Replace section identification line with the correct section ID",
-		Autofixable: true,
-	},
-	BreachCodeSectionWrongIdentificationUri: {
-		Kind:        BreachCodeSectionWrongIdentificationUri,
-		Priority:    BreachPriorityLow,
-		Reason:      "Section identification must use the correct artifact URI",
-		Solution:    "Replace section identification line with the correct section URI",
-		Autofixable: true,
-	},
 	BreachCodeSectionMissingSummary: {
 		Kind:        BreachCodeSectionMissingSummary,
 		Priority:    BreachPriorityLow,
@@ -15140,27 +14377,6 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Reason:      "Section must be documented in bundle README.md Docs section",
 		Solution:    "Add section documentation to bundle README.md",
 		Autofixable: false,
-	},
-	BreachCodeDefMissingIdentification: {
-		Kind:        BreachCodeDefMissingIdentification,
-		Priority:    BreachPriorityLow,
-		Reason:      "Definition must have an identification comment as the last line before the definition",
-		Solution:    "Add [definitionId](definitionUri) as the last line in the docstring",
-		Autofixable: true,
-	},
-	BreachCodeDefWrongIdentificationId: {
-		Kind:        BreachCodeDefWrongIdentificationId,
-		Priority:    BreachPriorityLow,
-		Reason:      "Definition identification must use the correct artifact ID",
-		Solution:    "Replace definition identification line with the correct definition ID",
-		Autofixable: true,
-	},
-	BreachCodeDefWrongIdentificationUri: {
-		Kind:        BreachCodeDefWrongIdentificationUri,
-		Priority:    BreachPriorityLow,
-		Reason:      "Definition identification must use the correct artifact URI",
-		Solution:    "Replace definition identification line with the correct definition URI",
-		Autofixable: true,
 	},
 	BreachCodeDefWrongFormat: {
 		Kind:        BreachCodeDefWrongFormat,
@@ -15393,6 +14609,20 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Solution:    "Remove the UI dependency import and use only non-UI alternatives",
 		Autofixable: false,
 	},
+	BreachSemioDescriptionMissingEmoji: {
+		Kind:        BreachSemioDescriptionMissingEmoji,
+		Priority:    BreachPriorityMedium,
+		Reason:      "Every entity description must start with an emoji as the first symbol",
+		Solution:    "Add a leading emoji to the description",
+		Autofixable: false,
+	},
+	BreachSemioDescriptionEmojiNotUnique: {
+		Kind:        BreachSemioDescriptionEmojiNotUnique,
+		Priority:    BreachPriorityMedium,
+		Reason:      "Every entity must have a unique emoji among its siblings",
+		Solution:    "Change the leading emoji to one that is not already used by a sibling entity",
+		Autofixable: false,
+	},
 	BreachCodeRustRegionComment: {
 		Kind:        BreachCodeRustRegionComment,
 		Priority:    BreachPriorityHigh,
@@ -15402,9 +14632,8 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 	},
 }
 
-// Info MUST return the metadata entry for the statute.
-// Info returns the metadata for the statute.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️info](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Info)
+// 📍Info MUST return the metadata entry for the statute.
+// ℹ️Info returns the metadata for the statute.
 func (k Statute) Info() StatuteMeta {
 	if info, ok := statuteInfoTable[k]; ok {
 		return info
@@ -15418,8 +14647,7 @@ func (k Statute) Info() StatuteMeta {
 	}
 }
 
-// Territory holds the data fields for a statute group record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️territory](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Territory)
+// 🟣Territory holds the data fields for a statute group record.
 type Territory struct {
 	Name        string      `json:"name"`
 	Description string      `json:"description"`
@@ -15428,9 +14656,8 @@ type Territory struct {
 	Kinds       []Statute   `json:"kinds,omitempty"`
 }
 
-// AllKinds MUST include all statutes from the group and its children.
-// AllKinds returns all statutes associated with the group.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️allkinds](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/AllKinds)
+// 🟤AllKinds MUST include all statutes from the group and its children.
+// 🟦AllKinds returns all statutes associated with the group.
 func (g *Territory) AllKinds() []Statute {
 	var result []Statute
 	result = append(result, g.Kinds...)
@@ -15440,22 +14667,19 @@ func (g *Territory) AllKinds() []Statute {
 	return result
 }
 
-// GetID MUST return the stored value without modification.
-// GetID returns the i d of the Territory.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetID)
+// ⚪GetID MUST return the stored value without modification.
+// 🗺️GetID returns the i d of the Territory.
 func (g *Territory) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiTerritory), g.Name)
 }
 
-// GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Territory.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/GetURI)
+// ⚫GetURI MUST return the stored value without modification.
+// ❌GetURI returns the u r i of the Territory.
 func (g *Territory) GetURI() string {
 	return "repo://territory/" + g.GetID()
 }
 
-// PolicyDef holds the data fields for a policy def record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️policydef](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/PolicyDef)
+// 🩵PolicyDef holds the data fields for a policy def record.
 type PolicyDef struct {
 	ID          string         `json:"id"`
 	Name        string         `json:"name"`
@@ -15466,9 +14690,8 @@ type PolicyDef struct {
 	Run         PolicyFunc     `json:"-"`
 }
 
-// AllKinds MUST include all statutes from the group and its children.
-// AllKinds returns all statutes associated with the group.
-// [🧰repo⌨️cli💻main🔖types🔖languages🛠️allkinds](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/AllKinds)
+// 🩶AllKinds MUST include all statutes from the group and its children.
+// 🟪AllKinds returns all statutes associated with the group.
 func (p *PolicyDef) AllKinds() []Statute {
 	var result []Statute
 	for _, g := range p.Groups {
@@ -15477,8 +14700,7 @@ func (p *PolicyDef) AllKinds() []Statute {
 	return result
 }
 
-// AnalyzeReport holds the data fields for a analyze report record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️analyzereport](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/AnalyzeReport)
+// 🩷AnalyzeReport holds the data fields for a analyze report record.
 type AnalyzeReport struct {
 	Second  string   `json:"second"`
 	Status  string   `json:"status"`
@@ -15487,16 +14709,14 @@ type AnalyzeReport struct {
 	Breachs []Breach `json:"breachs"`
 }
 
-// Summary holds the data fields for a summary record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️summary](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/Summary)
+// 💜Summary holds the data fields for a summary record.
 type Summary struct {
 	Total      int            `json:"total"`
 	ByPriority map[string]int `json:"byPriority"`
 	ByKind     map[string]int `json:"byKind"`
 }
 
-// FileCache holds the data fields for a file cache record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️filecache](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/FileCache)
+// 💙FileCache holds the data fields for a file cache record.
 type FileCache struct {
 	FilePath string   `json:"filePath"`
 	Hash     string   `json:"hash"`
@@ -15504,8 +14724,7 @@ type FileCache struct {
 	Breachs  []Breach `json:"breachs"`
 }
 
-// OutputType represents a output type value.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️outputtype](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/OutputType)
+// 💚OutputType represents a output type value.
 type OutputType string
 
 const (
@@ -15516,30 +14735,26 @@ const (
 	OutputPlain   OutputType = "plain"
 )
 
-// OutputLine holds the data fields for a output line record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️outputline](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/OutputLine)
+// 💛OutputLine holds the data fields for a output line record.
 type OutputLine struct {
 	Type OutputType `json:"type"`
 	Text string     `json:"text"`
 }
 
-// CommandOutput holds the data fields for a command output record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️commandoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/CommandOutput)
+// 🧡CommandOutput holds the data fields for a command output record.
 type CommandOutput struct {
 	Lines    []OutputLine `json:"lines"`
 	ExitCode int          `json:"exitCode"`
 }
 
-// ToolResult holds the data fields for a tool result record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️toolresult](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ToolResult)
+// ❤️ToolResult holds the data fields for a tool result record.
 type ToolResult struct {
 	Output CommandOutput `json:"output"`
 	Data   interface{}   `json:"data,omitempty"`
 	Error  string        `json:"error,omitempty"`
 }
 
-// ContributorTicket holds the data fields for a contributor ticket record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️contributorticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ContributorTicket)
+// 🤍ContributorTicket holds the data fields for a contributor ticket record.
 type ContributorTicket struct {
 	Year     int          `json:"year"`
 	Month    int          `json:"month"`
@@ -15554,8 +14769,7 @@ type ContributorCheckpoint struct {
 	Sha   string `json:"sha"`
 }
 
-// ContributorContributionsStorage holds the data fields for a contributor contributions storage record.
-// [🧰repo⌨️cli💻main🔖types🔖languages✂️contributorcontributionsstorage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/d/i/ContributorContributionsStorage)
+// 🖤ContributorContributionsStorage holds the data fields for a contributor contributions storage record.
 type ContributorContributionsStorage struct {
 	Bundles     []string                `json:"bundles,omitempty"`
 	Folders     []string                `json:"folders,omitempty"`
@@ -15567,12 +14781,10 @@ type ContributorContributionsStorage struct {
 	Lines       *LineMetrics            `json:"lines,omitempty"`
 }
 
-// #region 🔖Codebase Types
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types)
+// #region ⭐Codebase Types
 // Internal metric, contributor, ticket, policy, breach, and tree node types for codebase analysis.
 
-// BundleMetricsInternal holds the data fields for a bundle metrics internal record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️bundlemetricsinternal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/BundleMetricsInternal)
+// 💿BundleMetricsInternal holds the data fields for a bundle metrics internal record.
 type BundleMetricsInternal struct {
 	Folders     int `json:"folders"`
 	Files       int `json:"files"`
@@ -15582,54 +14794,47 @@ type BundleMetricsInternal struct {
 	Breachs     int `json:"breachs"`
 }
 
-// FolderMetricsInternal holds the data fields for a folder metrics internal record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️foldermetricsinternal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/FolderMetricsInternal)
+// 📁FolderMetricsInternal holds the data fields for a folder metrics internal record.
 type FolderMetricsInternal struct {
 	Files   int `json:"files"`
 	Lines   int `json:"lines"`
 	Breachs int `json:"breachs"`
 }
 
-// FileMetricsInternal holds the data fields for a file metrics internal record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️filemetricsinternal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/FileMetricsInternal)
+// 📄FileMetricsInternal holds the data fields for a file metrics internal record.
 type FileMetricsInternal struct {
 	Sections    int `json:"sections"`
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
 }
 
-// SectionMetricsInternal holds the data fields for a section metrics internal record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️sectionmetricsinternal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/SectionMetricsInternal)
+// 📑SectionMetricsInternal holds the data fields for a section metrics internal record.
 type SectionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
 	Breachs     int `json:"breachs"`
 }
 
-// DefinitionMetricsInternal holds the data fields for a definition metrics internal record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️definitionmetricsinternal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/DefinitionMetricsInternal)
+// 📖DefinitionMetricsInternal holds the data fields for a definition metrics internal record.
 type DefinitionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
 	Breachs     int `json:"breachs"`
 }
 
-// RangePosition holds the data fields for a range position record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️rangeposition](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/RangePosition)
+// 🔷RangePosition holds the data fields for a range position record.
 type RangePosition struct {
 	Line   int `json:"line"`
 	Column int `json:"column"`
 }
 
-// FileRange holds the data fields for a file range record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️filerange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/FileRange)
+// 🔶FileRange holds the data fields for a file range record.
 type FileRange struct {
 	Start RangePosition `json:"start"`
 	End   RangePosition `json:"end"`
 }
 
-// BreachFile holds the data fields for a breach file record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️breachfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/BreachFile)
+// 🔹BreachFile holds the data fields for a breach file record.
 type BreachFile struct {
 	ID    string     `json:"id"`
 	Path  string     `json:"path"`
@@ -15637,16 +14842,14 @@ type BreachFile struct {
 	Range *FileRange `json:"range,omitempty"`
 }
 
-// BreachFolder holds the data fields for a breach folder record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️breachfolder](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/BreachFolder)
+// 🔸BreachFolder holds the data fields for a breach folder record.
 type BreachFolder struct {
 	ID   string `json:"id"`
 	Path string `json:"path"`
 	URI  string `json:"uri"`
 }
 
-// CodebaseBreach holds the data fields for a codebase breach record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️codebasebreach](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseBreach)
+// 🔺CodebaseBreach holds the data fields for a codebase breach record.
 type CodebaseBreach struct {
 	ID          string         `json:"id"`
 	Folders     []BreachFolder `json:"folders,omitempty"`
@@ -15658,8 +14861,7 @@ type CodebaseBreach struct {
 	Solution    string         `json:"solution"`
 }
 
-// CodebaseBundle holds the data fields for a codebase bundle record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️codebasebundle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseBundle)
+// 📦CodebaseBundle holds the data fields for a codebase bundle record.
 type CodebaseBundle struct {
 	ID           string                 `json:"id"`
 	Folder       string                 `json:"folder"`
@@ -15669,8 +14871,7 @@ type CodebaseBundle struct {
 	Metrics      *BundleMetricsInternal `json:"metrics,omitempty"`
 }
 
-// CodebaseFolder holds the data fields for a codebase folder record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️codebasefolder](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseFolder)
+// 🔻CodebaseFolder holds the data fields for a codebase folder record.
 type CodebaseFolder struct {
 	ID       string                 `json:"id"`
 	Path     string                 `json:"path"`
@@ -15680,8 +14881,7 @@ type CodebaseFolder struct {
 	Metrics  *FolderMetricsInternal `json:"metrics,omitempty"`
 }
 
-// FileBreachRef holds the data fields for a file breach ref record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️filebreachref](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/FileBreachRef)
+// 🔗FileBreachRef holds the data fields for a file breach ref record.
 type FileBreachRef struct {
 	Kind        Statute        `json:"kind"`
 	Priority    BreachPriority `json:"priority"`
@@ -15689,8 +14889,7 @@ type FileBreachRef struct {
 	Solution    string         `json:"solution"`
 }
 
-// CodebaseFile holds the data fields for a codebase file record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️codebasefile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseFile)
+// ⬛CodebaseFile holds the data fields for a codebase file record.
 type CodebaseFile struct {
 	ID      string               `json:"id"`
 	Path    string               `json:"path"`
@@ -15699,8 +14898,7 @@ type CodebaseFile struct {
 	Breachs []FileBreachRef      `json:"breachs,omitempty"`
 }
 
-// CodebaseSection holds the data fields for a codebase section record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️codebasesection](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseSection)
+// ⬜CodebaseSection holds the data fields for a codebase section record.
 type CodebaseSection struct {
 	ID      string                  `json:"id"`
 	Path    string                  `json:"path"`
@@ -15708,8 +14906,7 @@ type CodebaseSection struct {
 	Metrics *SectionMetricsInternal `json:"metrics,omitempty"`
 }
 
-// CodebaseDefinition holds the data fields for a codebase definition record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️codebasedefinition](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseDefinition)
+// 🟥CodebaseDefinition holds the data fields for a codebase definition record.
 type CodebaseDefinition struct {
 	ID      string                     `json:"id"`
 	Path    string                     `json:"path"`
@@ -15717,43 +14914,37 @@ type CodebaseDefinition struct {
 	Metrics *DefinitionMetricsInternal `json:"metrics,omitempty"`
 }
 
-// ContributorBundleContrib holds the data fields for a contributor bundle contrib record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️contributorbundlecontrib](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorBundleContrib)
+// 🤝ContributorBundleContrib holds the data fields for a contributor bundle contrib record.
 type ContributorBundleContrib struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
-// ContributorFolderContrib holds the data fields for a contributor folder contrib record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️contributorfoldercontrib](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorFolderContrib)
+// 🟧ContributorFolderContrib holds the data fields for a contributor folder contrib record.
 type ContributorFolderContrib struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
-// ContributorFileContrib holds the data fields for a contributor file contrib record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️contributorfilecontrib](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorFileContrib)
+// 🟨ContributorFileContrib holds the data fields for a contributor file contrib record.
 type ContributorFileContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
-// ContributorSectionContrib holds the data fields for a contributor section contrib record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️contributorsectioncontrib](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorSectionContrib)
+// 🟩ContributorSectionContrib holds the data fields for a contributor section contrib record.
 type ContributorSectionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
-// ContributorDefinitionContrib holds the data fields for a contributor definition contrib record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️contributordefinitioncontrib](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorDefinitionContrib)
+// 🟦ContributorDefinitionContrib holds the data fields for a contributor definition contrib record.
 type ContributorDefinitionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
-// ContributorContributionsInternal holds the data fields for a contributor contributions internal record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️contributorcontributionsinternal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorContributionsInternal)
+// 🟪ContributorContributionsInternal holds the data fields for a contributor contributions internal record.
 type ContributorContributionsInternal struct {
 	Bundles     []ContributorBundleContrib     `json:"bundles,omitempty"`
 	Folders     []ContributorFolderContrib     `json:"folders,omitempty"`
@@ -15762,8 +14953,7 @@ type ContributorContributionsInternal struct {
 	Definitions []ContributorDefinitionContrib `json:"definitions,omitempty"`
 }
 
-// ContributorMetricsInternal holds the data fields for a contributor metrics internal record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️contributormetricsinternal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/ContributorMetricsInternal)
+// 🟫ContributorMetricsInternal holds the data fields for a contributor metrics internal record.
 type ContributorMetricsInternal struct {
 	Checkpoints int `json:"checkpoints"`
 	Tickets     int `json:"tickets"`
@@ -15775,8 +14965,7 @@ type ContributorMetricsInternal struct {
 	Definitions int `json:"definitions"`
 }
 
-// CodebaseContributor holds the data fields for a codebase contributor record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️codebasecontributor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseContributor)
+// 💠CodebaseContributor holds the data fields for a codebase contributor record.
 type CodebaseContributor struct {
 	ID            string                            `json:"id"`
 	URI           string                            `json:"uri"`
@@ -15789,50 +14978,43 @@ type CodebaseContributor struct {
 	Metrics       *ContributorMetricsInternal       `json:"metrics,omitempty"`
 }
 
-// TicketDateInfo holds the data fields for a ticket date info record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️ticketdateinfo](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketDateInfo)
+// 🎫TicketDateInfo holds the data fields for a ticket date info record.
 type TicketDateInfo struct {
 	Created  string `json:"created,omitempty"`
 	Finished string `json:"finished,omitempty"`
 }
 
-// TicketBundleContribInfo holds the data fields for a ticket bundle contrib info record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️ticketbundlecontribinfo](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketBundleContribInfo)
+// 🔳TicketBundleContribInfo holds the data fields for a ticket bundle contrib info record.
 type TicketBundleContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
-// TicketFolderContribInfo holds the data fields for a ticket folder contrib info record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️ticketfoldercontribinfo](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketFolderContribInfo)
+// 🔲TicketFolderContribInfo holds the data fields for a ticket folder contrib info record.
 type TicketFolderContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
-// TicketFileContribInfo holds the data fields for a ticket file contrib info record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️ticketfilecontribinfo](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketFileContribInfo)
+// ▪️TicketFileContribInfo holds the data fields for a ticket file contrib info record.
 type TicketFileContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
-// TicketSectionContribInfo holds the data fields for a ticket section contrib info record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️ticketsectioncontribinfo](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketSectionContribInfo)
+// ▫️TicketSectionContribInfo holds the data fields for a ticket section contrib info record.
 type TicketSectionContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
-// TicketDefinitionContrib holds the data fields for a ticket definition contrib record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️ticketdefinitioncontrib](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/TicketDefinitionContrib)
+// ◾TicketDefinitionContrib holds the data fields for a ticket definition contrib record.
 type TicketDefinitionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
-// CodebaseTicket holds the data fields for a codebase ticket record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️codebaseticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebaseTicket)
+// 🗃️CodebaseTicket holds the data fields for a codebase ticket record.
 type CodebaseTicket struct {
 	ID          string                     `json:"id"`
 	Path        string                     `json:"path"`
@@ -15854,8 +15036,7 @@ type CodebaseTicket struct {
 	Definitions []TicketDefinitionContrib  `json:"definitions,omitempty"`
 }
 
-// PolicyBreachRef holds the data fields for a policy breach ref record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️policybreachref](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/PolicyBreachRef)
+// 📜PolicyBreachRef holds the data fields for a policy breach ref record.
 type PolicyBreachRef struct {
 	Kind        Statute        `json:"kind"`
 	Priority    BreachPriority `json:"priority"`
@@ -15863,8 +15044,7 @@ type PolicyBreachRef struct {
 	Solution    string         `json:"solution"`
 }
 
-// CodebasePolicy holds the data fields for a codebase policy record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️codebasepolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CodebasePolicy)
+// ◽CodebasePolicy holds the data fields for a codebase policy record.
 type CodebasePolicy struct {
 	ID      string            `json:"id"`
 	Name    string            `json:"name"`
@@ -15872,8 +15052,7 @@ type CodebasePolicy struct {
 	Breachs []PolicyBreachRef `json:"breachs,omitempty"`
 }
 
-// CbTreeNodeKind represents a cb tree node kind value.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️cbtreenodekind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CbTreeNodeKind)
+// 🌳CbTreeNodeKind represents a cb tree node kind value.
 type CbTreeNodeKind string
 
 const (
@@ -15885,15 +15064,13 @@ const (
 	CbTreeNodeDefinition CbTreeNodeKind = "definition"
 )
 
-// CbTreeNode holds the data fields for a cb tree node record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️cbtreenode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/CbTreeNode)
+// 🌿CbTreeNode holds the data fields for a cb tree node record.
 type CbTreeNode struct {
 	Kind     CbTreeNodeKind         `json:"kind"`
 	Children map[string]*CbTreeNode `json:"children,omitempty"`
 }
 
-// Codebase holds the data fields for a codebase record.
-// [🧰repo⌨️cli💻main🔖types🔖languages🔖codebasetypes✂️codebase](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Languages/s/Codebase%20Types/d/i/Codebase)
+// ◻️Codebase holds the data fields for a codebase record.
 type Codebase struct {
 	Bundles      []CodebaseBundle       `json:"bundles"`
 	Folders      []CodebaseFolder       `json:"folders"`
@@ -15907,12 +15084,11 @@ type Codebase struct {
 	Tree         map[string]*CbTreeNode `json:"tree"`
 }
 
-// #endregion 🔖Codebase Types
+// #endregion ⭐Codebase Types
 
-// #endregion 🔖Languages
+// #endregion 🎽Languages
 
-// #region 🔖Utils
-// [🧰repo⌨️cli💻main🔖types🔖utils](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils)
+// #region 📦Utils
 // File system, git, path normalization, and formatting utilities.
 
 var (
@@ -15923,9 +15099,9 @@ var (
 	formatterCommandRun   = runFormatterCommand
 )
 
-// ensureExecutor lazily initializes the GraphQL executor on first use.
+// 🕸️ensureExecutor lazily initializes the GraphQL executor on first use.
 // This avoids the expensive initialization (LoadBundles, buildSchema) for
-// commands that don't need GraphQL (e.g. hook calls).
+// 🕸️commands that don't need GraphQL (e.g. hook calls).
 func ensureExecutor() {
 	executorOnce.Do(func() {
 		var e error
@@ -15937,8 +15113,7 @@ func ensureExecutor() {
 	})
 }
 
-// init holds the data fields for a init record.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️init](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/init)
+// 💿init holds the data fields for a init record.
 func init() {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -15949,16 +15124,14 @@ func init() {
 	SetRootDir(rootDir)
 }
 
-// GetRootDir MUST return the stored value without modification.
-// GetRootDir returns the root dir of the value.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️getrootdir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetRootDir)
+// 🏪GetRootDir MUST return the stored value without modification.
+// 📖GetRootDir returns the root dir of the value.
 func GetRootDir() string {
 	return rootDir
 }
 
-// SetRootDir MUST update the value on the receiver.
-// SetRootDir sets the root dir on the value.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️setrootdir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/SetRootDir)
+// 📥SetRootDir MUST update the value on the receiver.
+// 🗺️SetRootDir sets the root dir on the value.
 func SetRootDir(dir string) {
 	rootDir = findRepoRoot(dir)
 	gitignoreMutex.Lock()
@@ -15968,21 +15141,18 @@ func SetRootDir(dir string) {
 	InvalidateTechnologyCache()
 }
 
-// GetRepoMetaDir MUST return the stored value without modification.
-// GetRepoMetaDir returns the repo meta dir of the value.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️getrepometadir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetRepoMetaDir)
+// 🔷GetRepoMetaDir MUST return the stored value without modification.
+// 📦GetRepoMetaDir returns the repo meta dir of the value.
 func GetRepoMetaDir() string {
 	return filepath.Join(GetRootDir(), ".repo")
 }
 
-// GetRepoMetaPath MUST return the stored value without modification.
-// GetRepoMetaPath returns the repo meta path of the value.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️getrepometapath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetRepoMetaPath)
+// 🛤️GetRepoMetaPath MUST return the stored value without modification.
+// 📰GetRepoMetaPath returns the repo meta path of the value.
 func GetRepoMetaPath(path string) string {
 	return filepath.Join(GetRepoMetaDir(), path)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️findreporoot](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/findRepoRoot)
 func findRepoRoot(startDir string) string {
 	if strings.TrimSpace(startDir) == "" {
 		cwd, err := os.Getwd()
@@ -16034,7 +15204,6 @@ func findRepoRoot(startDir string) string {
 }
 
 // GitignorePattern holds the data fields for a gitignore pattern record.
-// [🧰repo⌨️cli💻maingo🔖types🔖utils✂️gitignorepattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GitignorePattern)
 
 var (
 	cachedGitignore *ignore.GitIgnore
@@ -16042,8 +15211,7 @@ var (
 	gitignoreMutex  sync.Mutex
 )
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️getgitignore](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/getGitignore)
-// getGitignore holds the data fields for a getGitignore record.
+// 🐙getGitignore holds the data fields for a getGitignore record.
 func getGitignore() *ignore.GitIgnore {
 	gitignoreMutex.Lock()
 	defer gitignoreMutex.Unlock()
@@ -16061,8 +15229,7 @@ func getGitignore() *ignore.GitIgnore {
 	return cachedGitignore
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️isgitignored](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/isGitIgnored)
-// isGitIgnored holds the data fields for a isGitIgnored record.
+// 🔶isGitIgnored holds the data fields for a isGitIgnored record.
 func isGitIgnored(filePath string) bool {
 	if filepath.Base(filePath) == "LICENSE.md" {
 		return true
@@ -16070,7 +15237,6 @@ func isGitIgnored(filePath string) bool {
 	return isIgnoredByGitignore(filePath)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️isignoredbygitignore](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/isIgnoredByGitignore)
 func isIgnoredByGitignore(filePath string) bool {
 	relPath := normalizeRepoPath(filePath)
 	if relPath == "" {
@@ -16083,8 +15249,7 @@ func isIgnoredByGitignore(filePath string) bool {
 	return ign.MatchesPath(relPath)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️policyappliestoscope](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/policyAppliesToScope)
-// policyAppliesToScope holds the data fields for a policyAppliesToScope record.
+// 📜policyAppliesToScope holds the data fields for a policyAppliesToScope record.
 func policyAppliesToScope(policyID string, scope Scope) bool {
 	switch policyID {
 	case "code":
@@ -16096,31 +15261,27 @@ func policyAppliesToScope(policyID string, scope Scope) bool {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️issourcefile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/isSourceFile)
-// isSourceFile holds the data fields for a isSourceFile record.
+// 📄isSourceFile holds the data fields for a isSourceFile record.
 func isSourceFile(filePath string) bool {
 	ext := filepath.Ext(filePath)
 	return ext == ".ts" || ext == ".tsx" || ext == ".js" || ext == ".jsx" ||
 		ext == ".py" || ext == ".go" || ext == ".cs"
 }
 
-// NormalizePath MUST be idempotent for already-normalized values.
-// NormalizePath normalizes the path to its canonical form.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️normalizepath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/NormalizePath)
+// 📖NormalizePath MUST be idempotent for already-normalized values.
+// 📝NormalizePath normalizes the path to its canonical form.
 func NormalizePath(p string) string {
 	return strings.ReplaceAll(p, "\\", "/")
 }
 
-// EnsureDir MUST be idempotent and MUST NOT fail if the target already exists.
-// EnsureDir ensures the dir exists, creating it if necessary.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️ensuredir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/EnsureDir)
+// 🎛️EnsureDir MUST be idempotent and MUST NOT fail if the target already exists.
+// ❓EnsureDir ensures the dir exists, creating it if necessary.
 func EnsureDir(dirPath string) error {
 	return os.MkdirAll(dirPath, 0755)
 }
 
-// GetRelativePath MUST return the stored value without modification.
-// GetRelativePath returns the relative path of the value.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️getrelativepath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetRelativePath)
+// 🔹GetRelativePath MUST return the stored value without modification.
+// 🔷GetRelativePath returns the relative path of the value.
 func GetRelativePath(filePath string) string {
 	rel, err := filepath.Rel(rootDir, filePath)
 	if err != nil {
@@ -16129,9 +15290,8 @@ func GetRelativePath(filePath string) string {
 	return NormalizePath(rel)
 }
 
-// ReadTextFile MUST return the full content from the given path.
-// ReadTextFile reads and returns the text file content.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️readtextfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ReadTextFile)
+// 📝ReadTextFile MUST return the full content from the given path.
+// 🔤ReadTextFile reads and returns the text file content.
 func ReadTextFile(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -16140,9 +15300,8 @@ func ReadTextFile(filePath string) (string, error) {
 	return string(data), nil
 }
 
-// WriteTextFile MUST persist the content atomically.
-// WriteTextFile writes the text file content to storage.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️writetextfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/WriteTextFile)
+// ✏️WriteTextFile MUST persist the content atomically.
+// 💾WriteTextFile writes the text file content to storage.
 func WriteTextFile(filePath string, content string) error {
 	if err := EnsureDir(filepath.Dir(filePath)); err != nil {
 		return err
@@ -16150,16 +15309,14 @@ func WriteTextFile(filePath string, content string) error {
 	return os.WriteFile(filePath, []byte(content), 0644)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils✂️formatterplan](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/formatterPlan)
-// formatterPlan holds the data fields for a formatterPlan record.
+// 📋formatterPlan holds the data fields for a formatterPlan record.
 type formatterPlan struct {
 	binary      string
 	args        []string
 	requirement []string
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️runformattercommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/runFormatterCommand)
-// runFormatterCommand holds the data fields for a runFormatterCommand record.
+// 🔸runFormatterCommand holds the data fields for a runFormatterCommand record.
 func runFormatterCommand(binary string, args []string, workDir string) error {
 	commandPath := binary
 	if strings.Contains(binary, "/") || strings.Contains(binary, "\\") {
@@ -16170,8 +15327,7 @@ func runFormatterCommand(binary string, args []string, workDir string) error {
 	return cmd.Run()
 }
 
-// formatterPlansForLanguage holds the data fields for a formatterPlansForLanguage record.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️formatterplansforlanguage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/formatterPlansForLanguage)
+// 🗣️formatterPlansForLanguage holds the data fields for a formatterPlansForLanguage record.
 func formatterPlansForLanguage(languageName string, relPath string) []formatterPlan {
 	prettierBinary := filepath.Join("node_modules", ".bin", "prettier")
 	prettierPlan := formatterPlan{
@@ -16217,8 +15373,7 @@ func formatterPlansForLanguage(languageName string, relPath string) []formatterP
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️isformatterplanavailable](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/isFormatterPlanAvailable)
-// isFormatterPlanAvailable holds the data fields for a isFormatterPlanAvailable record.
+// 🔺isFormatterPlanAvailable holds the data fields for a isFormatterPlanAvailable record.
 func isFormatterPlanAvailable(plan formatterPlan, workDir string) bool {
 	if strings.Contains(plan.binary, "/") || strings.Contains(plan.binary, "\\") {
 		if !FileExists(filepath.Join(workDir, plan.binary)) {
@@ -16237,8 +15392,7 @@ func isFormatterPlanAvailable(plan formatterPlan, workDir string) bool {
 	return true
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️fallbackformattext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/fallbackFormatText)
-// fallbackFormatText holds the data fields for a fallbackFormatText record.
+// 🔻fallbackFormatText holds the data fields for a fallbackFormatText record.
 func fallbackFormatText(content string) string {
 	lines := strings.Split(content, "\n")
 	for i, line := range lines {
@@ -16254,8 +15408,7 @@ func fallbackFormatText(content string) string {
 	return formatted
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️runformatterafterautofix](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/runFormatterAfterAutofix)
-// runFormatterAfterAutofix holds the data fields for a runFormatterAfterAutofix record.
+// 🔧runFormatterAfterAutofix holds the data fields for a runFormatterAfterAutofix record.
 func runFormatterAfterAutofix(relPath string, language LanguagePlugin) error {
 	absPath := filepath.Join(rootDir, relPath)
 	langName := ""
@@ -16282,9 +15435,8 @@ func runFormatterAfterAutofix(relPath string, language LanguagePlugin) error {
 	return WriteTextFile(absPath, formatted)
 }
 
-// runFormatterForFile runs the language-appropriate formatter on the given file.
-// Unlike runFormatterAfterAutofix, this only runs the formatter with no fallback.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️runformatterforfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/runFormatterForFile)
+// ⬛runFormatterForFile runs the language-appropriate formatter on the given file.
+// 🖊️Unlike runFormatterAfterAutofix, this only runs the formatter with no fallback.
 func runFormatterForFile(relPath string) {
 	lang := GetLanguage(relPath)
 	langName := ""
@@ -16302,9 +15454,8 @@ func runFormatterForFile(relPath string) {
 	}
 }
 
-// WriteJSONFile MUST persist the content atomically.
-// WriteJSONFile writes the j s o n file content to storage.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️writejsonfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/WriteJSONFile)
+// ⬜WriteJSONFile MUST persist the content atomically.
+// 🔹WriteJSONFile writes the j s o n file content to storage.
 func WriteJSONFile(filePath string, data interface{}) error {
 	jsonBytes, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -16313,9 +15464,8 @@ func WriteJSONFile(filePath string, data interface{}) error {
 	return WriteTextFile(filePath, string(jsonBytes)+"\n")
 }
 
-// ReadJSONFile MUST return the full content from the given path.
-// ReadJSONFile reads and returns the j s o n file content.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️readjsonfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ReadJSONFile)
+// 🟥ReadJSONFile MUST return the full content from the given path.
+// ⬛ReadJSONFile reads and returns the j s o n file content.
 func ReadJSONFile(filePath string, v interface{}) error {
 	data, err := ReadTextFile(filePath)
 	if err != nil {
@@ -16324,16 +15474,14 @@ func ReadJSONFile(filePath string, v interface{}) error {
 	return json.Unmarshal([]byte(data), v)
 }
 
-// FileExists MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️fileexists](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/FileExists)
+// 🟧FileExists MUST complete the operation and return consistent results.
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
 
-// IsDir MUST return true only when the condition is met.
-// IsDir reports whether the value is dir.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️isdir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/IsDir)
+// 🟨IsDir MUST return true only when the condition is met.
+// ⬜IsDir reports whether the value is dir.
 func IsDir(path string) bool {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -16342,9 +15490,8 @@ func IsDir(path string) bool {
 	return info.IsDir()
 }
 
-// LoadGitignore MUST read from the configured storage path.
-// LoadGitignore loads the gitignore from storage.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️loadgitignore](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/LoadGitignore)
+// ⚙️LoadGitignore MUST read from the configured storage path.
+// 🟥LoadGitignore loads the gitignore from storage.
 func LoadGitignore(cwd string) ([]string, error) {
 	gitignorePath := filepath.Join(cwd, ".gitignore")
 	if !FileExists(gitignorePath) {
@@ -16364,7 +15511,6 @@ func LoadGitignore(cwd string) ([]string, error) {
 	return patterns, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️matchesignorepattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/matchesIgnorePattern)
 func matchesIgnorePattern(path string, isDir bool, pattern string) bool {
 	pattern = NormalizePath(strings.TrimSpace(pattern))
 	if pattern == "" {
@@ -16398,8 +15544,7 @@ func matchesIgnorePattern(path string, isDir bool, pattern string) bool {
 	return false
 }
 
-// SimpleGlob MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️simpleglob](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/SimpleGlob)
+// 🟩SimpleGlob MUST complete the operation and return consistent results.
 func SimpleGlob(pattern string, cwd string, ignorePatterns []string, respectGitignore bool) ([]string, error) {
 	if cwd == "" {
 		cwd = rootDir
@@ -16439,8 +15584,7 @@ func SimpleGlob(pattern string, cwd string, ignorePatterns []string, respectGiti
 	return files, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️globbyextension](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/globByExtension)
-// globByExtension holds the data fields for a globByExtension record.
+// 🟦globByExtension holds the data fields for a globByExtension record.
 func globByExtension(root string, patternBase string, exts []string, ignorePatterns []string, respectGitignore bool) ([]string, error) {
 	base := strings.TrimSuffix(patternBase, "/**/*")
 	if patternBase == "**/*" {
@@ -16504,28 +15648,24 @@ func globByExtension(root string, patternBase string, exts []string, ignorePatte
 	return results, nil
 }
 
-// FormatSecond MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️formatsecond](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/FormatSecond)
+// 🟪FormatSecond MUST complete the operation and return consistent results.
 func FormatSecond(t time.Time) string {
 	return fmt.Sprintf("🎆%02d🌙%02d☀️%02d⏰%02d⌚%02d⏱️%02d", t.Year()%100, t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 }
 
-// FormatDate MUST produce a well-formed date string.
-// FormatDate formats the date into its string representation.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️formatdate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/FormatDate)
+// 🔤FormatDate MUST produce a well-formed date string.
+// 📩FormatDate formats the date into its string representation.
 func FormatDate(t time.Time) (year, month, day int) {
 	return t.Year() % 100, int(t.Month()), t.Day()
 }
 
-// PadNumber MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️padnumber](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/PadNumber)
+// 🔢PadNumber MUST complete the operation and return consistent results.
 func PadNumber(n, width int) string {
 	return fmt.Sprintf("%0*d", width, n)
 }
 
-// PathToUriPath MUST complete the operation and return consistent results.
-// PathToUriPath performs the path to uri path operation (no whitespace, reversible).
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️pathtouripath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/PathToUriPath)
+// 🔗PathToUriPath MUST complete the operation and return consistent results.
+// 🌐PathToUriPath performs the path to uri path operation (no whitespace, reversible).
 func PathToUriPath(path string) string {
 	segments := strings.Split(path, "/")
 	for i, s := range segments {
@@ -16534,9 +15674,8 @@ func PathToUriPath(path string) string {
 	return strings.Join(segments, "/")
 }
 
-// PathFromUriPath MUST complete the operation and return consistent results.
-// PathFromUriPath performs the uri path to path operation (reverse of PathToUriPath).
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️pathfromuripath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/PathFromUriPath)
+// 🟫PathFromUriPath MUST complete the operation and return consistent results.
+// 🟨PathFromUriPath performs the uri path to path operation (reverse of PathToUriPath).
 func PathFromUriPath(uriPath string) string {
 	segments := strings.Split(uriPath, "/")
 	for i, s := range segments {
@@ -16545,8 +15684,7 @@ func PathFromUriPath(uriPath string) string {
 	return strings.Join(segments, "/")
 }
 
-// Flat MUST preserve only alphanumeric characters and emojis, then lower case.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️flat](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Flat)
+// 😀Flat MUST preserve only alphanumeric characters and emojis, then lower case.
 func Flat(text string) string {
 	var buf strings.Builder
 	for _, r := range text {
@@ -16557,8 +15695,7 @@ func Flat(text string) string {
 	return strings.ToLower(buf.String())
 }
 
-// Slugify MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️slugify](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Slugify)
+// 💠Slugify MUST complete the operation and return consistent results.
 func Slugify(text string) string {
 	runes := []rune(text)
 	var buf strings.Builder
@@ -16578,8 +15715,7 @@ func Slugify(text string) string {
 	return strings.Trim(slug, "-")
 }
 
-// TitleizeSlug MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️titleizeslug](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/TitleizeSlug)
+// 📌TitleizeSlug MUST complete the operation and return consistent results.
 func TitleizeSlug(slug string) string {
 	words := strings.Split(slug, "-")
 	for i, w := range words {
@@ -16590,8 +15726,7 @@ func TitleizeSlug(slug string) string {
 	return strings.Join(words, " ")
 }
 
-// StatutePathToIdValue MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️statutepathtoidvalue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/StatutePathToIdValue)
+// 🔳StatutePathToIdValue MUST complete the operation and return consistent results.
 func StatutePathToIdValue(path string) string {
 	parts := strings.Split(path, "/")
 	for i, p := range parts {
@@ -16600,8 +15735,7 @@ func StatutePathToIdValue(path string) string {
 	return strings.Join(parts, "#")
 }
 
-// StatuteIdValueToPath MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️statuteidvaluetopath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/StatuteIdValueToPath)
+// 🔲StatuteIdValueToPath MUST complete the operation and return consistent results.
 func StatuteIdValueToPath(idValue string) string {
 	parts := strings.Split(idValue, "#")
 	for i, p := range parts {
@@ -16610,8 +15744,7 @@ func StatuteIdValueToPath(idValue string) string {
 	return strings.Join(parts, "/")
 }
 
-// ExecCommand MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️execcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ExecCommand)
+// ▪️ExecCommand MUST complete the operation and return consistent results.
 func ExecCommand(command string, args []string, cwd string) (stdout, stderr string, exitCode int) {
 	if cwd == "" {
 		cwd = rootDir
@@ -16633,9 +15766,8 @@ func ExecCommand(command string, args []string, cwd string) (stdout, stderr stri
 	return stdoutBuf.String(), stderrBuf.String(), exitCode
 }
 
-// GetGitAuthor MUST return the stored value without modification.
-// GetGitAuthor returns the git author of the value.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️getgitauthor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetGitAuthor)
+// ✍️GetGitAuthor MUST return the stored value without modification.
+// 🔐GetGitAuthor returns the git author of the value.
 func GetGitAuthor() string {
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	email, _, _ := ExecCommand("git", []string{"config", "--get", "user.email"}, "")
@@ -16647,9 +15779,8 @@ func GetGitAuthor() string {
 	return name
 }
 
-// GetGitAuthorAlias MUST return the stored value without modification.
-// GetGitAuthorAlias returns the git author alias of the value.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️getgitauthoralias](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetGitAuthorAlias)
+// 🔐GetGitAuthorAlias MUST return the stored value without modification.
+// 🟫GetGitAuthorAlias returns the git author alias of the value.
 func GetGitAuthorAlias() string {
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	name = strings.TrimSpace(name)
@@ -16664,17 +15795,15 @@ func GetGitAuthorAlias() string {
 	return FindAndUpdateContributor(fallback)
 }
 
-// GetGitCheckpoint MUST return the stored value without modification.
-// GetGitCheckpoint returns the git checkpoint of the value.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️getgitcheckpoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetGitCheckpoint)
+// 💾GetGitCheckpoint MUST return the stored value without modification.
+// ✔️GetGitCheckpoint returns the git checkpoint of the value.
 func GetGitCheckpoint() string {
 	sha, _, _ := ExecCommand("git", []string{"rev-parse", "HEAD"}, "")
 	return strings.TrimSpace(sha)
 }
 
-// GetGitIgnoredSet MUST return the stored value without modification.
-// GetGitIgnoredSet returns the git ignored set of the value.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️getgitignoredset](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/GetGitIgnoredSet)
+// 🗃️GetGitIgnoredSet MUST return the stored value without modification.
+// ▫️GetGitIgnoredSet returns the git ignored set of the value.
 func GetGitIgnoredSet(paths []string) map[string]bool {
 	if len(paths) == 0 {
 		return make(map[string]bool)
@@ -16691,56 +15820,48 @@ func GetGitIgnoredSet(paths []string) map[string]bool {
 	return ignored
 }
 
-// NewOutput MUST initialize all required fields and return a valid Output.
-// NewOutput creates and returns a new Output instance.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️newoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/NewOutput)
+// ▫️NewOutput MUST initialize all required fields and return a valid Output.
+// 🆕NewOutput creates and returns a new Output instance.
 func NewOutput() *CommandOutput {
 	return &CommandOutput{Lines: []OutputLine{}, ExitCode: 0}
 }
 
-// Info MUST return the metadata entry for the statute.
-// Info returns the metadata for the statute.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️info](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Info)
+// 📍Info MUST return the metadata entry for the statute.
+// ℹ️Info returns the metadata for the statute.
 func (o *CommandOutput) Info(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputInfo, Text: text})
 }
 
-// Success MUST operate on the CommandOutput receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️success](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Success)
+// ◾Success MUST operate on the CommandOutput receiver and return consistent results.
 func (o *CommandOutput) Success(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputSuccess, Text: text})
 }
 
-// Error MUST return a formatted string representation.
-// Error returns the string representation of the error.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️error](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Error)
+// ❌Error MUST return a formatted string representation.
+// ❌Error returns the string representation of the error.
 func (o *CommandOutput) Error(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputError, Text: text})
 	o.ExitCode = 1
 }
 
-// Warn MUST operate on the CommandOutput receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️warn](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Warn)
+// ⚠️Warn MUST operate on the CommandOutput receiver and return consistent results.
 func (o *CommandOutput) Warn(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputWarn, Text: text})
 }
 
-// Plain MUST operate on the CommandOutput receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️plain](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Plain)
+// ◽Plain MUST operate on the CommandOutput receiver and return consistent results.
 func (o *CommandOutput) Plain(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputPlain, Text: text})
 }
 
-// Print MUST operate on the CommandOutput receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️print](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Print)
+// ◻️Print MUST operate on the CommandOutput receiver and return consistent results.
 func (o *CommandOutput) Print() {
 	for _, line := range o.Lines {
 		fmt.Println(line.Text)
 	}
 }
 
-// Json MUST operate on the CommandOutput receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️json](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/Json)
+// ◼️Json MUST operate on the CommandOutput receiver and return consistent results.
 func (o *CommandOutput) Json(data interface{}) {
 	bytes, err := json.MarshalIndent(data, "", "  ")
 	if err == nil {
@@ -16748,9 +15869,8 @@ func (o *CommandOutput) Json(data interface{}) {
 	}
 }
 
-// ListDirEntries MUST return a consistent snapshot of available entries.
-// ListDirEntries returns all available dir entries entries.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️listdirentries](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ListDirEntries)
+// 📸ListDirEntries MUST return a consistent snapshot of available entries.
+// 🔵ListDirEntries returns all available dir entries entries.
 func ListDirEntries(dir string, dirsOnly bool) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -16772,9 +15892,8 @@ func ListDirEntries(dir string, dirsOnly bool) ([]string, error) {
 	return names, nil
 }
 
-// WalkDir MUST visit every entry and MUST stop when the callback returns an error.
-// WalkDir recursively walks the dir and invokes the callback.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️walkdir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/WalkDir)
+// ⏹️WalkDir MUST visit every entry and MUST stop when the callback returns an error.
+// 🔬WalkDir recursively walks the dir and invokes the callback.
 func WalkDir(dir string, fn func(path string, isDir bool) error) error {
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -16790,9 +15909,8 @@ func WalkDir(dir string, fn func(path string, isDir bool) error) error {
 	})
 }
 
-// ParseScope MUST return an error when the input is malformed.
-// ParseScope parses the input and returns the scope result.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️parsescope](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ParseScope)
+// 🔭ParseScope MUST return an error when the input is malformed.
+// 🔴ParseScope parses the input and returns the scope result.
 func ParseScope(raw string) Scope {
 	if raw == "" || raw == "semio" {
 		return Scope{Raw: "semio", Kind: ScopeRepo}
@@ -16819,9 +15937,8 @@ func ParseScope(raw string) Scope {
 	return Scope{Raw: raw, Kind: ScopeFolder, FilePath: raw}
 }
 
-// ReadLines MUST return the full content from the given path.
-// ReadLines reads and returns the lines content.
-// [🧰repo⌨️cli💻main🔖types🔖utils🛠️readlines](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Utils/d/i/ReadLines)
+// 🔵ReadLines MUST return the full content from the given path.
+// 🟠ReadLines reads and returns the lines content.
 func ReadLines(filePath string) ([]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -16836,15 +15953,13 @@ func ReadLines(filePath string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-// #endregion 🔖Utils
+// #endregion 📦Utils
 
-// #region 🔖Sections
-// [🧰repo⌨️cli💻main🔖types🔖sections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections)
+// #region 📝Sections
 // Section parsing, JSON section manipulation, and section lookup utilities.
 
-// ParseCodeSections MUST return an error when the input is malformed.
-// ParseCodeSections parses the input and returns the code sections result.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️parsecodesections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseCodeSections)
+// 📑ParseCodeSections MUST return an error when the input is malformed.
+// 📑ParseCodeSections parses the input and returns the code sections result.
 func ParseCodeSections(content string, languageName string) []Section {
 	lang := GetLanguageByName(languageName)
 	if lang == nil || !lang.SupportsSections() {
@@ -16853,9 +15968,8 @@ func ParseCodeSections(content string, languageName string) []Section {
 	return lang.ParseSections(content)
 }
 
-// ParseMarkdownSectionsInternal MUST return an error when the input is malformed.
-// ParseMarkdownSectionsInternal parses the input and returns the markdown sections internal result.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️parsemarkdownsectionsinternal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseMarkdownSectionsInternal)
+// 📰ParseMarkdownSectionsInternal MUST return an error when the input is malformed.
+// 📰ParseMarkdownSectionsInternal parses the input and returns the markdown sections internal result.
 func ParseMarkdownSectionsInternal(content string) []Section {
 	lines := strings.Split(content, "\n")
 	var sections []Section
@@ -16914,8 +16028,7 @@ func ParseMarkdownSectionsInternal(content string) []Section {
 	return sections
 }
 
-// JsonSectionLocation holds the data fields for a json section location record.
-// [🧰repo⌨️cli💻main🔖types🔖sections✂️jsonsectionlocation](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/JsonSectionLocation)
+// 💿JsonSectionLocation holds the data fields for a json section location record.
 type JsonSectionLocation struct {
 	Path       string
 	KeyStart   int
@@ -16925,8 +16038,7 @@ type JsonSectionLocation struct {
 	Section    *Section
 }
 
-// jsonContext holds the data fields for a jsonContext record.
-// [🧰repo⌨️cli💻main🔖types🔖sections✂️jsoncontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonContext)
+// 📋jsonContext holds the data fields for a jsonContext record.
 type jsonContext struct {
 	kind      byte
 	section   *Section
@@ -16935,9 +16047,8 @@ type jsonContext struct {
 	location  *JsonSectionLocation
 }
 
-// ParseJSONSectionsDetailed MUST return an error when the input is malformed.
-// ParseJSONSectionsDetailed parses the input and returns the j s o n sections detailed result.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️parsejsonsectionsdetailed](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseJSONSectionsDetailed)
+// ❌ParseJSONSectionsDetailed MUST return an error when the input is malformed.
+// 💾ParseJSONSectionsDetailed parses the input and returns the j s o n sections detailed result.
 func ParseJSONSectionsDetailed(content string) ([]Section, map[string]*JsonSectionLocation, error) {
 	var sections []Section
 	locations := make(map[string]*JsonSectionLocation)
@@ -17106,17 +16217,15 @@ func ParseJSONSectionsDetailed(content string) ([]Section, map[string]*JsonSecti
 	return sections, locations, nil
 }
 
-// ParseJSONSections MUST return an error when the input is malformed.
-// ParseJSONSections parses the input and returns the j s o n sections result.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️parsejsonsections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseJSONSections)
+// 🔬ParseJSONSections MUST return an error when the input is malformed.
+// 📝ParseJSONSections parses the input and returns the j s o n sections result.
 func ParseJSONSections(content string) []Section {
 	sections, _, _ := ParseJSONSectionsDetailed(content)
 	return sections
 }
 
-// ParseSections MUST return an error when the input is malformed.
-// ParseSections parses the input and returns the sections result.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️parsesections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseSections)
+// 📝ParseSections MUST return an error when the input is malformed.
+// 📩ParseSections parses the input and returns the sections result.
 func ParseSections(content string, filePath string) []Section {
 	language := GetLanguage(filePath)
 	if language == nil {
@@ -17125,9 +16234,8 @@ func ParseSections(content string, filePath string) []Section {
 	return language.ParseSections(content)
 }
 
-// ParseDefinitions MUST return an error when the input is malformed.
-// ParseDefinitions parses the input and returns the definitions result.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️parsedefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/ParseDefinitions)
+// 📖ParseDefinitions MUST return an error when the input is malformed.
+// 📖ParseDefinitions parses the input and returns the definitions result.
 func ParseDefinitions(content string, filePath string) []Definition {
 	language := GetLanguage(filePath)
 	if language == nil {
@@ -17152,9 +16260,8 @@ func ParseDefinitions(content string, filePath string) []Definition {
 	return definitions
 }
 
-// HydrateSectionsWithDefinitions MUST attach all matching child elements to their parents.
-// HydrateSectionsWithDefinitions populates the sections with definitions with associated child data.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️hydratesectionswithdefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/HydrateSectionsWithDefinitions)
+// 🎯HydrateSectionsWithDefinitions MUST attach all matching child elements to their parents.
+// 📦HydrateSectionsWithDefinitions populates the sections with definitions with associated child data.
 func HydrateSectionsWithDefinitions(sections []Section, definitions []Definition) []Section {
 	if len(sections) == 0 {
 		return sections
@@ -17192,9 +16299,8 @@ func HydrateSectionsWithDefinitions(sections []Section, definitions []Definition
 	return newSections
 }
 
-// NormalizeSectionPath MUST be idempotent for already-normalized values.
-// NormalizeSectionPath normalizes the section path to its canonical form.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️normalizesectionpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/NormalizeSectionPath)
+// 🛤️NormalizeSectionPath MUST be idempotent for already-normalized values.
+// ❓NormalizeSectionPath normalizes the section path to its canonical form.
 func NormalizeSectionPath(sectionPath string) []string {
 	cleaned := strings.ReplaceAll(sectionPath, "#", "/")
 	raw := strings.FieldsFunc(cleaned, func(r rune) bool { return r == '/' })
@@ -17207,8 +16313,7 @@ func NormalizeSectionPath(sectionPath string) []string {
 	return parts
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonlinestart](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonLineStart)
-// jsonLineStart holds the data fields for a jsonLineStart record.
+// ▶️jsonLineStart holds the data fields for a jsonLineStart record.
 func jsonLineStart(content string, index int) int {
 	if index <= 0 {
 		return 0
@@ -17220,8 +16325,7 @@ func jsonLineStart(content string, index int) int {
 	return pos + 1
 }
 
-// jsonLineIndent holds the data fields for a jsonLineIndent record.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonlineindent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonLineIndent)
+// 🔷jsonLineIndent holds the data fields for a jsonLineIndent record.
 func jsonLineIndent(content string, index int) string {
 	start := jsonLineStart(content, index)
 	end := start
@@ -17231,14 +16335,12 @@ func jsonLineIndent(content string, index int) string {
 	return content[start:end]
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsoniswhitespace](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonIsWhitespace)
-// jsonIsWhitespace holds the data fields for a jsonIsWhitespace record.
+// 🔶jsonIsWhitespace holds the data fields for a jsonIsWhitespace record.
 func jsonIsWhitespace(ch byte) bool {
 	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
 }
 
-// jsonFindMatching holds the data fields for a jsonFindMatching record.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonfindmatching](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonFindMatching)
+// 🔹jsonFindMatching holds the data fields for a jsonFindMatching record.
 func jsonFindMatching(content string, start int, open byte, close byte) (int, bool) {
 	if start < 0 || start >= len(content) || content[start] != open {
 		return -1, false
@@ -17280,8 +16382,7 @@ func jsonFindMatching(content string, start int, open byte, close byte) (int, bo
 	return -1, false
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonfindrootobjectrange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonFindRootObjectRange)
-// jsonFindRootObjectRange holds the data fields for a jsonFindRootObjectRange record.
+// 🌱jsonFindRootObjectRange holds the data fields for a jsonFindRootObjectRange record.
 func jsonFindRootObjectRange(content string) (int, int, bool) {
 	for i := 0; i < len(content); i++ {
 		if jsonIsWhitespace(content[i]) {
@@ -17296,8 +16397,7 @@ func jsonFindRootObjectRange(content string) (int, int, bool) {
 	return -1, -1, false
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonfindobjectrange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonFindObjectRange)
-// jsonFindObjectRange holds the data fields for a jsonFindObjectRange record.
+// 🔸jsonFindObjectRange holds the data fields for a jsonFindObjectRange record.
 func jsonFindObjectRange(content string, locations map[string]*JsonSectionLocation, path string) (int, int, bool) {
 	if path == "" {
 		return jsonFindRootObjectRange(content)
@@ -17312,8 +16412,7 @@ func jsonFindObjectRange(content string, locations map[string]*JsonSectionLocati
 	return location.ValueStart, location.ValueEnd, true
 }
 
-// jsonObjectHasEntries holds the data fields for a jsonObjectHasEntries record.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonobjecthasentries](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonObjectHasEntries)
+// 🔺jsonObjectHasEntries holds the data fields for a jsonObjectHasEntries record.
 func jsonObjectHasEntries(content string, start, end int) bool {
 	for i := start + 1; i < end; i++ {
 		if !jsonIsWhitespace(content[i]) {
@@ -17323,7 +16422,6 @@ func jsonObjectHasEntries(content string, start, end int) bool {
 	return false
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonfindfirstkeyindent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonFindFirstKeyIndent)
 func jsonFindFirstKeyIndent(content string, start, end int) string {
 	depth := 0
 	inString := false
@@ -17373,8 +16471,7 @@ func jsonFindFirstKeyIndent(content string, start, end int) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsoninsertentry](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonInsertEntry)
-// jsonInsertEntry holds the data fields for a jsonInsertEntry record.
+// 📌jsonInsertEntry holds the data fields for a jsonInsertEntry record.
 func jsonInsertEntry(content string, objectStart, objectEnd int, entry string) (string, bool) {
 	if objectStart < 0 || objectEnd <= objectStart {
 		return content, false
@@ -17394,15 +16491,13 @@ func jsonInsertEntry(content string, objectStart, objectEnd int, entry string) (
 	return content[:objectEnd] + insert + content[objectEnd:], true
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonreplacekey](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonReplaceKey)
-// jsonReplaceKey holds the data fields for a jsonReplaceKey record.
+// 🔻jsonReplaceKey holds the data fields for a jsonReplaceKey record.
 func jsonReplaceKey(content string, keyStart, keyEnd int, newName string) string {
 	quoted := strconv.Quote(newName)
 	return content[:keyStart] + quoted + content[keyEnd+1:]
 }
 
-// jsonExtractEntry holds the data fields for a jsonExtractEntry record.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonextractentry](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonExtractEntry)
+// 🧲jsonExtractEntry holds the data fields for a jsonExtractEntry record.
 func jsonExtractEntry(content string, keyStart int, valueEnd int) (string, int, int) {
 	start := jsonLineStart(content, keyStart)
 	end := valueEnd + 1
@@ -17425,8 +16520,7 @@ func jsonExtractEntry(content string, keyStart int, valueEnd int) (string, int, 
 	return entry, start, end
 }
 
-// jsonRenameEntryKey holds the data fields for a jsonRenameEntryKey record.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonrenameentrykey](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonRenameEntryKey)
+// 📍jsonRenameEntryKey holds the data fields for a jsonRenameEntryKey record.
 func jsonRenameEntryKey(entry string, newName string) string {
 	inString := false
 	escape := false
@@ -17456,8 +16550,7 @@ func jsonRenameEntryKey(entry string, newName string) string {
 	return entry
 }
 
-// jsonReindentEntry holds the data fields for a jsonReindentEntry record.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️jsonreindententry](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/jsonReindentEntry)
+// ⬛jsonReindentEntry holds the data fields for a jsonReindentEntry record.
 func jsonReindentEntry(entry string, indent string) string {
 	lines := strings.Split(entry, "\n")
 	minIndent := -1
@@ -17489,9 +16582,8 @@ func jsonReindentEntry(entry string, indent string) string {
 	return strings.Join(lines, "\n")
 }
 
-// FindSection MUST return nil when no match is found.
-// FindSection searches for and returns the matching section.
-// [🧰repo⌨️cli💻main🔖types🔖sections🛠️findsection](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Sections/d/i/FindSection)
+// ⬜FindSection MUST return nil when no match is found.
+// 🔎FindSection searches for and returns the matching section.
 func FindSection(sections []Section, name string) *Section {
 	for i := range sections {
 		if sections[i].Name == name {
@@ -17504,18 +16596,15 @@ func FindSection(sections []Section, name string) *Section {
 	return nil
 }
 
-// #endregion 🔖Sections
+// #endregion 📝Sections
 
-// #region 🔖Policies
-// [🧰repo⌨️cli💻main🔖types🔖policies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies)
+// #region 🧊Policies
 // Policy definitions, context, checkers, and individual policy implementations.
 
-// PolicyFunc is a function type for policy func callbacks.
-// [🧰repo⌨️cli💻main🔖types🔖policies✂️policyfunc](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/PolicyFunc)
+// 📜PolicyFunc is a function type for policy func callbacks.
 type PolicyFunc func(ctx *PolicyContext) []Breach
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🪨policies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/policies)
-// policies holds the data fields for a policies record.
+// 💿policies holds the data fields for a policies record.
 var policies = []PolicyDef{
 	{
 		ID:          "code",
@@ -17528,20 +16617,10 @@ var policies = []PolicyDef{
 				Name:        "File",
 				Description: "File header region breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-				Groups: []Territory{
-					{
-						Name:        "Wrong Identification",
-						Description: "Wrong identification breachs",
-						Kinds: []Statute{
-							BreachCodeFileWrongIdentificationId,
-							BreachCodeFileWrongIdentificationUri,
-						},
-					},
-				},
+				Groups:      []Territory{},
 				Kinds: []Statute{
 					BreachCodeFileMissingHeaderRegion,
 					BreachCodeFileWrongHeaderRegionFormat,
-					BreachCodeFileMissingIdentification,
 					BreachCodeFileMissingContributors,
 					BreachCodeFileMissingSummary,
 					BreachCodeFileMissingLicense,
@@ -17555,14 +16634,6 @@ var policies = []PolicyDef{
 				Description: "Section structure breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 				Groups: []Territory{
-					{
-						Name:        "Wrong Identification",
-						Description: "Section identification mismatches",
-						Kinds: []Statute{
-							BreachCodeSectionWrongIdentificationId,
-							BreachCodeSectionWrongIdentificationUri,
-						},
-					},
 					{
 						Name:        "Wrong Format",
 						Description: "Section format breachs",
@@ -17595,9 +16666,6 @@ var policies = []PolicyDef{
 					BreachCodeSectionMissingStartName,
 					BreachCodeSectionMissingEndName,
 					BreachCodeSectionNameMismatch,
-					BreachCodeSectionMissingIdentification,
-					BreachCodeSectionWrongIdentificationId,
-					BreachCodeSectionWrongIdentificationUri,
 					BreachCodeSectionMissingSummary,
 					BreachCodeSectionMissingRequirements,
 					BreachCodeSectionMissingDocs,
@@ -17609,14 +16677,6 @@ var policies = []PolicyDef{
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 				Groups: []Territory{
 					{
-						Name:        "Wrong Identification",
-						Description: "Definition identification mismatches",
-						Kinds: []Statute{
-							BreachCodeDefWrongIdentificationId,
-							BreachCodeDefWrongIdentificationUri,
-						},
-					},
-					{
 						Name:        "Wrong Format",
 						Description: "Definition format breachs",
 						Kinds: []Statute{
@@ -17626,9 +16686,6 @@ var policies = []PolicyDef{
 					},
 				},
 				Kinds: []Statute{
-					BreachCodeDefMissingIdentification,
-					BreachCodeDefWrongIdentificationId,
-					BreachCodeDefWrongIdentificationUri,
 					BreachCodeDefMissingSummary,
 					BreachCodeDefMissingRequirements,
 					BreachCodeDefMissingDocs,
@@ -17872,9 +16929,8 @@ var policies = []PolicyDef{
 	},
 }
 
-// FindPolicy MUST return nil when no match is found.
-// FindPolicy searches for and returns the matching policy.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️findpolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/FindPolicy)
+// 🎯FindPolicy MUST return nil when no match is found.
+// 🔎FindPolicy searches for and returns the matching policy.
 func FindPolicy(id string) (PolicyDef, bool) {
 	for _, p := range policies {
 		if p.ID == id {
@@ -17884,16 +16940,14 @@ func FindPolicy(id string) (PolicyDef, bool) {
 	return PolicyDef{}, false
 }
 
-// GetPolicies MUST return the stored value without modification.
-// GetPolicies returns the policies of the value.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️getpolicies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/GetPolicies)
+// 🏪GetPolicies MUST return the stored value without modification.
+// 📦GetPolicies returns the policies of the value.
 func GetPolicies() []PolicyDef {
 	return policies
 }
 
-// StreamPolicies MUST emit all matching entries and close the channel when done.
-// StreamPolicies streams the policies over a channel with optional filtering.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️streampolicies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/StreamPolicies)
+// 📪StreamPolicies MUST emit all matching entries and close the channel when done.
+// 🔍StreamPolicies streams the policies over a channel with optional filtering.
 func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -17942,8 +16996,7 @@ func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOpt
 	return nil
 }
 
-// PolicyContext holds the data fields for a policy context record.
-// [🧰repo⌨️cli💻main🔖types🔖policies✂️policycontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/PolicyContext)
+// 📝PolicyContext holds the data fields for a policy context record.
 type PolicyContext struct {
 	Scope              Scope
 	RootDir            string
@@ -17957,9 +17010,8 @@ type PolicyContext struct {
 	filesOverride      []string
 }
 
-// NewPolicyContext MUST initialize all required fields and return a valid PolicyContext.
-// NewPolicyContext creates and returns a new PolicyContext instance.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️newpolicycontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/NewPolicyContext)
+// 🔷NewPolicyContext MUST initialize all required fields and return a valid PolicyContext.
+// 🆕NewPolicyContext creates and returns a new PolicyContext instance.
 func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	return &PolicyContext{
 		Scope:        scope,
@@ -17971,17 +17023,15 @@ func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	}
 }
 
-// NewPolicyContextWithFiles MUST initialize all required fields and return a valid PolicyContextWithFiles.
-// NewPolicyContextWithFiles creates and returns a new PolicyContextWithFiles instance.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️newpolicycontextwithfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/NewPolicyContextWithFiles)
+// 📄NewPolicyContextWithFiles MUST initialize all required fields and return a valid PolicyContextWithFiles.
+// 📄NewPolicyContextWithFiles creates and returns a new PolicyContextWithFiles instance.
 func NewPolicyContextWithFiles(scope Scope, bundles []Bundle, files []string) *PolicyContext {
 	ctx := NewPolicyContext(scope, bundles)
 	ctx.filesOverride = files
 	return ctx
 }
 
-// Files MUST operate on the PolicyContext receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️files](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/Files)
+// 📥Files MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) Files() ([]string, error) {
 	if ctx.filesOverride != nil {
 		return ctx.filesOverride, nil
@@ -17994,9 +17044,8 @@ func (ctx *PolicyContext) Files() ([]string, error) {
 	return files, nil
 }
 
-// ReadText MUST return the full content from the given path.
-// ReadText reads and returns the text content.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️readtext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/ReadText)
+// 🛤️ReadText MUST return the full content from the given path.
+// 🔤ReadText reads and returns the text content.
 func (ctx *PolicyContext) ReadText(filePath string) string {
 	if ctx.fileCache == nil {
 		ctx.fileCache = make(map[string]string)
@@ -18014,8 +17063,7 @@ func (ctx *PolicyContext) ReadText(filePath string) string {
 	return content
 }
 
-// Sections MUST operate on the PolicyContext receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️sections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/Sections)
+// 📑Sections MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) Sections(filePath string) []Section {
 	if ctx.sectionCache == nil {
 		ctx.sectionCache = make(map[string][]Section)
@@ -18029,9 +17077,8 @@ func (ctx *PolicyContext) Sections(filePath string) []Section {
 	return sections
 }
 
-// ParseIgnoreDirectives MUST return an error when the input is malformed.
-// ParseIgnoreDirectives parses the input and returns the ignore directives result.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️parseignoredirectives](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/ParseIgnoreDirectives)
+// ❌ParseIgnoreDirectives MUST return an error when the input is malformed.
+// 💾ParseIgnoreDirectives parses the input and returns the ignore directives result.
 func ParseIgnoreDirectives(content string) map[int][]string {
 	result := make(map[int][]string)
 	lines := strings.Split(content, "\n")
@@ -18053,8 +17100,7 @@ func ParseIgnoreDirectives(content string) map[int][]string {
 	return result
 }
 
-// IgnoreDirectives MUST operate on the PolicyContext receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️ignoredirectives](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IgnoreDirectives)
+// 🔶IgnoreDirectives MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 	if ignores, ok := ctx.ignoreCache[filePath]; ok {
 		return ignores
@@ -18065,9 +17111,8 @@ func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 	return ignores
 }
 
-// IsIgnored MUST return true only when the condition is met.
-// IsIgnored reports whether the PolicyContext is ignored.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️isignored](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IsIgnored)
+// 🔹IsIgnored MUST return true only when the condition is met.
+// ❓IsIgnored reports whether the PolicyContext is ignored.
 func (ctx *PolicyContext) IsIgnored(filePath string, breachLine int, kind Statute) bool {
 	ignores := ctx.IgnoreDirectives(filePath)
 	kindStr := string(kind)
@@ -18086,9 +17131,8 @@ func (ctx *PolicyContext) IsIgnored(filePath string, breachLine int, kind Statut
 	return false
 }
 
-// CreateBreach MUST persist the new entity and return a reference to it.
-// CreateBreach creates a new breach and persists it.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️createbreach](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/CreateBreach)
+// 🆕CreateBreach MUST persist the new entity and return a reference to it.
+// ⚠️CreateBreach creates a new breach and persists it.
 func (ctx *PolicyContext) CreateBreach(summary string, kind Statute, scope string, line int, col int, excerpt string) Breach {
 	return Breach{
 		ID:      buildBreachID(scope, line, col),
@@ -18101,8 +17145,7 @@ func (ctx *PolicyContext) CreateBreach(summary string, kind Statute, scope strin
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️extractfilefromscope](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/extractFileFromScope)
-// extractFileFromScope holds the data fields for a extractFileFromScope record.
+// 🧲extractFileFromScope holds the data fields for a extractFileFromScope record.
 func extractFileFromScope(scope string) string {
 
 	if idx := strings.Index(scope, "#"); idx != -1 {
@@ -18115,9 +17158,8 @@ func extractFileFromScope(scope string) string {
 	return scope
 }
 
-// FilterIgnored MUST preserve the tree structure while removing non-matching nodes.
-// FilterIgnored filters the ignored based on the given criteria.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️filterignored](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/FilterIgnored)
+// 🧹FilterIgnored MUST preserve the tree structure while removing non-matching nodes.
+// 🔷FilterIgnored filters the ignored based on the given criteria.
 func (ctx *PolicyContext) FilterIgnored(breachs []Breach) []Breach {
 	var result []Breach
 	for _, v := range breachs {
@@ -18129,25 +17171,20 @@ func (ctx *PolicyContext) FilterIgnored(breachs []Breach) []Breach {
 	return result
 }
 
-// specKeywordPattern holds the data fields for a specKeywordPattern record.
-// [🧰repo⌨️cli💻main🔖types🔖policies🪨speckeywordpattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/specKeywordPattern)
+// 🧩specKeywordPattern holds the data fields for a specKeywordPattern record.
 var specKeywordPattern = regexp.MustCompile(`\b(MUST(\s+NOT)?|SHOULD(\s+NOT)?|SHALL(\s+NOT)?|MAY|REQUIRED|RECOMMENDED|OPTIONAL)\b`)
 
-// isSpecText holds the data fields for a isSpecText record.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️isspectext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/isSpecText)
+// 🔸isSpecText holds the data fields for a isSpecText record.
 func isSpecText(text string) bool {
 	return specKeywordPattern.MatchString(text)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🪨specimplsyntaxbacktick](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/specImplSyntaxBacktick)
-// specImplSyntaxBacktick holds the data fields for a specImplSyntaxBacktick record.
+// 📐specImplSyntaxBacktick holds the data fields for a specImplSyntaxBacktick record.
 var specImplSyntaxBacktick = regexp.MustCompile("`[^`]+`")
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🪨specimplsyntaxfunccall](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/specImplSyntaxFuncCall)
-// specImplSyntaxFuncCall holds the data fields for a specImplSyntaxFuncCall record.
+// ⚡specImplSyntaxFuncCall holds the data fields for a specImplSyntaxFuncCall record.
 var specImplSyntaxFuncCall = regexp.MustCompile(`[A-Za-z_]\w*\.\w+\(|[A-Z]\w+\(`)
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️hasimplementationsyntax](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/hasImplementationSyntax)
 func hasImplementationSyntax(text string) (bool, string) {
 	if specImplSyntaxBacktick.MatchString(text) {
 		return true, "backtick-wrapped code"
@@ -18161,8 +17198,7 @@ func hasImplementationSyntax(text string) (bool, string) {
 	return false, ""
 }
 
-// SpecLines MUST operate on the PolicyContext receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️speclines](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/SpecLines)
+// 🔺SpecLines MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 	if ctx.specLineCache == nil {
 		ctx.specLineCache = make(map[string]map[int]bool)
@@ -18222,16 +17258,14 @@ func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 	return result
 }
 
-// IsSpecLine MUST return true only when the condition is met.
-// IsSpecLine reports whether the PolicyContext is spec line.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️isspecline](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IsSpecLine)
+// 🔻IsSpecLine MUST return true only when the condition is met.
+// 🐙IsSpecLine reports whether the PolicyContext is spec line.
 func (ctx *PolicyContext) IsSpecLine(filePath string, lineNum int) bool {
 	return ctx.SpecLines(filePath)[lineNum]
 }
 
-// IsSpecBlock MUST return true only when the condition is met.
-// IsSpecBlock reports whether the PolicyContext is spec block.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️isspecblock](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IsSpecBlock)
+// ⬛IsSpecBlock MUST return true only when the condition is met.
+// 🔒IsSpecBlock reports whether the PolicyContext is spec block.
 func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, lines []string) bool {
 	for i := startLine; i <= endLine && i <= len(lines); i++ {
 		if isSpecText(lines[i-1]) {
@@ -18241,8 +17275,7 @@ func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, l
 	return false
 }
 
-// SectionDocLines MUST operate on the PolicyContext receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️sectiondoclines](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/SectionDocLines)
+// ⬜SectionDocLines MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 	if ctx.sectionDocCache == nil {
 		ctx.sectionDocCache = make(map[string]map[int]bool)
@@ -18320,15 +17353,13 @@ func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 	return result
 }
 
-// IsSectionDocLine MUST return true only when the condition is met.
-// IsSectionDocLine reports whether the PolicyContext is section doc line.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️issectiondocline](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IsSectionDocLine)
+// 🟥IsSectionDocLine MUST return true only when the condition is met.
+// 🔹IsSectionDocLine reports whether the PolicyContext is section doc line.
 func (ctx *PolicyContext) IsSectionDocLine(filePath string, lineNum int) bool {
 	return ctx.SectionDocLines(filePath)[lineNum]
 }
 
-// DefinitionDocLines MUST operate on the PolicyContext receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️definitiondoclines](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/DefinitionDocLines)
+// 📖DefinitionDocLines MUST operate on the PolicyContext receiver and return consistent results.
 func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 	if ctx.definitionDocCache == nil {
 		ctx.definitionDocCache = make(map[string]map[int]bool)
@@ -18441,14 +17472,12 @@ func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 	return result
 }
 
-// IsDefinitionDocLine MUST return true only when the condition is met.
-// IsDefinitionDocLine reports whether the PolicyContext is definition doc line.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️isdefinitiondocline](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/IsDefinitionDocLine)
+// 🟧IsDefinitionDocLine MUST return true only when the condition is met.
+// ▶️IsDefinitionDocLine reports whether the PolicyContext is definition doc line.
 func (ctx *PolicyContext) IsDefinitionDocLine(filePath string, lineNum int) bool {
 	return ctx.DefinitionDocLines(filePath)[lineNum]
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️randomstring](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/randomString)
 func randomString(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
 	b := make([]byte, n)
@@ -18458,17 +17487,15 @@ func randomString(n int) string {
 	return string(b)
 }
 
-// CheckPolicies MUST run all applicable policies and aggregate breachs.
-// CheckPolicies validates the policies and returns any breachs.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️checkpolicies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/CheckPolicies)
+// ✔️CheckPolicies MUST run all applicable policies and aggregate breachs.
+// ✔️CheckPolicies validates the policies and returns any breachs.
 func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Breach, error) {
 	ctx := NewPolicyContext(scope, bundles)
 	return CheckPoliciesWithContext(ctx, policyIDs)
 }
 
-// CheckPoliciesWithContext MUST run all applicable policies and aggregate breachs.
-// CheckPoliciesWithContext validates the policies with context and returns any breachs.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️checkpolicieswithcontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/CheckPoliciesWithContext)
+// 🟨CheckPoliciesWithContext MUST run all applicable policies and aggregate breachs.
+// 🔑CheckPoliciesWithContext validates the policies with context and returns any breachs.
 func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Breach, error) {
 	var breachs []Breach
 	var policiesToRun []PolicyDef
@@ -18495,8 +17522,7 @@ func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Breach,
 	return breachs, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️matchesscope](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/matchesScope)
-// matchesScope holds the data fields for a matchesScope record.
+// 🔭matchesScope holds the data fields for a matchesScope record.
 func matchesScope(policyScopes []string, targetScope Scope) bool {
 	for _, pattern := range policyScopes {
 		if pattern == "*" || pattern == "**/*" {
@@ -18521,8 +17547,7 @@ func matchesScope(policyScopes []string, targetScope Scope) bool {
 	return false
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️headerpolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/headerPolicy)
-// headerPolicy holds the data fields for a headerPolicy record.
+// 🟩headerPolicy holds the data fields for a headerPolicy record.
 func headerPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	files, err := ctx.Files()
@@ -18556,69 +17581,6 @@ func headerPolicy(ctx *PolicyContext) []Breach {
 		}
 		headerContent := content[headerSection.StartIndex:headerSection.EndIndex]
 		headerLines := strings.Split(headerContent, "\n")
-		expectedFileId := FileHeaderId(file)
-		expectedFileUri := FileHeaderUri(file)
-		stripVS := func(s string) string {
-			return strings.ReplaceAll(strings.ReplaceAll(s, "\uFE0F", ""), "\uFE0E", "")
-		}
-		identificationLineIdx := -1
-		parsedId := ""
-		parsedUri := ""
-		identificationRegex := regexp.MustCompile(`\[([^\]]+)\]\(([^)]+)\)`)
-		for lineIdx, line := range headerLines {
-			matches := identificationRegex.FindStringSubmatch(line)
-			if matches != nil {
-				identificationLineIdx = lineIdx
-				parsedId = matches[1]
-				parsedUri = matches[2]
-				break
-			}
-		}
-		if identificationLineIdx == -1 {
-			oldFormatId := false
-			for _, line := range headerLines {
-				trimmed := strings.TrimSpace(line)
-				prefix := language.CommentPrefix()
-				stripped := strings.TrimSpace(strings.TrimPrefix(trimmed, prefix))
-				if stripped == "" || strings.HasPrefix(trimmed, prefix+" #region") || strings.HasPrefix(trimmed, prefix+" #endregion") {
-					continue
-				}
-				hasExt := strings.Contains(stripped, ".ts") || strings.Contains(stripped, ".tsx") || strings.Contains(stripped, ".go") || strings.Contains(stripped, ".cs") || strings.Contains(stripped, ".py") || strings.Contains(stripped, ".sh") || strings.Contains(stripped, ".sql")
-				hasEmoji := strings.ContainsAny(stripped, "\U0001F4BB\U0001F9EA\U0001F4DC\U0001F4C3\u2699\uFE0F\U0001F4BE\u2696\uFE0F")
-				if hasExt || hasEmoji {
-					oldFormatId = true
-					break
-				}
-			}
-			if oldFormatId {
-				breachs = append(breachs, ctx.CreateBreach(
-					fmt.Sprintf("Wrong header region format in %s: identification must use [ID](URI) format", file),
-					BreachCodeFileWrongHeaderRegionFormat,
-					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
-			} else {
-				breachs = append(breachs, ctx.CreateBreach(
-					fmt.Sprintf("Missing identification in header of %s (expected [%s](%s))", file, expectedFileId, expectedFileUri),
-					BreachCodeFileMissingIdentification,
-					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
-			}
-		} else {
-			normalizedParsedId := stripVS(parsedId)
-			normalizedExpectedId := stripVS(expectedFileId)
-			if normalizedParsedId != normalizedExpectedId {
-				breachs = append(breachs, ctx.CreateBreach(
-					fmt.Sprintf("Wrong file ID in header of %s (expected %s, got %s)", file, expectedFileId, parsedId),
-					BreachCodeFileWrongIdentificationId,
-					fmt.Sprintf("%s#Header", file), headerSection.StartLine+identificationLineIdx, 0, expectedFileId))
-			}
-			normalizedParsedUri := stripVS(parsedUri)
-			normalizedExpectedUri := stripVS(expectedFileUri)
-			if normalizedParsedUri != normalizedExpectedUri {
-				breachs = append(breachs, ctx.CreateBreach(
-					fmt.Sprintf("Wrong file URI in header of %s (expected %s, got %s)", file, expectedFileUri, parsedUri),
-					BreachCodeFileWrongIdentificationUri,
-					fmt.Sprintf("%s#Header", file), headerSection.StartLine+identificationLineIdx, 0, expectedFileUri))
-			}
-		}
 		contributorPattern := regexp.MustCompile(`\d{4}\s+[\w\s]+<[\w.@-]+>`)
 		hasContributors := false
 		for _, line := range headerLines {
@@ -18689,9 +17651,7 @@ func headerPolicy(ctx *PolicyContext) []Breach {
 				}
 				continue
 			}
-			if identificationRegex.MatchString(line) {
-				continue
-			}
+
 			if contributorPattern.MatchString(line) {
 				continue
 			}
@@ -18728,8 +17688,7 @@ func headerPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️istestorbenchmarkfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/isTestOrBenchmarkFile)
-// isTestOrBenchmarkFile holds the data fields for a isTestOrBenchmarkFile record.
+// 🧪isTestOrBenchmarkFile holds the data fields for a isTestOrBenchmarkFile record.
 func isTestOrBenchmarkFile(file string) bool {
 	if DeriveFileKind(filepath.Base(file)) == FileKindLab {
 		return true
@@ -18738,14 +17697,12 @@ func isTestOrBenchmarkFile(file string) bool {
 	return strings.Contains(lowerPath, "/tests/") || strings.Contains(lowerPath, ".tests/") || strings.Contains(lowerPath, "/test/") || strings.Contains(lowerPath, ".test/") || strings.Contains(lowerPath, "/benchmark/") || strings.Contains(lowerPath, ".benchmark/")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️isexporteddefinition](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/isExportedDefinition)
-// isExportedDefinition holds the data fields for a isExportedDefinition record.
+// 📤isExportedDefinition holds the data fields for a isExportedDefinition record.
 func isExportedDefinition(name string, line string, langName string) bool {
 	return true
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️requiresdefinitionrequirements](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/requiresDefinitionRequirements)
-// requiresDefinitionRequirements holds the data fields for a requiresDefinitionRequirements record.
+// 🟦requiresDefinitionRequirements holds the data fields for a requiresDefinitionRequirements record.
 func requiresDefinitionRequirements(line string, langName string) bool {
 	trimmed := strings.TrimSpace(line)
 	switch langName {
@@ -18772,37 +17729,7 @@ func requiresDefinitionRequirements(line string, langName string) bool {
 	return true
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🪨semiomarkdownlinkpattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/semioMarkdownLinkPattern)
-// semioMarkdownLinkPattern holds the data fields for a semioMarkdownLinkPattern record.
-var semioMarkdownLinkPattern = regexp.MustCompile(`\[(.*?)\]\((repo://[^)\s]+)\)`)
-
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️parsesemioidentificationlink](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/parseSemioIdentificationLink)
-// parseSemioIdentificationLink holds the data fields for a parseSemioIdentificationLink record.
-func parseSemioIdentificationLink(commentText string, uriKind string) (string, string, bool) {
-	trimmed := strings.TrimSpace(commentText)
-	for strings.HasPrefix(trimmed, "*") {
-		trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "*"))
-	}
-	matches := semioMarkdownLinkPattern.FindStringSubmatch(trimmed)
-	if len(matches) != 3 {
-		return "", "", false
-	}
-	idValue := strings.TrimSpace(matches[1])
-	uriValue := strings.TrimSpace(matches[2])
-	if !strings.HasPrefix(uriValue, "repo://") {
-		return "", "", false
-	}
-	if uriKind == "section" && !containsUriSection(uriValue) {
-		return "", "", false
-	}
-	if uriKind == "definition" && !containsUriDefinition(uriValue) {
-		return "", "", false
-	}
-	return idValue, uriValue, true
-}
-
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️sectionpolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/sectionPolicy)
-// sectionPolicy holds the data fields for a sectionPolicy record.
+// 🟪sectionPolicy holds the data fields for a sectionPolicy record.
 func sectionPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	files, err := ctx.Files()
@@ -18888,10 +17815,6 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 					fmt.Sprintf("%s#%s", file, sectionPath), s.StartLine+1, 0, ""))
 			}
 			if !isExempt && s.Name != "" && !isTestOrBenchmarkFile(file) {
-				hasIdentification := false
-				identificationLine := 0
-				identifiedID := ""
-				identifiedURI := ""
 				hasSummary := false
 				for i := 1; i < len(sectionLines)-1; i++ {
 					line := strings.TrimSpace(sectionLines[i])
@@ -18911,36 +17834,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 					if commentText == "" {
 						continue
 					}
-					idValue, uriValue, ok := parseSemioIdentificationLink(commentText, "section")
-					if ok {
-						hasIdentification = true
-						identifiedID = idValue
-						identifiedURI = uriValue
-						identificationLine = s.StartLine + i
-						continue
-					}
 					hasSummary = true
-				}
-				if !hasIdentification {
-					breachs = append(breachs, ctx.CreateBreach(
-						fmt.Sprintf("Section \"%s\" is missing identification in %s", s.Name, file),
-						BreachCodeSectionMissingIdentification,
-						fmt.Sprintf("%s#%s", file, sectionPath), s.StartLine, 0, ""))
-				} else {
-					expectedID := SectionHeaderId(file, sectionPath)
-					expectedURI := SectionHeaderUri(file, sectionPath)
-					if identifiedID != expectedID {
-						breachs = append(breachs, ctx.CreateBreach(
-							fmt.Sprintf("Section \"%s\" has wrong identification ID in %s", s.Name, file),
-							BreachCodeSectionWrongIdentificationId,
-							fmt.Sprintf("%s#%s", file, sectionPath), identificationLine, 0, identifiedID))
-					}
-					if identifiedURI != expectedURI {
-						breachs = append(breachs, ctx.CreateBreach(
-							fmt.Sprintf("Section \"%s\" has wrong identification URI in %s", s.Name, file),
-							BreachCodeSectionWrongIdentificationUri,
-							fmt.Sprintf("%s#%s", file, sectionPath), identificationLine, 0, identifiedURI))
-					}
 				}
 				if !hasSummary {
 					breachs = append(breachs, ctx.CreateBreach(
@@ -19141,10 +18035,6 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 			}
 			hasSummary := false
 			hasRequirements := false
-			hasIdentification := false
-			identificationLine := 0
-			identifiedID := ""
-			identifiedURI := ""
 			isNativeDocstring := false
 			langName := language.Name()
 			if langName == "typescript" {
@@ -19180,13 +18070,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 							if strings.HasPrefix(content, "* ") {
 								content = strings.TrimSpace(content[2:])
 							}
-							idValue, uriValue, ok := parseSemioIdentificationLink(content, "definition")
-							if ok {
-								hasIdentification = true
-								identifiedID = idValue
-								identifiedURI = uriValue
-								identificationLine = scanIdx + 1
-							} else if isSpecText(content) {
+							if isSpecText(content) {
 								hasRequirements = true
 							} else {
 								hasSummary = true
@@ -19217,13 +18101,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 						if commentText == "<remarks>" || commentText == "</remarks>" || commentText == "" {
 							continue
 						}
-						idValue, uriValue, ok := parseSemioIdentificationLink(commentText, "definition")
-						if ok {
-							hasIdentification = true
-							identifiedID = idValue
-							identifiedURI = uriValue
-							identificationLine = lineIndex + 1
-						} else if isSpecText(commentText) {
+						if isSpecText(commentText) {
 							hasRequirements = true
 						} else {
 							hasSummary = true
@@ -19275,13 +18153,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 						if closeIdx >= 0 {
 							content := strings.TrimSpace(afterOpen[:closeIdx])
 							if content != "" {
-								idValue, uriValue, ok := parseSemioIdentificationLink(content, "definition")
-								if ok {
-									hasIdentification = true
-									identifiedID = idValue
-									identifiedURI = uriValue
-									identificationLine = bodyIdx + 1
-								} else if isSpecText(content) {
+								if isSpecText(content) {
 									hasRequirements = true
 								} else {
 									hasSummary = true
@@ -19290,13 +18162,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 						} else {
 							firstContent := strings.TrimSpace(afterOpen)
 							if firstContent != "" {
-								idValue, uriValue, ok := parseSemioIdentificationLink(firstContent, "definition")
-								if ok {
-									hasIdentification = true
-									identifiedID = idValue
-									identifiedURI = uriValue
-									identificationLine = bodyIdx + 1
-								} else if isSpecText(firstContent) {
+								if isSpecText(firstContent) {
 									hasRequirements = true
 								} else {
 									hasSummary = true
@@ -19310,13 +18176,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 								if strings.HasSuffix(sline, quote) {
 									content := strings.TrimSpace(strings.TrimSuffix(sline, quote))
 									if content != "" {
-										idValue, uriValue, ok := parseSemioIdentificationLink(content, "definition")
-										if ok {
-											hasIdentification = true
-											identifiedID = idValue
-											identifiedURI = uriValue
-											identificationLine = scanIdx + 1
-										} else if isSpecText(content) {
+										if isSpecText(content) {
 											hasRequirements = true
 										} else {
 											hasSummary = true
@@ -19327,13 +18187,7 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 								if sline == "" {
 									continue
 								}
-								idValue, uriValue, ok := parseSemioIdentificationLink(sline, "definition")
-								if ok {
-									hasIdentification = true
-									identifiedID = idValue
-									identifiedURI = uriValue
-									identificationLine = scanIdx + 1
-								} else if isSpecText(sline) {
+								if isSpecText(sline) {
 									hasRequirements = true
 								} else {
 									hasSummary = true
@@ -19376,14 +18230,6 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 					if commentText == "" {
 						continue
 					}
-					idValue, uriValue, ok := parseSemioIdentificationLink(commentText, "definition")
-					if ok {
-						hasIdentification = true
-						identifiedID = idValue
-						identifiedURI = uriValue
-						identificationLine = lineIndex + 1
-						continue
-					}
 					if isSpecText(commentText) {
 						hasRequirements = true
 					} else {
@@ -19391,49 +18237,11 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 					}
 				}
 			}
-			if !isNativeDocstring && (hasSummary || hasRequirements || hasIdentification) {
+			if !isNativeDocstring && (hasSummary || hasRequirements) {
 				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Definition \"%s\" is not using native docstring format in %s:%d", def.name, file, def.start),
 					BreachCodeDefNotNativeDocstring,
 					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
-			}
-			if !hasIdentification {
-				breachs = append(breachs, ctx.CreateBreach(
-					fmt.Sprintf("Definition \"%s\" is missing identification in %s:%d", def.name, file, def.start),
-					BreachCodeDefMissingIdentification,
-					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
-			} else {
-				defSectionPath := findSectionPathForLine(sections, def.start)
-				if defSectionPath == "Header" || strings.HasPrefix(defSectionPath, "Header#") {
-					defSectionPath = ""
-				}
-				expectedKind := DeriveDefinitionKind(def.kind)
-				expectedID := DefinitionHeaderId(file, defSectionPath, def.name, expectedKind)
-				expectedURI := DefinitionHeaderUri(file, defSectionPath, def.name)
-				scopeValue := fmt.Sprintf("%s::%s", file, def.name)
-				if defSectionPath != "" {
-					scopeValue = fmt.Sprintf("%s#%s::%s", file, defSectionPath, def.name)
-				}
-				if identifiedID != expectedID {
-					lineNum := identificationLine
-					if lineNum <= 0 {
-						lineNum = def.start
-					}
-					breachs = append(breachs, ctx.CreateBreach(
-						fmt.Sprintf("Definition \"%s\" has wrong identification ID in %s:%d", def.name, file, lineNum),
-						BreachCodeDefWrongIdentificationId,
-						scopeValue, lineNum, 0, identifiedID))
-				}
-				if identifiedURI != expectedURI {
-					lineNum := identificationLine
-					if lineNum <= 0 {
-						lineNum = def.start
-					}
-					breachs = append(breachs, ctx.CreateBreach(
-						fmt.Sprintf("Definition \"%s\" has wrong identification URI in %s:%d", def.name, file, lineNum),
-						BreachCodeDefWrongIdentificationUri,
-						scopeValue, lineNum, 0, identifiedURI))
-				}
 			}
 			if !hasSummary {
 				breachs = append(breachs, ctx.CreateBreach(
@@ -19452,14 +18260,12 @@ func sectionPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// CommentTemplateState holds the data fields for a comment template state record.
-// [🧰repo⌨️cli💻main🔖types🔖policies✂️commenttemplatestate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/CommentTemplateState)
+// 📋CommentTemplateState holds the data fields for a comment template state record.
 type CommentTemplateState struct {
 	ExprDepth int
 }
 
-// CommentScanState holds the data fields for a comment scan state record.
-// [🧰repo⌨️cli💻main🔖types🔖policies✂️commentscanstate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/CommentScanState)
+// 💬CommentScanState holds the data fields for a comment scan state record.
 type CommentScanState struct {
 	InBlockComment          bool
 	BlockCommentStartLine   int
@@ -19478,8 +18284,7 @@ type CommentScanState struct {
 	InVerbatimString        bool
 }
 
-// InTemplateRaw MUST operate on the CommentScanState receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️intemplateraw](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/InTemplateRaw)
+// 📡InTemplateRaw MUST operate on the CommentScanState receiver and return consistent results.
 func (state *CommentScanState) InTemplateRaw() bool {
 	if len(state.Templates) == 0 {
 		return false
@@ -19487,7 +18292,7 @@ func (state *CommentScanState) InTemplateRaw() bool {
 	return state.Templates[len(state.Templates)-1].ExprDepth == 0
 }
 
-// commentPolicy holds the data fields for a commentPolicy record.
+// 🟫commentPolicy holds the data fields for a commentPolicy record.
 func commentPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	files, err := ctx.Files()
@@ -19511,8 +18316,7 @@ func commentPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️truncate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/truncate)
-// truncate holds the data fields for a truncate record.
+// 💠truncate holds the data fields for a truncate record.
 func truncate(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
@@ -19520,8 +18324,7 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen]
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️requirementspolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/requirementsPolicy)
-// requirementsPolicy holds the data fields for a requirementsPolicy record.
+// 🔳requirementsPolicy holds the data fields for a requirementsPolicy record.
 func requirementsPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	files, err := ctx.Files()
@@ -19631,8 +18434,7 @@ func requirementsPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️codepolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/codePolicy)
-// codePolicy holds the data fields for a codePolicy record.
+// 🔲codePolicy holds the data fields for a codePolicy record.
 func codePolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	breachs = append(breachs, headerPolicy(ctx)...)
@@ -19644,8 +18446,7 @@ func codePolicy(ctx *PolicyContext) []Breach {
 	return breachs
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️emojipolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/emojiPolicy)
-// emojiPolicy holds the data fields for a emojiPolicy record.
+// 😀emojiPolicy holds the data fields for a emojiPolicy record.
 func emojiPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	files, err := ctx.Files()
@@ -19702,8 +18503,7 @@ func emojiPolicy(ctx *PolicyContext) []Breach {
 	return breachs
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️docspolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/docsPolicy)
-// docsPolicy holds the data fields for a docsPolicy record.
+// ▪️docsPolicy holds the data fields for a docsPolicy record.
 func docsPolicy(ctx *PolicyContext) []Breach {
 	if ctx.Scope.Kind == ScopeFile || ctx.Scope.Kind == ScopeSection || ctx.Scope.Kind == ScopeDefinition {
 		return nil
@@ -19742,8 +18542,7 @@ func docsPolicy(ctx *PolicyContext) []Breach {
 	return breachs
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️devdocspolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/devDocsPolicy)
-// devDocsPolicy holds the data fields for a devDocsPolicy record.
+// ▫️devDocsPolicy holds the data fields for a devDocsPolicy record.
 func devDocsPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	agentsContent := ctx.ReadText("AGENTS.md")
@@ -19810,8 +18609,7 @@ func devDocsPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️sketchpadpolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/sketchpadPolicy)
-// sketchpadPolicy holds the data fields for a sketchpadPolicy record.
+// ◾sketchpadPolicy holds the data fields for a sketchpadPolicy record.
 func sketchpadPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	files, err := ctx.Files()
@@ -19909,8 +18707,7 @@ func sketchpadPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️repopolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/repoPolicy)
-// repoPolicy holds the data fields for a repoPolicy record.
+// ◽repoPolicy holds the data fields for a repoPolicy record.
 func repoPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 
@@ -19960,8 +18757,7 @@ func repoPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️systempolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/systemPolicy)
-// systemPolicy holds the data fields for a systemPolicy record.
+// ◻️systemPolicy holds the data fields for a systemPolicy record.
 func systemPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	settingsPath := filepath.Join(ctx.RootDir, ".vscode", "settings.json")
@@ -19981,8 +18777,7 @@ func systemPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️folderpolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/folderPolicy)
-// folderPolicy holds the data fields for a folderPolicy record.
+// 📁folderPolicy holds the data fields for a folderPolicy record.
 func folderPolicy(ctx *PolicyContext) []Breach {
 	if ctx.Scope.Kind != ScopeRepo {
 		return nil
@@ -20036,21 +18831,18 @@ func folderPolicy(ctx *PolicyContext) []Breach {
 	return breachs
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies✂️godfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/Godfile)
-// Godfile holds the data fields for a Godfile record.
+// ◼️Godfile holds the data fields for a Godfile record.
 type Godfile struct {
 	Exact map[string]bool
 	Globs []string
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️isglobpattern](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/isGlobPattern)
-// isGlobPattern holds the data fields for a isGlobPattern record.
+// 🔵isGlobPattern holds the data fields for a isGlobPattern record.
 func isGlobPattern(value string) bool {
 	return strings.ContainsAny(value, "*?[{")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️loadgodfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/loadGodfile)
-// loadGodfile holds the data fields for a loadGodfile record.
+// 🔴loadGodfile holds the data fields for a loadGodfile record.
 func loadGodfile() (*Godfile, error) {
 	godfilePath := filepath.Join(rootDir, ".repo", "files.json")
 	data, err := os.ReadFile(godfilePath)
@@ -20075,8 +18867,7 @@ func loadGodfile() (*Godfile, error) {
 	return result, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️godfilematchespath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/godfileMatchesPath)
-// godfileMatchesPath holds the data fields for a godfileMatchesPath record.
+// 🟠godfileMatchesPath holds the data fields for a godfileMatchesPath record.
 func godfileMatchesPath(godfile *Godfile, relPath string) bool {
 	relPath = normalizeRepoPath(relPath)
 	if godfile.Exact[relPath] {
@@ -20094,8 +18885,7 @@ func godfileMatchesPath(godfile *Godfile, relPath string) bool {
 	return false
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️filepolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/filePolicy)
-// filePolicy holds the data fields for a filePolicy record.
+// 🟡filePolicy holds the data fields for a filePolicy record.
 func filePolicy(ctx *PolicyContext) []Breach {
 	if ctx.Scope.Kind != ScopeRepo {
 		return nil
@@ -20130,8 +18920,7 @@ func filePolicy(ctx *PolicyContext) []Breach {
 	return breachs
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖policies🛠️semiopolicy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Policies/d/i/semioPolicy)
-// semioPolicy validates that semio.* files do not import UI dependencies.
+// 🟢semioPolicy validates that semio.* files do not import UI dependencies.
 func semioPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	files, err := ctx.Files()
@@ -20181,14 +18970,12 @@ func semioPolicy(ctx *PolicyContext) []Breach {
 	return ctx.FilterIgnored(breachs)
 }
 
-// #endregion 🔖Policies
+// #endregion 🧊Policies
 
-// #region 🔖Codebase
-// [🧰repo⌨️cli💻main🔖types🔖codebase](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase)
+// #region 🏩Codebase
 // Codebase builder that assembles bundles, folders, files, sections, definitions, contributors, tickets, policies, and breachs.
 
-// CodebaseContext holds the data fields for a codebase context record.
-// [🧰repo⌨️cli💻main🔖types🔖codebase✂️codebasecontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/CodebaseContext)
+// 💿CodebaseContext holds the data fields for a codebase context record.
 type CodebaseContext struct {
 	RootDir  string
 	RootURI  string
@@ -20199,9 +18986,8 @@ type CodebaseContext struct {
 	Policies []PolicyDef
 }
 
-// NewCodebaseContext MUST initialize all required fields and return a valid CodebaseContext.
-// NewCodebaseContext creates and returns a new CodebaseContext instance.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️newcodebasecontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/NewCodebaseContext)
+// 📝NewCodebaseContext MUST initialize all required fields and return a valid CodebaseContext.
+// 🆕NewCodebaseContext creates and returns a new CodebaseContext instance.
 func NewCodebaseContext() *CodebaseContext {
 	rootURI := "file://" + NormalizePath(rootDir)
 	return &CodebaseContext{
@@ -20210,16 +18996,14 @@ func NewCodebaseContext() *CodebaseContext {
 	}
 }
 
-// LoadBundles MUST read from the configured storage path.
-// LoadBundles loads the bundles from storage.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️loadbundles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/LoadBundles)
+// ⚙️LoadBundles MUST read from the configured storage path.
+// 📖LoadBundles loads the bundles from storage.
 func (ctx *CodebaseContext) LoadBundles() {
 	ctx.Bundles = GetTechnologies()
 }
 
-// LoadFiles MUST read from the configured storage path.
-// LoadFiles loads the files from storage.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️loadfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/LoadFiles)
+// 📄LoadFiles MUST read from the configured storage path.
+// 📄LoadFiles loads the files from storage.
 func (ctx *CodebaseContext) LoadFiles() error {
 	files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, ctx.Bundles)
 	if err != nil {
@@ -20229,9 +19013,8 @@ func (ctx *CodebaseContext) LoadFiles() error {
 	return nil
 }
 
-// LoadBreachs MUST read from the configured storage path.
-// LoadBreachs loads the breachs from storage.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️loadbreachs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/LoadBreachs)
+// 🛤️LoadBreachs MUST read from the configured storage path.
+// ⚠️LoadBreachs loads the breachs from storage.
 func (ctx *CodebaseContext) LoadBreachs() error {
 	for _, file := range ctx.Files {
 		breachs, err := AnalyzeFile(file, ctx.Bundles)
@@ -20243,9 +19026,8 @@ func (ctx *CodebaseContext) LoadBreachs() error {
 	return nil
 }
 
-// LoadTickets MUST read from the configured storage path.
-// LoadTickets loads the tickets from storage.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️loadtickets](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/LoadTickets)
+// 🎫LoadTickets MUST read from the configured storage path.
+// 🔷LoadTickets loads the tickets from storage.
 func (ctx *CodebaseContext) LoadTickets() error {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -20255,16 +19037,14 @@ func (ctx *CodebaseContext) LoadTickets() error {
 	return nil
 }
 
-// LoadPolicies MUST read from the configured storage path.
-// LoadPolicies loads the policies from storage.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️loadpolicies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/LoadPolicies)
+// 📖LoadPolicies MUST read from the configured storage path.
+// 🔶LoadPolicies loads the policies from storage.
 func (ctx *CodebaseContext) LoadPolicies() {
 	ctx.Policies = GetPolicies()
 }
 
-// GetBundleForFile MUST return the stored value without modification.
-// GetBundleForFile returns the bundle for file of the CodebaseContext.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️getbundleforfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/GetBundleForFile)
+// 📦GetBundleForFile MUST return the stored value without modification.
+// 🔤GetBundleForFile returns the bundle for file of the CodebaseContext.
 func (ctx *CodebaseContext) GetBundleForFile(filePath string) string {
 	name, _, ok := ctx.GetBundleInfo(filePath)
 	if !ok {
@@ -20273,9 +19053,8 @@ func (ctx *CodebaseContext) GetBundleForFile(filePath string) string {
 	return name
 }
 
-// GetBundleInfo MUST return the stored value without modification.
-// GetBundleInfo returns the bundle info of the CodebaseContext.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️getbundleinfo](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/GetBundleInfo)
+// 🏪GetBundleInfo MUST return the stored value without modification.
+// ℹ️GetBundleInfo returns the bundle info of the CodebaseContext.
 func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bool) {
 	normalizedPath := NormalizePath(path)
 	var matchedBundle string
@@ -20297,35 +19076,30 @@ func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bo
 	return "", "", false
 }
 
-// GetFileID MUST return the stored value without modification.
-// GetFileID returns the file i d of the CodebaseContext.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️getfileid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/GetFileID)
+// 🔷GetFileID MUST return the stored value without modification.
+// 🔑GetFileID returns the file i d of the CodebaseContext.
 func (ctx *CodebaseContext) GetFileID(file string) string {
 	return buildFileID(file, nil)
 }
 
-// GetFolderID MUST return the stored value without modification.
-// GetFolderID returns the folder i d of the CodebaseContext.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️getfolderid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/GetFolderID)
+// 📁GetFolderID MUST return the stored value without modification.
+// 🔹GetFolderID returns the folder i d of the CodebaseContext.
 func (ctx *CodebaseContext) GetFolderID(folder string) string {
 	return buildFolderID(folder, nil)
 }
 
-// FileURI MUST operate on the CodebaseContext receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️fileuri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/FileURI)
+// 📥FileURI MUST operate on the CodebaseContext receiver and return consistent results.
 func (ctx *CodebaseContext) FileURI(path string) string {
 	return buildFileUriFromPath(NormalizePath(path))
 }
 
-// FolderURI MUST operate on the CodebaseContext receiver and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️folderuri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/FolderURI)
+// 🔗FolderURI MUST operate on the CodebaseContext receiver and return consistent results.
 func (ctx *CodebaseContext) FolderURI(path string) string {
 	return buildFileUriFromPath(NormalizePath(path))
 }
 
-// BuildCodebaseBundles MUST assemble the codebase bundles from the available context data.
-// BuildCodebaseBundles constructs and returns the codebase bundles structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasebundles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseBundles)
+// 🏗️BuildCodebaseBundles MUST assemble the codebase bundles from the available context data.
+// 🧱BuildCodebaseBundles constructs and returns the codebase bundles structure.
 func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	var result []CodebaseBundle
 	fileCounts := make(map[string]int)
@@ -20455,8 +19229,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️countsections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/countSections)
-// countSections holds the data fields for a countSections record.
+// 📑countSections holds the data fields for a countSections record.
 func countSections(sections []Section) int {
 	count := len(sections)
 	for _, s := range sections {
@@ -20465,9 +19238,8 @@ func countSections(sections []Section) int {
 	return count
 }
 
-// BuildCodebaseFolders MUST assemble the codebase folders from the available context data.
-// BuildCodebaseFolders constructs and returns the codebase folders structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasefolders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseFolders)
+// 🔶BuildCodebaseFolders MUST assemble the codebase folders from the available context data.
+// 📦BuildCodebaseFolders constructs and returns the codebase folders structure.
 func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 	folderSet := make(map[string]struct{})
 	fileCounts := make(map[string]int)
@@ -20515,17 +19287,15 @@ func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️extractfilepath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/extractFilePath)
-// extractFilePath holds the data fields for a extractFilePath record.
+// 🧲extractFilePath holds the data fields for a extractFilePath record.
 func extractFilePath(scope string) string {
 	scope = strings.Split(scope, "#")[0]
 	scope = strings.Split(scope, "§")[0]
 	return scope
 }
 
-// BuildCodebaseFiles MUST assemble the codebase files from the available context data.
-// BuildCodebaseFiles constructs and returns the codebase files structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasefiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseFiles)
+// 🔹BuildCodebaseFiles MUST assemble the codebase files from the available context data.
+// 🔸BuildCodebaseFiles constructs and returns the codebase files structure.
 func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 	var result []CodebaseFile
 	breachsByFile := make(map[string][]Breach)
@@ -20582,9 +19352,8 @@ func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 	return result
 }
 
-// BuildCodebaseSections MUST assemble the codebase sections from the available context data.
-// BuildCodebaseSections constructs and returns the codebase sections structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasesections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseSections)
+// 🔸BuildCodebaseSections MUST assemble the codebase sections from the available context data.
+// 🔺BuildCodebaseSections constructs and returns the codebase sections structure.
 func BuildCodebaseSections(ctx *CodebaseContext) []CodebaseSection {
 	var result []CodebaseSection
 
@@ -20604,8 +19373,7 @@ func BuildCodebaseSections(ctx *CodebaseContext) []CodebaseSection {
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️addsections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/addSections)
-// addSections holds the data fields for a addSections record.
+// ➕addSections holds the data fields for a addSections record.
 func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, content string, sections []Section, parentPath string) {
 	for _, section := range sections {
 		sectionPath := section.Name
@@ -20638,9 +19406,8 @@ func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, 
 	}
 }
 
-// BuildCodebaseDefinitions MUST assemble the codebase definitions from the available context data.
-// BuildCodebaseDefinitions constructs and returns the codebase definitions structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasedefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseDefinitions)
+// 🔺BuildCodebaseDefinitions MUST assemble the codebase definitions from the available context data.
+// ▶️BuildCodebaseDefinitions constructs and returns the codebase definitions structure.
 func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 	var result []CodebaseDefinition
 
@@ -20683,9 +19450,8 @@ func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 	return result
 }
 
-// BuildCodebaseContributors MUST assemble the codebase contributors from the available context data.
-// BuildCodebaseContributors constructs and returns the codebase contributors structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasecontributors](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseContributors)
+// 🤝BuildCodebaseContributors MUST assemble the codebase contributors from the available context data.
+// 🔻BuildCodebaseContributors constructs and returns the codebase contributors structure.
 func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -20774,9 +19540,8 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 	return result
 }
 
-// BuildCodebaseTickets MUST assemble the codebase tickets from the available context data.
-// BuildCodebaseTickets constructs and returns the codebase tickets structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasetickets](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseTickets)
+// 🗃️BuildCodebaseTickets MUST assemble the codebase tickets from the available context data.
+// 🗺️BuildCodebaseTickets constructs and returns the codebase tickets structure.
 func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 	var result []CodebaseTicket
 
@@ -20838,9 +19603,8 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 	return result
 }
 
-// BuildCodebasePolicies MUST assemble the codebase policies from the available context data.
-// BuildCodebasePolicies constructs and returns the codebase policies structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasepolicies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebasePolicies)
+// 🔻BuildCodebasePolicies MUST assemble the codebase policies from the available context data.
+// ⬛BuildCodebasePolicies constructs and returns the codebase policies structure.
 func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 	var result []CodebasePolicy
 	breachsByPolicy := make(map[string][]Breach)
@@ -20874,9 +19638,8 @@ func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 	return result
 }
 
-// BuildCodebaseBreachs MUST assemble the codebase breachs from the available context data.
-// BuildCodebaseBreachs constructs and returns the codebase breachs structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasebreachs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseBreachs)
+// ⬛BuildCodebaseBreachs MUST assemble the codebase breachs from the available context data.
+// ⬜BuildCodebaseBreachs constructs and returns the codebase breachs structure.
 func BuildCodebaseBreachs(ctx *CodebaseContext) []CodebaseBreach {
 	var result []CodebaseBreach
 
@@ -20934,9 +19697,8 @@ func BuildCodebaseBreachs(ctx *CodebaseContext) []CodebaseBreach {
 	return result
 }
 
-// BuildCodebaseTree MUST assemble the codebase tree from the available context data.
-// BuildCodebaseTree constructs and returns the codebase tree structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasetree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseTree)
+// 🌳BuildCodebaseTree MUST assemble the codebase tree from the available context data.
+// 🌳BuildCodebaseTree constructs and returns the codebase tree structure.
 func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []CodebaseFile, sections []CodebaseSection, definitions []CodebaseDefinition) map[string]*CbTreeNode {
 	tree := make(map[string]*CbTreeNode)
 	tree["semio"] = &CbTreeNode{Kind: CbTreeNodeRepo, Children: make(map[string]*CbTreeNode)}
@@ -20982,9 +19744,8 @@ func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []C
 	return tree
 }
 
-// BuildCodebase MUST assemble the codebase from the available context data.
-// BuildCodebase constructs and returns the codebase structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebase](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebase)
+// ⬜BuildCodebase MUST assemble the codebase from the available context data.
+// 🟥BuildCodebase constructs and returns the codebase structure.
 func BuildCodebase(ctx *CodebaseContext) *Codebase {
 	bundles := BuildCodebaseBundles(ctx)
 	folders := BuildCodebaseFolders(ctx)
@@ -21011,9 +19772,8 @@ func BuildCodebase(ctx *CodebaseContext) *Codebase {
 	}
 }
 
-// BuildCodebaseSnapshot MUST assemble the codebase snapshot from the available context data.
-// BuildCodebaseSnapshot constructs and returns the codebase snapshot structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasesnapshot](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseSnapshot)
+// 📸BuildCodebaseSnapshot MUST assemble the codebase snapshot from the available context data.
+// 🟧BuildCodebaseSnapshot constructs and returns the codebase snapshot structure.
 func BuildCodebaseSnapshot(files []string, bundles []Bundle, checkpoint string) (*Codebase, error) {
 	ctx := &CodebaseContext{RootDir: rootDir, RootURI: "file://" + NormalizePath(rootDir)}
 	ctx.Bundles = bundles
@@ -21029,9 +19789,8 @@ func BuildCodebaseSnapshot(files []string, bundles []Bundle, checkpoint string) 
 	return codebase, nil
 }
 
-// BuildCodebaseBundlesForFiles MUST assemble the codebase bundles for files from the available context data.
-// BuildCodebaseBundlesForFiles constructs and returns the codebase bundles for files structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasebundlesforfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseBundlesForFiles)
+// 🟥BuildCodebaseBundlesForFiles MUST assemble the codebase bundles for files from the available context data.
+// 🟨BuildCodebaseBundlesForFiles constructs and returns the codebase bundles for files structure.
 func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, checkpoint string) []CodebaseBundle {
 	var result []CodebaseBundle
 	fileCounts := make(map[string]int)
@@ -21105,9 +19864,8 @@ func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, checkpoint string) []Cod
 	return result
 }
 
-// BuildCodebaseFoldersForFiles MUST assemble the codebase folders for files from the available context data.
-// BuildCodebaseFoldersForFiles constructs and returns the codebase folders for files structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasefoldersforfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseFoldersForFiles)
+// 🟧BuildCodebaseFoldersForFiles MUST assemble the codebase folders for files from the available context data.
+// 🟩BuildCodebaseFoldersForFiles constructs and returns the codebase folders for files structure.
 func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, checkpoint string) []CodebaseFolder {
 	folderSet := make(map[string]struct{})
 	fileCounts := make(map[string]int)
@@ -21151,9 +19909,8 @@ func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, checkpoint string) []Cod
 	return result
 }
 
-// BuildCodebaseFilesForFiles MUST assemble the codebase files for files from the available context data.
-// BuildCodebaseFilesForFiles constructs and returns the codebase files for files structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasefilesforfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseFilesForFiles)
+// 🟨BuildCodebaseFilesForFiles MUST assemble the codebase files for files from the available context data.
+// 🟪BuildCodebaseFilesForFiles constructs and returns the codebase files for files structure.
 func BuildCodebaseFilesForFiles(ctx *CodebaseContext, checkpoint string) []CodebaseFile {
 	var result []CodebaseFile
 	for _, file := range ctx.Files {
@@ -21187,9 +19944,8 @@ func BuildCodebaseFilesForFiles(ctx *CodebaseContext, checkpoint string) []Codeb
 	return result
 }
 
-// BuildCodebaseSectionsForFiles MUST assemble the codebase sections for files from the available context data.
-// BuildCodebaseSectionsForFiles constructs and returns the codebase sections for files structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasesectionsforfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseSectionsForFiles)
+// 🟩BuildCodebaseSectionsForFiles MUST assemble the codebase sections for files from the available context data.
+// 💠BuildCodebaseSectionsForFiles constructs and returns the codebase sections for files structure.
 func BuildCodebaseSectionsForFiles(ctx *CodebaseContext, checkpoint string) []CodebaseSection {
 	var result []CodebaseSection
 	for _, file := range ctx.Files {
@@ -21205,8 +19961,7 @@ func BuildCodebaseSectionsForFiles(ctx *CodebaseContext, checkpoint string) []Co
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️addsectionsforcontent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/addSectionsForContent)
-// addSectionsForContent holds the data fields for a addSectionsForContent record.
+// 🟦addSectionsForContent holds the data fields for a addSectionsForContent record.
 func addSectionsForContent(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, content string, sections []Section, parentPath string) {
 	for _, section := range sections {
 		sectionPath := section.Name
@@ -21238,9 +19993,8 @@ func addSectionsForContent(ctx *CodebaseContext, result *[]CodebaseSection, file
 	}
 }
 
-// BuildCodebaseDefinitionsForFiles MUST assemble the codebase definitions for files from the available context data.
-// BuildCodebaseDefinitionsForFiles constructs and returns the codebase definitions for files structure.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️buildcodebasedefinitionsforfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/BuildCodebaseDefinitionsForFiles)
+// 🟪BuildCodebaseDefinitionsForFiles MUST assemble the codebase definitions for files from the available context data.
+// 🔳BuildCodebaseDefinitionsForFiles constructs and returns the codebase definitions for files structure.
 func BuildCodebaseDefinitionsForFiles(ctx *CodebaseContext, checkpoint string) []CodebaseDefinition {
 	var result []CodebaseDefinition
 	for _, file := range ctx.Files {
@@ -21278,8 +20032,7 @@ func BuildCodebaseDefinitionsForFiles(ctx *CodebaseContext, checkpoint string) [
 	return result
 }
 
-// ToolCodebase MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖codebase🛠️toolcodebase](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Codebase/d/i/ToolCodebase)
+// 🟫ToolCodebase MUST complete the operation and return consistent results.
 func ToolCodebase() ToolResult {
 	output := NewOutput()
 	ctx := NewCodebaseContext()
@@ -21304,55 +20057,47 @@ func ToolCodebase() ToolResult {
 	return ToolResult{Output: *output, Data: codebase}
 }
 
-// #endregion 🔖Codebase
+// #endregion 🏩Codebase
 
-// #region 🔖Tickets
-// [🧰repo⌨️cli💻main🔖types🔖tickets](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets)
+// #region 📋Tickets
 // Ticket and goal lifecycle management including creation, closing, reopening, deletion, and diff computation.
 
-// GetTicketsDir MUST return the stored value without modification.
-// GetTicketsDir returns the tickets dir of the value.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️getticketsdir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetTicketsDir)
+// 🎫GetTicketsDir MUST return the stored value without modification.
+// 📖GetTicketsDir returns the tickets dir of the value.
 func GetTicketsDir() string {
 	return filepath.Join(GetRepoMetaDir(), "🎫")
 }
 
-// GetTicketPath MUST return the stored value without modification.
-// GetTicketPath returns the ticket path of the value.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️getticketpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetTicketPath)
+// 🏪GetTicketPath MUST return the stored value without modification.
+// 📦GetTicketPath returns the ticket path of the value.
 func GetTicketPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketsDir(), PadNumber(year, 2), PadNumber(month, 2), PadNumber(day, 2), slug)
 }
 
-// GetImportantFilePath MUST return the stored value without modification.
-// GetImportantFilePath returns the important file path of the value.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️getimportantfilepath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetImportantFilePath)
+// 📥GetImportantFilePath MUST return the stored value without modification.
+// 📥GetImportantFilePath returns the important file path of the value.
 func GetImportantFilePath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "important.md")
 }
 
-// GetTicketJsonPath MUST return the stored value without modification.
-// GetTicketJsonPath returns the ticket json path of the value.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️getticketjsonpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetTicketJsonPath)
+// 🛤️GetTicketJsonPath MUST return the stored value without modification.
+// ⬛GetTicketJsonPath returns the ticket json path of the value.
 func GetTicketJsonPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.json")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️normalizeticketkeyword](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/normalizeTicketKeyword)
-// normalizeTicketKeyword holds the data fields for a normalizeTicketKeyword record.
+// 💿normalizeTicketKeyword holds the data fields for a normalizeTicketKeyword record.
 func normalizeTicketKeyword(value string) string {
 	return strings.ToUpper(strings.TrimSpace(value))
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️hasticketkeyword](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/hasTicketKeyword)
-// hasTicketKeyword holds the data fields for a hasTicketKeyword record.
+// 🔷hasTicketKeyword holds the data fields for a hasTicketKeyword record.
 func hasTicketKeyword(text, keyword string) bool {
 	return strings.Contains(strings.ToUpper(text), keyword)
 }
 
-// FindTicketBySlug MUST return nil when no match is found.
-// FindTicketBySlug searches for and returns the matching ticket by slug.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️findticketbyslug](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/FindTicketBySlug)
+// 🎯FindTicketBySlug MUST return nil when no match is found.
+// 🔎FindTicketBySlug searches for and returns the matching ticket by slug.
 func FindTicketBySlug(slug string) (*Ticket, error) {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -21367,8 +20112,7 @@ func FindTicketBySlug(slug string) (*Ticket, error) {
 	return nil, fmt.Errorf("ticket not found: %s", slug)
 }
 
-// LatestTicket MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️latestticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/LatestTicket)
+// 🧪LatestTicket MUST complete the operation and return consistent results.
 func LatestTicket() (*Ticket, error) {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -21392,20 +20136,17 @@ func LatestTicket() (*Ticket, error) {
 	return &tickets[0], nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldcontinueticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldContinueTicket)
-// shouldContinueTicket holds the data fields for a shouldContinueTicket record.
+// 🔶shouldContinueTicket holds the data fields for a shouldContinueTicket record.
 func shouldContinueTicket(prompt string) bool {
 	return hasTicketKeyword(prompt, "CONTINUE")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldskipticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldSkipTicket)
-// shouldSkipTicket holds the data fields for a shouldSkipTicket record.
+// 🔹shouldSkipTicket holds the data fields for a shouldSkipTicket record.
 func shouldSkipTicket(prompt string) bool {
 	return hasTicketKeyword(prompt, "NOTICKET")
 }
 
-// OpenTicket MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️openticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/OpenTicket)
+// 📬OpenTicket MUST complete the operation and return consistent results.
 func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
 	if prompt == "" {
 		prompt = title
@@ -21426,8 +20167,7 @@ func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal str
 	return CreateTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
 }
 
-// OpenGoal MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️opengoal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/OpenGoal)
+// ⛳OpenGoal MUST complete the operation and return consistent results.
 func OpenGoal(title, description, prompt, dueDate, client, llm string, noManagement bool) (*Goal, error) {
 	ctx := NewRepoContext(rootDir)
 	input := GoalCreateInput{
@@ -21442,8 +20182,7 @@ func OpenGoal(title, description, prompt, dueDate, client, llm string, noManagem
 	return ctx.GoalCreate(input)
 }
 
-// UpdateTicketTitle MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️updatetickettitle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/UpdateTicketTitle)
+// 🔁UpdateTicketTitle MUST complete the operation and return consistent results.
 func UpdateTicketTitle(ticket *Ticket, title string) error {
 	if ticket == nil {
 		return fmt.Errorf("ticket is nil")
@@ -21485,9 +20224,8 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 	return nil
 }
 
-// CreateTicket MUST persist the new entity and return a reference to it.
-// CreateTicket creates a new ticket and persists it.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️createticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/CreateTicket)
+// 🆕CreateTicket MUST persist the new entity and return a reference to it.
+// 🆕CreateTicket creates a new ticket and persists it.
 func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
 	title = strings.TrimSpace(title)
 	if goal == "" {
@@ -21617,8 +20355,7 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 	return ticket, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghgetmilestonetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghGetMilestoneTitle)
-// ghGetMilestoneTitle holds the data fields for a ghGetMilestoneTitle record.
+// 📌ghGetMilestoneTitle holds the data fields for a ghGetMilestoneTitle record.
 func ghGetMilestoneTitle(number int) (string, error) {
 	stdout, stderr, exitCode := ExecCommand("gh", []string{"api", fmt.Sprintf("repos/{owner}/{repo}/milestones/%d", number), "--jq", ".title"}, "")
 	if exitCode != 0 {
@@ -21627,8 +20364,7 @@ func ghGetMilestoneTitle(number int) (string, error) {
 	return strings.TrimSpace(stdout), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghcreateissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghCreateIssue)
-// ghCreateIssue holds the data fields for a ghCreateIssue record.
+// 🔸ghCreateIssue holds the data fields for a ghCreateIssue record.
 func ghCreateIssue(title, body string, milestone *int) (string, error) {
 	args := []string{"issue", "create", "--title", title, "--body", body, "--label", "ticket"}
 	if milestone != nil {
@@ -21650,14 +20386,12 @@ func ghCreateIssue(title, body string, milestone *int) (string, error) {
 	return issueURL, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️buildtechnologylinkargs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/buildTechnologyLinkArgs)
-// buildTechnologyLinkArgs holds the data fields for a buildTechnologyLinkArgs record.
+// 🛠️buildTechnologyLinkArgs holds the data fields for a buildTechnologyLinkArgs record.
 func buildTechnologyLinkArgs(issueURL string) []string {
 	return []string{"project", "item-add", "2", "--owner", "usalu", "--url", issueURL}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghaddissuetoproject](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghAddIssueToProject)
-// ghAddIssueToProject holds the data fields for a ghAddIssueToProject record.
+// ➕ghAddIssueToProject holds the data fields for a ghAddIssueToProject record.
 func ghAddIssueToProject(issueURL string) {
 	if issueURL == "" {
 		return
@@ -21665,8 +20399,7 @@ func ghAddIssueToProject(issueURL string) {
 	ExecCommand("gh", buildTechnologyLinkArgs(issueURL), "")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghgetcurrentuser](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghGetCurrentUser)
-// ghGetCurrentUser holds the data fields for a ghGetCurrentUser record.
+// 👤ghGetCurrentUser holds the data fields for a ghGetCurrentUser record.
 func ghGetCurrentUser() string {
 	stdout, _, exitCode := ExecCommand("gh", []string{"api", "user", "--jq", ".login"}, "")
 	if exitCode != 0 {
@@ -21675,8 +20408,7 @@ func ghGetCurrentUser() string {
 	return strings.TrimSpace(stdout)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghassignissuetocurrentuser](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghAssignIssueToCurrentUser)
-// ghAssignIssueToCurrentUser holds the data fields for a ghAssignIssueToCurrentUser record.
+// 🔺ghAssignIssueToCurrentUser holds the data fields for a ghAssignIssueToCurrentUser record.
 func ghAssignIssueToCurrentUser(issueURL string) {
 	if issueURL == "" {
 		return
@@ -21688,8 +20420,7 @@ func ghAssignIssueToCurrentUser(issueURL string) {
 	ExecCommand("gh", []string{"issue", "edit", issueURL, "--add-assignee", user}, "")
 }
 
-// CountLines MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️countlines](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/CountLines)
+// 🔻CountLines MUST complete the operation and return consistent results.
 func CountLines(content string) int {
 	if content == "" {
 		return 0
@@ -21697,8 +20428,7 @@ func CountLines(content string) int {
 	return strings.Count(content, "\n") + 1
 }
 
-// CountLinesInFile MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️countlinesinfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/CountLinesInFile)
+// 📄CountLinesInFile MUST complete the operation and return consistent results.
 func CountLinesInFile(path string) int {
 	content, err := ReadTextFile(path)
 	if err != nil {
@@ -21707,8 +20437,7 @@ func CountLinesInFile(path string) int {
 	return CountLines(content)
 }
 
-// CountLinesAtCheckpoint MUST complete the operation and return consistent results.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️countlinesatcheckpoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/CountLinesAtCheckpoint)
+// 💾CountLinesAtCheckpoint MUST complete the operation and return consistent results.
 func CountLinesAtCheckpoint(checkpoint, filePath string) int {
 	stdout, _, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", checkpoint, filePath)}, "")
 	if exitCode != 0 {
@@ -21717,9 +20446,8 @@ func CountLinesAtCheckpoint(checkpoint, filePath string) int {
 	return CountLines(stdout)
 }
 
-// ReadTextFileAtCheckpoint MUST return the text file at checkpoint content or an error if unavailable.
-// ReadTextFileAtCheckpoint reads and returns text file at checkpoint from the source.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️readtextfileatcheckpoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ReadTextFileAtCheckpoint)
+// ❌ReadTextFileAtCheckpoint MUST return the text file at checkpoint content or an error if unavailable.
+// ✔️ReadTextFileAtCheckpoint reads and returns text file at checkpoint from the source.
 func ReadTextFileAtCheckpoint(checkpoint, filePath string) (string, error) {
 	if checkpoint == "" {
 		return ReadTextFile(filepath.Join(rootDir, filePath))
@@ -21731,9 +20459,8 @@ func ReadTextFileAtCheckpoint(checkpoint, filePath string) (string, error) {
 	return stdout, nil
 }
 
-// ListFilesAtCheckpoint MUST return all available files at checkpoint entries.
-// ListFilesAtCheckpoint returns a list of files at checkpoint entries.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️listfilesatcheckpoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ListFilesAtCheckpoint)
+// ✔️ListFilesAtCheckpoint MUST return all available files at checkpoint entries.
+// 🔢ListFilesAtCheckpoint returns a list of files at checkpoint entries.
 func ListFilesAtCheckpoint(checkpoint string) ([]string, error) {
 	if checkpoint == "" {
 		files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, GetTechnologies())
@@ -21758,8 +20485,7 @@ func ListFilesAtCheckpoint(checkpoint string) ([]string, error) {
 	return files, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatpromptheading](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatPromptHeading)
-// formatPromptHeading holds the data fields for a formatPromptHeading record.
+// 📰formatPromptHeading holds the data fields for a formatPromptHeading record.
 func formatPromptHeading(body string) string {
 	if body == "" {
 		return "# 🤖 Prompt"
@@ -21767,8 +20493,7 @@ func formatPromptHeading(body string) string {
 	return "# 🤖 Prompt\n\n" + body
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatsummaryheading](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatSummaryHeading)
-// formatSummaryHeading holds the data fields for a formatSummaryHeading record.
+// 📋formatSummaryHeading holds the data fields for a formatSummaryHeading record.
 func formatSummaryHeading(body string) string {
 	if body == "" {
 		return "# 🔍 Summary"
@@ -21776,8 +20501,7 @@ func formatSummaryHeading(body string) string {
 	return "# 🔍 Summary\n\n" + body
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️replacesectioncontent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/replaceSectionContent)
-// replaceSectionContent holds the data fields for a replaceSectionContent record.
+// 📑replaceSectionContent holds the data fields for a replaceSectionContent record.
 func replaceSectionContent(content, sectionHeading, newContent string) string {
 	idx := strings.Index(content, sectionHeading)
 	if idx == -1 {
@@ -21796,13 +20520,11 @@ func replaceSectionContent(content, sectionHeading, newContent string) string {
 	return strings.TrimRight(before, "\n") + "\n\n" + sectionHeading + "\n\n" + newContent + rest
 }
 
-// #region 🔖Ticket File Resolution
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖ticketfileresolution](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/Ticket%20File%20Resolution)
+// #region 🎗️Ticket File Resolution
 // Ticket file input normalization for close operations.
 // Requirements: Accept repo-relative paths, absolute paths, repo file URIs, and file artifact IDs.
 // Docs: Used by ticket close to map file identifiers to repo paths.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖ticketfileresolution🛠️normalizeticketfileinput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/Ticket%20File%20Resolution/d/i/normalizeTicketFileInput)
-// normalizeTicketFileInput holds the data fields for a normalizeTicketFileInput record.
+// 📝normalizeTicketFileInput holds the data fields for a normalizeTicketFileInput record.
 func normalizeTicketFileInput(filePath string) string {
 	normalized := strings.TrimSpace(filePath)
 	if normalized == "" {
@@ -21843,8 +20565,7 @@ func normalizeTicketFileInput(filePath string) string {
 	return normalizeRepoPath(normalized)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖ticketfileresolution🛠️normalizeticketfileinputs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/Ticket%20File%20Resolution/d/i/normalizeTicketFileInputs)
-// normalizeTicketFileInputs holds the data fields for a normalizeTicketFileInputs record.
+// 💿normalizeTicketFileInputs holds the data fields for a normalizeTicketFileInputs record.
 func normalizeTicketFileInputs(files []string) []string {
 	if len(files) == 0 {
 		return files
@@ -21865,11 +20586,10 @@ func normalizeTicketFileInputs(files []string) []string {
 	return filtered
 }
 
-// #endregion 🔖Ticket File Resolution
+// #endregion 🎗️Ticket File Resolution
 
-// FilterTicketWorkspaceFiles MUST return only entries that match the filter criteria.
-// FilterTicketWorkspaceFiles returns the subset of ticket workspace files matching the criteria.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️filterticketworkspacefiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/FilterTicketWorkspaceFiles)
+// 🧹FilterTicketWorkspaceFiles MUST return only entries that match the filter criteria.
+// 🗺️FilterTicketWorkspaceFiles returns the subset of ticket workspace files matching the criteria.
 func FilterTicketWorkspaceFiles(ticket *Ticket, files []string) []string {
 	if ticket == nil {
 		return files
@@ -21903,8 +20623,7 @@ func FilterTicketWorkspaceFiles(ticket *Ticket, files []string) []string {
 	return filtered
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghaddcomment](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghAddComment)
-// ghAddComment holds the data fields for a ghAddComment record.
+// 💬ghAddComment holds the data fields for a ghAddComment record.
 func ghAddComment(issueURL, comment string) error {
 	args := []string{"issue", "comment", issueURL, "--body", comment}
 	_, stderr, exitCode := ExecCommand("gh", args, "")
@@ -21914,8 +20633,7 @@ func ghAddComment(issueURL, comment string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghaddlabels](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghAddLabels)
-// ghAddLabels holds the data fields for a ghAddLabels record.
+// 🏷️ghAddLabels holds the data fields for a ghAddLabels record.
 func ghAddLabels(issueURL string, labels []string) error {
 	if len(labels) == 0 {
 		return nil
@@ -21931,8 +20649,7 @@ func ghAddLabels(issueURL string, labels []string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghcloseissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghCloseIssue)
-// ghCloseIssue holds the data fields for a ghCloseIssue record.
+// 📪ghCloseIssue holds the data fields for a ghCloseIssue record.
 func ghCloseIssue(issueURL string) error {
 	args := []string{"issue", "close", issueURL}
 	_, stderr, exitCode := ExecCommand("gh", args, "")
@@ -21942,8 +20659,7 @@ func ghCloseIssue(issueURL string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghreopenissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghReopenIssue)
-// ghReopenIssue holds the data fields for a ghReopenIssue record.
+// 🔓ghReopenIssue holds the data fields for a ghReopenIssue record.
 func ghReopenIssue(issueURL string) error {
 	args := []string{"issue", "reopen", issueURL}
 	_, stderr, exitCode := ExecCommand("gh", args, "")
@@ -21953,8 +20669,7 @@ func ghReopenIssue(issueURL string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghupdateissuetitle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghUpdateIssueTitle)
-// ghUpdateIssueTitle holds the data fields for a ghUpdateIssueTitle record.
+// ⬛ghUpdateIssueTitle holds the data fields for a ghUpdateIssueTitle record.
 func ghUpdateIssueTitle(issueURL, title string) error {
 	args := []string{"issue", "edit", issueURL, "--title", title}
 	_, stderr, exitCode := ExecCommand("gh", args, "")
@@ -21964,8 +20679,7 @@ func ghUpdateIssueTitle(issueURL, title string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghupdateissuebody](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghUpdateIssueBody)
-// ghUpdateIssueBody holds the data fields for a ghUpdateIssueBody record.
+// ⬜ghUpdateIssueBody holds the data fields for a ghUpdateIssueBody record.
 func ghUpdateIssueBody(issueURL, body string) error {
 	args := []string{"issue", "edit", issueURL, "--body", body}
 	_, stderr, exitCode := ExecCommand("gh", args, "")
@@ -21975,8 +20689,7 @@ func ghUpdateIssueBody(issueURL, body string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets✂️ghissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghIssue)
-// ghIssue holds the data fields for a ghIssue record.
+// 🟥ghIssue holds the data fields for a ghIssue record.
 type ghIssue struct {
 	URL       string `json:"url"`
 	State     string `json:"state"`
@@ -21991,8 +20704,7 @@ type ghIssue struct {
 	} `json:"labels"`
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets✂️ghmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghMilestone)
-// ghMilestone holds the data fields for a ghMilestone record.
+// 🟧ghMilestone holds the data fields for a ghMilestone record.
 type ghMilestone struct {
 	Number      int    `json:"number"`
 	Title       string `json:"title"`
@@ -22002,14 +20714,12 @@ type ghMilestone struct {
 	State       string `json:"state"`
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets✂️ghlabel](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghLabel)
-// ghLabel holds the data fields for a ghLabel record.
+// 🟨ghLabel holds the data fields for a ghLabel record.
 type ghLabel struct {
 	Name string `json:"name"`
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghgetissuedetails](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghGetIssueDetails)
-// ghGetIssueDetails holds the data fields for a ghGetIssueDetails record.
+// 🟩ghGetIssueDetails holds the data fields for a ghGetIssueDetails record.
 func ghGetIssueDetails(issueURL string) (*ghIssue, error) {
 	args := []string{"issue", "view", issueURL, "--json", "url,state,milestone,labels,title,body"}
 	stdout, stderr, exitCode := ExecCommand("gh", args, "")
@@ -22023,7 +20733,6 @@ func ghGetIssueDetails(issueURL string) (*ghIssue, error) {
 	return &issue, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghgetmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghGetMilestone)
 func ghGetMilestone(number int) (*ghMilestone, error) {
 	args := []string{"api", fmt.Sprintf("repos/:owner/:repo/milestones/%d", number)}
 	stdout, stderr, exitCode := ExecCommand("gh", args, "")
@@ -22037,8 +20746,7 @@ func ghGetMilestone(number int) (*ghMilestone, error) {
 	return &milestone, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghfindmilestonebytitle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghFindMilestoneByTitle)
-// ghFindMilestoneByTitle holds the data fields for a ghFindMilestoneByTitle record.
+// 🟦ghFindMilestoneByTitle holds the data fields for a ghFindMilestoneByTitle record.
 func ghFindMilestoneByTitle(title string) (*ghMilestone, error) {
 	if strings.TrimSpace(title) == "" {
 		return nil, nil
@@ -22064,8 +20772,7 @@ func ghFindMilestoneByTitle(title string) (*ghMilestone, error) {
 	return nil, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghupdateissuemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghUpdateIssueMilestone)
-// ghUpdateIssueMilestone holds the data fields for a ghUpdateIssueMilestone record.
+// 🟪ghUpdateIssueMilestone holds the data fields for a ghUpdateIssueMilestone record.
 func ghUpdateIssueMilestone(issueURL, milestoneTitle string) error {
 	if strings.TrimSpace(milestoneTitle) == "" {
 		return fmt.Errorf("milestone title is required")
@@ -22078,8 +20785,7 @@ func ghUpdateIssueMilestone(issueURL, milestoneTitle string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghclearissuemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghClearIssueMilestone)
-// ghClearIssueMilestone holds the data fields for a ghClearIssueMilestone record.
+// 🟫ghClearIssueMilestone holds the data fields for a ghClearIssueMilestone record.
 func ghClearIssueMilestone(issueURL string) error {
 	issueNodeID, err := ghGetIssueNodeID(issueURL)
 	if err != nil {
@@ -22101,8 +20807,7 @@ func ghClearIssueMilestone(issueURL string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghremovelabels](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghRemoveLabels)
-// ghRemoveLabels holds the data fields for a ghRemoveLabels record.
+// 🚚ghRemoveLabels holds the data fields for a ghRemoveLabels record.
 func ghRemoveLabels(issueURL string, labels []string) error {
 	if len(labels) == 0 {
 		return nil
@@ -22118,8 +20823,7 @@ func ghRemoveLabels(issueURL string, labels []string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghlistissuesforlabelsync](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghListIssuesForLabelSync)
-// ghListIssuesForLabelSync holds the data fields for a ghListIssuesForLabelSync record.
+// 💠ghListIssuesForLabelSync holds the data fields for a ghListIssuesForLabelSync record.
 func ghListIssuesForLabelSync() ([]ghIssue, error) {
 	args := []string{"issue", "list", "--state", "all", "--json", "url,labels", "--limit", "1000"}
 	stdout, stderr, exitCode := ExecCommand("gh", args, "")
@@ -22133,8 +20837,7 @@ func ghListIssuesForLabelSync() ([]ghIssue, error) {
 	return issues, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghlistrepolabels](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghListRepoLabels)
-// ghListRepoLabels holds the data fields for a ghListRepoLabels record.
+// 🔳ghListRepoLabels holds the data fields for a ghListRepoLabels record.
 func ghListRepoLabels() ([]ghLabel, error) {
 	args := []string{"label", "list", "--json", "name", "--limit", "1000"}
 	stdout, stderr, exitCode := ExecCommand("gh", args, "")
@@ -22148,7 +20851,6 @@ func ghListRepoLabels() ([]ghLabel, error) {
 	return labels, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghcreaterepolabel](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghCreateRepoLabel)
 func ghCreateRepoLabel(name string) error {
 	if strings.TrimSpace(name) == "" {
 		return fmt.Errorf("label name is required")
@@ -22161,8 +20863,7 @@ func ghCreateRepoLabel(name string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghdeleterepolabel](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghDeleteRepoLabel)
-// ghDeleteRepoLabel holds the data fields for a ghDeleteRepoLabel record.
+// 🗑️ghDeleteRepoLabel holds the data fields for a ghDeleteRepoLabel record.
 func ghDeleteRepoLabel(name string) error {
 	if strings.TrimSpace(name) == "" {
 		return fmt.Errorf("label name is required")
@@ -22175,7 +20876,6 @@ func ghDeleteRepoLabel(name string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghsyncrepolabelcatalog](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghSyncRepoLabelCatalog)
 func ghSyncRepoLabelCatalog(validLabels map[string]bool) error {
 	labels, err := ghListRepoLabels()
 	if err != nil {
@@ -22214,8 +20914,7 @@ func ghSyncRepoLabelCatalog(validLabels map[string]bool) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️extractmilestonenumber](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/extractMilestoneNumber)
-// extractMilestoneNumber holds the data fields for a extractMilestoneNumber record.
+// 🧲extractMilestoneNumber holds the data fields for a extractMilestoneNumber record.
 func extractMilestoneNumber(milestoneURL string) int {
 	parts := strings.Split(milestoneURL, "/")
 	if len(parts) == 0 {
@@ -22225,8 +20924,7 @@ func extractMilestoneNumber(milestoneURL string) int {
 	return num
 }
 
-// ghListOpenIssuesWithLabel holds the data fields for a ghListOpenIssuesWithLabel record.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ghlistopenissueswithlabel](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ghListOpenIssuesWithLabel)
+// ⏹️ghListOpenIssuesWithLabel holds the data fields for a ghListOpenIssuesWithLabel record.
 func ghListOpenIssuesWithLabel(label string) ([]string, error) {
 	args := []string{"issue", "list", "--label", label, "--state", "open", "--json", "url", "--limit", "1000"}
 	stdout, stderr, exitCode := ExecCommand("gh", args, "")
@@ -22246,9 +20944,8 @@ func ghListOpenIssuesWithLabel(label string) ([]string, error) {
 	return urls, nil
 }
 
-// SaveTicket MUST persist the ticket atomically to the data store.
-// SaveTicket persists ticket to the data store.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️saveticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/SaveTicket)
+// 🔲SaveTicket MUST persist the ticket atomically to the data store.
+// 💾SaveTicket persists ticket to the data store.
 func SaveTicket(ticket *Ticket) error {
 	jsonBytes, err := json.MarshalIndent(ticket, "", "  ")
 	if err != nil {
@@ -22266,9 +20963,8 @@ func SaveTicket(ticket *Ticket) error {
 	return nil
 }
 
-// ReadTicket MUST return the ticket content or an error if unavailable.
-// ReadTicket reads and returns ticket from the source.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️readticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ReadTicket)
+// 📖ReadTicket MUST return the ticket content or an error if unavailable.
+// 🔸ReadTicket reads and returns ticket from the source.
 func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	folderPath := GetTicketPath(year, month, day, slug)
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
@@ -22295,9 +20991,8 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	return &ticket, nil
 }
 
-// ListTickets MUST return all available tickets entries.
-// ListTickets returns a list of tickets entries.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️listtickets](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ListTickets)
+// ▪️ListTickets MUST return all available tickets entries.
+// 📋ListTickets returns a list of tickets entries.
 func ListTickets(year, month, day *int) ([]Ticket, error) {
 	ticketsDir := GetTicketsDir()
 	if !FileExists(ticketsDir) {
@@ -22399,9 +21094,8 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	return tickets, nil
 }
 
-// StreamTickets MUST invoke the callback for each matching tickets entry.
-// StreamTickets streams tickets entries through the callback.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️streamtickets](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamTickets)
+// 📍StreamTickets MUST invoke the callback for each matching tickets entry.
+// ⚡StreamTickets streams tickets entries through the callback.
 func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket, opts ...StreamOptions) error {
 	defer close(out)
 
@@ -22534,8 +21228,7 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️ticketmatcheskinds](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ticketMatchesKinds)
-// ticketMatchesKinds holds the data fields for a ticketMatchesKinds record.
+// ▫️ticketMatchesKinds holds the data fields for a ticketMatchesKinds record.
 func ticketMatchesKinds(t *Ticket, opts StreamOptions) bool {
 	if len(opts.IncludeKinds) == 0 && len(opts.ExcludeKinds) == 0 {
 		return true
@@ -22596,9 +21289,8 @@ var (
 	technologyCacheMutex  sync.Mutex
 )
 
-// InvalidateTechnologyCache MUST clear the cached state to force a reload.
-// InvalidateTechnologyCache invalidates the cached technology cache.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️invalidatetechnologycache](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/InvalidateTechnologyCache)
+// 📜InvalidateTechnologyCache MUST clear the cached state to force a reload.
+// ✔️InvalidateTechnologyCache invalidates the cached technology cache.
 func InvalidateTechnologyCache() {
 	technologyCacheMutex.Lock()
 	defer technologyCacheMutex.Unlock()
@@ -22606,9 +21298,8 @@ func InvalidateTechnologyCache() {
 	technologyCache = nil
 }
 
-// LoadTechnologies MUST return all matching technologies from the data source.
-// LoadTechnologies loads and returns technologies from the data source.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️loadtechnologies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/LoadTechnologies)
+// ◾LoadTechnologies MUST return all matching technologies from the data source.
+// 📺LoadTechnologies loads and returns technologies from the data source.
 func LoadTechnologies() []Technology {
 	technologyCacheMutex.Lock()
 	defer technologyCacheMutex.Unlock()
@@ -22620,8 +21311,7 @@ func LoadTechnologies() []Technology {
 	return technologyCache
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️istechnologydir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/isTechnologyDir)
-// isTechnologyDir holds the data fields for a isTechnologyDir record.
+// ◽isTechnologyDir holds the data fields for a isTechnologyDir record.
 func isTechnologyDir(name string) bool {
 	readmePath := filepath.Join(rootDir, name, "README.md")
 	content, err := ReadTextFile(readmePath)
@@ -22637,8 +21327,7 @@ func isTechnologyDir(name string) bool {
 	return true
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️loadtechnologiesinternal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/loadTechnologiesInternal)
-// loadTechnologiesInternal holds the data fields for a loadTechnologiesInternal record.
+// ◻️loadTechnologiesInternal holds the data fields for a loadTechnologiesInternal record.
 func loadTechnologiesInternal() []Technology {
 	var technologies []Technology
 	technologiesDir := rootDir
@@ -22694,6 +21383,21 @@ func loadTechnologiesInternal() []Technology {
 			Bundles: []Bundle{},
 		}
 
+		// Read technology emoji from AGENTS.md frontmatter
+		agentsPath := filepath.Join(rootDir, name, "AGENTS.md")
+		if content, err := ReadTextFile(agentsPath); err == nil && strings.HasPrefix(content, "---") {
+			endIdx := strings.Index(content[3:], "---")
+			if endIdx > 0 {
+				fmContent := content[3 : 3+endIdx]
+				var agentsFm struct {
+					Emoji string `yaml:"emoji"`
+				}
+				if yaml.Unmarshal([]byte(fmContent), &agentsFm) == nil && agentsFm.Emoji != "" {
+					technology.Emoji = agentsFm.Emoji
+				}
+			}
+		}
+
 		technologyPath := filepath.Join(technologiesDir, name)
 		subEntries, _ := os.ReadDir(technologyPath)
 		for _, sub := range subEntries {
@@ -22724,6 +21428,22 @@ func loadTechnologiesInternal() []Technology {
 						Root:           bundlePath,
 						TechnologyName: technologyName,
 						Kind:           BundleKindSite,
+					}
+					// Read site bundle emoji from AGENTS.md frontmatter
+					siteAgentsPath := filepath.Join(rootDir, bundlePath, "AGENTS.md")
+					if content, err := ReadTextFile(siteAgentsPath); err == nil && strings.HasPrefix(content, "---") {
+						endIdx := strings.Index(content[3:], "---")
+						if endIdx > 0 {
+							fmContent := content[3 : 3+endIdx]
+							var siteFm struct {
+								Bundle struct {
+									Emoji string `yaml:"emoji"`
+								} `yaml:"bundle"`
+							}
+							if yaml.Unmarshal([]byte(fmContent), &siteFm) == nil && siteFm.Bundle.Emoji != "" {
+								bundle.Emoji = siteFm.Bundle.Emoji
+							}
+						}
 					}
 					bundle.Packages = loadPackages(filepath.Join(rootDir, bundlePath))
 					configPath := filepath.Join(technologyPath, bunName, siteName, "project.json")
@@ -22759,6 +21479,23 @@ func loadTechnologiesInternal() []Technology {
 				Kind:           kind,
 			}
 
+			// Read bundle emoji from AGENTS.md frontmatter
+			bundleAgentsPath := filepath.Join(rootDir, bundlePath, "AGENTS.md")
+			if content, err := ReadTextFile(bundleAgentsPath); err == nil && strings.HasPrefix(content, "---") {
+				endIdx := strings.Index(content[3:], "---")
+				if endIdx > 0 {
+					fmContent := content[3 : 3+endIdx]
+					var bundleFm struct {
+						Bundle struct {
+							Emoji string `yaml:"emoji"`
+						} `yaml:"bundle"`
+					}
+					if yaml.Unmarshal([]byte(fmContent), &bundleFm) == nil && bundleFm.Bundle.Emoji != "" {
+						bundle.Emoji = bundleFm.Bundle.Emoji
+					}
+				}
+			}
+
 			bundle.Packages = loadPackages(filepath.Join(rootDir, bundlePath))
 
 			configPath := filepath.Join(technologyPath, bunName, "project.json")
@@ -22786,9 +21523,8 @@ func loadTechnologiesInternal() []Technology {
 	return technologies
 }
 
-// LoadCheckpoints MUST return all matching checkpoints from the data source.
-// LoadCheckpoints loads and returns checkpoints from the data source.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️loadcheckpoints](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/LoadCheckpoints)
+// ◼️LoadCheckpoints MUST return all matching checkpoints from the data source.
+// 🔢LoadCheckpoints loads and returns checkpoints from the data source.
 func LoadCheckpoints(limit *int) []Checkpoint {
 	args := []string{"log", "--pretty=format:%H|%aN|%ad|%s", "--date=iso-strict"}
 	if limit != nil {
@@ -22823,9 +21559,8 @@ func LoadCheckpoints(limit *int) []Checkpoint {
 	return checkpoints
 }
 
-// LoadBundles MUST return all matching bundles from the data source.
-// LoadBundles loads and returns bundles from the data source.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️loadbundles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/LoadBundles)
+// 📦LoadBundles MUST return all matching bundles from the data source.
+// 🗄️LoadBundles loads and returns bundles from the data source.
 func LoadBundles() []Bundle {
 	var bundles []Bundle
 	technologies := LoadTechnologies()
@@ -22835,16 +21570,14 @@ func LoadBundles() []Bundle {
 	return bundles
 }
 
-// GetTechnologies MUST retrieve the requested value or return an error.
-// GetTechnologies retrieves and returns the technologies.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️gettechnologies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/GetTechnologies)
+// 📨GetTechnologies MUST retrieve the requested value or return an error.
+// 🔺GetTechnologies retrieves and returns the technologies.
 func GetTechnologies() []Bundle {
 	return LoadBundles()
 }
 
-// StreamBundles MUST invoke the callback for each matching bundles entry.
-// StreamBundles streams bundles entries through the callback.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️streambundles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamBundles)
+// 🔵StreamBundles MUST invoke the callback for each matching bundles entry.
+// 🎯StreamBundles streams bundles entries through the callback.
 func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -22879,8 +21612,7 @@ func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️bundlematcheskinds](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/bundleMatchesKinds)
-// bundleMatchesKinds holds the data fields for a bundleMatchesKinds record.
+// 🔴bundleMatchesKinds holds the data fields for a bundleMatchesKinds record.
 func bundleMatchesKinds(b Bundle, opts StreamOptions) bool {
 	if len(opts.IncludeKinds) == 0 && len(opts.ExcludeKinds) == 0 {
 		return true
@@ -22935,8 +21667,7 @@ func bundleMatchesKinds(b Bundle, opts StreamOptions) bool {
 	return true
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️loadpackages](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/loadPackages)
-// loadPackages holds the data fields for a loadPackages record.
+// 🟠loadPackages holds the data fields for a loadPackages record.
 func loadPackages(bundleRoot string) []Package {
 	var packages []Package
 	filepath.WalkDir(bundleRoot, func(path string, d fs.DirEntry, err error) error {
@@ -23021,9 +21752,8 @@ func loadPackages(bundleRoot string) []Package {
 	return packages
 }
 
-// StreamTechnologies MUST invoke the callback for each matching technologies entry.
-// StreamTechnologies streams technologies entries through the callback.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️streamtechnologies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamTechnologies)
+// 🟡StreamTechnologies MUST invoke the callback for each matching technologies entry.
+// 🔻StreamTechnologies streams technologies entries through the callback.
 func StreamTechnologies(ctx context.Context, out chan<- Technology, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -23049,8 +21779,7 @@ func StreamTechnologies(ctx context.Context, out chan<- Technology, opts ...Stre
 	return nil
 }
 
-// runTechnologyList holds the data fields for a runTechnologyList record.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️runtechnologylist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/runTechnologyList)
+// 🟢runTechnologyList holds the data fields for a runTechnologyList record.
 func runTechnologyList(factory EngineFactory, config Config, cmd *cobra.Command, args []string) error {
 	opts := getStreamOptions(cmd)
 	stream := make(chan Event)
@@ -23076,8 +21805,7 @@ func runTechnologyList(factory EngineFactory, config Config, cmd *cobra.Command,
 	return renderStream(cmd, &config, stream)
 }
 
-// runTechnologyTree holds the data fields for a runTechnologyTree record.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️runtechnologytree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/runTechnologyTree)
+// 🌳runTechnologyTree holds the data fields for a runTechnologyTree record.
 func runTechnologyTree(factory EngineFactory, config Config, cmd *cobra.Command, args []string) error {
 	opts := getStreamOptions(cmd)
 	stream := make(chan Event)
@@ -23114,8 +21842,7 @@ func runTechnologyTree(factory EngineFactory, config Config, cmd *cobra.Command,
 	return renderStream(cmd, &config, stream)
 }
 
-// StreamOptions holds the data fields for a stream options record.
-// [🧰repo⌨️cli💻main🔖types🔖tickets✂️streamoptions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamOptions)
+// 🟣StreamOptions holds the data fields for a stream options record.
 type StreamOptions struct {
 	ShowIgnored    bool
 	ShowGenerated  bool
@@ -23148,8 +21875,7 @@ type StreamOptions struct {
 	IncludeBreachs      []string
 }
 
-// matchesFilter holds the data fields for a matchesFilter record.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️matchesfilter](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/matchesFilter)
+// 🟤matchesFilter holds the data fields for a matchesFilter record.
 func matchesFilter(name string, opts StreamOptions) bool {
 	if opts.Filter == "" {
 		return true
@@ -23186,8 +21912,7 @@ func matchesFilter(name string, opts StreamOptions) bool {
 	return strings.Contains(target, pattern)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️matchesquery](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/matchesQuery)
-// matchesQuery holds the data fields for a matchesQuery record.
+// 🔍matchesQuery holds the data fields for a matchesQuery record.
 func matchesQuery(text string, opts StreamOptions) bool {
 	if opts.Query == "" {
 		return true
@@ -23216,15 +21941,13 @@ func matchesQuery(text string, opts StreamOptions) bool {
 	return results.Total > 0
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets✂️queryableitem](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/queryableItem)
-// queryableItem holds the data fields for a queryableItem record.
+// 🔖queryableItem holds the data fields for a queryableItem record.
 type queryableItem struct {
 	text string
 	idx  int
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️blevefilteritems](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/bleveFilterItems)
-// bleveFilterItems holds the data fields for a bleveFilterItems record.
+// ⚪bleveFilterItems holds the data fields for a bleveFilterItems record.
 func bleveFilterItems(items []queryableItem, query string) map[int]bool {
 	result := make(map[int]bool)
 	if query == "" {
@@ -23266,8 +21989,7 @@ func bleveFilterItems(items []queryableItem, query string) map[int]bool {
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldincludekind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldIncludeKind)
-// shouldIncludeKind holds the data fields for a shouldIncludeKind record.
+// ⚫shouldIncludeKind holds the data fields for a shouldIncludeKind record.
 func shouldIncludeKind(kind string, opts StreamOptions) bool {
 	if len(opts.IncludeKinds) > 0 {
 		found := false
@@ -23290,8 +22012,7 @@ func shouldIncludeKind(kind string, opts StreamOptions) bool {
 	return true
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldincludebundlekind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldIncludeBundleKind)
-// shouldIncludeBundleKind holds the data fields for a shouldIncludeBundleKind record.
+// 🩵shouldIncludeBundleKind holds the data fields for a shouldIncludeBundleKind record.
 func shouldIncludeBundleKind(kind BundleKind, opts StreamOptions) bool {
 	if len(opts.IncludeBundleKinds) > 0 {
 		found := false
@@ -23314,8 +22035,7 @@ func shouldIncludeBundleKind(kind BundleKind, opts StreamOptions) bool {
 	return true
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldincludefolderkind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldIncludeFolderKind)
-// shouldIncludeFolderKind holds the data fields for a shouldIncludeFolderKind record.
+// 📁shouldIncludeFolderKind holds the data fields for a shouldIncludeFolderKind record.
 func shouldIncludeFolderKind(kind FolderKind, opts StreamOptions) bool {
 	if len(opts.IncludeFolderKinds) > 0 {
 		found := false
@@ -23338,8 +22058,7 @@ func shouldIncludeFolderKind(kind FolderKind, opts StreamOptions) bool {
 	return true
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️shouldincludedefinitionkind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/shouldIncludeDefinitionKind)
-// shouldIncludeDefinitionKind holds the data fields for a shouldIncludeDefinitionKind record.
+// 🩶shouldIncludeDefinitionKind holds the data fields for a shouldIncludeDefinitionKind record.
 func shouldIncludeDefinitionKind(kind DefinitionKind, opts StreamOptions) bool {
 	if len(opts.IncludeDefinitionKinds) > 0 {
 		found := false
@@ -23362,9 +22081,8 @@ func shouldIncludeDefinitionKind(kind DefinitionKind, opts StreamOptions) bool {
 	return true
 }
 
-// StreamFolders MUST invoke the callback for each matching folders entry.
-// StreamFolders streams folders entries through the callback.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️streamfolders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamFolders)
+// 🩷StreamFolders MUST invoke the callback for each matching folders entry.
+// 📄StreamFolders streams folders entries through the callback.
 func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -23471,9 +22189,8 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 	return nil
 }
 
-// StreamFiles MUST invoke the callback for each matching files entry.
-// StreamFiles streams files entries through the callback.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️streamfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamFiles)
+// 💜StreamFiles MUST invoke the callback for each matching files entry.
+// 🔲StreamFiles streams files entries through the callback.
 func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -23632,23 +22349,25 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️flattensections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/flattenSections)
-// flattenSections holds the data fields for a flattenSections record.
+// 💙flattenSections holds the data fields for a flattenSections record.
 func flattenSections(sections []Section) []Section {
 	return flattenSectionsWithPrefix(sections, "")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️flattensectionswithprefix](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/flattenSectionsWithPrefix)
-// flattenSectionsWithPrefix holds the data fields for a flattenSectionsWithPrefix record.
+// 🔧flattenSectionsWithPrefix holds the data fields for a flattenSectionsWithPrefix record.
 func flattenSectionsWithPrefix(sections []Section, prefix string) []Section {
 	var result []Section
 	for _, s := range sections {
 		children := s.Children
 		s.Children = nil
+		sPrefix := s.Name
+		if s.Emoji != "" {
+			sPrefix = s.Emoji + s.Name
+		}
 		if prefix != "" {
-			s.Path = prefix + "#" + s.Name
+			s.Path = prefix + "#" + sPrefix
 		} else {
-			s.Path = s.Name
+			s.Path = sPrefix
 		}
 		result = append(result, s)
 		result = append(result, flattenSectionsWithPrefix(children, s.Path)...)
@@ -23656,20 +22375,23 @@ func flattenSectionsWithPrefix(sections []Section, prefix string) []Section {
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️hydratesectionmetadata](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/hydrateSectionMetadata)
-// hydrateSectionMetadata holds the data fields for a hydrateSectionMetadata record.
+// 💚hydrateSectionMetadata holds the data fields for a hydrateSectionMetadata record.
 func hydrateSectionMetadata(s *Section, filePath string, prefix string) {
 	s.FilePath = filePath
 	s.Path = prefix
 	for i := range s.Children {
-		childPath := prefix + "#" + s.Children[i].Name
+		childEmoji := s.Children[i].Emoji
+		childPrefix := s.Children[i].Name
+		if childEmoji != "" {
+			childPrefix = childEmoji + childPrefix
+		}
+		childPath := prefix + "#" + childPrefix
 		hydrateSectionMetadata(&s.Children[i], filePath, childPath)
 	}
 }
 
-// StreamSections MUST invoke the callback for each matching sections entry.
-// StreamSections streams sections entries through the callback.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️streamsections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamSections)
+// 💛StreamSections MUST invoke the callback for each matching sections entry.
+// ▪️StreamSections streams sections entries through the callback.
 func StreamSections(ctx context.Context, scope string, out chan<- Section, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -23716,7 +22438,11 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section, opts 
 			}
 		} else {
 			for i := range sections {
-				hydrateSectionMetadata(&sections[i], f.Path, sections[i].Name)
+				rootPrefix := sections[i].Name
+				if sections[i].Emoji != "" {
+					rootPrefix = sections[i].Emoji + rootPrefix
+				}
+				hydrateSectionMetadata(&sections[i], f.Path, rootPrefix)
 				select {
 				case <-ctx.Done():
 					return ctx.Err()
@@ -23729,9 +22455,8 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section, opts 
 	return nil
 }
 
-// StreamDefinitions MUST invoke the callback for each matching definitions entry.
-// StreamDefinitions streams definitions entries through the callback.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️streamdefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/StreamDefinitions)
+// 🧡StreamDefinitions MUST invoke the callback for each matching definitions entry.
+// ▶️StreamDefinitions streams definitions entries through the callback.
 func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -23800,9 +22525,8 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition,
 	return nil
 }
 
-// ResolveBundleForPath MUST return the resolved value or an error if unresolvable.
-// ResolveBundleForPath resolves and returns the bundle for path.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️resolvebundleforpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ResolveBundleForPath)
+// ❤️ResolveBundleForPath MUST return the resolved value or an error if unresolvable.
+// 📩ResolveBundleForPath resolves and returns the bundle for path.
 func ResolveBundleForPath(filePath string, bundles []Bundle) string {
 	var bestMatch string
 	var maxLen int
@@ -23820,8 +22544,7 @@ func ResolveBundleForPath(filePath string, bundles []Bundle) string {
 	return bestMatch
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatlinemetrics](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatLineMetrics)
-// formatLineMetrics holds the data fields for a formatLineMetrics record.
+// 🤍formatLineMetrics holds the data fields for a formatLineMetrics record.
 func formatLineMetrics(metrics *LineMetrics) string {
 	if metrics == nil {
 		return ""
@@ -23839,8 +22562,7 @@ func formatLineMetrics(metrics *LineMetrics) string {
 	return " " + strings.Join(parts, " ")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatpathwithbundle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatPathWithBundle)
-// formatPathWithBundle holds the data fields for a formatPathWithBundle record.
+// 🖤formatPathWithBundle holds the data fields for a formatPathWithBundle record.
 func formatPathWithBundle(path string, bundles []Bundle) string {
 	bundleName := ResolveBundleForPath(path, bundles)
 	if bundleName == "" {
@@ -23866,16 +22588,14 @@ func formatPathWithBundle(path string, bundles []Bundle) string {
 	return bundleLabel + "/" + path
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatsemanticpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatSemanticPath)
-// formatSemanticPath holds the data fields for a formatSemanticPath record.
+// 🤎formatSemanticPath holds the data fields for a formatSemanticPath record.
 func formatSemanticPath(path string, bundles []Bundle) string {
 	filePath := extractFilePrefix(path)
 	remainder := path[len(filePath):]
 	return formatPathWithBundle(filePath, bundles) + remainder
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatdeletedpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatDeletedPath)
-// formatDeletedPath holds the data fields for a formatDeletedPath record.
+// 💗formatDeletedPath holds the data fields for a formatDeletedPath record.
 func formatDeletedPath(path string, bundles []Bundle) string {
 	filePath := extractFilePrefix(path)
 	remainder := path[len(filePath):]
@@ -23886,8 +22606,7 @@ func formatDeletedPath(path string, bundles []Bundle) string {
 	return base + "<del>" + remainder + "</del>"
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️commonprefixlength](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/commonPrefixLength)
-// commonPrefixLength holds the data fields for a commonPrefixLength record.
+// 💖commonPrefixLength holds the data fields for a commonPrefixLength record.
 func commonPrefixLength(a, b string) int {
 	limit := len(a)
 	if len(b) < limit {
@@ -23903,8 +22622,7 @@ func commonPrefixLength(a, b string) int {
 	return idx
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️commonsuffixlength](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/commonSuffixLength)
-// commonSuffixLength holds the data fields for a commonSuffixLength record.
+// 💝commonSuffixLength holds the data fields for a commonSuffixLength record.
 func commonSuffixLength(a, b string, prefix int) int {
 	max := len(a) - prefix
 	if len(b)-prefix < max {
@@ -23920,8 +22638,7 @@ func commonSuffixLength(a, b string, prefix int) int {
 	return idx
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatrenamedelta](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatRenameDelta)
-// formatRenameDelta holds the data fields for a formatRenameDelta record.
+// 💘formatRenameDelta holds the data fields for a formatRenameDelta record.
 func formatRenameDelta(from, to string) string {
 	if from == to {
 		return from
@@ -23933,15 +22650,13 @@ func formatRenameDelta(from, to string) string {
 	return from[:prefix] + "<del>" + fromMiddle + "</del>" + toMiddle + from[len(from)-suffix:]
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️formatrenamepath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/formatRenamePath)
 func formatRenamePath(from, to string, bundles []Bundle) string {
 	fromFormatted := formatSemanticPath(from, bundles)
 	toFormatted := formatSemanticPath(to, bundles)
 	return formatRenameDelta(fromFormatted, toFormatted)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️appenddifflines](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/appendDiffLines)
-// appendDiffLines holds the data fields for a appendDiffLines record.
+// ➡️appendDiffLines holds the data fields for a appendDiffLines record.
 func appendDiffLines(lines *[]string, diffSet TicketDiffSet, iconAdded, iconChanged, iconRemoved, iconRenamed string, bundles []Bundle, formatter func(string) string, renameFormatter func(string, string) string) {
 	if len(diffSet.Added) > 0 {
 		sort.Slice(diffSet.Added, func(i, j int) bool { return diffSet.Added[i].Path < diffSet.Added[j].Path })
@@ -23973,8 +22688,7 @@ func appendDiffLines(lines *[]string, diffSet TicketDiffSet, iconAdded, iconChan
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️generatemetricscomment](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/generateMetricsComment)
-// generateMetricsComment holds the data fields for a generateMetricsComment record.
+// 💕generateMetricsComment holds the data fields for a generateMetricsComment record.
 func generateMetricsComment(diffs *TicketDiffs, bundles []Bundle) string {
 	if diffs == nil {
 		return ""
@@ -24011,8 +22725,7 @@ func generateMetricsComment(diffs *TicketDiffs, bundles []Bundle) string {
 	return strings.Join(lines, "\n")
 }
 
-// FinishTicket MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️finishticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/FinishTicket)
+// 🔖FinishTicket MUST return a non-nil error when the operation fails.
 func FinishTicket(ticket *Ticket, summary string, files []string, noManagement bool, bulk bool) error {
 	if ticket.Status != TicketStatusOpen {
 		return fmt.Errorf("ticket is not open")
@@ -24164,8 +22877,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 	return nil
 }
 
-// ReopenTicket MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️reopenticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ReopenTicket)
+// 🔖ReopenTicket MUST return a non-nil error when the operation fails.
 func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string, parent string, noManagement bool) error {
 	if ticket.Status == TicketStatusOpen {
 		return fmt.Errorf("ticket is already open")
@@ -24260,8 +22972,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 	return nil
 }
 
-// ToolTicketOpen MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolticketopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketOpen)
+// 🔖ToolTicketOpen MUST complete the operation successfully.
 func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) ToolResult {
 	repopkg.Emit(repopkg.EventTicketOpenStarting, "repo-cli", repopkg.TicketOpenPayload{
 		Title: title, Prompt: prompt, LLM: llm, Client: client, Goal: goal, Parent: parent,
@@ -24291,8 +23002,7 @@ func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal
 	return toolResultFromEvents(events, ticket)
 }
 
-// ToolTicketList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolticketlist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketList)
+// 🔖ToolTicketList MUST complete the operation successfully.
 func ToolTicketList(year, month, day *int) ToolResult {
 	if year == nil && month == nil && day == nil {
 		result := toolResultFromTreeList(TreeNodeTicket)
@@ -24328,8 +23038,7 @@ func ToolTicketList(year, month, day *int) ToolResult {
 	return ToolResult{Output: *output, Data: tickets}
 }
 
-// ToolTicketRead MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolticketread](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketRead)
+// 🔖ToolTicketRead MUST complete the operation successfully.
 func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
@@ -24357,8 +23066,7 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	return toolResultFromEvents(events, ticket)
 }
 
-// ToolTicketClose MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolticketclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketClose)
+// 🔖ToolTicketClose MUST complete the operation successfully.
 func ToolTicketClose(year, month, day int, slug, summary string, files []string, title string, noManagement bool) ToolResult {
 	repopkg.Emit(repopkg.EventTicketCloseStarting, "repo-cli", repopkg.TicketClosePayload{
 		TicketPayload: repopkg.TicketPayload{ID: fmt.Sprintf("%d/%02d/%02d/%s", year, month, day, slug), Year: year, Month: month, Day: day, Slug: slug},
@@ -24401,8 +23109,7 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 	return toolResultFromEvents(events, ticket)
 }
 
-// ToolTicketReopen MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolticketreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTicketReopen)
+// 🔖ToolTicketReopen MUST complete the operation successfully.
 func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft string, title string, goal string, parent string, noManagement bool) ToolResult {
 	repopkg.Emit(repopkg.EventTicketReopenStarting, "repo-cli", repopkg.TicketReopenPayload{
 		TicketPayload: repopkg.TicketPayload{ID: fmt.Sprintf("%d/%02d/%02d/%s", year, month, day, slug), Year: year, Month: month, Day: day, Slug: slug},
@@ -24430,8 +23137,7 @@ func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft str
 	return ToolResult{Output: *output, Data: ticket}
 }
 
-// ToolDraftCreate MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️tooldraftcreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDraftCreate)
+// 📝ToolDraftCreate MUST complete the operation successfully.
 func ToolDraftCreate(title string, files []string) ToolResult {
 	repopkg.Emit(repopkg.EventDraftCreateStarting, "repo-cli", repopkg.DraftPayload{
 		Title: title,
@@ -24446,8 +23152,7 @@ func ToolDraftCreate(title string, files []string) ToolResult {
 	return ToolResult{Output: *output, Data: draft}
 }
 
-// ToolDraftList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️tooldraftlist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDraftList)
+// 🔖ToolDraftList MUST complete the operation successfully.
 func ToolDraftList() ToolResult {
 	drafts, err := ListDrafts()
 	if err != nil {
@@ -24461,8 +23166,7 @@ func ToolDraftList() ToolResult {
 	return toolResultFromEvents(events, drafts)
 }
 
-// ToolDraftDelete MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️tooldraftdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDraftDelete)
+// 🔖ToolDraftDelete MUST complete the operation successfully.
 func ToolDraftDelete(slug string) ToolResult {
 	repopkg.Emit(repopkg.EventDraftDeleteStarting, "repo-cli", repopkg.DraftPayload{Slug: slug})
 	if err := DeleteDraft(slug); err != nil {
@@ -24472,8 +23176,7 @@ func ToolDraftDelete(slug string) ToolResult {
 	return toolResultFromEvents(nil, nil)
 }
 
-// ToolGoalCreate MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolgoalcreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolGoalCreate)
+// 🔖ToolGoalCreate MUST complete the operation successfully.
 func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noManagement bool, parent, milestone string) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	goal, err := ctx.GoalCreate(GoalCreateInput{
@@ -24505,8 +23208,7 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noM
 	return toolResultFromEvents(events, goal)
 }
 
-// ToolGoalList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolgoallist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolGoalList)
+// 🔖ToolGoalList MUST complete the operation successfully.
 func ToolGoalList() ToolResult {
 	result := toolResultFromTreeList(TreeNodeGoal)
 	goals, err := ListGoals()
@@ -24516,8 +23218,7 @@ func ToolGoalList() ToolResult {
 	return result
 }
 
-// ToolGoalClose MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolgoalclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolGoalClose)
+// 🔖ToolGoalClose MUST complete the operation successfully.
 func ToolGoalClose(id, summary string, noManagement bool) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	res, err := ctx.GoalClose(GoalCloseInput{
@@ -24538,8 +23239,7 @@ func ToolGoalClose(id, summary string, noManagement bool) ToolResult {
 	return toolResultFromEvents(events, nil)
 }
 
-// ToolGoalReopen MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolgoalreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolGoalReopen)
+// 🔖ToolGoalReopen MUST complete the operation successfully.
 func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string, noManagement bool) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	var titlePtr, descriptionPtr, dueDatePtr *string
@@ -24575,8 +23275,7 @@ func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string,
 	return toolResultFromEvents(events, nil)
 }
 
-// ToolContributorAdd MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolcontributoradd](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolContributorAdd)
+// 🤝ToolContributorAdd MUST complete the operation successfully.
 func ToolContributorAdd(github string) ToolResult {
 	repopkg.Emit(repopkg.EventContributorAddStarting, "repo-cli", repopkg.ContributorPayload{Github: github})
 	contributor, err := CreateContributor(github)
@@ -24595,8 +23294,7 @@ func ToolContributorAdd(github string) ToolResult {
 	return toolResultFromEvents(events, contributor)
 }
 
-// ToolContributorList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolcontributorlist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolContributorList)
+// 🔖ToolContributorList MUST complete the operation successfully.
 func ToolContributorList() ToolResult {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -24610,8 +23308,7 @@ func ToolContributorList() ToolResult {
 	return toolResultFromEvents(events, contributors)
 }
 
-// ToolContributorRemove MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolcontributorremove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolContributorRemove)
+// ➖ToolContributorRemove MUST complete the operation successfully.
 func ToolContributorRemove(github string) ToolResult {
 	repopkg.Emit(repopkg.EventContributorRemoveStarting, "repo-cli", repopkg.ContributorPayload{Github: github})
 	if err := RemoveContributor(github); err != nil {
@@ -24624,8 +23321,7 @@ func ToolContributorRemove(github string) ToolResult {
 	return toolResultFromEvents(events, nil)
 }
 
-// ToolTechnologyList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️tooltechnologylist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTechnologyList)
+// 🔖ToolTechnologyList MUST complete the operation successfully.
 func ToolTechnologyList() ToolResult {
 	technologies := LoadTechnologies()
 	sort.Slice(technologies, func(i, j int) bool { return technologies[i].Name < technologies[j].Name })
@@ -24637,8 +23333,7 @@ func ToolTechnologyList() ToolResult {
 	return toolResultFromEvents(events, technologies)
 }
 
-// ToolBundleList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolbundlelist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolBundleList)
+// 🔖ToolBundleList MUST complete the operation successfully.
 func ToolBundleList() ToolResult {
 	bundles := LoadBundles()
 	sort.Slice(bundles, func(i, j int) bool { return bundles[i].Name < bundles[j].Name })
@@ -24650,14 +23345,12 @@ func ToolBundleList() ToolResult {
 	return toolResultFromEvents(events, bundles)
 }
 
-// ToolTechnologyTree MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️tooltechnologytree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolTechnologyTree)
+// 🔖ToolTechnologyTree MUST complete the operation successfully.
 func ToolTechnologyTree() ToolResult {
 	return toolResultFromTreeRender(TreeNodeTechnology)
 }
 
-// ToolFolderCreate MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolfoldercreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderCreate)
+// 🔖ToolFolderCreate MUST complete the operation successfully.
 func ToolFolderCreate(path string) ToolResult {
 	repopkg.Emit(repopkg.EventFolderCreateStarting, "repo-cli", repopkg.FolderPayload{Path: path})
 	output := NewOutput()
@@ -24673,8 +23366,7 @@ func ToolFolderCreate(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// ToolFolderMove MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolfoldermove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderMove)
+// 🔖ToolFolderMove MUST complete the operation successfully.
 func ToolFolderMove(source, target string) ToolResult {
 	repopkg.Emit(repopkg.EventFolderMoveStarting, "repo-cli", repopkg.FolderPayload{Path: target, From: source})
 	output := NewOutput()
@@ -24698,8 +23390,7 @@ func ToolFolderMove(source, target string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// ToolFolderDelete MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolfolderdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderDelete)
+// 🔖ToolFolderDelete MUST complete the operation successfully.
 func ToolFolderDelete(path string) ToolResult {
 	repopkg.Emit(repopkg.EventFolderDeleteStarting, "repo-cli", repopkg.FolderPayload{Path: path})
 	output := NewOutput()
@@ -24715,8 +23406,7 @@ func ToolFolderDelete(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// ToolFolderList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolfolderlist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderList)
+// 🔖ToolFolderList MUST complete the operation successfully.
 func ToolFolderList(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -24746,8 +23436,7 @@ func ToolFolderList(path string) ToolResult {
 	return ToolResult{Output: *output, Data: filtered}
 }
 
-// ToolFolderTree MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolfoldertree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFolderTree)
+// 🔖ToolFolderTree MUST complete the operation successfully.
 func ToolFolderTree(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -24759,8 +23448,7 @@ func ToolFolderTree(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️printtree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/printTree)
-// printTree holds the data fields for a printTree record.
+// 🔖printTree holds the data fields for a printTree record.
 func printTree(output *CommandOutput, dir, prefix string) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -24805,8 +23493,7 @@ func printTree(output *CommandOutput, dir, prefix string) {
 	}
 }
 
-// ToolFileCreate MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolfilecreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileCreate)
+// 🔖ToolFileCreate MUST complete the operation successfully.
 func ToolFileCreate(path string) ToolResult {
 	repopkg.Emit(repopkg.EventFileCreateStarting, "repo-cli", repopkg.FilePayload{Path: path})
 	output := NewOutput()
@@ -24824,8 +23511,7 @@ func ToolFileCreate(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// FileHeaderId MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️fileheaderid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/FileHeaderId)
+// 🔖FileHeaderId MUST complete the operation successfully.
 func FileHeaderId(path string) string {
 	kind := DeriveFileKind(filepath.Base(path))
 	if kind == FileKindCode {
@@ -24847,8 +23533,7 @@ func FileHeaderId(path string) string {
 	return GetArtifactID("file", data)
 }
 
-// AGPLLicenseText MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️agpllicensetext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/AGPLLicenseText)
+// 🗃️AGPLLicenseText MUST complete the operation successfully.
 func AGPLLicenseText() string {
 	return `This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -24864,17 +23549,15 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.`
 }
 
-// FileHeaderUri MUST return the repo URI for a file path.
-// FileHeaderUri returns the artifact URI for the given file path.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️fileheaderuri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/FileHeaderUri)
+// 🔗FileHeaderUri MUST return the repo URI for a file path.
+// ◾FileHeaderUri returns the artifact URI for the given file path.
 func FileHeaderUri(path string) string {
 	data := map[string]interface{}{"path": path}
 	return GetArtifactURI("file", data)
 }
 
-// SectionHeaderId MUST return the section artifact ID for a file path and section path.
-// SectionHeaderId returns the section identification string.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️sectionheaderid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/SectionHeaderId)
+// 🏺SectionHeaderId MUST return the section artifact ID for a file path and section path.
+// ◼️SectionHeaderId returns the section identification string.
 func SectionHeaderId(filePath string, sectionPath string) string {
 	normalizedFilePath := NormalizePath(filePath)
 	fileID := buildFileID(normalizedFilePath, nil)
@@ -24883,18 +23566,16 @@ func SectionHeaderId(filePath string, sectionPath string) string {
 	return buildSectionID(fileID, parts)
 }
 
-// SectionHeaderUri MUST return the repo URI for a section.
-// SectionHeaderUri returns the section artifact URI.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️sectionheaderuri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/SectionHeaderUri)
+// 🔖SectionHeaderUri MUST return the repo URI for a section.
+// 🔵SectionHeaderUri returns the section artifact URI.
 func SectionHeaderUri(filePath string, sectionPath string) string {
 	path := filePath + "#" + sectionPath
 	data := map[string]interface{}{"path": path}
 	return GetArtifactURI("section", data)
 }
 
-// DefinitionHeaderId MUST return the definition artifact ID for a file path, section path, and definition name.
-// DefinitionHeaderId returns the definition identification string.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️definitionheaderid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/DefinitionHeaderId)
+// 🔖DefinitionHeaderId MUST return the definition artifact ID for a file path, section path, and definition name.
+// 🟡DefinitionHeaderId returns the definition identification string.
 func DefinitionHeaderId(filePath string, sectionPath string, name string, kind DefinitionKind) string {
 	normalizedFilePath := NormalizePath(filePath)
 	fileID := buildFileID(normalizedFilePath, nil)
@@ -24906,9 +23587,8 @@ func DefinitionHeaderId(filePath string, sectionPath string, name string, kind D
 	return buildDefinitionID(fileID, sectionParts, name, kind)
 }
 
-// DefinitionHeaderUri MUST return the repo URI for a definition.
-// DefinitionHeaderUri returns the definition artifact URI.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️definitionheaderuri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/DefinitionHeaderUri)
+// 🔖DefinitionHeaderUri MUST return the repo URI for a definition.
+// 🩷DefinitionHeaderUri returns the definition artifact URI.
 func DefinitionHeaderUri(filePath string, sectionPath string, name string) string {
 	val := filePath
 	if sectionPath != "" {
@@ -24919,8 +23599,7 @@ func DefinitionHeaderUri(filePath string, sectionPath string, name string) strin
 	return GetArtifactURI("definition", data)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️generatefileheader](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/generateFileHeader)
-// generateFileHeader holds the data fields for a generateFileHeader record.
+// 🔖generateFileHeader holds the data fields for a generateFileHeader record.
 func generateFileHeader(path string, language LanguagePlugin) string {
 	if language == nil || !language.SupportsHeaders() {
 		return ""
@@ -24931,8 +23610,7 @@ func generateFileHeader(path string, language LanguagePlugin) string {
 	return language.FormatHeader(FileHeaderId(path), FileHeaderUri(path), "", contributors, AGPLLicenseText(), "")
 }
 
-// ToolFileMove MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolfilemove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileMove)
+// 🔖ToolFileMove MUST complete the operation successfully.
 func ToolFileMove(source, target string) ToolResult {
 	repopkg.Emit(repopkg.EventFileMoveStarting, "repo-cli", repopkg.FilePayload{Path: target, From: source})
 	output := NewOutput()
@@ -24956,8 +23634,7 @@ func ToolFileMove(source, target string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// ToolFileDelete MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolfiledelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileDelete)
+// 🔖ToolFileDelete MUST complete the operation successfully.
 func ToolFileDelete(path string) ToolResult {
 	repopkg.Emit(repopkg.EventFileDeleteStarting, "repo-cli", repopkg.FilePayload{Path: path})
 	output := NewOutput()
@@ -24973,8 +23650,7 @@ func ToolFileDelete(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// ToolFileList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolfilelist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileList)
+// 🔖ToolFileList MUST complete the operation successfully.
 func ToolFileList(scopeRaw string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(scopeRaw)
@@ -24994,8 +23670,7 @@ func ToolFileList(scopeRaw string) ToolResult {
 	return ToolResult{Output: *output, Data: files}
 }
 
-// ToolFileTree MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolfiletree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolFileTree)
+// 🔖ToolFileTree MUST complete the operation successfully.
 func ToolFileTree(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -25007,8 +23682,7 @@ func ToolFileTree(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// ToolSectionCreate MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolsectioncreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionCreate)
+// 🔖ToolSectionCreate MUST complete the operation successfully.
 func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 	repopkg.Emit(repopkg.EventSectionCreateStarting, "repo-cli", repopkg.SectionPayload{File: filePath, Name: sectionPath})
 	output := NewOutput()
@@ -25068,8 +23742,7 @@ func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// ToolSectionMove MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolsectionmove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionMove)
+// 🔖ToolSectionMove MUST complete the operation successfully.
 func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 	repopkg.Emit(repopkg.EventSectionMoveStarting, "repo-cli", repopkg.SectionPayload{File: filePath, Name: newPath, OldName: oldPath})
 	output := NewOutput()
@@ -25149,8 +23822,7 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// ToolIntegrate MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolintegrate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolIntegrate)
+// 🧬ToolIntegrate MUST complete the operation successfully.
 func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSectionName string) ToolResult {
 	repopkg.Emit(repopkg.EventIntegrateStarting, "repo-cli", repopkg.IntegratePayload{Source: sourcePath, TargetFile: targetFilePath, TargetSection: targetSectionName})
 	output := NewOutput()
@@ -25260,8 +23932,7 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 	return ToolResult{Output: *output}
 }
 
-// ToolExtract MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolextract](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolExtract)
+// 🔖ToolExtract MUST complete the operation successfully.
 func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolResult {
 	repopkg.Emit(repopkg.EventExtractStarting, "repo-cli", repopkg.ExtractPayload{SourceFile: sourceFilePath, SourceSection: sourceSectionName, TargetFile: targetFilePath})
 	output := NewOutput()
@@ -25352,9 +24023,8 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolR
 	return ToolResult{Output: *output}
 }
 
-// UpdateAgentsDocsPath MUST apply the update and return an error if the target is missing.
-// UpdateAgentsDocsPath modifies an existing agents docs path entry.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️updateagentsdocspath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/UpdateAgentsDocsPath)
+// 🎛️UpdateAgentsDocsPath MUST apply the update and return an error if the target is missing.
+// ✏️UpdateAgentsDocsPath modifies an existing agents docs path entry.
 func UpdateAgentsDocsPath(oldPath, newPath string) {
 	agentsPath := filepath.Join(rootDir, "AGENTS.md")
 	if !FileExists(agentsPath) {
@@ -25394,9 +24064,8 @@ func UpdateAgentsDocsPath(oldPath, newPath string) {
 	WriteTextFile(agentsPath, strings.Join(lines, "\n"))
 }
 
-// RemoveAgentsDocsEntry MUST remove the target and return an error on failure.
-// RemoveAgentsDocsEntry removes the specified agents docs entry.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️removeagentsdocsentry](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/RemoveAgentsDocsEntry)
+// 🔖RemoveAgentsDocsEntry MUST remove the target and return an error on failure.
+// 🧪RemoveAgentsDocsEntry removes the specified agents docs entry.
 func RemoveAgentsDocsEntry(filePath string) {
 	agentsPath := filepath.Join(rootDir, "AGENTS.md")
 	if !FileExists(agentsPath) {
@@ -25442,9 +24111,8 @@ func RemoveAgentsDocsEntry(filePath string) {
 	}
 }
 
-// SplitHeader MUST complete the operation successfully.
-// SplitHeader splits the header into parts.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️splitheader](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/SplitHeader)
+// 🔖SplitHeader MUST complete the operation successfully.
+// ✂️SplitHeader splits the header into parts.
 func SplitHeader(content string, lang LanguagePlugin) (string, string) {
 	sections := lang.ParseSections(content)
 	for _, s := range sections {
@@ -25457,9 +24125,8 @@ func SplitHeader(content string, lang LanguagePlugin) (string, string) {
 	return "", content
 }
 
-// MergeHeaders MUST combine the inputs and return the merged result.
-// MergeHeaders combines the headers entries into one.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️mergeheaders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/MergeHeaders)
+// 🔖MergeHeaders MUST combine the inputs and return the merged result.
+// 🔀MergeHeaders combines the headers entries into one.
 func MergeHeaders(targetHeader, sourceHeader string, lang LanguagePlugin) string {
 	if targetHeader == "" {
 		return sourceHeader
@@ -25511,8 +24178,7 @@ func MergeHeaders(targetHeader, sourceHeader string, lang LanguagePlugin) string
 	return strings.Join(res, "\n")
 }
 
-// UniqueStrings MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️uniquestrings](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/UniqueStrings)
+// 🔤UniqueStrings MUST complete the operation successfully.
 func UniqueStrings(input []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}
@@ -25525,8 +24191,7 @@ func UniqueStrings(input []string) []string {
 	return list
 }
 
-// ToolSectionDelete MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolsectiondelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionDelete)
+// 🔖ToolSectionDelete MUST complete the operation successfully.
 func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 	repopkg.Emit(repopkg.EventSectionDeleteStarting, "repo-cli", repopkg.SectionPayload{File: filePath, Name: sectionPath})
 	output := NewOutput()
@@ -25584,8 +24249,7 @@ func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// ToolSectionList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolsectionlist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionList)
+// 🔖ToolSectionList MUST complete the operation successfully.
 func ToolSectionList(filePath string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(filePath)
@@ -25618,8 +24282,7 @@ func ToolSectionList(filePath string) ToolResult {
 	return ToolResult{Output: *output, Data: sections}
 }
 
-// ToolSectionTree MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolsectiontree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolSectionTree)
+// 🔖ToolSectionTree MUST complete the operation successfully.
 func ToolSectionTree(filePath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.Split(filePath, "#")[0])
@@ -25648,8 +24311,7 @@ func ToolSectionTree(filePath string) ToolResult {
 	return ToolResult{Output: *output, Data: sections}
 }
 
-// ToolDefinitionList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️tooldefinitionlist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDefinitionList)
+// 🔖ToolDefinitionList MUST complete the operation successfully.
 func ToolDefinitionList(filePath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -25661,14 +24323,12 @@ func ToolDefinitionList(filePath string) ToolResult {
 	return ToolResult{Output: *output, Data: []Definition{}}
 }
 
-// ToolDefinitionTree MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️tooldefinitiontree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolDefinitionTree)
+// 🔖ToolDefinitionTree MUST complete the operation successfully.
 func ToolDefinitionTree(filePath string) ToolResult {
 	return ToolDefinitionList(filePath)
 }
 
-// ToolUpdateMetabolism MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🛠️toolupdatemetabolism](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/d/i/ToolUpdateMetabolism)
+// 🔖ToolUpdateMetabolism MUST complete the operation successfully.
 func ToolUpdateMetabolism() ToolResult {
 	output := NewOutput()
 	output.Info("\n🔄 Running update-metabolism via npx tsx...")
@@ -25680,12 +24340,10 @@ func ToolUpdateMetabolism() ToolResult {
 	return ToolResult{Output: *output}
 }
 
-// #region 🔖SQLite Export
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export)
+// #region 🕰️SQLite Export
 // SQLite export functions for persisting repository data to the normalized schema defined in repo/sqlite/schema.sql.
 
-// exportSchemaSQL is the embedded SQLite schema for repo export, matching repo/sqlite/schema.sql exactly.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🪨exportschemasql](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSchemaSQL)
+// 📤exportSchemaSQL is the embedded SQLite schema for repo export, matching repo/sqlite/schema.sql exactly.
 const exportSchemaSQL = `
 CREATE TABLE IF NOT EXISTS contributor (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25904,8 +24562,7 @@ CREATE TABLE IF NOT EXISTS event (
 );
 `
 
-// ExportResult holds the data fields for a export result record.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport✂️exportresult](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/ExportResult)
+// 💿ExportResult holds the data fields for a export result record.
 type ExportResult struct {
 	Path         string `json:"path"`
 	Technologies int    `json:"technologies"`
@@ -25916,8 +24573,6 @@ type ExportResult struct {
 	Definitions  int    `json:"definitions"`
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️folderkindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/folderKindToInt)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️folderkindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/folderKindToInt)
 func folderKindToInt(k FolderKind) int {
 	switch k {
 	case FolderKindRequired:
@@ -25927,8 +24582,6 @@ func folderKindToInt(k FolderKind) int {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️technologykindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/technologyKindToInt)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️technologykindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/technologyKindToInt)
 func technologyKindToInt(k TechnologyKind) int {
 	switch k {
 	case TechnologyKindUser:
@@ -25942,8 +24595,6 @@ func technologyKindToInt(k TechnologyKind) int {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️bundlekindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/bundleKindToInt)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️bundlekindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/bundleKindToInt)
 func bundleKindToInt(k BundleKind) int {
 	switch k {
 	case BundleKindLibrary:
@@ -25965,8 +24616,6 @@ func bundleKindToInt(k BundleKind) int {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️filekindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/fileKindToInt)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️filekindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/fileKindToInt)
 func fileKindToInt(kind string) int {
 	switch kind {
 	case FileKindCode:
@@ -25990,8 +24639,6 @@ func fileKindToInt(kind string) int {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️definitionkindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/definitionKindToInt)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️definitionkindtoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/definitionKindToInt)
 func definitionKindToInt(k DefinitionKind) int {
 	switch k {
 	case DefinitionKindImplementation:
@@ -26007,8 +24654,6 @@ func definitionKindToInt(k DefinitionKind) int {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️seedkindtables](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/seedKindTables)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️seedkindtables](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/seedKindTables)
 func seedKindTables(tx *sql.Tx) error {
 	folderKinds := []struct {
 		id    int
@@ -26094,9 +24739,8 @@ func seedKindTables(tx *sql.Tx) error {
 	return nil
 }
 
-// ExportToSQLite MUST write the complete output to the target using exactly the schema defined in repo/sqlite/schema.sql.
-// ExportToSQLite exports repo data to a SQLite database using the normalized schema with FK-based kind references and a synthetic snapshot checkpoint.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exporttosqlite](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/ExportToSQLite)
+// ✏️ExportToSQLite MUST write the complete output to the target using exactly the schema defined in repo/sqlite/schema.sql.
+// ✔️ExportToSQLite exports repo data to a SQLite database using the normalized schema with FK-based kind references and a synthetic snapshot checkpoint.
 func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 	if outputPath == "" {
 		outputPath = filepath.Join(ctx.GetRootDir(), "repo.db")
@@ -26179,8 +24823,6 @@ func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 	return result, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportfoldersnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportFoldersNew)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportfoldersnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportFoldersNew)
 func exportFoldersNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs map[string]int64) (int, error) {
 	folders := ctx.GetFolders()
 	stmt, err := tx.Prepare(`INSERT INTO folder (checkpoint_id, parent_folder_id, folder_kind_id, name, summary) VALUES (?, ?, ?, ?, ?)`)
@@ -26238,8 +24880,6 @@ func exportFoldersNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs
 	return len(folders), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️extractreadmesummary](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/extractReadmeSummary)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️extractreadmesummary](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/extractReadmeSummary)
 func extractReadmeSummary(content string) string {
 	lines := strings.Split(content, "\n")
 	inSummary := false
@@ -26262,8 +24902,6 @@ func extractReadmeSummary(content string) string {
 	return strings.TrimSpace(strings.Join(summaryLines, "\n"))
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exporttechnologiesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportTechnologiesNew)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exporttechnologiesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportTechnologiesNew)
 func exportTechnologiesNew(tx *sql.Tx, ctx RepoContext, folderIDs map[string]int64, technologyIDs map[string]int64) (int, error) {
 	technologies := ctx.GetTechnologies()
 	stmt, err := tx.Prepare(`INSERT INTO technology (folder_id, technology_kind_id, name, summary) VALUES (?, ?, ?, ?)`)
@@ -26297,8 +24935,6 @@ func exportTechnologiesNew(tx *sql.Tx, ctx RepoContext, folderIDs map[string]int
 	return len(technologies), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportbundlesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportBundlesNew)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportbundlesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportBundlesNew)
 func exportBundlesNew(tx *sql.Tx, ctx RepoContext, technologyIDs map[string]int64, folderIDs map[string]int64) (int, error) {
 	bundles := ctx.GetBundles()
 	stmt, err := tx.Prepare(`INSERT INTO bundle (technology_id, folder_id, bundle_kind_id, name, summary) VALUES (?, ?, ?, ?, ?)`)
@@ -26337,8 +24973,6 @@ func exportBundlesNew(tx *sql.Tx, ctx RepoContext, technologyIDs map[string]int6
 	return count, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportfilesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportFilesNew)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportfilesnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportFilesNew)
 func exportFilesNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs map[string]int64, fileIDs map[string]int64) (int, error) {
 	files := ctx.GetFiles()
 	stmt, err := tx.Prepare(`INSERT INTO file (checkpoint_id, parent_folder_id, file_kind_id, name, extension, summary) VALUES (?, ?, ?, ?, ?, ?)`)
@@ -26380,8 +25014,6 @@ func exportFilesNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs m
 	return len(files), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportsectionsnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSectionsNew)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportsectionsnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSectionsNew)
 func exportSectionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64, sectionIDs map[string]int64) (int, error) {
 	files := ctx.GetFiles()
 	stmt, err := tx.Prepare(`INSERT INTO section (file_id, name, summary) VALUES (?, ?, ?)`)
@@ -26415,8 +25047,6 @@ func exportSectionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64, se
 	return totalSections, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportsectionsrecursivenew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSectionsRecursiveNew)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportsectionsrecursivenew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportSectionsRecursiveNew)
 func exportSectionsRecursiveNew(stmt *sql.Stmt, sections []Section, fileID int64, filePath string, content string, commentPrefix string, sectionIDs map[string]int64) (int, error) {
 	count := 0
 	for _, s := range sections {
@@ -26449,8 +25079,6 @@ func exportSectionsRecursiveNew(stmt *sql.Stmt, sections []Section, fileID int64
 	return count, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️exportdefinitionsnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportDefinitionsNew)
-// [🧰repo⌨️cli💻maingo🔖types🔖tickets🔖sqliteexport🛠️exportdefinitionsnew](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/exportDefinitionsNew)
 func exportDefinitionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64, sectionIDs map[string]int64) (int, error) {
 	files := ctx.GetFiles()
 	stmt, err := tx.Prepare(`INSERT INTO definition (section_id, definition_kind_id, name, summary, code) VALUES (?, ?, ?, ?, ?)`)
@@ -26521,8 +25149,7 @@ func exportDefinitionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64,
 	return totalDefs, nil
 }
 
-// ToolExport MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖tickets🔖sqliteexport🛠️toolexport](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Tickets/s/SQLite%20Export/d/i/ToolExport)
+// 🔷ToolExport MUST complete the operation successfully.
 func ToolExport(outputPath string) ToolResult {
 	repopkg.Emit(repopkg.EventExportStarting, "repo-cli", repopkg.FilePayload{Path: outputPath})
 	output := NewOutput()
@@ -26543,16 +25170,14 @@ func ToolExport(outputPath string) ToolResult {
 	return ToolResult{Output: *output, Data: result}
 }
 
-// #endregion 🔖SQLite Export
+// #endregion 🕰️SQLite Export
 
-// #endregion 🔖Tickets
+// #endregion 📋Tickets
 
-// #region 🔖GraphQL Context Port
-// [🧰repo⌨️cli💻main🔖types🔖graphqlcontextport](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Context%20Port)
+// #region 🎥GraphQL Context Port
 // GraphQL context port adapter for request context propagation.
 
-// RepoContext defines the interface for repo context operations.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlcontextport✂️repocontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Context%20Port/d/i/RepoContext)
+// 🔌RepoContext defines the interface for repo context operations.
 type RepoContext interface {
 	GetRootDir() string
 	GetBundles() []*Bundle
@@ -26602,68 +25227,58 @@ type RepoContext interface {
 	SyncManagement() (bool, error)
 }
 
-// #endregion 🔖GraphQL Context Port
+// #endregion 🎥GraphQL Context Port
 
-// #region 🔖GraphQL Resolver
-// [🧰repo⌨️cli💻main🔖types🔖graphqlresolver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Resolver)
+// #region 💡GraphQL Resolver
 // GraphQL resolver implementation binding queries to data sources.
 
-// Resolver holds the data fields for a resolver record.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlresolver✂️resolver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Resolver/d/i/Resolver)
+// 💿Resolver holds the data fields for a resolver record.
 type Resolver struct {
 	RootDir string
 	Ctx     RepoContext
 }
 
-// NewResolver MUST initialize all required fields and return a valid resolver.
-// NewResolver creates and returns a new resolver instance.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlresolver🛠️newresolver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Resolver/d/i/NewResolver)
+// 🔷NewResolver MUST initialize all required fields and return a valid resolver.
+// 🆕NewResolver creates and returns a new resolver instance.
 func NewResolver(rootDir string) *Resolver {
 	return &Resolver{RootDir: rootDir, Ctx: NewRepoContext(rootDir)}
 }
 
-// NewResolverWithContext MUST initialize all required fields and return a valid resolver with context.
-// NewResolverWithContext creates and returns a new resolver with context instance.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlresolver🛠️newresolverwithcontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Resolver/d/i/NewResolverWithContext)
+// 📝NewResolverWithContext MUST initialize all required fields and return a valid resolver with context.
+// 🔤NewResolverWithContext creates and returns a new resolver with context instance.
 func NewResolverWithContext(rootDir string, ctx RepoContext) *Resolver {
 	return &Resolver{RootDir: rootDir, Ctx: ctx}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖graphqlresolver🛠️context](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Resolver/d/i/context)
-// context holds the data fields for a context record.
+// 🔶context holds the data fields for a context record.
 func (r *Resolver) context() RepoContext {
 	return r.Ctx
 }
 
-// #endregion 🔖GraphQL Resolver
+// #endregion 💡GraphQL Resolver
 
-// #region 🔖Default Context
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context)
+// #region 🩻Default Context
 // Default context factory providing baseline resolver context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext✂️defaultcontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/defaultContext)
-// defaultContext holds the data fields for a defaultContext record.
+// 📝defaultContext holds the data fields for a defaultContext record.
 type defaultContext struct {
 	rootDir string
 }
 
-// NewDefaultContext MUST initialize all required fields and return a valid default context.
-// NewDefaultContext creates and returns a new default context instance.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️newdefaultcontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/NewDefaultContext)
+// 🔷NewDefaultContext MUST initialize all required fields and return a valid default context.
+// 🟧NewDefaultContext creates and returns a new default context instance.
 func NewDefaultContext(rootDir string) RepoContext {
 	return &defaultContext{rootDir: rootDir}
 }
 
-// repoContext holds the data fields for a repoContext record.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext✂️repocontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/repoContext)
+// 💿repoContext holds the data fields for a repoContext record.
 type repoContext struct {
 	rootDir            string
 	bundles            []Bundle
 	managementProvider ManagementProvider
 }
 
-// NewRepoContext MUST initialize all required fields and return a valid repo context.
-// NewRepoContext creates and returns a new repo context instance.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️newrepocontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/NewRepoContext)
+// 🔶NewRepoContext MUST initialize all required fields and return a valid repo context.
+// 🐙NewRepoContext creates and returns a new repo context instance.
 func NewRepoContext(rootDir string) RepoContext {
 	resolvedRoot := rootDir
 	if strings.TrimSpace(resolvedRoot) == "" {
@@ -26675,34 +25290,29 @@ func NewRepoContext(rootDir string) RepoContext {
 	return ctx
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️managementprov](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ManagementProv)
-// ManagementProv holds the data fields for a ManagementProv record.
+// 🔹ManagementProv holds the data fields for a ManagementProv record.
 func (c *repoContext) ManagementProv() ManagementProvider { return c.managementProvider }
 
-// GetRootDir MUST retrieve the requested value or return an error.
-// GetRootDir retrieves and returns the root dir.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getrootdir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetRootDir)
+// 📨GetRootDir MUST retrieve the requested value or return an error.
+// 🟨GetRootDir retrieves and returns the root dir.
 func (c *repoContext) GetRootDir() string { return c.rootDir }
 
-// GetFileID MUST retrieve the requested value or return an error.
-// GetFileID retrieves and returns the file i d.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getfileid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFileID)
+// ❌GetFileID MUST retrieve the requested value or return an error.
+// 🔑GetFileID retrieves and returns the file i d.
 func (c *repoContext) GetFileID(path string) string {
 	ctx := &CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	return ctx.GetFileID(path)
 }
 
-// GetFolderID MUST retrieve the requested value or return an error.
-// GetFolderID retrieves and returns the folder i d.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getfolderid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFolderID)
+// 📁GetFolderID MUST retrieve the requested value or return an error.
+// 🟦GetFolderID retrieves and returns the folder i d.
 func (c *repoContext) GetFolderID(path string) string {
 	ctx := &CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	return ctx.GetFolderID(path)
 }
 
-// GetBundles MUST retrieve the requested value or return an error.
-// GetBundles retrieves and returns the bundles.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getbundles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetBundles)
+// 📦GetBundles MUST retrieve the requested value or return an error.
+// 🟪GetBundles retrieves and returns the bundles.
 func (c *repoContext) GetBundles() []*Bundle {
 	result := make([]*Bundle, len(c.bundles))
 	for i := range c.bundles {
@@ -26711,9 +25321,8 @@ func (c *repoContext) GetBundles() []*Bundle {
 	return result
 }
 
-// GetTechnologies MUST retrieve the requested value or return an error.
-// GetTechnologies retrieves and returns the technologies.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️gettechnologies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetTechnologies)
+// 📜GetTechnologies MUST retrieve the requested value or return an error.
+// 📺GetTechnologies retrieves and returns the technologies.
 func (c *repoContext) GetTechnologies() []*Technology {
 	technologies := LoadTechnologies()
 	res := make([]*Technology, len(technologies))
@@ -26723,9 +25332,8 @@ func (c *repoContext) GetTechnologies() []*Technology {
 	return res
 }
 
-// GetCheckpoints MUST retrieve the requested value or return an error.
-// GetCheckpoints retrieves and returns the checkpoints.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getcheckpoints](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetCheckpoints)
+// 💾GetCheckpoints MUST retrieve the requested value or return an error.
+// ✔️GetCheckpoints retrieves and returns the checkpoints.
 func (c *repoContext) GetCheckpoints(limit *int) ([]*Checkpoint, error) {
 	checkpoints := LoadCheckpoints(limit)
 	res := make([]*Checkpoint, len(checkpoints))
@@ -26735,9 +25343,8 @@ func (c *repoContext) GetCheckpoints(limit *int) ([]*Checkpoint, error) {
 	return res, nil
 }
 
-// GetFolders MUST retrieve the requested value or return an error.
-// GetFolders retrieves and returns the folders.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getfolders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFolders)
+// 🔸GetFolders MUST retrieve the requested value or return an error.
+// 🟫GetFolders retrieves and returns the folders.
 func (c *repoContext) GetFolders() []*Folder {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -26766,9 +25373,8 @@ func (c *repoContext) GetFolders() []*Folder {
 	return results
 }
 
-// GetFiles MUST retrieve the requested value or return an error.
-// GetFiles retrieves and returns the files.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFiles)
+// 📄GetFiles MUST retrieve the requested value or return an error.
+// 💠GetFiles retrieves and returns the files.
 func (c *repoContext) GetFiles() []*File {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -26799,9 +25405,8 @@ func (c *repoContext) GetFiles() []*File {
 	return results
 }
 
-// GetDefinitions MUST retrieve the requested value or return an error.
-// GetDefinitions retrieves and returns the definitions.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getdefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetDefinitions)
+// 📖GetDefinitions MUST retrieve the requested value or return an error.
+// 🔳GetDefinitions retrieves and returns the definitions.
 func (c *repoContext) GetDefinitions() []*Definition {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -26838,9 +25443,8 @@ func (c *repoContext) GetDefinitions() []*Definition {
 	return results
 }
 
-// GetSections MUST retrieve the requested value or return an error.
-// GetSections retrieves and returns the sections.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getsections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetSections)
+// 📑GetSections MUST retrieve the requested value or return an error.
+// 🔲GetSections retrieves and returns the sections.
 func (c *repoContext) GetSections() []*Section {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -26874,9 +25478,8 @@ func (c *repoContext) GetSections() []*Section {
 	return results
 }
 
-// GetContributors MUST retrieve the requested value or return an error.
-// GetContributors retrieves and returns the contributors.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getcontributors](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetContributors)
+// 🤝GetContributors MUST retrieve the requested value or return an error.
+// ▪️GetContributors retrieves and returns the contributors.
 func (c *repoContext) GetContributors() ([]*Contributor, error) {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -26889,9 +25492,8 @@ func (c *repoContext) GetContributors() ([]*Contributor, error) {
 	return result, nil
 }
 
-// GetTickets MUST retrieve the requested value or return an error.
-// GetTickets retrieves and returns the tickets.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️gettickets](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetTickets)
+// 🎫GetTickets MUST retrieve the requested value or return an error.
+// ▫️GetTickets retrieves and returns the tickets.
 func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
 	tickets, err := ListTickets(year, month, day)
 	if err != nil {
@@ -26906,16 +25508,14 @@ func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([
 	return result, nil
 }
 
-// GetGoals MUST retrieve the requested value or return an error.
-// GetGoals retrieves and returns the goals.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getgoals](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetGoals)
+// ⛳GetGoals MUST retrieve the requested value or return an error.
+// ◾GetGoals retrieves and returns the goals.
 func (c *repoContext) GetGoals() ([]*Goal, error) {
 	return ListGoals()
 }
 
-// GoalCreate MUST return a non-nil error when the operation fails.
-// GoalCreate performs the goal create operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️goalcreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalCreate)
+// 🆕GoalCreate MUST return a non-nil error when the operation fails.
+// ◽GoalCreate performs the goal create operation on the repo context.
 func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 
 	if input.Title == "" {
@@ -27020,8 +25620,7 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 	return &goal, nil
 }
 
-// getGhRepoUrl holds the data fields for a getGhRepoUrl record.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getghrepourl](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/getGhRepoUrl)
+// 🌐getGhRepoUrl holds the data fields for a getGhRepoUrl record.
 func getGhRepoUrl() (string, error) {
 	out, err := exec.Command("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
 	if err != nil {
@@ -27030,8 +25629,7 @@ func getGhRepoUrl() (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-// parseMilestoneNumber holds the data fields for a parseMilestoneNumber record.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️parsemilestonenumber](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/parseMilestoneNumber)
+// 🎯parseMilestoneNumber holds the data fields for a parseMilestoneNumber record.
 func parseMilestoneNumber(milestone string) (int, error) {
 	if n, err := strconv.Atoi(milestone); err == nil {
 		return n, nil
@@ -27045,9 +25643,8 @@ func parseMilestoneNumber(milestone string) (int, error) {
 	return 0, fmt.Errorf("could not parse milestone number from %s", milestone)
 }
 
-// UpdateGoalTitle MUST apply the update and return an error if the target is missing.
-// UpdateGoalTitle modifies an existing goal title entry.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️updategoaltitle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/UpdateGoalTitle)
+// 🔁UpdateGoalTitle MUST apply the update and return an error if the target is missing.
+// ❓UpdateGoalTitle modifies an existing goal title entry.
 func UpdateGoalTitle(goal *Goal, title string) error {
 	title = strings.TrimSpace(title)
 	if title == "" {
@@ -27084,9 +25681,8 @@ func UpdateGoalTitle(goal *Goal, title string) error {
 	return nil
 }
 
-// GoalChange MUST return a non-nil error when the operation fails.
-// GoalChange performs the goal change operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️goalchange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalChange)
+// ♻️GoalChange MUST return a non-nil error when the operation fails.
+// 📐GoalChange performs the goal change operation on the repo context.
 func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -27170,9 +25766,8 @@ func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 	return &goal, nil
 }
 
-// GoalClose MUST return a non-nil error when the operation fails.
-// GoalClose performs the goal close operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️goalclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalClose)
+// 📪GoalClose MUST return a non-nil error when the operation fails.
+// 🏁GoalClose performs the goal close operation on the repo context.
 func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -27218,9 +25813,8 @@ func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 	return &goal, nil
 }
 
-// GoalReopen MUST return a non-nil error when the operation fails.
-// GoalReopen performs the goal reopen operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️goalreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalReopen)
+// 🔓GoalReopen MUST return a non-nil error when the operation fails.
+// 🔄GoalReopen performs the goal reopen operation on the repo context.
 func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -27283,9 +25877,8 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	return &goal, nil
 }
 
-// TicketChange MUST return a non-nil error when the operation fails.
-// TicketChange performs the ticket change operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ticketchange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketChange)
+// 🔺TicketChange MUST return a non-nil error when the operation fails.
+// ♻️TicketChange performs the ticket change operation on the repo context.
 func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -27354,9 +25947,8 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 	return ticket, nil
 }
 
-// GoalDelete MUST return a non-nil error when the operation fails.
-// GoalDelete performs the goal delete operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️goaldelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalDelete)
+// 🗑️GoalDelete MUST return a non-nil error when the operation fails.
+// ◼️GoalDelete performs the goal delete operation on the repo context.
 func (c *repoContext) GoalDelete(input GoalDeleteInput) (bool, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -27392,9 +25984,8 @@ func (c *repoContext) GoalDelete(input GoalDeleteInput) (bool, error) {
 	return true, nil
 }
 
-// TicketDelete MUST return a non-nil error when the operation fails.
-// TicketDelete performs the ticket delete operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ticketdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketDelete)
+// 🔻TicketDelete MUST return a non-nil error when the operation fails.
+// 🔴TicketDelete performs the ticket delete operation on the repo context.
 func (c *repoContext) TicketDelete(input TicketDeleteInput) (bool, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -27423,30 +26014,26 @@ func (c *repoContext) TicketDelete(input TicketDeleteInput) (bool, error) {
 	return true, nil
 }
 
-// GetDrafts MUST retrieve the requested value or return an error.
-// GetDrafts retrieves and returns the drafts.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getdrafts](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetDrafts)
+// ⬛GetDrafts MUST retrieve the requested value or return an error.
+// 🟠GetDrafts retrieves and returns the drafts.
 func (c *repoContext) GetDrafts() ([]*Draft, error) {
 	return ListDrafts()
 }
 
-// DraftCreate MUST return a non-nil error when the operation fails.
-// DraftCreate performs the draft create operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️draftcreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/DraftCreate)
+// ⬜DraftCreate MUST return a non-nil error when the operation fails.
+// 🟡DraftCreate performs the draft create operation on the repo context.
 func (c *repoContext) DraftCreate(input DraftCreateInput) (*Draft, error) {
 	return CreateDraft(input.Title, input.Files)
 }
 
-// DraftDelete MUST return a non-nil error when the operation fails.
-// DraftDelete performs the draft delete operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️draftdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/DraftDelete)
+// 🟥DraftDelete MUST return a non-nil error when the operation fails.
+// 🟢DraftDelete performs the draft delete operation on the repo context.
 func (c *repoContext) DraftDelete(id string) (bool, error) {
 	return true, DeleteDraft(id)
 }
 
-// GetPolicies MUST retrieve the requested value or return an error.
-// GetPolicies retrieves and returns the policies.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getpolicies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetPolicies)
+// 🟧GetPolicies MUST retrieve the requested value or return an error.
+// 🟣GetPolicies retrieves and returns the policies.
 func (c *repoContext) GetPolicies() []*Policy {
 	policies := GetRegisteredPolicies()
 	result := make([]*Policy, len(policies))
@@ -27475,9 +26062,8 @@ func (c *repoContext) GetPolicies() []*Policy {
 	return result
 }
 
-// GetStatutes MUST retrieve the requested value or return an error.
-// GetStatutes retrieves and returns the statutes.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getstatutes](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetStatutes)
+// 🟨GetStatutes MUST retrieve the requested value or return an error.
+// 🟤GetStatutes retrieves and returns the statutes.
 func (c *repoContext) GetStatutes() []*StatuteMeta {
 	var result []*StatuteMeta
 	for _, meta := range statuteInfoTable {
@@ -27488,9 +26074,8 @@ func (c *repoContext) GetStatutes() []*StatuteMeta {
 	return result
 }
 
-// Analyze MUST return a non-nil error when the operation fails.
-// Analyze performs the analyze operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️analyze](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Analyze)
+// 🔬Analyze MUST return a non-nil error when the operation fails.
+// ⚪Analyze performs the analyze operation on the repo context.
 func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	scopeStr := "semio"
 	if scope != nil {
@@ -27510,9 +26095,8 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	return &AnalyzeResult{Breachs: result, Metrics: &AnalyzeMetrics{Total: len(breachs)}}, nil
 }
 
-// Fix MUST return a non-nil error when the operation fails.
-// Fix performs the fix operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️fix](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Fix)
+// 🔧Fix MUST return a non-nil error when the operation fails.
+// 🔧Fix performs the fix operation on the repo context.
 func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 	scopeStr := "semio"
 	if scope != nil {
@@ -27567,17 +26151,7 @@ func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 	return &FixResult{Fixed: fixed, Remaining: len(remaining), Breachs: remainingPtrs}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️replacementidentificationline](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/replacementIdentificationLine)
-func replacementIdentificationLine(existingLine string, commentPrefix string, idValue string, uriValue string) string {
-	link := "[" + idValue + "](" + uriValue + ")"
-	if bracketIndex := strings.Index(existingLine, "["); bracketIndex >= 0 {
-		return existingLine[:bracketIndex] + link
-	}
-	return commentPrefix + " " + link
-}
-
-// inferDefinitionKindFromLine holds the data fields for a inferDefinitionKindFromLine record.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️inferdefinitionkindfromline](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/inferDefinitionKindFromLine)
+// 🏷️inferDefinitionKindFromLine holds the data fields for a inferDefinitionKindFromLine record.
 func inferDefinitionKindFromLine(line string) DefinitionKind {
 	lower := strings.ToLower(strings.TrimSpace(line))
 	switch {
@@ -27603,7 +26177,6 @@ func inferDefinitionKindFromLine(line string) DefinitionKind {
 	}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️applyautofixes](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/applyAutofixes)
 func applyAutofixes(file string, breachs []Breach) (int, error) {
 	absPath := filepath.Join(rootDir, file)
 	content, err := ReadTextFile(absPath)
@@ -27613,31 +26186,6 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 	language := GetLanguage(file)
 	fixed := 0
 	lines := strings.Split(content, "\n")
-	sectionPathForLine := func(lineNum int) string {
-		if language == nil || lineNum <= 0 {
-			return ""
-		}
-		sections := language.ParseSections(strings.Join(lines, "\n"))
-		var findPath func(secs []Section, n int) string
-		findPath = func(secs []Section, n int) string {
-			for _, s := range secs {
-				if n < s.StartLine || n > s.EndLine {
-					continue
-				}
-				child := findPath(s.Children, n)
-				if child != "" {
-					return s.Name + "#" + child
-				}
-				return s.Name
-			}
-			return ""
-		}
-		path := findPath(sections, lineNum)
-		if path == "Header" || strings.HasPrefix(path, "Header#") {
-			return ""
-		}
-		return path
-	}
 	sort.Slice(breachs, func(i, j int) bool {
 		return breachs[i].Line > breachs[j].Line
 	})
@@ -27652,41 +26200,6 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 					lines = strings.Split(content, "\n")
 					fixed++
 				}
-			}
-		case BreachCodeFileMissingIdentification:
-			if language != nil {
-				expectedId := FileHeaderId(file)
-				expectedUri := FileHeaderUri(file)
-				prefix := language.CommentPrefix()
-				newLine := prefix + " [" + expectedId + "](" + expectedUri + ")"
-				insertAfter := 0
-				for i, line := range lines {
-					if matched, _ := language.PolicySectionStartMatch(line); matched {
-						_, name := language.PolicySectionStartMatch(line)
-						if strings.ToLower(name) == "header" {
-							insertAfter = i + 1
-							break
-						}
-					}
-				}
-				if insertAfter > 0 && insertAfter < len(lines) {
-					newLines := make([]string, 0, len(lines)+2)
-					newLines = append(newLines, lines[:insertAfter]...)
-					newLines = append(newLines, "")
-					newLines = append(newLines, newLine)
-					newLines = append(newLines, lines[insertAfter:]...)
-					lines = newLines
-					fixed++
-				}
-			}
-		case BreachCodeFileWrongIdentificationId, BreachCodeFileWrongIdentificationUri:
-			if v.Line > 0 && v.Line <= len(lines) && language != nil {
-				expectedId := FileHeaderId(file)
-				expectedUri := FileHeaderUri(file)
-				prefix := language.CommentPrefix()
-				newLine := prefix + " [" + expectedId + "](" + expectedUri + ")"
-				lines[v.Line-1] = newLine
-				fixed++
 			}
 		case BreachCodeSectionEmpty:
 			sectionStartLine := 0
@@ -27744,362 +26257,6 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 				startName := findMatchingSectionStartName(lines, v.Line-1, language)
 				if startName != "" {
 					lines[v.Line-1] = language.FormatSectionEnd(startName)
-					fixed++
-				}
-			}
-		case BreachCodeSectionMissingIdentification:
-			if v.Line > 0 && v.Line <= len(lines) && language != nil {
-				sectionPath := ""
-				if idx := strings.Index(v.Scope, "#"); idx >= 0 {
-					sectionPath = v.Scope[idx+1:]
-				}
-				if sectionPath == "" {
-					sectionPath = sectionPathForLine(v.Line)
-				}
-				if sectionPath != "" {
-					sectionId := SectionHeaderId(file, sectionPath)
-					sectionUri := SectionHeaderUri(file, sectionPath)
-					prefix := language.CommentPrefix()
-					idLine := prefix + " [" + sectionId + "](" + sectionUri + ")"
-					insertAt := v.Line
-					newLines := make([]string, 0, len(lines)+1)
-					newLines = append(newLines, lines[:insertAt]...)
-					newLines = append(newLines, idLine)
-					newLines = append(newLines, lines[insertAt:]...)
-					lines = newLines
-					fixed++
-				}
-			}
-		case BreachCodeSectionWrongIdentificationId, BreachCodeSectionWrongIdentificationUri:
-			if v.Line > 0 && v.Line <= len(lines) && language != nil {
-				sectionPath := ""
-				if idx := strings.Index(v.Scope, "#"); idx >= 0 {
-					sectionPath = v.Scope[idx+1:]
-				}
-				if sectionPath == "" {
-					sectionPath = sectionPathForLine(v.Line)
-				}
-				if sectionPath != "" {
-					sectionId := SectionHeaderId(file, sectionPath)
-					sectionUri := SectionHeaderUri(file, sectionPath)
-					prefix := language.CommentPrefix()
-					lines[v.Line-1] = replacementIdentificationLine(lines[v.Line-1], prefix, sectionId, sectionUri)
-					fixed++
-				}
-			}
-		case BreachCodeDefMissingIdentification:
-			if v.Line > 0 && v.Line <= len(lines) && language != nil {
-				defName := ""
-				filePart := file
-				if idx := strings.Index(v.Scope, "::"); idx >= 0 {
-					defName = v.Scope[idx+2:]
-					filePart = v.Scope[:idx]
-				}
-				if defName != "" {
-					sectionPath := ""
-					if idx := strings.Index(filePart, "#"); idx >= 0 {
-						sectionPath = filePart[idx+1:]
-						filePart = filePart[:idx]
-					}
-					if sectionPath == "" {
-						sectionPath = sectionPathForLine(v.Line)
-					}
-					defKind := DefinitionKindImplementation
-					for lineIdx := v.Line - 1; lineIdx < len(lines) && lineIdx < v.Line+2; lineIdx++ {
-						l := lines[lineIdx]
-						defKind = inferDefinitionKindFromLine(l)
-						if defKind != DefinitionKindImplementation {
-							break
-						}
-					}
-					defId := DefinitionHeaderId(filePart, sectionPath, defName, defKind)
-					defUri := DefinitionHeaderUri(filePart, sectionPath, defName)
-					prefix := language.CommentPrefix()
-					idLine := prefix + " [" + defId + "](" + defUri + ")"
-					langName := language.Name()
-					if langName == "python" {
-						parenDepth := 0
-						for _, ch := range lines[v.Line-1] {
-							if ch == '(' {
-								parenDepth++
-							}
-							if ch == ')' {
-								parenDepth--
-							}
-						}
-						bodyStart := v.Line
-						if parenDepth > 0 {
-							for scanIdx := v.Line; scanIdx < len(lines) && scanIdx < v.Line+15; scanIdx++ {
-								for _, ch := range lines[scanIdx] {
-									if ch == '(' {
-										parenDepth++
-									}
-									if ch == ')' {
-										parenDepth--
-									}
-								}
-								if parenDepth <= 0 {
-									bodyStart = scanIdx + 1
-									break
-								}
-							}
-						}
-						docstringFound := false
-						for bodyIdx := bodyStart; bodyIdx < len(lines) && bodyIdx < bodyStart+5; bodyIdx++ {
-							trimmed := strings.TrimSpace(lines[bodyIdx])
-							if trimmed == "" {
-								continue
-							}
-							if strings.HasPrefix(trimmed, `"""`) || strings.HasPrefix(trimmed, `'''`) {
-								docstringFound = true
-								quote := `"""`
-								if strings.HasPrefix(trimmed, `'''`) {
-									quote = `'''`
-								}
-								afterOpen := strings.TrimPrefix(trimmed, quote)
-								closeIdx := strings.Index(afterOpen, quote)
-								bodyIndent := ""
-								for _, ch := range lines[bodyIdx] {
-									if ch == ' ' || ch == '\t' {
-										bodyIndent += string(ch)
-									} else {
-										break
-									}
-								}
-								idContent := "[" + defId + "](" + defUri + ")"
-								if closeIdx >= 0 {
-									existingContent := strings.TrimSpace(afterOpen[:closeIdx])
-									if existingContent != "" {
-										lines[bodyIdx] = bodyIndent + quote + existingContent
-										newLines := make([]string, 0, len(lines)+2)
-										newLines = append(newLines, lines[:bodyIdx+1]...)
-										newLines = append(newLines, bodyIndent+idContent)
-										newLines = append(newLines, bodyIndent+quote)
-										newLines = append(newLines, lines[bodyIdx+1:]...)
-										lines = newLines
-									} else {
-										lines[bodyIdx] = bodyIndent + quote + idContent + quote
-									}
-								} else {
-									for scanIdx := bodyIdx + 1; scanIdx < len(lines); scanIdx++ {
-										sline := strings.TrimSpace(lines[scanIdx])
-										if sline == quote || strings.HasSuffix(sline, quote) {
-											newLines := make([]string, 0, len(lines)+1)
-											newLines = append(newLines, lines[:scanIdx]...)
-											newLines = append(newLines, bodyIndent+idContent)
-											newLines = append(newLines, lines[scanIdx:]...)
-											lines = newLines
-											break
-										}
-									}
-								}
-								fixed++
-							}
-							break
-						}
-						if !docstringFound {
-							bodyIndent := "    "
-							if bodyStart < len(lines) {
-								raw := lines[bodyStart]
-								detected := ""
-								for _, ch := range raw {
-									if ch == ' ' || ch == '\t' {
-										detected += string(ch)
-									} else {
-										break
-									}
-								}
-								if detected != "" {
-									bodyIndent = detected
-								}
-							}
-							idContent := "[" + defId + "](" + defUri + ")"
-							newLines := make([]string, 0, len(lines)+1)
-							newLines = append(newLines, lines[:bodyStart]...)
-							newLines = append(newLines, bodyIndent+`"""`+idContent+`"""`)
-							newLines = append(newLines, lines[bodyStart:]...)
-							lines = newLines
-							fixed++
-						}
-					} else if langName == "typescript" {
-						prevIdx := v.Line - 2
-						if prevIdx >= 0 {
-							prevLine := strings.TrimSpace(lines[prevIdx])
-							if strings.HasSuffix(prevLine, "**/") || strings.HasSuffix(prevLine, "*/") {
-								indent := ""
-								for _, ch := range lines[v.Line-1] {
-									if ch == ' ' || ch == '\t' {
-										indent += string(ch)
-									} else {
-										break
-									}
-								}
-								idContent := "[" + defId + "](" + defUri + ")"
-								for scanIdx := prevIdx; scanIdx >= 0; scanIdx-- {
-									sline := strings.TrimSpace(lines[scanIdx])
-									if strings.HasPrefix(sline, "/**") {
-										newLines := make([]string, 0, len(lines)+2)
-										newLines = append(newLines, lines[:prevIdx]...)
-										newLines = append(newLines, indent+" *")
-										newLines = append(newLines, indent+" * "+idContent)
-										newLines = append(newLines, lines[prevIdx:]...)
-										lines = newLines
-										fixed++
-										break
-									}
-								}
-								break
-							}
-						}
-						insertAt := v.Line - 1
-						for insertAt > 0 {
-							prev := strings.TrimSpace(lines[insertAt-1])
-							if prev == "" || !strings.HasPrefix(prev, prefix) {
-								break
-							}
-							insertAt--
-						}
-						newLines := make([]string, 0, len(lines)+1)
-						newLines = append(newLines, lines[:v.Line-1]...)
-						newLines = append(newLines, idLine)
-						newLines = append(newLines, lines[v.Line-1:]...)
-						lines = newLines
-						fixed++
-					} else if langName == "go" {
-						newLines := make([]string, 0, len(lines)+1)
-						newLines = append(newLines, lines[:v.Line-1]...)
-						newLines = append(newLines, idLine)
-						newLines = append(newLines, lines[v.Line-1:]...)
-						lines = newLines
-						fixed++
-					} else if langName == "csharp" || langName == "rust" {
-						prevIdx := v.Line - 2
-						if prevIdx >= 0 && strings.HasPrefix(strings.TrimSpace(lines[prevIdx]), "///") {
-							idContent := "/// [" + defId + "](" + defUri + ")"
-							hasRemarks := false
-							for scanIdx := prevIdx; scanIdx >= 0; scanIdx-- {
-								sline := strings.TrimSpace(lines[scanIdx])
-								if !strings.HasPrefix(sline, "///") {
-									break
-								}
-								if strings.Contains(sline, "<remarks>") {
-									hasRemarks = true
-									break
-								}
-							}
-							if hasRemarks {
-								for scanIdx := prevIdx; scanIdx >= 0; scanIdx-- {
-									sline := strings.TrimSpace(lines[scanIdx])
-									if strings.Contains(sline, "</remarks>") {
-										newLines := make([]string, 0, len(lines)+1)
-										newLines = append(newLines, lines[:scanIdx]...)
-										newLines = append(newLines, idContent)
-										newLines = append(newLines, lines[scanIdx:]...)
-										lines = newLines
-										fixed++
-										break
-									}
-								}
-							} else {
-								newLines := make([]string, 0, len(lines)+3)
-								newLines = append(newLines, lines[:v.Line-1]...)
-								newLines = append(newLines, "/// <remarks>")
-								newLines = append(newLines, idContent)
-								newLines = append(newLines, "/// </remarks>")
-								newLines = append(newLines, lines[v.Line-1:]...)
-								lines = newLines
-								fixed++
-							}
-							break
-						}
-						insertAt := v.Line - 1
-						for insertAt > 0 {
-							prev := strings.TrimSpace(lines[insertAt-1])
-							if prev == "" || !strings.HasPrefix(prev, prefix) {
-								break
-							}
-							insertAt--
-						}
-						newLines := make([]string, 0, len(lines)+1)
-						newLines = append(newLines, lines[:v.Line-1]...)
-						newLines = append(newLines, idLine)
-						newLines = append(newLines, lines[v.Line-1:]...)
-						lines = newLines
-						fixed++
-					} else {
-						insertAt := v.Line - 1
-						for insertAt > 0 {
-							prev := strings.TrimSpace(lines[insertAt-1])
-							if prev == "" || !strings.HasPrefix(prev, prefix) {
-								break
-							}
-							insertAt--
-						}
-						newLines := make([]string, 0, len(lines)+1)
-						newLines = append(newLines, lines[:v.Line-1]...)
-						newLines = append(newLines, idLine)
-						newLines = append(newLines, lines[v.Line-1:]...)
-						lines = newLines
-						fixed++
-					}
-				}
-			}
-		case BreachCodeDefWrongIdentificationId, BreachCodeDefWrongIdentificationUri:
-			if v.Line > 0 && v.Line <= len(lines) && language != nil {
-				defName := ""
-				filePart := file
-				if idx := strings.Index(v.Scope, "::"); idx >= 0 {
-					defName = v.Scope[idx+2:]
-					filePart = v.Scope[:idx]
-				}
-				if defName != "" {
-					sectionPath := ""
-					if idx := strings.Index(filePart, "#"); idx >= 0 {
-						sectionPath = filePart[idx+1:]
-						filePart = filePart[:idx]
-					}
-					if sectionPath == "" {
-						sectionPath = sectionPathForLine(v.Line)
-					}
-					defLineNum := v.Line
-					for scanIdx := v.Line; scanIdx < len(lines) && scanIdx < v.Line+8; scanIdx++ {
-						trimmed := strings.TrimSpace(lines[scanIdx])
-						if trimmed == "" {
-							continue
-						}
-						if strings.HasPrefix(trimmed, language.CommentPrefix()) || strings.HasPrefix(trimmed, "*") {
-							continue
-						}
-						defLineNum = scanIdx + 1
-						break
-					}
-					defKind := inferDefinitionKindFromLine(lines[defLineNum-1])
-					defId := DefinitionHeaderId(filePart, sectionPath, defName, defKind)
-					defUri := DefinitionHeaderUri(filePart, sectionPath, defName)
-					if language.Name() == "typescript" {
-						trimmed := strings.TrimSpace(lines[v.Line-1])
-						if strings.HasPrefix(trimmed, "*") && strings.Contains(trimmed, "[") && strings.Contains(trimmed, "](") {
-							indent := ""
-							for _, ch := range lines[v.Line-1] {
-								if ch == ' ' || ch == '\t' {
-									indent += string(ch)
-								} else {
-									break
-								}
-							}
-							lines[v.Line-1] = indent + " *"
-							idLine := indent + " *  * [" + defId + "](" + defUri + ")"
-							newLines := make([]string, 0, len(lines)+1)
-							newLines = append(newLines, lines[:v.Line]...)
-							newLines = append(newLines, idLine)
-							newLines = append(newLines, lines[v.Line:]...)
-							lines = newLines
-							fixed++
-							break
-						}
-					}
-					prefix := language.CommentPrefix()
-					lines[v.Line-1] = replacementIdentificationLine(lines[v.Line-1], prefix, defId, defUri)
 					fixed++
 				}
 			}
@@ -28634,6 +26791,7 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 				if defName != "" {
 					langName := language.Name()
 					prefix := language.CommentPrefix()
+					specText := v.Excerpt
 					if langName == "python" {
 						parenDepth := 0
 						for _, ch := range lines[v.Line-1] {
@@ -29065,8 +27223,7 @@ func applyAutofixes(file string, breachs []Breach) (int, error) {
 	return fixed, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️applysystemautofixes](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/applySystemAutofixes)
-// applySystemAutofixes holds the data fields for a applySystemAutofixes record.
+// 🟩applySystemAutofixes holds the data fields for a applySystemAutofixes record.
 func applySystemAutofixes(breachs []Breach) (int, error) {
 	fixed := 0
 	for _, v := range breachs {
@@ -29178,7 +27335,7 @@ func applySystemAutofixes(breachs []Breach) (int, error) {
 	return fixed, nil
 }
 
-// findMatchingSectionStartName holds the data fields for a findMatchingSectionStartName record.
+// ▶️findMatchingSectionStartName holds the data fields for a findMatchingSectionStartName record.
 func findMatchingSectionStartName(lines []string, endLineIdx int, language LanguagePlugin) string {
 	depth := 0
 	for i := endLineIdx - 1; i >= 0; i-- {
@@ -29197,16 +27354,14 @@ func findMatchingSectionStartName(lines []string, endLineIdx int, language Langu
 	return ""
 }
 
-// TicketOpen MUST return a non-nil error when the operation fails.
-// TicketOpen performs the ticket open operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ticketopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketOpen)
+// 📬TicketOpen MUST return a non-nil error when the operation fails.
+// ⚫TicketOpen performs the ticket open operation on the repo context.
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
 	return OpenTicket(input.Title, input.Prompt, input.LLM, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoManagement, input.Issue)
 }
 
-// TicketClose MUST return a non-nil error when the operation fails.
-// TicketClose performs the ticket close operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ticketclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketClose)
+// 🟦TicketClose MUST return a non-nil error when the operation fails.
+// 🩵TicketClose performs the ticket close operation on the repo context.
 func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 	if input.All {
 		tickets, err := ListTickets(nil, nil, nil)
@@ -29263,9 +27418,8 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 	return ticket, nil
 }
 
-// TicketReopen MUST return a non-nil error when the operation fails.
-// TicketReopen performs the ticket reopen operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ticketreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketReopen)
+// 🟪TicketReopen MUST return a non-nil error when the operation fails.
+// 🩶TicketReopen performs the ticket reopen operation on the repo context.
 func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -29289,14 +27443,12 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	return ticket, nil
 }
 
-// FolderCreate MUST return a non-nil error when the operation fails.
-// FolderCreate performs the folder create operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️foldercreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderCreate)
+// 🟫FolderCreate MUST return a non-nil error when the operation fails.
+// 🩷FolderCreate performs the folder create operation on the repo context.
 func (c *repoContext) FolderCreate(path string) (*Folder, error) { return nil, nil }
 
-// FolderMove MUST return a non-nil error when the operation fails.
-// FolderMove performs the folder move operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️foldermove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderMove)
+// 🚚FolderMove MUST return a non-nil error when the operation fails.
+// 💜FolderMove performs the folder move operation on the repo context.
 func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
 	result := ToolFolderMove(src, dst)
 	if result.Error != "" {
@@ -29306,9 +27458,8 @@ func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
 	return &Folder{ID: ctx.GetFolderID(dst), Path: dst, Name: filepath.Base(dst)}, nil
 }
 
-// FolderDelete MUST return a non-nil error when the operation fails.
-// FolderDelete performs the folder delete operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️folderdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderDelete)
+// 💠FolderDelete MUST return a non-nil error when the operation fails.
+// 💙FolderDelete performs the folder delete operation on the repo context.
 func (c *repoContext) FolderDelete(path string) error {
 	result := ToolFolderDelete(path)
 	if result.Error != "" {
@@ -29317,9 +27468,8 @@ func (c *repoContext) FolderDelete(path string) error {
 	return nil
 }
 
-// FileCreate MUST return a non-nil error when the operation fails.
-// FileCreate performs the file create operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️filecreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileCreate)
+// 🔳FileCreate MUST return a non-nil error when the operation fails.
+// 💚FileCreate performs the file create operation on the repo context.
 func (c *repoContext) FileCreate(path string) (*File, error) {
 	result := ToolFileCreate(path)
 	if result.Error != "" {
@@ -29329,9 +27479,8 @@ func (c *repoContext) FileCreate(path string) (*File, error) {
 	return &File{ID: ctx.GetFileID(path), Path: path, Name: filepath.Base(path), Extension: strings.TrimPrefix(filepath.Ext(path), ".")}, nil
 }
 
-// FileMove MUST return a non-nil error when the operation fails.
-// FileMove performs the file move operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️filemove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileMove)
+// 🔲FileMove MUST return a non-nil error when the operation fails.
+// 💛FileMove performs the file move operation on the repo context.
 func (c *repoContext) FileMove(src, dst string) (*File, error) {
 	result := ToolFileMove(src, dst)
 	if result.Error != "" {
@@ -29341,9 +27490,8 @@ func (c *repoContext) FileMove(src, dst string) (*File, error) {
 	return &File{ID: ctx.GetFileID(dst), Path: dst, Name: filepath.Base(dst), Extension: strings.TrimPrefix(filepath.Ext(dst), ".")}, nil
 }
 
-// FileDelete MUST return a non-nil error when the operation fails.
-// FileDelete performs the file delete operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️filedelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileDelete)
+// ▪️FileDelete MUST return a non-nil error when the operation fails.
+// 🧡FileDelete performs the file delete operation on the repo context.
 func (c *repoContext) FileDelete(path string) error {
 	result := ToolFileDelete(path)
 	if result.Error != "" {
@@ -29352,9 +27500,8 @@ func (c *repoContext) FileDelete(path string) error {
 	return nil
 }
 
-// SectionCreate MUST return a non-nil error when the operation fails.
-// SectionCreate performs the section create operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️sectioncreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionCreate)
+// ▫️SectionCreate MUST return a non-nil error when the operation fails.
+// ❤️SectionCreate performs the section create operation on the repo context.
 func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section, error) {
 	sectionPath := name
 	if parent != nil && *parent != "" {
@@ -29369,9 +27516,8 @@ func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section
 	return &Section{ID: id, Name: name, Path: sectionPath, FilePath: file}, nil
 }
 
-// SectionMove MUST return a non-nil error when the operation fails.
-// SectionMove performs the section move operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️sectionmove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionMove)
+// ◾SectionMove MUST return a non-nil error when the operation fails.
+// 🤍SectionMove performs the section move operation on the repo context.
 func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, error) {
 	result := ToolSectionMove(file, oldName, newName)
 	if result.Error != "" {
@@ -29382,9 +27528,8 @@ func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, erro
 	return &Section{ID: id, Name: newName, Path: newName, FilePath: file}, nil
 }
 
-// SectionDelete MUST return a non-nil error when the operation fails.
-// SectionDelete performs the section delete operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️sectiondelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionDelete)
+// ◽SectionDelete MUST return a non-nil error when the operation fails.
+// 🖤SectionDelete performs the section delete operation on the repo context.
 func (c *repoContext) SectionDelete(file, name string) error {
 	result := ToolSectionDelete(file, name)
 	if result.Error != "" {
@@ -29393,9 +27538,8 @@ func (c *repoContext) SectionDelete(file, name string) error {
 	return nil
 }
 
-// Integrate MUST return a non-nil error when the operation fails.
-// Integrate performs the integrate operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️integrate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Integrate)
+// 🧬Integrate MUST return a non-nil error when the operation fails.
+// 🧬Integrate performs the integrate operation on the repo context.
 func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
 	s := ""
 	if source != nil {
@@ -29420,9 +27564,8 @@ func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent 
 	return &File{ID: c.GetFileID(tf), Path: tf, Name: filepath.Base(tf)}, nil
 }
 
-// Extract MUST return the extracted component from the input.
-// Extract extracts the extract from the source.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️extract](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Extract)
+// 🧲Extract MUST return the extracted component from the input.
+// 🤎Extract extracts the extract from the source.
 func (c *repoContext) Extract(sourceFile, sourceSection, targetFile *string) (*File, error) {
 	s := ""
 	if sourceFile != nil {
@@ -29444,9 +27587,8 @@ func (c *repoContext) Extract(sourceFile, sourceSection, targetFile *string) (*F
 	return &File{ID: c.GetFileID(tf), Path: tf, Name: filepath.Base(tf)}, nil
 }
 
-// ContributorAdd MUST return a non-nil error when the operation fails.
-// ContributorAdd performs the contributor add operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️contributoradd](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ContributorAdd)
+// ➕ContributorAdd MUST return a non-nil error when the operation fails.
+// ➕ContributorAdd performs the contributor add operation on the repo context.
 func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	contributor, err := LoadContributor(input.Github)
 	if err != nil {
@@ -29499,9 +27641,8 @@ func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, e
 	return contributor, nil
 }
 
-// ContributorRemove MUST return a non-nil error when the operation fails.
-// ContributorRemove performs the contributor remove operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️contributorremove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ContributorRemove)
+// ➖ContributorRemove MUST return a non-nil error when the operation fails.
+// 💗ContributorRemove performs the contributor remove operation on the repo context.
 func (c *repoContext) ContributorRemove(github string) error {
 	repopkg.Emit(repopkg.EventContributorRemoveEnded, "repo-cli", repopkg.ContributorPayload{
 		Github: github, Author: GetGitAuthorAlias(),
@@ -29509,7 +27650,6 @@ func (c *repoContext) ContributorRemove(github string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️updategoalmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/updateGoalMilestone)
 func updateGoalMilestone(goal *Goal, number int) (int, error) {
 	repoUrl, err := getGhRepoUrl()
 	if err != nil {
@@ -29528,8 +27668,7 @@ func updateGoalMilestone(goal *Goal, number int) (int, error) {
 	return number, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ensuregoalmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ensureGoalMilestone)
-// ensureGoalMilestone holds the data fields for a ensureGoalMilestone record.
+// ◻️ensureGoalMilestone holds the data fields for a ensureGoalMilestone record.
 func ensureGoalMilestone(goal *Goal) (*ManagementMilestone, error) {
 	if goal == nil {
 		return nil, nil
@@ -29574,9 +27713,8 @@ func ensureGoalMilestone(goal *Goal) (*ManagementMilestone, error) {
 	return milestone, nil
 }
 
-// SyncManagement MUST return a non-nil error when the operation fails.
-// SyncManagement performs the sync github operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️syncmanagement](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SyncManagement)
+// ◼️SyncManagement MUST return a non-nil error when the operation fails.
+// 💖SyncManagement performs the sync github operation on the repo context.
 func (c *repoContext) SyncManagement() (bool, error) {
 	fmt.Println("Syncing local tickets and goals with GitHub...")
 
@@ -29818,277 +27956,227 @@ func (c *repoContext) SyncManagement() (bool, error) {
 	return true, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🪨](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/_)
-// _ holds the data fields for a _ record.
+// 🔵_ holds the data fields for a _ record.
 var _ RepoContext = (*repoContext)(nil)
 
-// GetRootDir MUST retrieve the requested value or return an error.
-// GetRootDir retrieves and returns the root dir.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getrootdir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetRootDir)
+// 🌱GetRootDir MUST retrieve the requested value or return an error.
+// 💝GetRootDir retrieves and returns the root dir.
 func (c *defaultContext) GetRootDir() string { return c.rootDir }
 
-// GetBundles MUST retrieve the requested value or return an error.
-// GetBundles retrieves and returns the bundles.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getbundles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetBundles)
+// 🔴GetBundles MUST retrieve the requested value or return an error.
+// 💘GetBundles retrieves and returns the bundles.
 func (c *defaultContext) GetBundles() []*Bundle { return []*Bundle{} }
 
-// GetTechnologies MUST retrieve the requested value or return an error.
-// GetTechnologies retrieves and returns the technologies.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️gettechnologies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetTechnologies)
+// 🟠GetTechnologies MUST retrieve the requested value or return an error.
+// 💕GetTechnologies retrieves and returns the technologies.
 func (c *defaultContext) GetTechnologies() []*Technology { return []*Technology{} }
 
-// GetCheckpoints MUST retrieve the requested value or return an error.
-// GetCheckpoints retrieves and returns the checkpoints.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getcheckpoints](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetCheckpoints)
+// ✔️GetCheckpoints MUST retrieve the requested value or return an error.
+// 🔢GetCheckpoints retrieves and returns the checkpoints.
 func (c *defaultContext) GetCheckpoints(limit *int) ([]*Checkpoint, error) {
 	return []*Checkpoint{}, nil
 }
 
-// GetFolders MUST retrieve the requested value or return an error.
-// GetFolders retrieves and returns the folders.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getfolders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFolders)
+// 🟡GetFolders MUST retrieve the requested value or return an error.
+// 🏵️GetFolders retrieves and returns the folders.
 func (c *defaultContext) GetFolders() []*Folder { return []*Folder{} }
 
-// GetFiles MUST retrieve the requested value or return an error.
-// GetFiles retrieves and returns the files.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetFiles)
+// 🟢GetFiles MUST retrieve the requested value or return an error.
+// 🌸GetFiles retrieves and returns the files.
 func (c *defaultContext) GetFiles() []*File { return []*File{} }
 
-// GetDefinitions MUST retrieve the requested value or return an error.
-// GetDefinitions retrieves and returns the definitions.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getdefinitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetDefinitions)
+// 🟣GetDefinitions MUST retrieve the requested value or return an error.
+// 🌺GetDefinitions retrieves and returns the definitions.
 func (c *defaultContext) GetDefinitions() []*Definition { return []*Definition{} }
 
-// GetSections MUST retrieve the requested value or return an error.
-// GetSections retrieves and returns the sections.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getsections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetSections)
+// 🟤GetSections MUST retrieve the requested value or return an error.
+// 🌻GetSections retrieves and returns the sections.
 func (c *defaultContext) GetSections() []*Section { return []*Section{} }
 
-// GetContributors MUST retrieve the requested value or return an error.
-// GetContributors retrieves and returns the contributors.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getcontributors](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetContributors)
+// ⚪GetContributors MUST retrieve the requested value or return an error.
+// 🌼GetContributors retrieves and returns the contributors.
 func (c *defaultContext) GetContributors() ([]*Contributor, error) { return []*Contributor{}, nil }
 
-// GetTickets MUST retrieve the requested value or return an error.
-// GetTickets retrieves and returns the tickets.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️gettickets](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetTickets)
+// ⚫GetTickets MUST retrieve the requested value or return an error.
+// 🌷GetTickets retrieves and returns the tickets.
 func (c *defaultContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
 	return []*Ticket{}, nil
 }
 
-// GetPolicies MUST retrieve the requested value or return an error.
-// GetPolicies retrieves and returns the policies.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getpolicies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetPolicies)
+// 🩵GetPolicies MUST retrieve the requested value or return an error.
+// 🌹GetPolicies retrieves and returns the policies.
 func (c *defaultContext) GetPolicies() []*Policy { return []*Policy{} }
 
-// GetStatutes MUST retrieve the requested value or return an error.
-// GetStatutes retrieves and returns the statutes.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getstatutes](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetStatutes)
+// 🩶GetStatutes MUST retrieve the requested value or return an error.
+// 🥀GetStatutes retrieves and returns the statutes.
 func (c *defaultContext) GetStatutes() []*StatuteMeta { return []*StatuteMeta{} }
 
-// Analyze MUST return a non-nil error when the operation fails.
-// Analyze performs the analyze operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️analyze](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Analyze)
+// 🩷Analyze MUST return a non-nil error when the operation fails.
+// 🪻Analyze performs the analyze operation on the default context.
 func (c *defaultContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	return &AnalyzeResult{Breachs: []*Breach{}, Metrics: &AnalyzeMetrics{}}, nil
 }
 
-// Fix MUST return a non-nil error when the operation fails.
-// Fix performs the fix operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️fix](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Fix)
+// 💜Fix MUST return a non-nil error when the operation fails.
+// 🪷Fix performs the fix operation on the default context.
 func (c *defaultContext) Fix(scope *string) (*FixResult, error) {
 	return &FixResult{Breachs: []*Breach{}}, nil
 }
 
-// TicketOpen MUST return a non-nil error when the operation fails.
-// TicketOpen performs the ticket open operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ticketopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketOpen)
+// 💙TicketOpen MUST return a non-nil error when the operation fails.
+// 🍁TicketOpen performs the ticket open operation on the default context.
 func (c *defaultContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
 	return nil, nil
 }
 
-// TicketClose MUST return a non-nil error when the operation fails.
-// TicketClose performs the ticket close operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ticketclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketClose)
+// 💚TicketClose MUST return a non-nil error when the operation fails.
+// 🍂TicketClose performs the ticket close operation on the default context.
 func (c *defaultContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 	return nil, nil
 }
 
-// TicketReopen MUST return a non-nil error when the operation fails.
-// TicketReopen performs the ticket reopen operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ticketreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketReopen)
+// 💛TicketReopen MUST return a non-nil error when the operation fails.
+// 🍃TicketReopen performs the ticket reopen operation on the default context.
 func (c *defaultContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	return nil, nil
 }
 
-// TicketChange MUST return a non-nil error when the operation fails.
-// TicketChange performs the ticket change operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ticketchange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketChange)
+// 🧡TicketChange MUST return a non-nil error when the operation fails.
+// ☘️TicketChange performs the ticket change operation on the default context.
 func (c *defaultContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 	return nil, nil
 }
 
-// FolderCreate MUST return a non-nil error when the operation fails.
-// FolderCreate performs the folder create operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️foldercreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderCreate)
+// ❤️FolderCreate MUST return a non-nil error when the operation fails.
+// 🍀FolderCreate performs the folder create operation on the default context.
 func (c *defaultContext) FolderCreate(path string) (*Folder, error) { return nil, nil }
 
-// FolderMove MUST return a non-nil error when the operation fails.
-// FolderMove performs the folder move operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️foldermove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderMove)
+// 🤍FolderMove MUST return a non-nil error when the operation fails.
+// 🪴FolderMove performs the folder move operation on the default context.
 func (c *defaultContext) FolderMove(src, dst string) (*Folder, error) { return nil, nil }
 
-// FolderDelete MUST return a non-nil error when the operation fails.
-// FolderDelete performs the folder delete operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️folderdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FolderDelete)
+// 🖤FolderDelete MUST return a non-nil error when the operation fails.
+// 🌱FolderDelete performs the folder delete operation on the default context.
 func (c *defaultContext) FolderDelete(path string) error { return nil }
 
-// FileCreate MUST return a non-nil error when the operation fails.
-// FileCreate performs the file create operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️filecreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileCreate)
+// 🤎FileCreate MUST return a non-nil error when the operation fails.
+// 🌲FileCreate performs the file create operation on the default context.
 func (c *defaultContext) FileCreate(path string) (*File, error) { return nil, nil }
 
-// FileMove MUST return a non-nil error when the operation fails.
-// FileMove performs the file move operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️filemove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileMove)
+// 💗FileMove MUST return a non-nil error when the operation fails.
+// 🔖FileMove performs the file move operation on the default context.
 func (c *defaultContext) FileMove(src, dst string) (*File, error) { return nil, nil }
 
-// FileDelete MUST return a non-nil error when the operation fails.
-// FileDelete performs the file delete operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️filedelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/FileDelete)
+// 💖FileDelete MUST return a non-nil error when the operation fails.
+// 🔖FileDelete performs the file delete operation on the default context.
 func (c *defaultContext) FileDelete(path string) error { return nil }
 
-// SectionCreate MUST return a non-nil error when the operation fails.
-// SectionCreate performs the section create operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️sectioncreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionCreate)
+// 💝SectionCreate MUST return a non-nil error when the operation fails.
+// 🔖SectionCreate performs the section create operation on the default context.
 func (c *defaultContext) SectionCreate(file, name string, parent *string) (*Section, error) {
 	return nil, nil
 }
 
-// SectionMove MUST return a non-nil error when the operation fails.
-// SectionMove performs the section move operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️sectionmove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionMove)
+// 💘SectionMove MUST return a non-nil error when the operation fails.
+// 🔖SectionMove performs the section move operation on the default context.
 func (c *defaultContext) SectionMove(file, oldName, newName string) (*Section, error) {
 	return nil, nil
 }
 
-// SectionDelete MUST return a non-nil error when the operation fails.
-// SectionDelete performs the section delete operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️sectiondelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SectionDelete)
+// 💕SectionDelete MUST return a non-nil error when the operation fails.
+// 🔖SectionDelete performs the section delete operation on the default context.
 func (c *defaultContext) SectionDelete(file, name string) error { return nil }
 
-// Integrate MUST return a non-nil error when the operation fails.
-// Integrate performs the integrate operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️integrate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Integrate)
+// 🔖Integrate MUST return a non-nil error when the operation fails.
+// 🔖Integrate performs the integrate operation on the default context.
 func (c *defaultContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
 	return nil, nil
 }
 
-// Extract MUST return the extracted component from the input.
-// Extract extracts the extract from the source.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️extract](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/Extract)
+// 🔖Extract MUST return the extracted component from the input.
+// 🔖Extract extracts the extract from the source.
 func (c *defaultContext) Extract(sourceFile, sourceSection, targetFile *string) (*File, error) {
 	return nil, nil
 }
 
-// ContributorAdd MUST return a non-nil error when the operation fails.
-// ContributorAdd performs the contributor add operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️contributoradd](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ContributorAdd)
+// 🔖ContributorAdd MUST return a non-nil error when the operation fails.
+// 🔖ContributorAdd performs the contributor add operation on the default context.
 func (c *defaultContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	return nil, nil
 }
 
-// ContributorRemove MUST return a non-nil error when the operation fails.
-// ContributorRemove performs the contributor remove operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️contributorremove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/ContributorRemove)
+// 🔖ContributorRemove MUST return a non-nil error when the operation fails.
+// 🔖ContributorRemove performs the contributor remove operation on the default context.
 func (c *defaultContext) ContributorRemove(github string) error { return nil }
 
-// SyncManagement MUST return a non-nil error when the operation fails.
-// SyncManagement performs the sync github operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️syncmanagement](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/SyncManagement)
+// 🔖SyncManagement MUST return a non-nil error when the operation fails.
+// 🔖SyncManagement performs the sync github operation on the default context.
 func (c *defaultContext) SyncManagement() (bool, error) { return false, nil }
 
-// GetGoals MUST retrieve the requested value or return an error.
-// GetGoals retrieves and returns the goals.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getgoals](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetGoals)
+// 🔖GetGoals MUST retrieve the requested value or return an error.
+// 🔖GetGoals retrieves and returns the goals.
 func (c *defaultContext) GetGoals() ([]*Goal, error) { return []*Goal{}, nil }
 
-// GoalCreate MUST return a non-nil error when the operation fails.
-// GoalCreate performs the goal create operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️goalcreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalCreate)
+// 🔖GoalCreate MUST return a non-nil error when the operation fails.
+// 🔖GoalCreate performs the goal create operation on the default context.
 func (c *defaultContext) GoalCreate(input GoalCreateInput) (*Goal, error) { return nil, nil }
 
-// GoalChange MUST return a non-nil error when the operation fails.
-// GoalChange performs the goal change operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️goalchange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalChange)
+// 🔖GoalChange MUST return a non-nil error when the operation fails.
+// 🔖GoalChange performs the goal change operation on the default context.
 func (c *defaultContext) GoalChange(input GoalChangeInput) (*Goal, error) { return nil, nil }
 
-// GoalClose MUST return a non-nil error when the operation fails.
-// GoalClose performs the goal close operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️goalclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalClose)
+// 🔖GoalClose MUST return a non-nil error when the operation fails.
+// 🔖GoalClose performs the goal close operation on the default context.
 func (c *defaultContext) GoalClose(input GoalCloseInput) (*Goal, error) { return nil, nil }
 
-// GoalReopen MUST return a non-nil error when the operation fails.
-// GoalReopen performs the goal reopen operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️goalreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalReopen)
+// 🔖GoalReopen MUST return a non-nil error when the operation fails.
+// 🔖GoalReopen performs the goal reopen operation on the default context.
 func (c *defaultContext) GoalReopen(input GoalReopenInput) (*Goal, error) { return nil, nil }
 
-// GoalDelete MUST return a non-nil error when the operation fails.
-// GoalDelete performs the goal delete operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️goaldelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GoalDelete)
+// 🔖GoalDelete MUST return a non-nil error when the operation fails.
+// 🔖GoalDelete performs the goal delete operation on the default context.
 func (c *defaultContext) GoalDelete(input GoalDeleteInput) (bool, error) { return false, nil }
 
-// TicketDelete MUST return a non-nil error when the operation fails.
-// TicketDelete performs the ticket delete operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️ticketdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TicketDelete)
+// 🔖TicketDelete MUST return a non-nil error when the operation fails.
+// 🔖TicketDelete performs the ticket delete operation on the default context.
 func (c *defaultContext) TicketDelete(input TicketDeleteInput) (bool, error) { return false, nil }
 
-// GetDrafts MUST retrieve the requested value or return an error.
-// GetDrafts retrieves and returns the drafts.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️getdrafts](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetDrafts)
+// 🔖GetDrafts MUST retrieve the requested value or return an error.
+// 🔖GetDrafts retrieves and returns the drafts.
 func (c *defaultContext) GetDrafts() ([]*Draft, error) { return []*Draft{}, nil }
 
-// DraftCreate MUST return a non-nil error when the operation fails.
-// DraftCreate performs the draft create operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️draftcreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/DraftCreate)
+// 🔖DraftCreate MUST return a non-nil error when the operation fails.
+// 🔖DraftCreate performs the draft create operation on the default context.
 func (c *defaultContext) DraftCreate(input DraftCreateInput) (*Draft, error) { return nil, nil }
 
-// DraftDelete MUST return a non-nil error when the operation fails.
-// DraftDelete performs the draft delete operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️draftdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/DraftDelete)
+// 🔖DraftDelete MUST return a non-nil error when the operation fails.
+// 🔖DraftDelete performs the draft delete operation on the default context.
 func (c *defaultContext) DraftDelete(id string) (bool, error) { return false, nil }
 
-// GetTodos MUST retrieve the requested value or return an error.
-// GetTodos retrieves and returns the todos.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️gettodos](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/GetTodos)
+// ✅GetTodos MUST retrieve the requested value or return an error.
+// 🔖GetTodos retrieves and returns the todos.
 func (c *defaultContext) GetTodos(filter *FilterInput) ([]*Todo, error) { return []*Todo{}, nil }
 
-// TodoCreate MUST return a non-nil error when the operation fails.
-// TodoCreate performs the todo create operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️todocreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TodoCreate)
+// 🔖TodoCreate MUST return a non-nil error when the operation fails.
+// 🔖TodoCreate performs the todo create operation on the default context.
 func (c *defaultContext) TodoCreate(input TodoCreateInput) (*Todo, error) { return nil, nil }
 
-// TodoChange MUST return a non-nil error when the operation fails.
-// TodoChange performs the todo change operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️todochange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TodoChange)
+// 🔖TodoChange MUST return a non-nil error when the operation fails.
+// 🔖TodoChange performs the todo change operation on the default context.
 func (c *defaultContext) TodoChange(input TodoChangeInput) (*Todo, error) { return nil, nil }
 
-// TodoDelete MUST return a non-nil error when the operation fails.
-// TodoDelete performs the todo delete operation on the default context.
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🛠️tododelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/TodoDelete)
+// 🔖TodoDelete MUST return a non-nil error when the operation fails.
+// 🔖TodoDelete performs the todo delete operation on the default context.
 func (c *defaultContext) TodoDelete(id string) (bool, error) { return false, nil }
 
-// [🧰repo⌨️cli💻main🔖types🔖defaultcontext🪨](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Default%20Context/d/i/_)
-// _ holds the data fields for a _ record.
+// 🔖_ holds the data fields for a _ record.
 var _ RepoContext = (*defaultContext)(nil)
 
-// #endregion 🔖Default Context
+// #endregion 🩻Default Context
 
-// #region 🔖GraphQL Executor
-// [🧰repo⌨️cli💻main🔖types🔖graphqlexecutor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor)
+// #region 🧱GraphQL Executor
 // GraphQL executor dispatching queries against the schema.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlexecutor🛠️parsefilelistinput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/parseFileListInput)
-// parseFileListInput holds the data fields for a parseFileListInput record.
+// 🧱parseFileListInput holds the data fields for a parseFileListInput record.
 func parseFileListInput(f map[string]interface{}) *FileListInput {
 	files := &FileListInput{}
 	if updated, ok := f["updated"].([]interface{}); ok {
@@ -30115,16 +28203,14 @@ func parseFileListInput(f map[string]interface{}) *FileListInput {
 	return files
 }
 
-// Executor holds the data fields for a executor record.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlexecutor✂️executor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/Executor)
+// 💿Executor holds the data fields for a executor record.
 type Executor struct {
 	resolver *Resolver
 	schema   graphql.Schema
 }
 
-// NewExecutor MUST initialize all required fields and return a valid executor.
-// NewExecutor creates and returns a new executor instance.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlexecutor🛠️newexecutor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/NewExecutor)
+// 🔷NewExecutor MUST initialize all required fields and return a valid executor.
+// 🔖NewExecutor creates and returns a new executor instance.
 func NewExecutor(rootDir string) (*Executor, error) {
 	resolver := NewResolver(rootDir)
 	schema, err := buildSchema(resolver)
@@ -30137,9 +28223,8 @@ func NewExecutor(rootDir string) (*Executor, error) {
 	}, nil
 }
 
-// NewExecutorWithContext MUST initialize all required fields and return a valid executor with context.
-// NewExecutorWithContext creates and returns a new executor with context instance.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlexecutor🛠️newexecutorwithcontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/NewExecutorWithContext)
+// 📝NewExecutorWithContext MUST initialize all required fields and return a valid executor with context.
+// 🔖NewExecutorWithContext creates and returns a new executor with context instance.
 func NewExecutorWithContext(rootDir string, ctx RepoContext) (*Executor, error) {
 	resolver := NewResolverWithContext(rootDir, ctx)
 	schema, err := buildSchema(resolver)
@@ -30152,9 +28237,8 @@ func NewExecutorWithContext(rootDir string, ctx RepoContext) (*Executor, error) 
 	}, nil
 }
 
-// Execute MUST execute the operation to completion and report any errors.
-// Execute executes the ute operation.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlexecutor🛠️execute](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/Execute)
+// ❌Execute MUST execute the operation to completion and report any errors.
+// ⚡Execute executes the ute operation.
 func (e *Executor) Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error) {
 	result := graphql.Do(graphql.Params{
 		Context:        ctx,
@@ -30168,9 +28252,8 @@ func (e *Executor) Execute(ctx context.Context, query string, variables map[stri
 	return result.Data, nil
 }
 
-// ExecuteJSON MUST execute the operation to completion and report any errors.
-// ExecuteJSON executes the ute j s o n operation.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlexecutor🛠️executejson](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/ExecuteJSON)
+// 📋ExecuteJSON MUST execute the operation to completion and report any errors.
+// 🔖ExecuteJSON executes the ute j s o n operation.
 func (e *Executor) ExecuteJSON(ctx context.Context, query string, variables map[string]interface{}) (string, error) {
 	data, err := e.Execute(ctx, query, variables)
 	if err != nil {
@@ -30183,9 +28266,8 @@ func (e *Executor) ExecuteJSON(ctx context.Context, query string, variables map[
 	return string(jsonBytes), nil
 }
 
-// ValidateQuery MUST return nil when valid and a descriptive error otherwise.
-// ValidateQuery checks the query for correctness and returns any errors.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlexecutor🛠️validatequery](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/ValidateQuery)
+// 🔍ValidateQuery MUST return nil when valid and a descriptive error otherwise.
+// 🕸️ValidateQuery checks the query for correctness and returns any errors.
 func (e *Executor) ValidateQuery(query string) error {
 	_, err := parser.Parse(parser.ParseParams{
 		Source: query,
@@ -30196,9 +28278,8 @@ func (e *Executor) ValidateQuery(query string) error {
 	return err
 }
 
-// GetOperationType MUST retrieve the requested value or return an error.
-// GetOperationType retrieves and returns the operation type.
-// [🧰repo⌨️cli💻main🔖types🔖graphqlexecutor🛠️getoperationtype](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/GraphQL%20Executor/d/i/GetOperationType)
+// 📨GetOperationType MUST retrieve the requested value or return an error.
+// 🔖GetOperationType retrieves and returns the operation type.
 func (e *Executor) GetOperationType(query string) (string, error) {
 	doc, err := parser.Parse(parser.ParseParams{
 		Source: query,
@@ -30217,14 +28298,12 @@ func (e *Executor) GetOperationType(query string) (string, error) {
 	return "query", nil
 }
 
-// #endregion 🔖GraphQL Executor
+// #endregion 🧱GraphQL Executor
 
-// #region 🔖Schema Builder
-// [🧰repo⌨️cli💻main🔖types🔖schemabuilder](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Schema%20Builder)
+// #region 🐹Schema Builder
 // Schema builder constructing the GraphQL schema from type definitions.
 
-// buildSchema holds the data fields for a buildSchema record.
-// [🧰repo⌨️cli💻main🔖types🔖schemabuilder🛠️buildschema](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Schema%20Builder/d/i/buildSchema)
+// 💿buildSchema holds the data fields for a buildSchema record.
 func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	repoResolverInstance = resolver
 	rangeType := graphql.NewObject(graphql.ObjectConfig{
@@ -31213,6 +29292,16 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return ticket.GetTitle(), nil
 					},
 				},
+				"emoji": &graphql.Field{
+					Type: graphql.String,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						if ticket.Emoji == "" {
+							return nil, nil
+						}
+						return ticket.Emoji, nil
+					},
+				},
 				"prompt": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -31550,6 +29639,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					},
 				},
 				"github":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"emoji":        &graphql.Field{Type: graphql.String},
 				"name":         &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"names":        &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
 				"email":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
@@ -32865,26 +30955,22 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	})
 }
 
-// #endregion 🔖Schema Builder
+// #endregion 🐹Schema Builder
 
-// #region 🔖Query Resolvers
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers)
+// #region 🗂️Query Resolvers
 // Query resolver methods implementing GraphQL read operations.
 
-// Query MUST execute the query and return matching results.
-// Query executes the query query.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️query](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Query)
+// 🔍Query MUST execute the query and return matching results.
+// 🕸️Query executes the query query.
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers✂️queryresolver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/queryResolver)
-// queryResolver holds the data fields for a queryResolver record.
+// 💿queryResolver holds the data fields for a queryResolver record.
 type queryResolver struct{ *Resolver }
 
-// Drafts MUST return a non-nil error when the operation fails.
-// Drafts performs the drafts operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️drafts](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Drafts)
+// ❌Drafts MUST return a non-nil error when the operation fails.
+// 📝Drafts performs the drafts operation on the query resolver.
 func (r *queryResolver) Drafts(ctx context.Context) ([]*Draft, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDrafts()
@@ -32892,9 +30978,8 @@ func (r *queryResolver) Drafts(ctx context.Context) ([]*Draft, error) {
 	return []*Draft{}, nil
 }
 
-// Node MUST return a non-nil error when the operation fails.
-// Node performs the node operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️node](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Node)
+// 🌿Node MUST return a non-nil error when the operation fails.
+// 🔖Node performs the node operation on the query resolver.
 func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 
 	cleanID := strings.ReplaceAll(id, "\uFE0E", "")
@@ -32932,6 +31017,49 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 
 	technologyEmojis := []string{EmojiTechnologyUser, EmojiTechnologyInfra, EmojiTechnologyResearch, EmojiTechnologyMono}
 	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets, EmojiBundleRepo}
+
+	// Include custom emojis from loaded bundles and technologies.
+	if bundles, err := r.Bundles(ctx, nil); err == nil {
+		for _, b := range bundles {
+			if b.Emoji != "" {
+				ne := strings.ReplaceAll(b.Emoji, "\uFE0F", "")
+				ne = strings.ReplaceAll(ne, "\uFE0E", "")
+				found := false
+				for _, e := range bundleEmojis {
+					ce := strings.ReplaceAll(e, "\uFE0F", "")
+					ce = strings.ReplaceAll(ce, "\uFE0E", "")
+					if ce == ne {
+						found = true
+						break
+					}
+				}
+				if !found {
+					bundleEmojis = append(bundleEmojis, b.Emoji)
+				}
+			}
+		}
+	}
+	if techs, err := r.Technologies(ctx, nil); err == nil {
+		for _, t := range techs {
+			if t.Emoji != "" {
+				ne := strings.ReplaceAll(t.Emoji, "\uFE0F", "")
+				ne = strings.ReplaceAll(ne, "\uFE0E", "")
+				found := false
+				for _, e := range technologyEmojis {
+					ce := strings.ReplaceAll(e, "\uFE0F", "")
+					ce = strings.ReplaceAll(ce, "\uFE0E", "")
+					if ce == ne {
+						found = true
+						break
+					}
+				}
+				if !found {
+					technologyEmojis = append(technologyEmojis, t.Emoji)
+				}
+			}
+		}
+	}
+
 	for _, pe := range technologyEmojis {
 		if rest, ok := stripPrefix(cleanID, pe); ok {
 			if technologyVal, bundleVal, found := findEmoji(rest, bundleEmojis); found {
@@ -33054,9 +31182,8 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 	return nil, fmt.Errorf("invalid node id format: %s", id)
 }
 
-// Repo MUST return a non-nil error when the operation fails.
-// Repo performs the repo operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️repo](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Repo)
+// 🔷Repo MUST return a non-nil error when the operation fails.
+// 📩Repo performs the repo operation on the query resolver.
 func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 	technologies, _ := r.Technologies(ctx, nil)
 	bundles, _ := r.Bundles(ctx, &FilterInput{})
@@ -33079,9 +31206,8 @@ func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 	}, nil
 }
 
-// Technologies MUST return a non-nil error when the operation fails.
-// Technologies performs the technologies operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️technologies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Technologies)
+// 📜Technologies MUST return a non-nil error when the operation fails.
+// 📺Technologies performs the technologies operation on the query resolver.
 func (r *queryResolver) Technologies(ctx context.Context, filter *FilterInput) ([]*Technology, error) {
 	allBundles, err := r.Bundles(ctx, &FilterInput{})
 	if err != nil {
@@ -33131,9 +31257,8 @@ func (r *queryResolver) Technologies(ctx context.Context, filter *FilterInput) (
 	return results, nil
 }
 
-// Technology MUST return a non-nil error when the operation fails.
-// Technology performs the technology operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️technology](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Technology)
+// 🛠️Technology MUST return a non-nil error when the operation fails.
+// 🔷Technology performs the technology operation on the query resolver.
 func (r *queryResolver) Technology(ctx context.Context, name string) (*Technology, error) {
 	all, err := r.Technologies(ctx, nil)
 	if err != nil {
@@ -33147,9 +31272,8 @@ func (r *queryResolver) Technology(ctx context.Context, name string) (*Technolog
 	return nil, nil
 }
 
-// Bundles MUST return a non-nil error when the operation fails.
-// Bundles performs the bundles operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️bundles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Bundles)
+// 📦Bundles MUST return a non-nil error when the operation fails.
+// 🔶Bundles performs the bundles operation on the query resolver.
 func (r *queryResolver) Bundles(ctx context.Context, filter *FilterInput) ([]*Bundle, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -33165,9 +31289,8 @@ func (r *queryResolver) Bundles(ctx context.Context, filter *FilterInput) ([]*Bu
 	return []*Bundle{}, nil
 }
 
-// Folders MUST return a non-nil error when the operation fails.
-// Folders performs the folders operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️folders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Folders)
+// 📁Folders MUST return a non-nil error when the operation fails.
+// 📄Folders performs the folders operation on the query resolver.
 func (r *queryResolver) Folders(ctx context.Context) ([]*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFolders(), nil
@@ -33175,9 +31298,8 @@ func (r *queryResolver) Folders(ctx context.Context) ([]*Folder, error) {
 	return []*Folder{}, nil
 }
 
-// Files MUST return a non-nil error when the operation fails.
-// Files performs the files operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️files](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Files)
+// 📄Files MUST return a non-nil error when the operation fails.
+// 🔹Files performs the files operation on the query resolver.
 func (r *queryResolver) Files(ctx context.Context) ([]*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFiles(), nil
@@ -33185,9 +31307,8 @@ func (r *queryResolver) Files(ctx context.Context) ([]*File, error) {
 	return []*File{}, nil
 }
 
-// Sections MUST return a non-nil error when the operation fails.
-// Sections performs the sections operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️sections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Sections)
+// 📑Sections MUST return a non-nil error when the operation fails.
+// 🔸Sections performs the sections operation on the query resolver.
 func (r *queryResolver) Sections(ctx context.Context) ([]*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetSections(), nil
@@ -33195,9 +31316,8 @@ func (r *queryResolver) Sections(ctx context.Context) ([]*Section, error) {
 	return []*Section{}, nil
 }
 
-// Definitions MUST return a non-nil error when the operation fails.
-// Definitions performs the definitions operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️definitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Definitions)
+// 📖Definitions MUST return a non-nil error when the operation fails.
+// ▶️Definitions performs the definitions operation on the query resolver.
 func (r *queryResolver) Definitions(ctx context.Context) ([]*Definition, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDefinitions(), nil
@@ -33205,9 +31325,8 @@ func (r *queryResolver) Definitions(ctx context.Context) ([]*Definition, error) 
 	return []*Definition{}, nil
 }
 
-// Contributors MUST return a non-nil error when the operation fails.
-// Contributors performs the contributors operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️contributors](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Contributors)
+// 🤝Contributors MUST return a non-nil error when the operation fails.
+// 🔺Contributors performs the contributors operation on the query resolver.
 func (r *queryResolver) Contributors(ctx context.Context, filter *FilterInput) ([]*Contributor, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -33223,9 +31342,8 @@ func (r *queryResolver) Contributors(ctx context.Context, filter *FilterInput) (
 	return []*Contributor{}, nil
 }
 
-// Todos MUST return a non-nil error when the operation fails.
-// Todos performs the todos operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️todos](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Todos)
+// ✅Todos MUST return a non-nil error when the operation fails.
+// 🔻Todos performs the todos operation on the query resolver.
 func (r *queryResolver) Todos(ctx context.Context, filter *FilterInput) ([]*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetTodos(filter)
@@ -33233,9 +31351,8 @@ func (r *queryResolver) Todos(ctx context.Context, filter *FilterInput) ([]*Todo
 	return []*Todo{}, nil
 }
 
-// Tickets MUST return a non-nil error when the operation fails.
-// Tickets performs the tickets operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️tickets](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Tickets)
+// 🎫Tickets MUST return a non-nil error when the operation fails.
+// ⬛Tickets performs the tickets operation on the query resolver.
 func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -33254,15 +31371,13 @@ func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day 
 	return []*Ticket{}, nil
 }
 
-// Interactions aggregates all interactions from tickets and goals.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️interactions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Interactions)
+// ⛳Interactions aggregates all interactions from tickets and goals.
 func (r *queryResolver) Interactions(ctx context.Context) ([]InteractionResource, error) {
 	return ListInteractions()
 }
 
-// Policies MUST return a non-nil error when the operation fails.
-// Policies performs the policies operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️policies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Policies)
+// 🔶Policies MUST return a non-nil error when the operation fails.
+// ⬜Policies performs the policies operation on the query resolver.
 func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*Policy, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -33292,9 +31407,8 @@ func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*P
 	return []*Policy{}, nil
 }
 
-// Statutes MUST return a non-nil error when the operation fails.
-// Statutes performs the statutes operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️statutes](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Statutes)
+// 🔹Statutes MUST return a non-nil error when the operation fails.
+// 📜Statutes performs the statutes operation on the query resolver.
 func (r *queryResolver) Statutes(ctx context.Context) ([]*StatuteMeta, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetStatutes(), nil
@@ -33302,9 +31416,8 @@ func (r *queryResolver) Statutes(ctx context.Context) ([]*StatuteMeta, error) {
 	return []*StatuteMeta{}, nil
 }
 
-// Breachs MUST return a non-nil error when the operation fails.
-// Breachs performs the breachs operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️breachs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Breachs)
+// 🔸Breachs MUST return a non-nil error when the operation fails.
+// ⚠️Breachs performs the breachs operation on the query resolver.
 func (r *queryResolver) Breachs(ctx context.Context, scope *string) ([]*Breach, error) {
 	if r.Ctx != nil {
 		result, err := r.Ctx.Analyze(scope)
@@ -33316,9 +31429,8 @@ func (r *queryResolver) Breachs(ctx context.Context, scope *string) ([]*Breach, 
 	return []*Breach{}, nil
 }
 
-// Bundle MUST return a non-nil error when the operation fails.
-// Bundle performs the bundle operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️bundle](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Bundle)
+// 🔺Bundle MUST return a non-nil error when the operation fails.
+// 🟥Bundle performs the bundle operation on the query resolver.
 func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error) {
 	if r.Ctx != nil {
 		bundles := r.Ctx.GetBundles()
@@ -33334,9 +31446,8 @@ func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error
 	}, nil
 }
 
-// Folder MUST return a non-nil error when the operation fails.
-// Folder performs the folder operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️folder](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Folder)
+// 🔻Folder MUST return a non-nil error when the operation fails.
+// 🟧Folder performs the folder operation on the query resolver.
 func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error) {
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
@@ -33356,9 +31467,8 @@ func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error
 	}, nil
 }
 
-// File MUST return a non-nil error when the operation fails.
-// File performs the file operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️file](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/File)
+// ⬛File MUST return a non-nil error when the operation fails.
+// 🟨File performs the file operation on the query resolver.
 func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
@@ -33387,9 +31497,8 @@ func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 	}, nil
 }
 
-// Section MUST return a non-nil error when the operation fails.
-// Section performs the section operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️section](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Section)
+// ⬜Section MUST return a non-nil error when the operation fails.
+// 🟩Section performs the section operation on the query resolver.
 func (r *queryResolver) Section(ctx context.Context, path string, sectionPath []string) (*Section, error) {
 	sectionName := strings.Join(sectionPath, "#")
 	return &Section{
@@ -33397,9 +31506,8 @@ func (r *queryResolver) Section(ctx context.Context, path string, sectionPath []
 	}, nil
 }
 
-// Definition MUST return a non-nil error when the operation fails.
-// Definition performs the definition operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️definition](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Definition)
+// 🟥Definition MUST return a non-nil error when the operation fails.
+// 🟦Definition performs the definition operation on the query resolver.
 func (r *queryResolver) Definition(ctx context.Context, path string, name string) (*Definition, error) {
 	return &Definition{
 		Name: name,
@@ -33407,8 +31515,7 @@ func (r *queryResolver) Definition(ctx context.Context, path string, name string
 	}, nil
 }
 
-// Contributor performs the contributor operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️contributor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Contributor)
+// 📋Contributor performs the contributor operation on the query resolver.
 func (r *queryResolver) Contributor(ctx context.Context, id string) (*Contributor, error) {
 	if r.Ctx != nil {
 		contributors, err := r.Ctx.GetContributors()
@@ -33427,9 +31534,8 @@ func (r *queryResolver) Contributor(ctx context.Context, id string) (*Contributo
 	}, nil
 }
 
-// Ticket MUST return a non-nil error when the operation fails.
-// Ticket performs the ticket operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️ticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Ticket)
+// 🟧Ticket MUST return a non-nil error when the operation fails.
+// 🟪Ticket performs the ticket operation on the query resolver.
 func (r *queryResolver) Ticket(ctx context.Context, year int, month int, day int, slug string) (*Ticket, error) {
 	if r.Ctx != nil {
 		y, m, d := year, month, day
@@ -33450,9 +31556,8 @@ func (r *queryResolver) Ticket(ctx context.Context, year int, month int, day int
 	}, nil
 }
 
-// Policy MUST return a non-nil error when the operation fails.
-// Policy performs the policy operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️policy](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Policy)
+// 🟨Policy MUST return a non-nil error when the operation fails.
+// 🟫Policy performs the policy operation on the query resolver.
 func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) {
 	if r.Ctx != nil {
 		policies := r.Ctx.GetPolicies()
@@ -33469,9 +31574,8 @@ func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) 
 	}, nil
 }
 
-// Statute MUST return a non-nil error when the operation fails.
-// Statute performs the statute operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️statute](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Statute)
+// 🟩Statute MUST return a non-nil error when the operation fails.
+// 💠Statute performs the statute operation on the query resolver.
 func (r *queryResolver) Statute(ctx context.Context, id string) (*StatuteMeta, error) {
 	if r.Ctx != nil {
 		kinds := r.Ctx.GetStatutes()
@@ -33490,9 +31594,8 @@ func (r *queryResolver) Statute(ctx context.Context, id string) (*StatuteMeta, e
 	}, nil
 }
 
-// Analyze MUST return a non-nil error when the operation fails.
-// Analyze performs the analyze operation on the query resolver.
-// [🧰repo⌨️cli💻main🔖types🔖queryresolvers🛠️analyze](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Query%20Resolvers/d/i/Analyze)
+// 🔬Analyze MUST return a non-nil error when the operation fails.
+// 🔬Analyze performs the analyze operation on the query resolver.
 func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeResult, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Analyze(scope)
@@ -33507,25 +31610,21 @@ func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeRes
 	}, nil
 }
 
-// #endregion 🔖Query Resolvers
+// #endregion 🗂️Query Resolvers
 
-// #region 🔖Mutation Resolvers
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers)
+// #region 💻Mutation Resolvers
 // Mutation resolver methods implementing GraphQL write operations.
 
-// Mutation MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️mutation](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/Mutation)
+// 🔷Mutation MUST complete the operation successfully.
 func (r *Resolver) Mutation() MutationResolver {
 	return &mutationResolver{r}
 }
 
-// mutationResolver holds the data fields for a mutationResolver record.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers✂️mutationresolver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/mutationResolver)
+// 💿mutationResolver holds the data fields for a mutationResolver record.
 type mutationResolver struct{ *Resolver }
 
-// SyncManagement MUST return a non-nil error when the operation fails.
-// SyncManagement performs the sync github operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️syncmanagement](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/SyncManagement)
+// ❌SyncManagement MUST return a non-nil error when the operation fails.
+// 📝SyncManagement performs the sync github operation on the mutation resolver.
 func (r *mutationResolver) SyncManagement(ctx context.Context) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SyncManagement()
@@ -33533,9 +31632,8 @@ func (r *mutationResolver) SyncManagement(ctx context.Context) (bool, error) {
 	return false, fmt.Errorf("not implemented")
 }
 
-// Fix MUST return a non-nil error when the operation fails.
-// Fix performs the fix operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️fix](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/Fix)
+// 🔧Fix MUST return a non-nil error when the operation fails.
+// 🔧Fix performs the fix operation on the mutation resolver.
 func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Fix(scope)
@@ -33547,9 +31645,8 @@ func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, 
 	}, nil
 }
 
-// DraftCreate MUST return a non-nil error when the operation fails.
-// DraftCreate performs the draft create operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️draftcreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/DraftCreate)
+// 🆕DraftCreate MUST return a non-nil error when the operation fails.
+// 🆕DraftCreate performs the draft create operation on the mutation resolver.
 func (r *mutationResolver) DraftCreate(ctx context.Context, input DraftCreateInput) (*Draft, error) {
 	if r.Ctx != nil {
 		return r.Ctx.DraftCreate(input)
@@ -33557,9 +31654,8 @@ func (r *mutationResolver) DraftCreate(ctx context.Context, input DraftCreateInp
 	return nil, fmt.Errorf("not implemented")
 }
 
-// DraftDelete MUST return a non-nil error when the operation fails.
-// DraftDelete performs the draft delete operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️draftdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/DraftDelete)
+// 🗑️DraftDelete MUST return a non-nil error when the operation fails.
+// 🗑️DraftDelete performs the draft delete operation on the mutation resolver.
 func (r *mutationResolver) DraftDelete(ctx context.Context, id string) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.DraftDelete(id)
@@ -33567,9 +31663,8 @@ func (r *mutationResolver) DraftDelete(ctx context.Context, id string) (bool, er
 	return false, fmt.Errorf("not implemented")
 }
 
-// TicketOpen MUST return a non-nil error when the operation fails.
-// TicketOpen performs the ticket open operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️ticketopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TicketOpen)
+// 🎫TicketOpen MUST return a non-nil error when the operation fails.
+// 📬TicketOpen performs the ticket open operation on the mutation resolver.
 func (r *mutationResolver) TicketOpen(ctx context.Context, input TicketOpenInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketOpen(input)
@@ -33577,8 +31672,7 @@ func (r *mutationResolver) TicketOpen(ctx context.Context, input TicketOpenInput
 	return nil, fmt.Errorf("not implemented")
 }
 
-// TicketClose performs the ticket close operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️ticketclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TicketClose)
+// 📪TicketClose performs the ticket close operation on the mutation resolver.
 func (r *mutationResolver) TicketClose(ctx context.Context, input TicketCloseInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketClose(input)
@@ -33586,9 +31680,8 @@ func (r *mutationResolver) TicketClose(ctx context.Context, input TicketCloseInp
 	return nil, fmt.Errorf("not implemented")
 }
 
-// TicketReopen MUST return a non-nil error when the operation fails.
-// TicketReopen performs the ticket reopen operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️ticketreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TicketReopen)
+// 🔓TicketReopen MUST return a non-nil error when the operation fails.
+// 🔓TicketReopen performs the ticket reopen operation on the mutation resolver.
 func (r *mutationResolver) TicketReopen(ctx context.Context, input TicketReopenInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketReopen(input)
@@ -33596,9 +31689,8 @@ func (r *mutationResolver) TicketReopen(ctx context.Context, input TicketReopenI
 	return nil, fmt.Errorf("not implemented")
 }
 
-// TicketChange MUST return a non-nil error when the operation fails.
-// TicketChange performs the ticket change operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️ticketchange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TicketChange)
+// ♻️TicketChange MUST return a non-nil error when the operation fails.
+// ♻️TicketChange performs the ticket change operation on the mutation resolver.
 func (r *mutationResolver) TicketChange(ctx context.Context, input TicketChangeInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketChange(input)
@@ -33606,9 +31698,8 @@ func (r *mutationResolver) TicketChange(ctx context.Context, input TicketChangeI
 	return nil, fmt.Errorf("not implemented")
 }
 
-// GoalCreate MUST return a non-nil error when the operation fails.
-// GoalCreate performs the goal create operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️goalcreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/GoalCreate)
+// ⛳GoalCreate MUST return a non-nil error when the operation fails.
+// 📩GoalCreate performs the goal create operation on the mutation resolver.
 func (r *mutationResolver) GoalCreate(ctx context.Context, input GoalCreateInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalCreate(input)
@@ -33616,9 +31707,8 @@ func (r *mutationResolver) GoalCreate(ctx context.Context, input GoalCreateInput
 	return nil, fmt.Errorf("not implemented")
 }
 
-// GoalChange MUST return a non-nil error when the operation fails.
-// GoalChange performs the goal change operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️goalchange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/GoalChange)
+// 🔶GoalChange MUST return a non-nil error when the operation fails.
+// 📐GoalChange performs the goal change operation on the mutation resolver.
 func (r *mutationResolver) GoalChange(ctx context.Context, id string, input GoalChangeInput) (*Goal, error) {
 	if r.Ctx != nil {
 		input.ID = id
@@ -33627,9 +31717,8 @@ func (r *mutationResolver) GoalChange(ctx context.Context, id string, input Goal
 	return nil, fmt.Errorf("not implemented")
 }
 
-// GoalClose MUST return a non-nil error when the operation fails.
-// GoalClose performs the goal close operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️goalclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/GoalClose)
+// 🔹GoalClose MUST return a non-nil error when the operation fails.
+// 🏁GoalClose performs the goal close operation on the mutation resolver.
 func (r *mutationResolver) GoalClose(ctx context.Context, input GoalCloseInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalClose(input)
@@ -33637,9 +31726,8 @@ func (r *mutationResolver) GoalClose(ctx context.Context, input GoalCloseInput) 
 	return nil, fmt.Errorf("not implemented")
 }
 
-// TodoCreate MUST return a non-nil error when the operation fails.
-// TodoCreate performs the todo create operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️todocreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TodoCreate)
+// ✅TodoCreate MUST return a non-nil error when the operation fails.
+// 🔶TodoCreate performs the todo create operation on the mutation resolver.
 func (r *mutationResolver) TodoCreate(ctx context.Context, input TodoCreateInput) (*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoCreate(input)
@@ -33647,9 +31735,8 @@ func (r *mutationResolver) TodoCreate(ctx context.Context, input TodoCreateInput
 	return nil, fmt.Errorf("not implemented")
 }
 
-// TodoChange MUST return a non-nil error when the operation fails.
-// TodoChange performs the todo change operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️todochange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TodoChange)
+// 🔸TodoChange MUST return a non-nil error when the operation fails.
+// ✏️TodoChange performs the todo change operation on the mutation resolver.
 func (r *mutationResolver) TodoChange(ctx context.Context, input TodoChangeInput) (*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoChange(input)
@@ -33657,9 +31744,8 @@ func (r *mutationResolver) TodoChange(ctx context.Context, input TodoChangeInput
 	return nil, fmt.Errorf("not implemented")
 }
 
-// TodoDelete MUST return a non-nil error when the operation fails.
-// TodoDelete performs the todo delete operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️tododelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TodoDelete)
+// 🔺TodoDelete MUST return a non-nil error when the operation fails.
+// 🔹TodoDelete performs the todo delete operation on the mutation resolver.
 func (r *mutationResolver) TodoDelete(ctx context.Context, id string) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoDelete(id)
@@ -33667,9 +31753,8 @@ func (r *mutationResolver) TodoDelete(ctx context.Context, id string) (bool, err
 	return false, fmt.Errorf("not implemented")
 }
 
-// GoalReopen MUST return a non-nil error when the operation fails.
-// GoalReopen performs the goal reopen operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️goalreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/GoalReopen)
+// 📬GoalReopen MUST return a non-nil error when the operation fails.
+// 🎯GoalReopen performs the goal reopen operation on the mutation resolver.
 func (r *mutationResolver) GoalReopen(ctx context.Context, input GoalReopenInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalReopen(input)
@@ -33677,9 +31762,8 @@ func (r *mutationResolver) GoalReopen(ctx context.Context, input GoalReopenInput
 	return nil, fmt.Errorf("not implemented")
 }
 
-// GoalDelete MUST return a non-nil error when the operation fails.
-// GoalDelete performs the goal delete operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️goaldelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/GoalDelete)
+// 🔻GoalDelete MUST return a non-nil error when the operation fails.
+// 🔸GoalDelete performs the goal delete operation on the mutation resolver.
 func (r *mutationResolver) GoalDelete(ctx context.Context, input GoalDeleteInput) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalDelete(input)
@@ -33687,9 +31771,8 @@ func (r *mutationResolver) GoalDelete(ctx context.Context, input GoalDeleteInput
 	return false, fmt.Errorf("not implemented")
 }
 
-// TicketDelete MUST return a non-nil error when the operation fails.
-// TicketDelete performs the ticket delete operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️ticketdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/TicketDelete)
+// ⬛TicketDelete MUST return a non-nil error when the operation fails.
+// 🔺TicketDelete performs the ticket delete operation on the mutation resolver.
 func (r *mutationResolver) TicketDelete(ctx context.Context, input TicketDeleteInput) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketDelete(input)
@@ -33697,9 +31780,8 @@ func (r *mutationResolver) TicketDelete(ctx context.Context, input TicketDeleteI
 	return false, fmt.Errorf("not implemented")
 }
 
-// ContributorAdd MUST return a non-nil error when the operation fails.
-// ContributorAdd performs the contributor add operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️contributoradd](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/ContributorAdd)
+// 🤝ContributorAdd MUST return a non-nil error when the operation fails.
+// ➕ContributorAdd performs the contributor add operation on the mutation resolver.
 func (r *mutationResolver) ContributorAdd(ctx context.Context, input ContributorAddInput) (*Contributor, error) {
 	if r.Ctx != nil {
 		return r.Ctx.ContributorAdd(input)
@@ -33707,9 +31789,8 @@ func (r *mutationResolver) ContributorAdd(ctx context.Context, input Contributor
 	return nil, fmt.Errorf("not implemented")
 }
 
-// ContributorRemove MUST return a non-nil error when the operation fails.
-// ContributorRemove performs the contributor remove operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️contributorremove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/ContributorRemove)
+// 🚚ContributorRemove MUST return a non-nil error when the operation fails.
+// 🚚ContributorRemove performs the contributor remove operation on the mutation resolver.
 func (r *mutationResolver) ContributorRemove(ctx context.Context, github string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.ContributorRemove(github)
@@ -33718,9 +31799,8 @@ func (r *mutationResolver) ContributorRemove(ctx context.Context, github string)
 	return false, fmt.Errorf("not implemented")
 }
 
-// FolderCreate MUST return a non-nil error when the operation fails.
-// FolderCreate performs the folder create operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️foldercreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FolderCreate)
+// 📁FolderCreate MUST return a non-nil error when the operation fails.
+// 📁FolderCreate performs the folder create operation on the mutation resolver.
 func (r *mutationResolver) FolderCreate(ctx context.Context, path string) (*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FolderCreate(path)
@@ -33728,9 +31808,8 @@ func (r *mutationResolver) FolderCreate(ctx context.Context, path string) (*Fold
 	return nil, fmt.Errorf("not implemented")
 }
 
-// FolderMove MUST return a non-nil error when the operation fails.
-// FolderMove performs the folder move operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️foldermove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FolderMove)
+// ⬜FolderMove MUST return a non-nil error when the operation fails.
+// 📄FolderMove performs the folder move operation on the mutation resolver.
 func (r *mutationResolver) FolderMove(ctx context.Context, src string, dst string) (*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FolderMove(src, dst)
@@ -33738,9 +31817,8 @@ func (r *mutationResolver) FolderMove(ctx context.Context, src string, dst strin
 	return nil, fmt.Errorf("not implemented")
 }
 
-// FolderDelete MUST return a non-nil error when the operation fails.
-// FolderDelete performs the folder delete operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️folderdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FolderDelete)
+// 🟥FolderDelete MUST return a non-nil error when the operation fails.
+// 🔻FolderDelete performs the folder delete operation on the mutation resolver.
 func (r *mutationResolver) FolderDelete(ctx context.Context, path string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.FolderDelete(path)
@@ -33749,9 +31827,8 @@ func (r *mutationResolver) FolderDelete(ctx context.Context, path string) (bool,
 	return false, fmt.Errorf("not implemented")
 }
 
-// FileCreate MUST return a non-nil error when the operation fails.
-// FileCreate performs the file create operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️filecreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FileCreate)
+// 📄FileCreate MUST return a non-nil error when the operation fails.
+// ⬛FileCreate performs the file create operation on the mutation resolver.
 func (r *mutationResolver) FileCreate(ctx context.Context, path string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FileCreate(path)
@@ -33759,9 +31836,8 @@ func (r *mutationResolver) FileCreate(ctx context.Context, path string) (*File, 
 	return nil, fmt.Errorf("not implemented")
 }
 
-// FileMove MUST return a non-nil error when the operation fails.
-// FileMove performs the file move operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️filemove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FileMove)
+// 🟧FileMove MUST return a non-nil error when the operation fails.
+// ⬜FileMove performs the file move operation on the mutation resolver.
 func (r *mutationResolver) FileMove(ctx context.Context, src string, dst string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FileMove(src, dst)
@@ -33769,9 +31845,8 @@ func (r *mutationResolver) FileMove(ctx context.Context, src string, dst string)
 	return nil, fmt.Errorf("not implemented")
 }
 
-// FileDelete MUST return a non-nil error when the operation fails.
-// FileDelete performs the file delete operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️filedelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/FileDelete)
+// 🟨FileDelete MUST return a non-nil error when the operation fails.
+// 🟥FileDelete performs the file delete operation on the mutation resolver.
 func (r *mutationResolver) FileDelete(ctx context.Context, path string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.FileDelete(path)
@@ -33780,9 +31855,8 @@ func (r *mutationResolver) FileDelete(ctx context.Context, path string) (bool, e
 	return false, fmt.Errorf("not implemented")
 }
 
-// SectionCreate MUST return a non-nil error when the operation fails.
-// SectionCreate performs the section create operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️sectioncreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/SectionCreate)
+// 📑SectionCreate MUST return a non-nil error when the operation fails.
+// 📑SectionCreate performs the section create operation on the mutation resolver.
 func (r *mutationResolver) SectionCreate(ctx context.Context, file string, name string, parent *string) (*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SectionCreate(file, name, parent)
@@ -33790,9 +31864,8 @@ func (r *mutationResolver) SectionCreate(ctx context.Context, file string, name 
 	return nil, fmt.Errorf("not implemented")
 }
 
-// SectionMove MUST return a non-nil error when the operation fails.
-// SectionMove performs the section move operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️sectionmove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/SectionMove)
+// 🟩SectionMove MUST return a non-nil error when the operation fails.
+// 🟧SectionMove performs the section move operation on the mutation resolver.
 func (r *mutationResolver) SectionMove(ctx context.Context, file string, oldName string, newName string) (*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SectionMove(file, oldName, newName)
@@ -33800,9 +31873,8 @@ func (r *mutationResolver) SectionMove(ctx context.Context, file string, oldName
 	return nil, fmt.Errorf("not implemented")
 }
 
-// SectionDelete MUST return a non-nil error when the operation fails.
-// SectionDelete performs the section delete operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️sectiondelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/SectionDelete)
+// 🟦SectionDelete MUST return a non-nil error when the operation fails.
+// 🟨SectionDelete performs the section delete operation on the mutation resolver.
 func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.SectionDelete(file, name)
@@ -33811,9 +31883,8 @@ func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name 
 	return false, fmt.Errorf("not implemented")
 }
 
-// Integrate MUST return a non-nil error when the operation fails.
-// Integrate performs the integrate operation on the mutation resolver.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️integrate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/Integrate)
+// 🧬Integrate MUST return a non-nil error when the operation fails.
+// 🧬Integrate performs the integrate operation on the mutation resolver.
 func (r *mutationResolver) Integrate(ctx context.Context, source, targetSection, targetFile, targetParent *string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Integrate(source, targetSection, targetFile, targetParent)
@@ -33821,9 +31892,8 @@ func (r *mutationResolver) Integrate(ctx context.Context, source, targetSection,
 	return nil, fmt.Errorf("not implemented")
 }
 
-// Extract MUST return the extracted component from the input.
-// Extract extracts the extract from the source.
-// [🧰repo⌨️cli💻main🔖types🔖mutationresolvers🛠️extract](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mutation%20Resolvers/d/i/Extract)
+// 🧲Extract MUST return the extracted component from the input.
+// 🧲Extract extracts the extract from the source.
 func (r *mutationResolver) Extract(ctx context.Context, sourceFile, sourceSection, targetFile *string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Extract(sourceFile, sourceSection, targetFile)
@@ -33831,25 +31901,21 @@ func (r *mutationResolver) Extract(ctx context.Context, sourceFile, sourceSectio
 	return nil, fmt.Errorf("not implemented")
 }
 
-// #endregion 🔖Mutation Resolvers
+// #endregion 💻Mutation Resolvers
 
-// #region 🔖Entity Resolvers
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers)
+// #region 🧪Entity Resolvers
 // Entity resolver methods implementing GraphQL entity lookups.
 
-// repoResolver holds the data fields for a repoResolver record.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers✂️reporesolver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/repoResolver)
+// 💿repoResolver holds the data fields for a repoResolver record.
 type repoResolver struct{ *Resolver }
 
-// Repo_ MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️repo](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Repo_)
+// 🔷Repo_ MUST complete the operation successfully.
 func (r *Resolver) Repo_() RepoResolver {
 	return &repoResolver{r}
 }
 
-// Bundles MUST return a non-nil error when the operation fails.
-// Bundles performs the bundles operation on the repo resolver.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️bundles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Bundles)
+// 📦Bundles MUST return a non-nil error when the operation fails.
+// 📝Bundles performs the bundles operation on the repo resolver.
 func (r *repoResolver) Bundles(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Bundle, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -33865,9 +31931,8 @@ func (r *repoResolver) Bundles(ctx context.Context, obj *Repo, filter *FilterInp
 	return []*Bundle{}, nil
 }
 
-// Folders MUST return a non-nil error when the operation fails.
-// Folders performs the folders operation on the repo resolver.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️folders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Folders)
+// 📁Folders MUST return a non-nil error when the operation fails.
+// 📩Folders performs the folders operation on the repo resolver.
 func (r *repoResolver) Folders(ctx context.Context, obj *Repo) ([]*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFolders(), nil
@@ -33875,9 +31940,8 @@ func (r *repoResolver) Folders(ctx context.Context, obj *Repo) ([]*Folder, error
 	return []*Folder{}, nil
 }
 
-// Files MUST return a non-nil error when the operation fails.
-// Files performs the files operation on the repo resolver.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️files](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Files)
+// ❌Files MUST return a non-nil error when the operation fails.
+// 📄Files performs the files operation on the repo resolver.
 func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFiles(), nil
@@ -33885,9 +31949,8 @@ func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
 	return []*File{}, nil
 }
 
-// Sections MUST return a non-nil error when the operation fails.
-// Sections performs the sections operation on the repo resolver.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️sections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Sections)
+// 📑Sections MUST return a non-nil error when the operation fails.
+// 🐙Sections performs the sections operation on the repo resolver.
 func (r *repoResolver) Sections(ctx context.Context, obj *Repo) ([]*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetSections(), nil
@@ -33895,9 +31958,8 @@ func (r *repoResolver) Sections(ctx context.Context, obj *Repo) ([]*Section, err
 	return []*Section{}, nil
 }
 
-// Definitions MUST return a non-nil error when the operation fails.
-// Definitions performs the definitions operation on the repo resolver.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️definitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Definitions)
+// 📖Definitions MUST return a non-nil error when the operation fails.
+// ▶️Definitions performs the definitions operation on the repo resolver.
 func (r *repoResolver) Definitions(ctx context.Context, obj *Repo) ([]*Definition, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDefinitions(), nil
@@ -33905,9 +31967,8 @@ func (r *repoResolver) Definitions(ctx context.Context, obj *Repo) ([]*Definitio
 	return []*Definition{}, nil
 }
 
-// Contributors MUST return a non-nil error when the operation fails.
-// Contributors performs the contributors operation on the repo resolver.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️contributors](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Contributors)
+// 🤝Contributors MUST return a non-nil error when the operation fails.
+// 🔶Contributors performs the contributors operation on the repo resolver.
 func (r *repoResolver) Contributors(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Contributor, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -33923,9 +31984,8 @@ func (r *repoResolver) Contributors(ctx context.Context, obj *Repo, filter *Filt
 	return []*Contributor{}, nil
 }
 
-// Todos MUST return a non-nil error when the operation fails.
-// Todos performs the todos operation on the repo resolver.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️todos](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Todos)
+// ✅Todos MUST return a non-nil error when the operation fails.
+// 🔹Todos performs the todos operation on the repo resolver.
 func (r *repoResolver) Todos(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetTodos(filter)
@@ -33933,9 +31993,8 @@ func (r *repoResolver) Todos(ctx context.Context, obj *Repo, filter *FilterInput
 	return []*Todo{}, nil
 }
 
-// Tickets MUST return a non-nil error when the operation fails.
-// Tickets performs the tickets operation on the repo resolver.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️tickets](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Tickets)
+// 🎫Tickets MUST return a non-nil error when the operation fails.
+// 🔸Tickets performs the tickets operation on the repo resolver.
 func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -33954,9 +32013,8 @@ func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month 
 	return []*Ticket{}, nil
 }
 
-// Policies MUST return a non-nil error when the operation fails.
-// Policies performs the policies operation on the repo resolver.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️policies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Policies)
+// 🔶Policies MUST return a non-nil error when the operation fails.
+// 🔺Policies performs the policies operation on the repo resolver.
 func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Policy, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -33985,9 +32043,8 @@ func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterIn
 	return []*Policy{}, nil
 }
 
-// Statutes MUST return a non-nil error when the operation fails.
-// Statutes performs the statutes operation on the repo resolver.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️statutes](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Statutes)
+// 🔹Statutes MUST return a non-nil error when the operation fails.
+// 📜Statutes performs the statutes operation on the repo resolver.
 func (r *repoResolver) Statutes(ctx context.Context, obj *Repo) ([]*StatuteMeta, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetStatutes(), nil
@@ -33995,9 +32052,8 @@ func (r *repoResolver) Statutes(ctx context.Context, obj *Repo) ([]*StatuteMeta,
 	return []*StatuteMeta{}, nil
 }
 
-// Breachs MUST return a non-nil error when the operation fails.
-// Breachs performs the breachs operation on the repo resolver.
-// [🧰repo⌨️cli💻main🔖types🔖entityresolvers🛠️breachs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Entity%20Resolvers/d/i/Breachs)
+// 🔸Breachs MUST return a non-nil error when the operation fails.
+// ⚠️Breachs performs the breachs operation on the repo resolver.
 func (r *repoResolver) Breachs(ctx context.Context, obj *Repo, scope *string) ([]*Breach, error) {
 	if r.Ctx != nil {
 		result, err := r.Ctx.Analyze(scope)
@@ -34014,14 +32070,12 @@ func (r *repoResolver) Breachs(ctx context.Context, obj *Repo, scope *string) ([
 	return []*Breach{}, nil
 }
 
-// #endregion 🔖Entity Resolvers
+// #endregion 🧪Entity Resolvers
 
-// #region 🔖Resolver Interfaces
-// [🧰repo⌨️cli💻main🔖types🔖resolverinterfaces](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Resolver%20Interfaces)
+// #region 🗼Resolver Interfaces
 // Resolver interface definitions for the GraphQL server.
 
-// QueryResolver defines the interface for query resolver operations.
-// [🧰repo⌨️cli💻main🔖types🔖resolverinterfaces✂️queryresolver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Resolver%20Interfaces/d/i/QueryResolver)
+// 🔌QueryResolver defines the interface for query resolver operations.
 type QueryResolver interface {
 	Node(ctx context.Context, id string) (Node, error)
 	Repo(ctx context.Context) (*Repo, error)
@@ -34046,8 +32100,7 @@ type QueryResolver interface {
 	Analyze(ctx context.Context, scope *string) (*AnalyzeResult, error)
 }
 
-// MutationResolver defines the interface for mutation resolver operations.
-// [🧰repo⌨️cli💻main🔖types🔖resolverinterfaces✂️mutationresolver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Resolver%20Interfaces/d/i/MutationResolver)
+// 🔷MutationResolver defines the interface for mutation resolver operations.
 type MutationResolver interface {
 	SyncManagement(ctx context.Context) (bool, error)
 	Fix(ctx context.Context, scope *string) (*FixResult, error)
@@ -34072,8 +32125,7 @@ type MutationResolver interface {
 	Integrate(ctx context.Context, source, targetSection, targetFile, targetParent *string) (*File, error)
 }
 
-// RepoResolver defines the interface for repo resolver operations.
-// [🧰repo⌨️cli💻main🔖types🔖resolverinterfaces✂️reporesolver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Resolver%20Interfaces/d/i/RepoResolver)
+// 🔶RepoResolver defines the interface for repo resolver operations.
 type RepoResolver interface {
 	Bundles(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Bundle, error)
 	Folders(ctx context.Context, obj *Repo) ([]*Folder, error)
@@ -34088,14 +32140,12 @@ type RepoResolver interface {
 	Definitions(ctx context.Context, obj *Repo) ([]*Definition, error)
 }
 
-// #endregion 🔖Resolver Interfaces
+// #endregion 🗼Resolver Interfaces
 
-// #region 🔖Mcp
-// [🧰repo⌨️cli💻main🔖types🔖mcp](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp)
+// #region 🦀Mcp
 // MCP protocol handlers for the model context protocol server.
 
-// createMcpServer holds the data fields for a createMcpServer record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🛠️createmcpserver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/d/i/createMcpServer)
+// 🖥️createMcpServer holds the data fields for a createMcpServer record.
 func createMcpServer() *server.MCPServer {
 	s := server.NewMCPServer(
 		"repo",
@@ -34300,8 +32350,7 @@ func createMcpServer() *server.MCPServer {
 	return s
 }
 
-// runMcpServer holds the data fields for a runMcpServer record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🛠️runmcpserver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/d/i/runMcpServer)
+// 💿runMcpServer holds the data fields for a runMcpServer record.
 func runMcpServer(cmd *cobra.Command, args []string) error {
 	s := createMcpServer()
 	if err := server.ServeStdio(s); err != nil {
@@ -34310,14 +32359,12 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// textResult holds the data fields for a textResult record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🛠️textresult](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/d/i/textResult)
+// 📝textResult holds the data fields for a textResult record.
 func textResult(text string) *mcp.CallToolResult {
 	return mcp.NewToolResultText(text)
 }
 
-// toolResultToMCP holds the data fields for a toolResultToMCP record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🛠️toolresulttomcp](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/d/i/toolResultToMCP)
+// 🔷toolResultToMCP holds the data fields for a toolResultToMCP record.
 func toolResultToMCP(result ToolResult) (*mcp.CallToolResult, error) {
 	if result.Error != "" {
 		return nil, fmt.Errorf("%s", result.Error)
@@ -34329,10 +32376,8 @@ func toolResultToMCP(result ToolResult) (*mcp.CallToolResult, error) {
 	return mcp.NewToolResultText(strings.Join(lines, "\n")), nil
 }
 
-// #region 🔖Args
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖args](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args)
-// Argument parsing utilities for CLI and MCP commands.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖args🛠️getargs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args/d/i/getArgs)
+// #region 🎼Args
+// ⌨️Argument parsing utilities for CLI and MCP commands.
 func getArgs(request mcp.CallToolRequest) map[string]interface{} {
 	if args, ok := request.Params.Arguments.(map[string]interface{}); ok {
 		return args
@@ -34340,7 +32385,6 @@ func getArgs(request mcp.CallToolRequest) map[string]interface{} {
 	return make(map[string]interface{})
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖args🛠️getstringarg](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args/d/i/getStringArg)
 func getStringArg(args map[string]interface{}, key string) (string, bool, error) {
 	value, ok := args[key]
 	if !ok {
@@ -34353,8 +32397,7 @@ func getStringArg(args map[string]interface{}, key string) (string, bool, error)
 	return str, true, nil
 }
 
-// requireStringArg holds the data fields for a requireStringArg record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖args🛠️requirestringarg](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args/d/i/requireStringArg)
+// 💿requireStringArg holds the data fields for a requireStringArg record.
 func requireStringArg(args map[string]interface{}, key string) (string, error) {
 	value, ok, err := getStringArg(args, key)
 	if err != nil {
@@ -34366,8 +32409,7 @@ func requireStringArg(args map[string]interface{}, key string) (string, error) {
 	return value, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖args🛠️getintarg](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args/d/i/getIntArg)
-// getIntArg holds the data fields for a getIntArg record.
+// 🔷getIntArg holds the data fields for a getIntArg record.
 func getIntArg(args map[string]interface{}, key string) (int, bool, error) {
 	value, ok := args[key]
 	if !ok {
@@ -34380,8 +32422,7 @@ func getIntArg(args map[string]interface{}, key string) (int, bool, error) {
 	return int(number), true, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖args🛠️requireintarg](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args/d/i/requireIntArg)
-// requireIntArg holds the data fields for a requireIntArg record.
+// 🔶requireIntArg holds the data fields for a requireIntArg record.
 func requireIntArg(args map[string]interface{}, key string) (int, error) {
 	value, ok, err := getIntArg(args, key)
 	if err != nil {
@@ -34393,8 +32434,7 @@ func requireIntArg(args map[string]interface{}, key string) (int, error) {
 	return value, nil
 }
 
-// getStringSliceArg holds the data fields for a getStringSliceArg record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖args🛠️getstringslicearg](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args/d/i/getStringSliceArg)
+// 🔤getStringSliceArg holds the data fields for a getStringSliceArg record.
 func getStringSliceArg(args map[string]interface{}, key string) ([]string, bool, error) {
 	value, ok := args[key]
 	if !ok {
@@ -34415,8 +32455,7 @@ func getStringSliceArg(args map[string]interface{}, key string) ([]string, bool,
 	return result, true, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖args🛠️getboolarg](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Args/d/i/getBoolArg)
-// getBoolArg holds the data fields for a getBoolArg record.
+// 🔘getBoolArg holds the data fields for a getBoolArg record.
 func getBoolArg(args map[string]interface{}, key string) (bool, bool, error) {
 	value, ok := args[key]
 	if !ok {
@@ -34429,12 +32468,10 @@ func getBoolArg(args map[string]interface{}, key string) (bool, bool, error) {
 	return boolVal, true, nil
 }
 
-// #endregion 🔖Args
+// #endregion 🎼Args
 
-// #region 🔖Paths
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖paths](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Paths)
-// Path resolution utilities for file and folder operations.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖paths🛠️requirefilepath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Paths/d/i/requireFilePath)
+// #region 🔧Paths
+// 🛠️Path resolution utilities for file and folder operations.
 func requireFilePath(path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -34446,8 +32483,7 @@ func requireFilePath(path string) error {
 	return nil
 }
 
-// requireFolderPath holds the data fields for a requireFolderPath record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖paths🛠️requirefolderpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Paths/d/i/requireFolderPath)
+// 📁requireFolderPath holds the data fields for a requireFolderPath record.
 func requireFolderPath(path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -34459,8 +32495,7 @@ func requireFolderPath(path string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖paths🛠️requirefiletargetpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Paths/d/i/requireFileTargetPath)
-// requireFileTargetPath holds the data fields for a requireFileTargetPath record.
+// 💿requireFileTargetPath holds the data fields for a requireFileTargetPath record.
 func requireFileTargetPath(path string) error {
 	info, err := os.Stat(path)
 	if err == nil {
@@ -34475,8 +32510,7 @@ func requireFileTargetPath(path string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖paths🛠️requirefoldertargetpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Paths/d/i/requireFolderTargetPath)
-// requireFolderTargetPath holds the data fields for a requireFolderTargetPath record.
+// 🛤️requireFolderTargetPath holds the data fields for a requireFolderTargetPath record.
 func requireFolderTargetPath(path string) error {
 	info, err := os.Stat(path)
 	if err == nil {
@@ -34491,13 +32525,11 @@ func requireFolderTargetPath(path string) error {
 	return nil
 }
 
-// #endregion 🔖Paths
+// #endregion 🔧Paths
 
-// #region 🔖GraphQL
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖graphql](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/GraphQL)
+// #region 🎙️GraphQL
 // GraphQL query and mutation string constants.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖graphql🛠️jsontoyaml](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/GraphQL/d/i/jsonToYaml)
-// jsonToYaml holds the data fields for a jsonToYaml record.
+// 🔖jsonToYaml holds the data fields for a jsonToYaml record.
 func jsonToYaml(jsonStr string) (string, error) {
 	var data interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
@@ -34510,8 +32542,7 @@ func jsonToYaml(jsonStr string) (string, error) {
 	return string(yamlBytes), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖graphql🛠️gql](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/GraphQL/d/i/gql)
-// gql holds the data fields for a gql record.
+// 💿gql holds the data fields for a gql record.
 func gql(query string, variables map[string]interface{}) (string, error) {
 	ensureExecutor()
 	if executor == nil {
@@ -34520,13 +32551,11 @@ func gql(query string, variables map[string]interface{}) (string, error) {
 	return executor.ExecuteJSON(context.Background(), query, variables)
 }
 
-// #endregion 🔖GraphQL
+// #endregion 🎙️GraphQL
 
-// #region 🔖Handlers
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers)
+// #region 🪄Handlers
 // Request handler functions for CLI and MCP operations.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️renderprompttemplate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/renderPromptTemplate)
-// renderPromptTemplate holds the data fields for a renderPromptTemplate record.
+// ⏹️renderPromptTemplate holds the data fields for a renderPromptTemplate record.
 func renderPromptTemplate(name string, data map[string]string) (string, error) {
 	path := GetRepoMetaPath(filepath.Join("💬", "📋", name+".tpl"))
 	content, err := os.ReadFile(path)
@@ -34544,8 +32573,7 @@ func renderPromptTemplate(name string, data map[string]string) (string, error) {
 	return out.String(), nil
 }
 
-// handleEnhancePrompt holds the data fields for a handleEnhancePrompt record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️handleenhanceprompt](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/handleEnhancePrompt)
+// 💿handleEnhancePrompt holds the data fields for a handleEnhancePrompt record.
 func handleEnhancePrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
 	prompt := request.Params.Arguments["prompt"]
 	content, err := renderPromptTemplate("enhance", map[string]string{"prompt": prompt})
@@ -34560,7 +32588,6 @@ func handleEnhancePrompt(ctx context.Context, request mcp.GetPromptRequest) (*mc
 	), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️handlerefactorprompt](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/handleRefactorPrompt)
 func handleRefactorPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
 	prompt := request.Params.Arguments["prompt"]
 	content, err := renderPromptTemplate("refactor", map[string]string{"prompt": prompt})
@@ -34575,8 +32602,7 @@ func handleRefactorPrompt(ctx context.Context, request mcp.GetPromptRequest) (*m
 	), nil
 }
 
-// handleTestPrompt holds the data fields for a handleTestPrompt record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️handletestprompt](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/handleTestPrompt)
+// 🧪handleTestPrompt holds the data fields for a handleTestPrompt record.
 func handleTestPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
 	prompt := request.Params.Arguments["prompt"]
 	content, err := renderPromptTemplate("test", map[string]string{"prompt": prompt})
@@ -34591,8 +32617,7 @@ func handleTestPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.G
 	), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️handlecomplyprompt](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/handleComplyPrompt)
-// handleComplyPrompt holds the data fields for a handleComplyPrompt record.
+// 🔷handleComplyPrompt holds the data fields for a handleComplyPrompt record.
 func handleComplyPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
 	prompt := request.Params.Arguments["prompt"]
 	content, err := renderPromptTemplate("comply", map[string]string{"prompt": prompt})
@@ -34607,7 +32632,6 @@ func handleComplyPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp
 	), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️analyze](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/analyze)
 func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	scope, ok, err := getStringArg(args, "scope")
@@ -34621,7 +32645,6 @@ func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️fix](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/fix)
 func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	scope, ok, err := getStringArg(args, "scope")
@@ -34635,8 +32658,7 @@ func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult,
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️policycheck](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/policyCheck)
-// policyCheck holds the data fields for a policyCheck record.
+// 📜policyCheck holds the data fields for a policyCheck record.
 func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	id, err := requireStringArg(args, "id")
@@ -34654,8 +32676,7 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️ticketopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/ticketOpen)
-// ticketOpen holds the data fields for a ticketOpen record.
+// 🎫ticketOpen holds the data fields for a ticketOpen record.
 func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	title, _, _ := getStringArg(args, "title")
@@ -34672,7 +32693,6 @@ func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️ticketread](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/ticketRead)
 func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	year, err := requireIntArg(args, "year")
@@ -34696,9 +32716,8 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return toolResultToMCP(result)
 }
 
-// parseTicketPath parses a ticket path string (e.g. "26/03/27/SLUG") into year, month, day, slug.
-// Normalizes 4-digit years to 2-digit (2026 → 26).
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️parseticketpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/parseTicketPath)
+// 🔤parseTicketPath parses a ticket path string (e.g. "26/03/27/SLUG") into year, month, day, slug.
+// 🗺️Normalizes 4-digit years to 2-digit (2026 → 26).
 func parseTicketPath(path string) (int, int, int, string, error) {
 	parts := strings.Split(strings.TrimSpace(path), "/")
 	if len(parts) < 4 {
@@ -34726,8 +32745,7 @@ func parseTicketPath(path string) (int, int, int, string, error) {
 	return year, month, day, slug, nil
 }
 
-// resolveTicketForClose resolves a ticket for closing: by path or latest open ticket.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️resolveticketforclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/resolveTicketForClose)
+// 📪resolveTicketForClose resolves a ticket for closing: by path or latest open ticket.
 func resolveTicketForClose(path string) (int, int, int, string, error) {
 	if path != "" {
 		return parseTicketPath(path)
@@ -34742,8 +32760,7 @@ func resolveTicketForClose(path string) (int, int, int, string, error) {
 	return ticket.Year, ticket.Month, ticket.Day, ticket.Slug, nil
 }
 
-// resolveTicketForReopen resolves a ticket for reopening: by path or latest closed ticket.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️resolveticketforreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/resolveTicketForReopen)
+// 🔓resolveTicketForReopen resolves a ticket for reopening: by path or latest closed ticket.
 func resolveTicketForReopen(path string) (int, int, int, string, error) {
 	if path != "" {
 		return parseTicketPath(path)
@@ -34758,8 +32775,7 @@ func resolveTicketForReopen(path string) (int, int, int, string, error) {
 	return ticket.Year, ticket.Month, ticket.Day, ticket.Slug, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️ticketclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/ticketClose)
-// ticketClose holds the data fields for a ticketClose record.
+// 🔶ticketClose holds the data fields for a ticketClose record.
 func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _, _ := getStringArg(args, "path")
@@ -34777,8 +32793,7 @@ func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	return toolResultToMCP(result)
 }
 
-// ticketReopen holds the data fields for a ticketReopen record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️ticketreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/ticketReopen)
+// 📬ticketReopen holds the data fields for a ticketReopen record.
 func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _, _ := getStringArg(args, "path")
@@ -34798,8 +32813,7 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️draftdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/draftDelete)
-// draftDelete holds the data fields for a draftDelete record.
+// 🗑️draftDelete holds the data fields for a draftDelete record.
 func draftDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	slug, err := requireStringArg(args, "slug")
@@ -34810,7 +32824,6 @@ func draftDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️todocreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/todoCreate)
 func todoCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	parent, _, _ := getStringArg(args, "parent")
@@ -34832,7 +32845,6 @@ func todoCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return textResult(payload), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️tododelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/todoDelete)
 func todoDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, err := requireStringArg(args, "path")
@@ -34851,8 +32863,7 @@ func todoDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return textResult(payload), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️goalopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/goalOpen)
-// goalOpen holds the data fields for a goalOpen record.
+// ⛳goalOpen holds the data fields for a goalOpen record.
 func goalOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	title, _, _ := getStringArg(args, "title")
@@ -34869,8 +32880,7 @@ func goalOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️goalclose](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/goalClose)
-// goalClose holds the data fields for a goalClose record.
+// 🔹goalClose holds the data fields for a goalClose record.
 func goalClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	id, err := requireStringArg(args, "id")
@@ -34887,7 +32897,6 @@ func goalClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolR
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️goalreopen](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/goalReopen)
 func goalReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	id, err := requireStringArg(args, "id")
@@ -34915,8 +32924,7 @@ func goalReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️export](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/export)
-// export holds the data fields for a export record.
+// 📤export holds the data fields for a export record.
 func export(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	output, _, _ := getStringArg(args, "output")
@@ -34924,8 +32932,7 @@ func export(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResu
 	return toolResultToMCP(result)
 }
 
-// contributorAdd holds the data fields for a contributorAdd record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️contributoradd](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/contributorAdd)
+// 🤝contributorAdd holds the data fields for a contributorAdd record.
 func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	github, err := requireStringArg(args, "github")
@@ -34936,8 +32943,7 @@ func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️contributorremove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/contributorRemove)
-// contributorRemove holds the data fields for a contributorRemove record.
+// 🚚contributorRemove holds the data fields for a contributorRemove record.
 func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	github, err := requireStringArg(args, "github")
@@ -34948,8 +32954,7 @@ func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️foldercreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/folderCreate)
-// folderCreate holds the data fields for a folderCreate record.
+// 📁folderCreate holds the data fields for a folderCreate record.
 func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, err := requireStringArg(args, "path")
@@ -34960,8 +32965,7 @@ func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	return toolResultToMCP(result)
 }
 
-// folderMove holds the data fields for a folderMove record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️foldermove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/folderMove)
+// 🔸folderMove holds the data fields for a folderMove record.
 func folderMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	source, err := requireStringArg(args, "source")
@@ -34976,8 +32980,7 @@ func folderMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return toolResultToMCP(result)
 }
 
-// folderDelete holds the data fields for a folderDelete record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️folderdelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/folderDelete)
+// 🔺folderDelete holds the data fields for a folderDelete record.
 func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, err := requireStringArg(args, "path")
@@ -34988,8 +32991,7 @@ func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️filecreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/fileCreate)
-// fileCreate holds the data fields for a fileCreate record.
+// 🆕fileCreate holds the data fields for a fileCreate record.
 func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, err := requireStringArg(args, "path")
@@ -35000,8 +33002,7 @@ func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return toolResultToMCP(result)
 }
 
-// fileMove holds the data fields for a fileMove record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️filemove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/fileMove)
+// 📄fileMove holds the data fields for a fileMove record.
 func fileMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	source, err := requireStringArg(args, "source")
@@ -35016,8 +33017,7 @@ func fileMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	return toolResultToMCP(result)
 }
 
-// fileDelete holds the data fields for a fileDelete record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️filedelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/fileDelete)
+// 🔻fileDelete holds the data fields for a fileDelete record.
 func fileDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, err := requireStringArg(args, "path")
@@ -35028,8 +33028,7 @@ func fileDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	return toolResultToMCP(result)
 }
 
-// sectionCreate holds the data fields for a sectionCreate record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️sectioncreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/sectionCreate)
+// 📑sectionCreate holds the data fields for a sectionCreate record.
 func sectionCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, err := requireStringArg(args, "file")
@@ -35044,8 +33043,7 @@ func sectionCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 	return toolResultToMCP(result)
 }
 
-// sectionMove holds the data fields for a sectionMove record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️sectionmove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/sectionMove)
+// ⬛sectionMove holds the data fields for a sectionMove record.
 func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, err := requireStringArg(args, "file")
@@ -35064,8 +33062,7 @@ func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️sectiondelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/sectionDelete)
-// sectionDelete holds the data fields for a sectionDelete record.
+// ⬜sectionDelete holds the data fields for a sectionDelete record.
 func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, err := requireStringArg(args, "file")
@@ -35080,7 +33077,6 @@ func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️sectionintegrate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/sectionIntegrate)
 func sectionIntegrate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	source, err := requireStringArg(args, "source")
@@ -35103,8 +33099,7 @@ func sectionIntegrate(ctx context.Context, request mcp.CallToolRequest) (*mcp.Ca
 	return toolResultToMCP(result)
 }
 
-// sectionExtract holds the data fields for a sectionExtract record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️sectionextract](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/sectionExtract)
+// 🧲sectionExtract holds the data fields for a sectionExtract record.
 func sectionExtract(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	sourceFile, err := requireStringArg(args, "source_file")
@@ -35123,8 +33118,7 @@ func sectionExtract(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️artifactmove](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/artifactMove)
-// artifactMove holds the data fields for a artifactMove record.
+// 🏺artifactMove holds the data fields for a artifactMove record.
 func artifactMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	sourceID, err := requireStringArg(args, "source")
@@ -35182,8 +33176,7 @@ func artifactMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	return toolResultToMCP(result)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️mcptree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/mcpTree)
-// mcpTree holds the data fields for a mcpTree record.
+// 🌳mcpTree holds the data fields for a mcpTree record.
 func mcpTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	query, _, _ := getStringArg(args, "query")
@@ -35195,7 +33188,6 @@ func mcpTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 	return textResult(RenderMonorepoTreeMarkdown(tree)), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️graphqlquery](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/graphqlQuery)
 func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	query, err := requireStringArg(args, "query")
@@ -35219,8 +33211,7 @@ func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	return textResult(result), nil
 }
 
-// navigateTool holds the data fields for a navigateTool record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🛠️navigatetool](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/d/i/navigateTool)
+// 🟥navigateTool holds the data fields for a navigateTool record.
 func navigateTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	target, err := requireStringArg(args, "target")
@@ -35242,11 +33233,9 @@ func navigateTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	return textResult(string(bytes)), nil
 }
 
-// #region 🔖Mcp Resources Handlers
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers)
+// #region 🏬Mcp Resources Handlers
 // MCP resource handler functions for resource listing and reading.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlereporesource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleRepoResource)
-// handleRepoResource holds the data fields for a handleRepoResource record.
+// 📩handleRepoResource holds the data fields for a handleRepoResource record.
 func handleRepoResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Repo { repo { id name bundles { id } tickets { id } policies { id } contributors { id } } }`
 	result, err := gql(query, nil)
@@ -35266,8 +33255,7 @@ func handleRepoResource(ctx context.Context, request mcp.ReadResourceRequest) ([
 	}, nil
 }
 
-// handleBundlesResource holds the data fields for a handleBundlesResource record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlebundlesresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleBundlesResource)
+// 💿handleBundlesResource holds the data fields for a handleBundlesResource record.
 func handleBundlesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Bundles { repo { bundles { id name root sourceRoot projectType tags kind } } }`
 	result, err := gql(query, nil)
@@ -35287,8 +33275,7 @@ func handleBundlesResource(ctx context.Context, request mcp.ReadResourceRequest)
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlebundleresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleBundleResource)
-// handleBundleResource holds the data fields for a handleBundleResource record.
+// 📦handleBundleResource holds the data fields for a handleBundleResource record.
 func handleBundleResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	if id == "" {
@@ -35328,7 +33315,6 @@ func handleBundleResource(ctx context.Context, request mcp.ReadResourceRequest) 
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlefoldersresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleFoldersResource)
 func handleFoldersResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Folders { repo { folders { id path name kind } } }`
 	result, err := gql(query, nil)
@@ -35348,7 +33334,6 @@ func handleFoldersResource(ctx context.Context, request mcp.ReadResourceRequest)
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlefolderresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleFolderResource)
 func handleFolderResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	path := IdToPath(id)
@@ -35370,7 +33355,6 @@ func handleFolderResource(ctx context.Context, request mcp.ReadResourceRequest) 
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlefilesresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleFilesResource)
 func handleFilesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Files { repo { files { id path name kind extension } } }`
 	result, err := gql(query, nil)
@@ -35390,8 +33374,7 @@ func handleFilesResource(ctx context.Context, request mcp.ReadResourceRequest) (
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlefileresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleFileResource)
-// handleFileResource holds the data fields for a handleFileResource record.
+// 📄handleFileResource holds the data fields for a handleFileResource record.
 func handleFileResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	path := IdToPath(id)
@@ -35413,7 +33396,6 @@ func handleFileResource(ctx context.Context, request mcp.ReadResourceRequest) ([
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlesectionsresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleSectionsResource)
 func handleSectionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	path := IdToPath(id)
@@ -35435,8 +33417,7 @@ func handleSectionsResource(ctx context.Context, request mcp.ReadResourceRequest
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlesectionresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleSectionResource)
-// handleSectionResource holds the data fields for a handleSectionResource record.
+// 📑handleSectionResource holds the data fields for a handleSectionResource record.
 func handleSectionResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	if id == "" {
@@ -35470,8 +33451,7 @@ func handleSectionResource(ctx context.Context, request mcp.ReadResourceRequest)
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handledefinitionsresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleDefinitionsResource)
-// handleDefinitionsResource holds the data fields for a handleDefinitionsResource record.
+// 📖handleDefinitionsResource holds the data fields for a handleDefinitionsResource record.
 func handleDefinitionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	path := IdToPath(id)
@@ -35493,8 +33473,7 @@ func handleDefinitionsResource(ctx context.Context, request mcp.ReadResourceRequ
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handledefinitionresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleDefinitionResource)
-// handleDefinitionResource holds the data fields for a handleDefinitionResource record.
+// 🔷handleDefinitionResource holds the data fields for a handleDefinitionResource record.
 func handleDefinitionResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	if id == "" {
@@ -35525,8 +33504,7 @@ func handleDefinitionResource(ctx context.Context, request mcp.ReadResourceReque
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handleticketsresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleTicketsResource)
-// handleTicketsResource holds the data fields for a handleTicketsResource record.
+// 🎫handleTicketsResource holds the data fields for a handleTicketsResource record.
 func handleTicketsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Tickets { repo { tickets { id slug title status prompt interactions { prompt } } } }`
 	result, err := gql(query, nil)
@@ -35546,8 +33524,7 @@ func handleTicketsResource(ctx context.Context, request mcp.ReadResourceRequest)
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handleticketresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleTicketResource)
-// handleTicketResource holds the data fields for a handleTicketResource record.
+// 🔶handleTicketResource holds the data fields for a handleTicketResource record.
 func handleTicketResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	if id == "" {
@@ -35577,7 +33554,6 @@ func handleTicketResource(ctx context.Context, request mcp.ReadResourceRequest) 
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlegoalsresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleGoalsResource)
 func handleGoalsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	goals, err := ListGoals()
 	if err != nil {
@@ -35600,8 +33576,7 @@ func handleGoalsResource(ctx context.Context, request mcp.ReadResourceRequest) (
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlegoalresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleGoalResource)
-// handleGoalResource holds the data fields for a handleGoalResource record.
+// ⛳handleGoalResource holds the data fields for a handleGoalResource record.
 func handleGoalResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	if id == "" {
@@ -35635,8 +33610,7 @@ func handleGoalResource(ctx context.Context, request mcp.ReadResourceRequest) ([
 	return nil, fmt.Errorf("goal not found: %s", goalPath)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlepoliciesresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handlePoliciesResource)
-// handlePoliciesResource holds the data fields for a handlePoliciesResource record.
+// 🔹handlePoliciesResource holds the data fields for a handlePoliciesResource record.
 func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Policies { repo { policies { id description breachs { id } } } }`
 	result, err := gql(query, nil)
@@ -35656,8 +33630,7 @@ func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlepolicyresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handlePolicyResource)
-// handlePolicyResource holds the data fields for a handlePolicyResource record.
+// 📜handlePolicyResource holds the data fields for a handlePolicyResource record.
 func handlePolicyResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	if id == "" {
@@ -35681,8 +33654,7 @@ func handlePolicyResource(ctx context.Context, request mcp.ReadResourceRequest) 
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlestatutesresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleStatutesResource)
-// handleStatutesResource holds the data fields for a handleStatutesResource record.
+// 🔸handleStatutesResource holds the data fields for a handleStatutesResource record.
 func handleStatutesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Statutes { repo { statutes { id priority autofixable reason solution } } }`
 	result, err := gql(query, nil)
@@ -35702,8 +33674,7 @@ func handleStatutesResource(ctx context.Context, request mcp.ReadResourceRequest
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlestatuteresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleStatuteResource)
-// handleStatuteResource holds the data fields for a handleStatuteResource record.
+// 🔺handleStatuteResource holds the data fields for a handleStatuteResource record.
 func handleStatuteResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	if id == "" {
@@ -35727,8 +33698,7 @@ func handleStatuteResource(ctx context.Context, request mcp.ReadResourceRequest)
 	}, nil
 }
 
-// handleContributorsResource holds the data fields for a handleContributorsResource record.
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlecontributorsresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleContributorsResource)
+// 🤝handleContributorsResource holds the data fields for a handleContributorsResource record.
 func handleContributorsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Contributors { repo { contributors { id emails name contributions { checkpoints { id } tickets { id } } } } }`
 	result, err := gql(query, nil)
@@ -35748,8 +33718,7 @@ func handleContributorsResource(ctx context.Context, request mcp.ReadResourceReq
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlecontributorresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleContributorResource)
-// handleContributorResource holds the data fields for a handleContributorResource record.
+// 🔻handleContributorResource holds the data fields for a handleContributorResource record.
 func handleContributorResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := UriToId(request.Params.URI)
 	if id == "" {
@@ -35773,8 +33742,7 @@ func handleContributorResource(ctx context.Context, request mcp.ReadResourceRequ
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlecheckpointsresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleCheckpointsResource)
-// handleCheckpointsResource holds the data fields for a handleCheckpointsResource record.
+// 💾handleCheckpointsResource holds the data fields for a handleCheckpointsResource record.
 func handleCheckpointsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Checkpoints { repo { checkpoints { id sha title date } } }`
 	result, err := gql(query, nil)
@@ -35794,26 +33762,22 @@ func handleCheckpointsResource(ctx context.Context, request mcp.ReadResourceRequ
 	}, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖mcp🔖handlers🔖mcpresourceshandlers🛠️handlecheckpointresource](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Mcp/s/Handlers/s/Mcp%20Resources%20Handlers/d/i/handleCheckpointResource)
 func handleCheckpointResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	return nil, fmt.Errorf("checkpoint resource not implemented")
 }
 
-// #endregion 🔖Mcp Resources Handlers
+// #endregion 🏬Mcp Resources Handlers
 
-// #endregion 🔖Handlers
+// #endregion 🪄Handlers
 
-// #endregion 🔖Mcp
+// #endregion 🦀Mcp
 
-// #region 🔖Cli
-// [🧰repo⌨️cli💻maingo🔖cli](repo://section/repo/cli/main.go/cli)
+// #region 🔊Cli
 
-// #region 🔖GraphQL Helpers
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖graphqlhelpers](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/GraphQL%20Helpers)
+// #region 🌦️GraphQL Helpers
 // GraphQL helper functions for query construction and execution.
 
-// printGQL holds the data fields for a printGQL record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖graphqlhelpers🛠️printgql](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/GraphQL%20Helpers/d/i/printGQL)
+// 💿printGQL holds the data fields for a printGQL record.
 func printGQL(query string, variables map[string]interface{}) error {
 	result, err := gql(query, variables)
 	if err != nil {
@@ -35823,13 +33787,11 @@ func printGQL(query string, variables map[string]interface{}) error {
 	return nil
 }
 
-// #endregion 🔖GraphQL Helpers
+// #endregion 🌦️GraphQL Helpers
 
-// #region 🔖Analyze Command
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖analyzecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Analyze%20Command)
+// #region 🪅Analyze Command
 // Analyze command implementation for policy breach detection.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖analyzecommand🪨analyzecmd](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Analyze%20Command/d/i/analyzeCmd)
-// analyzeCmd holds the data fields for a analyzeCmd record.
+// 🔬analyzeCmd holds the data fields for a analyzeCmd record.
 var analyzeCmd = &cobra.Command{
 	Use:   "analyze [scope]",
 	Short: "Analyze codebase for breachs",
@@ -35875,13 +33837,12 @@ var analyzeCmd = &cobra.Command{
 	},
 }
 
-// #endregion 🔖Analyze Command
+// #endregion 🪅Analyze Command
 
-// #region 🔖Fix Command
+// #region 📃Fix Command
 
-// Fix command implementation for automatic policy breach repair.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖fixcommand🪨autofixcmd](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Fix%20Command/d/i/autofixCmd)
-// autofixCmd holds the data fields for a autofixCmd record.
+// 🔧Fix command implementation for automatic policy breach repair.
+// 🔧autofixCmd holds the data fields for a autofixCmd record.
 var autofixCmd = &cobra.Command{
 	Use:   "autofix [scope]",
 	Short: "Apply autofixes for breachs",
@@ -35912,14 +33873,12 @@ var autofixCmd = &cobra.Command{
 	},
 }
 
-// #endregion 🔖Fix Command
+// #endregion 📃Fix Command
 
-// #region 🔖Missing Utilities
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities)
+// #region 🧬Missing Utilities
 // Utility functions that are missing from the main codebase.
 
-// ScopeToFiles MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️scopetofiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/ScopeToFiles)
+// ❌ScopeToFiles MUST return a non-nil error when the operation fails.
 func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 	ignorePatterns := []string{"**/node_modules/**", "**/.venv/**"}
 	var files []string
@@ -35951,7 +33910,6 @@ func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 	return files, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️normalizerepopath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/normalizeRepoPath)
 func normalizeRepoPath(path string) string {
 	normalized := NormalizePath(path)
 	if filepath.IsAbs(path) {
@@ -35961,8 +33919,7 @@ func normalizeRepoPath(path string) string {
 	return normalized
 }
 
-// isRepoExcludedPath holds the data fields for a isRepoExcludedPath record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️isrepoexcludedpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/isRepoExcludedPath)
+// 💿isRepoExcludedPath holds the data fields for a isRepoExcludedPath record.
 func isRepoExcludedPath(path string) bool {
 	normalized := normalizeRepoPath(path)
 	if normalized == "" {
@@ -35987,8 +33944,7 @@ func isRepoExcludedPath(path string) bool {
 	return false
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️filterconsideredfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/filterConsideredFiles)
-// filterConsideredFiles holds the data fields for a filterConsideredFiles record.
+// 🧹filterConsideredFiles holds the data fields for a filterConsideredFiles record.
 func filterConsideredFiles(files []string) []string {
 	if len(files) == 0 {
 		return files
@@ -36006,15 +33962,13 @@ func filterConsideredFiles(files []string) []string {
 	return filtered
 }
 
-// GitIndexRef is the git ref for the staging index. Used for unstaged-only diffs (index vs working tree).
-// Requirements: ticket close and interaction finish use only unstaged diffs; git diff runs without tree-ish for index vs working tree.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🪨gitindexref](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GitIndexRef)
+// 🌳GitIndexRef is the git ref for the staging index. Used for unstaged-only diffs (index vs working tree).
+// ⏹️Requirements: ticket close and interaction finish use only unstaged diffs; git diff runs without tree-ish for index vs working tree.
 const GitIndexRef = ":0"
 
-// ComputeTicketFiles MUST return the computed result deterministically.
+// 🎫ComputeTicketFiles MUST return the computed result deterministically.
 // ComputeTicketFiles computes and returns the ticket files.
-// Uses unstaged diffs only (index vs working tree) for complete, current working state.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️computeticketfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/ComputeTicketFiles)
+// 💾Uses unstaged diffs only (index vs working tree) for complete, current working state.
 func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
 	files = normalizeTicketFileInputs(files)
 	files = FilterTicketWorkspaceFiles(ticket, files)
@@ -36069,10 +34023,9 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
 	return result, nil
 }
 
-// GetGitDiffLines MUST retrieve the requested value or return an error.
+// 📨GetGitDiffLines MUST retrieve the requested value or return an error.
 // GetGitDiffLines retrieves and returns the git diff lines.
-// For unstaged-only diffs use baseCheckpoint GitIndexRef (index vs working tree).
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️getgitdifflines](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetGitDiffLines)
+// ✔️For unstaged-only diffs use baseCheckpoint GitIndexRef (index vs working tree).
 func GetGitDiffLines(baseCheckpoint, headCheckpoint string, paths []string) (map[string]*DiffLines, error) {
 	if baseCheckpoint == "" {
 		return nil, fmt.Errorf("base checkpoint or GitIndexRef is required")
@@ -36126,8 +34079,7 @@ func GetGitDiffLines(baseCheckpoint, headCheckpoint string, paths []string) (map
 	return result, nil
 }
 
-// buildBreachID holds the data fields for a buildBreachID record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️buildbreachid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/buildBreachID)
+// 🏗️buildBreachID holds the data fields for a buildBreachID record.
 func buildBreachID(scope string, line int, col int) string {
 	if line > 0 && col > 0 {
 		return fmt.Sprintf("repo/breach/%s#%d:%d", scope, line, col)
@@ -36138,8 +34090,7 @@ func buildBreachID(scope string, line int, col int) string {
 	return fmt.Sprintf("repo/breach/%s", scope)
 }
 
-// CanCloseTicket MUST return a deterministic boolean result.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️cancloseticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/CanCloseTicket)
+// 📪CanCloseTicket MUST return a deterministic boolean result.
 func CanCloseTicket(ticket *Ticket) (bool, []string) {
 	var reasons []string
 	if ticket == nil {
@@ -36149,9 +34100,8 @@ func CanCloseTicket(ticket *Ticket) (bool, []string) {
 	return len(reasons) == 0, reasons
 }
 
-// GetBundleByPath MUST retrieve the requested value or return an error.
-// GetBundleByPath retrieves and returns the bundle by path.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️getbundlebypath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetBundleByPath)
+// 📦GetBundleByPath MUST retrieve the requested value or return an error.
+// 🔻GetBundleByPath retrieves and returns the bundle by path.
 func GetBundleByPath(path string) *Bundle {
 	bundles := GetTechnologies()
 	normalizedPath := NormalizePath(path)
@@ -36170,8 +34120,7 @@ func GetBundleByPath(path string) *Bundle {
 	return bestMatch
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️findbundleinfo](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/findBundleInfo)
-// findBundleInfo holds the data fields for a findBundleInfo record.
+// 🔷findBundleInfo holds the data fields for a findBundleInfo record.
 func findBundleInfo(path string) (name, root string, ok bool) {
 	bundles := GetTechnologies()
 	normalizedPath := NormalizePath(path)
@@ -36194,8 +34143,7 @@ func findBundleInfo(path string) (name, root string, ok bool) {
 	return "", "", false
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️resolveparentidfrompath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/resolveParentIDFromPath)
-// resolveParentIDFromPath holds the data fields for a resolveParentIDFromPath record.
+// 🛤️resolveParentIDFromPath holds the data fields for a resolveParentIDFromPath record.
 func resolveParentIDFromPath(dirPath string) string {
 	normalized := NormalizePath(dirPath)
 	if normalized == "." || normalized == "" {
@@ -36247,7 +34195,7 @@ func resolveParentIDFromPath(dirPath string) string {
 	return parentID
 }
 
-// buildFolderID holds the data fields for a buildFolderID record.
+// 📁buildFolderID holds the data fields for a buildFolderID record.
 func buildFolderID(path string, bundleID *string) string {
 	normalized := NormalizePath(path)
 	if normalized == "." || normalized == "" {
@@ -36293,8 +34241,7 @@ func buildFolderID(path string, bundleID *string) string {
 	return parentID + emojiText(EmojiFolderRequired) + Flat(name)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️buildfileid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/buildFileID)
-// buildFileID holds the data fields for a buildFileID record.
+// 📄buildFileID holds the data fields for a buildFileID record.
 func buildFileID(path string, bundleID *string) string {
 	normalized := NormalizePath(path)
 	name := filepath.Base(normalized)
@@ -36317,8 +34264,7 @@ func buildFileID(path string, bundleID *string) string {
 	return GetArtifactID("file", map[string]interface{}{"path": normalized, "kind": kind, "parentId": parentID})
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️buildsectionid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/buildSectionID)
-// buildSectionID holds the data fields for a buildSectionID record.
+// 📑buildSectionID holds the data fields for a buildSectionID record.
 func buildSectionID(fileID string, sectionPath []string) string {
 	if len(sectionPath) == 0 || (len(sectionPath) == 1 && sectionPath[0] == "") {
 		return fileID
@@ -36334,13 +34280,16 @@ func buildSectionID(fileID string, sectionPath []string) string {
 	}
 	result := fileID
 	for _, segment := range segments {
-		result += emojiText(EmojiSection) + Flat(segment)
+		emoji, name := extractEntityEmoji(segment)
+		if emoji == "" {
+			emoji = EmojiSection
+		}
+		result += emojiText(emoji) + Flat(name)
 	}
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️istestfunctionname](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/isTestFunctionName)
-// isTestFunctionName holds the data fields for a isTestFunctionName record.
+// 🧪isTestFunctionName holds the data fields for a isTestFunctionName record.
 func isTestFunctionName(name string) bool {
 
 	for _, prefix := range []string{"Test", "Benchmark", "Fuzz"} {
@@ -36355,8 +34304,7 @@ func isTestFunctionName(name string) bool {
 	return false
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️builddefinitionid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/buildDefinitionID)
-// buildDefinitionID holds the data fields for a buildDefinitionID record.
+// 📖buildDefinitionID holds the data fields for a buildDefinitionID record.
 func buildDefinitionID(fileID string, sectionPath []string, name string, kind DefinitionKind) string {
 	effectiveKind := kind
 	if kind == DefinitionKindImplementation && strings.Contains(fileID, emojiText(EmojiFileLab)) && isTestFunctionName(name) {
@@ -36366,8 +34314,7 @@ func buildDefinitionID(fileID string, sectionPath []string, name string, kind De
 	return buildSectionID(fileID, sectionPath) + definitionKindEmoji(data) + Flat(name)
 }
 
-// GuessSectionName MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️guesssectionname](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GuessSectionName)
+// 🔶GuessSectionName MUST complete the operation successfully.
 func GuessSectionName(filePath string) string {
 	base := filepath.Base(filePath)
 	ext := filepath.Ext(base)
@@ -36384,16 +34331,14 @@ func GuessSectionName(filePath string) string {
 	return strings.Join(words, " ")
 }
 
-// GetGitDiffSectionLineMetrics MUST retrieve the requested value or return an error.
-// GetGitDiffSectionLineMetrics retrieves and returns the git diff section line metrics.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️getgitdiffsectionlinemetrics](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetGitDiffSectionLineMetrics)
+// 🐙GetGitDiffSectionLineMetrics MUST retrieve the requested value or return an error.
+// ⚖️GetGitDiffSectionLineMetrics retrieves and returns the git diff section line metrics.
 func GetGitDiffSectionLineMetrics(baseCheckpoint, endCheckpoint, filePath string) map[string]LineMetrics {
 	return nil
 }
 
-// FlattenSections MUST return a single-level collection with all nested items.
-// FlattenSections flattens the nested sections into a single level.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️flattensections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/FlattenSections)
+// 🔖FlattenSections MUST return a single-level collection with all nested items.
+// 🔢FlattenSections flattens the nested sections into a single level.
 func FlattenSections(sections []Section) []Section {
 	var result []Section
 	var flatten func(secs []Section)
@@ -36407,8 +34352,7 @@ func FlattenSections(sections []Section) []Section {
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️computesectionlinemap](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/computeSectionLineMap)
-// computeSectionLineMap holds the data fields for a computeSectionLineMap record.
+// 🗺️computeSectionLineMap holds the data fields for a computeSectionLineMap record.
 func computeSectionLineMap(sections []Section, diffLines []int, parentPath string) map[string][]int {
 	result := map[string][]int{}
 	for _, section := range sections {
@@ -36434,7 +34378,6 @@ func computeSectionLineMap(sections []Section, diffLines []int, parentPath strin
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️computeaffectedsections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/computeAffectedSections)
 func computeAffectedSections(filePath string, sections []Section, defs []DefinitionRange, addedLineMap map[string][]int, removedLineMap map[string][]int, parentPath string) []TicketSection {
 	var result []TicketSection
 	for _, section := range sections {
@@ -36482,8 +34425,7 @@ func computeAffectedSections(filePath string, sections []Section, defs []Definit
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️setdifference](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/setDifference)
-// setDifference holds the data fields for a setDifference record.
+// 🗃️setDifference holds the data fields for a setDifference record.
 func setDifference(a, b []int) []int {
 	m := make(map[int]bool)
 	for _, x := range b {
@@ -36498,8 +34440,7 @@ func setDifference(a, b []int) []int {
 	return diff
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️setintersection](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/setIntersection)
-// setIntersection holds the data fields for a setIntersection record.
+// 🔹setIntersection holds the data fields for a setIntersection record.
 func setIntersection(a, b []int) []int {
 	m := make(map[int]bool)
 	for _, x := range b {
@@ -36514,8 +34455,7 @@ func setIntersection(a, b []int) []int {
 	return intersection
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️uniquestrings](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/uniqueStrings)
-// uniqueStrings holds the data fields for a uniqueStrings record.
+// 🔤uniqueStrings holds the data fields for a uniqueStrings record.
 func uniqueStrings(strs []string) []string {
 	seen := make(map[string]bool)
 	result := []string{}
@@ -36528,7 +34468,6 @@ func uniqueStrings(strs []string) []string {
 	return result
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️computelinesinrange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/computeLinesInRange)
 func computeLinesInRange(changedLines []int, startLine, endLine int) []int {
 	var result []int
 	for _, line := range changedLines {
@@ -36539,8 +34478,7 @@ func computeLinesInRange(changedLines []int, startLine, endLine int) []int {
 	return result
 }
 
-// findSectionForLine holds the data fields for a findSectionForLine record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️findsectionforline](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/findSectionForLine)
+// 🔸findSectionForLine holds the data fields for a findSectionForLine record.
 func findSectionForLine(sections []Section, line int) string {
 	for _, section := range sections {
 		if line >= section.StartLine && line <= section.EndLine {
@@ -36556,10 +34494,9 @@ func findSectionForLine(sections []Section, line int) string {
 	return ""
 }
 
-// BuildGitDiffArgs MUST construct and return the fully initialized result.
+// 🧱BuildGitDiffArgs MUST construct and return the fully initialized result.
 // BuildGitDiffArgs constructs and returns the git diff args.
-// GitIndexRef as baseCheckpoint yields unstaged-only diff (index vs working tree) with no tree-ish.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️buildgitdiffargs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/BuildGitDiffArgs)
+// 🌳GitIndexRef as baseCheckpoint yields unstaged-only diff (index vs working tree) with no tree-ish.
 func BuildGitDiffArgs(flag, baseCheckpoint, headCheckpoint string, paths []string) []string {
 	if baseCheckpoint == GitIndexRef {
 		if len(paths) == 0 {
@@ -36579,17 +34516,15 @@ func BuildGitDiffArgs(flag, baseCheckpoint, headCheckpoint string, paths []strin
 	return append([]string{"diff", flag, "-M", baseCheckpoint, headCheckpoint, "--"}, paths...)
 }
 
-// GitDiffStatus holds the data fields for a git diff status record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities✂️gitdiffstatus](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GitDiffStatus)
+// 🔺GitDiffStatus holds the data fields for a git diff status record.
 type GitDiffStatus struct {
 	Status string
 	From   string
 	To     string
 }
 
-// GetGitDiffStatus MUST retrieve the requested value or return an error.
-// GetGitDiffStatus retrieves and returns the git diff status.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️getgitdiffstatus](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetGitDiffStatus)
+// 🔻GetGitDiffStatus MUST retrieve the requested value or return an error.
+// 🐙GetGitDiffStatus retrieves and returns the git diff status.
 func GetGitDiffStatus(baseCheckpoint, headCheckpoint string, paths []string) ([]GitDiffStatus, error) {
 	if baseCheckpoint == "" {
 		return nil, fmt.Errorf("base checkpoint or GitIndexRef is required")
@@ -36638,9 +34573,8 @@ func GetGitDiffStatus(baseCheckpoint, headCheckpoint string, paths []string) ([]
 	return results, nil
 }
 
-// GetFolderChildren MUST retrieve the requested value or return an error.
-// GetFolderChildren retrieves and returns the folder children.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️getfolderchildren](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetFolderChildren)
+// ⬛GetFolderChildren MUST retrieve the requested value or return an error.
+// ⬛GetFolderChildren retrieves and returns the folder children.
 func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
 	absPath := filepath.Join(rootDir, folderPath)
 	entries, err := os.ReadDir(absPath)
@@ -36684,9 +34618,8 @@ func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
 	return children, nil
 }
 
-// GetFolderFiles MUST retrieve the requested value or return an error.
-// GetFolderFiles retrieves and returns the folder files.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingutilities🛠️getfolderfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Utilities/d/i/GetFolderFiles)
+// ⬜GetFolderFiles MUST retrieve the requested value or return an error.
+// ⬜GetFolderFiles retrieves and returns the folder files.
 func GetFolderFiles(folderPath string, bundleID *string) ([]*File, error) {
 	absPath := filepath.Join(rootDir, folderPath)
 	entries, err := os.ReadDir(absPath)
@@ -36725,10 +34658,9 @@ func GetFolderFiles(folderPath string, bundleID *string) ([]*File, error) {
 	return files, nil
 }
 
-// #endregion 🔖Missing Utilities
+// #endregion 🧬Missing Utilities
 
-// AnalyzeFile MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️analyzefile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/AnalyzeFile)
+// 🔬AnalyzeFile MUST return a non-nil error when the operation fails.
 func AnalyzeFile(filePath string, bundles []Bundle) ([]Breach, error) {
 	scope := Scope{
 		Kind:     ScopeFile,
@@ -36740,9 +34672,8 @@ func AnalyzeFile(filePath string, bundles []Bundle) ([]Breach, error) {
 	return CheckPoliciesWithContext(ctx, nil)
 }
 
-// ParseContributorIdentity MUST return the parsed result or an error for invalid input.
-// ParseContributorIdentity parses and returns the contributor identity from the input.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️parsecontributoridentity](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/ParseContributorIdentity)
+// 🤝ParseContributorIdentity MUST return the parsed result or an error for invalid input.
+// 🔖ParseContributorIdentity parses and returns the contributor identity from the input.
 func ParseContributorIdentity(line string) (name, email string, ok bool) {
 	re := regexp.MustCompile(`\d{4}\s+(.+?)\s*<([^>]+)>`)
 	m := re.FindStringSubmatch(line)
@@ -36752,7 +34683,6 @@ func ParseContributorIdentity(line string) (name, email string, ok bool) {
 	return strings.TrimSpace(m[1]), strings.TrimSpace(m[2]), true
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️findsectionfordefinition](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/findSectionForDefinition)
 func findSectionForDefinition(sections []Section, startLine, endLine int, prefix string) string {
 	for _, s := range sections {
 		if startLine >= s.StartLine && endLine <= s.EndLine {
@@ -36771,9 +34701,8 @@ func findSectionForDefinition(sections []Section, startLine, endLine int, prefix
 	return prefix
 }
 
-// ListContributors MUST return all available contributors entries.
-// ListContributors returns a list of contributors entries.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️listcontributors](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/ListContributors)
+// 📋ListContributors MUST return all available contributors entries.
+// 🔖ListContributors returns a list of contributors entries.
 func ListContributors() ([]Contributor, error) {
 	var result []Contributor
 	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻")
@@ -36803,9 +34732,8 @@ func ListContributors() ([]Contributor, error) {
 	return result, nil
 }
 
-// StreamContributors MUST invoke the callback for each matching contributors entry.
-// StreamContributors streams contributors entries through the callback.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️streamcontributors](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/StreamContributors)
+// 🎯StreamContributors MUST invoke the callback for each matching contributors entry.
+// 🔖StreamContributors streams contributors entries through the callback.
 func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -36864,30 +34792,26 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 	return nil
 }
 
-// GetContributorAvatarPath MUST retrieve the requested value or return an error.
-// GetContributorAvatarPath retrieves and returns the contributor avatar path.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️getcontributoravatarpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/GetContributorAvatarPath)
+// 📨GetContributorAvatarPath MUST retrieve the requested value or return an error.
+// 🔖GetContributorAvatarPath retrieves and returns the contributor avatar path.
 func GetContributorAvatarPath(alias string) string {
 	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias, "avatar.png")
 }
 
-// GetContributorAvatarRoundPath MUST retrieve the requested value or return an error.
-// GetContributorAvatarRoundPath retrieves and returns the contributor avatar round path.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️getcontributoravatarroundpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/GetContributorAvatarRoundPath)
+// ❌GetContributorAvatarRoundPath MUST retrieve the requested value or return an error.
+// 🔖GetContributorAvatarRoundPath retrieves and returns the contributor avatar round path.
 func GetContributorAvatarRoundPath(alias string) string {
 	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias, "avatar-round.png")
 }
 
-// GetContributorPath MUST retrieve the requested value or return an error.
-// GetContributorPath retrieves and returns the contributor path.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️getcontributorpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/GetContributorPath)
+// 🛤️GetContributorPath MUST retrieve the requested value or return an error.
+// 🔖GetContributorPath retrieves and returns the contributor path.
 func GetContributorPath(alias string) string {
 	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias)
 }
 
-// CreateContributor MUST create a new entry and return an error on conflict.
-// CreateContributor creates a new contributor entry.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️createcontributor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/CreateContributor)
+// 🆕CreateContributor MUST create a new entry and return an error on conflict.
+// 🔖CreateContributor creates a new contributor entry.
 func CreateContributor(alias string) (*Contributor, error) {
 	dir := GetContributorPath(alias)
 	if FileExists(dir) {
@@ -36900,9 +34824,8 @@ func CreateContributor(alias string) (*Contributor, error) {
 	return &c, nil
 }
 
-// LoadContributor MUST return all matching contributor from the data source.
-// LoadContributor loads and returns contributor from the data source.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️loadcontributor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/LoadContributor)
+// 🔷LoadContributor MUST return all matching contributor from the data source.
+// 🔖LoadContributor loads and returns contributor from the data source.
 func LoadContributor(alias string) (*Contributor, error) {
 	path := filepath.Join(GetContributorPath(alias), "contributor.json")
 	if !FileExists(path) {
@@ -36922,9 +34845,8 @@ func LoadContributor(alias string) (*Contributor, error) {
 	return &c, nil
 }
 
-// SaveContributor MUST persist the contributor atomically to the data store.
-// SaveContributor persists contributor to the data store.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️savecontributor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/SaveContributor)
+// 🏪SaveContributor MUST persist the contributor atomically to the data store.
+// 🔖SaveContributor persists contributor to the data store.
 func SaveContributor(c Contributor) error {
 	if c.Alias == "" {
 		c.Alias = c.Github
@@ -36940,9 +34862,8 @@ func SaveContributor(c Contributor) error {
 	return WriteTextFile(filepath.Join(dir, "contributor.json"), string(data))
 }
 
-// RemoveContributor MUST remove the target and return an error on failure.
-// RemoveContributor removes the specified contributor.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️removecontributor](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/RemoveContributor)
+// 🚚RemoveContributor MUST remove the target and return an error on failure.
+// 🔖RemoveContributor removes the specified contributor.
 func RemoveContributor(alias string) error {
 	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias)
 	if !FileExists(dir) {
@@ -36951,15 +34872,13 @@ func RemoveContributor(alias string) error {
 	return os.RemoveAll(dir)
 }
 
-// GetRegisteredPolicies MUST retrieve the requested value or return an error.
-// GetRegisteredPolicies retrieves and returns the registered policies.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️getregisteredpolicies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/GetRegisteredPolicies)
+// 🔶GetRegisteredPolicies MUST retrieve the requested value or return an error.
+// 🔖GetRegisteredPolicies retrieves and returns the registered policies.
 func GetRegisteredPolicies() []PolicyDef {
 	return GetPolicies()
 }
 
-// filterGitIgnored holds the data fields for a filterGitIgnored record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️filtergitignored](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/filterGitIgnored)
+// 🧹filterGitIgnored holds the data fields for a filterGitIgnored record.
 func filterGitIgnored(files []string) []string {
 	if len(files) == 0 {
 		return files
@@ -36983,72 +34902,60 @@ func filterGitIgnored(files []string) []string {
 	return filtered
 }
 
-// repoResolverInstance holds the data fields for a repoResolverInstance record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🪨reporesolverinstance](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/repoResolverInstance)
+// 💿repoResolverInstance holds the data fields for a repoResolverInstance record.
 var repoResolverInstance *Resolver
 
-// ensureRepoResolver lazily initializes the repoResolverInstance on first use.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️ensurereporesolver](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/ensureRepoResolver)
+// 🔹ensureRepoResolver lazily initializes the repoResolverInstance on first use.
 func ensureRepoResolver() {
 	if repoResolverInstance == nil {
 		repoResolverInstance = NewResolver(rootDir)
 	}
 }
 
-// #region 🔖Resolver Methods
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖resolvermethods](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods)
+// #region 📜Resolver Methods
 // Resolver method implementations for GraphQL field resolution.
 
-// Bundles MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖resolvermethods🛠️bundles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Bundles)
+// 📦Bundles MUST return a non-nil error when the operation fails.
 func (r *Resolver) Bundles(ctx context.Context, repo *Repo) ([]*Bundle, error) {
 	return r.Ctx.GetBundles(), nil
 }
 
-// Folders MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖resolvermethods🛠️folders](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Folders)
+// 📁Folders MUST return a non-nil error when the operation fails.
 func (r *Resolver) Folders(ctx context.Context, repo *Repo) ([]*Folder, error) {
 	return r.Ctx.GetFolders(), nil
 }
 
-// Files MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖resolvermethods🛠️files](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Files)
+// ❌Files MUST return a non-nil error when the operation fails.
 func (r *Resolver) Files(ctx context.Context, repo *Repo) ([]*File, error) {
 	return r.Ctx.GetFiles(), nil
 }
 
-// Sections MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖resolvermethods🛠️sections](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Sections)
+// 📑Sections MUST return a non-nil error when the operation fails.
 func (r *Resolver) Sections(ctx context.Context, repo *Repo) ([]*Section, error) {
 	return r.Ctx.GetSections(), nil
 }
 
-// Definitions MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖resolvermethods🛠️definitions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Definitions)
+// 📖Definitions MUST return a non-nil error when the operation fails.
 func (r *Resolver) Definitions(ctx context.Context, repo *Repo) ([]*Definition, error) {
 	return r.Ctx.GetDefinitions(), nil
 }
 
-// Contributors MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖resolvermethods🛠️contributors](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Contributors)
+// 🤝Contributors MUST return a non-nil error when the operation fails.
 func (r *Resolver) Contributors(ctx context.Context, repo *Repo) ([]*Contributor, error) {
 	return r.Ctx.GetContributors()
 }
 
-// Policies MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖resolvermethods🛠️policies](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Policies)
+// 🔷Policies MUST return a non-nil error when the operation fails.
 func (r *Resolver) Policies(ctx context.Context, repo *Repo) ([]*Policy, error) {
 	return r.Ctx.GetPolicies(), nil
 }
 
-// Statutes MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖resolvermethods🛠️statutes](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Statutes)
+// 🔶Statutes MUST return a non-nil error when the operation fails.
 func (r *Resolver) Statutes(ctx context.Context, repo *Repo) ([]*StatuteMeta, error) {
 	return r.Ctx.GetStatutes(), nil
 }
 
-// Breachs MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖resolvermethods🛠️breachs](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Resolver%20Methods/d/i/Breachs)
+// 🔹Breachs MUST return a non-nil error when the operation fails.
 func (r *Resolver) Breachs(ctx context.Context, repo *Repo, scope *string) ([]*Breach, error) {
 	analysis, err := r.Ctx.Analyze(scope)
 	if err != nil {
@@ -37057,14 +34964,12 @@ func (r *Resolver) Breachs(ctx context.Context, repo *Repo, scope *string) ([]*B
 	return analysis.Breachs, nil
 }
 
-// #endregion 🔖Resolver Methods
+// #endregion 📜Resolver Methods
 
-// #region 🔖Missing Tool Functions
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingtoolfunctions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions)
+// #region 🖋️Missing Tool Functions
 // Tool function stubs for unimplemented features.
 
-// ToolAnalyze MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingtoolfunctions🛠️toolanalyze](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolAnalyze)
+// 🔬ToolAnalyze MUST complete the operation successfully.
 func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	repopkg.Emit(repopkg.EventAnalyzeStarting, "repo-cli", repopkg.FolderPayload{Path: scopeRaw})
 	scope := ParseScope(scopeRaw)
@@ -37096,8 +35001,7 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	return ToolResult{Output: *output, Data: report}
 }
 
-// ToolFix MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingtoolfunctions🛠️toolfix](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolFix)
+// 🔧ToolFix MUST complete the operation successfully.
 func ToolFix(scopeRaw string) ToolResult {
 	repopkg.Emit(repopkg.EventFixStarting, "repo-cli", repopkg.FolderPayload{Path: scopeRaw})
 	ctx := NewRepoContext(rootDir)
@@ -37112,16 +35016,14 @@ func ToolFix(scopeRaw string) ToolResult {
 	return ToolResult{Output: *output, Data: res}
 }
 
-// ToolPolicyList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicylist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolPolicyList)
+// 📜ToolPolicyList MUST complete the operation successfully.
 func ToolPolicyList() ToolResult {
 	result := toolResultFromTreeList(TreeNodePolicy)
 	result.Data = GetRegisteredPolicies()
 	return result
 }
 
-// ToolPolicyTree MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicytree](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolPolicyTree)
+// 🌳ToolPolicyTree MUST complete the operation successfully.
 func ToolPolicyTree() ToolResult {
 	allPolicies := GetRegisteredPolicies()
 	var sb strings.Builder
@@ -37139,47 +35041,40 @@ func ToolPolicyTree() ToolResult {
 	return ToolResult{Output: *treeOutput, Data: allPolicies}
 }
 
-// ToolPolicyCheck MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicycheck](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolPolicyCheck)
+// ✔️ToolPolicyCheck MUST complete the operation successfully.
 func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
 	return ToolAnalyze(scopeRaw, []string{policyID})
 }
 
-// ToolPolicyBreachList MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖missingtoolfunctions🛠️toolpolicybreachlist](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Missing%20Tool%20Functions/d/i/ToolPolicyBreachList)
+// 📋ToolPolicyBreachList MUST complete the operation successfully.
 func ToolPolicyBreachList(policyID string) ToolResult {
 
 	return ToolAnalyze("semio", []string{policyID})
 }
 
-// #endregion 🔖Missing Tool Functions
+// #endregion 🖋️Missing Tool Functions
 
-// #region 🔖Benchmark Command
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖benchmarkcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Benchmark%20Command)
+// #region 🔮Benchmark Command
 // Benchmark command implementation for performance measurement.
 
-// benchmarkCmd holds the data fields for a benchmarkCmd record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖benchmarkcommand🪨benchmarkcmd](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Benchmark%20Command/d/i/benchmarkCmd)
+// 💿benchmarkCmd holds the data fields for a benchmarkCmd record.
 var benchmarkCmd = &cobra.Command{
 	Use:   "benchmark",
 	Short: "Run benchmarks for all ecosystems",
 	RunE:  runBenchmark,
 }
 
-// benchmarkDryRun holds the data fields for a benchmarkDryRun record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖benchmarkcommand🪨benchmarkdryrun](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Benchmark%20Command/d/i/benchmarkDryRun)
+// 🔷benchmarkDryRun holds the data fields for a benchmarkDryRun record.
 var benchmarkDryRun bool
 
-// BenchmarkResult holds the data fields for a benchmark result record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖benchmarkcommand✂️benchmarkresult](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Benchmark%20Command/d/i/BenchmarkResult)
+// 🔶BenchmarkResult holds the data fields for a benchmark result record.
 type BenchmarkResult struct {
 	Test string
 	Lang string
 	Time string
 }
 
-// runBenchmark holds the data fields for a runBenchmark record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖benchmarkcommand🛠️runbenchmark](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Benchmark%20Command/d/i/runBenchmark)
+// 🔹runBenchmark holds the data fields for a runBenchmark record.
 func runBenchmark(cmd *cobra.Command, args []string) error {
 	if benchmarkDryRun {
 		return nil
@@ -37280,8 +35175,7 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// parseBenchmarkOutput holds the data fields for a parseBenchmarkOutput record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖benchmarkcommand🛠️parsebenchmarkoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Benchmark%20Command/d/i/parseBenchmarkOutput)
+// 🔬parseBenchmarkOutput holds the data fields for a parseBenchmarkOutput record.
 func parseBenchmarkOutput(results *[]BenchmarkResult, lang string, output string) {
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {
@@ -37303,8 +35197,7 @@ func parseBenchmarkOutput(results *[]BenchmarkResult, lang string, output string
 	}
 }
 
-// writeBenchmarkReport holds the data fields for a writeBenchmarkReport record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖benchmarkcommand🛠️writebenchmarkreport](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Benchmark%20Command/d/i/writeBenchmarkReport)
+// ✏️writeBenchmarkReport holds the data fields for a writeBenchmarkReport record.
 func writeBenchmarkReport(rootDir string, results []BenchmarkResult) error {
 	reportFile := filepath.Join(rootDir, "📊", "benchmark.csv")
 	if err := os.MkdirAll(filepath.Dir(reportFile), 0755); err != nil {
@@ -37358,14 +35251,12 @@ func writeBenchmarkReport(rootDir string, results []BenchmarkResult) error {
 	return nil
 }
 
-// #endregion 🔖Benchmark Command
+// #endregion 🔮Benchmark Command
 
-// #region 🔖Hooks
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks)
+// #region 🦀Hooks
 // Hook event types, context, handler, and blocked tool patterns for git and agent lifecycle hooks.
 
-// HookEvent represents a lifecycle event kind for hooks.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookEvent)
+// 📡HookEvent represents a lifecycle event kind for hooks.
 type HookEvent string
 
 const (
@@ -37397,8 +35288,7 @@ const (
 	HookAgentThinkingEnded            HookEvent = "agent.thinking.ended"
 )
 
-// AllHookEvents lists every valid hook event slug.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🪨allhookevents](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/AllHookEvents)
+// 📋AllHookEvents lists every valid hook event slug.
 var AllHookEvents = []HookEvent{
 	HookVersionCheckpointStarting,
 	HookVersionCheckpointEnded,
@@ -37428,8 +35318,7 @@ var AllHookEvents = []HookEvent{
 	HookAgentThinkingEnded,
 }
 
-// HookKind categorizes a hook as either a git hook or an agent hook.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookkind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookKind)
+// 🏷️HookKind categorizes a hook as either a git hook or an agent hook.
 type HookKind string
 
 const (
@@ -37437,8 +35326,7 @@ const (
 	HookKindAgent   HookKind = "agent"
 )
 
-// HookEventKind returns the hook kind for the given event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️hookeventkind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookEventKind)
+// 🔷HookEventKind returns the hook kind for the given event.
 func HookEventKind(e HookEvent) HookKind {
 	switch e {
 	case HookVersionCheckpointStarting, HookVersionCheckpointEnded,
@@ -37450,8 +35338,7 @@ func HookEventKind(e HookEvent) HookKind {
 	}
 }
 
-// HookContext carries event metadata and a codebase handle for hook handlers.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookcontext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookContext)
+// 🎯HookContext carries event metadata and a codebase handle for hook handlers.
 type HookContext struct {
 	Event      HookEvent         `json:"event"`
 	Client     string            `json:"client"`
@@ -37465,38 +35352,32 @@ type HookContext struct {
 	Input      json.RawMessage   `json:"input,omitempty"`
 }
 
-// HookPlanStep represents a single step in a plan/task list update event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookplanstep](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookPlanStep)
+// 🔁HookPlanStep represents a single step in a plan/task list update event.
 type HookPlanStep struct {
 	Name   string `json:"name"`
 	Status string `json:"status"`
 }
 
-// HookResult represents the outcome of a hook invocation with event-specific data.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresult](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResult)
+// 🔶HookResult represents the outcome of a hook invocation with event-specific data.
 type HookResult interface {
 	IsAllowed() bool
 	GetMessage() string
 }
 
-// HookResultBase provides common fields for all hook results.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultbase](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultBase)
+// 💻HookResultBase provides common fields for all hook results.
 type HookResultBase struct {
 	Allowed bool   `json:"allowed"`
 	Message string `json:"message,omitempty"`
 	Raw     any    `json:"-"`
 }
 
-// IsAllowed holds the data fields for a IsAllowed record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️isallowed](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/IsAllowed)
+// 💿IsAllowed holds the data fields for a IsAllowed record.
 func (h HookResultBase) IsAllowed() bool { return h.Allowed }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️getmessage](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/GetMessage)
-// GetMessage holds the data fields for a GetMessage record.
+// 🔹GetMessage holds the data fields for a GetMessage record.
 func (h HookResultBase) GetMessage() string { return h.Message }
 
-// HookResultAgentBase provides shared fields for all agent hook results.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentbase](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentBase)
+// 🔸HookResultAgentBase provides shared fields for all agent hook results.
 type HookResultAgentBase struct {
 	HookResultBase
 	Checkpoint string `json:"checkpoint,omitempty"`
@@ -37521,43 +35402,37 @@ type HookResultVersionCheckpointEnded struct {
 	Description string `json:"description,omitempty"`
 }
 
-// HookResultAgentStarted represents the result of an agent started event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentstarted](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentStarted)
+// ▶️HookResultAgentStarted represents the result of an agent started event.
 type HookResultAgentStarted struct {
 	HookResultAgentBase
 }
 
-// HookResultAgentEnded represents the result of an agent ended event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentended](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentEnded)
+// 🔺HookResultAgentEnded represents the result of an agent ended event.
 type HookResultAgentEnded struct {
 	HookResultAgentBase
 	Report string `json:"report,omitempty"`
 }
 
-// HookResultAgentPromptSubmitting represents the result of an agent prompt submitting event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentpromptsubmitting](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentPromptSubmitting)
+// 🔻HookResultAgentPromptSubmitting represents the result of an agent prompt submitting event.
 type HookResultAgentPromptSubmitting struct {
 	HookResultAgentBase
 	Prompt string `json:"prompt,omitempty"`
 }
 
-// HookResultAgentCompacting represents the result of an agent compacting event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagentcompacting](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentCompacting)
+// ⬛HookResultAgentCompacting represents the result of an agent compacting event.
 type HookResultAgentCompacting struct {
 	HookResultAgentBase
 	Chat string `json:"chat,omitempty"`
 }
 
-// HookResultAgentToolStarting represents the result of an agent tool starting event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagenttoolstarting](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolStarting)
+// ⬜HookResultAgentToolStarting represents the result of an agent tool starting event.
 type HookResultAgentToolStarting struct {
 	HookResultAgentBase
 	Name  string          `json:"name,omitempty"`
 	Input json.RawMessage `json:"input,omitempty"`
 }
 
-// HookResultAgentToolEnded represents the result of an agent tool ended event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagenttoolended](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolEnded)
+// 🟥HookResultAgentToolEnded represents the result of an agent tool ended event.
 type HookResultAgentToolEnded struct {
 	HookResultAgentBase
 	Name     string          `json:"name,omitempty"`
@@ -37565,15 +35440,13 @@ type HookResultAgentToolEnded struct {
 	Response json.RawMessage `json:"response,omitempty"`
 }
 
-// HookResultAgentToolPlanUpdating represents the result of an agent tool plan updating event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagenttoolplanupdating](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolPlanUpdating)
+// 🟧HookResultAgentToolPlanUpdating represents the result of an agent tool plan updating event.
 type HookResultAgentToolPlanUpdating struct {
 	HookResultAgentBase
 	Steps []HookPlanStep `json:"steps,omitempty"`
 }
 
-// HookResultAgentToolSearchStarting represents the result of an agent tool search starting event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagenttoolsearchstarting](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolSearchStarting)
+// 🔎HookResultAgentToolSearchStarting represents the result of an agent tool search starting event.
 type HookResultAgentToolSearchStarting struct {
 	HookResultAgentBase
 	Pages       []string               `json:"pages,omitempty"`
@@ -37581,8 +35454,7 @@ type HookResultAgentToolSearchStarting struct {
 	Definitions []HookSearchDefinition `json:"definitions,omitempty"`
 }
 
-// HookResultAgentToolSearchEnded represents the result of an agent tool search ended event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagenttoolsearchended](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolSearchEnded)
+// 🟨HookResultAgentToolSearchEnded represents the result of an agent tool search ended event.
 type HookResultAgentToolSearchEnded struct {
 	HookResultAgentBase
 	Pages       []string               `json:"pages,omitempty"`
@@ -37591,15 +35463,13 @@ type HookResultAgentToolSearchEnded struct {
 	Error       string                 `json:"error,omitempty"`
 }
 
-// HookSearchDefinition holds search line coverage for a resolved definition.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hooksearchdefinition](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookSearchDefinition)
+// 📖HookSearchDefinition holds search line coverage for a resolved definition.
 type HookSearchDefinition struct {
 	ID  string `json:"id,omitempty"`
 	Loc int    `json:"loc,omitempty"`
 }
 
-// HookResultAgentToolCodeEditStarting represents the result of an agent tool code edit starting event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeeditstarting](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolCodeEditStarting)
+// 🟩HookResultAgentToolCodeEditStarting represents the result of an agent tool code edit starting event.
 type HookResultAgentToolCodeEditStarting struct {
 	HookResultAgentBase
 	Path string `json:"path,omitempty"`
@@ -37608,8 +35478,7 @@ type HookResultAgentToolCodeEditStarting struct {
 	All  bool   `json:"all,omitempty"`
 }
 
-// HookResultAgentToolCodeEditEnded represents the result of an agent tool code edit ended event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagenttoolcodeeditended](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolCodeEditEnded)
+// 🟦HookResultAgentToolCodeEditEnded represents the result of an agent tool code edit ended event.
 type HookResultAgentToolCodeEditEnded struct {
 	HookResultAgentBase
 	Path string `json:"path,omitempty"`
@@ -37617,8 +35486,7 @@ type HookResultAgentToolCodeEditEnded struct {
 	New  string `json:"new,omitempty"`
 }
 
-// HookResultAgentToolTestStarting represents the result of an agent tool test starting event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagenttoolteststarting](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolTestStarting)
+// 🧪HookResultAgentToolTestStarting represents the result of an agent tool test starting event.
 type HookResultAgentToolTestStarting struct {
 	HookResultAgentBase
 	Labs    []string `json:"labs,omitempty"`
@@ -37626,8 +35494,7 @@ type HookResultAgentToolTestStarting struct {
 	Timeout string   `json:"timeout,omitempty"`
 }
 
-// HookResultAgentToolTestEnded represents the result of an agent tool test ended event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️hookresultagenttooltestended](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/HookResultAgentToolTestEnded)
+// 🟪HookResultAgentToolTestEnded represents the result of an agent tool test ended event.
 type HookResultAgentToolTestEnded struct {
 	HookResultAgentBase
 	Files     []string `json:"files,omitempty"`
@@ -38001,8 +35868,7 @@ func extractTestStartingFromInput(input json.RawMessage, toolArgs string) (labs 
 	return nil, tests, timeout
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extracttestendedfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractTestEndedFromInput)
-// extractTestEndedFromInput holds the data fields for a extractTestEndedFromInput record.
+// 🧲extractTestEndedFromInput holds the data fields for a extractTestEndedFromInput record.
 func extractTestEndedFromInput(input json.RawMessage) (files []string, succeeded []string, failed []string) {
 	if len(input) == 0 {
 		return nil, nil, nil
@@ -38061,7 +35927,6 @@ func extractTestEndedFromInput(input json.RawMessage) (files []string, succeeded
 	return files, succeeded, failed
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractbuildbundlesfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractBuildBundlesFromInput)
 func extractBuildBundlesFromInput(input json.RawMessage, toolArgs string) []string {
 	var toolInput map[string]interface{}
 	if len(input) > 0 {
@@ -38091,8 +35956,7 @@ func extractBuildBundlesFromInput(input json.RawMessage, toolArgs string) []stri
 	return bundles
 }
 
-// extractBuildEndedFromInput holds the data fields for a extractBuildEndedFromInput record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractbuildendedfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractBuildEndedFromInput)
+// 🏗️extractBuildEndedFromInput holds the data fields for a extractBuildEndedFromInput record.
 func extractBuildEndedFromInput(input json.RawMessage) (succeeded []string, failed []string) {
 	if len(input) == 0 {
 		return nil, nil
@@ -38126,8 +35990,7 @@ func extractBuildEndedFromInput(input json.RawMessage) (succeeded []string, fail
 	return succeeded, failed
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractcodeeditfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractCodeEditFromInput)
-// extractCodeEditFromInput holds the data fields for a extractCodeEditFromInput record.
+// 📝extractCodeEditFromInput holds the data fields for a extractCodeEditFromInput record.
 func extractCodeEditFromInput(input json.RawMessage, toolArgs string) (path string, old string, new_ string, all bool) {
 	var toolInput map[string]interface{}
 	if len(input) > 0 {
@@ -38168,8 +36031,7 @@ func extractCodeEditFromInput(input json.RawMessage, toolArgs string) (path stri
 	return path, old, new_, all
 }
 
-// extractTerminalCommandFromInput holds the data fields for a extractTerminalCommandFromInput record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractterminalcommandfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractTerminalCommandFromInput)
+// 🟫extractTerminalCommandFromInput holds the data fields for a extractTerminalCommandFromInput record.
 func extractTerminalCommandFromInput(input json.RawMessage, toolArgs string) string {
 	cmd := extractCommandFromStdin(input)
 	if cmd != "" {
@@ -38186,8 +36048,7 @@ func extractTerminalCommandFromInput(input json.RawMessage, toolArgs string) str
 	return ""
 }
 
-// extractTerminalEndedFromInput holds the data fields for a extractTerminalEndedFromInput record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractterminalendedfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractTerminalEndedFromInput)
+// 💠extractTerminalEndedFromInput holds the data fields for a extractTerminalEndedFromInput record.
 func extractTerminalEndedFromInput(input json.RawMessage) (command string, pid string, terminated bool, stdout string, stderr string) {
 	if len(input) == 0 {
 		return "", "", false, "", ""
@@ -38242,7 +36103,6 @@ func extractTerminalEndedFromInput(input json.RawMessage) (command string, pid s
 	return command, pid, terminated, stdout, stderr
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractchatfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractChatFromInput)
 func extractChatFromInput(input json.RawMessage) string {
 	if len(input) == 0 {
 		return ""
@@ -38265,8 +36125,7 @@ func extractChatFromInput(input json.RawMessage) string {
 	return ""
 }
 
-// extractReportFromInput extracts a text report from agent-ended payloads.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractreportfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractReportFromInput)
+// 📦extractReportFromInput extracts a text report from agent-ended payloads.
 func extractReportFromInput(input json.RawMessage) string {
 	if len(input) == 0 {
 		return ""
@@ -38315,7 +36174,6 @@ func extractReportFromInput(input json.RawMessage) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractcheckpointmessagefrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractCheckpointMessageFromInput)
 func extractCheckpointMessageFromInput(input json.RawMessage, repoRoot string) string {
 	if len(input) > 0 {
 		var data map[string]interface{}
@@ -38337,8 +36195,7 @@ func extractCheckpointMessageFromInput(input json.RawMessage, repoRoot string) s
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractcheckpointshafrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractCheckpointSHAFromInput)
-// extractCheckpointSHAFromInput holds the data fields for a extractCheckpointSHAFromInput record.
+// 💾extractCheckpointSHAFromInput holds the data fields for a extractCheckpointSHAFromInput record.
 func extractCheckpointSHAFromInput(input json.RawMessage) string {
 	if len(input) > 0 {
 		var data map[string]interface{}
@@ -38353,8 +36210,7 @@ func extractCheckpointSHAFromInput(input json.RawMessage) string {
 	return GetGitCheckpoint()
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️normalizeparentsessionid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/normalizeParentSessionID)
-// normalizeParentSessionID holds the data fields for a normalizeParentSessionID record.
+// 🪪normalizeParentSessionID holds the data fields for a normalizeParentSessionID record.
 func normalizeParentSessionID(parent string) string {
 	parent = strings.TrimSpace(parent)
 	if parent == "" {
@@ -38366,7 +36222,6 @@ func normalizeParentSessionID(parent string) string {
 	return parent
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractparentfrommap](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractParentFromMap)
 func extractParentFromMap(data map[string]interface{}) string {
 	for _, key := range []string{"parent", "parentInfo", "parent_info", "parentSessionId", "parent_session_id", "parentId", "parent_id"} {
 		if v, ok := data[key].(string); ok {
@@ -38379,7 +36234,6 @@ func extractParentFromMap(data map[string]interface{}) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractparentfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractParentFromInput)
 func extractParentFromInput(input json.RawMessage) string {
 	if len(input) == 0 {
 		return ""
@@ -38408,8 +36262,7 @@ func extractParentFromInput(input json.RawMessage) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolveparentsessionid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveParentSessionID)
-// resolveParentSessionID holds the data fields for a resolveParentSessionID record.
+// 🔳resolveParentSessionID holds the data fields for a resolveParentSessionID record.
 func resolveParentSessionID(parentInfo string, input json.RawMessage) string {
 	parent := normalizeParentSessionID(parentInfo)
 	if parent != "" {
@@ -38452,8 +36305,7 @@ func findNestedStringValue(value interface{}, keys ...string) string {
 	return ""
 }
 
-// extractTranscriptFromInput holds the data fields for a extractTranscriptFromInput record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extracttranscriptfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractTranscriptFromInput)
+// 🔲extractTranscriptFromInput holds the data fields for a extractTranscriptFromInput record.
 func extractTranscriptFromInput(input json.RawMessage) string {
 	data := decodeHookInputMap(input)
 	if data == nil {
@@ -38462,8 +36314,7 @@ func extractTranscriptFromInput(input json.RawMessage) string {
 	return findNestedStringValue(data, "transcript", "transcript_path", "transcriptPath", "log_path", "logPath")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractmessageidfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractMessageIDFromInput)
-// extractMessageIDFromInput holds the data fields for a extractMessageIDFromInput record.
+// ▪️extractMessageIDFromInput holds the data fields for a extractMessageIDFromInput record.
 func extractMessageIDFromInput(input json.RawMessage) string {
 	if len(input) == 0 {
 		return ""
@@ -38480,7 +36331,6 @@ func extractMessageIDFromInput(input json.RawMessage) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractparentmessageidfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractParentMessageIDFromInput)
 func extractParentMessageIDFromInput(input json.RawMessage) string {
 	if len(input) == 0 {
 		return ""
@@ -38497,8 +36347,7 @@ func extractParentMessageIDFromInput(input json.RawMessage) string {
 	return ""
 }
 
-// normalizeHookPath holds the data fields for a normalizeHookPath record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️normalizehookpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/normalizeHookPath)
+// 🛤️normalizeHookPath holds the data fields for a normalizeHookPath record.
 func normalizeHookPath(path string) string {
 	path = strings.TrimSpace(path)
 	if path == "" {
@@ -38511,8 +36360,7 @@ func normalizeHookPath(path string) string {
 	return strings.TrimPrefix(path, "./")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️ensureticketagent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/ensureTicketAgent)
-// ensureTicketAgent holds the data fields for a ensureTicketAgent record.
+// 🎫ensureTicketAgent holds the data fields for a ensureTicketAgent record.
 func ensureTicketAgent(ticket *Ticket, sessionID string, client string) int {
 	for i := range ticket.Agents {
 		if ticket.Agents[i].Session == sessionID {
@@ -38531,8 +36379,7 @@ func ensureTicketAgent(ticket *Ticket, sessionID string, client string) int {
 	return len(ticket.Agents) - 1
 }
 
-// trackHookInOpenTicket updates agent metadata and plan in the latest open ticket.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️trackhookinopenticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/trackHookInOpenTicket)
+// 📬trackHookInOpenTicket updates agent metadata and plan in the latest open ticket.
 func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 	ticket, err := latestOpenTicket()
 	if err != nil || ticket == nil {
@@ -38573,8 +36420,7 @@ func trackHookInOpenTicket(hctx HookContext, result HookResult) {
 	_ = SaveTicket(ticket)
 }
 
-// computeCheckpointDiff computes a semantic code diff from git changes for a checkpoint.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️computecheckpointdiff](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/computeCheckpointDiff)
+// ♻️computeCheckpointDiff computes a semantic code diff from git changes for a checkpoint.
 func computeCheckpointDiff(repoRoot string, checkpointID string) *CheckpointDiff {
 	diff := &CheckpointDiff{}
 	stdout, _, exitCode := ExecCommand("git", []string{"diff-tree", "--no-commit-id", "-r", "--name-status", checkpointID}, repoRoot)
@@ -38667,8 +36513,7 @@ func computeCheckpointDiff(repoRoot string, checkpointID string) *CheckpointDiff
 	return diff
 }
 
-// storeCheckpointDiff stores a semantic code diff at .repo/🔀/YY/MM/DD/<checkpoint-id>.json.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️storecheckpointdiff](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/storeCheckpointDiff)
+// 🏪storeCheckpointDiff stores a semantic code diff at .repo/🔀/YY/MM/DD/<checkpoint-id>.json.
 func storeCheckpointDiff(repoRoot string, checkpointID string) {
 	if checkpointID == "" || checkpointID == "unknown" {
 		return
@@ -38690,8 +36535,7 @@ func storeCheckpointDiff(repoRoot string, checkpointID string) {
 	_ = os.WriteFile(filepath.Join(diffDir, checkpointID+".json"), data, 0644)
 }
 
-// runCheckpointStartingHook holds the data fields for a runCheckpointStartingHook record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️runcheckpointstartinghook](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/runCheckpointStartingHook)
+// ✔️runCheckpointStartingHook holds the data fields for a runCheckpointStartingHook record.
 func runCheckpointStartingHook(hctx HookContext) HookResultVersionCheckpointStarting {
 	repoRoot := hctx.RepoRoot
 	if repoRoot == "" {
@@ -38709,8 +36553,7 @@ func runCheckpointStartingHook(hctx HookContext) HookResultVersionCheckpointStar
 	}
 }
 
-// ValidateHookEvent checks if the given string is a valid hook event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️validatehookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/ValidateHookEvent)
+// 🔤ValidateHookEvent checks if the given string is a valid hook event.
 func ValidateHookEvent(s string) (HookEvent, error) {
 	for _, e := range AllHookEvents {
 		if string(e) == s {
@@ -38720,7 +36563,6 @@ func ValidateHookEvent(s string) (HookEvent, error) {
 	return "", fmt.Errorf("invalid hook event %q, valid events: %s", s, strings.Join(hookEventStrings(), ", "))
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️hookeventstrings](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/hookEventStrings)
 func hookEventStrings() []string {
 	result := make([]string, len(AllHookEvents))
 	for i, e := range AllHookEvents {
@@ -38729,8 +36571,7 @@ func hookEventStrings() []string {
 	return result
 }
 
-// hookCommand creates the `hook <event> <client>` cobra command.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️hookcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/hookCommand)
+// 🆕hookCommand creates the `hook <event> <client>` cobra command.
 func hookCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "hook <event> <client>",
@@ -38860,22 +36701,19 @@ Accepts neutral repo events or native client events (inlet adapter resolves to n
 	return cmd
 }
 
-// #endregion 🔖Hooks
+// #endregion 🦀Hooks
 
-// #region 🔖Configure
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure)
+// #region 🔷Configure
 // Configure command auto-generates native hook configs for all supported clients.
 
-// ClientHookMapping maps client names to their native event configuration format.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure✂️clienthookmapping](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/ClientHookMapping)
+// ⚙️ClientHookMapping maps client names to their native event configuration format.
 type ClientHookMapping struct {
 	Client     string
 	ConfigPath string
 	Generator  func(repoRoot string) (string, error)
 }
 
-// configureCommand creates the `configure` cobra command.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️configurecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/configureCommand)
+// 🆕configureCommand creates the `configure` cobra command.
 func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configure",
@@ -38915,8 +36753,7 @@ func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️configuregithooks](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/configureGitHooks)
-// configureGitHooks holds the data fields for a configureGitHooks record.
+// 💿configureGitHooks holds the data fields for a configureGitHooks record.
 func configureGitHooks(repoRoot string) error {
 	hooksDir := filepath.Join(repoRoot, ".git", "hooks")
 	if err := unsetLocalCoreHooksPath(repoRoot); err != nil {
@@ -38963,8 +36800,7 @@ cd "$repo_root"
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️unsetlocalcorehookspath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/unsetLocalCoreHooksPath)
-// unsetLocalCoreHooksPath holds the data fields for a unsetLocalCoreHooksPath record.
+// 🛤️unsetLocalCoreHooksPath holds the data fields for a unsetLocalCoreHooksPath record.
 func unsetLocalCoreHooksPath(repoRoot string) error {
 	cmd := exec.Command("git", "-C", repoRoot, "config", "--local", "--get", "core.hooksPath")
 	out, err := cmd.Output()
@@ -38984,7 +36820,6 @@ func unsetLocalCoreHooksPath(repoRoot string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🪨getclienthookmappings](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/getClientHookMappings)
 func getClientHookMappings() []ClientHookMapping {
 	var mappings []ClientHookMapping
 	for _, provider := range AllEditorProviders() {
@@ -38998,8 +36833,7 @@ func getClientHookMappings() []ClientHookMapping {
 	return mappings
 }
 
-// generateCopilotConfig holds the data fields for a generateCopilotConfig record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generatecopilotconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateCopilotConfig)
+// 🔷generateCopilotConfig holds the data fields for a generateCopilotConfig record.
 func generateCopilotConfig(repoRoot string) (string, error) {
 	c := "./repo/cli/cli"
 	entry := func(cmd string) map[string]interface{} {
@@ -39040,8 +36874,7 @@ func generateCopilotConfig(repoRoot string) (string, error) {
 	return string(out) + "\n", nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generatecursorconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateCursorConfig)
-// generateCursorConfig holds the data fields for a generateCursorConfig record.
+// 🔶generateCursorConfig holds the data fields for a generateCursorConfig record.
 func generateCursorConfig(repoRoot string) (string, error) {
 	c := "./repo/cli/cli"
 	config := map[string]interface{}{
@@ -39116,7 +36949,6 @@ func generateCursorConfig(repoRoot string) (string, error) {
 	return string(out) + "\n", nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generatewindsurfconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateWindsurfConfig)
 func generateWindsurfConfig(repoRoot string) (string, error) {
 	c := "./repo/cli/cli"
 	config := map[string]interface{}{
@@ -39160,8 +36992,7 @@ func generateWindsurfConfig(repoRoot string) (string, error) {
 	return string(out) + "\n", nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generateclaudecodeconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateClaudeCodeConfig)
-// generateClaudeCodeConfig holds the data fields for a generateClaudeCodeConfig record.
+// 🔹generateClaudeCodeConfig holds the data fields for a generateClaudeCodeConfig record.
 func generateClaudeCodeConfig(repoRoot string) (string, error) {
 	c := "./repo/cli/cli"
 	existing := make(map[string]interface{})
@@ -39221,8 +37052,7 @@ func generateClaudeCodeConfig(repoRoot string) (string, error) {
 	return string(out) + "\n", nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generatedroidconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateDroidConfig)
-// generateDroidConfig holds the data fields for a generateDroidConfig record.
+// 🔸generateDroidConfig holds the data fields for a generateDroidConfig record.
 func generateDroidConfig(repoRoot string) (string, error) {
 	c := "./repo/cli/cli"
 	config := map[string]interface{}{
@@ -39245,8 +37075,7 @@ func generateDroidConfig(repoRoot string) (string, error) {
 	return string(out) + "\n", nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖configure🛠️generatekiroconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Configure/d/i/generateKiroConfig)
-// generateKiroConfig holds the data fields for a generateKiroConfig record.
+// 🔺generateKiroConfig holds the data fields for a generateKiroConfig record.
 func generateKiroConfig(repoRoot string) (string, error) {
 	c := "./repo/cli/cli"
 	hook := func(cmd string) map[string]interface{} {
@@ -39284,35 +37113,29 @@ func generateKiroConfig(repoRoot string) (string, error) {
 	return string(out) + "\n", nil
 }
 
-// #endregion 🔖Configure
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command)
+// #endregion 🔷Configure
 // Update command implementation for dependency updates.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🪨updatecmd](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateCmd)
-// updateCmd holds the data fields for a updateCmd record.
+// ✏️updateCmd holds the data fields for a updateCmd record.
 var updateCmd = &cobra.Command{
 	Use:   "update [target]",
 	Short: "Update dependencies (npm, python, rust, go, dotnet)",
 	RunE:  runUpdate,
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🪨updatedryrun](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateDryRun)
-// updateDryRun holds the data fields for a updateDryRun record.
+// 🔁updateDryRun holds the data fields for a updateDryRun record.
 var updateDryRun bool
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🪨updateapply](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateApply)
-// updateApply holds the data fields for a updateApply record.
+// 🔸updateApply holds the data fields for a updateApply record.
 var updateApply bool
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️init](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/init)
-// init holds the data fields for a init record.
+// 🔺init holds the data fields for a init record.
 func init() {
 	updateCmd.Flags().BoolVar(&updateDryRun, "dry-run", false, "Show what would be updated without making changes")
 	updateCmd.Flags().BoolVar(&updateApply, "apply", false, "Apply updates (default is dry-run)")
 	benchmarkCmd.Flags().BoolVar(&benchmarkDryRun, "dry-run", false, "Initialize and exit without running benchmarks")
 }
 
-// DependabotConfig holds the data fields for a dependabot config record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand✂️dependabotconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/DependabotConfig)
+// 🔻DependabotConfig holds the data fields for a dependabot config record.
 type DependabotConfig struct {
 	Version int `yaml:"version"`
 	Updates []struct {
@@ -39332,8 +37155,7 @@ type DependabotConfig struct {
 	} `yaml:"x-semio-config"`
 }
 
-// UpdateConfig holds the data fields for a update config record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand✂️updateconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/UpdateConfig)
+// ⬛UpdateConfig holds the data fields for a update config record.
 type UpdateConfig struct {
 	Exclude               map[string][]string
 	Constraints           map[string][]Constraint
@@ -39351,15 +37173,13 @@ type UpdateConfig struct {
 	}
 }
 
-// Constraint holds the data fields for a constraint record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand✂️constraint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/Constraint)
+// 🔒Constraint holds the data fields for a constraint record.
 type Constraint struct {
 	Dependency string
 	MaxMajor   int
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️runupdate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/runUpdate)
-// runUpdate holds the data fields for a runUpdate record.
+// ⬜runUpdate holds the data fields for a runUpdate record.
 func runUpdate(cmd *cobra.Command, args []string) error {
 	target := "all"
 	if len(args) > 0 {
@@ -39433,8 +37253,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️loadupdateconfig](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/loadUpdateConfig)
-// loadUpdateConfig holds the data fields for a loadUpdateConfig record.
+// 🟥loadUpdateConfig holds the data fields for a loadUpdateConfig record.
 func loadUpdateConfig(rootDir string) (*UpdateConfig, error) {
 	dependabotPath := filepath.Join(rootDir, ".github", "dependabot.yml")
 	data, err := os.ReadFile(dependabotPath)
@@ -39505,8 +37324,7 @@ func loadUpdateConfig(rootDir string) (*UpdateConfig, error) {
 	return config, nil
 }
 
-// findCsprojFiles holds the data fields for a findCsprojFiles record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️findcsprojfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/findCsprojFiles)
+// 📄findCsprojFiles holds the data fields for a findCsprojFiles record.
 func findCsprojFiles(rootDir, dir string) []string {
 	fullDir := filepath.Join(rootDir, dir)
 	var files []string
@@ -39522,8 +37340,7 @@ func findCsprojFiles(rootDir, dir string) []string {
 	return files
 }
 
-// runCommand holds the data fields for a runCommand record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️runcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/runCommand)
+// 🟧runCommand holds the data fields for a runCommand record.
 func runCommand(dir, name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = dir
@@ -39533,7 +37350,6 @@ func runCommand(dir, name string, args ...string) error {
 	return cmd.Run()
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️runcommandquiet](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/runCommandQuiet)
 func runCommandQuiet(dir, name string, args ...string) (string, error) {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = dir
@@ -39541,8 +37357,7 @@ func runCommandQuiet(dir, name string, args ...string) (string, error) {
 	return string(output), err
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️updatenpm](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateNpm)
-// updateNpm holds the data fields for a updateNpm record.
+// 🟨updateNpm holds the data fields for a updateNpm record.
 func updateNpm(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[NPM] Updating npm packages...")
 	if dryRun {
@@ -39556,7 +37371,6 @@ func updateNpm(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("[NPM] Done.")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️updatepython](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updatePython)
 func updatePython(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[Python] Updating Python packages...")
 	for _, pyPath := range config.Paths.Python {
@@ -39579,8 +37393,7 @@ func updatePython(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("[Python] Done.")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️updaterust](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateRust)
-// updateRust holds the data fields for a updateRust record.
+// 🟩updateRust holds the data fields for a updateRust record.
 func updateRust(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[Rust] Updating Rust packages...")
 	for _, rsPath := range config.Paths.Rust {
@@ -39602,8 +37415,7 @@ func updateRust(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("[Rust] Done.")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️updatego](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateGo)
-// updateGo holds the data fields for a updateGo record.
+// 🟦updateGo holds the data fields for a updateGo record.
 func updateGo(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[Go] Updating Go modules...")
 	for _, goPath := range config.Paths.Go {
@@ -39624,7 +37436,6 @@ func updateGo(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("[Go] Done.")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖updatecommand🛠️updatedotnet](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Update%20Command/d/i/updateDotNet)
 func updateDotNet(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("\n[.NET] Updating .NET packages...")
 	for _, csprojPath := range config.Paths.Dotnet {
@@ -39674,14 +37485,12 @@ func updateDotNet(rootDir string, config *UpdateConfig, dryRun bool) {
 	fmt.Println("[.NET] Done.")
 }
 
-// #endregion 🔖Update Command
+// #endregion 🔊Update Command
 
-// #region 🔖File Utilities
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖fileutilities](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/File%20Utilities)
+// #region ⏰File Utilities
 // File utility functions for reading, writing and path manipulation.
 
-// MoveFile MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖fileutilities🛠️movefile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/File%20Utilities/d/i/MoveFile)
+// 🚚MoveFile MUST return a non-nil error when the operation fails.
 func MoveFile(sourcePath, destPath string) error {
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
@@ -39706,8 +37515,7 @@ func MoveFile(sourcePath, destPath string) error {
 	return nil
 }
 
-// CopyFile MUST return a non-nil error when the operation fails.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖fileutilities🛠️copyfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/File%20Utilities/d/i/CopyFile)
+// ❌CopyFile MUST return a non-nil error when the operation fails.
 func CopyFile(sourcePath, destPath string) error {
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
@@ -39726,13 +37534,12 @@ func CopyFile(sourcePath, destPath string) error {
 	return nil
 }
 
-// #endregion 🔖File Utilities
+// #endregion ⏰File Utilities
 
-// #region 🔖Server Client
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖serverclient](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Server%20Client)
+// #region ⚡Server Client
 // HTTP client for communicating with the Next.js repo server. Uses Bearer token auth with API keys.
 
-// getServerAddr returns the server address from SEMIO_SERVER_ADDR env var.
+// 🖥️getServerAddr returns the server address from SEMIO_SERVER_ADDR env var.
 func getServerAddr() string {
 	addr := strings.TrimSpace(os.Getenv("SEMIO_SERVER_ADDR"))
 	if addr == "" {
@@ -39744,12 +37551,12 @@ func getServerAddr() string {
 	return strings.TrimSuffix(addr, "/")
 }
 
-// getServerToken returns the API key from SEMIO_SERVER_TOKEN env var.
+// 🎟️getServerToken returns the API key from SEMIO_SERVER_TOKEN env var.
 func getServerToken() string {
 	return strings.TrimSpace(os.Getenv("SEMIO_SERVER_TOKEN"))
 }
 
-// serverRequest sends an authenticated HTTP request to the server.
+// 📨serverRequest sends an authenticated HTTP request to the server.
 func serverRequest(method, path string, body interface{}) (*http.Response, error) {
 	addr := getServerAddr()
 	if addr == "" {
@@ -39776,7 +37583,7 @@ func serverRequest(method, path string, body interface{}) (*http.Response, error
 	return client.Do(req)
 }
 
-// syncTicketToServer sends ticket state to the server. No-op if server is not configured.
+// ⚙️syncTicketToServer sends ticket state to the server. No-op if server is not configured.
 func syncTicketToServer(ticket *Ticket, action string) {
 	addr := getServerAddr()
 	if addr == "" {
@@ -39809,7 +37616,7 @@ func syncTicketToServer(ticket *Ticket, action string) {
 	resp.Body.Close()
 }
 
-// serverWhoami calls the auth whoami endpoint and returns developer info.
+// 🔐serverWhoami calls the auth whoami endpoint and returns developer info.
 func serverWhoami() (map[string]interface{}, error) {
 	resp, err := serverRequest("GET", "/api/v1/auth", nil)
 	if err != nil {
@@ -39826,22 +37633,19 @@ func serverWhoami() (map[string]interface{}, error) {
 	return result, nil
 }
 
-// #endregion 🔖Server Client
+// #endregion ⚡Server Client
 
-// #region 🔖Goals
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals)
+// #region ❄️Goals
 // Goal management functions for planning and tracking.
 
-// GetRepoGoalsDir MUST retrieve the requested value or return an error.
-// GetRepoGoalsDir retrieves and returns the repo goals dir.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️getrepogoalsdir](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/GetRepoGoalsDir)
+// 📨GetRepoGoalsDir MUST retrieve the requested value or return an error.
+// 📖GetRepoGoalsDir retrieves and returns the repo goals dir.
 func GetRepoGoalsDir() string {
 	return filepath.Join(GetRepoMetaDir(), "🎯")
 }
 
-// ListGoals MUST return all available goals entries.
-// ListGoals returns a list of goals entries.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️listgoals](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ListGoals)
+// ⛳ListGoals MUST return all available goals entries.
+// 📋ListGoals returns a list of goals entries.
 func ListGoals() ([]*Goal, error) {
 	dir := GetRepoGoalsDir()
 	var goals []*Goal
@@ -39878,9 +37682,8 @@ func ListGoals() ([]*Goal, error) {
 	return goals, err
 }
 
-// ReadGoal MUST return the goal content or an error if unavailable.
-// ReadGoal reads and returns goal from the source.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️readgoal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ReadGoal)
+// ❌ReadGoal MUST return the goal content or an error if unavailable.
+// ⬛ReadGoal reads and returns goal from the source.
 func ReadGoal(id string) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, filepath.FromSlash(id), "goal.json")
@@ -39906,9 +37709,8 @@ func ReadGoal(id string) (*Goal, error) {
 	return &goal, nil
 }
 
-// StreamGoals MUST invoke the callback for each matching goals entry.
-// StreamGoals streams goals entries through the callback.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️streamgoals](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/StreamGoals)
+// 🎯StreamGoals MUST invoke the callback for each matching goals entry.
+// ⚡StreamGoals streams goals entries through the callback.
 func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -39938,9 +37740,8 @@ func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) e
 	return nil
 }
 
-// StreamStatutes MUST invoke the callback for each matching statutes entry.
-// StreamStatutes streams statutes entries through the callback.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️streamstatutes](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/StreamStatutes)
+// 📍StreamStatutes MUST invoke the callback for each matching statutes entry.
+// 📜StreamStatutes streams statutes entries through the callback.
 func StreamStatutes(ctx context.Context, out chan<- StatuteMeta, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -39964,9 +37765,8 @@ func StreamStatutes(ctx context.Context, out chan<- StatuteMeta, opts ...StreamO
 	return nil
 }
 
-// StreamCheckpoints MUST invoke the callback for each matching checkpoints entry.
-// StreamCheckpoints streams checkpoints entries through the callback.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️streamcheckpoints](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/StreamCheckpoints)
+// 💾StreamCheckpoints MUST invoke the callback for each matching checkpoints entry.
+// ✔️StreamCheckpoints streams checkpoints entries through the callback.
 func StreamCheckpoints(ctx context.Context, limit *int, out chan<- Checkpoint, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -39991,12 +37791,10 @@ func StreamCheckpoints(ctx context.Context, limit *int, out chan<- Checkpoint, o
 	return nil
 }
 
-// #region 🔖Sessions
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🔖sessions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions)
+// #region 🪅Sessions
 // Session entity model, streaming, and ID/URI helpers.
 
-// SessionKind represents the status of a session.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🔖sessions✂️sessionkind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/SessionKind)
+// 🪪SessionKind represents the status of a session.
 type SessionKind string
 
 const (
@@ -40005,8 +37803,7 @@ const (
 	SessionKindInterrupted SessionKind = "interrupted"
 )
 
-// Session holds the data fields for a session record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🔖sessions✂️session](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/Session)
+// 💿Session holds the data fields for a session record.
 type Session struct {
 	UUID       string      `json:"uuid"`
 	Year       int         `json:"year"`
@@ -40020,9 +37817,8 @@ type Session struct {
 	EndedAt    string      `json:"endedAt,omitempty"`
 }
 
-// GetID returns the repo ID for a session.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🔖sessions🛠️getid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/GetID)
-// GetID MUST use the checkpoint ID as parent for the session ID. Falls back to date hierarchy if checkpoint is unknown.
+// 🔷GetID returns the repo ID for a session.
+// ✔️GetID MUST use the checkpoint ID as parent for the session ID. Falls back to date hierarchy if checkpoint is unknown.
 func (s *Session) GetID() string {
 	var parentId string
 	if s.Checkpoint != "" {
@@ -40045,16 +37841,14 @@ func (s *Session) GetID() string {
 	})
 }
 
-// GetURI returns the repo URI for a session.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🔖sessions🛠️geturi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/GetURI)
+// 🔗GetURI returns the repo URI for a session.
 func (s *Session) GetURI() string {
 	return GetArtifactURI("session", map[string]interface{}{
 		"uuid": s.UUID,
 	})
 }
 
-// SessionKindEmoji returns the emoji for the given session kind.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🔖sessions🛠️sessionkindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/SessionKindEmoji)
+// 😀SessionKindEmoji returns the emoji for the given session kind.
 func SessionKindEmoji(kind SessionKind) string {
 	switch kind {
 	case SessionKindRunning:
@@ -40067,8 +37861,7 @@ func SessionKindEmoji(kind SessionKind) string {
 	return EmojiSession
 }
 
-// DeriveSessionKind determines the session kind by examining its event files.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🔖sessions🛠️derivesessionkind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/DeriveSessionKind)
+// 📡DeriveSessionKind determines the session kind by examining its event files.
 func DeriveSessionKind(sessionDir string) SessionKind {
 	metaPath := filepath.Join(sessionDir, "session.json")
 	if data, err := os.ReadFile(metaPath); err == nil {
@@ -40123,8 +37916,7 @@ func DeriveSessionKind(sessionDir string) SessionKind {
 	return SessionKindInterrupted
 }
 
-// ExtractSessionClient reads the client from session event files.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🔖sessions🛠️extractsessionclient](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/ExtractSessionClient)
+// 🧲ExtractSessionClient reads the client from session event files.
 func ExtractSessionClient(sessionDir string) string {
 	metaPath := filepath.Join(sessionDir, "session.json")
 	if data, err := os.ReadFile(metaPath); err == nil {
@@ -40167,8 +37959,7 @@ func ExtractSessionClient(sessionDir string) string {
 	return ""
 }
 
-// ExtractSessionSecond reads the earliest second from session event files.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🔖sessions🛠️extractsessionsecond](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/ExtractSessionSecond)
+// 📄ExtractSessionSecond reads the earliest second from session event files.
 func ExtractSessionSecond(sessionDir string) string {
 	metaPath := filepath.Join(sessionDir, "session.json")
 	if data, err := os.ReadFile(metaPath); err == nil {
@@ -40220,9 +38011,8 @@ func ExtractSessionSecond(sessionDir string) string {
 	return earliest
 }
 
-// ExtractSessionCheckpoint reads the checkpoint SHA from the session.json file.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🔖sessions🛠️extractsessioncheckpoint](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/ExtractSessionCheckpoint)
-// ExtractSessionCheckpoint MUST return the checkpoint SHA stored in session.json, or empty string if not present.
+// 💾ExtractSessionCheckpoint reads the checkpoint SHA from the session.json file.
+// 💾ExtractSessionCheckpoint MUST return the checkpoint SHA stored in session.json, or empty string if not present.
 func ExtractSessionCheckpoint(sessionDir string) string {
 	metaPath := filepath.Join(sessionDir, "session.json")
 	if data, err := os.ReadFile(metaPath); err == nil {
@@ -40234,8 +38024,7 @@ func ExtractSessionCheckpoint(sessionDir string) string {
 	return ""
 }
 
-// StreamSessions streams all sessions found in the events directory.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🔖sessions🛠️streamsessions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/s/Sessions/d/i/StreamSessions)
+// 📂StreamSessions streams all sessions found in the events directory.
 func StreamSessions(ctx context.Context, out chan<- Session, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -40321,11 +38110,10 @@ func StreamSessions(ctx context.Context, out chan<- Session, opts ...StreamOptio
 	return nil
 }
 
-// #endregion 🔖Sessions
+// #endregion 🪅Sessions
 
-// SaveGoal MUST persist the goal atomically to the data store.
-// SaveGoal persists goal to the data store.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️savegoal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/SaveGoal)
+// 🏪SaveGoal MUST persist the goal atomically to the data store.
+// 💾SaveGoal persists goal to the data store.
 func SaveGoal(goal Goal) error {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, filepath.FromSlash(goal.ID), "goal.json")
@@ -40339,8 +38127,7 @@ func SaveGoal(goal Goal) error {
 	return WriteTextFile(path, string(data))
 }
 
-// ghCreateMilestone holds the data fields for a ghCreateMilestone record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghcreatemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghCreateMilestone)
+// 💿ghCreateMilestone holds the data fields for a ghCreateMilestone record.
 func ghCreateMilestone(title, description string) (int, error) {
 	args := []string{"api", "repos/:owner/:repo/milestones", "-f", fmt.Sprintf("title=%s", title), "-f", fmt.Sprintf("description=%s", description), "--jq", ".number"}
 	stdout, stderr, exitCode := ExecCommand("gh", args, "")
@@ -40351,8 +38138,7 @@ func ghCreateMilestone(title, description string) (int, error) {
 	return num, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghupdatemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghUpdateMilestone)
-// ghUpdateMilestone holds the data fields for a ghUpdateMilestone record.
+// 🔁ghUpdateMilestone holds the data fields for a ghUpdateMilestone record.
 func ghUpdateMilestone(number int, title, description, state, dueOn string) error {
 	args := []string{"api", fmt.Sprintf("repos/:owner/:repo/milestones/%d", number), "-X", "PATCH"}
 	if title != "" {
@@ -40378,8 +38164,7 @@ func ghUpdateMilestone(number int, title, description, state, dueOn string) erro
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghdeletemilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghDeleteMilestone)
-// ghDeleteMilestone holds the data fields for a ghDeleteMilestone record.
+// 🗑️ghDeleteMilestone holds the data fields for a ghDeleteMilestone record.
 func ghDeleteMilestone(number int) error {
 	args := []string{"api", fmt.Sprintf("repos/:owner/:repo/milestones/%d", number), "-X", "DELETE"}
 	_, stderr, exitCode := ExecCommand("gh", args, "")
@@ -40389,8 +38174,7 @@ func ghDeleteMilestone(number int) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghcreategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghCreateGoalIssue)
-// ghCreateGoalIssue holds the data fields for a ghCreateGoalIssue record.
+// 🆕ghCreateGoalIssue holds the data fields for a ghCreateGoalIssue record.
 func ghCreateGoalIssue(title, description string, milestone *int) (string, error) {
 	args := []string{"issue", "create", "--title", title, "--body", description, "--label", "goal"}
 	if milestone != nil {
@@ -40411,8 +38195,7 @@ func ghCreateGoalIssue(title, description string, milestone *int) (string, error
 	return issueURL, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghupdategoalissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghUpdateGoalIssue)
-// ghUpdateGoalIssue holds the data fields for a ghUpdateGoalIssue record.
+// 🔷ghUpdateGoalIssue holds the data fields for a ghUpdateGoalIssue record.
 func ghUpdateGoalIssue(issueURL, title, description string) error {
 	args := []string{"issue", "edit", issueURL}
 	if title != "" {
@@ -40428,32 +38211,27 @@ func ghUpdateGoalIssue(issueURL, title, description string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️goaldepth](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/goalDepth)
-// goalDepth holds the data fields for a goalDepth record.
+// 🔶goalDepth holds the data fields for a goalDepth record.
 func goalDepth(goalID string) int {
 	return strings.Count(goalID, "/")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️isrootgoal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/isRootGoal)
-// isRootGoal holds the data fields for a isRootGoal record.
+// 🌱isRootGoal holds the data fields for a isRootGoal record.
 func isRootGoal(goal *Goal) bool {
 	return goalDepth(goal.ID) == 0
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️isfirstgengoal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/isFirstGenGoal)
-// isFirstGenGoal holds the data fields for a isFirstGenGoal record.
+// 🔹isFirstGenGoal holds the data fields for a isFirstGenGoal record.
 func isFirstGenGoal(goal *Goal) bool {
 	return goalDepth(goal.ID) == 1
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️isdeepergoal](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/isDeeperGoal)
-// isDeeperGoal holds the data fields for a isDeeperGoal record.
+// 🔸isDeeperGoal holds the data fields for a isDeeperGoal record.
 func isDeeperGoal(goal *Goal) bool {
 	return goalDepth(goal.ID) >= 2
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️getrootgoalid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/getRootGoalID)
-// getRootGoalID holds the data fields for a getRootGoalID record.
+// 🔺getRootGoalID holds the data fields for a getRootGoalID record.
 func getRootGoalID(goalID string) string {
 	if idx := strings.Index(goalID, "/"); idx != -1 {
 		return goalID[:idx]
@@ -40461,7 +38239,6 @@ func getRootGoalID(goalID string) string {
 	return goalID
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️getparentgoalid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/getParentGoalID)
 func getParentGoalID(goalID string) string {
 	if idx := strings.LastIndex(goalID, "/"); idx != -1 {
 		return goalID[:idx]
@@ -40469,8 +38246,7 @@ func getParentGoalID(goalID string) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️getrootgoalmilestone](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/getRootGoalMilestone)
-// getRootGoalMilestone holds the data fields for a getRootGoalMilestone record.
+// 🔻getRootGoalMilestone holds the data fields for a getRootGoalMilestone record.
 func getRootGoalMilestone(goalID string) (*int, error) {
 	rootID := getRootGoalID(goalID)
 	rootGoal, err := ReadGoal(rootID)
@@ -40487,8 +38263,7 @@ func getRootGoalMilestone(goalID string) (*int, error) {
 	return &n, nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️getparentgoalissuenodeid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/getParentGoalIssueNodeID)
-// getParentGoalIssueNodeID holds the data fields for a getParentGoalIssueNodeID record.
+// 🌿getParentGoalIssueNodeID holds the data fields for a getParentGoalIssueNodeID record.
 func getParentGoalIssueNodeID(goalID string) (string, error) {
 	parentID := getParentGoalID(goalID)
 	if parentID == "" {
@@ -40504,7 +38279,6 @@ func getParentGoalIssueNodeID(goalID string) (string, error) {
 	return ghGetIssueNodeID(parentGoal.Management.Issue)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghgetissuenodeid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghGetIssueNodeID)
 func ghGetIssueNodeID(issueURL string) (string, error) {
 	args := []string{"issue", "view", issueURL, "--json", "id", "--jq", ".id"}
 	stdout, stderr, exitCode := ExecCommand("gh", args, "")
@@ -40514,8 +38288,7 @@ func ghGetIssueNodeID(issueURL string) (string, error) {
 	return strings.TrimSpace(stdout), nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghgetissueparenturl](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghGetIssueParentURL)
-// ghGetIssueParentURL holds the data fields for a ghGetIssueParentURL record.
+// 🌐ghGetIssueParentURL holds the data fields for a ghGetIssueParentURL record.
 func ghGetIssueParentURL(issueURL string) (string, error) {
 	query := `query($url: URI!) {
 		resource(url: $url) {
@@ -40552,8 +38325,7 @@ func ghGetIssueParentURL(issueURL string) (string, error) {
 	return response.Data.Resource.Parent.URL, nil
 }
 
-// ghAddSubIssue holds the data fields for a ghAddSubIssue record.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️ghaddsubissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/ghAddSubIssue)
+// ➕ghAddSubIssue holds the data fields for a ghAddSubIssue record.
 func ghAddSubIssue(parentIssueURL, childIssueURL string) error {
 	parentNodeID, err := ghGetIssueNodeID(parentIssueURL)
 	if err != nil {
@@ -40581,8 +38353,7 @@ func ghAddSubIssue(parentIssueURL, childIssueURL string) error {
 	return nil
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖goals🛠️parseissuenumber](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Goals/d/i/parseIssueNumber)
-// parseIssueNumber holds the data fields for a parseIssueNumber record.
+// 🔢parseIssueNumber holds the data fields for a parseIssueNumber record.
 func parseIssueNumber(issueURL string) (int, error) {
 	parts := strings.Split(issueURL, "/")
 	if len(parts) > 0 {
@@ -40593,9 +38364,8 @@ func parseIssueNumber(issueURL string) (int, error) {
 	return 0, fmt.Errorf("could not parse issue number from %s", issueURL)
 }
 
-// #endregion 🔖Goals
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️ghdeleteissue](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/ghDeleteIssue)
-// ghDeleteIssue holds the data fields for a ghDeleteIssue record.
+// #endregion ❄️Goals
+// 📦ghDeleteIssue holds the data fields for a ghDeleteIssue record.
 func ghDeleteIssue(issueURLOrNumber string) error {
 	args := []string{"issue", "delete", issueURLOrNumber, "--yes"}
 	_, stderr, exitCode := ExecCommand("gh", args, "")
@@ -40605,9 +38375,8 @@ func ghDeleteIssue(issueURLOrNumber string) error {
 	return nil
 }
 
-// ResolveContributorContributions MUST return the resolved value or an error if unresolvable.
-// ResolveContributorContributions resolves and returns the contributor contributions.
-// [🧰repo⌨️cli💻main🔖types🔖cli🛠️resolvecontributorcontributions](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/d/i/ResolveContributorContributions)
+// 🤝ResolveContributorContributions MUST return the resolved value or an error if unresolvable.
+// 📩ResolveContributorContributions resolves and returns the contributor contributions.
 func ResolveContributorContributions(tickets []*Ticket) *ContributorContributionsTree {
 	checkpointsMap := map[string]*Checkpoint{}
 
@@ -40818,15 +38587,13 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 	}
 }
 
-// #endregion 🔖Cli
+// #endregion ⚙️Cli
 
-// #region 🔖Todos
-// [🧰repo⌨️cli💻main🔖types🔖todos](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos)
+// #region 📰Todos
 // Todo tracking functions for task management.
 
-// GetTodos MUST retrieve the requested value or return an error.
-// GetTodos retrieves and returns the todos.
-// [🧰repo⌨️cli💻main🔖types🔖todos🛠️gettodos](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/GetTodos)
+// 📨GetTodos MUST retrieve the requested value or return an error.
+// 📖GetTodos retrieves and returns the todos.
 func (c *repoContext) GetTodos(filter *FilterInput) ([]*Todo, error) {
 	allTodos, err := ScanTodos(c.rootDir)
 	if err != nil {
@@ -40845,9 +38612,8 @@ func (c *repoContext) GetTodos(filter *FilterInput) ([]*Todo, error) {
 	return allTodos, nil
 }
 
-// ScanTodos MUST scan the input completely and collect all matches.
-// ScanTodos scans and collects todos from the input.
-// [🧰repo⌨️cli💻main🔖types🔖todos🛠️scantodos](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/ScanTodos)
+// 🎯ScanTodos MUST scan the input completely and collect all matches.
+// 🔬ScanTodos scans and collects todos from the input.
 func ScanTodos(rootDir string) ([]*Todo, error) {
 	var todos []*Todo
 	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
@@ -40881,9 +38647,8 @@ func ScanTodos(rootDir string) ([]*Todo, error) {
 	return todos, err
 }
 
-// ParseTodoMarkdown MUST return the parsed result or an error for invalid input.
-// ParseTodoMarkdown parses and returns the todo markdown from the input.
-// [🧰repo⌨️cli💻main🔖types🔖todos🛠️parsetodomarkdown](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/ParseTodoMarkdown)
+// 📰ParseTodoMarkdown MUST return the parsed result or an error for invalid input.
+// 📰ParseTodoMarkdown parses and returns the todo markdown from the input.
 func ParseTodoMarkdown(content string, parentPath string) []*Todo {
 	var todos []*Todo
 	lines := strings.Split(content, "\n")
@@ -40910,9 +38675,8 @@ func ParseTodoMarkdown(content string, parentPath string) []*Todo {
 	return todos
 }
 
-// ParseTodoComments MUST return the parsed result or an error for invalid input.
-// ParseTodoComments parses and returns the todo comments from the input.
-// [🧰repo⌨️cli💻main🔖types🔖todos🛠️parsetodocomments](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/ParseTodoComments)
+// 💬ParseTodoComments MUST return the parsed result or an error for invalid input.
+// 💾ParseTodoComments parses and returns the todo comments from the input.
 func ParseTodoComments(content string, filePath string) []*Todo {
 	var todos []*Todo
 	lines := strings.Split(content, "\n")
@@ -40936,9 +38700,8 @@ func ParseTodoComments(content string, filePath string) []*Todo {
 	return todos
 }
 
-// TodoCreate MUST return a non-nil error when the operation fails.
-// TodoCreate performs the todo create operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖todos🛠️todocreate](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/TodoCreate)
+// 🆕TodoCreate MUST return a non-nil error when the operation fails.
+// 🆕TodoCreate performs the todo create operation on the repo context.
 func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
 
 	info, err := os.Stat(input.ParentID)
@@ -40986,16 +38749,14 @@ func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
 	return nil, fmt.Errorf("invalid parent id (must be path to folder or file)")
 }
 
-// TodoChange MUST return a non-nil error when the operation fails.
-// TodoChange performs the todo change operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖todos🛠️todochange](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/TodoChange)
+// ♻️TodoChange MUST return a non-nil error when the operation fails.
+// ✏️TodoChange performs the todo change operation on the repo context.
 func (c *repoContext) TodoChange(input TodoChangeInput) (*Todo, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-// TodoDelete MUST return a non-nil error when the operation fails.
-// TodoDelete performs the todo delete operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖todos🛠️tododelete](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/TodoDelete)
+// 🗑️TodoDelete MUST return a non-nil error when the operation fails.
+// 🗑️TodoDelete performs the todo delete operation on the repo context.
 func (c *repoContext) TodoDelete(id string) (bool, error) {
 	todos, err := ScanTodos(c.rootDir)
 	if err != nil {
@@ -41022,9 +38783,8 @@ func (c *repoContext) TodoDelete(id string) (bool, error) {
 	return false, fmt.Errorf("todo not found")
 }
 
-// TodoToTicket MUST return a non-nil error when the operation fails.
-// TodoToTicket performs the todo to ticket operation on the repo context.
-// [🧰repo⌨️cli💻main🔖types🔖todos🛠️todototicket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/TodoToTicket)
+// 🎫TodoToTicket MUST return a non-nil error when the operation fails.
+// 🔤TodoToTicket performs the todo to ticket operation on the repo context.
 func (c *repoContext) TodoToTicket(id string, input TicketOpenInput) (*Ticket, error) {
 	todos, _ := ScanTodos(c.rootDir)
 	var todo *Todo
@@ -41050,8 +38810,7 @@ func (c *repoContext) TodoToTicket(id string, input TicketOpenInput) (*Ticket, e
 	return ticket, nil
 }
 
-// removeLineFromMarkdown holds the data fields for a removeLineFromMarkdown record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🛠️removelinefrommarkdown](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/removeLineFromMarkdown)
+// 🚚removeLineFromMarkdown holds the data fields for a removeLineFromMarkdown record.
 func removeLineFromMarkdown(path, name string) {
 	content, _ := os.ReadFile(path)
 	lines := strings.Split(string(content), "\n")
@@ -41066,7 +38825,6 @@ func removeLineFromMarkdown(path, name string) {
 	os.WriteFile(path, []byte(strings.Join(newLines, "\n")), 0644)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🛠️removelinefromfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/d/i/removeLineFromFile)
 func removeLineFromFile(path string, lineNum int) {
 	content, _ := os.ReadFile(path)
 	lines := strings.Split(string(content), "\n")
@@ -41076,22 +38834,18 @@ func removeLineFromFile(path string, lineNum int) {
 	}
 }
 
-// #region 🔖Entity Rendering
-// [🧰repo⌨️cli💻maingo🔖entityrendering](repo://section/repo/cli/main.go/entity-rendering)
+// #region 🪨Entity Rendering
 
-// #region 🔖Artifact ID
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID)
+// #region 🧱Artifact ID
 // Artifact ID parsing and resolution utilities.
 
-// SemanticId holds the data fields for a semantic id record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid✂️semanticid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/SemanticId)
+// 💿SemanticId holds the data fields for a semantic id record.
 type SemanticId struct {
 	Emoji string
 	Value string
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️emojitext](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/emojiText)
-// emojiText holds the data fields for a emojiText record.
+// 😀emojiText holds the data fields for a emojiText record.
 func emojiText(emoji string) string {
 	stripped := strings.ReplaceAll(emoji, "\uFE0E", "")
 	textDefaultEmojis := []string{
@@ -41109,9 +38863,209 @@ func emojiText(emoji string) string {
 	return base
 }
 
-// String MUST return a non-empty string representation.
-// String returns the string representation of the semantic id.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️string](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/String)
+// 🧲extractEntityEmoji extracts the leading emoji and remaining text from a string.
+// 🧲Returns (emoji, remainingText). If no emoji is found, returns ("", original).
+func extractEntityEmoji(s string) (string, string) {
+	if s == "" {
+		return "", ""
+	}
+	runes := []rune(s)
+	if len(runes) == 0 {
+		return "", ""
+	}
+	i := 0
+	r := runes[i]
+	// Check if the first rune is an emoji
+	if !isEmojiRune(r) {
+		return "", s
+	}
+	i++
+	// Consume variation selectors and ZWJ sequences
+	for i < len(runes) {
+		r = runes[i]
+		if r == 0xFE0F || r == 0xFE0E { // variation selectors
+			i++
+		} else if r == 0x20E3 { // combining enclosing keycap
+			i++
+		} else if r == 0x200D { // ZWJ
+			i++
+			if i < len(runes) {
+				i++ // consume the next emoji after ZWJ
+				// Continue consuming variation selectors
+				for i < len(runes) && (runes[i] == 0xFE0F || runes[i] == 0xFE0E) {
+					i++
+				}
+			}
+		} else if r >= 0x1F3FB && r <= 0x1F3FF { // skin tone modifiers
+			i++
+		} else {
+			break
+		}
+	}
+	emoji := string(runes[:i])
+	remaining := string(runes[i:])
+	return emoji, remaining
+}
+
+// 🔷isEmojiRune returns true if the rune is likely an emoji base character.
+func isEmojiRune(r rune) bool {
+	// Common emoji ranges
+	if r >= 0x1F600 && r <= 0x1F64F {
+		return true
+	} // Emoticons
+	if r >= 0x1F300 && r <= 0x1F5FF {
+		return true
+	} // Misc Symbols and Pictographs
+	if r >= 0x1F680 && r <= 0x1F6FF {
+		return true
+	} // Transport and Map
+	if r >= 0x1F700 && r <= 0x1F77F {
+		return true
+	} // Alchemical Symbols
+	if r >= 0x1F780 && r <= 0x1F7FF {
+		return true
+	} // Geometric Shapes Extended
+	if r >= 0x1F800 && r <= 0x1F8FF {
+		return true
+	} // Supplemental Arrows-C
+	if r >= 0x1F900 && r <= 0x1F9FF {
+		return true
+	} // Supplemental Symbols and Pictographs
+	if r >= 0x1FA00 && r <= 0x1FA6F {
+		return true
+	} // Chess Symbols
+	if r >= 0x1FA70 && r <= 0x1FAFF {
+		return true
+	} // Symbols and Pictographs Extended-A
+	if r >= 0x2600 && r <= 0x26FF {
+		return true
+	} // Misc Symbols
+	if r >= 0x2700 && r <= 0x27BF {
+		return true
+	} // Dingbats
+	if r >= 0x2300 && r <= 0x23FF {
+		return true
+	} // Misc Technical
+	if r >= 0x2B50 && r <= 0x2B55 {
+		return true
+	} // Stars
+	if r >= 0x200D && r <= 0x200D {
+		return true
+	} // ZWJ
+	if r >= 0xFE00 && r <= 0xFE0F {
+		return true
+	} // Variation selectors
+	if r == 0x2139 || r == 0x2194 || r == 0x2195 {
+		return true
+	}
+	if r >= 0x2196 && r <= 0x2199 {
+		return true
+	}
+	if r >= 0x21A9 && r <= 0x21AA {
+		return true
+	}
+	if r >= 0x231A && r <= 0x231B {
+		return true
+	}
+	if r >= 0x25AA && r <= 0x25AB {
+		return true
+	}
+	if r == 0x25B6 || r == 0x25C0 || r == 0x25FB || r == 0x25FC || r == 0x25FD || r == 0x25FE {
+		return true
+	}
+	if r >= 0x2614 && r <= 0x2615 {
+		return true
+	}
+	if r >= 0x2648 && r <= 0x2653 {
+		return true
+	}
+	if r == 0x267F || r == 0x2693 || r == 0x26A1 {
+		return true
+	}
+	if r >= 0x26AA && r <= 0x26AB {
+		return true
+	}
+	if r >= 0x26BD && r <= 0x26BE {
+		return true
+	}
+	if r >= 0x26C4 && r <= 0x26C5 {
+		return true
+	}
+	if r == 0x26CE || r == 0x26D4 {
+		return true
+	}
+	if r == 0x26EA || r == 0x26F2 || r == 0x26F3 || r == 0x26F5 || r == 0x26FA || r == 0x26FD {
+		return true
+	}
+	if r == 0x2702 || r == 0x2705 {
+		return true
+	}
+	if r >= 0x2708 && r <= 0x270D {
+		return true
+	}
+	if r == 0x270F {
+		return true
+	}
+	if r == 0x2712 || r == 0x2714 || r == 0x2716 || r == 0x271D || r == 0x2721 {
+		return true
+	}
+	if r == 0x2728 {
+		return true
+	}
+	if r >= 0x2733 && r <= 0x2734 {
+		return true
+	}
+	if r == 0x2744 || r == 0x2747 || r == 0x274C || r == 0x274E {
+		return true
+	}
+	if r >= 0x2753 && r <= 0x2755 {
+		return true
+	}
+	if r == 0x2757 {
+		return true
+	}
+	if r >= 0x2763 && r <= 0x2764 {
+		return true
+	}
+	if r >= 0x2795 && r <= 0x2797 {
+		return true
+	}
+	if r == 0x27A1 || r == 0x27B0 || r == 0x27BF {
+		return true
+	}
+	if r >= 0x2934 && r <= 0x2935 {
+		return true
+	}
+	if r >= 0x3030 && r <= 0x3030 {
+		return true
+	}
+	if r == 0x303D || r == 0x3297 || r == 0x3299 {
+		return true
+	}
+	if r == 0x00A9 || r == 0x00AE {
+		return true
+	} // © ®
+	return false
+}
+
+// 🛠️resolveTechnologyEmoji looks up the emoji for a technology by name.
+// 📺Falls back to kind-derived emoji.
+func resolveTechnologyEmoji(techName string) string {
+	techs := GetTechnologies()
+	for _, t := range techs {
+		if t.Name == techName {
+			if t.Emoji != "" {
+				return t.Emoji
+			}
+			break
+		}
+	}
+	kind := DeriveTechnologyKind(techName)
+	return string(kind)
+}
+
+// 🔤String MUST return a non-empty string representation.
+// 🔤String returns the string representation of the semantic id.
 func (s SemanticId) String() string {
 	if s.Value == "" {
 		return emojiText(s.Emoji)
@@ -41119,9 +39073,11 @@ func (s SemanticId) String() string {
 	return fmt.Sprintf("%s%s", emojiText(s.Emoji), s.Value)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️technologykindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/technologyKindEmoji)
-// technologyKindEmoji holds the data fields for a technologyKindEmoji record.
+// 🏷️technologyKindEmoji holds the data fields for a technologyKindEmoji record.
 func technologyKindEmoji(data map[string]interface{}) string {
+	if emoji, ok := data["emoji"].(string); ok && emoji != "" {
+		return emojiText(emoji)
+	}
 	if val, ok := data["kind"].(string); ok {
 		switch val {
 		case "infrastructure":
@@ -41144,8 +39100,10 @@ func technologyKindEmoji(data map[string]interface{}) string {
 	return emojiText(EmojiTechnologyUser)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️bundlekindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/bundleKindEmoji)
 func bundleKindEmoji(data map[string]interface{}) string {
+	if emoji, ok := data["emoji"].(string); ok && emoji != "" {
+		return emojiText(emoji)
+	}
 	bKind, _ := data["kind"].(string)
 	switch bKind {
 	case "schema":
@@ -41166,8 +39124,7 @@ func bundleKindEmoji(data map[string]interface{}) string {
 	return emojiText(EmojiBundleLibrary)
 }
 
-// fileKindEmoji holds the data fields for a fileKindEmoji record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️filekindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/fileKindEmoji)
+// 📄fileKindEmoji holds the data fields for a fileKindEmoji record.
 func fileKindEmoji(data map[string]interface{}) string {
 	fkind, _ := data["kind"].(string)
 	switch fkind {
@@ -41191,8 +39148,7 @@ func fileKindEmoji(data map[string]interface{}) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️folderkindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/folderKindEmoji)
-// folderKindEmoji holds the data fields for a folderKindEmoji record.
+// 📁folderKindEmoji holds the data fields for a folderKindEmoji record.
 func folderKindEmoji(data map[string]interface{}) string {
 	fkind, _ := data["kind"].(string)
 	if fkind == "organization" {
@@ -41203,7 +39159,6 @@ func folderKindEmoji(data map[string]interface{}) string {
 	return emojiText(EmojiFolderRequired)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️definitionkindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/definitionKindEmoji)
 func definitionKindEmoji(data map[string]interface{}) string {
 	kind, _ := data["kind"].(string)
 	switch DeriveDefinitionKind(kind) {
@@ -41217,8 +39172,7 @@ func definitionKindEmoji(data map[string]interface{}) string {
 	return emojiText(EmojiDefinitionImpl)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️goalartifactid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/goalArtifactID)
-// goalArtifactID holds the data fields for a goalArtifactID record.
+// 🏺goalArtifactID holds the data fields for a goalArtifactID record.
 func goalArtifactID(rawGoalID string) string {
 	parts := strings.Split(rawGoalID, "/")
 	result := ""
@@ -41228,9 +39182,8 @@ func goalArtifactID(rawGoalID string) string {
 	return result
 }
 
-// goalPathToSemioID converts a filesystem goal path (e.g. "AI-OPTIMIZED-REPO/REPO-CLI")
-// to the repo emoji ID format (e.g. "🎯aioptimizedrepo🎯repocli").
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️goalpathtosemioid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/goalPathToSemioID)
+// ⛳goalPathToSemioID converts a filesystem goal path (e.g. "AI-OPTIMIZED-REPO/REPO-CLI")
+// 🖊️to the repo emoji ID format (e.g. "🎯aioptimizedrepo🎯repocli").
 func goalPathToSemioID(goalPath string) string {
 	if goalPath == "" {
 		return ""
@@ -41238,10 +39191,9 @@ func goalPathToSemioID(goalPath string) string {
 	return goalArtifactID(goalPath)
 }
 
-// semioIDToGoalPath converts a repo emoji goal ID (e.g. "🎯aioptimizedrepo🎯repocli")
+// 🛤️semioIDToGoalPath converts a repo emoji goal ID (e.g. "🎯aioptimizedrepo🎯repocli")
 // back to its filesystem goal path (e.g. "AI-OPTIMIZED-REPO/REPO-CLI") by scanning the
-// goals directory and matching each segment's Flat() value.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️semioidtogoalpath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/semioIDToGoalPath)
+// 🔑goals directory and matching each segment's Flat() value.
 func semioIDToGoalPath(semioID string) string {
 	if semioID == "" {
 		return ""
@@ -41284,8 +39236,7 @@ func semioIDToGoalPath(semioID string) string {
 	return strings.Join(pathParts, "/")
 }
 
-// contributorGithubToSemioID converts a contributor identifier (alias or github) to the semio contributor ID format.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️contributorgithubtosemioid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/contributorGithubToSemioID)
+// 🤝contributorGithubToSemioID converts a contributor identifier (alias or github) to the semio contributor ID format.
 func contributorGithubToSemioID(identifier string) string {
 	if identifier == "" || identifier == "unknown" {
 		return identifier
@@ -41297,8 +39248,7 @@ func contributorGithubToSemioID(identifier string) string {
 	return prefix + Flat(identifier)
 }
 
-// semioIDToContributorGithub converts a semio contributor ID back to a contributor alias.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️semioidtocontributorgithub](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/semioIDToContributorGithub)
+// 🐙semioIDToContributorGithub converts a semio contributor ID back to a contributor alias.
 func semioIDToContributorGithub(semioID string) string {
 	if semioID == "" || semioID == "unknown" {
 		return semioID
@@ -41319,7 +39269,6 @@ func semioIDToContributorGithub(semioID string) string {
 	return flat
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️interactionkindemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/interactionKindEmoji)
 func interactionKindEmoji(data map[string]interface{}) string {
 	kind, _ := data["kind"].(string)
 	switch kind {
@@ -41335,8 +39284,7 @@ func interactionKindEmoji(data map[string]interface{}) string {
 	return emojiText(EmojiInteractionStarted)
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️interactionkindfromemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/interactionKindFromEmoji)
-// interactionKindFromEmoji holds the data fields for a interactionKindFromEmoji record.
+// 🔶interactionKindFromEmoji holds the data fields for a interactionKindFromEmoji record.
 func interactionKindFromEmoji(emoji string) string {
 	switch emoji {
 	case EmojiInteractionFinished:
@@ -41351,8 +39299,7 @@ func interactionKindFromEmoji(emoji string) string {
 	return "started"
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️technologykindcodefromemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/technologyKindCodeFromEmoji)
-// technologyKindCodeFromEmoji holds the data fields for a technologyKindCodeFromEmoji record.
+// 📜technologyKindCodeFromEmoji holds the data fields for a technologyKindCodeFromEmoji record.
 func technologyKindCodeFromEmoji(emoji string) string {
 	ne := emojiText(emoji)
 	switch ne {
@@ -41366,8 +39313,7 @@ func technologyKindCodeFromEmoji(emoji string) string {
 	return "u"
 }
 
-// bundleKindCodeFromEmoji holds the data fields for a bundleKindCodeFromEmoji record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️bundlekindcodefromemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/bundleKindCodeFromEmoji)
+// 📦bundleKindCodeFromEmoji holds the data fields for a bundleKindCodeFromEmoji record.
 func bundleKindCodeFromEmoji(emoji string) string {
 	ne := emojiText(emoji)
 	switch ne {
@@ -41389,8 +39335,7 @@ func bundleKindCodeFromEmoji(emoji string) string {
 	return "l"
 }
 
-// folderKindCodeFromEmoji holds the data fields for a folderKindCodeFromEmoji record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️folderkindcodefromemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/folderKindCodeFromEmoji)
+// 🔹folderKindCodeFromEmoji holds the data fields for a folderKindCodeFromEmoji record.
 func folderKindCodeFromEmoji(emoji string) string {
 	ne := emojiText(emoji)
 	if ne == emojiText(EmojiFolderRequired) {
@@ -41399,8 +39344,7 @@ func folderKindCodeFromEmoji(emoji string) string {
 	return "org"
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️definitionkindcodefromemoji](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/definitionKindCodeFromEmoji)
-// definitionKindCodeFromEmoji holds the data fields for a definitionKindCodeFromEmoji record.
+// 📖definitionKindCodeFromEmoji holds the data fields for a definitionKindCodeFromEmoji record.
 func definitionKindCodeFromEmoji(emoji string) string {
 	ne := emojiText(emoji)
 	switch ne {
@@ -41414,8 +39358,7 @@ func definitionKindCodeFromEmoji(emoji string) string {
 	return "i"
 }
 
-// technologyKindCode holds the data fields for a technologyKindCode record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️technologykindcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/technologyKindCode)
+// 🔸technologyKindCode holds the data fields for a technologyKindCode record.
 func technologyKindCode(data map[string]interface{}) string {
 	if val, ok := data["kind"].(string); ok {
 		switch val {
@@ -41439,8 +39382,7 @@ func technologyKindCode(data map[string]interface{}) string {
 	return "u"
 }
 
-// TechnologyKindToCode holds the data fields for a TechnologyKindToCode record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️technologykindtocode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/TechnologyKindToCode)
+// 🔺TechnologyKindToCode holds the data fields for a TechnologyKindToCode record.
 func TechnologyKindToCode(k TechnologyKind) string {
 	switch k {
 	case TechnologyKindInfrastructure:
@@ -41453,8 +39395,7 @@ func TechnologyKindToCode(k TechnologyKind) string {
 	return "u"
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️bundlekindcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/bundleKindCode)
-// bundleKindCode holds the data fields for a bundleKindCode record.
+// 🔻bundleKindCode holds the data fields for a bundleKindCode record.
 func bundleKindCode(data map[string]interface{}) string {
 	bKind, _ := data["kind"].(string)
 	switch bKind {
@@ -41478,8 +39419,7 @@ func bundleKindCode(data map[string]interface{}) string {
 	return "l"
 }
 
-// BundleKindToCode holds the data fields for a BundleKindToCode record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️bundlekindtocode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/BundleKindToCode)
+// ⬛BundleKindToCode holds the data fields for a BundleKindToCode record.
 func BundleKindToCode(k BundleKind) string {
 	switch k {
 	case BundleKindRepo:
@@ -41498,8 +39438,7 @@ func BundleKindToCode(k BundleKind) string {
 	return "l"
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️folderkindcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/folderKindCode)
-// folderKindCode holds the data fields for a folderKindCode record.
+// ⬜folderKindCode holds the data fields for a folderKindCode record.
 func folderKindCode(data map[string]interface{}) string {
 	fkind, _ := data["kind"].(string)
 	if fkind == "organization" {
@@ -41508,7 +39447,6 @@ func folderKindCode(data map[string]interface{}) string {
 	return "req"
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️folderkindtocode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/FolderKindToCode)
 func FolderKindToCode(k FolderKind) string {
 	if k == FolderKindOrganization {
 		return "org"
@@ -41516,8 +39454,7 @@ func FolderKindToCode(k FolderKind) string {
 	return "req"
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️definitionkindcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/definitionKindCode)
-// definitionKindCode holds the data fields for a definitionKindCode record.
+// 🟥definitionKindCode holds the data fields for a definitionKindCode record.
 func definitionKindCode(data map[string]interface{}) string {
 	kind, _ := data["kind"].(string)
 	switch DeriveDefinitionKind(kind) {
@@ -41531,28 +39468,24 @@ func definitionKindCode(data map[string]interface{}) string {
 	return "i"
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️interactionkindcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/interactionKindCode)
-// interactionKindCode holds the data fields for a interactionKindCode record.
+// 🟧interactionKindCode holds the data fields for a interactionKindCode record.
 func interactionKindCode(data map[string]interface{}) string {
 	kind, _ := data["kind"].(string)
 	return kind
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️containsurisection](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/containsUriSection)
-// containsUriSection holds the data fields for a containsUriSection record.
+// 📑containsUriSection holds the data fields for a containsUriSection record.
 func containsUriSection(uri string) bool {
 	return strings.HasPrefix(uri, "repo://section/")
 }
 
-// containsUriDefinition holds the data fields for a containsUriDefinition record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️containsuridefinition](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/containsUriDefinition)
+// 🔗containsUriDefinition holds the data fields for a containsUriDefinition record.
 func containsUriDefinition(uri string) bool {
 	return strings.HasPrefix(uri, "repo://definition/")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileandsectionsfromuri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileandsectionsfromuri)
-// extractFileAndSectionsFromUri extracts the file path and section names from a URI.
-// Supports new format repo://section/{{id}} where ID encodes file+sections as emojis.
+// 🟨extractFileAndSectionsFromUri extracts the file path and section names from a URI.
+// 🆕Supports new format repo://section/{{id}} where ID encodes file+sections as emojis.
 func extractFileAndSectionsFromUri(uri string) (filePath string, sectionSlugs []string) {
 	// New format: repo://section/{{id}}
 	if strings.HasPrefix(uri, "repo://section/") || strings.HasPrefix(uri, "repo://file/") {
@@ -41608,9 +39541,8 @@ func extractFileAndSectionsFromUri(uri string) (filePath string, sectionSlugs []
 	return filePath, sectionParts
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileanddefinitionfromuri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractfileanddefinitionfromuri)
-// extractFileAndDefinitionFromUri extracts the file path and definition name from a URI.
-// Supports new format repo://definition/{{id}} where ID encodes file+sections+definition as emojis.
+// 🟩extractFileAndDefinitionFromUri extracts the file path and definition name from a URI.
+// ▶️Supports new format repo://definition/{{id}} where ID encodes file+sections+definition as emojis.
 func extractFileAndDefinitionFromUri(uri string) (filePath string, defName string) {
 	// New format: repo://definition/{{id}}
 	if strings.HasPrefix(uri, "repo://definition/") {
@@ -41654,17 +39586,15 @@ func extractFileAndDefinitionFromUri(uri string) (filePath string, defName strin
 	return filePath, defName
 }
 
-// ArtifactRef holds the data fields for a artifact ref record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid✂️artifactref](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/ArtifactRef)
+// 🟦ArtifactRef holds the data fields for a artifact ref record.
 type ArtifactRef struct {
 	Kind         string
 	Path         string
 	SectionParts []string
 }
 
-// ParseArtifactRef MUST return the parsed result or an error for invalid input.
-// ParseArtifactRef parses and returns the artifact ref from the input.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️parseartifactref](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/ParseArtifactRef)
+// ❌ParseArtifactRef MUST return the parsed result or an error for invalid input.
+// 💾ParseArtifactRef parses and returns the artifact ref from the input.
 func ParseArtifactRef(ref string) ArtifactRef {
 	clean := strings.ReplaceAll(ref, "\uFE0E", "")
 	clean = strings.ReplaceAll(clean, "\uFE0F", "")
@@ -41740,8 +39670,7 @@ func ParseArtifactRef(ref string) ArtifactRef {
 	return ArtifactRef{Kind: "file", Path: normalized}
 }
 
-// UnSlugify MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️unslugify](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/UnSlugify)
+// 🟪UnSlugify MUST complete the operation successfully.
 func UnSlugify(slug string) string {
 	parts := strings.Split(slug, "-")
 	for i, p := range parts {
@@ -41752,9 +39681,8 @@ func UnSlugify(slug string) string {
 	return strings.Join(parts, " ")
 }
 
-// FindSectionBySlug MUST return the matching result or an error if not found.
-// FindSectionBySlug locates and returns the matching section by slug.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️findsectionbyslug](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/FindSectionBySlug)
+// 🎯FindSectionBySlug MUST return the matching result or an error if not found.
+// 🧩FindSectionBySlug locates and returns the matching section by slug.
 func FindSectionBySlug(sections []Section, slug string) *Section {
 	for i := range sections {
 		if Slugify(sections[i].Name) == slug {
@@ -41767,9 +39695,8 @@ func FindSectionBySlug(sections []Section, slug string) *Section {
 	return nil
 }
 
-// ResolveSectionName MUST return the resolved value or an error if unresolvable.
-// ResolveSectionName resolves and returns the section name.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️resolvesectionname](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/ResolveSectionName)
+// 🟫ResolveSectionName MUST return the resolved value or an error if unresolvable.
+// 📩ResolveSectionName resolves and returns the section name.
 func ResolveSectionName(filePath string, slug string) string {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
@@ -41788,8 +39715,7 @@ func ResolveSectionName(filePath string, slug string) string {
 	return UnSlugify(slug)
 }
 
-// SectionIdValueToUriPath MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️sectionidvaluetouripath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/SectionIdValueToUriPath)
+// 💠SectionIdValueToUriPath MUST complete the operation successfully.
 func SectionIdValueToUriPath(value string) string {
 	hashIdx := strings.Index(value, "#")
 	if hashIdx < 0 {
@@ -41805,8 +39731,7 @@ func SectionIdValueToUriPath(value string) string {
 	return result
 }
 
-// DefinitionIdValueToUriPath MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️definitionidvaluetouripath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/DefinitionIdValueToUriPath)
+// 🔳DefinitionIdValueToUriPath MUST complete the operation successfully.
 func DefinitionIdValueToUriPath(value string) string {
 	hashIdx := strings.Index(value, "#")
 	paragraphIdx := strings.Index(value, "§")
@@ -41831,9 +39756,8 @@ func DefinitionIdValueToUriPath(value string) string {
 	return result
 }
 
-// ParseSectionUriPath MUST return the parsed result or an error for invalid input.
-// ParseSectionUriPath parses and returns the section uri path from the input.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️parsesectionuripath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/ParseSectionUriPath)
+// 🔬ParseSectionUriPath MUST return the parsed result or an error for invalid input.
+// 📝ParseSectionUriPath parses and returns the section uri path from the input.
 func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string) {
 	parts := strings.Split(uriPath, "/")
 	fileEnd := -1
@@ -41852,8 +39776,7 @@ func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string
 	return
 }
 
-// StatuteIdToUriPath MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️statuteidtouripath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/StatuteIdToUriPath)
+// 🔲StatuteIdToUriPath MUST complete the operation successfully.
 func StatuteIdToUriPath(id string) string {
 	parts := strings.Split(id, "/")
 	for i, p := range parts {
@@ -41862,8 +39785,7 @@ func StatuteIdToUriPath(id string) string {
 	return strings.Join(parts, "/")
 }
 
-// StatuteUriPathToId MUST complete the operation successfully.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️statuteuripathtoid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/StatuteUriPathToId)
+// ▪️StatuteUriPathToId MUST complete the operation successfully.
 func StatuteUriPathToId(uriPath string) string {
 	parts := strings.Split(uriPath, "/")
 	for i, p := range parts {
@@ -41872,9 +39794,8 @@ func StatuteUriPathToId(uriPath string) string {
 	return strings.Join(parts, "/")
 }
 
-// GetArtifactID MUST retrieve the requested value or return an error.
-// GetArtifactID retrieves and returns the artifact i d.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️getartifactid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/GetArtifactID)
+// 📨GetArtifactID MUST retrieve the requested value or return an error.
+// 🟨GetArtifactID retrieves and returns the artifact i d.
 func GetArtifactID(kind string, data map[string]interface{}) string {
 	parentId, _ := data["parentId"].(string)
 	switch kind {
@@ -42141,9 +40062,8 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 	return ""
 }
 
-// GetArtifactURI MUST retrieve the requested value or return an error.
-// GetArtifactURI retrieves and returns the artifact URI using the format repo://{{entity-kind}}/{{id}}.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️getartifacturi](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️getartifacturi)
+// ▫️GetArtifactURI MUST retrieve the requested value or return an error.
+// 🌐GetArtifactURI retrieves and returns the artifact URI using the format repo://{{entity-kind}}/{{id}}.
 func GetArtifactURI(kind string, data map[string]interface{}) string {
 	id := GetArtifactID(kind, data)
 	if id == "" {
@@ -42152,15 +40072,13 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 	return "repo://" + kind + "/" + id
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildfolderurifrompath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/buildFolderUriFromPath)
-// buildFolderUriFromPath holds the data fields for a buildFolderUriFromPath record.
+// 🏗️buildFolderUriFromPath holds the data fields for a buildFolderUriFromPath record.
 func buildFolderUriFromPath(path string) string {
 	return GetArtifactURI("folder", map[string]interface{}{"path": path})
 }
 
-// extractPathFromFolderUri extracts the filesystem path from a folder URI.
-// With the new repo://folder/{{id}} format, it resolves the emoji ID back to a path.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractpathfromfolderuri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractpathfromfolderuri)
+// ◾extractPathFromFolderUri extracts the filesystem path from a folder URI.
+// 🟩With the new repo://folder/{{id}} format, it resolves the emoji ID back to a path.
 func extractPathFromFolderUri(uri string) string {
 	id := UriToId("repo://" + uri)
 	if id == "" {
@@ -42172,9 +40090,8 @@ func extractPathFromFolderUri(uri string) string {
 	return IdToPath(id)
 }
 
-// extractPathFromFileUri extracts the filesystem path from a file URI.
-// With the new repo://file/{{id}} format, it resolves the emoji ID back to a path.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractpathfromfileuri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️extractpathfromfileuri)
+// ◽extractPathFromFileUri extracts the filesystem path from a file URI.
+// 🟫With the new repo://file/{{id}} format, it resolves the emoji ID back to a path.
 func extractPathFromFileUri(uri string) string {
 	id := UriToId("repo://" + uri)
 	if id == "" {
@@ -42186,27 +40103,27 @@ func extractPathFromFileUri(uri string) string {
 	return IdToPath(id)
 }
 
-// buildFileUriFromPath builds a file URI from a filesystem path.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildfileurifrompath](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildfileurifrompath)
+// ◻️buildFileUriFromPath builds a file URI from a filesystem path.
 func buildFileUriFromPath(path string) string {
-	return GetArtifactURI("file", map[string]interface{}{"path": path})
+	id := buildFileID(path, nil)
+	if id == "" {
+		return GetArtifactURI("file", map[string]interface{}{"path": path})
+	}
+	return "repo://file/" + id
 }
 
-// buildSectionUriFromPath builds a section URI from a path#section format.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildsectionurifrompath](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️buildsectionurifrompath)
+// 📋buildSectionUriFromPath builds a section URI from a path#section format.
 func buildSectionUriFromPath(path string) string {
 	return GetArtifactURI("section", map[string]interface{}{"path": path})
 }
 
-// buildDefinitionUriFromIdValue builds a definition URI from an id value.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️builddefinitionurifromidvalue](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️builddefinitionurifromidvalue)
+// ◼️buildDefinitionUriFromIdValue builds a definition URI from an id value.
 func buildDefinitionUriFromIdValue(id string, dkc string) string {
 	return GetArtifactURI("definition", map[string]interface{}{"id": id})
 }
 
-// IdToUri converts an emoji-based ID to a repo:// URI.
-// New format: repo://{{entity-kind}}/{{id}}
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtouri](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtouri)
+// 🔵IdToUri converts an emoji-based ID to a repo:// URI.
+// ▫️New format: repo://{{entity-kind}}/{{id}}
 func IdToUri(id string) string {
 	normalized := strings.ReplaceAll(id, "\uFE0E", "")
 	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
@@ -42221,8 +40138,7 @@ func IdToUri(id string) string {
 	return "repo://" + kind + "/" + id
 }
 
-// DetectEntityKindFromId determines the entity kind from an emoji-based ID string.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️detectentitykindfromid](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️detectentitykindfromid)
+// 🔴DetectEntityKindFromId determines the entity kind from an emoji-based ID string.
 func DetectEntityKindFromId(id string) string {
 	normalized := strings.ReplaceAll(id, "\uFE0E", "")
 	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
@@ -42398,9 +40314,8 @@ func DetectEntityKindFromId(id string) string {
 	return ""
 }
 
-// UriToId converts a repo:// URI to an emoji-based ID.
-// New format: repo://{{entity-kind}}/{{id}} → {{id}}
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️uritoid](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️uritoid)
+// 🟠UriToId converts a repo:// URI to an emoji-based ID.
+// ◾New format: repo://{{entity-kind}}/{{id}} → {{id}}
 func UriToId(uri string) string {
 	if !strings.HasPrefix(uri, "repo://") {
 		return ""
@@ -42419,10 +40334,9 @@ func UriToId(uri string) string {
 	return id
 }
 
-// IdToPath converts an emoji-based artifact ID back to a filesystem path.
+// 🟡IdToPath converts an emoji-based artifact ID back to a filesystem path.
 // It walks all tracked bundles and files, computes their IDs, and matches.
-// For file/folder/section/definition IDs, it returns the file path.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtopath](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtopath)
+// ◽For file/folder/section/definition IDs, it returns the file path.
 func IdToPath(id string) string {
 	normalized := strings.ReplaceAll(id, "\uFE0E", "")
 	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
@@ -42484,7 +40398,7 @@ func IdToPath(id string) string {
 			// This is a bundle-level ID, return bundle root
 			return NormalizePath(b.Root)
 		}
-		// Walk the bundle directory and match file IDs
+		// 📂Walk the bundle directory and match file IDs
 		var matchedPath string
 		filepath.Walk(bundleRoot, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -42543,9 +40457,8 @@ func IdToPath(id string) string {
 	return ""
 }
 
-// IdToSectionPath extracts the section path parts from an emoji-based ID.
-// Returns the section names as a slice.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtosectionpath](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtosectionpath)
+// 🟢IdToSectionPath extracts the section path parts from an emoji-based ID.
+// 🔵Returns the section names as a slice.
 func IdToSectionPath(id string) []string {
 	normalized := strings.ReplaceAll(id, "\uFE0E", "")
 	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
@@ -42569,7 +40482,7 @@ func IdToSectionPath(id string) []string {
 			break
 		}
 	}
-	// Find all section emoji occurrences
+	// 🟣Find all section emoji occurrences
 	var sections []string
 	remaining := forSections
 	for {
@@ -42590,8 +40503,7 @@ func IdToSectionPath(id string) []string {
 	return sections
 }
 
-// IdToDefinitionName extracts the definition name from an emoji-based ID.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtodefinitionname](repo://definition/🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️idtodefinitionname)
+// 🟤IdToDefinitionName extracts the definition name from an emoji-based ID.
 func IdToDefinitionName(id string) string {
 	normalized := strings.ReplaceAll(id, "\uFE0E", "")
 	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
@@ -42614,8 +40526,7 @@ func IdToDefinitionName(id string) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️technologyemojifromcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/technologyEmojiFromCode)
-// technologyEmojiFromCode holds the data fields for a technologyEmojiFromCode record.
+// ⚪technologyEmojiFromCode holds the data fields for a technologyEmojiFromCode record.
 func technologyEmojiFromCode(code string) string {
 	switch code {
 	case "i":
@@ -42628,7 +40539,6 @@ func technologyEmojiFromCode(code string) string {
 	return EmojiTechnologyUser
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️bundleemojifromcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/bundleEmojiFromCode)
 func bundleEmojiFromCode(code string) string {
 	switch code {
 	case "r":
@@ -42649,8 +40559,7 @@ func bundleEmojiFromCode(code string) string {
 	return EmojiBundleLibrary
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️folderemojifromcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/folderEmojiFromCode)
-// folderEmojiFromCode holds the data fields for a folderEmojiFromCode record.
+// ⚫folderEmojiFromCode holds the data fields for a folderEmojiFromCode record.
 func folderEmojiFromCode(code string) string {
 	if code == "req" {
 		return EmojiFolderRequired
@@ -42658,8 +40567,7 @@ func folderEmojiFromCode(code string) string {
 	return EmojiFolderOrg
 }
 
-// definitionEmojiFromCode holds the data fields for a definitionEmojiFromCode record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️definitionemojifromcode](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/definitionEmojiFromCode)
+// 🩵definitionEmojiFromCode holds the data fields for a definitionEmojiFromCode record.
 func definitionEmojiFromCode(code string) string {
 	switch code {
 	case "f":
@@ -42672,8 +40580,7 @@ func definitionEmojiFromCode(code string) string {
 	return EmojiDefinitionImpl
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️urisubpathtoid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/uriSubPathToId)
-// uriSubPathToId holds the data fields for a uriSubPathToId record.
+// 🩶uriSubPathToId holds the data fields for a uriSubPathToId record.
 func uriSubPathToId(parentId string, subPath string) string {
 	if subPath == "fds" {
 		return emojiText(EmojiFolders)
@@ -42739,8 +40646,7 @@ func uriSubPathToId(parentId string, subPath string) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️urisubpathtoidfromfile](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/uriSubPathToIdFromFile)
-// uriSubPathToIdFromFile holds the data fields for a uriSubPathToIdFromFile record.
+// 🩷uriSubPathToIdFromFile holds the data fields for a uriSubPathToIdFromFile record.
 func uriSubPathToIdFromFile(fileId string, subPath string) string {
 	if subPath == "ss" {
 		return emojiText(EmojiSections)
@@ -42765,7 +40671,6 @@ func uriSubPathToIdFromFile(fileId string, subPath string) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️parsesectionandrest](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/parseSectionAndRest)
 func parseSectionAndRest(parentId string, sRest string) string {
 	parts := strings.SplitN(sRest, "/s/", 2)
 	sectionName := PathFromUriPath(parts[0])
@@ -42788,13 +40693,11 @@ func parseSectionAndRest(parentId string, sRest string) string {
 	return parseSectionAndRest(sectionId, parts[1])
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️splitsectionuri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/splitSectionUri)
-// splitSectionUri holds the data fields for a splitSectionUri record.
+// 💜splitSectionUri holds the data fields for a splitSectionUri record.
 func splitSectionUri(path string) []string {
 	return strings.Split(path, "/s/")
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖artifactid🛠️parsegoaluri](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Artifact%20ID/d/i/parseGoalUri)
 func parseGoalUri(rest string) string {
 	parts := strings.SplitN(rest, "/", 2)
 	goalName := parts[0]
@@ -42818,12 +40721,10 @@ func parseGoalUri(rest string) string {
 	return result
 }
 
-// #endregion 🔖Artifact ID
+// #endregion 🧱Artifact ID
 
-// #region 🔖Entity Rendering
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖entityrendering](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Entity%20Rendering)
-// Entity rendering functions for formatted output generation.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖entityrendering🛠️extractcreatedstr](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Entity%20Rendering/d/i/extractCreatedStr)
+// #region 🪨Entity Rendering
+// 🖊️Entity rendering functions for formatted output generation.
 func extractCreatedStr(data map[string]interface{}) string {
 	createdStr := ""
 	if dates, ok := data["dates"].(map[string]interface{}); ok {
@@ -42851,8 +40752,7 @@ func extractCreatedStr(data map[string]interface{}) string {
 	return createdStr
 }
 
-// extractFinishedStr holds the data fields for a extractFinishedStr record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖entityrendering🛠️extractfinishedstr](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Entity%20Rendering/d/i/extractFinishedStr)
+// 💿extractFinishedStr holds the data fields for a extractFinishedStr record.
 func extractFinishedStr(data map[string]interface{}) string {
 	finishedStr := ""
 	if dates, ok := data["dates"].(map[string]interface{}); ok {
@@ -42874,7 +40774,6 @@ func extractFinishedStr(data map[string]interface{}) string {
 	return finishedStr
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖entityrendering🛠️sanitizeprop](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Entity%20Rendering/d/i/sanitizeProp)
 func sanitizeProp(v string) string {
 	v = strings.ReplaceAll(v, "\r\n", " ")
 	v = strings.ReplaceAll(v, "\n", " ")
@@ -42886,8 +40785,7 @@ func sanitizeProp(v string) string {
 	return strings.TrimSpace(v)
 }
 
-// sanitizeSingleLine holds the data fields for a sanitizeSingleLine record.
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖entityrendering🛠️sanitizesingleline](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Entity%20Rendering/d/i/sanitizeSingleLine)
+// 🔷sanitizeSingleLine holds the data fields for a sanitizeSingleLine record.
 func sanitizeSingleLine(v string) string {
 	v = strings.ReplaceAll(v, "\r\n", " ")
 	v = strings.ReplaceAll(v, "\n", " ")
@@ -42895,8 +40793,7 @@ func sanitizeSingleLine(v string) string {
 	return v
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🔖entityrendering🛠️collectentityprops](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/s/Entity%20Rendering/d/i/collectEntityProps)
-// collectEntityProps holds the data fields for a collectEntityProps record.
+// 🔶collectEntityProps holds the data fields for a collectEntityProps record.
 func collectEntityProps(kind string, data map[string]interface{}, truncateDesc bool) []string {
 	var props []string
 	appendNonEmpty := func(vals ...string) {
@@ -43029,8 +40926,7 @@ func collectEntityProps(kind string, data map[string]interface{}, truncateDesc b
 	return props
 }
 
-// #endregion 🔖Entity Rendering
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🛠️renderentityhuman](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/d/i/renderEntityHuman)
+// #endregion 🪨Entity Rendering
 func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) string {
 	id := GetArtifactID(kind, data)
 	props := collectEntityProps(kind, data, false)
@@ -43041,7 +40937,6 @@ func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) str
 	}))
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🛠️inferentitykind](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/d/i/inferEntityKind)
 func inferEntityKind(key string) string {
 	key = strings.ToLower(key)
 	prefixes := []struct {
@@ -43077,8 +40972,7 @@ func inferEntityKind(key string) string {
 	return ""
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🛠️renderentitymarkdownlink](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/d/i/renderEntityMarkdownLink)
-// renderEntityMarkdownLink holds the data fields for a renderEntityMarkdownLink record.
+// 📰renderEntityMarkdownLink holds the data fields for a renderEntityMarkdownLink record.
 func renderEntityMarkdownLink(kind string, data map[string]interface{}) string {
 	id := GetArtifactID(kind, data)
 	uri := GetArtifactURI(kind, data)
@@ -43090,8 +40984,7 @@ func renderEntityMarkdownLink(kind string, data map[string]interface{}) string {
 	}))
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🛠️renderentitymarkdown](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/d/i/renderEntityMarkdown)
-// renderEntityMarkdown holds the data fields for a renderEntityMarkdown record.
+// 🔹renderEntityMarkdown holds the data fields for a renderEntityMarkdown record.
 func renderEntityMarkdown(kind string, data map[string]interface{}) string {
 	id := GetArtifactID(kind, data)
 	uri := GetArtifactURI(kind, data)
@@ -43103,8 +40996,7 @@ func renderEntityMarkdown(kind string, data map[string]interface{}) string {
 	}))
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🛠️getterminalwidth](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/d/i/getTerminalWidth)
-// getTerminalWidth holds the data fields for a getTerminalWidth record.
+// 🔸getTerminalWidth holds the data fields for a getTerminalWidth record.
 func getTerminalWidth() int {
 	w := os.Getenv("COLUMNS")
 	if w != "" {
@@ -43115,7 +41007,6 @@ func getTerminalWidth() int {
 	return 120
 }
 
-// [🧰repo⌨️cli💻main🔖types🔖todos🔖entityrendering🛠️truncateansi](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Todos/s/Entity%20Rendering/d/i/truncateANSI)
 func truncateANSI(s string, maxVisible int) string {
 	if maxVisible <= 0 {
 		return s
@@ -43181,11 +41072,10 @@ func truncateANSI(s string, maxVisible int) string {
 	return b.String()
 }
 
-// #region 🔖Missing Hook Functions
+// #region 🔭Missing Hook Functions
 // These functions were removed but are still referenced in the code
 
-// normalizeTicketSessionID normalizes a ticket session ID.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️normalizeticketsessionid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/normalizeTicketSessionID)
+// 🪪normalizeTicketSessionID normalizes a ticket session ID.
 func normalizeTicketSessionID(sessionID string) string {
 	sessionID = strings.TrimSpace(sessionID)
 	if sessionID == "" {
@@ -43223,8 +41113,7 @@ func normalizeTicketSessionID(sessionID string) string {
 	return prefix + sessionEmoji + payload
 }
 
-// currentTicketSessionID returns the current ticket session ID.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️currentticketsessionid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/currentTicketSessionID)
+// 🎫currentTicketSessionID returns the current ticket session ID.
 func currentTicketSessionID() string {
 	if testSessionIDOverride != "" {
 		return testSessionIDOverride
@@ -43232,8 +41121,7 @@ func currentTicketSessionID() string {
 	return generateHookSessionID()
 }
 
-// resolveCopilotEvent maps a VS Code / Copilot Chat native event to a neutral HookEvent.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvecopilotevent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveCopilotEvent)
+// 📡resolveCopilotEvent maps a VS Code / Copilot Chat native event to a neutral HookEvent.
 func resolveCopilotEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
 	switch nativeEvent {
 	case "SessionStart":
@@ -43273,8 +41161,7 @@ func resolveCopilotEvent(nativeEvent string, kind ToolKind) (HookEvent, string, 
 	}
 }
 
-// resolveCursorEvent maps a Cursor native event to a neutral HookEvent.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvecursorevent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveCursorEvent)
+// 🗺️resolveCursorEvent maps a Cursor native event to a neutral HookEvent.
 func resolveCursorEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
 	switch nativeEvent {
 	case "sessionStart":
@@ -43316,8 +41203,7 @@ func resolveCursorEvent(nativeEvent string, kind ToolKind) (HookEvent, string, e
 	}
 }
 
-// resolveWindsurfEvent maps a Windsurf native event to a neutral HookEvent.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvewindsurfevent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveWindsurfEvent)
+// 🔷resolveWindsurfEvent maps a Windsurf native event to a neutral HookEvent.
 func resolveWindsurfEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
 	switch nativeEvent {
 	case "pre_user_prompt":
@@ -43355,8 +41241,7 @@ func resolveWindsurfEvent(nativeEvent string, kind ToolKind) (HookEvent, string,
 	}
 }
 
-// resolveClaudeCompatibleEvent maps a Claude-compatible native event to a neutral HookEvent.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolveclaudecompatibleevent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveClaudeCompatibleEvent)
+// 🔶resolveClaudeCompatibleEvent maps a Claude-compatible native event to a neutral HookEvent.
 func resolveClaudeCompatibleEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
 	switch nativeEvent {
 	case "start", "SessionStart":
@@ -43382,8 +41267,7 @@ func resolveClaudeCompatibleEvent(nativeEvent string, kind ToolKind) (HookEvent,
 	}
 }
 
-// resolveKiroEvent maps a Kiro native event to a neutral HookEvent.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvekirovent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveKiroEvent)
+// 🔹resolveKiroEvent maps a Kiro native event to a neutral HookEvent.
 func resolveKiroEvent(nativeEvent string, kind ToolKind) (HookEvent, string, error) {
 	switch nativeEvent {
 	case "agentSpawn":
@@ -43401,8 +41285,7 @@ func resolveKiroEvent(nativeEvent string, kind ToolKind) (HookEvent, string, err
 	}
 }
 
-// formatVSCodeHookOutput formats a hook output for VS Code.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️formatvscodehookoutput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/formatVSCodeHookOutput)
+// 💻formatVSCodeHookOutput formats a hook output for VS Code.
 func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
 	payload := map[string]interface{}{}
 	out, _ := json.Marshal(result)
@@ -43430,8 +41313,7 @@ func formatVSCodeHookOutput(hookEventName string, result HookResult) string {
 	return string(finalOut)
 }
 
-// vsCodeEventFromHookEvent converts a HookEvent to a VS Code event string.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️vscodeeventfromhookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/vsCodeEventFromHookEvent)
+// 🔤vsCodeEventFromHookEvent converts a HookEvent to a VS Code event string.
 func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	switch event {
 	case HookAgentStarted:
@@ -43469,8 +41351,7 @@ func vsCodeEventFromHookEvent(event HookEvent, parentInfo string) string {
 	}
 }
 
-// resolvePreToolUse resolves the pre-tool-use event based on tool kind.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvepretooluse](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolvePreToolUse)
+// 🏷️resolvePreToolUse resolves the pre-tool-use event based on tool kind.
 func resolvePreToolUse(kind ToolKind) HookEvent {
 	switch kind {
 	case ToolKindPlan:
@@ -43490,8 +41371,7 @@ func resolvePreToolUse(kind ToolKind) HookEvent {
 	}
 }
 
-// resolvePostToolUse resolves the post-tool-use event based on tool kind.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolveposttooluse](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolvePostToolUse)
+// 🔸resolvePostToolUse resolves the post-tool-use event based on tool kind.
 func resolvePostToolUse(kind ToolKind) HookEvent {
 	switch kind {
 	case ToolKindPlan:
@@ -43529,19 +41409,17 @@ func resolveShellPostToolUse(kind ToolKind) HookEvent {
 	}
 }
 
-// #endregion 🔖Missing Hook Functions
+// #endregion 🔭Missing Hook Functions
 
-// #region 🔖Missing Test Functions
+// #region 🖲️Missing Test Functions
 // These functions were removed but are still referenced in the code
 
-// pyTestRunnerBins are direct Python test runner binary names.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🪨pytestrunnerbins](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/pyTestRunnerBins)
+// 🧪pyTestRunnerBins are direct Python test runner binary names.
 var pyTestRunnerBins = map[string]bool{
 	"pytest": true, "py.test": true, "nosetests": true, "nose2": true,
 }
 
-// extractTestSegmentFromCommand extracts the test-relevant segment from a command.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extracttestsegmentfromcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractTestSegmentFromCommand)
+// 🧲extractTestSegmentFromCommand extracts the test-relevant segment from a command.
 func extractTestSegmentFromCommand(command string) (string, string) {
 	command = strings.TrimSpace(command)
 	if command == "" {
@@ -43650,8 +41528,7 @@ func trimPipelineTail(segment string) string {
 	return strings.TrimSpace(current.String())
 }
 
-// resolveGoTestFiles resolves test files for Go commands.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvegotestfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveGoTestFiles)
+// 📄resolveGoTestFiles resolves test files for Go commands.
 func resolveGoTestFiles(args []string, cwd string) []string {
 	var files []string
 	seen := map[string]bool{}
@@ -43713,8 +41590,7 @@ func resolveGoTestFiles(args []string, cwd string) []string {
 	return files
 }
 
-// resolveCargoTestFiles resolves test files for Cargo commands.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvecargotestfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveCargoTestFiles)
+// 🎛️resolveCargoTestFiles resolves test files for Cargo commands.
 func resolveCargoTestFiles(args []string, cwd string) []string {
 	var files []string
 	// Look for test directories and files
@@ -43736,8 +41612,7 @@ func resolveCargoTestFiles(args []string, cwd string) []string {
 	return files
 }
 
-// resolveDotnetTestFiles resolves test files for .NET commands.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvedotnettestfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveDotnetTestFiles)
+// 🔷resolveDotnetTestFiles resolves test files for .NET commands.
 func resolveDotnetTestFiles(args []string, cwd string) []string {
 	var files []string
 	// Look for .cs files with test attributes
@@ -43759,8 +41634,7 @@ func resolveDotnetTestFiles(args []string, cwd string) []string {
 	return files
 }
 
-// resolvePythonTestFiles resolves test files for Python commands.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvepythontestfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolvePythonTestFiles)
+// 🔶resolvePythonTestFiles resolves test files for Python commands.
 func resolvePythonTestFiles(args []string, cwd string) []string {
 	var files []string
 	// Look for test_*.py and *_test.py files
@@ -43779,8 +41653,7 @@ func resolvePythonTestFiles(args []string, cwd string) []string {
 	return files
 }
 
-// resolvePytestFiles resolves test files for pytest commands.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvepytestfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolvePytestFiles)
+// 🔹resolvePytestFiles resolves test files for pytest commands.
 func resolvePytestFiles(args []string, cwd string) []string {
 	var files []string
 	seen := map[string]bool{}
@@ -43843,8 +41716,7 @@ func resolvePytestFiles(args []string, cwd string) []string {
 	return files
 }
 
-// findJSTestFiles resolves test files for JavaScript test runners.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️findjstestfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/findJSTestFiles)
+// 🔸findJSTestFiles resolves test files for JavaScript test runners.
 func findJSTestFiles(cwd string) []string {
 	var files []string
 	// Look for test files with common patterns
@@ -43865,22 +41737,21 @@ func findJSTestFiles(cwd string) []string {
 	return files
 }
 
-// #endregion 🔖Missing Test Functions
+// #endregion 🖲️Missing Test Functions
 
-// #region 🔖Missing Utility Functions
+// #region 💾Missing Utility Functions
 // These functions were removed but are still referenced in the code
 
-// jsTestRunnerBins are JavaScript test runner binary names.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🪨jstestrunnerbins](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/jsTestRunnerBins)
+// 🧪jsTestRunnerBins are JavaScript test runner binary names.
 var jsTestRunnerBins = map[string]bool{
 	"jest": true, "vitest": true, "mocha": true, "jasmine": true,
 	"ava": true, "tape": true, "qunit": true, "karma": true,
 }
 
-// testSessionIDOverride is a test override for session ID generation.
+// 🪪testSessionIDOverride is a test override for session ID generation.
 var testSessionIDOverride string
 
-// BlockedToolPatterns are patterns for blocked tools.
+// 🧩BlockedToolPatterns are patterns for blocked tools.
 var BlockedToolPatterns = map[string]bool{
 	"rm":              true,
 	"rmdir":           true,
@@ -43911,7 +41782,7 @@ var BlockedToolPatterns = map[string]bool{
 	"git tag":         true,
 }
 
-// IsToolBlocked checks if a tool is blocked.
+// ✔️IsToolBlocked checks if a tool is blocked.
 func IsToolBlocked(tool string, args string) (bool, string) {
 	for _, segment := range splitCommandSegments(args) {
 		if blocked, reason := isCommandSegmentBlocked(segment); blocked {
@@ -43925,7 +41796,7 @@ func IsToolBlocked(tool string, args string) (bool, string) {
 	return false, ""
 }
 
-// splitCommandSegments splits a command into segments.
+// 🔷splitCommandSegments splits a command into segments.
 func splitCommandSegments(cmd string) []string {
 	cmd = strings.TrimSpace(cmd)
 	if cmd == "" {
@@ -43977,8 +41848,8 @@ func splitCommandSegments(cmd string) []string {
 	return segments
 }
 
-// isCommandSegmentBlocked checks if a command segment is blocked.
-// blockedGitVerbs are git subcommands that modify repository state.
+// 🐙isCommandSegmentBlocked checks if a command segment is blocked.
+// ⌨️blockedGitVerbs are git subcommands that modify repository state.
 var blockedGitVerbs = map[string]bool{
 	"add": true, "branch": true, "checkout": true, "cherry-pick": true, "clone": true,
 	"commit": true, "config": true, "fetch": true, "init": true, "merge": true,
@@ -43987,18 +41858,18 @@ var blockedGitVerbs = map[string]bool{
 	"switch": true, "tag": true, "clean": true,
 }
 
-// blockedKillLsofPortPattern matches kill commands that use lsof to select a TCP port PID.
+// 🎯blockedKillLsofPortPattern matches kill commands that use lsof to select a TCP port PID.
 // This is intentionally denied because in containerized environments the matched PID can be critical (e.g. PID 1),
-// causing the entire devcontainer to terminate and stopping all running work.
+// ⏹️causing the entire devcontainer to terminate and stopping all running work.
 var blockedKillLsofPortPattern = regexp.MustCompile(`(?i)\bkill\b[\s\S]*\$\(\s*lsof\b[\s\S]*-t[\s\S]*-i\s*:\s*\d+[\s\S]*\)`)
 
-// blockedGitVerbPattern matches any blocked git verb in inline code strings (shell-style invocation).
+// 🔤blockedGitVerbPattern matches any blocked git verb in inline code strings (shell-style invocation).
 var blockedGitVerbPattern = regexp.MustCompile(`(?i)\bgit\s+(add|branch|checkout|cherry-pick|clone|commit|config|fetch|init|merge|mv|pull|push|rebase|remote|reset|restore|revert|rm|stash|switch|tag|clean)\b`)
 
-// blockedGitListPattern matches array/list-style git invocations like ['git', 'stash'] or ["git", "checkout"].
+// 📚blockedGitListPattern matches array/list-style git invocations like ['git', 'stash'] or ["git", "checkout"].
 var blockedGitListPattern = regexp.MustCompile(`(?i)['"]\s*git\s*['"]\s*,\s*['"]\s*(add|branch|checkout|cherry-pick|clone|commit|config|fetch|init|merge|mv|pull|push|rebase|remote|reset|restore|revert|rm|stash|switch|tag|clean)\s*['"]`)
 
-// containsBlockedGitInCode scans arbitrary inline code (e.g. python -c, node -e) for blocked git invocations.
+// 🌿containsBlockedGitInCode scans arbitrary inline code (e.g. python -c, node -e) for blocked git invocations.
 func containsBlockedGitInCode(code string) (bool, string) {
 	if m := blockedGitVerbPattern.FindString(code); m != "" {
 		return true, "blocked: " + strings.ToLower(strings.TrimSpace(m))
@@ -44092,7 +41963,7 @@ func isCommandSegmentBlocked(segment string) (bool, string) {
 	return true, "blocked: git " + verb
 }
 
-// resolveEventSessionID resolves the session ID from input.
+// 📡resolveEventSessionID resolves the session ID from input.
 func resolveEventSessionID(input string) string {
 	if input == "" {
 		return ""
@@ -44100,7 +41971,7 @@ func resolveEventSessionID(input string) string {
 	return input
 }
 
-// resolveEventSecondID resolves the second ID from input.
+// 📝resolveEventSecondID resolves the second ID from input.
 func resolveEventSecondID(input string) string {
 	if input == "" {
 		return ""
@@ -44108,24 +41979,23 @@ func resolveEventSecondID(input string) string {
 	return input
 }
 
-// extractSecondFromInput extracts second from input.
+// 🧲extractSecondFromInput extracts second from input.
 func extractSecondFromInput(input string) int {
 	// This is a placeholder implementation
 	return 0
 }
 
-// HookResultAgentThinkingEnded represents the result of an agent thinking ended event.
+// 🏷️HookResultAgentThinkingEnded represents the result of an agent thinking ended event.
 type HookResultAgentThinkingEnded struct {
 	HookResultAgentBase
 }
 
-// HookResultAgentThinkingStarting represents the result of an agent thinking starting event.
+// ▶️HookResultAgentThinkingStarting represents the result of an agent thinking starting event.
 type HookResultAgentThinkingStarting struct {
 	HookResultAgentBase
 }
 
-// resolveRspecFiles resolves test files for RSpec commands.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolverspecfiles](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveRspecFiles)
+// 📄resolveRspecFiles resolves test files for RSpec commands.
 func resolveRspecFiles(args []string, cwd string) []string {
 	var files []string
 	// Look for _spec.rb files
@@ -44141,8 +42011,7 @@ func resolveRspecFiles(args []string, cwd string) []string {
 	return files
 }
 
-// resolvePathToFileID resolves a file path to a file ID.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvpathtofileid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolvePathToFileID)
+// 🛤️resolvePathToFileID resolves a file path to a file ID.
 func resolvePathToFileID(path string) string {
 	normalized := normalizeHookPath(path)
 	if normalized == "" {
@@ -44152,7 +42021,6 @@ func resolvePathToFileID(path string) string {
 }
 
 // resolveTestNamesToDefinitionIDs resolves test names to definition IDs.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvetestnamestodefinitionids](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveTestNamesToDefinitionIDs)
 
 func resolveTestNamesToDefinitionIDs(testFiles []string, testNames []string) map[string]string {
 	result := make(map[string]string)
@@ -44194,8 +42062,7 @@ func resolveTestNamesToDefinitionIDs(testFiles []string, testNames []string) map
 	return result
 }
 
-// extractToolInputMapFromData extracts tool input map from data.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extracttoolinputmapfromdata](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractToolInputMapFromData)
+// 🗺️extractToolInputMapFromData extracts tool input map from data.
 func extractToolInputMapFromData(data interface{}) map[string]interface{} {
 	if m, ok := data.(map[string]interface{}); ok {
 		if toolInput, ok := m["tool_input"].(map[string]interface{}); ok {
@@ -44218,16 +42085,14 @@ func extractToolInputMapFromData(data interface{}) map[string]interface{} {
 	return nil
 }
 
-// looksLikeFilePath checks if a string looks like a file path.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️lookslikefilepath](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/looksLikeFilePath)
+// 🔶looksLikeFilePath checks if a string looks like a file path.
 func looksLikeFilePath(s string) bool {
 	// Check if string contains path separators or file extensions
 	return strings.Contains(s, "/") || strings.Contains(s, "\\") ||
 		strings.Contains(s, ".") && !strings.HasPrefix(s, ".")
 }
 
-// extractCommandFromStdin extracts command from stdin.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractcommandfromstdin](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractCommandFromStdin)
+// 🔹extractCommandFromStdin extracts command from stdin.
 func extractCommandFromStdin(data json.RawMessage) string {
 	var cmd string
 	if err := json.Unmarshal(data, &cmd); err == nil {
@@ -44245,8 +42110,7 @@ func extractCommandFromStdin(data json.RawMessage) string {
 	return strings.TrimSpace(findNestedStringValue(decoded, "command", "command_line", "commandLine"))
 }
 
-// extractCommandCwdFromInput extracts command and cwd from input.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractcommandcwdfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractCommandCwdFromInput)
+// 🔸extractCommandCwdFromInput extracts command and cwd from input.
 func extractCommandCwdFromInput(input json.RawMessage) (string, string) {
 	decoded := decodeHookInputMap(input)
 	command := extractCommandFromStdin(input)
@@ -44267,8 +42131,7 @@ func extractCommandCwdFromInput(input json.RawMessage) (string, string) {
 	return command, cwd
 }
 
-// resolveTestFilesFromCommand resolves test files from a command.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvetestfilesfromcommand](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveTestFilesFromCommand)
+// 🔺resolveTestFilesFromCommand resolves test files from a command.
 func resolveTestFilesFromCommand(command string, cwd string) []string {
 	command = strings.TrimSpace(command)
 	if command == "" {
@@ -44352,16 +42215,14 @@ func resolveTestFilesFromCommand(command string, cwd string) []string {
 	}
 }
 
-// #endregion 🔖Missing Utility Functions
+// #endregion 💾Missing Utility Functions
 
-// #endregion 🔖Missing Hook Functions
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️generatehooksessionid](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/generateHookSessionID)
+// #endregion 🪨Missing Hook Functions
 func generateHookSessionID() string {
 	return uuid.New().String()
 }
 
-// resolveAllTestDefinitionIDs resolves all test definition IDs.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvealltestdefinitionids](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/resolveAllTestDefinitionIDs)
+// 📖resolveAllTestDefinitionIDs resolves all test definition IDs.
 func resolveAllTestDefinitionIDs(files []string) []string {
 	var ids []string
 	seen := map[string]bool{}
@@ -44416,8 +42277,7 @@ func resolvePHPTestFiles(cwd string) []string {
 	return files
 }
 
-// latestOpenTicket finds the latest open ticket.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️latestopenticket](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/latestOpenTicket)
+// 🧪latestOpenTicket finds the latest open ticket.
 func latestOpenTicket() (*Ticket, error) {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -44441,8 +42301,7 @@ func latestOpenTicket() (*Ticket, error) {
 	return latest, nil
 }
 
-// extractSessionIDFromInput extracts session ID from input.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractsessionidfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractSessionIDFromInput)
+// 🧲extractSessionIDFromInput extracts session ID from input.
 func extractSessionIDFromInput(input json.RawMessage) string {
 	data := decodeHookInputMap(input)
 	if data == nil {
@@ -44474,8 +42333,7 @@ func extractSessionIDFromInput(input json.RawMessage) string {
 	return strings.TrimSpace(base)
 }
 
-// extractLLMFromInput extracts LLM from input.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extractllmfrominput](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractLLMFromInput)
+// 📝extractLLMFromInput extracts LLM from input.
 func extractLLMFromInput(input json.RawMessage) string {
 	data := decodeHookInputMap(input)
 	if data == nil {
@@ -44484,8 +42342,7 @@ func extractLLMFromInput(input json.RawMessage) string {
 	return findNestedStringValue(data, "llm", "model", "model_name", "modelName")
 }
 
-// extractToolNameFromStdin extracts tool name from stdin.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extracttoolnamefromstdin](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractToolNameFromStdin)
+// 🔷extractToolNameFromStdin extracts tool name from stdin.
 func extractToolNameFromStdin(input json.RawMessage) string {
 	data := decodeHookInputMap(input)
 	if data == nil {
@@ -44494,8 +42351,7 @@ func extractToolNameFromStdin(input json.RawMessage) string {
 	return findNestedStringValue(data, "tool", "tool_name", "toolName", "mcp_tool_name", "mcpToolName")
 }
 
-// extractHookEventNameFromStdin extracts hook event name from stdin.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️extracthookeventnamefromstdin](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/extractHookEventNameFromStdin)
+// 📡extractHookEventNameFromStdin extracts hook event name from stdin.
 func extractHookEventNameFromStdin(input json.RawMessage) string {
 	data := decodeHookInputMap(input)
 	if data == nil {
@@ -44510,8 +42366,7 @@ func extractHookEventNameFromStdin(input json.RawMessage) string {
 	)
 }
 
-// ResolveHookEvent resolves a hook event.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️resolvehookevent](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/ResolveHookEvent)
+// 🔶ResolveHookEvent resolves a hook event.
 func ResolveHookEvent(name string, client string, toolName string, input json.RawMessage) (HookEvent, string, error) {
 	if event, err := ValidateHookEvent(name); err == nil {
 		return event, "", nil
@@ -44537,8 +42392,7 @@ func ResolveHookEvent(name string, client string, toolName string, input json.Ra
 	return resolveClaudeCompatibleEvent(name, kind)
 }
 
-// RunHook runs a hook.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️runhook](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/RunHook)
+// 🔹RunHook runs a hook.
 func RunHook(ctx HookContext) HookResult {
 	previousRoot := rootDir
 	defer func() {
@@ -44687,8 +42541,7 @@ func writeSessionHookLog(ctx HookContext, result HookResult, logDir string, sess
 	_ = WriteJSONFile(metaPath, meta)
 }
 
-// SessionMeta holds session metadata.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks✂️sessionmeta](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/SessionMeta)
+// 🔸SessionMeta holds session metadata.
 type SessionMeta struct {
 	ID          string           `json:"id"`
 	URI         string           `json:"uri,omitempty"`
@@ -44701,7 +42554,7 @@ type SessionMeta struct {
 	Plan        *TicketAgentPlan `json:"plan,omitempty"`
 }
 
-// EventEntry represents an event entry in session metadata.
+// 📍EventEntry represents an event entry in session metadata.
 type EventEntry struct {
 	Event  json.RawMessage `json:"event"`
 	Native *struct {
@@ -44714,7 +42567,7 @@ type EventEntry struct {
 	} `json:"response,omitempty"`
 }
 
-// classifyTool classifies a tool name into a ToolKind.
+// 🏛️classifyTool classifies a tool name into a ToolKind.
 func classifyTool(toolName string) ToolKind {
 	switch toolName {
 	case "manage_todo_list", "Task", "task", "todo_tool", "TodoWrite":
@@ -44741,7 +42594,7 @@ func classifyTool(toolName string) ToolKind {
 	}
 }
 
-// classifyCommandKind classifies a command string into a ToolKind.
+// 🔤classifyCommandKind classifies a command string into a ToolKind.
 func classifyCommandKind(command string) ToolKind {
 	trimmed := strings.TrimSpace(command)
 	if trimmed == "" {
@@ -44855,8 +42708,8 @@ func classifyCommandKind(command string) ToolKind {
 	return ToolKindTerminal
 }
 
-// parseTestInfoFromCommand parses test information from a command string.
-// Returns a slice of test names/patterns and a timeout duration string.
+// 🔬parseTestInfoFromCommand parses test information from a command string.
+// ⏰Returns a slice of test names/patterns and a timeout duration string.
 func parseTestInfoFromCommand(command string) ([]string, string) {
 	segment, _ := extractTestSegmentFromCommand(command)
 	if segment != "" {
@@ -44971,8 +42824,7 @@ func parseTestInfoFromCommand(command string) ([]string, string) {
 	return tests, timeout
 }
 
-// mergeTicketAgentPlanSteps merges ticket agent plan steps.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️mergeticketagentplansteps](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/mergeTicketAgentPlanSteps)
+// 🏷️mergeTicketAgentPlanSteps merges ticket agent plan steps.
 func mergeTicketAgentPlanSteps(existing []TicketAgentPlanStep, newSteps []HookPlanStep, second string) []TicketAgentPlanStep {
 	existingByName := map[string]TicketAgentPlanStep{}
 	for _, step := range existing {
@@ -45039,8 +42891,7 @@ func extractHookResultToolInfo(result interface{}) (string, string) {
 	}
 }
 
-// appendUniqueString appends a string to a slice if it's not already present.
-// [🧰repo⌨️cli💻main🔖types🔖cli🔖hooks🛠️appenduniquestring](repo://p/i/repo/b/b/cli/f/main.go/s/Types/s/Cli/s/Hooks/d/i/appendUniqueString)
+// ➡️appendUniqueString appends a string to a slice if it's not already present.
 func appendUniqueString(slice []string, str string) []string {
 	for _, item := range slice {
 		if item == str {
@@ -45050,10 +42901,10 @@ func appendUniqueString(slice []string, str string) []string {
 	return append(slice, str)
 }
 
-// HookLogEntry is an alias for EventEntry for hook log entries.
+// 📜HookLogEntry is an alias for EventEntry for hook log entries.
 type HookLogEntry = EventEntry
 
-// deriveRepoOpFromMCPTool derives repo operation from MCP tool.
+// 🔺deriveRepoOpFromMCPTool derives repo operation from MCP tool.
 func deriveRepoOpFromMCPTool(tool string) string {
 	if tool == "" {
 		return ""
@@ -45070,7 +42921,7 @@ func deriveRepoOpFromMCPTool(tool string) string {
 	return strings.ReplaceAll(op, "_", ".")
 }
 
-// deriveRepoOpFromCLICommand derives repo operation from CLI command.
+// 🔻deriveRepoOpFromCLICommand derives repo operation from CLI command.
 func deriveRepoOpFromCLICommand(cmd string) string {
 	if cmd == "" {
 		return ""
@@ -45116,7 +42967,7 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 	}
 }
 
-// logRepoOperationHook logs repo operation hook.
+// ⬛logRepoOperationHook logs repo operation hook.
 func logRepoOperationHook(hctx HookContext, result interface{}, operation string, t time.Time, msg string) {
 	logDir := strings.TrimSpace(operation)
 	sessionID := strings.TrimSpace(msg)
@@ -45158,7 +43009,7 @@ func logRepoOperationHook(hctx HookContext, result interface{}, operation string
 	_ = WriteJSONFile(metaPath, meta)
 }
 
-// HookResultAgentToolTerminalStarting represents the result of an agent terminal tool starting event.
+// ▶️HookResultAgentToolTerminalStarting represents the result of an agent terminal tool starting event.
 type HookResultAgentToolTerminalStarting struct {
 	HookResultAgentBase
 	Name    string          `json:"name,omitempty"`
@@ -45166,7 +43017,7 @@ type HookResultAgentToolTerminalStarting struct {
 	Command string          `json:"command,omitempty"`
 }
 
-// HookResultAgentToolTerminalEnded represents the result of an agent terminal tool ended event.
+// ⬜HookResultAgentToolTerminalEnded represents the result of an agent terminal tool ended event.
 type HookResultAgentToolTerminalEnded struct {
 	HookResultAgentBase
 	Name       string          `json:"name,omitempty"`
@@ -45179,7 +43030,7 @@ type HookResultAgentToolTerminalEnded struct {
 	Stderr     json.RawMessage `json:"stderr,omitempty"`
 }
 
-// extractPlanStepsFromInput extracts plan steps from input JSON or toolArgs string.
+// 📋extractPlanStepsFromInput extracts plan steps from input JSON or toolArgs string.
 func extractPlanStepsFromInput(input json.RawMessage, toolArgs string) []HookPlanStep {
 	var data map[string]interface{}
 	var source interface{}
@@ -45244,7 +43095,7 @@ func extractPlanStepsFromInput(input json.RawMessage, toolArgs string) []HookPla
 	return steps
 }
 
-// extractSearchFromInput extracts search information from input JSON or toolArgs string.
+// 🔎extractSearchFromInput extracts search information from input JSON or toolArgs string.
 func extractSearchFromInput(input json.RawMessage, toolArgs string) ([]string, []string) {
 	var data map[string]interface{}
 	var source interface{}
@@ -45364,7 +43215,7 @@ func extractSearchFromInput(input json.RawMessage, toolArgs string) ([]string, [
 	return pages, ranges
 }
 
-// extractToolInputFromStdin extracts tool input from stdin JSON.
+// 🟥extractToolInputFromStdin extracts tool input from stdin JSON.
 func extractToolInputFromStdin(input json.RawMessage) json.RawMessage {
 	if input == nil {
 		return nil
@@ -45390,7 +43241,7 @@ func extractToolInputFromStdin(input json.RawMessage) json.RawMessage {
 	return nil
 }
 
-// extractToolResponseFromStdin extracts tool response from stdin JSON.
+// 📩extractToolResponseFromStdin extracts tool response from stdin JSON.
 func extractToolResponseFromStdin(input json.RawMessage) json.RawMessage {
 	if input == nil {
 		return nil
@@ -45745,4 +43596,4 @@ func searchLinesInFile(filePath string, pattern string) []int {
 	return lines
 }
 
-// #endregion 🔖Missing Hook Functions
+// #endregion 📰Missing Hook Functions

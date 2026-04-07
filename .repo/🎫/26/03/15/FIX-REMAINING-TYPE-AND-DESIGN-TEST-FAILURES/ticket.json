@@ -1,5 +1,6 @@
 {
   "title": "Fix Remaining Type And Design Test Failures",
+  "emoji": "🔧",
   "status": "open",
   "description": "Fix remaining 2 failing sketchpad tests (Type and Design). Type test: 2nd call to initHome within same page fails because zip import is silently ignored when kit already exists in store. Design test: kit page shows 0 rows after import despite 20s retry. Need to make initHome check store for existing kits and navigate directly, and make initDesign more robust with store-level checks.",
   "github": {

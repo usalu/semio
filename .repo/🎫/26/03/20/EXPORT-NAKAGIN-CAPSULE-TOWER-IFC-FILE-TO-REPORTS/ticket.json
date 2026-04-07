@@ -1,5 +1,6 @@
 {
   "title": "Export Nakagin Capsule Tower IFC File to Reports",
+  "emoji": "📋",
   "status": "closed",
   "description": "Create a Python script to export the Nakagin Capsule Tower design model from the Metabolism kit to IFC format, similar to the existing GLB export functionality. The script should use the export_design_model function from semio.py with format='.ifc' and save the result to the semio/assets/models folder. This will provide IFC format support alongside the existing GLB export for reports.",
   "summary": "Successfully implemented IFC export functionality for Nakagin Capsule Tower reports. Created export-to-ifc.py script that uses the existing export_design_model function from semio.py with format='.ifc' to export the Nakagin Capsule Tower design from the Metabolism kit to IFC4 format. The script successfully generates a 2.49MB IFC file saved to semio/assets/models/nakagin-capsule-tower.ifc, alongside the existing GLB export. Also created test scripts to validate the IFC export functionality and updated the Python report to include IFC-specific metadata. The IFC file contains proper IFC4 schema with spatial hierarchy and 180 building element proxies representing the tower pieces.",

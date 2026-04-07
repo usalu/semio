@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/algorithms/.storybook/withLanguage.tsx
 // Specs: Provide a global Storybook toolbar selector for algorithm implementation language.
 // Summary: Wraps stories with a LanguageProvider and exposes `useAlgorithmLanguage()` for story UI.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import type { Decorator } from "@storybook/react";
 import * as React from "react";

@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🧰repo⌨️server💻main](repo://p/i/repo/b/b/server/f/main.go)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,17 +6,15 @@
 
 // GraphQL server for the monorepo management API.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Package
-// [🧰repo⌨️server💻main🔖package](repo://p/i/repo/b/b/server/f/main.go/s/Package)
+// #region 🔑Package
 // Package declaration for the repo server binary. MUST be package main.
 package main
 
-// #endregion 🔖Package
+// #endregion 🔑Package
 
-// #region 🔖Imports
-// [🧰repo⌨️server💻main🔖imports](repo://p/i/repo/b/b/server/f/main.go/s/Imports)
+// #region ⛩️Imports
 // Standard library and third-party imports MUST be grouped by origin.
 import (
 	"bufio"
@@ -46,14 +43,12 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// #endregion 🔖Imports
+// #endregion ⛩️Imports
 
-// #region 🔖Config
-// [🧰repo⌨️server💻main🔖config](repo://p/i/repo/b/b/server/f/main.go/s/Config)
+// #region ⏱️Config
 // Server configuration loading from environment variables. MUST provide sensible defaults.
 
-// Config holds all server configuration values.
-// [🧰repo⌨️server💻main🔖config✂️config](repo://p/i/repo/b/b/server/f/main.go/s/Config/d/i/Config)
+// ⚙️Config holds all server configuration values.
 type Config struct {
 	Address          string
 	DatabasePath     string
@@ -64,8 +59,7 @@ type Config struct {
 	RequestBodyLimit int64
 }
 
-// loadConfig reads server configuration from environment variables with fallback defaults.
-// [🧰repo⌨️server💻main🔖config🛠️loadconfig](repo://p/i/repo/b/b/server/f/main.go/s/Config/d/i/loadConfig)
+// 🖥️loadConfig reads server configuration from environment variables with fallback defaults.
 func loadConfig() Config {
 	cwd, _ := os.Getwd()
 	return Config{
@@ -79,8 +73,7 @@ func loadConfig() Config {
 	}
 }
 
-// envOrDefault returns the environment variable value or the fallback if empty.
-// [🧰repo⌨️server💻main🔖config🛠️envordefault](repo://p/i/repo/b/b/server/f/main.go/s/Config/d/i/envOrDefault)
+// 📦envOrDefault returns the environment variable value or the fallback if empty.
 func envOrDefault(key, fallback string) string {
 	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
 		return value
@@ -88,8 +81,7 @@ func envOrDefault(key, fallback string) string {
 	return fallback
 }
 
-// envOrDefaultInt64 returns the parsed int64 environment variable or the fallback.
-// [🧰repo⌨️server💻main🔖config🛠️envordefaultint64](repo://p/i/repo/b/b/server/f/main.go/s/Config/d/i/envOrDefaultInt64)
+// 🔬envOrDefaultInt64 returns the parsed int64 environment variable or the fallback.
 func envOrDefaultInt64(key string, fallback int64) int64 {
 	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
 		if parsed, err := strconv.ParseInt(value, 10, 64); err == nil {
@@ -99,18 +91,17 @@ func envOrDefaultInt64(key string, fallback int64) int64 {
 	return fallback
 }
 
-// #endregion 🔖Config
+// #endregion ⏱️Config
 
-// #region 🔖Models
-// [🧰repo⌨️server💻main🔖models](repo://p/i/repo/b/b/server/f/main.go/s/Models)
+// #region 🎺Models
 // Data model types for tickets, scopes, warnings, breachs, events, and API request/response payloads. MUST mirror the server SQLite schema.
 
-// Ticket represents a tracked work item with lifecycle status.
-// [🧰repo⌨️server💻main🔖models✂️ticket](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/Ticket)
+// 🎫Ticket represents a tracked work item with lifecycle status.
 type Ticket struct {
 	ID        string     `json:"id"`
 	Status    string     `json:"status"`
 	Title     string     `json:"title"`
+	Emoji     string     `json:"emoji"`
 	Prompt    string     `json:"prompt"`
 	Summary   string     `json:"summary"`
 	LLM       string     `json:"llm"`
@@ -121,8 +112,7 @@ type Ticket struct {
 	ClosedAt  *time.Time `json:"closed_at"`
 }
 
-// Scope represents a code region (file, section, or definition) with line range.
-// [🧰repo⌨️server💻main🔖models✂️scope](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/Scope)
+// 📖Scope represents a code region (file, section, or definition) with line range.
 type Scope struct {
 	ID          string    `json:"id"`
 	Kind        string    `json:"kind"`
@@ -134,8 +124,7 @@ type Scope struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// Warning represents a detected issue such as a scope conflict between tickets.
-// [🧰repo⌨️server💻main🔖models✂️warning](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/Warning)
+// 🔭Warning represents a detected issue such as a scope conflict between tickets.
 type Warning struct {
 	ID             string     `json:"id"`
 	Kind           string     `json:"kind"`
@@ -148,8 +137,7 @@ type Warning struct {
 	AcknowledgedBy string     `json:"ack_by"`
 }
 
-// Breach represents a policy breach detected in source code.
-// [🧰repo⌨️server💻main🔖models✂️breach](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/Breach)
+// 📜Breach represents a policy breach detected in source code.
 type Breach struct {
 	ID         string     `json:"id"`
 	Kind       string     `json:"kind"`
@@ -166,8 +154,7 @@ type Breach struct {
 	ResolvedAt *time.Time `json:"resolved_at"`
 }
 
-// Event represents a system event persisted to the event log.
-// [🧰repo⌨️server💻main🔖models✂️event](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/Event)
+// 📡Event represents a system event persisted to the event log.
 type Event struct {
 	ID        string    `json:"id"`
 	Type      string    `json:"type"`
@@ -176,22 +163,19 @@ type Event struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-// LineRange represents a contiguous range of line numbers.
-// [🧰repo⌨️server💻main🔖models✂️linerange](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/LineRange)
+// 🔢LineRange represents a contiguous range of line numbers.
 type LineRange struct {
 	Start int
 	End   int
 }
 
-// DiffHunk represents a single hunk with old and new line ranges from a unified diff.
-// [🧰repo⌨️server💻main🔖models✂️diffhunk](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/DiffHunk)
+// 🔷DiffHunk represents a single hunk with old and new line ranges from a unified diff.
 type DiffHunk struct {
 	OldRange LineRange
 	NewRange LineRange
 }
 
-// DiffFile represents a single file entry in a unified diff with its hunks.
-// [🧰repo⌨️server💻main🔖models✂️difffile](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/DiffFile)
+// 📍DiffFile represents a single file entry in a unified diff with its hunks.
 type DiffFile struct {
 	Path    string
 	Hunks   []DiffHunk
@@ -199,21 +183,18 @@ type DiffFile struct {
 	Created bool
 }
 
-// DiffResult aggregates all parsed diff files from a patch.
-// [🧰repo⌨️server💻main🔖models✂️diffresult](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/DiffResult)
+// 🔬DiffResult aggregates all parsed diff files from a patch.
 type DiffResult struct {
 	Files []DiffFile
 }
 
-// FileSnapshot holds the full content of a file for snapshot-based indexing.
-// [🧰repo⌨️server💻main🔖models✂️filesnapshot](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/FileSnapshot)
+// 📸FileSnapshot holds the full content of a file for snapshot-based indexing.
 type FileSnapshot struct {
 	Path    string `json:"path"`
 	Content string `json:"content"`
 }
 
-// TicketOpenRequest is the JSON payload for opening a new ticket.
-// [🧰repo⌨️server💻main🔖models✂️ticketopenrequest](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/TicketOpenRequest)
+// 📦TicketOpenRequest is the JSON payload for opening a new ticket.
 type TicketOpenRequest struct {
 	TicketID    string `json:"ticket_id"`
 	Title       string `json:"title"`
@@ -224,16 +205,14 @@ type TicketOpenRequest struct {
 	GitHubIssue string `json:"github_issue"`
 }
 
-// TicketCloseRequest is the JSON payload for closing a ticket.
-// [🧰repo⌨️server💻main🔖models✂️ticketcloserequest](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/TicketCloseRequest)
+// 📨TicketCloseRequest is the JSON payload for closing a ticket.
 type TicketCloseRequest struct {
 	TicketID string   `json:"ticket_id"`
 	Summary  string   `json:"summary"`
 	Files    []string `json:"files"`
 }
 
-// TicketReopenRequest is the JSON payload for reopening a closed ticket.
-// [🧰repo⌨️server💻main🔖models✂️ticketreopenrequest](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/TicketReopenRequest)
+// 🔓TicketReopenRequest is the JSON payload for reopening a closed ticket.
 type TicketReopenRequest struct {
 	TicketID string `json:"ticket_id"`
 	Prompt   string `json:"prompt"`
@@ -241,8 +220,7 @@ type TicketReopenRequest struct {
 	Title    string `json:"title"`
 }
 
-// DiffIngestRequest is the JSON payload for ingesting a diff patch.
-// [🧰repo⌨️server💻main🔖models✂️diffingestrequest](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/DiffIngestRequest)
+// 📋DiffIngestRequest is the JSON payload for ingesting a diff patch.
 type DiffIngestRequest struct {
 	TicketID  string         `json:"ticket_id"`
 	RepoID    string         `json:"repo_id"`
@@ -250,8 +228,7 @@ type DiffIngestRequest struct {
 	Snapshots []FileSnapshot `json:"snapshots"`
 }
 
-// DiffIngestResponse holds the results of a diff ingestion operation.
-// [🧰repo⌨️server💻main🔖models✂️diffingestresponse](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/DiffIngestResponse)
+// 📩DiffIngestResponse holds the results of a diff ingestion operation.
 type DiffIngestResponse struct {
 	ChangedFiles  []string  `json:"changed_files"`
 	ClaimedScopes []string  `json:"claimed_scopes"`
@@ -260,28 +237,24 @@ type DiffIngestResponse struct {
 	Blockers      []string  `json:"blockers"`
 }
 
-// IndexFileRequest is the JSON payload for indexing a single file.
-// [🧰repo⌨️server💻main🔖models✂️indexfilerequest](repo://p/i/repo/b/b/server/f/main.go/s/Models/d/i/IndexFileRequest)
+// 📄IndexFileRequest is the JSON payload for indexing a single file.
 type IndexFileRequest struct {
 	FilePath string `json:"file_path"`
 	Content  string `json:"content"`
 }
 
-// #endregion 🔖Models
+// #endregion 🎺Models
 
-// #region 🔖Database
-// [🧰repo⌨️server💻main🔖database](repo://p/i/repo/b/b/server/f/main.go/s/Database)
+// #region 🔷Database
 // SQLite database layer for persistent storage of tickets, scopes, claims, warnings, breachs, and events. MUST use WAL journal mode.
 
-// Database wraps a sql.DB connection to the SQLite store.
-// [🧰repo⌨️server💻main🔖database✂️database](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/Database)
+// 🔌Database wraps a sql.DB connection to the SQLite store.
 type Database struct {
 	db *sql.DB
 }
 
-// openDatabase opens an SQLite database and runs schema migrations.
-// MUST enable WAL journal mode and foreign keys.
-// [🧰repo⌨️server💻main🔖database🛠️opendatabase](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/openDatabase)
+// 🗄️openDatabase opens an SQLite database and runs schema migrations.
+// ⏹️MUST enable WAL journal mode and foreign keys.
 func openDatabase(path string) (*Database, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
@@ -300,12 +273,11 @@ func openDatabase(path string) (*Database, error) {
 	return store, nil
 }
 
-// migrate creates database tables if they do not already exist.
-// [🧰repo⌨️server💻main🔖database🛠️migrate](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/migrate)
+// 🆕migrate creates database tables if they do not already exist.
 func (d *Database) migrate() error {
 	statements := []string{
 		"CREATE TABLE IF NOT EXISTS repos (id TEXT PRIMARY KEY, name TEXT, path TEXT, created_at DATETIME)",
-		"CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, status TEXT, title TEXT, prompt TEXT, summary TEXT, llm TEXT, ui TEXT, author TEXT, github_issue TEXT, created_at DATETIME, closed_at DATETIME)",
+		"CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, status TEXT, title TEXT, emoji TEXT, prompt TEXT, summary TEXT, llm TEXT, ui TEXT, author TEXT, github_issue TEXT, created_at DATETIME, closed_at DATETIME)",
 		"CREATE TABLE IF NOT EXISTS scopes (id TEXT PRIMARY KEY, kind TEXT, file_path TEXT, section_path TEXT, definition_name TEXT, start_line INT, end_line INT, updated_at DATETIME)",
 		"CREATE TABLE IF NOT EXISTS ticket_claims (ticket_id TEXT, scope_id TEXT, claim_type TEXT, first_seen_at DATETIME, last_seen_at DATETIME, PRIMARY KEY (ticket_id, scope_id))",
 		"CREATE TABLE IF NOT EXISTS breachs (id TEXT PRIMARY KEY, kind TEXT, priority TEXT, scope_id TEXT, file_path TEXT, line INT, column INT, summary TEXT, excerpt TEXT, autofixable BOOL, detected_at DATETIME, ticket_id TEXT, resolved_at DATETIME)",
@@ -321,31 +293,27 @@ func (d *Database) migrate() error {
 	return nil
 }
 
-// Close closes the underlying SQL database connection.
-// MUST release all database resources.
-// [🧰repo⌨️server💻main🔖database🛠️close](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/Close)
+// 📪Close closes the underlying SQL database connection.
+// 📪MUST release all database resources.
 func (d *Database) Close() error {
 	return d.db.Close()
 }
 
-// insertEvent persists a new event record.
-// [🧰repo⌨️server💻main🔖database🛠️insertevent](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/insertEvent)
+// 💿insertEvent persists a new event record.
 func (d *Database) insertEvent(ctx context.Context, event Event) error {
 	_, err := d.db.ExecContext(ctx, "INSERT INTO events (id, type, source, payload_json, created_at) VALUES (?, ?, ?, ?, ?)", event.ID, event.Type, event.Source, event.Payload, event.CreatedAt.UTC())
 	return err
 }
 
-// upsertTicket inserts or updates a ticket record.
-// [🧰repo⌨️server💻main🔖database🛠️upsertticket](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/upsertTicket)
+// 🎫upsertTicket inserts or updates a ticket record.
 func (d *Database) upsertTicket(ctx context.Context, ticket Ticket) error {
-	_, err := d.db.ExecContext(ctx, "INSERT INTO tickets (id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status=excluded.status, title=excluded.title, prompt=excluded.prompt, summary=excluded.summary, llm=excluded.llm, ui=excluded.ui, author=excluded.author, github_issue=excluded.github_issue, closed_at=excluded.closed_at", ticket.ID, ticket.Status, ticket.Title, ticket.Prompt, ticket.Summary, ticket.LLM, ticket.Client, ticket.Author, ticket.GitHub, ticket.CreatedAt.UTC(), ticket.ClosedAt)
+	_, err := d.db.ExecContext(ctx, "INSERT INTO tickets (id, status, title, emoji, prompt, summary, llm, ui, author, github_issue, created_at, closed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status=excluded.status, title=excluded.title, emoji=excluded.emoji, prompt=excluded.prompt, summary=excluded.summary, llm=excluded.llm, ui=excluded.ui, author=excluded.author, github_issue=excluded.github_issue, closed_at=excluded.closed_at", ticket.ID, ticket.Status, ticket.Title, ticket.Emoji, ticket.Prompt, ticket.Summary, ticket.LLM, ticket.Client, ticket.Author, ticket.GitHub, ticket.CreatedAt.UTC(), ticket.ClosedAt)
 	return err
 }
 
-// listTickets queries tickets optionally filtered by status.
-// [🧰repo⌨️server💻main🔖database🛠️listtickets](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/listTickets)
+// 🧹listTickets queries tickets optionally filtered by status.
 func (d *Database) listTickets(ctx context.Context, status string) ([]Ticket, error) {
-	query := "SELECT id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at FROM tickets"
+	query := "SELECT id, status, title, emoji, prompt, summary, llm, ui, author, github_issue, created_at, closed_at FROM tickets"
 	args := []interface{}{}
 	if status != "" {
 		query += " WHERE status = ?"
@@ -360,7 +328,7 @@ func (d *Database) listTickets(ctx context.Context, status string) ([]Ticket, er
 	for rows.Next() {
 		var ticket Ticket
 		var closedAt sql.NullTime
-		if err := rows.Scan(&ticket.ID, &ticket.Status, &ticket.Title, &ticket.Prompt, &ticket.Summary, &ticket.LLM, &ticket.Client, &ticket.Author, &ticket.GitHub, &ticket.CreatedAt, &closedAt); err != nil {
+		if err := rows.Scan(&ticket.ID, &ticket.Status, &ticket.Title, &ticket.Emoji, &ticket.Prompt, &ticket.Summary, &ticket.LLM, &ticket.Client, &ticket.Author, &ticket.GitHub, &ticket.CreatedAt, &closedAt); err != nil {
 			return nil, err
 		}
 		if closedAt.Valid {
@@ -371,13 +339,12 @@ func (d *Database) listTickets(ctx context.Context, status string) ([]Ticket, er
 	return tickets, nil
 }
 
-// getTicket retrieves a single ticket by ID.
-// [🧰repo⌨️server💻main🔖database🛠️getticket](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/getTicket)
+// 🔷getTicket retrieves a single ticket by ID.
 func (d *Database) getTicket(ctx context.Context, ticketID string) (*Ticket, error) {
-	row := d.db.QueryRowContext(ctx, "SELECT id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at FROM tickets WHERE id = ?", ticketID)
+	row := d.db.QueryRowContext(ctx, "SELECT id, status, title, emoji, prompt, summary, llm, ui, author, github_issue, created_at, closed_at FROM tickets WHERE id = ?", ticketID)
 	var ticket Ticket
 	var closedAt sql.NullTime
-	if err := row.Scan(&ticket.ID, &ticket.Status, &ticket.Title, &ticket.Prompt, &ticket.Summary, &ticket.LLM, &ticket.Client, &ticket.Author, &ticket.GitHub, &ticket.CreatedAt, &closedAt); err != nil {
+	if err := row.Scan(&ticket.ID, &ticket.Status, &ticket.Title, &ticket.Emoji, &ticket.Prompt, &ticket.Summary, &ticket.LLM, &ticket.Client, &ticket.Author, &ticket.GitHub, &ticket.CreatedAt, &closedAt); err != nil {
 		return nil, err
 	}
 	if closedAt.Valid {
@@ -386,8 +353,7 @@ func (d *Database) getTicket(ctx context.Context, ticketID string) (*Ticket, err
 	return &ticket, nil
 }
 
-// replaceScopes deletes existing scopes for the file and inserts the new ones.
-// [🧰repo⌨️server💻main🔖database🛠️replacescopes](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/replaceScopes)
+// 🗑️replaceScopes deletes existing scopes for the file and inserts the new ones.
 func (d *Database) replaceScopes(ctx context.Context, filePath string, scopes []Scope) error {
 	if _, err := d.db.ExecContext(ctx, "DELETE FROM scopes WHERE file_path = ?", filePath); err != nil {
 		return err
@@ -400,8 +366,7 @@ func (d *Database) replaceScopes(ctx context.Context, filePath string, scopes []
 	return nil
 }
 
-// listScopesByFile retrieves all scopes for a given file path.
-// [🧰repo⌨️server💻main🔖database🛠️listscopesbyfile](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/listScopesByFile)
+// 🔭listScopesByFile retrieves all scopes for a given file path.
 func (d *Database) listScopesByFile(ctx context.Context, filePath string) ([]Scope, error) {
 	rows, err := d.db.QueryContext(ctx, "SELECT id, kind, file_path, section_path, definition_name, start_line, end_line, updated_at FROM scopes WHERE file_path = ?", filePath)
 	if err != nil {
@@ -419,15 +384,13 @@ func (d *Database) listScopesByFile(ctx context.Context, filePath string) ([]Sco
 	return scopes, nil
 }
 
-// upsertClaim inserts or updates a ticket-scope claim record.
-// [🧰repo⌨️server💻main🔖database🛠️upsertclaim](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/upsertClaim)
+// 🔁upsertClaim inserts or updates a ticket-scope claim record.
 func (d *Database) upsertClaim(ctx context.Context, ticketID string, scopeID string, claimType string, now time.Time) error {
 	_, err := d.db.ExecContext(ctx, "INSERT INTO ticket_claims (ticket_id, scope_id, claim_type, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(ticket_id, scope_id) DO UPDATE SET claim_type=excluded.claim_type, last_seen_at=excluded.last_seen_at", ticketID, scopeID, claimType, now.UTC(), now.UTC())
 	return err
 }
 
-// listClaimsByTicket retrieves all scopes claimed by a ticket.
-// [🧰repo⌨️server💻main🔖database🛠️listclaimsbyticket](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/listClaimsByTicket)
+// 📋listClaimsByTicket retrieves all scopes claimed by a ticket.
 func (d *Database) listClaimsByTicket(ctx context.Context, ticketID string) ([]Scope, error) {
 	rows, err := d.db.QueryContext(ctx, "SELECT scopes.id, scopes.kind, scopes.file_path, scopes.section_path, scopes.definition_name, scopes.start_line, scopes.end_line, scopes.updated_at FROM scopes JOIN ticket_claims ON scopes.id = ticket_claims.scope_id WHERE ticket_claims.ticket_id = ?", ticketID)
 	if err != nil {
@@ -445,8 +408,7 @@ func (d *Database) listClaimsByTicket(ctx context.Context, ticketID string) ([]S
 	return scopes, nil
 }
 
-// replaceWarnings removes conflict warnings and inserts the new set.
-// [🧰repo⌨️server💻main🔖database🛠️replacewarnings](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/replaceWarnings)
+// ➖replaceWarnings removes conflict warnings and inserts the new set.
 func (d *Database) replaceWarnings(ctx context.Context, warnings []Warning) error {
 	if _, err := d.db.ExecContext(ctx, "DELETE FROM warnings WHERE kind = ?", "conflict"); err != nil {
 		return err
@@ -459,8 +421,7 @@ func (d *Database) replaceWarnings(ctx context.Context, warnings []Warning) erro
 	return nil
 }
 
-// listWarnings retrieves warnings optionally filtered by ticket ID.
-// [🧰repo⌨️server💻main🔖database🛠️listwarnings](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/listWarnings)
+// ⚠️listWarnings retrieves warnings optionally filtered by ticket ID.
 func (d *Database) listWarnings(ctx context.Context, ticketID string) ([]Warning, error) {
 	query := "SELECT id, kind, severity, message, ticket_id, scope_id, created_at, acknowledged_at, ack_by FROM warnings"
 	args := []interface{}{}
@@ -488,8 +449,7 @@ func (d *Database) listWarnings(ctx context.Context, ticketID string) ([]Warning
 	return warnings, nil
 }
 
-// listBreachs retrieves breachs optionally filtered by ticket ID.
-// [🧰repo⌨️server💻main🔖database🛠️listbreachs](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/listBreachs)
+// 🔶listBreachs retrieves breachs optionally filtered by ticket ID.
 func (d *Database) listBreachs(ctx context.Context, ticketID string) ([]Breach, error) {
 	query := "SELECT id, kind, priority, scope_id, file_path, line, column, summary, excerpt, autofixable, detected_at, ticket_id, resolved_at FROM breachs"
 	args := []interface{}{}
@@ -527,8 +487,7 @@ func (d *Database) listBreachs(ctx context.Context, ticketID string) ([]Breach, 
 	return breachs, nil
 }
 
-// listConflicts finds scopes claimed by more than one open ticket.
-// [🧰repo⌨️server💻main🔖database🛠️listconflicts](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/listConflicts)
+// 📬listConflicts finds scopes claimed by more than one open ticket.
 func (d *Database) listConflicts(ctx context.Context) ([]struct {
 	ScopeID string
 	Tickets []string
@@ -555,23 +514,22 @@ func (d *Database) listConflicts(ctx context.Context) ([]struct {
 	}
 	return results, nil
 }
-// [🧰repo⌨️server💻main🔖database🛠️addcontributorwork](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/addContributorWork)
-// addContributorWork holds the data fields for a addContributorWork record.
+
+// 🤝addContributorWork holds the data fields for a addContributorWork record.
 func (d *Database) addContributorWork(ctx context.Context, github string, kind string, itemID string) error {
 	_, err := d.db.ExecContext(ctx, "INSERT OR REPLACE INTO contributor_work (github, kind, item_id) VALUES (?, ?, ?)", github, kind, itemID)
 	return err
 }
 
-// removeContributorWork holds the data fields for a removeContributorWork record.
-// [🧰repo⌨️server💻main🔖database🛠️removecontributorwork](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/removeContributorWork)
+// 🚚removeContributorWork holds the data fields for a removeContributorWork record.
 func (d *Database) removeContributorWork(ctx context.Context, github string, kindsAndIDs []struct{ Kind, ID string }) error {
 	for _, kv := range kindsAndIDs {
 		_, _ = d.db.ExecContext(ctx, "DELETE FROM contributor_work WHERE github = ? AND kind = ? AND item_id = ?", github, kv.Kind, kv.ID)
 	}
 	return nil
 }
-// [🧰repo⌨️server💻main🔖database🛠️listcontributorsonitem](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/listContributorsOnItem)
-// listContributorsOnItem holds the data fields for a listContributorsOnItem record.
+
+// 🔖listContributorsOnItem holds the data fields for a listContributorsOnItem record.
 func (d *Database) listContributorsOnItem(ctx context.Context, kind string, itemID string) ([]string, error) {
 	rows, err := d.db.QueryContext(ctx, "SELECT github FROM contributor_work WHERE kind = ? AND item_id = ?", kind, itemID)
 	if err != nil {
@@ -588,8 +546,8 @@ func (d *Database) listContributorsOnItem(ctx context.Context, kind string, item
 	}
 	return out, nil
 }
-// [🧰repo⌨️server💻main🔖database🛠️removecontributorworkforcheckpoint](repo://p/i/repo/b/b/server/f/main.go/s/Database/d/i/removeContributorWorkForCheckpoint)
-// removeContributorWorkForCheckpoint holds the data fields for a removeContributorWorkForCheckpoint record.
+
+// 💾removeContributorWorkForCheckpoint holds the data fields for a removeContributorWorkForCheckpoint record.
 func (d *Database) removeContributorWorkForCheckpoint(ctx context.Context, github string, files []string) error {
 	for _, f := range files {
 		_, _ = d.db.ExecContext(ctx, "DELETE FROM contributor_work WHERE github = ? AND kind = 'file' AND item_id = ?", github, f)
@@ -597,18 +555,15 @@ func (d *Database) removeContributorWorkForCheckpoint(ctx context.Context, githu
 	return nil
 }
 
-// #endregion 🔖Database
+// #endregion 🔷Database
 
-// #region 🔖EventBus
-// [🧰repo⌨️server💻main🔖eventbus](repo://p/i/repo/b/b/server/f/main.go/s/EventBus)
+// #region ✨EventBus
 // Asynchronous in-process event bus for decoupled event publishing and subscription. MUST persist events to the database before dispatching.
 
-// EventHandler is a callback invoked when an event of a subscribed type is published.
-// [🧰repo⌨️server💻main🔖eventbus✂️eventhandler](repo://p/i/repo/b/b/server/f/main.go/s/EventBus/d/i/EventHandler)
+// 🎯EventHandler is a callback invoked when an event of a subscribed type is published.
 type EventHandler func(context.Context, Event)
 
-// EventBus is a buffered channel-based event dispatcher with persistent storage.
-// [🧰repo⌨️server💻main🔖eventbus✂️eventbus](repo://p/i/repo/b/b/server/f/main.go/s/EventBus/d/i/EventBus)
+// 📡EventBus is a buffered channel-based event dispatcher with persistent storage.
 type EventBus struct {
 	ch       chan Event
 	handlers map[string][]EventHandler
@@ -618,9 +573,8 @@ type EventBus struct {
 	wg       sync.WaitGroup
 }
 
-// NewEventBus creates a new event bus backed by the given database.
-// MUST initialize the channel buffer to 256 and create a cancellable context.
-// [🧰repo⌨️server💻main🔖eventbus🛠️neweventbus](repo://p/i/repo/b/b/server/f/main.go/s/EventBus/d/i/NewEventBus)
+// 🗄️NewEventBus creates a new event bus backed by the given database.
+// 🆕MUST initialize the channel buffer to 256 and create a cancellable context.
 func NewEventBus(db *Database) *EventBus {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &EventBus{
@@ -632,16 +586,14 @@ func NewEventBus(db *Database) *EventBus {
 	}
 }
 
-// Subscribe registers a handler for the given event type.
-// MUST append the handler to the handlers map.
-// [🧰repo⌨️server💻main🔖eventbus🛠️subscribe](repo://p/i/repo/b/b/server/f/main.go/s/EventBus/d/i/Subscribe)
+// 🏷️Subscribe registers a handler for the given event type.
+// ➕MUST append the handler to the handlers map.
 func (b *EventBus) Subscribe(eventType string, handler EventHandler) {
 	b.handlers[eventType] = append(b.handlers[eventType], handler)
 }
 
-// Publish persists an event and dispatches it to subscribers.
-// MUST store the event in the database before sending to the channel.
-// [🧰repo⌨️server💻main🔖eventbus🛠️publish](repo://p/i/repo/b/b/server/f/main.go/s/EventBus/d/i/Publish)
+// 📬Publish persists an event and dispatches it to subscribers.
+// 💾MUST store the event in the database before sending to the channel.
 func (b *EventBus) Publish(ctx context.Context, eventType string, source string, payload interface{}) error {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
@@ -665,9 +617,8 @@ func (b *EventBus) Publish(ctx context.Context, eventType string, source string,
 	}
 }
 
-// Start launches the event dispatch goroutine.
-// MUST consume events from the channel and invoke registered handlers.
-// [🧰repo⌨️server💻main🔖eventbus🛠️start](repo://p/i/repo/b/b/server/f/main.go/s/EventBus/d/i/Start)
+// ▶️Start launches the event dispatch goroutine.
+// ▶️MUST consume events from the channel and invoke registered handlers.
 func (b *EventBus) Start() {
 	b.wg.Add(1)
 	go func() {
@@ -687,26 +638,22 @@ func (b *EventBus) Start() {
 	}()
 }
 
-// Stop cancels the event bus context and waits for the dispatch goroutine to finish.
-// MUST block until the goroutine exits.
-// [🧰repo⌨️server💻main🔖eventbus🛠️stop](repo://p/i/repo/b/b/server/f/main.go/s/EventBus/d/i/Stop)
+// ⏹️Stop cancels the event bus context and waits for the dispatch goroutine to finish.
+// ⏹️MUST block until the goroutine exits.
 func (b *EventBus) Stop() {
 	b.cancel()
 	b.wg.Wait()
 }
 
-// #endregion 🔖EventBus
+// #endregion ✨EventBus
 
-// #region 🔖DiffParsing
-// [🧰repo⌨️server💻main🔖diffparsing](repo://p/i/repo/b/b/server/f/main.go/s/DiffParsing)
+// #region 🐍DiffParsing
 // Unified diff parser that extracts file paths and hunk line ranges from patch text. MUST handle standard git diff output format.
 
-// hunkHeader is a regex pattern matching unified diff hunk headers.
-// [🧰repo⌨️server💻main🔖diffparsing🪨hunkheader](repo://p/i/repo/b/b/server/f/main.go/s/DiffParsing/d/i/hunkHeader)
+// 🧩hunkHeader is a regex pattern matching unified diff hunk headers.
 var hunkHeader = regexp.MustCompile(`@@ -([0-9]+)(?:,([0-9]+))? \+([0-9]+)(?:,([0-9]+))? @@`)
 
-// parseUnifiedDiff extracts file paths and hunk ranges from a unified diff patch.
-// [🧰repo⌨️server💻main🔖diffparsing🛠️parseunifieddiff](repo://p/i/repo/b/b/server/f/main.go/s/DiffParsing/d/i/parseUnifiedDiff)
+// 🧲parseUnifiedDiff extracts file paths and hunk ranges from a unified diff patch.
 func parseUnifiedDiff(patch string) DiffResult {
 	scanner := bufio.NewScanner(strings.NewReader(patch))
 	var files []DiffFile
@@ -750,15 +697,13 @@ func parseUnifiedDiff(patch string) DiffResult {
 	return DiffResult{Files: files}
 }
 
-// parseHunkInt parses a hunk header integer value.
-// [🧰repo⌨️server💻main🔖diffparsing🛠️parsehunkint](repo://p/i/repo/b/b/server/f/main.go/s/DiffParsing/d/i/parseHunkInt)
+// 🔬parseHunkInt parses a hunk header integer value.
 func parseHunkInt(value string) int {
 	parsed, _ := strconv.Atoi(value)
 	return parsed
 }
 
-// parseHunkIntWithDefault parses a hunk header integer or returns the fallback.
-// [🧰repo⌨️server💻main🔖diffparsing🛠️parsehunkintwithdefault](repo://p/i/repo/b/b/server/f/main.go/s/DiffParsing/d/i/parseHunkIntWithDefault)
+// 🔷parseHunkIntWithDefault parses a hunk header integer or returns the fallback.
 func parseHunkIntWithDefault(value string, fallback int) int {
 	if value == "" {
 		return fallback
@@ -770,22 +715,19 @@ func parseHunkIntWithDefault(value string, fallback int) int {
 	return parsed
 }
 
-// #endregion 🔖DiffParsing
+// #endregion 🐍DiffParsing
 
-// #region 🔖Indexing
-// [🧰repo⌨️server💻main🔖indexing](repo://p/i/repo/b/b/server/f/main.go/s/Indexing)
+// #region 📦Indexing
 // Source code indexer that delegates to the shared repo/go parsing package. MUST support region-marker-based sections and language-specific definition patterns.
 
-// IndexCache holds in-memory caches of indexed scopes partitioned by file path.
-// [🧰repo⌨️server💻main🔖indexing✂️indexcache](repo://p/i/repo/b/b/server/f/main.go/s/Indexing/d/i/IndexCache)
+// 🔭IndexCache holds in-memory caches of indexed scopes partitioned by file path.
 type IndexCache struct {
 	Sections    map[string][]Scope
 	Definitions map[string][]Scope
 	Files       map[string]Scope
 }
 
-// newIndexCache creates an empty IndexCache with initialized maps.
-// [🧰repo⌨️server💻main🔖indexing🛠️newindexcache](repo://p/i/repo/b/b/server/f/main.go/s/Indexing/d/i/newIndexCache)
+// 🆕newIndexCache creates an empty IndexCache with initialized maps.
 func newIndexCache() IndexCache {
 	return IndexCache{
 		Sections:    map[string][]Scope{},
@@ -794,8 +736,7 @@ func newIndexCache() IndexCache {
 	}
 }
 
-// buildScopesForFile delegates to the shared repopkg.BuildScopesForFile and converts ScopeEntry to Scope.
-// [🧰repo⌨️server💻main🔖indexing🛠️buildscopesforfile](repo://p/i/repo/b/b/server/f/main.go/s/Indexing/d/i/buildScopesForFile)
+// 🏗️buildScopesForFile delegates to the shared repopkg.BuildScopesForFile and converts ScopeEntry to Scope.
 func buildScopesForFile(path string, content string) []Scope {
 	now := time.Now().UTC()
 	entries := repopkg.BuildScopesForFile(path, content)
@@ -815,13 +756,11 @@ func buildScopesForFile(path string, content string) []Scope {
 	return scopes
 }
 
-// #endregion 🔖Indexing
-// #region 🔖Claims
-// [🧰repo⌨️server💻main🔖claims](repo://p/i/repo/b/b/server/f/main.go/s/Claims)
+// #endregion 📦Indexing
+// #region 🗡️Claims
 // Scope claim mapping logic that associates diff hunks with overlapping scopes. MUST detect multi-ticket conflicts.
 
-// mapClaims maps diff hunks to overlapping scopes and returns claimed IDs.
-// [🧰repo⌨️server💻main🔖claims🛠️mapclaims](repo://p/i/repo/b/b/server/f/main.go/s/Claims/d/i/mapClaims)
+// 🔭mapClaims maps diff hunks to overlapping scopes and returns claimed IDs.
 func mapClaims(scopes []Scope, diff DiffResult) ([]string, map[string][]Scope) {
 	claimed := map[string][]Scope{}
 	var claimedIDs []string
@@ -850,8 +789,7 @@ func mapClaims(scopes []Scope, diff DiffResult) ([]string, map[string][]Scope) {
 	return claimedIDs, claimed
 }
 
-// filterScopesByFile returns scopes matching the given file path.
-// [🧰repo⌨️server💻main🔖claims🛠️filterscopesbyfile](repo://p/i/repo/b/b/server/f/main.go/s/Claims/d/i/filterScopesByFile)
+// 🧹filterScopesByFile returns scopes matching the given file path.
 func filterScopesByFile(scopes []Scope, filePath string) []Scope {
 	var filtered []Scope
 	for _, scope := range scopes {
@@ -862,8 +800,7 @@ func filterScopesByFile(scopes []Scope, filePath string) []Scope {
 	return filtered
 }
 
-// rangesOverlap tests whether two line ranges overlap.
-// [🧰repo⌨️server💻main🔖claims🛠️rangesoverlap](repo://p/i/repo/b/b/server/f/main.go/s/Claims/d/i/rangesOverlap)
+// 🧪rangesOverlap tests whether two line ranges overlap.
 func rangesOverlap(a LineRange, b LineRange) bool {
 	if a.Start == 0 || b.Start == 0 {
 		return false
@@ -871,8 +808,7 @@ func rangesOverlap(a LineRange, b LineRange) bool {
 	return a.Start <= b.End && b.Start <= a.End
 }
 
-// appendIfMissing appends a string to a slice only if it is not already present.
-// [🧰repo⌨️server💻main🔖claims🛠️appendifmissing](repo://p/i/repo/b/b/server/f/main.go/s/Claims/d/i/appendIfMissing)
+// 🔤appendIfMissing appends a string to a slice only if it is not already present.
 func appendIfMissing(list []string, value string) []string {
 	for _, item := range list {
 		if item == value {
@@ -882,14 +818,12 @@ func appendIfMissing(list []string, value string) []string {
 	return append(list, value)
 }
 
-// #endregion 🔖Claims
+// #endregion 🗡️Claims
 
-// #region 🔖Warnings
-// [🧰repo⌨️server💻main🔖warnings](repo://p/i/repo/b/b/server/f/main.go/s/Warnings)
+// #region 🎊Warnings
 // Conflict warning generation from multi-ticket scope overlaps. MUST produce error-severity warnings for blocking conflicts.
 
-// buildConflictWarnings creates warning records from detected scope conflicts.
-// [🧰repo⌨️server💻main🔖warnings🛠️buildconflictwarnings](repo://p/i/repo/b/b/server/f/main.go/s/Warnings/d/i/buildConflictWarnings)
+// 💿buildConflictWarnings creates warning records from detected scope conflicts.
 func buildConflictWarnings(conflicts []struct {
 	ScopeID string
 	Tickets []string
@@ -910,14 +844,12 @@ func buildConflictWarnings(conflicts []struct {
 	return warnings
 }
 
-// #endregion 🔖Warnings
+// #endregion 🎊Warnings
 
-// #region 🔖Server
-// [🧰repo⌨️server💻main🔖server](repo://p/i/repo/b/b/server/f/main.go/s/Server)
+// #region 🗻Server
 // HTTP server with ticket lifecycle, diff ingestion, indexing, and webhook endpoints. MUST enforce authentication on mutating routes.
 
-// Server is the main HTTP server holding configuration, database, event bus, and caches.
-// [🧰repo⌨️server💻main🔖server✂️server](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/Server)
+// 🗄️Server is the main HTTP server holding configuration, database, event bus, and caches.
 type Server struct {
 	config      Config
 	db          *Database
@@ -929,9 +861,8 @@ type Server struct {
 	ghLock      sync.Mutex
 }
 
-// NewServer creates a new Server with the given config, database, and event bus.
-// MUST initialize the index cache and GitHub comment cache.
-// [🧰repo⌨️server💻main🔖server🛠️newserver](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/NewServer)
+// ⚙️NewServer creates a new Server with the given config, database, and event bus.
+// 💾MUST initialize the index cache and GitHub comment cache.
 func NewServer(config Config, db *Database, bus *EventBus) *Server {
 	return &Server{
 		config:      config,
@@ -943,14 +874,12 @@ func NewServer(config Config, db *Database, bus *EventBus) *Server {
 	}
 }
 
-// newRequestContext creates a request-scoped context with a 15-second timeout.
-// [🧰repo⌨️server💻main🔖server🛠️newrequestcontext](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/newRequestContext)
+// 📨newRequestContext creates a request-scoped context with a 15-second timeout.
 func (s *Server) newRequestContext(r *http.Request) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(r.Context(), 15*time.Second)
 }
 
-// requireAuth checks the bearer token against the configured server token.
-// [🧰repo⌨️server💻main🔖server🛠️requireauth](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/requireAuth)
+// 🖥️requireAuth checks the bearer token against the configured server token.
 func (s *Server) requireAuth(r *http.Request) bool {
 	if s.config.Token == "" {
 		return true
@@ -966,30 +895,26 @@ func (s *Server) requireAuth(r *http.Request) bool {
 	return parts[1] == s.config.Token
 }
 
-// decodeJSON reads and decodes a JSON request body with size limits.
-// [🧰repo⌨️server💻main🔖server🛠️decodejson](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/decodeJSON)
+// 📋decodeJSON reads and decodes a JSON request body with size limits.
 func (s *Server) decodeJSON(r *http.Request, payload interface{}) error {
 	decoder := json.NewDecoder(io.LimitReader(r.Body, s.config.RequestBodyLimit))
 	decoder.DisallowUnknownFields()
 	return decoder.Decode(payload)
 }
 
-// writeJSON writes a JSON response with the given status code.
-// [🧰repo⌨️server💻main🔖server🛠️writejson](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/writeJSON)
+// 📩writeJSON writes a JSON response with the given status code.
 func (s *Server) writeJSON(w http.ResponseWriter, status int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(payload)
 }
 
-// respondError writes a JSON error response.
-// [🧰repo⌨️server💻main🔖server🛠️responderror](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/respondError)
+// ❌respondError writes a JSON error response.
 func (s *Server) respondError(w http.ResponseWriter, status int, message string) {
 	s.writeJSON(w, status, map[string]string{"error": message})
 }
 
-// handleEvents accepts CLI event payloads and persists/publishes them.
-// [🧰repo⌨️server💻main🔖server🛠️handleevents](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleEvents)
+// 📦handleEvents accepts CLI event payloads and persists/publishes them.
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1021,8 +946,7 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
-// handleHealth responds with 200 OK for liveness checks.
-// [🧰repo⌨️server💻main🔖server🛠️handlehealth](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleHealth)
+// ✔️handleHealth responds with 200 OK for liveness checks.
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1032,8 +956,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte("ok"))
 }
 
-// handleTicketOpen creates a new ticket from the request payload.
-// [🧰repo⌨️server💻main🔖server🛠️handleticketopen](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleTicketOpen)
+// 🎫handleTicketOpen creates a new ticket from the request payload.
 func (s *Server) handleTicketOpen(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1074,8 +997,7 @@ func (s *Server) handleTicketOpen(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, ticket)
 }
 
-// handleTicketClose closes an existing ticket with a summary.
-// [🧰repo⌨️server💻main🔖server🛠️handleticketclose](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleTicketClose)
+// 📪handleTicketClose closes an existing ticket with a summary.
 func (s *Server) handleTicketClose(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1113,8 +1035,7 @@ func (s *Server) handleTicketClose(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, ticket)
 }
 
-// handleTicketReopen reopens a closed ticket with a new prompt.
-// [🧰repo⌨️server💻main🔖server🛠️handleticketreopen](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleTicketReopen)
+// 🔓handleTicketReopen reopens a closed ticket with a new prompt.
 func (s *Server) handleTicketReopen(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1155,8 +1076,7 @@ func (s *Server) handleTicketReopen(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, ticket)
 }
 
-// handleTicketsQuery lists tickets optionally filtered by status.
-// [🧰repo⌨️server💻main🔖server🛠️handleticketsquery](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleTicketsQuery)
+// 🧹handleTicketsQuery lists tickets optionally filtered by status.
 func (s *Server) handleTicketsQuery(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1177,8 +1097,7 @@ func (s *Server) handleTicketsQuery(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, tickets)
 }
 
-// handleTicketDetail returns a single ticket by its path-extracted ID.
-// [🧰repo⌨️server💻main🔖server🛠️handleticketdetail](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleTicketDetail)
+// 🧲handleTicketDetail returns a single ticket by its path-extracted ID.
 func (s *Server) handleTicketDetail(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1207,8 +1126,7 @@ func (s *Server) handleTicketDetail(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, ticket)
 }
 
-// handleTicketClaims returns scope claims for a ticket.
-// [🧰repo⌨️server💻main🔖server🛠️handleticketclaims](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleTicketClaims)
+// 🔭handleTicketClaims returns scope claims for a ticket.
 func (s *Server) handleTicketClaims(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1229,8 +1147,7 @@ func (s *Server) handleTicketClaims(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, claims)
 }
 
-// handleDiffIngest ingests a diff patch, indexes changed files, maps claims, and returns results.
-// [🧰repo⌨️server💻main🔖server🛠️handlediffingest](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleDiffIngest)
+// ♻️handleDiffIngest ingests a diff patch, indexes changed files, maps claims, and returns results.
 func (s *Server) handleDiffIngest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1266,8 +1183,7 @@ func (s *Server) handleDiffIngest(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, response)
 }
 
-// handleReindex walks the repo and re-indexes all files.
-// [🧰repo⌨️server💻main🔖server🛠️handlereindex](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleReindex)
+// 🎯handleReindex walks the repo and re-indexes all files.
 func (s *Server) handleReindex(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1294,8 +1210,7 @@ func (s *Server) handleReindex(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, map[string]int{"files": len(files)})
 }
 
-// handleIndexFile indexes a single file from the request payload.
-// [🧰repo⌨️server💻main🔖server🛠️handleindexfile](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleIndexFile)
+// 📄handleIndexFile indexes a single file from the request payload.
 func (s *Server) handleIndexFile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1320,8 +1235,7 @@ func (s *Server) handleIndexFile(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
-// handleWarnings returns warnings optionally filtered by ticket ID.
-// [🧰repo⌨️server💻main🔖server🛠️handlewarnings](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleWarnings)
+// ⚠️handleWarnings returns warnings optionally filtered by ticket ID.
 func (s *Server) handleWarnings(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1341,8 +1255,7 @@ func (s *Server) handleWarnings(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, warnings)
 }
 
-// handleBreachs returns breachs optionally filtered by ticket ID.
-// [🧰repo⌨️server💻main🔖server🛠️handlebreachs](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleBreachs)
+// 🔷handleBreachs returns breachs optionally filtered by ticket ID.
 func (s *Server) handleBreachs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1362,8 +1275,7 @@ func (s *Server) handleBreachs(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, breachs)
 }
 
-// handleScopes returns scopes for a given file query parameter.
-// [🧰repo⌨️server💻main🔖server🛠️handlescopes](repo://p/i/repo/b/b/server/f/main.go/s/Server/d/i/handleScopes)
+// 🔍handleScopes returns scopes for a given file query parameter.
 func (s *Server) handleScopes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1388,23 +1300,20 @@ func (s *Server) handleScopes(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, scopes)
 }
 
-// #endregion 🔖Server
+// #endregion 🗻Server
 
-// #region 🔖Processing
-// [🧰repo⌨️server💻main🔖processing](repo://p/i/repo/b/b/server/f/main.go/s/Processing)
+// #region 📌Processing
 // Diff processing pipeline that indexes changed files, maps claims, detects conflicts, and produces warnings. MUST be transactional per request.
 
-// ProcessResult holds the outcome of a diff processing operation.
-// [🧰repo⌨️server💻main🔖processing✂️processresult](repo://p/i/repo/b/b/server/f/main.go/s/Processing/d/i/ProcessResult)
+// 🔷ProcessResult holds the outcome of a diff processing operation.
 type ProcessResult struct {
 	ChangedFiles  []string
 	ClaimedScopes []string
 	Blockers      []string
 }
 
-// processDiff parses the patch, indexes changed files, maps claims, and detects conflicts.
-// MUST return warnings and breachs alongside the processing result.
-// [🧰repo⌨️server💻main🔖processing🛠️processdiff](repo://p/i/repo/b/b/server/f/main.go/s/Processing/d/i/processDiff)
+// ♻️processDiff parses the patch, indexes changed files, maps claims, and detects conflicts.
+// ⚠️MUST return warnings and breachs alongside the processing result.
 func (s *Server) processDiff(ctx context.Context, ticketID string, patch string, snapshots []FileSnapshot) (ProcessResult, []Warning, []Breach, error) {
 	diff := parseUnifiedDiff(patch)
 	changedFiles := uniqueFiles(diff.Files)
@@ -1459,8 +1368,7 @@ func (s *Server) processDiff(ctx context.Context, ticketID string, patch string,
 	return result, warnings, []Breach{}, nil
 }
 
-// uniqueFiles extracts deduplicated file paths from a diff result.
-// [🧰repo⌨️server💻main🔖processing🛠️uniquefiles](repo://p/i/repo/b/b/server/f/main.go/s/Processing/d/i/uniqueFiles)
+// 🧲uniqueFiles extracts deduplicated file paths from a diff result.
 func uniqueFiles(files []DiffFile) []string {
 	var list []string
 	for _, file := range files {
@@ -1471,8 +1379,7 @@ func uniqueFiles(files []DiffFile) []string {
 	return list
 }
 
-// snapshotMap converts a slice of file snapshots into a path-to-content map.
-// [🧰repo⌨️server💻main🔖processing🛠️snapshotmap](repo://p/i/repo/b/b/server/f/main.go/s/Processing/d/i/snapshotMap)
+// 📸snapshotMap converts a slice of file snapshots into a path-to-content map.
 func snapshotMap(snapshots []FileSnapshot) map[string]string {
 	mapping := map[string]string{}
 	for _, snapshot := range snapshots {
@@ -1481,8 +1388,7 @@ func snapshotMap(snapshots []FileSnapshot) map[string]string {
 	return mapping
 }
 
-// updateIndexForFile builds scopes from file content and updates both the database and cache.
-// [🧰repo⌨️server💻main🔖processing🛠️updateindexforfile](repo://p/i/repo/b/b/server/f/main.go/s/Processing/d/i/updateIndexForFile)
+// 🗄️updateIndexForFile builds scopes from file content and updates both the database and cache.
 func (s *Server) updateIndexForFile(ctx context.Context, filePath string, content string) {
 	scopes := buildScopesForFile(filePath, content)
 	var fileScope Scope
@@ -1508,8 +1414,7 @@ func (s *Server) updateIndexForFile(ctx context.Context, filePath string, conten
 	_ = s.bus.Publish(ctx, "IndexUpdated", "server", map[string]interface{}{"file": filePath})
 }
 
-// walkRepoFiles walks the repo root and returns all non-hidden file paths.
-// [🧰repo⌨️server💻main🔖processing🛠️walkrepofiles](repo://p/i/repo/b/b/server/f/main.go/s/Processing/d/i/walkRepoFiles)
+// 📄walkRepoFiles walks the repo root and returns all non-hidden file paths.
 func (s *Server) walkRepoFiles() ([]string, error) {
 	var files []string
 	err := filepath.Walk(s.config.RepoRoot, func(path string, info os.FileInfo, err error) error {
@@ -1535,14 +1440,12 @@ func (s *Server) walkRepoFiles() ([]string, error) {
 	return files, nil
 }
 
-// #endregion 🔖Processing
+// #endregion 📌Processing
 
-// #region 🔖Webhooks
-// [🧰repo⌨️server💻main🔖webhooks](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks)
+// #region 🖼️Webhooks
 // GitHub webhook handlers for issue comment caching and issue event processing. MUST verify HMAC signatures when a secret is configured.
 
-// GitHubComment stores a cached GitHub issue comment for correlating close/reopen events.
-// [🧰repo⌨️server💻main🔖webhooks✂️githubcomment](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks/d/i/GitHubComment)
+// 💬GitHubComment stores a cached GitHub issue comment for correlating close/reopen events.
 type GitHubComment struct {
 	Body   string
 	Actor  string
@@ -1551,8 +1454,7 @@ type GitHubComment struct {
 	Second time.Time
 }
 
-// handleGitHubWebhook processes incoming GitHub webhook events.
-// [🧰repo⌨️server💻main🔖webhooks🛠️handlegithubwebhook](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks/d/i/handleGitHubWebhook)
+// 🐙handleGitHubWebhook processes incoming GitHub webhook events.
 func (s *Server) handleGitHubWebhook(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1596,8 +1498,7 @@ func (s *Server) handleGitHubWebhook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// verifyGitHubSignature validates the HMAC-SHA256 signature of a webhook payload.
-// [🧰repo⌨️server💻main🔖webhooks🛠️verifygithubsignature](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks/d/i/verifyGitHubSignature)
+// 📦verifyGitHubSignature validates the HMAC-SHA256 signature of a webhook payload.
 func verifyGitHubSignature(body []byte, signature string, secret string) bool {
 	parts := strings.SplitN(signature, "=", 2)
 	if len(parts) != 2 {
@@ -1609,8 +1510,7 @@ func verifyGitHubSignature(body []byte, signature string, secret string) bool {
 	return hmac.Equal([]byte(computed), []byte(parts[1]))
 }
 
-// cacheGitHubComment stores a GitHub comment for correlating subsequent events.
-// [🧰repo⌨️server💻main🔖webhooks🛠️cachegithubcomment](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks/d/i/cacheGitHubComment)
+// 📡cacheGitHubComment stores a GitHub comment for correlating subsequent events.
 func (s *Server) cacheGitHubComment(payload map[string]interface{}) {
 	issue, repo, actor, body := extractIssueComment(payload)
 	if issue == 0 || repo == "" || actor == "" || body == "" {
@@ -1628,8 +1528,7 @@ func (s *Server) cacheGitHubComment(payload map[string]interface{}) {
 	s.ghLock.Unlock()
 }
 
-// handleGitHubIssueEvent processes GitHub issue close/reopen events.
-// [🧰repo⌨️server💻main🔖webhooks🛠️handlegithubissueevent](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks/d/i/handleGitHubIssueEvent)
+// 🔓handleGitHubIssueEvent processes GitHub issue close/reopen events.
 func (s *Server) handleGitHubIssueEvent(ctx context.Context, payload map[string]interface{}) {
 	action, _ := payload["action"].(string)
 	issueNumber := extractIssueNumber(payload)
@@ -1647,8 +1546,7 @@ func (s *Server) handleGitHubIssueEvent(ctx context.Context, payload map[string]
 	}
 }
 
-// findCachedComment retrieves a recently cached GitHub comment for the given issue.
-// [🧰repo⌨️server💻main🔖webhooks🛠️findcachedcomment](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks/d/i/findCachedComment)
+// 💾findCachedComment retrieves a recently cached GitHub comment for the given issue.
 func (s *Server) findCachedComment(repo string, issue int, actor string) GitHubComment {
 	key := fmt.Sprintf("%s#%d#%s", repo, issue, actor)
 	s.ghLock.Lock()
@@ -1664,8 +1562,7 @@ func (s *Server) findCachedComment(repo string, issue int, actor string) GitHubC
 	return comment
 }
 
-// extractIssueComment extracts issue number, repo, actor, and body from a webhook payload.
-// [🧰repo⌨️server💻main🔖webhooks🛠️extractissuecomment](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks/d/i/extractIssueComment)
+// 🧲extractIssueComment extracts issue number, repo, actor, and body from a webhook payload.
 func extractIssueComment(payload map[string]interface{}) (int, string, string, string) {
 	issueNumber := extractIssueNumber(payload)
 	repo := extractRepoFullName(payload)
@@ -1677,8 +1574,7 @@ func extractIssueComment(payload map[string]interface{}) (int, string, string, s
 	return issueNumber, repo, actor, body
 }
 
-// extractIssueNumber extracts the issue number from a GitHub webhook payload.
-// [🧰repo⌨️server💻main🔖webhooks🛠️extractissuenumber](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks/d/i/extractIssueNumber)
+// 🔢extractIssueNumber extracts the issue number from a GitHub webhook payload.
 func extractIssueNumber(payload map[string]interface{}) int {
 	if issue, ok := payload["issue"].(map[string]interface{}); ok {
 		if number, ok := issue["number"].(float64); ok {
@@ -1688,8 +1584,7 @@ func extractIssueNumber(payload map[string]interface{}) int {
 	return 0
 }
 
-// extractRepoFullName extracts the repository full name from a GitHub webhook payload.
-// [🧰repo⌨️server💻main🔖webhooks🛠️extractrepofullname](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks/d/i/extractRepoFullName)
+// 🔷extractRepoFullName extracts the repository full name from a GitHub webhook payload.
 func extractRepoFullName(payload map[string]interface{}) string {
 	if repo, ok := payload["repository"].(map[string]interface{}); ok {
 		if name, ok := repo["full_name"].(string); ok {
@@ -1699,8 +1594,7 @@ func extractRepoFullName(payload map[string]interface{}) string {
 	return ""
 }
 
-// handleGitHubPushEvent holds the data fields for a handleGitHubPushEvent record.
-// [🧰repo⌨️server💻main🔖webhooks🛠️handlegithubpushevent](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks/d/i/handleGitHubPushEvent)
+// 💿handleGitHubPushEvent holds the data fields for a handleGitHubPushEvent record.
 func (s *Server) handleGitHubPushEvent(ctx context.Context, payload map[string]interface{}) {
 	actor := extractActorLogin(payload)
 	if actor == "" {
@@ -1736,8 +1630,7 @@ func (s *Server) handleGitHubPushEvent(ctx context.Context, payload map[string]i
 	}
 }
 
-// extractActorLogin extracts the sender login from a GitHub webhook payload.
-// [🧰repo⌨️server💻main🔖webhooks🛠️extractactorlogin](repo://p/i/repo/b/b/server/f/main.go/s/Webhooks/d/i/extractActorLogin)
+// 📤extractActorLogin extracts the sender login from a GitHub webhook payload.
 func extractActorLogin(payload map[string]interface{}) string {
 	if sender, ok := payload["sender"].(map[string]interface{}); ok {
 		if login, ok := sender["login"].(string); ok {
@@ -1747,12 +1640,10 @@ func extractActorLogin(payload map[string]interface{}) string {
 	return ""
 }
 
-// #endregion 🔖Webhooks
+// #endregion 🖼️Webhooks
 
-// #region 🔖Discord
-// [🧰repo⌨️server💻main🔖discord](repo://p/i/repo/b/b/server/f/main.go/s/Discord)
-// Discord notification integration for ticket lifecycle events. MUST silently skip when no webhook URL is configured.
-// [🧰repo⌨️server💻main🔖discord🛠️notifydiscord](repo://p/i/repo/b/b/server/f/main.go/s/Discord/d/i/notifyDiscord)
+// 🔷#region 📔Discord
+// ⚙️Discord notification integration for ticket lifecycle events. MUST silently skip when no webhook URL is configured.
 func (s *Server) notifyDiscord(title string, body string) {
 	if s.config.DiscordWebhook == "" {
 		return
@@ -1768,8 +1659,7 @@ func (s *Server) notifyDiscord(title string, body string) {
 	_, _ = client.Do(request)
 }
 
-// registerNotifications subscribes to ticket lifecycle events and sends Discord notifications.
-// [🧰repo⌨️server💻main🔖discord🛠️registernotifications](repo://p/i/repo/b/b/server/f/main.go/s/Discord/d/i/registerNotifications)
+// 🔔registerNotifications subscribes to ticket lifecycle events and sends Discord notifications.
 func (s *Server) registerNotifications() {
 	s.bus.Subscribe("TicketOpened", func(ctx context.Context, event Event) {
 		s.notifyDiscord("# Prompt", event.Payload)
@@ -1796,8 +1686,7 @@ func (s *Server) registerNotifications() {
 	})
 }
 
-// onCLIEvent holds the data fields for a onCLIEvent record.
-// [🧰repo⌨️server💻main🔖discord🛠️onclievent](repo://p/i/repo/b/b/server/f/main.go/s/Discord/d/i/onCLIEvent)
+// 💿onCLIEvent holds the data fields for a onCLIEvent record.
 func (s *Server) onCLIEvent(ctx context.Context, kind repopkg.EventKind, event Event) {
 	s.notifyDiscord(string(kind), event.Payload)
 	author, items := s.extractAuthorAndItems(kind, event.Payload)
@@ -1816,8 +1705,8 @@ func (s *Server) onCLIEvent(ctx context.Context, kind repopkg.EventKind, event E
 		_ = s.db.addContributorWork(ctx, author, item.Kind, item.ID)
 	}
 }
-// [🧰repo⌨️server💻main🔖discord🛠️oncheckpointevent](repo://p/i/repo/b/b/server/f/main.go/s/Discord/d/i/onCheckpointEvent)
-// onCheckpointEvent holds the data fields for a onCheckpointEvent record.
+
+// 💾onCheckpointEvent holds the data fields for a onCheckpointEvent record.
 func (s *Server) onCheckpointEvent(ctx context.Context, event Event) {
 	var p repopkg.CheckpointPayload
 	if json.Unmarshal([]byte(event.Payload), &p) != nil {
@@ -1830,8 +1719,7 @@ func (s *Server) onCheckpointEvent(ctx context.Context, event Event) {
 	_ = s.db.removeContributorWorkForCheckpoint(ctx, p.Author, files)
 }
 
-// extractAuthorAndItems holds the data fields for a extractAuthorAndItems record.
-// [🧰repo⌨️server💻main🔖discord🛠️extractauthoranditems](repo://p/i/repo/b/b/server/f/main.go/s/Discord/d/i/extractAuthorAndItems)
+// 🧲extractAuthorAndItems holds the data fields for a extractAuthorAndItems record.
 func (s *Server) extractAuthorAndItems(kind repopkg.EventKind, payloadJSON string) (author string, items []repopkg.WorkItem) {
 	switch kind {
 	case repopkg.EventTicketOpenEnded, repopkg.EventTicketCloseEnded, repopkg.EventTicketReopenEnded, repopkg.EventTicketChangeEnded:
@@ -1871,8 +1759,8 @@ func (s *Server) extractAuthorAndItems(kind repopkg.EventKind, payloadJSON strin
 		return "", nil
 	}
 }
-// [🧰repo⌨️server💻main🔖discord🛠️getauthorfrompayload](repo://p/i/repo/b/b/server/f/main.go/s/Discord/d/i/getAuthorFromPayload)
-// getAuthorFromPayload holds the data fields for a getAuthorFromPayload record.
+
+// 📦getAuthorFromPayload holds the data fields for a getAuthorFromPayload record.
 func getAuthorFromPayload(payloadJSON string) string {
 	var m map[string]interface{}
 	if json.Unmarshal([]byte(payloadJSON), &m) != nil {
@@ -1883,8 +1771,8 @@ func getAuthorFromPayload(payloadJSON string) string {
 	}
 	return ""
 }
-// [🧰repo⌨️server💻main🔖discord🛠️filterout](repo://p/i/repo/b/b/server/f/main.go/s/Discord/d/i/filterOut)
-// filterOut holds the data fields for a filterOut record.
+
+// 🧹filterOut holds the data fields for a filterOut record.
 func filterOut(list []string, exclude string) []string {
 	var out []string
 	for _, x := range list {
@@ -1895,18 +1783,16 @@ func filterOut(list []string, exclude string) []string {
 	return out
 }
 
-// #endregion 🔖Discord
+// #endregion 📔Discord
 
-// newID holds the data fields for a newID record.
-// [🧰repo⌨️server💻main🛠️newid](repo://p/i/repo/b/b/server/f/main.go/d/i/newID)
+// 💿newID holds the data fields for a newID record.
 func newID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UTC().UnixNano(), rand.Int63())
 }
 
 // #endregion 🔖Utilities
 
-// main holds the data fields for a main record.
-// [🧰repo⌨️server💻main🛠️main](repo://p/i/repo/b/b/server/f/main.go/d/i/main)
+// 🔷main holds the data fields for a main record.
 func main() {
 	config := loadConfig()
 	db, err := openDatabase(config.DatabasePath)

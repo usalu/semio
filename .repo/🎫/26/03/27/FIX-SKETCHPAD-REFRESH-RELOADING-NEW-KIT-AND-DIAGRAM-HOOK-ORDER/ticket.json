@@ -1,5 +1,6 @@
 {
   "title": "Fix Sketchpad Refresh Reloading New Kit And Diagram Hook Order",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Investigate semio/sketchpad refresh path. Refreshing the page loads a new kit and triggers a React hook order error in DesignDiagram: Rendered more hooks than during the previous render. Fix end-to-end in existing files and extend existing tests to cover the regression.",
   "summary": "Stabilized the standalone sketchpad scope id, fixed hook-order violations during design route hydration, persisted browser kit snapshots through IndexedDB/localStorage fallback, and extended the existing Design browser test to cover reload regression checks.",

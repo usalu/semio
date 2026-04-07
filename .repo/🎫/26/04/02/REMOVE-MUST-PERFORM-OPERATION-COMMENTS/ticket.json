@@ -1,5 +1,6 @@
 {
   "title": "Remove Must Perform Operation Comments",
+  "emoji": "🗑️",
   "status": "closed",
   "description": "Remove all comments with the scheme: \"* MUST perform the * operation\" from the codebase. These are documentation comments that follow a specific pattern and need to be cleaned up from all source files.",
   "summary": "Successfully removed all comments with the pattern \"* MUST perform the * operation\" from the codebase. The cleanup covered Go (.go), Rust (.rs), TypeScript (.ts), and Python (.py) files across the entire semio repository. A total of 9 source files were modified, removing over 1500 redundant documentation comments.",

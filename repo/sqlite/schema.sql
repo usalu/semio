@@ -1,7 +1,7 @@
--- #region 🔖Header
+-- #region 🧲Header
 -- sql/sqlite/repo/schema.sql
 -- 2025 Ueli Saluz <ueli@semio-tech.com>
--- #region 🔖License
+-- #region 🪬License
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU Affero General Public License as
 -- published by the Free Software Foundation, either version 3 of the
@@ -12,9 +12,9 @@
 -- GNU Affero General Public License for more details.
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
--- #endregion 🔖License
--- #endregion 🔖Header
--- #region 🔖Domains
+-- #endregion 🪬License
+-- #endregion 🧲Header
+-- #region 🛒Domains
 -- unix_s   INTEGER  -- Unix timestamp in seconds (UTC, >= 0)
 -- unix_s_day_end   INTEGER  -- Unix timestamp in seconds (UTC, >= 0) year.month.day 23:59:59
 -- unix_s_month INTEGER -- Unix timestamp in seconds (UTC, >= 0) year.month.01 00:00:00
@@ -23,8 +23,8 @@
 -- enum     INTEGER  -- Enum integer with CHECK constraint
 -- NOTE: Foreign keys require:
 -- PRAGMA foreign_keys = ON;
--- #endregion 🔖Domains
--- #region 🔖Tables
+-- #endregion 🛒Domains
+-- #region 🛕Tables
 CREATE TABLE IF NOT EXISTS contributor (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     alias TEXT NOT NULL UNIQUE CHECK (length (trim(alias)) > 0) -- nn_text
@@ -241,4 +241,4 @@ CREATE TABLE IF NOT EXISTS event (
     FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
 );
 
--- #endregion 🔖Tables
+-- #endregion 🛕Tables

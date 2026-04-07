@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio📚js💻viteenvd](repo://p/u/semio/b/l/js/f/vite-env.d.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Vite client type declarations for the JavaScript workspace.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Declarations
-// [👤semio📚js💻viteenvd🔖declarations](repo://p/u/semio/b/l/js/f/vite-env.d.ts/s/Declarations)
+// #region 🖼️Declarations
 // Ambient module declarations for non-standard import types.
 // Declarations MUST cover all custom asset import suffixes used in the project.
 

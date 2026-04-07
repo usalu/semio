@@ -1,5 +1,6 @@
 {
   "title": "Normalize Semio Asset Filenames",
+  "emoji": "📏",
   "status": "closed",
   "description": "Normalize all semio asset filenames to clean dot-separated naming (e.g. metabolism.kit.semio.json), remove inconsistent underscore/hyphen patterns, and update all code references accordingly. Ensure build/tests still work.",
   "summary": "Normalized semio asset filenames to clean dot-separated .semio.json naming and updated all code/test/storybook/benchmark references to the new names across semio and vscode extension fixtures. Also updated kit-path detection expectations to include renamed assets.",

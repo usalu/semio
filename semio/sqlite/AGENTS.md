@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: sqlite
- emoji: 📚
+ emoji: 💾
  description: The sqlite bundle for semio.
  kind: library
 ---

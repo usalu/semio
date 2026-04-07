@@ -1,5 +1,6 @@
 {
   "title": "Refine UI Component With Window Kinds and Golden Layout",
+  "emoji": "🎨",
   "status": "closed",
   "description": "Refine UI component to use window kinds with golden-layout, move domain-neutral types",
   "summary": "Refactored elements/ui so each UI app now owns windowKinds and an abstract defaultLayout composed of rows, columns, stacks, and window nodes. Golden Layout is now confined to the internal canvas adapter, legacy stored Golden Layout configs are parsed into the abstract layout model, UI stories were updated to the new app API, AlgorithmApp now emits the new UI app shape, and elements/ui test, lint, and Storybook build all pass.",

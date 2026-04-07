@@ -1,5 +1,6 @@
 {
   "title": "Fix useMemo ReferenceError in DiagramInner",
+  "emoji": "🔧",
   "status": "closed",
   "summary": "Fixed ReferenceError: useMemo is not defined in DiagramInner",
   "github": {

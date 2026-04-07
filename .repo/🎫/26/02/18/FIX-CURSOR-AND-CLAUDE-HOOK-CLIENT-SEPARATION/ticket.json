@@ -1,5 +1,6 @@
 {
   "title": "Fix Cursor and Claude Hook Client Separation",
+  "emoji": "🔧",
   "status": "closed",
   "description": "fix hooks",
   "summary": "Cursor fires both .cursor/hooks.json (cursor-chat) and .claude/settings.json (claude-code) for shared lifecycle events (SessionStart/sessionStart, Stop/stop, UserPromptSubmit/beforeSubmitPrompt). The claude-code version logged last, overwriting cursor events. Fix: generateClaudeCodeConfig now only writes Claude Code-exclusive hooks (Notification, PermissionRequest, TaskCompleted, TeammateIdle) to .claude/settings.json when .cursor/hooks.json exists. Shared events are fully handled by Cursor. Regenerated .claude/settings.json via configure.",

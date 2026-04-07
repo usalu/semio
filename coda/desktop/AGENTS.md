@@ -2,7 +2,7 @@
 technology: coda
 bundle:
  name: desktop
- emoji: 🖱️
+ emoji: 🖥️
  description: The desktop bundle for coda.
  kind: ui
 ---

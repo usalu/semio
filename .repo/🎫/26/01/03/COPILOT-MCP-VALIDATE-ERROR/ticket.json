@@ -1,5 +1,6 @@
 {
   "title": "COPILOT-MCP-VALIDATE-ERROR",
+  "emoji": "❌",
   "status": "closed",
   "description": "Copilot MCP ticket open fails with tool parameters array type must have items",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp"

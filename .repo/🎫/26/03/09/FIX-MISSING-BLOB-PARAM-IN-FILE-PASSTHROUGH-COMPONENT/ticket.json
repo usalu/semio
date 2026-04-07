@@ -1,5 +1,6 @@
 {
   "title": "Fix Missing Blob Param in File Passthrough Component",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The FileComponent class is missing the blob parameter in its RegisterModelInputParams, RegisterModelOutputParams, GetModelData, and SetModelData methods. The FileDiffComponent has the correct implementation which should be used as a reference.",
   "summary": "Added missing blob parameter to FileComponent class in Semio.Grasshopper.cs. The blob parameter was added to RegisterModelInputParams, RegisterModelOutputParams, GetModelData, and SetModelData methods, following the same pattern as FileDiffComponent.",

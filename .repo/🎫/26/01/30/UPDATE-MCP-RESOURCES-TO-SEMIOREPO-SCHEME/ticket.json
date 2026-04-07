@@ -1,5 +1,6 @@
 {
   "title": "Update MCP Resources to repo scheme",
+  "emoji": "🔌",
   "status": "closed",
   "description": "Update MCP resources to use repo:// scheme, add missing resources (repo, bundle, section, definition, etc), and ensure output is text (not JSON).",
   "summary": "Bulk close",

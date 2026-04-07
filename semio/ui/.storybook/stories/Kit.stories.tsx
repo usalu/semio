@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/ui/.storybook/stories/Kit.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses the shallow kit prop directly.
 // Summary: Kit stories: Default, DesignsOnly, TypesOnly, PortsOnly, SelectionDisabled, DataDisabled, OpenArtifact.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import type { Kit as SemioKit } from "@semio/js";
 import { SemioKit as Kit } from "@semio/ui";
@@ -11,13 +11,13 @@ import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import metabolismShallowKit from "../../../assets/semio/metabolism.shallow.kit.semio.json";
 
-// #region 🔖Data
+// #region 🖥️Data
 
 const kit = metabolismShallowKit as unknown as SemioKit;
 
-// #endregion 🔖Data
+// #endregion 🖥️Data
 
-// #region 🔖Kit
+// #region ⏱️Kit
 
 const meta: Meta<typeof Kit> = {
   title: "semio/Kit",
@@ -75,4 +75,4 @@ export const OpenArtifact: Story = {
   },
 };
 
-// #endregion 🔖Kit
+// #endregion ⏱️Kit

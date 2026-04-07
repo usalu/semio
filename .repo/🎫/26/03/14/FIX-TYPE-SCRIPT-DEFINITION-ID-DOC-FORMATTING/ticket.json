@@ -1,5 +1,6 @@
 {
   "title": "Fix TypeScript Definition ID Doc Formatting",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix repo TypeScript definition ID formatting so generated doc comments do not emit an extra blank `*` line before the ID link and do not render a doubled `* *` marker. Verify the generation path affecting shared.ts outputs and update existing code accordingly.",
   "summary": "Fixed the TypeScript native-docstring autofix so definition identification lines are emitted as a single JSDoc line without an extra blank separator or doubled asterisk marker. Repaired an existing malformed test wrapper in main_test.go and extended the existing autofix test to lock down the identification-line formatting. Verified with targeted Go tests covering the formatter and surrounding autofix paths.",

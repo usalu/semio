@@ -1,5 +1,6 @@
 {
   "title": "Fix Sketchpad Panel Section Provider Crash",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix Sketchpad runtime crash: Uncaught ReferenceError contextValue is not defined at PanelSectionProvider in semio/js/sketchpad/Sketchpad.tsx. Identify root cause, implement direct fix, and verify sketchpad runs.",
   "summary": "Fixed Sketchpad runtime crash by adding the missing PanelSectionProvider context value memoization and wiring it into PanelSectionContext.Provider. Verified the sketchpad dev server starts successfully via Vite.",

@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio👥studio💻studio](repo://p/u/semio/b/l/studio/f/studio.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -11,9 +10,9 @@
 
 // Synchronizable state layer and kit persistence providers for semio studio.
 
-// #endregion Header
+// #endregion 🧲Header
 
-// #region 🔖SyncInterfaces
+// #region 🪬SyncInterfaces
 
 /**
  * Event emitted when fields change in a SyncMap.
@@ -119,9 +118,9 @@ export function isSyncArray(value: any): value is SyncArray {
  **/
 export type SyncDocFactory = () => SyncDoc;
 
-// #endregion SyncInterfaces
+// #endregion 🪬SyncInterfaces
 
-// #region 🔖CrdtBackend
+// #region 📰CrdtBackend
 
 import * as Y from "yjs";
 
@@ -181,9 +180,9 @@ export function getSyncBackendDoc(syncDoc: SyncDoc): Y.Doc {
   throw new Error("SyncDoc is not backed by a CRDT implementation");
 }
 
-// #endregion CrdtBackend
+// #endregion 📰CrdtBackend
 
-// #region 🔖PersistenceProviders
+// #region 🏂PersistenceProviders
 
 /**
  * Abstract persistence provider for syncing a SyncDoc to a storage backend.
@@ -330,10 +329,9 @@ export function createSqliteFolderPersistenceFactory(adapter: SqliteAdapter): Pe
   };
 }
 
-// #endregion PersistenceProviders
+// #endregion 🏂PersistenceProviders
 
-// #region 🔖JsonFileKitStore
-// [👤semio👥studio💻studio🔖jsonfilekitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/JsonFileKitStore)
+// #region 🔩JsonFileKitStore
 // JSON file-backed kit store implementing UndoableKitStore.
 // Specs: Loads a Kit from a JSON file via adapter, holds an in-memory working copy,
 // persists on save() by serializing the full Kit back to JSON. Supports undo/redo
@@ -365,7 +363,6 @@ import {
  * Specs: read() returns the raw JSON string from the file, or null if not found.
  * write() writes the JSON string to the file. Implementations provide
  * platform-specific I/O (Node fs, VS Code workspace, etc.).
- * [👤semio👥studio💻studio🔖jsonfilekitstore🛠️kitjsonfileadapter](repo://p/u/semio/b/l/studio/f/studio.ts/s/JsonFileKitStore/d/i/KitJsonFileAdapter)
  **/
 export interface KitJsonFileAdapter {
   read(): Promise<string | null>;
@@ -379,7 +376,6 @@ export interface KitJsonFileAdapter {
  * replace() swaps the Kit. transact() groups mutations into one undo entry.
  * save() serializes the Kit to JSON and writes via adapter. reload() re-reads
  * from the file, resetting the working copy. Undo/redo uses a command stack.
- * [👤semio👥studio💻studio🔖jsonfilekitstore🛠️jsonfilekitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/JsonFileKitStore/d/i/JsonFileKitStore)
  **/
 export class JsonFileKitStore implements UndoableKitStore {
   private kit: Kit;
@@ -604,16 +600,14 @@ export class JsonFileKitStore implements UndoableKitStore {
  *
  * Specs: Factory function matching the provider pattern. Returns a ready-to-use
  * JsonFileKitStore. The adapter provides platform-specific file I/O.
- * [👤semio👥studio💻studio🔖jsonfilekitstore🛠️createjsonfilekitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/JsonFileKitStore/d/i/createJsonFileKitStore)
  **/
 export async function createJsonFileKitStore(adapter: KitJsonFileAdapter): Promise<JsonFileKitStore> {
   return JsonFileKitStore.create(adapter);
 }
 
-// #endregion 🔖JsonFileKitStore
+// #endregion 🔩JsonFileKitStore
 
-// #region 🔖FolderKitStore
-// [👤semio👥studio💻studio🔖folderkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/FolderKitStore)
+// #region 📯FolderKitStore
 // Folder-backed kit store implementing UndoableKitStore.
 // Specs: Uses a folder with `.semio/kit.db` SQLite database for kit data. The folder serves as
 // the root for relative file references. Files referenced by the kit are stored
@@ -627,7 +621,6 @@ export async function createJsonFileKitStore(adapter: KitJsonFileAdapter): Promi
  * readFile()/writeFile()/deleteFile() handle binary assets relative to the folder root.
  * listFiles() returns all file paths in the folder.
  * watch() optionally registers a callback for external changes.
- * [👤semio👥studio💻studio🔖folderkitstore🛠️kitfolderadapter](repo://p/u/semio/b/l/studio/f/studio.ts/s/FolderKitStore/d/i/KitFolderAdapter)
  **/
 export interface KitFolderAdapter {
   readKit(): Promise<Uint8Array | null>;
@@ -646,7 +639,6 @@ export interface KitFolderAdapter {
  * apply() merges diffs, replace() swaps the Kit. transact() groups mutations.
  * save() serializes the Kit to SQLite and writes via adapter. reload() re-reads from the folder.
  * Undo/redo uses a command stack identical to JsonFileKitStore.
- * [👤semio👥studio💻studio🔖folderkitstore🛠️folderkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/FolderKitStore/d/i/FolderKitStore)
  **/
 export class FolderKitStore implements UndoableKitStore {
   private kit: Kit;
@@ -891,16 +883,14 @@ export class FolderKitStore implements UndoableKitStore {
  *
  * Specs: Factory function matching the provider pattern. Returns a ready-to-use
  * FolderKitStore. The adapter provides platform-specific folder I/O.
- * [👤semio👥studio💻studio🔖folderkitstore🛠️createfolderkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/FolderKitStore/d/i/createFolderKitStore)
  **/
 export async function createFolderKitStore(adapter: KitFolderAdapter): Promise<FolderKitStore> {
   return FolderKitStore.create(adapter);
 }
 
-// #endregion 🔖FolderKitStore
+// #endregion 📯FolderKitStore
 
-// #region 🔖SessionKitStore
-// [👤semio👥studio💻studio🔖sessionkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/SessionKitStore)
+// #region ⚙️SessionKitStore
 // Server-backed kit store implementing UndoableKitStore.
 // Specs: Connects to a semio-session backend via HTTP+WS. Commands are sent via HTTP POST,
 // events received via WebSocket. Local Kit state is maintained in-memory and updated on
@@ -914,7 +904,6 @@ export async function createFolderKitStore(adapter: KitFolderAdapter): Promise<F
  * Specs: serverUrl is the base URL (e.g. http://localhost:8080). sessionId is optional —
  * if omitted, a new session is created. kitName is used when creating a new session.
  * personId and clientId identify this frontend instance for presence.
- * [👤semio👥studio💻studio🔖sessionkitstore🛠️sessionkitstoreconfig](repo://p/u/semio/b/l/studio/f/studio.ts/s/SessionKitStore/d/i/SessionKitStoreConfig)
  **/
 export interface SessionKitStoreConfig {
   serverUrl: string;
@@ -985,7 +974,6 @@ export interface PresenceState {
  * via POST, waits for Accepted event via WS. On WS event: applies entity changes to
  * local Kit and notifies subscribers. Undo/redo operates on local command stack.
  * Provides presence tracking via semio commands.
- * [👤semio👥studio💻studio🔖sessionkitstore🛠️sessionkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/SessionKitStore/d/i/SessionKitStore)
  **/
 export class SessionKitStore implements UndoableKitStore {
   private kit: Kit;
@@ -1360,7 +1348,7 @@ export class SessionKitStore implements UndoableKitStore {
 
   private async sendKitDiffToServer(diff: KitDiff): Promise<void> {
     const commands: any[] = [];
-    // Kit-level fields
+    // 🔷Kit-level fields
     const kitFields: Record<string, any> = {};
     if (diff.name !== undefined) kitFields.name = diff.name;
     if (diff.version !== undefined) kitFields.version = diff.version;
@@ -1374,7 +1362,7 @@ export class SessionKitStore implements UndoableKitStore {
     if (Object.keys(kitFields).length > 0) {
       commands.push({ kind: "PatchKit", payload: { fields: kitFields } });
     }
-    // Collection diffs
+    // 🗺️Collection diffs
     const collectionMap: Record<string, { create: string; patch: string; delete: string }> = {
       types: { create: "CreateType", patch: "PatchType", delete: "DeleteType" },
       designs: { create: "CreateDesign", patch: "PatchDesign", delete: "DeleteDesign" },
@@ -1502,7 +1490,7 @@ export class SessionKitStore implements UndoableKitStore {
     this.notify();
   }
 
-  // #region 🔖Presence
+  // #region 📣Presence
 
   /**
    * Send cursor position to server for this person.
@@ -1593,9 +1581,9 @@ export class SessionKitStore implements UndoableKitStore {
     };
   }
 
-  // #endregion 🔖Presence
+  // #endregion 📣Presence
 
-  // #region 🔖History
+  // #region 🔩History
 
   /**
    * Get kit state at a named lookback point (e.g. "1min", "5h", "1d").
@@ -1647,9 +1635,9 @@ export class SessionKitStore implements UndoableKitStore {
     return this.semioVersion;
   }
 
-  // #endregion 🔖History
+  // #endregion 🔩History
 
-  // #region 🔖GranularSubscriptions
+  // #region 🎵GranularSubscriptions
 
   /**
    * Subscribe to changes on a specific entity by kind and guid.
@@ -1707,7 +1695,7 @@ export class SessionKitStore implements UndoableKitStore {
     this.presenceListeners.forEach((l) => l());
   }
 
-  // #endregion 🔖GranularSubscriptions
+  // #endregion 🎵GranularSubscriptions
 
   private notify(): void {
     for (const listener of this.listeners) {
@@ -1720,16 +1708,14 @@ export class SessionKitStore implements UndoableKitStore {
  * Creates a SessionKitStore by connecting to a semio-session server.
  *
  * Specs: Factory function matching the provider pattern.
- * [👤semio👥studio💻studio🔖sessionkitstore🛠️createsessionkitstore](repo://p/u/semio/b/l/studio/f/studio.ts/s/SessionKitStore/d/i/createSessionKitStore)
  **/
 export async function createSessionKitStore(config: SessionKitStoreConfig): Promise<SessionKitStore> {
   return SessionKitStore.create(config);
 }
 
-// #endregion 🔖SessionKitStore
+// #endregion ⚙️SessionKitStore
 
-// #region 🔖GranularHooks
-// [👤semio👥studio💻studio🔖granularhooks](repo://p/u/semio/b/l/studio/f/studio.ts/s/GranularHooks)
+// #region 🏩GranularHooks
 // React hooks for 100% granular entity/collection/property-level subscriptions.
 // Specs: Each hook uses useSyncExternalStore under the hood. Hooks subscribe to the
 // minimum scope needed and only re-render when that scope changes. For SessionKitStore,
@@ -1739,7 +1725,7 @@ export async function createSessionKitStore(config: SessionKitStoreConfig): Prom
 import type { Author, Concept, Design, Port, Quality, Tag, Type } from "@semio/js";
 import { useCallback, useRef, useSyncExternalStore } from "react";
 
-// #region 🔖SelectorHook
+// #region 🌥️SelectorHook
 
 /**
  * Core selector hook for any KitStore. Selects a value from the snapshot and only
@@ -1762,9 +1748,9 @@ export function useKitStoreSelector<T>(store: KitStore, selector: (snap: KitStor
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
-// #endregion 🔖SelectorHook
+// #endregion 🌥️SelectorHook
 
-// #region 🔖KitHooks
+// #region 🩺KitHooks
 
 /**
  * Returns the full Kit snapshot. Re-renders on any kit change.
@@ -1843,9 +1829,9 @@ export function useKitField<K extends keyof Kit>(store: KitStore, field: K): Kit
   return useKitStoreSelector(store, (s) => s.kit[field]);
 }
 
-// #endregion 🔖KitHooks
+// #endregion 🩺KitHooks
 
-// #region 🔖CollectionHooks
+// #region 🤸CollectionHooks
 
 /**
  * Returns all types. Re-renders when types collection changes.
@@ -1965,9 +1951,9 @@ export function useQuality(store: KitStore, qualityGuid: string): Quality | unde
   return useKitStoreSelector(store, (s) => (s.kit.qualities ?? []).find((q) => q.guid === qualityGuid));
 }
 
-// #endregion 🔖CollectionHooks
+// #endregion 🤸CollectionHooks
 
-// #region 🔖PresenceHooks
+// #region 🗽PresenceHooks
 
 /**
  * Returns all current presences. Re-renders when any presence changes.
@@ -2001,9 +1987,9 @@ export function usePresence(store: KitStore, personId: string, frontendId: strin
   return presences.find((p) => p.personId === personId && p.frontendId === frontendId);
 }
 
-// #endregion 🔖PresenceHooks
+// #endregion 🗽PresenceHooks
 
-// #region 🔖SessionHooks
+// #region ⛅SessionHooks
 
 /**
  * Returns the current domain version. Only works with SessionKitStore.
@@ -2025,6 +2011,6 @@ export function useSemioVersion(store: KitStore): number {
   });
 }
 
-// #endregion 🔖SessionHooks
+// #endregion ⛅SessionHooks
 
-// #endregion 🔖GranularHooks
+// #endregion 🏩GranularHooks

@@ -1,0 +1,9 @@
+{
+  "title": "Fix Copy and Paste Target Design Window Showing White",
+  "status": "open",
+  "description": "The TargetDesignWindow in CopyAndPaste.stories.tsx renders pasteTargetDesign (nakagin-capsule-tower.paste.design.semio.json) unflattened. Only the root piece has a plane; the 8 other pieces have no coordinates. SemioDiagram renders raw planes so only the root appears and the rest is white. Fix: flatten the paste target design using the metabolism kit (which has all the type definitions), then render the flattened version in TargetDesignWindow.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪72a54929d4844e3ea20a6e7686202514"
+  ]
+}

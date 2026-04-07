@@ -1,9 +1,8 @@
-// #region 🔖Header
-// [🧰repo⌨️server🛅app🛅api🛅v1🛅diff💻route](repo://p/i/repo/b/b/server/f/app/api/v1/diff/route.ts)
+// #region 🧲Header
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0
 // Diff ingestion API: parses patches, indexes changed files, maps claims, detects conflicts.
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -60,13 +59,13 @@ export async function POST(request: NextRequest) {
     files: changedFiles,
   });
 
-  // Build snapshot map
+  // 📸Build snapshot map
   const contentByFile: Record<string, string> = {};
   for (const s of snapshots) {
     contentByFile[s.path] = s.content;
   }
 
-  // Index changed files
+  // ♻️Index changed files
   const allScopes: Scope[] = [];
   for (const file of changedFiles) {
     let content = contentByFile[file];
@@ -82,7 +81,7 @@ export async function POST(request: NextRequest) {
     allScopes.push(...scopes);
   }
 
-  // Map claims
+  // 🗺️Map claims
   const claimedIds: string[] = [];
   for (const diffFile of diffFiles) {
     if (!diffFile.path) continue;
@@ -108,7 +107,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Detect conflicts
+  // 🔷Detect conflicts
   const conflicts = await listConflicts();
   const warnings: Warning[] = conflicts.map((c) => ({
     id: newId(),

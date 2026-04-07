@@ -1,5 +1,6 @@
 {
   "title": "Refine Ticket Structure",
+  "emoji": "🎫",
   "status": "closed",
   "description": "Remove ticket progress command and deduplicate ticket.json fields",
   "summary": "Refactored ticket structure: removed progress command and deduplicated JSON storage",

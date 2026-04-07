@@ -1,4 +1,4 @@
-#region 🔖Header
+#region 📱Header
 
 // 💻semio/assets/repo/some/folder/file_invalid.cs
 
@@ -16,13 +16,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion 🔖Header
+#endregion 📱Header
 
-#region 🔖Classes
+#region 🎪Classes
 
 public class InvalidClass
 {
     public int Value { get; set; }
 }
 
-#endregion 🔖Classes
+#endregion 🎪Classes

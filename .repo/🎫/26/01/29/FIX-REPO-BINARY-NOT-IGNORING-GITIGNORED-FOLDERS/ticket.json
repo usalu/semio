@@ -1,5 +1,6 @@
 {
   "title": "Fix Repo Binary Not Ignoring Gitignored Folders",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The repo binary is not properly ignoring folders that are in .gitignore. For example, js/storybook-static is gitignored but still shows up as a folder in repo tool output. Investigate and fix the folder listing/tree logic to respect .gitignore rules.",
   "summary": "Fixed GetFolderChildren() in ./repo/cli/main.go to apply gitignore filtering. The function was missing the GetGitIgnoredSet() call that ToolFolderList, ToolFolderTree, and GetFolderFiles all had. Now folder children are collected as candidates first, checked against git check-ignore, and filtered before being returned.",

@@ -83,6 +83,105 @@ TODO: Add roomie to discord for verification
 
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)
 
+repo:
+
+Every single entity MUST have a unique emoji among the siblings inside the same parent. No white space after the emoji.
+
+- Technologies: Add the emoji as yml-key to the frontmatter of the `AGENTS.md` file.
+- Bundles: Add the emoji as yml-key to the frontmatter of the `AGENTS.md` file.
+- Folders: Add the emoji as yml-key to the frontmatter of the `AGENTS.md` file.
+- Files: Add the emoji in front of the description line
+  e.g.
+
+```
+// #region 🎩Header
+// semio/ui/index.tsx
+// 2026 Ueli Saluz <ueli@semio-tech.com>
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// 🖱️Shared semio ui components.
+// #endregion 🎩Header
+```
+
+- Sections: Add the emoji in front of the section name for regions e.g. `#region 💾State`, Exception Rust: modules are `mod diffs` where the emoji is infront of the native module description docstring.
+- Definitions: Add the emoji in front of the docstring summary
+
+You MUST adjust the repo implementation, tests and extend all entities and source code in the complete codebase. Current implementation is not clean.
+
+repo:
+All tickets MUST have an `emoji` that summarizes the ticket.
+Adjust all implementations, tests and extend all existing tickets manually with a fitting emoji.
+
+Create a git hook that automatically creates a commit messages. If the commit contains new tickets `.repo/🎫/{{YY}}/{{MM}}/{{DD}}/*/ticket.json` add them to the description. Only change the commit message for branches that match `{{dev-emoji}}{{dev-alias}}/🏗️dev`
+
+scheme:
+
+```tpl
+{{.DevEmoji}}{{.DevAlias}}🎆{{.Year}}🌙{{.Month}}☀️{{.Day}}🚩{{.CommitCountSinceLastMerge}}
+{{range .Days -}}
+🎆{{.Year}}🌙{{.Month}}☀️{{.Day}}
+{{range .Tickets -}}
+- {{.Emoji}} {{.Title}}
+{{end -}}
+{{end -}}
+{{.SignedOffBy}}
+```
+
+e.g.
+
+```
+🐙ueli🎆26🌙04☀️07🚩2
+🎆26🌙04☀️07
+- 🔌Add Max Children to Port and Type Connector
+- 📚Refactor UI Levels from Stories to Storybook Decorator
+🎆26🌙04☀️06
+- 📊Server Baseline Diffs Studio Adapter E2e Tests
+- 🔖Use Mod Instead of Region for Rust Sections
+- 🧪Consolidate Server Into Bin Rs With Integration Tests
+- ⌛Fix Mcp App Scene and Diagram Without Timeout
+🎆26🌙04☀️03
+- 💍Fix Type Connector Ring Detail Panel
+- 🍩Fix Workbench Piece Addition to Show Correct Type 3D Model in Scene
+Signed-off-by: Ueli Saluz <ueli@semio-tech.com>
+```
+
+---
+
+Create an agentskill SKILL.md for merging commits.
+
+It is a monorepo and devs work accross different technologies and bundles. Mostly commits are working more in special areas. All docs can be found under tickets and sessions. If the current git user is not the author from the merged commits then add the user as co-author.
+
+Commit messages:
+It MUST follow the scheme:
+
+```
+{{dev-emoji}}{{dev-alias}}🎆{{YY}}🌙{{MM}}☀️{{DD}}🔀
+🎆{{YY}}🌙{{MM}}☀️{{DD}}
+- {{ticket-emoji}} {{ticket-title}}
+{{co-authored-by}}
+{{signed-off-by}}
+```
+
+e.g.
+
+```
+🐙ueli🎆26🌙04☀️07🔀
+🎆26🌙04☀️07
+- 🔌Add Max Children to Port and Type Connector
+- 📚Refactor UI Levels from Stories to Storybook Decorator
+🎆26🌙04☀️06
+- 📊Server Baseline Diffs Studio Adapter E2e Tests
+- 🔖Use Mod Instead of Region for Rust Sections
+- 🧪Consolidate Server Into Bin Rs With Integration Tests
+- ⌛Fix Mcp App Scene and Diagram Without Timeout
+🎆26🌙04☀️03
+- 💍Fix Type Connector Ring Detail Panel
+- 🍩Fix Workbench Piece Addition to Show Correct Type 3D Model in Scene
+Co-authored-by: Kinan Sarakbi <kinan.sarak@gmail.com>
+Signed-off-by: Ueli Saluz <ueli@semio-tech.com>
+```
+
+---
+
 Remove all tasks.json and integrate it directly into launch.json
 
 elements ui and semio ui MUST NOT have any dependency to sketchpad. Further make sure that all test dependencies etc are not bundled in the build. Same for tests assets such as semio asset metabolism.
@@ -172,6 +271,19 @@ Define a clusterPiecesInDesign(kit:Kit, design:Guid, pieces:Guid[]):KitDiff func
 - Removes all internal connection which are only within the given pieces from the current design and
 
 A clusterPiecesInDesign is a shape invariant operation (all piece planes after flatten are identical before and after cluster)
+
+---
+
+- The target design is not correct it MUST be different from the source design. `nakagin-capsule-tower.paste.design.semio.json` which is just the second storey (flat tambour at different location with all capsules)
+- Not 2 stories but one story with two design with diff outputs: WithoutCoord and WithCoord. The target design is missing as input window (currently nothing can be selected but will be extended in the future.)
+
+---
+
+- The test case is missing `nakagin-capsule-tower.paste.design.semio.json` which is just the second storey (flat tambour at different location with all capsules)
+- The story is wrong. Make sure to add coord input. The output is only the diff display of the target. Dont add diff and output just diff. Call it `WithoutCoord`. The selections is wrong. Take the one that we described.
+- Add another output with diff can call it `WithCood`. Create a new `nakagin-capsule-tower.paste.with-coord.design.diff.semio.json` along with it and extend all tests
+- You missed some programming languages
+- The connections where both pieces are not external MUST NOT change, not even u and v. Only when pieces are matched then u,v changes when coord is given.
 
 ---
 
@@ -489,6 +601,12 @@ MUST work for both kind of kits. Extend the engine with a way to authenticate wi
 ## 👤semio⌨️engine🤖mcp
 
 semio engine mcp:
+
+The styling from the apps is largely different to the one in semio/ui. It MUST be identical and not have any debug code etc. There are a lot of mismatches. It MUST be 100% identical to semio/ui with no modifications. e.g. the colors of the gizmo, not all models show lines. A lot of things are displayed with light foreground on light background (e.g. text of kit app or pieces in diagram)
+
+The current mcp app is centered around designs. But it should be general for semio. Refactor everything, so that kit, design, design-diagram, design-scene all a
+re equal.
+
 All apps MUST use semio/ui. Use clean architecture, no stubs etc
 
 This should not happen:

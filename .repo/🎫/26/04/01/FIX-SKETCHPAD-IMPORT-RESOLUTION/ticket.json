@@ -1,5 +1,6 @@
 {
   "title": "Fix Sketchpad Import Resolution",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix the sketchpad Vite build error: Failed to resolve import \"@modelcontextprotocol/ext-apps/react\" from \"../../ui/index.tsx\". The sketchpad imports @semio/ui which transitively imports this MCP package that isn't available in the sketchpad context. Need to fix the import resolution.",
   "summary": "The `@modelcontextprotocol/ext-apps` package was declared in both the root `package.json` and `@semio/ui/package.json` but was not actually installed in `node_modules`. Running `npm install @modelcontextprotocol/ext-apps` resolved the missing dependency. The sketchpad's Vite build now succeeds (4039 modules transformed) and the dev server starts cleanly on port 5173.",

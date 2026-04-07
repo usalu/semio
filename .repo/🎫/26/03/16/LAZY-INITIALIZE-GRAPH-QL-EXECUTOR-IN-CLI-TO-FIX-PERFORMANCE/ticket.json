@@ -1,5 +1,6 @@
 {
   "title": "Lazy Initialize GraphQL Executor in CLI to Fix Performance",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The CLI has a massive performance problem: the init() function at line 16169 eagerly initializes the GraphQL executor (NewExecutorWithContext + NewRepoContext + buildSchema + LoadBundles) for every single CLI invocation, including lightweight hook calls. Since hooks fire many times per second during agent sessions, this causes 11+ CLI processes each consuming 100%+ CPU, creating 33+ load average. Fix by making executor initialization lazy - only initialize when gql() is actually called.",
   "summary": "Made GraphQL executor initialization lazy via sync.Once in ensureExecutor(). The init() at line 16169 no longer calls NewExecutorWithContext/NewRepoContext/buildSchema/LoadBundles eagerly. Hook commands (which fire many times per second during agent sessions) now skip this expensive initialization entirely, reducing CPU from 100%+ per process to ~0.1s total. Also removed eager NewResolver init. Added TestMain to test file to ensure executor is initialized before tests that need it.",

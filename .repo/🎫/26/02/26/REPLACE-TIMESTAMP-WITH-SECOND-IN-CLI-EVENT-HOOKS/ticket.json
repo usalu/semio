@@ -1,5 +1,6 @@
 {
   "title": "Replace Timestamp With Second in CLI Event Hooks",
+  "emoji": "🔄",
   "status": "closed",
   "description": "Replace timestamp with second everywhere in repo to use custom formatting 🎆YY🌙MM☀️DD⏰HH⌚MM⏱️SS",
   "summary": "Replaced timestamp with second formatting logic across repo cli and server to align with domain naming rules",

@@ -1,5 +1,4 @@
-# region Header
-# [🔬coda📚py💻coda](repo://p/r/coda/b/l/py/f/coda.py)
+# #region 📊Header
 
 # 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -14,10 +13,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# endregion Header
+# #endregion 📊Header
 
-# region Imports
-# [🔬coda📚py💻coda🔖imports](repo://p/r/coda/b/l/py/f/coda.py/s/Imports)
+# #region ⭐Imports
 # Imports MUST include standard library, third-party FastMCP, and module-level configuration.
 
 """coda - ACC design assistant. Runs as MCP server or Electron sidecar binary."""
@@ -50,17 +48,15 @@ _PROPERTY_KIND_MEASURE_KINDS = {
     "category": ["include", "exclude"],
 }
 
-# endregion Imports
+# #endregion ⭐Imports
 
-# region Helpers
-# [🔬coda📚py💻coda🔖helpers](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers)
+# #region 🎢Helpers
 # Helpers MUST provide private functions for config loading and project root resolution.
 
 
 def _load_json_with_comments(path: Path) -> dict:
-    """Load JSON file, stripping // line comments.
+    """💬Load JSON file, stripping // line comments.
     _load_json_with_comments MUST strip full-line // comments without corrupting URLs inside strings.
-    [🔬coda📚py💻coda🔖helpers🛠️loadjsonwithcomments](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_load_json_with_comments)
     """
     text = path.read_text(encoding="utf-8")
     text = re.sub(r"^\s*//.*$", "", text, flags=re.MULTILINE)
@@ -68,9 +64,8 @@ def _load_json_with_comments(path: Path) -> dict:
 
 
 def _get_project_root() -> Path | None:
-    """Resolve project root from CODA_PROJECT or cwd.
+    """🌱Resolve project root from CODA_PROJECT or cwd.
     _get_project_root MUST perform the _get_project_root operation.
-    [🔬coda📚py💻coda🔖helpers🛠️getprojectroot](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_project_root)
     """
     if val := os.environ.get(_PROJECT_ENV):
         p = Path(val).resolve()
@@ -83,8 +78,7 @@ def _get_project_root() -> Path | None:
 
 
 def _get_coda_config() -> dict:
-    """_get_coda_config performs the _get_coda_config operation.
-    [🔬coda📚py💻coda🔖helpers🛠️getcodaconfig](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_coda_config)
+    """⚙️_get_coda_config performs the _get_coda_config operation.
     _get_coda_config MUST perform the _get_coda_config operation.
     """
     config_path = Path(os.environ.get("CODA_CONFIG", _CODA_JSON_PATH))
@@ -94,9 +88,8 @@ def _get_coda_config() -> dict:
 
 
 def _canonicalize_property_kind(raw_kind: str | None) -> str:
-    """Map legacy property kind values to canonical coda kinds.
+    """🏷️Map legacy property kind values to canonical coda kinds.
     _canonicalize_property_kind MUST map to one of: number, object, array, level, category.
-    [🔬coda📚py💻coda🔖helpers🛠️canonicalizepropertykind](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_canonicalize_property_kind)
     """
     if not raw_kind:
         return "object"
@@ -109,9 +102,8 @@ def _canonicalize_property_kind(raw_kind: str | None) -> str:
 
 
 def _normalize_property_definition(property_definition: dict) -> dict:
-    """Normalize a property definition to the canonical coda property kind system.
+    """📖Normalize a property definition to the canonical coda property kind system.
     _normalize_property_definition MUST expose canonical kind and kind-specific measure_kinds.
-    [🔬coda📚py💻coda🔖helpers🛠️normalizepropertydefinition](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_normalize_property_definition)
     """
     normalized = dict(property_definition)
     kind = _canonicalize_property_kind(normalized.get("kind") or normalized.get("type"))
@@ -161,9 +153,8 @@ def _normalize_property_definition(property_definition: dict) -> dict:
 
 
 def _normalize_target_definition(target_definition: dict) -> dict:
-    """Normalize target property definitions to canonical coda property kinds.
+    """🎛️Normalize target property definitions to canonical coda property kinds.
     _normalize_target_definition MUST normalize all target properties recursively.
-    [🔬coda📚py💻coda🔖helpers🛠️normalizetargetdefinition](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_normalize_target_definition)
     """
     normalized = dict(target_definition)
     properties = normalized.get("properties", [])
@@ -176,8 +167,7 @@ def _normalize_target_definition(target_definition: dict) -> dict:
 
 
 def _get_project_config() -> dict | None:
-    """_get_project_config performs the _get_project_config operation.
-    [🔬coda📚py💻coda🔖helpers🛠️getprojectconfig](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_project_config)
+    """📋_get_project_config performs the _get_project_config operation.
     _get_project_config MUST perform the _get_project_config operation.
     """
     root = _get_project_root()
@@ -188,7 +178,7 @@ def _get_project_config() -> dict | None:
 
 
 def _ensure_validation_envelope(raw: str) -> dict:
-    """Normalize arbitrary validator output into the canonical validation envelope."""
+    """🔷Normalize arbitrary validator output into the canonical validation envelope."""
     text = raw if isinstance(raw, str) else str(raw)
     try:
         obj = json.loads(text)
@@ -337,8 +327,7 @@ def _run_ontology_validator(
 
 
 def _get_latest_run(root: Path) -> Path | None:
-    """_get_latest_run performs the _get_latest_run operation.
-    [🔬coda📚py💻coda🔖helpers🛠️getlatestrun](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_latest_run)
+    """🧪_get_latest_run performs the _get_latest_run operation.
     _get_latest_run MUST perform the _get_latest_run operation.
     """
     runs = root / ".coda" / "runs"
@@ -349,8 +338,7 @@ def _get_latest_run(root: Path) -> Path | None:
 
 
 def _get_latest_iteration(run_dir: Path) -> Path | None:
-    """_get_latest_iteration performs the _get_latest_iteration operation.
-    [🔬coda📚py💻coda🔖helpers🛠️getlatestiteration](repo://p/r/coda/b/l/py/f/coda.py/s/Helpers/d/i/_get_latest_iteration)
+    """🔶_get_latest_iteration performs the _get_latest_iteration operation.
     _get_latest_iteration MUST perform the _get_latest_iteration operation.
     """
     iters = run_dir / "iterations"
@@ -362,17 +350,15 @@ def _get_latest_iteration(run_dir: Path) -> Path | None:
     return iters / str(dirs[-1]) if dirs else None
 
 
-# endregion Helpers
+# #endregion 🎢Helpers
 
-# region Session
-# [🔬coda📚py💻coda🔖session](repo://p/r/coda/b/l/py/f/coda.py/s/Session)
+# #region 🔗Session
 # Session MUST hold mutable state for the current project, run, iteration, and target.
 
 
 class Session:
-    """Stateful session tracking the current project, run, iteration, and target.
+    """🪪Stateful session tracking the current project, run, iteration, and target.
     Shared by both MCP and sidecar modes.
-    [🔬coda📚py💻coda🔖session🛠️session](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/Session)
     """
 
     def __init__(self) -> None:
@@ -382,8 +368,7 @@ class Session:
         self.target_id: str | None = None
 
     def start_working_on_project(self, path: str) -> dict:
-        """Set the active project root. Resets run/iteration/target.
-        [🔬coda📚py💻coda🔖session🛠️startworkingonproject](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/start_working_on_project)
+        """▶️Set the active project root. Resets run/iteration/target.
         """
         p = Path(path).resolve()
         if not (p / ".coda" / "project.json").exists():
@@ -405,8 +390,7 @@ class Session:
         }
 
     def start_run(self) -> dict:
-        """Create a new run in the current project. Sets it as active run.
-        [🔬coda📚py💻coda🔖session🛠️startrun](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/start_run)
+        """🆕Create a new run in the current project. Sets it as active run.
         """
         if not self.project_root:
             return {"error": "No project. Call start_working_on_project first."}
@@ -425,8 +409,7 @@ class Session:
         return {"run_id": run_id, "path": str(run_dir)}
 
     def start_iteration(self, run_id: str | None = None) -> dict:
-        """Create a new iteration in the active or specified run. Sets it as active iteration.
-        [🔬coda📚py💻coda🔖session🛠️startiteration](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/start_iteration)
+        """🗃️Create a new iteration in the active or specified run. Sets it as active iteration.
         """
         if not self.project_root:
             return {"error": "No project. Call start_working_on_project first."}
@@ -466,8 +449,7 @@ class Session:
         }
 
     def start_translation(self, target_id: str) -> dict:
-        """Set the active target and prepare for translation.
-        [🔬coda📚py💻coda🔖session🛠️starttranslation](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/start_translation)
+        """🔹Set the active target and prepare for translation.
         """
         if not self.project_root:
             return {"error": "No project. Call start_working_on_project first."}
@@ -503,8 +485,7 @@ class Session:
         }
 
     def get_status(self) -> dict:
-        """Return current session state.
-        [🔬coda📚py💻coda🔖session🛠️getstatus](repo://p/r/coda/b/l/py/f/coda.py/s/Session/d/i/get_status)
+        """🔸Return current session state.
         """
         return {
             "project_root": str(self.project_root) if self.project_root else None,
@@ -523,12 +504,12 @@ _mcp_sessions: weakref.WeakKeyDictionary[typing.Any, Session] = weakref.WeakKeyD
 
 
 def _mcp_session_id(ctx) -> typing.Any | None:
-    """Get MCP session object from context."""
+    """📝Get MCP session object from context."""
     return ctx.session if ctx and hasattr(ctx, "session") else None
 
 
 def _get_mcp_session(ctx) -> Session:
-    """Get or create Session for an MCP session."""
+    """🔺Get or create Session for an MCP session."""
     sid = _mcp_session_id(ctx)
     if sid is None:
         return _sidecar_session
@@ -537,18 +518,16 @@ def _get_mcp_session(ctx) -> Session:
     return _mcp_sessions[sid]
 
 
-# endregion Session
+# #endregion 🔗Session
 
-# region Resources
-# [🔬coda📚py💻coda🔖resources](repo://p/r/coda/b/l/py/f/coda.py/s/Resources)
+# #region 🕸️Resources
 # Resources MUST expose MCP resource handlers for measures, targets, properties, rules, and project data.
 
 
 @mcp.resource("coda://measures")
 def get_measures() -> str:
-    """List all measures that are available.
+    """🔻List all measures that are available.
     Implementations MUST load the coda config and return the measures array.
-    [🔬coda📚py💻coda🔖resources🛠️getmeasures](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_measures)
     """
     config = _get_coda_config()
     return json.dumps(config.get("measures", []), indent=2)
@@ -556,9 +535,8 @@ def get_measures() -> str:
 
 @mcp.resource("coda://measure/{id}")
 def get_measure(id: str) -> str:
-    """Get a measure by id.
+    """⬛Get a measure by id.
     Implementations MUST return an error JSON object when the measure is not found.
-    [🔬coda📚py💻coda🔖resources🛠️getmeasure](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_measure)
     """
     config = _get_coda_config()
     for m in config.get("measures", []):
@@ -569,8 +547,7 @@ def get_measure(id: str) -> str:
 
 @mcp.resource("coda://property-kinds")
 def get_property_kinds() -> str:
-    """List all property kinds with their measures.
-    [🔬coda📚py💻coda🔖resources🛠️getpropertykinds](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_property_kinds)
+    """⬜List all property kinds with their measures.
     """
     config = _get_coda_config()
     return json.dumps(config.get("property_kinds", {}), indent=2)
@@ -578,8 +555,7 @@ def get_property_kinds() -> str:
 
 @mcp.resource("coda://correlation")
 def get_correlation() -> str:
-    """Get the property correlation matrix.
-    [🔬coda📚py💻coda🔖resources🛠️getcorrelation](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_correlation)
+    """🟥Get the property correlation matrix.
     """
     config = _get_coda_config()
     return json.dumps(config.get("correlation", {}), indent=2)
@@ -587,9 +563,8 @@ def get_correlation() -> str:
 
 @mcp.resource("coda://properties")
 def get_properties() -> str:
-    """List all root-level property definitions with normalized kinds and measure_kinds.
+    """🟧List all root-level property definitions with normalized kinds and measure_kinds.
     Implementations MUST load the coda config and return the normalized properties array.
-    [🔬coda📚py💻coda🔖resources🛠️getproperties](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_properties)
     """
     config = _get_coda_config()
     properties = [
@@ -601,9 +576,8 @@ def get_properties() -> str:
 
 @mcp.resource("coda://property/{id}")
 def get_property(id: str) -> str:
-    """Get a root-level property by id with normalized kind and measure_kinds.
+    """🟨Get a root-level property by id with normalized kind and measure_kinds.
     Implementations MUST return an error JSON object when the property is not found.
-    [🔬coda📚py💻coda🔖resources🛠️getproperty](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_property)
     """
     config = _get_coda_config()
     for p in config.get("properties", []):
@@ -614,9 +588,8 @@ def get_property(id: str) -> str:
 
 @mcp.resource("coda://targets")
 def get_targets() -> str:
-    """List all targets.
+    """🟩List all targets.
     Implementations MUST load the coda config and return the targets array.
-    [🔬coda📚py💻coda🔖resources🛠️gettargets](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_targets)
     """
     config = _get_coda_config()
     targets = [_normalize_target_definition(t) for t in config.get("targets", [])]
@@ -625,9 +598,8 @@ def get_targets() -> str:
 
 @mcp.resource("coda://frameworks")
 def get_frameworks() -> str:
-    """List all frameworks. Frameworks are the same as targets in coda.json but general (not project-scoped).
+    """🔭List all frameworks. Frameworks are the same as targets in coda.json but general (not project-scoped).
     Implementations MUST load the coda config and return the targets array.
-    [🔬coda📚py💻coda🔖resources🛠️getframeworks](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_frameworks)
     """
     config = _get_coda_config()
     return json.dumps(config.get("targets", []), indent=2)
@@ -635,9 +607,8 @@ def get_frameworks() -> str:
 
 @mcp.resource("coda://framework/{id}")
 def get_framework(id: str) -> str:
-    """Get a framework by id. Frameworks are the same as targets in coda.json but general (not project-scoped).
+    """💼Get a framework by id. Frameworks are the same as targets in coda.json but general (not project-scoped).
     Implementations MUST return an error JSON object when the framework is not found.
-    [🔬coda📚py💻coda🔖resources🛠️getframework](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_framework)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -648,9 +619,8 @@ def get_framework(id: str) -> str:
 
 @mcp.resource("coda://target/{id}")
 def get_target(id: str) -> str:
-    """Get a target by id.
+    """🟦Get a target by id.
     Implementations MUST return an error JSON object when the target is not found.
-    [🔬coda📚py💻coda🔖resources🛠️gettarget](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_target)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -661,9 +631,8 @@ def get_target(id: str) -> str:
 
 @mcp.resource("coda://{target_id}/properties")
 def get_target_properties(target_id: str) -> str:
-    """Get properties for a target.
+    """🟪Get properties for a target.
     Implementations MUST return an error JSON object when the target is not found.
-    [🔬coda📚py💻coda🔖resources🛠️gettargetproperties](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_target_properties)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -675,9 +644,8 @@ def get_target_properties(target_id: str) -> str:
 
 @mcp.resource("coda://{target_id}/property/{id}")
 def get_target_property(target_id: str, id: str) -> str:
-    """Get a property by id for a target.
+    """🟫Get a property by id for a target.
     Implementations MUST return an error JSON object when the target or property is not found.
-    [🔬coda📚py💻coda🔖resources🛠️gettargetproperty](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_target_property)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -692,9 +660,8 @@ def get_target_property(target_id: str, id: str) -> str:
 
 @mcp.resource("coda://{target_id}/rules")
 def get_target_rules(target_id: str) -> str:
-    """Get rules for a target.
+    """💠Get rules for a target.
     Implementations MUST return an error JSON object when the target is not found.
-    [🔬coda📚py💻coda🔖resources🛠️gettargetrules](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_target_rules)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -705,9 +672,8 @@ def get_target_rules(target_id: str) -> str:
 
 @mcp.resource("coda://{target_id}/rule/{id}")
 def get_target_rule(target_id: str, id: str) -> str:
-    """Get a rule by id for a target.
+    """🔳Get a rule by id for a target.
     Implementations MUST return an error JSON object when the target or rule is not found.
-    [🔬coda📚py💻coda🔖resources🛠️gettargetrule](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_target_rule)
     """
     config = _get_coda_config()
     for t in config.get("targets", []):
@@ -721,9 +687,8 @@ def get_target_rule(target_id: str, id: str) -> str:
 
 @mcp.resource("coda://project")
 def get_project() -> str:
-    """Get the current project configuration.
+    """🔲Get the current project configuration.
     Implementations MUST return an error JSON object when no project root is found.
-    [🔬coda📚py💻coda🔖resources🛠️getproject](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_project)
     """
     proj = _get_project_config()
     if proj is None:
@@ -737,9 +702,8 @@ def get_project() -> str:
 
 @mcp.resource("coda://current-run")
 def get_current_run() -> str:
-    """Get the current run metadata.
+    """▪️Get the current run metadata.
     Implementations MUST return an error JSON object when no project or run exists.
-    [🔬coda📚py💻coda🔖resources🛠️getcurrentrun](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_current_run)
     """
     root = _get_project_root()
     if not root:
@@ -758,9 +722,8 @@ def get_current_run() -> str:
 
 @mcp.resource("coda://current-iteration")
 def get_current_iteration() -> str:
-    """Get the current iteration metadata.
+    """▫️Get the current iteration metadata.
     Implementations MUST return an error JSON object when no project, run, or iteration exists.
-    [🔬coda📚py💻coda🔖resources🛠️getcurrentiteration](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_current_iteration)
     """
     root = _get_project_root()
     if not root:
@@ -782,9 +745,8 @@ def get_current_iteration() -> str:
 
 @mcp.resource("coda://iterations")
 def get_iterations() -> str:
-    """List iterations in the current run.
+    """◾List iterations in the current run.
     Implementations MUST return an empty array when no runs or iterations exist.
-    [🔬coda📚py💻coda🔖resources🛠️getiterations](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_iterations)
     """
     root = _get_project_root()
     if not root:
@@ -802,8 +764,7 @@ def get_iterations() -> str:
 
 @mcp.resource("coda://report")
 def get_report() -> str:
-    """Get the current report from the latest iteration.
-    [🔬coda📚py💻coda🔖resources🛠️getreport](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_report)
+    """◽Get the current report from the latest iteration.
     get_report MUST perform the get_report operation.
     """
     root = _get_project_root()
@@ -823,9 +784,8 @@ def get_report() -> str:
 
 @mcp.resource("coda://platforms")
 def get_platforms() -> str:
-    """List all platforms with their measure instructions.
+    """🧱List all platforms with their measure instructions.
     Implementations MUST load the coda config and return the platforms array.
-    [🔬coda📚py💻coda🔖resources🛠️getplatforms](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_platforms)
     """
     config = _get_coda_config()
     return json.dumps(config.get("platforms", []), indent=2)
@@ -833,9 +793,8 @@ def get_platforms() -> str:
 
 @mcp.resource("coda://platform/{id}")
 def get_platform(id: str) -> str:
-    """Get a platform by id with its measure instructions.
+    """◻️Get a platform by id with its measure instructions.
     Implementations MUST return an error JSON object when the platform is not found.
-    [🔬coda📚py💻coda🔖resources🛠️getplatform](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_platform)
     """
     config = _get_coda_config()
     for p in config.get("platforms", []):
@@ -846,9 +805,8 @@ def get_platform(id: str) -> str:
 
 @mcp.resource("coda://breachs")
 def get_breachs() -> str:
-    """Get breachs from the current report of the latest iteration.
+    """◼️Get breachs from the current report of the latest iteration.
     Implementations MUST return an empty array when no breachs exist.
-    [🔬coda📚py💻coda🔖resources🛠️getbreachs](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_breachs)
     """
     root = _get_project_root()
     if not root:
@@ -869,9 +827,8 @@ def get_breachs() -> str:
 
 @mcp.resource("coda://translation/{target_id}")
 def get_translation(target_id: str) -> str:
-    """Get the translation output for a target in the current iteration.
+    """🔵Get the translation output for a target in the current iteration.
     Implementations MUST return an error JSON object when no translation exists.
-    [🔬coda📚py💻coda🔖resources🛠️gettranslation](repo://p/r/coda/b/l/py/f/coda.py/s/Resources/d/i/get_translation)
     """
     root = _get_project_root()
     if not root:
@@ -890,7 +847,7 @@ def get_translation(target_id: str) -> str:
 
 @mcp.resource("coda://validation/{target_id}")
 def get_validation(target_id: str) -> str:
-    """Get the validation report for a target in the current iteration (ontology or binary).
+    """📜Get the validation report for a target in the current iteration (ontology or binary).
     get_validation MUST return the per-target validation envelope written by validate/save_validation.
     """
     root = _get_project_root()
@@ -908,62 +865,55 @@ def get_validation(target_id: str) -> str:
     return report_json.read_text(encoding="utf-8")
 
 
-# endregion Resources
-# region Tools
-# [🔬coda📚py💻coda🔖tools](repo://p/r/coda/b/l/py/f/coda.py/s/Tools)
+# #endregion 🕸️Resources
+# #region 🥁Tools
 # Tools MUST expose stateful MCP tool handlers following the engine pattern.
 # Call start_working_on_project(path) first; then start_run, start_iteration, start_translation.
 
 
 @mcp.tool()
 def start_working_on_project(path: str, ctx: Context) -> dict:
-    """Set the active project for this MCP session. MUST be called first.
+    """🔴Set the active project for this MCP session. MUST be called first.
     Path: absolute path to a folder containing .coda/project.json.
-    [🔬coda📚py💻coda🔖tools🛠️startworkingonproject](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/start_working_on_project)
     """
     return _get_mcp_session(ctx).start_working_on_project(path)
 
 
 @mcp.tool()
 def start_run(ctx: Context) -> dict:
-    """Start a new run in the active project. Creates run directory under .coda/runs.
+    """📂Start a new run in the active project. Creates run directory under .coda/runs.
     MUST call start_working_on_project first.
-    [🔬coda📚py💻coda🔖tools🛠️startrun](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/start_run)
     """
     return _get_mcp_session(ctx).start_run()
 
 
 @mcp.tool()
 def start_iteration(ctx: Context, run_id: str | None = None) -> dict:
-    """Start a new iteration in the active or specified run.
+    """🟠Start a new iteration in the active or specified run.
     MUST call start_run first (or specify run_id).
-    [🔬coda📚py💻coda🔖tools🛠️startiteration](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/start_iteration)
     """
     return _get_mcp_session(ctx).start_iteration(run_id)
 
 
 @mcp.tool()
 def start_translation(target_id: str, ctx: Context) -> dict:
-    """Set the active target and prepare for translation.
+    """🟡Set the active target and prepare for translation.
     MUST call start_iteration first.
-    [🔬coda📚py💻coda🔖tools🛠️starttranslation](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/start_translation)
     """
     return _get_mcp_session(ctx).start_translation(target_id)
 
 
 @mcp.tool()
 def get_status(ctx: Context) -> dict:
-    """Return the current session state (project, run, iteration, target).
-    [🔬coda📚py💻coda🔖tools🛠️getstatus](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/get_status)
+    """🟢Return the current session state (project, run, iteration, target).
     """
     return _get_mcp_session(ctx).get_status()
 
 
 @mcp.tool()
 def translate(target_id: str, ctx: Context) -> dict:
-    """Translate design to target format by invoking the translator subagent.
+    """🟣Translate design to target format by invoking the translator subagent.
     Uses the session's active iteration or falls back to latest.
-    [🔬coda📚py💻coda🔖tools🛠️translate](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/translate)
     """
     sess = _get_mcp_session(ctx)
     if sess.project_root and sess.iteration_dir:
@@ -1009,8 +959,7 @@ def translate(target_id: str, ctx: Context) -> dict:
 
 @mcp.tool()
 def save_translation(target_id: str, data: str) -> dict:
-    """Save translation output for a target in the current iteration.
-    [🔬coda📚py💻coda🔖tools🛠️savetranslation](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/save_translation)
+    """🟤Save translation output for a target in the current iteration.
     """
     root = _get_project_root()
     if not root:
@@ -1030,8 +979,7 @@ def save_translation(target_id: str, data: str) -> dict:
 
 @mcp.tool()
 def validate(target_id: str) -> dict:
-    """Validate a target by running its validator on the translation output.
-    [🔬coda📚py💻coda🔖tools🛠️validate](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/validate)
+    """⚪Validate a target by running its validator on the translation output.
     """
     root = _get_project_root()
     if not root:
@@ -1122,8 +1070,7 @@ def validate(target_id: str) -> dict:
 
 @mcp.tool()
 def save_report(report_data: str) -> dict:
-    """Save aggregated report for the current iteration.
-    [🔬coda📚py💻coda🔖tools🛠️savereport](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/save_report)
+    """⚫Save aggregated report for the current iteration.
     """
     root = _get_project_root()
     if not root:
@@ -1141,8 +1088,7 @@ def save_report(report_data: str) -> dict:
 
 @mcp.tool()
 def fix(prompt: str) -> dict:
-    """Fix design to address breachs by invoking the fixer subagent.
-    [🔬coda📚py💻coda🔖tools🛠️fix](repo://p/r/coda/b/l/py/f/coda.py/s/Tools/d/i/fix)
+    """🔧Fix design to address breachs by invoking the fixer subagent.
     """
     proj = _get_project_config()
     if not proj:
@@ -1178,24 +1124,21 @@ def fix(prompt: str) -> dict:
     }
 
 
-# endregion Tools
-# region Prompts
-# [🔬coda📚py💻coda🔖prompts](repo://p/r/coda/b/l/py/f/coda.py/s/Prompts)
+# #endregion 🥁Tools
+# #region 📋Prompts
 # Prompts MUST expose MCP prompt handlers for design change instructions.
 
 
 @mcp.prompt()
 def change(prompt: str) -> str:
-    """Change the design according to the given prompt. Use with the fixer agent.
-    [🔬coda📚py💻coda🔖prompts🛠️change](repo://p/r/coda/b/l/py/f/coda.py/s/Prompts/d/i/change)
+    """♻️Change the design according to the given prompt. Use with the fixer agent.
     """
     return f"Change the design to address the following: {prompt}"
 
 
-# endregion Prompts
+# #endregion 📋Prompts
 
-# region Sidecar
-# [🔬coda📚py💻coda🔖sidecar](repo://p/r/coda/b/l/py/f/coda.py/s/Sidecar)
+# #region 🧱Sidecar
 # Sidecar MUST implement a JSON-over-stdio protocol for Electron integration.
 # Protocol: one JSON object per line on stdin/stdout.
 # Each request: {"id": "<uuid>", "method": "<name>", "params": {...}}
@@ -1206,7 +1149,7 @@ _SIDECAR_METHODS: dict[str, callable] = {}
 
 
 def _register_sidecar(name: str):
-    """Decorator to register a sidecar method handler."""
+    """🎯Decorator to register a sidecar method handler."""
 
     def decorator(fn):
         _SIDECAR_METHODS[name] = fn
@@ -1639,8 +1582,7 @@ def _sidecar_fix(params: dict) -> dict:
 
 
 def _handle_sidecar_request(request: dict) -> dict:
-    """Dispatch a sidecar JSON request and return a response dict.
-    [🔬coda📚py💻coda🔖sidecar🛠️handlesidecarrequest](repo://p/r/coda/b/l/py/f/coda.py/s/Sidecar/d/i/_handle_sidecar_request)
+    """📩Dispatch a sidecar JSON request and return a response dict.
     """
     req_id = request.get("id")
     method = request.get("method", "")
@@ -1663,8 +1605,7 @@ def _handle_sidecar_request(request: dict) -> dict:
 
 
 def _run_sidecar() -> None:
-    """Run the sidecar stdio event loop. Reads JSON lines from stdin, writes responses to stdout.
-    [🔬coda📚py💻coda🔖sidecar🛠️runsidecar](repo://p/r/coda/b/l/py/f/coda.py/s/Sidecar/d/i/_run_sidecar)
+    """📡Run the sidecar stdio event loop. Reads JSON lines from stdin, writes responses to stdout.
     """
     # Write a ready message so Electron knows we've started
     _write_stdout({"id": None, "result": {"status": "ready", "pid": os.getpid()}})
@@ -1686,24 +1627,22 @@ def _run_sidecar() -> None:
 
 
 def _write_stdout(obj: dict) -> None:
-    """Write a JSON object as a single line to stdout and flush."""
+    """✏️Write a JSON object as a single line to stdout and flush."""
     sys.stdout.write(json.dumps(obj) + "\n")
     sys.stdout.flush()
 
 
-# endregion Sidecar
+# #endregion 🧱Sidecar
 
-# region Main
-# [🔬coda📚py💻coda🔖main](repo://p/r/coda/b/l/py/f/coda.py/s/Main)
+# #region 🐼Main
 # Main MUST provide the CLI entry point supporting MCP (stdio/HTTP) and sidecar modes.
 
 
 def main() -> None:
-    """Parses CLI arguments and starts in the selected mode.
+    """🔬Parses CLI arguments and starts in the selected mode.
     --sidecar: Electron sidecar (JSON-over-stdio).
     --mcp-stdio: MCP server over stdio.
     Default: MCP server over streamable-http on 127.0.0.1:8080.
-    [🔬coda📚py💻coda🔖main🛠️main](repo://p/r/coda/b/l/py/f/coda.py/s/Main/d/i/main)
     """
     parser = argparse.ArgumentParser(description="coda - ACC design assistant")
     group = parser.add_mutually_exclusive_group()
@@ -1738,4 +1677,4 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 
-# endregion Main
+# #endregion 🐼Main

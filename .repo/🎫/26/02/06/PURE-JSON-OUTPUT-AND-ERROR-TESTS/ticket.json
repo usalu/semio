@@ -1,5 +1,6 @@
 {
   "title": "Pure Json Output And Error Tests",
+  "emoji": "❌",
   "status": "closed",
   "description": "All --json commands should return pure data without extra wrapping. Errors go to stderr. All commands must be tested with semantically wrong arguments.",
   "summary": "All --json CLI commands now return pure data without {\"data\": ...} GraphQL wrapper. Errors emitted to stderr. Cobra SilenceUsage/SilenceErrors set. Wrong-argument tests added for all command categories. TestCliJsonPureData and TestCliJsonErrorsToStderr verify output contract. Full test suite passes.",

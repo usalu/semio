@@ -1,6 +1,5 @@
 #!/usr/bin/env tsx
-// #region 🔖Header
-// [👤semio📚engine📜generateschemas](repo://p/u/semio/b/l/engine/f/generate-schemas.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -8,10 +7,9 @@
 
 // Generates JSON schemas from the engine's Python models.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Schema Generation
-// [👤semio📚engine💻generateschemas🔖schemageneration](repo://p/u/semio/b/l/engine/f/generate-schemas.ts/s/Schema%20Generation)
+// #region 🎼Schema Generation
 // Schema generation script. MUST invoke the Python engine schema generator.
 
 import { execSync } from "child_process";
@@ -23,4 +21,4 @@ execSync('uv run python -c "from main import generateSchemas; generateSchemas()"
 
 console.log("✅ Schemas generated");
 
-// #endregion 🔖Schema Generation
+// #endregion 🎼Schema Generation

@@ -1,5 +1,6 @@
 {
   "title": "Extend Kit Diff Coverage Across Languages",
+  "emoji": "📊",
   "status": "closed",
   "description": "Extend the semio diff test asset so it covers every feature of a kit diff, then fix all language implementations until all diff tests across programming languages pass and are functionally equivalent.",
   "summary": "Stabilized semio/js parser and runtime blockers, reconciled metabolism diff fixtures to the canonical asset data, fixed JS zip/validation/runtime regressions, added missing shared SQLite folder/file tables, and aligned .NET zip/sqlite behavior. Verified JS, Python, Go, and .NET net8 tests pass; net48 remains environment-blocked on this machine because mono is unavailable.",

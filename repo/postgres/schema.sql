@@ -1,4 +1,4 @@
--- #region 🔖Header
+-- #region 🧲Header
 -- [🧰repo📚postgres📐schema](repo://p/i/repo/b/l/postgres/f/schema.sql)
 -- 2025 Ueli Saluz <ueli@semio-tech.com>
 -- AGPL-3.0
@@ -10,15 +10,15 @@
 -- - Use jsonb for flexible payload storage.
 -- - Mirror current SQLite schema semantics but use PostgreSQL features.
 -- - Include pg-boss schema via its own init.
--- #endregion 🔖Header
+-- #endregion 🧲Header
 
--- #region 🔖Extensions
+-- #region 🖇️Extensions
 -- [🧰repo📚postgres📐schema🔖extensions](repo://p/i/repo/b/l/postgres/f/schema.sql/s/Extensions)
 -- Required PostgreSQL extensions.
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
--- #endregion 🔖Extensions
+-- #endregion 🖇️Extensions
 
--- #region 🔖Developers
+-- #region 👓Developers
 -- [🧰repo📚postgres📐schema🔖developers](repo://p/i/repo/b/l/postgres/f/schema.sql/s/Developers)
 -- Identity and auth tables for trusted developer access control.
 
@@ -57,9 +57,9 @@ CREATE TABLE IF NOT EXISTS audit_log (
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at DESC);
--- #endregion 🔖Developers
+-- #endregion 👓Developers
 
--- #region 🔖Repos
+-- #region 📐Repos
 -- [🧰repo📚postgres📐schema🔖repos](repo://p/i/repo/b/l/postgres/f/schema.sql/s/Repos)
 -- Repository registration table.
 
@@ -69,9 +69,9 @@ CREATE TABLE IF NOT EXISTS repos (
     path       TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
--- #endregion 🔖Repos
+-- #endregion 📐Repos
 
--- #region 🔖Tickets
+-- #region 📋Tickets
 -- [🧰repo📚postgres📐schema🔖tickets](repo://p/i/repo/b/l/postgres/f/schema.sql/s/Tickets)
 -- Ticket lifecycle tables for tracked work items.
 
@@ -101,9 +101,9 @@ CREATE TABLE IF NOT EXISTS ticket_files (
 );
 
 CREATE INDEX IF NOT EXISTS idx_ticket_files_ticket ON ticket_files(ticket_id);
--- #endregion 🔖Tickets
+-- #endregion 📋Tickets
 
--- #region 🔖Scopes
+-- #region 🧩Scopes
 -- [🧰repo📚postgres📐schema🔖scopes](repo://p/i/repo/b/l/postgres/f/schema.sql/s/Scopes)
 -- Code scope indexing and claim tracking.
 
@@ -126,9 +126,9 @@ CREATE TABLE IF NOT EXISTS ticket_claims (
     last_seen_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (ticket_id, scope_id)
 );
--- #endregion 🔖Scopes
+-- #endregion 🧩Scopes
 
--- #region 🔖Warnings
+-- #region 🎊Warnings
 -- [🧰repo📚postgres📐schema🔖warnings](repo://p/i/repo/b/l/postgres/f/schema.sql/s/Warnings)
 -- Warning and breach detection tables.
 
@@ -163,9 +163,9 @@ CREATE TABLE IF NOT EXISTS breaches (
 );
 
 CREATE INDEX IF NOT EXISTS idx_breaches_ticket ON breaches(ticket_id, detected_at DESC);
--- #endregion 🔖Warnings
+-- #endregion 🎊Warnings
 
--- #region 🔖Events
+-- #region ⛅Events
 -- [🧰repo📚postgres📐schema🔖events](repo://p/i/repo/b/l/postgres/f/schema.sql/s/Events)
 -- Event log for all system and user actions.
 
@@ -179,9 +179,9 @@ CREATE TABLE IF NOT EXISTS events (
 
 CREATE INDEX IF NOT EXISTS idx_events_created ON events(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_events_kind_created ON events(kind, created_at DESC);
--- #endregion 🔖Events
+-- #endregion ⛅Events
 
--- #region 🔖ContributorWork
+-- #region 🗂️ContributorWork
 -- [🧰repo📚postgres📐schema🔖contributorwork](repo://p/i/repo/b/l/postgres/f/schema.sql/s/ContributorWork)
 -- Contributor work tracking for conflict detection.
 
@@ -191,9 +191,9 @@ CREATE TABLE IF NOT EXISTS contributor_work (
     item_id TEXT NOT NULL,
     PRIMARY KEY (github, kind, item_id)
 );
--- #endregion 🔖ContributorWork
+-- #endregion 🗂️ContributorWork
 
--- #region 🔖Goals
+-- #region ❄️Goals
 -- [🧰repo📚postgres📐schema🔖goals](repo://p/i/repo/b/l/postgres/f/schema.sql/s/Goals)
 -- Goal tracking tables.
 
@@ -207,9 +207,9 @@ CREATE TABLE IF NOT EXISTS goals (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     closed_at   TIMESTAMPTZ
 );
--- #endregion 🔖Goals
+-- #endregion ❄️Goals
 
--- #region 🔖Artifacts
+-- #region 📌Artifacts
 -- [🧰repo📚postgres📐schema🔖artifacts](repo://p/i/repo/b/l/postgres/f/schema.sql/s/Artifacts)
 -- Uploaded ticket folder artifacts.
 
@@ -225,9 +225,9 @@ CREATE TABLE IF NOT EXISTS artifacts (
 );
 
 CREATE INDEX IF NOT EXISTS idx_artifacts_ticket ON artifacts(ticket_id);
--- #endregion 🔖Artifacts
+-- #endregion 📌Artifacts
 
--- #region 🔖Discord
+-- #region 🔷Discord
 -- [🧰repo📚postgres📐schema🔖discord](repo://p/i/repo/b/l/postgres/f/schema.sql/s/Discord)
 -- Discord delivery tracking.
 
@@ -251,9 +251,9 @@ CREATE TABLE IF NOT EXISTS discord_deliveries (
 );
 
 CREATE INDEX IF NOT EXISTS idx_discord_deliveries_status ON discord_deliveries(status) WHERE status = 'pending';
--- #endregion 🔖Discord
+-- #endregion 🔷Discord
 
--- #region 🔖Migration
+-- #region 🖼️Migration
 -- [🧰repo📚postgres📐schema🔖migration](repo://p/i/repo/b/l/postgres/f/schema.sql/s/Migration)
 -- Migration ledger for tracking history imports.
 
@@ -275,4 +275,4 @@ CREATE TABLE IF NOT EXISTS migration_failures (
     raw_data    JSONB,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
--- #endregion 🔖Migration
+-- #endregion 🖼️Migration

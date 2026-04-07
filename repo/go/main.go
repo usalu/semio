@@ -1,11 +1,8 @@
-// #region 🔖Header
-// [🧰repo📚go💻main](repo://p/i/repo/b/l/go/f/main.go)
+// #region 🧲Header
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-// GPL-3.0
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 // Shared Go library for repo CLI and server: event kinds, payloads, and emit helper.
-// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or \(at your option\) any later version\. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\.  See the GNU Affero General Public License for more details\. You should have received a copy of the GNU Affero General Public License along with this program\.  If not, see <https://www\.gnu\.org/licenses/>\.
-
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 package repo
 
@@ -21,11 +18,9 @@ import (
 	"time"
 )
 
-// #region 🔖EventKind
-// [🧰repo📚go💻main🔖eventkind](repo://p/i/repo/b/l/go/f/main.go/s/EventKind)
+// #region 📋EventKind
 
-// EventKind identifies a changing interaction. CLI emits; server subscribes and notifies.
-// [🧰repo📚go💻main🔖eventkind✂️eventkind](repo://p/i/repo/b/l/go/f/main.go/s/EventKind/d/i/EventKind)
+// 📡EventKind identifies a changing interaction. CLI emits; server subscribes and notifies.
 type EventKind string
 
 const (
@@ -101,26 +96,22 @@ const (
 	EventPolicyCheckEnded          EventKind = "policy.check.ended"
 )
 
-// #endregion 🔖EventKind
+// #endregion 📋EventKind
 
-// #region 🔖Event
-// [🧰repo📚go💻main🔖event](repo://p/i/repo/b/l/go/f/main.go/s/Event)
+// #region 🏗️Event
 
-// Event is the canonical envelope for a changing interaction sent from CLI to server.
-// [🧰repo📚go💻main🔖event✂️event](repo://p/i/repo/b/l/go/f/main.go/s/Event/d/i/Event)
+// ✉️Event is the canonical envelope for a changing interaction sent from CLI to server.
 type Event struct {
 	Kind    EventKind       `json:"kind"`
 	Source  string          `json:"source"`
 	Payload json.RawMessage `json:"payload"`
 }
 
-// #endregion 🔖Event
+// #endregion 🏗️Event
 
-// #region 🔖Payloads
-// [🧰repo📚go💻main🔖payloads](repo://p/i/repo/b/l/go/f/main.go/s/Payloads)
+// #region 🌨️Payloads
 
-// TicketPayload holds common ticket identifiers.
-// [🧰repo📚go💻main🔖payloads✂️ticketpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TicketPayload)
+// 📦TicketPayload holds common ticket identifiers.
 type TicketPayload struct {
 	ID    string `json:"id"`
 	Year  int    `json:"year,omitempty"`
@@ -129,8 +120,7 @@ type TicketPayload struct {
 	Slug  string `json:"slug,omitempty"`
 }
 
-// TicketOpenPayload payload for ticket.open.
-// [🧰repo📚go💻main🔖payloads✂️ticketopenpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TicketOpenPayload)
+// 🎫TicketOpenPayload payload for ticket.open.
 type TicketOpenPayload struct {
 	TicketPayload
 	Title  string `json:"title"`
@@ -142,8 +132,7 @@ type TicketOpenPayload struct {
 	Parent string `json:"parent,omitempty"`
 }
 
-// TicketClosePayload payload for ticket.close.
-// [🧰repo📚go💻main🔖payloads✂️ticketclosepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TicketClosePayload)
+// 📪TicketClosePayload payload for ticket.close.
 type TicketClosePayload struct {
 	TicketPayload
 	Summary string   `json:"summary"`
@@ -151,8 +140,7 @@ type TicketClosePayload struct {
 	Author  string   `json:"author,omitempty"`
 }
 
-// TicketReopenPayload payload for ticket.reopen.
-// [🧰repo📚go💻main🔖payloads✂️ticketreopenpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TicketReopenPayload)
+// 🔓TicketReopenPayload payload for ticket.reopen.
 type TicketReopenPayload struct {
 	TicketPayload
 	Prompt string `json:"prompt"`
@@ -161,8 +149,7 @@ type TicketReopenPayload struct {
 	Author string `json:"author,omitempty"`
 }
 
-// TicketChangePayload payload for ticket.change.
-// [🧰repo📚go💻main🔖payloads✂️ticketchangepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TicketChangePayload)
+// ♻️TicketChangePayload payload for ticket.change.
 type TicketChangePayload struct {
 	TicketPayload
 	Title  *string `json:"title,omitempty"`
@@ -172,14 +159,12 @@ type TicketChangePayload struct {
 	Author string  `json:"author,omitempty"`
 }
 
-// GoalPayload holds common goal identifiers.
-// [🧰repo📚go💻main🔖payloads✂️goalpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/GoalPayload)
+// ⛳GoalPayload holds common goal identifiers.
 type GoalPayload struct {
 	ID string `json:"id"`
 }
 
-// GoalOpenPayload payload for goal.open.
-// [🧰repo📚go💻main🔖payloads✂️goalopenpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/GoalOpenPayload)
+// 🎯GoalOpenPayload payload for goal.open.
 type GoalOpenPayload struct {
 	GoalPayload
 	Title       string `json:"title"`
@@ -188,16 +173,14 @@ type GoalOpenPayload struct {
 	Author      string `json:"author,omitempty"`
 }
 
-// GoalClosePayload payload for goal.close.
-// [🧰repo📚go💻main🔖payloads✂️goalclosepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/GoalClosePayload)
+// 🏁GoalClosePayload payload for goal.close.
 type GoalClosePayload struct {
 	GoalPayload
 	Summary string `json:"summary"`
 	Author  string `json:"author,omitempty"`
 }
 
-// GoalReopenPayload payload for goal.reopen.
-// [🧰repo📚go💻main🔖payloads✂️goalreopenpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/GoalReopenPayload)
+// 🔄GoalReopenPayload payload for goal.reopen.
 type GoalReopenPayload struct {
 	GoalPayload
 	Prompt string `json:"prompt"`
@@ -206,8 +189,7 @@ type GoalReopenPayload struct {
 	Author string `json:"author,omitempty"`
 }
 
-// GoalChangePayload payload for goal.change.
-// [🧰repo📚go💻main🔖payloads✂️goalchangepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/GoalChangePayload)
+// 📐GoalChangePayload payload for goal.change.
 type GoalChangePayload struct {
 	GoalPayload
 	Title       *string `json:"title,omitempty"`
@@ -216,15 +198,13 @@ type GoalChangePayload struct {
 	Author      string  `json:"author,omitempty"`
 }
 
-// ContributorPayload holds contributor identifiers.
-// [🧰repo📚go💻main🔖payloads✂️contributorpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/ContributorPayload)
+// 👥ContributorPayload holds contributor identifiers.
 type ContributorPayload struct {
 	Github string `json:"github"`
 	Author string `json:"author,omitempty"`
 }
 
-// CheckpointPayload payload for checkpoint (GitHub push).
-// [🧰repo📚go💻main🔖payloads✂️checkpointpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/CheckpointPayload)
+// 💾CheckpointPayload payload for checkpoint (GitHub push).
 type CheckpointPayload struct {
 	Author       string   `json:"author"`
 	Github       string   `json:"github"`
@@ -239,8 +219,7 @@ type CheckpointPayload struct {
 	Definitions  []string `json:"definitions,omitempty"`
 }
 
-// TodoPayload holds todo identifiers.
-// [🧰repo📚go💻main🔖payloads✂️todopayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TodoPayload)
+// ✅TodoPayload holds todo identifiers.
 type TodoPayload struct {
 	ID       string `json:"id"`
 	ParentID string `json:"parent_id,omitempty"`
@@ -248,35 +227,30 @@ type TodoPayload struct {
 	Author   string `json:"author,omitempty"`
 }
 
-// TodoCreatePayload payload for todo.create.
-// [🧰repo📚go💻main🔖payloads✂️todocreatepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TodoCreatePayload)
+// 🆕TodoCreatePayload payload for todo.create.
 type TodoCreatePayload struct {
 	TodoPayload
 }
 
-// TodoChangePayload payload for todo.change.
-// [🧰repo📚go💻main🔖payloads✂️todochangepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TodoChangePayload)
+// ✏️TodoChangePayload payload for todo.change.
 type TodoChangePayload struct {
 	TodoPayload
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
 }
 
-// TodoDeletePayload payload for todo.delete.
-// [🧰repo📚go💻main🔖payloads✂️tododeletepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/TodoDeletePayload)
+// 🗑️TodoDeletePayload payload for todo.delete.
 type TodoDeletePayload struct {
 	TodoPayload
 }
 
-// WorkItem represents a single item a contributor is working on (technology, bundle, folder, file, section, definition, ticket, goal, todo).
-// [🧰repo📚go💻main🔖payloads✂️workitem](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/WorkItem)
+// 💼WorkItem represents a single item a contributor is working on (technology, bundle, folder, file, section, definition, ticket, goal, todo).
 type WorkItem struct {
 	Kind string `json:"kind"`
 	ID   string `json:"id"`
 }
 
-// ContributorWork holds all work items for one contributor.
-// [🧰repo📚go💻main🔖payloads✂️contributorwork](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/ContributorWork)
+// 🤝ContributorWork holds all work items for one contributor.
 type ContributorWork struct {
 	Github       string   `json:"github"`
 	Tickets      []string `json:"tickets"`
@@ -290,32 +264,28 @@ type ContributorWork struct {
 	Definitions  []string `json:"definitions"`
 }
 
-// DraftPayload holds draft identifiers.
-// [🧰repo📚go💻main🔖payloads✂️draftpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/DraftPayload)
+// 📝DraftPayload holds draft identifiers.
 type DraftPayload struct {
 	Slug   string `json:"slug"`
 	Title  string `json:"title,omitempty"`
 	Author string `json:"author,omitempty"`
 }
 
-// FilePayload holds file operation identifiers.
-// [🧰repo📚go💻main🔖payloads✂️filepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/FilePayload)
+// 📄FilePayload holds file operation identifiers.
 type FilePayload struct {
 	Path   string `json:"path"`
 	From   string `json:"from,omitempty"`
 	Author string `json:"author,omitempty"`
 }
 
-// FolderPayload holds folder operation identifiers.
-// [🧰repo📚go💻main🔖payloads✂️folderpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/FolderPayload)
+// 📁FolderPayload holds folder operation identifiers.
 type FolderPayload struct {
 	Path   string `json:"path"`
 	From   string `json:"from,omitempty"`
 	Author string `json:"author,omitempty"`
 }
 
-// SectionPayload holds section operation identifiers.
-// [🧰repo📚go💻main🔖payloads✂️sectionpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/SectionPayload)
+// 📑SectionPayload holds section operation identifiers.
 type SectionPayload struct {
 	File    string `json:"file"`
 	Name    string `json:"name"`
@@ -324,8 +294,7 @@ type SectionPayload struct {
 	Author  string `json:"author,omitempty"`
 }
 
-// IntegratePayload holds integrate operation identifiers.
-// [🧰repo📚go💻main🔖payloads✂️integratepayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/IntegratePayload)
+// 🧬IntegratePayload holds integrate operation identifiers.
 type IntegratePayload struct {
 	Source        string `json:"source"`
 	TargetFile    string `json:"target_file"`
@@ -333,8 +302,7 @@ type IntegratePayload struct {
 	Author        string `json:"author,omitempty"`
 }
 
-// ExtractPayload holds extract operation identifiers.
-// [🧰repo📚go💻main🔖payloads✂️extractpayload](repo://p/i/repo/b/l/go/f/main.go/s/Payloads/d/i/ExtractPayload)
+// 🧲ExtractPayload holds extract operation identifiers.
 type ExtractPayload struct {
 	SourceFile    string `json:"source_file"`
 	SourceSection string `json:"source_section"`
@@ -342,13 +310,11 @@ type ExtractPayload struct {
 	Author        string `json:"author,omitempty"`
 }
 
-// #endregion 🔖Payloads
+// #endregion 🌨️Payloads
 
-// #region 🔖Emit
-// [🧰repo📚go💻main🔖emit](repo://p/i/repo/b/l/go/f/main.go/s/Emit)
+// #region 🧳Emit
 
-// Emit posts an event to the repo server. No-op when SEMIO_SERVER_ADDR is unset.
-// [🧰repo📚go💻main🔖emit🛠️emit](repo://p/i/repo/b/l/go/f/main.go/s/Emit/d/i/Emit)
+// 📤Emit posts an event to the repo server. No-op when SEMIO_SERVER_ADDR is unset.
 func Emit(kind EventKind, source string, payload interface{}) {
 	addr := strings.TrimSpace(os.Getenv("SEMIO_SERVER_ADDR"))
 	if addr == "" {
@@ -380,15 +346,13 @@ func Emit(kind EventKind, source string, payload interface{}) {
 	_, _ = client.Do(req)
 }
 
-// #endregion 🔖Emit
+// #endregion 🧳Emit
 
-// #region 🔖Parsing
-// [🧰repo📚go💻main🔖parsing](repo://p/i/repo/b/l/go/f/main.go/s/Parsing)
+// #region 📹Parsing
 
 // Shared source code parsing primitives for section/definition extraction used by CLI and server.
 
-// ParsedSection represents a parsed source code section from region markers or markdown headings.
-// [🧰repo📚go💻main🔖parsing✂️parsedsection](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParsedSection)
+// 📑ParsedSection represents a parsed source code section from region markers or markdown headings.
 type ParsedSection struct {
 	Name      string
 	Path      string
@@ -396,16 +360,183 @@ type ParsedSection struct {
 	EndLine   int
 }
 
-// ParsedDefinition represents a parsed source code definition extracted by regex patterns.
-// [🧰repo📚go💻main🔖parsing✂️parseddefinition](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParsedDefinition)
+// 📖ParsedDefinition represents a parsed source code definition from regex patterns.
 type ParsedDefinition struct {
 	Name      string
 	StartLine int
 	EndLine   int
 }
 
-// ParseRegionMarker detects region start/end markers in a line, stripping common comment prefixes.
-// [🧰repo📚go💻main🔖parsing🛠️parseregionmarker](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParseRegionMarker)
+// 🎭IsEmojiRune returns true if the rune is likely an emoji base character.
+func IsEmojiRune(r rune) bool {
+	if r >= 0x1F600 && r <= 0x1F64F {
+		return true
+	}
+	if r >= 0x1F300 && r <= 0x1F5FF {
+		return true
+	}
+	if r >= 0x1F680 && r <= 0x1F6FF {
+		return true
+	}
+	if r >= 0x1F700 && r <= 0x1F77F {
+		return true
+	}
+	if r >= 0x1F780 && r <= 0x1F7FF {
+		return true
+	}
+	if r >= 0x1F800 && r <= 0x1F8FF {
+		return true
+	}
+	if r >= 0x1F900 && r <= 0x1F9FF {
+		return true
+	}
+	if r >= 0x1FA00 && r <= 0x1FA6F {
+		return true
+	}
+	if r >= 0x1FA70 && r <= 0x1FAFF {
+		return true
+	}
+	if r >= 0x2600 && r <= 0x26FF {
+		return true
+	}
+	if r >= 0x2700 && r <= 0x27BF {
+		return true
+	}
+	if r >= 0x2300 && r <= 0x23FF {
+		return true
+	}
+	if r >= 0x2B50 && r <= 0x2B55 {
+		return true
+	}
+	if r >= 0x200D && r <= 0x200D {
+		return true
+	}
+	if r >= 0xFE00 && r <= 0xFE0F {
+		return true
+	}
+	if r == 0x2139 || r == 0x2194 || r == 0x2195 {
+		return true
+	}
+	if r >= 0x2196 && r <= 0x2199 {
+		return true
+	}
+	if r >= 0x21A9 && r <= 0x21AA {
+		return true
+	}
+	if r >= 0x231A && r <= 0x231B {
+		return true
+	}
+	if r >= 0x25AA && r <= 0x25AB {
+		return true
+	}
+	if r >= 0x25B6 && r <= 0x25C0 {
+		return true
+	}
+	if r >= 0x25FB && r <= 0x25FE {
+		return true
+	}
+	if r >= 0x2614 && r <= 0x2615 {
+		return true
+	}
+	if r >= 0x2648 && r <= 0x2653 {
+		return true
+	}
+	if r >= 0x267F && r <= 0x267F {
+		return true
+	}
+	if r >= 0x2693 && r <= 0x2693 {
+		return true
+	}
+	if r >= 0x26A1 && r <= 0x26A1 {
+		return true
+	}
+	if r >= 0x26AA && r <= 0x26AB {
+		return true
+	}
+	if r >= 0x26BD && r <= 0x26BE {
+		return true
+	}
+	if r >= 0x26C4 && r <= 0x26C5 {
+		return true
+	}
+	if r >= 0x26CE && r <= 0x26CF {
+		return true
+	}
+	if r >= 0x26D4 && r <= 0x26D4 {
+		return true
+	}
+	if r >= 0x26EA && r <= 0x26EA {
+		return true
+	}
+	if r >= 0x26F2 && r <= 0x26F3 {
+		return true
+	}
+	if r >= 0x26F5 && r <= 0x26F5 {
+		return true
+	}
+	if r >= 0x26FA && r <= 0x26FA {
+		return true
+	}
+	if r >= 0x26FD && r <= 0x26FD {
+		return true
+	}
+	if r == 0x203C || r == 0x2049 {
+		return true
+	}
+	if r == 0x20E3 {
+		return true
+	}
+	if r == 0x00A9 || r == 0x00AE {
+		return true
+	}
+	if r == 0x2122 {
+		return true
+	}
+	return false
+}
+
+// 🧲ExtractEntityEmoji extracts the leading emoji and remaining text from a string.
+func ExtractEntityEmoji(s string) (string, string) {
+	if s == "" {
+		return "", ""
+	}
+	runes := []rune(s)
+	if len(runes) == 0 {
+		return "", ""
+	}
+	i := 0
+	r := runes[i]
+	if !IsEmojiRune(r) {
+		return "", s
+	}
+	i++
+	for i < len(runes) {
+		r = runes[i]
+		if r == 0xFE0F || r == 0xFE0E {
+			i++
+		} else if r == 0x20E3 {
+			i++
+		} else if r == 0x200D {
+			i++
+			if i < len(runes) {
+				i++
+				for i < len(runes) && (runes[i] == 0xFE0F || runes[i] == 0xFE0E) {
+					i++
+				}
+			}
+		} else if r >= 0x1F3FB && r <= 0x1F3FF {
+			i++
+		} else {
+			break
+		}
+	}
+	emoji := string(runes[:i])
+	remaining := string(runes[i:])
+	return emoji, remaining
+}
+
+// 💬ParseRegionMarker detects region start/end markers in a line, stripping common comment prefixes.
+// 💬Supports any emoji prefix (e.g. #region 📋EventKind, #region 🔖Legacy).
 func ParseRegionMarker(line string) (string, bool, bool) {
 	trimmed := strings.TrimSpace(line)
 	trimmed = strings.TrimPrefix(trimmed, "//")
@@ -414,17 +545,24 @@ func ParseRegionMarker(line string) (string, bool, bool) {
 	trimmed = strings.TrimPrefix(trimmed, "/*")
 	trimmed = strings.TrimSuffix(trimmed, "*/")
 	trimmed = strings.TrimSpace(trimmed)
-	if strings.HasPrefix(trimmed, "#region 🔖") {
-		return strings.TrimSpace(strings.TrimPrefix(trimmed, "#region 🔖")), true, false
+	if strings.HasPrefix(trimmed, "#region ") {
+		content := strings.TrimSpace(strings.TrimPrefix(trimmed, "#region "))
+		emoji, name := ExtractEntityEmoji(content)
+		if emoji != "" {
+			return name, true, false
+		}
 	}
-	if strings.HasPrefix(trimmed, "#endregion 🔖") {
-		return strings.TrimSpace(strings.TrimPrefix(trimmed, "#endregion 🔖")), true, true
+	if strings.HasPrefix(trimmed, "#endregion ") {
+		content := strings.TrimSpace(strings.TrimPrefix(trimmed, "#endregion "))
+		emoji, name := ExtractEntityEmoji(content)
+		if emoji != "" {
+			return name, true, true
+		}
 	}
 	return "", false, false
 }
 
-// ParseMarkdownHeading parses a markdown heading line into level and title.
-// [🧰repo📚go💻main🔖parsing🛠️parsemarkdownheading](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParseMarkdownHeading)
+// 🔬ParseMarkdownHeading parses a markdown heading line into level and title.
 func ParseMarkdownHeading(line string) (int, string) {
 	trimmed := strings.TrimSpace(line)
 	if !strings.HasPrefix(trimmed, "#") {
@@ -444,8 +582,7 @@ func ParseMarkdownHeading(line string) (int, string) {
 	return level, name
 }
 
-// DefinitionPatterns returns language-specific regex patterns for extracting definitions by file extension.
-// [🧰repo📚go💻main🔖parsing🛠️definitionpatterns](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/DefinitionPatterns)
+// 🗣️DefinitionPatterns returns language-specific regex patterns for extracting definitions by file extension.
 func DefinitionPatterns(ext string) []*regexp.Regexp {
 	switch ext {
 	case ".go":
@@ -492,8 +629,7 @@ func DefinitionPatterns(ext string) []*regexp.Regexp {
 	}
 }
 
-// ParseSectionsFromLines extracts sections from source lines using region markers and markdown headings.
-// [🧰repo📚go💻main🔖parsing🛠️parsesectionsfromlines](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParseSectionsFromLines)
+// 🌳ParseSectionsFromLines extracts sections from source lines using region markers and markdown headings.
 func ParseSectionsFromLines(lines []string, ext string) []ParsedSection {
 	var sections []ParsedSection
 	type sectionFrame struct {
@@ -557,8 +693,7 @@ func ParseSectionsFromLines(lines []string, ext string) []ParsedSection {
 	return sections
 }
 
-// ParseDefinitionsFromLines extracts definitions from source lines using the given regex patterns.
-// [🧰repo📚go💻main🔖parsing🛠️parsedefinitionsfromlines](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/ParseDefinitionsFromLines)
+// 🧩ParseDefinitionsFromLines extracts definitions from source lines using the given regex patterns.
 func ParseDefinitionsFromLines(lines []string, patterns []*regexp.Regexp) []ParsedDefinition {
 	var defs []ParsedDefinition
 	for index, line := range lines {
@@ -578,8 +713,7 @@ func ParseDefinitionsFromLines(lines []string, patterns []*regexp.Regexp) []Pars
 	return defs
 }
 
-// BuildScopeID generates a deterministic scope ID from kind, file path, section path, and definition name.
-// [🧰repo📚go💻main🔖parsing🛠️buildscopeid](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/BuildScopeID)
+// 🔭BuildScopeID generates a deterministic scope ID from kind, file path, section path, and definition name.
 func BuildScopeID(kind string, filePath string, sectionPath string, definition string) string {
 	if kind == "file" {
 		return fmt.Sprintf("file:%s", filePath)
@@ -593,9 +727,7 @@ func BuildScopeID(kind string, filePath string, sectionPath string, definition s
 	return fmt.Sprintf("def:%s#%s", filePath, definition)
 }
 
-// BuildScopesForFile parses a file into file, section, and definition scope tuples.
-// Returns (kind, id, filePath, sectionPath, definition, startLine, endLine) for each scope.
-// [🧰repo📚go💻main🔖parsing🛠️buildscopesforfile](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/BuildScopesForFile)
+// 📍ScopeEntry holds kind, id, file, section, and definition for a parsed scope.
 type ScopeEntry struct {
 	Kind        string
 	ID          string
@@ -606,8 +738,7 @@ type ScopeEntry struct {
 	EndLine     int
 }
 
-// BuildScopesForFile parses file content into scope entries for file, sections, and definitions.
-// [🧰repo📚go💻main🔖parsing🛠️buildscopesforfile2](repo://p/i/repo/b/l/go/f/main.go/s/Parsing/d/i/BuildScopesForFile2)
+// 🏗️BuildScopesForFile parses file content into scope entries for file, sections, and definitions.
 func BuildScopesForFile(path string, content string) []ScopeEntry {
 	lines := strings.Split(content, "\n")
 	ext := strings.ToLower(filepath.Ext(path))
@@ -662,4 +793,4 @@ func BuildScopesForFile(path string, content string) []ScopeEntry {
 	return entries
 }
 
-// #endregion 🔖Parsing
+// #endregion 📹Parsing

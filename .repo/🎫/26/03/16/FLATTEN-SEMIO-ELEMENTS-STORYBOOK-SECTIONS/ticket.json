@@ -1,5 +1,6 @@
 {
   "title": "Flatten Elements Storybook Sections",
+  "emoji": "📚",
   "status": "open",
   "description": "Flatten Storybook stories into one section called elements. Remove subgroup folders such as aggregation, coda, and similar sidebar nesting. Adjust story files, folder structure, and Storybook configuration as needed under elements/ui. Extend existing tests or checks only if relevant; do not add new test files.",
   "github": {

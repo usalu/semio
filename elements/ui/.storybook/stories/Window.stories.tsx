@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // .elements/ui/.storybook/stories/elements/window/Window.stories.tsx
 
@@ -9,12 +9,12 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { Canvas, HorizontalWindows, VerticalWindows, Window } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 
-// #region 🔖Window
+// #region 🌊Window
 
 const meta = {
   title: "elements/Window",
@@ -159,4 +159,4 @@ export const NestedLayout: Story = {
   ),
 };
 
-// #endregion 🔖Window
+// #endregion 🌊Window

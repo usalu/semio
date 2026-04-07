@@ -1,5 +1,6 @@
 {
   "title": "Check All Sketchpad App Detail Panels Against Schema",
+  "emoji": "✏️",
   "status": "open",
   "description": "Check all sketchpad apps (Type, Quality, Home, Docs, etc.) for detail panel UI inconsistencies with the JS schema, same as the previous ticket but for remaining apps.",
   "github": {

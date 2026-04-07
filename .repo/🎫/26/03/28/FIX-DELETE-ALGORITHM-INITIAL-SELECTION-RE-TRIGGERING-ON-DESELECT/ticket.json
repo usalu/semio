@@ -1,5 +1,6 @@
 {
   "title": "Fix Delete Algorithm Initial Selection Re-triggering on Deselect",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix Delete Algorithm Initial Selection Re-triggering on Deselect",
   "summary": "Fixed initial selection re-triggering on deselect in all algorithm stories. The useEffect was re-selecting pieces whenever selection dropped to empty, preventing background click deselection. Replaced with useMemo + useState initializer so the initial selection only applies once on mount.",

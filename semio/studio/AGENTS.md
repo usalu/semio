@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: studio
- emoji: 🖱️
+ emoji: 🎬
  description: The studio bundle for semio.
  kind: ui
 ---

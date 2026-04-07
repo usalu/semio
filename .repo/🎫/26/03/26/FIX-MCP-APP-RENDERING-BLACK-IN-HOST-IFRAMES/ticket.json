@@ -1,5 +1,6 @@
 {
   "title": "Fix Mcp App Rendering Black in Host Iframes",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The semio engine MCP app tools (show_design, show_diagram, etc.) render black when invoked in MCP hosts like VS Code Copilot. The app HTML loads but the diagram is not visible. Need to investigate and fix the rendering issue following the official MCP Apps protocol.",
   "summary": "Fixed MCP app rendering black in host iframes by adding official MCP Apps protocol theming support. Added useHostStyles hook from @modelcontextprotocol/ext-apps/react to both mcp-app.tsx and semio/ui McpDesignViewer. Added var(--color-background-primary, #ffffff) fallback backgrounds to all states. Added onteardown handler per official patterns. Updated mcp-app.html CSS with host variable fallbacks and dark mode media query. Removed debug console.log statements. Rebuilt dist/mcp-app.html. Root cause: no background color set and useHostStyles not called, so host CSS variables were never applied, making transparent iframe appear black in dark-themed hosts. All 164 engine tests pass.",

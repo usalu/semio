@@ -1,5 +1,6 @@
 {
   "title": "Add Pannable Semio Diagram",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add panning to the semio/ui Diagram viewport while preserving the existing zoom, diff colors, selection, and click callbacks. Implement local pointer drag panning suitable for the mini-map/preview component and verify semio/ui type-check and Storybook build.",
   "summary": "Added pointer drag panning to the semio/ui Diagram viewport on the empty canvas while preserving zoom, diff colors, selection, and piece/connection click callbacks. Re-verified semio/ui type-check and Storybook build.",

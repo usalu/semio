@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🧰repo🖱️vscode💻extension](repo://p/i/repo/b/u/vscode/f/extension.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // VS Code extension providing monorepo navigation, analysis and commands.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Imports
-// [🧰repo🖱️vscode💻extension🔖imports](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Imports)
+// #region ⛩️Imports
 // Imports MUST include VS Code API, Node.js utilities, and semio validation.
 
 // import { deserializeKit, Problem, validateKit } from "@semio/js/semio";
@@ -21,33 +19,27 @@ import { promisify } from "util";
 import * as vscode from "vscode";
 
 /**
- * [🧰repo🖱️vscode💻extension🔖imports🪨execasync](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Imports/d/i/execAsync)
  * execAsync holds the data fields for a execAsync record.
  **/
 const execAsync = promisify(exec);
 /**
- * [🧰repo🖱️vscode💻extension🔖imports🪨execfileasync](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Imports/d/i/execFileAsync)
  * execFileAsync holds the data fields for a execFileAsync record.
  **/
 const execFileAsync = promisify(execFile);
-// [🧰repo🖱️vscode💻extension🔖imports✂️problem](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Imports/d/i/Problem)
-// Problem holds the data fields for a Problem record.
+// 💿Problem holds the data fields for a Problem record.
 type Problem = { message: string };
-// [🧰repo🖱️vscode💻extension🔖imports🛠️deserializekit](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Imports/d/i/deserializeKit)
-// deserializeKit holds the data fields for a deserializeKit record.
+// 🔷deserializeKit holds the data fields for a deserializeKit record.
 function deserializeKit(text: string): unknown {
   return JSON.parse(text);
 }
 
-// validateKit holds the data fields for a validateKit record.
-// [🧰repo🖱️vscode💻extension🔖imports🛠️validatekit](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Imports/d/i/validateKit)
+// 🔶validateKit holds the data fields for a validateKit record.
 function validateKit(_kit: unknown): { problems: Problem[] } {
   return { problems: [] };
 }
 
 /**
  * Structured event emitted by the repo CLI binary.
- * [🧰repo🖱️vscode💻extension🔖imports🛠️repoevent](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Imports/d/i/RepoEvent)
  **/
 export type RepoEvent = {
   kind: string;
@@ -56,25 +48,21 @@ export type RepoEvent = {
   error?: { message?: string; fatal?: boolean };
   done?: { exit_code?: number };
 };
-// #endregion 🔖Imports
+// #endregion ⛩️Imports
 
-// #region 🔖Constants
-// [🧰repo🖱️vscode💻extension🔖constants](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Constants)
+// #region 🎞️Constants
 // Constants MUST define static configuration for diagnostics and UI strings.
 
 /**
- * [🧰repo🖱️vscode💻extension🔖constants🪨semiokitlanguage](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Constants/d/i/SEMIO_KIT_LANGUAGE)
  * SEMIO_KIT_LANGUAGE holds the data fields for a SEMIO_KIT_LANGUAGE record.
  **/
 const SEMIO_KIT_LANGUAGE = "json";
 /**
- * [🧰repo🖱️vscode💻extension🔖constants🪨diagnosticsource](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Constants/d/i/DIAGNOSTIC_SOURCE)
  * DIAGNOSTIC_SOURCE holds the data fields for a DIAGNOSTIC_SOURCE record.
  **/
 const DIAGNOSTIC_SOURCE = "semio";
 
 /**
- * [🧰repo🖱️vscode💻extension🔖constants🪨uistrings](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Constants/d/i/UI_STRINGS)
  * UI_STRINGS holds the data fields for a UI_STRINGS record.
  **/
 const UI_STRINGS = {
@@ -92,8 +80,7 @@ const UI_STRINGS = {
   },
 };
 
-// #region 🔖Entity Emoji Registry
-// [🧰repo🖱️vscode💻extension🔖constants🔖entityemojiregistry](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry)
+// #region 🌪️Entity Emoji Registry
 // Entity Emoji Registry MUST contain all entity-identifying emojis used in IDs.
 // This registry drives CodeLens detection, gutter decorations, and ID parsing.
 // It MUST be kept in sync with the CLI AllEntityEmojis() function.
@@ -102,7 +89,6 @@ const UI_STRINGS = {
  * Complete set of entity-identifying emojis that appear as kind prefixes in entity IDs.
  * Each entry maps an emoji (after VS16 normalization) to its entity kind name.
  * This is the single source of truth — regex patterns are derived from it.
- * [🧰repo🖱️vscode💻extension🔖constants🔖entityemojiregistry🪨entityemojis](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry/d/i/ENTITY_EMOJIS)
  **/
 export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([
   ["👤", "technology-user"],
@@ -179,7 +165,6 @@ export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([
 
 /**
  * Escapes a string for safe use inside a regular expression character class or alternation.
- * [🧰repo🖱️vscode💻extension🔖constants🔖entityemojiregistry🛠️escaperegex](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry/d/i/escapeRegex)
  **/
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -188,7 +173,6 @@ function escapeRegex(s: string): string {
 /**
  * Builds a regex pattern that matches any entity emoji from the registry.
  * Longer emojis are tried first to prevent partial matches (e.g. 🧑‍💻 before 🧑).
- * [🧰repo🖱️vscode💻extension🔖constants🔖entityemojiregistry🛠️buildentityemojipattern](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry/d/i/buildEntityEmojiPattern)
  **/
 export function buildEntityEmojiPattern(): string {
   const emojis = Array.from(ENTITY_EMOJIS.keys());
@@ -214,21 +198,18 @@ export function buildEntityIdRegex(): RegExp {
 
 /**
  * Compiled entity ID regex, built once from the registry.
- * [🧰repo🖱️vscode💻extension🔖constants🔖entityemojiregistry🪨entityidregex](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Constants/s/Entity%20Emoji%20Registry/d/i/ENTITY_ID_REGEX)
  **/
 export const ENTITY_ID_REGEX = buildEntityIdRegex();
 
-// #endregion 🔖Entity Emoji Registry
+// #endregion 🌪️Entity Emoji Registry
 
-// #endregion 🔖Constants
+// #endregion 🎞️Constants
 
-// #region 🔖Types
-// [🧰repo🖱️vscode💻extension🔖types](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types)
+// #region ⚙️Types
 // Types MUST define interfaces for repo events, tool results, and data models.
 
 /**
  * Structured output from a repo CLI tool invocation.
- * [🧰repo🖱️vscode💻extension🔖types🛠️toolresult](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/ToolResult)
  **/
 export interface ToolResult<T = unknown> {
   output: { lines: { type: string; text: string }[]; exitCode: number };
@@ -238,7 +219,6 @@ export interface ToolResult<T = unknown> {
 
 /**
  * NX technology metadata for a workspace package.
- * [🧰repo🖱️vscode💻extension🔖types🛠️technologydata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/TechnologyData)
  **/
 export interface TechnologyData {
   name: string;
@@ -251,7 +231,6 @@ export interface TechnologyData {
 
 /**
  * Code policy configuration with id, name, and description.
- * [🧰repo🖱️vscode💻extension🔖types🛠️policydata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/PolicyData)
  **/
 export interface PolicyData {
   id: string;
@@ -261,7 +240,6 @@ export interface PolicyData {
 
 /**
  * YAML frontmatter fields parsed from a ticket markdown file.
- * [🧰repo🖱️vscode💻extension🔖types🛠️ticketfrontmatter](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/TicketFrontmatter)
  **/
 export interface TicketFrontmatter {
   status: string;
@@ -276,7 +254,6 @@ export interface TicketFrontmatter {
 
 /**
  * Single interaction record within a ticket lifecycle.
- * [🧰repo🖱️vscode💻extension🔖types🛠️ticketinteraction](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/TicketInteraction)
  **/
 export interface TicketInteraction {
   prompt: string;
@@ -289,7 +266,6 @@ export interface TicketInteraction {
 
 /**
  * Full ticket data including date, slug, frontmatter, and interactions.
- * [🧰repo🖱️vscode💻extension🔖types🛠️ticketdata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/TicketData)
  **/
 export interface TicketData {
   year: number;
@@ -303,7 +279,6 @@ export interface TicketData {
 
 /**
  * Line-level contribution metrics for added and removed lines.
- * [🧰repo🖱️vscode💻extension🔖types🛠️contributorlinemetrics](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/ContributorLineMetrics)
  **/
 export interface ContributorLineMetrics {
   added: number;
@@ -312,7 +287,6 @@ export interface ContributorLineMetrics {
 
 /**
  * Contributor metrics scoped to a single definition.
- * [🧰repo🖱️vscode💻extension🔖types🛠️contributordefinitiondata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/ContributorDefinitionData)
  **/
 export interface ContributorDefinitionData {
   name: string;
@@ -321,7 +295,6 @@ export interface ContributorDefinitionData {
 
 /**
  * Contributor metrics scoped to a file section and its definitions.
- * [🧰repo🖱️vscode💻extension🔖types🛠️contributorsectiondata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/ContributorSectionData)
  **/
 export interface ContributorSectionData {
   name: string;
@@ -331,7 +304,6 @@ export interface ContributorSectionData {
 
 /**
  * Contributor metrics scoped to a single file and its sections.
- * [🧰repo🖱️vscode💻extension🔖types🛠️contributorfiledata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/ContributorFileData)
  **/
 export interface ContributorFileData {
   name: string;
@@ -341,7 +313,6 @@ export interface ContributorFileData {
 
 /**
  * Contributor metrics scoped to a folder and its files.
- * [🧰repo🖱️vscode💻extension🔖types🛠️contributorfolderdata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/ContributorFolderData)
  **/
 export interface ContributorFolderData {
   name: string;
@@ -351,7 +322,6 @@ export interface ContributorFolderData {
 
 /**
  * Contributor metrics scoped to a bundle and its folders.
- * [🧰repo🖱️vscode💻extension🔖types🛠️contributorbundledata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/ContributorBundleData)
  **/
 export interface ContributorBundleData {
   name: string;
@@ -361,7 +331,6 @@ export interface ContributorBundleData {
 
 /**
  * Ticket metadata associated with a contributor.
- * [🧰repo🖱️vscode💻extension🔖types🛠️contributorticketdata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/ContributorTicketData)
  **/
 export interface ContributorTicketData {
   year: number;
@@ -370,13 +339,13 @@ export interface ContributorTicketData {
   slug: string;
   status: string;
   title: string;
+  emoji: string;
   summary: string;
   folderPath?: string;
 }
 
 /**
  * Checkpoint metadata associated with a contributor.
- * [🧰repo🖱️vscode💻extension🔖types🛠️contributorcheckpointdata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/ContributorCheckpointData)
  **/
 export interface ContributorCheckpointData {
   title: string;
@@ -385,7 +354,6 @@ export interface ContributorCheckpointData {
 
 /**
  * Full contributor profile with contributions across bundles, tickets, and checkpoints.
- * [🧰repo🖱️vscode💻extension🔖types🛠️contributordata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/ContributorData)
  **/
 export interface ContributorData {
   github: string;
@@ -400,7 +368,6 @@ export interface ContributorData {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖types✂️textedit](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/TextEdit)
  * TextEdit holds the data fields for a TextEdit record.
  **/
 interface TextEdit {
@@ -410,7 +377,6 @@ interface TextEdit {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖types✂️autofix](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/AutoFix)
  * AutoFix holds the data fields for a AutoFix record.
  **/
 interface AutoFix {
@@ -419,7 +385,6 @@ interface AutoFix {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖types✂️breach](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/Breach)
  * Breach holds the data fields for a Breach record.
  **/
 interface Breach {
@@ -435,7 +400,6 @@ interface Breach {
 
 /**
  * AnalyzeReport holds the data fields for a AnalyzeReport record.
- * [🧰repo🖱️vscode💻extension🔖types✂️analyzereport](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/AnalyzeReport)
  **/
 interface AnalyzeReport {
   timestamp: string;
@@ -444,7 +408,6 @@ interface AnalyzeReport {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖types✂️sectioninfo](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/SectionInfo)
  * SectionInfo holds the data fields for a SectionInfo record.
  **/
 interface SectionInfo {
@@ -458,7 +421,6 @@ interface SectionInfo {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖types✂️definitioninfo](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/DefinitionInfo)
  * DefinitionInfo holds the data fields for a DefinitionInfo record.
  **/
 interface DefinitionInfo {
@@ -469,7 +431,6 @@ interface DefinitionInfo {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖types✂️graphqlsectionrange](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/GraphqlSectionRange)
  * GraphqlSectionRange holds the data fields for a GraphqlSectionRange record.
  **/
 interface GraphqlSectionRange {
@@ -478,7 +439,6 @@ interface GraphqlSectionRange {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖types✂️graphqlsection](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Types/d/i/GraphqlSection)
  * GraphqlSection holds the data fields for a GraphqlSection record.
  **/
 interface GraphqlSection {
@@ -487,29 +447,24 @@ interface GraphqlSection {
   children?: GraphqlSection[] | null;
 }
 
-// #endregion 🔖Types
+// #endregion ⚙️Types
 
-// #region 🔖Globals
-// [🧰repo🖱️vscode💻extension🔖globals](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals)
-// Globals MUST hold module-level state for output channel, diagnostics, caches, and providers.
+// #region 🎩Globals
+// 🔌Globals MUST hold module-level state for output channel, diagnostics, caches, and providers.
 let outputChannel: vscode.OutputChannel;
 /**
- * [🧰repo🖱️vscode💻extension🔖globals🪨repodiagnosticcollection](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals/d/i/repoDiagnosticCollection)
  * repoDiagnosticCollection holds the data fields for a repoDiagnosticCollection record.
  **/
 let repoDiagnosticCollection: vscode.DiagnosticCollection;
 /**
- * [🧰repo🖱️vscode💻extension🔖globals🪨kitdiagnosticcollection](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals/d/i/kitDiagnosticCollection)
  * kitDiagnosticCollection holds the data fields for a kitDiagnosticCollection record.
  **/
 let kitDiagnosticCollection: vscode.DiagnosticCollection;
 /**
- * [🧰repo🖱️vscode💻extension🔖globals🪨filebreachsmap](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals/d/i/fileBreachsMap)
  * fileBreachsMap holds the data fields for a fileBreachsMap record.
  **/
 const fileBreachsMap = new Map<string, Breach[]>();
 /**
- * [🧰repo🖱️vscode💻extension🔖globals✂️bundleinfo](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals/d/i/BundleInfo)
  * BundleInfo holds the data fields for a BundleInfo record.
  **/
 interface BundleInfo {
@@ -517,22 +472,18 @@ interface BundleInfo {
   root: string;
 }
 /**
- * [🧰repo🖱️vscode💻extension🔖globals🪨bundlecache](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals/d/i/bundleCache)
  * bundleCache holds the data fields for a bundleCache record.
  **/
 let bundleCache: BundleInfo[] = [];
 /**
- * [🧰repo🖱️vscode💻extension🔖globals🪨cachedrepobaseurl](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals/d/i/cachedRepoBaseUrl)
  * cachedRepoBaseUrl holds the data fields for a cachedRepoBaseUrl record.
  **/
 let cachedRepoBaseUrl: string | undefined = undefined;
 /**
- * [🧰repo🖱️vscode💻extension🔖globals🪨runningprocesses](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals/d/i/runningProcesses)
  * runningProcesses holds the data fields for a runningProcesses record.
  **/
 const runningProcesses = new Map<string, AbortController>();
-// [🧰repo🖱️vscode💻extension🔖globals🪨cliconcurrencylimit](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals/d/i/cliConcurrencyLimit)
-// Maximum number of concurrent CLI subprocess spawns to prevent system overload.
+// 🔢Maximum number of concurrent CLI subprocess spawns to prevent system overload.
 const CLI_CONCURRENCY_LIMIT = 2;
 let cliActiveCount = 0;
 const cliWaitQueue: (() => void)[] = [];
@@ -557,24 +508,19 @@ function releaseCliSlot(): void {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖globals🪨filterprovider](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals/d/i/filterProvider)
  * filterProvider holds the data fields for a filterProvider record.
  **/
 let filterProvider: FilterTreeDataProvider | undefined;
 /**
- * [🧰repo🖱️vscode💻extension🔖globals🪨monorepoprovider](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Globals/d/i/monorepoProvider)
  * monorepoProvider holds the data fields for a monorepoProvider record.
  **/
 let monorepoProvider: MonorepoTreeDataProvider | undefined;
-// #endregion 🔖Globals
+// #endregion 🎩Globals
 
-// #region 🔖Utilities
-// [🧰repo🖱️vscode💻extension🔖utilities](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities)
+// #region 🎼Utilities
 // Utilities MUST provide shared functions for logging, shell execution, and binary resolution.
 
 /**
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️writelog](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/writeLog)
- * [🧰repo🖱️vscode💻extension🔖utilities🪨writelog](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/writeLog)
  * writeLog holds the data fields for a writeLog record.
  **/
 function writeLog(level: string, args: any[]): void {
@@ -588,7 +534,6 @@ function writeLog(level: string, args: any[]): void {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️log](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/log)
  * log holds the data fields for a log record.
  **/
 function log(...args: any[]): void {
@@ -597,7 +542,6 @@ function log(...args: any[]): void {
 
 /**
  * logError holds the data fields for a logError record.
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️logerror](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/logError)
  **/
 function logError(...args: any[]): void {
   writeLog("ERROR", args);
@@ -605,15 +549,12 @@ function logError(...args: any[]): void {
 
 /**
  * getWorkspaceRoot holds the data fields for a getWorkspaceRoot record.
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️getworkspaceroot](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getWorkspaceRoot)
  **/
 function getWorkspaceRoot(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 }
 
 /** getRepoBinaryPath holds the data fields for a getRepoBinaryPath record.
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️getrepobinarypath](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getRepoBinaryPath)
- * [🧰repo🖱️vscode💻extension🔖utilities🪨getrepobinarypath](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getRepoBinaryPath)
  **/
 function getRepoBinaryPath(): string | undefined {
   const root = getWorkspaceRoot();
@@ -625,7 +566,6 @@ function getRepoBinaryPath(): string | undefined {
 
 /**
  * execShell holds the data fields for a execShell record.
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️execshell](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/execShell)
  **/
 function execShell(cmd: string, cwd: string | undefined): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -637,8 +577,6 @@ function execShell(cmd: string, cwd: string | undefined): Promise<string> {
 }
 
 /** getRepoCommand holds the data fields for a getRepoCommand record.
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️getrepocommand](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getRepoCommand)
- * [🧰repo🖱️vscode💻extension🔖utilities🪨getrepocommand](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getRepoCommand)
  **/
 function getRepoCommand(): string {
   const binaryPath = getRepoBinaryPath();
@@ -647,15 +585,12 @@ function getRepoCommand(): string {
 
 /**
  * hasRepoAccess holds the data fields for a hasRepoAccess record.
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️hasrepoaccess](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/hasRepoAccess)
  **/
 export function hasRepoAccess(): boolean {
   return getRepoCommand() !== "";
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️getuistring](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getUiString)
- * [🧰repo🖱️vscode💻extension🔖utilities🪨getuistring](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getUiString)
  * getUiString holds the data fields for a getUiString record.
  **/
 function getUiString(key: keyof typeof UI_STRINGS.en): string {
@@ -665,7 +600,6 @@ function getUiString(key: keyof typeof UI_STRINGS.en): string {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️resolvecheckpointsha](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/resolveCheckpointSha)
  * resolveCheckpointSha holds the data fields for a resolveCheckpointSha record.
  **/
 function resolveCheckpointSha(checkpoint: string | { sha?: string } | undefined): string | undefined {
@@ -675,8 +609,6 @@ function resolveCheckpointSha(checkpoint: string | { sha?: string } | undefined)
 }
 
 /** getGitHubRepoBaseUrl holds the data fields for a getGitHubRepoBaseUrl record.
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️getgithubrepobaseurl](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getGitHubRepoBaseUrl)
- * [🧰repo🖱️vscode💻extension🔖utilities🪨getgithubrepobaseurl](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/getGitHubRepoBaseUrl)
  **/
 function getGitHubRepoBaseUrl(): string | undefined {
   if (cachedRepoBaseUrl !== undefined) return cachedRepoBaseUrl;
@@ -698,8 +630,6 @@ function getGitHubRepoBaseUrl(): string | undefined {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️runrepocommand](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/runRepoCommand)
- * [🧰repo🖱️vscode💻extension🔖utilities🪨runrepocommand](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/runRepoCommand)
  * runRepoCommand holds the data fields for a runRepoCommand record.
  **/
 function runRepoCommand(args: string): void {
@@ -721,8 +651,6 @@ function runRepoCommand(args: string): void {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️runrepocommandjson](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/runRepoCommandJson)
- * [🧰repo🖱️vscode💻extension🔖utilities🪨runrepocommandjson](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/runRepoCommandJson)
  * runRepoCommandJson holds the data fields for a runRepoCommandJson record.
  **/
 async function runRepoCommandJson<T>(args: string): Promise<T | null> {
@@ -752,7 +680,6 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
 /**
  * Parses raw CLI output into structured repo events.
  * Implementations MUST split output by newlines and parse each non-empty line as JSON.
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️parserepoevents](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/parseRepoEvents)
  **/
 export function parseRepoEvents(output: string): RepoEvent[] {
   const lines = output
@@ -765,7 +692,6 @@ export function parseRepoEvents(output: string): RepoEvent[] {
 /**
  * Extracts the final result payload from a sequence of repo events.
  * Implementations MUST throw on fatal errors and return the last meaningful result.
- * [🧰repo🖱️vscode💻extension🔖utilities🛠️extractreporesult](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Utilities/d/i/extractRepoResult)
  **/
 export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
   const results: unknown[] = [];
@@ -801,15 +727,13 @@ export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> 
   return { data: lastResult };
 }
 
-// #endregion 🔖Utilities
+// #endregion 🎼Utilities
 
-// #region 🔖URI Resolution
-// [🧰repo🖱️vscode💻extension🔖uriresolution](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution)
+// #region 🏬URI Resolution
 // URI Resolution MUST handle parsing, tree node caching, and repo URI navigation.
 
 /**
  * Tree node data structure representing a monorepo artifact in the sidebar tree.
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️treenodedata](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/TreeNodeData)
  **/
 export interface TreeNodeData {
   Kind: string;
@@ -828,22 +752,18 @@ export interface TreeNodeData {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖uriresolution🪨treenodecache](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/treeNodeCache)
  * treeNodeCache holds the data fields for a treeNodeCache record.
  **/
 let treeNodeCache: Map<string, TreeNodeData> | null = null;
 /**
- * [🧰repo🖱️vscode💻extension🔖uriresolution🪨treerootcache](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/treeRootCache)
  * treeRootCache holds the data fields for a treeRootCache record.
  **/
 let treeRootCache: TreeNodeData | null = null;
 /**
  * treeNodeCacheTime holds the data fields for a treeNodeCacheTime record.
- * [🧰repo🖱️vscode💻extension🔖uriresolution🪨treenodecachetime](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/treeNodeCacheTime)
  **/
 let treeNodeCacheTime = 0;
 /**
- * [🧰repo🖱️vscode💻extension🔖uriresolution🪨treecachettl](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/TREE_CACHE_TTL)
  * TREE_CACHE_TTL holds the data fields for a TREE_CACHE_TTL record.
  **/
 const TREE_CACHE_TTL = 30000;
@@ -851,7 +771,6 @@ const TREE_CACHE_TTL = 30000;
 /**
  * Extracts the leading emoji characters from a text string.
  * Implementations MUST use Unicode emoji properties to detect the prefix.
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️extractleadingemoji](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/extractLeadingEmoji)
  **/
 export function extractLeadingEmoji(text: string): string {
   const match = text.match(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}][\u{FE0E}\u{FE0F}\u{200D}\p{Emoji_Component}]*/u);
@@ -861,7 +780,6 @@ export function extractLeadingEmoji(text: string): string {
 /**
  * Computes the display label for a tree node including emoji prefix and status icon.
  * Implementations MUST prepend the node emoji and status indicator to the label.
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️treenodedisplaylabel](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/treeNodeDisplayLabel)
  **/
 export function treeNodeDisplayLabel(node: TreeNodeData): string {
   if (node.Kind === "category") return node.Label;
@@ -886,7 +804,6 @@ export function treeNodeDisplayLabel(node: TreeNodeData): string {
 /**
  * Returns the VS Code context value for a tree node based on its kind and status.
  * Implementations MUST distinguish open and closed tickets.
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️treenodecontextvalue](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/treeNodeContextValue)
  **/
 export function treeNodeContextValue(node: TreeNodeData): string {
   if (node.Kind === "ticket") return node.Status === "open" ? "ticketOpen" : "ticketClosed";
@@ -896,7 +813,6 @@ export function treeNodeContextValue(node: TreeNodeData): string {
 /**
  * Returns the VS Code command to execute when a tree node is clicked.
  * Implementations MUST return undefined for category nodes and navigate for others.
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️treenodecommand](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/treeNodeCommand)
  **/
 export function treeNodeCommand(node: TreeNodeData): vscode.Command | undefined {
   if (node.Kind === "category") return undefined;
@@ -907,7 +823,6 @@ export function treeNodeCommand(node: TreeNodeData): vscode.Command | undefined 
 /**
  * Builds CLI tree command arguments from the current filter provider state.
  * Implementations MUST translate each filter toggle into the corresponding CLI flag.
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️buildclitreeargs](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/buildCliTreeArgs)
  **/
 export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
   const args: string[] = [];
@@ -963,7 +878,6 @@ export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
 /**
  * Converts text to an uppercase slug with non-alphanumeric characters replaced by hyphens.
  * Implementations MUST uppercase the input and strip leading and trailing hyphens.
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️slugify](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/slugify)
  **/
 export function slugify(text: string): string {
   return text
@@ -973,7 +887,6 @@ export function slugify(text: string): string {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️flattentree](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/flattenTree)
  * flattenTree holds the data fields for a flattenTree record.
  **/
 function flattenTree(node: TreeNodeData, result: Map<string, TreeNodeData>): void {
@@ -988,8 +901,6 @@ function flattenTree(node: TreeNodeData, result: Map<string, TreeNodeData>): voi
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️gettreenodecache](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/getTreeNodeCache)
- * [🧰repo🖱️vscode💻extension🔖uriresolution🪨gettreenodecache](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/getTreeNodeCache)
  * getTreeNodeCache holds the data fields for a getTreeNodeCache record.
  **/
 async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
@@ -1024,7 +935,6 @@ async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️gettreeroot](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/getTreeRoot)
  * getTreeRoot holds the data fields for a getTreeRoot record.
  **/
 async function getTreeRoot(): Promise<TreeNodeData | null> {
@@ -1033,8 +943,6 @@ async function getTreeRoot(): Promise<TreeNodeData | null> {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️fetchtreewithargs](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/fetchTreeWithArgs)
- * [🧰repo🖱️vscode💻extension🔖uriresolution🪨fetchtreewithargs](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/fetchTreeWithArgs)
  * fetchTreeWithArgs holds the data fields for a fetchTreeWithArgs record.
  **/
 async function fetchTreeWithArgs(args: string[]): Promise<TreeNodeData | null> {
@@ -1057,7 +965,6 @@ async function fetchTreeWithArgs(args: string[]): Promise<TreeNodeData | null> {
 /**
  * Clears the cached tree node data forcing a fresh fetch on next access.
  * Implementations MUST reset all cache fields and the timestamp.
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️invalidatetreenodecache](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/invalidateTreeNodeCache)
  **/
 export function invalidateTreeNodeCache(): void {
   treeNodeCache = null;
@@ -1068,7 +975,6 @@ export function invalidateTreeNodeCache(): void {
 /**
  * Parses a repo URI into its type and path components.
  * Implementations MUST return null for URIs that do not match the repo scheme.
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️parseuri](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/parseUri)
  **/
 export function parseUri(uri: string): { type: string; path: string } | null {
   const match = uri.match(/^repo:\/\/([a-zA-Z]+)(?:\/(.*)?)?$/);
@@ -1077,8 +983,6 @@ export function parseUri(uri: string): { type: string; path: string } | null {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖uriresolution🛠️navigatetouri](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/navigateToUri)
- * [🧰repo🖱️vscode💻extension🔖uriresolution🪨navigatetouri](repo://p/i/repo/b/u/vscode/f/extension.ts/s/URI%20Resolution/d/i/navigateToUri)
  * navigateToUri holds the data fields for a navigateToUri record.
  **/
 async function navigateToUri(uri: string): Promise<void> {
@@ -1237,15 +1141,12 @@ async function navigateToUri(uri: string): Promise<void> {
   }
 }
 
-// #endregion 🔖URI Resolution
+// #endregion 🏬URI Resolution
 
-// #region 🔖Helpers
-// [🧰repo🖱️vscode💻extension🔖helpers](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Helpers)
+// #region 🎵Helpers
 // Helpers MUST provide file path extraction, ticket path resolution, and editor navigation.
 
 /**
- * [🧰repo🖱️vscode💻extension🔖helpers🛠️extractfilepathfromscope](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Helpers/d/i/extractFilePathFromScope)
- * [🧰repo🖱️vscode💻extension🔖helpers🪨extractfilepathfromscope](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Helpers/d/i/extractFilePathFromScope)
  * extractFilePathFromScope holds the data fields for a extractFilePathFromScope record.
  **/
 function extractFilePathFromScope(scope: string): string | undefined {
@@ -1292,7 +1193,6 @@ function extractFilePathFromScope(scope: string): string | undefined {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖helpers🛠️resolveticketpath](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Helpers/d/i/resolveTicketPath)
  * resolveTicketPath holds the data fields for a resolveTicketPath record.
  **/
 function resolveTicketPath(ticket: { year: number; month: number; day: number; slug: string; folderPath?: string }): string | undefined {
@@ -1304,8 +1204,6 @@ function resolveTicketPath(ticket: { year: number; month: number; day: number; s
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖helpers🛠️openfileatline](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Helpers/d/i/openFileAtLine)
- * [🧰repo🖱️vscode💻extension🔖helpers🪨openfileatline](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Helpers/d/i/openFileAtLine)
  * openFileAtLine holds the data fields for a openFileAtLine record.
  **/
 async function openFileAtLine(filePath: string, startLine: number, endLine?: number): Promise<void> {
@@ -1321,15 +1219,12 @@ async function openFileAtLine(filePath: string, startLine: number, endLine?: num
   editor.selection = new vscode.Selection(startPos, startPos);
 }
 
-// #endregion 🔖Helpers
+// #endregion 🎵Helpers
 
-// #region 🔖File Analysis & Diagnostics
-// [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics)
+// #region 🗺️File Analysis & Diagnostics
 // File Analysis & Diagnostics MUST handle analysis, breach diagnostics, bundle caching, and kit validation.
 
 /** updateBundleCache holds the data fields for a updateBundleCache record.
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🛠️updatebundlecache](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/updateBundleCache)
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨updatebundlecache](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/updateBundleCache)
  **/
 async function updateBundleCache() {
   const root = await getTreeRoot();
@@ -1346,19 +1241,15 @@ async function updateBundleCache() {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨ignoreddirectories](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/ignoredDirectories)
  * ignoredDirectories holds the data fields for a ignoredDirectories record.
  **/
 const ignoredDirectories = new Set(["node_modules", "venv", "dist", "build", "out", "__pycache__", "coverage", "site-packages", "eggs", "wheels", "htmlcov", "target", "artifacts", "vendor"]);
 /**
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨alloweddotdirectories](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/allowedDotDirectories)
  * allowedDotDirectories holds the data fields for a allowedDotDirectories record.
  **/
 const allowedDotDirectories = new Set([".github", ".devcontainer", ".repo"]);
 
 /**
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🛠️isinignoreddirectory](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/isInIgnoredDirectory)
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨isinignoreddirectory](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/isInIgnoredDirectory)
  * isInIgnoredDirectory holds the data fields for a isInIgnoredDirectory record.
  **/
 function isInIgnoredDirectory(relativePath: string): boolean {
@@ -1371,8 +1262,6 @@ function isInIgnoredDirectory(relativePath: string): boolean {
 }
 
 /** shouldAnalyzeFile holds the data fields for a shouldAnalyzeFile record.
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🛠️shouldanalyzefile](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/shouldAnalyzeFile)
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨shouldanalyzefile](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/shouldAnalyzeFile)
  **/
 function shouldAnalyzeFile(document: vscode.TextDocument): boolean {
   const supportedLanguages = ["typescript", "javascript", "typescriptreact", "javascriptreact", "json", "python", "csharp", "go", "shellscript"];
@@ -1381,7 +1270,6 @@ function shouldAnalyzeFile(document: vscode.TextDocument): boolean {
 
 /**
  * analyzeFile holds the data fields for a analyzeFile record.
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🛠️analyzefile](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/analyzeFile)
  **/
 async function analyzeFile(document: vscode.TextDocument): Promise<void> {
   if (!shouldAnalyzeFile(document)) return;
@@ -1428,8 +1316,6 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🛠️updatefilediagnostics](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/updateFileDiagnostics)
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨updatefilediagnostics](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/updateFileDiagnostics)
  * updateFileDiagnostics holds the data fields for a updateFileDiagnostics record.
  **/
 function updateFileDiagnostics(document: vscode.TextDocument, breachs: Breach[]): void {
@@ -1468,8 +1354,6 @@ function updateFileDiagnostics(document: vscode.TextDocument, breachs: Breach[])
 }
 
 /** autofixBreach holds the data fields for a autofixBreach record.
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🛠️autofixbreach](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/autofixBreach)
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🪨autofixbreach](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/autofixBreach)
  **/
 async function autofixBreach(relativePath: string): Promise<void> {
   const root = getWorkspaceRoot();
@@ -1503,7 +1387,6 @@ async function autofixBreach(relativePath: string): Promise<void> {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🛠️iskitdocument](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/isKitDocument)
  * isKitDocument holds the data fields for a isKitDocument record.
  **/
 function isKitDocument(document: vscode.TextDocument): boolean {
@@ -1513,7 +1396,6 @@ function isKitDocument(document: vscode.TextDocument): boolean {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖fileanalysisdiagnostics🛠️validatekitdocument](repo://p/i/repo/b/u/vscode/f/extension.ts/s/File%20Analysis%20&%20Diagnostics/d/i/validateKitDocument)
  * validateKitDocument holds the data fields for a validateKitDocument record.
  **/
 function validateKitDocument(document: vscode.TextDocument): void {
@@ -1532,16 +1414,14 @@ function validateKitDocument(document: vscode.TextDocument): void {
   }
 }
 
-// #endregion 🔖File Analysis & Diagnostics
+// #endregion 🗺️File Analysis & Diagnostics
 
-// #region 🔖Providers
-// [🧰repo🖱️vscode💻extension🔖providers](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers)
+// #region 🪵Providers
 // Providers MUST implement VS Code tree data providers for filter, monorepo, and sections views.
 
 /**
  * Tree item representing a filter option in the filter sidebar view.
  *Implementations MUST extend vscode.TreeItem and expose filter metadata.
- * [🧰repo🖱️vscode💻extension🔖providers🛠️filtertreeitem](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers/d/i/FilterTreeItem)
  **/
 export class FilterTreeItem extends vscode.TreeItem {
   constructor(
@@ -1560,7 +1440,6 @@ export class FilterTreeItem extends vscode.TreeItem {
 /**
  * Provides the tree data for the filter sidebar view with search and toggle state.
  *Implementations MUST implement vscode.TreeDataProvider and emit change events on toggle.
- * [🧰repo🖱️vscode💻extension🔖providers🛠️filtertreedataprovider](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers/d/i/FilterTreeDataProvider)
  **/
 export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<FilterTreeItem | undefined | null | void>();
@@ -1748,7 +1627,6 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
 /**
  * Tree item representing a monorepo artifact in the sidebar tree.
  *Implementations MUST extend vscode.TreeItem and carry the original node data.
- * [🧰repo🖱️vscode💻extension🔖providers🛠️monorepotreeitem](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers/d/i/MonorepoTreeItem)
  **/
 export class MonorepoTreeItem extends vscode.TreeItem {
   constructor(
@@ -1767,7 +1645,6 @@ export class MonorepoTreeItem extends vscode.TreeItem {
 /**
  * Converts a TreeNodeData to a VS Code MonorepoTreeItem for the sidebar.
  *Implementations MUST set label, description, tooltip, and command from node data.
- * [🧰repo🖱️vscode💻extension🔖providers🛠️treenodetoitem](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers/d/i/treeNodeToItem)
  **/
 export function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
   const label = treeNodeDisplayLabel(node);
@@ -1788,7 +1665,6 @@ export function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
 /**
  * Provides the tree data for the monorepo sidebar view using CLI tree output.
  *Implementations MUST implement vscode.TreeDataProvider and fetch data via CLI.
- * [🧰repo🖱️vscode💻extension🔖providers🛠️monorepotreedataprovider](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers/d/i/MonorepoTreeDataProvider)
  **/
 export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<MonorepoTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<MonorepoTreeItem | undefined | null | void>();
@@ -1822,7 +1698,6 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖providers🛠️sectiontreeitem](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers/d/i/SectionTreeItem)
  * SectionTreeItem holds the data fields for a SectionTreeItem record.
  **/
 class SectionTreeItem extends vscode.TreeItem {
@@ -1846,7 +1721,6 @@ class SectionTreeItem extends vscode.TreeItem {
 /**
  * Provides the tree data for the sections sidebar view of the active file.
  *Implementations MUST refresh when the active editor changes or the document is edited.
- * [🧰repo🖱️vscode💻extension🔖providers🛠️sectionstreedataprovider](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers/d/i/SectionsTreeDataProvider)
  **/
 export class SectionsTreeDataProvider implements vscode.TreeDataProvider<SectionTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<SectionTreeItem | undefined | null | void>();
@@ -2061,7 +1935,6 @@ async function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, 
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖providers🛠️semiocodelensprovider](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers/d/i/SemioCodeLensProvider)
  * SemioCodeLensProvider provides Analyze and Navigate to CodeLenses for all entity IDs.
  * It uses the ENTITY_ID_REGEX built dynamically from the ENTITY_EMOJIS registry.
  **/
@@ -2105,14 +1978,11 @@ class SemioCodeLensProvider implements vscode.CodeLensProvider {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖providers🪨semioguttericon](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers/d/i/semioGutterIcon)
  * semioGutterIcon holds the data fields for a semioGutterIcon record.
  **/
 let semioGutterIcon: vscode.TextEditorDecorationType;
 
 /** updateSemioDecorations holds the data fields for a updateSemioDecorations record.
- * [🧰repo🖱️vscode💻extension🔖providers🛠️updatesemiodecorations](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers/d/i/updateSemioDecorations)
- * [🧰repo🖱️vscode💻extension🔖providers🪨updatesemiodecorations](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Providers/d/i/updateSemioDecorations)
  **/
 function updateSemioDecorations(editor: vscode.TextEditor) {
   if (!editor || !semioGutterIcon) return;
@@ -2130,15 +2000,13 @@ function updateSemioDecorations(editor: vscode.TextEditor) {
   editor.setDecorations(semioGutterIcon, decorations);
 }
 
-// #endregion 🔖Providers
+// #endregion 🪵Providers
 
-// #region 🔖Activation
-// [🧰repo🖱️vscode💻extension🔖activation](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Activation)
+// #region 📜Activation
 // Activation MUST handle extension activation, command registration, and lifecycle management.
 
 /**
  * registerSidebarViews holds the data fields for a registerSidebarViews record.
- * [🧰repo🖱️vscode💻extension🔖activation🛠️registersidebarviews](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Activation/d/i/registerSidebarViews)
  **/
 function registerSidebarViews(context: vscode.ExtensionContext): void {
   filterProvider = new FilterTreeDataProvider();
@@ -2152,8 +2020,6 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖activation🛠️registercommands](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Activation/d/i/registerCommands)
- * [🧰repo🖱️vscode💻extension🔖activation🪨registercommands](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Activation/d/i/registerCommands)
  * registerCommands holds the data fields for a registerCommands record.
  **/
 function registerCommands(context: vscode.ExtensionContext): void {
@@ -2497,8 +2363,6 @@ function registerCommands(context: vscode.ExtensionContext): void {
 }
 
 /**
- * [🧰repo🖱️vscode💻extension🔖activation🛠️loadavailablefiltervalues](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Activation/d/i/loadAvailableFilterValues)
- * [🧰repo🖱️vscode💻extension🔖activation🪨loadavailablefiltervalues](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Activation/d/i/loadAvailableFilterValues)
  * loadAvailableFilterValues holds the data fields for a loadAvailableFilterValues record.
  **/
 async function loadAvailableFilterValues(): Promise<void> {
@@ -2540,7 +2404,6 @@ async function loadAvailableFilterValues(): Promise<void> {
 /**
  * Activates the repo VS Code extension and registers all providers and commands.
  *Implementations MUST register sidebar views, commands, diagnostics, and event handlers.
- * [🧰repo🖱️vscode💻extension🔖activation🛠️activate](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Activation/d/i/activate)
  **/
 export function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel("repo");
@@ -2649,8 +2512,7 @@ export function activate(context: vscode.ExtensionContext) {
 /**
  * Deactivates the repo VS Code extension and releases resources.
  *Implementations MUST clean up any active subscriptions.
- * [🧰repo🖱️vscode💻extension🔖activation🛠️deactivate](repo://p/i/repo/b/u/vscode/f/extension.ts/s/Activation/d/i/deactivate)
  **/
 export function deactivate() { }
 
-// #endregion 🔖Activation
+// #endregion 📜Activation

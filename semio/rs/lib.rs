@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 #![allow(clippy::too_many_arguments)]
 
-mod header { // 🔖Header
-             // [👤semio📚rs💻semio](repo://p/u/semio/b/l/rs/f/semio.rs)
+mod header { // 🧲Header
 
     // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -18,12 +17,11 @@ mod header { // 🔖Header
     //
     // You should have received a copy of the GNU Affero General Public License
     // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-} // 🔖Header
+} // 🧲Header
 
-mod imports { // 🔖Imports
-              // [👤semio📚rs💻semio🔖imports](repo://p/u/semio/b/l/rs/f/semio.rs/s/Imports)
+mod imports { // ⛩️Imports
               // Imports MUST include all required crates and modules for the semio domain library.
-} // 🔖Imports
+} // ⛩️Imports
 
 use base64::Engine;
 use nalgebra::{Matrix4, Point3, Vector3};
@@ -38,17 +36,14 @@ use uuid::Uuid;
 use wasm_bindgen::prelude::*;
 
 mod error_types {
-    // 🔖Error Types
-    // [👤semio📚rs💻semio🔖errortypes](repo://p/u/semio/b/l/rs/f/semio.rs/s/Error%20Types)
+    // 🎪Error Types
     // Error Types MUST provide the error types functionality.
 
     use super::*;
 
     #[derive(Error, Debug, Clone, Serialize, Deserialize)]
-    // [🛠️semio/rs/semio.rs#Error Types§SemioError](repo://definition/semio/rs/semio.rs/ERROR-TYPES/SEMIO-ERROR)
-    /// <summary>SemioError holds the data fields for a SemioError record.</summary>
+    /// 📋<summary>❌SemioError holds the data fields for a SemioError record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖errortypes🛠️semioerror](repo://p/u/semio/b/l/rs/f/semio.rs/s/Error%20Types/d/i/SemioError)
     /// </remarks>
     pub enum SemioError {
         #[error("Entity not found: {kind} with guid {guid}")]
@@ -62,51 +57,42 @@ mod error_types {
         #[error("Invalid operation: {message}")]
         InvalidOperation { message: String },
     }
-    // [🛠️semio/rs/semio.rs#Error Types§Result](repo://definition/semio/rs/semio.rs/ERROR-TYPES/RESULT)
-    /// <summary>Result holds the data fields for a Result record.</summary>
+    /// 💿<summary>💿Result holds the data fields for a Result record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖errortypes🛠️result](repo://p/u/semio/b/l/rs/f/semio.rs/s/Error%20Types/d/i/Result)
     /// </remarks>
     pub type Result<T> = std::result::Result<T, SemioError>;
-} // 🔖Error Types
+} // 📃Error Types
 pub use error_types::*;
 
 mod utility_functions {
-    // 🔖Utility Functions
-    // [👤semio📚rs💻semio🔖utilityfunctions](repo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions)
+    // 🏭Utility Functions
     // Utility Functions MUST provide the utility functions functionality.
-    // [🛠️semio/rs/semio.rs#Utility Functions§Guid](repo://definition/semio/rs/semio.rs/UTILITY-FUNCTIONS/GUID)
-    /// <summary>Guid holds the data fields for a Guid record.</summary>
+    /// <summary>🔑Guid holds the data fields for a Guid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖utilityfunctions🛠️guid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/Guid)
     /// </remarks>
     use super::*;
 
     pub type Guid = String;
 
-    /// <summary>guid holds the data fields for a guid record.</summary>
-    /// [👤semio📚rs💻semio🔖utilityfunctions🛠️guid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/guid)
+    /// 🔷<summary>🧱guid holds the data fields for a guid record.</summary>
     pub fn guid() -> String {
         Uuid::now_v7().to_string()
     }
 
-    /// <summary>normalize holds the data fields for a normalize record.</summary>
-    /// [👤semio📚rs💻semio🔖utilityfunctions🛠️normalize](repo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/normalize)
+    /// 🔶<summary>📦normalize holds the data fields for a normalize record.</summary>
     pub fn normalize(value: f64, decimals: u32) -> f64 {
         let factor = 10_f64.powi(decimals as i32);
         (value * factor).round() / factor
     }
 
-    /// <summary>round holds the data fields for a round record.</summary>
-    /// [👤semio📚rs💻semio🔖utilityfunctions🛠️round](repo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/round)
+    /// 🔹<summary>🔷round holds the data fields for a round record.</summary>
     /// <remarks>
     /// </remarks>
     pub fn round(value: f64) -> f64 {
         normalize(value, 3)
     }
 
-    /// <summary>jaccard holds the data fields for a jaccard record.</summary>
-    /// [👤semio📚rs💻semio🔖utilityfunctions🛠️jaccard](repo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/jaccard)
+    /// 🔸<summary>🔶jaccard holds the data fields for a jaccard record.</summary>
     pub fn jaccard<T: Eq + std::hash::Hash>(a: &HashSet<T>, b: &HashSet<T>) -> f64 {
         if a.is_empty() && b.is_empty() {
             return 1.0;
@@ -120,8 +106,7 @@ mod utility_functions {
         }
     }
 
-    /// <summary>deep_equal holds the data fields for a deep_equal record.</summary>
-    /// [👤semio📚rs💻semio🔖utilityfunctions🛠️deepequal](repo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/deep_equal)
+    /// 🔺<summary>🔹deep_equal holds the data fields for a deep_equal record.</summary>
     pub fn deep_equal<T: Serialize>(a: &T, b: &T) -> bool {
         pub fn normalize_json(v: &mut serde_json::Value) {
             match v {
@@ -172,9 +157,7 @@ mod utility_functions {
             _ => false,
         }
     }
-    // [🛠️semio/rs/semio.rs#Utility Functions§generate_unique_name](repo://definition/semio/rs/semio.rs/UTILITY-FUNCTIONS/GENERATE-UNIQUE-NAME)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖utilityfunctions🛠️generateuniquename](repo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions/d/i/generate_unique_name)
+    /// 🔻<remarks>
     /// </remarks>
     pub fn generate_unique_name(base: &str, existing: &[String]) -> String {
         let existing_set: HashSet<_> = existing.iter().collect();
@@ -190,19 +173,17 @@ mod utility_functions {
             counter += 1;
         }
     }
-} // 🔖Utility Functions
+} // 🤸Utility Functions
 pub use utility_functions::*;
 
 mod model_types_attribute {
-    // 🔖Model Types - Attribute
-    // [👤semio📚rs💻semio🔖modeltypesattribute](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Attribute)
+    // 📆Model Types - Attribute
     // Model Types - Attribute MUST provide the model types - attribute functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>Attribute holds the data fields for a Attribute record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypesattribute🛠️attribute](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Attribute/d/i/Attribute)
+    /// ⬛<summary>⚡Attribute holds the data fields for a Attribute record.</summary>
     pub struct Attribute {
         pub guid: Guid,
         pub key: String,
@@ -213,59 +194,49 @@ mod model_types_attribute {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Attribute§AttributeId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-ATTRIBUTE/ATTRIBUTE-ID)
-    /// <summary>AttributeId holds the data fields for a AttributeId record.</summary>
+    /// ⬜<summary>🪄AttributeId holds the data fields for a AttributeId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypesattribute🛠️attributeid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Attribute/d/i/AttributeId)
     /// </remarks>
     pub struct AttributeId {
         pub guid: Guid,
     }
-} // 🔖Model Types - Attribute
+} // 🗻Model Types - Attribute
 pub use model_types_attribute::*;
 
 mod model_types_coord {
-    // 🔖Model Types - Coord
-    // [👤semio📚rs💻semio🔖modeltypescoord](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Coord)
+    // 🥇Model Types - Coord
     // Model Types - Coord MUST provide the model types - coord functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Coord§Coord](repo://definition/semio/rs/semio.rs/MODEL-TYPES-COORD/COORD)
-    /// <summary>Coord holds the data fields for a Coord record.</summary>
+    /// 🟥<summary>🔸Coord holds the data fields for a Coord record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypescoord🛠️coord](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Coord/d/i/Coord)
     /// </remarks>
     pub struct Coord {
         pub u: f64,
         pub v: f64,
     }
-    // [👤semio📚rs💻semio🔖modeltypescoord🛠️coord](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Coord/d/i/Coord)
-    /// <summary>Coord holds the data fields for a Coord record.</summary>
+    /// 🟧<summary>🔺Coord holds the data fields for a Coord record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypescoord🛠️coord](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Coord/d/i/Coord)
     /// </remarks>
     impl Coord {
         pub fn new(u: f64, v: f64) -> Self {
             Self { u, v }
         }
     }
-} // 🔖Model Types - Coord
+} // 🤸Model Types - Coord
 pub use model_types_coord::*;
 
 mod model_types_vector {
-    // 🔖Model Types - Vector
-    // [👤semio📚rs💻semio🔖modeltypesvector](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Vector)
+    // 🎒Model Types - Vector
     // Model Types - Vector MUST provide the model types - vector functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Vector§Vector](repo://definition/semio/rs/semio.rs/MODEL-TYPES-VECTOR/VECTOR)
-    /// <summary>Vector holds the data fields for a Vector record.</summary>
+    /// 🟨<summary>📋Vector holds the data fields for a Vector record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypesvector🛠️vector](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Vector/d/i/Vector)
     /// </remarks>
     pub struct Vector {
         pub x: f64,
@@ -273,8 +244,7 @@ mod model_types_vector {
         pub z: f64,
     }
 
-    /// <summary>Vector holds the data fields for a Vector record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypesvector🛠️vector](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Vector/d/i/Vector)
+    /// 🟩<summary>📍Vector holds the data fields for a Vector record.</summary>
     impl Vector {
         pub fn new(x: f64, y: f64, z: f64) -> Self {
             Self { x, y, z }
@@ -298,19 +268,17 @@ mod model_types_vector {
             Self::new(v.x, v.y, v.z)
         }
     }
-} // 🔖Model Types - Vector
+} // 👓Model Types - Vector
 pub use model_types_vector::*;
 
 mod model_types_plane {
-    // 🔖Model Types - Plane
-    // [👤semio📚rs💻semio🔖modeltypesplane](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Plane)
+    // 🩹Model Types - Plane
     // Model Types - Plane MUST provide the model types - plane functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>Plane holds the data fields for a Plane record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypesplane🛠️plane](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Plane/d/i/Plane)
+    /// 🟦<summary>📐Plane holds the data fields for a Plane record.</summary>
     pub struct Plane {
         pub origin: Vector,
         #[serde(rename = "xAxis")]
@@ -319,8 +287,7 @@ mod model_types_plane {
         pub y_axis: Vector,
     }
 
-    /// <summary>Default holds the data fields for a Default record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypesplane🛠️default](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Plane/d/i/Default)
+    /// 🟪<summary>🔻Default holds the data fields for a Default record.</summary>
     impl Default for Plane {
         fn default() -> Self {
             Self {
@@ -331,8 +298,7 @@ mod model_types_plane {
         }
     }
 
-    /// <summary>Plane holds the data fields for a Plane record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypesplane🛠️plane](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Plane/d/i/Plane)
+    /// 🟫<summary>⬛Plane holds the data fields for a Plane record.</summary>
     impl Plane {
         pub fn new(origin: Vector, x_axis: Vector, y_axis: Vector) -> Self {
             Self {
@@ -386,21 +352,18 @@ mod model_types_plane {
             }
         }
     }
-} // 🔖Model Types - Plane
+} // 🧭Model Types - Plane
 pub use model_types_plane::*;
 
 mod model_types_camera {
-    // 🔖Model Types - Camera
-    // [👤semio📚rs💻semio🔖modeltypescamera](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Camera)
+    // 🧣Model Types - Camera
     // Model Types - Camera MUST provide the model types - camera functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Camera§Camera](repo://definition/semio/rs/semio.rs/MODEL-TYPES-CAMERA/CAMERA)
-    /// <summary>Camera holds the data fields for a Camera record.</summary>
+    /// 💠<summary>⬜Camera holds the data fields for a Camera record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypescamera🛠️camera](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Camera/d/i/Camera)
     /// </remarks>
     pub struct Camera {
         pub position: Vector,
@@ -411,8 +374,7 @@ mod model_types_camera {
         pub far: f64,
     }
 
-    /// <summary>Default holds the data fields for a Default record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypescamera🛠️default](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Camera/d/i/Default)
+    /// 🔳<summary>🟥Default holds the data fields for a Default record.</summary>
     impl Default for Camera {
         fn default() -> Self {
             Self {
@@ -425,30 +387,26 @@ mod model_types_camera {
             }
         }
     }
-} // 🔖Model Types - Camera
+} // 🎖️Model Types - Camera
 pub use model_types_camera::*;
 
 mod model_types_location_author_file_folder {
-    // 🔖Model Types - Location, Author, File, Folder
-    // [👤semio📚rs💻semio🔖modeltypeslocationauthorfilefolder](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder)
+    // 🧣Model Types - Location, Author, File, Folder
     // Model Types - Location, Author, File, Folder MUST provide the model types - location, author, file, folder functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>LocationId holds the data fields for a LocationId record.</summary>
-    // [🛠️semio/rs/semio.rs#Model Types - Location, Author, File, Folder§LocationId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LOCATION-AUTHOR-FILE-FOLDER/LOCATION-ID)
-    /// <summary>LocationId holds the data fields for a LocationId record.</summary>
+    /// 🔲<summary>🟧LocationId holds the data fields for a LocationId record.</summary>
+    /// <summary>🟨LocationId holds the data fields for a LocationId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslocationauthorfilefolder🛠️locationid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/LocationId)
     /// </remarks>
     pub struct LocationId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>Location holds the data fields for a Location record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypeslocationauthorfilefolder🛠️location](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/Location)
+    /// ▪️<summary>🟩Location holds the data fields for a Location record.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Location {
@@ -461,15 +419,13 @@ mod model_types_location_author_file_folder {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>AuthorId holds the data fields for a AuthorId record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypeslocationauthorfilefolder🛠️authorid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/AuthorId)
+    /// ✍️<summary>🟦AuthorId holds the data fields for a AuthorId record.</summary>
     pub struct AuthorId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>Author holds the data fields for a Author record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypeslocationauthorfilefolder🛠️author](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/Author)
+    /// 🔐<summary>🟪Author holds the data fields for a Author record.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Author {
@@ -486,17 +442,14 @@ mod model_types_location_author_file_folder {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>FolderId holds the data fields for a FolderId record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypeslocationauthorfilefolder🛠️folderid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/FolderId)
+    /// 📁<summary>📄FolderId holds the data fields for a FolderId record.</summary>
     pub struct FolderId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Location, Author, File, Folder§Folder](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LOCATION-AUTHOR-FILE-FOLDER/FOLDER)
-    /// <summary>Folder holds the data fields for a Folder record.</summary>
+    /// ▫️<summary>🟫Folder holds the data fields for a Folder record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslocationauthorfilefolder🛠️folder](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/Folder)
     /// </remarks>
     pub struct Folder {
         pub guid: Guid,
@@ -514,8 +467,7 @@ mod model_types_location_author_file_folder {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>FileId holds the data fields for a FileId record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypeslocationauthorfilefolder🛠️fileid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/FileId)
+    /// 📄<summary>💠FileId holds the data fields for a FileId record.</summary>
     /// <remarks>
     /// </remarks>
     pub struct FileId {
@@ -523,8 +475,7 @@ mod model_types_location_author_file_folder {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>File holds the data fields for a File record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypeslocationauthorfilefolder🛠️file](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder/d/i/File)
+    /// ◾<summary>🔳File holds the data fields for a File record.</summary>
     /// <remarks>
     /// </remarks>
     pub struct File {
@@ -545,21 +496,18 @@ mod model_types_location_author_file_folder {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 🔖Model Types - Location, Author, File, Folder
+} // 📰Model Types - Location, Author, File, Folder
 pub use model_types_location_author_file_folder::*;
 
 mod model_types_quality_port_tag_concept {
-    // 🔖Model Types - Quality, Port, Tag, Concept
-    // [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept)
+    // 🗞️Model Types - Quality, Port, Tag, Concept
     // Model Types - Quality, Port, Tag, Concept MUST provide the model types - quality, port, tag, concept functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Quality, Port, Tag, Concept§QualityId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-QUALITY-PORT-TAG-CONCEPT/QUALITY-ID)
-    /// <summary>QualityId holds the data fields for a QualityId record.</summary>
+    /// ◽<summary>🔲QualityId holds the data fields for a QualityId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept🛠️qualityid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/QualityId)
     /// </remarks>
     pub struct QualityId {
         pub guid: Guid,
@@ -592,8 +540,7 @@ mod model_types_quality_port_tag_concept {
 
     #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
     #[repr(i32)]
-    /// <summary>QualityKind holds the data fields for a QualityKind record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept🛠️qualitykind](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/QualityKind)
+    /// 🏷️<summary>🏷️QualityKind holds the data fields for a QualityKind record.</summary>
     pub enum QualityKind {
         #[default]
         Integer = 0,
@@ -602,10 +549,8 @@ mod model_types_quality_port_tag_concept {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Quality, Port, Tag, Concept§Quality](repo://definition/semio/rs/semio.rs/MODEL-TYPES-QUALITY-PORT-TAG-CONCEPT/QUALITY)
-    /// <summary>Quality holds the data fields for a Quality record.</summary>
+    /// ◻️<summary>▪️Quality holds the data fields for a Quality record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept🛠️quality](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/Quality)
     /// </remarks>
     pub struct Quality {
         pub guid: Guid,
@@ -651,20 +596,16 @@ mod model_types_quality_port_tag_concept {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Quality, Port, Tag, Concept§PortId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-QUALITY-PORT-TAG-CONCEPT/PORT-ID)
-    /// <summary>PortId holds the data fields for a PortId record.</summary>
+    /// ◼️<summary>🔌PortId holds the data fields for a PortId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept🛠️portid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/PortId)
     /// </remarks>
     pub struct PortId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Quality, Port, Tag, Concept§Port](repo://definition/semio/rs/semio.rs/MODEL-TYPES-QUALITY-PORT-TAG-CONCEPT/PORT)
-    /// <summary>Port holds the data fields for a Port record.</summary>
+    /// 🔵<summary>▫️Port holds the data fields for a Port record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept🛠️port](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/Port)
     /// </remarks>
     pub struct Port {
         pub guid: Guid,
@@ -682,21 +623,17 @@ mod model_types_quality_port_tag_concept {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Quality, Port, Tag, Concept§TagId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-QUALITY-PORT-TAG-CONCEPT/TAG-ID)
-    /// <summary>TagId holds the data fields for a TagId record.</summary>
+    /// 🔴<summary>◾TagId holds the data fields for a TagId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept🛠️tagid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/TagId)
     /// </remarks>
     pub struct TagId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>Tag holds the data fields for a Tag record.</summary>
-    // [🛠️semio/rs/semio.rs#Model Types - Quality, Port, Tag, Concept§Tag](repo://definition/semio/rs/semio.rs/MODEL-TYPES-QUALITY-PORT-TAG-CONCEPT/TAG)
-    /// <summary>Tag holds the data fields for a Tag record.</summary>
+    /// 🟠<summary>◽Tag holds the data fields for a Tag record.</summary>
+    /// <summary>◻️Tag holds the data fields for a Tag record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept🛠️tag](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/Tag)
     /// </remarks>
     pub struct Tag {
         pub guid: Guid,
@@ -710,20 +647,16 @@ mod model_types_quality_port_tag_concept {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Quality, Port, Tag, Concept§ConceptId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-QUALITY-PORT-TAG-CONCEPT/CONCEPT-ID)
-    /// <summary>ConceptId holds the data fields for a ConceptId record.</summary>
+    /// 🟡<summary>◼️ConceptId holds the data fields for a ConceptId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept🛠️conceptid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/ConceptId)
     /// </remarks>
     pub struct ConceptId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Quality, Port, Tag, Concept§Concept](repo://definition/semio/rs/semio.rs/MODEL-TYPES-QUALITY-PORT-TAG-CONCEPT/CONCEPT)
-    /// <summary>Concept holds the data fields for a Concept record.</summary>
+    /// 🟢<summary>🔵Concept holds the data fields for a Concept record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept🛠️concept](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept/d/i/Concept)
     /// </remarks>
     /// <remarks>
     /// </remarks>
@@ -737,32 +670,27 @@ mod model_types_quality_port_tag_concept {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub attributes: Option<Vec<Attribute>>,
     }
-} // 🔖Model Types - Quality, Port, Tag, Concept
+} // 🗝️Model Types - Quality, Port, Tag, Concept
 pub use model_types_quality_port_tag_concept::*;
 
 mod model_types_prop_model_connector {
-    // 🔖Model Types - Prop, Model, Connector
-    // [👤semio📚rs💻semio🔖modeltypespropmodelconnector](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector)
+    // 🏸Model Types - Prop, Model, Connector
     // Model Types - Prop, Model, Connector MUST provide the model types - prop, model, connector functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Prop, Model, Connector§PropId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-PROP-MODEL-CONNECTOR/PROP-ID)
-    /// <summary>PropId holds the data fields for a PropId record.</summary>
+    /// 🟣<summary>🔴PropId holds the data fields for a PropId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypespropmodelconnector🛠️propid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/PropId)
     /// </remarks>
     pub struct PropId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>Prop holds the data fields for a Prop record.</summary>
-    // [🛠️semio/rs/semio.rs#Model Types - Prop, Model, Connector§Prop](repo://definition/semio/rs/semio.rs/MODEL-TYPES-PROP-MODEL-CONNECTOR/PROP)
-    /// <summary>Prop holds the data fields for a Prop record.</summary>
+    /// 🟤<summary>🟠Prop holds the data fields for a Prop record.</summary>
+    /// <summary>🟡Prop holds the data fields for a Prop record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypespropmodelconnector🛠️prop](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/Prop)
     /// </remarks>
     pub struct Prop {
         pub guid: Guid,
@@ -775,17 +703,14 @@ mod model_types_prop_model_connector {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>ModelId holds the data fields for a ModelId record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypespropmodelconnector🛠️modelid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/ModelId)
+    /// ⚪<summary>🟢ModelId holds the data fields for a ModelId record.</summary>
     pub struct ModelId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Prop, Model, Connector§Model](repo://definition/semio/rs/semio.rs/MODEL-TYPES-PROP-MODEL-CONNECTOR/MODEL)
-    /// <summary>Model holds the data fields for a Model record.</summary>
+    /// ⚫<summary>🟣Model holds the data fields for a Model record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypespropmodelconnector🛠️model](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/Model)
     /// </remarks>
     /// <remarks>
     /// </remarks>
@@ -803,8 +728,7 @@ mod model_types_prop_model_connector {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>ConnectorId holds the data fields for a ConnectorId record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypespropmodelconnector🛠️connectorid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/ConnectorId)
+    /// 🩵<summary>🔗ConnectorId holds the data fields for a ConnectorId record.</summary>
     /// <remarks>
     /// </remarks>
     pub struct ConnectorId {
@@ -812,10 +736,8 @@ mod model_types_prop_model_connector {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Prop, Model, Connector§Connector](repo://definition/semio/rs/semio.rs/MODEL-TYPES-PROP-MODEL-CONNECTOR/CONNECTOR)
-    /// <summary>Connector holds the data fields for a Connector record.</summary>
+    /// 🩶<summary>🟤Connector holds the data fields for a Connector record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypespropmodelconnector🛠️connector](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector/d/i/Connector)
     /// </remarks>
     pub struct Connector {
         pub guid: Guid,
@@ -837,28 +759,24 @@ mod model_types_prop_model_connector {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub attributes: Option<Vec<Attribute>>,
     }
-} // 🔖Model Types - Prop, Model, Connector
+} // 👝Model Types - Prop, Model, Connector
 pub use model_types_prop_model_connector::*;
 
 mod model_types_type {
-    // 🔖Model Types - Type
-    // [👤semio📚rs💻semio🔖modeltypestype](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Type)
+    // 🧢Model Types - Type
     // Model Types - Type MUST provide the model types - type functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>TypeId holds the data fields for a TypeId record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypestype🛠️typeid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Type/d/i/TypeId)
+    /// 🩷<summary>⚪TypeId holds the data fields for a TypeId record.</summary>
     pub struct TypeId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Type§Type](repo://definition/semio/rs/semio.rs/MODEL-TYPES-TYPE/TYPE)
-    /// <summary>Type holds the data fields for a Type record.</summary>
+    /// 💜<summary>⚫Type holds the data fields for a Type record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypestype🛠️type](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Type/d/i/Type)
     /// </remarks>
     pub struct Type {
         pub guid: Guid,
@@ -900,19 +818,17 @@ mod model_types_type {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 🔖Model Types - Type
+} // 🥈Model Types - Type
 pub use model_types_type::*;
 
 mod model_types_layer_piece_group_side_connection_stat {
-    // 🔖Model Types - Layer, Piece, Group, Side, Connection, Stat
-    // [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat)
+    // 💾Model Types - Layer, Piece, Group, Side, Connection, Stat
     // Model Types - Layer, Piece, Group, Side, Connection, Stat MUST provide the model types - layer, piece, group, side, connection, stat functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>LayerId holds the data fields for a LayerId record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️layerid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/LayerId)
+    /// 💙<summary>🩵LayerId holds the data fields for a LayerId record.</summary>
     /// <remarks>
     /// </remarks>
     pub struct LayerId {
@@ -920,10 +836,8 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Layer, Piece, Group, Side, Connection, Stat§Layer](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LAYER-PIECE-GROUP-SIDE-CONNECTION-STAT/LAYER)
-    /// <summary>Layer holds the data fields for a Layer record.</summary>
+    /// 💚<summary>🩶Layer holds the data fields for a Layer record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️layer](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Layer)
     /// </remarks>
     pub struct Layer {
         pub guid: Guid,
@@ -941,30 +855,24 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Layer, Piece, Group, Side, Connection, Stat§PieceId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LAYER-PIECE-GROUP-SIDE-CONNECTION-STAT/PIECE-ID)
-    /// <summary>PieceId holds the data fields for a PieceId record.</summary>
+    /// 💛<summary>🧩PieceId holds the data fields for a PieceId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️pieceid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/PieceId)
     /// </remarks>
     pub struct PieceId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Layer, Piece, Group, Side, Connection, Stat§DesignId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LAYER-PIECE-GROUP-SIDE-CONNECTION-STAT/DESIGN-ID)
-    /// <summary>DesignId holds the data fields for a DesignId record.</summary>
+    /// 🧡<summary>🩷DesignId holds the data fields for a DesignId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️designid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/DesignId)
     /// </remarks>
     pub struct DesignId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Layer, Piece, Group, Side, Connection, Stat§Piece](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LAYER-PIECE-GROUP-SIDE-CONNECTION-STAT/PIECE)
-    /// <summary>Piece holds the data fields for a Piece record.</summary>
+    /// ❤️<summary>💜Piece holds the data fields for a Piece record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️piece](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Piece)
     /// </remarks>
     pub struct Piece {
         pub guid: Guid,
@@ -997,21 +905,17 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Layer, Piece, Group, Side, Connection, Stat§GroupId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LAYER-PIECE-GROUP-SIDE-CONNECTION-STAT/GROUP-ID)
-    /// <summary>GroupId holds the data fields for a GroupId record.</summary>
+    /// 🤍<summary>💙GroupId holds the data fields for a GroupId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️groupid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/GroupId)
     /// </remarks>
     pub struct GroupId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>Group holds the data fields for a Group record.</summary>
-    // [🛠️semio/rs/semio.rs#Model Types - Layer, Piece, Group, Side, Connection, Stat§Group](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LAYER-PIECE-GROUP-SIDE-CONNECTION-STAT/GROUP)
-    /// <summary>Group holds the data fields for a Group record.</summary>
+    /// 🖤<summary>💚Group holds the data fields for a Group record.</summary>
+    /// <summary>💛Group holds the data fields for a Group record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️group](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Group)
     /// </remarks>
     pub struct Group {
         pub guid: Guid,
@@ -1028,10 +932,8 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Layer, Piece, Group, Side, Connection, Stat§Side](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LAYER-PIECE-GROUP-SIDE-CONNECTION-STAT/SIDE)
-    /// <summary>Side holds the data fields for a Side record.</summary>
+    /// 💻<summary>🧡Side holds the data fields for a Side record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️side](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Side)
     /// </remarks>
     pub struct Side {
         pub piece: PieceId,
@@ -1042,21 +944,17 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>ConnectionId holds the data fields for a ConnectionId record.</summary>
-    // [🛠️semio/rs/semio.rs#Model Types - Layer, Piece, Group, Side, Connection, Stat§ConnectionId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LAYER-PIECE-GROUP-SIDE-CONNECTION-STAT/CONNECTION-ID)
-    /// <summary>ConnectionId holds the data fields for a ConnectionId record.</summary>
+    /// 🔌<summary>❤️ConnectionId holds the data fields for a ConnectionId record.</summary>
+    /// <summary>🤍ConnectionId holds the data fields for a ConnectionId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️connectionid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/ConnectionId)
     /// </remarks>
     pub struct ConnectionId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Layer, Piece, Group, Side, Connection, Stat§Connection](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LAYER-PIECE-GROUP-SIDE-CONNECTION-STAT/CONNECTION)
-    /// <summary>Connection holds the data fields for a Connection record.</summary>
+    /// 🤎<summary>🖤Connection holds the data fields for a Connection record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️connection](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Connection)
     /// </remarks>
     pub struct Connection {
         pub guid: Guid,
@@ -1085,20 +983,16 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Model Types - Layer, Piece, Group, Side, Connection, Stat§StatId](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LAYER-PIECE-GROUP-SIDE-CONNECTION-STAT/STAT-ID)
-    /// <summary>StatId holds the data fields for a StatId record.</summary>
+    /// 💗<summary>🤎StatId holds the data fields for a StatId record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️statid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/StatId)
     /// </remarks>
     pub struct StatId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Layer, Piece, Group, Side, Connection, Stat§Stat](repo://definition/semio/rs/semio.rs/MODEL-TYPES-LAYER-PIECE-GROUP-SIDE-CONNECTION-STAT/STAT)
-    /// <summary>Stat holds the data fields for a Stat record.</summary>
+    /// 💖<summary>💗Stat holds the data fields for a Stat record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat🛠️stat](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat/d/i/Stat)
     /// </remarks>
     /// <remarks>
     /// </remarks>
@@ -1116,21 +1010,18 @@ mod model_types_layer_piece_group_side_connection_stat {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
     }
-} // 🔖Model Types - Layer, Piece, Group, Side, Connection, Stat
+} // ⛑️Model Types - Layer, Piece, Group, Side, Connection, Stat
 pub use model_types_layer_piece_group_side_connection_stat::*;
 
 mod model_types_design {
-    // 🔖Model Types - Design
-    // [👤semio📚rs💻semio🔖modeltypesdesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Design)
+    // 🌋Model Types - Design
     // Model Types - Design MUST provide the model types - design functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Model Types - Design§Design](repo://definition/semio/rs/semio.rs/MODEL-TYPES-DESIGN/DESIGN)
-    /// <summary>Design holds the data fields for a Design record.</summary>
+    /// 💝<summary>💖Design holds the data fields for a Design record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖modeltypesdesign🛠️design](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Design/d/i/Design)
     /// </remarks>
     pub struct Design {
         pub guid: Guid,
@@ -1180,19 +1071,17 @@ mod model_types_design {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 🔖Model Types - Design
+} // 📊Model Types - Design
 pub use model_types_design::*;
 
 mod model_types_kit {
-    // 🔖Model Types - Kit
-    // [👤semio📚rs💻semio🔖modeltypeskit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit)
+    // 📢Model Types - Kit
     // Model Types - Kit MUST provide the model types - kit functionality.
 
     use super::*;
 
     mod kit_kind {
-        // 🔖KitKind
-        // [👤semio📚rs💻semio🔖modeltypeskit🔖kitkind](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit/s/KitKind)
+        // 📈KitKind
         // KitKind discriminates the five persistence/transport forms of a Kit.
 
         /// Discriminator for the five kit persistence/transport forms.
@@ -1203,7 +1092,6 @@ mod model_types_kit {
         /// - Archive: ZIP file packaging a FolderKit structure
         /// - Remote: URL-addressable kit served over HTTP(S)
         /// - Temporary: In-memory ephemeral kit (no persistence)
-        /// [👤semio📚rs💻semio🔖modeltypeskit🔖kitkind🛠️kitkind](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit/s/KitKind/d/i/KitKind)
         use super::*;
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -1216,8 +1104,7 @@ mod model_types_kit {
             Temporary,
         }
 
-        /// All valid KitKind values.
-        /// [👤semio📚rs💻semio🔖modeltypeskit🔖kitkind🪨allkitkinds](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit/s/KitKind/d/i/ALL_KIT_KINDS)
+        /// 💘All valid KitKind values.
         pub const ALL_KIT_KINDS: [KitKind; 5] = [
             KitKind::File,
             KitKind::Folder,
@@ -1225,12 +1112,11 @@ mod model_types_kit {
             KitKind::Remote,
             KitKind::Temporary,
         ];
-    } // 🔖KitKind
+    } // 🥁KitKind
     pub use kit_kind::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>Kit holds the data fields for a Kit record.</summary>
-    /// [👤semio📚rs💻semio🔖modeltypeskit🛠️kit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit/d/i/Kit)
+    /// 💕<summary>🧰Kit holds the data fields for a Kit record.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Kit {
@@ -1277,58 +1163,45 @@ mod model_types_kit {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 🔖Model Types - Kit
+} // 🌎Model Types - Kit
 pub use model_types_kit::*;
 
 mod finder_functions {
-    // 🔖Finder Functions
-    // [👤semio📚rs💻semio🔖finderfunctions](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions)
+    // 🥿Finder Functions
     // Finder Functions MUST provide the finder functions functionality.
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_type_in_kit](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-TYPE-IN-KIT)
-    /// <summary>find_type_in_kit holds the data fields for a find_type_in_kit record.</summary>
+    /// <summary>📖find_type_in_kit holds the data fields for a find_type_in_kit record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findtypeinkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_type_in_kit)
     /// </remarks>
     use super::*;
 
     pub fn find_type_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Type> {
         kit.types.as_ref()?.iter().find(|t| t.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_type_in_kit_mut](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-TYPE-IN-KIT-MUT)
-    /// <summary>find_type_in_kit_mut holds the data fields for a find_type_in_kit_mut record.</summary>
+    /// 🔖<summary>💝find_type_in_kit_mut holds the data fields for a find_type_in_kit_mut record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findtypeinkitmut](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_type_in_kit_mut)
     /// </remarks>
     pub fn find_type_in_kit_mut<'a>(kit: &'a mut Kit, guid: &str) -> Option<&'a mut Type> {
         kit.types.as_mut()?.iter_mut().find(|t| t.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_design_in_kit](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-DESIGN-IN-KIT)
-    /// <summary>find_design_in_kit holds the data fields for a find_design_in_kit record.</summary>
+    /// 🔖<summary>💘find_design_in_kit holds the data fields for a find_design_in_kit record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️finddesigninkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_design_in_kit)
     /// </remarks>
     pub fn find_design_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Design> {
         kit.designs.as_ref()?.iter().find(|d| d.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_design_in_kit_mut](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-DESIGN-IN-KIT-MUT)
-    /// <summary>find_design_in_kit_mut holds the data fields for a find_design_in_kit_mut record.</summary>
+    /// 🔖<summary>💕find_design_in_kit_mut holds the data fields for a find_design_in_kit_mut record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️finddesigninkitmut](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_design_in_kit_mut)
     /// </remarks>
     pub fn find_design_in_kit_mut<'a>(kit: &'a mut Kit, guid: &str) -> Option<&'a mut Design> {
         kit.designs.as_mut()?.iter_mut().find(|d| d.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_piece_in_design](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-PIECE-IN-DESIGN)
-    /// <summary>find_piece_in_design holds the data fields for a find_piece_in_design record.</summary>
+    /// 🔖<summary>🔖find_piece_in_design holds the data fields for a find_piece_in_design record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findpieceindesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_piece_in_design)
     /// </remarks>
     pub fn find_piece_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Piece> {
         design.pieces.as_ref()?.iter().find(|p| p.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_piece_in_design_mut](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-PIECE-IN-DESIGN-MUT)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findpieceindesignmut](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_piece_in_design_mut)
+    /// 🔖<remarks>
     /// </remarks>
     pub fn find_piece_in_design_mut<'a>(
         design: &'a mut Design,
@@ -1336,108 +1209,84 @@ mod finder_functions {
     ) -> Option<&'a mut Piece> {
         design.pieces.as_mut()?.iter_mut().find(|p| p.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_connection_in_design](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-CONNECTION-IN-DESIGN)
-    /// <summary>find_connection_in_design holds the data fields for a find_connection_in_design record.</summary>
+    /// 🔖<summary>🔖find_connection_in_design holds the data fields for a find_connection_in_design record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findconnectionindesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_connection_in_design)
     /// </remarks>
     pub fn find_connection_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Connection> {
         design.connections.as_ref()?.iter().find(|c| c.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_connector_in_type](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-CONNECTOR-IN-TYPE)
-    /// <summary>find_connector_in_type holds the data fields for a find_connector_in_type record.</summary>
+    /// 🔖<summary>🔖find_connector_in_type holds the data fields for a find_connector_in_type record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findconnectorintype](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_connector_in_type)
     /// </remarks>
     pub fn find_connector_in_type<'a>(t: &'a Type, guid: &str) -> Option<&'a Connector> {
         t.connectors.as_ref()?.iter().find(|c| c.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_model_in_type](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-MODEL-IN-TYPE)
-    /// <summary>find_model_in_type holds the data fields for a find_model_in_type record.</summary>
+    /// 🔖<summary>🔖find_model_in_type holds the data fields for a find_model_in_type record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findmodelintype](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_model_in_type)
     /// </remarks>
     pub fn find_model_in_type<'a>(t: &'a Type, guid: &str) -> Option<&'a Model> {
         t.models.as_ref()?.iter().find(|m| m.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_file_in_kit](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-FILE-IN-KIT)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findfileinkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_file_in_kit)
+    /// 🔖<remarks>
     /// </remarks>
     pub fn find_file_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a File> {
         kit.files.as_ref()?.iter().find(|f| f.guid == guid)
     }
 
-    /// <summary>find_folder_in_kit holds the data fields for a find_folder_in_kit record.</summary>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findfolderinkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_folder_in_kit)
+    /// 🔖<summary>🔖find_folder_in_kit holds the data fields for a find_folder_in_kit record.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_folder_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Folder> {
         kit.folders.as_ref()?.iter().find(|f| f.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_author_in_kit](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-AUTHOR-IN-KIT)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findauthorinkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_author_in_kit)
+    /// 🔖<remarks>
     /// </remarks>
     pub fn find_author_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Author> {
         kit.authors.as_ref()?.iter().find(|a| a.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_tag_in_kit](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-TAG-IN-KIT)
-    /// <summary>find_tag_in_kit holds the data fields for a find_tag_in_kit record.</summary>
+    /// 🔖<summary>🔖find_tag_in_kit holds the data fields for a find_tag_in_kit record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findtaginkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_tag_in_kit)
     /// </remarks>
     pub fn find_tag_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Tag> {
         kit.tags.as_ref()?.iter().find(|t| t.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_concept_in_kit](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-CONCEPT-IN-KIT)
-    /// <summary>find_concept_in_kit holds the data fields for a find_concept_in_kit record.</summary>
+    /// 🔖<summary>🔖find_concept_in_kit holds the data fields for a find_concept_in_kit record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findconceptinkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_concept_in_kit)
     /// </remarks>
     pub fn find_concept_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Concept> {
         kit.concepts.as_ref()?.iter().find(|c| c.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_quality_in_kit](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-QUALITY-IN-KIT)
-    /// <summary>find_quality_in_kit holds the data fields for a find_quality_in_kit record.</summary>
+    /// 🔖<summary>🔖find_quality_in_kit holds the data fields for a find_quality_in_kit record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findqualityinkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_quality_in_kit)
     /// </remarks>
     pub fn find_quality_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Quality> {
         kit.qualities.as_ref()?.iter().find(|q| q.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_interface_in_kit](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-INTERFACE-IN-KIT)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findinterfaceinkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_interface_in_kit)
+    /// 🔖<remarks>
     /// </remarks>
     pub fn find_interface_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Port> {
         kit.ports.as_ref()?.iter().find(|i| i.guid == guid)
     }
 
-    /// <summary>find_layer_in_design holds the data fields for a find_layer_in_design record.</summary>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findlayerindesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_layer_in_design)
+    /// 🔖<summary>🔖find_layer_in_design holds the data fields for a find_layer_in_design record.</summary>
     pub fn find_layer_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Layer> {
         design.layers.as_ref()?.iter().find(|l| l.guid == guid)
     }
-    // [🛠️semio/rs/semio.rs#Finder Functions§find_group_in_design](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-GROUP-IN-DESIGN)
-    /// <summary>find_group_in_design holds the data fields for a find_group_in_design record.</summary>
+    /// 🔖<summary>🔖find_group_in_design holds the data fields for a find_group_in_design record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findgroupindesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_group_in_design)
     /// </remarks>
     pub fn find_group_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Group> {
         design.groups.as_ref()?.iter().find(|g| g.guid == guid)
     }
 
-    /// <summary>find_stat_in_design holds the data fields for a find_stat_in_design record.</summary>
-    /// [👤semio📚rs💻semio🔖finderfunctions🛠️findstatindesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions/d/i/find_stat_in_design)
+    /// 🔖<summary>🔖find_stat_in_design holds the data fields for a find_stat_in_design record.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_stat_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Stat> {
         design.stats.as_ref()?.iter().find(|s| s.guid == guid)
     }
 
-    /// sum_quality_in_design MUST sum all quality values for a given quality across all pieces in a design.
-    /// For each piece, it checks piece-level props first, then falls back to type-level props.
+    /// ✔️For each piece, it checks piece-level props first, then falls back to type-level props.
     pub fn sum_quality_in_design(kit: &Kit, design_guid: &str, quality_guid: &str) -> f64 {
         let design = match find_design_in_kit(kit, design_guid) {
             Some(d) => d,
@@ -1475,16 +1324,14 @@ mod finder_functions {
         }
         sum
     }
-} // 🔖Finder Functions
+} // 🎖️Finder Functions
 pub use finder_functions::*;
 
 mod serialization {
-    // 🔖Serialization
-    // [👤semio📚rs💻semio🔖serialization](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization)
+    // 👑Serialization
     // Serialization MUST provide the serialization functionality.
 
-    /// <summary>serialize_kit holds the data fields for a serialize_kit record.</summary>
-    /// [👤semio📚rs💻semio🔖serialization🛠️serializekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/serialize_kit)
+    /// <summary>🔖serialize_kit holds the data fields for a serialize_kit record.</summary>
     use super::*;
 
     pub fn serialize_kit(kit: &Kit) -> Result<String> {
@@ -1492,29 +1339,23 @@ mod serialization {
             message: e.to_string(),
         })
     }
-    // [🛠️semio/rs/semio.rs#Serialization§deserialize_kit](repo://definition/semio/rs/semio.rs/SERIALIZATION/DESERIALIZE-KIT)
-    /// <summary>deserialize_kit holds the data fields for a deserialize_kit record.</summary>
+    /// 🔖<summary>🔖deserialize_kit holds the data fields for a deserialize_kit record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖serialization🛠️deserializekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/deserialize_kit)
     /// </remarks>
     pub fn deserialize_kit(json: &str) -> Result<Kit> {
         serde_json::from_str(json).map_err(|e| SemioError::Serialization {
             message: e.to_string(),
         })
     }
-    // [🛠️semio/rs/semio.rs#Serialization§serialize_design](repo://definition/semio/rs/semio.rs/SERIALIZATION/SERIALIZE-DESIGN)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖serialization🛠️serializedesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/serialize_design)
+    /// 🔖<remarks>
     /// </remarks>
     pub fn serialize_design(design: &Design) -> Result<String> {
         serde_json::to_string_pretty(design).map_err(|e| SemioError::Serialization {
             message: e.to_string(),
         })
     }
-    // [🛠️semio/rs/semio.rs#Serialization§deserialize_design](repo://definition/semio/rs/semio.rs/SERIALIZATION/DESERIALIZE-DESIGN)
-    /// <summary>deserialize_design holds the data fields for a deserialize_design record.</summary>
+    /// 🔖<summary>🔖deserialize_design holds the data fields for a deserialize_design record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖serialization🛠️deserializedesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/deserialize_design)
     /// </remarks>
     pub fn deserialize_design(json: &str) -> Result<Design> {
         serde_json::from_str(json).map_err(|e| SemioError::Serialization {
@@ -1522,85 +1363,68 @@ mod serialization {
         })
     }
 
-    /// <summary>serialize_type holds the data fields for a serialize_type record.</summary>
-    // [🛠️semio/rs/semio.rs#Serialization§serialize_type](repo://definition/semio/rs/semio.rs/SERIALIZATION/SERIALIZE-TYPE)
+    /// 🔖<summary>🔖serialize_type holds the data fields for a serialize_type record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖serialization🛠️serializetype](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/serialize_type)
     /// </remarks>
     pub fn serialize_type(t: &Type) -> Result<String> {
         serde_json::to_string_pretty(t).map_err(|e| SemioError::Serialization {
             message: e.to_string(),
         })
     }
-    // [🛠️semio/rs/semio.rs#Serialization§deserialize_type](repo://definition/semio/rs/semio.rs/SERIALIZATION/DESERIALIZE-TYPE)
-    /// <summary>deserialize_type holds the data fields for a deserialize_type record.</summary>
+    /// 🔖<summary>🔖deserialize_type holds the data fields for a deserialize_type record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖serialization🛠️deserializetype](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/deserialize_type)
     /// </remarks>
     pub fn deserialize_type(json: &str) -> Result<Type> {
         serde_json::from_str(json).map_err(|e| SemioError::Serialization {
             message: e.to_string(),
         })
     }
-    // [🛠️semio/rs/semio.rs#Serialization§are_kits_equal](repo://definition/semio/rs/semio.rs/SERIALIZATION/ARE-KITS-EQUAL)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖serialization🛠️arekitsequal](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/are_kits_equal)
+    /// 🔖<remarks>
     /// </remarks>
     pub fn are_kits_equal(a: &Kit, b: &Kit) -> bool {
         deep_equal(a, b)
     }
-    // [🛠️semio/rs/semio.rs#Serialization§are_designs_equal](repo://definition/semio/rs/semio.rs/SERIALIZATION/ARE-DESIGNS-EQUAL)
-    /// <summary>are_designs_equal holds the data fields for a are_designs_equal record.</summary>
+    /// 🔖<summary>🔖are_designs_equal holds the data fields for a are_designs_equal record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖serialization🛠️aredesignsequal](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/are_designs_equal)
     /// </remarks>
     pub fn are_designs_equal(a: &Design, b: &Design) -> bool {
         deep_equal(a, b)
     }
-    /// <summary>are_types_equal holds the data fields for a are_types_equal record.</summary>
-    /// [👤semio📚rs💻semio🔖serialization🛠️aretypesequal](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/are_types_equal)
+    /// 🔖<summary>🔖are_types_equal holds the data fields for a are_types_equal record.</summary>
     pub fn are_types_equal(a: &Type, b: &Type) -> bool {
         deep_equal(a, b)
     }
 
-    /// <summary>SUPPORTED_MODEL_EXTENSIONS holds the data fields for a SUPPORTED_MODEL_EXTENSIONS record.</summary>
-    /// [👤semio📚rs💻semio🔖serialization🛠️supportedmodelextensions](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/SUPPORTED_MODEL_EXTENSIONS)
+    /// 🔖<summary>🔖SUPPORTED_MODEL_EXTENSIONS holds the data fields for a SUPPORTED_MODEL_EXTENSIONS record.</summary>
     pub const SUPPORTED_MODEL_EXTENSIONS: &[&str] = &[
         "gltf", "glb", "fbx", "obj", "dae", "3ds", "stl", "ply", "usdz", "vrm", "ifc", "3mf",
     ];
-    // [🛠️semio/rs/semio.rs#Serialization§is_supported_model_extension](repo://definition/semio/rs/semio.rs/SERIALIZATION/IS-SUPPORTED-MODEL-EXTENSION)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖serialization🛠️issupportedmodelextension](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization/d/i/is_supported_model_extension)
+    /// 🔖<remarks>
     /// </remarks>
     pub fn is_supported_model_extension(ext: &str) -> bool {
         SUPPORTED_MODEL_EXTENSIONS.contains(&ext.to_lowercase().as_str())
     }
-} // 🔖Serialization
+} // 🤸Serialization
 pub use serialization::*;
 
 mod diff_types {
-    // 🔖Diff Types
-    // [👤semio📚rs💻semio🔖difftypes](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types)
+    // ✂️Diff Types
     // Diff Types MUST provide the diff types functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>RemovedItem holds the data fields for a RemovedItem record.</summary>
-    // [🛠️semio/rs/semio.rs#Diff Types§RemovedItem](repo://definition/semio/rs/semio.rs/DIFF-TYPES/REMOVED-ITEM)
-    /// <summary>RemovedItem holds the data fields for a RemovedItem record.</summary>
+    /// 🚚<summary>🗑️RemovedItem holds the data fields for a RemovedItem record.</summary>
+    /// <summary>✏️RemovedItem holds the data fields for a RemovedItem record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️removeditem](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/RemovedItem)
     /// </remarks>
     pub struct RemovedItem {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Diff Types§DiffUpdate](repo://definition/semio/rs/semio.rs/DIFF-TYPES/DIFF-UPDATE)
-    /// <summary>DiffUpdate holds the data fields for a DiffUpdate record.</summary>
+    /// 🔁<summary>♻️DiffUpdate holds the data fields for a DiffUpdate record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️diffupdate](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/DiffUpdate)
     /// </remarks>
     pub struct DiffUpdate<D> {
         pub key: String,
@@ -1703,10 +1527,8 @@ mod diff_types {
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     #[serde(bound(deserialize = "T: Deserialize<'de>, D: serde::de::DeserializeOwned"))]
-    // [🛠️semio/rs/semio.rs#Diff Types§CollectionDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/COLLECTION-DIFF)
-    /// <summary>CollectionDiff holds the data fields for a CollectionDiff record.</summary>
+    /// 🔖<summary>🔖CollectionDiff holds the data fields for a CollectionDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️collectiondiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/CollectionDiff)
     /// </remarks>
     pub struct CollectionDiff<T, D> {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1718,10 +1540,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§AttributeDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/ATTRIBUTE-DIFF)
-    /// <summary>AttributeDiff holds the data fields for a AttributeDiff record.</summary>
+    /// 🔖<summary>🔖AttributeDiff holds the data fields for a AttributeDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️attributediff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AttributeDiff)
     /// </remarks>
     pub struct AttributeDiff {
         pub guid: Guid,
@@ -1742,10 +1562,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§PropDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/PROP-DIFF)
-    /// <summary>PropDiff holds the data fields for a PropDiff record.</summary>
+    /// 🔖<summary>🔖PropDiff holds the data fields for a PropDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️propdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PropDiff)
     /// </remarks>
     pub struct PropDiff {
         pub guid: Guid,
@@ -1764,10 +1582,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§ConnectorDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/CONNECTOR-DIFF)
-    /// <summary>ConnectorDiff holds the data fields for a ConnectorDiff record.</summary>
+    /// 🔖<summary>🔖ConnectorDiff holds the data fields for a ConnectorDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️connectordiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectorDiff)
     /// </remarks>
     pub struct ConnectorDiff {
         pub guid: Guid,
@@ -1815,10 +1631,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§ModelDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/MODEL-DIFF)
-    /// <summary>ModelDiff holds the data fields for a ModelDiff record.</summary>
+    /// 🔖<summary>🔖ModelDiff holds the data fields for a ModelDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️modeldiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ModelDiff)
     /// </remarks>
     pub struct ModelDiff {
         pub guid: Guid,
@@ -1847,10 +1661,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§TypeDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/TYPE-DIFF)
-    /// <summary>TypeDiff holds the data fields for a TypeDiff record.</summary>
+    /// 🔖<summary>🔖TypeDiff holds the data fields for a TypeDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️typediff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TypeDiff)
     /// </remarks>
     pub struct TypeDiff {
         pub guid: Guid,
@@ -1941,10 +1753,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§SideDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/SIDE-DIFF)
-    /// <summary>SideDiff holds the data fields for a SideDiff record.</summary>
+    /// 🔖<summary>🔖SideDiff holds the data fields for a SideDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️sidediff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/SideDiff)
     /// </remarks>
     pub struct SideDiff {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1965,10 +1775,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§ConnectionDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/CONNECTION-DIFF)
-    /// <summary>ConnectionDiff holds the data fields for a ConnectionDiff record.</summary>
+    /// 🔖<summary>🔖ConnectionDiff holds the data fields for a ConnectionDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️connectiondiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectionDiff)
     /// </remarks>
     pub struct ConnectionDiff {
         pub guid: Guid,
@@ -2011,10 +1819,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§PieceDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/PIECE-DIFF)
-    /// <summary>PieceDiff holds the data fields for a PieceDiff record.</summary>
+    /// 🔖<summary>🔖PieceDiff holds the data fields for a PieceDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️piecediff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PieceDiff)
     /// </remarks>
     pub struct PieceDiff {
         pub guid: Guid,
@@ -2095,10 +1901,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§LayerDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/LAYER-DIFF)
-    /// <summary>LayerDiff holds the data fields for a LayerDiff record.</summary>
+    /// 🔖<summary>🔖LayerDiff holds the data fields for a LayerDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️layerdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/LayerDiff)
     /// </remarks>
     pub struct LayerDiff {
         pub guid: Guid,
@@ -2135,10 +1939,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§GroupDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/GROUP-DIFF)
-    /// <summary>GroupDiff holds the data fields for a GroupDiff record.</summary>
+    /// 🔖<summary>🔖GroupDiff holds the data fields for a GroupDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️groupdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/GroupDiff)
     /// </remarks>
     pub struct GroupDiff {
         pub guid: Guid,
@@ -2171,10 +1973,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§StatDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/STAT-DIFF)
-    /// <summary>StatDiff holds the data fields for a StatDiff record.</summary>
+    /// 🔖<summary>🔖StatDiff holds the data fields for a StatDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️statdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/StatDiff)
     /// </remarks>
     pub struct StatDiff {
         pub guid: Guid,
@@ -2215,10 +2015,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§DesignDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/DESIGN-DIFF)
-    /// <summary>DesignDiff holds the data fields for a DesignDiff record.</summary>
+    /// 🔖<summary>🔖DesignDiff holds the data fields for a DesignDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️designdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/DesignDiff)
     /// </remarks>
     pub struct DesignDiff {
         #[serde(default)]
@@ -2318,10 +2116,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§TagDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/TAG-DIFF)
-    /// <summary>TagDiff holds the data fields for a TagDiff record.</summary>
+    /// 🔖<summary>🔖TagDiff holds the data fields for a TagDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️tagdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TagDiff)
     /// </remarks>
     pub struct TagDiff {
         pub guid: Guid,
@@ -2342,10 +2138,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§ConceptDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/CONCEPT-DIFF)
-    /// <summary>ConceptDiff holds the data fields for a ConceptDiff record.</summary>
+    /// 🔖<summary>🔖ConceptDiff holds the data fields for a ConceptDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️conceptdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConceptDiff)
     /// </remarks>
     pub struct ConceptDiff {
         pub guid: Guid,
@@ -2366,10 +2160,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§PortDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/PORT-DIFF)
-    /// <summary>PortDiff holds the data fields for a PortDiff record.</summary>
+    /// 🔖<summary>🔖PortDiff holds the data fields for a PortDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️portdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PortDiff)
     /// </remarks>
     pub struct PortDiff {
         pub guid: Guid,
@@ -2406,10 +2198,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§QualityDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/QUALITY-DIFF)
-    /// <summary>QualityDiff holds the data fields for a QualityDiff record.</summary>
+    /// 🔖<summary>🔖QualityDiff holds the data fields for a QualityDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️qualitydiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/QualityDiff)
     /// </remarks>
     pub struct QualityDiff {
         pub guid: Guid,
@@ -2490,10 +2280,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§FileDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/FILE-DIFF)
-    /// <summary>FileDiff holds the data fields for a FileDiff record.</summary>
+    /// 🔖<summary>🔖FileDiff holds the data fields for a FileDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️filediff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FileDiff)
     /// </remarks>
     pub struct FileDiff {
         pub guid: Guid,
@@ -2526,10 +2314,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§FolderDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/FOLDER-DIFF)
-    /// <summary>FolderDiff holds the data fields for a FolderDiff record.</summary>
+    /// 🔖<summary>🔖FolderDiff holds the data fields for a FolderDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️folderdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FolderDiff)
     /// </remarks>
     pub struct FolderDiff {
         pub guid: Guid,
@@ -2546,10 +2332,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [🛠️semio/rs/semio.rs#Diff Types§AuthorDiff](repo://definition/semio/rs/semio.rs/DIFF-TYPES/AUTHOR-DIFF)
-    /// <summary>AuthorDiff holds the data fields for a AuthorDiff record.</summary>
+    /// 🔖<summary>🔖AuthorDiff holds the data fields for a AuthorDiff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️authordiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AuthorDiff)
     /// </remarks>
     pub struct AuthorDiff {
         pub guid: Guid,
@@ -2566,8 +2350,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>KitDiff holds the data fields for a KitDiff record.</summary>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️kitdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/KitDiff)
+    /// 🔖<summary>🔖KitDiff holds the data fields for a KitDiff record.</summary>
     /// <remarks>
     /// </remarks>
     pub struct KitDiff {
@@ -2646,10 +2429,8 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    // [👤semio📚rs💻semio🔖difftypes🛠️change](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/Change)
-    /// <summary>Change holds the data fields for a Change record.</summary>
+    /// ♻️<summary>🔖Change holds the data fields for a Change record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️change](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/Change)
     /// </remarks>
     pub struct Change<TEntity, TDiff> {
         pub forward: TDiff,
@@ -2663,137 +2444,102 @@ mod diff_types {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub after: Option<TEntity>,
     }
-    // [👤semio📚rs💻semio🔖difftypes🛠️attributechange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AttributeChange)
-    /// <summary>AttributeChange holds the data fields for a AttributeChange record.</summary>
+    /// 🔖<summary>🔖AttributeChange holds the data fields for a AttributeChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️attributechange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AttributeChange)
     /// </remarks>
     pub type AttributeChange = Change<Attribute, AttributeDiff>;
-    /// <summary>AuthorChange holds the data fields for a AuthorChange record.</summary>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️authorchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/AuthorChange)
+    /// 🔖<summary>🔖AuthorChange holds the data fields for a AuthorChange record.</summary>
     pub type AuthorChange = Change<Author, AuthorDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️filechange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FileChange)
-    /// <summary>FileChange holds the data fields for a FileChange record.</summary>
+    /// 🔖<summary>🔖FileChange holds the data fields for a FileChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️filechange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FileChange)
     /// </remarks>
     pub type FileChange = Change<File, FileDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️folderchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FolderChange)
-    /// <summary>FolderChange holds the data fields for a FolderChange record.</summary>
+    /// 🔖<summary>🔖FolderChange holds the data fields for a FolderChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️folderchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/FolderChange)
     /// </remarks>
     pub type FolderChange = Change<Folder, FolderDiff>;
-    /// <summary>QualityChange holds the data fields for a QualityChange record.</summary>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️qualitychange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/QualityChange)
+    /// 🔖<summary>🔖QualityChange holds the data fields for a QualityChange record.</summary>
     pub type QualityChange = Change<Quality, QualityDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️portchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PortChange)
-    /// <summary>PortChange holds the data fields for a PortChange record.</summary>
+    /// 🔖<summary>🔖PortChange holds the data fields for a PortChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️portchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PortChange)
     /// </remarks>
     pub type PortChange = Change<Port, PortDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️propchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PropChange)
-    /// <summary>PropChange holds the data fields for a PropChange record.</summary>
+    /// 🔖<summary>🔖PropChange holds the data fields for a PropChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️propchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PropChange)
     /// </remarks>
     pub type PropChange = Change<Prop, PropDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️tagchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TagChange)
-    /// <summary>TagChange holds the data fields for a TagChange record.</summary>
+    /// 🔖<summary>🔖TagChange holds the data fields for a TagChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️tagchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TagChange)
     /// </remarks>
     pub type TagChange = Change<Tag, TagDiff>;
-    /// <summary>ConceptChange holds the data fields for a ConceptChange record.</summary>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️conceptchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConceptChange)
+    /// 🔖<summary>🔖ConceptChange holds the data fields for a ConceptChange record.</summary>
     pub type ConceptChange = Change<Concept, ConceptDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️modelchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ModelChange)
-    /// <summary>ModelChange holds the data fields for a ModelChange record.</summary>
+    /// 🔖<summary>🔖ModelChange holds the data fields for a ModelChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️modelchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ModelChange)
     /// </remarks>
     pub type ModelChange = Change<Model, ModelDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️connectorchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectorChange)
-    /// <summary>ConnectorChange holds the data fields for a ConnectorChange record.</summary>
+    /// 🔖<summary>🔖ConnectorChange holds the data fields for a ConnectorChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️connectorchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectorChange)
     /// </remarks>
     pub type ConnectorChange = Change<Connector, ConnectorDiff>;
-    /// <summary>TypeChange holds the data fields for a TypeChange record.</summary>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️typechange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/TypeChange)
+    /// 🔖<summary>🔖TypeChange holds the data fields for a TypeChange record.</summary>
     pub type TypeChange = Change<Type, TypeDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️layerchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/LayerChange)
-    /// <summary>LayerChange holds the data fields for a LayerChange record.</summary>
+    /// 🔖<summary>🔖LayerChange holds the data fields for a LayerChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️layerchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/LayerChange)
     /// </remarks>
     pub type LayerChange = Change<Layer, LayerDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️piecechange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PieceChange)
-    /// <summary>PieceChange holds the data fields for a PieceChange record.</summary>
+    /// 🔖<summary>🔖PieceChange holds the data fields for a PieceChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️piecechange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/PieceChange)
     /// </remarks>
     pub type PieceChange = Change<Piece, PieceDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️groupchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/GroupChange)
-    /// <summary>GroupChange holds the data fields for a GroupChange record.</summary>
+    /// 🔖<summary>🔖GroupChange holds the data fields for a GroupChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️groupchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/GroupChange)
     /// </remarks>
     pub type GroupChange = Change<Group, GroupDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️sidechange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/SideChange)
-    /// <summary>SideChange holds the data fields for a SideChange record.</summary>
+    /// 🔖<summary>🔖SideChange holds the data fields for a SideChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️sidechange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/SideChange)
     /// </remarks>
     pub type SideChange = Change<Side, SideDiff>;
-    /// <summary>ConnectionChange holds the data fields for a ConnectionChange record.</summary>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️connectionchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/ConnectionChange)
+    /// 🔖<summary>🔖ConnectionChange holds the data fields for a ConnectionChange record.</summary>
     pub type ConnectionChange = Change<Connection, ConnectionDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️statchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/StatChange)
-    /// <summary>StatChange holds the data fields for a StatChange record.</summary>
+    /// 🔖<summary>🔖StatChange holds the data fields for a StatChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️statchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/StatChange)
     /// </remarks>
     pub type StatChange = Change<Stat, StatDiff>;
-    // [👤semio📚rs💻semio🔖difftypes🛠️designchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/DesignChange)
-    /// <summary>DesignChange holds the data fields for a DesignChange record.</summary>
+    /// 🔖<summary>🔖DesignChange holds the data fields for a DesignChange record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️designchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/DesignChange)
     /// </remarks>
     pub type DesignChange = Change<Design, DesignDiff>;
-    /// <summary>KitChange holds the data fields for a KitChange record.</summary>
-    /// [👤semio📚rs💻semio🔖difftypes🛠️kitchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types/d/i/KitChange)
+    /// 🔖<summary>🔖KitChange holds the data fields for a KitChange record.</summary>
     pub type KitChange = Change<Kit, KitDiff>;
-} // 🔖Diff Types
+} // 🏩Diff Types
 pub use diff_types::*;
 
 mod meta_and_shallow_types {
-    // 🔖Meta And Shallow Types
-    // [👤semio📚rs💻semio🔖metaandshallowtypes](repo://p/u/semio/b/l/rs/f/semio.rs/s/Meta%20And%20Shallow%20Types)
+    // 🥉Meta And Shallow Types
     // Meta And Shallow Types MUST provide lightweight entity representations.
 
     use super::*;
 
     mod sub_entity_meta_types {
-        // 🔖Sub-entity Meta Types
+        // 🤾Sub-entity Meta Types
 
         /// AttributeMeta is identical to Attribute (no Vec fields to omit).
         use super::*;
 
         pub type AttributeMeta = Attribute;
 
-        /// StatMeta is identical to Stat (no Vec fields to omit).
+        /// 🔖StatMeta is identical to Stat (no Vec fields to omit).
         pub type StatMeta = Stat;
 
-        /// TagMeta is identical to Tag (no Vec fields to omit).
+        /// 🔖TagMeta is identical to Tag (no Vec fields to omit).
         pub type TagMeta = Tag;
 
-        /// ConceptMeta is identical to Concept (no Vec fields to omit).
+        /// 🔖ConceptMeta is identical to Concept (no Vec fields to omit).
         pub type ConceptMeta = Concept;
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// PropMeta is Prop without attributes.
+        /// 🔖PropMeta is Prop without attributes.
         pub struct PropMeta {
             pub guid: Guid,
             pub quality: QualityId,
@@ -2803,7 +2549,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// AuthorMeta is Author without attributes.
+        /// 🔖AuthorMeta is Author without attributes.
         pub struct AuthorMeta {
             pub guid: Guid,
             pub name: String,
@@ -2812,7 +2558,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// FileMeta is File without blob.
+        /// 🔖FileMeta is File without blob.
         pub struct FileMeta {
             pub guid: Guid,
             pub name: String,
@@ -2831,7 +2577,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// FolderMeta is Folder without attributes.
+        /// 🔖FolderMeta is Folder without attributes.
         pub struct FolderMeta {
             pub guid: Guid,
             pub name: String,
@@ -2846,7 +2592,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// QualityMeta is Quality without attributes.
+        /// 🔖QualityMeta is Quality without attributes.
         pub struct QualityMeta {
             pub guid: Guid,
             pub key: String,
@@ -2879,7 +2625,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// PortMeta is Port without compatible_ports and attributes.
+        /// 🔖PortMeta is Port without compatible_ports and attributes.
         pub struct PortMeta {
             pub guid: Guid,
             pub name: String,
@@ -2892,7 +2638,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// ModelMeta is Model without tags and attributes.
+        /// 🔖ModelMeta is Model without tags and attributes.
         pub struct ModelMeta {
             pub guid: Guid,
             pub file: FileId,
@@ -2903,7 +2649,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// ConnectorMeta is Connector without props and attributes.
+        /// 🔖ConnectorMeta is Connector without props and attributes.
         pub struct ConnectorMeta {
             pub guid: Guid,
             pub point: Vector,
@@ -2922,7 +2668,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// LayerMeta is Layer without attributes.
+        /// 🔖LayerMeta is Layer without attributes.
         pub struct LayerMeta {
             pub guid: Guid,
             pub path: String,
@@ -2937,7 +2683,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-        /// PieceMeta is Piece without props and attributes.
+        /// 🔖PieceMeta is Piece without props and attributes.
         pub struct PieceMeta {
             pub guid: Guid,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -2965,7 +2711,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// GroupMeta is Group without pieces and attributes.
+        /// 🔖GroupMeta is Group without pieces and attributes.
         pub struct GroupMeta {
             pub guid: Guid,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -2977,7 +2723,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// ConnectionMeta is Connection without attributes.
+        /// 🔖ConnectionMeta is Connection without attributes.
         pub struct ConnectionMeta {
             pub guid: Guid,
             pub connected: Side,
@@ -3001,16 +2747,16 @@ mod meta_and_shallow_types {
             #[serde(skip_serializing_if = "Option::is_none")]
             pub description: Option<String>,
         }
-    } // 🔖Sub-entity Meta Types
+    } // 🕌Sub-entity Meta Types
     pub use sub_entity_meta_types::*;
 
     mod main_entity_meta_types {
-        // 🔖Main Entity Meta Types
+        // 📉Main Entity Meta Types
 
         use super::*;
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// TypeMeta is Type with only scalar fields (no models, connectors, props, attributes, authors, concepts).
+        /// 🔖TypeMeta is Type with only scalar fields (no models, connectors, props, attributes, authors, concepts).
         pub struct TypeMeta {
             pub guid: Guid,
             pub name: String,
@@ -3041,7 +2787,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// TypeShallow is Type with Vec fields replaced by Meta item vectors.
+        /// 🔖TypeShallow is Type with Vec fields replaced by Meta item vectors.
         pub struct TypeShallow {
             pub guid: Guid,
             pub name: String,
@@ -3084,7 +2830,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// DesignMeta is Design with only scalar fields.
+        /// 🔖DesignMeta is Design with only scalar fields.
         pub struct DesignMeta {
             pub guid: Guid,
             pub name: String,
@@ -3115,7 +2861,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// DesignShallow is Design with Vec fields replaced by Meta item vectors.
+        /// 🔖DesignShallow is Design with Vec fields replaced by Meta item vectors.
         pub struct DesignShallow {
             pub guid: Guid,
             pub name: String,
@@ -3164,7 +2910,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// KitMeta is Kit with only scalar fields.
+        /// 🔖KitMeta is Kit with only scalar fields.
         pub struct KitMeta {
             pub guid: Guid,
             pub name: String,
@@ -3191,7 +2937,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// KitShallow is Kit with Vec fields replaced by Meta item vectors.
+        /// 🔖KitShallow is Kit with Vec fields replaced by Meta item vectors.
         pub struct KitShallow {
             pub guid: Guid,
             pub name: String,
@@ -3236,11 +2982,11 @@ mod meta_and_shallow_types {
             #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
             pub updated_at: Option<String>,
         }
-    } // 🔖Main Entity Meta Types
+    } // 🏬Main Entity Meta Types
     pub use main_entity_meta_types::*;
 
     mod meta_and_shallow_conversion_functions {
-        // 🔖Meta And Shallow Conversion Functions
+        // 🏋️Meta And Shallow Conversion Functions
 
         use super::*;
 
@@ -3600,282 +3346,228 @@ mod meta_and_shallow_types {
                 }
             }
         }
-    } // 🔖Meta And Shallow Conversion Functions
+    } // 🤸Meta And Shallow Conversion Functions
     pub use meta_and_shallow_conversion_functions::*;
-} // 🔖Meta And Shallow Types
+} // 🖋️Meta And Shallow Types
 pub use meta_and_shallow_types::*;
 
 mod has_guid_trait {
-    // 🔖HasGuid Trait
-    // [👤semio📚rs💻semio🔖hasguidtrait](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait)
+    // 🎮HasGuid Trait
     // HasGuid Trait MUST provide the hasguid trait functionality.
-    // [✂️semio/rs/semio.rs#HasGuid Trait§HasGuid](repo://definition/semio/rs/semio.rs/HAS-GUID-TRAIT/HAS-GUID)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     use super::*;
 
     pub trait HasGuid {
         fn guid(&self) -> &str;
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Attribute {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     impl HasGuid for Prop {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     impl HasGuid for Connector {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Model {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Type {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     impl HasGuid for Piece {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Connection {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     impl HasGuid for Layer {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Group {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Stat {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     impl HasGuid for Design {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Tag {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Concept {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Port {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Quality {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for File {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Folder {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Author {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
-    /// <summary>HasGuid holds the data fields for a HasGuid record.</summary>
+    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️hasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/HasGuid)
     /// </remarks>
     impl HasGuid for Kit {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [✂️semio/rs/semio.rs#HasGuid Trait§DiffHasGuid](repo://definition/semio/rs/semio.rs/HAS-GUID-TRAIT/DIFF-HAS-GUID)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     pub trait DiffHasGuid {
         fn guid(&self) -> &str;
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for AttributeDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for PropDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for ConnectorDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for ModelDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for TypeDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for PieceDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for ConnectionDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     /// <remarks>
     /// </remarks>
@@ -3884,123 +3576,100 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     impl DiffHasGuid for GroupDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for StatDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for DesignDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for TagDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for ConceptDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for PortDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for QualityDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for FileDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for FolderDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for AuthorDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    // [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
-    /// <summary>DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖hasguidtrait🛠️diffhasguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait/d/i/DiffHasGuid)
     /// </remarks>
     impl DiffHasGuid for KitDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-} // 🔖HasGuid Trait
+} // 🧵HasGuid Trait
 pub use has_guid_trait::*;
 
 mod apply_diff {
-    // 🔖ApplyDiff
-    // [👤semio📚rs💻semio🔖applydiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff)
+    // 🎲ApplyDiff
     // ApplyDiff MUST provide the applydiff functionality.
 
-    /// <summary>apply_collection_diff holds the data fields for a apply_collection_diff record.</summary>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applycollectiondiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_collection_diff)
+    /// <summary>🔖apply_collection_diff holds the data fields for a apply_collection_diff record.</summary>
     /// <remarks>
     /// </remarks>
     use super::*;
@@ -4045,9 +3714,7 @@ mod apply_diff {
             };
         }
     }
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_attribute_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-ATTRIBUTE-DIFF)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applyattributediff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_attribute_diff)
+    /// 🔖<remarks>
     /// </remarks>
     pub fn apply_attribute_diff(item: &mut Attribute, diff: &AttributeDiff) {
         if let Some(value) = &diff.key {
@@ -4060,10 +3727,8 @@ mod apply_diff {
             item.definition = value.clone();
         }
     }
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_prop_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-PROP-DIFF)
-    /// <summary>apply_prop_diff holds the data fields for a apply_prop_diff record.</summary>
+    /// 🔖<summary>🔖apply_prop_diff holds the data fields for a apply_prop_diff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applypropdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_prop_diff)
     /// </remarks>
     pub fn apply_prop_diff(item: &mut Prop, diff: &PropDiff) {
         if let Some(value) = &diff.quality {
@@ -4077,10 +3742,8 @@ mod apply_diff {
         }
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_connector_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-CONNECTOR-DIFF)
-    /// <summary>apply_connector_diff holds the data fields for a apply_connector_diff record.</summary>
+    /// 🔖<summary>🔖apply_connector_diff holds the data fields for a apply_connector_diff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applyconnectordiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_connector_diff)
     /// </remarks>
     pub fn apply_connector_diff(item: &mut Connector, diff: &ConnectorDiff) {
         if let Some(value) = &diff.point {
@@ -4111,9 +3774,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_model_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-MODEL-DIFF)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applymodeldiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_model_diff)
+    /// 🔖<remarks>
     /// </remarks>
     pub fn apply_model_diff(item: &mut Model, diff: &ModelDiff) {
         if let Some(value) = &diff.file {
@@ -4130,10 +3791,8 @@ mod apply_diff {
         }
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_type_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-TYPE-DIFF)
-    /// <summary>apply_type_diff holds the data fields for a apply_type_diff record.</summary>
+    /// 🔖<summary>🔖apply_type_diff holds the data fields for a apply_type_diff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applytypediff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_type_diff)
     /// </remarks>
     pub fn apply_type_diff(item: &mut Type, diff: &TypeDiff) {
         if let Some(value) = &diff.name {
@@ -4181,8 +3840,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
 
-    /// <summary>apply_layer_diff holds the data fields for a apply_layer_diff record.</summary>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applylayerdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_layer_diff)
+    /// 🔖<summary>🔖apply_layer_diff holds the data fields for a apply_layer_diff record.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_layer_diff(item: &mut Layer, diff: &LayerDiff) {
@@ -4204,10 +3862,8 @@ mod apply_diff {
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
 
-    /// <summary>apply_group_diff holds the data fields for a apply_group_diff record.</summary>
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_group_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-GROUP-DIFF)
+    /// 🔖<summary>🔖apply_group_diff holds the data fields for a apply_group_diff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applygroupdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_group_diff)
     /// </remarks>
     pub fn apply_group_diff(item: &mut Group, diff: &GroupDiff) {
         if let Some(value) = &diff.name {
@@ -4225,8 +3881,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
 
-    /// <summary>apply_stat_diff holds the data fields for a apply_stat_diff record.</summary>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applystatdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_stat_diff)
+    /// 🔖<summary>🔖apply_stat_diff holds the data fields for a apply_stat_diff record.</summary>
     pub fn apply_stat_diff(item: &mut Stat, diff: &StatDiff) {
         if let Some(value) = &diff.quality {
             item.quality = value.clone();
@@ -4247,10 +3902,8 @@ mod apply_diff {
             item.unit = value.clone();
         }
     }
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_piece_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-PIECE-DIFF)
-    /// <summary>apply_piece_diff holds the data fields for a apply_piece_diff record.</summary>
+    /// 🔖<summary>🔖apply_piece_diff holds the data fields for a apply_piece_diff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applypiecediff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_piece_diff)
     /// </remarks>
     pub fn apply_piece_diff(item: &mut Piece, diff: &PieceDiff) {
         if let Some(value) = &diff.name {
@@ -4289,10 +3942,8 @@ mod apply_diff {
         apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_connection_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-CONNECTION-DIFF)
-    /// <summary>apply_connection_diff holds the data fields for a apply_connection_diff record.</summary>
+    /// 🔖<summary>🔖apply_connection_diff holds the data fields for a apply_connection_diff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applyconnectiondiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_connection_diff)
     /// </remarks>
     pub fn apply_connection_diff(item: &mut Connection, diff: &ConnectionDiff) {
         if let Some(value) = &diff.connected {
@@ -4360,9 +4011,7 @@ mod apply_diff {
         }
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_design_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-DESIGN-DIFF)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applydesigndiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_design_diff)
+    /// 🔖<remarks>
     /// </remarks>
     pub fn apply_design_diff(item: &mut Design, diff: &DesignDiff) {
         if let Some(value) = &diff.name {
@@ -4417,11 +4066,9 @@ mod apply_diff {
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
 
-    /// Creates a mixed design keeping old entities with diff status annotations.
-    /// design_with_diff MUST maintain all old pieces and connections (same parameters),
+    /// 📌Creates a mixed design keeping old entities with diff status annotations.
     /// annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added),
     /// keep deleted entities in place marked as removed, and append added entities marked as added.
-    /// [👤semio📚rs💻semio🔖applydiff🛠️designwithdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/design_with_diff)
     pub fn design_with_diff(base: &Design, diff: &DesignDiff) -> Design {
         let status_attr = |status: &str| Attribute {
             guid: format!("semio.diffStatus.{}", status),
@@ -4534,8 +4181,7 @@ mod apply_diff {
         result
     }
 
-    /// <summary>apply_tag_diff holds the data fields for a apply_tag_diff record.</summary>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applytagdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_tag_diff)
+    /// 🔖<summary>🔖apply_tag_diff holds the data fields for a apply_tag_diff record.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_tag_diff(item: &mut Tag, diff: &TagDiff) {
@@ -4550,8 +4196,7 @@ mod apply_diff {
         }
     }
 
-    /// <summary>apply_concept_diff holds the data fields for a apply_concept_diff record.</summary>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applyconceptdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_concept_diff)
+    /// 🔖<summary>🔖apply_concept_diff holds the data fields for a apply_concept_diff record.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_concept_diff(item: &mut Concept, diff: &ConceptDiff) {
@@ -4566,8 +4211,7 @@ mod apply_diff {
         }
     }
 
-    /// <summary>apply_interface_diff holds the data fields for a apply_interface_diff record.</summary>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applyinterfacediff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_interface_diff)
+    /// 🔖<summary>🔢apply_interface_diff holds the data fields for a apply_interface_diff record.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_interface_diff(item: &mut Port, diff: &PortDiff) {
@@ -4586,8 +4230,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
 
-    /// <summary>apply_quality_diff holds the data fields for a apply_quality_diff record.</summary>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applyqualitydiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_quality_diff)
+    /// 🔖<summary>🔖apply_quality_diff holds the data fields for a apply_quality_diff record.</summary>
     pub fn apply_quality_diff(item: &mut Quality, diff: &QualityDiff) {
         if let Some(value) = &diff.key {
             item.key = value.clone();
@@ -4630,10 +4273,8 @@ mod apply_diff {
         }
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_file_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-FILE-DIFF)
-    /// <summary>apply_file_diff holds the data fields for a apply_file_diff record.</summary>
+    /// 🔖<summary>🔖apply_file_diff holds the data fields for a apply_file_diff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applyfilediff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_file_diff)
     /// </remarks>
     pub fn apply_file_diff(item: &mut File, diff: &FileDiff) {
         if let Some(value) = &diff.name {
@@ -4652,9 +4293,7 @@ mod apply_diff {
             item.hash = value.clone();
         }
     }
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_folder_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-FOLDER-DIFF)
-    /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applyfolderdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_folder_diff)
+    /// 🔖<remarks>
     /// </remarks>
     pub fn apply_folder_diff(item: &mut Folder, diff: &FolderDiff) {
         if let Some(value) = &diff.name {
@@ -4666,8 +4305,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
 
-    /// <summary>apply_author_diff holds the data fields for a apply_author_diff record.</summary>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applyauthordiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_author_diff)
+    /// 🔖<summary>🔖apply_author_diff holds the data fields for a apply_author_diff record.</summary>
     pub fn apply_author_diff(item: &mut Author, diff: &AuthorDiff) {
         if let Some(value) = &diff.name {
             item.name = value.clone();
@@ -4677,10 +4315,8 @@ mod apply_diff {
         }
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    // [🛠️semio/rs/semio.rs#ApplyDiff§apply_kit_diff](repo://definition/semio/rs/semio.rs/APPLY-DIFF/APPLY-KIT-DIFF)
-    /// <summary>apply_kit_diff holds the data fields for a apply_kit_diff record.</summary>
+    /// 🔖<summary>🔖apply_kit_diff holds the data fields for a apply_kit_diff record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖applydiff🛠️applykitdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff/d/i/apply_kit_diff)
     /// </remarks>
     pub fn apply_kit_diff(item: &mut Kit, diff: &KitDiff) {
         if let Some(value) = &diff.name {
@@ -4721,17 +4357,15 @@ mod apply_diff {
         apply_collection_diff(&mut item.authors, &diff.authors, apply_author_diff);
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-} // 🔖ApplyDiff
+} // ✈️ApplyDiff
 pub use apply_diff::*;
 
 mod kit_change_helpers {
-    // 🔖Kit Change Helpers
-    // [👤semio📚rs💻semio🔖kitchangehelpers](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers)
+    // 🏬Kit Change Helpers
     // Kit Change Helpers MUST provide convenience functions for computing kit and design diffs, inverses, and changes.
 
     /// Computes a CollectionDiff between two optional collections of guid-identified items.
     /// Uses a caller-provided `compute_diff` function for entity-level diffs.
-    /// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getguidcollectiondiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_guid_collection_diff)
     use super::*;
 
     pub fn get_guid_collection_diff<T, D>(
@@ -4801,7 +4435,7 @@ mod kit_change_helpers {
     }
 
     mod entity_diff_functions {
-        // 🔖Entity Diff Functions
+        // 🔔Entity Diff Functions
 
         use super::*;
 
@@ -5359,11 +4993,10 @@ mod kit_change_helpers {
             );
             diff
         }
-    } // 🔖Entity Diff Functions
+    } // 🌍Entity Diff Functions
     pub use entity_diff_functions::*;
 
-    /// Computes the KitDiff that transforms `before` into `after`.
-    /// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getkitdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_kit_diff)
+    /// 🔄Computes the KitDiff that transforms `before` into `after`.
     pub fn get_kit_diff(before: &Kit, after: &Kit) -> KitDiff {
         let mut diff = KitDiff {
             guid: before.guid.clone(),
@@ -5429,8 +5062,7 @@ mod kit_change_helpers {
         diff
     }
 
-    /// Computes the DesignDiff that transforms `before` into `after`.
-    /// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getdesigndiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_design_diff)
+    /// 🔖Computes the DesignDiff that transforms `before` into `after`.
     pub fn get_design_diff(before: &Design, after: &Design) -> DesignDiff {
         let mut diff = DesignDiff {
             guid: before.guid.clone(),
@@ -5498,26 +5130,23 @@ mod kit_change_helpers {
         diff
     }
 
-    /// Computes the inverse of a KitDiff given the original Kit state.
-    /// [👤semio📚rs💻semio🔖kitchangehelpers🛠️inversekitdiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/inverse_kit_diff)
+    /// 🔖Computes the inverse of a KitDiff given the original Kit state.
     pub fn inverse_kit_diff(original: &Kit, forward: &KitDiff) -> KitDiff {
         let mut after = original.clone();
         apply_kit_diff(&mut after, forward);
         get_kit_diff(&after, original)
     }
 
-    /// Computes the inverse of a DesignDiff given the original Design state.
-    /// [👤semio📚rs💻semio🔖kitchangehelpers🛠️inversedesigndiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/inverse_design_diff)
+    /// 🔖Computes the inverse of a DesignDiff given the original Design state.
     pub fn inverse_design_diff(original: &Design, forward: &DesignDiff) -> DesignDiff {
         let mut after = original.clone();
         apply_design_diff(&mut after, forward);
         get_design_diff(&after, original)
     }
 
-    /// Deletes pieces and connections from a design, returning a DesignDiff.
+    /// 🗑️Deletes pieces and connections from a design, returning a DesignDiff.
     /// Removes stale connections referencing deleted pieces.
     /// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
-    /// [👤semio📚rs💻semio🔖kitchangehelpers🛠️deletepiecesandconnectionsindesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/delete_pieces_and_connections_in_design)
     pub fn delete_pieces_and_connections_in_design(
         kit: &Kit,
         design: &Design,
@@ -5658,8 +5287,7 @@ mod kit_change_helpers {
         diff
     }
 
-    /// Computes a reversible KitChange from two kit states.
-    /// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getkitchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_kit_change)
+    /// 🔖Computes a reversible KitChange from two kit states.
     pub fn get_kit_change(before: &Kit, after: &Kit) -> KitChange {
         let forward = get_kit_diff(before, after);
         let backward = inverse_kit_diff(before, &forward);
@@ -5673,8 +5301,7 @@ mod kit_change_helpers {
         }
     }
 
-    /// Computes a reversible DesignChange from two design states.
-    /// [👤semio📚rs💻semio🔖kitchangehelpers🛠️getdesignchange](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers/d/i/get_design_change)
+    /// 🔖Computes a reversible DesignChange from two design states.
     pub fn get_design_change(before: &Design, after: &Design) -> DesignChange {
         let forward = get_design_diff(before, after);
         let backward = inverse_design_diff(before, &forward);
@@ -5687,12 +5314,11 @@ mod kit_change_helpers {
             after: Some(after.clone()),
         }
     }
-} // 🔖Kit Change Helpers
+} // 🎽Kit Change Helpers
 pub use kit_change_helpers::*;
 
 mod filter {
-    // 🔖Filter
-    // [👤semio📚rs💻semio🔖filter](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter)
+    // 📷Filter
     // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
     /// Glob filter with include and exclude patterns for name-based entity filtering.
@@ -5735,7 +5361,7 @@ mod filter {
         pub folders: Option<GlobFilter>,
     }
 
-    /// Matches a name against a glob pattern supporting * (any chars) and ? (single char). Case-insensitive.
+    /// 🧩Matches a name against a glob pattern supporting * (any chars) and ? (single char). Case-insensitive.
     pub fn glob_match(name: &str, pattern: &str) -> bool {
         let name_lower = name.to_lowercase();
         let pattern_lower = pattern.to_lowercase();
@@ -5762,7 +5388,7 @@ mod filter {
         matches(name_bytes, pattern_bytes)
     }
 
-    /// Checks if a name passes a GlobFilter. Returns true if filter is None or name matches.
+    /// 🧹Checks if a name passes a GlobFilter. Returns true if filter is None or name matches.
     pub fn matches_glob_filter(name: &str, filter: Option<&GlobFilter>) -> bool {
         let Some(filter) = filter else { return true };
         if let Some(include) = &filter.include {
@@ -5840,10 +5466,9 @@ mod filter {
         Some(best_model)
     }
 
-    /// Internal design-based transitive kit filtering.
+    /// 🎨Internal design-based transitive kit filtering.
     /// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
     /// files not used by selected models, and keeps at most one model per type according to the optional tags.
-    /// [👤semio📚rs💻semio🔖filter🛠️filterkitbydesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter/d/i/filter_kit_by_design)
     pub fn filter_kit_by_design(kit: &Kit, design_guid: &str, tags: Option<&[String]>) -> Kit {
         let design = match find_design_in_kit(kit, design_guid) {
             Some(design) => design,
@@ -6117,10 +5742,9 @@ mod filter {
         }
     }
 
-    /// General-purpose kit filter. Combines optional design-based transitive filtering with glob-based name filtering.
+    /// 🔖General-purpose kit filter. Combines optional design-based transitive filtering with glob-based name filtering.
     /// When design_guid is set, first performs transitive design-scoped subset extraction.
     /// Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
-    /// [👤semio📚rs💻semio🔖filter🛠️filterkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter/d/i/filter_kit)
     pub fn filter_kit(kit: &Kit, filter: &KitFilter) -> Kit {
         let base = if let Some(design_guid) = &filter.design_guid {
             filter_kit_by_design(kit, design_guid, filter.model_tags.as_deref())
@@ -6239,16 +5863,14 @@ mod filter {
             updated_at: base.updated_at,
         }
     }
-} // 🔖Filter
+} // 🧩Filter
 pub use filter::*;
 
 mod flatten_design {
-    // 🔖FlattenDesign
-    // [👤semio📚rs💻semio🔖flattendesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign)
+    // 🏦FlattenDesign
     // FlattenDesign MUST provide the flattendesign functionality.
 
-    /// <summary>FlattenedPiece holds the data fields for a FlattenedPiece record.</summary>
-    /// [👤semio📚rs💻semio🔖flattendesign🛠️flattenedpiece](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/FlattenedPiece)
+    /// <summary>🔖FlattenedPiece holds the data fields for a FlattenedPiece record.</summary>
     use super::*;
 
     pub struct FlattenedPiece {
@@ -6259,8 +5881,7 @@ mod flatten_design {
         pub path: Vec<String>,
     }
 
-    /// <summary>flatten_design holds the data fields for a flatten_design record.</summary>
-    /// [👤semio📚rs💻semio🔖flattendesign🛠️flattendesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/flatten_design)
+    /// 🔖<summary>🔖flatten_design holds the data fields for a flatten_design record.</summary>
     /// <remarks>
     /// </remarks>
     pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
@@ -6519,10 +6140,8 @@ mod flatten_design {
             after: Some(after_design),
         }
     }
-    // [👤semio📚rs💻semio🔖flattendesign🛠️planesequalapprox](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/planes_equal_approx)
-    /// <summary>planes_equal_approx holds the data fields for a planes_equal_approx record.</summary>
+    /// 🔖<summary>🔖planes_equal_approx holds the data fields for a planes_equal_approx record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖flattendesign🛠️planesequalapprox](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/planes_equal_approx)
     /// </remarks>
     pub fn planes_equal_approx(a: &Plane, b: &Plane) -> bool {
         pub const TOL: f64 = 0.0001;
@@ -6536,10 +6155,8 @@ mod flatten_design {
             && (a.y_axis.y - b.y_axis.y).abs() < TOL
             && (a.y_axis.z - b.y_axis.z).abs() < TOL
     }
-    // [👤semio📚rs💻semio🔖flattendesign🛠️computeconnectionmatrixfast](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/compute_connection_matrix_fast)
-    /// <summary>compute_connection_matrix_fast holds the data fields for a compute_connection_matrix_fast record.</summary>
+    /// 🔖<summary>💾compute_connection_matrix_fast holds the data fields for a compute_connection_matrix_fast record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖flattendesign🛠️computeconnectionmatrixfast](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/compute_connection_matrix_fast)
     /// </remarks>
     pub fn compute_connection_matrix_fast(
         types_map: &HashMap<&str, &Type>,
@@ -6562,10 +6179,8 @@ mod flatten_design {
             conn,
         ))
     }
-    // [👤semio📚rs💻semio🔖flattendesign🛠️computechildplanematrix](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/compute_child_plane_matrix)
-    /// <summary>compute_child_plane_matrix holds the data fields for a compute_child_plane_matrix record.</summary>
+    /// 🔖<summary>🔖compute_child_plane_matrix holds the data fields for a compute_child_plane_matrix record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖flattendesign🛠️computechildplanematrix](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/compute_child_plane_matrix)
     /// </remarks>
     pub fn compute_child_plane_matrix(
         parent_connector: &Connector,
@@ -6707,10 +6322,8 @@ mod flatten_design {
 
         transform
     }
-    // [👤semio📚rs💻semio🔖flattendesign🛠️quattomatrix4](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/quat_to_matrix4)
-    /// <summary>quat_to_matrix4 holds the data fields for a quat_to_matrix4 record.</summary>
+    /// 🔖<summary>🔄quat_to_matrix4 holds the data fields for a quat_to_matrix4 record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖flattendesign🛠️quattomatrix4](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/quat_to_matrix4)
     /// </remarks>
     pub fn quat_to_matrix4(q: &nalgebra::UnitQuaternion<f64>) -> Matrix4<f64> {
         let rot = q.to_rotation_matrix();
@@ -6734,20 +6347,16 @@ mod flatten_design {
             1.0,
         )
     }
-    // [👤semio📚rs💻semio🔖flattendesign🛠️maketranslation](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/make_translation)
-    /// <summary>make_translation holds the data fields for a make_translation record.</summary>
+    /// 🔖<summary>🔖make_translation holds the data fields for a make_translation record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖flattendesign🛠️maketranslation](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/make_translation)
     /// </remarks>
     pub fn make_translation(x: f64, y: f64, z: f64) -> Matrix4<f64> {
         Matrix4::new(
             1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0,
         )
     }
-    // [👤semio📚rs💻semio🔖flattendesign🛠️applymatrix4tovec3](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/apply_matrix4_to_vec3)
-    /// <summary>apply_matrix4_to_vec3 holds the data fields for a apply_matrix4_to_vec3 record.</summary>
+    /// 🔖<summary>🔖apply_matrix4_to_vec3 holds the data fields for a apply_matrix4_to_vec3 record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖flattendesign🛠️applymatrix4tovec3](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/apply_matrix4_to_vec3)
     /// </remarks>
     pub fn apply_matrix4_to_vec3(
         m: &Matrix4<f64>,
@@ -6759,10 +6368,8 @@ mod flatten_design {
             m[(2, 0)] * v.x + m[(2, 1)] * v.y + m[(2, 2)] * v.z,
         )
     }
-    // [👤semio📚rs💻semio🔖flattendesign🛠️getconnectorforsidefast](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/get_connector_for_side_fast)
-    /// <summary>get_connector_for_side_fast holds the data fields for a get_connector_for_side_fast record.</summary>
+    /// 🔖<summary>🔖get_connector_for_side_fast holds the data fields for a get_connector_for_side_fast record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖flattendesign🛠️getconnectorforsidefast](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/get_connector_for_side_fast)
     /// </remarks>
     pub fn get_connector_for_side_fast<'a>(
         types_map: &HashMap<&str, &'a Type>,
@@ -6775,10 +6382,8 @@ mod flatten_design {
         let connector_guid = side.connector.as_ref().map(|c| c.guid.as_str());
         get_connector_from_type(types_map, t, connector_guid).map(|c| c.clone())
     }
-    // [👤semio📚rs💻semio🔖flattendesign🛠️getconnectorfromtype](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/get_connector_from_type)
-    /// <summary>get_connector_from_type holds the data fields for a get_connector_from_type record.</summary>
+    /// 🔖<summary>🔖get_connector_from_type holds the data fields for a get_connector_from_type record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖flattendesign🛠️getconnectorfromtype](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/get_connector_from_type)
     /// </remarks>
     pub fn get_connector_from_type<'a>(
         types_map: &HashMap<&str, &'a Type>,
@@ -6824,10 +6429,8 @@ mod flatten_design {
             }
         }
     }
-    // [👤semio📚rs💻semio🔖flattendesign🛠️connectortoplane](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/connector_to_plane)
-    /// <summary>connector_to_plane holds the data fields for a connector_to_plane record.</summary>
+    /// 🔖<summary>🔖connector_to_plane holds the data fields for a connector_to_plane record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖flattendesign🛠️connectortoplane](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign/d/i/connector_to_plane)
     /// </remarks>
     pub fn connector_to_plane(connector: &Connector) -> Plane {
         let origin = connector.point.clone();
@@ -6936,16 +6539,643 @@ mod flatten_design {
         }
         diff
     }
-} // 🔖FlattenDesign
+} // 🕍FlattenDesign
 pub use flatten_design::*;
 
+mod copy_paste_design {
+    // 📋Copy Paste Design
+    // Copy Paste Design MUST provide copy and paste functionality for designs.
+    // Specs: CopyDesign extracts selected pieces and connections. PasteDesign inserts them into a target design.
+
+    use super::*;
+    use std::collections::{HashMap, HashSet};
+
+    /// 📋Extracts selected pieces and connections from a design into a new Design.
+    /// Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
+    /// Internal pieces are copied as-is. Pp-excl-pc-incl pieces get semio.center and semio.plane attributes.
+    /// Non-internal connections include their external pieces marked with semio.piece.origin = "external".
+    pub fn copy_design(
+        kit: &Kit,
+        design: &Design,
+        piece_guids: &[String],
+        connection_guids: &[String],
+    ) -> Design {
+        let selected_piece_set: HashSet<&str> = piece_guids.iter().map(|s| s.as_str()).collect();
+        let selected_connection_set: HashSet<&str> =
+            connection_guids.iter().map(|s| s.as_str()).collect();
+
+        let connections = design.connections.as_deref().unwrap_or(&[]);
+        let pieces = design.pieces.as_deref().unwrap_or(&[]);
+
+        // Build parent map: child guid -> (parent guid, connection)
+        let mut parent_map: HashMap<&str, (&str, &Connection)> = HashMap::new();
+        for conn in connections {
+            parent_map.insert(
+                conn.connecting.piece.guid.as_str(),
+                (conn.connected.piece.guid.as_str(), conn),
+            );
+        }
+
+        // Flatten the design to get absolute planes/centers
+        let flat_change = flatten_design(kit, &design.guid);
+        let mut flat_design = design.clone();
+        apply_design_diff(&mut flat_design, &flat_change.forward);
+        let flat_piece_map: HashMap<&str, &Piece> = flat_design
+            .pieces
+            .as_deref()
+            .unwrap_or(&[])
+            .iter()
+            .map(|p| (p.guid.as_str(), p))
+            .collect();
+
+        let mut copy_pieces: Vec<Piece> = Vec::new();
+        let mut added_piece_guids: HashSet<String> = HashSet::new();
+        let mut copy_connections: Vec<Connection> = Vec::new();
+
+        // Process selected pieces
+        for piece_guid in piece_guids {
+            let piece = match pieces.iter().find(|p| p.guid == *piece_guid) {
+                Some(p) => p,
+                None => continue,
+            };
+
+            let is_fixed = piece.plane.is_some();
+            let is_connected = parent_map.contains_key(piece_guid.as_str());
+
+            let mut is_internal_connected = false;
+            let is_internal_fixed = is_fixed && selected_piece_set.contains(piece_guid.as_str());
+            let mut is_pp_excl_pc_incl = false;
+
+            if is_connected {
+                let (parent_guid, parent_conn) = parent_map[piece_guid.as_str()];
+                let parent_piece_selected = selected_piece_set.contains(parent_guid);
+                let parent_conn_selected =
+                    selected_connection_set.contains(parent_conn.guid.as_str());
+                is_internal_connected = parent_piece_selected && parent_conn_selected;
+                is_pp_excl_pc_incl = !parent_piece_selected && parent_conn_selected;
+            }
+
+            if is_internal_fixed || is_internal_connected {
+                copy_pieces.push(piece.clone());
+                added_piece_guids.insert(piece_guid.clone());
+            } else if is_pp_excl_pc_incl {
+                let mut copied = piece.clone();
+                if let Some(flat_piece) = flat_piece_map.get(piece_guid.as_str()) {
+                    let center_value = match &flat_piece.center {
+                        Some(c) => serde_json::to_string(c).unwrap_or_default(),
+                        None => serde_json::to_string(&Coord::default()).unwrap_or_default(),
+                    };
+                    let plane_value = match &flat_piece.plane {
+                        Some(p) => serde_json::to_string(p).unwrap_or_default(),
+                        None => serde_json::to_string(&Plane::default()).unwrap_or_default(),
+                    };
+                    let attrs = copied.attributes.get_or_insert_with(Vec::new);
+                    attrs.push(Attribute {
+                        guid: String::new(),
+                        key: "semio.center".to_string(),
+                        value: Some(center_value),
+                        definition: None,
+                    });
+                    attrs.push(Attribute {
+                        guid: String::new(),
+                        key: "semio.plane".to_string(),
+                        value: Some(plane_value),
+                        definition: None,
+                    });
+                }
+                copy_pieces.push(copied);
+                added_piece_guids.insert(piece_guid.clone());
+            }
+        }
+
+        // Process selected connections
+        for conn_guid in connection_guids {
+            let conn = match connections.iter().find(|c| c.guid == *conn_guid) {
+                Some(c) => c,
+                None => continue,
+            };
+
+            let connected_guid = &conn.connected.piece.guid;
+            let connecting_guid = &conn.connecting.piece.guid;
+            let connected_selected = selected_piece_set.contains(connected_guid.as_str());
+            let connecting_selected = selected_piece_set.contains(connecting_guid.as_str());
+
+            let is_internal = connected_selected && connecting_selected;
+
+            if is_internal {
+                copy_connections.push(conn.clone());
+            } else {
+                // Orphaned, parent-excl-child-incl, or parent-incl-child-excl
+                copy_connections.push(conn.clone());
+
+                let mut external_guids: Vec<&str> = Vec::new();
+                if !connected_selected {
+                    external_guids.push(connected_guid.as_str());
+                }
+                if !connecting_selected {
+                    external_guids.push(connecting_guid.as_str());
+                }
+
+                for ext_guid in external_guids {
+                    if !added_piece_guids.contains(ext_guid) {
+                        if let Some(ext_piece) = pieces.iter().find(|p| p.guid == ext_guid) {
+                            let mut cloned = ext_piece.clone();
+                            let attrs = cloned.attributes.get_or_insert_with(Vec::new);
+                            attrs.push(Attribute {
+                                guid: String::new(),
+                                key: "semio.piece.origin".to_string(),
+                                value: Some("external".to_string()),
+                                definition: None,
+                            });
+                            if let Some(flat_piece) = flat_piece_map.get(ext_guid) {
+                                let center_value = match &flat_piece.center {
+                                    Some(c) => serde_json::to_string(c).unwrap_or_default(),
+                                    None => {
+                                        serde_json::to_string(&Coord::default()).unwrap_or_default()
+                                    }
+                                };
+                                attrs.push(Attribute {
+                                    guid: String::new(),
+                                    key: "semio.center".to_string(),
+                                    value: Some(center_value),
+                                    definition: None,
+                                });
+                            }
+                            copy_pieces.push(cloned);
+                            added_piece_guids.insert(ext_guid.to_string());
+                        }
+                    }
+                }
+            }
+        }
+
+        Design {
+            guid: String::new(),
+            name: String::new(),
+            pieces: Some(copy_pieces),
+            connections: Some(copy_connections),
+            parent: None,
+            description: None,
+            icon: None,
+            image: None,
+            folder: None,
+            unit: None,
+            is_abstract: None,
+            can_scale: None,
+            can_mirror: None,
+            concepts: None,
+            authors: None,
+            props: None,
+            layers: None,
+            groups: None,
+            stats: None,
+            active_layer: None,
+            location: None,
+            attributes: None,
+            created_at: None,
+            updated_at: None,
+        }
+    }
+
+    /// 📋Pastes a copied design into a target design, returning a DesignDiff.
+    /// Specs: Anchoring determines the reference point within the bounding rectangle of the source.
+    /// Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
+    /// Connected pieces with non-external parents are added as-is.
+    /// Connected pieces with external-origin parents: if a matching piece with a matching connector is found in target,
+    /// the parent connection is remapped; otherwise treated as fixed using semio.center/semio.plane attributes.
+    pub fn paste_design(
+        kit: &Kit,
+        source: &Design,
+        target: &Design,
+        anchoring: &str,
+        coord: Option<&Coord>,
+    ) -> DesignDiff {
+        let types_map: HashMap<&str, &Type> = kit
+            .types
+            .as_deref()
+            .unwrap_or(&[])
+            .iter()
+            .map(|t| (t.guid.as_str(), t))
+            .collect();
+        let ports_map: HashMap<&str, &Port> = kit
+            .ports
+            .as_deref()
+            .unwrap_or(&[])
+            .iter()
+            .map(|p| (p.guid.as_str(), p))
+            .collect();
+
+        let source_pieces = source.pieces.as_deref().unwrap_or(&[]);
+        let source_connections = source.connections.as_deref().unwrap_or(&[]);
+        let target_pieces = target.pieces.as_deref().unwrap_or(&[]);
+
+        // Classify source pieces
+        let external_origin_guids: HashSet<&str> = source_pieces
+            .iter()
+            .filter(|p| {
+                p.attributes.as_deref().unwrap_or(&[]).iter().any(|a| {
+                    a.key == "semio.piece.origin" && a.value.as_deref() == Some("external")
+                })
+            })
+            .map(|p| p.guid.as_str())
+            .collect();
+
+        let source_piece_map: HashMap<&str, &Piece> =
+            source_pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+
+        let mut source_parent_map: HashMap<&str, (&str, &Connection)> = HashMap::new();
+        for conn in source_connections {
+            let child_guid = conn.connecting.piece.guid.as_str();
+            let parent_guid = conn.connected.piece.guid.as_str();
+            match source_parent_map.get(child_guid).copied() {
+                None => {
+                    source_parent_map.insert(child_guid, (parent_guid, conn));
+                }
+                Some((prev_parent, _)) => {
+                    let prev_stub = external_origin_guids.contains(prev_parent);
+                    let next_stub = external_origin_guids.contains(parent_guid);
+                    if prev_stub != next_stub && next_stub {
+                        source_parent_map.insert(child_guid, (parent_guid, conn));
+                    }
+                }
+            }
+        }
+
+        // Compute bounding rectangle from flat centers
+        let mut center_coords: Vec<Coord> = Vec::new();
+        for piece in source_pieces {
+            if external_origin_guids.contains(piece.guid.as_str()) {
+                continue;
+            }
+            let mut center: Option<Coord> = piece.center.clone();
+            if center.is_none() {
+                if let Some(attr) = piece
+                    .attributes
+                    .as_deref()
+                    .unwrap_or(&[])
+                    .iter()
+                    .find(|a| a.key == "semio.center")
+                {
+                    if let Some(val) = &attr.value {
+                        center = serde_json::from_str(val).ok();
+                    }
+                }
+            }
+            if let Some(c) = center {
+                center_coords.push(c);
+            }
+        }
+
+        if center_coords.is_empty() {
+            center_coords.push(Coord::default());
+        }
+
+        let min_u = center_coords
+            .iter()
+            .map(|c| c.u)
+            .fold(f64::INFINITY, f64::min);
+        let max_u = center_coords
+            .iter()
+            .map(|c| c.u)
+            .fold(f64::NEG_INFINITY, f64::max);
+        let min_v = center_coords
+            .iter()
+            .map(|c| c.v)
+            .fold(f64::INFINITY, f64::min);
+        let max_v = center_coords
+            .iter()
+            .map(|c| c.v)
+            .fold(f64::NEG_INFINITY, f64::max);
+
+        let anchor = match anchoring {
+            "middle" => Coord::new((min_u + max_u) / 2.0, (min_v + max_v) / 2.0),
+            "centroid" => {
+                let n = center_coords.len() as f64;
+                Coord::new(
+                    center_coords.iter().map(|c| c.u).sum::<f64>() / n,
+                    center_coords.iter().map(|c| c.v).sum::<f64>() / n,
+                )
+            }
+            "bottomLeft" => Coord::new(min_u, min_v),
+            "bottomRight" => Coord::new(max_u, min_v),
+            "topLeft" => Coord::new(min_u, max_v),
+            "topRight" => Coord::new(max_u, max_v),
+            _ => Coord::new(0.0, 0.0), // "original"
+        };
+
+        // Build target piece maps for matching
+        let mut target_pieces_by_name: HashMap<&str, Vec<&Piece>> = HashMap::new();
+        for tp in target_pieces {
+            if let Some(ref name) = tp.name {
+                target_pieces_by_name
+                    .entry(name.as_str())
+                    .or_default()
+                    .push(tp);
+            }
+        }
+
+        // Helper: check port compatibility
+        let are_ports_compatible = |pg1: &str, pg2: &str| -> bool {
+            if pg1.is_empty() || pg2.is_empty() {
+                return false;
+            }
+            if pg1 == pg2 {
+                return true;
+            }
+            let port1 = match ports_map.get(pg1) {
+                Some(p) => p,
+                None => return false,
+            };
+            let port2 = match ports_map.get(pg2) {
+                Some(p) => p,
+                None => return false,
+            };
+            if let Some(ref cp) = port1.compatible_interfaces {
+                if cp.iter().any(|c| c.guid == pg2) {
+                    return true;
+                }
+            }
+            if let Some(ref cp) = port2.compatible_interfaces {
+                if cp.iter().any(|c| c.guid == pg1) {
+                    return true;
+                }
+            }
+            false
+        };
+
+        // Helper: find matching connector on a type
+        let find_matching_connector =
+            |type_guid: &str, source_connector: &Connector| -> Option<Connector> {
+                let t = types_map.get(type_guid)?;
+                let connectors = t.connectors.as_deref().unwrap_or(&[]);
+                connectors
+                    .iter()
+                    .find(|c| {
+                        c.name == source_connector.name && {
+                            let pg1 = c.port.as_ref().map(|p| p.guid.as_str()).unwrap_or("");
+                            let pg2 = source_connector
+                                .port
+                                .as_ref()
+                                .map(|p| p.guid.as_str())
+                                .unwrap_or("");
+                            are_ports_compatible(pg1, pg2)
+                        }
+                    })
+                    .cloned()
+            };
+
+        let mut added_pieces: Vec<Piece> = Vec::new();
+        let mut added_connections: Vec<Connection> = Vec::new();
+
+        // Process source pieces
+        for piece in source_pieces {
+            if external_origin_guids.contains(piece.guid.as_str()) {
+                continue;
+            }
+
+            let is_fixed = piece.plane.is_some();
+            let is_connected = source_parent_map.contains_key(piece.guid.as_str());
+
+            if is_fixed && !is_connected {
+                // Fixed piece: apply -anchor offset, then +coord if given
+                let mut copied = piece.clone();
+                let c = copied.center.clone().unwrap_or_default();
+                let mut new_center = Coord::new(c.u - anchor.u, c.v - anchor.v);
+                if let Some(co) = coord {
+                    new_center = Coord::new(new_center.u + co.u, new_center.v + co.v);
+                }
+                copied.center = Some(new_center);
+                added_pieces.push(copied);
+            } else if is_connected {
+                let (parent_guid, parent_conn) = source_parent_map[piece.guid.as_str()];
+                if external_origin_guids.contains(parent_guid) {
+                    // Parent is external-origin: try to match in target
+                    let external_parent = source_piece_map[parent_guid];
+                    let mut matched = false;
+
+                    let ext_name = external_parent.name.as_deref().unwrap_or("");
+                    if !ext_name.is_empty() {
+                        if let Some(candidates) = target_pieces_by_name.get(ext_name) {
+                            let is_parent_connected =
+                                parent_conn.connected.piece.guid.as_str() == parent_guid;
+                            let parent_connector_guid = if is_parent_connected {
+                                parent_conn
+                                    .connected
+                                    .connector
+                                    .as_ref()
+                                    .map(|c| c.guid.as_str())
+                                    .unwrap_or("")
+                            } else {
+                                parent_conn
+                                    .connecting
+                                    .connector
+                                    .as_ref()
+                                    .map(|c| c.guid.as_str())
+                                    .unwrap_or("")
+                            };
+
+                            // Find the source parent connector
+                            let source_parent_connector: Option<&Connector> =
+                                external_parent.type_ref.as_ref().and_then(|tr| {
+                                    types_map.get(tr.guid.as_str()).and_then(|parent_type| {
+                                        parent_type
+                                            .connectors
+                                            .as_deref()
+                                            .unwrap_or(&[])
+                                            .iter()
+                                            .find(|c| c.guid.as_str() == parent_connector_guid)
+                                    })
+                                });
+
+                            if let Some(src_conn) = source_parent_connector {
+                                for candidate in candidates {
+                                    if let Some(ref type_ref) = candidate.type_ref {
+                                        if let Some(matching_connector) =
+                                            find_matching_connector(&type_ref.guid, src_conn)
+                                        {
+                                            matched = true;
+                                            added_pieces.push(piece.clone());
+
+                                            let mut copied_conn = parent_conn.clone();
+                                            if is_parent_connected {
+                                                copied_conn.connected = Side {
+                                                    piece: PieceId {
+                                                        guid: candidate.guid.clone(),
+                                                    },
+                                                    design_piece: None,
+                                                    connector: Some(ConnectorId {
+                                                        guid: matching_connector.guid.clone(),
+                                                    }),
+                                                };
+                                            } else {
+                                                copied_conn.connecting = Side {
+                                                    piece: PieceId {
+                                                        guid: candidate.guid.clone(),
+                                                    },
+                                                    design_piece: None,
+                                                    connector: Some(ConnectorId {
+                                                        guid: matching_connector.guid.clone(),
+                                                    }),
+                                                };
+                                            }
+                                            if let Some(co) = coord {
+                                                let connected_stub = external_origin_guids
+                                                    .contains(parent_conn.connected.piece.guid.as_str());
+                                                let connecting_stub = external_origin_guids
+                                                    .contains(parent_conn.connecting.piece.guid.as_str());
+                                                let conn_matches_parentage = (parent_conn.connecting.piece.guid.as_str()
+                                                    == piece.guid.as_str()
+                                                    && parent_conn.connected.piece.guid.as_str()
+                                                        == parent_guid)
+                                                    || (parent_conn.connected.piece.guid.as_str()
+                                                        == piece.guid.as_str()
+                                                        && parent_conn.connecting.piece.guid.as_str()
+                                                            == parent_guid);
+                                                // Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
+                                                // internal–internal source edges (neither side a stub) must keep cloned u/v.
+                                                if conn_matches_parentage && connected_stub != connecting_stub
+                                                {
+                                                    let mut flat_parent_center: Option<Coord> = candidate.center.clone();
+                                                    if flat_parent_center.is_none() {
+                                                        flat_parent_center = candidate
+                                                            .attributes
+                                                            .as_deref()
+                                                            .unwrap_or(&[])
+                                                            .iter()
+                                                            .find(|a| a.key == "semio.center")
+                                                            .and_then(|a| a.value.as_ref())
+                                                            .and_then(|v| serde_json::from_str::<Coord>(v).ok());
+                                                    }
+                                                    if flat_parent_center.is_none() {
+                                                        flat_parent_center = external_parent
+                                                            .attributes
+                                                            .as_deref()
+                                                            .unwrap_or(&[])
+                                                            .iter()
+                                                            .find(|a| a.key == "semio.center")
+                                                            .and_then(|a| a.value.as_ref())
+                                                            .and_then(|v| serde_json::from_str::<Coord>(v).ok());
+                                                    }
+                                                    if flat_parent_center.is_none() {
+                                                        flat_parent_center = external_parent.center.clone();
+                                                    }
+                                                    let mut flat_child_center: Option<Coord> = piece
+                                                        .attributes
+                                                        .as_deref()
+                                                        .unwrap_or(&[])
+                                                        .iter()
+                                                        .find(|a| a.key == "semio.center")
+                                                        .and_then(|a| a.value.as_ref())
+                                                        .and_then(|v| serde_json::from_str::<Coord>(v).ok());
+                                                    if flat_child_center.is_none() {
+                                                        flat_child_center = piece.center.clone();
+                                                    }
+                                                    if let (Some(fpc), Some(fcc)) =
+                                                        (flat_parent_center, flat_child_center)
+                                                    {
+                                                        copied_conn.u = Some(
+                                                            fpc.u - (co.u + (anchor.u - fcc.u)),
+                                                        );
+                                                        copied_conn.v = Some(
+                                                            fpc.v - (co.v + (anchor.v - fcc.v)),
+                                                        );
+                                                    }
+                                                }
+                                            }
+                                            added_connections.push(copied_conn);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if !matched {
+                        // Treat as fixed piece using semio.center and semio.plane attributes
+                        let mut copied = piece.clone();
+                        let attrs = piece.attributes.as_deref().unwrap_or(&[]);
+                        for attr in attrs {
+                            if attr.key == "semio.center" {
+                                if let Some(val) = &attr.value {
+                                    if let Ok(c) = serde_json::from_str::<Coord>(val) {
+                                        copied.center = Some(c);
+                                    }
+                                }
+                            }
+                            if attr.key == "semio.plane" {
+                                if let Some(val) = &attr.value {
+                                    if let Ok(p) = serde_json::from_str::<Plane>(val) {
+                                        copied.plane = Some(p);
+                                    }
+                                }
+                            }
+                        }
+                        let c = copied.center.clone().unwrap_or_default();
+                        let mut new_center = Coord::new(c.u - anchor.u, c.v - anchor.v);
+                        if let Some(co) = coord {
+                            new_center = Coord::new(new_center.u + co.u, new_center.v + co.v);
+                        }
+                        copied.center = Some(new_center);
+                        added_pieces.push(copied);
+                    }
+                } else {
+                    // Parent is not external: add connected piece as-is
+                    added_pieces.push(piece.clone());
+                }
+            }
+        }
+
+        // Process source connections (non-external internal connections)
+        let added_piece_guids: HashSet<&str> =
+            added_pieces.iter().map(|p| p.guid.as_str()).collect();
+        for conn in source_connections {
+            let connected_guid = conn.connected.piece.guid.as_str();
+            let connecting_guid = conn.connecting.piece.guid.as_str();
+
+            if external_origin_guids.contains(connected_guid)
+                || external_origin_guids.contains(connecting_guid)
+            {
+                continue;
+            }
+
+            if !added_piece_guids.contains(connected_guid)
+                || !added_piece_guids.contains(connecting_guid)
+            {
+                continue;
+            }
+
+            added_connections.push(conn.clone());
+        }
+
+        let mut diff = DesignDiff {
+            guid: String::new(),
+            ..Default::default()
+        };
+        if !added_pieces.is_empty() {
+            diff.pieces = Some(CollectionDiff {
+                added: Some(added_pieces),
+                removed: None,
+                updated: None,
+            });
+        }
+        if !added_connections.is_empty() {
+            diff.connections = Some(CollectionDiff {
+                added: Some(added_connections),
+                removed: None,
+                updated: None,
+            });
+        }
+        diff
+    }
+} // 📋CopyPasteDesign
+pub use copy_paste_design::*;
+
 mod kit_model_export {
-    // 🔖Kit Model Export
-    // [👤semio📚rs💻semio🔖kitmodelexport](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export)
+    // 🏤Kit Model Export
     // Kit Model Export MUST provide GLB/glTF export of a design's assembled 3D model.
 
-    /// <summary>Supported 3D model export formats (extension, description).</summary>
-    /// [👤semio📚rs💻semio🔖kitmodelexport🛠️exportmodelformats](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/EXPORT_MODEL_FORMATS)
+    /// <summary>📺Supported 3D model export formats (extension, description).</summary>
     use super::*;
 
     pub const EXPORT_MODEL_FORMATS: &[(&str, &str)] = &[
@@ -6953,8 +7183,7 @@ mod kit_model_export {
         ("gltf", "glTF JSON (glTF 2.0)"),
     ];
 
-    /// <summary>Decodes a data URI blob (data:mime;base64,...) into raw bytes.</summary>
-    /// [👤semio📚rs💻semio🔖kitmodelexport🛠️decodedatauriblob](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/decode_data_uri_blob)
+    /// <summary>🔐Decodes a data URI blob (data:mime;base64,...) into raw bytes.</summary>
     #[cfg(not(target_arch = "wasm32"))]
     pub fn decode_data_uri_blob(blob: &str) -> Option<Vec<u8>> {
         use base64::Engine;
@@ -6966,8 +7195,7 @@ mod kit_model_export {
         base64::engine::general_purpose::STANDARD.decode(b64).ok()
     }
 
-    /// <summary>Parses a GLB binary into its JSON chunk and BIN chunk.</summary>
-    /// [👤semio📚rs💻semio🔖kitmodelexport🛠️parseglb](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/parse_glb)
+    /// <summary>🔬Parses a GLB binary into its JSON chunk and BIN chunk.</summary>
     #[cfg(not(target_arch = "wasm32"))]
     pub fn parse_glb(data: &[u8]) -> Option<(serde_json::Value, Vec<u8>)> {
         if data.len() < 12 {
@@ -7010,8 +7238,7 @@ mod kit_model_export {
         json_value.map(|json| (json, bin_data))
     }
 
-    /// <summary>Builds a GLB binary from a glTF JSON value and binary buffer.</summary>
-    /// [👤semio📚rs💻semio🔖kitmodelexport🛠️buildglb](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/build_glb)
+    /// <summary>🏗️Builds a GLB binary from a glTF JSON value and binary buffer.</summary>
     #[cfg(not(target_arch = "wasm32"))]
     pub fn build_glb(json: &serde_json::Value, bin: &[u8]) -> Vec<u8> {
         let json_str = serde_json::to_string(json).unwrap_or_default();
@@ -7037,8 +7264,7 @@ mod kit_model_export {
         result
     }
 
-    /// <summary>Converts a nalgebra Matrix4 to glTF column-major array of 16 f64.</summary>
-    /// [👤semio📚rs💻semio🔖kitmodelexport🛠️matrix4togltfcolumnmajor](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/matrix4_to_gltf_column_major)
+    /// 📚<summary>🔖Converts a nalgebra Matrix4 to glTF column-major array of 16 f64.</summary>
     pub fn matrix4_to_gltf_column_major(m: &Matrix4<f64>) -> [f64; 16] {
         let transformed = semio_matrix_to_gltf_matrix(m);
         [
@@ -7071,7 +7297,7 @@ mod kit_model_export {
         basis * matrix * basis_inv
     }
 
-    /// <summary>Preserves source mesh geometry while clearing unresolved material links.</summary>
+    /// 🔗<summary>🔖Preserves source mesh geometry while clearing unresolved material links.</summary>
     pub fn strip_mesh_material_references(mesh: &mut serde_json::Value) {
         if let Some(primitives) = mesh
             .get_mut("primitives")
@@ -7085,7 +7311,7 @@ mod kit_model_export {
         }
     }
 
-    /// <summary>Assigns a human-readable source file name to a merged mesh.</summary>
+    /// 📖<summary>🔤Assigns a human-readable source file name to a merged mesh.</summary>
     pub fn set_mesh_name(mesh: &mut serde_json::Value, mesh_name: &str) {
         mesh["name"] = serde_json::json!(mesh_name);
     }
@@ -7111,8 +7337,7 @@ mod kit_model_export {
         ]
     }
 
-    /// <summary>Writes a box placeholder mesh into the combined GLB buffers and returns the mesh index.</summary>
-    /// [👤semio📚rs💻semio🔖kitmodelexport🛠️appendboxmesh](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/append_box_mesh)
+    /// <summary>➕Writes a box placeholder mesh into the combined GLB buffers and returns the mesh index.</summary>
     #[cfg(not(target_arch = "wasm32"))]
     pub fn append_box_mesh(
         combined_bin: &mut Vec<u8>,
@@ -7198,8 +7423,7 @@ mod kit_model_export {
         }));
     }
 
-    /// <summary>Selects the best model for a type given desired tag guids.</summary>
-    /// [👤semio📚rs💻semio🔖kitmodelexport🛠️selectmodelfortype](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/select_model_for_type)
+    /// 🔖<summary>🔖Selects the best model for a type given desired tag guids.</summary>
     pub fn select_model_for_type<'a>(t: &'a Type, tags: &[String]) -> Option<&'a Model> {
         let models = t.models.as_ref()?;
         if models.is_empty() {
@@ -7244,8 +7468,7 @@ mod kit_model_export {
         models.first()
     }
 
-    /// <summary>Merges a source GLB's mesh data into the combined GLB builder.</summary>
-    /// [👤semio📚rs💻semio🔖kitmodelexport🛠️mergeglbmesh](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/merge_glb_mesh)
+    /// <summary>🔖Merges a source GLB's mesh data into the combined GLB builder.</summary>
     #[cfg(not(target_arch = "wasm32"))]
     pub fn merge_glb_mesh(
         src_json: &serde_json::Value,
@@ -7324,10 +7547,8 @@ mod kit_model_export {
         false
     }
 
-    /// <summary>Exports the 3D model of a design to GLB or glTF format.</summary>
-    /// [👤semio📚rs💻semio🔖kitmodelexport🛠️exportdesignmodel](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export/d/i/export_design_model)
+    /// <summary>🔖Exports the 3D model of a design to GLB or glTF format.</summary>
     /// <remarks>
-    /// export_design_model MUST assemble all piece instances with their world transforms,
     /// merging per-type GLB meshes (or box placeholders) into a single GLB/glTF output.
     /// </remarks>
     #[cfg(not(target_arch = "wasm32"))]
@@ -7391,7 +7612,7 @@ mod kit_model_export {
             .map(|files| files.iter().map(|f| (f.guid.as_str(), f)).collect())
             .unwrap_or_default();
 
-        // 🔖BFS World Transforms
+        // 📹BFS World Transforms
         let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
         for conn in connections {
             let src = conn.connected.piece.guid.as_str();
@@ -7446,9 +7667,9 @@ mod kit_model_export {
                 }
             }
         }
-        // 🔖BFS World Transforms
+        // 🔑BFS World Transforms
 
-        // 🔖Mesh Assembly
+        // 🏞️Mesh Assembly
         let mut combined_bin: Vec<u8> = Vec::new();
         let mut gltf_buffer_views: Vec<serde_json::Value> = Vec::new();
         let mut gltf_accessors: Vec<serde_json::Value> = Vec::new();
@@ -7499,9 +7720,9 @@ mod kit_model_export {
                 type_mesh_map.insert(type_guid.clone(), mesh_idx);
             }
         }
-        // 🔖Mesh Assembly
+        // 📈Mesh Assembly
 
-        // 🔖Scene Graph
+        // 🧤Scene Graph
         let mut gltf_nodes: Vec<serde_json::Value> = Vec::new();
         let mut piece_node_indices: HashMap<&str, usize> = HashMap::new();
         let mut root_node_indices: Vec<usize> = Vec::new();
@@ -7561,9 +7782,9 @@ mod kit_model_export {
                 gltf_nodes[parent_node_idx]["children"] = serde_json::json!(child_indices);
             }
         }
-        // 🔖Scene Graph
+        // 📑Scene Graph
 
-        // 🔖Output
+        // 📂Output
         let mut gltf_root = serde_json::json!({
             "asset": { "version": "2.0", "generator": "semio" },
             "scene": 0,
@@ -7587,18 +7808,16 @@ mod kit_model_export {
                 .unwrap_or_default()
                 .into_bytes())
         }
-        // 🔖Output
+        // 📢Output
     }
-} // 🔖Kit Model Export
+} // 🔮Kit Model Export
 pub use kit_model_export::*;
 
 mod geometric_insights {
-    // 🔖Geometric Insights
-    // [👤semio📚rs💻semio🔖geometricinsights](repo://p/u/semio/b/l/rs/f/semio.rs/s/Geometric%20Insights)
+    // 🥽Geometric Insights
     // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
     /// Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
-    /// [👤semio📚rs💻semio🔖geometricinsights🪨geometricinsights](repo://p/u/semio/b/l/rs/f/semio.rs/s/Geometric%20Insights/d/i/GeometricInsights)
     use super::*;
 
     #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -7729,8 +7948,6 @@ mod geometric_insights {
     }
 
     /// Computes key performance indicators for the geometry of a GLB/GLTF model.
-    /// Model MUST be path (&str) or raw bytes (&[u8]). Uses parse_glb for GLB; JSON+buffer for GLTF.
-    /// [👤semio📚rs💻semio🔖geometricinsights🛠️getgeometricinsightsformodel](repo://p/u/semio/b/l/rs/f/semio.rs/s/Geometric%20Insights/d/i/get_geometric_insights_for_model)
     #[cfg(not(target_arch = "wasm32"))]
     pub fn get_geometric_insights_for_model(model: &[u8]) -> Result<GeometricInsights> {
         let (json, bin) = if model.len() >= 4
@@ -7871,7 +8088,6 @@ mod geometric_insights {
         })
     }
 
-    /// Loads model from path and returns geometric insights. Model MUST be .glb or .gltf.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn get_geometric_insights_for_model_path(path: &str) -> Result<GeometricInsights> {
         let data = std::fs::read(path).map_err(|e| SemioError::InvalidOperation {
@@ -8014,24 +8230,21 @@ mod geometric_insights {
         }
         get_geometric_insights_for_model(&data)
     }
-} // 🔖Geometric Insights
+} // 🏥Geometric Insights
 pub use geometric_insights::*;
 
 mod validation_types {
-    // 🔖Validation Types
-    // [👤semio📚rs💻semio🔖validationtypes](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types)
+    // 🌸Validation Types
     // Validation Types MUST provide the validation types functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     #[serde(rename_all = "camelCase")]
-    // [🛠️semio/rs/semio.rs#Validation Types§ValidationProblem](repo://definition/semio/rs/semio.rs/VALIDATION-TYPES/VALIDATION-PROBLEM)
-    /// <summary>ValidationProblem holds the data fields for a ValidationProblem record.</summary>
+    /// 🔖<summary>✔️ValidationProblem holds the data fields for a ValidationProblem record.</summary>
     /// <remarks>
     /// </remarks>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️validationproblem](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/ValidationProblem)
     /// </remarks>
     pub struct ValidationProblem {
         pub constraint_id: String,
@@ -8045,10 +8258,8 @@ mod validation_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    // [🛠️semio/rs/semio.rs#Validation Types§ValidationFix](repo://definition/semio/rs/semio.rs/VALIDATION-TYPES/VALIDATION-FIX)
-    /// <summary>ValidationFix holds the data fields for a ValidationFix record.</summary>
+    /// 🔧<summary>🔖ValidationFix holds the data fields for a ValidationFix record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️validationfix](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/ValidationFix)
     /// </remarks>
     pub struct ValidationFix {
         pub title: String,
@@ -8057,16 +8268,14 @@ mod validation_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>ValidationResult holds the data fields for a ValidationResult record.</summary>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️validationresult](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/ValidationResult)
+    /// 🔖<summary>🔖ValidationResult holds the data fields for a ValidationResult record.</summary>
     /// <remarks>
     /// </remarks>
     pub struct ValidationResult {
         pub problems: Vec<ValidationProblem>,
     }
 
-    /// <summary>validate_kit holds the data fields for a validate_kit record.</summary>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️validatekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/validate_kit)
+    /// 🔖<summary>🔖validate_kit holds the data fields for a validate_kit record.</summary>
     pub fn validate_kit(kit: &Kit) -> ValidationResult {
         let mut problems = Vec::new();
 
@@ -8082,13 +8291,13 @@ mod validation_types {
         check_port_name_uniqueness(kit, &mut problems);
         check_file_name_uniqueness(kit, &mut problems);
         check_folder_name_uniqueness(kit, &mut problems);
+        check_description_missing_emoji(kit, &mut problems);
+        check_description_emoji_unique(kit, &mut problems);
 
         ValidationResult { problems }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checkguiduniquenessconstraint](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_guid_uniqueness_constraint)
-    /// <summary>check_guid_uniqueness_constraint holds the data fields for a check_guid_uniqueness_constraint record.</summary>
+    /// 🔒<summary>🧪check_guid_uniqueness_constraint holds the data fields for a check_guid_uniqueness_constraint record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checkguiduniquenessconstraint](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_guid_uniqueness_constraint)
     /// </remarks>
     pub fn check_guid_uniqueness_constraint(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let mut guids: HashSet<String> = HashSet::new();
@@ -8167,10 +8376,8 @@ mod validation_types {
             }
         }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checkguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_guid)
-    /// <summary>check_guid holds the data fields for a check_guid record.</summary>
+    /// 🔖<summary>🔖check_guid holds the data fields for a check_guid record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checkguid](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_guid)
     /// </remarks>
     pub fn check_guid(
         guid: &str,
@@ -8190,10 +8397,8 @@ mod validation_types {
             guids.insert(guid.to_string());
         }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checktypenameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_type_name_uniqueness)
-    /// <summary>check_type_name_uniqueness holds the data fields for a check_type_name_uniqueness record.</summary>
+    /// 🔖<summary>🔖check_type_name_uniqueness holds the data fields for a check_type_name_uniqueness record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checktypenameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_type_name_uniqueness)
     /// </remarks>
     pub fn check_type_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let Some(ref types) = kit.types else { return };
@@ -8222,10 +8427,8 @@ mod validation_types {
             }
         }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checkdesignnameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_design_name_uniqueness)
-    /// <summary>check_design_name_uniqueness holds the data fields for a check_design_name_uniqueness record.</summary>
+    /// 🔖<summary>🔖check_design_name_uniqueness holds the data fields for a check_design_name_uniqueness record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checkdesignnameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_design_name_uniqueness)
     /// </remarks>
     pub fn check_design_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let Some(ref designs) = kit.designs else {
@@ -8256,10 +8459,8 @@ mod validation_types {
             }
         }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checkpiecenameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_piece_name_uniqueness)
-    /// <summary>check_piece_name_uniqueness holds the data fields for a check_piece_name_uniqueness record.</summary>
+    /// 🔖<summary>🔖check_piece_name_uniqueness holds the data fields for a check_piece_name_uniqueness record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checkpiecenameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_piece_name_uniqueness)
     /// </remarks>
     pub fn check_piece_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let Some(ref designs) = kit.designs else {
@@ -8293,16 +8494,12 @@ mod validation_types {
             }
         }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checkconnectionnameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_connection_name_uniqueness)
-    /// <summary>check_connection_name_uniqueness holds the data fields for a check_connection_name_uniqueness record.</summary>
+    /// 🔖<summary>🔖check_connection_name_uniqueness holds the data fields for a check_connection_name_uniqueness record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checkconnectionnameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_connection_name_uniqueness)
     /// </remarks>
     pub fn check_connection_name_uniqueness(_kit: &Kit, _problems: &mut Vec<ValidationProblem>) {}
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checkconnectornameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_connector_name_uniqueness)
-    /// <summary>check_connector_name_uniqueness holds the data fields for a check_connector_name_uniqueness record.</summary>
+    /// 🔖<summary>🔖check_connector_name_uniqueness holds the data fields for a check_connector_name_uniqueness record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checkconnectornameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_connector_name_uniqueness)
     /// </remarks>
     pub fn check_connector_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let Some(ref types) = kit.types else { return };
@@ -8334,10 +8531,8 @@ mod validation_types {
             }
         }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checkmodelnameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_model_name_uniqueness)
-    /// <summary>check_model_name_uniqueness holds the data fields for a check_model_name_uniqueness record.</summary>
+    /// 🔖<summary>🔖check_model_name_uniqueness holds the data fields for a check_model_name_uniqueness record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checkmodelnameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_model_name_uniqueness)
     /// </remarks>
     pub fn check_model_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let Some(ref types) = kit.types else { return };
@@ -8369,10 +8564,8 @@ mod validation_types {
             }
         }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checklayerpathuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_layer_path_uniqueness)
-    /// <summary>check_layer_path_uniqueness holds the data fields for a check_layer_path_uniqueness record.</summary>
+    /// 🛤️<summary>🔖check_layer_path_uniqueness holds the data fields for a check_layer_path_uniqueness record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checklayerpathuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_layer_path_uniqueness)
     /// </remarks>
     pub fn check_layer_path_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let Some(ref designs) = kit.designs else {
@@ -8404,10 +8597,8 @@ mod validation_types {
             }
         }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checkqualitynameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_quality_name_uniqueness)
-    /// <summary>check_quality_name_uniqueness holds the data fields for a check_quality_name_uniqueness record.</summary>
+    /// 🔖<summary>🔖check_quality_name_uniqueness holds the data fields for a check_quality_name_uniqueness record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checkqualitynameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_quality_name_uniqueness)
     /// </remarks>
     pub fn check_quality_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let Some(ref qualities) = kit.qualities else {
@@ -8431,10 +8622,8 @@ mod validation_types {
             }
         }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checkportnameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_port_name_uniqueness)
-    /// <summary>check_port_name_uniqueness holds the data fields for a check_port_name_uniqueness record.</summary>
+    /// 🔖<summary>🔖check_port_name_uniqueness holds the data fields for a check_port_name_uniqueness record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checkportnameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_port_name_uniqueness)
     /// </remarks>
     pub fn check_port_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let Some(ref ports) = kit.ports else { return };
@@ -8456,10 +8645,8 @@ mod validation_types {
             }
         }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checkfilenameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_file_name_uniqueness)
-    /// <summary>check_file_name_uniqueness holds the data fields for a check_file_name_uniqueness record.</summary>
+    /// 🔖<summary>🔖check_file_name_uniqueness holds the data fields for a check_file_name_uniqueness record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checkfilenameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_file_name_uniqueness)
     /// </remarks>
     pub fn check_file_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let Some(ref files) = kit.files else { return };
@@ -8481,10 +8668,8 @@ mod validation_types {
             }
         }
     }
-    // [👤semio📚rs💻semio🔖validationtypes🛠️checkfoldernameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_folder_name_uniqueness)
-    /// <summary>check_folder_name_uniqueness holds the data fields for a check_folder_name_uniqueness record.</summary>
+    /// 🔖<summary>🔖check_folder_name_uniqueness holds the data fields for a check_folder_name_uniqueness record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖validationtypes🛠️checkfoldernameuniqueness](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types/d/i/check_folder_name_uniqueness)
     /// </remarks>
     pub fn check_folder_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let Some(ref folders) = kit.folders else {
@@ -8515,19 +8700,254 @@ mod validation_types {
             }
         }
     }
-} // 🔖Validation Types
+
+    /// 🔣 Extract the first emoji from a string, or None if none.
+    pub fn extract_first_emoji(text: &str) -> Option<String> {
+        if text.is_empty() {
+            return None;
+        }
+        let mut chars = text.chars();
+        let first = chars.next()?;
+        let mut cluster = String::new();
+        cluster.push(first);
+        for ch in chars {
+            if ch == '\u{FE0F}'
+                || ch == '\u{FE0E}'
+                || ch == '\u{200D}'
+                || ('\u{1F3FB}'..='\u{1F3FF}').contains(&ch)
+            {
+                cluster.push(ch);
+                continue;
+            }
+            break;
+        }
+        fn is_emoji_char(c: char) -> bool {
+            matches!(c,
+                '\u{1F600}'..='\u{1F64F}' | '\u{1F300}'..='\u{1F5FF}' |
+                '\u{1F680}'..='\u{1F6FF}' | '\u{1F900}'..='\u{1F9FF}' |
+                '\u{1FA00}'..='\u{1FA6F}' | '\u{1FA70}'..='\u{1FAFF}' |
+                '\u{2600}'..='\u{26FF}' | '\u{2700}'..='\u{27BF}' |
+                '\u{231A}'..='\u{231B}' | '\u{2328}' | '\u{23CF}' |
+                '\u{23E9}'..='\u{23F3}' | '\u{23F8}'..='\u{23FA}' |
+                '\u{25AA}'..='\u{25AB}' | '\u{25B6}' | '\u{25C0}' |
+                '\u{25FB}'..='\u{25FE}' |
+                '\u{203C}' | '\u{2049}' | '\u{2122}' | '\u{2139}' |
+                '\u{2194}'..='\u{2199}' | '\u{21A9}'..='\u{21AA}' |
+                '\u{00A9}' | '\u{00AE}' | '\u{1F1E0}'..='\u{1F1FF}'
+            )
+        }
+        if is_emoji_char(first) {
+            Some(cluster)
+        } else {
+            None
+        }
+    }
+
+    /// 🚫 Check that every entity description starts with an emoji.
+    pub fn check_description_missing_emoji(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
+        let check = |kind: &str,
+                     guid: &str,
+                     desc: &Option<String>,
+                     problems: &mut Vec<ValidationProblem>| {
+            if let Some(ref d) = desc {
+                if !d.is_empty() && extract_first_emoji(d).is_none() {
+                    problems.push(ValidationProblem {
+                        constraint_id: "description-missing-emoji".to_string(),
+                        message: format!(
+                            "Description of {} \"{}\" must start with an emoji.",
+                            kind, guid
+                        ),
+                        entity_kind: Some(kind.to_string()),
+                        entity_guid: Some(guid.to_string()),
+                        fixes: vec![],
+                    });
+                }
+            }
+        };
+        check("Kit", &kit.guid, &kit.description, problems);
+        if let Some(ref types) = kit.types {
+            for t in types {
+                check("Type", &t.guid, &t.description, problems);
+                if let Some(ref connectors) = t.connectors {
+                    for c in connectors {
+                        check("Connector", &c.guid, &c.description, problems);
+                    }
+                }
+                if let Some(ref models) = t.models {
+                    for m in models {
+                        check("Model", &m.guid, &m.description, problems);
+                    }
+                }
+            }
+        }
+        if let Some(ref designs) = kit.designs {
+            for d in designs {
+                check("Design", &d.guid, &d.description, problems);
+                if let Some(ref pieces) = d.pieces {
+                    for p in pieces {
+                        check("Piece", &p.guid, &p.description, problems);
+                    }
+                }
+                if let Some(ref connections) = d.connections {
+                    for c in connections {
+                        check("Connection", &c.guid, &c.description, problems);
+                    }
+                }
+            }
+        }
+        if let Some(ref qualities) = kit.qualities {
+            for q in qualities {
+                check("Quality", &q.guid, &q.description, problems);
+            }
+        }
+        if let Some(ref ports) = kit.ports {
+            for p in ports {
+                check("Port", &p.guid, &p.description, problems);
+            }
+        }
+        if let Some(ref files) = kit.files {
+            for _f in files {}
+        }
+        if let Some(ref folders) = kit.folders {
+            for f in folders {
+                check("Folder", &f.guid, &f.description, problems);
+            }
+        }
+    }
+
+    /// 🔤 Check that sibling entity descriptions have unique leading emojis.
+    pub fn check_description_emoji_unique(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
+        fn check_siblings(
+            kind: &str,
+            siblings: &[(String, Option<String>)],
+            problems: &mut Vec<ValidationProblem>,
+        ) {
+            let mut emoji_map: HashMap<String, Vec<String>> = HashMap::new();
+            for (guid, desc) in siblings {
+                if let Some(ref d) = desc {
+                    if let Some(emoji) = extract_first_emoji(d) {
+                        emoji_map.entry(emoji).or_default().push(guid.clone());
+                    }
+                }
+            }
+            for (emoji, guids) in &emoji_map {
+                if guids.len() > 1 {
+                    for guid in guids.iter().skip(1) {
+                        problems.push(ValidationProblem {
+                            constraint_id: "description-emoji-unique".to_string(),
+                            message: format!(
+                                "Duplicate leading emoji \"{}\" in {} descriptions among siblings.",
+                                emoji, kind
+                            ),
+                            entity_kind: Some(kind.to_string()),
+                            entity_guid: Some(guid.clone()),
+                            fixes: vec![],
+                        });
+                    }
+                }
+            }
+        }
+        if let Some(ref types) = kit.types {
+            let mut by_parent: HashMap<Option<String>, Vec<(String, Option<String>)>> =
+                HashMap::new();
+            for t in types {
+                let pid = t.parent.as_ref().map(|p| p.guid.clone());
+                by_parent
+                    .entry(pid)
+                    .or_default()
+                    .push((t.guid.clone(), t.description.clone()));
+            }
+            for (_, siblings) in &by_parent {
+                check_siblings("Type", siblings, problems);
+            }
+            for t in types {
+                if let Some(ref connectors) = t.connectors {
+                    let s: Vec<_> = connectors
+                        .iter()
+                        .map(|c| (c.guid.clone(), c.description.clone()))
+                        .collect();
+                    check_siblings("Connector", &s, problems);
+                }
+                if let Some(ref models) = t.models {
+                    let s: Vec<_> = models
+                        .iter()
+                        .map(|m| (m.guid.clone(), m.description.clone()))
+                        .collect();
+                    check_siblings("Model", &s, problems);
+                }
+            }
+        }
+        if let Some(ref designs) = kit.designs {
+            let mut by_parent: HashMap<Option<String>, Vec<(String, Option<String>)>> =
+                HashMap::new();
+            for d in designs {
+                let pid = d.parent.as_ref().map(|p| p.guid.clone());
+                by_parent
+                    .entry(pid)
+                    .or_default()
+                    .push((d.guid.clone(), d.description.clone()));
+            }
+            for (_, siblings) in &by_parent {
+                check_siblings("Design", siblings, problems);
+            }
+            for d in designs {
+                if let Some(ref pieces) = d.pieces {
+                    let s: Vec<_> = pieces
+                        .iter()
+                        .map(|p| (p.guid.clone(), p.description.clone()))
+                        .collect();
+                    check_siblings("Piece", &s, problems);
+                }
+                if let Some(ref connections) = d.connections {
+                    let s: Vec<_> = connections
+                        .iter()
+                        .map(|c| (c.guid.clone(), c.description.clone()))
+                        .collect();
+                    check_siblings("Connection", &s, problems);
+                }
+            }
+        }
+        if let Some(ref qualities) = kit.qualities {
+            let s: Vec<_> = qualities
+                .iter()
+                .map(|q| (q.guid.clone(), q.description.clone()))
+                .collect();
+            check_siblings("Quality", &s, problems);
+        }
+        if let Some(ref ports) = kit.ports {
+            let s: Vec<_> = ports
+                .iter()
+                .map(|p| (p.guid.clone(), p.description.clone()))
+                .collect();
+            check_siblings("Port", &s, problems);
+        }
+        if let Some(ref _files) = kit.files {}
+        if let Some(ref folders) = kit.folders {
+            let mut by_parent: HashMap<Option<String>, Vec<(String, Option<String>)>> =
+                HashMap::new();
+            for f in folders {
+                let pid = f.parent.as_ref().map(|p| p.guid.clone());
+                by_parent
+                    .entry(pid)
+                    .or_default()
+                    .push((f.guid.clone(), f.description.clone()));
+            }
+            for (_, siblings) in &by_parent {
+                check_siblings("Folder", siblings, problems);
+            }
+        }
+    }
+} // 🌿Validation Types
 pub use validation_types::*;
 
 mod sqlite_import_export {
-    // 🔖SQLite Import/Export
-    // [👤semio📚rs💻semio🔖sqliteimport🔖export](repo://p/u/semio/b/l/rs/f/semio.rs/s/SQLite%20Import/Export)
+    // 🏢SQLite Import/Export
     // SQLite Import/Export MUST provide the sqlite import/export functionality.
 
     use super::*;
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>sqlite holds the data fields for a sqlite record.</summary>
-    /// [👤semio📚rs💻semio🔖sqliteimport🔖export🛠️sqlite](repo://p/u/semio/b/l/rs/f/semio.rs/s/SQLite%20Import/Export/d/i/sqlite)
+    /// 🔖<summary>🔖sqlite holds the data fields for a sqlite record.</summary>
     pub mod sqlite {
         use super::*;
         use rusqlite::params;
@@ -9340,19 +9760,17 @@ mod sqlite_import_export {
                 })
         }
     }
-} // 🔖SQLite Import/Export
+} // 👠SQLite Import/Export
 pub use sqlite_import_export::*;
 
 mod zip_import_export {
-    // 🔖Zip Import/Export
-    // [👤semio📚rs💻semio🔖zipimport🔖export](repo://p/u/semio/b/l/rs/f/semio.rs/s/Zip%20Import/Export)
+    // 📋Zip Import/Export
     // Zip Import/Export MUST provide the zip import/export functionality.
 
     use super::*;
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>zip_roundtrip holds the data fields for a zip_roundtrip record.</summary>
-    /// [👤semio📚rs💻semio🔖zipimport🔖export🛠️ziproundtrip](repo://p/u/semio/b/l/rs/f/semio.rs/s/Zip%20Import/Export/d/i/zip_roundtrip)
+    /// 🔖<summary>🔖zip_roundtrip holds the data fields for a zip_roundtrip record.</summary>
     pub fn mime_from_filename(filename: &str) -> &'static str {
         let ext = filename.rsplit('.').next().unwrap_or("").to_lowercase();
         match ext.as_str() {
@@ -9527,12 +9945,11 @@ mod zip_import_export {
             Ok(())
         }
     }
-} // 🔖Zip Import/Export
+} // 🎽Zip Import/Export
 pub use zip_import_export::*;
 
 mod kit_workflow {
-    // 🔖Kit Workflow
-    // [👤semio📚rs💻semio🔖kitworkflow](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow)
+    // 📭Kit Workflow
     // Kit Workflow MUST provide cohesive file, folder, archive, remote, and temporary kit operations.
 
     use super::*;
@@ -9731,9 +10148,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>import_file_kit holds the data fields for a import_file_kit record.</summary>
-    /// import_file_kit MUST import a JSON file kit using deserialize_kit.
-    /// [👤semio📚rs💻semio🔖kitworkflow🛠️importfilekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/import_file_kit)
+    /// 📥<summary>🔖import_file_kit holds the data fields for a import_file_kit record.</summary>
     pub fn import_file_kit(path: &str) -> Result<Kit> {
         let content = std::fs::read_to_string(path)
             .map_err(|error| io_semio_error("Failed to read kit file", error))?;
@@ -9741,9 +10156,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>export_file_kit holds the data fields for a export_file_kit record.</summary>
-    /// export_file_kit MUST export a JSON file kit using serialize_kit.
-    /// [👤semio📚rs💻semio🔖kitworkflow🛠️exportfilekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/export_file_kit)
+    /// 📤<summary>🔖export_file_kit holds the data fields for a export_file_kit record.</summary>
     pub fn export_file_kit(kit: &Kit, path: &str) -> Result<()> {
         let json = serialize_kit(kit)?;
         std::fs::write(path, json)
@@ -9751,9 +10164,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>import_folder_kit holds the data fields for a import_folder_kit record.</summary>
-    /// import_folder_kit MUST import a folder kit using sqlite metadata and filesystem asset files.
-    /// [👤semio📚rs💻semio🔖kitworkflow🛠️importfolderkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/import_folder_kit)
+    /// 🔖<summary>🔖import_folder_kit holds the data fields for a import_folder_kit record.</summary>
     pub fn import_folder_kit(folder_path: &str) -> Result<zip_roundtrip::KitImportResult> {
         let database_path = build_folder_database_path(folder_path);
         let database_path_str = database_path.to_str().ok_or(SemioError::InvalidOperation {
@@ -9788,9 +10199,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>export_folder_kit holds the data fields for a export_folder_kit record.</summary>
-    /// export_folder_kit MUST export a folder kit using sqlite metadata and filesystem asset files.
-    /// [👤semio📚rs💻semio🔖kitworkflow🛠️exportfolderkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/export_folder_kit)
+    /// 🔖<summary>🔖export_folder_kit holds the data fields for a export_folder_kit record.</summary>
     pub fn export_folder_kit(
         kit: &Kit,
         files: &HashMap<String, Vec<u8>>,
@@ -9832,9 +10241,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>import_remote_kit holds the data fields for a import_remote_kit record.</summary>
-    /// import_remote_kit MUST import remote JSON kits and remote ZIP kits over HTTP(S).
-    /// [👤semio📚rs💻semio🔖kitworkflow🛠️importremotekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/import_remote_kit)
+    /// 🔖<summary>🔖import_remote_kit holds the data fields for a import_remote_kit record.</summary>
     pub fn import_remote_kit(url: &str) -> Result<zip_roundtrip::KitImportResult> {
         let response = reqwest::blocking::get(url).map_err(|error| SemioError::Database {
             message: format!("Failed to fetch remote kit {}: {}", url, error),
@@ -9869,9 +10276,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>edit_temporary_kit holds the data fields for a edit_temporary_kit record.</summary>
-    /// edit_temporary_kit MUST clone a kit and apply a diff in memory.
-    /// [👤semio📚rs💻semio🔖kitworkflow🛠️edittemporarykit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/edit_temporary_kit)
+    /// 🔖<summary>🔖edit_temporary_kit holds the data fields for a edit_temporary_kit record.</summary>
     pub fn edit_temporary_kit(kit: &Kit, diff: &KitDiff) -> Kit {
         let mut edited = kit.clone();
         apply_kit_diff(&mut edited, diff);
@@ -9879,9 +10284,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>edit_file_kit holds the data fields for a edit_file_kit record.</summary>
-    /// edit_file_kit MUST import, edit, and persist a JSON file kit in place.
-    /// [👤semio📚rs💻semio🔖kitworkflow🛠️editfilekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/edit_file_kit)
+    /// 🔖<summary>🔖edit_file_kit holds the data fields for a edit_file_kit record.</summary>
     pub fn edit_file_kit(path: &str, diff: &KitDiff) -> Result<Kit> {
         let kit = import_file_kit(path)?;
         let edited = edit_temporary_kit(&kit, diff);
@@ -9890,9 +10293,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>edit_folder_kit holds the data fields for a edit_folder_kit record.</summary>
-    /// edit_folder_kit MUST import, edit, and persist a folder kit in place.
-    /// [👤semio📚rs💻semio🔖kitworkflow🛠️editfolderkit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/edit_folder_kit)
+    /// 🔖<summary>🔖edit_folder_kit holds the data fields for a edit_folder_kit record.</summary>
     pub fn edit_folder_kit(folder_path: &str, diff: &KitDiff) -> Result<Kit> {
         let imported = import_folder_kit(folder_path)?;
         let edited = edit_temporary_kit(&imported.kit, diff);
@@ -9903,9 +10304,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>edit_archive_kit holds the data fields for a edit_archive_kit record.</summary>
-    /// edit_archive_kit MUST import, edit, and persist a ZIP archive kit in place.
-    /// [👤semio📚rs💻semio🔖kitworkflow🛠️editarchivekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/edit_archive_kit)
+    /// 🔖<summary>🔖edit_archive_kit holds the data fields for a edit_archive_kit record.</summary>
     pub fn edit_archive_kit(path: &str, diff: &KitDiff) -> Result<Kit> {
         let imported = zip_roundtrip::import_kit_from_zip(path)?;
         let edited = edit_temporary_kit(&imported.kit, diff);
@@ -9915,26 +10314,22 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// <summary>edit_remote_kit holds the data fields for a edit_remote_kit record.</summary>
-    /// edit_remote_kit MUST import a remote kit and apply a temporary diff without persisting remotely.
-    /// [👤semio📚rs💻semio🔖kitworkflow🛠️editremotekit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow/d/i/edit_remote_kit)
+    /// 🔖<summary>🔖edit_remote_kit holds the data fields for a edit_remote_kit record.</summary>
     pub fn edit_remote_kit(url: &str, diff: &KitDiff) -> Result<Kit> {
         let imported = import_remote_kit(url)?;
         Ok(edit_temporary_kit(&imported.kit, diff))
     }
-} // 🔖Kit Workflow
+} // 🚣Kit Workflow
 pub use kit_workflow::*;
 
 mod wasm_bindings {
-    // 🔖WASM Bindings
-    // [👤semio📚rs💻semio🔖wasmbindings](repo://p/u/semio/b/l/rs/f/semio.rs/s/WASM%20Bindings)
+    // 🥈WASM Bindings
     // WASM Bindings MUST provide the wasm bindings functionality.
 
     use super::*;
 
     #[cfg(target_arch = "wasm32")]
-    /// <summary>wasm holds the data fields for a wasm record.</summary>
-    /// [👤semio📚rs💻semio🔖wasmbindings🛠️wasm](repo://p/u/semio/b/l/rs/f/semio.rs/s/WASM%20Bindings/d/i/wasm)
+    /// 🔖<summary>🔖wasm holds the data fields for a wasm record.</summary>
     pub mod wasm {
         use super::*;
         use wasm_bindgen::prelude::*;
@@ -10087,11 +10482,11 @@ mod wasm_bindings {
             console_error_panic_hook::set_once();
         }
     }
-} // 🔖WASM Bindings
+} // 🎰WASM Bindings
 pub use wasm_bindings::*;
 
 mod hash {
-    // 🔖Hash
+    // 📭Hash
     // Hash MUST provide deterministic SHA-256 Merkle hash functions for all entities.
 
     use super::*;
@@ -10176,7 +10571,7 @@ mod hash {
     }
 
     mod hash_value_types {
-        // 🔖Hash Value Types
+        // 📝Hash Value Types
 
         use super::*;
 
@@ -10237,11 +10632,11 @@ mod hash {
             w.write_hash(&hash_vector(&c.up));
             w.digest()
         }
-    } // 🔖Hash Value Types
+    } // 🧮Hash Value Types
     pub use hash_value_types::*;
 
     mod hash_entities {
-        // 🔖Hash Entities
+        // 📎Hash Entities
 
         use super::*;
 
@@ -11177,11 +11572,11 @@ mod hash {
             }
             w.digest()
         }
-    } // 🔖Hash Entities
+    } // ⛷️Hash Entities
     pub use hash_entities::*;
 
     mod hash_diff_value_types {
-        // 🔖Hash Diff Value Types
+        // 📣Hash Diff Value Types
 
         use super::*;
 
@@ -11230,11 +11625,11 @@ mod hash {
             w.write_hash(&hash_vector_diff(&p.y_axis));
             w.digest()
         }
-    } // 🔖Hash Diff Value Types
+    } // 🖌️Hash Diff Value Types
     pub use hash_diff_value_types::*;
 
     mod hash_diff_collection {
-        // 🔖Hash Diff Collection
+        // 🥇Hash Diff Collection
 
         use super::*;
 
@@ -11289,11 +11684,11 @@ mod hash {
             }
             w.digest()
         }
-    } // 🔖Hash Diff Collection
+    } // 🧢Hash Diff Collection
     pub use hash_diff_collection::*;
 
     mod hash_diff_entities {
-        // 🔖Hash Diff Entities
+        // 🏸Hash Diff Entities
 
         use super::*;
 
@@ -12947,23 +13342,20 @@ mod hash {
             }
             w.digest()
         }
-    } // 🔖Hash Diff Entities
+    } // 📄Hash Diff Entities
     pub use hash_diff_entities::*;
-} // 🔖Hash
+} // 🌋Hash
 pub use hash::*;
 
 mod tests {
-    // 🔖Tests
-    // [👤semio📚rs💻semio🔖tests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests)
+    // 🏘️Tests
     // Tests MUST provide the tests functionality.
 
     use super::*;
 
     #[cfg(test)]
-    // [👤semio📚rs💻semio🔖tests🛠️tests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/d/i/tests)
-    /// <summary>tests holds the data fields for a tests record.</summary>
+    /// 🧪<summary>🔖tests holds the data fields for a tests record.</summary>
     /// <remarks>
-    /// [👤semio📚rs💻semio🔖tests🛠️tests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/d/i/tests)
     /// </remarks>
     mod tests {
         use super::*;
@@ -13233,8 +13625,7 @@ mod tests {
         }
 
         mod roundtrip_tests {
-            // 🔖Roundtrip Tests
-            // [👤semio📚rs💻semio🔖tests🔖roundtriptests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Roundtrip%20Tests)
+            // 👓Roundtrip Tests
             // Roundtrip Tests MUST provide the roundtrip tests functionality.
 
             use super::*;
@@ -13290,12 +13681,11 @@ mod tests {
                     );
                 }
             }
-        } // 🔖Roundtrip Tests
+        } // 🥊Roundtrip Tests
         pub use roundtrip_tests::*;
 
         mod design_model_tests {
-            // 🔖DesignModel Tests
-            // [👤semio📚rs💻semio🔖tests🔖designmodeltests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/DesignModel%20Tests)
+            // 🗽DesignModel Tests
             // DesignModel Tests MUST provide model-selection regression checks.
 
             use super::*;
@@ -13344,12 +13734,11 @@ mod tests {
                     }
                 }
             }
-        } // 🔖DesignModel Tests
+        } // 🤾DesignModel Tests
         pub use design_model_tests::*;
 
         mod kit_filter_tests {
-            // 🔖KitFilter Tests
-            // [👤semio📚rs💻semio🔖tests🔖kitfiltertests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/KitFilter%20Tests)
+            // 🎸KitFilter Tests
             // KitFilter Tests MUST verify design-scoped kit extraction.
 
             use super::*;
@@ -13626,12 +14015,11 @@ mod tests {
                     );
                 }
             }
-        } // 🔖KitFilter Tests
+        } // 🗼KitFilter Tests
         pub use kit_filter_tests::*;
 
         mod model_kpi_tests {
-            // 🔖Model/KPI Tests
-            // [👤semio📚rs💻semio🔖tests🔖modelkpi](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Model%20KPI)
+            // 🌍Model/KPI Tests
             // Model/KPI tests for get_geometric_insights_for_model using nakagin-capsule-tower.gltf.
 
             use super::*;
@@ -13712,12 +14100,11 @@ mod tests {
                     }
                 }
             }
-        } // 🔖Model/KPI Tests
+        } // 🏘️Model/KPI Tests
         pub use model_kpi_tests::*;
 
         mod flatten_tests {
-            // 🔖Flatten Tests
-            // [👤semio📚rs💻semio🔖tests🔖flattentests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Flatten%20Tests)
+            // 🔐Flatten Tests
             // Flatten Tests MUST provide the flatten tests functionality.
 
             use super::*;
@@ -13775,12 +14162,11 @@ mod tests {
                     }
                 }
             }
-        } // 🔖Flatten Tests
+        } // 📭Flatten Tests
         pub use flatten_tests::*;
 
         mod change_tests {
-            // 🔖Change Tests
-            // [👤semio📚rs💻semio🔖tests🔖changetests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Change%20Tests)
+            // 👠Change Tests
             // Change Tests MUST provide the change tests functionality.
 
             use super::*;
@@ -13823,12 +14209,11 @@ mod tests {
                     }
                 }
             }
-        } // 🔖Change Tests
+        } // ⛹️Change Tests
         pub use change_tests::*;
 
         mod delete_tests {
-            // 🔖Delete Tests
-            // [👤semio📚rs💻semio🔖tests🔖deletetests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Delete%20Tests)
+            // 🌻Delete Tests
             // Delete Tests MUST verify delete_pieces_and_connections_in_design functionality.
 
             use super::*;
@@ -14012,12 +14397,311 @@ mod tests {
                     );
                 }
             }
-        } // 🔖Delete Tests
+        } // 🏦Delete Tests
         pub use delete_tests::*;
 
+        mod copy_paste_tests {
+            // 📋Copy Paste Tests
+            // Copy Paste Tests MUST verify copy_design and paste_design functionality.
+
+            use super::*;
+
+            mod copy_paste {
+                use super::*;
+
+                #[test]
+                pub fn nakagin_capsule_tower_copy_paste_roundtrip() {
+                    let kit = load_kit("metabolism.kit.semio.json");
+                    let designs = kit.designs.as_ref().expect("Kit has no designs");
+                    let design = designs
+                        .iter()
+                        .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                        .expect("Design 'Nakagin Capsule Tower' not found");
+
+                    // Load selection
+                    let selection_path = Path::new(ASSETS_DIR)
+                        .join("nakagin-capsule-tower.copy.design.selection.semio.json");
+                    let selection_data = fs::read_to_string(&selection_path)
+                        .expect("Failed to read selection asset");
+                    let selection: serde_json::Value =
+                        serde_json::from_str(&selection_data).expect("Failed to parse selection");
+                    let piece_guids: Vec<String> = selection["pieces"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|p| p["guid"].as_str().unwrap().to_string())
+                        .collect();
+                    let connection_guids: Vec<String> = selection["connections"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|c| c["guid"].as_str().unwrap().to_string())
+                        .collect();
+
+                    // Load expected copy design
+                    let expected_copy_path =
+                        Path::new(ASSETS_DIR).join("nakagin-capsule-tower.copy.design.semio.json");
+                    let expected_copy_data = fs::read_to_string(&expected_copy_path)
+                        .expect("Failed to read expected copy asset");
+                    let expected_copy_json: serde_json::Value =
+                        serde_json::from_str(&expected_copy_data)
+                            .expect("Failed to parse expected copy design");
+
+                    // Compute copy
+                    let copy_design_result =
+                        copy_design(&kit, design, &piece_guids, &connection_guids);
+                    let copy_json: serde_json::Value = serde_json::to_value(&copy_design_result)
+                        .expect("Failed to serialize copy");
+
+                    // Verify piece count
+                    let copy_pieces = copy_json["pieces"].as_array().unwrap();
+                    let expected_pieces = expected_copy_json["pieces"].as_array().unwrap();
+                    assert_eq!(
+                        copy_pieces.len(),
+                        expected_pieces.len(),
+                        "Copy pieces count mismatch: got {}, want {}",
+                        copy_pieces.len(),
+                        expected_pieces.len()
+                    );
+
+                    // Verify connection count
+                    let copy_conns = copy_json["connections"].as_array().unwrap();
+                    let expected_conns = expected_copy_json["connections"].as_array().unwrap();
+                    assert_eq!(
+                        copy_conns.len(),
+                        expected_conns.len(),
+                        "Copy connections count mismatch: got {}, want {}",
+                        copy_conns.len(),
+                        expected_conns.len()
+                    );
+
+                    // Verify each piece exists in the copy
+                    let copy_piece_guids: HashSet<&str> = copy_pieces
+                        .iter()
+                        .map(|p| p["guid"].as_str().unwrap())
+                        .collect();
+                    for ep in expected_pieces {
+                        let guid = ep["guid"].as_str().unwrap();
+                        assert!(
+                            copy_piece_guids.contains(guid),
+                            "Expected piece {} not found in copy output",
+                            guid
+                        );
+                    }
+
+                    // Verify external pieces have semio.piece.origin attribute
+                    for cp in copy_pieces {
+                        let guid = cp["guid"].as_str().unwrap();
+                        let ep = expected_pieces
+                            .iter()
+                            .find(|p| p["guid"].as_str().unwrap() == guid)
+                            .expect("Piece not in expected");
+                        let has_origin = cp["attributes"]
+                            .as_array()
+                            .map(|attrs| {
+                                attrs.iter().any(|a| {
+                                    a["key"].as_str() == Some("semio.piece.origin")
+                                        && a["value"].as_str() == Some("external")
+                                })
+                            })
+                            .unwrap_or(false);
+                        let expected_origin = ep["attributes"]
+                            .as_array()
+                            .map(|attrs| {
+                                attrs.iter().any(|a| {
+                                    a["key"].as_str() == Some("semio.piece.origin")
+                                        && a["value"].as_str() == Some("external")
+                                })
+                            })
+                            .unwrap_or(false);
+                        assert_eq!(
+                            has_origin, expected_origin,
+                            "Piece {}: semio.piece.origin mismatch",
+                            guid
+                        );
+                    }
+
+                    // Verify pp_excl_pc_incl pieces have semio.center and semio.plane attributes
+                    for cp in copy_pieces {
+                        let guid = cp["guid"].as_str().unwrap();
+                        let ep = expected_pieces
+                            .iter()
+                            .find(|p| p["guid"].as_str().unwrap() == guid)
+                            .unwrap();
+                        let has_center = cp["attributes"]
+                            .as_array()
+                            .map(|a| a.iter().any(|x| x["key"].as_str() == Some("semio.center")))
+                            .unwrap_or(false);
+                        let expected_center = ep["attributes"]
+                            .as_array()
+                            .map(|a| a.iter().any(|x| x["key"].as_str() == Some("semio.center")))
+                            .unwrap_or(false);
+                        assert_eq!(
+                            has_center, expected_center,
+                            "Piece {}: semio.center attr mismatch",
+                            guid
+                        );
+                        let has_plane = cp["attributes"]
+                            .as_array()
+                            .map(|a| a.iter().any(|x| x["key"].as_str() == Some("semio.plane")))
+                            .unwrap_or(false);
+                        let expected_plane = ep["attributes"]
+                            .as_array()
+                            .map(|a| a.iter().any(|x| x["key"].as_str() == Some("semio.plane")))
+                            .unwrap_or(false);
+                        assert_eq!(
+                            has_plane, expected_plane,
+                            "Piece {}: semio.plane attr mismatch",
+                            guid
+                        );
+                    }
+
+                    // Load paste target design (second storey)
+                    let paste_target_path =
+                        Path::new(ASSETS_DIR).join("nakagin-capsule-tower.paste.design.semio.json");
+                    let paste_target_data = fs::read_to_string(&paste_target_path)
+                        .expect("Failed to read paste target design");
+                    let paste_target: Design = serde_json::from_str(&paste_target_data)
+                        .expect("Failed to parse paste target design");
+
+                    // Test PasteDesign with original anchoring (no coord)
+                    let paste_diff =
+                        paste_design(&kit, &copy_design_result, &paste_target, "original", None);
+
+                    // Load expected paste diff
+                    let expected_paste_path = Path::new(ASSETS_DIR)
+                        .join("nakagin-capsule-tower.paste.design.diff.semio.json");
+                    let expected_paste_data = fs::read_to_string(&expected_paste_path)
+                        .expect("Failed to read expected paste asset");
+                    let expected_paste_json: serde_json::Value =
+                        serde_json::from_str(&expected_paste_data)
+                            .expect("Failed to parse expected paste diff");
+
+                    let paste_json: serde_json::Value =
+                        serde_json::to_value(&paste_diff).expect("Failed to serialize paste diff");
+
+                    // Verify pasted pieces count
+                    let paste_pieces = paste_json["pieces"]["added"].as_array().unwrap();
+                    let expected_paste_pieces =
+                        expected_paste_json["pieces"]["added"].as_array().unwrap();
+                    assert_eq!(
+                        paste_pieces.len(),
+                        expected_paste_pieces.len(),
+                        "Paste added pieces count mismatch: got {}, want {}",
+                        paste_pieces.len(),
+                        expected_paste_pieces.len()
+                    );
+
+                    // Verify pasted pieces don't include external-origin pieces
+                    for p in paste_pieces {
+                        let has_ext = p["attributes"]
+                            .as_array()
+                            .map(|attrs| {
+                                attrs.iter().any(|a| {
+                                    a["key"].as_str() == Some("semio.piece.origin")
+                                        && a["value"].as_str() == Some("external")
+                                })
+                            })
+                            .unwrap_or(false);
+                        assert!(
+                            !has_ext,
+                            "External-origin piece {} should not be in paste output",
+                            p["guid"].as_str().unwrap_or("?")
+                        );
+                    }
+
+                    // Verify pasted connections count
+                    let paste_conns = paste_json["connections"]["added"].as_array().unwrap();
+                    let expected_paste_conns = expected_paste_json["connections"]["added"]
+                        .as_array()
+                        .unwrap();
+                    assert_eq!(
+                        paste_conns.len(),
+                        expected_paste_conns.len(),
+                        "Paste added connections count mismatch: got {}, want {}",
+                        paste_conns.len(),
+                        expected_paste_conns.len()
+                    );
+
+                    // Test PasteDesign with original anchoring and coord
+                    let coord_val = Coord::new(10.0, 10.0);
+                    let paste_with_coord_diff = paste_design(
+                        &kit,
+                        &copy_design_result,
+                        &paste_target,
+                        "original",
+                        Some(&coord_val),
+                    );
+
+                    // Load expected paste with coord diff
+                    let expected_pwc_path = Path::new(ASSETS_DIR)
+                        .join("nakagin-capsule-tower.paste.with-coord.design.diff.semio.json");
+                    let expected_pwc_data = fs::read_to_string(&expected_pwc_path)
+                        .expect("Failed to read expected paste with coord asset");
+                    let expected_pwc_json: serde_json::Value =
+                        serde_json::from_str(&expected_pwc_data)
+                            .expect("Failed to parse expected paste with coord diff");
+
+                    let pwc_json: serde_json::Value = serde_json::to_value(&paste_with_coord_diff)
+                        .expect("Failed to serialize paste with coord diff");
+
+                    // Verify pasted pieces count
+                    let pwc_pieces = pwc_json["pieces"]["added"].as_array().unwrap();
+                    let expected_pwc_pieces =
+                        expected_pwc_json["pieces"]["added"].as_array().unwrap();
+                    assert_eq!(
+                        pwc_pieces.len(),
+                        expected_pwc_pieces.len(),
+                        "Paste with coord added pieces count mismatch: got {}, want {}",
+                        pwc_pieces.len(),
+                        expected_pwc_pieces.len()
+                    );
+
+                    // Verify pasted connections count
+                    let pwc_conns = pwc_json["connections"]["added"].as_array().unwrap();
+                    let expected_pwc_conns = expected_pwc_json["connections"]["added"]
+                        .as_array()
+                        .unwrap();
+                    assert_eq!(
+                        pwc_conns.len(),
+                        expected_pwc_conns.len(),
+                        "Paste with coord added connections count mismatch: got {}, want {}",
+                        pwc_conns.len(),
+                        expected_pwc_conns.len()
+                    );
+
+                    // Verify centers are offset by coord
+                    for pp in pwc_pieces {
+                        let guid = pp["guid"].as_str().unwrap();
+                        let ep = expected_pwc_pieces
+                            .iter()
+                            .find(|p| p["guid"].as_str().unwrap() == guid)
+                            .expect(&format!("Piece {} not in expected paste with coord", guid));
+                        if let (Some(pc), Some(ec)) =
+                            (pp["center"].as_object(), ep["center"].as_object())
+                        {
+                            let pu = pc["u"].as_f64().unwrap();
+                            let pv = pc["v"].as_f64().unwrap();
+                            let eu = ec["u"].as_f64().unwrap();
+                            let ev = ec["v"].as_f64().unwrap();
+                            assert!(
+                                (pu - eu).abs() < 0.001 && (pv - ev).abs() < 0.001,
+                                "Piece {} center mismatch: got ({},{}), want ({},{})",
+                                guid,
+                                pu,
+                                pv,
+                                eu,
+                                ev
+                            );
+                        }
+                    }
+                }
+            }
+        } // 📋Copy Paste Tests
+        pub use copy_paste_tests::*;
+
         mod with_diff_tests {
-            // 🔖WithDiff Tests
-            // [👤semio📚rs💻semio🔖tests🔖withdifftests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/WithDiff%20Tests)
+            // 🏗️WithDiff Tests
             // WithDiff Tests MUST verify design_with_diff functionality.
 
             use super::*;
@@ -14110,12 +14794,11 @@ mod tests {
                     assert_eq!(conn_status_counts.get("added"), Some(&4));
                 }
             }
-        } // 🔖WithDiff Tests
+        } // 🧪WithDiff Tests
         pub use with_diff_tests::*;
 
         mod drag_tests {
-            // 🔖Drag Tests
-            // [👤semio📚rs💻semio🔖tests🔖dragtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Drag%20Tests)
+            // 🎴Drag Tests
             // Drag Tests MUST verify drag_pieces_in_design functionality.
 
             use super::*;
@@ -14247,12 +14930,11 @@ mod tests {
                     }
                 }
             }
-        } // 🔖Drag Tests
+        } // 🏊Drag Tests
         pub use drag_tests::*;
 
         mod validation_tests {
-            // 🔖Validation Tests
-            // [👤semio📚rs💻semio🔖tests🔖validationtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Validation%20Tests)
+            // 🗝️Validation Tests
             // Validation Tests MUST provide the validation tests functionality.
 
             use super::*;
@@ -14287,11 +14969,11 @@ mod tests {
                     }
                 }
             }
-        } // 🔖Validation Tests
+        } // 🎷Validation Tests
         pub use validation_tests::*;
 
         mod design_quality_sum_tests {
-            // 🔖Design Quality Sum Tests
+            // 🥇Design Quality Sum Tests
 
             use super::*;
 
@@ -14327,11 +15009,11 @@ mod tests {
                     }
                 }
             }
-        } // 🔖Design Quality Sum Tests
+        } // 🥋Design Quality Sum Tests
         pub use design_quality_sum_tests::*;
 
         mod export_design_model_tests {
-            // 🔖Export Design Model Tests
+            // 🏄Export Design Model Tests
 
             use super::*;
 
@@ -14442,11 +15124,11 @@ mod tests {
                     fs::write(reports_dir.join("rs.gltf"), result).expect("Failed to write report");
                 }
             }
-        } // 🔖Export Design Model Tests
+        } // ⚡Export Design Model Tests
         pub use export_design_model_tests::*;
 
         mod meta_and_shallow_tests {
-            // 🔖Meta And Shallow Tests
+            // 🃏Meta And Shallow Tests
 
             use super::*;
 
@@ -14590,12 +15272,11 @@ mod tests {
                     );
                 }
             }
-        } // 🔖Meta And Shallow Tests
+        } // 🎤Meta And Shallow Tests
         pub use meta_and_shallow_tests::*;
 
         mod kit_workflow_tests {
-            // 🔖Kit Workflow Tests
-            // [👤semio📚rs💻semio🔖tests🔖kitworkflowtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Kit%20Workflow%20Tests)
+            // 🏞️Kit Workflow Tests
             // Kit Workflow Tests MUST verify file, folder, archive, remote, and temporary kit workflows.
 
             use super::*;
@@ -14883,12 +15564,11 @@ mod tests {
                     assert_eq!(kit.folders.as_ref().unwrap()[0].name, "assets");
                 }
             }
-        } // 🔖Kit Workflow Tests
+        } // 🏠Kit Workflow Tests
         pub use kit_workflow_tests::*;
 
         mod kit_kind_tests {
-            // 🔖KitKind Tests
-            // [👤semio📚rs💻semio🔖tests🔖kitkindtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/KitKind%20Tests)
+            // 📊KitKind Tests
             // KitKind Tests MUST verify serialization, deserialization and completeness.
 
             use super::*;
@@ -15012,11 +15692,11 @@ mod tests {
                 assert_eq!(kit.name, "ModifiedTempKit");
                 assert_eq!(kit.description, Some("Modified in memory".to_string()));
             }
-        } // 🔖KitKind Tests
+        } // 🧶KitKind Tests
         pub use kit_kind_tests::*;
 
         mod hash_tests {
-            // 🔖Hash Tests
+            // 🎖️Hash Tests
 
             use super::*;
 
@@ -15026,7 +15706,7 @@ mod tests {
                 let hash = hash_kit(&kit);
                 assert_eq!(
                     hash,
-                    "4a8b056c2e80616afd25addb1bc31204da9879714c78ef2ec213df691a043160"
+                    "d786ae5cd2cb18d78f0d80df92ded94905adf708df077206f72162d43dd8767c"
                 );
             }
 
@@ -15161,11 +15841,11 @@ mod tests {
                 let diff2: KitDiff = serde_json::from_str(json2).unwrap();
                 assert_eq!(hash_kit_diff(&diff1), hash_kit_diff(&diff2));
             }
-        } // 🔖Hash Tests
+        } // 🏸Hash Tests
         pub use hash_tests::*;
 
         mod max_children_tests {
-            // 🔖MaxChildren Tests
+            // 👠MaxChildren Tests
             use super::*;
 
             #[test]
@@ -15250,14 +15930,14 @@ mod tests {
                     Some(5)
                 );
             }
-        } // 🔖MaxChildren Tests
+        } // ⚡MaxChildren Tests
         pub use max_children_tests::*;
     }
-} // 🔖Tests
+} // 🏦Tests
 pub use tests::*;
 
 mod benchmark {
-    // 🔖Benchmark
+    // 🕹️Benchmark
     use super::*;
 
     #[cfg(test)]
@@ -15392,5 +16072,5 @@ mod benchmark {
             });
         }
     }
-} // 🔖Benchmark
+} // 🏯Benchmark
 pub use benchmark::*;

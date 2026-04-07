@@ -1,5 +1,6 @@
 {
   "title": "Rename File Search Agent Events To File Read",
+  "emoji": "🏷️",
   "status": "closed",
   "description": "Rename repo agent hook event slugs from agent.file.search.starting/ended to agent.file.read.starting/ended, and update corresponding tests and event docs in cli/main.go and cli/main_test.go.",
   "summary": "Renamed neutral agent event slugs from agent.file.search.starting/ended to agent.file.read.starting/ended in CLI hook constants, help text, and all related tests. Verified no remaining agent.file.search references in repo.",

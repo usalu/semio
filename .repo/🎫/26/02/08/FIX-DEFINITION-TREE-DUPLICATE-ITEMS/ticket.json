@@ -1,5 +1,6 @@
 {
   "title": "Fix Definition Tree Duplicate Items",
+  "emoji": "🔧",
   "status": "closed",
   "description": "semio vscode extension: definition tree items appear twice, with one set incorrectly marked as sections.",
   "summary": "Filtered monorepo section tree children to section-typed nodes so definitions are no longer rendered twice as sections.",

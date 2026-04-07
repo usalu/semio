@@ -1,5 +1,6 @@
 {
   "title": "Fix Browser Attach Failure",
+  "emoji": "🔧",
   "status": "closed",
   "summary": "Switched app dev launch profiles to attach-free node launches with serverReadyAction openExternally to eliminate Unable to attach browser failures in remote/devcontainer sessions."
 }

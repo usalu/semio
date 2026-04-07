@@ -1,5 +1,6 @@
 {
   "title": "Fix create port/tag buttons doing nothing",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix create port/tag buttons doing nothing",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"

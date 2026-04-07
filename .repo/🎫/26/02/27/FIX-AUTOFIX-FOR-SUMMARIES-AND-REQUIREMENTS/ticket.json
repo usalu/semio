@@ -1,5 +1,6 @@
 {
   "title": "Fix autofix for summaries and requirements",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Autofix should never add summaries and requirements. Those are not autofixable.",
   "summary": "Removed autofix handlers for missing summaries and requirements because those are not autofixable.",

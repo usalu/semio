@@ -1,5 +1,6 @@
 {
   "title": "Coda Desktop Electron UI",
+  "emoji": "🎨",
   "status": "closed",
   "description": "Create a complete Electron desktop UI for coda similar to semio desktop. Must visualize project, runs, iterations, reports, breachs, measures, targets, platforms and allow invoking coda tools (start_run, start_iteration, translate, validate, fix). Uses React, Tailwind, Electron Forge + Vite like semio desktop.",
   "summary": "Created complete Electron desktop UI for coda (ACC design assistant) mirroring semio desktop architecture. Built with Electron Forge + Vite + React + Tailwind CSS 4. Features 6 pages: Dashboard (stat cards, compliance overview), Config (measures, targets with properties/rules/clauses, platforms), Runs (run details, iterations), Report (violations with expandable clauses), Translations (per-target JSON), Actions (start run, start iteration, translate/validate per target, fix design with prompt, action log). Frameless window, collapsible sidebar, compliance badges, dark mode support. Communicates via streamable-http JSON-RPC. Deleted superseded CodaApp.tsx. Fixed workspace path.",

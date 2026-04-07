@@ -2,7 +2,7 @@
 technology: coda
 bundle:
  name: engine
- emoji: 📚
+ emoji: 🤖
  description: The engine bundle for coda.
  kind: library
 ---

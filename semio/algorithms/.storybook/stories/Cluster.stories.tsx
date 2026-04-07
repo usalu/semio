@@ -1,9 +1,9 @@
-// #region 🔖Header
+// #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Cluster.stories.tsx
 // Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
 // Summary: Cluster story using nativeFlattenDesign with the Storybook language toolbar.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import type { DesignChange } from "@semio/js";
 import { applyDesignDiff } from "@semio/js";

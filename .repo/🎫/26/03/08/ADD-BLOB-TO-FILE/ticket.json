@@ -1,5 +1,6 @@
 {
   "title": "Add Blob to File",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add blob data property to File for base64-encoded file content, remove file/folder from SQLite, simplify roundtrip tests",
   "summary": "Blob field on File across Go Rust Python TypeScript CSharp. All tests pass.",

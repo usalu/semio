@@ -1,5 +1,6 @@
 {
   "title": "Fix Duplicate Hook Execution in Cursor",
+  "emoji": "🔧",
   "status": "closed",
   "description": "All hooks in Cursor are triggered twice - once as cursor-chat and once as claude-code. This is because Cursor automatically loads hooks from both .cursor/hooks.json and .claude/settings.json. Need to prevent duplicate execution.",
   "summary": "Fixed duplicate hook execution by preventing Claude Code hook generation when Cursor hooks exist. Modified generateClaudeCodeConfig to skip hook generation when .cursor/hooks.json exists, preventing Cursor from loading hooks from both .cursor/hooks.json and .claude/settings.json. Hooks now execute only once as cursor-chat.",

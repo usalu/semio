@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // .elements/ui/.storybook/stories/elements/display/Card.stories.tsx
 
@@ -9,13 +9,13 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { Aside, Card, CardGrid, LoadingRow, NotFound, Section, Spinner } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { MemoryRouter } from "react-router";
 
-// #region 🔖Card
+// #region 🎬Card
 
 const meta = {
   title: "elements/Card",
@@ -58,9 +58,9 @@ export const Grid: Story = {
   ),
 };
 
-// #endregion 🔖Card
+// #endregion 🎬Card
 
-// #region 🔖Spinner
+// #region 🎹Spinner
 
 export const SpinnerStory: Story = {
   name: "Spinner",
@@ -74,9 +74,9 @@ export const SpinnerStory: Story = {
   ),
 };
 
-// #endregion 🔖Spinner
+// #endregion 🎹Spinner
 
-// #region 🔖NotFound
+// #region 🎍NotFound
 
 export const NotFoundStory: Story = {
   name: "Not Found",
@@ -95,9 +95,9 @@ export const NotFoundStory: Story = {
   ),
 };
 
-// #endregion 🔖NotFound
+// #endregion 🎍NotFound
 
-// #region 🔖LoadingRow
+// #region 🎺LoadingRow
 
 export const LoadingRowStory: Story = {
   name: "Loading Row",
@@ -111,9 +111,9 @@ export const LoadingRowStory: Story = {
   ),
 };
 
-// #endregion 🔖LoadingRow
+// #endregion 🎺LoadingRow
 
-// #region 🔖Section
+// #region 🖲️Section
 
 export const SectionStory: Story = {
   name: "Section",
@@ -130,9 +130,9 @@ export const SectionStory: Story = {
   ),
 };
 
-// #endregion 🔖Section
+// #endregion 🖲️Section
 
-// #region 🔖Aside
+// #region 📣Aside
 
 export const AsideStory: Story = {
   name: "Aside",
@@ -155,4 +155,4 @@ export const AsideStory: Story = {
   ),
 };
 
-// #endregion 🔖Aside
+// #endregion 📣Aside

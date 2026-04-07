@@ -1,5 +1,6 @@
 {
   "title": "RecordingControlsContent now uses useRecordingState and useActiveRecording hooks for reactivity",
+  "emoji": "📋",
   "status": "closed",
   "description": "\"Fix Smell 5: Non-reactive snapshot reads in Tutorials.tsx - RecordingControlsContent now uses reactive hooks instead of store.snapshot()\"",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"

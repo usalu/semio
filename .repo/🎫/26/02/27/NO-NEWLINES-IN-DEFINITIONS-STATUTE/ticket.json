@@ -1,5 +1,6 @@
 {
   "title": "No Newlines in Definitions Statute",
+  "emoji": "📋",
   "status": "open",
   "description": "Add a new code statute that inside definitions no newlines (blank lines) are allowed. Create an autofix that removes them.",
   "github": {

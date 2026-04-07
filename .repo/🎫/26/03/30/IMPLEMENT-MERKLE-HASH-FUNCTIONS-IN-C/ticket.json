@@ -1,5 +1,6 @@
 {
   "title": "Implement Merkle Hash Functions in C#",
+  "emoji": "🔨",
   "status": "closed",
   "description": "Implement deterministic SHA-256 Merkle hash functions for all entities in C# (Semio.cs), change float to double precision, and add hash tests in Tests.cs.",
   "summary": "Re-verified the completed cross-language Merkle hashing work in the live workspace. Confirmed the canonical metabolism kit hash test passes in TypeScript, Go, Python, Rust, and C# net8.0, the C# JavaScript-threshold number-format regression test remains in place, and the temporary Go debug file is absent.",

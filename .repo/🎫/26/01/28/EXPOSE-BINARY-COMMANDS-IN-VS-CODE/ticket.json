@@ -1,5 +1,6 @@
 {
   "title": "Expose binary commands in VS Code",
+  "emoji": "📋",
   "status": "closed",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/238"

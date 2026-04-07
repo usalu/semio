@@ -1,5 +1,6 @@
 {
   "title": "Extract Sketchpad Bundle from Semio Js",
+  "emoji": "📤",
   "status": "open",
   "description": "Create a new semio/sketchpad bundle, move all sketchpad UI/runtime code out of semio/js into it, keep only domain logic in semio/js, update imports/exports/tests/docs, and verify the split with builds/tests.",
   "goal": "🎯sketchpadimprovements",

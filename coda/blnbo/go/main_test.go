@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda📦blnbo🥼maintest](repo://p/r/coda/b/l/blnbo/f/main_test.go)
+// #region 🧲Header
 //
 // Summary: Tests for blnbo (Berlin Building Code) validator.
 //
@@ -14,8 +13,7 @@ import (
 	"testing"
 )
 
-// #region 🔖StaircaseLocatedTests
-// [🔬coda📦blnbo🥼maintest🔖staircaselocatedtests](repo://p/r/coda/b/l/blnbo/f/main_test.go/s/StaircaseLocatedTests)
+// #region 🦉StaircaseLocatedTests
 
 func TestStaircaseLocated_NoStaircases(t *testing.T) {
 	trans := Translation{
@@ -247,8 +245,7 @@ func TestStaircaseLocated_OnlyNonNecessaryStaircases(t *testing.T) {
 
 // #endregion
 
-// #region 🔖BuildingHeightLimitTests
-// [🔬coda📦blnbo🥼maintest🔖buildingheightlimittests](repo://p/r/coda/b/l/blnbo/f/main_test.go/s/BuildingHeightLimitTests)
+// #region 🎵BuildingHeightLimitTests
 
 func TestBuildingHeightLimit_Compliant(t *testing.T) {
 	trans := Translation{
@@ -305,8 +302,7 @@ func TestBuildingHeightLimit_NoHeightData(t *testing.T) {
 
 // #endregion
 
-// #region 🔖EndToEndTests
-// [🔬coda📦blnbo🥼maintest🔖endtoendtests](repo://p/r/coda/b/l/blnbo/f/main_test.go/s/EndToEndTests)
+// #region 🏪EndToEndTests
 
 func TestEndToEnd_FullTranslation(t *testing.T) {
 	input := `{
@@ -390,7 +386,7 @@ func TestEndToEnd_ViolatedStaircaseAndCompliantHeight(t *testing.T) {
 
 // #endregion
 
-// #region 🔖TestHelpers
+// #region 🪩TestHelpers
 
 func findRule(t *testing.T, report Report, ruleID string) *Rule {
 	t.Helper()

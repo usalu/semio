@@ -1,5 +1,6 @@
 {
   "title": "Add Gemini CLI To Devcontainer",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add Gemini CLI into devcontainer image so gemini is available in dev shells.",
   "summary": "Install Gemini CLI via npm in devcontainer post-create script",

@@ -1,5 +1,6 @@
 {
   "title": "Unify Sketchpad Panel Toggles With Elements UI",
+  "emoji": "🎨",
   "status": "closed",
   "description": "Refactor sketchpad so the navbar only exposes left and right panel toggles, matching elements/ui. Remove dedicated settings/chat navbar toggles and route settings/chat through right-side tabs only. Update the existing sketchpad Playwright tests in place to match the new model and verify the affected app flows.",
   "summary": "Refactored sketchpad to match elements/ui by keeping only left and right navbar panel toggles and rendering settings/chat as regular right-side tabs. Removed sketchpad’s dedicated utility panel mode switching, simplified right-side panel activation logic, updated right-side tab expectations in the existing Playwright suite, and verified the sketchpad bundle still builds and the test file still discovers six app-level tests.",

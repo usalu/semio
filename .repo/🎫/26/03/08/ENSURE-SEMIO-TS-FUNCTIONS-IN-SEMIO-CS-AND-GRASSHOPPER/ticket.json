@@ -1,5 +1,6 @@
 {
   "title": "Ensure semio.ts functions in Semio.cs and Grasshopper",
+  "emoji": "📋",
   "status": "closed",
   "description": "Ensure every function in semio.ts is also available in Semio.cs and that every function has a Grasshopper component.",
   "summary": "Added missing semio.ts functions (FlattenDesign, ReplacePieceTypes, Find* methods) to Semio.cs as SemioExt and exposed them as Grasshopper components",

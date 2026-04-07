@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🖱️sketchpad⚙️tailwindconfig](repo://p/u/semio/b/u/sketchpad/f/tailwind.config.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Tailwind CSS configuration for the sketchpad app styling.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [👤semio🖱️sketchpad⚙️tailwindconfig🔖configuration](repo://p/u/semio/b/u/sketchpad/f/tailwind.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // Tailwind CSS configuration extending the shared semio preset for the sketchpad application.
 // Configuration MUST use the shared tailwindConfig preset from @semio/ui.
 
@@ -19,7 +17,6 @@ import type { Config } from "tailwindcss";
 
 /**
  * Tailwind CSS configuration with content paths and shared preset.
-// [👤semio🖱️sketchpad⚙️tailwindconfig🔖configuration🪨config](repo://p/u/semio/b/u/sketchpad/f/tailwind.config.ts/s/Configuration/d/i/config)
  * Config MUST include content glob patterns and the tailwindConfig preset.
  **/
 const config: Pick<Config, "content" | "presets"> = {
@@ -30,4 +27,4 @@ const config: Pick<Config, "content" | "presets"> = {
 // Default export of the Tailwind CSS configuration.
 // Export MUST be the config object.
 export default config;
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

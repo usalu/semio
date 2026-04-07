@@ -1,5 +1,6 @@
 {
   "title": "Fix Windsurf Hooks Configuration",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The .windsurf/hooks.json file is missing, so Windsurf's native hook system never calls the repo CLI hooks. Need to create the file with the correct Windsurf hook format (snake_case events) that pipes stdin JSON to the CLI for blocking checks (pre_run_command for git checkout/stash/reset blocking).",
   "summary": "Bulk close",

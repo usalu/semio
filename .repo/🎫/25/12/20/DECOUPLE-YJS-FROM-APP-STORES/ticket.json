@@ -1,5 +1,6 @@
 {
   "title": "Decoupled yjs from all app stores except Kit. Only KitStore uses yjs for state persistence. Design, Type, Quality, Docs, Home, and Feedback apps use PlainAppStore/PlainKitDiffAppStore.",
+  "emoji": "🧰",
   "status": "closed",
   "description": "Decouple yjs from all app stores except Kit. All app stores are still entangled with yjs. Only the kit store should use yjs. All other stores should use the state machine for state management.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"

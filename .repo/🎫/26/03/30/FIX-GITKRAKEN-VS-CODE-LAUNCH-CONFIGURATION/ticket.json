@@ -1,5 +1,6 @@
 {
   "title": "Fix Gitkraken VS Code Launch Configuration",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The gitkraken launch config in .vscode/launch.json uses node-terminal type which attaches a Node.js debugger to the Electron process. Since gitkraken is not a Node script, the debugger attaches and immediately disconnects, causing the app to exit. Fix the launch config so gitkraken actually runs properly from VS Code Run and Debug. Also fix the broken emoji in the config name.",
   "github": {

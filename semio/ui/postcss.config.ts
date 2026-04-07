@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // 💻 semio/ui/postcss.config.ts
 
@@ -8,9 +8,9 @@
 
 // PostCSS configuration for the semio ui bundle.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
+// #region 🗄️Configuration
 // PostCSS plugin configuration re-exporting from @elements/ui.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 
@@ -24,4 +24,4 @@ const config: Config = {
 
 export default config;
 
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

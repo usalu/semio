@@ -1,5 +1,6 @@
 {
   "title": "VSCODE-FIX-COMMAND",
+  "emoji": "🔧",
   "status": "closed",
   "description": "\"Fix the VSCode fix command that fails with: Failed to fix breach: Error: Command failed: c:\\\\git\\\\semio.tech\\\\semio\\\\bin\\\\repo.exe fix js/semio/playwright.config.ts. Also enable individual breach fixing.\"",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension"

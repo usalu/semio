@@ -1,5 +1,6 @@
 {
   "title": "Restore Connection Detail Panel Structure After Connecting Connected Wording Regression",
+  "emoji": "🔙",
   "status": "closed",
   "description": "Update the sketchpad detail panel parent-connection section to replace visible `connecting` and `connected` wording with clearer `piece/port` labels, and adjust tests/docs/runtime text anywhere this panel still exposes the old terminology.",
   "summary": "Restored the design connection detail rows to the shared property-row structure so the nested piece and port entries no longer render chevrons and their disabled inputs align with the rest of the detail panel. Extended the shared Label primitive with explicit label and wrapper-id support, centered property controls, updated the inline UI tests for that shared row path, and added Design Playwright assertions that the connection rows render without toggle buttons and stay vertically centered. Verification: `npm test --workspace elements/ui` passed (12 tests) and `npm run build --workspace semio/sketchpad` passed. The targeted Design Playwright run still fails earlier in an existing unrelated selection-toolbar path with `Kit with guid ... not found`, so it does not yet reach the new connection-row assertions.",

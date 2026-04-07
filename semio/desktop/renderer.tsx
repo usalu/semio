@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🖱️desktop💻renderer](repo://p/u/semio/b/u/desktop/f/renderer.tsx)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Entry point for the Electron renderer process mounting the React app.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Renderer
-// [👤semio🖱️desktop💻renderer🔖renderer](repo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer)
+// #region ⛩️Renderer
 // Electron renderer process that mounts the Sketchpad React app with window controls.
 // MUST resolve the user identity before rendering the sketchpad.
 
@@ -22,7 +20,7 @@ import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
 
 import "./globals.css";
 
-// Lazy-load the heavy sketchpad module (500KB+) to avoid blocking the renderer.
+// 🎨Lazy-load the heavy sketchpad module (500KB+) to avoid blocking the renderer.
 const LazySketchpad = lazy(() =>
   import("@semio/sketchpad").then((mod) => {
     mod.appRegistry.register(mod.designConfig);
@@ -62,7 +60,6 @@ declare global {
 
 /**
  * Invokes a window control action via the preload bridge.
-// [👤semio🖱️desktop💻renderer🔖renderer🛠️invokewindowcontrol](repo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/invokeWindowControl)
  *MUST fall back gracefully when window controls are unavailable.
  **/
 const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
@@ -75,7 +72,6 @@ const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
 
 /**
  * Window event handlers for minimize, maximize and close actions.
-// [👤semio🖱️desktop💻renderer🔖renderer🪨windowevents](repo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/windowEvents)
  *MUST delegate to invokeWindowControl for each action.
  **/
 const windowEvents = {
@@ -86,7 +82,6 @@ const windowEvents = {
 
 /**
  * OS bridge for retrieving the current user identity.
-// [👤semio🖱️desktop💻renderer🔖renderer🪨os](repo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/os)
  *MUST use the preload-exposed getUserId API.
  **/
 const os = {
@@ -95,11 +90,10 @@ const os = {
 
 /**
  * Root React component rendering the sketchpad with folder kit store factory.
-// [👤semio🖱️desktop💻renderer🔖renderer🛠️app](repo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/d/i/App)
  *MUST render sketchpad directly with folder kit store factory for local kit persistence.
  **/
 
-// #region 🔖FolderAdapter
+// 🔄#region 🗄️FolderAdapter
 function createElectronFolderAdapter(folderPath: string): KitFolderAdapter {
   return {
     readKit: async () => {
@@ -120,10 +114,9 @@ function createElectronFolderAdapter(folderPath: string): KitFolderAdapter {
     listFiles: () => window.kitFolder.listFiles(folderPath),
   };
 }
-// #endregion 🔖FolderAdapter
+// #endregion 🗄️FolderAdapter
 
-// #region 🔖App
-// [👤semio🖱️desktop💻renderer🔖renderer🔖app](repo://p/u/semio/b/u/desktop/f/renderer.tsx/s/Renderer/s/App)
+// #region 🖲️App
 // Root app renders the Sketchpad directly with folder kit store factory for local kit persistence.
 // No welcome/start page — the home app toolbar provides open/create actions.
 
@@ -144,7 +137,7 @@ function App() {
     fetchUserId();
   }, []);
 
-  // Folder kit store factory for creating/opening local kits via Electron IPC.
+  // 🏭Folder kit store factory for creating/opening local kits via Electron IPC.
   const folderKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (kit) => {
     const selectedFolder = await window.kitFolder.selectFolder();
     if (!selectedFolder) {
@@ -167,7 +160,7 @@ function App() {
     </div>
   );
 }
-// #endregion 🔖App
+// #endregion 🖲️App
 
 export default App;
 
@@ -177,4 +170,4 @@ createRoot(document.getElementById("root")!).render(
   </React.StrictMode>,
 );
 
-// #endregion 🔖Renderer
+// #endregion ⛩️Renderer

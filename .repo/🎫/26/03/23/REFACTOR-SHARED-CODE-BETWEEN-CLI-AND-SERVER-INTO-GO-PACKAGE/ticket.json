@@ -1,5 +1,6 @@
 {
   "title": "Refactor Shared Code Between CLI and Server into Go Package",
+  "emoji": "♻️",
   "status": "open",
   "description": "Refactor everything that is shared between client (cli) and server into the repo/go package. Both repo/cli and repo/server duplicate section parsing, definition parsing, region marker parsing, and related indexing utilities. These should be consolidated into the shared repo/go package.",
   "github": {

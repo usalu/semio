@@ -1,5 +1,6 @@
 {
   "title": "Add Import Model Component",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add a new Grasshopper component Import Model that accepts a file blob string input and outputs Rhino ModelObject.",
   "summary": "Import Model now takes Model first and File second; scales from source file units to model unit attribute exactly once and avoids active-doc/default scaling side effects.",

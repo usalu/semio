@@ -1,5 +1,4 @@
-#region 🔖Header
-// [👤semio📚3dm🛅semiorhino💻semiorhino](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs)
+#region 📱Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Rhino 8 plugin hosting a WebView2 panel for importing semio kits and models.
 
-#endregion 🔖Header
+#endregion 📱Header
 
-#region 🔖Imports
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖imports](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/Imports)
+#region ⌛Imports
 // Callers MUST import all required namespaces listed here.
 using System;
 using System.Collections.Generic;
@@ -41,10 +39,9 @@ using RhinoLayer = global::Rhino.DocObjects.Layer;
 using Type = Semio.Type;
 using File = Semio.File;
 
-#endregion 🔖Imports
+#endregion ⌛Imports
 
-#region 🔖AssemblyAttributes
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖assemblyattributes](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/AssemblyAttributes)
+#region ⭐AssemblyAttributes
 // Assembly-level attributes required by Rhino to identify this plugin.
 // The Guid is the plugin ID. PlugInDescription attributes show in Rhino Options > Plug-ins.
 #if RHINO_PLUGIN
@@ -58,16 +55,14 @@ using File = Semio.File;
 [assembly: PlugInDescription(DescriptionType.WebSite, "https://semio.tech")]
 [assembly: PlugInDescription(DescriptionType.Icon, "Semio.Rhino.semio_32x32.ico")]
 #endif
-#endregion 🔖AssemblyAttributes
+#endregion ⭐AssemblyAttributes
 
-#region 🔖Namespace
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖namespace](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/Namespace)
+#region ✨Namespace
 // Implementations MUST reside in this namespace.
 namespace Semio.Rhino;
-#endregion 🔖Namespace
+#endregion ✨Namespace
 
-#region 🔖Constants
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖constants](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/Constants)
+#region 🎠Constants
 // Consumers MUST use these shared constants for configuration.
 
 public static class Constants
@@ -77,14 +72,13 @@ public static class Constants
     public const string PanelId = "D3A4E2C1-7B8F-4D5E-9A1C-6F2B3E4D5A6B";
 }
 
-#endregion 🔖Constants
+#endregion 🎠Constants
 
-#region 🔖BridgeProtocol
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖bridgeprotocol](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/BridgeProtocol)
+#region 🔬BridgeProtocol
 // Bridge protocol types for JSON-RPC style communication between React UI and C#.
 
 /// <summary>
-/// Incoming request from the React UI to native C#.
+/// 📨Incoming request from the React UI to native C#.
 /// </summary>
 public class BridgeRequest
 {
@@ -95,7 +89,7 @@ public class BridgeRequest
 }
 
 /// <summary>
-/// Outgoing response from native C# to the React UI.
+/// 📩Outgoing response from native C# to the React UI.
 /// </summary>
 public class BridgeResponse
 {
@@ -106,7 +100,7 @@ public class BridgeResponse
 }
 
 /// <summary>
-/// Error detail for a failed bridge response.
+/// ❌Error detail for a failed bridge response.
 /// </summary>
 public class BridgeError
 {
@@ -116,7 +110,7 @@ public class BridgeError
 }
 
 /// <summary>
-/// Outgoing event from native C# to the React UI.
+/// 📡Outgoing event from native C# to the React UI.
 /// </summary>
 public class BridgeEvent
 {
@@ -124,14 +118,13 @@ public class BridgeEvent
     [JsonProperty("payload")] public object? Payload { get; set; }
 }
 
-#endregion 🔖BridgeProtocol
+#endregion 🔬BridgeProtocol
 
-#region 🔖BridgeBinding
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖bridgebinding](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/BridgeBinding)
+#region ⛹BridgeBinding
 // Bridge bindings define the native methods callable from the React UI.
 
 /// <summary>
-/// Interface for a bridge binding exposing named methods.
+/// 🔌Interface for a bridge binding exposing named methods.
 /// </summary>
 public interface IBridgeBinding
 {
@@ -139,14 +132,13 @@ public interface IBridgeBinding
     IReadOnlyDictionary<string, Func<JToken?, Task<object?>>> Methods { get; }
 }
 
-#endregion 🔖BridgeBinding
+#endregion ⛹BridgeBinding
 
-#region 🔖BridgeRegistry
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖bridgeregistry](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/BridgeRegistry)
+#region 🪨BridgeRegistry
 // Central registry routing bridge requests to the correct binding and method.
 
 /// <summary>
-/// Routes incoming bridge requests to registered bindings.
+/// 📨Routes incoming bridge requests to registered bindings.
 /// </summary>
 public class BridgeRegistry
 {
@@ -218,14 +210,13 @@ public class BridgeRegistry
         _bindings.TryGetValue(binding, out var b) ? b.Methods.Keys : Enumerable.Empty<string>();
 }
 
-#endregion 🔖BridgeRegistry
+#endregion 🪨BridgeRegistry
 
-#region 🔖AppBinding
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖appbinding](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/AppBinding)
+#region 🗻AppBinding
 // Application-level bridge binding for version info and diagnostics.
 
 /// <summary>
-/// Provides application-level methods: ping, getVersion, getBridgeInfo.
+/// 📌Provides application-level methods: ping, getVersion, getBridgeInfo.
 /// </summary>
 public class AppBinding : IBridgeBinding
 {
@@ -244,14 +235,13 @@ public class AppBinding : IBridgeBinding
     };
 }
 
-#endregion 🔖AppBinding
+#endregion 🗻AppBinding
 
-#region 🔖DocumentBinding
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖documentbinding](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/DocumentBinding)
+#region 📢DocumentBinding
 // Document-level bridge binding for Rhino document information.
 
 /// <summary>
-/// Provides document-level methods: getInfo, getUnits, getLayers.
+/// 🔧Provides document-level methods: getInfo, getUnits, getLayers.
 /// </summary>
 public class DocumentBinding : IBridgeBinding
 {
@@ -294,14 +284,13 @@ public class DocumentBinding : IBridgeBinding
     };
 }
 
-#endregion 🔖DocumentBinding
+#endregion 📢DocumentBinding
 
-#region 🔖LayerService
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖layerservice](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/LayerService)
+#region 🎢LayerService
 // Service for creating and managing Rhino layers following the semio hierarchy.
 
 /// <summary>
-/// Creates nested layer hierarchies for semio imports.
+/// 🆕Creates nested layer hierarchies for semio imports.
 /// Layer path: semio::KITNAME::Types::TYPENAME::Models::MODELTAGS
 /// </summary>
 public static class LayerService
@@ -369,14 +358,13 @@ public static class LayerService
     }
 }
 
-#endregion 🔖LayerService
+#endregion 🎢LayerService
 
-#region 🔖ImportBinding
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖importbinding](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/ImportBinding)
+#region 🎹ImportBinding
 // Bridge binding for importing kits and models into the active Rhino document.
 
 /// <summary>
-/// DTO for an import model request from the React UI.
+/// 📨DTO for an import model request from the React UI.
 /// </summary>
 public class ImportModelRequest
 {
@@ -388,7 +376,7 @@ public class ImportModelRequest
 }
 
 /// <summary>
-/// Provides import methods: importModel, importKit (placeholder for file dialog trigger).
+/// 🔧Provides import methods: importModel, importKit (placeholder for file dialog trigger).
 /// </summary>
 public class ImportBinding : IBridgeBinding
 {
@@ -448,16 +436,15 @@ public class ImportBinding : IBridgeBinding
     };
 }
 
-#endregion 🔖ImportBinding
+#endregion 🎹ImportBinding
 
 #if RHINO_PLUGIN
-#region 🔖SemioRhinoPlugin
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖semiorhinoplugin](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/SemioRhinoPlugin)
+#region 🪩SemioRhinoPlugin
 // Main Rhino plugin class bootstrapping the bridge bindings.
 // Panel registration is done in the ShowSemioCommand constructor (like Speckle).
 
 /// <summary>
-/// Entry point for the semio Rhino plugin.
+/// 📍Entry point for the semio Rhino plugin.
 /// Registers bridge bindings on load. Panel is registered by the command.
 /// </summary>
 public class SemioRhinoPlugin : PlugIn
@@ -482,15 +469,14 @@ public class SemioRhinoPlugin : PlugIn
     }
 }
 
-#endregion 🔖SemioRhinoPlugin
+#endregion 🪩SemioRhinoPlugin
 
-#region 🔖SemioWebViewControl
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖semiowebviewcontrol](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/SemioWebViewControl)
+#region 🔓SemioWebViewControl
 // WPF UserControl hosting WebView2 that loads the semio React UI.
 // This control is wrapped by SemioPanelHost (WpfElementHost) for Rhino panel integration.
 
 /// <summary>
-/// WPF UserControl hosting WebView2 that loads the semio React UI.
+/// 👤WPF UserControl hosting WebView2 that loads the semio React UI.
 /// Handles bridge message routing between the browser and native C#.
 /// </summary>
 public class SemioWebViewControl : System.Windows.Controls.UserControl
@@ -593,15 +579,14 @@ public class SemioWebViewControl : System.Windows.Controls.UserControl
     }
 }
 
-#endregion 🔖SemioWebViewControl
+#endregion 🔓SemioWebViewControl
 
-#region 🔖SemioPanelHost
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖semiopanelhost](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/SemioPanelHost)
+#region 📊SemioPanelHost
 // Dockable Rhino panel host wrapping the WPF WebView2 control.
 // Follows the Speckle pattern: inherits RhinoWindows.Controls.WpfElementHost.
 
 /// <summary>
-/// WpfElementHost panel wrapping SemioWebViewControl for Rhino docking.
+/// 👁️WpfElementHost panel wrapping SemioWebViewControl for Rhino docking.
 /// Handles panel close/reopen lifecycle by disconnecting the WPF child.
 /// </summary>
 [Guid(Constants.PanelId)]
@@ -656,15 +641,14 @@ public class SemioPanelHost : RhinoWindows.Controls.WpfElementHost
     }
 }
 
-#endregion 🔖SemioPanelHost
+#endregion 📊SemioPanelHost
 
-#region 🔖ShowSemioCommand
-// [👤semio📚3dm🛅semiorhino💻semiorhino🔖showsemiocommand](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino/f/Semio.Rhino.cs/s/ShowSemioCommand)
+#region 🛒ShowSemioCommand
 // Rhino command to open or focus the semio dockable panel.
 // Panel registration happens in the constructor (like Speckle connectors).
 
 /// <summary>
-/// Command that opens the semio dockable side panel.
+/// 📬Command that opens the semio dockable side panel.
 /// Registers the panel in its constructor following Speckle's pattern.
 /// </summary>
 [CommandStyle(global::Rhino.Commands.Style.ScriptRunner)]
@@ -756,5 +740,5 @@ public class ShowSemioCommand : Command
     }
 }
 
-#endregion 🔖ShowSemioCommand
+#endregion 🛒ShowSemioCommand
 #endif

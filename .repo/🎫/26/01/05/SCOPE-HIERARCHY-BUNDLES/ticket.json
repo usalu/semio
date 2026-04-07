@@ -1,5 +1,6 @@
 {
   "title": "SCOPE-HIERARCHY-BUNDLES",
+  "emoji": "📋",
   "status": "closed",
   "description": "Add hierarchical scope mechanism, ignore flag, bundles structure for contribution tracking",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repobundlemechanism"

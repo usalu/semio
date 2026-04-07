@@ -1,5 +1,6 @@
 {
   "title": "Unified Item Rendering Across Commands",
+  "emoji": "📋",
   "status": "closed",
   "description": "All items should always be identically rendered across all commands regardless the originating command. Define rendering once for text and once for markdown, and reuse for all commands. Extend tests to guarantee identical representations.",
   "summary": "Unified item rendering across all CLI commands. All entity types now render identically via collectEntityProps/renderEntityHuman/renderEntityMarkdownLink regardless of command origin (tree, list, goal tree, section tree, ticket list, monorepo tree). Fixed double-dash bug in goal tree markdown and missing indentation in section tree markdown. Removed legacy template system (TemplateManager, defaultTemplates, tmplColor/tmplColorStatus/tmplTimeAgo/tmplTimeLeft/tmplTruncate/tmplTernary). Added comprehensive identity tests ensuring rendering consistency across all code paths.",

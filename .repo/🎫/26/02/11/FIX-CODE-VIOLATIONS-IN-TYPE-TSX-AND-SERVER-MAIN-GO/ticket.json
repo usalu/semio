@@ -1,5 +1,6 @@
 {
   "title": "Fix Code Breachs in Type Tsx and Server Main Go",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix all code breachs in semio/js/sketchpad/Type.tsx (91 breachs) and repo/server/main.go (72 breachs). Add section summaries with MUST keywords, definition summaries, and spec comments with RFC2119 keywords on functions/classes.",
   "summary": "Fixed all 163 code breachs across repo/server/main.go and semio/js/sketchpad/Type.tsx by adding section summaries, definition summaries, and spec comments with RFC2119 keywords.",

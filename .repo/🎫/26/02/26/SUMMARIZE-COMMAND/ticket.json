@@ -1,5 +1,6 @@
 {
   "title": "Summarize Command",
+  "emoji": "📋",
   "status": "closed",
   "description": "Introduce a new command summarize {{id|uri}} which creates a summary of the given entity. Use go embedded templates for every entity kind.",
   "summary": "Bulk close",

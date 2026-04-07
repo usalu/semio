@@ -1,5 +1,6 @@
 {
   "title": "Standardize GH Param And Component Nicknames",
+  "emoji": "🧩",
   "status": "closed",
   "description": "The naming and descriptions of all params and components are inconsistent. Use two-letter nicknames for params with ? and * cardinality suffixes, three-letter nicknames for components, and replace generic descriptions using dictionary.csv as reference.",
   "summary": "Centralized Grasshopper naming policy now normalizes all component nicknames to 3 chars, parameter nicknames to 2 chars with cardinality suffixes, and rewrites parameter/component descriptions to non-generic, component-specific text; added reflection-based naming conformance test coverage.",

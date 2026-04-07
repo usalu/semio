@@ -1,5 +1,6 @@
 {
   "title": "Kit Diagram Fixes",
+  "emoji": "📊",
   "status": "closed",
   "summary": "Fixed Kit diagram pan/zoom, edge alignment, and styling parity with Design app.",
   "github": {

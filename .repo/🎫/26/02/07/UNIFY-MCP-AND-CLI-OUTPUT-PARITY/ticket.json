@@ -1,5 +1,6 @@
 {
   "title": "Unify Mcp and Cli Output Parity",
+  "emoji": "🔌",
   "status": "closed",
   "description": "Make MCP tool outputs 100% identical to CLI tool outputs. Extend existing tests to cover all cases. Refactor as needed.",
   "summary": "Bulk close",

@@ -1,5 +1,6 @@
 {
   "title": "Implement Semio Algorithm Window Apps",
+  "emoji": "🔨",
   "status": "open",
   "description": "Every algorithm should be a elements/ui/UI with an AlgorithmApp and semio ui for the window kinds. WindowKinds: VecInput, PiecesSelectionInput, DesignDiffOutput, DesignOutput. Drag: VecInput, PiecesSelectionInput, DesignDiffOutput, DesignOutput. Delete: PiecesSelectionInput, DesignDiffOutput, DesignOutput. etc.",
   "summary": "Implemented deletePiecesAndConnectionsInDesign across all 5 programming languages (C#, TypeScript, Rust, Python, Go). The function takes a design, list of piece GUIDs, and list of connection GUIDs to delete, then returns a DesignDiff that: (1) removes the specified pieces, (2) removes stale connections referencing deleted pieces, (3) updates pieces that become fixed (parent connection removed) with flat plane and zero center. Created test assets for nakagin capsule tower deletion scenario (third tambour of large tower + first connection of small tower). Refactored existing removePiecesAndConnectionsFromDesign in TypeScript to use the new function. Fixed pre-existing net48 Range syntax error in Semio.cs. All tests pass across all languages.",

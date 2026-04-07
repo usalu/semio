@@ -1,5 +1,6 @@
 {
   "title": "Document All Hardcoded Semiorepo Uri Strings in Test",
+  "emoji": "🧪",
   "status": "closed",
   "description": "Read main_test.go and find all lines containing old-scheme semiorepo:// URI strings, grouped by test function",
   "summary": "Documented all 144 hardcoded semiorepo:// URI strings in main_test.go, grouped by 20 test functions with line numbers, URIs, and exact code",

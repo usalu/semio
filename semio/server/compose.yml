@@ -1,5 +1,4 @@
 # #region 🔖Header
-# [👤semio📚server💻compose](repo://p/u/semio/b/l/server/f/compose.yml)
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 # AGPL-3.0
 # Docker Compose for the semio server stack with repo web services and the semio session backend.

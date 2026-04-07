@@ -1,5 +1,6 @@
 {
   "title": "Fix Vscode Extension Analyzing Ignored Files",
+  "emoji": "🔧",
   "status": "closed",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/221"

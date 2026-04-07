@@ -1,5 +1,6 @@
 {
   "title": "Refactor all apps to a unified multi-window system",
+  "emoji": "♻️",
   "status": "closed",
   "description": "\"Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas\"",
   "goal": "🎯r2602🎯runningsketchpad"

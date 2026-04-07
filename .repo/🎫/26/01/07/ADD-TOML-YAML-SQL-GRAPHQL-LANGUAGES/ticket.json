@@ -1,5 +1,6 @@
 {
   "title": "ADD-TOML-YAML-SQL-GRAPHQL-LANGUAGES",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add Toml, Yaml, Sql, and Graphql language plugins to the repo CLI language registry",
   "summary": "Bulk close",

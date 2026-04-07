@@ -1,5 +1,6 @@
 {
   "title": "Mcp App Fetch Url Uses Relative Path",
+  "emoji": "🔌",
   "status": "closed",
   "description": "Fix MCP design-viewer fallback fetch: engine emits fetchUrl pointing at localhost:PORT which can be wrong under Cursor host embedding. Emit relative fetchUrl '/api/app/payload/{token}' so iframe resolves against its actual origin. Add engine test coverage asserting fetchUrl is relative and points to /api/app/payload/ for show_design/show_scene results. UI already supports fetchUrl; ensure normalize accepts relative.",
   "summary": "Fixed CSP-blocked MCP payload hydration: relative fetchUrl resolved against host iframe origin (e.g. 127.0.0.1:6274) and was blocked by MCP App CSP connect-src. Engine now emits absolute fetchUrl on engine origin (http://127.0.0.1:{PORT}/api/app/payload/{token}), which is allowlisted by _mcp_app_html_resource_meta. Updated engine tests to assert fetchUrl contains :PORT/api/app/payload/. Verified via pytest filter (2 tests passed).",

@@ -1,5 +1,6 @@
 {
   "title": "Hook Native Event Mapping Tests",
+  "emoji": "🪝",
   "status": "closed",
   "description": "Test every native hook event mapping using real data from 📜 logs, refactor log format to input/event/response",
   "summary": "Refactored hook log format from {context,result} to {input,event,response}. Added HookLogEvent, HookLogResponse types, extractTimestampFromInput. Added TestNativeHookEventMappingWithRealData (85 subtests for all native events across copilot/cursor/windsurf/claude/droid/codex/antigravity with real data from log files). Added TestNativeHookEventMappingFromRealLogFiles (reads real log files for end-to-end validation). All tests pass.",

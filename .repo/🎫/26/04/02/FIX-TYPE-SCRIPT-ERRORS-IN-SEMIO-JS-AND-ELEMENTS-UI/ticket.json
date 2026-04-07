@@ -1,5 +1,6 @@
 {
   "title": "Fix TypeScript Errors in Semio JS and Elements UI",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix TypeScript compilation errors in semio/js/index.ts and elements/ui/index.tsx. The errors include: missing arguments in function calls, wrong property names (definition vs attributes), type incompatibilities with Plane/ArrayBuffer, spread types on unknown, and DraggableAttributes type mismatches.",
   "summary": "Fixed 7 TypeScript compilation errors across semio/js/index.ts and elements/ui/index.tsx. Cast PlaneDiff to Plane in deletePiecesAndConnectionsInDesign. Added missing kit argument. Removed non-existent definition and attributes fields from hash functions. Fixed Uint8Array generic. Cast slot to ReactElement. Widened TreeDragHandle attributes prop. tsc passes clean, all 134 tests pass, dev server running.",

@@ -1,5 +1,6 @@
 {
   "title": "Rename Tree Command to Search",
+  "emoji": "🏷️",
   "status": "closed",
   "description": "Rename the top-level `tree` CLI command to `search` in repo/cli/main.go. Update all references in main_test.go and repo/vscode/extension.ts.",
   "summary": "Renamed top-level CLI `tree` command to `search` in main.go (function treeCommand→searchCommand, Use: \"tree\"→\"search\"). Updated all test references in main_test.go and VSCode extension CLI calls. Also added missing net/url import that caused pre-existing build failure.",

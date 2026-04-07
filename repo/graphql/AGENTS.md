@@ -2,7 +2,7 @@
 technology: repo
 bundle:
  name: graphql
- emoji: 🛂
+ emoji: 🔗
  description: The graphql bundle for repo.
  kind: schema
 ---

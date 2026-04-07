@@ -1,5 +1,6 @@
 {
   "title": "Replace JSON.stringify diffing in providers with structural equality helpers",
+  "emoji": "🔄",
   "status": "closed",
   "description": "\"Fix Smell 3: Replace JSON.stringify diffing pattern in TransactionPiecesProviderInner and HoverPiecesProviderInner with structural equality helpers and useSyncExternalStore\"",
   "goal": "🎯aioptimizedrepo"

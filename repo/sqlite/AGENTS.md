@@ -2,7 +2,7 @@
 technology: repo
 bundle:
  name: sqlite
- emoji: 📚
+ emoji: 💾
  description: The sqlite bundle for repo.
  kind: library
 ---

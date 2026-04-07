@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🖱️desktop⚙️forgeconfig](repo://p/u/semio/b/u/desktop/f/forge.config.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Electron Forge configuration for building and packaging the desktop app.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [👤semio🖱️desktop⚙️forgeconfig🔖configuration](repo://p/u/semio/b/u/desktop/f/forge.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // Electron Forge build configuration for the desktop application.
 // Configuration MUST define packager, makers, and plugins for Electron Forge.
 
@@ -25,7 +23,6 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 
 /**
  * Electron Forge configuration with Vite plugin and security fuses.
-// [👤semio🖱️desktop⚙️forgeconfig🔖configuration🪨config](repo://p/u/semio/b/u/desktop/f/forge.config.ts/s/Configuration/d/i/config)
  * Config MUST include VitePlugin with main, preload, and renderer entries.
  **/
 const config: ForgeConfig = {
@@ -71,4 +68,4 @@ const config: ForgeConfig = {
 // Default export of the Electron Forge configuration.
 // Export MUST be the config object.
 export default config;
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

@@ -1,5 +1,6 @@
 {
   "title": "Emoji Variation Fix Complete",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Remove debug panic in ScanComments, fix emojiPolicy and applyAutofixes to properly detect and fix text-default emojis missing VS16, extend tests, build CLI and verify no bare emojis remain in codebase after fix",
   "summary": "Complete emoji variation fix: emojiText preserves VS16 for text-default emojis, header comparison made VS-agnostic, ScanComments uses regex for section markers, Interaction.UnmarshalJSON handles legacy JSON, all 212+ tests pass, fix converges to 0 idempotently",

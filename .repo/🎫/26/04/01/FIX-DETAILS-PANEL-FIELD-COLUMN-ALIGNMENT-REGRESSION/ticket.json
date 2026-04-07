@@ -1,5 +1,6 @@
 {
   "title": "Fix Details Panel Field Column Alignment Regression",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Restore consistent value-column sizing across all tree depths in the Details panel",
   "summary": "Fixed property row width in Label component to use calc(100% + offset) compensation, ensuring value-column right edge stays constant across all tree depths. Updated test assertions to match corrected layout.",

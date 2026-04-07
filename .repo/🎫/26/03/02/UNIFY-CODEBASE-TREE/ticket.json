@@ -1,5 +1,6 @@
 {
   "title": "Unify Codebase Tree",
+  "emoji": "📋",
   "status": "open",
   "description": "Unify folders and projects tree items into a single codebase tree item. Remove root level project and root level bundle.",
   "github": {

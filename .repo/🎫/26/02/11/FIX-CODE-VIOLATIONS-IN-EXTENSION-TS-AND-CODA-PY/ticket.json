@@ -1,5 +1,6 @@
 {
   "title": "Fix Code Breachs in Extension Ts and Coda Py",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix all code breachs in repo/vscode/extension.ts (55 breachs) and coda/engine/coda.py (38 breachs) by adding missing section summaries, definition summaries, and spec comments",
   "summary": "Fixed all code breachs in extension.ts (45→0) and coda.py (70→0). Added section summaries with RFC2119 keywords, definition summaries, and spec comments. Key discovery: Python definition comments must be placed between decorators and def lines.",

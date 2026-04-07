@@ -1,5 +1,6 @@
 {
   "title": "Fix Full Project Tree Rendering In Cli Tree",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Implement the `tree \u003cquery\u003ee?` command that shows the complete monorepo as a tree with all entity types (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, statutes, contributors, commits). Add positional query parameter for fuzzy search using bleve. Add `--only-\u003cvalue\u003ee` and `--no-\u003cfilter\u003ee` flags for filtering. Handle parent chain preservation when filtering. Collapse intermediate parents when filtered. Extend existing tests.",
   "summary": "Fixed full tree hierarchy rendering by adding folders root category, ensuring bundle-root path inclusion, forcing tree section inclusion, and restructuring policy tree to policy-\u003eentitykind-\u003estatute. Extended existing tree tests and validated with targeted go test runs.",

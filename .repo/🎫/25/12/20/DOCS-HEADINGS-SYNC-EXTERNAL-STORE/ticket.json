@@ -1,5 +1,6 @@
 {
   "title": "Refactor Docs useHeadings to use useSyncExternalStore instead of useState + subscribe",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Refactor Docs.tsx useHeadings hook to use useSyncExternalStore instead of useState + useEffect + manual subscribe pattern",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"

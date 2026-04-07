@@ -1,5 +1,6 @@
 {
   "title": "VSCODE-DIAGNOSTIC-READONLY",
+  "emoji": "💻",
   "status": "closed",
   "description": "Fix VSCode diagnostics opening files as read-only preview instead of editable files when clicking on semio breach diagnostics.",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension"

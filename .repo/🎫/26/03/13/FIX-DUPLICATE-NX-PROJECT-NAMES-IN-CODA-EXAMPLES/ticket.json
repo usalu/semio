@@ -1,5 +1,6 @@
 {
   "title": "Fix Duplicate Nx Project Names in Coda Examples",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Two coda example .coda directories resolve to the same NX project name causing the project graph to fail. Add unique name fields to each project.json.",
   "summary": "Added unique name fields to both .coda/project.json files: coda-example and semio-blnbo-roomprogram. NX project graph now resolves without duplicate name errors.",

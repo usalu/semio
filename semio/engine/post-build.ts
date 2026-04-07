@@ -1,6 +1,5 @@
 #!/usr/bin/env tsx
-// #region 🔖Header
-// [👤semio📚engine📜postbuild](repo://p/u/semio/b/l/engine/f/post-build.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -8,10 +7,9 @@
 
 // Post-build script for engine artifact processing and packaging.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Post Build
-// [👤semio📚engine💻postbuild🔖postbuild](repo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build)
+// #region 💾Post Build
 // Post-build script. MUST relocate the PyInstaller output to the Grasshopper bin folder.
 
 import { existsSync, renameSync, rmSync } from "fs";
@@ -22,7 +20,6 @@ import { join } from "path";
  * MUST resolve to the engine folder.
  **/
  * cwd holds the data fields for a cwd record.
- * [👤semio📚engine💻postbuild🔖postbuild🪨cwd](repo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/cwd)
  **/
 const cwd = __dirname;
 /**
@@ -30,18 +27,15 @@ const cwd = __dirname;
  * MUST match the PyInstaller output name.
  **/
  * exePath holds the data fields for a exePath record.
- * [👤semio📚engine💻postbuild🔖postbuild🪨exepath](repo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/exePath)
  **/
 const exePath = join(cwd, "dist", "semio-engine", "semio-engine.exe");
 /**
  * Path to the PyInstaller internal dependencies folder.
-// [👤semio📚engine💻postbuild🔖postbuild🪨internalpath](repo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/internalPath)
  * MUST be co-located with the executable.
  **/
 const internalPath = join(cwd, "dist", "semio-engine", "_internal");
 /**
  * Grasshopper plugin binary output directory.
-// [👤semio📚engine💻postbuild🔖postbuild🪨grasshopperbinpath](repo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/grasshopperBinPath)
  * MUST match the .NET build output path.
  **/
 const grasshopperBinPath = join(cwd, "..", "..", "net", "Semio.Grasshopper", "bin", "Debug", "net48");
@@ -50,7 +44,6 @@ const grasshopperBinPath = join(cwd, "..", "..", "net", "Semio.Grasshopper", "bi
  * MUST use the same executable name as the PyInstaller output.
  **/
  * grasshopperExePath holds the data fields for a grasshopperExePath record.
- * [👤semio📚engine💻postbuild🔖postbuild🪨grasshopperexepath](repo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/grasshopperExePath)
  **/
 const grasshopperExePath = join(grasshopperBinPath, "semio-engine.exe");
 /**
@@ -58,7 +51,6 @@ const grasshopperExePath = join(grasshopperBinPath, "semio-engine.exe");
  * MUST mirror the PyInstaller _internal directory structure.
  **/
  * grasshopperInternalPath holds the data fields for a grasshopperInternalPath record.
- * [👤semio📚engine💻postbuild🔖postbuild🪨grasshopperinternalpath](repo://p/u/semio/b/l/engine/f/post-build.ts/s/Post%20Build/d/i/grasshopperInternalPath)
  **/
 const grasshopperInternalPath = join(grasshopperBinPath, "_internal");
 
@@ -74,4 +66,4 @@ renameSync(internalPath, grasshopperInternalPath);
 
 console.log("✅ Post-build complete");
 
-// #endregion 🔖Post Build
+// #endregion 💾Post Build

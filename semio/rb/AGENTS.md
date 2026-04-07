@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: rb
- emoji: 📚
+ emoji: 💎
  description: The rb bundle for semio.
  kind: library
 ---

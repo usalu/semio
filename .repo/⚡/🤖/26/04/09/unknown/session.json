@@ -1,0 +1,53 @@
+{
+  "id": "unknown",
+  "uri": "repo://session/unknown",
+  "second": "2026-04-09T00:05:32Z",
+  "checkpoint": "cc310f6f090994959cdf1fda1943ef1ea97a285b",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "cc310f6f090994959cdf1fda1943ef1ea97a285b",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-09T00:05:32Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "4f9b5817c5e89115d00f47f7855d8392c09ec86d",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-09T00:31:24Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "7821329ee027f799b3db41ea6dd96c847cbe0c5f",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-09T00:55:49Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "23b05a10c661d1802ed253a3e4014fa3e31f5fe8",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-09T02:00:03Z",
+        "session": "unknown"
+      },
+      "response": {}
+    }
+  ]
+}

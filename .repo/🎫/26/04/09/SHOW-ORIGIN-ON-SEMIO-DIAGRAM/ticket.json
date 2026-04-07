@@ -1,0 +1,10 @@
+{
+  "title": "Show Origin On Semio Diagram",
+  "status": "closed",
+  "description": "SemioDiagram SVG: show u=0,v=0 origin marker (crosshair), behind edges/nodes, pointer-events none; optional prop to hide; extend vitest in semio/ui index.",
+  "summary": "SemioDiagram: crosshair at diagram origin (u=0,v=0) using same toPixel* as nodes; muted-foreground strokes, pointer-events none, drawn under edges/nodes. New prop showOrigin (default true). Helper resolveSemioDiagramOriginPixels + vitest. Files: semio/ui/index.tsx only.",
+  "goal": "🎯uipolish",
+  "sessions": [
+    "⚪bc25f9f1229b43759da822b439cd4560"
+  ]
+}

@@ -1,5 +1,6 @@
 {
   "title": "Migrate JS Bundle Docs From Root README",
+  "emoji": "📝",
   "status": "closed",
   "description": "Migrate Borders, Background levels, Validation System, Sketchpad, UI System, Platform Compatibility, and JavaScript ecosystem (Resources, Workspaces, Preflight, Channels) content from root README.md into semio/js/README.md Docs section.",
   "summary": "Appended 10 doc subsections to semio/js/README.md Docs section: Borders, Background levels, Validation System, Sketchpad (with transactions, selection+hover visuals, windows, Kit app artifact creation, state sub-sections), UI System (with UI Levels, Size Constants, Guidelines sub-sections), Platform Compatibility, Resources, Workspaces, Preflight, Channels. Added empty Requirements section at end.",

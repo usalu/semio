@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // 🥼︎ semio/js/.storybook/stories/elements/Layout.stories.tsx
 
@@ -6,14 +6,14 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { Canvas, Footer, HorizontalWindows, Layout, Navbar, Page, SidePanel, Window } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Home, Info, Layers, Settings, User } from "lucide-react";
 import { useState } from "react";
 
-// #region 🔖Layout
+// 🔷#region 🪨Layout
 const meta = {
   title: "elements/Layout",
   component: Layout,
@@ -124,9 +124,9 @@ export const Default: Story = {
   },
 };
 
-// #endregion 🔖Layout
+// #endregion 🪨Layout
 
-// #region 🔖Page
+// 🔷#region 🌈Page
 export const PageDefault: Story = {
   args: { canvas: null },
   render: () => (
@@ -140,9 +140,9 @@ export const PageDefault: Story = {
     </div>
   ),
 };
-// #endregion 🔖Page
+// #endregion 🌈Page
 
-// #region 🔖SidePanel
+// 💻#region 📌SidePanel
 export const SidePanelDefault: Story = {
   args: { canvas: null },
   render: () => {
@@ -163,4 +163,4 @@ export const SidePanelDefault: Story = {
     );
   },
 };
-// #endregion 🔖SidePanel
+// #endregion 📌SidePanel

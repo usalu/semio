@@ -1,5 +1,6 @@
 {
   "title": "Embed Event Data in Hook Log",
+  "emoji": "📥",
   "description": "Update the hook log format to embed event-specific data directly under the 'event' property instead of using a separate 'data' property. This involves removing the 'data' field from HookLogEntry and merging the result JSON with the event metadata.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/652"
@@ -55,17 +56,17 @@
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-23T16:03:12Z",
-          "query": "cd /workspaces/semio/repo/cli \u0026\u0026 go build ./... 2\u003e\u00261"
+          "query": "cd /workspaces/semio/repo/cli && go build ./... 2>&1"
         },
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-23T16:03:18Z",
-          "query": "cd /workspaces/semio \u0026\u0026 grep -n 'json:\"-\"\\|json:\"status\\|json:\"summary\\|json:\"interactions\\|json:\"agents\\|json:\"sessions' repo/cli/main.go | head -20"
+          "query": "cd /workspaces/semio && grep -n 'json:\"-\"\\|json:\"status\\|json:\"summary\\|json:\"interactions\\|json:\"agents\\|json:\"sessions' repo/cli/main.go | head -20"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-23T16:03:30Z",
-          "query": "cd /workspaces/semio \u0026\u0026 grep -n 'json:\"-\"\\|json:\"status\\|json:\"summary\\|json:\"interactions\\|json:\"agents\\|json:\"sessions' repo/cli/main.go | head -20"
+          "query": "cd /workspaces/semio && grep -n 'json:\"-\"\\|json:\"status\\|json:\"summary\\|json:\"interactions\\|json:\"agents\\|json:\"sessions' repo/cli/main.go | head -20"
         },
         {
           "kind": "agent.tool.ended",
@@ -95,12 +96,12 @@
         {
           "kind": "agent.tool.terminal.starting",
           "timestamp": "2026-02-23T16:04:15Z",
-          "query": "cd /workspaces/semio \u0026\u0026 grep -n 'func SaveTicket\\|func ReadTicket\\|func FinishTicket\\|func latestOpenTicket\\|func CreateTicket\\|func ReopenTicket' repo/cli/main.go"
+          "query": "cd /workspaces/semio && grep -n 'func SaveTicket\\|func ReadTicket\\|func FinishTicket\\|func latestOpenTicket\\|func CreateTicket\\|func ReopenTicket' repo/cli/main.go"
         },
         {
           "kind": "agent.tool.terminal.ended",
           "timestamp": "2026-02-23T16:04:23Z",
-          "query": "cd /workspaces/semio \u0026\u0026 grep -n 'func SaveTicket\\|func ReadTicket\\|func FinishTicket\\|func latestOpenTicket\\|func CreateTicket\\|func ReopenTicket' repo/cli/main.go"
+          "query": "cd /workspaces/semio && grep -n 'func SaveTicket\\|func ReadTicket\\|func FinishTicket\\|func latestOpenTicket\\|func CreateTicket\\|func ReopenTicket' repo/cli/main.go"
         },
         {
           "kind": "agent.tool.searching",
@@ -134,9 +135,4 @@
       ]
     }
   ]
-}iting","timestamp": "2026-02-23T16:03:29Z"
-}
-]
-}
-]
 }

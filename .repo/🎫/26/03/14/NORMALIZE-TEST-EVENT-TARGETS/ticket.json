@@ -1,5 +1,6 @@
 {
   "title": "Normalize Test Event Targets",
+  "emoji": "📏",
   "status": "open",
   "description": "Normalize agent.tool.test.starting payloads to emit labs with lab IDs for full runs and tests with test IDs for subset runs across supported runners, update CLI parsing/resolution logic, repair malformed main.go state, and extend existing tests.",
   "github": {

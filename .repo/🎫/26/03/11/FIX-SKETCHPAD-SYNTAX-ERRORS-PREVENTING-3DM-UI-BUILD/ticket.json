@@ -1,5 +1,6 @@
 {
   "title": "Fix Sketchpad Syntax Errors Preventing 3dm UI Build",
+  "emoji": "🔧",
   "status": "open",
   "description": "Multiple sketchpad TSX files have syntax errors preventing the 3dm UI from building. Files affected: Docs.tsx (line 776), Feedback.tsx (line 257), Home.tsx (line 555), Quality.tsx (line 698), Kit.tsx (line 1787), Design.tsx (line 10787), Type.tsx (line 1381), elements.tsx (line 211), Sketchpad.tsx (line 886). All appear to be incomplete edits or merge artifacts causing parse errors.",
   "github": {

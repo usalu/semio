@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda🖱️desktop⚙️postcssconfig](repo://p/r/coda/b/u/desktop/f/postcss.config.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // PostCSS configuration for the coda desktop app.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [🔬coda🖱️desktop⚙️postcssconfig🔖configuration](repo://p/r/coda/b/u/desktop/f/postcss.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // PostCSS plugin configuration for the coda desktop application.
 // Configuration MUST use postcss-import and postcss-nesting plugins.
 
@@ -18,7 +16,6 @@ import { Config } from "postcss-load-config";
 
 /**
  * PostCSS configuration with import and nesting plugins.
-// [🔬coda🖱️desktop⚙️postcssconfig🔖configuration🪨config](repo://p/r/coda/b/u/desktop/f/postcss.config.ts/s/Configuration/d/i/config)
  * Config MUST include postcss-import and postcss-nesting plugins.
  **/
 const config: Config = {
@@ -29,4 +26,4 @@ const config: Config = {
 };
 
 export default config;
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

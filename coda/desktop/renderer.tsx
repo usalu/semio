@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda🖱️desktop💻renderer](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Entry point for the Electron renderer process mounting the coda React app.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Renderer
-// [🔬coda🖱️desktop💻renderer🔖renderer](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer)
+// #region ⛩️Renderer
 // Electron renderer process that mounts the coda dashboard React app with window controls.
 // MUST resolve the user identity before rendering the dashboard.
 // MUST communicate with coda MCP server via the preload bridge.
@@ -33,8 +31,7 @@ i18next.use(initReactI18next).init({
   resources: { en: { translation: {} } },
 });
 
-// #region 🔖Types
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types)
+// #region ⚙️Types
 // TypeScript interfaces for coda domain models used in the renderer.
 // Types MUST match the coda MCP server data structures.
 
@@ -69,7 +66,6 @@ declare global {
 
 /**
  * An event pushed from the coda sidecar process.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️codaevent](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/CodaEvent)
  *MUST have event kind, data, and timestamp.
  **/
 interface CodaEvent {
@@ -80,7 +76,6 @@ interface CodaEvent {
 
 /**
  * MCP JSON-RPC response wrapper.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️mcpresponse](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/McpResponse)
  *MUST contain either result or error.
  **/
 interface McpResponse {
@@ -95,7 +90,6 @@ interface McpResponse {
 
 /**
  * A platform measure instruction for a specific measure kind on a property.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️platformmeasureinstruction](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/PlatformMeasureInstruction)
  *MUST have instructions and optional mcp tools.
  **/
 interface PlatformMeasureInstruction {
@@ -108,7 +102,6 @@ interface PlatformMeasureInstruction {
 
 /**
  * A platform property with measure kind keys mapping to instructions.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️platformproperty](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/PlatformProperty)
  *MUST have id. Measure kinds (increase, decrease, etc.) are dynamic keys.
  **/
 interface PlatformProperty {
@@ -118,7 +111,6 @@ interface PlatformProperty {
 
 /**
  * A platform with properties and their measure instructions.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️platform](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Platform)
  *MUST have an id.
  **/
 interface Platform {
@@ -128,7 +120,6 @@ interface Platform {
 
 /**
  * A clause within a compliance rule.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️clause](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Clause)
  *MUST have id and description.
  **/
 interface Clause {
@@ -140,7 +131,6 @@ interface Clause {
 
 /**
  * A compliance rule belonging to a target.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️rule](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Rule)
  *MUST have id and description.
  **/
 interface Rule {
@@ -154,7 +144,6 @@ interface Rule {
 
 /**
  * A measure reference with an instruction for a specific level direction.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️levelmeasureref](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/LevelMeasureRef)
  *MUST have id and optional instruction.
  **/
 interface LevelMeasureRef {
@@ -164,7 +153,6 @@ interface LevelMeasureRef {
 
 /**
  * A level within a property, optionally with measures and instructions for raising/lowering.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️level](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Level)
  *MUST have a value. May have measures (lower/higher) and instructions (higher).
  **/
 interface Level {
@@ -177,7 +165,6 @@ interface Level {
 
 /**
  * A property kind definition mapping kind names to their available measures.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️propertykind](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/PropertyKindMap)
  *MUST map kind id to measures array.
  **/
 interface PropertyKindMap {
@@ -186,7 +173,6 @@ interface PropertyKindMap {
 
 /**
  * A correlation matrix between properties.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️correlation](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Correlation)
  *MUST have properties array and matrix.
  **/
 interface Correlation {
@@ -196,7 +182,6 @@ interface Correlation {
 
 /**
  * A property definition with canonical kind and associated measure_kinds.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️property](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Property)
  *MUST have id. Kind determines measure_kinds (e.g. number->increase/decrease, level->raise/lower).
  **/
 interface Property {
@@ -214,7 +199,6 @@ interface Property {
 
 /**
  * A compliance framework with properties and rules. General (not project-scoped).
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️framework](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Framework)
  *MUST have an id.
  **/
 interface Framework {
@@ -225,7 +209,6 @@ interface Framework {
 
 /**
  * Project configuration from .coda/project.json.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️project](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Project)
  *MUST have design and targets.
  **/
 interface Project {
@@ -236,7 +219,6 @@ interface Project {
 
 /**
  * Run metadata.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️run](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Run)
  *MUST have an id.
  **/
 interface Run {
@@ -248,7 +230,6 @@ interface Run {
 
 /**
  * Iteration metadata.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️iteration](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Iteration)
  *MUST have an index.
  **/
 interface Iteration {
@@ -259,7 +240,6 @@ interface Iteration {
 
 /**
  * Compliance report from an iteration.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️report](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Report)
  *MUST contain rules array.
  **/
 interface Report {
@@ -270,21 +250,18 @@ interface Report {
 
 /**
  * Navigation page identifiers.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖types🛠️page](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Types/d/i/Page)
  *MUST enumerate all navigable pages.
  **/
 type Page = "dashboard" | "config" | "runs" | "report" | "translations" | "actions" | "events";
 
-// #endregion 🔖Types
+// #endregion ⚙️Types
 
-// #region 🔖Helpers
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖helpers](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Helpers)
+// #region 🎼Helpers
 // Helper functions for parsing MCP responses and formatting data.
 // Helpers MUST safely extract data from MCP JSON-RPC responses.
 
 /**
  * Extract parsed JSON from an MCP resource response.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖helpers🛠️parsemcpresource](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Helpers/d/i/parseMcpResource)
  *MUST return null when the response has no valid content.
  **/
 function parseMcpResource<T>(response: McpResponse): T | null {
@@ -302,7 +279,6 @@ function parseMcpResource<T>(response: McpResponse): T | null {
 
 /**
  * Extract parsed JSON from an MCP tool response.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖helpers🛠️parsemcptool](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Helpers/d/i/parseMcpTool)
  *MUST return null when the response has no valid content.
  **/
 function parseMcpTool<T>(response: McpResponse): T | null {
@@ -320,7 +296,6 @@ function parseMcpTool<T>(response: McpResponse): T | null {
 
 /**
  * Format a timestamp or ID string for display.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖helpers🛠️formatid](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Helpers/d/i/formatId)
  *MUST return a human-readable string.
  **/
 function formatId(id: string | undefined): string {
@@ -328,10 +303,9 @@ function formatId(id: string | undefined): string {
   return id.replace(/_/g, " ").replace(/-/g, " ");
 }
 
-// #endregion 🔖Helpers
+// #endregion 🎼Helpers
 
-// #region 🔖Icons
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖icons](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Icons)
+// #region 🛒Icons
 // Inline SVG icon components used across the coda desktop UI.
 // Icons MUST be pure functional components with className prop.
 
@@ -485,19 +459,16 @@ function IconEvents({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-// #endregion 🔖Icons
+// #endregion 🛒Icons
 
-// #region 🔖Components
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components)
+// #region 🎖️Components
 // Reusable UI components for the coda desktop application.
 // Components MUST use Tailwind CSS classes for styling.
 
-// #region 🔖StatusBadge
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖statusbadge](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/StatusBadge)
+// #region 🌀StatusBadge
 
 /**
  * Displays a colored badge for compliance status.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖statusbadge🛠️statusbadge](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/StatusBadge/d/i/StatusBadge)
  *MUST render green for compliant, red for violated, gray for unknown.
  **/
 function StatusBadge({ status }: { status?: string }) {
@@ -516,14 +487,12 @@ function StatusBadge({ status }: { status?: string }) {
   );
 }
 
-// #endregion 🔖StatusBadge
+// #endregion 🌀StatusBadge
 
-// #region 🔖Card
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖card](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/Card)
+// #region 🎬Card
 
 /**
  * A card container for dashboard sections.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖card🛠️card](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/Card/d/i/Card)
  *MUST render a bordered container with optional title.
  **/
 function Card({ title, children, className = "", action }: { title?: string; children: React.ReactNode; className?: string; action?: React.ReactNode }) {
@@ -540,14 +509,12 @@ function Card({ title, children, className = "", action }: { title?: string; chi
   );
 }
 
-// #endregion 🔖Card
+// #endregion 🎬Card
 
-// #region 🔖StatCard
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖statcard](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/StatCard)
+// #region 📌StatCard
 
 /**
  * A metric card for the dashboard overview.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖statcard🛠️statcard](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/StatCard/d/i/StatCard)
  *MUST display a label and a large value.
  **/
 function StatCard({ label, value, sublabel }: { label: string; value: string | number; sublabel?: string }) {
@@ -560,14 +527,12 @@ function StatCard({ label, value, sublabel }: { label: string; value: string | n
   );
 }
 
-// #endregion 🔖StatCard
+// #endregion 📌StatCard
 
-// #region 🔖Button
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖button](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/Button)
+// #region 🔤Button
 
 /**
  * A styled button with variant support.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖button🛠️button](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/Button/d/i/Button)
  *MUST support primary, secondary, and danger variants.
  **/
 function Button({
@@ -603,14 +568,12 @@ function Button({
   );
 }
 
-// #endregion 🔖Button
+// #endregion 🔤Button
 
-// #region 🔖Spinner
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖spinner](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/Spinner)
+// #region 🎹Spinner
 
 /**
  * A centered loading spinner.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖spinner🛠️spinner](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/Spinner/d/i/Spinner)
  *MUST display an animated spinning indicator.
  **/
 function Spinner({ label = "Loading..." }: { label?: string }) {
@@ -625,14 +588,12 @@ function Spinner({ label = "Loading..." }: { label?: string }) {
   );
 }
 
-// #endregion 🔖Spinner
+// #endregion 🎹Spinner
 
-// #region 🔖EmptyState
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖emptystate](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/EmptyState)
+// #region 🎊EmptyState
 
 /**
  * An empty state placeholder.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖emptystate🛠️emptystate](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/EmptyState/d/i/EmptyState)
  *MUST display a message and optional action.
  **/
 function EmptyState({ message, action }: { message: string; action?: React.ReactNode }) {
@@ -644,14 +605,12 @@ function EmptyState({ message, action }: { message: string; action?: React.React
   );
 }
 
-// #endregion 🔖EmptyState
+// #endregion 🎊EmptyState
 
-// #region 🔖Collapsible
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖collapsible](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/Collapsible)
+// #region 🖥️Collapsible
 
 /**
  * A collapsible section with toggle.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖collapsible🛠️collapsible](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/Collapsible/d/i/Collapsible)
  *MUST toggle visibility on header click.
  **/
 function Collapsible({ title, children, defaultOpen = false, badge }: { title: string; children: React.ReactNode; defaultOpen?: boolean; badge?: React.ReactNode }) {
@@ -668,14 +627,12 @@ function Collapsible({ title, children, defaultOpen = false, badge }: { title: s
   );
 }
 
-// #endregion 🔖Collapsible
+// #endregion 🖥️Collapsible
 
-// #region 🔖JsonViewer
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖jsonviewer](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/JsonViewer)
+// #region 📸JsonViewer
 
 /**
  * A formatted JSON viewer for translation data.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖jsonviewer🛠️jsonviewer](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/JsonViewer/d/i/JsonViewer)
  *MUST display formatted JSON in a code block.
  **/
 function JsonViewer({ data }: { data: unknown }) {
@@ -689,23 +646,20 @@ function JsonViewer({ data }: { data: unknown }) {
   return <pre className="overflow-auto max-h-96 rounded-md bg-panel border border-border-window p-3 text-xs font-mono text-muted-foreground whitespace-pre-wrap break-all">{formatted}</pre>;
 }
 
-// #endregion 🔖JsonViewer
+// #endregion 📸JsonViewer
 
-// #region 🔖OntologyTree
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree)
+// #region 🧨OntologyTree
 // Tree viewer for visualizing OWL class expression structure (schema-level, no instances).
 // OntologyTree MUST render a collapsible tree of the class expression without truth values.
 
 /**
  * Node kind in an ontology class expression tree.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree✂️ontologynodekind](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/f/OntologyNodeKind)
  *Enumerates all OWL class expression constructs.
  **/
 type OntologyNodeKind = "Class" | "And" | "Or" | "Not" | "SomeValuesFrom" | "AllValuesFrom" | "ExactCardinality" | "MinCardinality" | "MaxCardinality" | "DataSomeValuesFrom" | "DataAllValuesFrom" | "DataHasValue" | "DatatypeRestriction";
 
 /**
  * A node in the ontology class expression tree (schema only, no instances).
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree✂️ontologytreenode](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/f/OntologyTreeNode)
  *MUST have id, kind, label, and children.
  **/
 interface OntologyTreeNode {
@@ -767,7 +721,6 @@ function getOntologyNodeDescriptor(node: OntologyTreeNode): { icon: string; prim
 
 /**
  * Renders a single ontology tree node with expand/collapse.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree🛠️ontologytreenodeview](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/i/OntologyTreeNodeView)
  *MUST display the node kind icon, label, and expandable children.
  **/
 function OntologyTreeNodeView({ node, defaultExpanded = true }: { node: OntologyTreeNode; defaultExpanded?: boolean }) {
@@ -798,7 +751,6 @@ function OntologyTreeNodeView({ node, defaultExpanded = true }: { node: Ontology
 
 /**
  * Tree viewer that displays an OWL class expression as a collapsible tree.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖ontologytree🛠️ontologytree](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/OntologyTree/d/i/OntologyTree)
  *MUST render the full ontology tree structure from root.
  **/
 function OntologyTree({ root, title, defaultExpanded = true }: { root: OntologyTreeNode; title?: string; defaultExpanded?: boolean }) {
@@ -816,30 +768,26 @@ function OntologyTree({ root, title, defaultExpanded = true }: { root: OntologyT
   );
 }
 
-// #endregion 🔖OntologyTree
+// #endregion 🧨OntologyTree
 
-// #region 🔖ValidationTree
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree)
+// #region 🔔ValidationTree
 // Tree viewer for visualizing validation results (data graph instances of the ontology).
 // ValidationTree MUST render truth values, witnesses, data values, and cardinality info.
 
 /**
  * Three-valued truth for validation nodes.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree✂️truthvalue](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/f/TruthValue)
  *true = green, false = red, unknown = gray.
  **/
 type TruthValue = "true" | "false" | "unknown";
 
 /**
  * Node kind in a validation tree, extending ontology kinds with instance-level nodes.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree✂️validationnodekind](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/f/ValidationNodeKind)
  *Extends OntologyNodeKind with Witness and DataValue for instance data.
  **/
 type ValidationNodeKind = OntologyNodeKind | "ClassAssertion" | "Witness" | "DataValue";
 
 /**
  * A node in the validation result tree (instance-level with truth values).
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree✂️validationtreenode](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/f/ValidationTreeNode)
  *MUST have id, kind, label, truth, and children.
  **/
 interface ValidationTreeNode {
@@ -863,7 +811,6 @@ interface ValidationTreeNode {
 
 /**
  * A validation report for a specific instance.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree✂️validationreport](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/f/ValidationReport)
  *MUST have instance, expression, truth, and tree.
  **/
 interface ValidationReport {
@@ -935,14 +882,13 @@ function getValidationNodeDescriptor(node: ValidationTreeNode): {
 
 /**
  * Renders a single validation tree node with expand/collapse, truth badges, and witnesses.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree🛠️validationtreenodeview](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/i/ValidationTreeNodeView)
  *MUST display truth indicator, node label, witness/value info, and expandable children.
  **/
 function ValidationTreeNodeView({ node, defaultExpanded = true }: { node: ValidationTreeNode; defaultExpanded?: boolean }) {
   const colors = truthColors[node.truth];
   const descriptor = getValidationNodeDescriptor(node);
 
-  // Separate witness children from non-witness children for alternative branches.
+  // 🌿Separate witness children from non-witness children for alternative branches.
   const witnessChildren = node.children.filter((c) => c.kind === "Witness");
   const nonWitnessChildren = node.children.filter((c) => c.kind !== "Witness");
   const useAlternatives = witnessChildren.length > 1;
@@ -997,7 +943,6 @@ function ValidationTreeNodeView({ node, defaultExpanded = true }: { node: Valida
 
 /**
  * Tree viewer that displays a validation report as a collapsible tree with truth values.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖components🔖validationtree🛠️validationtree](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Components/s/ValidationTree/d/i/ValidationTree)
  *MUST render instance header, expression, overall truth, and the expanded result tree.
  **/
 function ValidationTree({ report, defaultExpanded = true }: { report: ValidationReport; defaultExpanded?: boolean }) {
@@ -1026,18 +971,16 @@ function ValidationTree({ report, defaultExpanded = true }: { report: Validation
   );
 }
 
-// #endregion 🔖ValidationTree
+// #endregion 🔔ValidationTree
 
-// #endregion 🔖Components
+// #endregion 🎖️Components
 
-// #region 🔖Hooks
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖hooks](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Hooks)
+// #region 🦀Hooks
 // Custom React hooks for fetching coda MCP data.
 // Hooks MUST handle loading, error, and data states.
 
 /**
  * Fetches a coda MCP resource and returns parsed data.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖hooks🛠️usecodaResource](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Hooks/d/i/useCodaResource)
  *MUST refetch when uri or refreshKey changes.
  **/
 function useCodaResource<T>(uri: string, refreshKey: number = 0): { data: T | null; loading: boolean; error: string | null; refresh: () => void } {
@@ -1084,19 +1027,16 @@ function useCodaResource<T>(uri: string, refreshKey: number = 0): { data: T | nu
   return { data, loading, error, refresh };
 }
 
-// #endregion 🔖Hooks
+// #endregion 🦀Hooks
 
-// #region 🔖Pages
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages)
+// #region 🎉Pages
 // Page components for each view in the coda desktop application.
 // Pages MUST use useCodaResource hooks to fetch and display data.
 
-// #region 🔖DashboardPage
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖dashboardpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/DashboardPage)
+// #region 🕹️DashboardPage
 
 /**
  * Dashboard overview showing project status, current run, iteration, and compliance summary.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖dashboardpage🛠️dashboardpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/DashboardPage/d/i/DashboardPage)
  *MUST display stat cards for project, run, iteration, and breach counts.
  **/
 function DashboardPage({ refreshKey }: { refreshKey: number }) {
@@ -1205,14 +1145,12 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
   );
 }
 
-// #endregion 🔖DashboardPage
+// #endregion 🕹️DashboardPage
 
-// #region 🔖ConfigPage
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖configpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ConfigPage)
+// #region 📣ConfigPage
 
 /**
  * Counts all properties recursively in a property tree.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖configpage🛠️countproperties](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ConfigPage/d/i/countProperties)
  *MUST count the property itself plus all nested properties and items.
  **/
 function countProperties(props: Property[]): number {
@@ -1227,7 +1165,6 @@ function countProperties(props: Property[]): number {
 
 /**
  * Renders a single property with its kind badge, measure_kinds, and nested children.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖configpage🛠️propertyview](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ConfigPage/d/i/PropertyView)
  *MUST display kind, measure_kinds, description, levels, nested properties, and items recursively.
  **/
 function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
@@ -1352,7 +1289,6 @@ function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
 
 /**
  * Configuration page showing properties, frameworks (with properties and rules), and platforms.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖configpage🛠️configpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ConfigPage/d/i/ConfigPage)
  *MUST display all coda configuration in expandable sections.
  * Properties and frameworks are general (not project-scoped).
  **/
@@ -1608,14 +1544,12 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
   );
 }
 
-// #endregion 🔖ConfigPage
+// #endregion 📣ConfigPage
 
-// #region 🔖RunsPage
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖runspage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/RunsPage)
+// #region 💡RunsPage
 
 /**
  * Runs page showing current run, iterations list, and iteration details.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖runspage🛠️runspage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/RunsPage/d/i/RunsPage)
  *MUST display the current run, all iterations, and the current iteration detail.
  **/
 function RunsPage({ refreshKey }: { refreshKey: number }) {
@@ -1691,14 +1625,12 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
   );
 }
 
-// #endregion 🔖RunsPage
+// #endregion 💡RunsPage
 
-// #region 🔖ReportPage
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖reportpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ReportPage)
+// #region 📋ReportPage
 
 /**
  * Report page showing compliance report with validation trees.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖reportpage🛠️reportpage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ReportPage/d/i/ReportPage)
  *MUST display the full report with expandable validation trees showing truth values.
  **/
 function ReportPage({ refreshKey }: { refreshKey: number }) {
@@ -1769,14 +1701,12 @@ function ReportPage({ refreshKey }: { refreshKey: number }) {
   );
 }
 
-// #endregion 🔖ReportPage
+// #endregion 📋ReportPage
 
-// #region 🔖TranslationsPage
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖translationspage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/TranslationsPage)
+// #region 📊TranslationsPage
 
 /**
  * Translations page showing translation outputs per target.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖translationspage🛠️translationspage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/TranslationsPage/d/i/TranslationsPage)
  *MUST display translation data for each project target.
  **/
 function TranslationsPage({ refreshKey }: { refreshKey: number }) {
@@ -1803,7 +1733,6 @@ function TranslationsPage({ refreshKey }: { refreshKey: number }) {
 
 /**
  * A card that fetches and displays a single target translation.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖translationspage🛠️translationcard](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/TranslationsPage/d/i/TranslationCard)
  *MUST handle loading and error states for translation data.
  **/
 function TranslationCard({ targetId, refreshKey }: { targetId: string; refreshKey: number }) {
@@ -1814,14 +1743,12 @@ function TranslationCard({ targetId, refreshKey }: { targetId: string; refreshKe
   );
 }
 
-// #endregion 🔖TranslationsPage
+// #endregion 📊TranslationsPage
 
-// #region 🔖ActionsPage
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖actionspage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ActionsPage)
+// #region 📡ActionsPage
 
 /**
  * Actions page for invoking coda MCP tools.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖actionspage🛠️actionspage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ActionsPage/d/i/ActionsPage)
  *MUST provide buttons for all coda tools and display results.
  **/
 function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh: () => void }) {
@@ -1940,7 +1867,6 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
 
 /**
  * Per-target action card with translate/validate buttons and manual input.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖actionspage🛠️targetactioncard](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ActionsPage/d/i/TargetActionCard)
  *MUST offer tool invocation and manual result input for translate and validate.
  **/
 function TargetActionCard({
@@ -2050,7 +1976,6 @@ function TargetActionCard({
 
 /**
  * Manual fix result input form.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖actionspage🛠️manualfixinput](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ActionsPage/d/i/ManualFixInput)
  *MUST provide a textarea to paste fix results and submit them.
  **/
 function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | null; onSubmit: (result: unknown) => void; disabled: boolean }) {
@@ -2086,7 +2011,6 @@ function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | nul
 
 /**
  * Fix action form with prompt input.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖actionspage🛠️fixaction](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/ActionsPage/d/i/FixAction)
  *MUST provide a text input for the fix prompt.
  **/
 function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix: (prompt: string) => void; disabled: boolean }) {
@@ -2118,17 +2042,15 @@ function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix
   );
 }
 
-// #endregion 🔖ActionsPage
+// #endregion 📡ActionsPage
 
-// #region 🔖EventsPage
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖eventspage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/EventsPage)
+// #region 🗃️EventsPage
 // Events page showing real-time event stream from the coda sidecar process.
 // EventsPage MUST display all events with timestamps, kind, and full data.
 // EventsPage MUST allow clearing and filtering events.
 
 /**
  * Events page showing the real-time event log from the sidecar.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖pages🔖eventspage🛠️eventspage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Pages/s/EventsPage/d/i/EventsPage)
  *MUST display all events in reverse chronological order.
  * MUST show event kind, timestamp, and full data payload.
  **/
@@ -2204,18 +2126,16 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
   );
 }
 
-// #endregion 🔖EventsPage
+// #endregion 🗃️EventsPage
 
-// #endregion 🔖Pages
+// #endregion 🎉Pages
 
-// #region 🔖Welcome
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖welcome](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Welcome)
+// #region 🧬Welcome
 // Welcome screen shown on startup when no project is open.
 // MUST offer two options: create a new project or open an existing one.
 
 /**
  * Welcome screen with options to create or open a project.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖welcome🛠️welcomepage](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/Welcome/d/i/WelcomePage)
  *MUST show create-new-project form and open-existing-project button.
  * MUST call onProjectReady with the resolved project path on success.
  **/
@@ -2442,16 +2362,14 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
   );
 }
 
-// #endregion 🔖Welcome
+// #endregion 🧬Welcome
 
-// #region 🔖App
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖app](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/App)
+// #region 🖲️App
 // Root application component with sidebar navigation, title bar, and page routing.
 // App MUST render the frameless window with custom title bar and navigation.
 
 /**
  * Navigation item configuration.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖app🪨navitems](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/App/d/i/navItems)
  *MUST define all navigable pages with icons and labels.
  **/
 const navItems: Array<{ id: Page; label: string; icon: React.ComponentType<{ className?: string }> }> = [
@@ -2466,7 +2384,6 @@ const navItems: Array<{ id: Page; label: string; icon: React.ComponentType<{ cla
 
 /**
  * Root React component that renders the coda desktop app.
-// [🔬coda🖱️desktop💻renderer🔖renderer🔖app🛠️app](semiorepo://p/r/coda/b/u/desktop/f/renderer.tsx/s/Renderer/s/App/d/i/App)
  *MUST show WelcomePage until a project is selected.
  * MUST show loading state until user ID is resolved.
  * MUST provide sidebar navigation and page content area.
@@ -2660,6 +2577,6 @@ if (typeof document !== "undefined") {
   }
 }
 
-// #endregion 🔖App
+// #endregion 🖲️App
 
-// #endregion 🔖Renderer
+// #endregion ⛩️Renderer

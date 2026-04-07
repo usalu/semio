@@ -1,5 +1,6 @@
 {
   "title": "Resolve Test IDs in Test Events",
+  "emoji": "🧪",
   "status": "closed",
   "description": "Resolve all test definition IDs from test commands in agent.tool.test.starting and agent.tool.test.ended events. Parse commands like 'go test -v ./repo/cli/...' to find all test files, extract test definitions, and add their IDs to the tests array. Support Go, Python, JS/TS, Rust, C#, Ruby test frameworks.",
   "summary": "Implemented test file resolution from commands (Go, Python, JS/TS, Rust, C#, Ruby) and test definition ID extraction with section paths. Modified extractTestStartingFromInput and extractTestEndedFromInput to resolve test IDs. Added 19 sub-tests. Fixed pre-existing test failures: claude/PreToolUse/Bash expectation (terminal-\u003etest), claude/PreToolUse/Grep (generic-\u003esearch), and session.json file count in SessionStart/SubagentStart tests.",

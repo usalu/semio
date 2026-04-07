@@ -1,5 +1,6 @@
 {
   "title": "Fix Semio Engine MCP Kit Path Resolution",
+  "emoji": "🔧",
   "status": "open",
   "description": "Investigate and fix semio engine MCP error `Kit not found at path: /workspaces/semio/semio/assets/metabolism`. Trace how local kit paths are resolved, correct the resolution logic, extend existing tests to cover the failure mode, validate runtime behavior, and close the ticket when done.",
   "github": {

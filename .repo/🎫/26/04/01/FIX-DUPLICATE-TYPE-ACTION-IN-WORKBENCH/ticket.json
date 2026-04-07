@@ -1,5 +1,6 @@
 {
   "title": "Fix Duplicate Type Action in Workbench",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix duplicate type action in workbench: (1) rename tooltip from \"Duplicate Type\" to \"Duplicate Type by Hover\", (2) rename the duplicated type from \"{name} Copy\" to \"{name} Duplicate\", (3) insert the duplicate right after the original in the types array so it appears immediately below in the workbench.",
   "github": {

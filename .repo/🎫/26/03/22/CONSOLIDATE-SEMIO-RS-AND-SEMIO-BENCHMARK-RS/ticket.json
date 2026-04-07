@@ -1,5 +1,6 @@
 {
   "title": "Consolidate Semio.rs And Semio.benchmark.rs",
+  "emoji": "🧹",
   "status": "closed",
   "description": "Consolidate semio.rs and semio.benchmark.rs into one single lib.rs file",
   "summary": "Consolidated semio.rs and semio.benchmark.rs into lib.rs, moved the benchmark code into a pub mod benchmark, updated Cargo.toml to compile successfully and removed the obsolete binary target.",

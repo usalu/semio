@@ -1,5 +1,6 @@
 {
   "title": "Create Plan for Toolbar Draft",
+  "emoji": "🆕",
   "status": "closed",
   "summary": "Created a phased toolbar implementation plan in .repo/drafts/Toolbar.md and synchronized toolbar mechanism docs in README.md and AGENTS.md.",
   "github": {

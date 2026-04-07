@@ -1,5 +1,6 @@
 {
   "title": "Refactor UI Navigation Breadcrumb and Panel Toggles Into Elements",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Move navigation breadcrumb and panel toggles from sketchpad into the UI component in elements/ui. Every UI has navigation breadcrumbs and left/right panel toggles in the navbar. Refactor cleanly so sketchpad uses the generic UI component for these.",
   "summary": "Refactored UI component: navbar has breadcrumb and panel toggles. Added UIPanelVisibility, UIPanelToggles, useUI exposes panelVisibility/togglePanel.",

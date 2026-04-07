@@ -1,5 +1,6 @@
 {
   "title": "Test Section Commands",
+  "emoji": "🧪",
   "status": "closed",
   "description": "Make sure that rename, extract and integrate section commands are tested for every single language for the repo cli binary.",
   "summary": "Test coverage for section commands (rename, extract, integrate) added for all languages.",

@@ -1,5 +1,6 @@
 {
   "title": "Tune Sketchpad Kit Relational Layout",
+  "emoji": "📐",
   "status": "open",
   "description": "Make sketchpad kit app relational graph nodes and labels noticeably smaller, then retune the D3 force layout parameters for a compact, balanced, readable layout with minimal overlap and crossings. Update the existing sketchpad implementation and extend the existing inline tests to validate the smaller sizing and tuned layout behavior.",
   "github": {

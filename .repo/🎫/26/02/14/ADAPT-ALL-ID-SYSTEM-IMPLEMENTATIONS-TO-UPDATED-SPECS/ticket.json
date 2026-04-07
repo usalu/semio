@@ -1,5 +1,6 @@
 {
   "title": "Adapt All ID System Implementations to Updated Requirements",
+  "emoji": "📋",
   "status": "closed",
   "description": "Adapt all implementations and tests across Go, JS, TS, Python, C#, Rust and repo CLI to the majorly updated ID system requirements with entity-emoji-prefix format. Includes entity kinds, resource kinds, diffable entities, flat string slugging rules, and interaction support.",
   "summary": "Bulk close",

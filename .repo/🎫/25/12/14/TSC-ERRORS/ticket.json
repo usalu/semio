@@ -1,5 +1,6 @@
 {
   "title": "Fix all TypeScript errors from tsc",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix all TypeScript errors from tsc",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningtypeapp"

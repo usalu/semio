@@ -1,5 +1,6 @@
 {
   "title": "Standardize Repo CLI Output Formats",
+  "emoji": "📂",
   "status": "closed",
   "description": "Make sure that all commands show either perfect human output, perfect markdown output or perfect json output. e.g. all tree commands with --md are currently just showing wrong lists. Use proper nested bullet lists for the markdown output on tree commands",
   "summary": "Standardized CLI output formats for human and markdown",

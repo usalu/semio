@@ -1,5 +1,6 @@
 {
   "title": "Refactor Repo File Handling and Filtering",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Refactor file kinds, ignored/generated flags, and filtering in CLI and VS Code",
   "summary": "Bulk close",

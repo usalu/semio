@@ -1,5 +1,6 @@
 {
   "title": "Make Design App Compliant and Running",
+  "emoji": "🎨",
   "status": "closed",
   "summary": "Implemented design selection dispatch dedupe to prevent freeze-inducing callback floods and extended Design Playwright coverage with selection responsiveness assertions; test execution remains blocked by environment browser launch failure.",
   "github": {

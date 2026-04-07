@@ -1,0 +1,10 @@
+{
+  "title": "Refactor Engine MCP App to Be General for Semio",
+  "status": "closed",
+  "description": "Refactor the semio engine MCP app so that kit, design, design-diagram, and design-scene are all equal top-level views instead of the current design-centered approach. The MCP app should be general for semio, not centered around designs.",
+  "summary": "Fixed TestChange/Metabolism failure in semio/go caused by emoji descriptions added to metabolism.kit.semio.json without updating the corresponding diff fixtures. Synced emoji descriptions to metabolism.kit.diffed.semio.json (162 descriptions), regenerated metabolism.kit.diff.semio.json and metabolism.kit.diff.inverted.semio.json from computed values. Removed debug logging from main_test.go. All 23 semio/go tests and all repo/cli tests now pass.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪28ac3013b43144c081d745f569146bb1"
+  ]
+}

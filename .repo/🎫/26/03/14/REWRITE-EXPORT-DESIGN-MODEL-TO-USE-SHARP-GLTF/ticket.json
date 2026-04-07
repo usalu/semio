@@ -1,5 +1,6 @@
 {
   "title": "Rewrite ExportDesignModel to Use SharpGLTF",
+  "emoji": "📋",
   "status": "open",
   "description": "Replace manual GLB construction in ExportDesignModel with SharpGLTF.Toolkit SceneBuilder/MeshBuilder/NodeBuilder API. Remove all manual binary GLB parsing/building helpers.",
   "github": {

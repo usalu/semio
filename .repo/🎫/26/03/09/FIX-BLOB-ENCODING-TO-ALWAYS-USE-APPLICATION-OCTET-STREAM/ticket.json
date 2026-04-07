@@ -1,5 +1,6 @@
 {
   "title": "Fix Blob Encoding to Always Use application/octet-stream",
+  "emoji": "🔧",
   "status": "open",
   "description": "Fix blob encoding across Go, C#, Python, and TypeScript implementations to always use application/octet-stream as the mediatype instead of the file's mime field. Also fix TypeScript importKit/exportKit to use kit.files[i].blob instead of a separate Map. Reconvert JSON assets to use the corrected encoding.",
   "goal": "🎯addblobtofile",

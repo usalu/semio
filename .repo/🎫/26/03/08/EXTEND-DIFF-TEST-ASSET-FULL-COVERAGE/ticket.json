@@ -1,5 +1,6 @@
 {
   "title": "Extend Diff Test Asset Full Coverage",
+  "emoji": "🧪",
   "status": "closed",
   "description": "Extend the semio diff test asset to include every single feature exactly once in a kit diff. Fix all diff test implementations across all programming languages to pass. Ensure functional equivalence.",
   "summary": "Fixed Go attribute diff missing Updated handling by implementing getAttributeDiff, inverseAttributeDiff, applyAttributeDiff functions and adding Updated processing to getAttributesDiff, inverseAttributesDiff, applyAttributesDiff. Fixed areAttributesEqual pointer comparison bug using new optStringEqual helper. Removed debugAreTypesEqual and debugAreConnectorsEqual debug functions and cleaned up semio_test.go debug output. All diff tests pass: JS 10/10, Python 9/9, C# diff passes, Go TestChange/TestFlatten/TestValidation all pass.",

@@ -1,5 +1,6 @@
 {
   "title": "Fix Play Dev Module Warning",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Add \"type\": \"module\" to js/play/package.json to fix the MODULE_TYPELESS_PACKAGE_JSON warning when running play dev.",
   "summary": "Bulk close",

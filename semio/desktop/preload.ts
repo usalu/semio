@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🖱️desktop💻preload](repo://p/u/semio/b/u/desktop/f/preload.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Electron preload script exposing safe APIs to the renderer process.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Preload
-// [👤semio🖱️desktop💻preload🔖preload](repo://p/u/semio/b/u/desktop/f/preload.ts/s/Preload)
+// #region 🎋Preload
 // Electron preload script exposing window controls and OS APIs to the renderer.
 // Preload MUST use contextBridge to safely expose IPC methods.
 
@@ -26,7 +24,7 @@ contextBridge.exposeInMainWorld("os", {
   getUserId: () => ipcRenderer.invoke("get-user-id"),
 });
 
-// #region 🔖FolderBridge
+// #region 🎗️FolderBridge
 // Exposes folder-based kit storage operations to the renderer process.
 contextBridge.exposeInMainWorld("kitFolder", {
   selectFolder: () => ipcRenderer.invoke("select-folder"),
@@ -39,5 +37,5 @@ contextBridge.exposeInMainWorld("kitFolder", {
   getRecentFolders: () => ipcRenderer.invoke("get-recent-folders"),
   addRecentFolder: (folderPath: string) => ipcRenderer.invoke("add-recent-folder", folderPath),
 });
-// #endregion 🔖FolderBridge
-// #endregion 🔖Preload
+// #endregion 🎗️FolderBridge
+// #endregion 🎋Preload

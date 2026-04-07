@@ -1,5 +1,6 @@
 {
   "title": "Fix Emoji Space In Ids",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix emoji presentation in artifact IDs and URIs across all CLI list/tree commands. Remove U+FE0E text presentation selectors, fix duplicate emoji prefixes in file IDs/URIs, fix folder kind not appearing correctly, fix ticket tree intermediate nodes missing proper IDs/URIs. Extend test coverage for all list/tree markdown output.",
   "summary": "All tests pass. ToolProjectTree rewritten with toolResultFromEvents event pipeline with events sorted by formatMarkdownResult output for stable CLI/MCP parity. ToolBundleList added for bundle-specific listing using LoadBundles. TestBundleListCommand updated to use ToolBundleList. runProjectTree updated to sort events by rendered output matching ToolProjectTree ordering. AGENTS.md updated with ToolBundleList, ToolProjectTree event sorting, and test coverage documentation.",

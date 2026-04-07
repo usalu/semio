@@ -1,5 +1,6 @@
 {
   "title": "Fix Csharp Diff Implementation",
+  "emoji": "🔧",
   "status": "open",
   "description": "Fix all C# compile errors in Semio.cs, complete all diff functions (GetConnectorDiff, GetConnectionDiff, GetPieceDiff, GetModelDiff, GetPortDiff, GetFileDiff, GetFoldersDiff, GetAttributesDiff), add tolerance to float comparisons, fix Serialize/Deserialize issues, and ensure all C# diff tests pass. Make C# functionally equivalent to JS/Go/Python implementations.",
   "github": {

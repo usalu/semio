@@ -1,5 +1,6 @@
 {
   "title": "Fix Missing Design App Selection Hook Import In Semio UI",
+  "emoji": "🔧",
   "status": "open",
   "description": "Fix runtime ReferenceError in semio/sketchpad/index.tsx where useDesignAppSelection is referenced in the design app hook exports before being defined. Patch the existing files, extend existing tests if needed, and run relevant checks until the bundle/tests pass.",
   "github": {

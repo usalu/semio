@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: jsonschema
- emoji: 🛂
+ emoji: 📋
  description: The jsonschema bundle for semio.
  kind: schema
 ---

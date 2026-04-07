@@ -1,9 +1,8 @@
-// #region 🔖Header
-// [🧰repo⌨️server🛅app🛅api🛅v1🛅health💻route](repo://p/i/repo/b/b/server/f/app/api/v1/health/route.ts)
+// #region 🧲Header
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0
 // Health check endpoint. No auth required.
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { NextResponse } from "next/server";
 

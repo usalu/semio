@@ -1,5 +1,6 @@
 {
   "title": "Fix All Kit Store Kinds And Tests",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix all three KitStore kinds (InMemoryKitStore, JsonFileKitStore, FolderKitStore) and their tests. Fix SketchpadStore tests. All stores are collaborative with different sync mechanisms. All tests must pass.",
   "summary": "All 79 tests pass. All three KitStore kinds work: InMemoryKitStore (12 tests), JsonFileKitStore (13 tests), FolderKitStore with SQLite (17 tests). SketchpadStore tests (14 tests) also pass. The circular dependency bug from guid() calls at module level in tutorial constants was already fixed in the previous ticket, which resolved the SketchpadStore test failures. No additional code changes needed.",

@@ -1,5 +1,6 @@
 {
   "title": "Coda Desktop Welcome Screen with Project Options",
+  "emoji": "🖥️",
   "status": "closed",
   "description": "Add a welcome screen to the Coda desktop app that shows two options on startup: (1) Create a new project — a form with project name and folder picker that scaffolds .coda/project.json; (2) Open an existing project — a folder picker. After selecting/creating a project, proceed to the main dashboard UI with the project path shown in the title bar.",
   "summary": "Added a welcome screen to the Coda desktop app showing two options on startup: Create New Project (form with name + folder picker that scaffolds .coda/project.json) and Open Existing Project (folder picker validating .coda/project.json). Added IPC handlers in main.ts, window.dialog/window.project bridges in preload.ts, and WelcomePage component plus projectPath state in renderer.tsx.",

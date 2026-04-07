@@ -1,5 +1,6 @@
 {
   "title": "Implement Clean CodeLens for All Entity IDs",
+  "emoji": "🧹",
   "status": "closed",
   "description": "Implement a clean non-hardcoded entity ID detection mechanism for CodeLens in the repo VSCode extension. All IDs must show Summarize and Navigate to CodeLenses. Refactor both CLI (entity registry/summarize command) and VSCode extension (CodeLens provider with dynamic emoji detection).",
   "summary": "Implemented clean non-hardcoded CodeLens for all entity IDs. Added ENTITY_EMOJIS registry with 50+ emoji-to-kind mappings, dynamic regex builder (buildEntityEmojiPattern, buildEntityIdRegex), refactored SemioCodeLensProvider and updateSemioDecorations to use dynamic regex. Added summarize and entity-emojis CLI commands. Fixed 2 pre-existing missing brace bugs (navigateToUri, SectionsTreeDataProvider constructor). All 33 new tests pass. Build succeeds.",

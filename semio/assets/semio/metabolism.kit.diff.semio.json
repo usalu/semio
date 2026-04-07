@@ -1,13 +1,6 @@
 {
   "name": "Metabolism Modified",
   "version": "r25.08-1",
-  "description": "Modified version for comprehensive diff testing",
-  "icon": "modified-icon.svg",
-  "image": "modified-image.png",
-  "remote": "https://modified.example.com/archive.tar.gz",
-  "homepage": "https://modified.example.com",
-  "license": "MIT-Modified",
-  "preview": "modified-preview.png",
   "types": {
     "removed": [
       {
@@ -21,12 +14,9 @@
         },
         "diff": {
           "name": "Base Modified",
-          "stock": 42,
           "virtual": true,
           "unit": "cm",
-          "icon": "updated-base-icon.svg",
-          "image": "updated-base-image.png",
-          "description": "Updated base type description",
+          "stock": 42,
           "models": {
             "removed": [
               {
@@ -51,17 +41,16 @@
             "added": [
               {
                 "guid": "019caa00-0000-7000-a000-000000000001",
-                "name": "new-test-model",
                 "file": {
                   "guid": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
                 },
+                "name": "new-test-model",
                 "tags": [
                   {
                     "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab"
                   }
                 ],
-                "description": "A newly added model",
-                "attributes": []
+                "description": "A newly added model"
               }
             ]
           },
@@ -78,9 +67,6 @@
                 },
                 "diff": {
                   "name": "c1-modified",
-                  "description": "Updated connector description",
-                  "mandatory": true,
-                  "t": 0.75,
                   "point": {
                     "x": 28.6,
                     "y": 27.7,
@@ -88,9 +74,11 @@
                   },
                   "direction": {
                     "x": 1,
-                    "y": 0,
                     "z": -1
                   },
+                  "t": 0.75,
+                  "mandatory": true,
+                  "description": "Updated connector description",
                   "attributes": {
                     "added": [
                       {
@@ -120,15 +108,16 @@
                 },
                 "t": 0.5,
                 "mandatory": true,
-                "description": "Newly added connector",
                 "port": {
                   "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
                 },
-                "props": [],
-                "attributes": []
+                "description": "Newly added connector"
               }
             ]
           },
+          "icon": "updated-base-icon.svg",
+          "image": "updated-base-image.png",
+          "description": "Updated base type description",
           "attributes": {
             "added": [
               {
@@ -146,28 +135,37 @@
       {
         "guid": "019caa00-0000-7000-a000-000000000005",
         "name": "New Comprehensive Type",
+        "parent": {
+          "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
+        },
+        "isAbstract": false,
         "virtual": true,
         "unit": "mm",
-        "isAbstract": false,
-        "description": "A new type added for testing",
-        "icon": "new-type-icon.svg",
-        "image": "new-type-image.png",
         "stock": 100,
         "location": {
           "guid": "019caa00-0000-7000-a000-000000000006"
         },
         "folder": "new-type-folder",
-        "parent": {
-          "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-        },
-        "authors": [
+        "models": [
           {
-            "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
-          }
-        ],
-        "concepts": [
-          {
-            "guid": "019adc5e-9205-7364-a213-66fda12e5120"
+            "guid": "019caa00-0000-7000-a000-00000000000b",
+            "file": {
+              "guid": "457d2061-ac4b-4317-8563-ba41afffd149"
+            },
+            "name": "new-model",
+            "tags": [
+              {
+                "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+              }
+            ],
+            "description": "New model",
+            "attributes": [
+              {
+                "guid": "019caa00-0000-7000-a000-00000000000c",
+                "key": "new.model.attr",
+                "value": "val"
+              }
+            ]
           }
         ],
         "connectors": [
@@ -186,7 +184,6 @@
             },
             "t": 0,
             "mandatory": false,
-            "description": "Test connector",
             "port": {
               "guid": "019ab243-21f3-7380-93c6-994a9a023448"
             },
@@ -196,36 +193,14 @@
                 "quality": {
                   "guid": "019caa00-0000-7000-a000-000000000009"
                 },
-                "value": "100",
-                "attributes": []
+                "value": "100"
               }
             ],
+            "description": "Test connector",
             "attributes": [
               {
                 "guid": "019caa00-0000-7000-a000-00000000000a",
                 "key": "new.conn.attr",
-                "value": "val"
-              }
-            ]
-          }
-        ],
-        "models": [
-          {
-            "guid": "019caa00-0000-7000-a000-00000000000b",
-            "name": "new-model",
-            "file": {
-              "guid": "457d2061-ac4b-4317-8563-ba41afffd149"
-            },
-            "tags": [
-              {
-                "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
-              }
-            ],
-            "description": "New model",
-            "attributes": [
-              {
-                "guid": "019caa00-0000-7000-a000-00000000000c",
-                "key": "new.model.attr",
                 "value": "val"
               }
             ]
@@ -237,10 +212,22 @@
             "quality": {
               "guid": "019caa00-0000-7000-a000-00000000000e"
             },
-            "value": "yes",
-            "attributes": []
+            "value": "yes"
           }
         ],
+        "authors": [
+          {
+            "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+          }
+        ],
+        "concepts": [
+          {
+            "guid": "019adc5e-9205-7364-a213-66fda12e5120"
+          }
+        ],
+        "icon": "new-type-icon.svg",
+        "image": "new-type-image.png",
+        "description": "A new type added for testing",
         "attributes": [
           {
             "guid": "019caa00-0000-7000-a000-00000000000f",
@@ -257,129 +244,7 @@
   "designs": {
     "removed": [
       {
-        "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef",
-        "layers": [
-          {
-            "guid": "85032a32-8506-5868-2e59-39d20f6eddab",
-            "path": "tower",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuilding"
-              }
-            ]
-          },
-          {
-            "guid": "375f8239-8a6b-d6bb-ac00-22e473dd1e46",
-            "path": "tower/0",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuildingStorey"
-              }
-            ]
-          },
-          {
-            "guid": "353abbc4-31a3-7b88-ac56-02bf96b6d64d",
-            "path": "tower/1",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuildingStorey"
-              }
-            ]
-          },
-          {
-            "guid": "33fd965c-44fd-fc63-68d8-c07de5d7e839",
-            "path": "tower/2",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuildingStorey"
-              }
-            ]
-          },
-          {
-            "guid": "d00d2603-fde1-891c-edb9-c7142d63d938",
-            "path": "tower/3",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuildingStorey"
-              }
-            ]
-          },
-          {
-            "guid": "5ae3514c-b31c-604e-886b-7fc91b625740",
-            "path": "tower/4",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuildingStorey"
-              }
-            ]
-          },
-          {
-            "guid": "e8b65ed3-9538-24e8-0c7f-91a8b81da8c1",
-            "path": "tower/5",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuildingStorey"
-              }
-            ]
-          },
-          {
-            "guid": "57d972fb-8c2e-24d5-46a3-ffd52f49ef74",
-            "path": "tower/6",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuildingStorey"
-              }
-            ]
-          },
-          {
-            "guid": "8f4486ea-7327-354c-91e2-5b2b5332c7e3",
-            "path": "tower/7",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuildingStorey"
-              }
-            ]
-          },
-          {
-            "guid": "ce2f0293-e0f9-00fc-c4b0-cec8eebdf507",
-            "path": "tower/8",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuildingStorey"
-              }
-            ]
-          },
-          {
-            "guid": "120dbb87-0f81-f49a-66be-0b102341c36f",
-            "path": "tower/9",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuildingStorey"
-              }
-            ]
-          },
-          {
-            "guid": "e9183906-91b9-5c57-f1af-55fc020f9022",
-            "path": "tower/10",
-            "attributes": [
-              {
-                "key": "ifc.type",
-                "value": "IfcBuildingStorey"
-              }
-            ]
-          }
-        ]
+        "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
       }
     ],
     "updated": [
@@ -390,17 +255,6 @@
         "diff": {
           "name": "Capsule Dream Modified",
           "unit": "cm",
-          "icon": "updated-design-icon.svg",
-          "image": "updated-design-image.png",
-          "description": "Updated design description",
-          "authors": [
-            {
-              "guid": "5c2e7719-dec3-4f21-9c47-b7081410219a"
-            },
-            {
-              "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
-            }
-          ],
           "pieces": {
             "removed": [
               {
@@ -448,6 +302,7 @@
                   "u": 3,
                   "v": 7
                 },
+                "scale": 1.5,
                 "mirrorPlane": {
                   "origin": {
                     "x": 0,
@@ -465,10 +320,7 @@
                     "z": 0
                   }
                 },
-                "scale": 1.5,
-                "description": "New piece for testing",
-                "props": [],
-                "attributes": []
+                "description": "New piece for testing"
               }
             ]
           },
@@ -532,11 +384,21 @@
                 "tilt": 0,
                 "u": 0,
                 "v": 0,
-                "description": "New test connection",
-                "attributes": []
+                "description": "New test connection"
               }
             ]
           },
+          "authors": [
+            {
+              "guid": "5c2e7719-dec3-4f21-9c47-b7081410219a"
+            },
+            {
+              "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+            }
+          ],
+          "icon": "updated-design-icon.svg",
+          "image": "updated-design-image.png",
+          "description": "Updated design description",
           "attributes": {
             "added": [
               {
@@ -554,25 +416,11 @@
       {
         "guid": "019caa00-0000-7000-a000-000000000016",
         "name": "New Comprehensive Design",
-        "unit": "mm",
-        "description": "New design for testing",
-        "icon": "new-design-icon.svg",
-        "image": "new-design-image.png",
         "isAbstract": false,
+        "unit": "mm",
+        "folder": "new-design-folder",
         "canScale": true,
         "canMirror": false,
-        "activeLayer": {
-          "guid": "019caa00-0000-7000-a000-000000000015"
-        },
-        "folder": "new-design-folder",
-        "location": {
-          "guid": "019caa00-0000-7000-a000-000000000017"
-        },
-        "concepts": [
-          {
-            "guid": "019adc5e-40ee-789d-a877-5baef7bc79fa"
-          }
-        ],
         "pieces": [
           {
             "guid": "019caa00-0000-7000-a000-000000000013",
@@ -597,9 +445,7 @@
                 "z": 0
               }
             },
-            "scale": 1,
-            "props": [],
-            "attributes": []
+            "scale": 1
           },
           {
             "guid": "019caa00-0000-7000-a000-000000000014",
@@ -624,9 +470,7 @@
                 "z": 0
               }
             },
-            "scale": 1,
-            "props": [],
-            "attributes": []
+            "scale": 1
           }
         ],
         "connections": [
@@ -643,34 +487,50 @@
               }
             },
             "gap": 0,
-            "description": "New design connection",
-            "attributes": []
+            "shift": 0,
+            "rise": 0,
+            "rotation": 0,
+            "turn": 0,
+            "tilt": 0,
+            "u": 0,
+            "v": 0,
+            "description": "New design connection"
           }
         ],
-        "stats": [],
         "props": [
           {
             "guid": "019caa00-0000-7000-a000-000000000019",
             "quality": {
               "guid": "019caa00-0000-7000-a000-00000000001a"
             },
-            "value": "test",
-            "attributes": []
+            "value": "test"
           }
         ],
         "layers": [
           {
             "guid": "019caa00-0000-7000-a000-000000000015",
-            "path": "default",
-            "attributes": []
+            "path": "default"
           }
         ],
-        "groups": [],
+        "activeLayer": {
+          "guid": "019caa00-0000-7000-a000-000000000015"
+        },
+        "location": {
+          "guid": "019caa00-0000-7000-a000-000000000017"
+        },
         "authors": [
           {
             "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
           }
         ],
+        "concepts": [
+          {
+            "guid": "019adc5e-40ee-789d-a877-5baef7bc79fa"
+          }
+        ],
+        "icon": "new-design-icon.svg",
+        "image": "new-design-image.png",
+        "description": "New design for testing",
         "attributes": [
           {
             "guid": "019caa00-0000-7000-a000-00000000001b",
@@ -736,8 +596,7 @@
         "guid": "019caa00-0000-7000-a000-00000000001e",
         "name": "New Concept",
         "description": "New",
-        "icon": "concept.svg",
-        "attributes": []
+        "icon": "concept.svg"
       }
     ]
   },
@@ -775,8 +634,7 @@
           {
             "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
           }
-        ],
-        "attributes": []
+        ]
       }
     ]
   },
@@ -801,11 +659,11 @@
         "guid": "019caa00-0000-7000-a000-000000000021",
         "name": "new-file.txt",
         "remote": "https://example.com/new-file.txt",
-        "size": 42,
-        "hash": "sha256:newfilehash",
         "folder": {
           "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
         },
+        "size": 42,
+        "hash": "sha256:newfilehash",
         "createdAt": "2025-12-23T13:40:58.750Z",
         "updatedAt": "2025-12-23T13:40:58.750Z"
       }
@@ -826,11 +684,10 @@
       {
         "guid": "019caa00-0000-7000-a000-000000000022",
         "name": "test-folder",
-        "description": "New folder",
         "parent": {
           "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
         },
-        "attributes": [],
+        "description": "New folder",
         "createdAt": "2025-12-23T13:40:58.750Z"
       }
     ]
@@ -851,9 +708,15 @@
       {
         "guid": "019caa00-0000-7000-a000-000000000020",
         "name": "Test Author",
-        "email": "test@example.com",
-        "attributes": []
+        "email": "test@example.com"
       }
     ]
-  }
+  },
+  "remote": "https://modified.example.com/archive.tar.gz",
+  "homepage": "https://modified.example.com",
+  "license": "MIT-Modified",
+  "preview": "modified-preview.png",
+  "icon": "modified-icon.svg",
+  "image": "modified-image.png",
+  "description": "Modified version for comprehensive diff testing"
 }

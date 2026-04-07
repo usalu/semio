@@ -1,5 +1,6 @@
 {
   "title": "Replace Commit Terminology with Checkpoint",
+  "emoji": "🔄",
   "status": "closed",
   "description": "Replace all git-specific \"commit\" terminology in the repo with the general term \"checkpoint\". This includes: Commit type/struct → Checkpoint, commits fields → checkpoints, LoadCommits → LoadCheckpoints, GetCommits → GetCheckpoints, StreamCommits → StreamCheckpoints, TreeNodeCommit → TreeNodeCheckpoint, EmojiCommit → EmojiCheckpoint, commit_sha DB field → checkpoint_sha, ContributorCommit → ContributorCheckpoint, CountLinesAtCommit → CountLinesAtCheckpoint, ReadTextFileAtCommit → ReadTextFileAtCheckpoint, ListFilesAtCheckpoint, CLI command 'commit' → 'checkpoint', --only-commit/--no-commit flags → --only-checkpoint/--no-checkpoint, EventCommit → EventCheckpoint, CommitPayload → CheckpointPayload, precommit → precheckpoint in server, GraphQL type Commit → Checkpoint, etc. Keep underlying git commands (git commit -m) as implementation details.",
   "summary": "Bulk close",

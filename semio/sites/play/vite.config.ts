@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🌐play⚙️viteconfig](repo://p/u/semio/b/w/play/f/vite.config.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Vite build and development configuration for the playground app.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [👤semio🌐play⚙️viteconfig🔖configuration](repo://p/u/semio/b/w/play/f/vite.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // Vite build configuration for the play application.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 
@@ -29,13 +27,11 @@ import wasm from "vite-plugin-wasm";
 
 /**
  * Absolute file path of the current module.
-// [👤semio🌐play⚙️viteconfig🔖configuration🪨filename](repo://p/u/semio/b/w/play/f/vite.config.ts/s/Configuration/d/i/__filename)
  * Path MUST be derived from import.meta.url.
  **/
 const __filename = fileURLToPath(import.meta.url);
 /**
  * Absolute directory path of the current module.
-// [👤semio🌐play⚙️viteconfig🔖configuration🪨dirname](repo://p/u/semio/b/w/play/f/vite.config.ts/s/Configuration/d/i/__dirname)
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);
@@ -43,7 +39,7 @@ const __dirname = path.dirname(__filename);
 // Vite configuration with plugins, resolve aliases, and asset serving.
 // Export MUST call defineConfig with the complete build configuration.
 export default defineConfig(async () => {
-  // normal import fails in electron due to esm stuff
+  // 📥normal import fails in electron due to esm stuff
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
   return {
@@ -107,4 +103,4 @@ export default defineConfig(async () => {
     },
   };
 });
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

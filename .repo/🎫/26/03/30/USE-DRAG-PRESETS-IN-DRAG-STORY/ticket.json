@@ -1,5 +1,6 @@
 {
   "title": "Use Drag Presets In Drag Story",
+  "emoji": "📚",
   "status": "closed",
   "description": "Use the drag design, selection, offset as preset for the drag instead of nakagin capsule tower in semio algorithms drag.",
   "summary": "Updated Drag.stories.tsx to use the DragDesign, DragPieces, and DragOffset assets exported from semio/assets instead of Nakagin Capsule Tower.",

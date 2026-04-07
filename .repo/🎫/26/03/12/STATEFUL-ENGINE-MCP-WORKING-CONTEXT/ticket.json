@@ -1,5 +1,6 @@
 {
   "title": "Stateful Engine MCP Working Context",
+  "emoji": "🔌",
   "status": "closed",
   "description": "Rename set_local_kit to start_working_in_local_kit. Introduce start_working_in_design(guid), read_current_design, finish_working_in_design, start_working_in_type(guid), read_current_type, finish_working_in_type, finish_working_in_kit. Update session state to track current kit, design, and type. Update tests.",
   "summary": "Renamed set_local_kit to start_working_in_local_kit and made the semio MCP engine stateful. Added session state for designs (_mcp_session_designs) and types (_mcp_session_types) alongside existing kit state. Introduced 8 new MCP tools: start_working_in_design(guid), read_current_design, finish_working_in_design, start_working_in_type(guid), read_current_type, finish_working_in_type, finish_working_in_kit. Made sum_quality_in_design session-aware (uses kit from session). Removed drag_pieces_in_design tool (referenced non-existent dragPiecesInDesignDict). Fixed ASSETS_DIR path in tests. All 77 tests pass.",

@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // 💻 semio/ui/tailwind.config.ts
 
@@ -8,12 +8,12 @@
 
 // Tailwind CSS configuration for the semio ui bundle.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
+// #region 🗄️Configuration
 // Tailwind CSS configuration re-exporting the shared elements ui preset.
 // Configuration MUST re-export the tailwindConfig from @elements/ui.
 
 export { tailwindConfig, tailwindConfig as default } from "@elements/ui";
 
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

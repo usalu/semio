@@ -1,5 +1,6 @@
 {
   "title": "Refactor sketchpad to use pure XState machines with no Y.js in app state",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Refactor sketchpad to use pure XState machines with no Y.js in app state",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"

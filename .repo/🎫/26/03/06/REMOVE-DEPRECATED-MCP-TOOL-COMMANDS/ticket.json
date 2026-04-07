@@ -1,5 +1,6 @@
 {
   "title": "Remove Deprecated MCP Tool Commands",
+  "emoji": "🗑️",
   "status": "closed",
   "description": "Remove MCP tools: analyze, contributor add/delete, export, file create/delete/move, folder, graphql, move, policy check, ticket read.",
   "summary": "Removed requested MCP tools from server registry and added test coverage to ensure they stay removed.",

@@ -1,4 +1,4 @@
-// #region 🔖Header
+// #region 🧲Header
 
 // .elements/ui/.storybook/stories/elements/UI.stories.tsx
 
@@ -9,14 +9,14 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import { BreadcrumbItemData, Tree, UI, UIAppConfig, UIFindItem, UISearchItem, UIToolbarItem, createDefaultLayout } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import { BarChart, BookOpen, ClipboardPaste, Copy, File, FileText, FolderOpen, Home, Info, Layers, Redo, Save, Scissors, Settings, Undo } from "lucide-react";
 import { expect, userEvent, within } from "storybook/test";
 
-// #region 🔖UI
+// #region 🎊UI
 
 const meta = {
   title: "elements/UI",
@@ -31,7 +31,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// #region 🔖Windows
+// #region 🧿Windows
 
 const EditorWindow = () => (
   <div className="flex items-center justify-center h-full bg-window">
@@ -51,9 +51,9 @@ const StatsWindow = () => (
   </div>
 );
 
-// #endregion 🔖Windows
+// #endregion 🧿Windows
 
-// #region 🔖TreePanels
+// #region 🏆TreePanels
 
 const ExplorerTree = () => (
   <Tree
@@ -154,9 +154,9 @@ const MetricsTree = () => (
   />
 );
 
-// #endregion 🔖TreePanels
+// #endregion 🏆TreePanels
 
-// #region 🔖SearchItems
+// #region 🌟SearchItems
 
 const searchItems: UISearchItem[] = [
   { id: "s1", label: "index.ts", description: "Main entry point", icon: <File size={14} />, category: "Files", onSelect: () => {} },
@@ -168,9 +168,9 @@ const searchItems: UISearchItem[] = [
   { id: "s7", label: "Documentation", description: "Read the docs", icon: <BookOpen size={14} />, category: "Pages", onSelect: () => {} },
 ];
 
-// #endregion 🔖SearchItems
+// #endregion 🌟SearchItems
 
-// #region 🔖FindItems
+// #region 🖲️FindItems
 
 const editorFindItems: UIFindItem[] = [
   { id: "f1", label: "function handleClick", description: "Line 42", category: "Functions" },
@@ -180,9 +180,9 @@ const editorFindItems: UIFindItem[] = [
   { id: "f5", label: "class EditorState", description: "Line 120", category: "Classes" },
 ];
 
-// #endregion 🔖FindItems
+// #endregion 🖲️FindItems
 
-// #region 🔖ToolbarItems
+// #region 👓ToolbarItems
 
 const editorToolbarItems: UIToolbarItem[] = [
   { id: "undo", icon: <Undo size={14} />, label: "Undo", onClick: () => {}, order: 0 },
@@ -195,9 +195,9 @@ const editorToolbarItems: UIToolbarItem[] = [
   { id: "save", icon: <Save size={14} />, label: "Save", onClick: () => {}, order: 7 },
 ];
 
-// #endregion 🔖ToolbarItems
+// #endregion 👓ToolbarItems
 
-// #region 🔖Apps
+// #region 🦉Apps
 
 const editorApp: UIAppConfig = {
   id: "editor",
@@ -232,9 +232,9 @@ const dashboardApp: UIAppConfig = {
   footerItems: [{ id: "last-updated", content: "Updated 2m ago", order: 0 }],
 };
 
-// #endregion 🔖Apps
+// #endregion 🦉Apps
 
-// #region 🔖Breadcrumb
+// #region 💡Breadcrumb
 
 const breadcrumbItems: BreadcrumbItemData[] = [
   {
@@ -281,9 +281,9 @@ const breadcrumbItems: BreadcrumbItemData[] = [
   },
 ];
 
-// #endregion 🔖Breadcrumb
+// #endregion 💡Breadcrumb
 
-// #region 🔖Stories
+// #region 📮Stories
 
 export const Default: Story = {
   args: {
@@ -553,6 +553,6 @@ export const MobileNoPanels: Story = {
   ],
 };
 
-// #endregion 🔖Stories
+// #endregion 📮Stories
 
-// #endregion 🔖UI
+// #endregion 🎊UI

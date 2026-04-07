@@ -1,5 +1,6 @@
 {
   "title": "Ensure Command Parity",
+  "emoji": "📋",
   "status": "closed",
   "description": "Ensure parity between repo cli commands, mcp tools and vscode extension commands",
   "summary": "Implemented complete parity for Repo CLI and MCP commands, including ticket progress, goal management, and codebase export. Added strict ticket tracking via log appending and a new Repo policy for verifying command parity.",

@@ -1,0 +1,10 @@
+{
+  "title": "Fix Connector Match And File Description Types",
+  "status": "closed",
+  "description": "Resolve TypeScript errors in semio/js/index.ts: findMatchingConnector used non-schema Connector.id; replace with guid matching. File entity lacks optional description on FileSchema but emoji constraint iterates kit.files with description. Run semio vitest and close when green.",
+  "summary": "findMatchingConnector now matches connectors by name or guid (ConnectorSchema has no id). FileSchema includes optional description so semioDescriptionMissingEmojiConstraint compiles for kit files. Verified: semio/js vitest 155 passed, semio/ui vitest 232 passed.",
+  "goal": "🎯semioui",
+  "sessions": [
+    "⚪699833edebc64fbe81e6213c4b294cd8"
+  ]
+}

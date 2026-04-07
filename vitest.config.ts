@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [⚙️vitestconfig](repo://f/vitest.config.ts)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Root Vitest configuration for the monorepo test runner.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [⚙️vitestconfig🔖configuration](repo://f/vitest.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // Root Vitest configuration aggregating all workspace test projects.
 // Configuration MUST reference all workspace vite config files that define tests.
 
@@ -22,4 +20,4 @@ export default defineConfig({
   },
 });
 
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

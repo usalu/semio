@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: owl
- emoji: 📚
+ emoji: 🦉
  description: The owl bundle for semio.
  kind: library
 ---

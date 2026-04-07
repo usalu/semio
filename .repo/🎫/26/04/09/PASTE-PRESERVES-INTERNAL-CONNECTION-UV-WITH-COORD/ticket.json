@@ -1,0 +1,10 @@
+{
+  "title": "Paste Preserves Internal Connection Uv With Coord",
+  "status": "closed",
+  "description": "Fix PasteDesign so diagram u/v are not adjusted from coord when the remapped connection is an internal-internal clipboard edge (both endpoints non-external stub). Gate coord-based connection offset on exactly one external stub endpoint and validate parentConn matches child/parent mapping.",
+  "summary": "Fixed the target design window showing white. The paste target design (nakagin-capsule-tower.paste.design.semio.json) was unflattened — only the root piece had a plane set. Fix: created a kitWithPasteTarget (metabolism kit + paste target design), flattened it alongside the source design in the same effect, stored as flatPasteTargetDesign state, and passed it via CopyPasteWindowContext (replacing the old WithCoordDiffContext) to both TargetDesignWindow and WithCoordDiffWindow. Also updated outputDesign and diffDesign to use the flattened version.",
+  "goal": "🎯semio🎯copypaste",
+  "sessions": [
+    "⚪2789c8f91ccf4f4b81dcc773b418d372"
+  ]
+}

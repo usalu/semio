@@ -1,5 +1,6 @@
 {
   "title": "Fix VS Code Extension Issues",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix codebase tree sections, explorer section view, and ticket list visibility in VS Code extension.",
   "summary": "Bulk close",

@@ -1,5 +1,6 @@
 {
   "title": "Fix project detection",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix project list command to only detect root folders with a README containing frontmatter. Currently it detects folders like __pycache__ as projects.",
   "summary": "Fixed isProjectDir to actually verify the presence of frontmatter in a directory's README.md. This prevents folders like __pycache__ without a README/frontmatter from erroneously being returned as projects by the 'project list' command.",

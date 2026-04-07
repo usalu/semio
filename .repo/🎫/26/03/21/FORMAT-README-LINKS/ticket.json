@@ -1,5 +1,6 @@
 {
   "title": "Format README links",
+  "emoji": "📝",
   "status": "closed",
   "description": "Update READMEs with Technologies and bundles lists",
   "summary": "Formatted bundles listing to use links",

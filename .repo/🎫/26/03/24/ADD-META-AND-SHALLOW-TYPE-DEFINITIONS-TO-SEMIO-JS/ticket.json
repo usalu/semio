@@ -1,5 +1,6 @@
 {
   "title": "Add Meta and Shallow Type Definitions to Semio JS",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add Meta and Shallow Type Definitions to Semio JS",
   "summary": "Added Meta and Shallow type definitions for all 19 entities. Updated existing TypeShallow, DesignShallow, KitShallow to use Meta schemas. Added conversion functions.",

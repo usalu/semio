@@ -1,5 +1,6 @@
 {
   "title": "Fix Emoji Variation Selector Handling in CLI Fix Command",
+  "emoji": "🔧",
   "status": "closed",
   "description": "When running `./repo/cli/cli fix`, emojis are being replaced with text rendering (via variation selectors like VS15). The command should do the opposite - remove all variation selectors and ensure colorful emoji presentation is used instead of text presentation.",
   "summary": "The `cli fix` command is working correctly! It strips variation selectors (both VS15 and VS16) from emojis as specified in lines 305 and 541 of README.md. The perceived \"text rendering\" is actually the correct behavior - plain emojis without variation selectors render according to terminal/font defaults. The issue was outdated documentation at line 44 that incorrectly described the emoji normalization behavior. Updated README.md to accurately reflect that CLI artifact IDs use plain emojis without variation selectors for consistent cross-platform rendering.",

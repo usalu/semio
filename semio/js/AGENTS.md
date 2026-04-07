@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: js
- emoji: 📚
+ emoji: 📜
  description: The js bundle for semio.
  kind: library
 ---

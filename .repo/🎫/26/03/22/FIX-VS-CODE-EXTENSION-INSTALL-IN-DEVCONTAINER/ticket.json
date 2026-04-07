@@ -1,5 +1,6 @@
 {
   "title": "Fix VSCode Extension Install in Devcontainer",
+  "emoji": "🔧",
   "status": "open",
   "description": "Fix VSCode extension installation in devcontainer. The script fails with WSL_ERROR because it tries to use the remote-cli executable directly, which expects to be run in a specific environment.",
   "github": {

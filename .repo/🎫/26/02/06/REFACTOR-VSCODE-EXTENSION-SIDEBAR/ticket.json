@@ -1,5 +1,6 @@
 {
   "title": "Refactor Vscode Extension Sidebar",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Refactor and complete the repo/vscode extension sidebar into exactly two sections: Monorepo and Filter. Implement full tree views for Projects, Goals, Tickets, Policies, Contributors, Commits. Implement Filter view with search input, bundle/folder/section/definition/ticket/date filters. Extend existing test file to cover all new features. Fix all registration issues.",
   "summary": "Refactored vscode extension sidebar into Monorepo+Filter views with emoji labels, copy-to-clipboard, contributor children, filter none/all toggles. Removed Todos. All 63 tests passing.",

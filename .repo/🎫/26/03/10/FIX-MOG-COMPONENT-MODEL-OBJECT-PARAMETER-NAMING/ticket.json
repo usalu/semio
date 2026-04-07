@@ -1,5 +1,6 @@
 {
   "title": "Fix MOG Component Model Object Parameter Naming",
+  "emoji": "🔧",
   "status": "closed",
   "description": "MOG component should also use the same proper Model Object param as Import Model. Currently Import Model outputs \"Rhino ModelObject\" with nickname \"Mo\", but ModelObject To Group expects input \"Rhino ModelObject\" with nickname \"Mo*\". They should use the same parameter naming convention.",
   "summary": "Successfully fixed MOG component to use the same proper Model Object param as Import Model. Changed the input parameter nickname from \"Mo*\" to \"Mo\" in ModelObjectToGroupComponent to match the ImportModelComponent output. Updated the corresponding test to expect the correct nickname. Both components now use consistent parameter naming: \"Rhino ModelObject\" with nickname \"Mo\".",

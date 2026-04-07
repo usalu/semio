@@ -1,5 +1,6 @@
 {
   "title": "TICKET-DIFF-FILES-SCOPE",
+  "emoji": "🎫",
   "status": "closed",
   "description": "Limit ticket line recomputation to ticket files only",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism"

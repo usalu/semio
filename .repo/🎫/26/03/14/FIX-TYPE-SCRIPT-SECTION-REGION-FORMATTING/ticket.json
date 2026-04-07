@@ -1,5 +1,6 @@
 {
   "title": "Fix TypeScript Section Region Formatting",
+  "emoji": "🔧",
   "status": "open",
   "description": "Fix repo TypeScript section emission so region start lines use `// #region 🔖\u003cName\u003e` with no blank line before the section id/doc lines, and section ids include the `🔖` prefix on every section name segment required by the current semio format. Update the existing formatter/parsing tests accordingly and validate with focused test runs.",
   "github": {

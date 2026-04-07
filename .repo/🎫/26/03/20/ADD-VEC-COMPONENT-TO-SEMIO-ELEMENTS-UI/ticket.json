@@ -1,5 +1,6 @@
 {
   "title": "Add Vec Component to Semio Elements Ui",
+  "emoji": "➕",
   "status": "closed",
   "description": "Create a new Vec component in elements/ui that takes a vec (x,y) and displays a vector xy input with visible origin and axes. Optionally take minU, maxU, minV, maxV, showAxes, showOrigin, onVecChange(vec). Add a story.",
   "summary": "Added Vec component to semio/ui with draggable SVG 2D vector input. Takes vec {u,v}, optional minU/maxU/minV/maxV domain bounds, showAxes, showOrigin, onVecChange callback. Added story with Default, NoAxes, NoOrigin, PositiveDomain, and Large variants. Both semio/ui and elements/ui typecheck clean.",

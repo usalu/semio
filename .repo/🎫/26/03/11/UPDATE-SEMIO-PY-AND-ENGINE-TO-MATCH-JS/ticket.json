@@ -1,5 +1,6 @@
 {
   "title": "Update Semio Py and Engine to Match Js",
+  "emoji": "🏭",
   "status": "closed",
   "description": "Update semio/py and semio/engine to be up-to-date with semio/js as reference. Get all tests passing and MCP server running.",
   "summary": "Updated semio/py and semio/engine to be up-to-date with semio/js reference implementation. All tests passing (py: 9/9, engine: 42/42, js: 10/10) and MCP server running on all endpoints (REST /api, GraphQL /graphql, MCP /mcp).\n\nKey changes:\n1. engine/test.ts: Changed `poetry run pytest` to `uv run pytest` (poetry no longer used)\n2. engine/pyproject.toml: Updated tox config from poetry to uv commands\n3. py/semio.py: Made Side.connector optional to match JS SideSchema\n4. py/semio.py: Updated SideNode/SideInputNode GraphQL types for optional connector\n5. py/semio.py: Fixed Connection.parse and Connection.idMembers for optional connector\n6. py/semio.py: Made connector_guid nullable in SQLite DDL\n7. py/semio.py: Fixed SQLite export to extract GUIDs from nested dict references using _getGuidFromRef() for piece, connector, designPiece, type, design, parent, location, activeLayer fields",

@@ -4,7 +4,7 @@
   "stock": 2147483647,
   "icon": "icons/tambour.svg",
   "image": "images/tambour.svg",
-  "description": "An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
+  "description": "🏰 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
   "virtual": false,
   "createdAt": "2025-11-23T01:10:21.247Z",
   "name": "Tambour",

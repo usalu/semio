@@ -1,5 +1,6 @@
 {
   "title": "Restore Design App Selection Hook Registration",
+  "emoji": "🪝",
   "status": "closed",
   "description": "Fix the semio play runtime crash caused by a missing useDesignAppSelection symbol in semio/sketchpad/index.tsx. Restore the design selection hook implementation, extend existing tests to cover it, verify with targeted tests/build, and close the ticket with the touched files.",
   "summary": "Restored the missing Design app selection hook and field in semio/sketchpad/index.tsx, which removes the useDesignAppSelection ReferenceError during semio play startup. Extended the existing in-file Design Playwright regression to fail explicitly if that startup error reappears. Verified with direct package-local Vite builds for @semio/sketchpad and @semio/play.",

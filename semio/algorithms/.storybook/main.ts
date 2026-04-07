@@ -1,9 +1,10 @@
-// #region 🔖Header
+// This file has been automatically migrated to valid ESM format by Storybook.
+// #region 🧲Header
 // 💻 semio/algorithms/.storybook/main.ts
 // Specs: Keep Storybook wiring aligned with .elements/ui.
 // Summary: Configures Storybook for the algorithms bundle.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🔖Header
+// #endregion 🧲Header
 
 import type { StorybookConfig } from "@storybook/react-vite";
 import { spawnSync } from "node:child_process";

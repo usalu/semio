@@ -1,5 +1,6 @@
 {
   "title": "Adapt ID System to New Emoji Format",
+  "emoji": "📋",
   "status": "closed",
   "description": "Adapt all implementations and tests for the new emoji-based hierarchical ID system: remove list emoji prefixes, use kind emojis directly, use Flat() for values, rewrite IdToUri/UriToId, update all tests",
   "summary": "Adapted all ID system implementations and tests to updated requirements. New flat hierarchical ID format uses kind emojis directly, Flat() for values, interaction emojis at END. Fixed critical bugs in IdToUri, UriToId, renderEntityHuman, Node resolver. Updated VSCode extension emojis. All tests pass.",

@@ -1,5 +1,6 @@
 {
   "title": "Remove Lowercase from Id System",
+  "emoji": "🗑️",
   "status": "open",
   "description": "Refactor the ID system to not lowercase everything while keeping all other constraints (stripping non-alphanumeric, trimming whitespace, etc). This affects Flat(), Normalize(), NormalizeLLMSlug(), NormalizeClientSlug(), StatuteIdValueToPath() and the vscode extension URI handling.",
   "github": {

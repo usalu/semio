@@ -2,7 +2,7 @@
 technology: repo
 bundle:
  name: server
- emoji: 📚
+ emoji: 🌍
  description: The server bundle for repo.
  kind: library
 ---

@@ -1,5 +1,6 @@
 {
   "title": "Fix Home.tsx Structural Corruption From Automated Refactoring",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Fix severe structural issues in Home.tsx where an automated refactoring removed closing braces, endregion markers, and nested components inside other functions. Restore proper structure while keeping updated URI comments.",
   "summary": "Fixed structural corruption in Home.tsx by: (1) Adding missing // #endregion Footer marker after HomeFooter, (2) Adding missing // #endregion DropZone marker after HomeDropZone, (3) Adding missing KitKind type definition, (4) Restoring missing hasChildren field in TableRow type, (5) Adding blank line between endregion App and region Config. All region/endregion markers are now properly balanced.",

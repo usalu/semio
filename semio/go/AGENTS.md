@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: go
- emoji: 📚
+ emoji: 🐹
  description: The go bundle for semio.
  kind: library
 ---

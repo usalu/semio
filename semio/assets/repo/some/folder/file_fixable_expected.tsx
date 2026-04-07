@@ -1,6 +1,4 @@
-// #region 🔖Header
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixable](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx)
-
+// #region 🧲Header
 // 2025 Test User <test@test.com>
 
 // GNU Affero General Public License
@@ -8,30 +6,24 @@
 
 // A fixable TypeScript file for testing.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖MissingEnd
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixable🔖missingend](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/MissingEnd)
+// #region 📷MissingEnd
 // MissingEnd MUST provide the missingend functionality.
 
 /** missingEnd holds the data fields for a missingEnd record.
  * missingEnd MUST hold an integer.
- *
- *  * [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixable🔖missingend🪨missingend](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/MissingEnd/d/i/missingEnd)
  **/
 const missingEnd = 1;
 
-// #endregion 🔖MissingEnd
+// #endregion 📷MissingEnd
 
-// #region 🔖Alpha
-// [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixable🔖alpha](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/Alpha)
+// #region 🧩Alpha
 // Alpha MUST provide the alpha functionality.
 
 /** mismatchName holds the data fields for a mismatchName record.
  * mismatchName MUST hold an integer.
- *
- *  * [👤semio🏪assets🗃️repo🗃️some🗃️folder💻filefixable🔖alpha🪨mismatchname](repo://p/u/semio/b/a/assets/fd/org/repo/fd/org/some/fd/org/folder/f/file_fixable.tsx/s/Alpha/d/i/mismatchName)
  **/
 const mismatchName = 2;
 
-// #endregion 🔖Alpha
+// #endregion 🧩Alpha

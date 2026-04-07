@@ -1,5 +1,6 @@
 {
   "title": "Implement Duplicate Type Feature in Sketchpad",
+  "emoji": "🔨",
   "status": "open",
   "description": "Implement \"Duplicate Type\" feature in sketchpad. Deep clone type with all nested data, regenerate IDs, generate unique name, insert after original, keep parent/context, ensure immutability. Add tests.",
   "github": {

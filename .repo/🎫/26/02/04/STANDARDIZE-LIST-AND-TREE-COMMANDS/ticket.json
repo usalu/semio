@@ -1,5 +1,6 @@
 {
   "title": "Standardize List and Tree Commands",
+  "emoji": "📋",
   "status": "closed",
   "description": "Standardize output of list and tree commands for text and markdown formats in Repo CLI.",
   "summary": "Bulk close",

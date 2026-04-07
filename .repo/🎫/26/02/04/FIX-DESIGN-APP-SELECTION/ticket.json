@@ -1,5 +1,6 @@
 {
   "title": "Fix Design App Selection",
+  "emoji": "🔧",
   "status": "closed",
   "summary": "Fixed scene model selection by stamping piece identity metadata on transform and mesh wrapper ancestors so loaded model picks resolve to piece guids; selection sync now works across diagram and scene.",
   "github": {

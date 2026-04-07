@@ -1,5 +1,6 @@
 {
   "title": "Remove Welcome Page and Add Toolbar Open Category",
+  "emoji": "🗑️",
   "status": "closed",
   "description": "Remove the welcome page in desktop that selects folder for kit. Add a toolbar category open with different options such as folder, file, or remote with a URL to semio sketchpad.",
   "summary": "Removed the StartPage welcome screen from semio desktop renderer.tsx. The app now renders the Sketchpad directly with a folderKitStoreFactory for local kit persistence. Added a new HomeToolbarOpen component to the sketchpad home app toolbar with three actions: Open Folder (creates a local kit via folder selection dialog), Open File (triggers the existing .semio.zip file import input), and Open Remote (prompts for a URL and imports the kit). Registered the \"open\" toolbar group (order 10, before filter and create) in the Home component. Added the open group icon to getToolbarGroupIcon. Updated tests to verify the open toolbar group is visible.",

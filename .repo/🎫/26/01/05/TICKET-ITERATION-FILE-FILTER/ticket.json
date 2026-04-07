@@ -1,5 +1,6 @@
 {
   "title": "TICKET-ITERATION-FILE-FILTER",
+  "emoji": "🎫",
   "status": "closed",
   "description": "Fix ticket interaction end to only calculate lines for files that were declared when the interaction started, not all files from git.",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism"

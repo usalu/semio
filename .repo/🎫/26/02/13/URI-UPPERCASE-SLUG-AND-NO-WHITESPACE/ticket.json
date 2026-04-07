@@ -1,5 +1,6 @@
 {
   "title": "URI Uppercase Slug and No Whitespace",
+  "emoji": "📋",
   "status": "closed",
   "description": "repo: uri always have uppercase slug for everything dynamic inside the uri (e.g. file name, folder name, ticket title, etc). In the uri cant be a whitespace (but names can usually have them). Make sure to refactor and tests this.",
   "summary": "Bulk close",

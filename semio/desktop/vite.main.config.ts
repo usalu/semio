@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🖱️desktop⚙️vitemainconfig](repo://p/u/semio/b/u/desktop/f/vite.main.config.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Vite build configuration for the Electron main process.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [👤semio🖱️desktop⚙️vitemainconfig🔖configuration](repo://p/u/semio/b/u/desktop/f/vite.main.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // Vite configuration for the Electron main process.
 // Configuration MUST export a valid Vite config object.
 
@@ -28,4 +26,4 @@ export default defineConfig({
   },
 });
 
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

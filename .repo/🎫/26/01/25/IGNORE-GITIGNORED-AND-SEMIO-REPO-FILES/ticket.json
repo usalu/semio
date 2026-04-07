@@ -1,5 +1,6 @@
 {
   "title": "Ignore Gitignored And Semio Repo Files",
+  "emoji": "📂",
   "status": "closed",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/196"

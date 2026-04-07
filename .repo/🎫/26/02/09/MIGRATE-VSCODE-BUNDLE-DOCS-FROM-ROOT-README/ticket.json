@@ -1,5 +1,6 @@
 {
   "title": "Migrate Vscode Bundle Docs From Root Readme",
+  "emoji": "📝",
   "status": "closed",
   "description": "Migrate Command Tree, Sections Explorer, and semio/vscode subsections from root README.md into the repo/vscode/README.md Docs section",
   "summary": "Appended six doc subsections (Command Tree, Sections Explorer, Breach Diagnostics, Kit Validation, Sidebar, Tickets) from root README.md to repo/vscode/README.md Docs section before Requirements",

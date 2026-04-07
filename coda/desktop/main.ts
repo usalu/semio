@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🔬coda🖱️desktop💻main](repo://p/r/coda/b/u/desktop/f/main.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Entry point for the Electron main process managing windows, sidecar lifecycle, IPC, and event forwarding.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Sidecar Bridge
-// [🔬coda🖱️desktop💻main🔖sidecarbridge](repo://p/r/coda/b/u/desktop/f/main.ts/s/Sidecar%20Bridge)
+// #region 🔮Sidecar Bridge
 // Manages the Python sidecar child process over JSON-over-stdio.
 // MUST handle spawning, request/response correlation, heartbeats, timeouts, auto-restart, and event forwarding.
 
@@ -35,7 +33,7 @@ if (started) {
 
 // Sidecar configuration
 // In dev, __dirname is desktop/.vite/build. The engine dir is a sibling of desktop/.
-// app.getAppPath() returns the desktop/ dir in dev.
+// 🛤️app.getAppPath() returns the desktop/ dir in dev.
 const SIDECAR_PY_DIR = path.resolve(app.isPackaged ? path.join(process.resourcesPath, "engine") : path.join(app.getAppPath(), "..", "engine"));
 const SIDECAR_CMD = process.env.CODA_SIDECAR_CMD ?? "uv";
 const SIDECAR_BASE_ARGS = process.env.CODA_SIDECAR_CMD ? ["--sidecar"] : ["run", "--active", "coda.py", "--sidecar"];
@@ -262,16 +260,14 @@ function switchProject(newPath: string): void {
   startSidecar();
 }
 
-// #endregion 🔖Sidecar Bridge
+// #endregion 🔮Sidecar Bridge
 
-// #region 🔖Main Process
-// [🔬coda🖱️desktop💻main🔖mainprocess](repo://p/r/coda/b/u/desktop/f/main.ts/s/Main%20Process)
+// #region 🐙Main Process
 // Electron main process that creates the browser window and registers IPC handlers.
 // MUST quit on all windows closed except on macOS.
 
 /**
  * Creates the main Electron browser window with preload and vite integration.
-// [🔬coda🖱️desktop💻main🔖mainprocess🛠️createwindow](repo://p/r/coda/b/u/desktop/f/main.ts/s/Main%20Process/d/i/createWindow)
  *
  * MUST load the vite dev server URL in development and the built file in production.
  **/
@@ -294,7 +290,7 @@ const createWindow = async () => {
     // dependencies. The elements.tsx file is 1.2MB and takes seconds to
     // transform. If we don't warm it up, the browser's HTTP/1.1 connection
     // pool (6 connections) stalls while Vite transforms it on-demand,
-    // blocking the entire ESM module tree from resolving.
+    // 🌳blocking the entire ESM module tree from resolving.
     const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL.replace(/\/$/, "");
     const warmupUrls = [`${baseUrl}/renderer.tsx`, `${baseUrl}/@fs${path.resolve(app.getAppPath(), "..", "..", "elements", "ui", "elements.tsx").replace(/\\/g, "/")}`];
     console.log(`[coda desktop] Pre-warming Vite module graph (${warmupUrls.length} entries)...`);
@@ -315,7 +311,7 @@ const createWindow = async () => {
       console.log(`[coda desktop] Vite warmup failed: ${e}, proceeding anyway.`);
     }
 
-    // Retry loading with backoff to handle Vite dev server startup race
+    // 🖥️Retry loading with backoff to handle Vite dev server startup race
     const loadWithRetry = async (retries = 5, delay = 1000) => {
       for (let i = 0; i < retries; i++) {
         try {
@@ -341,7 +337,7 @@ const createWindow = async () => {
     mainWindow.webContents.session.webRequest.onErrorOccurred((details: { url: string; error: string }) => {
       console.log(`[DEBUG] net-error: ${details.error} ${details.url.substring(0, 200)}`);
     });
-    // [DEBUG] Monitor completed requests to track module loading progress
+    // 📨[DEBUG] Monitor completed requests to track module loading progress
     let requestCount = 0;
     mainWindow.webContents.session.webRequest.onCompleted((details: { url: string; statusCode: number }) => {
       requestCount++;
@@ -512,7 +508,7 @@ app.whenReady().then(() => {
     };
     const fullUri = uri.startsWith("coda://") ? uri : `coda://${uri}`;
 
-    // Handle parameterized URIs like coda://translation/{target_id}
+    // 🎛️Handle parameterized URIs like coda://translation/{target_id}
     const translationMatch = fullUri.match(/^coda:\/\/translation\/(.+)$/);
     if (translationMatch) {
       try {
@@ -555,4 +551,4 @@ app.whenReady().then(() => {
   });
 });
 
-// #endregion 🔖Main Process
+// #endregion 🐙Main Process

@@ -1,5 +1,6 @@
 {
   "title": "Fix Grasshopper Missing Icon Resources",
+  "emoji": "🔧",
   "status": "closed",
   "description": "The code is outdated after folder structure changes; resource lookups like attributediff_24x24 fail. Refactor icon/resource resolution to new paths and use placeholders for missing assets.",
   "summary": "Fixed NullReferenceException in ProcessModel for KitComponent, TypeComponent, and DesignComponent by using null-conditional operator ?.Replace() instead of .Replace() on Icon, Image, and Preview fields that can be null.",

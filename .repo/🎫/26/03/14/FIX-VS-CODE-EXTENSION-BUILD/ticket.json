@@ -1,5 +1,6 @@
 {
   "title": "Fix VS Code Extension Build",
+  "emoji": "🔧",
   "status": "open",
   "description": "Get it working and building",
   "github": {

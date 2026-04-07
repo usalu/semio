@@ -1,5 +1,6 @@
 {
   "title": "Fix Camera Clipping in Scene Viewport",
+  "emoji": "🔧",
   "status": "open",
   "description": "The 3D scene viewport clips/cuts parts of the design. The bounds.clip() call after auto-fit is too aggressive, causing geometry to be cut off by the camera clipping planes.",
   "github": {

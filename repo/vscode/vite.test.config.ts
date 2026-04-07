@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [🧰repo🖱️vscode⚙️vitetestconfig](repo://p/i/repo/b/u/vscode/f/vite.test.config.ts)
+// #region 🧲Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -7,10 +6,9 @@
 
 // Vite test configuration for the VS Code extension test runner.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Configuration
-// [🧰repo🖱️vscode⚙️vitetestconfig🔖configuration](repo://p/i/repo/b/u/vscode/f/vite.test.config.ts/s/Configuration)
+// #region 🗄️Configuration
 // Vite build configuration for the VS Code extension test bundle.
 // Configuration MUST output a CJS test bundle targeting Node 18.
 
@@ -20,13 +18,11 @@ import { defineConfig } from "vite";
 
 /**
  * Absolute file path of the current module.
-// [🧰repo🖱️vscode⚙️vitetestconfig🔖configuration🪨filename](repo://p/i/repo/b/u/vscode/f/vite.test.config.ts/s/Configuration/d/i/__filename)
  * Path MUST be derived from import.meta.url.
  **/
 const __filename = fileURLToPath(import.meta.url);
 /**
  * Absolute directory path of the current module.
-// [🧰repo🖱️vscode⚙️vitetestconfig🔖configuration🪨dirname](repo://p/i/repo/b/u/vscode/f/vite.test.config.ts/s/Configuration/d/i/__dirname)
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);
@@ -62,4 +58,4 @@ export default defineConfig({
     },
   },
 });
-// #endregion 🔖Configuration
+// #endregion 🗄️Configuration

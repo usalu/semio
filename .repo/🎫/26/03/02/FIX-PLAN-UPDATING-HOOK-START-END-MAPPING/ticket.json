@@ -1,5 +1,6 @@
 {
   "title": "Fix Plan Updating Hook Start End Mapping",
+  "emoji": "🔧",
   "status": "closed",
   "description": "plan.updating should map to starting and ended events without duplicate dispatch",
   "summary": "Split plan updating hook into starting and ended mappings to avoid duplicate event dispatch, and updated hook tests accordingly.",

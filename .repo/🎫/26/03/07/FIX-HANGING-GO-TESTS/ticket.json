@@ -1,5 +1,6 @@
 {
   "title": "Fix Hanging Go Tests",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Investigate and fix all hanging go tests in repo cli, including deadlocks and missing timeouts.",
   "summary": "Fixed hanging Go tests by pruning expensive ticket/file traversal and reducing git-status scan cost; added regression tests for ignore matching, ticket traversal, and fingerprint behavior.",

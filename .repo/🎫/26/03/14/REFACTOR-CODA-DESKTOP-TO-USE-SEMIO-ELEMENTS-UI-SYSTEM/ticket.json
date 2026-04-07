@@ -1,5 +1,6 @@
 {
   "title": "Refactor Coda Desktop To Use Elements UI System",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Refactor coda desktop renderer and styles so UI uses elements design system exclusively, removing app-specific colors/styling tokens and replacing with elements tokens/components.",
   "summary": "Refactored coda desktop UI styling to elements tokens across the renderer, removed desktop-specific theme overrides from globals, and fixed the renderer Vite config so targeted TypeScript and renderer build checks now pass.",

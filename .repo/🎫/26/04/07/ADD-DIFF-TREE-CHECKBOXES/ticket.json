@@ -1,0 +1,10 @@
+{
+  "title": "Add Diff Tree Checkboxes",
+  "status": "closed",
+  "description": "Add a toggleable checkbox action to the shared tree UI, then extend the semio sketchpad design diff viewer to render a diff tree with per-item checkboxes so individual diff parts can be unchecked. Refactor existing files directly, update existing tests instead of adding new test files, and verify the affected test coverage passes.",
+  "summary": "Added toggleable checkbox actions to shared tree headers and used them in semio UI design diff details so diff pieces and connections can be individually unchecked. Filtered unchecked diff entries out of the rendered diff output and extended the existing co-located Vitest coverage for both the tree primitives and the diff filtering behavior.",
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪8658dc279d7e4c33b7fe9f2da5ca3561"
+  ]
+}

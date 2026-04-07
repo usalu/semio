@@ -1,5 +1,6 @@
 {
   "title": "Correct Script Identification in Fix",
+  "emoji": "🔧",
   "status": "closed",
   "description": "Ensure script files with shebangs are correctly identified and shebangs are preserved during fix command.",
   "summary": "Corrected ScanComments to ignore shebang headers.",

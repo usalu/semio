@@ -1,5 +1,4 @@
-# region Header
-# [👤semio📚py💻semio](repo://p/u/semio/b/l/py/f/semio.py)
+# #region 📊Header
 
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -14,10 +13,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# endregion Header
+# #endregion 📊Header
 
-# region Imports
-# [👤semio📚py💻semio🔖imports](repo://p/u/semio/b/l/py/f/semio.py/s/Imports)
+# #region ⭐Imports
 # Standard library, third-party and framework imports.
 from __future__ import annotations
 
@@ -68,19 +66,17 @@ import pydantic
 import pytest
 import pytransform3d.rotations
 
-# endregion Imports
+# #endregion ⭐Imports
 
-# region Type Hints
-# [👤semio📚py💻semio🔖typehints](repo://p/u/semio/b/l/py/f/semio.py/s/Type%20Hints)
+# #region 🌩️Type Hints
 # Custom type hint aliases used throughout the module.
 
 RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 """🔁 A recursive any list is either any or a list where the items are recursive any list."""
 
-# endregion Type Hints
+# #endregion 🌩️Type Hints
 
-# region Constants
-# [👤semio📚py💻semio🔖constants](repo://p/u/semio/b/l/py/f/semio.py/s/Constants)
+# #region 👓Constants
 # Global constants for limits, paths, encodings and configuration.
 
 NAME = "semio"
@@ -142,80 +138,55 @@ MAX_REQUEST_BODY_SIZE = 50 * 1024 * 1024
 dotenv.load_dotenv()
 ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO_")}
 
-# endregion Constants
+# #endregion 👓Constants
 
-# region Utility
-# [👤semio📚py💻semio🔖utility](repo://p/u/semio/b/l/py/f/semio.py/s/Utility)
+# #region 🎗️Utility
 # General-purpose utility functions for encoding, formatting and transformation.
 
 
 def encode(value: str) -> str:
-    """ᗒ Encode a string to be url safe.
-    encode MUST return a percent-encoded string safe for URL paths.
-    [👤semio📚py💻semio🔖utility🛠️encode](repo://p/u/semio/b/l/py/f/semio.py/s/Utility/d/i/encode)
-    """
+    """🔷ᗒ Encode a string to be url safe."""
     return urllib.parse.quote(value, safe="")
 
 
 def decode(value: str) -> str:
-    """ᗕ Decode a url safe string.
-    decode MUST return the original string from a percent-encoded input.
-    [👤semio📚py💻semio🔖utility🛠️decode](repo://p/u/semio/b/l/py/f/semio.py/s/Utility/d/i/decode)
-    """
+    """🔶ᗕ Decode a url safe string."""
     return urllib.parse.unquote(value)
 
 
 def encodeList(items: list[str]) -> str:
-    """Encode a list of strings into a comma-separated URL-safe string.
-    encodeList MUST encode each item and join them with commas.
-    [👤semio📚py💻semio🔖utility🛠️encodelist](repo://p/u/semio/b/l/py/f/semio.py/s/Utility/d/i/encodeList)
-    """
+    """🔹Encode a list of strings into a comma-separated URL-safe string."""
     return ",".join([encode(t) for t in items])
 
 
 def decodeList(encodedList: str) -> list[str]:
-    """Decode a comma-separated URL-safe string into a list of strings.
-    decodeList MUST split by comma and decode each item.
-    [👤semio📚py💻semio🔖utility🛠️decodelist](repo://p/u/semio/b/l/py/f/semio.py/s/Utility/d/i/decodeList)
-    """
+    """🔸Decode a comma-separated URL-safe string into a list of strings."""
     return [decode(t) for t in encodedList.split(",")]
 
 
 def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
-    """🆔 Encode a `RecursiveAnyList` to a url encoded string.
-    encodeRecursiveAnyList MUST recursively encode nested lists into a flat string.
-    [👤semio📚py💻semio🔖utility🛠️encoderecursiveanylist](repo://p/u/semio/b/l/py/f/semio.py/s/Utility/d/i/encodeRecursiveAnyList)
-    """
+    """🆔 Encode a `RecursiveAnyList` to a url encoded string."""
     if not isinstance(recursiveAnyList, list):
         return encode(str(recursiveAnyList))
     return encode(",".join([encodeRecursiveAnyList(item) for item in recursiveAnyList]))
 
 
 def create_id(recursiveAnyList: RecursiveAnyList) -> str:
-    """🆔 Turn any into `encoded(str(any))` or a recursive list into a flat comma [,] separated encoded list.
-    create_id MUST produce a deterministic identifier from any value or nested list.
-    [👤semio📚py💻semio🔖utility🛠️createid](repo://p/u/semio/b/l/py/f/semio.py/s/Utility/d/i/create_id)
-    """
+    """🆔 Turn any into `encoded(str(any))` or a recursive list into a flat comma [,] separated encoded list."""
     if not isinstance(recursiveAnyList, list):
         return encode(str(recursiveAnyList))
     return ",".join([encodeRecursiveAnyList(item) for item in recursiveAnyList])
 
 
 def pretty(number: float) -> str:
-    """🦋 Pretty print a floating point number.
-    pretty MUST format the number with up to 5 significant digits.
-    [👤semio📚py💻semio🔖utility🛠️pretty](repo://p/u/semio/b/l/py/f/semio.py/s/Utility/d/i/pretty)
-    """
+    """🦋 Pretty print a floating point number."""
     if number == -0.0:
         number = 0.0
     return f"{number:.5f}".rstrip("0").rstrip(".")
 
 
 def changeValues(c: dict | list, key: str, func: typing.Callable[[typing.Any], typing.Any]) -> None:
-    """Recursively change values for a given key in nested dicts and lists.
-    changeValues MUST apply the function to all occurrences of the key recursively.
-    [👤semio📚py💻semio🔖utility🛠️changevalues](repo://p/u/semio/b/l/py/f/semio.py/s/Utility/d/i/changeValues)
-    """
+    """♻️Recursively change values for a given key in nested dicts and lists."""
     if isinstance(c, dict):
         if key in c:
             c[key] = func(c[key])
@@ -229,10 +200,7 @@ def changeValues(c: dict | list, key: str, func: typing.Callable[[typing.Any], t
 
 
 def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) -> None:
-    """Recursively transform all keys in nested dicts and lists.
-    changeKeys MUST apply the function to all dictionary keys recursively.
-    [👤semio📚py💻semio🔖utility🛠️changekeys](repo://p/u/semio/b/l/py/f/semio.py/s/Utility/d/i/changeKeys)
-    """
+    """🔺Recursively transform all keys in nested dicts and lists."""
     if isinstance(c, dict):
         for k in list(c.keys()):
             newKey = func(k)
@@ -247,77 +215,54 @@ def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) 
 
 
 def normalizeAngle(angle: float) -> float:
-    """🔃 Normalize an angle to be greater or equal to 0 and smaller than 360 degrees.
-    normalizeAngle MUST return an angle in the range [0, 360).
-    [👤semio📚py💻semio🔖utility🛠️normalizeangle](repo://p/u/semio/b/l/py/f/semio.py/s/Utility/d/i/normalizeAngle)
-    """
+    """🔃 Normalize an angle to be greater or equal to 0 and smaller than 360 degrees."""
     return (angle % 360 + 360) % 360
 
 
-# endregion Utility
+# #endregion 🎗️Utility
 
-# region Logging
-# [👤semio📚py💻semio🔖logging](repo://p/u/semio/b/l/py/f/semio.py/s/Logging)
+# #region 📰Logging
 # Module-level logger configuration.
 
 logger = loguru.logger
 
-# endregion Logging
+# #endregion 📰Logging
 
-# region Exceptions
-# [👤semio📚py💻semio🔖exceptions](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions)
+# #region 🎬Exceptions
 # Custom exception hierarchy for server, client and specification errors.
 
 
 class Error(Exception, abc.ABC):
-    """❗ The base for all exceptions.
-    Error MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️error](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/Error)
-    """
+    """❗ The base for all exceptions."""
 
     def __str__(self):
         return "❗ " + self.__class__.__name__
 
 
 class ServerError(Error, abc.ABC):
-    """🖥 The base for all server errors.
-    ServerError MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️servererror](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/ServerError)
-    """
+    """🖥 The base for all server errors."""
 
 
 class ClientError(Error, abc.ABC):
-    """👩‍💼 The base for all client errors.
-    ClientError MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️clienterror](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/ClientError)
-    """
+    """👩‍💼 The base for all client errors."""
 
 
 class CodeUnreachable(ServerError):
-    """Exception for code paths that should never be reached.
-    CodeUnreachable MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️codeunreachable](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/CodeUnreachable)
-    """
+    """🛤️Exception for code paths that should never be reached."""
 
     def __str__(self):
         return "🤷 This code should be unreachable."
 
 
 class FeatureNotYetSupported(ServerError):
-    """Exception for unimplemented features.
-    FeatureNotYetSupported MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️featurenotyetsupported](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/FeatureNotYetSupported)
-    """
+    """🔻Exception for unimplemented features."""
 
     def __str__(self):
         return "🔜 This feature is not yet supported."
 
 
 class RemoteKitsNotYetSupported(FeatureNotYetSupported):
-    """Exception for unsupported remote kit access.
-    RemoteKitsNotYetSupported MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️remotekitsnotyetsupported](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/RemoteKitsNotYetSupported)
-    """
+    """⬛Exception for unsupported remote kit access."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -327,20 +272,14 @@ class RemoteKitsNotYetSupported(FeatureNotYetSupported):
 
 
 class AuthenticationError(ClientError):
-    """🔐 Base error for authentication failures.
-    AuthenticationError MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️authenticationerror](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/AuthenticationError)
-    """
+    """🔐 Base error for authentication failures."""
 
     def __str__(self):
         return "🔐 Authentication failed."
 
 
 class InvalidAuthToken(AuthenticationError):
-    """🔑 The auth token is invalid or expired.
-    InvalidAuthToken MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️invalidauthtoken](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/InvalidAuthToken)
-    """
+    """🔑 The auth token is invalid or expired."""
 
     def __init__(self, serverUrl: str) -> None:
         self.serverUrl = serverUrl
@@ -350,10 +289,7 @@ class InvalidAuthToken(AuthenticationError):
 
 
 class AuthTokenNotFound(AuthenticationError):
-    """🔑 No auth token found for the server.
-    AuthTokenNotFound MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️authtokennotfound](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/AuthTokenNotFound)
-    """
+    """🔑 No auth token found for the server."""
 
     def __init__(self, serverUrl: str) -> None:
         self.serverUrl = serverUrl
@@ -363,10 +299,7 @@ class AuthTokenNotFound(AuthenticationError):
 
 
 class ServerUnreachable(ClientError):
-    """🌐 The remote server is not reachable.
-    ServerUnreachable MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️serverunreachable](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/ServerUnreachable)
-    """
+    """🌐 The remote server is not reachable."""
 
     def __init__(self, serverUrl: str) -> None:
         self.serverUrl = serverUrl
@@ -376,10 +309,7 @@ class ServerUnreachable(ClientError):
 
 
 class RemoteKitUriNotValid(ClientError):
-    """🌐 The remote kit URI is not valid.
-    RemoteKitUriNotValid MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️remotekiturinotvalid](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/RemoteKitUriNotValid)
-    """
+    """🌐 The remote kit URI is not valid."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -389,58 +319,37 @@ class RemoteKitUriNotValid(ClientError):
 
 
 class NotFound(ClientError, abc.ABC):
-    """🔍 The base for not found errors.
-    NotFound MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️notfound](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/NotFound)
-    """
+    """🔍 The base for not found errors."""
 
 
 class SpecificationError(ClientError, abc.ABC):
-    """📋 The base for all specification errors.
-    SpecificationError MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️specificationerror](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/SpecificationError)
-    """
+    """📋 The base for all specification errors."""
 
 
 class NoParentAssigned(SpecificationError, abc.ABC):
-    """👪 The base for all no parent assigned errors.
-    NoParentAssigned MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖exceptions🛠️noparentassigned](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/NoParentAssigned)
-    """
+    """👪 The base for all no parent assigned errors."""
 
 
 class NoTypeOrDesignAssigned(NoParentAssigned):
-    """No Type Or Design Assigned definition.
-    NoTypeOrDesignAssigned MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖exceptions🛠️notypeordesignassigned](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/NoTypeOrDesignAssigned)
-    """
+    """📖No Type Or Design Assigned definition."""
 
     def __str__(self):
         return "👪 The entity has no parent type or design assigned."
 
 
 class NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoParentAssigned):
-    """No Model Or Port Or Type Or Piece Or Connection Or Design Or Kit Assigned definition.
-    NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖exceptions🛠️nomodelorportortypeorpieceorconnectionordesignorkitassigned](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned)
-    """
+    """🔌No Model Or Port Or Type Or Piece Or Connection Or Design Or Kit Assigned definition."""
 
     def __str__(self):
         return "👪 The entity has no parent model, connector, type, piece, connection, design, kit or folder assigned."
 
 
 class AlreadyExists(SpecificationError, abc.ABC):
-    """♊ The entity already exists in the store.
-    AlreadyExists MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖exceptions🛠️alreadyexists](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/AlreadyExists)
-    """
+    """♊ The entity already exists in the store."""
 
 
 class Semio(pydantic.BaseModel):
-    """ℹ Metadata about the database.
-    Semio MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖exceptions🛠️semio](repo://p/u/semio/b/l/py/f/semio.py/s/Exceptions/d/i/Semio)
-    """
+    """ℹ Metadata about the database."""
 
     release: str = pydantic.Field(default=RELEASE)
     """🍾 The current release of semio."""
@@ -450,21 +359,16 @@ class Semio(pydantic.BaseModel):
     """⌚ The time when the database was created."""
 
 
-# endregion Exceptions
+# #endregion 🎬Exceptions
 
-# region Modeling
-# [🔖semio/py/semio.py#Modeling](repo://section/semio/py/semio.py/MODELING)
+# #region 🎲Modeling
 
-# region Primitives
-# [👤semio📚py💻semio🔖modeling](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling)
+# #region 🐻Primitives
 # Abstract base classes for models, fields, ids, inputs, outputs and entities.
 
 
 class SModel(pydantic.BaseModel, abc.ABC):
-    """⚪ The base for models.
-    SModel MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️smodel](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/SModel)
-    """
+    """⚪ The base for models."""
 
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
@@ -486,80 +390,47 @@ BaseModel = SModel
 
 
 class Field(SModel, abc.ABC):
-    """🎫 The base for a field of a model.
-    Field MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️field](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/Field)
-    """
+    """🎫 The base for a field of a model."""
 
 
 class RealField(Field, abc.ABC):
-    """🧑 The base for a real field of a model. No lie.
-    RealField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️realfield](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/RealField)
-    """
+    """🧑 The base for a real field of a model. No lie."""
 
 
 class MaskedField(Field, abc.ABC):
-    """🎭 The base for a mask of a field of a model. WYSIWYG but don't expect it to be there.
-    MaskedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️maskedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/MaskedField)
-    """
+    """🎭 The base for a mask of a field of a model. WYSIWYG but don't expect it to be there."""
 
 
 class Base(SModel, abc.ABC):
-    """👥 The base for models.
-    Base MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️base](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/Base)
-    """
+    """👥 The base for models."""
 
 
 class Id(Base, abc.ABC):
-    """🪪 The base for ids. All fields that identify the entity here.
-    Id MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️id](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/Id)
-    """
+    """🪪 The base for ids. All fields that identify the entity here."""
 
 
 class Props(Base, abc.ABC):
-    """🎫 The base for props. All fields except input-only, output-only or child entities.
-    Props MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️props](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/Props)
-    """
+    """🎫 The base for props. All fields except input-only, output-only or child entities."""
 
 
 class Input(Base, abc.ABC):
-    """↘ The base for inputs. All fields that are required to create the entity.
-    Input MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️input](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/Input)
-    """
+    """↘ The base for inputs. All fields that are required to create the entity."""
 
 
 class Context(Base, abc.ABC):
-    """📑 The base for contexts. All fields that are required to understand the entity by an llm.
-    Context MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️context](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/Context)
-    """
+    """📑 The base for contexts. All fields that are required to understand the entity by an llm."""
 
 
 class Output(Base, abc.ABC):
-    """↗ The base for outputs. All fields that are returned when the entity is fetched.
-    Output MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️output](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/Output)
-    """
+    """↗ The base for outputs. All fields that are returned when the entity is fetched."""
 
 
 class Prediction(Base, abc.ABC):
-    """🔮 The base for predictions. All fields that are required to predict the entity by a llm.
-    Prediction MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️prediction](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/Prediction)
-    """
+    """🔮 The base for predictions. All fields that are required to predict the entity by a llm."""
 
 
 class Entity(SModel, abc.ABC):
-    """▢ The base for entities. All fields and behavior of the entity.
-    Entity MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️entity](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/Entity)
-    """
+    """▢ The base for entities. All fields and behavior of the entity."""
 
     PLURAL: typing.ClassVar[str]
     """🔢 The plural of the singular of the entity name."""
@@ -602,33 +473,23 @@ class Entity(SModel, abc.ABC):
 
 
 class Table(SModel, abc.ABC):
-    """▦ The base for tables. All resources that are stored in the database.
-    Table MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️table](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/Table)
-    """
+    """▦ The base for tables. All resources that are stored in the database."""
 
 
 class TableEntity(Entity, Table, abc.ABC):
-    """▢ The base for table entities.
-    TableEntity MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖modeling🔖primitives🛠️tableentity](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Primitives/d/i/TableEntity)
-    """
+    """▢ The base for table entities."""
 
     """📛 The lowercase name of the table in the database."""
 
 
-# endregion Primitives
+# #endregion 🐻Primitives
 
-# region Graphql
-# [👤semio📚py💻semio🔖modeling🔖graphql](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Graphql)
+# #region 🎬Graphql
 # GraphQL node base classes for pydantic, sqlalchemy and relay integration.
 
 
 class Node(graphene_pydantic.PydanticObjectType):
-    """A base class for all nodes that are not a table in the database.
-    Node MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖modeling🔖graphql🛠️node](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Graphql/d/i/Node)
-    """
+    """🗄️A base class for all nodes that are not a table in the database."""
 
     class Meta:
         abstract = True
@@ -642,20 +503,14 @@ class Node(graphene_pydantic.PydanticObjectType):
 
 
 class InputNode(graphene_pydantic.PydanticInputObjectType):
-    """A base class for all input nodes.
-    InputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖modeling🔖graphql🛠️inputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Graphql/d/i/InputNode)
-    """
+    """🏛️A base class for all input nodes."""
 
     class Meta:
         abstract = True
 
 
 class RelayNode(graphene.relay.Node):
-    """Relay-compliant GraphQL node interface.
-    RelayNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖modeling🔖graphql🛠️relaynode](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Graphql/d/i/RelayNode)
-    """
+    """🕸️Relay-compliant GraphQL node interface."""
 
     class Meta:
         name = "Node"
@@ -671,12 +526,10 @@ class RelayNode(graphene.relay.Node):
 
 
 class TableNode(graphene_pydantic.PydanticObjectType):
-    """A base class for all nodes that are a table in the database.
+    """📊A base class for all nodes that are a table in the database.
     It automatically excludes the fields that are defined in the table.
     Resolvers to all @properties are added.
     Child relationships are by default included.
-    TableNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖modeling🔖graphql🛠️tablenode](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Graphql/d/i/TableNode)
     """
 
     class Meta:
@@ -696,10 +549,8 @@ class TableNode(graphene_pydantic.PydanticObjectType):
 
 
 class TableEntityNode(TableNode):
-    """A base class for all nodes that are a table in the database and are entities.
+    """🌿A base class for all nodes that are a table in the database and are entities.
     It automatically complies to the Relay Node interface.
-    TableEntityNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖modeling🔖graphql🛠️tableentitynode](repo://p/u/semio/b/l/py/f/semio.py/s/Modeling/s/Graphql/d/i/TableEntityNode)
     """
 
     class Meta:
@@ -718,86 +569,60 @@ class TableEntityNode(TableNode):
         super().__init_subclass_with_meta__(model=model, **options)
 
 
-# endregion Graphql
+# #endregion 🎬Graphql
 
-# endregion Modeling
+# #endregion 🎲Modeling
 
-# region Domain
-# [🔖semio/py/semio.py#Domain](repo://section/semio/py/semio.py/DOMAIN)
+# #region 🧩Domain
 
-# region Attribute
-# [👤semio📚py💻semio🔖domain🔖attribute](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute)
+# #region 🪨Attribute
 # Attribute entity with key-value pairs and definitions.
 
 
 class AttributeKeyField(RealField, abc.ABC):
-    """Field mixin for the key of a attribute.
-    AttributeKeyField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖attribute🛠️attributekeyfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeKeyField)
-    """
+    """⬜Field mixin for the key of a attribute."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class AttributeValueField(RealField, abc.ABC):
-    """Field mixin for the value of a attribute.
-    AttributeValueField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖attribute🛠️attributevaluefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeValueField)
-    """
+    """🟥Field mixin for the value of a attribute."""
 
     value: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class AttributeDefinitionField(RealField, abc.ABC):
-    """Field mixin for the definition of a attribute.
-    AttributeDefinitionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖attribute🛠️attributedefinitionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeDefinitionField)
-    """
+    """🟧Field mixin for the definition of a attribute."""
 
     definition: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class AttributeId(AttributeKeyField, Id):
-    """Identity fields for uniquely identifying a attribute.
-    AttributeId MUST contain all fields that uniquely identify a attribute.
-    [👤semio📚py💻semio🔖domain🔖attribute🛠️attributeid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeId)
-    """
+    """💻Identity fields for uniquely identifying a attribute."""
 
     pass
 
 
 class AttributeProps(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Props):
-    """Property fields for a attribute.
-    AttributeProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖attribute🛠️attributeprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeProps)
-    """
+    """🟨Property fields for a attribute."""
 
     pass
 
 
 class AttributeInput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Input):
-    """Input fields for creating or updating a attribute.
-    AttributeInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖attribute🛠️attributeinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeInput)
-    """
+    """📝Input fields for creating or updating a attribute."""
 
     pass
 
 
 class AttributeContext(AttributeValueField, AttributeKeyField, Context):
-    """Context fields for understanding a attribute by an LLM.
-    AttributeContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖attribute🛠️attributecontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeContext)
-    """
+    """🟩Context fields for understanding a attribute by an LLM."""
 
     pass
 
 
 class AttributeOutput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Output):
-    """Output fields returned when fetching a attribute.
-    AttributeOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖attribute🛠️attributeoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeOutput)
-    """
+    """🟦Output fields returned when fetching a attribute."""
 
     pass
 
@@ -808,10 +633,7 @@ class Attribute(
     AttributeKeyField,
     TableEntity,
 ):
-    """Attribute entity storing a key-value pair with an optional definition.
-    Attribute MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖attribute🛠️attribute](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/Attribute)
-    """
+    """Attribute entity storing a key-value pair with an optional definition."""
 
     PLURAL = "attributes"
 
@@ -877,72 +699,50 @@ class Attribute(
 
 
 class AttributeInputNode(InputNode):
-    """GraphQL input node for attribute mutations.
-    AttributeInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖attribute🛠️attributeinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Attribute/d/i/AttributeInputNode)
-    """
+    """🟪GraphQL input node for attribute mutations."""
 
     class Meta:
         model = AttributeInput
 
 
-# endregion Attribute
+# #endregion 🪨Attribute
 
-# region Tag
-# [👤semio📚py💻semio🔖domain🔖tag](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag)
+# #region 📎Tag
 # Tag entity for categorizing and labeling kit elements.
 
 
 class TagGuidField(RealField, abc.ABC):
-    """Field mixin for the guid of a tag.
-    TagGuidField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖tag🛠️tagguidfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/TagGuidField)
-    """
+    """🏷️Field mixin for the guid of a tag."""
 
     guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class TagNameField(RealField, abc.ABC):
-    """Field mixin for the name of a tag.
-    TagNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖tag🛠️tagnamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/TagNameField)
-    """
+    """🟫Field mixin for the name of a tag."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class TagDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a tag.
-    TagDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖tag🛠️tagdescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/TagDescriptionField)
-    """
+    """💠Field mixin for the description of a tag."""
 
     description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class TagIconField(RealField, abc.ABC):
-    """Field mixin for the icon of a tag.
-    TagIconField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖tag🛠️tagiconfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/TagIconField)
-    """
+    """🖼️Field mixin for the icon of a tag."""
 
     icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 
 class TagOrderField(RealField, abc.ABC):
-    """Field mixin for the order of a tag.
-    TagOrderField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖tag🛠️tagorderfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/TagOrderField)
-    """
+    """🔳Field mixin for the order of a tag."""
 
     order: int = pydantic.Field(default=0)
 
 
 class TagId(TagGuidField, Id):
-    """Identity fields for uniquely identifying a tag.
-    TagId MUST contain all fields that uniquely identify a tag.
-    [👤semio📚py💻semio🔖domain🔖tag🛠️tagid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/TagId)
-    """
+    """🔲Identity fields for uniquely identifying a tag."""
 
     pass
 
@@ -955,69 +755,47 @@ class Tag(
     TagGuidField,
     Table,
 ):
-    """Tag entity for labeling kit elements with name, icon and order.
-    Tag MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖tag🛠️tag](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Tag/d/i/Tag)
-    """
+    """Tag entity for labeling kit elements with name, icon and order."""
 
 
-# endregion Tag
+# #endregion 📎Tag
 
-# region Concept
-# [👤semio📚py💻semio🔖domain🔖concept](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept)
+# #region 🗝️Concept
 # Concept entity for semantic grouping of design elements.
 
 
 class ConceptGuidField(RealField, abc.ABC):
-    """Field mixin for the guid of a concept.
-    ConceptGuidField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖concept🛠️conceptguidfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/ConceptGuidField)
-    """
+    """▪️Field mixin for the guid of a concept."""
 
     guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class ConceptNameField(RealField, abc.ABC):
-    """Field mixin for the name of a concept.
-    ConceptNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖concept🛠️conceptnamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/ConceptNameField)
-    """
+    """▫️Field mixin for the name of a concept."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class ConceptDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a concept.
-    ConceptDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖concept🛠️conceptdescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/ConceptDescriptionField)
-    """
+    """◾Field mixin for the description of a concept."""
 
     description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class ConceptIconField(RealField, abc.ABC):
-    """Field mixin for the icon of a concept.
-    ConceptIconField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖concept🛠️concepticonfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/ConceptIconField)
-    """
+    """◽Field mixin for the icon of a concept."""
 
     icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 
 class ConceptOrderField(RealField, abc.ABC):
-    """Field mixin for the order of a concept.
-    ConceptOrderField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖concept🛠️conceptorderfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/ConceptOrderField)
-    """
+    """◻️Field mixin for the order of a concept."""
 
     order: int = pydantic.Field(default=0)
 
 
 class ConceptId(ConceptGuidField, Id):
-    """Identity fields for uniquely identifying a concept.
-    ConceptId MUST contain all fields that uniquely identify a concept.
-    [👤semio📚py💻semio🔖domain🔖concept🛠️conceptid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/ConceptId)
-    """
+    """◼️Identity fields for uniquely identifying a concept."""
 
     pass
 
@@ -1030,24 +808,17 @@ class Concept(
     ConceptGuidField,
     Table,
 ):
-    """Concept entity for semantic grouping with name, icon and order.
-    Concept MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖concept🛠️concept](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Concept/d/i/Concept)
-    """
+    """Concept entity for semantic grouping with name, icon and order."""
 
 
-# endregion Concept
+# #endregion 🗝️Concept
 
-# region Coord
-# [👤semio📚py💻semio🔖domain🔖coord](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Coord)
+# #region 🐹Coord
 # Coordinate primitive for three-dimensional values.
 
 
 class Coord(SModel):
-    """Three-dimensional coordinate with x, y and z values.
-    Coord MUST contain all coordinate or geometry fields.
-    [👤semio📚py💻semio🔖domain🔖coord🛠️coord](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Coord/d/i/Coord)
-    """
+    """🔵Three-dimensional coordinate with x, y and z values."""
 
     u: float = pydantic.Field()
     v: float = pydantic.Field()
@@ -1060,73 +831,51 @@ class Coord(SModel):
 
 
 class CoordInput(Coord, Input):
-    """Input fields for creating or updating a coord.
-    CoordInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖coord🛠️coordinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Coord/d/i/CoordInput)
-    """
+    """🔴Input fields for creating or updating a coord."""
 
     pass
 
 
 class CoordContext(Coord, Context):
-    """Context fields for understanding a coord by an LLM.
-    CoordContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖coord🛠️coordcontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Coord/d/i/CoordContext)
-    """
+    """🟠Context fields for understanding a coord by an LLM."""
 
     pass
 
 
 class CoordOutput(Coord, Output):
-    """Output fields returned when fetching a coord.
-    CoordOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖coord🛠️coordoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Coord/d/i/CoordOutput)
-    """
+    """🟡Output fields returned when fetching a coord."""
 
     pass
 
 
 class CoordPrediction(Coord, Prediction):
-    """Prediction fields for LLM-based coord inference.
-    CoordPrediction MUST contain all fields for LLM inference.
-    [👤semio📚py💻semio🔖domain🔖coord🛠️coordprediction](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Coord/d/i/CoordPrediction)
-    """
+    """🟢Prediction fields for LLM-based coord inference."""
 
     pass
 
 
 class CoordNode(Node):
-    """GraphQL node exposing coord data.
-    CoordNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖coord🛠️coordnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Coord/d/i/CoordNode)
-    """
+    """🟣GraphQL node exposing coord data."""
 
     class Meta:
         model = Coord
 
 
 class CoordInputNode(InputNode):
-    """GraphQL input node for coord mutations.
-    CoordInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖coord🛠️coordinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Coord/d/i/CoordInputNode)
-    """
+    """🟤GraphQL input node for coord mutations."""
 
     class Meta:
         model = CoordInput
 
 
-# endregion Coord
+# #endregion 🐹Coord
 
-# region Point
-# [👤semio📚py💻semio🔖domain🔖point](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Point)
+# #region 🎋Point
 # Point primitive representing a position in 3D space.
 
 
 class Point(SModel):
-    """Point in 3D space with x, y and z coordinates.
-    Point MUST contain all coordinate or geometry fields.
-    [👤semio📚py💻semio🔖domain🔖point🛠️point](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Point/d/i/Point)
-    """
+    """⚫Point in 3D space with x, y and z coordinates."""
 
     x: float = pydantic.Field()
     y: float = pydantic.Field()
@@ -1140,73 +889,51 @@ class Point(SModel):
 
 
 class PointInput(Point, Input):
-    """Input fields for creating or updating a point.
-    PointInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖point🛠️pointinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Point/d/i/PointInput)
-    """
+    """🩵Input fields for creating or updating a point."""
 
     pass
 
 
 class PointContext(Point, Context):
-    """Context fields for understanding a point by an LLM.
-    PointContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖point🛠️pointcontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Point/d/i/PointContext)
-    """
+    """🩶Context fields for understanding a point by an LLM."""
 
     pass
 
 
 class PointOutput(Point, Output):
-    """Output fields returned when fetching a point.
-    PointOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖point🛠️pointoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Point/d/i/PointOutput)
-    """
+    """🩷Output fields returned when fetching a point."""
 
     pass
 
 
 class PointPrediction(Point, Prediction):
-    """Prediction fields for LLM-based point inference.
-    PointPrediction MUST contain all fields for LLM inference.
-    [👤semio📚py💻semio🔖domain🔖point🛠️pointprediction](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Point/d/i/PointPrediction)
-    """
+    """💜Prediction fields for LLM-based point inference."""
 
     pass
 
 
 class PointNode(Node):
-    """GraphQL node exposing point data.
-    PointNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖point🛠️pointnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Point/d/i/PointNode)
-    """
+    """💙GraphQL node exposing point data."""
 
     class Meta:
         model = Point
 
 
 class PointInputNode(InputNode):
-    """GraphQL input node for point mutations.
-    PointInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖point🛠️pointinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Point/d/i/PointInputNode)
-    """
+    """💚GraphQL input node for point mutations."""
 
     class Meta:
         model = PointInput
 
 
-# endregion Point
+# #endregion 🎋Point
 
-# region Vector
-# [👤semio📚py💻semio🔖domain🔖vector](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Vector)
+# #region 🌊Vector
 # Vector primitive representing a direction in 3D space.
 
 
 class Vector(SModel):
-    """Direction vector in 3D space with x, y and z components.
-    Vector MUST contain all coordinate or geometry fields.
-    [👤semio📚py💻semio🔖domain🔖vector🛠️vector](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Vector/d/i/Vector)
-    """
+    """💛Direction vector in 3D space with x, y and z components."""
 
     x: float = pydantic.Field()
     y: float = pydantic.Field()
@@ -1220,100 +947,69 @@ class Vector(SModel):
 
 
 class VectorInput(Vector, Input):
-    """Input fields for creating or updating a vector.
-    VectorInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖vector🛠️vectorinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Vector/d/i/VectorInput)
-    """
+    """🧡Input fields for creating or updating a vector."""
 
     pass
 
 
 class VectorContext(Vector, Context):
-    """Context fields for understanding a vector by an LLM.
-    VectorContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖vector🛠️vectorcontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Vector/d/i/VectorContext)
-    """
+    """❤️Context fields for understanding a vector by an LLM."""
 
     pass
 
 
 class VectorOutput(Vector, Output):
-    """Output fields returned when fetching a vector.
-    VectorOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖vector🛠️vectoroutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Vector/d/i/VectorOutput)
-    """
+    """🤍Output fields returned when fetching a vector."""
 
     pass
 
 
 class VectorPrediction(Vector, Prediction):
-    """Prediction fields for LLM-based vector inference.
-    VectorPrediction MUST contain all fields for LLM inference.
-    [👤semio📚py💻semio🔖domain🔖vector🛠️vectorprediction](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Vector/d/i/VectorPrediction)
-    """
+    """🖤Prediction fields for LLM-based vector inference."""
 
     pass
 
 
 class VectorNode(Node):
-    """GraphQL node exposing vector data.
-    VectorNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖vector🛠️vectornode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Vector/d/i/VectorNode)
-    """
+    """🤎GraphQL node exposing vector data."""
 
     class Meta:
         model = Vector
 
 
 class VectorInputNode(InputNode):
-    """GraphQL input node for vector mutations.
-    VectorInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖vector🛠️vectorinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Vector/d/i/VectorInputNode)
-    """
+    """💗GraphQL input node for vector mutations."""
 
     class Meta:
         model = VectorInput
 
 
-# endregion Vector
+# #endregion 🌊Vector
 
-# region Plane
-# [👤semio📚py💻semio🔖domain🔖plane](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane)
+# #region 🦁Plane
 # Plane primitive representing an oriented coordinate frame in 3D space.
 
 
 class PlaneOriginField(MaskedField, abc.ABC):
-    """Field mixin for the origin of a plane.
-    PlaneOriginField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖plane🛠️planeoriginfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneOriginField)
-    """
+    """💖Field mixin for the origin of a plane."""
 
     origin: Point = pydantic.Field()
 
 
 class PlaneXAxisField(MaskedField, abc.ABC):
-    """Field mixin for the x axis of a plane.
-    PlaneXAxisField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖plane🛠️planexaxisfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneXAxisField)
-    """
+    """💝Field mixin for the x axis of a plane."""
 
     xAxis: Vector = pydantic.Field()
 
 
 class PlaneYAxisField(MaskedField, abc.ABC):
-    """Field mixin for the y axis of a plane.
-    PlaneYAxisField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖plane🛠️planeyaxisfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneYAxisField)
-    """
+    """💘Field mixin for the y axis of a plane."""
 
     yAxis: Vector = pydantic.Field()
 
 
 class PlaneInput(Input):
-    """Input fields for creating or updating a plane.
-    PlaneInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖plane🛠️planeinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneInput)
-    """
+    """💕Input fields for creating or updating a plane."""
 
     origin: PointInput = pydantic.Field()
     xAxis: VectorInput = pydantic.Field()
@@ -1321,10 +1017,7 @@ class PlaneInput(Input):
 
 
 class PlaneContext(Context):
-    """Context fields for understanding a plane by an LLM.
-    PlaneContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖plane🛠️planecontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneContext)
-    """
+    """🔖Context fields for understanding a plane by an LLM."""
 
     origin: PointContext = pydantic.Field()
     xAxis: VectorContext = pydantic.Field()
@@ -1332,19 +1025,13 @@ class PlaneContext(Context):
 
 
 class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
-    """Output fields returned when fetching a plane.
-    PlaneOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖plane🛠️planeoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneOutput)
-    """
+    """🔖Output fields returned when fetching a plane."""
 
     pass
 
 
 class Plane(Table):
-    """Oriented coordinate frame in 3D space with origin and axes.
-    Plane MUST contain all coordinate or geometry fields.
-    [👤semio📚py💻semio🔖domain🔖plane🛠️plane](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/Plane)
-    """
+    """🔖Oriented coordinate frame in 3D space with origin and axes."""
 
     @property
     def origin(self) -> Point:
@@ -1412,63 +1099,44 @@ class Plane(Table):
 
 
 class PlaneInputNode(InputNode):
-    """GraphQL input node for plane mutations.
-    PlaneInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖plane🛠️planeinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Plane/d/i/PlaneInputNode)
-    """
+    """🔖GraphQL input node for plane mutations."""
 
     class Meta:
         model = PlaneInput
 
 
-# endregion Plane
+# #endregion 🦁Plane
 
-# region Location
-# [👤semio📚py💻semio🔖domain🔖location](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location)
+# #region 💧Location
 # Location entity for geographic coordinates with longitude, latitude and altitude.
 
 
 class LocationGuidField(RealField, abc.ABC):
-    """Field mixin for the guid of a location.
-    LocationGuidField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖location🛠️locationguidfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationGuidField)
-    """
+    """🔖Field mixin for the guid of a location."""
 
     guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class LocationLongitudeField(RealField, abc.ABC):
-    """Field mixin for the longitude of a location.
-    LocationLongitudeField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖location🛠️locationlongitudefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationLongitudeField)
-    """
+    """🐙Field mixin for the longitude of a location."""
 
     longitude: float = pydantic.Field()
 
 
 class LocationLatitudeField(RealField, abc.ABC):
-    """Field mixin for the latitude of a location.
-    LocationLatitudeField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖location🛠️locationlatitudefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationLatitudeField)
-    """
+    """🔖Field mixin for the latitude of a location."""
 
     latitude: float = pydantic.Field()
 
 
 class LocationAltitudeField(RealField, abc.ABC):
-    """Field mixin for the altitude of a location.
-    LocationAltitudeField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖location🛠️locationaltitudefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationAltitudeField)
-    """
+    """🔖Field mixin for the altitude of a location."""
 
     altitude: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class LocationId(LocationGuidField, Id):
-    """Identity fields for uniquely identifying a location.
-    LocationId MUST contain all fields that uniquely identify a location.
-    [👤semio📚py💻semio🔖domain🔖location🛠️locationid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationId)
-    """
+    """🔖Identity fields for uniquely identifying a location."""
 
     pass
 
@@ -1480,137 +1148,94 @@ class Location(
     LocationGuidField,
     TableEntity,
 ):
-    """Geographic location with longitude, latitude and altitude.
-    Location MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖location🛠️location](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/Location)
-    """
+    """Geographic location with longitude, latitude and altitude."""
 
     PLURAL = "locations"
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 
 class LocationInput(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Input):
-    """Input fields for creating or updating a location.
-    LocationInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖location🛠️locationinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationInput)
-    """
+    """🔖Input fields for creating or updating a location."""
 
     pass
 
 
 class LocationOutput(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Output):
-    """Output fields returned when fetching a location.
-    LocationOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖location🛠️locationoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationOutput)
-    """
+    """🔖Output fields returned when fetching a location."""
 
     pass
 
 
 class LocationContext(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Context):
-    """Context fields for understanding a location by an LLM.
-    LocationContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖location🛠️locationcontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationContext)
-    """
+    """🔖Context fields for understanding a location by an LLM."""
 
     pass
 
 
 class LocationPrediction(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Prediction):
-    """Prediction fields for LLM-based location inference.
-    LocationPrediction MUST contain all fields for LLM inference.
-    [👤semio📚py💻semio🔖domain🔖location🛠️locationprediction](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationPrediction)
-    """
+    """🔖Prediction fields for LLM-based location inference."""
 
     pass
 
 
 class LocationNode(Node):
-    """GraphQL node exposing location data.
-    LocationNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖location🛠️locationnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationNode)
-    """
+    """🔖GraphQL node exposing location data."""
 
     class Meta:
         model = LocationOutput
 
 
 class LocationInputNode(InputNode):
-    """GraphQL input node for location mutations.
-    LocationInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖location🛠️locationinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Location/d/i/LocationInputNode)
-    """
+    """🔖GraphQL input node for location mutations."""
 
     class Meta:
         model = LocationInput
 
 
-# endregion Location
+# #endregion 💧Location
 
-# region Author
-# [👤semio📚py💻semio🔖domain🔖author](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author)
+# #region 🎏Author
 # Author entity for tracking contributor identity and rank.
 
 
 class AuthorNameField(RealField, abc.ABC):
-    """Field mixin for the name of a author.
-    AuthorNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖author🛠️authornamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/AuthorNameField)
-    """
+    """✍️Field mixin for the name of a author."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class AuthorEmailField(RealField, abc.ABC):
-    """Field mixin for the email of a author.
-    AuthorEmailField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖author🛠️authoremailfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/AuthorEmailField)
-    """
+    """🔖Field mixin for the email of a author."""
 
     email: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class AuthorRankField(RealField, abc.ABC):
-    """Field mixin for the rank of a author.
-    AuthorRankField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖author🛠️authorrankfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/AuthorRankField)
-    """
+    """🔖Field mixin for the rank of a author."""
 
     rank: int = pydantic.Field(default=0)
 
 
 class AuthorId(AuthorEmailField, Id):
-    """Identity fields for uniquely identifying a author.
-    AuthorId MUST contain all fields that uniquely identify a author.
-    [👤semio📚py💻semio🔖domain🔖author🛠️authorid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/AuthorId)
-    """
+    """🔖Identity fields for uniquely identifying a author."""
 
     pass
 
 
 class AuthorProps(AuthorEmailField, AuthorNameField, Props):
-    """Property fields for a author.
-    AuthorProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖author🛠️authorprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/AuthorProps)
-    """
+    """🔖Property fields for a author."""
 
     pass
 
 
 class AuthorInput(AuthorEmailField, AuthorNameField, Input):
-    """Input fields for creating or updating a author.
-    AuthorInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖author🛠️authorinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/AuthorInput)
-    """
+    """🔖Input fields for creating or updating a author."""
 
     pass
 
 
 class AuthorOutput(AuthorEmailField, AuthorNameField, Output):
-    """Output fields returned when fetching a author.
-    AuthorOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖author🛠️authoroutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/AuthorOutput)
-    """
+    """🔖Output fields returned when fetching a author."""
 
     pass
 
@@ -1621,10 +1246,7 @@ class Author(
     AuthorNameField,
     TableEntity,
 ):
-    """Author entity with name, email and contribution rank.
-    Author MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖author🛠️author](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/Author)
-    """
+    """Author entity with name, email and contribution rank."""
 
     PLURAL = "authors"
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
@@ -1639,36 +1261,26 @@ class Author(
 
 
 class AuthorInputNode(InputNode):
-    """GraphQL input node for author mutations.
-    AuthorInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖author🛠️authorinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Author/d/i/AuthorInputNode)
-    """
+    """🔖GraphQL input node for author mutations."""
 
     class Meta:
         model = AuthorInput
 
 
-# endregion Author
+# #endregion 🎏Author
 
-# region ArtifactAuthor
-# [👤semio📚py💻semio🔖domain🔖artifactauthor](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/ArtifactAuthor)
+# #region 🔥ArtifactAuthor
 # Artifact-author association entity linking artifacts to authors by email.
 
 
 class ArtifactAuthorEmailField(RealField, abc.ABC):
-    """Field mixin for the email of a artifact author.
-    ArtifactAuthorEmailField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖artifactauthor🛠️artifactauthoremailfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/ArtifactAuthor/d/i/ArtifactAuthorEmailField)
-    """
+    """🏺Field mixin for the email of a artifact author."""
 
     author_email: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity):
-    """Association entity linking an artifact to an author by email.
-    ArtifactAuthor MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖artifactauthor🛠️artifactauthor](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/ArtifactAuthor/d/i/ArtifactAuthor)
-    """
+    """🔗Association entity linking an artifact to an author by email."""
 
     PLURAL = "artifact_authors"
 
@@ -1686,117 +1298,80 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity):
         ]
 
 
-# endregion ArtifactAuthor
+# #endregion 🔥ArtifactAuthor
 
-# region File
-# [👤semio📚py💻semio🔖domain🔖file](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File)
+# #region 💾File
 # File entity for managing binary assets with metadata and hashing.
 
 
 class FileGuidField(RealField, abc.ABC):
-    """Field mixin for the guid of a file.
-    FileGuidField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️fileguidfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileGuidField)
-    """
+    """📄Field mixin for the guid of a file."""
 
     guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class FileNameField(RealField, abc.ABC):
-    """Field mixin for the name of a file.
-    FileNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️filenamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileNameField)
-    """
+    """🔖Field mixin for the name of a file."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class FileRemoteField(RealField, abc.ABC):
-    """Field mixin for the remote of a file.
-    FileRemoteField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️fileremotefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileRemoteField)
-    """
+    """🔖Field mixin for the remote of a file."""
 
     remote: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 
 class FileFolderField(RealField, abc.ABC):
-    """Field mixin for the folder of a file.
-    FileFolderField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️filefolderfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileFolderField)
-    """
+    """📁Field mixin for the folder of a file."""
 
     folder: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 
 class FileSizeField(RealField, abc.ABC):
-    """Field mixin for the size of a file.
-    FileSizeField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️filesizefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileSizeField)
-    """
+    """🔖Field mixin for the size of a file."""
 
     size: typing.Optional[int] = pydantic.Field(default=None)
 
 
 class FileHashField(RealField, abc.ABC):
-    """Field mixin for the hash of a file.
-    FileHashField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️filehashfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileHashField)
-    """
+    """🔖Field mixin for the hash of a file."""
 
     hash: typing.Optional[str] = pydantic.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 
 class FileBlobField(RealField, abc.ABC):
-    """Field mixin for the blob of a file.
-    FileBlobField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️fileblobfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileBlobField)
-    """
+    """🔖Field mixin for the blob of a file."""
 
     blob: typing.Optional[str] = pydantic.Field(default=None)
 
 
 class FileCreatedAtField(RealField, abc.ABC):
-    """Field mixin for the created at of a file.
-    FileCreatedAtField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️filecreatedatfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileCreatedAtField)
-    """
+    """🆕Field mixin for the created at of a file."""
 
     createdAt: datetime.datetime = pydantic.Field()
 
 
 class FileCreatedByField(RealField, abc.ABC):
-    """Field mixin for the created by of a file.
-    FileCreatedByField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️filecreatedbyfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileCreatedByField)
-    """
+    """🔖Field mixin for the created by of a file."""
 
     createdBy: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class FileUpdatedAtField(RealField, abc.ABC):
-    """Field mixin for the updated at of a file.
-    FileUpdatedAtField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️fileupdatedatfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileUpdatedAtField)
-    """
+    """🔁Field mixin for the updated at of a file."""
 
     updatedAt: datetime.datetime = pydantic.Field()
 
 
 class FileUpdatedByField(RealField, abc.ABC):
-    """Field mixin for the updated by of a file.
-    FileUpdatedByField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖file🛠️fileupdatedbyfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileUpdatedByField)
-    """
+    """🔖Field mixin for the updated by of a file."""
 
     updatedBy: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class FileId(FileGuidField, Id):
-    """Identity fields for uniquely identifying a file.
-    FileId MUST contain all fields that uniquely identify a file.
-    [👤semio📚py💻semio🔖domain🔖file🛠️fileid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileId)
-    """
+    """🔖Identity fields for uniquely identifying a file."""
 
     pass
 
@@ -1815,10 +1390,7 @@ class FileProps(
     FileGuidField,
     Props,
 ):
-    """Property fields for a file.
-    FileProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖file🛠️fileprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileProps)
-    """
+    """Property fields for a file."""
 
     pass
 
@@ -1837,19 +1409,13 @@ class FileInput(
     FileGuidField,
     Input,
 ):
-    """Input fields for creating or updating a file.
-    FileInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖file🛠️fileinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileInput)
-    """
+    """Input fields for creating or updating a file."""
 
     pass
 
 
 class FileContext(FileNameField, FileGuidField, Context):
-    """Context fields for understanding a file by an LLM.
-    FileContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖file🛠️filecontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileContext)
-    """
+    """🔖Context fields for understanding a file by an LLM."""
 
     pass
 
@@ -1868,10 +1434,7 @@ class FileOutput(
     FileGuidField,
     Output,
 ):
-    """Output fields returned when fetching a file.
-    FileOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖file🛠️fileoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileOutput)
-    """
+    """Output fields returned when fetching a file."""
 
     pass
 
@@ -1890,10 +1453,7 @@ class File(
     FileGuidField,
     TableEntity,
 ):
-    """File entity for binary assets with metadata, hashing and timestamps.
-    File MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖file🛠️file](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/File)
-    """
+    """File entity for binary assets with metadata, hashing and timestamps."""
 
     PLURAL = "files"
 
@@ -1907,99 +1467,68 @@ class File(
 
 
 class FileInputNode(InputNode):
-    """GraphQL input node for file mutations.
-    FileInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖file🛠️fileinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/File/d/i/FileInputNode)
-    """
+    """🔖GraphQL input node for file mutations."""
 
     class Meta:
         model = FileInput
 
 
-# endregion File
+# #endregion 💾File
 
-# region Folder
-# [👤semio📚py💻semio🔖domain🔖folder](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder)
+# #region 📊Folder
 # Folder entity for hierarchical organization of kit content.
 
 
 class FolderGuidField(RealField, abc.ABC):
-    """Field mixin for the guid of a folder.
-    FolderGuidField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️folderguidfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderGuidField)
-    """
+    """🔖Field mixin for the guid of a folder."""
 
     guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class FolderNameField(RealField, abc.ABC):
-    """Field mixin for the name of a folder.
-    FolderNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️foldernamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderNameField)
-    """
+    """🔖Field mixin for the name of a folder."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class FolderParentField(RealField, abc.ABC):
-    """Field mixin for the parent of a folder.
-    FolderParentField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️folderparentfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderParentField)
-    """
+    """🔖Field mixin for the parent of a folder."""
 
     parent: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class FolderDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a folder.
-    FolderDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️folderdescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderDescriptionField)
-    """
+    """🔖Field mixin for the description of a folder."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class FolderCreatedAtField(RealField, abc.ABC):
-    """Field mixin for the created at of a folder.
-    FolderCreatedAtField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️foldercreatedatfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderCreatedAtField)
-    """
+    """🔖Field mixin for the created at of a folder."""
 
     createdAt: datetime.datetime = pydantic.Field()
 
 
 class FolderCreatedByField(RealField, abc.ABC):
-    """Field mixin for the created by of a folder.
-    FolderCreatedByField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️foldercreatedbyfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderCreatedByField)
-    """
+    """🔖Field mixin for the created by of a folder."""
 
     createdBy: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class FolderUpdatedAtField(RealField, abc.ABC):
-    """Field mixin for the updated at of a folder.
-    FolderUpdatedAtField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️folderupdatedatfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderUpdatedAtField)
-    """
+    """🔖Field mixin for the updated at of a folder."""
 
     updatedAt: datetime.datetime = pydantic.Field()
 
 
 class FolderUpdatedByField(RealField, abc.ABC):
-    """Field mixin for the updated by of a folder.
-    FolderUpdatedByField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️folderupdatedbyfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderUpdatedByField)
-    """
+    """🔖Field mixin for the updated by of a folder."""
 
     updatedBy: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class FolderId(FolderGuidField, Id):
-    """Identity fields for uniquely identifying a folder.
-    FolderId MUST contain all fields that uniquely identify a folder.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️folderid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderId)
-    """
+    """🔖Identity fields for uniquely identifying a folder."""
 
     pass
 
@@ -2015,10 +1544,7 @@ class FolderProps(
     FolderGuidField,
     Props,
 ):
-    """Property fields for a folder.
-    FolderProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️folderprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderProps)
-    """
+    """Property fields for a folder."""
 
     pass
 
@@ -2034,19 +1560,13 @@ class FolderInput(
     FolderGuidField,
     Input,
 ):
-    """Input fields for creating or updating a folder.
-    FolderInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️folderinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderInput)
-    """
+    """Input fields for creating or updating a folder."""
 
     attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 
 class FolderContext(FolderNameField, FolderGuidField, Context):
-    """Context fields for understanding a folder by an LLM.
-    FolderContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️foldercontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderContext)
-    """
+    """🔖Context fields for understanding a folder by an LLM."""
 
     pass
 
@@ -2062,10 +1582,7 @@ class FolderOutput(
     FolderGuidField,
     Output,
 ):
-    """Output fields returned when fetching a folder.
-    FolderOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️folderoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderOutput)
-    """
+    """Output fields returned when fetching a folder."""
 
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
@@ -2081,10 +1598,7 @@ class Folder(
     FolderGuidField,
     TableEntity,
 ):
-    """Folder entity for hierarchical content organization.
-    Folder MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️folder](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/Folder)
-    """
+    """Folder entity for hierarchical content organization."""
 
     PLURAL = "folders"
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
@@ -2132,81 +1646,56 @@ class Folder(
 
 
 class FolderInputNode(InputNode):
-    """GraphQL input node for folder mutations.
-    FolderInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖folder🛠️folderinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Folder/d/i/FolderInputNode)
-    """
+    """🔖GraphQL input node for folder mutations."""
 
     class Meta:
         model = FolderInput
 
 
-# endregion Folder
+# #endregion 📊Folder
 
-# region Benchmark
-# [👤semio📚py💻semio🔖domain🔖benchmark](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark)
+# #region 🎎Benchmark
 # Benchmark entity for defining performance metrics with min-max bounds.
 
 
 class BenchmarkNameField(RealField, abc.ABC):
-    """Field mixin for the name of a benchmark.
-    BenchmarkNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarknamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkNameField)
-    """
+    """🔖Field mixin for the name of a benchmark."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class BenchmarkIconField(RealField, abc.ABC):
-    """Field mixin for the icon of a benchmark.
-    BenchmarkIconField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkiconfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkIconField)
-    """
+    """🔖Field mixin for the icon of a benchmark."""
 
     icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class BenchmarkMinField(RealField, abc.ABC):
-    """Field mixin for the min of a benchmark.
-    BenchmarkMinField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkminfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkMinField)
-    """
+    """🔖Field mixin for the min of a benchmark."""
 
     min: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class BenchmarkMinExcludedField(RealField, abc.ABC):
-    """Field mixin for the min excluded of a benchmark.
-    BenchmarkMinExcludedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkminexcludedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkMinExcludedField)
-    """
+    """🔖Field mixin for the min excluded of a benchmark."""
 
     min_excluded: bool = pydantic.Field(default=False)
 
 
 class BenchmarkMaxField(RealField, abc.ABC):
-    """Field mixin for the max of a benchmark.
-    BenchmarkMaxField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkmaxfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkMaxField)
-    """
+    """🔖Field mixin for the max of a benchmark."""
 
     max: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class BenchmarkMaxExcludedField(RealField, abc.ABC):
-    """Field mixin for the max excluded of a benchmark.
-    BenchmarkMaxExcludedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkmaxexcludedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkMaxExcludedField)
-    """
+    """🔖Field mixin for the max excluded of a benchmark."""
 
     max_excluded: bool = pydantic.Field(default=False)
 
 
 class BenchmarkId(BenchmarkNameField, Id):
-    """Identity fields for uniquely identifying a benchmark.
-    BenchmarkId MUST contain all fields that uniquely identify a benchmark.
-    [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkId)
-    """
+    """🔖Identity fields for uniquely identifying a benchmark."""
 
     pass
 
@@ -2220,10 +1709,7 @@ class BenchmarkProps(
     BenchmarkNameField,
     Props,
 ):
-    """Property fields for a benchmark.
-    BenchmarkProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkProps)
-    """
+    """Property fields for a benchmark."""
 
     pass
 
@@ -2237,10 +1723,7 @@ class BenchmarkInput(
     BenchmarkNameField,
     Input,
 ):
-    """Input fields for creating or updating a benchmark.
-    BenchmarkInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkInput)
-    """
+    """Input fields for creating or updating a benchmark."""
 
     pass
 
@@ -2254,10 +1737,7 @@ class BenchmarkOutput(
     BenchmarkNameField,
     Output,
 ):
-    """Output fields returned when fetching a benchmark.
-    BenchmarkOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmarkoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/BenchmarkOutput)
-    """
+    """Output fields returned when fetching a benchmark."""
 
     pass
 
@@ -2271,207 +1751,140 @@ class Benchmark(
     BenchmarkNameField,
     TableEntity,
 ):
-    """Benchmark entity for performance metrics with min-max bounds.
-    Benchmark MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖benchmark🛠️benchmark](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Benchmark/d/i/Benchmark)
-    """
+    """Benchmark entity for performance metrics with min-max bounds."""
 
     PLURAL = "benchmarks"
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 
-# endregion Benchmark
+# #endregion 🎎Benchmark
 
-# region Quality
-# [👤semio📚py💻semio🔖domain🔖quality](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality)
+# #region 🖇️Quality
 # Quality entity for defining measurable properties with units and constraints.
 
 
 class QualityKeyField(RealField, abc.ABC):
-    """Field mixin for the key of a quality.
-    QualityKeyField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualitykeyfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityKeyField)
-    """
+    """🔖Field mixin for the key of a quality."""
 
     key: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class QualityNameField(RealField, abc.ABC):
-    """Field mixin for the name of a quality.
-    QualityNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualitynamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityNameField)
-    """
+    """🔖Field mixin for the name of a quality."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class QualityDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a quality.
-    QualityDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualitydescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityDescriptionField)
-    """
+    """🔖Field mixin for the description of a quality."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class QualityUriField(RealField, abc.ABC):
-    """Field mixin for the uri of a quality.
-    QualityUriField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityurifield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityUriField)
-    """
+    """🔖Field mixin for the uri of a quality."""
 
     uri: str = pydantic.Field(default="", max_length=URI_LENGTH_LIMIT)
 
 
 class QualityScalableField(RealField, abc.ABC):
-    """Field mixin for the scalable of a quality.
-    QualityScalableField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityscalablefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityScalableField)
-    """
+    """🔖Field mixin for the scalable of a quality."""
 
     scalable: bool = pydantic.Field(default=False)
 
 
 class QualityKindField(RealField, abc.ABC):
-    """Field mixin for the kind of a quality.
-    QualityKindField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualitykindfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityKindField)
-    """
+    """🔖Field mixin for the kind of a quality."""
 
     kind: int = pydantic.Field(default=0)
 
 
 class QualitySiField(RealField, abc.ABC):
-    """Field mixin for the si of a quality.
-    QualitySiField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualitysifield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualitySiField)
-    """
+    """🔖Field mixin for the si of a quality."""
 
     si: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class QualityImperialField(RealField, abc.ABC):
-    """Field mixin for the imperial of a quality.
-    QualityImperialField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityimperialfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityImperialField)
-    """
+    """🔖Field mixin for the imperial of a quality."""
 
     imperial: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class QualityMinField(RealField, abc.ABC):
-    """Field mixin for the min of a quality.
-    QualityMinField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityminfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityMinField)
-    """
+    """🔖Field mixin for the min of a quality."""
 
     min: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class QualityMinExcludedField(RealField, abc.ABC):
-    """Field mixin for the min excluded of a quality.
-    QualityMinExcludedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityminexcludedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityMinExcludedField)
-    """
+    """🔖Field mixin for the min excluded of a quality."""
 
     min_excluded: bool = pydantic.Field(default=True)
 
 
 class QualityMaxField(RealField, abc.ABC):
-    """Field mixin for the max of a quality.
-    QualityMaxField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualitymaxfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityMaxField)
-    """
+    """🔖Field mixin for the max of a quality."""
 
     max: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class QualityMaxExcludedField(RealField, abc.ABC):
-    """Field mixin for the max excluded of a quality.
-    QualityMaxExcludedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualitymaxexcludedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityMaxExcludedField)
-    """
+    """🔖Field mixin for the max excluded of a quality."""
 
     max_excluded: bool = pydantic.Field(default=True)
 
 
 class QualityDefaultField(RealField, abc.ABC):
-    """Field mixin for the default of a quality.
-    QualityDefaultField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualitydefaultfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityDefaultField)
-    """
+    """🔖Field mixin for the default of a quality."""
 
     default: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class QualityFormulaField(RealField, abc.ABC):
-    """Field mixin for the formula of a quality.
-    QualityFormulaField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityformulafield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityFormulaField)
-    """
+    """🔖Field mixin for the formula of a quality."""
 
     formula: str = pydantic.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
 
 
 class QualityFolderField(RealField, abc.ABC):
-    """Field mixin for the folder of a quality.
-    QualityFolderField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityfolderfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityFolderField)
-    """
+    """🔖Field mixin for the folder of a quality."""
 
     folder: typing.Optional[str] = pydantic.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 
 class QualityIconField(RealField, abc.ABC):
-    """Field mixin for the icon of a quality.
-    QualityIconField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityiconfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityIconField)
-    """
+    """🔖Field mixin for the icon of a quality."""
 
     icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 
 class QualityImageField(RealField, abc.ABC):
-    """Field mixin for the image of a quality.
-    QualityImageField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityimagefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityImageField)
-    """
+    """🔖Field mixin for the image of a quality."""
 
     image: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 
 class QualityUnitField(RealField, abc.ABC):
-    """Field mixin for the unit of a quality.
-    QualityUnitField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityunitfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityUnitField)
-    """
+    """🔖Field mixin for the unit of a quality."""
 
     unit: typing.Optional[str] = pydantic.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 
 class QualityCreatedField(RealField, abc.ABC):
-    """Field mixin for the created of a quality.
-    QualityCreatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualitycreatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityCreatedField)
-    """
+    """🔖Field mixin for the created of a quality."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class QualityUpdatedField(RealField, abc.ABC):
-    """Field mixin for the updated of a quality.
-    QualityUpdatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityupdatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityUpdatedField)
-    """
+    """🔖Field mixin for the updated of a quality."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class QualityId(QualityKeyField, Id):
-    """Identity fields for uniquely identifying a quality.
-    QualityId MUST contain all fields that uniquely identify a quality.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityId)
-    """
+    """🔖Identity fields for uniquely identifying a quality."""
 
     pass
 
@@ -2497,10 +1910,7 @@ class QualityProps(
     QualityKeyField,
     Props,
 ):
-    """Property fields for a quality.
-    QualityProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityProps)
-    """
+    """Property fields for a quality."""
 
     pass
 
@@ -2526,19 +1936,13 @@ class QualityInput(
     QualityKeyField,
     Input,
 ):
-    """Input fields for creating or updating a quality.
-    QualityInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityInput)
-    """
+    """Input fields for creating or updating a quality."""
 
     pass
 
 
 class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField, Context):
-    """Context fields for understanding a quality by an LLM.
-    QualityContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualitycontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityContext)
-    """
+    """🔖Context fields for understanding a quality by an LLM."""
 
     pass
 
@@ -2566,10 +1970,7 @@ class QualityOutput(
     QualityKeyField,
     Output,
 ):
-    """Output fields returned when fetching a quality.
-    QualityOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️qualityoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/QualityOutput)
-    """
+    """Output fields returned when fetching a quality."""
 
     benchmarks: list["BenchmarkOutput"] = pydantic.Field(default_factory=list)
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
@@ -2598,10 +1999,7 @@ class Quality(
     QualityKeyField,
     TableEntity,
 ):
-    """Quality entity with units, constraints, formula and folder classification.
-    Quality MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖quality🛠️quality](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Quality/d/i/Quality)
-    """
+    """Quality entity with units, constraints, formula and folder classification."""
 
     PLURAL = "qualities"
 
@@ -2609,63 +2007,44 @@ class Quality(
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 
-# endregion Quality
+# #endregion 🖇️Quality
 
-# region Prop
-# [👤semio📚py💻semio🔖domain🔖prop](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop)
+# #region 🏷️Prop
 # Prop entity for key-value property pairs with units.
 
 
 class PropKeyField(RealField, abc.ABC):
-    """Field mixin for the key of a prop.
-    PropKeyField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖prop🛠️propkeyfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropKeyField)
-    """
+    """🔖Field mixin for the key of a prop."""
 
     key: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class PropValueField(RealField, abc.ABC):
-    """Field mixin for the value of a prop.
-    PropValueField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖prop🛠️propvaluefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropValueField)
-    """
+    """🔖Field mixin for the value of a prop."""
 
     value: str = pydantic.Field(max_length=VALUE_LENGTH_LIMIT)
 
 
 class PropUnitField(RealField, abc.ABC):
-    """Field mixin for the unit of a prop.
-    PropUnitField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖prop🛠️propunitfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropUnitField)
-    """
+    """🔖Field mixin for the unit of a prop."""
 
     unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class PropCreatedField(RealField, abc.ABC):
-    """Field mixin for the created of a prop.
-    PropCreatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖prop🛠️propcreatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropCreatedField)
-    """
+    """🔖Field mixin for the created of a prop."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class PropUpdatedField(RealField, abc.ABC):
-    """Field mixin for the updated of a prop.
-    PropUpdatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖prop🛠️propupdatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropUpdatedField)
-    """
+    """🔖Field mixin for the updated of a prop."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class PropId(PropKeyField, Id):
-    """Identity fields for uniquely identifying a prop.
-    PropId MUST contain all fields that uniquely identify a prop.
-    [👤semio📚py💻semio🔖domain🔖prop🛠️propid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropId)
-    """
+    """🔖Identity fields for uniquely identifying a prop."""
 
     pass
 
@@ -2678,19 +2057,13 @@ class PropProps(
     PropKeyField,
     Props,
 ):
-    """Property fields for a prop.
-    PropProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖prop🛠️propprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropProps)
-    """
+    """Property fields for a prop."""
 
     pass
 
 
 class PropInput(PropUnitField, PropValueField, PropKeyField, Input):
-    """Input fields for creating or updating a prop.
-    PropInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖prop🛠️propinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropInput)
-    """
+    """🔖Input fields for creating or updating a prop."""
 
     pass
 
@@ -2703,10 +2076,7 @@ class PropOutput(
     PropKeyField,
     Output,
 ):
-    """Output fields returned when fetching a prop.
-    PropOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖prop🛠️propoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropOutput)
-    """
+    """Output fields returned when fetching a prop."""
 
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
@@ -2719,10 +2089,7 @@ class Prop(
     PropKeyField,
     TableEntity,
 ):
-    """Prop entity for key-value properties with optional units.
-    Prop MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖prop🛠️prop](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/Prop)
-    """
+    """Prop entity for key-value properties with optional units."""
 
     PLURAL = "props"
 
@@ -2760,72 +2127,50 @@ class Prop(
 
 
 class PropInputNode(InputNode):
-    """GraphQL input node for prop mutations.
-    PropInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖prop🛠️propinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Prop/d/i/PropInputNode)
-    """
+    """🔖GraphQL input node for prop mutations."""
 
     class Meta:
         model = PropInput
 
 
-# endregion Prop
+# #endregion 🏷️Prop
 
-# region Model
-# [👤semio📚py💻semio🔖domain🔖model](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model)
+# #region 🧫Model
 # Model entity for 3D geometry representations linked to files.
 
 
 class ModelNameField(RealField, abc.ABC):
-    """Field mixin for the name of a model.
-    ModelNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖model🛠️modelnamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelNameField)
-    """
+    """🔖Field mixin for the name of a model."""
 
     name: typing.Optional[str] = pydantic.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 
 class ModelUrlField(RealField, abc.ABC):
-    """Field mixin for the url of a model.
-    ModelUrlField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖model🛠️modelurlfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelUrlField)
-    """
+    """🔖Field mixin for the url of a model."""
 
     url: str = pydantic.Field(max_length=URL_LENGTH_LIMIT)
 
 
 class ModelFileField(RealField, abc.ABC):
-    """Field mixin for the file of a model.
-    ModelFileField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖model🛠️modelfilefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelFileField)
-    """
+    """🔖Field mixin for the file of a model."""
 
     file: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class ModelDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a model.
-    ModelDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖model🛠️modeldescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelDescriptionField)
-    """
+    """🔖Field mixin for the description of a model."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class ModelTagsField(MaskedField, abc.ABC):
-    """Field mixin for the tags of a model.
-    ModelTagsField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖model🛠️modeltagsfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelTagsField)
-    """
+    """🔖Field mixin for the tags of a model."""
 
     tags: list[str] = pydantic.Field(default_factory=list)
 
 
 class ModelId(ModelTagsField, Id):
-    """Identity fields for uniquely identifying a model.
-    ModelId MUST contain all fields that uniquely identify a model.
-    [👤semio📚py💻semio🔖domain🔖model🛠️modelid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelId)
-    """
+    """🔖Identity fields for uniquely identifying a model."""
 
     pass
 
@@ -2838,10 +2183,7 @@ class ModelProps(
     ModelUrlField,
     Props,
 ):
-    """Property fields for a model.
-    ModelProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖model🛠️modelprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelProps)
-    """
+    """Property fields for a model."""
 
     pass
 
@@ -2854,19 +2196,13 @@ class ModelInput(
     ModelUrlField,
     Input,
 ):
-    """Input fields for creating or updating a model.
-    ModelInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖model🛠️modelinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelInput)
-    """
+    """Input fields for creating or updating a model."""
 
     attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 
 class ModelContext(ModelTagsField, ModelDescriptionField, ModelNameField, Context):
-    """Context fields for understanding a model by an LLM.
-    ModelContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖model🛠️modelcontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelContext)
-    """
+    """🔖Context fields for understanding a model by an LLM."""
 
     attributes: list[AttributeContext] = pydantic.Field(default_factory=list)
 
@@ -2879,10 +2215,7 @@ class ModelOutput(
     ModelUrlField,
     Output,
 ):
-    """Output fields returned when fetching a model.
-    ModelOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖model🛠️modeloutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelOutput)
-    """
+    """Output fields returned when fetching a model."""
 
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
@@ -2894,10 +2227,7 @@ class Model(
     ModelUrlField,
     TableEntity,
 ):
-    """Model entity for 3D geometry with name, URL and file reference.
-    Model MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖model🛠️model](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/Model)
-    """
+    """Model entity for 3D geometry with name, URL and file reference."""
 
     PLURAL = "models"
     tags_: list[Tag] = pydantic.Field(default_factory=list)
@@ -2946,117 +2276,81 @@ class Model(
 
 
 class NoModelAssigned(NoParentAssigned):
-    """No Model Assigned definition.
-    NoModelAssigned MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖domain🔖model🛠️nomodelassigned](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/NoModelAssigned)
-    """
+    """🔖No Model Assigned definition."""
 
     def __str__(self):
         return " The entity has no parent model assigned."
 
 
 class ModelInputNode(InputNode):
-    """GraphQL input node for model mutations.
-    ModelInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖model🛠️modelinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Model/d/i/ModelInputNode)
-    """
+    """🔖GraphQL input node for model mutations."""
 
     class Meta:
         model = ModelInput
 
 
-# endregion Model
+# #endregion 🧫Model
 
-# region Port
-# [👤semio📚py💻semio🔖domain🔖port](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port)
+# #region 🎆Port
 # Port entity for defining connection interfaces on types.
 
 
 class PortNameField(RealField, abc.ABC):
-    """Field mixin for the name of a port.
-    PortNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖port🛠️portnamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortNameField)
-    """
+    """🔖Field mixin for the name of a port."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class PortDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a port.
-    PortDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖port🛠️portdescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortDescriptionField)
-    """
+    """🔖Field mixin for the description of a port."""
 
     description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class PortIconField(RealField, abc.ABC):
-    """Field mixin for the icon of a port.
-    PortIconField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖port🛠️porticonfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortIconField)
-    """
+    """🔖Field mixin for the icon of a port."""
 
     icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 
 class PortMaxChildrenField(RealField, abc.ABC):
-    """Field mixin for the max children of a port.
-    PortMaxChildrenField MUST declare exactly one field with appropriate constraints.
-    """
+    """🔖Field mixin for the max children of a port."""
 
     maxChildren: int = pydantic.Field(default=1, ge=0)
 
 
 class PortCompatiblePortsField(MaskedField, abc.ABC):
-    """Field mixin for the compatible ports of a port.
-    PortCompatiblePortsField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖port🛠️portcompatibleportsfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortCompatiblePortsField)
-    """
+    """🔖Field mixin for the compatible ports of a port."""
 
     compatiblePorts: list[str] = pydantic.Field(default_factory=list)
 
 
 class PortId(PortNameField, Id):
-    """Identity fields for uniquely identifying a port.
-    PortId MUST contain all fields that uniquely identify a port.
-    [👤semio📚py💻semio🔖domain🔖port🛠️portid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortId)
-    """
+    """🔖Identity fields for uniquely identifying a port."""
 
     pass
 
 
 class PortProps(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Props):
-    """Property fields for a port.
-    PortProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖port🛠️portprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortProps)
-    """
+    """🔖Property fields for a port."""
 
     pass
 
 
 class PortInput(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Input):
-    """Input fields for creating or updating a port.
-    PortInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖port🛠️portinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortInput)
-    """
+    """🔖Input fields for creating or updating a port."""
 
     attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 
 class PortOutput(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Output):
-    """Output fields returned when fetching a port.
-    PortOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖port🛠️portoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortOutput)
-    """
+    """🔖Output fields returned when fetching a port."""
 
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 
 class Port(PortMaxChildrenField, PortIconField, PortDescriptionField, PortNameField, TableEntity):
-    """Port entity defining a named connection interface on a type.
-    Port MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖port🛠️port](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/Port)
-    """
+    """🔖Port entity defining a named connection interface on a type."""
 
     PLURAL = "ports"
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
@@ -3066,138 +2360,95 @@ class Port(PortMaxChildrenField, PortIconField, PortDescriptionField, PortNameFi
 
 
 class PortInputNode(InputNode):
-    """GraphQL input node for port mutations.
-    PortInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖port🛠️portinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortInputNode)
-    """
+    """🔖GraphQL input node for port mutations."""
 
     class Meta:
         model = PortInput
 
 
-# endregion Port
+# #endregion 🎆Port
 
-# region Connector
-# [🔖semio/py/semio.py#Connector](repo://section/semio/py/semio.py/CONNECTOR)
+# #region 🦀Connector
 
-# region CompatiblePort
-# [👤semio📚py💻semio🔖domain🔖connector🔖compatibleport](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/s/CompatiblePort)
+# #region 🪙CompatiblePort
 # Compatible port entity for specifying allowed port pairings on connectors.
 
 
 class CompatiblePortNameField(RealField, abc.ABC):
-    """Field mixin for the name of a compatible port.
-    CompatiblePortNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connector🔖compatibleport🛠️compatibleportnamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/s/CompatiblePort/d/i/CompatiblePortNameField)
-    """
+    """🔖Field mixin for the name of a compatible port."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class CompatiblePortOrderField(RealField, abc.ABC):
-    """Field mixin for the order of a compatible port.
-    CompatiblePortOrderField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connector🔖compatibleport🛠️compatibleportorderfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/s/CompatiblePort/d/i/CompatiblePortOrderField)
-    """
+    """🔖Field mixin for the order of a compatible port."""
 
     order: int = pydantic.Field()
 
 
 class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table):
-    """Compatible port entity specifying an allowed port pairing.
-    CompatiblePort MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖connector🔖compatibleport🛠️compatibleport](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/s/CompatiblePort/d/i/CompatiblePort)
-    """
+    """🔖Compatible port entity specifying an allowed port pairing."""
 
 
-# endregion CompatiblePort
+# #endregion 🪙CompatiblePort
 
 
 class ConnectorIdField(MaskedField, abc.ABC):
-    """Field mixin for the id of a connector.
-    ConnectorIdField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectoridfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorIdField)
-    """
+    """🔖Field mixin for the id of a connector."""
 
     id_: str = pydantic.Field(default="", max_length=ID_LENGTH_LIMIT)
 
 
 class ConnectorDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a connector.
-    ConnectorDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectordescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorDescriptionField)
-    """
+    """🔖Field mixin for the description of a connector."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class ConnectorMandatoryField(RealField, abc.ABC):
-    """Field mixin for the mandatory of a connector.
-    ConnectorMandatoryField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectormandatoryfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorMandatoryField)
-    """
+    """🔖Field mixin for the mandatory of a connector."""
 
     is_mandatory: bool = pydantic.Field(default=False)
 
 
 class ConnectorMaxChildrenField(RealField, abc.ABC):
-    """Field mixin for the max children of a connector.
-    ConnectorMaxChildrenField MUST declare exactly one field with appropriate constraints.
-    """
+    """🔖Field mixin for the max children of a connector."""
 
     maxChildren: int = pydantic.Field(default=1, ge=0)
 
 
 class ConnectorPortField(RealField, abc.ABC):
-    """Field mixin for the port of a connector.
-    ConnectorPortField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectorportfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorPortField)
-    """
+    """🔖Field mixin for the port of a connector."""
 
     port: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class ConnectorCompatiblePortsField(MaskedField, abc.ABC):
-    """Field mixin for the compatible ports of a connector.
-    ConnectorCompatiblePortsField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectorcompatibleportsfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorCompatiblePortsField)
-    """
+    """🔖Field mixin for the compatible ports of a connector."""
 
     compatiblePorts: list[str] = pydantic.Field(default_factory=list)
 
 
 class ConnectorPointField(MaskedField, abc.ABC):
-    """Field mixin for the point of a connector.
-    ConnectorPointField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectorpointfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorPointField)
-    """
+    """🔖Field mixin for the point of a connector."""
 
     point: Point = pydantic.Field()
 
 
 class ConnectorDirectionField(MaskedField, abc.ABC):
-    """Field mixin for the direction of a connector.
-    ConnectorDirectionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectordirectionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorDirectionField)
-    """
+    """🔖Field mixin for the direction of a connector."""
 
     direction: Vector = pydantic.Field()
 
 
 class ConnectorTField(RealField, abc.ABC):
-    """Field mixin for the t of a connector.
-    ConnectorTField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectortfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorTField)
-    """
+    """🔖Field mixin for the t of a connector."""
 
     t: float = pydantic.Field(default=0.0)
 
 
 class ConnectorId(ConnectorIdField, Id):
-    """Identity fields for uniquely identifying a connector.
-    ConnectorId MUST contain all fields that uniquely identify a connector.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectorid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorId)
-    """
+    """🔖Identity fields for uniquely identifying a connector."""
 
     pass
 
@@ -3212,10 +2463,7 @@ class ConnectorProps(
     ConnectorIdField,
     Props,
 ):
-    """Property fields for a connector.
-    ConnectorProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectorprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorProps)
-    """
+    """Property fields for a connector."""
 
     pass
 
@@ -3230,10 +2478,7 @@ class ConnectorInput(
     ConnectorIdField,
     Input,
 ):
-    """Input fields for creating or updating a connector.
-    ConnectorInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectorinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorInput)
-    """
+    """Input fields for creating or updating a connector."""
 
     point: PointInput = pydantic.Field()
     direction: VectorInput = pydantic.Field()
@@ -3252,10 +2497,7 @@ class ConnectorContext(
     ConnectorIdField,
     Context,
 ):
-    """Context fields for understanding a connector by an LLM.
-    ConnectorContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectorcontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorContext)
-    """
+    """Context fields for understanding a connector by an LLM."""
 
     attributes: list[AttributeContext] = pydantic.Field(default_factory=list)
 
@@ -3272,10 +2514,7 @@ class ConnectorOutput(
     ConnectorIdField,
     Output,
 ):
-    """Output fields returned when fetching a connector.
-    ConnectorOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectoroutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorOutput)
-    """
+    """Output fields returned when fetching a connector."""
 
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
@@ -3288,10 +2527,7 @@ class Connector(
     ConnectorDescriptionField,
     TableEntity,
 ):
-    """Connector entity defining a localized connection point on a type.
-    Connector MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connector](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/Connector)
-    """
+    """Connector entity defining a localized connection point on a type."""
 
     PLURAL = "connectors"
 
@@ -3383,10 +2619,7 @@ class Connector(
 
 
 class ConnectorNotFound(NotFound):
-    """Exception for a connector not found on a type.
-    ConnectorNotFound MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectornotfound](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorNotFound)
-    """
+    """🔖Exception for a connector not found on a type."""
 
     def __init__(self, parent: "Type", id: "ConnectorId") -> None:
         self.parent = parent
@@ -3398,181 +2631,123 @@ class ConnectorNotFound(NotFound):
 
 
 class ConnectorInputNode(InputNode):
-    """GraphQL input node for connector mutations.
-    ConnectorInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectorinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorInputNode)
-    """
+    """🔖GraphQL input node for connector mutations."""
 
     class Meta:
         model = ConnectorInput
 
 
 class ConnectorIdInputNode(InputNode):
-    """GraphQL input node for connector id mutations.
-    ConnectorIdInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖connector🛠️connectoridinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connector/d/i/ConnectorIdInputNode)
-    """
+    """🔖GraphQL input node for connector id mutations."""
 
     class Meta:
         model = ConnectorId
 
 
-# endregion Connector
+# #endregion 🦀Connector
 
-# region Type
-# [👤semio📚py💻semio🔖domain🔖type](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type)
+# #region 💡Type
 # Type entity for defining reusable parametric building blocks.
 
 
 class TypeNameField(RealField, abc.ABC):
-    """Field mixin for the name of a type.
-    TypeNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typenamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeNameField)
-    """
+    """🔖Field mixin for the name of a type."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class TypeDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a type.
-    TypeDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typedescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeDescriptionField)
-    """
+    """🔖Field mixin for the description of a type."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class TypeIconField(RealField, abc.ABC):
-    """Field mixin for the icon of a type.
-    TypeIconField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeiconfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeIconField)
-    """
+    """🔖Field mixin for the icon of a type."""
 
     icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class TypeImageField(RealField, abc.ABC):
-    """Field mixin for the image of a type.
-    TypeImageField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeimagefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeImageField)
-    """
+    """🔖Field mixin for the image of a type."""
 
     image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class TypeParentField(RealField, abc.ABC):
-    """Field mixin for the parent of a type.
-    TypeParentField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeparentfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeParentField)
-    """
+    """🔖Field mixin for the parent of a type."""
 
     parent: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class TypeIsAbstractField(RealField, abc.ABC):
-    """Field mixin for the is abstract of a type.
-    TypeIsAbstractField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeisabstractfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeIsAbstractField)
-    """
+    """🔖Field mixin for the is abstract of a type."""
 
     is_abstract: bool = pydantic.Field(default=False)
 
 
 class TypeFolderField(RealField, abc.ABC):
-    """Field mixin for the folder of a type.
-    TypeFolderField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typefolderfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeFolderField)
-    """
+    """🔖Field mixin for the folder of a type."""
 
     folder: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class TypeStockField(RealField, abc.ABC):
-    """Field mixin for the stock of a type.
-    TypeStockField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typestockfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeStockField)
-    """
+    """🔖Field mixin for the stock of a type."""
 
     stock: int = pydantic.Field(default=2147483647)
 
 
 class TypeVariantField(RealField, abc.ABC):
-    """Field mixin for the variant of a type.
-    TypeVariantField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typevariantfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVariantField)
-    """
+    """🔖Field mixin for the variant of a type."""
 
     variant: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class TypeVirtualField(RealField, abc.ABC):
-    """Field mixin for the virtual of a type.
-    TypeVirtualField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typevirtualfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeVirtualField)
-    """
+    """🔖Field mixin for the virtual of a type."""
 
     is_virtual: bool = pydantic.Field(default=False)
 
 
 class TypeScalableField(RealField, abc.ABC):
-    """Field mixin for the scalable of a type.
-    TypeScalableField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typescalablefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeScalableField)
-    """
+    """🔖Field mixin for the scalable of a type."""
 
     can_scale: bool = pydantic.Field(default=True)
 
 
 class TypeMirrborableField(RealField, abc.ABC):
-    """Field mixin for the mirrborable of a type.
-    TypeMirrborableField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typemirrborablefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeMirrborableField)
-    """
+    """🔖Field mixin for the mirrborable of a type."""
 
     can_mirror: bool = pydantic.Field(default=True)
 
 
 class TypeUnitField(RealField, abc.ABC):
-    """Field mixin for the unit of a type.
-    TypeUnitField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeunitfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeUnitField)
-    """
+    """🔖Field mixin for the unit of a type."""
 
     unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class TypeLocationField(MaskedField, abc.ABC):
-    """Field mixin for the location of a type.
-    TypeLocationField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typelocationfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeLocationField)
-    """
+    """🔖Field mixin for the location of a type."""
 
     location: typing.Optional[Location] = pydantic.Field(default=None)
 
 
 class TypeCreatedField(RealField, abc.ABC):
-    """Field mixin for the created of a type.
-    TypeCreatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typecreatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeCreatedField)
-    """
+    """🔖Field mixin for the created of a type."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class TypeUpdatedField(RealField, abc.ABC):
-    """Field mixin for the updated of a type.
-    TypeUpdatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeupdatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeUpdatedField)
-    """
+    """🔖Field mixin for the updated of a type."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class TypeId(TypeNameField, TypeVariantField, Id):
-    """Identity fields for uniquely identifying a type.
-    TypeId MUST contain all fields that uniquely identify a type.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeId)
-    """
+    """🔖Identity fields for uniquely identifying a type."""
 
     pass
 
@@ -3591,10 +2766,7 @@ class TypeProps(
     TypeNameField,
     Props,
 ):
-    """Property fields for a type.
-    TypeProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeProps)
-    """
+    """Property fields for a type."""
 
     pass
 
@@ -3609,10 +2781,7 @@ class TypeInput(
     TypeNameField,
     Input,
 ):
-    """Input fields for creating or updating a type.
-    TypeInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeInput)
-    """
+    """Input fields for creating or updating a type."""
 
     parent: typing.Optional[str] = pydantic.Field(default=None)
     is_abstract: typing.Optional[bool] = pydantic.Field(default=None)
@@ -3638,10 +2807,7 @@ class TypeOutput(
     TypeNameField,
     Output,
 ):
-    """Output fields returned when fetching a type.
-    TypeOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeOutput)
-    """
+    """Output fields returned when fetching a type."""
 
     parent: typing.Optional[str] = pydantic.Field(default=None)
     is_abstract: typing.Optional[bool] = pydantic.Field(default=None)
@@ -3664,10 +2830,7 @@ class TypeContext(
     TypeNameField,
     Context,
 ):
-    """Context fields for understanding a type by an LLM.
-    TypeContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typecontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeContext)
-    """
+    """Context fields for understanding a type by an LLM."""
 
     location: typing.Optional[LocationContext] = pydantic.Field(default=None)
     connectors: list[ConnectorContext] = pydantic.Field(default_factory=list)
@@ -3693,10 +2856,7 @@ class Type(
     TypeParentField,
     TableEntity,
 ):
-    """Type entity defining a reusable parametric building block.
-    Type MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖type🛠️type](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/Type)
-    """
+    """Type entity defining a reusable parametric building block."""
 
     PLURAL = "types"
 
@@ -3851,10 +3011,7 @@ class Type(
 
 
 class TypeNotFound(NotFound):
-    """Exception for a type not found in the kit.
-    TypeNotFound MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typenotfound](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeNotFound)
-    """
+    """🔖Exception for a type not found in the kit."""
 
     def __init__(self, id: "TypeId") -> None:
         self.id = id
@@ -3865,20 +3022,14 @@ class TypeNotFound(NotFound):
 
 
 class NoTypeAssigned(NoParentAssigned):
-    """No Type Assigned definition.
-    NoTypeAssigned MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖domain🔖type🛠️notypeassigned](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/NoTypeAssigned)
-    """
+    """🔖No Type Assigned definition."""
 
     def __str__(self):
         return " The entity has no parent type assigned."
 
 
 class TypeHasNotAllUsedConnectors(SpecificationError):
-    """Type Has Not All Used Connectors definition.
-    TypeHasNotAllUsedConnectors MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typehasnotallusedconnectors](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeHasNotAllUsedConnectors)
-    """
+    """🔖Type Has Not All Used Connectors definition."""
 
     def __init__(self, missingConnectors: set[str]) -> None:
         self.missingConnectors = missingConnectors
@@ -3888,82 +3039,57 @@ class TypeHasNotAllUsedConnectors(SpecificationError):
 
 
 class TypeInputNode(InputNode):
-    """GraphQL input node for type mutations.
-    TypeInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeInputNode)
-    """
+    """🔖GraphQL input node for type mutations."""
 
     class Meta:
         model = TypeInput
 
 
 class TypeIdInputNode(InputNode):
-    """GraphQL input node for type id mutations.
-    TypeIdInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖type🛠️typeidinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Type/d/i/TypeIdInputNode)
-    """
+    """🔖GraphQL input node for type id mutations."""
 
     class Meta:
         model = TypeId
 
 
-# endregion Type
+# #endregion 💡Type
 
-# region Layer
-# [👤semio📚py💻semio🔖domain🔖layer](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer)
+# #region 🎃Layer
 # Layer entity for organizing design elements into visibility groups.
 
 
 class LayerNameField(RealField, abc.ABC):
-    """Field mixin for the name of a layer.
-    LayerNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖layer🛠️layernamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerNameField)
-    """
+    """🔖Field mixin for the name of a layer."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class LayerDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a layer.
-    LayerDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖layer🛠️layerdescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerDescriptionField)
-    """
+    """🔖Field mixin for the description of a layer."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class LayerColorField(RealField, abc.ABC):
-    """Field mixin for the color of a layer.
-    LayerColorField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖layer🛠️layercolorfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerColorField)
-    """
+    """🎨Field mixin for the color of a layer."""
 
     color: str = pydantic.Field(default="", max_length=7)
 
 
 class LayerIsHiddenField(RealField, abc.ABC):
-    """Field mixin for the is hidden of a layer.
-    LayerIsHiddenField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖layer🛠️layerishiddenfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerIsHiddenField)
-    """
+    """🔖Field mixin for the is hidden of a layer."""
 
     is_hidden: bool = pydantic.Field(default=False)
 
 
 class LayerIsLockedField(RealField, abc.ABC):
-    """Field mixin for the is locked of a layer.
-    LayerIsLockedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖layer🛠️layerislockedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerIsLockedField)
-    """
+    """🔖Field mixin for the is locked of a layer."""
 
     is_locked: bool = pydantic.Field(default=False)
 
 
 class LayerId(LayerNameField, Id):
-    """Identity fields for uniquely identifying a layer.
-    LayerId MUST contain all fields that uniquely identify a layer.
-    [👤semio📚py💻semio🔖domain🔖layer🛠️layerid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerId)
-    """
+    """🔖Identity fields for uniquely identifying a layer."""
 
     pass
 
@@ -3976,10 +3102,7 @@ class LayerProps(
     LayerNameField,
     Props,
 ):
-    """Property fields for a layer.
-    LayerProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖layer🛠️layerprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerProps)
-    """
+    """Property fields for a layer."""
 
     pass
 
@@ -3992,10 +3115,7 @@ class LayerInput(
     LayerNameField,
     Input,
 ):
-    """Input fields for creating or updating a layer.
-    LayerInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖layer🛠️layerinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerInput)
-    """
+    """Input fields for creating or updating a layer."""
 
     pass
 
@@ -4008,10 +3128,7 @@ class LayerOutput(
     LayerNameField,
     Output,
 ):
-    """Output fields returned when fetching a layer.
-    LayerOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖layer🛠️layeroutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/LayerOutput)
-    """
+    """Output fields returned when fetching a layer."""
 
     pass
 
@@ -4024,27 +3141,20 @@ class Layer(
     LayerNameField,
     TableEntity,
 ):
-    """Layer entity for grouping design elements with visibility and locking.
-    Layer MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖layer🛠️layer](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Layer/d/i/Layer)
-    """
+    """Layer entity for grouping design elements with visibility and locking."""
 
     PLURAL = "layers"
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 
-# endregion Layer
+# #endregion 🎃Layer
 
-# region Piece
-# [👤semio📚py💻semio🔖domain🔖piece](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece)
+# #region 🔔Piece
 # Piece entity for placed instances of types within a design.
 
 
 class PieceIdField(MaskedField, abc.ABC):
-    """Field mixin for the id of a piece.
-    PieceIdField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️pieceidfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceIdField)
-    """
+    """🔖Field mixin for the id of a piece."""
 
     id_: str = pydantic.Field(
         default="",
@@ -4053,100 +3163,67 @@ class PieceIdField(MaskedField, abc.ABC):
 
 
 class PieceDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a piece.
-    PieceDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️piecedescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceDescriptionField)
-    """
+    """🔖Field mixin for the description of a piece."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class PieceTypeField(MaskedField, abc.ABC):
-    """Field mixin for the type of a piece.
-    PieceTypeField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️piecetypefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceTypeField)
-    """
+    """🔖Field mixin for the type of a piece."""
 
     type: typing.Optional[TypeId] = pydantic.Field(default=None)
 
 
 class PieceDesignField(MaskedField, abc.ABC):
-    """Field mixin for the design of a piece.
-    PieceDesignField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️piecedesignfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceDesignField)
-    """
+    """🔖Field mixin for the design of a piece."""
 
     designPiece: typing.Optional["DesignId"] = pydantic.Field(default=None)
 
 
 class PiecePlaneField(MaskedField, abc.ABC):
-    """Field mixin for the plane of a piece.
-    PiecePlaneField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️pieceplanefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PiecePlaneField)
-    """
+    """🔖Field mixin for the plane of a piece."""
 
     plane: typing.Optional[Plane] = pydantic.Field(default=None)
 
 
 class PieceCenterField(MaskedField, abc.ABC):
-    """Field mixin for the center of a piece.
-    PieceCenterField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️piececenterfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceCenterField)
-    """
+    """🔖Field mixin for the center of a piece."""
 
     center: typing.Optional[Coord] = pydantic.Field(default=None)
 
 
 class PieceScaleField(RealField, abc.ABC):
-    """Field mixin for the scale of a piece.
-    PieceScaleField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️piecescalefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceScaleField)
-    """
+    """🔖Field mixin for the scale of a piece."""
 
     scale: float = pydantic.Field(default=1.0)
 
 
 class PieceMirrorPlaneField(MaskedField, abc.ABC):
-    """Field mixin for the mirror plane of a piece.
-    PieceMirrorPlaneField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️piecemirrorplanefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceMirrorPlaneField)
-    """
+    """🔖Field mixin for the mirror plane of a piece."""
 
     mirrorPlane: typing.Optional[Plane] = pydantic.Field(default=None)
 
 
 class PieceHiddenField(RealField, abc.ABC):
-    """Field mixin for the hidden of a piece.
-    PieceHiddenField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️piecehiddenfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceHiddenField)
-    """
+    """🔖Field mixin for the hidden of a piece."""
 
     is_hidden: bool = pydantic.Field(default=False)
 
 
 class PieceLockedField(RealField, abc.ABC):
-    """Field mixin for the locked of a piece.
-    PieceLockedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️piecelockedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceLockedField)
-    """
+    """🔖Field mixin for the locked of a piece."""
 
     is_locked: bool = pydantic.Field(default=False)
 
 
 class PieceColorField(RealField, abc.ABC):
-    """Field mixin for the color of a piece.
-    PieceColorField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️piececolorfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceColorField)
-    """
+    """🔖Field mixin for the color of a piece."""
 
     color: str = pydantic.Field(default="", max_length=7)
 
 
 class PieceId(PieceIdField, Id):
-    """Identity fields for uniquely identifying a piece.
-    PieceId MUST contain all fields that uniquely identify a piece.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️pieceid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceId)
-    """
+    """🔖Identity fields for uniquely identifying a piece."""
 
     pass
 
@@ -4160,19 +3237,13 @@ class PieceProps(
     PieceIdField,
     Props,
 ):
-    """Property fields for a piece.
-    PieceProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️pieceprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceProps)
-    """
+    """Property fields for a piece."""
 
     pass
 
 
 class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Input):
-    """Input fields for creating or updating a piece.
-    PieceInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️pieceinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceInput)
-    """
+    """🔖Input fields for creating or updating a piece."""
 
     plane: typing.Optional[PlaneInput] = pydantic.Field(default=None)
     center: typing.Optional[CoordInput] = pydantic.Field(default=None)
@@ -4180,10 +3251,7 @@ class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceI
 
 
 class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Context):
-    """Context fields for understanding a piece by an LLM.
-    PieceContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️piececontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceContext)
-    """
+    """🔖Context fields for understanding a piece by an LLM."""
 
     plane: typing.Optional[PlaneContext] = pydantic.Field(default=None)
     center: typing.Optional[CoordContext] = pydantic.Field(default=None)
@@ -4191,10 +3259,7 @@ class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, Piec
 
 
 class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Output):
-    """Output fields returned when fetching a piece.
-    PieceOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️pieceoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceOutput)
-    """
+    """🔖Output fields returned when fetching a piece."""
 
     plane: typing.Optional[PlaneOutput] = pydantic.Field(default=None)
     center: typing.Optional[CoordOutput] = pydantic.Field(default=None)
@@ -4202,10 +3267,7 @@ class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, Piece
 
 
 class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
-    """Prediction fields for LLM-based piece inference.
-    PiecePrediction MUST contain all fields for LLM inference.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️pieceprediction](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PiecePrediction)
-    """
+    """🔖Prediction fields for LLM-based piece inference."""
 
     pass
 
@@ -4218,10 +3280,7 @@ class Piece(
     PieceScaleField,
     TableEntity,
 ):
-    """Piece entity for a placed instance of a type within a design.
-    Piece MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️piece](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/Piece)
-    """
+    """Piece entity for a placed instance of a type within a design."""
 
     PLURAL = "pieces"
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
@@ -4328,10 +3387,7 @@ class Piece(
 
 
 class PieceInputNode(InputNode):
-    """GraphQL input node for piece mutations.
-    PieceInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️pieceinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceInputNode)
-    """
+    """🔖GraphQL input node for piece mutations."""
 
     class Meta:
         model = PieceInput
@@ -4342,107 +3398,75 @@ class PieceInputNode(InputNode):
 
 
 class PieceIdInputNode(InputNode):
-    """GraphQL input node for piece id mutations.
-    PieceIdInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖piece🛠️pieceidinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Piece/d/i/PieceIdInputNode)
-    """
+    """🔖GraphQL input node for piece id mutations."""
 
     class Meta:
         model = PieceId
 
 
-# endregion Piece
+# #endregion 🔔Piece
 
-# region Group
-# [👤semio📚py💻semio🔖domain🔖group](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group)
+# #region ⏱️Group
 # Group entity for named collections of pieces in a design.
 
 
 class GroupNameField(RealField, abc.ABC):
-    """Field mixin for the name of a group.
-    GroupNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖group🛠️groupnamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/GroupNameField)
-    """
+    """🔖Field mixin for the name of a group."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class GroupDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a group.
-    GroupDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖group🛠️groupdescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/GroupDescriptionField)
-    """
+    """🔖Field mixin for the description of a group."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class GroupColorField(RealField, abc.ABC):
-    """Field mixin for the color of a group.
-    GroupColorField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖group🛠️groupcolorfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/GroupColorField)
-    """
+    """🔖Field mixin for the color of a group."""
 
     color: str = pydantic.Field(default="", max_length=7)
 
 
 class GroupId(GroupNameField, Id):
-    """Identity fields for uniquely identifying a group.
-    GroupId MUST contain all fields that uniquely identify a group.
-    [👤semio📚py💻semio🔖domain🔖group🛠️groupid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/GroupId)
-    """
+    """🔖Identity fields for uniquely identifying a group."""
 
     pass
 
 
 class GroupProps(GroupColorField, GroupDescriptionField, GroupNameField, Props):
-    """Property fields for a group.
-    GroupProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖group🛠️groupprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/GroupProps)
-    """
+    """🔖Property fields for a group."""
 
     pass
 
 
 class GroupInput(GroupColorField, GroupDescriptionField, GroupNameField, Input):
-    """Input fields for creating or updating a group.
-    GroupInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖group🛠️groupinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/GroupInput)
-    """
+    """🔖Input fields for creating or updating a group."""
 
     pass
 
 
 class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output):
-    """Output fields returned when fetching a group.
-    GroupOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖group🛠️groupoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/GroupOutput)
-    """
+    """🔖Output fields returned when fetching a group."""
 
     pieces: list["PieceOutput"] = pydantic.Field(default_factory=list)
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 
 class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity):
-    """Group entity for named collections of pieces.
-    Group MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖group🛠️group](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Group/d/i/Group)
-    """
+    """🔖Group entity for named collections of pieces."""
 
     PLURAL = "groups"
 
 
-# endregion Group
+# #endregion ⏱️Group
 
-# region Side
-# [👤semio📚py💻semio🔖domain🔖side](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Side)
+# #region 🎑Side
 # Side primitive for identifying a specific connector on a specific piece.
 
 
 class Side(BaseModel):
-    """Side primitive identifying a specific connector on a specific piece.
-    Side MUST contain all coordinate or geometry fields.
-    [👤semio📚py💻semio🔖domain🔖side🛠️side](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Side/d/i/Side)
-    """
+    """🔖Side primitive identifying a specific connector on a specific piece."""
 
     piece: PieceId = pydantic.Field()
     designPiece: typing.Optional[PieceId] = pydantic.Field(default=None)
@@ -4469,46 +3493,31 @@ class Side(BaseModel):
 
 
 class SideInput(Side, Input):
-    """Input fields for creating or updating a side.
-    SideInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖side🛠️sideinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Side/d/i/SideInput)
-    """
+    """🔖Input fields for creating or updating a side."""
 
     pass
 
 
 class SideContext(Side, Context):
-    """Context fields for understanding a side by an LLM.
-    SideContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖side🛠️sidecontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Side/d/i/SideContext)
-    """
+    """🔖Context fields for understanding a side by an LLM."""
 
     pass
 
 
 class SideOutput(Side, Output):
-    """Output fields returned when fetching a side.
-    SideOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖side🛠️sideoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Side/d/i/SideOutput)
-    """
+    """🔖Output fields returned when fetching a side."""
 
     pass
 
 
 class SidePrediction(Side, Prediction):
-    """Prediction fields for LLM-based side inference.
-    SidePrediction MUST contain all fields for LLM inference.
-    [👤semio📚py💻semio🔖domain🔖side🛠️sideprediction](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Side/d/i/SidePrediction)
-    """
+    """🔖Prediction fields for LLM-based side inference."""
 
     pass
 
 
 class SideNode(Node):
-    """GraphQL node exposing side data.
-    SideNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖side🛠️sidenode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Side/d/i/SideNode)
-    """
+    """🔖GraphQL node exposing side data."""
 
     class Meta:
         model = Side
@@ -4530,10 +3539,7 @@ class SideNode(Node):
 
 
 class SideInputNode(InputNode):
-    """GraphQL input node for side mutations.
-    SideInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖side🛠️sideinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Side/d/i/SideInputNode)
-    """
+    """🔖GraphQL input node for side mutations."""
 
     class Meta:
         model = SideInput
@@ -4545,117 +3551,80 @@ class SideInputNode(InputNode):
     connector = ConnectorIdInputNode()
 
 
-# endregion Side
+# #endregion 🎑Side
 
-# region Connection
-# [👤semio📚py💻semio🔖domain🔖connection](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection)
+# #region 👓Connection
 # Connection entity for linking two pieces through their connectors.
 
 
 class ConnectionConnectedField(MaskedField, abc.ABC):
-    """Field mixin for the connected of a connection.
-    ConnectionConnectedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionconnectedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionConnectedField)
-    """
+    """🔖Field mixin for the connected of a connection."""
 
     connected: Side = pydantic.Field()
 
 
 class ConnectionConnectingField(MaskedField, abc.ABC):
-    """Field mixin for the connecting of a connection.
-    ConnectionConnectingField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionconnectingfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionConnectingField)
-    """
+    """🔖Field mixin for the connecting of a connection."""
 
     connecting: Side = pydantic.Field()
 
 
 class ConnectionDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a connection.
-    ConnectionDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectiondescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionDescriptionField)
-    """
+    """🔖Field mixin for the description of a connection."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class ConnectionGapField(RealField, abc.ABC):
-    """Field mixin for the gap of a connection.
-    ConnectionGapField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectiongapfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionGapField)
-    """
+    """🔖Field mixin for the gap of a connection."""
 
     gap: float = pydantic.Field(default=0)
 
 
 class ConnectionShiftField(RealField, abc.ABC):
-    """Field mixin for the shift of a connection.
-    ConnectionShiftField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionshiftfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionShiftField)
-    """
+    """🔖Field mixin for the shift of a connection."""
 
     shift: float = pydantic.Field(default=0)
 
 
 class ConnectionRiseField(MaskedField, abc.ABC):
-    """Field mixin for the rise of a connection.
-    ConnectionRiseField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionrisefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionRiseField)
-    """
+    """🔖Field mixin for the rise of a connection."""
 
     rise: float = pydantic.Field(default=0)
 
 
 class ConnectionRotationField(RealField, abc.ABC):
-    """Field mixin for the rotation of a connection.
-    ConnectionRotationField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionrotationfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionRotationField)
-    """
+    """🔖Field mixin for the rotation of a connection."""
 
     rotation: float = pydantic.Field(ge=0, lt=360, default=0)
 
 
 class ConnectionTurnField(RealField, abc.ABC):
-    """Field mixin for the turn of a connection.
-    ConnectionTurnField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionturnfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionTurnField)
-    """
+    """🔖Field mixin for the turn of a connection."""
 
     turn: float = pydantic.Field(ge=0, lt=360, default=0)
 
 
 class ConnectionTiltField(RealField, abc.ABC):
-    """Field mixin for the tilt of a connection.
-    ConnectionTiltField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectiontiltfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionTiltField)
-    """
+    """🔖Field mixin for the tilt of a connection."""
 
     tilt: float = pydantic.Field(ge=0, lt=360, default=0)
 
 
 class ConnectionUField(RealField, abc.ABC):
-    """Field mixin for the u of a connection.
-    ConnectionUField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionufield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionUField)
-    """
+    """🔖Field mixin for the u of a connection."""
 
     u: float = pydantic.Field(default=0)
 
 
 class ConnectionVField(RealField, abc.ABC):
-    """Field mixin for the v of a connection.
-    ConnectionVField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionvfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionVField)
-    """
+    """🔖Field mixin for the v of a connection."""
 
     v: float = pydantic.Field(default=0)
 
 
 class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
-    """Identity fields for uniquely identifying a connection.
-    ConnectionId MUST contain all fields that uniquely identify a connection.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionId)
-    """
+    """🔖Identity fields for uniquely identifying a connection."""
 
     pass
 
@@ -4672,10 +3641,7 @@ class ConnectionProps(
     ConnectionDescriptionField,
     Props,
 ):
-    """Property fields for a connection.
-    ConnectionProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionProps)
-    """
+    """Property fields for a connection."""
 
     pass
 
@@ -4692,10 +3658,7 @@ class ConnectionInput(
     ConnectionDescriptionField,
     Input,
 ):
-    """Input fields for creating or updating a connection.
-    ConnectionInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectioninput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionInput)
-    """
+    """Input fields for creating or updating a connection."""
 
     pass
 
@@ -4715,10 +3678,7 @@ class ConnectionContext(
     ConnectionDescriptionField,
     Context,
 ):
-    """Context fields for understanding a connection by an LLM.
-    ConnectionContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectioncontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionContext)
-    """
+    """Context fields for understanding a connection by an LLM."""
 
     pass
 
@@ -4738,10 +3698,7 @@ class ConnectionOutput(
     ConnectionDescriptionField,
     Output,
 ):
-    """Output fields returned when fetching a connection.
-    ConnectionOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionOutput)
-    """
+    """Output fields returned when fetching a connection."""
 
     pass
 
@@ -4761,10 +3718,7 @@ class ConnectionPrediction(
     ConnectionDescriptionField,
     Prediction,
 ):
-    """Prediction fields for LLM-based connection inference.
-    ConnectionPrediction MUST contain all fields for LLM inference.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectionprediction](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionPrediction)
-    """
+    """Prediction fields for LLM-based connection inference."""
 
     pass
 
@@ -4784,10 +3738,7 @@ class Connection(
     ConnectionDescriptionField,
     TableEntity,
 ):
-    """Connection entity linking two pieces through their connectors.
-    Connection MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connection](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/Connection)
-    """
+    """Connection entity linking two pieces through their connectors."""
 
     PLURAL = "connections"
 
@@ -4951,99 +3902,68 @@ class Connection(
 
 
 class ConnectionInputNode(InputNode):
-    """GraphQL input node for connection mutations.
-    ConnectionInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖connection🛠️connectioninputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Connection/d/i/ConnectionInputNode)
-    """
+    """🔖GraphQL input node for connection mutations."""
 
     class Meta:
         model = ConnectionInput
 
 
-# endregion Connection
+# #endregion 👓Connection
 
-# region Stat
-# [👤semio📚py💻semio🔖domain🔖stat](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat)
+# #region 🩺Stat
 # Stat entity for recording computed statistics with bounds.
 
 
 class StatKeyField(RealField, abc.ABC):
-    """Field mixin for the key of a stat.
-    StatKeyField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statkeyfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatKeyField)
-    """
+    """🔖Field mixin for the key of a stat."""
 
     key: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class StatUnitField(RealField, abc.ABC):
-    """Field mixin for the unit of a stat.
-    StatUnitField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statunitfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatUnitField)
-    """
+    """🔖Field mixin for the unit of a stat."""
 
     unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class StatMinField(RealField, abc.ABC):
-    """Field mixin for the min of a stat.
-    StatMinField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statminfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatMinField)
-    """
+    """🔖Field mixin for the min of a stat."""
 
     min: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class StatMinExcludedField(RealField, abc.ABC):
-    """Field mixin for the min excluded of a stat.
-    StatMinExcludedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statminexcludedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatMinExcludedField)
-    """
+    """🔖Field mixin for the min excluded of a stat."""
 
     min_excluded: bool = pydantic.Field(default=False)
 
 
 class StatMaxField(RealField, abc.ABC):
-    """Field mixin for the max of a stat.
-    StatMaxField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statmaxfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatMaxField)
-    """
+    """🔖Field mixin for the max of a stat."""
 
     max: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class StatMaxExcludedField(RealField, abc.ABC):
-    """Field mixin for the max excluded of a stat.
-    StatMaxExcludedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statmaxexcludedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatMaxExcludedField)
-    """
+    """🔖Field mixin for the max excluded of a stat."""
 
     max_excluded: bool = pydantic.Field(default=False)
 
 
 class StatCreatedField(RealField, abc.ABC):
-    """Field mixin for the created of a stat.
-    StatCreatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statcreatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatCreatedField)
-    """
+    """🔖Field mixin for the created of a stat."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class StatUpdatedField(RealField, abc.ABC):
-    """Field mixin for the updated of a stat.
-    StatUpdatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statupdatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatUpdatedField)
-    """
+    """🔖Field mixin for the updated of a stat."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class StatId(StatKeyField, Id):
-    """Identity fields for uniquely identifying a stat.
-    StatId MUST contain all fields that uniquely identify a stat.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatId)
-    """
+    """🔖Identity fields for uniquely identifying a stat."""
 
     pass
 
@@ -5059,10 +3979,7 @@ class StatProps(
     StatKeyField,
     Props,
 ):
-    """Property fields for a stat.
-    StatProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatProps)
-    """
+    """Property fields for a stat."""
 
     pass
 
@@ -5076,10 +3993,7 @@ class StatInput(
     StatKeyField,
     Input,
 ):
-    """Input fields for creating or updating a stat.
-    StatInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatInput)
-    """
+    """Input fields for creating or updating a stat."""
 
     pass
 
@@ -5095,10 +4009,7 @@ class StatOutput(
     StatKeyField,
     Output,
 ):
-    """Output fields returned when fetching a stat.
-    StatOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️statoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/StatOutput)
-    """
+    """Output fields returned when fetching a stat."""
 
     pass
 
@@ -5114,152 +4025,103 @@ class Stat(
     StatKeyField,
     TableEntity,
 ):
-    """Stat entity for recording computed statistics with bounds.
-    Stat MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖stat🛠️stat](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Stat/d/i/Stat)
-    """
+    """Stat entity for recording computed statistics with bounds."""
 
     PLURAL = "stats"
 
 
-# endregion Stat
+# #endregion 🩺Stat
 
-# region Design
-# [👤semio📚py💻semio🔖domain🔖design](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design)
+# #region 🌍Design
 # Design entity for composing pieces and connections into assemblies.
 
 
 class DesignNameField(RealField, abc.ABC):
-    """Field mixin for the name of a design.
-    DesignNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designnamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignNameField)
-    """
+    """🔖Field mixin for the name of a design."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class DesignDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a design.
-    DesignDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designdescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignDescriptionField)
-    """
+    """🔖Field mixin for the description of a design."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class DesignIconField(RealField, abc.ABC):
-    """Field mixin for the icon of a design.
-    DesignIconField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designiconfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignIconField)
-    """
+    """🔖Field mixin for the icon of a design."""
 
     icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class DesignImageField(RealField, abc.ABC):
-    """Field mixin for the image of a design.
-    DesignImageField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designimagefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignImageField)
-    """
+    """🔖Field mixin for the image of a design."""
 
     image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class DesignParentField(RealField, abc.ABC):
-    """Field mixin for the parent of a design.
-    DesignParentField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designparentfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignParentField)
-    """
+    """🔖Field mixin for the parent of a design."""
 
     parent: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class DesignIsAbstractField(RealField, abc.ABC):
-    """Field mixin for the is abstract of a design.
-    DesignIsAbstractField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designisabstractfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignIsAbstractField)
-    """
+    """🔖Field mixin for the is abstract of a design."""
 
     is_abstract: bool = pydantic.Field(default=False)
 
 
 class DesignFolderField(RealField, abc.ABC):
-    """Field mixin for the folder of a design.
-    DesignFolderField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designfolderfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignFolderField)
-    """
+    """🔖Field mixin for the folder of a design."""
 
     folder: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class DesignActiveLayerField(RealField, abc.ABC):
-    """Field mixin for the active layer of a design.
-    DesignActiveLayerField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designactivelayerfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignActiveLayerField)
-    """
+    """🔖Field mixin for the active layer of a design."""
 
     activeLayer: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
 class DesignLocationField(MaskedField, abc.ABC):
-    """Field mixin for the location of a design.
-    DesignLocationField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designlocationfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignLocationField)
-    """
+    """🔖Field mixin for the location of a design."""
 
     location: typing.Optional[Location] = pydantic.Field(default=None)
 
 
 class DesignUnitField(RealField, abc.ABC):
-    """Field mixin for the unit of a design.
-    DesignUnitField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designunitfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignUnitField)
-    """
+    """🔖Field mixin for the unit of a design."""
 
     unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class DesignScalableField(RealField, abc.ABC):
-    """Field mixin for the scalable of a design.
-    DesignScalableField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designscalablefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignScalableField)
-    """
+    """🔖Field mixin for the scalable of a design."""
 
     can_scale: bool = pydantic.Field(default=True)
 
 
 class DesignMirrorableField(RealField, abc.ABC):
-    """Field mixin for the mirrorable of a design.
-    DesignMirrorableField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designmirrorablefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignMirrorableField)
-    """
+    """🔖Field mixin for the mirrorable of a design."""
 
     can_mirror: bool = pydantic.Field(default=True)
 
 
 class DesignCreatedField(RealField, abc.ABC):
-    """Field mixin for the created of a design.
-    DesignCreatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designcreatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignCreatedField)
-    """
+    """🔖Field mixin for the created of a design."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class DesignUpdatedField(RealField, abc.ABC):
-    """Field mixin for the updated of a design.
-    DesignUpdatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designupdatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignUpdatedField)
-    """
+    """🔖Field mixin for the updated of a design."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class DesignId(DesignNameField, Id):
-    """Identity fields for uniquely identifying a design.
-    DesignId MUST contain all fields that uniquely identify a design.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignId)
-    """
+    """🔖Identity fields for uniquely identifying a design."""
 
     pass
 
@@ -5277,10 +4139,7 @@ class DesignProps(
     DesignNameField,
     Props,
 ):
-    """Property fields for a design.
-    DesignProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignProps)
-    """
+    """Property fields for a design."""
 
     pass
 
@@ -5293,10 +4152,7 @@ class DesignInput(
     DesignNameField,
     Input,
 ):
-    """Input fields for creating or updating a design.
-    DesignInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignInput)
-    """
+    """Input fields for creating or updating a design."""
 
     parent: typing.Optional[str] = pydantic.Field(default=None)
     is_abstract: typing.Optional[bool] = pydantic.Field(default=None)
@@ -5317,10 +4173,7 @@ class DesignContext(
     DesignNameField,
     Context,
 ):
-    """Context fields for understanding a design by an LLM.
-    DesignContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designcontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignContext)
-    """
+    """Context fields for understanding a design by an LLM."""
 
     pass
 
@@ -5341,10 +4194,7 @@ class DesignOutput(
     DesignNameField,
     Output,
 ):
-    """Output fields returned when fetching a design.
-    DesignOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignOutput)
-    """
+    """Output fields returned when fetching a design."""
 
     pass
 
@@ -5362,10 +4212,7 @@ class DesignOutput(
 
 
 class DesignPrediction(DesignDescriptionField, Prediction):
-    """Prediction fields for LLM-based design inference.
-    DesignPrediction MUST contain all fields for LLM inference.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designprediction](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignPrediction)
-    """
+    """🔖Prediction fields for LLM-based design inference."""
 
     pass
 
@@ -5389,10 +4236,7 @@ class Design(
     DesignParentField,
     TableEntity,
 ):
-    """Design entity composing pieces and connections into an assembly.
-    Design MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖design🛠️design](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/Design)
-    """
+    """Design entity composing pieces and connections into an assembly."""
 
     PLURAL = "designs"
     concepts_: list[Concept] = pydantic.Field(default_factory=list)
@@ -5533,49 +4377,38 @@ class Design(
 
 
 class NoDesignAssigned(NoParentAssigned):
-    """No Design Assigned definition.
-    NoDesignAssigned MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖domain🔖design🛠️nodesignassigned](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/NoDesignAssigned)
-    """
+    """🔖No Design Assigned definition."""
 
     def __str__(self):
         return "👪 The entity has no parent design assigned."
 
 
 class DesignInputNode(InputNode):
-    """GraphQL input node for design mutations.
-    DesignInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignInputNode)
-    """
+    """🔖GraphQL input node for design mutations."""
 
     class Meta:
         model = DesignInput
 
 
 class DesignIdInputNode(InputNode):
-    """GraphQL input node for design id mutations.
-    DesignIdInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖design🛠️designidinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Design/d/i/DesignIdInputNode)
-    """
+    """🔖GraphQL input node for design id mutations."""
 
     class Meta:
         model = DesignId
 
 
-# endregion Design
+# #endregion 🌍Design
 
-# region Kit
-# [👤semio📚py💻semio🔖domain🔖kit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit)
+# #region 🎈Kit
 # Kit entity for packaging types, designs, qualities and metadata.
 
 
-# #region 🔖KitKind
-# [👤semio📚py💻semio🔖modeltypeskit🔖kitkind](repo://p/u/semio/b/l/py/f/semio.py/s/Model%20Types%20-%20Kit/s/KitKind)
+# #region 🤸KitKind
 # KitKind discriminates the five persistence/transport forms of a Kit.
 
 
 class KitKind(str, enum.Enum):
-    """Discriminator for the five kit persistence/transport forms.
+    """🔖Discriminator for the five kit persistence/transport forms.
 
     Specs: Exactly five kit kinds exist:
     - FILE: Self-contained JSON file
@@ -5594,122 +4427,83 @@ class KitKind(str, enum.Enum):
 
 ALL_KIT_KINDS: list[KitKind] = list(KitKind)
 
-# #endregion 🔖KitKind
+# #endregion 🤸KitKind
 
 
 class KitUriField(RealField, abc.ABC):
-    """Field mixin for the uri of a kit.
-    KitUriField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kiturifield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitUriField)
-    """
+    """🔖Field mixin for the uri of a kit."""
 
     uri: str = pydantic.Field(max_length=URI_LENGTH_LIMIT)
 
 
 class KitNameField(RealField, abc.ABC):
-    """Field mixin for the name of a kit.
-    KitNameField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitnamefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitNameField)
-    """
+    """🔖Field mixin for the name of a kit."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class KitDescriptionField(RealField, abc.ABC):
-    """Field mixin for the description of a kit.
-    KitDescriptionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitdescriptionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitDescriptionField)
-    """
+    """🔖Field mixin for the description of a kit."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class KitIconField(RealField, abc.ABC):
-    """Field mixin for the icon of a kit.
-    KitIconField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kiticonfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitIconField)
-    """
+    """🔖Field mixin for the icon of a kit."""
 
     icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitImageField(RealField, abc.ABC):
-    """Field mixin for the image of a kit.
-    KitImageField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitimagefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitImageField)
-    """
+    """🔖Field mixin for the image of a kit."""
 
     image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitPreviewField(RealField, abc.ABC):
-    """Field mixin for the preview of a kit.
-    KitPreviewField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitpreviewfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitPreviewField)
-    """
+    """👁️Field mixin for the preview of a kit."""
 
     preview: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitVersionField(RealField, abc.ABC):
-    """Field mixin for the version of a kit.
-    KitVersionField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitversionfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitVersionField)
-    """
+    """📌Field mixin for the version of a kit."""
 
     version: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class KitRemoteField(RealField, abc.ABC):
-    """Field mixin for the remote of a kit.
-    KitRemoteField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitremotefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitRemoteField)
-    """
+    """🔖Field mixin for the remote of a kit."""
 
     remote: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitHomepageField(RealField, abc.ABC):
-    """Field mixin for the homepage of a kit.
-    KitHomepageField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kithomepagefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitHomepageField)
-    """
+    """🔖Field mixin for the homepage of a kit."""
 
     homepage: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitLicenseField(RealField, abc.ABC):
-    """Field mixin for the license of a kit.
-    KitLicenseField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitlicensefield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitLicenseField)
-    """
+    """🔖Field mixin for the license of a kit."""
 
     license: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitCreatedField(RealField, abc.ABC):
-    """Field mixin for the created of a kit.
-    KitCreatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitcreatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitCreatedField)
-    """
+    """🔖Field mixin for the created of a kit."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class KitUpdatedField(RealField, abc.ABC):
-    """Field mixin for the updated of a kit.
-    KitUpdatedField MUST declare exactly one field with appropriate constraints.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitupdatedfield](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitUpdatedField)
-    """
+    """🔖Field mixin for the updated of a kit."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class KitId(KitUriField, Id):
-    """Identity fields for uniquely identifying a kit.
-    KitId MUST contain all fields that uniquely identify a kit.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitId)
-    """
+    """🔖Identity fields for uniquely identifying a kit."""
 
     pass
 
@@ -5727,10 +4521,7 @@ class KitProps(
     KitUriField,
     Props,
 ):
-    """Property fields for a kit.
-    KitProps MUST contain all non-relational property fields.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitProps)
-    """
+    """Property fields for a kit."""
 
     pass
 
@@ -5747,10 +4538,7 @@ class KitInput(
     KitNameField,
     Input,
 ):
-    """Input fields for creating or updating a kit.
-    KitInput MUST contain all fields required for creation.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitInput)
-    """
+    """Input fields for creating or updating a kit."""
 
     pass
 
@@ -5762,10 +4550,7 @@ class KitInput(
 
 
 class KitContext(KitDescriptionField, KitNameField, Context):
-    """Context fields for understanding a kit by an LLM.
-    KitContext MUST contain all fields needed for LLM understanding.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitcontext](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitContext)
-    """
+    """🔖Context fields for understanding a kit by an LLM."""
 
     pass
 
@@ -5789,10 +4574,7 @@ class KitOutput(
     KitUriField,
     Output,
 ):
-    """Output fields returned when fetching a kit.
-    KitOutput MUST contain all fields returned on fetch.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kitoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/KitOutput)
-    """
+    """Output fields returned when fetching a kit."""
 
     pass
 
@@ -5818,10 +4600,7 @@ class Kit(
     KitCreatedField,
     TableEntity,
 ):
-    """Kit entity packaging types, designs, qualities and metadata.
-    Kit MUST implement idMembers and inherit from the appropriate field mixins.
-    [👤semio📚py💻semio🔖domain🔖kit🛠️kit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/d/i/Kit)
-    """
+    """Kit entity packaging types, designs, qualities and metadata."""
 
     PLURAL = "kits"
     concepts_: list[Concept] = pydantic.Field(default_factory=list)
@@ -5928,8 +4707,7 @@ class Kit(
     def guid(self) -> str:
         return self.id()
 
-    # region Design Family Helpers
-    # [👤semio📚py💻semio🔖domain🔖kit🔖designfamilyhelpers](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Design%20Family%20Helpers)
+    # #region 📻Design Family Helpers
     # Helper functions for querying design hierarchies and families.
 
     def find_design_by_guid(self, design_guid: str) -> "Design":
@@ -5982,7 +4760,7 @@ class Kit(
         return family
 
     def _collect_design_descendants(self, parent_guid: str, family: list["Design"]) -> None:
-        """Helper to collect all descendants of a design."""
+        """🔖Helper to collect all descendants of a design."""
         parent = self.find_design_by_guid(parent_guid)
         family.append(parent)
         children = [d for d in self.designs if d.parent and d.parent.guid == parent_guid]
@@ -6032,19 +4810,18 @@ class Kit(
         return [p for p in design.pieces if p.design and p.design.guid and self.are_designs_in_same_family(design_guid, p.design.guid)]
 
     def get_design_siblings(self, design_guid: str) -> list["Design"]:
-        """Returns all designs with the same parent, excluding self."""
+        """🔖Returns all designs with the same parent, excluding self."""
         design = self.find_design_by_guid(design_guid)
         parent_guid = design.parent.guid if design.parent else None
         return [d for d in self.designs if (d.parent.guid if d.parent else None) == parent_guid and d.guid != design_guid]
 
     def get_design_children(self, design_guid: str) -> list["Design"]:
-        """Returns all direct children of a design."""
+        """🔖Returns all direct children of a design."""
         return [d for d in self.designs if d.parent and d.parent.guid == design_guid]
 
-    # endregion Design Family Helpers
+    # #endregion 📻Design Family Helpers
 
-    # region Type Family Helpers
-    # [👤semio📚py💻semio🔖domain🔖kit🔖typefamilyhelpers](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Type%20Family%20Helpers)
+    # #region 🧊Type Family Helpers
     # Helper functions for querying type hierarchies and families.
 
     def find_type_by_guid(self, type_guid: str) -> "Type":
@@ -6097,7 +4874,7 @@ class Kit(
         return family
 
     def _collect_type_descendants(self, parent_guid: str, family: list["Type"]) -> None:
-        """Helper to collect all descendants of a type."""
+        """🔖Helper to collect all descendants of a type."""
         parent = self.find_type_by_guid(parent_guid)
         family.append(parent)
         children = [t for t in self.types if t.parent and t.parent.guid == parent_guid]
@@ -6120,30 +4897,29 @@ class Kit(
         return primitive_a.guid == primitive_b.guid
 
     def get_type_siblings(self, type_guid: str) -> list["Type"]:
-        """Returns all types with the same parent, excluding self."""
+        """🔖Returns all types with the same parent, excluding self."""
         type_ = self.find_type_by_guid(type_guid)
         parent_guid = type_.parent.guid if type_.parent else None
         return [t for t in self.types if (t.parent.guid if t.parent else None) == parent_guid and t.guid != type_guid]
 
     def get_type_children(self, type_guid: str) -> list["Type"]:
-        """Returns all direct children of a type."""
+        """🔖Returns all direct children of a type."""
         return [t for t in self.types if t.parent and t.parent.guid == type_guid]
 
-    # endregion Type Family Helpers
+    # #endregion 🧊Type Family Helpers
 
-    # region Kit Query Helpers
-    # [👤semio📚py💻semio🔖domain🔖kit🔖kitqueryhelpers](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Kit%20Query%20Helpers)
+    # #region 🗻Kit Query Helpers
     # Helper functions for querying entities in kits.
 
     def find_port_in_kit(self, port_guid: str) -> "Port":
-        """Finds a port by GUID in the kit."""
+        """🔖Finds a port by GUID in the kit."""
         for port in self.ports or []:
             if port.guid == port_guid:
                 return port
         raise ValueError(f"Port {port_guid} not found in kit {self.name}")
 
     def find_piece_in_design(self, design_guid: str, piece_guid: str) -> "Piece":
-        """Finds a piece by GUID in a design."""
+        """🔖Finds a piece by GUID in a design."""
         design = self.find_design_by_guid(design_guid)
         for piece in design.pieces or []:
             if piece.guid == piece_guid:
@@ -6151,7 +4927,7 @@ class Kit(
         raise ValueError(f"Piece {piece_guid} not found in design {design_guid}")
 
     def find_connection_in_design(self, design_guid: str, connection_guid: str) -> "Connection":
-        """Finds a connection by GUID in a design."""
+        """🔖Finds a connection by GUID in a design."""
         design = self.find_design_by_guid(design_guid)
         for connection in design.connections or []:
             if connection.guid == connection_guid:
@@ -6159,19 +4935,19 @@ class Kit(
         raise ValueError(f"Connection {connection_guid} not found in design {design_guid}")
 
     def find_piece_connections_in_design(self, design_guid: str, piece_guid: str) -> list["Connection"]:
-        """Finds all connections involving a piece in a design."""
+        """🔖Finds all connections involving a piece in a design."""
         design = self.find_design_by_guid(design_guid)
         return [c for c in (design.connections or []) if c.connected.piece.guid == piece_guid or c.connecting.piece.guid == piece_guid]
 
     def find_piece_type_in_design(self, design_guid: str, piece_guid: str) -> "Type":
-        """Gets the type of a piece in a design."""
+        """🔖Gets the type of a piece in a design."""
         piece = self.find_piece_in_design(design_guid, piece_guid)
         if not piece.type or not piece.type.guid:
             raise ValueError(f"Piece {piece_guid} has no type")
         return self.find_type_by_guid(piece.type.guid)
 
     def find_connector_in_type(self, type_guid: str, connector_guid: str) -> "Connector":
-        """Finds a connector by GUID in a type."""
+        """🔖Finds a connector by GUID in a type."""
         type_ = self.find_type_by_guid(type_guid)
         for connector in type_.connectors or []:
             if connector.guid == connector_guid:
@@ -6179,7 +4955,7 @@ class Kit(
         raise ValueError(f"Connector {connector_guid} not found in type {type_guid}")
 
     def find_connector_for_piece_in_connection(self, type_guid: str, connection: "Connection", piece_guid: str) -> typing.Optional["Connector"]:
-        """Gets the connector used by a piece in a connection."""
+        """🔖Gets the connector used by a piece in a connection."""
         if connection.connected.piece.guid == piece_guid:
             connector_guid = connection.connected.connector.guid if connection.connected.connector else None
         else:
@@ -6189,7 +4965,7 @@ class Kit(
         return self.find_connector_in_type(type_guid, connector_guid)
 
     def find_used_connectors_by_piece_in_design(self, design_guid: str, piece_guid: str) -> list["Connector"]:
-        """Returns all connectors of a piece that are used in connections."""
+        """🔖Returns all connectors of a piece that are used in connections."""
         piece = self.find_piece_in_design(design_guid, piece_guid)
         if not piece.type or not piece.type.guid:
             return []
@@ -6285,17 +5061,14 @@ class Kit(
                 result.append(replacement_type)
         return result
 
-    # endregion Kit Query Helpers
+    # #endregion 🗻Kit Query Helpers
 
-    # region Filter
-    # [👤semio📚py💻semio🔖domain🔖kit🔖filter](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter)
+    # #region 🎠Filter
     # Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
     @staticmethod
     def _select_best_model_filter(models: list, resolved_tag_guids: list[str]):
-        """Selects the best model based on tag matching using Jaccard similarity.
-        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️selectbestmodelfilter](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/_select_best_model_filter)
-        """
+        """🧹Selects the best model based on tag matching using Jaccard similarity."""
         if not models:
             return None
         if not resolved_tag_guids:
@@ -6323,9 +5096,7 @@ class Kit(
 
     @staticmethod
     def _matches_glob_filter(name: str, glob_filter: typing.Optional[dict] = None) -> bool:
-        """Checks if a name passes a glob filter with include/exclude patterns.
-        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️matchesglobfilter](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/_matches_glob_filter)
-        """
+        """🧩Checks if a name passes a glob filter with include/exclude patterns."""
         if glob_filter is None:
             return True
         include = glob_filter.get("include") or []
@@ -6337,10 +5108,9 @@ class Kit(
         return True
 
     def filter_kit(self: "Kit", filter_spec: dict) -> "Kit":
-        """General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.
+        """🔖General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.
         When design_guid is set, first performs transitive design-scoped subset extraction.
         Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
-        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️filterkit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/filter_kit)
         """
         design_guid = filter_spec.get("design_guid")
         model_tags = filter_spec.get("model_tags")
@@ -6391,10 +5161,9 @@ class Kit(
         return result
 
     def _filter_kit_by_design(self: "Kit", design_guid: str, tags: typing.Optional[list[str]] = None) -> "Kit":
-        """Filters a kit to only include entities related to a specific design.
+        """🔖Filters a kit to only include entities related to a specific design.
         Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
         files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
-        [👤semio📚py💻semio🔖domain🔖kit🔖filter🛠️filterkitbydesign](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit/s/Filter/d/i/_filter_kit_by_design)
         """
         design = self.find_design_by_guid(design_guid)
         pieces = design.pieces or []
@@ -6524,51 +5293,38 @@ class Kit(
 
         return result
 
-    # endregion Filter
+    # #endregion 🎠Filter
 
 
-# endregion Kit
+# #endregion 🎈Kit
 
-# region Moved Graphene Nodes
-# [👤semio📚py💻semio🔖domain🔖movedgraphenenodes](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes)
+# #region 🧭Moved Graphene Nodes
 # Graphene node definitions moved here due to forward-reference resolution order.
 
 
 class AttributeNode(TableEntityNode):
-    """GraphQL node exposing attribute data.
-    AttributeNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️attributenode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/AttributeNode)
-    """
+    """🔖GraphQL node exposing attribute data."""
 
     class Meta:
         model = Attribute
 
 
 class PlaneNode(TableNode):
-    """GraphQL node exposing plane data.
-    PlaneNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️planenode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/PlaneNode)
-    """
+    """🔖GraphQL node exposing plane data."""
 
     class Meta:
         model = Plane
 
 
 class AuthorNode(TableEntityNode):
-    """GraphQL node exposing author data.
-    AuthorNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️authornode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/AuthorNode)
-    """
+    """🔖GraphQL node exposing author data."""
 
     class Meta:
         model = Author
 
 
 class ModelNode(TableEntityNode):
-    """GraphQL node exposing model data.
-    ModelNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️modelnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/ModelNode)
-    """
+    """🔖GraphQL node exposing model data."""
 
     class Meta:
         model = Model
@@ -6576,10 +5332,7 @@ class ModelNode(TableEntityNode):
 
 
 class ConnectorNode(TableEntityNode):
-    """GraphQL node exposing connector data.
-    ConnectorNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️connectornode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/ConnectorNode)
-    """
+    """🔖GraphQL node exposing connector data."""
 
     class Meta:
         model = Connector
@@ -6592,20 +5345,14 @@ class ConnectorNode(TableEntityNode):
 
 
 class TypeNode(TableEntityNode):
-    """GraphQL node exposing type data.
-    TypeNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️typenode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/TypeNode)
-    """
+    """🔖GraphQL node exposing type data."""
 
     class Meta:
         model = Type
 
 
 class PieceNode(TableEntityNode):
-    """GraphQL node exposing piece data.
-    PieceNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️piecenode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/PieceNode)
-    """
+    """🔖GraphQL node exposing piece data."""
 
     class Meta:
         model = Piece
@@ -6618,10 +5365,7 @@ class PieceNode(TableEntityNode):
 
 
 class ConnectionNode(TableEntityNode):
-    """GraphQL node exposing connection data.
-    ConnectionNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️connectionnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/ConnectionNode)
-    """
+    """🔖GraphQL node exposing connection data."""
 
     class Meta:
         model = Connection
@@ -6643,20 +5387,14 @@ class ConnectionNode(TableEntityNode):
 
 
 class DesignNode(TableEntityNode):
-    """GraphQL node exposing design data.
-    DesignNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️designnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/DesignNode)
-    """
+    """🔖GraphQL node exposing design data."""
 
     class Meta:
         model = Design
 
 
 class KitNotFound(NotFound):
-    """endregion Moved Graphene Nodes
-    KitNotFound MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️kitnotfound](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/KitNotFound)
-    """
+    """🚚endregion 🧭Moved Graphene Nodes"""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -6666,10 +5404,7 @@ class KitNotFound(NotFound):
 
 
 class NoKitToDelete(KitNotFound):
-    """No Kit To Delete definition.
-    NoKitToDelete MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️nokittodelete](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/NoKitToDelete)
-    """
+    """🗑️No Kit To Delete definition."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -6679,10 +5414,7 @@ class NoKitToDelete(KitNotFound):
 
 
 class KitZipDoesNotContainSemioFolder(KitNotFound):
-    """Kit Zip Does Not Contain Semio Folder definition.
-    KitZipDoesNotContainSemioFolder MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️kitzipdoesnotcontainsemiofolder](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/KitZipDoesNotContainSemioFolder)
-    """
+    """🔖Kit Zip Does Not Contain Semio Folder definition."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -6692,10 +5424,7 @@ class KitZipDoesNotContainSemioFolder(KitNotFound):
 
 
 class OnlyRemoteKitsCanBeCached(ClientError):
-    """Only Remote Kits Can Be Cached definition.
-    OnlyRemoteKitsCanBeCached MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️onlyremotekitscanbecached](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/OnlyRemoteKitsCanBeCached)
-    """
+    """💾Only Remote Kits Can Be Cached definition."""
 
     def __init__(self, nonRemoteUri: str) -> None:
         self.nonRemoteUri = nonRemoteUri
@@ -6705,24 +5434,15 @@ class OnlyRemoteKitsCanBeCached(ClientError):
 
 
 class KitUriNotValid(ClientError, abc.ABC):
-    """🆔 The base for all kit uri not valid errors.
-    KitUriNotValid MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️kiturinotvalid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/KitUriNotValid)
-    """
+    """🆔 The base for all kit uri not valid errors."""
 
 
 class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
-    """📂 The base for all local kit uri not valid errors.
-    LocalKitUriNotValid MUST be subclassed and MUST NOT be instantiated directly.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️localkiturinotvalid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/LocalKitUriNotValid)
-    """
+    """📂 The base for all local kit uri not valid errors."""
 
 
 class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
-    """Local Kit Uri Is Not Absolute definition.
-    LocalKitUriIsNotAbsolute MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️localkituriisnotabsolute](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/LocalKitUriIsNotAbsolute)
-    """
+    """🔖Local Kit Uri Is Not Absolute definition."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -6732,10 +5452,7 @@ class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
 
 
 class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
-    """Local Kit Uri Is Not Directory definition.
-    LocalKitUriIsNotDirectory MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️localkituriisnotdirectory](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/LocalKitUriIsNotDirectory)
-    """
+    """🔖Local Kit Uri Is Not Directory definition."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -6745,20 +5462,14 @@ class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
 
 
 class NoKitAssigned(NoParentAssigned):
-    """No Kit Assigned definition.
-    NoKitAssigned MUST fulfill its documented contract.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️nokitassigned](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/NoKitAssigned)
-    """
+    """🔖No Kit Assigned definition."""
 
     def __str__(self):
         return "👪 The entity has no parent kit assigned."
 
 
 class KitAlreadyExists(AlreadyExists, abc.ABC):
-    """Exception for attempting to create a kit that already exists.
-    KitAlreadyExists MUST provide a descriptive error message via __str__.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️kitalreadyexists](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/KitAlreadyExists)
-    """
+    """🔖Exception for attempting to create a kit that already exists."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -6768,38 +5479,28 @@ class KitAlreadyExists(AlreadyExists, abc.ABC):
 
 
 class KitInputNode(InputNode):
-    """GraphQL input node for kit mutations.
-    KitInputNode MUST expose the input model via Meta.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️kitinputnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/KitInputNode)
-    """
+    """🔖GraphQL input node for kit mutations."""
 
     class Meta:
         model = KitInput
 
 
 class KitNode(TableEntityNode):
-    """GraphQL node exposing kit data.
-    KitNode MUST expose the model via Meta.
-    [👤semio📚py💻semio🔖domain🔖movedgraphenenodes🛠️kitnode](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Moved%20Graphene%20Nodes/d/i/KitNode)
-    """
+    """🔖GraphQL node exposing kit data."""
 
     class Meta:
         model = Kit
 
 
-# #endregion 🔖Moved Graphene Nodes
+# #endregion 🧩Moved Graphene Nodes
 
-# region Validation
-# [👤semio📚py💻semio🔖domain🔖validation](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation)
+# #region 💧Validation
 # Validation logic for checking kit constraints and uniqueness rules.
 
 
 @dataclasses.dataclass
 class ValidationFix:
-    """A proposed fix for a validation problem with a title and diff.
-    ValidationFix MUST contain a non-empty title and a valid diff dictionary.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validationfix](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/ValidationFix)
-    """
+    """🔧A proposed fix for a validation problem with a title and diff."""
 
     title: str
     diff: dict
@@ -6810,10 +5511,7 @@ class ValidationFix:
 
 @dataclasses.dataclass
 class Problem:
-    """A validation problem with a constraint identifier and message.
-    Problem MUST contain a non-empty constraint identifier and message.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️problem](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/Problem)
-    """
+    """🔒A validation problem with a constraint identifier and message."""
 
     constraintId: str
     message: str
@@ -6833,10 +5531,7 @@ class Problem:
 
 @dataclasses.dataclass
 class ValidationResult:
-    """A validation result aggregating problems and fixes for an entity.
-    ValidationResult MUST aggregate all problems and fixes for a single entity.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validationresult](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/ValidationResult)
-    """
+    """🔖A validation result aggregating problems and fixes for an entity."""
 
     problems: list[Problem]
 
@@ -6852,10 +5547,7 @@ class ValidationResult:
 
 
 def _isGuid(s: str) -> bool:
-    """_isGuid performs the _isGuid operation.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️isguid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/_isGuid)
-    _isGuid MUST perform the _isGuid operation.
-    """
+    """🔖_isGuid performs the _isGuid operation."""
     import re
 
     return bool(
@@ -6868,10 +5560,7 @@ def _isGuid(s: str) -> bool:
 
 
 def _normalizeGuids(obj: typing.Any) -> typing.Any:
-    """_normalizeGuids performs the _normalizeGuids operation.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️normalizeguids](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/_normalizeGuids)
-    _normalizeGuids MUST perform the _normalizeGuids operation.
-    """
+    """🔖_normalizeGuids performs the _normalizeGuids operation."""
     if obj is None:
         return obj
     if isinstance(obj, str) and _isGuid(obj):
@@ -6884,10 +5573,7 @@ def _normalizeGuids(obj: typing.Any) -> typing.Any:
 
 
 def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
-    """Check whether two validation results are semantically equal.
-    areValidationResultsEqual MUST compare all problems and fixes.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️arevalidationresultsequal](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/areValidationResultsEqual)
-    """
+    """✔️Check whether two validation results are semantically equal."""
     if len(a.problems) != len(b.problems):
         return False
     sortedA = sorted(a.problems, key=lambda i: (i.constraintId, i.entityGuid))
@@ -6909,10 +5595,7 @@ def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
 
 
 def parseValidationResult(jsonStr: str) -> ValidationResult:
-    """Parse a validation result from a dictionary representation.
-    parseValidationResult MUST return a ValidationResult from a dict.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️parsevalidationresult](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/parseValidationResult)
-    """
+    """🔬Parse a validation result from a dictionary representation."""
     data = json.loads(jsonStr)
     problems = []
     for i in data["problems"]:
@@ -6930,10 +5613,7 @@ def parseValidationResult(jsonStr: str) -> ValidationResult:
 
 
 def validateGuidUniqueness(kit: Kit) -> list[Problem]:
-    """Validate that all GUIDs within a collection are unique.
-    validateGuidUniqueness MUST report duplicate GUIDs as problems.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validateguiduniqueness](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/validateGuidUniqueness)
-    """
+    """🔖Validate that all GUIDs within a collection are unique."""
     problems: list[Problem] = []
     seen: dict[str, str] = {}
 
@@ -6971,10 +5651,7 @@ def validateGuidUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
-    """Validate that all type names within a kit are unique.
-    validateTypeNameUniqueness MUST report duplicate type names as problems.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validatetypenameuniqueness](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/validateTypeNameUniqueness)
-    """
+    """🔖Validate that all type names within a kit are unique."""
     problems: list[Problem] = []
     byParent: dict[str | None, list[Type]] = {}
     for t in kit.types or []:
@@ -7003,10 +5680,7 @@ def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
-    """Validate that all design names within a kit are unique.
-    validateDesignNameUniqueness MUST report duplicate design names as problems.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validatedesignnameuniqueness](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/validateDesignNameUniqueness)
-    """
+    """🔖Validate that all design names within a kit are unique."""
     problems: list[Problem] = []
     byParent: dict[str | None, list[Design]] = {}
     for d in kit.designs or []:
@@ -7035,10 +5709,7 @@ def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
-    """Validate that all piece names within a design are unique.
-    validatePieceNameUniqueness MUST report duplicate piece names as problems.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validatepiecenameuniqueness](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/validatePieceNameUniqueness)
-    """
+    """🔖Validate that all piece names within a design are unique."""
     problems: list[Problem] = []
     for design in kit.designs or []:
         names: dict[str, list[Piece]] = {}
@@ -7062,10 +5733,7 @@ def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
-    """Validate that all port names within a type are unique.
-    validatePortNameUniqueness MUST report duplicate port names as problems.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validateportnameuniqueness](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/validatePortNameUniqueness)
-    """
+    """🔖Validate that all port names within a type are unique."""
     problems: list[Problem] = []
     for t in kit.types or []:
         names: dict[str, list[Connector]] = {}
@@ -7089,10 +5757,7 @@ def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
-    """Validate that all model names within a type are unique.
-    validateModelNameUniqueness MUST report duplicate model names as problems.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validatemodelnameuniqueness](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/validateModelNameUniqueness)
-    """
+    """🔖Validate that all model names within a type are unique."""
     problems: list[Problem] = []
     for t in kit.types or []:
         names: dict[str, list[Model]] = {}
@@ -7116,10 +5781,7 @@ def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
-    """Validate that all quality names within a kit are unique.
-    validateQualityNameUniqueness MUST report duplicate quality names as problems.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validatequalitynameuniqueness](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/validateQualityNameUniqueness)
-    """
+    """🔖Validate that all quality names within a kit are unique."""
     problems: list[Problem] = []
     names: dict[str, list[Quality]] = {}
     for q in kit.qualities or []:
@@ -7141,10 +5803,7 @@ def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
-    """Validate that all file names within a kit are unique.
-    validateFileNameUniqueness MUST report duplicate file names as problems.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validatefilenameuniqueness](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/validateFileNameUniqueness)
-    """
+    """🔖Validate that all file names within a kit are unique."""
     problems: list[Problem] = []
     names: dict[str, list[File]] = {}
     for f in kit.files_ or []:
@@ -7166,10 +5825,7 @@ def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
-    """Validate that all folder names within a kit are unique.
-    validateFolderNameUniqueness MUST report duplicate folder names as problems.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validatefoldernameuniqueness](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/validateFolderNameUniqueness)
-    """
+    """🔖Validate that all folder names within a kit are unique."""
     problems: list[Problem] = []
     byParent: dict[str | None, list[Folder]] = {}
     for fo in kit.folders_ or []:
@@ -7198,10 +5854,7 @@ def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
-    """Validate that all layer paths within a design are unique.
-    validateLayerPathUniqueness MUST report duplicate layer paths as problems.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validatelayerpathuniqueness](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/validateLayerPathUniqueness)
-    """
+    """🔖Validate that all layer paths within a design are unique."""
     problems: list[Problem] = []
     for design in kit.designs or []:
         paths: dict[str, list[Layer]] = {}
@@ -7223,11 +5876,129 @@ def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
     return problems
 
 
+def extractFirstEmoji(text: str | None) -> str | None:
+    """🔣 Extract the first emoji grapheme from a string, or None if none."""
+    import re as _re
+
+    if not text:
+        return None
+    match = _re.match(r"(\p{Extended_Pictographic}[\u200D\uFE0F\uFE0E\U0001F3FB-\U0001F3FF]*(?:\u200D\p{Extended_Pictographic}[\u200D\uFE0F\uFE0E\U0001F3FB-\U0001F3FF]*)*)", text)
+    if not match:
+        match = _re.match(
+            r"([\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F900-\U0001F9FF\U0001FA00-\U0001FA6F\U0001FA70-\U0001FAFF\U00002600-\U000026FF\U00002700-\U000027BF\U0000231A-\U0000231B\U00002328\U000023CF\U000023E9-\U000023F3\U000023F8-\U000023FA\U000025AA-\U000025AB\U000025B6\U000025C0\U000025FB-\U000025FE\U00002614-\U00002615\U00002648-\U00002653\U0000267F\U00002702\U0000203C\U00002049\U00002122\U00002139\U00002194-\U00002199\U000021A9-\U000021AA\U000000A9\U000000AE]+[\uFE0F\uFE0E\u200D]*)",
+            text,
+        )
+    if match:
+        return match.group(1)
+    return None
+
+
+def validateDescriptionMissingEmoji(kit: Kit) -> list[Problem]:
+    """🚫 Validate that every entity description starts with an emoji."""
+    problems: list[Problem] = []
+
+    def check(entity_kind: str, entity_guid: str, description: str | None) -> None:
+        if not description:
+            return
+        emoji = extractFirstEmoji(description)
+        if not emoji:
+            problems.append(
+                Problem(
+                    constraintId="description-missing-emoji",
+                    message=f'Description of {entity_kind} "{entity_guid}" must start with an emoji.',
+                    entityKind=entity_kind,
+                    entityGuid=entity_guid,
+                )
+            )
+
+    check("Kit", kit.guid, kit.description)
+    for t in kit.types or []:
+        check("Type", t.guid, t.description)
+        for c in t.connectors or []:
+            check("Connector", c.guid, c.description)
+        for m in t.models or []:
+            check("Model", m.guid, m.description)
+    for d in kit.designs or []:
+        check("Design", d.guid, d.description)
+        for p in d.pieces or []:
+            check("Piece", p.guid, p.description)
+        for c in d.connections or []:
+            check("Connection", c.guid, c.description)
+    for q in kit.qualities or []:
+        check("Quality", q.guid, q.description)
+    for p in kit.ports or []:
+        check("Port", p.guid, p.description)
+    for f in kit.files or []:
+        check("File", f.guid, f.description)
+    for f in kit.folders or []:
+        check("Folder", f.guid, f.description)
+    return problems
+
+
+def validateDescriptionEmojiUnique(kit: Kit) -> list[Problem]:
+    """🔤 Validate that sibling entity descriptions have unique leading emojis."""
+    problems: list[Problem] = []
+
+    def check_siblings(entity_kind: str, siblings: list[tuple[str, str | None]]) -> None:
+        emoji_map: dict[str, list[str]] = {}
+        for guid, description in siblings:
+            emoji = extractFirstEmoji(description)
+            if not emoji:
+                continue
+            if emoji not in emoji_map:
+                emoji_map[emoji] = []
+            emoji_map[emoji].append(guid)
+        for emoji, guids in emoji_map.items():
+            if len(guids) <= 1:
+                continue
+            for guid in guids[1:]:
+                problems.append(
+                    Problem(
+                        constraintId="description-emoji-unique",
+                        message=f'Duplicate leading emoji "{emoji}" in {entity_kind} descriptions among siblings.',
+                        entityKind=entity_kind,
+                        entityGuid=guid,
+                    )
+                )
+
+    types_by_parent: dict[str, list[tuple[str, str | None]]] = {}
+    for t in kit.types or []:
+        pid = t.parent.guid if t.parent else ""
+        if pid not in types_by_parent:
+            types_by_parent[pid] = []
+        types_by_parent[pid].append((t.guid, t.description))
+    for siblings in types_by_parent.values():
+        check_siblings("Type", siblings)
+    designs_by_parent: dict[str, list[tuple[str, str | None]]] = {}
+    for d in kit.designs or []:
+        pid = d.parent.guid if d.parent else ""
+        if pid not in designs_by_parent:
+            designs_by_parent[pid] = []
+        designs_by_parent[pid].append((d.guid, d.description))
+    for siblings in designs_by_parent.values():
+        check_siblings("Design", siblings)
+    for d in kit.designs or []:
+        check_siblings("Piece", [(p.guid, p.description) for p in d.pieces or []])
+        check_siblings("Connection", [(c.guid, c.description) for c in d.connections or []])
+    check_siblings("Quality", [(q.guid, q.description) for q in kit.qualities or []])
+    check_siblings("Port", [(p.guid, p.description) for p in kit.ports or []])
+    check_siblings("File", [(f.guid, f.description) for f in kit.files or []])
+    folders_by_parent: dict[str, list[tuple[str, str | None]]] = {}
+    for f in kit.folders or []:
+        pid = f.parent.guid if f.parent else ""
+        if pid not in folders_by_parent:
+            folders_by_parent[pid] = []
+        folders_by_parent[pid].append((f.guid, f.description))
+    for siblings in folders_by_parent.values():
+        check_siblings("Folder", siblings)
+    for t in kit.types or []:
+        check_siblings("Connector", [(c.guid, c.description) for c in t.connectors or []])
+        check_siblings("Model", [(m.guid, m.description) for m in t.models or []])
+    return problems
+
+
 def validateKit(kit: Kit) -> ValidationResult:
-    """Validate a kit entity against all constraint rules.
-    validateKit MUST run all validation checks and return aggregated results.
-    [👤semio📚py💻semio🔖domain🔖validation🛠️validatekit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/d/i/validateKit)
-    """
+    """🔖Validate a kit entity against all constraint rules."""
     problems: list[Problem] = []
     problems.extend(validateGuidUniqueness(kit))
     problems.extend(validateTypeNameUniqueness(kit))
@@ -7238,45 +6009,34 @@ def validateKit(kit: Kit) -> ValidationResult:
     problems.extend(validateQualityNameUniqueness(kit))
     problems.extend(validateFolderNameUniqueness(kit))
     problems.extend(validateLayerPathUniqueness(kit))
+    problems.extend(validateDescriptionMissingEmoji(kit))
+    problems.extend(validateDescriptionEmojiUnique(kit))
     return ValidationResult(problems=problems)
 
 
-# region Dict-based Validation
-# [👤semio📚py💻semio🔖domain🔖validation🔖dictbasedvalidation](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Dict-based%20Validation)
+# #region 📧Dict-based Validation
 # Dictionary-based validation functions for kit data integrity.
 
 
 def _makeFix(title: str, diff: dict) -> ValidationFix:
-    """_makeFix performs the _makeFix operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖dictbasedvalidation🛠️makefix](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Dict-based%20Validation/d/i/_makeFix)
-    _makeFix MUST perform the _makeFix operation.
-    """
+    """🔖_makeFix performs the _makeFix operation."""
     return ValidationFix(title=title, diff=diff)
 
 
 def _deepCopy(obj: typing.Any) -> typing.Any:
-    """_deepCopy performs the _deepCopy operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖dictbasedvalidation🛠️deepcopy](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Dict-based%20Validation/d/i/_deepCopy)
-    _deepCopy MUST perform the _deepCopy operation.
-    """
+    """🔖_deepCopy performs the _deepCopy operation."""
     return json.loads(json.dumps(obj))
 
 
 def _newGuid() -> str:
-    """_newGuid performs the _newGuid operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖dictbasedvalidation🛠️newguid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Dict-based%20Validation/d/i/_newGuid)
-    _newGuid MUST perform the _newGuid operation.
-    """
+    """🔖_newGuid performs the _newGuid operation."""
     import uuid
 
     return str(uuid.uuid4())
 
 
 def validateKitDict(kit: dict) -> ValidationResult:
-    """Validate a kit dictionary against all constraint rules.
-    validateKitDict MUST validate a kit dictionary and return results.
-    [👤semio📚py💻semio🔖domain🔖validation🔖dictbasedvalidation🛠️validatekitdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Dict-based%20Validation/d/i/validateKitDict)
-    """
+    """🔖Validate a kit dictionary against all constraint rules."""
     problems: list[Problem] = []
     seen: dict[str, str] = {}
     seenEntities: dict[str, dict] = {}
@@ -7741,18 +6501,14 @@ def validateKitDict(kit: dict) -> ValidationResult:
     return ValidationResult(problems=problems)
 
 
-# #endregion 🔖Dict-based Validation
+# #endregion 📧Dict-based Validation
 
-# region Graph Operations
-# [👤semio📚py💻semio🔖domain🔖validation🔖graphoperations](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Graph%20Operations)
+# #region 🕌Graph Operations
 # Graph construction and traversal for piece connectivity analysis.
 
 
 def buildPieceGraph(design: Design | dict) -> networkx.Graph:
-    """Build a networkx graph from pieces and connections.
-    buildPieceGraph MUST return a networkx graph with pieces as nodes.
-    [👤semio📚py💻semio🔖domain🔖validation🔖graphoperations🛠️buildpiecegraph](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Graph%20Operations/d/i/buildPieceGraph)
-    """
+    """🏗️Build a networkx graph from pieces and connections."""
     G = networkx.Graph()
     pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
     connections = design.get("connections", []) if isinstance(design, dict) else design.connections
@@ -7772,10 +6528,7 @@ def buildPieceGraph(design: Design | dict) -> networkx.Graph:
 
 
 def findFixedPieces(design: Design | dict) -> list[str]:
-    """Find all pieces that are fixed in the design hierarchy.
-    findFixedPieces MUST return pieces that have both plane and center defined.
-    [👤semio📚py💻semio🔖domain🔖validation🔖graphoperations🛠️findfixedpieces](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Graph%20Operations/d/i/findFixedPieces)
-    """
+    """🔖Find all pieces that are fixed in the design hierarchy."""
     pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
     result = []
     for p in pieces:
@@ -7797,35 +6550,25 @@ def findFixedPieces(design: Design | dict) -> list[str]:
 
 
 def getConnectedComponents(design: Design | dict) -> list[set[str]]:
-    """Get connected components of the piece graph.
-    getConnectedComponents MUST return disjoint piece groups.
-    [👤semio📚py💻semio🔖domain🔖validation🔖graphoperations🛠️getconnectedcomponents](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Graph%20Operations/d/i/getConnectedComponents)
-    """
+    """🔖Get connected components of the piece graph."""
     G = buildPieceGraph(design)
 
 
 def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
-    """Get the hierarchical ordering of pieces from root to leaf.
-    getPieceHierarchy MUST return a topological ordering of pieces.
-    [👤semio📚py💻semio🔖domain🔖validation🔖graphoperations🛠️getpiecehierarchy](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Graph%20Operations/d/i/getPieceHierarchy)
-    """
+    """🍃Get the hierarchical ordering of pieces from root to leaf."""
     G = buildPieceGraph(design)
     if rootGuid not in G:
         return {}
 
 
-# endregion Graph Operations
+# #endregion 🕌Graph Operations
 
-# region FlattenDesign
-# [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign)
+# #region 🎖️FlattenDesign
 # Design flattening to resolve nested sub-designs into a single coordinate space.
 
 
 def getTypeByGuid(kit: dict, guid: str) -> dict | None:
-    """Look up a type by its GUID within a kit dictionary.
-    getTypeByGuid MUST return the type dict or raise if not found.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️gettypebyguid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/getTypeByGuid)
-    """
+    """🔖Look up a type by its GUID within a kit dictionary."""
     for t in kit.get("types", []):
         if t.get("guid") == guid:
             return t
@@ -7833,10 +6576,7 @@ def getTypeByGuid(kit: dict, guid: str) -> dict | None:
 
 
 def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | None) -> dict | None:
-    """Look up a connector by name from a type dictionary.
-    getConnectorFromType MUST return the matching connector dict.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️getconnectorfromtype](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/getConnectorFromType)
-    """
+    """🔖Look up a connector by name from a type dictionary."""
     if typeData is None:
         return None
     if connectorGuid is None:
@@ -7862,10 +6602,7 @@ def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | 
 
 
 def planeToMatrixDict(plane: dict) -> numpy.ndarray:
-    """Convert a plane dictionary to a 4x4 transformation matrix.
-    planeToMatrixDict MUST produce a valid 4x4 homogeneous matrix.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️planetomatrixdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/planeToMatrixDict)
-    """
+    """🔖Convert a plane dictionary to a 4x4 transformation matrix."""
     origin = numpy.array([plane["origin"]["x"], plane["origin"]["y"], plane["origin"]["z"]])
     xAxis = numpy.array([plane["xAxis"]["x"], plane["xAxis"]["y"], plane["xAxis"]["z"]])
     yAxis = numpy.array([plane["yAxis"]["x"], plane["yAxis"]["y"], plane["yAxis"]["z"]])
@@ -7880,10 +6617,7 @@ def planeToMatrixDict(plane: dict) -> numpy.ndarray:
 
 
 def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
-    """Convert a 4x4 transformation matrix to a plane dictionary.
-    matrixToPlaneDict MUST extract origin, xAxis and yAxis from the matrix.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️matrixtoplanedict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/matrixToPlaneDict)
-    """
+    """🔖Convert a 4x4 transformation matrix to a plane dictionary."""
     origin = matrix[:3, 3]
     xAxis = matrix[:3, 0]
     yAxis = matrix[:3, 1]
@@ -7895,10 +6629,7 @@ def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
 
 
 def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> numpy.ndarray:
-    """Compute a quaternion rotating one unit vector onto another.
-    quaternionFromUnitVectorsDict MUST compute the shortest rotation quaternion.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️quaternionfromunitvectorsdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/quaternionFromUnitVectorsDict)
-    """
+    """🔖Compute a quaternion rotating one unit vector onto another."""
     r = numpy.dot(vFrom, vTo) + 1
     if r < 0.000001:
         if abs(vFrom[0]) > abs(vFrom[2]):
@@ -7912,20 +6643,14 @@ def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> n
 
 
 def quaternionFromAxisAngleDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
-    """Compute a quaternion from an axis-angle representation.
-    quaternionFromAxisAngleDict MUST compute the quaternion for the given rotation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️quaternionfromaxisangledict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/quaternionFromAxisAngleDict)
-    """
+    """🔖Compute a quaternion from an axis-angle representation."""
     halfAngle = angle / 2
     s = numpy.sin(halfAngle)
     return numpy.array([axis[0] * s, axis[1] * s, axis[2] * s, numpy.cos(halfAngle)])
 
 
 def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
-    """Convert a quaternion to a 3x3 rotation matrix.
-    quaternionToMatrixDict MUST produce a valid 3x3 rotation matrix.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️quaterniontomatrixdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/quaternionToMatrixDict)
-    """
+    """🔖Convert a quaternion to a 3x3 rotation matrix."""
     x, y, z, w = q
     x2, y2, z2 = x + x, y + y, z + z
     xx, xy, xz = x * x2, x * y2, x * z2
@@ -7945,18 +6670,12 @@ def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
 
 
 def makeRotationAxisDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
-    """Create a 4x4 rotation matrix around an arbitrary axis.
-    makeRotationAxisDict MUST return a 4x4 rotation matrix around the axis.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️makerotationaxisdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/makeRotationAxisDict)
-    """
+    """🔖Create a 4x4 rotation matrix around an arbitrary axis."""
     return quaternionToMatrixDict(quaternionFromAxisAngleDict(axis, angle))
 
 
 def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
-    """Create a 4x4 translation matrix from a displacement vector.
-    makeTranslationDict MUST return a 4x4 translation matrix.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️maketranslationdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/makeTranslationDict)
-    """
+    """🔖Create a 4x4 translation matrix from a displacement vector."""
     m = numpy.eye(4)
     m[0, 3] = x
     m[1, 3] = y
@@ -7965,10 +6684,7 @@ def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
 
 
 def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
-    """Apply a 4x4 matrix to a 3D vector dictionary.
-    applyMatrix4ToVec3Dict MUST apply the full affine transformation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️applymatrix4tovec3dict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/applyMatrix4ToVec3Dict)
-    """
+    """🔖Apply a 4x4 matrix to a 3D vector dictionary."""
     return numpy.array(
         [
             m[0, 0] * v[0] + m[0, 1] * v[1] + m[0, 2] * v[2],
@@ -7979,10 +6695,7 @@ def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
 
 
 def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict) -> dict:
-    """Compute the world-space plane of a child piece from parent and local planes.
-    computeChildPlaneDict MUST compose parent and local transformations correctly.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️computechildplanedict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/computeChildPlaneDict)
-    """
+    """🔖Compute the world-space plane of a child piece from parent and local planes."""
     parentMatrix = planeToMatrixDict(parentPlane)
     parentPoint = numpy.array(
         [
@@ -8085,10 +6798,7 @@ def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnect
 
 
 def flattenDesignDict(kit: dict, designGuid: str) -> dict:
-    """Flatten a nested design hierarchy into a single flat coordinate space.
-    flattenDesignDict MUST resolve all nested designs into world coordinates.
-    [👤semio📚py💻semio🔖domain🔖validation🔖flattendesign🛠️flattendesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/FlattenDesign/d/i/flattenDesignDict)
-    """
+    """🔖Flatten a nested design hierarchy into a single flat coordinate space."""
     design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
     if design is None:
         raise ValueError(f"Design {designGuid} not found")
@@ -8198,17 +6908,15 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
     }
 
 
-# endregion FlattenDesign
+# #endregion 🎖️FlattenDesign
 
-# region Kit Operations
-# [👤semio📚py💻semio🔖domain🔖kitoperations](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations)
+# #region 🗡️Kit Operations
 # Dict-based pure functions for kit operations exposed via MCP.
 
 
 def findAttributeValueDict(entity: dict, name: str, defaultValue: typing.Any = ...) -> typing.Optional[str]:
-    """Finds an attribute value on an entity by key.
+    """🔖Finds an attribute value on an entity by key.
     Returns default if not found, raises ValueError if no default provided.
-    [👤semio📚py💻semio🔖domain🔖kitoperations🛠️findattributevaluedict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/d/i/findAttributeValueDict)
     """
     attributes = entity.get("attributes") or []
     attribute = next((a for a in attributes if a.get("key") == name), None)
@@ -8223,7 +6931,7 @@ def findAttributeValueDict(entity: dict, name: str, defaultValue: typing.Any = .
 
 
 def _findDesignInKitDict(kit: dict, design_guid: str) -> dict:
-    """Finds a design by GUID in a kit dict."""
+    """🔖Finds a design by GUID in a kit dict."""
     for d in kit.get("designs", []):
         if d.get("guid") == design_guid:
             return d
@@ -8231,7 +6939,7 @@ def _findDesignInKitDict(kit: dict, design_guid: str) -> dict:
 
 
 def _findTypeInKitDict(kit: dict, type_guid: str) -> dict:
-    """Finds a type by GUID in a kit dict."""
+    """🔖Finds a type by GUID in a kit dict."""
     for t in kit.get("types", []):
         if t.get("guid") == type_guid:
             return t
@@ -8239,7 +6947,7 @@ def _findTypeInKitDict(kit: dict, type_guid: str) -> dict:
 
 
 def _findPieceInDesignDict(design: dict, piece_guid: str) -> dict:
-    """Finds a piece by GUID in a design dict."""
+    """🔖Finds a piece by GUID in a design dict."""
     for p in design.get("pieces", []):
         if p.get("guid") == piece_guid:
             return p
@@ -8247,12 +6955,12 @@ def _findPieceInDesignDict(design: dict, piece_guid: str) -> dict:
 
 
 def _findPieceConnectionsInDesignDict(design: dict, piece_guid: str) -> list[dict]:
-    """Finds all connections involving a piece in a design dict."""
+    """🔖Finds all connections involving a piece in a design dict."""
     return [c for c in design.get("connections", []) if c.get("connected", {}).get("piece", {}).get("guid") == piece_guid or c.get("connecting", {}).get("piece", {}).get("guid") == piece_guid]
 
 
 def _findConnectorInTypeDict(type_dict: dict, connector_guid: str) -> dict:
-    """Finds a connector by GUID in a type dict."""
+    """🔖Finds a connector by GUID in a type dict."""
     for c in type_dict.get("connectors", []):
         if c.get("guid") == connector_guid:
             return c
@@ -8260,7 +6968,7 @@ def _findConnectorInTypeDict(type_dict: dict, connector_guid: str) -> dict:
 
 
 def _applyDesignDiffDict(base: dict, diff: dict) -> dict:
-    """Applies a design diff to a base design dict, returning a new design dict."""
+    """🔖Applies a design diff to a base design dict, returning a new design dict."""
     import copy
 
     result = copy.deepcopy(base)
@@ -8319,9 +7027,8 @@ def _applyDesignDiffDict(base: dict, diff: dict) -> dict:
 
 
 def piecesMetadataDict(kit: dict, design_guid: str) -> dict:
-    """Returns metadata for all pieces in a design.
+    """🔖Returns metadata for all pieces in a design.
     Each entry contains plane, center, fixedPieceId, parentPieceId, depth, and path.
-    [👤semio📚py💻semio🔖domain🔖kitoperations🛠️piecesmetadatadict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/d/i/piecesMetadataDict)
     """
     design = _findDesignInKitDict(kit, design_guid)
     flatten_diff = flattenDesignDict(kit, design_guid)
@@ -8342,15 +7049,13 @@ def piecesMetadataDict(kit: dict, design_guid: str) -> dict:
     return result
 
 
-# region 🔖Clustering
-# [👤semio📚py💻semio🔖domain🔖kitoperations🔖clustering](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Clustering)
+# #region 🎡Clustering
 # Functions for clustering and expanding design pieces.
 
 
 def createClusteredDesignDict(original_design: dict, cluster_piece_ids: list[str], design_name: str) -> dict:
-    """Creates a new design from a subset of pieces (cluster).
+    """🗃️Creates a new design from a subset of pieces (cluster).
     Returns a dict with 'clusteredDesign' and 'externalConnections'.
-    [👤semio📚py💻semio🔖domain🔖kitoperations🔖clustering🛠️createclustereddesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Clustering/d/i/createClusteredDesignDict)
     """
     pieces = original_design.get("pieces", [])
     if not pieces:
@@ -8390,9 +7095,7 @@ def replaceClusterWithDesignDict(
     clustered_design: dict,
     external_connections: list[dict],
 ) -> dict:
-    """Returns a DesignDiff that replaces clustered pieces with a design reference.
-    [👤semio📚py💻semio🔖domain🔖kitoperations🔖clustering🛠️replaceclusterwithdesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Clustering/d/i/replaceClusterWithDesignDict)
-    """
+    """Returns a DesignDiff that replaces clustered pieces with a design reference."""
     cluster_set = set(cluster_piece_ids)
     pieces_to_remove = [{"guid": guid} for guid in cluster_piece_ids]
     connections = original_design.get("connections", [])
@@ -8416,9 +7119,7 @@ def replaceClusterWithDesignDict(
 
 
 def getClusterableGroupsDict(design: dict, selected_piece_ids: list[str]) -> list[list[str]]:
-    """Returns clusterable groups of selected pieces using DFS on connection graph.
-    [👤semio📚py💻semio🔖domain🔖kitoperations🔖clustering🛠️getclusterablegroupsdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Clustering/d/i/getClusterableGroupsDict)
-    """
+    """🔖Returns clusterable groups of selected pieces using DFS on connection graph."""
     if len(selected_piece_ids) < 2:
         return []
     adjacency: dict[str, set[str]] = {}
@@ -8455,9 +7156,7 @@ def getClusterableGroupsDict(design: dict, selected_piece_ids: list[str]) -> lis
 
 
 def expandDesignPiecesDict(design: dict, kit: dict) -> dict:
-    """Recursively expands design references (designPiece) by inlining their pieces and connections.
-    [👤semio📚py💻semio🔖domain🔖kitoperations🔖clustering🛠️expanddesignpiecesdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Clustering/d/i/expandDesignPiecesDict)
-    """
+    """🔖Recursively expands design references (designPiece) by inlining their pieces and connections."""
     import copy
 
     connections = design.get("connections", [])
@@ -8505,15 +7204,14 @@ def expandDesignPiecesDict(design: dict, kit: dict) -> dict:
     return expanded
 
 
-# endregion 🔖Clustering
+# #endregion 🎡Clustering
 
-# region 🔖Kit Query Helpers Dict
-# [👤semio📚py💻semio🔖domain🔖kitoperations🔖kitqueryhelpersdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Kit%20Query%20Helpers%20Dict)
+# #region 📍Kit Query Helpers Dict
 # Dict-based kit query helper functions.
 
 
 def getPrimitiveDesignDict(kit: dict, design_guid: str) -> dict:
-    """Gets the primitive (root) design of a design family."""
+    """🌱Gets the primitive (root) design of a design family."""
     current = _findDesignInKitDict(kit, design_guid)
     while current.get("parent", {}).get("guid"):
         current = _findDesignInKitDict(kit, current["parent"]["guid"])
@@ -8521,7 +7219,7 @@ def getPrimitiveDesignDict(kit: dict, design_guid: str) -> dict:
 
 
 def getDesignFamilyDict(kit: dict, design_guid: str) -> list[dict]:
-    """Gets all designs in a design family (the entire tree)."""
+    """🌳Gets all designs in a design family (the entire tree)."""
     primitive = getPrimitiveDesignDict(kit, design_guid)
     family: list[dict] = []
 
@@ -8537,35 +7235,35 @@ def getDesignFamilyDict(kit: dict, design_guid: str) -> list[dict]:
 
 
 def getDesignSiblingsDict(kit: dict, design_guid: str) -> list[dict]:
-    """Returns all designs with the same parent, excluding self."""
+    """🔖Returns all designs with the same parent, excluding self."""
     design = _findDesignInKitDict(kit, design_guid)
     parent_guid = design.get("parent", {}).get("guid")
     return [d for d in kit.get("designs", []) if d.get("parent", {}).get("guid") == parent_guid and d.get("guid") != design_guid]
 
 
 def getDesignChildrenDict(kit: dict, design_guid: str) -> list[dict]:
-    """Returns all direct children of a design."""
+    """🔖Returns all direct children of a design."""
     return [d for d in kit.get("designs", []) if d.get("parent", {}).get("guid") == design_guid]
 
 
 def areDesignsInSameFamilyDict(kit: dict, design_guid_a: str, design_guid_b: str) -> bool:
-    """Checks if two designs share the same primitive ancestor."""
+    """🔖Checks if two designs share the same primitive ancestor."""
     return getPrimitiveDesignDict(kit, design_guid_a).get("guid") == getPrimitiveDesignDict(kit, design_guid_b).get("guid")
 
 
 def canUseDesignAsPieceDict(kit: dict, container_design_guid: str, piece_design_guid: str) -> bool:
-    """Returns true if a design can be used as a piece (must NOT be in same family)."""
+    """🔖Returns true if a design can be used as a piece (must NOT be in same family)."""
     return not areDesignsInSameFamilyDict(kit, container_design_guid, piece_design_guid)
 
 
 def findSameFamilyDesignPiecesDict(kit: dict, design_guid: str) -> list[dict]:
-    """Returns all pieces in a design that reference designs from the same family."""
+    """🔖Returns all pieces in a design that reference designs from the same family."""
     design = _findDesignInKitDict(kit, design_guid)
     return [p for p in design.get("pieces", []) if p.get("design", {}).get("guid") and areDesignsInSameFamilyDict(kit, design_guid, p["design"]["guid"])]
 
 
 def getPrimitiveTypeDict(kit: dict, type_guid: str) -> dict:
-    """Gets the primitive (root) type of a type family."""
+    """🔖Gets the primitive (root) type of a type family."""
     current = _findTypeInKitDict(kit, type_guid)
     while current.get("parent", {}).get("guid"):
         current = _findTypeInKitDict(kit, current["parent"]["guid"])
@@ -8573,7 +7271,7 @@ def getPrimitiveTypeDict(kit: dict, type_guid: str) -> dict:
 
 
 def getTypeFamilyDict(kit: dict, type_guid: str) -> list[dict]:
-    """Gets all types in a type family (the entire tree)."""
+    """🔖Gets all types in a type family (the entire tree)."""
     primitive = getPrimitiveTypeDict(kit, type_guid)
     family: list[dict] = []
 
@@ -8589,24 +7287,24 @@ def getTypeFamilyDict(kit: dict, type_guid: str) -> list[dict]:
 
 
 def getTypeSiblingsDict(kit: dict, type_guid: str) -> list[dict]:
-    """Returns all types with the same parent, excluding self."""
+    """🔖Returns all types with the same parent, excluding self."""
     type_ = _findTypeInKitDict(kit, type_guid)
     parent_guid = type_.get("parent", {}).get("guid")
     return [t for t in kit.get("types", []) if t.get("parent", {}).get("guid") == parent_guid and t.get("guid") != type_guid]
 
 
 def getTypeChildrenDict(kit: dict, type_guid: str) -> list[dict]:
-    """Returns all direct children of a type."""
+    """🔖Returns all direct children of a type."""
     return [t for t in kit.get("types", []) if t.get("parent", {}).get("guid") == type_guid]
 
 
 def areTypesInSameFamilyDict(kit: dict, type_guid_a: str, type_guid_b: str) -> bool:
-    """Checks if two types share the same primitive ancestor."""
+    """🔖Checks if two types share the same primitive ancestor."""
     return getPrimitiveTypeDict(kit, type_guid_a).get("guid") == getPrimitiveTypeDict(kit, type_guid_b).get("guid")
 
 
 def findPieceTypeInDesignDict(kit: dict, design_guid: str, piece_guid: str) -> dict:
-    """Gets the type of a piece in a design."""
+    """🔖Gets the type of a piece in a design."""
     design = _findDesignInKitDict(kit, design_guid)
     piece = _findPieceInDesignDict(design, piece_guid)
     type_ref = piece.get("type", {})
@@ -8616,7 +7314,7 @@ def findPieceTypeInDesignDict(kit: dict, design_guid: str, piece_guid: str) -> d
 
 
 def findUsedConnectorsByPieceInDesignDict(kit: dict, design_guid: str, piece_guid: str) -> list[dict]:
-    """Returns all connectors of a piece that are used in connections."""
+    """🔖Returns all connectors of a piece that are used in connections."""
     design = _findDesignInKitDict(kit, design_guid)
     piece = _findPieceInDesignDict(design, piece_guid)
     type_ref = piece.get("type", {})
@@ -8644,9 +7342,7 @@ def findReplaceableTypesForPieceInDesignDict(
     piece_guid: str,
     variants: typing.Optional[list[str]] = None,
 ) -> list[dict]:
-    """Finds all types that can replace a piece while maintaining connection compatibility.
-    [👤semio📚py💻semio🔖domain🔖kitoperations🔖kitqueryhelpersdict🛠️findreplaceabletypesforpieceindesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Kit%20Query%20Helpers%20Dict/d/i/findReplaceableTypesForPieceInDesignDict)
-    """
+    """Finds all types that can replace a piece while maintaining connection compatibility."""
     design = _findDesignInKitDict(kit, design_guid)
     connections = _findPieceConnectionsInDesignDict(design, piece_guid)
     required_connectors: list[dict] = []
@@ -8694,9 +7390,7 @@ def findReplaceableTypesForPiecesInDesignDict(
     piece_guids: list[str],
     variants: typing.Optional[list[str]] = None,
 ) -> list[dict]:
-    """Finds types that can replace multiple pieces while maintaining all external connections.
-    [👤semio📚py💻semio🔖domain🔖kitoperations🔖kitqueryhelpersdict🛠️findreplaceabletypesforpiecesindesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Kit%20Query%20Helpers%20Dict/d/i/findReplaceableTypesForPiecesInDesignDict)
-    """
+    """Finds types that can replace multiple pieces while maintaining all external connections."""
     design = _findDesignInKitDict(kit, design_guid)
     piece_set = set(piece_guids)
     external_connectors: list[dict] = []
@@ -8742,9 +7436,8 @@ def findReplaceableTypesForPiecesInDesignDict(
 
 
 def sumQualityInDesignDict(kit: dict, design_guid: str, quality_guid: str) -> float:
-    """Sums up the values of a quality across all pieces in a design.
+    """🔖Sums up the values of a quality across all pieces in a design.
     For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
-    [👤semio📚py💻semio🔖domain🔖kitoperations🔖kitqueryhelpersdict🛠️sumqualityindesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Kit%20Operations/s/Kit%20Query%20Helpers%20Dict/d/i/sumQualityInDesignDict)
     """
     design = _findDesignInKitDict(kit, design_guid)
     total = 0.0
@@ -8771,38 +7464,28 @@ def sumQualityInDesignDict(kit: dict, design_guid: str, quality_guid: str) -> fl
     return total
 
 
-# endregion 🔖Kit Query Helpers Dict
+# #endregion 📍Kit Query Helpers Dict
 
-# endregion Kit Operations
+# #endregion 🗡️Kit Operations
 
-# region Kit Diff Operations
-# [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations)
+# #region 🎗️Kit Diff Operations
 # Diffing and patching operations for comparing and merging kit versions.
 
 
 def _normalizeValue(value: typing.Any) -> typing.Any:
-    """Normalize empty values to None for comparison.
-    _normalizeValue MUST perform the _normalizeValue operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️normalizevalue](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_normalizeValue)
-    """
+    """🔖Normalize empty values to None for comparison."""
     if value is None or value == "" or value == []:
         return None
     return value
 
 
 def _normalizeBoolean(value: bool | None) -> bool | None:
-    """Normalize boolean: True stays True, False/None become None.
-    _normalizeBoolean MUST perform the _normalizeBoolean operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️normalizeboolean](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_normalizeBoolean)
-    """
+    """🔘Normalize boolean: True stays True, False/None become None."""
     return True if value else None
 
 
 def _normalizeArray(arr: list | None) -> list:
-    """Normalize None or single item to list.
-    _normalizeArray MUST perform the _normalizeArray operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️normalizearray](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_normalizeArray)
-    """
+    """📚Normalize None or single item to list."""
     if arr is None:
         return []
     if not isinstance(arr, list):
@@ -8811,10 +7494,7 @@ def _normalizeArray(arr: list | None) -> list:
 
 
 def areAttributesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two attribute dictionaries are equal.
-    areAttributesEqualDict MUST compare all attribute fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️areattributesequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areAttributesEqualDict)
-    """
+    """🔖Check whether two attribute dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -8838,10 +7518,7 @@ def areAttributesEqualDict(a: list | None, b: list | None, strict: bool = False)
 
 
 def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two prop dictionaries are equal.
-    arePropsEqualDict MUST compare all prop fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️arepropsequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/arePropsEqualDict)
-    """
+    """🔖Check whether two prop dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -8867,10 +7544,7 @@ def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 
 def areConnectorsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two port dictionaries are equal.
-    arePortsEqualDict MUST compare all port fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️areconnectorsequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areConnectorsEqualDict)
-    """
+    """🔖Check whether two port dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -8910,10 +7584,7 @@ def areConnectorsEqualDict(a: list | None, b: list | None, strict: bool = False)
 
 
 def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two model dictionaries are equal.
-    areModelsEqualDict MUST compare all model fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️aremodelsequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areModelsEqualDict)
-    """
+    """🔖Check whether two model dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -8946,10 +7617,7 @@ def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
 
 
 def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two type dictionaries are equal.
-    areTypesEqualDict MUST compare all type fields including children for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️aretypesequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areTypesEqualDict)
-    """
+    """🔖Check whether two type dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9024,10 +7692,7 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 
 def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two piece dictionaries are equal.
-    arePiecesEqualDict MUST compare all piece fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️arepiecesequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/arePiecesEqualDict)
-    """
+    """🔖Check whether two piece dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9105,10 +7770,7 @@ def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
 
 
 def _getGuidFromRef(ref: typing.Any) -> str | None:
-    """Extract guid from either a string (Input format) or dict with guid (Output format).
-    _getGuidFromRef MUST perform the _getGuidFromRef operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getguidfromref](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getGuidFromRef)
-    """
+    """🧲Extract guid from either a string (Input format) or dict with guid (Output format)."""
     if ref is None:
         return None
     if isinstance(ref, dict):
@@ -9117,10 +7779,7 @@ def _getGuidFromRef(ref: typing.Any) -> str | None:
 
 
 def _floatEqual(a, b, epsilon=1e-9):
-    """Compare two float values with epsilon tolerance.
-    _floatEqual MUST perform the _floatEqual operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️floatequal](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_floatEqual)
-    """
+    """🔖Compare two float values with epsilon tolerance."""
     if a is None and b is None:
         return True
     if a is None or b is None:
@@ -9131,10 +7790,7 @@ def _floatEqual(a, b, epsilon=1e-9):
 
 
 def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two connection dictionaries are equal.
-    areConnectionsEqualDict MUST compare all connection fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️areconnectionsequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areConnectionsEqualDict)
-    """
+    """🔖Check whether two connection dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9189,10 +7845,7 @@ def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False
 
 
 def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two design dictionaries are equal.
-    areDesignsEqualDict MUST compare all design fields including children for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️aredesignsequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areDesignsEqualDict)
-    """
+    """🔖Check whether two design dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9247,10 +7900,7 @@ def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
 
 
 def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two port dictionaries are equal.
-    arePortsEqualDict MUST compare all port fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️areportsequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/arePortsEqualDict)
-    """
+    """🔖Check whether two port dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9274,10 +7924,7 @@ def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 
 def areQualitiesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two quality dictionaries are equal.
-    areQualitiesEqualDict MUST compare all quality fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️arequalitiesequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areQualitiesEqualDict)
-    """
+    """🔖Check whether two quality dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9301,10 +7948,7 @@ def areQualitiesEqualDict(a: list | None, b: list | None, strict: bool = False) 
 
 
 def areFilesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two file dictionaries are equal.
-    areFilesEqualDict MUST compare all file fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️arefilesequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areFilesEqualDict)
-    """
+    """🔖Check whether two file dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9324,10 +7968,7 @@ def areFilesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 
 def areFoldersEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two folder dictionaries are equal.
-    areFoldersEqualDict MUST compare all folder fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️arefoldersequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areFoldersEqualDict)
-    """
+    """🔖Check whether two folder dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9349,10 +7990,7 @@ def areFoldersEqualDict(a: list | None, b: list | None, strict: bool = False) ->
 
 
 def areAuthorsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two author dictionaries are equal.
-    areAuthorsEqualDict MUST compare all author fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️areauthorsequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areAuthorsEqualDict)
-    """
+    """🔖Check whether two author dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9376,10 +8014,7 @@ def areAuthorsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
 
 
 def areConceptsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two concept dictionaries are equal.
-    areConceptsEqualDict MUST compare all concept fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️areconceptsequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areConceptsEqualDict)
-    """
+    """🔖Check whether two concept dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9403,10 +8038,7 @@ def areConceptsEqualDict(a: list | None, b: list | None, strict: bool = False) -
 
 
 def areTagsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """Check whether two tag dictionaries are equal.
-    areTagsEqualDict MUST compare all tag fields for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️aretagsequaldict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areTagsEqualDict)
-    """
+    """🔖Check whether two tag dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9430,15 +8062,13 @@ def areTagsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bo
 
 
 def areKitsDictEqual(a: dict, b: dict, strict: bool = False) -> bool:
-    """Deep equality check for kits (dict-based) - recursively compares all properties including nested entities.
+    """🔖Deep equality check for kits (dict-based) - recursively compares all properties including nested entities.
     Args:
     a: First kit dict
     b: Second kit dict
     strict: If True, also compare timestamps (createdAt, updatedAt). Default False.
     Returns:
     True if kits are equal, False otherwise.
-    areKitsDictEqual MUST compare all kit fields and children recursively.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️arekitsdictequal](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areKitsDictEqual)
     """
     if a.get("guid") != b.get("guid"):
         return False
@@ -9501,8 +8131,6 @@ def _getCollectionDiff(
         after: The after collection
         getItemDiff: Function to get item-level diff
         entityKey: The key name for the entity ID in the updated array (e.g., "type", "design", "piece")
-    _getCollectionDiff MUST perform the _getCollectionDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getcollectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getCollectionDiff)
     """
     diff: dict = {}
     beforeGuids = {item.get("guid") for item in before}
@@ -9542,8 +8170,6 @@ def _applyCollectionDiff(
         diff: The diff to apply (with removed, updated, added)
         applyItemDiff: Function to apply item-level diff
         entityKey: The key name for the entity ID in the updated array (e.g., "type", "design", "piece")
-    _applyCollectionDiff MUST perform the _applyCollectionDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applycollectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyCollectionDiff)
     """
     if not diff:
         return base
@@ -9572,10 +8198,7 @@ def _applyCollectionDiff(
 
 
 def _getTypeDiff(before: dict, after: dict) -> dict:
-    """Get diff between two type dicts.
-    _getTypeDiff MUST perform the _getTypeDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️gettypediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getTypeDiff)
-    """
+    """🔖Get diff between two type dicts."""
     diff: dict = {}
     for key in ["name", "description", "icon", "image", "folder", "unit", "stock"]:
         if _normalizeValue(before.get(key)) != _normalizeValue(after.get(key)):
@@ -9630,10 +8253,7 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
 
 
 def _applyTypeDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a type dict.
-    _applyTypeDiff MUST perform the _applyTypeDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applytypediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyTypeDiff)
-    """
+    """🔖Apply diff to a type dict."""
     result = dict(base)
     for key in [
         "name",
@@ -9670,10 +8290,7 @@ def _applyTypeDiff(base: dict, diff: dict) -> dict:
 
 
 def _getConnectorDiff(before: dict, after: dict) -> dict:
-    """Get diff between two connector dicts.
-    _getConnectorDiff MUST perform the _getConnectorDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getconnectordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getConnectorDiff)
-    """
+    """🔖Get diff between two connector dicts."""
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
         diff["name"] = after.get("name")
@@ -9714,10 +8331,7 @@ def _getConnectorDiff(before: dict, after: dict) -> dict:
 
 
 def _applyConnectorDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a connector dict.
-    _applyConnectorDiff MUST perform the _applyConnectorDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyconnectordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyConnectorDiff)
-    """
+    """🔖Apply diff to a connector dict."""
     result = dict(base)
     for key in ["name", "description", "t", "mandatory"]:
         if key in diff:
@@ -9750,10 +8364,7 @@ def _applyConnectorDiff(base: dict, diff: dict) -> dict:
 
 
 def _getModelDiff(before: dict, after: dict) -> dict:
-    """Get diff between two model dicts.
-    _getModelDiff MUST perform the _getModelDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getmodeldiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getModelDiff)
-    """
+    """🔖Get diff between two model dicts."""
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
         diff["name"] = after.get("name")
@@ -9782,10 +8393,7 @@ def _getModelDiff(before: dict, after: dict) -> dict:
 
 
 def _applyModelDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a model dict.
-    _applyModelDiff MUST perform the _applyModelDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applymodeldiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyModelDiff)
-    """
+    """🔖Apply diff to a model dict."""
     result = dict(base)
     for key in ["name", "description"]:
         if key in diff:
@@ -9800,10 +8408,7 @@ def _applyModelDiff(base: dict, diff: dict) -> dict:
 
 
 def _getDesignDiff(before: dict, after: dict) -> dict:
-    """Get diff between two design dicts.
-    _getDesignDiff MUST perform the _getDesignDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getdesigndiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getDesignDiff)
-    """
+    """🔖Get diff between two design dicts."""
     diff: dict = {}
     for key in [
         "name",
@@ -9867,10 +8472,7 @@ def _getDesignDiff(before: dict, after: dict) -> dict:
 
 
 def _applyDesignDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a design dict.
-    _applyDesignDiff MUST perform the _applyDesignDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applydesigndiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyDesignDiff)
-    """
+    """🔖Apply diff to a design dict."""
     result = dict(base)
     for key in [
         "name",
@@ -9909,11 +8511,9 @@ def _applyDesignDiff(base: dict, diff: dict) -> dict:
 
 
 def designWithDiffDict(base: dict, diff: dict) -> dict:
-    """Create a mixed design keeping old entities with diff status annotations.
-    designWithDiffDict MUST maintain all old pieces and connections (same parameters),
+    """🔖Create a mixed design keeping old entities with diff status annotations.
     annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added),
     keep deleted entities in place marked as removed, and append added entities marked as added.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️designwithdiffdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/designWithDiffDict)
     """
     import copy
 
@@ -9977,10 +8577,7 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
 
 
 def _getPieceDiff(before: dict, after: dict) -> dict:
-    """Get diff between two piece dicts.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getpiecediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getPieceDiff)
-    _getPieceDiff MUST perform the _getPieceDiff operation.
-    """
+    """🔖Get diff between two piece dicts."""
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
         diff["name"] = after.get("name")
@@ -10009,10 +8606,7 @@ def _getPieceDiff(before: dict, after: dict) -> dict:
 
 
 def _applyPieceDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a piece dict.
-    _applyPieceDiff MUST perform the _applyPieceDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applypiecediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyPieceDiff)
-    """
+    """🔖Apply diff to a piece dict."""
     result = dict(base)
     for key in [
         "name",
@@ -10035,10 +8629,7 @@ def _applyPieceDiff(base: dict, diff: dict) -> dict:
 
 
 def _getConnectionDiff(before: dict, after: dict) -> dict:
-    """Get diff between two connection dicts.
-    _getConnectionDiff MUST perform the _getConnectionDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getconnectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getConnectionDiff)
-    """
+    """🔖Get diff between two connection dicts."""
     diff: dict = {}
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
         bVal = before.get(key, 0) or 0
@@ -10059,10 +8650,7 @@ def _getConnectionDiff(before: dict, after: dict) -> dict:
 
 
 def _applyConnectionDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a connection dict.
-    _applyConnectionDiff MUST perform the _applyConnectionDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyconnectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyConnectionDiff)
-    """
+    """🔖Apply diff to a connection dict."""
     result = dict(base)
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
         if key in diff:
@@ -10079,10 +8667,7 @@ def _applyConnectionDiff(base: dict, diff: dict) -> dict:
 
 
 def _getTagDiff(before: dict, after: dict) -> dict:
-    """Get diff between two tag dicts.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️gettagdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getTagDiff)
-    _getTagDiff MUST perform the _getTagDiff operation.
-    """
+    """🔖Get diff between two tag dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -10097,10 +8682,7 @@ def _getTagDiff(before: dict, after: dict) -> dict:
 
 
 def _applyTagDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a tag dict.
-    _applyTagDiff MUST perform the _applyTagDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applytagdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyTagDiff)
-    """
+    """🔖Apply diff to a tag dict."""
     result = dict(base)
     for key in ["name", "description", "icon"]:
         if key in diff:
@@ -10111,10 +8693,7 @@ def _applyTagDiff(base: dict, diff: dict) -> dict:
 
 
 def _getConceptDiff(before: dict, after: dict) -> dict:
-    """Get diff between two concept dicts.
-    _getConceptDiff MUST perform the _getConceptDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getconceptdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getConceptDiff)
-    """
+    """🔖Get diff between two concept dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -10129,10 +8708,7 @@ def _getConceptDiff(before: dict, after: dict) -> dict:
 
 
 def _applyConceptDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a concept dict.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyconceptdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyConceptDiff)
-    _applyConceptDiff MUST perform the _applyConceptDiff operation.
-    """
+    """🔖Apply diff to a concept dict."""
     result = dict(base)
     for key in ["name", "description", "icon"]:
         if key in diff:
@@ -10143,10 +8719,7 @@ def _applyConceptDiff(base: dict, diff: dict) -> dict:
 
 
 def _getPortDiff(before: dict, after: dict) -> dict:
-    """Get diff between two port dicts.
-    _getPortDiff MUST perform the _getPortDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getportdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getPortDiff)
-    """
+    """🔖Get diff between two port dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -10173,10 +8746,7 @@ def _getPortDiff(before: dict, after: dict) -> dict:
 
 
 def _applyPortDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to an port dict.
-    _applyPortDiff MUST perform the _applyPortDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyportdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyPortDiff)
-    """
+    """🔖Apply diff to an port dict."""
     result = dict(base)
     for key in ["name", "description", "icon"]:
         if key in diff:
@@ -10189,10 +8759,7 @@ def _applyPortDiff(base: dict, diff: dict) -> dict:
 
 
 def _getFileDiff(before: dict, after: dict) -> dict:
-    """Get diff between two file dicts.
-    _getFileDiff MUST perform the _getFileDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getfilediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getFileDiff)
-    """
+    """🔖Get diff between two file dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -10217,10 +8784,7 @@ def _getFileDiff(before: dict, after: dict) -> dict:
 
 
 def _applyFileDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a file dict.
-    _applyFileDiff MUST perform the _applyFileDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyfilediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyFileDiff)
-    """
+    """🔖Apply diff to a file dict."""
     result = dict(base)
     for key in ["name", "description", "remote", "size", "hash", "blob"]:
         if key in diff:
@@ -10233,10 +8797,7 @@ def _applyFileDiff(base: dict, diff: dict) -> dict:
 
 
 def _getFolderDiff(before: dict, after: dict) -> dict:
-    """Get diff between two folder dicts.
-    _getFolderDiff MUST perform the _getFolderDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getfolderdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getFolderDiff)
-    """
+    """🔖Get diff between two folder dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -10249,10 +8810,7 @@ def _getFolderDiff(before: dict, after: dict) -> dict:
 
 
 def _applyFolderDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a folder dict.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyfolderdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyFolderDiff)
-    _applyFolderDiff MUST perform the _applyFolderDiff operation.
-    """
+    """🔖Apply diff to a folder dict."""
     result = dict(base)
     for key in ["name", "description"]:
         if key in diff:
@@ -10263,10 +8821,7 @@ def _applyFolderDiff(base: dict, diff: dict) -> dict:
 
 
 def _getQualityDiff(before: dict, after: dict) -> dict:
-    """Get diff between two quality dicts.
-    _getQualityDiff MUST perform the _getQualityDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getqualitydiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getQualityDiff)
-    """
+    """🔖Get diff between two quality dicts."""
     diff: dict = {}
     if before.get("key") != after.get("key"):
         diff["key"] = after.get("key")
@@ -10306,10 +8861,7 @@ def _getQualityDiff(before: dict, after: dict) -> dict:
 
 
 def _applyQualityDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to a quality dict.
-    _applyQualityDiff MUST perform the _applyQualityDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyqualitydiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyQualityDiff)
-    """
+    """🔖Apply diff to a quality dict."""
     result = dict(base)
     for key in [
         "key",
@@ -10336,10 +8888,7 @@ def _applyQualityDiff(base: dict, diff: dict) -> dict:
 
 
 def _getAuthorDiff(before: dict, after: dict) -> dict:
-    """Get diff between two author dicts.
-    _getAuthorDiff MUST perform the _getAuthorDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getauthordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getAuthorDiff)
-    """
+    """🔖Get diff between two author dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -10352,10 +8901,7 @@ def _getAuthorDiff(before: dict, after: dict) -> dict:
 
 
 def _applyAuthorDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to an author dict.
-    _applyAuthorDiff MUST perform the _applyAuthorDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyauthordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyAuthorDiff)
-    """
+    """🔖Apply diff to an author dict."""
     result = dict(base)
     for key in ["name", "email"]:
         if key in diff:
@@ -10366,10 +8912,7 @@ def _applyAuthorDiff(base: dict, diff: dict) -> dict:
 
 
 def _getAttributeDiff(before: dict, after: dict) -> dict:
-    """Get diff between two attribute dicts - used for individual attribute update diffs.
-    _getAttributeDiff MUST perform the _getAttributeDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getattributediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getAttributeDiff)
-    """
+    """🔖Get diff between two attribute dicts - used for individual attribute update diffs."""
     diff: dict = {}
     if _normalizeValue(before.get("key")) != _normalizeValue(after.get("key")):
         diff["key"] = after.get("key")
@@ -10381,10 +8924,7 @@ def _getAttributeDiff(before: dict, after: dict) -> dict:
 
 
 def _applyAttributeDiff(base: dict, diff: dict) -> dict:
-    """Apply diff to an attribute dict.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyattributediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyAttributeDiff)
-    _applyAttributeDiff MUST perform the _applyAttributeDiff operation.
-    """
+    """🔖Apply diff to an attribute dict."""
     result = dict(base)
     for key in ["key", "value", "definition"]:
         if key in diff:
@@ -10393,10 +8933,7 @@ def _applyAttributeDiff(base: dict, diff: dict) -> dict:
 
 
 def _getAttributesDiff(before: list, after: list) -> dict:
-    """Get diff for attributes collection - uses GUID for identification with EntityId format.
-    _getAttributesDiff MUST perform the _getAttributesDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getattributesdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_getAttributesDiff)
-    """
+    """🔖Get diff for attributes collection - uses GUID for identification with EntityId format."""
     diff: dict = {}
     beforeGuids = {a.get("guid") for a in before}
     afterGuids = {a.get("guid") for a in after}
@@ -10421,10 +8958,7 @@ def _getAttributesDiff(before: list, after: list) -> dict:
 
 
 def _applyAttributesDiff(base: list, diff: dict | None) -> list:
-    """Apply diff to attributes collection - uses GUID for identification with EntityId format.
-    _applyAttributesDiff MUST perform the _applyAttributesDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applyattributesdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_applyAttributesDiff)
-    """
+    """🔖Apply diff to attributes collection - uses GUID for identification with EntityId format."""
     if not diff:
         return base
     result = [dict(a) for a in base]
@@ -10443,10 +8977,7 @@ def _applyAttributesDiff(base: list, diff: dict | None) -> list:
 
 
 def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
-    """Compute inverse of attributes collection diff - uses GUID with EntityId format.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseattributesdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseAttributesDiff)
-    _inverseAttributesDiff MUST perform the _inverseAttributesDiff operation.
-    """
+    """🔖Compute inverse of attributes collection diff - uses GUID with EntityId format."""
     inverse: dict = {}
 
     removedGuids = [r["guid"] if isinstance(r, dict) else r for r in appliedDiff.get("removed", [])]
@@ -10481,10 +9012,7 @@ def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
 
 
 def _inverseAttributeDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of an attribute diff.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseattributediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseAttributeDiff)
-    _inverseAttributeDiff MUST perform the _inverseAttributeDiff operation.
-    """
+    """🔖Compute inverse of an attribute diff."""
     inverse: dict = {}
     for key in ["key", "value", "definition"]:
         if key in appliedDiff:
@@ -10493,10 +9021,7 @@ def _inverseAttributeDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def getKitDiffDict(before: dict, after: dict) -> dict:
-    """Compute the diff between two kit dicts.
-    getKitDiffDict MUST identify all added, removed and changed entities.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getkitdiffdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/getKitDiffDict)
-    """
+    """🔖Compute the diff between two kit dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -10560,10 +9085,7 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
 
 
 def applyKitDiffDict(base: dict, diff: dict) -> dict:
-    """Apply a diff to a kit dict.
-    applyKitDiffDict MUST apply additions, removals and changes correctly.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️applykitdiffdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/applyKitDiffDict)
-    """
+    """🔖Apply a diff to a kit dict."""
     result = dict(base)
     result["guid"] = base.get("guid")
     for key in [
@@ -10626,8 +9148,6 @@ def _inverseCollectionDiff(
         appliedDiff: The diff that was applied
         inverseItemDiff: Function to compute inverse of item-level diff
         entityKey: The key name for the entity ID (e.g., "type", "design", "piece")
-    _inverseCollectionDiff MUST perform the _inverseCollectionDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversecollectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseCollectionDiff)
     """
     inverse: dict = {}
     if appliedDiff.get("removed"):
@@ -10659,10 +9179,7 @@ def _inverseCollectionDiff(
 
 
 def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a type diff.
-    _inverseTypeDiff MUST perform the _inverseTypeDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversetypediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseTypeDiff)
-    """
+    """🔖Compute inverse of a type diff."""
     inverse: dict = {}
     for key in [
         "name",
@@ -10704,10 +9221,7 @@ def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a connector diff.
-    _inverseConnectorDiff MUST perform the _inverseConnectorDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconnectordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConnectorDiff)
-    """
+    """🔖Compute inverse of a connector diff."""
     inverse: dict = {}
     for key in ["name", "description", "t", "mandatory"]:
         if key in appliedDiff:
@@ -10734,10 +9248,7 @@ def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a model diff.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversemodeldiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseModelDiff)
-    _inverseModelDiff MUST perform the _inverseModelDiff operation.
-    """
+    """🔖Compute inverse of a model diff."""
     inverse: dict = {}
     for key in ["name", "description"]:
         if key in appliedDiff:
@@ -10752,10 +9263,7 @@ def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a connection diff (negate numeric deltas).
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconnectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConnectionDiff)
-    _inverseConnectionDiff MUST perform the _inverseConnectionDiff operation.
-    """
+    """🔖Compute inverse of a connection diff (negate numeric deltas)."""
     inverse: dict = {}
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
         if key in appliedDiff:
@@ -10772,10 +9280,7 @@ def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a model diff.
-    _inverseModelDiff MUST perform the _inverseModelDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversemodeldiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseModelDiff)
-    """
+    """🔖Compute inverse of a model diff."""
     inverse: dict = {}
     for key in ["name", "description"]:
         if key in appliedDiff:
@@ -10790,10 +9295,7 @@ def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a connection diff (negate numeric deltas).
-    _inverseConnectionDiff MUST perform the _inverseConnectionDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconnectiondiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConnectionDiff)
-    """
+    """🔖Compute inverse of a connection diff (negate numeric deltas)."""
     inverse: dict = {}
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
         if key in appliedDiff:
@@ -10810,10 +9312,7 @@ def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a design diff.
-    _inverseDesignDiff MUST perform the _inverseDesignDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversedesigndiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseDesignDiff)
-    """
+    """🔖Compute inverse of a design diff."""
     inverse: dict = {}
     for key in [
         "name",
@@ -10857,10 +9356,7 @@ def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a piece diff.
-    _inversePieceDiff MUST perform the _inversePieceDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversepiecediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inversePieceDiff)
-    """
+    """🔖Compute inverse of a piece diff."""
     inverse: dict = {}
     for key in [
         "name",
@@ -10883,10 +9379,7 @@ def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseTagDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a tag diff.
-    _inverseTagDiff MUST perform the _inverseTagDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversetagdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseTagDiff)
-    """
+    """🔖Compute inverse of a tag diff."""
     inverse: dict = {}
     for key in ["name", "description", "icon"]:
         if key in appliedDiff:
@@ -10897,10 +9390,7 @@ def _inverseTagDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a concept diff.
-    _inverseConceptDiff MUST perform the _inverseConceptDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseconceptdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseConceptDiff)
-    """
+    """🔖Compute inverse of a concept diff."""
     inverse: dict = {}
     for key in ["name", "description", "icon"]:
         if key in appliedDiff:
@@ -10911,10 +9401,7 @@ def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of an port diff.
-    _inversePortDiff MUST perform the _inversePortDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseportdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inversePortDiff)
-    """
+    """🔖Compute inverse of an port diff."""
     inverse: dict = {}
     for key in ["name", "description", "icon"]:
         if key in appliedDiff:
@@ -10927,10 +9414,7 @@ def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a file diff.
-    _inverseFileDiff MUST perform the _inverseFileDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversefilediff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseFileDiff)
-    """
+    """🔖Compute inverse of a file diff."""
     inverse: dict = {}
     for key in ["name", "description", "remote", "size", "hash", "blob"]:
         if key in appliedDiff:
@@ -10943,10 +9427,7 @@ def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseFolderDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a folder diff.
-    _inverseFolderDiff MUST perform the _inverseFolderDiff operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversefolderdiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseFolderDiff)
-    """
+    """🔖Compute inverse of a folder diff."""
     inverse: dict = {}
     for key in ["name", "description"]:
         if key in appliedDiff:
@@ -10957,10 +9438,7 @@ def _inverseFolderDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseQualityDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of a quality diff.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversequalitydiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseQualityDiff)
-    _inverseQualityDiff MUST perform the _inverseQualityDiff operation.
-    """
+    """🔖Compute inverse of a quality diff."""
     inverse: dict = {}
     for key in [
         "key",
@@ -10987,10 +9465,7 @@ def _inverseQualityDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseAuthorDiff(original: dict, appliedDiff: dict) -> dict:
-    """Compute inverse of an author diff.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inverseauthordiff](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_inverseAuthorDiff)
-    _inverseAuthorDiff MUST perform the _inverseAuthorDiff operation.
-    """
+    """🔖Compute inverse of an author diff."""
     inverse: dict = {}
     for key in ["name", "email"]:
         if key in appliedDiff:
@@ -11001,10 +9476,7 @@ def _inverseAuthorDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
-    """Compute the inverse of a kit diff.
-    inverseKitDiffDict MUST swap additions and removals to reverse the diff.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️inversekitdiffdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/inverseKitDiffDict)
-    """
+    """🔖Compute the inverse of a kit diff."""
     inverse: dict = {}
     for key in [
         "name",
@@ -11069,10 +9541,7 @@ def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
 
 @dataclasses.dataclass
 class Change:
-    """Change holds the data fields for a Change record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️change](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/Change)
-    Change MUST perform the Change operation.
-    """
+    """💿Change holds the data fields for a Change record."""
 
     forward: dict
     backward: dict
@@ -11083,10 +9552,7 @@ class Change:
 
 
 def changeToDict(change: Change) -> dict:
-    """changeToDict performs the changeToDict operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️changetodict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/changeToDict)
-    changeToDict MUST perform the changeToDict operation.
-    """
+    """🔖changeToDict performs the changeToDict operation."""
     result: dict = {"forward": change.forward, "backward": change.backward}
     if change.author is not None:
         result["author"] = change.author
@@ -11101,199 +9567,545 @@ def changeToDict(change: Change) -> dict:
 
 @dataclasses.dataclass
 class AttributeChange(Change):
-    """AttributeChange holds the data fields for a AttributeChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️attributechange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/AttributeChange)
-    AttributeChange MUST perform the AttributeChange operation.
-    """
+    """🔖AttributeChange holds the data fields for a AttributeChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class AuthorChange(Change):
-    """AuthorChange holds the data fields for a AuthorChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️authorchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/AuthorChange)
-    AuthorChange MUST perform the AuthorChange operation.
-    """
+    """🔖AuthorChange holds the data fields for a AuthorChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class FileChange(Change):
-    """FileChange holds the data fields for a FileChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️filechange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/FileChange)
-    FileChange MUST perform the FileChange operation.
-    """
+    """🔖FileChange holds the data fields for a FileChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class FolderChange(Change):
-    """FolderChange holds the data fields for a FolderChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️folderchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/FolderChange)
-    FolderChange MUST perform the FolderChange operation.
-    """
+    """🔖FolderChange holds the data fields for a FolderChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class QualityChange(Change):
-    """QualityChange holds the data fields for a QualityChange record.
-    QualityChange MUST perform the QualityChange operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️qualitychange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/QualityChange)
-    """
+    """🔖QualityChange holds the data fields for a QualityChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class PortChange(Change):
-    """PortChange holds the data fields for a PortChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️portchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/PortChange)
-    PortChange MUST perform the PortChange operation.
-    """
+    """🔖PortChange holds the data fields for a PortChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class PropChange(Change):
-    """PropChange holds the data fields for a PropChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️propchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/PropChange)
-    PropChange MUST perform the PropChange operation.
-    """
+    """🔖PropChange holds the data fields for a PropChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class TagChange(Change):
-    """TagChange holds the data fields for a TagChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️tagchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/TagChange)
-    TagChange MUST perform the TagChange operation.
-    """
+    """🔖TagChange holds the data fields for a TagChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class ConceptChange(Change):
-    """ConceptChange holds the data fields for a ConceptChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️conceptchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConceptChange)
-    ConceptChange MUST perform the ConceptChange operation.
-    """
+    """🔖ConceptChange holds the data fields for a ConceptChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class ModelChange(Change):
-    """ModelChange holds the data fields for a ModelChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️modelchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ModelChange)
-    ModelChange MUST perform the ModelChange operation.
-    """
+    """🔖ModelChange holds the data fields for a ModelChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class ConnectorChange(Change):
-    """ConnectorChange holds the data fields for a ConnectorChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️connectorchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConnectorChange)
-    ConnectorChange MUST perform the ConnectorChange operation.
-    """
+    """🔖ConnectorChange holds the data fields for a ConnectorChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class TypeChange(Change):
-    """TypeChange holds the data fields for a TypeChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️typechange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/TypeChange)
-    TypeChange MUST perform the TypeChange operation.
-    """
+    """🔖TypeChange holds the data fields for a TypeChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class LayerChange(Change):
-    """LayerChange holds the data fields for a LayerChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️layerchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/LayerChange)
-    LayerChange MUST perform the LayerChange operation.
-    """
+    """🔖LayerChange holds the data fields for a LayerChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class PieceChange(Change):
-    """PieceChange holds the data fields for a PieceChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️piecechange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/PieceChange)
-    PieceChange MUST perform the PieceChange operation.
-    """
+    """🔖PieceChange holds the data fields for a PieceChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class GroupChange(Change):
-    """GroupChange holds the data fields for a GroupChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️groupchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/GroupChange)
-    GroupChange MUST perform the GroupChange operation.
-    """
+    """🔖GroupChange holds the data fields for a GroupChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class ConnectionChange(Change):
-    """ConnectionChange holds the data fields for a ConnectionChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️connectionchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/ConnectionChange)
-    ConnectionChange MUST perform the ConnectionChange operation.
-    """
+    """🔖ConnectionChange holds the data fields for a ConnectionChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class StatChange(Change):
-    """StatChange holds the data fields for a StatChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️statchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/StatChange)
-    StatChange MUST perform the StatChange operation.
-    """
+    """🔖StatChange holds the data fields for a StatChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class DesignChange(Change):
-    """DesignChange holds the data fields for a DesignChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️designchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/DesignChange)
-    DesignChange MUST perform the DesignChange operation.
-    """
+    """🔖DesignChange holds the data fields for a DesignChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class KitChange(Change):
-    """KitChange holds the data fields for a KitChange record.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️kitchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/KitChange)
-    KitChange MUST perform the KitChange operation.
-    """
+    """🔖KitChange holds the data fields for a KitChange record."""
 
     pass
 
 
+# #region 📋Copy Paste Design
+# 📋Copy Paste Design provides copy and paste functionality for designs.
+# Specs: CopyDesign extracts selected pieces and connections. PasteDesign inserts them into a target design.
+
+
+def copyDesignDict(kit: dict, design: dict, pieceGuids: list[str], connectionGuids: list[str]) -> dict:
+    """📋Extracts selected pieces and connections from a design into a new Design dict.
+    Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
+    Internal pieces are copied as-is. Pp-excl-pc-incl pieces get semio.center and semio.plane attributes.
+    Non-internal connections include their external pieces marked with semio.piece.origin = "external" and semio.center.
+    """
+    selectedPieceSet = set(pieceGuids)
+    selectedConnectionSet = set(connectionGuids)
+
+    connections = design.get("connections", [])
+    pieces = design.get("pieces", [])
+
+    # Build parent map: child guid -> (parent guid, connection)
+    parentMap: dict[str, tuple[str, dict]] = {}
+    for conn in connections:
+        connectingGuid = conn.get("connecting", {}).get("piece", {}).get("guid", "")
+        connectedGuid = conn.get("connected", {}).get("piece", {}).get("guid", "")
+        parentMap[connectingGuid] = (connectedGuid, conn)
+
+    # Flatten the design to get absolute planes/centers
+    flatResult = flattenDesignDict(kit, design.get("guid", ""))
+    flatPieceMap: dict[str, dict] = {}
+    for piece in pieces:
+        if piece.get("plane"):
+            flatPieceMap[piece["guid"]] = {"plane": piece["plane"], "center": piece.get("center")}
+    for update in flatResult.get("pieces", {}).get("updated", []):
+        guid = update.get("piece", {}).get("guid", update.get("id", ""))
+        diff = update.get("diff", {})
+        entry = flatPieceMap.get(guid, {})
+        if diff.get("plane"):
+            entry["plane"] = diff["plane"]
+        if diff.get("center"):
+            entry["center"] = diff["center"]
+        flatPieceMap[guid] = entry
+
+    copyPieces: list[dict] = []
+    addedPieceGuids: set[str] = set()
+    copyConnections: list[dict] = []
+
+    # Process selected pieces
+    for pieceGuid in pieceGuids:
+        piece = next((p for p in pieces if p.get("guid") == pieceGuid), None)
+        if piece is None:
+            continue
+
+        isFixed = piece.get("plane") is not None
+        isConnected = pieceGuid in parentMap
+
+        isInternalConnected = False
+        isInternalFixed = isFixed and pieceGuid in selectedPieceSet
+        isPpExclPcIncl = False
+
+        if isConnected:
+            parentGuid, parentConn = parentMap[pieceGuid]
+            parentPieceSelected = parentGuid in selectedPieceSet
+            parentConnSelected = parentConn.get("guid", "") in selectedConnectionSet
+            isInternalConnected = parentPieceSelected and parentConnSelected
+            isPpExclPcIncl = not parentPieceSelected and parentConnSelected
+
+        if isInternalFixed or isInternalConnected:
+            copyPieces.append(_deepCopy(piece))
+            addedPieceGuids.add(pieceGuid)
+        elif isPpExclPcIncl:
+            copied = _deepCopy(piece)
+            flatPiece = flatPieceMap.get(pieceGuid, {})
+            centerValue = json.dumps(flatPiece.get("center", {"u": 0, "v": 0}))
+            planeValue = json.dumps(flatPiece.get("plane", {"origin": {"x": 0, "y": 0, "z": 0}, "xAxis": {"x": 1, "y": 0, "z": 0}, "yAxis": {"x": 0, "y": 1, "z": 0}}))
+            attrs = copied.setdefault("attributes", [])
+            attrs.append({"key": "semio.center", "value": centerValue})
+            attrs.append({"key": "semio.plane", "value": planeValue})
+            copyPieces.append(copied)
+            addedPieceGuids.add(pieceGuid)
+
+    # Process selected connections
+    for connGuid in connectionGuids:
+        conn = next((c for c in connections if c.get("guid") == connGuid), None)
+        if conn is None:
+            continue
+
+        connectedGuid = conn.get("connected", {}).get("piece", {}).get("guid", "")
+        connectingGuid = conn.get("connecting", {}).get("piece", {}).get("guid", "")
+        connectedSelected = connectedGuid in selectedPieceSet
+        connectingSelected = connectingGuid in selectedPieceSet
+
+        isInternal = connectedSelected and connectingSelected
+
+        if isInternal:
+            copyConnections.append(_deepCopy(conn))
+        else:
+            copyConnections.append(_deepCopy(conn))
+
+            externalGuids: list[str] = []
+            if not connectedSelected:
+                externalGuids.append(connectedGuid)
+            if not connectingSelected:
+                externalGuids.append(connectingGuid)
+
+            for extGuid in externalGuids:
+                if extGuid not in addedPieceGuids:
+                    extPiece = next((p for p in pieces if p.get("guid") == extGuid), None)
+                    if extPiece is not None:
+                        cloned = _deepCopy(extPiece)
+                        attrs = cloned.setdefault("attributes", [])
+                        attrs.append({"key": "semio.piece.origin", "value": "external"})
+                        flatPiece = flatPieceMap.get(extGuid, {})
+                        centerValue = json.dumps(flatPiece.get("center", {"u": 0, "v": 0}))
+                        attrs.append({"key": "semio.center", "value": centerValue})
+                        copyPieces.append(cloned)
+                        addedPieceGuids.add(extGuid)
+
+    return {"pieces": copyPieces, "connections": copyConnections}
+
+
+def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord: typing.Optional[dict] = None) -> dict:
+    """📋Pastes a copied design into a target design, returning a DesignDiff dict.
+    Specs: Anchoring determines the reference point within the bounding rectangle of the source.
+    Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
+    Connected pieces with non-external parents are added as-is.
+    Connected pieces with external-origin parents: if a matching piece with a matching connector is found in target,
+    the parent connection is remapped; otherwise treated as fixed using semio.center/semio.plane attributes.
+    Coord adjusts connection u/v only for remapped child–stub edges; fully internal clipboard connections keep cloned u/v.
+    """
+    types = kit.get("types", [])
+    ports = kit.get("ports", [])
+
+    typesMap: dict[str, dict] = {t["guid"]: t for t in types}
+    portsMap: dict[str, dict] = {p["guid"]: p for p in ports}
+
+    sourcePieces = source.get("pieces", [])
+    sourceConnections = source.get("connections", [])
+    targetPieces = target.get("pieces", [])
+
+    # Classify source pieces
+    externalOriginGuids: set[str] = set()
+    for p in sourcePieces:
+        for attr in p.get("attributes", []):
+            if attr.get("key") == "semio.piece.origin" and attr.get("value") == "external":
+                externalOriginGuids.add(p["guid"])
+
+    sourcePieceMap: dict[str, dict] = {p["guid"]: p for p in sourcePieces}
+
+    sourceParentMap: dict[str, tuple[str, dict]] = {}
+    for conn in sourceConnections:
+        connectingGuid = conn.get("connecting", {}).get("piece", {}).get("guid", "")
+        connectedGuid = conn.get("connected", {}).get("piece", {}).get("guid", "")
+        if connectingGuid not in sourceParentMap:
+            sourceParentMap[connectingGuid] = (connectedGuid, conn)
+            continue
+        prevGuid, _ = sourceParentMap[connectingGuid]
+        prev_stub = prevGuid in externalOriginGuids
+        next_stub = connectedGuid in externalOriginGuids
+        if prev_stub != next_stub and next_stub:
+            sourceParentMap[connectingGuid] = (connectedGuid, conn)
+
+    # Compute bounding rectangle from flat centers
+    centerCoords: list[dict] = []
+    for piece in sourcePieces:
+        if piece["guid"] in externalOriginGuids:
+            continue
+        center = piece.get("center")
+        if center is None:
+            for attr in piece.get("attributes", []):
+                if attr.get("key") == "semio.center" and attr.get("value"):
+                    try:
+                        center = json.loads(attr["value"])
+                    except json.JSONDecodeError, TypeError:
+                        pass
+        if center is not None:
+            centerCoords.append(center)
+
+    if not centerCoords:
+        centerCoords.append({"u": 0, "v": 0})
+
+    minU = min(c.get("u", 0) for c in centerCoords)
+    maxU = max(c.get("u", 0) for c in centerCoords)
+    minV = min(c.get("v", 0) for c in centerCoords)
+    maxV = max(c.get("v", 0) for c in centerCoords)
+
+    if anchoring == "middle":
+        anchor = {"u": (minU + maxU) / 2, "v": (minV + maxV) / 2}
+    elif anchoring == "centroid":
+        n = len(centerCoords)
+        anchor = {"u": sum(c.get("u", 0) for c in centerCoords) / n, "v": sum(c.get("v", 0) for c in centerCoords) / n}
+    elif anchoring == "bottomLeft":
+        anchor = {"u": minU, "v": minV}
+    elif anchoring == "bottomRight":
+        anchor = {"u": maxU, "v": minV}
+    elif anchoring == "topLeft":
+        anchor = {"u": minU, "v": maxV}
+    elif anchoring == "topRight":
+        anchor = {"u": maxU, "v": maxV}
+    else:  # "original"
+        anchor = {"u": 0, "v": 0}
+
+    # Build target piece maps for matching
+    targetPiecesByName: dict[str, list[dict]] = {}
+    for tp in targetPieces:
+        name = tp.get("name", "")
+        if name:
+            targetPiecesByName.setdefault(name, []).append(tp)
+
+    def arePortsCompatible(portGuid1: str, portGuid2: str) -> bool:
+        if not portGuid1 or not portGuid2:
+            return False
+        if portGuid1 == portGuid2:
+            return True
+        port1 = portsMap.get(portGuid1)
+        port2 = portsMap.get(portGuid2)
+        if not port1 or not port2:
+            return False
+        for cp in port1.get("compatiblePorts", []):
+            if cp.get("guid") == portGuid2:
+                return True
+        for cp in port2.get("compatiblePorts", []):
+            if cp.get("guid") == portGuid1:
+                return True
+        return False
+
+    def areConnectorsCompatible(c1: dict, c2: dict) -> bool:
+        pg1 = c1.get("port", {}).get("guid", "")
+        pg2 = c2.get("port", {}).get("guid", "")
+        return arePortsCompatible(pg1, pg2)
+
+    def findMatchingConnector(typeGuid: str, sourceConnector: dict) -> typing.Optional[dict]:
+        t = typesMap.get(typeGuid)
+        if not t:
+            return None
+        srcName = sourceConnector.get("name", "")
+        for c in t.get("connectors", []):
+            if c.get("name", "") == srcName and areConnectorsCompatible(c, sourceConnector):
+                return c
+        return None
+
+    addedPieces: list[dict] = []
+    addedConnections: list[dict] = []
+
+    # Process source pieces
+    for piece in sourcePieces:
+        if piece["guid"] in externalOriginGuids:
+            continue
+
+        isFixed = piece.get("plane") is not None
+        isConnected = piece["guid"] in sourceParentMap
+
+        if isFixed and not isConnected:
+            # Fixed piece: apply -anchor offset, then +coord if given
+            copied = _deepCopy(piece)
+            center = copied.get("center") or {"u": 0, "v": 0}
+            newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
+            if coord is not None:
+                newCenter = {"u": newCenter["u"] + coord.get("u", 0), "v": newCenter["v"] + coord.get("v", 0)}
+            copied["center"] = newCenter
+            addedPieces.append(copied)
+        elif isConnected:
+            parentGuid, parentConn = sourceParentMap[piece["guid"]]
+            if parentGuid in externalOriginGuids:
+                # Parent is external-origin: try to match in target
+                externalParent = sourcePieceMap[parentGuid]
+                matched = False
+
+                extName = externalParent.get("name", "")
+                if extName and extName in targetPiecesByName:
+                    candidates = targetPiecesByName[extName]
+                    isParentConnected = parentConn.get("connected", {}).get("piece", {}).get("guid", "") == parentGuid
+                    if isParentConnected:
+                        parentConnectorGuid = parentConn.get("connected", {}).get("connector", {}).get("guid", "")
+                    else:
+                        parentConnectorGuid = parentConn.get("connecting", {}).get("connector", {}).get("guid", "")
+
+                    # Find the source parent connector
+                    sourceParentConnector = None
+                    extTypeGuid = externalParent.get("type", {}).get("guid", "")
+                    if extTypeGuid:
+                        parentType = typesMap.get(extTypeGuid)
+                        if parentType:
+                            for c in parentType.get("connectors", []):
+                                if c.get("guid") == parentConnectorGuid:
+                                    sourceParentConnector = c
+                                    break
+
+                    if sourceParentConnector is not None:
+                        for candidate in candidates:
+                            candidateTypeGuid = candidate.get("type", {}).get("guid", "")
+                            if not candidateTypeGuid:
+                                continue
+                            matchingConnector = findMatchingConnector(candidateTypeGuid, sourceParentConnector)
+                            if matchingConnector is not None:
+                                matched = True
+                                addedPieces.append(_deepCopy(piece))
+
+                                copiedConn = _deepCopy(parentConn)
+                                if isParentConnected:
+                                    copiedConn["connected"] = {"piece": {"guid": candidate["guid"]}, "connector": {"guid": matchingConnector["guid"]}}
+                                else:
+                                    copiedConn["connecting"] = {"piece": {"guid": candidate["guid"]}, "connector": {"guid": matchingConnector["guid"]}}
+
+                                if coord is not None:
+                                    connected_guid = parentConn.get("connected", {}).get("piece", {}).get("guid", "")
+                                    connecting_guid = parentConn.get("connecting", {}).get("piece", {}).get("guid", "")
+                                    connected_stub = connected_guid in externalOriginGuids
+                                    connecting_stub = connecting_guid in externalOriginGuids
+                                    conn_matches_parentage = (
+                                        connecting_guid == piece["guid"] and connected_guid == parentGuid
+                                    ) or (connected_guid == piece["guid"] and connecting_guid == parentGuid)
+                                    # Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
+                                    # internal–internal source edges (neither side a stub) must keep cloned u/v.
+                                    if conn_matches_parentage and connected_stub != connecting_stub:
+                                        flatParentCenter = None
+                                        c0 = candidate.get("center")
+                                        if c0 is not None and isinstance(c0, dict):
+                                            flatParentCenter = {"u": c0.get("u", 0), "v": c0.get("v", 0)}
+                                        if flatParentCenter is None:
+                                            for attr in candidate.get("attributes", []):
+                                                if attr.get("key") == "semio.center" and attr.get("value"):
+                                                    try:
+                                                        flatParentCenter = json.loads(attr["value"])
+                                                        break
+                                                    except (json.JSONDecodeError, TypeError):
+                                                        pass
+                                        if flatParentCenter is None:
+                                            for attr in externalParent.get("attributes", []):
+                                                if attr.get("key") == "semio.center" and attr.get("value"):
+                                                    try:
+                                                        flatParentCenter = json.loads(attr["value"])
+                                                        break
+                                                    except (json.JSONDecodeError, TypeError):
+                                                        pass
+                                        if flatParentCenter is None and externalParent.get("center"):
+                                            flatParentCenter = externalParent["center"]
+                                        flatChildCenter = None
+                                        for attr in piece.get("attributes", []):
+                                            if attr.get("key") == "semio.center" and attr.get("value"):
+                                                try:
+                                                    flatChildCenter = json.loads(attr["value"])
+                                                    break
+                                                except json.JSONDecodeError, TypeError:
+                                                    pass
+                                        if flatChildCenter is None and piece.get("center"):
+                                            flatChildCenter = piece["center"]
+                                        if flatParentCenter is not None and flatChildCenter is not None:
+                                            copiedConn["u"] = flatParentCenter.get("u", 0) - (
+                                                coord.get("u", 0) + (anchor["u"] - flatChildCenter.get("u", 0))
+                                            )
+                                            copiedConn["v"] = flatParentCenter.get("v", 0) - (
+                                                coord.get("v", 0) + (anchor["v"] - flatChildCenter.get("v", 0))
+                                            )
+
+                                addedConnections.append(copiedConn)
+                                break
+
+                if not matched:
+                    # Treat as fixed piece using semio.center and semio.plane attributes
+                    copied = _deepCopy(piece)
+                    for attr in piece.get("attributes", []):
+                        if attr.get("key") == "semio.center" and attr.get("value"):
+                            try:
+                                copied["center"] = json.loads(attr["value"])
+                            except json.JSONDecodeError, TypeError:
+                                pass
+                        if attr.get("key") == "semio.plane" and attr.get("value"):
+                            try:
+                                copied["plane"] = json.loads(attr["value"])
+                            except json.JSONDecodeError, TypeError:
+                                pass
+                    center = copied.get("center") or {"u": 0, "v": 0}
+                    newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
+                    if coord is not None:
+                        newCenter = {"u": newCenter["u"] + coord.get("u", 0), "v": newCenter["v"] + coord.get("v", 0)}
+                    copied["center"] = newCenter
+                    addedPieces.append(copied)
+            else:
+                # Parent is not external: add connected piece as-is
+                addedPieces.append(_deepCopy(piece))
+
+    # Process source connections (non-external internal connections)
+    addedPieceGuids = {p["guid"] for p in addedPieces}
+    for conn in sourceConnections:
+        connectedGuid = conn.get("connected", {}).get("piece", {}).get("guid", "")
+        connectingGuid = conn.get("connecting", {}).get("piece", {}).get("guid", "")
+
+        if connectedGuid in externalOriginGuids or connectingGuid in externalOriginGuids:
+            continue
+
+        if connectedGuid not in addedPieceGuids or connectingGuid not in addedPieceGuids:
+            continue
+
+        addedConnections.append(_deepCopy(conn))
+
+    diff: dict = {}
+    if addedPieces:
+        diff["pieces"] = {"added": addedPieces}
+    if addedConnections:
+        diff["connections"] = {"added": addedConnections}
+    return diff
+
+
+# #endregion 📋Copy Paste Design
+
+
 def deletePiecesAndConnectionsInDesignDict(kit: dict, design: dict, pieceGuids: list[str], connectionGuids: list[str]) -> dict:
-    """Deletes pieces and connections from a design dict, returning a DesignDiff dict.
+    """🔖Deletes pieces and connections from a design dict, returning a DesignDiff dict.
     Removes stale connections referencing deleted pieces.
     Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️deletepiecesandconnectionsindesigndict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/deletePiecesAndConnectionsInDesignDict)
     """
     deletedPieceSet = set(pieceGuids)
     connections = design.get("connections", [])
@@ -11385,10 +10197,7 @@ def getDesignChange(
     author: typing.Optional[str] = None,
     time: typing.Optional[datetime.datetime] = None,
 ) -> DesignChange:
-    """getDesignChange performs the getDesignChange operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getdesignchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/getDesignChange)
-    getDesignChange MUST perform the getDesignChange operation.
-    """
+    """getDesignChange performs the getDesignChange operation."""
     forward_diff = _getDesignDiff(before, after)
     backward_diff = _inverseDesignDiff(before, forward_diff)
     return DesignChange(
@@ -11407,10 +10216,7 @@ def getKitChange(
     author: typing.Optional[str] = None,
     time: typing.Optional[datetime.datetime] = None,
 ) -> KitChange:
-    """getKitChange performs the getKitChange operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️getkitchange](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/getKitChange)
-    getKitChange MUST perform the getKitChange operation.
-    """
+    """getKitChange performs the getKitChange operation."""
     forward_diff = getKitDiffDict(before, after)
     backward_diff = inverseKitDiffDict(before, forward_diff)
     return KitChange(
@@ -11424,10 +10230,7 @@ def getKitChange(
 
 
 def _extractUpdateGuid(update: dict, entityKeys: list[str]) -> str:
-    """Extract guid from an updated entry which might use EntityId format or old id format.
-    _extractUpdateGuid MUST perform the _extractUpdateGuid operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️extractupdateguid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_extractUpdateGuid)
-    """
+    """📍Extract guid from an updated entry which might use EntityId format or old id format."""
     for key in entityKeys:
         if key in update and isinstance(update[key], dict):
             return update[key].get("guid", "")
@@ -11438,10 +10241,7 @@ FLOAT_EPSILON = 1e-10
 
 
 def _areDiffDictsEqual(a: dict, b: dict) -> bool:
-    """Deep equality check for diff dicts with float epsilon tolerance.
-    _areDiffDictsEqual MUST recursively compare dict values with float tolerance.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️arediffdictsequal](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/_areDiffDictsEqual)
-    """
+    """🔖Deep equality check for diff dicts with float epsilon tolerance."""
     if a is b:
         return True
     if type(a) != type(b):
@@ -11470,10 +10270,7 @@ def _areDiffDictsEqual(a: dict, b: dict) -> bool:
 
 
 def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
-    """Deep equality check for kit diffs.
-    areKitDiffsDictEqual MUST compare all diff entries for equality.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitdiffoperations🛠️arekitdiffsdictequal](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Diff%20Operations/d/i/areKitDiffsDictEqual)
-    """
+    """🔖Deep equality check for kit diffs."""
     keys = [
         "name",
         "version",
@@ -11528,18 +10325,14 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
     return True
 
 
-# endregion Kit Diff Operations
+# #endregion 🎗️Kit Diff Operations
 
-# region Kit Import/Export
-# [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export)
+# #region 🌎Kit Import/Export
 # Import and export utilities for kit serialization and deserialization.
 
 
 class KitData:
-    """Simple in-memory kit representation that supports attribute access.
-    KitData MUST hold all kit entities in memory for import and export operations.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️kitdata](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/KitData)
-    """
+    """🔖Simple in-memory kit representation that supports attribute access."""
 
     def __init__(self, data: dict):
         self._data = data
@@ -11560,9 +10353,7 @@ class KitData:
         return self._data
 
     def filter_kit(self, filter_spec: dict) -> "KitData":
-        """General-purpose kit filter with glob support.
-        [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️kitdata🛠️filterkit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/KitData/filter_kit)
-        """
+        """🔖General-purpose kit filter with glob support."""
         design_guid = filter_spec.get("design_guid")
         tags = filter_spec.get("model_tags")
 
@@ -11777,10 +10568,7 @@ class KitData:
 
 
 def _parse_connector_from_sqlite(row: dict) -> dict:
-    """_parse_connector_from_sqlite performs the _parse_connector_from_sqlite operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parseconnectorfromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_connector_from_sqlite)
-    _parse_connector_from_sqlite MUST perform the _parse_connector_from_sqlite operation.
-    """
+    """🔖_parse_connector_from_sqlite performs the _parse_connector_from_sqlite operation."""
     return {
         "guid": row.get("guid"),
         "name": row.get("name"),
@@ -11802,10 +10590,7 @@ def _parse_connector_from_sqlite(row: dict) -> dict:
 
 
 def _parse_model_from_sqlite(row: dict) -> dict:
-    """_parse_model_from_sqlite performs the _parse_model_from_sqlite operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parsemodelfromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_model_from_sqlite)
-    _parse_model_from_sqlite MUST perform the _parse_model_from_sqlite operation.
-    """
+    """🔖_parse_model_from_sqlite performs the _parse_model_from_sqlite operation."""
     return {
         "guid": row.get("guid"),
         "name": row.get("name"),
@@ -11815,10 +10600,7 @@ def _parse_model_from_sqlite(row: dict) -> dict:
 
 
 def _parse_type_from_sqlite(row: dict, connectors: list[dict], models: list[dict]) -> dict:
-    """_parse_type_from_sqlite performs the _parse_type_from_sqlite operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parsetypefromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_type_from_sqlite)
-    _parse_type_from_sqlite MUST perform the _parse_type_from_sqlite operation.
-    """
+    """🔖_parse_type_from_sqlite performs the _parse_type_from_sqlite operation."""
     return {
         "guid": row.get("guid"),
         "name": row.get("name"),
@@ -11838,10 +10620,7 @@ def _parse_type_from_sqlite(row: dict, connectors: list[dict], models: list[dict
 
 
 def _parse_piece_from_sqlite(row: dict) -> dict:
-    """_parse_piece_from_sqlite performs the _parse_piece_from_sqlite operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parsepiecefromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_piece_from_sqlite)
-    _parse_piece_from_sqlite MUST perform the _parse_piece_from_sqlite operation.
-    """
+    """🔖_parse_piece_from_sqlite performs the _parse_piece_from_sqlite operation."""
     plane = None
     if row.get("plane_origin_x") is not None:
         plane = {
@@ -11903,10 +10682,7 @@ def _parse_piece_from_sqlite(row: dict) -> dict:
 
 
 def _parse_connection_from_sqlite(row: dict) -> dict:
-    """_parse_connection_from_sqlite performs the _parse_connection_from_sqlite operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parseconnectionfromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_connection_from_sqlite)
-    _parse_connection_from_sqlite MUST perform the _parse_connection_from_sqlite operation.
-    """
+    """🔖_parse_connection_from_sqlite performs the _parse_connection_from_sqlite operation."""
     return {
         "guid": row.get("guid"),
         "connected": {
@@ -11932,10 +10708,7 @@ def _parse_connection_from_sqlite(row: dict) -> dict:
 
 
 def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[dict]) -> dict:
-    """_parse_design_from_sqlite performs the _parse_design_from_sqlite operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️parsedesignfromsqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_parse_design_from_sqlite)
-    _parse_design_from_sqlite MUST perform the _parse_design_from_sqlite operation.
-    """
+    """🔖_parse_design_from_sqlite performs the _parse_design_from_sqlite operation."""
     view = None
     if row.get("view_center_u") is not None or row.get("view_center_v") is not None or row.get("view_zoom") is not None:
         view = {
@@ -11967,10 +10740,7 @@ def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[d
 
 
 def _build_folder_path(kit_dict: dict, folder_guid: str) -> str:
-    """Build folder path from folder hierarchy.
-    _build_folder_path MUST perform the _build_folder_path operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️buildfolderpath](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_build_folder_path)
-    """
+    """🔖Build folder path from folder hierarchy."""
     for f in kit_dict.get("folders", []):
         if f.get("guid") == folder_guid:
             parent = f.get("parent")
@@ -11983,10 +10753,7 @@ def _build_folder_path(kit_dict: dict, folder_guid: str) -> str:
 
 
 def _build_file_path(kit_dict: dict, file_dict: dict) -> str:
-    """Build file path from folder hierarchy and file name.
-    _build_file_path MUST perform the _build_file_path operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️buildfilepath](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_build_file_path)
-    """
+    """🔖Build file path from folder hierarchy and file name."""
     folder = file_dict.get("folder")
     if folder:
         folder_path = _build_folder_path(kit_dict, folder.get("guid", ""))
@@ -11995,20 +10762,16 @@ def _build_file_path(kit_dict: dict, file_dict: dict) -> str:
     return file_dict.get("name", "")
 
 
-# region Kit Workflow Helpers
+# #region 📍Kit Workflow Helpers
 
 
 def _kit_to_dict(kit: KitData | dict) -> dict:
-    """Return the underlying kit dictionary.
-    _kit_to_dict MUST normalize KitData and dict inputs for shared workflow helpers.
-    """
+    """🔖Return the underlying kit dictionary."""
     return kit.to_dict() if isinstance(kit, KitData) else kit
 
 
 def _kit_without_file_blobs(kit: KitData | dict) -> dict:
-    """Return a deep copy of a kit dictionary without embedded file blobs.
-    _kit_without_file_blobs MUST remove file blob payloads before SQLite and archive persistence.
-    """
+    """🔖Return a deep copy of a kit dictionary without embedded file blobs."""
     kit_copy = copy.deepcopy(_kit_to_dict(kit))
     for file_entry in kit_copy.get("files", []):
         file_entry.pop("blob", None)
@@ -12016,17 +10779,13 @@ def _kit_without_file_blobs(kit: KitData | dict) -> dict:
 
 
 def _decode_kit_file_blob(blob: str) -> bytes:
-    """Decode a kit file blob into raw bytes.
-    _decode_kit_file_blob MUST support data URLs and raw base64 payloads.
-    """
+    """🔖Decode a kit file blob into raw bytes."""
     encoded = blob.split(",", 1)[1] if blob.startswith("data:") else blob
     return base64.b64decode(encoded)
 
 
 def _attach_file_blobs_to_kit(kit_dict: dict, files: dict[str, bytes]) -> dict:
-    """Attach file blobs from asset bytes to a kit dictionary.
-    _attach_file_blobs_to_kit MUST populate file blobs using canonical kit file paths.
-    """
+    """🔖Attach file blobs from asset bytes to a kit dictionary."""
     for file_entry in kit_dict.get("files", []):
         file_path = _build_file_path(kit_dict, file_entry)
         if file_path in files:
@@ -12036,9 +10795,7 @@ def _attach_file_blobs_to_kit(kit_dict: dict, files: dict[str, bytes]) -> dict:
 
 
 def _collect_kit_asset_files(kit: KitData | dict, files: typing.Optional[dict[str, bytes]] = None) -> dict[str, bytes]:
-    """Collect asset bytes for the current kit file entries.
-    _collect_kit_asset_files MUST prefer embedded blobs and fall back to provided file bytes.
-    """
+    """🔖Collect asset bytes for the current kit file entries."""
     data = _kit_to_dict(kit)
     existing_files = files or {}
     collected: dict[str, bytes] = {}
@@ -12053,9 +10810,7 @@ def _collect_kit_asset_files(kit: KitData | dict, files: typing.Optional[dict[st
 
 
 def _merge_sqlite_entity(parsed: dict, payload_entity: typing.Optional[dict]) -> dict:
-    """Merge a structured SQLite entity with payload metadata.
-    _merge_sqlite_entity MUST keep SQLite fields authoritative while preserving unsupported payload fields.
-    """
+    """🧱Merge a structured SQLite entity with payload metadata."""
     if payload_entity is None:
         return parsed
     merged = copy.deepcopy(payload_entity)
@@ -12066,9 +10821,7 @@ def _merge_sqlite_entity(parsed: dict, payload_entity: typing.Optional[dict]) ->
 
 
 def _read_kit_from_sqlite(db_path: str) -> dict:
-    """Read a kit dictionary from the folder SQLite database.
-    _read_kit_from_sqlite MUST rebuild types and designs using the existing SQLite parsing helpers.
-    """
+    """🔖Read a kit dictionary from the folder SQLite database."""
     import sqlite3
 
     if not os.path.exists(db_path):
@@ -12228,17 +10981,13 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
 
 
 def import_file_kit(path: str) -> KitData:
-    """Import a JSON file kit.
-    import_file_kit MUST deserialize a JSON kit file into KitData.
-    """
+    """📥Import a JSON file kit."""
     with open(path, "r", encoding="utf-8") as handle:
         return KitData(json.load(handle))
 
 
 def export_file_kit(kit: KitData | dict, path: str) -> None:
-    """Export a JSON file kit.
-    export_file_kit MUST persist the in-memory kit dictionary as JSON.
-    """
+    """📤Export a JSON file kit."""
     parent = os.path.dirname(path)
     if parent:
         os.makedirs(parent, exist_ok=True)
@@ -12247,9 +10996,7 @@ def export_file_kit(kit: KitData | dict, path: str) -> None:
 
 
 def import_folder_kit(folder_path: str) -> tuple[KitData, dict[str, bytes]]:
-    """Import a folder kit backed by .semio/kit.db.
-    import_folder_kit MUST rebuild the kit from SQLite and load asset files from the folder tree.
-    """
+    """🔖Import a folder kit backed by .semio/kit.db."""
     db_path = os.path.join(folder_path, KIT_LOCAL_SUFFIX)
     kit_dict = _read_kit_from_sqlite(db_path)
     files: dict[str, bytes] = {}
@@ -12264,9 +11011,7 @@ def import_folder_kit(folder_path: str) -> tuple[KitData, dict[str, bytes]]:
 
 
 def export_folder_kit(kit: KitData | dict, files: dict[str, bytes], folder_path: str) -> None:
-    """Export a folder kit backed by .semio/kit.db.
-    export_folder_kit MUST write the SQLite kit database and synchronize asset files into the folder tree.
-    """
+    """🔖Export a folder kit backed by .semio/kit.db."""
     data = _kit_to_dict(kit)
     asset_files = _collect_kit_asset_files(data, files)
     os.makedirs(folder_path, exist_ok=True)
@@ -12294,9 +11039,7 @@ def export_folder_kit(kit: KitData | dict, files: dict[str, bytes], folder_path:
 
 
 def _read_remote_kit_bytes(uri: str) -> tuple[str, bytes, str]:
-    """Read remote kit bytes and detect JSON or ZIP format.
-    _read_remote_kit_bytes MUST support HTTP(S) JSON and ZIP responses using urllib.request only.
-    """
+    """🔖Read remote kit bytes and detect JSON or ZIP format."""
     parsed = urllib.parse.urlparse(uri)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise RemoteKitUriNotValid(uri)
@@ -12313,9 +11056,7 @@ def _read_remote_kit_bytes(uri: str) -> tuple[str, bytes, str]:
 
 
 def import_remote_kit(uri: str) -> tuple[KitData, dict[str, bytes]]:
-    """Import a remote kit from JSON or ZIP.
-    import_remote_kit MUST support remote JSON and ZIP kit payloads over HTTP(S).
-    """
+    """🔖Import a remote kit from JSON or ZIP."""
     remote_kind, body, _ = _read_remote_kit_bytes(uri)
     if remote_kind == "archive":
         with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as handle:
@@ -12333,25 +11074,19 @@ def import_remote_kit(uri: str) -> tuple[KitData, dict[str, bytes]]:
 
 
 def edit_temporary_kit(kit: KitData | dict, diff: dict) -> KitData:
-    """Edit an in-memory temporary kit with a diff.
-    edit_temporary_kit MUST applyKitDiffDict and return the updated KitData instance.
-    """
+    """🔖Edit an in-memory temporary kit with a diff."""
     return KitData(applyKitDiffDict(_kit_to_dict(kit), diff))
 
 
 def edit_file_kit(path: str, diff: dict) -> KitData:
-    """Edit a JSON file kit in place.
-    edit_file_kit MUST import, apply the diff, persist the JSON file, and return the updated kit.
-    """
+    """🔖Edit a JSON file kit in place."""
     updated = edit_temporary_kit(import_file_kit(path), diff)
     export_file_kit(updated, path)
     return updated
 
 
 def edit_folder_kit(folder_path: str, diff: dict) -> KitData:
-    """Edit a folder kit in place.
-    edit_folder_kit MUST import, apply the diff, persist the SQLite database and asset files, and return the updated kit.
-    """
+    """🔖Edit a folder kit in place."""
     kit, files = import_folder_kit(folder_path)
     updated = edit_temporary_kit(kit, diff)
     export_folder_kit(updated, _collect_kit_asset_files(updated, files), folder_path)
@@ -12359,9 +11094,7 @@ def edit_folder_kit(folder_path: str, diff: dict) -> KitData:
 
 
 def edit_archive_kit(path: str, diff: dict) -> KitData:
-    """Edit an archive kit in place.
-    edit_archive_kit MUST import, apply the diff, persist the archive, and return the updated kit.
-    """
+    """🔖Edit an archive kit in place."""
     kit, files = import_kit(path)
     updated = edit_temporary_kit(kit, diff)
     export_kit(updated, _collect_kit_asset_files(updated, files), path)
@@ -12369,9 +11102,7 @@ def edit_archive_kit(path: str, diff: dict) -> KitData:
 
 
 def _write_remote_kit_bytes(uri: str, body: bytes, content_type: str) -> None:
-    """Write remote kit bytes back to their source URI.
-    _write_remote_kit_bytes MUST persist edited remote kit content using HTTP PUT.
-    """
+    """✏️Write remote kit bytes back to their source URI."""
     parsed = urllib.parse.urlparse(uri)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise RemoteKitUriNotValid(uri)
@@ -12385,9 +11116,7 @@ def _write_remote_kit_bytes(uri: str, body: bytes, content_type: str) -> None:
 
 
 def edit_remote_kit(uri: str, diff: dict) -> KitData:
-    """Edit a remote JSON or ZIP kit in place.
-    edit_remote_kit MUST import, apply the diff, persist the edited remote representation, and return the updated kit.
-    """
+    """🔖Edit a remote JSON or ZIP kit in place."""
     remote_kind, _, content_type = _read_remote_kit_bytes(uri)
     kit, files = import_remote_kit(uri)
     updated = edit_temporary_kit(kit, diff)
@@ -12410,14 +11139,11 @@ def edit_remote_kit(uri: str, diff: dict) -> KitData:
     return updated
 
 
-# endregion Kit Workflow Helpers
+# #endregion 📍Kit Workflow Helpers
 
 
 def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
-    """📦Import a kit from a .zip file (containing kit.json and actual files).
-    import_kit MUST read kit.json from zip and populate blob from actual files.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️importkit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/import_kit)
-    """
+    """📦Import a kit from a .zip file (containing kit.json and actual files)."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"File not found: {path}")
 
@@ -12444,10 +11170,7 @@ def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
 
 
 def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
-    """Write kit data to SQLite database using the TypeScript schema.
-    _write_kit_to_sqlite MUST perform the _write_kit_to_sqlite operation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️writekittosqlite](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/_write_kit_to_sqlite)
-    """
+    """🔖Write kit data to SQLite database using the TypeScript schema."""
     import sqlite3
     from datetime import datetime
 
@@ -12911,10 +11634,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
 
 
 def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
-    """📦Export a kit to a .zip file (containing kit.json and actual files).
-    export_kit MUST write kit.json (without blob) and actual files to the target path.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitimport🔖export🛠️exportkit](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Import/Export/d/i/export_kit)
-    """
+    """📦Export a kit to a .zip file (containing kit.json and actual files)."""
     import copy
 
     data = kit.to_dict() if isinstance(kit, KitData) else kit
@@ -12931,10 +11651,9 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
             zip_ref.writestr(filename, content)
 
 
-# endregion Kit Import/Export
+# #endregion 🌎Kit Import/Export
 
-# region Kit Model Export
-# [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export)
+# #region 🌦️Kit Model Export
 # 3D model export utilities for designs. Exports design scene graphs as GLB, GLTF, OBJ, STL, PLY, OFF, IFC.
 
 EXPORT_MODEL_FORMATS: dict[str, str] = {
@@ -12947,16 +11666,11 @@ EXPORT_MODEL_FORMATS: dict[str, str] = {
     ".ifc": "application/x-ifc",
 }
 """Supported 3D export formats with their MIME types.
-EXPORT_MODEL_FORMATS MUST map file extension to MIME type.
-[👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️exportmodelformats](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/c/EXPORT_MODEL_FORMATS)
 """
 
 
 def _plane_to_matrix_4x4(plane: "Plane") -> numpy.ndarray:
-    """Convert a Plane to a 4x4 column-major transformation matrix.
-    _plane_to_matrix_4x4 MUST produce an orthonormal basis with z = cross(x, y).
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️planetomatrix4x4](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_plane_to_matrix_4x4)
-    """
+    """🔖Convert a Plane to a 4x4 column-major transformation matrix."""
     origin = numpy.array([plane.origin.x, plane.origin.y, plane.origin.z])
     x_axis = numpy.array([plane.xAxis.x, plane.xAxis.y, plane.xAxis.z])
     y_axis = numpy.array([plane.yAxis.x, plane.yAxis.y, plane.yAxis.z])
@@ -12993,10 +11707,7 @@ def _semio_matrix_to_gltf_matrix(matrix: numpy.ndarray) -> numpy.ndarray:
 
 
 def _identity_plane() -> "Plane":
-    """Create an identity plane at the world origin with standard axes.
-    _identity_plane MUST return a plane with origin=(0,0,0), xAxis=(1,0,0), yAxis=(0,1,0).
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️identityplane](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_identity_plane)
-    """
+    """🔖Create an identity plane at the world origin with standard axes."""
     p = Plane()
     p.origin = Point(x=0.0, y=0.0, z=0.0)
     p.xAxis = Vector(x=1.0, y=0.0, z=0.0)
@@ -13005,26 +11716,17 @@ def _identity_plane() -> "Plane":
 
 
 def _type_key_from_id(type_id: "TypeId") -> str:
-    """Build a unique string key from a TypeId (name:variant).
-    _type_key_from_id MUST produce a consistent key for type matching.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️typekeyfromid](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_type_key_from_id)
-    """
+    """🔖Build a unique string key from a TypeId (name:variant)."""
     return f"{type_id.name}:{type_id.variant}"
 
 
 def _type_key_from_type(t: "Type") -> str:
-    """Build a unique string key from a Type (name:variant).
-    _type_key_from_type MUST produce a consistent key for type matching.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️typekeyfromtype](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_type_key_from_type)
-    """
+    """🔖Build a unique string key from a Type (name:variant)."""
     return f"{t.name}:{t.variant}"
 
 
 def _find_matching_model(kit: "Kit", type_obj: "Type", tags: list[str]) -> typing.Optional["Model"]:
-    """Find the best matching model for a type given requested tags.
-    _find_matching_model MUST return the first model whose tags are all in the requested set, or the first model as fallback.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️findmatchingmodel](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_find_matching_model)
-    """
+    """📨Find the best matching model for a type given requested tags."""
     if not type_obj.models or len(type_obj.models) == 0:
         return None
     if not tags or len(tags) == 0:
@@ -13039,10 +11741,7 @@ def _find_matching_model(kit: "Kit", type_obj: "Type", tags: list[str]) -> typin
 
 
 def _load_glb_mesh_from_bytes(raw: bytes, mesh_name: str | None = None) -> "typing.Any | None":
-    """Load a mesh directly from GLB bytes by reading accessors.
-    _load_glb_mesh_from_bytes MUST rebuild triangle faces from GLB accessor data without relying on trimesh GLB scene interpretation.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️loadglbmeshfrombytes](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_load_glb_mesh_from_bytes)
-    """
+    """🔖Load a mesh directly from GLB bytes by reading accessors."""
     import struct as _struct
 
     import trimesh as _trimesh
@@ -13184,10 +11883,7 @@ def _load_glb_mesh_from_bytes(raw: bytes, mesh_name: str | None = None) -> "typi
 
 
 def _load_type_mesh(kit: "Kit", type_obj: "Type", tags: list[str]) -> "typing.Any | None":
-    """Load the 3D mesh for a type from its best-matching model blob.
-    _load_type_mesh MUST decode the base64 blob, load with trimesh, and return a single Trimesh.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️loadtypemesh](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_load_type_mesh)
-    """
+    """🎯Load the 3D mesh for a type from its best-matching model blob."""
     import base64 as _base64
 
     import trimesh as _trimesh
@@ -13237,9 +11933,7 @@ def export_design_model(
     options: dict | None = None,
 ) -> bytes:
     """Export the 3D model of a design to a specified format.
-    export_design_model MUST produce a valid 3D file. Uses block definitions for types and instances for pieces.
     Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🪨exportdesignmodel](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/export_design_model)
     """
     import trimesh as _trimesh
 
@@ -13618,7 +12312,7 @@ def export_design_model(
 
     scene = _trimesh.Scene()
 
-    # region Load or create meshes per type
+    # #region 🎁Load or create meshes per type
     type_meshes: dict[str, str] = {}
     for piece in pieces:
         if piece.type is None:
@@ -13640,9 +12334,9 @@ def export_design_model(
             geometry_name = tk
         type_meshes[tk] = geometry_name
         scene.geometry[geometry_name] = mesh
-    # endregion Load or create meshes per type
+    # #endregion 🎁Load or create meshes per type
 
-    # region Build scene graph with connection hierarchy
+    # #region 🧭Build scene graph with connection hierarchy
     def _build_node(piece_id: str) -> None:
         piece = pieces_dict[piece_id]
         world_plane = piece_planes[piece_id]
@@ -13678,16 +12372,13 @@ def export_design_model(
 
     for root_id in roots:
         _build_node(root_id)
-    # endregion Build scene graph with connection hierarchy
+    # #endregion 🧭Build scene graph with connection hierarchy
 
     return _export_trimesh_scene(scene, format)
 
 
 def _export_empty_scene(format: str) -> bytes:
-    """Export a minimal valid empty scene for the requested format.
-    _export_empty_scene MUST return bytes representing a valid but empty 3D file.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️exportemptyscene](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_export_empty_scene)
-    """
+    """🔖Export a minimal valid empty scene for the requested format."""
     import struct as _struct
 
     empty_json: dict = {
@@ -13716,10 +12407,7 @@ def _export_empty_scene(format: str) -> bytes:
 
 
 def _export_trimesh_scene(scene: "typing.Any", format: str) -> bytes:
-    """Export a trimesh.Scene to the requested format as bytes.
-    _export_trimesh_scene MUST return bytes for all supported formats.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🛠️exporttrimeshscene](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/d/i/_export_trimesh_scene)
-    """
+    """🔖Export a trimesh.Scene to the requested format as bytes."""
     import base64
 
     import trimesh as _trimesh
@@ -13774,26 +12462,19 @@ def _export_trimesh_scene(scene: "typing.Any", format: str) -> bytes:
     return bytes(result)
 
 
-# region IFC Export
-# [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🔖ifcexport](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/s/IFC%20Export)
+# #region 📻IFC Export
 # IFC exporter mapping semio domain to IFC4 schema via ifcopenshell.
 
 
 def _gltf_xyz_to_semio_xyz(x: float, y: float, z: float) -> tuple[float, float, float]:
-    """Convert glTF coordinates to semio/IFC coordinates.
-    _gltf_xyz_to_semio_xyz MUST map glTF +Y up geometry back to semio/IFC +Z up geometry.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🔖ifcexport🛠️gltfxyztosemioxyz](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/s/IFC%20Export/d/i/_gltf_xyz_to_semio_xyz)
-    """
+    """🔖Convert glTF coordinates to semio/IFC coordinates."""
     return (float(x), float(-z), float(y))
 
 
 def _glb_bytes_to_vertices_faces(
     raw: bytes,
 ) -> tuple[list[tuple[float, float, float]], list[tuple[int, ...]]] | None:
-    """Extract vertices and faces from GLB bytes for IFC mesh representation.
-    _glb_bytes_to_vertices_faces MUST return (vertices, faces) or None if parsing fails.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🔖ifcexport🛠️glbbytestoverticesfaces](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/s/IFC%20Export/d/i/_glb_bytes_to_vertices_faces)
-    """
+    """Extract vertices and faces from GLB bytes for IFC mesh representation."""
     import struct as _struct
 
     if len(raw) < 20 or raw[0:4] != b"glTF":
@@ -13907,15 +12588,12 @@ def _export_ifc_from_dict(
     roots: list[str],
     tags: list[str],
 ) -> bytes:
-    """Export a design to IFC4 format from dict-based kit data.
-    _export_ifc_from_dict MUST produce a valid IFC4 file with spatial hierarchy, typed occurrences and mesh geometry.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🔖ifcexport🛠️exportifcfromdict](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/s/IFC%20Export/d/i/_export_ifc_from_dict)
-    """
+    """Export a design to IFC4 format from dict-based kit data."""
     import ifcopenshell as _ifc
     import ifcopenshell.api as _ifc_api
     import ifcopenshell.guid as _ifc_guid
 
-    # region Step 1: IFC file, project, units, context, spatial tree from layers
+    # #region 🖨️Step 1: IFC file, project, units, context, spatial tree from layers
     ifc = _ifc_api.run("project.create_file", version="IFC4")
     kit_name = kit.get("name", "semio Kit")
     project = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcProject", name=kit_name)
@@ -14010,9 +12688,9 @@ def _export_ifc_from_dict(
             relating_object=default_building,
             products=[default_storey],
         )
-    # endregion Step 1
+    # #endregion 🖨️Step 1
 
-    # region Step 2: Piece-to-storey mapping from piece names
+    # #region 📋Step 2: Piece-to-storey mapping from piece names
     import re as _re
 
     def _piece_storey(piece_name: str) -> typing.Any:
@@ -14023,7 +12701,7 @@ def _export_ifc_from_dict(
                 return storey_by_number[floor]
         return default_storey
 
-    # endregion Step 2
+    # #endregion 📋Step 2
 
     pieces = (design.get("pieces", []) or []) if design else []
     connections = (design.get("connections", []) or []) if design else []
@@ -14032,7 +12710,7 @@ def _export_ifc_from_dict(
     piece_by_guid = {p.get("guid"): p for p in pieces if p.get("guid")}
     tag_lookup = {tag.get("guid"): tag for tag in (kit.get("tags", []) or []) if tag.get("guid")}
 
-    # region Step 3: Types with geometry
+    # #region 🛕Step 3: Types with geometry
     ifc_types: dict[str, typing.Any] = {}
     for piece in pieces:
         type_ref = piece.get("type")
@@ -14125,9 +12803,9 @@ def _export_ifc_from_dict(
                     )
 
         ifc_types[type_guid] = ifc_type
-    # endregion Step 3
+    # #endregion 🛕Step 3
 
-    # region Step 4: Pieces as occurrences
+    # #region 🎈Step 4: Pieces as occurrences
     ifc_occurrences: dict[str, typing.Any] = {}
     ifc_connector_ports: dict[str, dict[str, typing.Any]] = {}
     for piece in pieces:
@@ -14290,9 +12968,9 @@ def _export_ifc_from_dict(
                 _ifc_api.run("pset.edit_pset", ifc, pset=conn_pset, properties=conn_props)
 
                 ifc_connector_ports[piece_guid][conn_id] = port
-    # endregion Step 4
+    # #endregion 🎈Step 4
 
-    # region Step 5: Connections as port relationships
+    # #region 🌪️Step 5: Connections as port relationships
     for connection in connections:
         connected = connection.get("connected", {})
         connecting = connection.get("connecting", {})
@@ -14344,9 +13022,9 @@ def _export_ifc_from_dict(
                 name="SemioConnectionParams",
             )
             _ifc_api.run("pset.edit_pset", ifc, pset=conn_pset, properties=conn_solver_props)
-    # endregion Step 5
+    # #endregion 🌪️Step 5
 
-    # region Step 6: Kit-level metadata
+    # #region 🏆Step 6: Kit-level metadata
     kit_meta: dict[str, typing.Any] = {}
     if kit.get("name"):
         kit_meta["name"] = kit.get("name")
@@ -14363,7 +13041,7 @@ def _export_ifc_from_dict(
     if kit_meta:
         kit_pset = _ifc_api.run("pset.add_pset", ifc, product=project, name="SemioKitMetadata")
         _ifc_api.run("pset.edit_pset", ifc, pset=kit_pset, properties=kit_meta)
-    # endregion Step 6
+    # #endregion 🏆Step 6
 
     return ifc.to_string().encode("utf-8")
 
@@ -14379,15 +13057,12 @@ def _export_ifc_from_entities(
     types_dict: dict[str, "Type"],
     tags: list[str],
 ) -> bytes:
-    """Export a design to IFC4 format from entity-based kit data.
-    _export_ifc_from_entities MUST produce a valid IFC4 file with spatial hierarchy, typed occurrences and mesh geometry.
-    [👤semio📚py💻semio🔖domain🔖validation🔖kitmodelexport🔖ifcexport🛠️exportifcfromentities](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Kit%20Model%20Export/s/IFC%20Export/d/i/_export_ifc_from_entities)
-    """
+    """Export a design to IFC4 format from entity-based kit data."""
     import ifcopenshell as _ifc
     import ifcopenshell.api as _ifc_api
     import ifcopenshell.guid as _ifc_guid
 
-    # region Step 1: IFC file, project, units, context, spatial tree from layers
+    # #region 🖲️Step 1: IFC file, project, units, context, spatial tree from layers
     ifc = _ifc_api.run("project.create_file", version="IFC4")
     kit_name = kit.name if hasattr(kit, "name") and kit.name else "semio Kit"
     project = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcProject", name=kit_name)
@@ -14477,9 +13152,9 @@ def _export_ifc_from_entities(
             relating_object=default_building,
             products=[default_storey],
         )
-    # endregion Step 1
+    # #endregion 🖲️Step 1
 
-    # region Step 2: Piece-to-storey mapping
+    # #region 🪅Step 2: Piece-to-storey mapping
     import re as _re
 
     def _piece_storey_entity(piece_name: str) -> typing.Any:
@@ -14490,12 +13165,12 @@ def _export_ifc_from_entities(
                 return storey_by_number[floor]
         return default_storey
 
-    # endregion Step 2
+    # #endregion 🪅Step 2
 
     pieces = design.pieces or []
     connections = design.connections or []
 
-    # region Step 3: Types with geometry
+    # #region 🌎Step 3: Types with geometry
     ifc_types: dict[str, typing.Any] = {}
     for piece in pieces:
         if piece.type is None:
@@ -14541,9 +13216,9 @@ def _export_ifc_from_entities(
                     )
 
         ifc_types[tk] = ifc_type
-    # endregion Step 3
+    # #endregion 🌎Step 3
 
-    # region Step 4: Pieces as occurrences
+    # #region 🎉Step 4: Pieces as occurrences
     ifc_occurrences: dict[str, typing.Any] = {}
     ifc_connector_ports: dict[str, dict[str, typing.Any]] = {}
     for piece in pieces:
@@ -14621,9 +13296,9 @@ def _export_ifc_from_entities(
                 _ifc_api.run("geometry.edit_object_placement", ifc, product=port, matrix=port_mat)
 
                 ifc_connector_ports[piece.id_][conn_id] = port
-    # endregion Step 4
+    # #endregion 🎉Step 4
 
-    # region Step 5: Connections as port relationships
+    # #region 🌤️Step 5: Connections as port relationships
     for conn in connections:
         connected_id = conn.connected.piece.id_
         connecting_id = conn.connecting.piece.id_
@@ -14670,26 +13345,24 @@ def _export_ifc_from_entities(
                 name="SemioConnectionParams",
             )
             _ifc_api.run("pset.edit_pset", ifc, pset=conn_pset, properties=conn_solver_props)
-    # endregion Step 5
+    # #endregion 🌤️Step 5
 
     return ifc.to_string().encode("utf-8")
 
 
-# endregion IFC Export
+# #endregion 📻IFC Export
 
-# endregion Kit Model Export
+# #endregion 🌦️Kit Model Export
 
-# region Geometric Insights
-# [👤semio📚py💻semio🔖domain🔖geometricinsights](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Geometric%20Insights)
+# #region 🎩Geometric Insights
 # Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
 
 @dataclasses.dataclass
 class GeometricInsights:
-    """Aggregated geometric KPIs for a single mesh or merged scene.
+    """🔖Aggregated geometric KPIs for a single mesh or merged scene.
     All geometric data is expressed in the semio coordinate system:
     semio.x = glb.x, semio.y = -glb.x, semio.z = glb.y.
-    [👤semio📚py💻semio🔖domain🔖geometricinsights🪨geometricinsights](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Geometric%20Insights/d/i/GeometricInsights)
     """
 
     # Overall size
@@ -14729,10 +13402,7 @@ class GeometricInsights:
 
 
 def get_geometric_insights_for_model(model: str | bytes) -> GeometricInsights:
-    """Compute key performance indicators for the geometry of a GLB/GLTF model.
-    Model MUST be glb or gltf (path or raw bytes). Uses trimesh for mesh analysis.
-    [👤semio📚py💻semio🔖domain🔖geometricinsights🛠️getgeometricinsightsformodel](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Geometric%20Insights/d/i/get_geometric_insights_for_model)
-    """
+    """🔖Compute key performance indicators for the geometry of a GLB/GLTF model."""
     import trimesh as _trimesh
 
     if isinstance(model, bytes):
@@ -14888,7 +13558,7 @@ def get_geometric_insights_for_model(model: str | bytes) -> GeometricInsights:
 
 
 def geometric_insights_to_report_dict(insights: GeometricInsights, round_digits: int = 6) -> dict[str, typing.Any]:
-    """Serialize GeometricInsights to a JSON-serializable dict for reports. Uses semio Point/Vector as {x,y,z}."""
+    """🔖Serialize GeometricInsights to a JSON-serializable dict for reports. Uses semio Point/Vector as {x,y,z}."""
     out: dict[str, typing.Any] = {}
     r = round_digits
 
@@ -14946,18 +13616,14 @@ def geometric_insights_to_report_dict(insights: GeometricInsights, round_digits:
     return out
 
 
-# endregion Geometric Insights
+# #endregion 🎩Geometric Insights
 
-# region Spatial Math
-# [👤semio📚py💻semio🔖domain🔖validation🔖spatialmath](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Spatial%20Math)
+# #region 🔍Spatial Math
 # Spatial math utilities for vector normalization and plane computation.
 
 
 def normalizeVector(v: numpy.ndarray) -> numpy.ndarray:
-    """Normalize a 3D vector to unit length.
-    normalizeVector MUST return a unit-length vector or raise on zero length.
-    [👤semio📚py💻semio🔖domain🔖validation🔖spatialmath🛠️normalizevector](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Spatial%20Math/d/i/normalizeVector)
-    """
+    """🔖Normalize a 3D vector to unit length."""
     length = numpy.linalg.norm(v)
     if length < 1e-10:
         return v
@@ -14965,10 +13631,7 @@ def normalizeVector(v: numpy.ndarray) -> numpy.ndarray:
 
 
 def planeFromYAxis(yAxis: numpy.ndarray, phiDegrees: float = 0.0, origin: numpy.ndarray | None = None) -> Plane:
-    """Construct a plane from an origin point and a Y-axis direction.
-    planeFromYAxis MUST derive orthogonal x and z axes from the y axis.
-    [👤semio📚py💻semio🔖domain🔖validation🔖spatialmath🛠️planefromyaxis](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Spatial%20Math/d/i/planeFromYAxis)
-    """
+    """🔖Construct a plane from an origin point and a Y-axis direction."""
     if origin is None:
         origin = numpy.array([0.0, 0.0, 0.0])
     yAxis = normalizeVector(yAxis)
@@ -15000,10 +13663,7 @@ def computeChildPlane(
     childConnector: Connector,
     connection: Connection,
 ) -> Plane:
-    """Compute the world-space plane of a child from parent and local planes.
-    computeChildPlane MUST compose parent and local plane transformations.
-    [👤semio📚py💻semio🔖domain🔖validation🔖spatialmath🛠️computechildplane](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Validation/s/Spatial%20Math/d/i/computeChildPlane)
-    """
+    """Compute the world-space plane of a child from parent and local planes."""
     gap = connection.gap or 0
     shift = connection.shift or 0
     rise = connection.rise or 0
@@ -15072,14 +13732,13 @@ def computeChildPlane(
     return plane
 
 
-# endregion Spatial Math
+# #endregion 🔍Spatial Math
 
 
-# region Meta And Shallow Types
-# [👤semio📚py💻main🔖metaandshallowtypes](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types)
+# #region 🔑Meta And Shallow Types
 # Meta And Shallow Types MUST provide lightweight entity representations.
 
-# region 🔖Sub-entity Meta Types
+# #region 🎼Sub-entity Meta Types
 
 AttributeMeta = typing.TypedDict(
     "AttributeMeta",
@@ -15287,9 +13946,9 @@ ConnectionMeta = typing.TypedDict(
 )
 """ConnectionMeta is Connection without attributes."""
 
-# endregion 🔖Sub-entity Meta Types
+# #endregion 🎼Sub-entity Meta Types
 
-# region 🔖Main Entity Meta Types
+# #region 🕰️Main Entity Meta Types
 
 TypeMeta = typing.TypedDict(
     "TypeMeta",
@@ -15351,9 +14010,9 @@ KitMeta = typing.TypedDict(
 )
 """KitMeta is Kit with only scalar fields."""
 
-# endregion 🔖Main Entity Meta Types
+# #endregion 🕰️Main Entity Meta Types
 
-# region 🔖Shallow Types
+# #region 🐻Shallow Types
 
 TypeShallow = typing.TypedDict(
     "TypeShallow",
@@ -15440,24 +14099,18 @@ KitShallow = typing.TypedDict(
 )
 """KitShallow is Kit with list fields replaced by Meta item lists."""
 
-# endregion 🔖Shallow Types
+# #endregion 🐻Shallow Types
 
-# region 🔖Meta And Shallow Conversion Functions
+# #region 📎Meta And Shallow Conversion Functions
 
 
 def _strip_none(d: dict) -> dict:
-    """Remove keys with None values from a dict.
-    _strip_none MUST remove keys with None values.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️stripnone](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/_strip_none)
-    """
+    """➖Remove keys with None values from a dict."""
     return {k: v for k, v in d.items() if v is not None}
 
 
 def _extract_scalar_fields(d: dict, keys: list[str]) -> dict:
-    """Extract only specified keys from a dict, skipping missing keys.
-    _extract_scalar_fields MUST return only the specified scalar fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️extractscalarfields](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/_extract_scalar_fields)
-    """
+    """🔖Extract only specified keys from a dict, skipping missing keys."""
     return {k: d[k] for k in keys if k in d}
 
 
@@ -15595,172 +14248,109 @@ _KIT_META_KEYS = [
 
 
 def attributeToMeta(d: dict) -> AttributeMeta:
-    """Convert an attribute dict to AttributeMeta.
-    attributeToMeta MUST extract only AttributeMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️attributetometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/attributeToMeta)
-    """
+    """🔖Convert an attribute dict to AttributeMeta."""
     return _extract_scalar_fields(d, _ATTRIBUTE_META_KEYS)
 
 
 def tagToMeta(d: dict) -> TagMeta:
-    """Convert a tag dict to TagMeta.
-    tagToMeta MUST extract only TagMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️tagtometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/tagToMeta)
-    """
+    """🔖Convert a tag dict to TagMeta."""
     return _extract_scalar_fields(d, _TAG_META_KEYS)
 
 
 def conceptToMeta(d: dict) -> ConceptMeta:
-    """Convert a concept dict to ConceptMeta.
-    conceptToMeta MUST extract only ConceptMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️concepttometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/conceptToMeta)
-    """
+    """🔖Convert a concept dict to ConceptMeta."""
     return _extract_scalar_fields(d, _CONCEPT_META_KEYS)
 
 
 def statToMeta(d: dict) -> StatMeta:
-    """Convert a stat dict to StatMeta.
-    statToMeta MUST extract only StatMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️stattometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/statToMeta)
-    """
+    """🔖Convert a stat dict to StatMeta."""
     return _extract_scalar_fields(d, _STAT_META_KEYS)
 
 
 def propToMeta(d: dict) -> PropMeta:
-    """Convert a prop dict to PropMeta (without attributes).
-    propToMeta MUST extract only PropMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️proptometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/propToMeta)
-    """
+    """🔖Convert a prop dict to PropMeta (without attributes)."""
     return _extract_scalar_fields(d, _PROP_META_KEYS)
 
 
 def authorToMeta(d: dict) -> AuthorMeta:
-    """Convert an author dict to AuthorMeta (without attributes).
-    authorToMeta MUST extract only AuthorMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️authortometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/authorToMeta)
-    """
+    """🔖Convert an author dict to AuthorMeta (without attributes)."""
     return _extract_scalar_fields(d, _AUTHOR_META_KEYS)
 
 
 def fileToMeta(d: dict) -> FileMeta:
-    """Convert a file dict to FileMeta (without blob).
-    fileToMeta MUST extract only FileMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️filetometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/fileToMeta)
-    """
+    """🔖Convert a file dict to FileMeta (without blob)."""
     return _extract_scalar_fields(d, _FILE_META_KEYS)
 
 
 def folderToMeta(d: dict) -> FolderMeta:
-    """Convert a folder dict to FolderMeta (without attributes).
-    folderToMeta MUST extract only FolderMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️foldertometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/folderToMeta)
-    """
+    """🔖Convert a folder dict to FolderMeta (without attributes)."""
     return _extract_scalar_fields(d, _FOLDER_META_KEYS)
 
 
 def qualityToMeta(d: dict) -> QualityMeta:
-    """Convert a quality dict to QualityMeta (without benchmarks and attributes).
-    qualityToMeta MUST extract only QualityMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️qualitytometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/qualityToMeta)
-    """
+    """🔖Convert a quality dict to QualityMeta (without benchmarks and attributes)."""
     return _extract_scalar_fields(d, _QUALITY_META_KEYS)
 
 
 def portToMeta(d: dict) -> PortMeta:
-    """Convert a port dict to PortMeta (without attributes).
-    portToMeta MUST extract only PortMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️porttometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/portToMeta)
-    """
+    """🔖Convert a port dict to PortMeta (without attributes)."""
     return _extract_scalar_fields(d, _PORT_META_KEYS)
 
 
 def modelToMeta(d: dict) -> ModelMeta:
-    """Convert a model dict to ModelMeta (without tags and attributes).
-    modelToMeta MUST extract only ModelMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️modeltometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/modelToMeta)
-    """
+    """🔖Convert a model dict to ModelMeta (without tags and attributes)."""
     return _extract_scalar_fields(d, _MODEL_META_KEYS)
 
 
 def connectorToMeta(d: dict) -> ConnectorMeta:
-    """Convert a connector dict to ConnectorMeta (without props and attributes).
-    connectorToMeta MUST extract only ConnectorMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️connectortometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/connectorToMeta)
-    """
+    """🔖Convert a connector dict to ConnectorMeta (without props and attributes)."""
     return _extract_scalar_fields(d, _CONNECTOR_META_KEYS)
 
 
 def layerToMeta(d: dict) -> LayerMeta:
-    """Convert a layer dict to LayerMeta (without attributes).
-    layerToMeta MUST extract only LayerMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️layertometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/layerToMeta)
-    """
+    """🔖Convert a layer dict to LayerMeta (without attributes)."""
     return _extract_scalar_fields(d, _LAYER_META_KEYS)
 
 
 def pieceToMeta(d: dict) -> PieceMeta:
-    """Convert a piece dict to PieceMeta (without props and attributes).
-    pieceToMeta MUST extract only PieceMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️piecetometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/pieceToMeta)
-    """
+    """🔖Convert a piece dict to PieceMeta (without props and attributes)."""
     return _extract_scalar_fields(d, _PIECE_META_KEYS)
 
 
 def groupToMeta(d: dict) -> GroupMeta:
-    """Convert a group dict to GroupMeta (without pieces and attributes).
-    groupToMeta MUST extract only GroupMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️grouptometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/groupToMeta)
-    """
+    """🔖Convert a group dict to GroupMeta (without pieces and attributes)."""
     return _extract_scalar_fields(d, _GROUP_META_KEYS)
 
 
 def connectionToMeta(d: dict) -> ConnectionMeta:
-    """Convert a connection dict to ConnectionMeta (without attributes).
-    connectionToMeta MUST extract only ConnectionMeta fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️connectiontometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/connectionToMeta)
-    """
+    """🔖Convert a connection dict to ConnectionMeta (without attributes)."""
     return _extract_scalar_fields(d, _CONNECTION_META_KEYS)
 
 
 def typeToMeta(d: dict) -> TypeMeta:
-    """Convert a type dict to TypeMeta (scalar fields only).
-    typeToMeta MUST extract only TypeMeta scalar fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️typetometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/typeToMeta)
-    """
+    """🔖Convert a type dict to TypeMeta (scalar fields only)."""
     return _extract_scalar_fields(d, _TYPE_META_KEYS)
 
 
 def designToMeta(d: dict) -> DesignMeta:
-    """Convert a design dict to DesignMeta (scalar fields only).
-    designToMeta MUST extract only DesignMeta scalar fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️designtometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/designToMeta)
-    """
+    """🔖Convert a design dict to DesignMeta (scalar fields only)."""
     return _extract_scalar_fields(d, _DESIGN_META_KEYS)
 
 
 def kitToMeta(d: dict) -> KitMeta:
-    """Convert a kit dict to KitMeta (scalar fields only).
-    kitToMeta MUST extract only KitMeta scalar fields.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️kittometa](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/kitToMeta)
-    """
+    """🔖Convert a kit dict to KitMeta (scalar fields only)."""
     return _extract_scalar_fields(d, _KIT_META_KEYS)
 
 
 def _convert_list(items: list | None, converter: typing.Callable) -> list | None:
-    """Convert a list of dicts using a converter function, returning None for empty/missing lists.
-    _convert_list MUST return None for empty or missing lists.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️convertlist](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/_convert_list)
-    """
+    """⚡Convert a list of dicts using a converter function, returning None for empty/missing lists."""
     if not items:
         return None
     return [converter(item) for item in items]
 
 
 def typeToShallow(d: dict) -> TypeShallow:
-    """Convert a type dict to TypeShallow (list fields replaced by Meta items).
-    typeToShallow MUST convert list fields to Meta item lists.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️typetoshallow](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/typeToShallow)
-    """
+    """🔖Convert a type dict to TypeShallow (list fields replaced by Meta items)."""
     result = _extract_scalar_fields(d, _TYPE_META_KEYS)
     concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
     if concepts is not None:
@@ -15784,10 +14374,7 @@ def typeToShallow(d: dict) -> TypeShallow:
 
 
 def designToShallow(d: dict) -> DesignShallow:
-    """Convert a design dict to DesignShallow (list fields replaced by Meta items).
-    designToShallow MUST convert list fields to Meta item lists.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️designtoshallow](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/designToShallow)
-    """
+    """🔖Convert a design dict to DesignShallow (list fields replaced by Meta items)."""
     result = _extract_scalar_fields(d, _DESIGN_META_KEYS)
     concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
     if concepts is not None:
@@ -15820,10 +14407,7 @@ def designToShallow(d: dict) -> DesignShallow:
 
 
 def kitToShallow(d: dict) -> KitShallow:
-    """Convert a kit dict to KitShallow (list fields replaced by Meta items).
-    kitToShallow MUST convert list fields to Meta item lists.
-    [👤semio📚py💻main🔖metaandshallowtypes🔖metaandshallowconversionfunctions🛠️kittoshallow](repo://p/u/semio/b/l/py/f/main.py/s/Meta%20And%20Shallow%20Types/s/Meta%20And%20Shallow%20Conversion%20Functions/d/i/kitToShallow)
-    """
+    """🔖Convert a kit dict to KitShallow (list fields replaced by Meta items)."""
     result = _extract_scalar_fields(d, _KIT_META_KEYS)
     concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
     if concepts is not None:
@@ -15858,19 +14442,18 @@ def kitToShallow(d: dict) -> KitShallow:
     return result
 
 
-# endregion 🔖Meta And Shallow Conversion Functions
+# #endregion 📎Meta And Shallow Conversion Functions
 
-# endregion Meta And Shallow Types
+# #endregion 🔑Meta And Shallow Types
 
 
-# region Hash
-# [👤semio📚py💻main🔖hash](repo://p/u/semio/b/l/py/f/main.py/s/Hash)
+# #region 🎮Hash
 # Merkle hash functions for all semio entities.
 
 
-# region 🔖HashWriter
+# #region 📻HashWriter
 def _format_number_for_hash(n) -> str:
-    """Format number to match JavaScript Number.toString() behavior.
+    """🔢Format number to match JavaScript Number.toString() behavior.
     Integers (including floats with no fractional part) are formatted without decimal point.
     """
     if isinstance(n, int):
@@ -15881,14 +14464,14 @@ def _format_number_for_hash(n) -> str:
 
 
 def _ref_guid(ref) -> str:
-    """Extract guid from a reference (dict with 'guid' key or plain string)."""
+    """🔖Extract guid from a reference (dict with 'guid' key or plain string)."""
     if isinstance(ref, dict):
         return ref["guid"]
     return ref
 
 
 class HashWriter:
-    """Feeds structured data into a SHA-256 hasher for deterministic hashing.
+    """🔖Feeds structured data into a SHA-256 hasher for deterministic hashing.
     Uses length-prefixed strings and type tags for unambiguous encoding.
     """
 
@@ -15925,12 +14508,12 @@ class HashWriter:
         return hashlib.sha256(bytes(self._parts)).hexdigest()
 
 
-# endregion 🔖HashWriter
+# #endregion 📻HashWriter
 
 
-# region 🔖Hash Value Types
+# #region 🧮Hash Value Types
 def hash_coord(c: dict) -> str:
-    """Computes SHA-256 hash of a Coord value."""
+    """🔖Computes SHA-256 hash of a Coord value."""
     w = HashWriter()
     w.writeString("Coord")
     w.writeString("u")
@@ -15941,7 +14524,7 @@ def hash_coord(c: dict) -> str:
 
 
 def hash_vec(v: dict) -> str:
-    """Computes SHA-256 hash of a Vec value."""
+    """🔖Computes SHA-256 hash of a Vec value."""
     w = HashWriter()
     w.writeString("Vec")
     w.writeString("u")
@@ -15952,7 +14535,7 @@ def hash_vec(v: dict) -> str:
 
 
 def hash_point(p: dict) -> str:
-    """Computes SHA-256 hash of a Point value."""
+    """🔖Computes SHA-256 hash of a Point value."""
     w = HashWriter()
     w.writeString("Point")
     w.writeString("x")
@@ -15965,7 +14548,7 @@ def hash_point(p: dict) -> str:
 
 
 def hash_vector(v: dict) -> str:
-    """Computes SHA-256 hash of a Vector value."""
+    """🔖Computes SHA-256 hash of a Vector value."""
     w = HashWriter()
     w.writeString("Vector")
     w.writeString("x")
@@ -15978,7 +14561,7 @@ def hash_vector(v: dict) -> str:
 
 
 def hash_plane(p: dict) -> str:
-    """Computes SHA-256 hash of a Plane value."""
+    """🔖Computes SHA-256 hash of a Plane value."""
     w = HashWriter()
     w.writeString("Plane")
     w.writeString("origin")
@@ -15991,7 +14574,7 @@ def hash_plane(p: dict) -> str:
 
 
 def hash_camera(c: dict) -> str:
-    """Computes SHA-256 hash of a Camera value."""
+    """🔖Computes SHA-256 hash of a Camera value."""
     w = HashWriter()
     w.writeString("Camera")
     w.writeString("forward")
@@ -16003,12 +14586,12 @@ def hash_camera(c: dict) -> str:
     return w.digest()
 
 
-# endregion 🔖Hash Value Types
+# #endregion 🧮Hash Value Types
 
 
-# region 🔖Hash Entities
+# #region 🌪️Hash Entities
 def hash_attribute(a: dict) -> str:
-    """Computes SHA-256 hash of an Attribute entity."""
+    """🔖Computes SHA-256 hash of an Attribute entity."""
     w = HashWriter()
     w.writeString("Attribute")
     if a.get("definition") is not None:
@@ -16025,7 +14608,7 @@ def hash_attribute(a: dict) -> str:
 
 
 def hash_location(l: dict) -> str:
-    """Computes SHA-256 hash of a Location entity."""
+    """🔖Computes SHA-256 hash of a Location entity."""
     w = HashWriter()
     w.writeString("Location")
     if l.get("altitude") is not None:
@@ -16045,7 +14628,7 @@ def hash_location(l: dict) -> str:
 
 
 def hash_author(a: dict) -> str:
-    """Computes SHA-256 hash of an Author entity."""
+    """🔖Computes SHA-256 hash of an Author entity."""
     w = HashWriter()
     w.writeString("Author")
     attrs = a.get("attributes")
@@ -16064,7 +14647,7 @@ def hash_author(a: dict) -> str:
 
 
 def hash_file(f: dict) -> str:
-    """Computes SHA-256 hash of a File entity."""
+    """🔖Computes SHA-256 hash of a File entity."""
     w = HashWriter()
     w.writeString("File")
     if f.get("blob") is not None:
@@ -16090,7 +14673,7 @@ def hash_file(f: dict) -> str:
 
 
 def hash_folder(f: dict) -> str:
-    """Computes SHA-256 hash of a Folder entity."""
+    """🔖Computes SHA-256 hash of a Folder entity."""
     w = HashWriter()
     w.writeString("Folder")
     attrs = f.get("attributes")
@@ -16111,7 +14694,7 @@ def hash_folder(f: dict) -> str:
 
 
 def hash_benchmark(b: dict) -> str:
-    """Computes SHA-256 hash of a Benchmark entity."""
+    """🔖Computes SHA-256 hash of a Benchmark entity."""
     w = HashWriter()
     w.writeString("Benchmark")
     attrs = b.get("attributes")
@@ -16141,7 +14724,7 @@ def hash_benchmark(b: dict) -> str:
 
 
 def hash_quality(q: dict) -> str:
-    """Computes SHA-256 hash of a Quality entity."""
+    """🔖Computes SHA-256 hash of a Quality entity."""
     w = HashWriter()
     w.writeString("Quality")
     benchmarks = q.get("benchmarks")
@@ -16203,7 +14786,7 @@ def hash_quality(q: dict) -> str:
 
 
 def hash_port(p: dict) -> str:
-    """Computes SHA-256 hash of a Port entity."""
+    """🔖Computes SHA-256 hash of a Port entity."""
     w = HashWriter()
     w.writeString("Port")
     attrs = p.get("attributes")
@@ -16228,7 +14811,7 @@ def hash_port(p: dict) -> str:
 
 
 def hash_prop(p: dict) -> str:
-    """Computes SHA-256 hash of a Prop entity."""
+    """🔖Computes SHA-256 hash of a Prop entity."""
     w = HashWriter()
     w.writeString("Prop")
     attrs = p.get("attributes")
@@ -16248,7 +14831,7 @@ def hash_prop(p: dict) -> str:
 
 
 def hash_tag(t: dict) -> str:
-    """Computes SHA-256 hash of a Tag entity."""
+    """🔖Computes SHA-256 hash of a Tag entity."""
     w = HashWriter()
     w.writeString("Tag")
     attrs = t.get("attributes")
@@ -16269,7 +14852,7 @@ def hash_tag(t: dict) -> str:
 
 
 def hash_concept(c: dict) -> str:
-    """Computes SHA-256 hash of a Concept entity."""
+    """🔖Computes SHA-256 hash of a Concept entity."""
     w = HashWriter()
     w.writeString("Concept")
     attrs = c.get("attributes")
@@ -16290,7 +14873,7 @@ def hash_concept(c: dict) -> str:
 
 
 def hash_model(m: dict) -> str:
-    """Computes SHA-256 hash of a Model entity."""
+    """🔖Computes SHA-256 hash of a Model entity."""
     w = HashWriter()
     w.writeString("Model")
     attrs = m.get("attributes")
@@ -16315,7 +14898,7 @@ def hash_model(m: dict) -> str:
 
 
 def hash_connector(c: dict) -> str:
-    """Computes SHA-256 hash of a Connector entity."""
+    """🔖Computes SHA-256 hash of a Connector entity."""
     w = HashWriter()
     w.writeString("Connector")
     attrs = c.get("attributes")
@@ -16350,7 +14933,7 @@ def hash_connector(c: dict) -> str:
 
 
 def hash_type(t: dict) -> str:
-    """Computes SHA-256 hash of a Type entity."""
+    """🔖Computes SHA-256 hash of a Type entity."""
     w = HashWriter()
     w.writeString("Type")
     attrs = t.get("attributes")
@@ -16415,7 +14998,7 @@ def hash_type(t: dict) -> str:
 
 
 def hash_layer(l: dict) -> str:
-    """Computes SHA-256 hash of a Layer entity."""
+    """🔖Computes SHA-256 hash of a Layer entity."""
     w = HashWriter()
     w.writeString("Layer")
     attrs = l.get("attributes")
@@ -16442,7 +15025,7 @@ def hash_layer(l: dict) -> str:
 
 
 def hash_stat(s: dict) -> str:
-    """Computes SHA-256 hash of a Stat entity."""
+    """🔖Computes SHA-256 hash of a Stat entity."""
     w = HashWriter()
     w.writeString("Stat")
     w.writeString("guid")
@@ -16468,7 +15051,7 @@ def hash_stat(s: dict) -> str:
 
 
 def hash_group(g: dict) -> str:
-    """Computes SHA-256 hash of a Group entity."""
+    """🔖Computes SHA-256 hash of a Group entity."""
     w = HashWriter()
     w.writeString("Group")
     attrs = g.get("attributes")
@@ -16492,7 +15075,7 @@ def hash_group(g: dict) -> str:
 
 
 def hash_side(s: dict) -> str:
-    """Computes SHA-256 hash of a Side value."""
+    """🔖Computes SHA-256 hash of a Side value."""
     w = HashWriter()
     w.writeString("Side")
     if s.get("connector") is not None:
@@ -16507,7 +15090,7 @@ def hash_side(s: dict) -> str:
 
 
 def hash_connection(c: dict) -> str:
-    """Computes SHA-256 hash of a Connection entity."""
+    """🔖Computes SHA-256 hash of a Connection entity."""
     w = HashWriter()
     w.writeString("Connection")
     attrs = c.get("attributes")
@@ -16551,7 +15134,7 @@ def hash_connection(c: dict) -> str:
 
 
 def hash_piece(p: dict) -> str:
-    """Computes SHA-256 hash of a Piece entity."""
+    """🔖Computes SHA-256 hash of a Piece entity."""
     w = HashWriter()
     w.writeString("Piece")
     attrs = p.get("attributes")
@@ -16600,7 +15183,7 @@ def hash_piece(p: dict) -> str:
 
 
 def hash_design(d: dict) -> str:
-    """Computes SHA-256 hash of a Design entity (Merkle tree)."""
+    """🔖Computes SHA-256 hash of a Design entity (Merkle tree)."""
     w = HashWriter()
     w.writeString("Design")
     if d.get("activeLayer") is not None:
@@ -16680,7 +15263,7 @@ def hash_design(d: dict) -> str:
 
 
 def hash_kit(k: dict) -> str:
-    """Computes SHA-256 Merkle hash of a Kit entity."""
+    """🔖Computes SHA-256 Merkle hash of a Kit entity."""
     w = HashWriter()
     w.writeString("Kit")
     attrs = k.get("attributes")
@@ -16753,9 +15336,9 @@ def hash_kit(k: dict) -> str:
     return w.digest()
 
 
-# endregion 🔖Hash Entities
+# #endregion 🌪️Hash Entities
 
-# region 🔖Hash Diffs
+# #region 🎥Hash Diffs
 # Deterministic SHA-256 Merkle hash functions for all diff types.
 # Diffs are plain dicts; field presence in dict = field was changed.
 # If a field is present with None value → write field name + writeBool(false) as null marker.
@@ -17338,13 +15921,12 @@ def hash_kit_diff(d: dict) -> str:
     return w.digest()
 
 
-# endregion 🔖Hash Diffs
+# #endregion 🎥Hash Diffs
 
-# endregion Hash
+# #endregion 🎮Hash
 
 
-# region Test
-# [👤semio📚py💻main🔖test](repo://p/u/semio/b/l/py/f/main.py/s/Test)
+# #region 🎪Test
 # Tests for the semio py module.
 
 TEST_TOLERANCE = 0.001
@@ -17362,7 +15944,7 @@ def _test_load_json(filename: str) -> dict:
 
 
 def _test_load_kit(filename: str) -> dict:
-    """Load and normalize kit JSON for Kit.parse (flattens parent/folder refs, etc.)."""
+    """🧪Load and normalize kit JSON for Kit.parse (flattens parent/folder refs, etc.)."""
     data = _test_load_json(filename)
     if "guid" in data and "uri" not in data:
         data["uri"] = data["guid"]
@@ -17412,7 +15994,7 @@ def _test_load_kit(filename: str) -> dict:
 
 
 def _test_build_workflow_kit() -> dict:
-    """Build a compact kit fixture for workflow roundtrip tests."""
+    """💼Build a compact kit fixture for workflow roundtrip tests."""
     asset_blob = "data:text/plain;base64," + base64.b64encode(b"workflow asset payload").decode("ascii")
     return {
         "guid": "11111111-1111-1111-1111-111111111111",
@@ -17471,7 +16053,7 @@ def _test_build_workflow_kit() -> dict:
 
 
 def _test_build_workflow_diff(updated_name: str, updated_asset_name: str) -> dict:
-    """Build a compact diff for workflow edit tests."""
+    """🔖Build a compact diff for workflow edit tests."""
     return {
         "name": updated_name,
         "files": {
@@ -17486,7 +16068,7 @@ def _test_build_workflow_diff(updated_name: str, updated_asset_name: str) -> dic
 
 
 def _test_build_workflow_archive_bytes(kit_dict: dict, files: dict[str, bytes]) -> bytes:
-    """Build archive bytes for remote ZIP workflow tests."""
+    """🔖Build archive bytes for remote ZIP workflow tests."""
     with tempfile.TemporaryDirectory() as tmpdir:
         archive_path = os.path.join(tmpdir, "workflow.zip")
         export_kit(KitData(kit_dict), files, archive_path)
@@ -17495,7 +16077,7 @@ def _test_build_workflow_archive_bytes(kit_dict: dict, files: dict[str, bytes]) 
 
 
 def _test_remote_kit_server(json_body: bytes, zip_body: bytes):
-    """Create a disposable HTTP server for remote kit workflow tests."""
+    """🖥️Create a disposable HTTP server for remote kit workflow tests."""
     import http.server
     import threading
 
@@ -17962,6 +16544,102 @@ class TestDelete:
             assert computed_conn_guids == expected_conn_guids, "Removed connection guids mismatch"
 
 
+class TestCopyAndPaste:
+    class TestNakaginCapsuleTower:
+        def test_copy(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+            selection = _test_load_json("nakagin-capsule-tower.copy.design.selection.semio.json")
+            expected_copy = _test_load_json("nakagin-capsule-tower.copy.design.semio.json")
+
+            piece_guids = [p["guid"] for p in selection.get("pieces", [])]
+            connection_guids = [c["guid"] for c in selection.get("connections", [])]
+
+            copy_result = copyDesignDict(kit, design, piece_guids, connection_guids)
+
+            # Verify piece count
+            assert len(copy_result.get("pieces", [])) == len(expected_copy.get("pieces", [])), f"Copy pieces count mismatch: {len(copy_result.get('pieces', []))} vs {len(expected_copy.get('pieces', []))}"
+
+            # Verify connection count
+            assert len(copy_result.get("connections", [])) == len(expected_copy.get("connections", [])), f"Copy connections count mismatch: {len(copy_result.get('connections', []))} vs {len(expected_copy.get('connections', []))}"
+
+            # Verify each piece exists
+            copyPieceGuids = {p["guid"] for p in copy_result.get("pieces", [])}
+            for ep in expected_copy.get("pieces", []):
+                assert ep["guid"] in copyPieceGuids, f"Expected piece {ep['guid']} not found in copy output"
+
+            # Verify external pieces have semio.piece.origin and semio.center attributes
+            expectedPieceMap = {p["guid"]: p for p in expected_copy.get("pieces", [])}
+            for p in copy_result.get("pieces", []):
+                ep = expectedPieceMap[p["guid"]]
+                hasOrigin = any(a.get("key") == "semio.piece.origin" and a.get("value") == "external" for a in p.get("attributes", []))
+                expectedOrigin = any(a.get("key") == "semio.piece.origin" and a.get("value") == "external" for a in ep.get("attributes", []))
+                assert hasOrigin == expectedOrigin, f"Piece {p['guid']}: semio.piece.origin mismatch"
+                hasCenter = any(a.get("key") == "semio.center" for a in p.get("attributes", []))
+                expectedCenter = any(a.get("key") == "semio.center" for a in ep.get("attributes", []))
+                assert hasCenter == expectedCenter, f"Piece {p['guid']}: semio.center attr mismatch"
+
+        def test_paste_without_coord(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+            paste_target = _test_load_json("nakagin-capsule-tower.paste.design.semio.json")
+            selection = _test_load_json("nakagin-capsule-tower.copy.design.selection.semio.json")
+            expected_paste = _test_load_json("nakagin-capsule-tower.paste.design.diff.semio.json")
+
+            piece_guids = [p["guid"] for p in selection.get("pieces", [])]
+            connection_guids = [c["guid"] for c in selection.get("connections", [])]
+
+            copy_result = copyDesignDict(kit, design, piece_guids, connection_guids)
+            paste_diff = pasteDesignDict(kit, copy_result, paste_target, "original", None)
+
+            # Verify pasted pieces count
+            paste_pieces = paste_diff.get("pieces", {}).get("added", [])
+            expected_paste_pieces = expected_paste.get("pieces", {}).get("added", [])
+            assert len(paste_pieces) == len(expected_paste_pieces), f"Paste added pieces count mismatch: {len(paste_pieces)} vs {len(expected_paste_pieces)}"
+
+            # Verify no external-origin pieces in paste output
+            for p in paste_pieces:
+                hasExt = any(a.get("key") == "semio.piece.origin" and a.get("value") == "external" for a in p.get("attributes", []))
+                assert not hasExt, f"External-origin piece {p['guid']} should not be in paste output"
+
+            # Verify pasted connections count
+            paste_conns = paste_diff.get("connections", {}).get("added", [])
+            expected_paste_conns = expected_paste.get("connections", {}).get("added", [])
+            assert len(paste_conns) == len(expected_paste_conns), f"Paste added connections count mismatch: {len(paste_conns)} vs {len(expected_paste_conns)}"
+
+        def test_paste_with_coord(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+            paste_target = _test_load_json("nakagin-capsule-tower.paste.design.semio.json")
+            selection = _test_load_json("nakagin-capsule-tower.copy.design.selection.semio.json")
+            expected_pwc = _test_load_json("nakagin-capsule-tower.paste.with-coord.design.diff.semio.json")
+
+            piece_guids = [p["guid"] for p in selection.get("pieces", [])]
+            connection_guids = [c["guid"] for c in selection.get("connections", [])]
+
+            copy_result = copyDesignDict(kit, design, piece_guids, connection_guids)
+            paste_diff = pasteDesignDict(kit, copy_result, paste_target, "original", {"u": 10, "v": 10})
+
+            # Verify pasted pieces count
+            paste_pieces = paste_diff.get("pieces", {}).get("added", [])
+            expected_paste_pieces = expected_pwc.get("pieces", {}).get("added", [])
+            assert len(paste_pieces) == len(expected_paste_pieces), f"Paste with coord added pieces count mismatch: {len(paste_pieces)} vs {len(expected_paste_pieces)}"
+
+            # Verify pasted connections count
+            paste_conns = paste_diff.get("connections", {}).get("added", [])
+            expected_paste_conns = expected_pwc.get("connections", {}).get("added", [])
+            assert len(paste_conns) == len(expected_paste_conns), f"Paste with coord added connections count mismatch: {len(paste_conns)} vs {len(expected_paste_conns)}"
+
+            # Verify centers are offset by coord
+            expectedPieceMap = {p["guid"]: p for p in expected_paste_pieces}
+            for p in paste_pieces:
+                ep = expectedPieceMap.get(p["guid"])
+                assert ep is not None, f"Piece {p['guid']} not found in expected paste with coord"
+                if p.get("center") and ep.get("center"):
+                    assert abs(p["center"]["u"] - ep["center"]["u"]) < 0.001, f"Piece {p['guid']} center.u mismatch: {p['center']['u']} vs {ep['center']['u']}"
+                    assert abs(p["center"]["v"] - ep["center"]["v"]) < 0.001, f"Piece {p['guid']} center.v mismatch: {p['center']['v']} vs {ep['center']['v']}"
+
+
 class TestDesignWithDiff:
     class TestNakaginCapsuleTower:
         def test_design_with_diff_preserves_old_entities_and_annotates_status(self):
@@ -18316,7 +16994,7 @@ class TestExportDesignModel:
 
 
 class TestGetGeometricInsightsForModel:
-    """Model/KPI tests for get_geometric_insights_for_model using nakagin-capsule-tower.gltf."""
+    """🔖Model/KPI tests for get_geometric_insights_for_model using nakagin-capsule-tower.gltf."""
 
     def test_nakagin_capsule_tower_gltf_returns_insights(self):
         model_path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, "nakagin-capsule-tower.gltf")
@@ -18358,7 +17036,7 @@ class TestGetGeometricInsightsForModel:
 
 
 class TestTypeMeta:
-    """Tests for TypeMeta deserialization from JSON."""
+    """🔖Tests for TypeMeta deserialization from JSON."""
 
     def test_type_meta(self):
         data = _test_load_json("tambour.meta.type.semio.json")
@@ -18375,7 +17053,7 @@ class TestTypeMeta:
 
 
 class TestTypeShallow:
-    """Tests for TypeShallow deserialization from JSON."""
+    """🔖Tests for TypeShallow deserialization from JSON."""
 
     def test_type_shallow(self):
         data = _test_load_json("tambour.shallow.type.semio.json")
@@ -18393,7 +17071,7 @@ class TestTypeShallow:
 
 
 class TestDesignMeta:
-    """Tests for DesignMeta deserialization from JSON."""
+    """🔖Tests for DesignMeta deserialization from JSON."""
 
     def test_design_meta(self):
         data = _test_load_json("nakagin-capsule-tower.meta.design.semio.json")
@@ -18408,7 +17086,7 @@ class TestDesignMeta:
 
 
 class TestDesignShallow:
-    """Tests for DesignShallow deserialization from JSON."""
+    """🔖Tests for DesignShallow deserialization from JSON."""
 
     def test_design_shallow(self):
         data = _test_load_json("nakagin-capsule-tower.shallow.design.semio.json")
@@ -18431,7 +17109,7 @@ class TestDesignShallow:
 
 
 class TestKitMeta:
-    """Tests for KitMeta deserialization from JSON."""
+    """🔖Tests for KitMeta deserialization from JSON."""
 
     def test_kit_meta(self):
         data = _test_load_json("metabolism.meta.kit.semio.json")
@@ -18447,7 +17125,7 @@ class TestKitMeta:
 
 
 class TestKitShallow:
-    """Tests for KitShallow deserialization from JSON."""
+    """🔖Tests for KitShallow deserialization from JSON."""
 
     def test_kit_shallow(self):
         data = _test_load_json("metabolism.shallow.kit.semio.json")
@@ -18465,7 +17143,7 @@ class TestKitShallow:
 
 
 class TestKitToMetaShallow:
-    """Tests for converting a full kit dict to meta and shallow representations."""
+    """🔖Tests for converting a full kit dict to meta and shallow representations."""
 
     def test_kit_to_meta_shallow(self):
         kit_dict = _test_load_json("metabolism.kit.semio.json")
@@ -18506,7 +17184,7 @@ class TestKitToMetaShallow:
 
 
 class TestKitKind:
-    """Tests for the KitKind enum."""
+    """📇Tests for the KitKind enum."""
 
     def test_all_kit_kinds_has_five_values(self):
         assert len(ALL_KIT_KINDS) == 5
@@ -18544,12 +17222,12 @@ class TestKitKind:
 
 
 class TestHash:
-    """Tests for the Merkle hash functions."""
+    """🔖Tests for the Merkle hash functions."""
 
     def test_metabolism_kit_hash(self):
         kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = hash_kit(kit_dict)
-        assert result == "4a8b056c2e80616afd25addb1bc31204da9879714c78ef2ec213df691a043160"
+        assert result == "d786ae5cd2cb18d78f0d80df92ded94905adf708df077206f72162d43dd8767c"
 
     def test_kit_diff_canonical_hash(self):
         d = {"name": "updated", "description": None}
@@ -18586,7 +17264,7 @@ class TestHash:
 
 
 class TestMaxChildren:
-    """Tests for maxChildren field on Port and Connector."""
+    """🔖Tests for maxChildren field on Port and Connector."""
 
     def test_port_max_children_default(self):
         port = PortProps(name="TestPort")
@@ -18677,10 +17355,9 @@ class TestMaxChildren:
         assert restored["types"][0]["connectors"][0]["maxChildren"] == 5
 
 
-# endregion Test
+# #endregion 🎪Test
 
-# region Benchmark
-# [👤semio📚py💻main🔖benchmark](repo://p/u/semio/b/l/py/f/main.py/s/Benchmark)
+# #region 🎎Benchmark
 # Benchmarks for the semio py module.
 
 BENCHMARK_ITERATIONS = 3
@@ -18770,4 +17447,4 @@ def benchmark_main():
 if __name__ == "__main__":
     benchmark_main()
 
-# endregion Benchmark
+# #endregion 🎎Benchmark

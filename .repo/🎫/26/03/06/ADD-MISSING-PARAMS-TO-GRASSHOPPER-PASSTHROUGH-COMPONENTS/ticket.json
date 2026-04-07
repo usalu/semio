@@ -1,5 +1,6 @@
 {
   "title": "Add Missing Params to Grasshopper Passthrough Components",
+  "emoji": "➕",
   "status": "closed",
   "description": "Add all missing domain model params to every Grasshopper passthrough component. Components like BenchmarkComponent, QualityComponent, PropComponent have completely empty bodies. Others like LocationComponent, FileComponent, FolderComponent, ConnectorComponent, TypeComponent, PieceComponent, ConnectionComponent, StatComponent, GroupComponent, DesignComponent, KitComponent are missing various params from the domain model.",
   "summary": "Precision fix: removed non-directly-accessible params from TypeComponent (Props removed — props belong to connectors not types) and KitComponent (Pieces, Groups, Connections, Props, Stats removed — these belong to designs not kits). All other 14 components verified correct. Indices shifted properly.",

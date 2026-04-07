@@ -1,5 +1,6 @@
 {
   "title": "Rewrite Export Design Model With Trimesh",
+  "emoji": "🎨",
   "status": "closed",
   "description": "Rewrite the export_design_model function in semio.py to use trimesh library instead of manual GLB construction. Remove all manual binary buffer manipulation helpers and replace with trimesh equivalents.",
   "summary": "Rewrote the Kit Model Export region in semio.py to use trimesh instead of manual GLB/glTF binary construction. Removed 12 manual helper functions (_parse_glb, _build_glb, _blob_to_bytes, _plane_to_glb_transform, _merge_glb_model, _add_box_placeholder, _read_accessor_floats, _read_accessor_indices, _extract_world_geometry, _export_obj, _export_stl, _export_ply, _export_off) and replaced with 3 trimesh-based functions: _load_type_mesh, _export_empty_scene, _export_trimesh_scene. Kept existing helpers. All 14 tests pass.",

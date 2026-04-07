@@ -1,5 +1,6 @@
 {
   "title": "Extend list and tree commands",
+  "emoji": "📐",
   "status": "closed",
   "description": "Extend all list and tree commands to receive --show-ignored and --show-generated flags",
   "summary": "Implemented flags and config updates",

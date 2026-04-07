@@ -1,5 +1,4 @@
-#region 🔖Header
-// [👤semio📚3dm🛅semiorhinotests💻tests](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs)
+#region 📱Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,16 +6,15 @@
 
 // Unit tests for the Semio.Rhino bridge registry and layer service.
 
-#endregion 🔖Header
+#endregion 📱Header
 
-#region 🔖Imports
+#region ⌛Imports
 using Xunit;
 using Newtonsoft.Json.Linq;
 using Semio.Rhino;
-#endregion 🔖Imports
+#endregion ⌛Imports
 
-#region 🔖BridgeRegistryTests
-// [👤semio📚3dm🛅semiorhinotests💻tests🔖bridgeregistrytests](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs/s/BridgeRegistryTests)
+#region 🎩BridgeRegistryTests
 // Tests for BridgeRegistry routing, error handling, and method dispatch.
 
 public class BridgeRegistryTests
@@ -99,10 +97,9 @@ public class BridgeRegistryTests
     }
 }
 
-#endregion 🔖BridgeRegistryTests
+#endregion 🎩BridgeRegistryTests
 
-#region 🔖LayerServiceTests
-// [👤semio📚3dm🛅semiorhinotests💻tests🔖layerservicetests](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs/s/LayerServiceTests)
+#region 🛕LayerServiceTests
 // Tests for LayerService path construction.
 
 public class LayerServiceTests
@@ -129,10 +126,9 @@ public class LayerServiceTests
     }
 }
 
-#endregion 🔖LayerServiceTests
+#endregion 🛕LayerServiceTests
 
-#region 🔖BridgeProtocolTests
-// [👤semio📚3dm🛅semiorhinotests💻tests🔖bridgeprotocoltests](repo://p/u/semio/b/l/3dm/fd/req/Semio.Rhino.Tests/f/Tests.cs/s/BridgeProtocolTests)
+#region 🌀BridgeProtocolTests
 // Tests for BridgeRequest/BridgeResponse serialization.
 
 public class BridgeProtocolTests
@@ -183,4 +179,4 @@ public class BridgeProtocolTests
     }
 }
 
-#endregion 🔖BridgeProtocolTests
+#endregion 🌀BridgeProtocolTests

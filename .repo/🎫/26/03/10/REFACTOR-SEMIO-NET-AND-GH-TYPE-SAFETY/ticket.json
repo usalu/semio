@@ -1,5 +1,6 @@
 {
   "title": "Refactor Semio Net and Gh Type Safety",
+  "emoji": "♻️",
   "status": "closed",
   "description": "Refactor semio net and semio gh dynamic/non-type-safe code to explicit compile-time-safe paths and resolve ApplyDiff overload mismatch compile error.",
   "summary": "Refactored semio gh dynamic ApplyDiff and persistence flows to strongly typed compile-time-safe contracts; removed dynamic dispatch and anonymous runtime payloads; restored missing headless import helper and fixed fallback return kind mismatch. Verified net build passes and gh net8 target builds.",

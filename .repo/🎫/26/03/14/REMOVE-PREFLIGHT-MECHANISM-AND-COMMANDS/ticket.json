@@ -1,5 +1,6 @@
 {
   "title": "Remove Preflight Mechanism And Commands",
+  "emoji": "🗑️",
   "status": "closed",
   "description": "Completely remove the preflight mechanism, preflight command wiring, and all associated references from the monorepo.",
   "summary": "Removed remaining preflight/pre-checkpoint references across monorepo configs/docs/tests, cleaned semio package scripts, updated repo specs and hook test naming, and validated with targeted grep and tests.",

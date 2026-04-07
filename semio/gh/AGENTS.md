@@ -2,7 +2,7 @@
 technology: semio
 bundle:
  name: gh
- emoji: 📚
+ emoji: 🐙
  description: The gh bundle for semio.
  kind: library
 ---

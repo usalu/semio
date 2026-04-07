@@ -1,5 +1,4 @@
-// #region 🔖Header
-// [👤semio🌐play💻index](repo://p/u/semio/b/w/play/f/index.tsx)
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,10 +6,9 @@
 
 // Entry point for the playground React app for interactive experimentation.
 
-// #endregion 🔖Header
+// #endregion 🧲Header
 
-// #region 🔖Entrypoint
-// [👤semio🌐play💻index🔖entrypoint](repo://p/u/semio/b/w/play/f/index.tsx/s/Entrypoint)
+// #region 🛎️Entrypoint
 // Play application entrypoint registering sketchpad apps and rendering the root.
 // Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
@@ -52,4 +50,4 @@ getOrCreateDomRoot(rootElement).render(
     <Sketchpad persistenceFactory={indexeddbPersistenceFactory} temporaryKitStoreFactory={temporaryKitStoreFactory} importKitUrls={["/metabolism.zip"]} />
   </div>,
 );
-// #endregion 🔖Entrypoint
+// #endregion 🛎️Entrypoint

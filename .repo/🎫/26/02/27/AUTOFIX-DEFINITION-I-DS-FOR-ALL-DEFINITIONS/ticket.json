@@ -1,5 +1,6 @@
 {
   "title": "Autofix Definition IDs for All Definitions",
+  "emoji": "📋",
   "status": "closed",
   "description": "When running autofix, it should automatically add missing IDs for ALL definitions (not just exported/public ones) in all languages (Go, TypeScript, Python, C#, Rust). Currently isExportedDefinition filters out unexported definitions so no breach is generated for them. Example: `func isLicenseText(text string) bool {` should get an ID comment added. Implement this for all languages and add test coverage for Go autofix.",
   "summary": "Changed isExportedDefinition to always return true so ALL definitions generate BreachCodeDefMissingIdentification. Added explicit Go case in autofix switch. Extended tests to cover unexported variants for all languages. Updated fixture files.",
