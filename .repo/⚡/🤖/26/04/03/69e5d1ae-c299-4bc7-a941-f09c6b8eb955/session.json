@@ -1,0 +1,42 @@
+{
+  "id": "69e5d1ae-c299-4bc7-a941-f09c6b8eb955",
+  "uri": "repo://session/69e5d1ae-c299-4bc7-a941-f09c6b8eb955",
+  "client": "cursor-chat",
+  "second": "2026-04-03T09:02:40Z",
+  "checkpoint": "448def52e1f6255302dab084d6eb905529d7d18b",
+  "contributor": "unknown",
+  "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/69e5d1ae-c299-4bc7-a941-f09c6b8eb955.txt",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "448def52e1f6255302dab084d6eb905529d7d18b",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-03T09:02:40Z",
+        "session": "69e5d1ae-c299-4bc7-a941-f09c6b8eb955",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/69e5d1ae-c299-4bc7-a941-f09c6b8eb955.txt"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "69e5d1ae-c299-4bc7-a941-f09c6b8eb955",
+          "generation_id": "ef46d52f-cb59-427a-8ed6-8ef1ed1d0b6e",
+          "model": "gpt-5.3-codex",
+          "session_id": "69e5d1ae-c299-4bc7-a941-f09c6b8eb955",
+          "reason": "user_close",
+          "duration_ms": 156764092,
+          "is_background_agent": false,
+          "final_status": "completed",
+          "hook_event_name": "sessionEnd",
+          "cursor_version": "2.4.31",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "kinan.sarak@gmail.com",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/69e5d1ae-c299-4bc7-a941-f09c6b8eb955.txt"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

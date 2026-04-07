@@ -5960,11 +5960,7 @@ const sharedLayoutRectCache = new Map<string, SharedLayoutRect>();
  * transform, then animates back to identity. Cancels in-flight animations
  * on re-trigger to avoid visual jumps.
  **/
-function useSharedLayoutTransition(
-  ref: React.RefObject<HTMLElement | null>,
-  transformOrigin: string = "center center",
-  sharedKey?: string,
-): void {
+function useSharedLayoutTransition(ref: React.RefObject<HTMLElement | null>, transformOrigin: string = "center center", sharedKey?: string): void {
   const prevRectRef = useRef<SharedLayoutRect | null>(null);
   const animRef = useRef<Animation | null>(null);
   const reducedMotionRef = useRef(typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -5984,7 +5980,7 @@ function useSharedLayoutTransition(
     const nextRect = el.getBoundingClientRect();
     const next: SharedLayoutRect = { left: nextRect.left, top: nextRect.top, width: nextRect.width, height: nextRect.height };
 
-    const prevFromCache = sharedKey ? sharedLayoutRectCache.get(sharedKey) ?? null : null;
+    const prevFromCache = sharedKey ? (sharedLayoutRectCache.get(sharedKey) ?? null) : null;
     const prev = prevRectRef.current ?? prevFromCache;
 
     prevRectRef.current = next;
@@ -37920,8 +37916,14 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const prevModelGuidRef = useRef<string | null>(null);
 
+  useEffect(() => {
+    const typeRef = typeof piece.type === "string" ? piece.type : piece.type?.guid;
+    console.log("[DEBUG] [PieceMesh] piece.guid:", piece.guid, "piece.type:", piece.type, "typeRef:", typeRef, "resolvedType:", type?.guid, type?.name, "models:", type?.models?.length, "files:", files?.length);
+  }, [piece.guid, piece.type, type, files]);
+
   const { modelUrl, fileExtension, fileGuid, modelGuid, selectionReason } = useMemo(() => {
     if (!type?.models || type.models.length === 0) {
+      console.log("[DEBUG] [PieceMesh] No models for type:", type?.guid, type?.name, "type object:", type);
       return { modelUrl: null, fileExtension: "", fileGuid: null, modelGuid: null, selectionReason: "no-models" };
     }
 
@@ -52601,6 +52603,16 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         console.log(`[Type Test] Type properties section label visible: ${hasTypePropertiesSection}`);
         expect(hasTypePropertiesSection).toBe(true);
 
+        const connectorsRingControl = typeRightSidePanel.locator('[id="semio.sketchpad.app.type.panel.details.section.connectors.ring"]').first();
+        const connectorsRingLabel = typeRightSidePanel.locator('[id="semio.sketchpad.app.type.panel.details.section.connectors.ring-label"]').first();
+        const hasConnectorsRingControl = await connectorsRingControl.isVisible({ timeout: 5000 }).catch(() => false);
+        const hasConnectorsRingLabel = await connectorsRingLabel.isVisible({ timeout: 5000 }).catch(() => false);
+        const connectorsRingLabelText = hasConnectorsRingLabel ? ((await connectorsRingLabel.textContent()) ?? "").trim() : "";
+        console.log(`[Type Test] Connectors ring visible: ${hasConnectorsRingControl}, label visible: ${hasConnectorsRingLabel}, label text: ${connectorsRingLabelText}`);
+        expect(hasConnectorsRingControl).toBe(true);
+        expect(hasConnectorsRingLabel).toBe(true);
+        expect(connectorsRingLabelText).toBe("Ring");
+
         const firstConnectorItem = typeRightSidePanel.locator('[id="semio.sketchpad.app.type.connector"]').first();
         const hasFirstConnectorItem = await firstConnectorItem.isVisible({ timeout: 5000 }).catch(() => false);
         console.log(`[Type Test] Connector list item visible: ${hasFirstConnectorItem}`);
@@ -52613,6 +52625,16 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           const hasConnectorPropertiesSection = await connectorPropertiesSection.isVisible({ timeout: 5000 }).catch(() => false);
           console.log(`[Type Test] Connector properties section label visible: ${hasConnectorPropertiesSection}`);
           expect(hasConnectorPropertiesSection).toBe(true);
+
+          const connectorRingControl = typeRightSidePanel.locator('[id="semio.sketchpad.app.type.panel.details.section.connector.ring"]').first();
+          const connectorRingLabel = typeRightSidePanel.locator('[id="semio.sketchpad.app.type.panel.details.section.connector.ring-label"]').first();
+          const hasConnectorRingControl = await connectorRingControl.isVisible({ timeout: 5000 }).catch(() => false);
+          const hasConnectorRingLabel = await connectorRingLabel.isVisible({ timeout: 5000 }).catch(() => false);
+          const connectorRingLabelText = hasConnectorRingLabel ? ((await connectorRingLabel.textContent()) ?? "").trim() : "";
+          console.log(`[Type Test] Single connector ring visible: ${hasConnectorRingControl}, label visible: ${hasConnectorRingLabel}, label text: ${connectorRingLabelText}`);
+          expect(hasConnectorRingControl).toBe(true);
+          expect(hasConnectorRingLabel).toBe(true);
+          expect(connectorRingLabelText).toBe("Ring");
         }
       }
 

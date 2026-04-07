@@ -1,5 +1,13 @@
 
 
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------
+
 semio:
 Define a copyPiecesAndConnectionsInDesign(design:Design, pieces:Guid[], connections:Guid[], anchor: ["byMiddle", "byCentroid", "byBottomLeftCorner", "byBottomRightCorner", "byTopLeftCorner", "byTopRightCorner"]):Design function that:
 
@@ -16,7 +24,7 @@ if the piece is fixed, the new plane should be normalized first and then the off
 
 
 
-
+---------------------------------------------------------------------------------------------------
 
 
 

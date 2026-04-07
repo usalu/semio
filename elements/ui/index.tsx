@@ -3939,6 +3939,14 @@ const elementUiTranslationBundles = {
                     "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
                   },
+                  "ring": {
+                    "label": {
+                      "normal": "Ring",
+                      "beginner": "Position auf dem Diagrammring (0-1). Steuert, wo der Connector in der 2D-Diagrammansicht erscheint."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
                   "direction": {
                     "label": {
                       "normal": "",
@@ -3998,6 +4006,16 @@ const elementUiTranslationBundles = {
                       "manual": "type#connectors",
                       "tutorial": "hello-semio/model-brick-set"
                     }
+                  }
+                },
+                "connector": {
+                  "ring": {
+                    "label": {
+                      "normal": "Ring",
+                      "beginner": "Position auf dem Diagrammring (0-1). Steuert, wo der Connector in der 2D-Diagrammansicht erscheint."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
                   }
                 },
                 "attributes": {
@@ -8614,6 +8632,14 @@ const elementUiTranslationBundles = {
                     "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
                   },
+                  "ring": {
+                    "label": {
+                      "normal": "Ring",
+                      "beginner": "Position on the diagram ring (0-1). Controls where the connector appears in the 2D diagram view."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
                   "direction": {
                     "label": {
                       "normal": "",
@@ -8673,6 +8699,16 @@ const elementUiTranslationBundles = {
                       "manual": "type#connectors",
                       "tutorial": "hello-semio/model-brick-set"
                     }
+                  }
+                },
+                "connector": {
+                  "ring": {
+                    "label": {
+                      "normal": "Ring",
+                      "beginner": "Position on the diagram ring (0-1). Controls where the connector appears in the 2D diagram view."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
                   }
                 },
                 "attributes": {
@@ -13871,11 +13907,12 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
     <svg
       ref={svgRef}
       data-slot="ring"
+      data-detail-panel-control="fit"
       id={id}
       width={size}
       height={size}
       viewBox={`${-center} ${-center} ${size} ${size}`}
-      className={cn("touch-none select-none", className)}
+      className={cn("w-fit shrink-0 touch-none select-none", className)}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
@@ -21627,6 +21664,18 @@ if (treeVitest) {
       expect(toggleMarkup).toContain('data-slot="toggle-group"');
       expect(toggleMarkup).toContain('data-detail-panel-control="fit"');
       expect(toggleMarkup).toContain("w-fit shrink-0");
+    });
+
+    it("anchors ring controls to the shared property edge and exposes the ring label", () => {
+      const ringMarkup = renderToStaticMarkup(<Ring id="semio.sketchpad.app.type.panel.details.section.connector.ring" orbs={[{ id: "connector-1", t: 0.25, selected: true }]} showLabel />);
+
+      expect(ringMarkup).toContain('data-slot="property-control"');
+      expect(ringMarkup).toContain("justify-end");
+      expect(ringMarkup).toContain('data-slot="ring"');
+      expect(ringMarkup).toContain('data-detail-panel-control="fit"');
+      expect(ringMarkup).toContain("w-fit shrink-0");
+      expect(ringMarkup).toContain('id="semio.sketchpad.app.type.panel.details.section.connector.ring-label"');
+      expect(ringMarkup).toContain(">Ring<");
     });
 
     it("marks combobox and select triggers as fill-width detail controls", () => {
