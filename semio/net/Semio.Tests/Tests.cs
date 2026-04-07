@@ -1224,4 +1224,81 @@ public class Tests
 
     #endregion 🔖Hash
 
+    #region 🔖MaxChildren
+
+    public class MaxChildrenTests
+    {
+        [Fact]
+        public void Port_MaxChildren_Serialization_Roundtrip()
+        {
+            var port = new Port { Guid = "p1", Name = "TestPort", MaxChildren = 3 };
+            var json = Utility.Serialize(port);
+            var restored = Utility.Deserialize<Port>(json)!;
+            Assert.Equal(3, restored.MaxChildren);
+        }
+
+        [Fact]
+        public void PortDiff_MaxChildren_Null_Omitted()
+        {
+            var diff = new PortDiff { Guid = "p1", Name = "TestPort" };
+            var json = Utility.Serialize(diff);
+            Assert.DoesNotContain("maxChildren", json);
+        }
+
+        [Fact]
+        public void Connector_MaxChildren_Serialization_Roundtrip()
+        {
+            var connector = new Connector
+            {
+                Guid = "c1",
+                T = 0,
+                Point = new Point { X = 0, Y = 0, Z = 0 },
+                Direction = new Vector { X = 0, Y = 0, Z = 1 },
+                MaxChildren = 5,
+            };
+            var json = Utility.Serialize(connector);
+            var restored = Utility.Deserialize<Connector>(json)!;
+            Assert.Equal(5, restored.MaxChildren);
+        }
+
+        [Fact]
+        public void Kit_MaxChildren_Roundtrip()
+        {
+            var kit = new Kit
+            {
+                Guid = "kit-1",
+                Name = "TestKit",
+                Ports = new List<Port>
+                {
+                    new Port { Guid = "p1", Name = "Port1", MaxChildren = 3 },
+                },
+                Types = new List<Type>
+                {
+                    new Type
+                    {
+                        Guid = "t1",
+                        Name = "Type1",
+                        Connectors = new List<Connector>
+                        {
+                            new Connector
+                            {
+                                Guid = "c1",
+                                T = 0,
+                                Point = new Point { X = 0, Y = 0, Z = 0 },
+                                Direction = new Vector { X = 0, Y = 0, Z = 1 },
+                                MaxChildren = 5,
+                            },
+                        },
+                    },
+                },
+            };
+            var json = Utility.Serialize(kit);
+            var restored = Utility.Deserialize<Kit>(json)!;
+            Assert.Equal(3, restored.Ports![0].MaxChildren);
+            Assert.Equal(5, restored.Types![0].Connectors![0].MaxChildren);
+        }
+    }
+
+    #endregion 🔖MaxChildren
+
 }

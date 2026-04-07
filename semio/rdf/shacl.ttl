@@ -245,6 +245,13 @@ se:Connector
   sh:description "A connector is a 3d interface."@en ;
   sh:property
     [
+      sh:path se:maxChildren ;
+      sh:name "maxChildren"@en ;
+      sh:description "Maximum number of connections. Defaults to 1."@en ;
+      sh:maxCount 1 ;
+      sh:datatype xsd:integer ;
+    ] ,
+    [
       sh:path se:plane ;
       sh:name "plane"@en ;
       sh:description "The plane of the connector."@en ;

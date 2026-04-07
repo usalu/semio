@@ -42,6 +42,7 @@ module Semio
     :description,
     :port,
     :mandatory,
+    :max_children,
     :t,
     :compatible_ports,
     :point,

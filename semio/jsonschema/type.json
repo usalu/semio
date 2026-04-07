@@ -94,6 +94,13 @@
           "title": "Mandatory",
           "type": "boolean"
         },
+        "maxChildren": {
+          "default": 1,
+          "description": "\ud83d\udc76 The optional maximum number of children (connections) that can be connected to this connector. When set on both port and connector, the connector (more specific) wins.",
+          "minimum": 0,
+          "title": "Maxchildren",
+          "type": "integer"
+        },
         "port": {
           "default": "",
           "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional port of the connector. This allows to define explicit compatibility with other connectors.",

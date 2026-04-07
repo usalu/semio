@@ -2999,6 +2999,14 @@ class PortIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 
+class PortMaxChildrenField(RealField, abc.ABC):
+    """Field mixin for the max children of a port.
+    PortMaxChildrenField MUST declare exactly one field with appropriate constraints.
+    """
+
+    maxChildren: int = pydantic.Field(default=1, ge=0)
+
+
 class PortCompatiblePortsField(MaskedField, abc.ABC):
     """Field mixin for the compatible ports of a port.
     PortCompatiblePortsField MUST declare exactly one field with appropriate constraints.
@@ -3017,7 +3025,7 @@ class PortId(PortNameField, Id):
     pass
 
 
-class PortProps(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Props):
+class PortProps(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Props):
     """Property fields for a port.
     PortProps MUST contain all non-relational property fields.
     [👤semio📚py💻semio🔖domain🔖port🛠️portprops](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortProps)
@@ -3026,7 +3034,7 @@ class PortProps(PortCompatiblePortsField, PortIconField, PortDescriptionField, P
     pass
 
 
-class PortInput(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Input):
+class PortInput(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Input):
     """Input fields for creating or updating a port.
     PortInput MUST contain all fields required for creation.
     [👤semio📚py💻semio🔖domain🔖port🛠️portinput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortInput)
@@ -3035,7 +3043,7 @@ class PortInput(PortCompatiblePortsField, PortIconField, PortDescriptionField, P
     attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 
-class PortOutput(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Output):
+class PortOutput(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Output):
     """Output fields returned when fetching a port.
     PortOutput MUST contain all fields returned on fetch.
     [👤semio📚py💻semio🔖domain🔖port🛠️portoutput](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/PortOutput)
@@ -3044,7 +3052,7 @@ class PortOutput(PortCompatiblePortsField, PortIconField, PortDescriptionField, 
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 
-class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity):
+class Port(PortMaxChildrenField, PortIconField, PortDescriptionField, PortNameField, TableEntity):
     """Port entity defining a named connection interface on a type.
     Port MUST implement idMembers and inherit from the appropriate field mixins.
     [👤semio📚py💻semio🔖domain🔖port🛠️port](repo://p/u/semio/b/l/py/f/semio.py/s/Domain/s/Port/d/i/Port)
@@ -3132,6 +3140,14 @@ class ConnectorMandatoryField(RealField, abc.ABC):
     is_mandatory: bool = pydantic.Field(default=False)
 
 
+class ConnectorMaxChildrenField(RealField, abc.ABC):
+    """Field mixin for the max children of a connector.
+    ConnectorMaxChildrenField MUST declare exactly one field with appropriate constraints.
+    """
+
+    maxChildren: int = pydantic.Field(default=1, ge=0)
+
+
 class ConnectorPortField(RealField, abc.ABC):
     """Field mixin for the port of a connector.
     ConnectorPortField MUST declare exactly one field with appropriate constraints.
@@ -3190,6 +3206,7 @@ class ConnectorProps(
     ConnectorTField,
     ConnectorCompatiblePortsField,
     ConnectorPortField,
+    ConnectorMaxChildrenField,
     ConnectorMandatoryField,
     ConnectorDescriptionField,
     ConnectorIdField,
@@ -3207,6 +3224,7 @@ class ConnectorInput(
     ConnectorTField,
     ConnectorCompatiblePortsField,
     ConnectorPortField,
+    ConnectorMaxChildrenField,
     ConnectorMandatoryField,
     ConnectorDescriptionField,
     ConnectorIdField,
@@ -3228,6 +3246,7 @@ class ConnectorContext(
     ConnectorPointField,
     ConnectorCompatiblePortsField,
     ConnectorPortField,
+    ConnectorMaxChildrenField,
     ConnectorMandatoryField,
     ConnectorDescriptionField,
     ConnectorIdField,
@@ -3247,6 +3266,7 @@ class ConnectorOutput(
     ConnectorPointField,
     ConnectorCompatiblePortsField,
     ConnectorPortField,
+    ConnectorMaxChildrenField,
     ConnectorMandatoryField,
     ConnectorDescriptionField,
     ConnectorIdField,
@@ -3263,6 +3283,7 @@ class ConnectorOutput(
 class Connector(
     ConnectorTField,
     ConnectorPortField,
+    ConnectorMaxChildrenField,
     ConnectorMandatoryField,
     ConnectorDescriptionField,
     TableEntity,
@@ -5142,8 +5163,6 @@ class DesignImageField(RealField, abc.ABC):
     """
 
     image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
-
-
 
 
 class DesignParentField(RealField, abc.ABC):
@@ -18564,6 +18583,98 @@ class TestHash:
         h1 = hash_coord_diff(d)
         h2 = hash_coord_diff(d)
         assert h1 == h2
+
+
+class TestMaxChildren:
+    """Tests for maxChildren field on Port and Connector."""
+
+    def test_port_max_children_default(self):
+        port = PortProps(name="TestPort")
+        assert port.maxChildren == 1
+
+    def test_port_max_children_custom(self):
+        port = PortProps(name="TestPort", maxChildren=3)
+        assert port.maxChildren == 3
+
+    def test_port_max_children_serialization(self):
+        port = PortProps(name="TestPort", maxChildren=5)
+        data = port.model_dump(mode="json")
+        assert data["maxChildren"] == 5
+
+    def test_port_max_children_roundtrip(self):
+        port = PortInput(name="TestPort", maxChildren=3)
+        data = port.model_dump(mode="json")
+        restored = PortInput(**data)
+        assert restored.maxChildren == 3
+
+    def test_connector_max_children_default(self):
+        connector = ConnectorInput(
+            guid="c1",
+            t=0,
+            point=PointInput(x=0, y=0, z=0),
+            direction=VectorInput(x=0, y=0, z=1),
+        )
+        assert connector.maxChildren == 1
+
+    def test_connector_max_children_custom(self):
+        connector = ConnectorInput(
+            guid="c1",
+            t=0,
+            point=PointInput(x=0, y=0, z=0),
+            direction=VectorInput(x=0, y=0, z=1),
+            maxChildren=5,
+        )
+        assert connector.maxChildren == 5
+
+    def test_connector_max_children_serialization(self):
+        connector = ConnectorInput(
+            guid="c1",
+            t=0,
+            point=PointInput(x=0, y=0, z=0),
+            direction=VectorInput(x=0, y=0, z=1),
+            maxChildren=10,
+        )
+        data = connector.model_dump(mode="json")
+        assert data["maxChildren"] == 10
+
+    def test_connector_max_children_roundtrip(self):
+        connector = ConnectorInput(
+            guid="c1",
+            t=0,
+            point=PointInput(x=0, y=0, z=0),
+            direction=VectorInput(x=0, y=0, z=1),
+            maxChildren=7,
+        )
+        data = connector.model_dump(mode="json")
+        restored = ConnectorInput(**data)
+        assert restored.maxChildren == 7
+
+    def test_kit_max_children_json_roundtrip(self):
+        kit_dict = {
+            "guid": "kit-mc-1",
+            "name": "MaxChildrenKit",
+            "ports": [{"guid": "p1", "name": "Port1", "maxChildren": 3}],
+            "types": [
+                {
+                    "guid": "t1",
+                    "name": "Type1",
+                    "connectors": [
+                        {
+                            "guid": "c1",
+                            "t": 0,
+                            "point": {"x": 0, "y": 0, "z": 0},
+                            "direction": {"x": 0, "y": 0, "z": 1},
+                            "maxChildren": 5,
+                        }
+                    ],
+                }
+            ],
+        }
+        import json as _json
+
+        restored = _json.loads(_json.dumps(kit_dict))
+        assert restored["ports"][0]["maxChildren"] == 3
+        assert restored["types"][0]["connectors"][0]["maxChildren"] == 5
 
 
 # endregion Test

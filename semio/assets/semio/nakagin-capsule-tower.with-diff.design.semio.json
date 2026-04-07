@@ -42,6 +42,27 @@
           "guid": "semio.diffStatus.unchanged",
           "key": "semio.diffStatus",
           "value": "unchanged"
+        },
+        {
+          "guid": "semio.diffStatus.unchanged",
+          "key": "semio.plane",
+          "value": "plane": {
+            "xAxis": {
+              "y": 0,
+              "x": 1,
+              "z": 0
+            },
+            "origin": {
+              "y": 0,
+              "x": 0,
+              "z": 0
+            },
+            "yAxis": {
+              "y": 1,
+              "x": 0,
+              "z": 0
+            }
+          },
         }
       ]
     },

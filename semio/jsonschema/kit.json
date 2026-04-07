@@ -429,6 +429,13 @@
           "title": "Mandatory",
           "type": "boolean"
         },
+        "maxChildren": {
+          "default": 1,
+          "description": "\ud83d\udc76 The optional maximum number of children (connections) that can be connected to this connector. When set on both port and connector, the connector (more specific) wins.",
+          "minimum": 0,
+          "title": "Maxchildren",
+          "type": "integer"
+        },
         "port": {
           "anyOf": [
             {
@@ -561,6 +568,13 @@
           "title": "Compatibleports",
           "type": "array"
         },
+        "maxChildren": {
+          "default": 1,
+          "description": "\ud83d\udc76 The optional maximum number of children (connections) that can be connected to this port. Defaults to 1.",
+          "minimum": 0,
+          "title": "Maxchildren",
+          "type": "integer"
+        },
         "attributes": {
           "description": "\ud83d\udccf The attributes of the port.",
           "items": {
@@ -629,6 +643,13 @@
           },
           "title": "Compatibleports",
           "type": "array"
+        },
+        "maxChildren": {
+          "default": 1,
+          "description": "\ud83d\udc76 The optional maximum number of children (connections) that can be connected to this port. Defaults to 1.",
+          "minimum": 0,
+          "title": "Maxchildren",
+          "type": "integer"
         },
         "attributes": {
           "description": "\ud83d\udccf The attributes of the port.",

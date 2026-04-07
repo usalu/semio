@@ -407,7 +407,7 @@ pub struct TagState { pub tag_id: Uuid, pub name: String, pub description: Optio
 pub struct ConceptState { pub concept_id: Uuid, pub name: String, pub description: Option<String>, pub icon: Option<String>, pub lifecycle: Lifecycle }
 
 #[derive(Debug, Clone)]
-pub struct PortState { pub port_id: Uuid, pub name: String, pub description: Option<String>, pub icon: Option<String>, pub compatible_port_ids: Vec<Uuid>, pub lifecycle: Lifecycle }
+pub struct PortState { pub port_id: Uuid, pub name: String, pub description: Option<String>, pub icon: Option<String>, pub max_children: Option<i32>, pub compatible_port_ids: Vec<Uuid>, pub lifecycle: Lifecycle }
 
 #[derive(Debug, Clone)]
 pub struct QualityState { pub quality_id: Uuid, pub key: String, pub name: String, pub description: Option<String>, pub icon: Option<String>, pub unit: Option<String>, pub lifecycle: Lifecycle }
@@ -427,7 +427,7 @@ pub struct ConnectorState {
     pub connector_id: Uuid, pub name: Option<String>, pub t: f64,
     pub point: [f64; 3], pub direction: [f64; 3],
     pub description: Option<String>, pub port_id: Option<Uuid>,
-    pub mandatory: Option<bool>, pub lifecycle: Lifecycle,
+    pub mandatory: Option<bool>, pub max_children: Option<i32>, pub lifecycle: Lifecycle,
 }
 
 #[derive(Debug, Clone)]
@@ -678,7 +678,7 @@ async fn create_core_concept(pool: &PgPool) {
 
 async fn create_core_port(pool: &PgPool) {
     exec(pool, "CREATE TABLE IF NOT EXISTS core.port (
-        session_id UUID NOT NULL, port_id UUID NOT NULL, name TEXT NOT NULL, description TEXT, icon TEXT,
+        session_id UUID NOT NULL, port_id UUID NOT NULL, name TEXT NOT NULL, description TEXT, icon TEXT, max_children INTEGER,
         lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, port_id)
     )", "core.port").await;
     exec(pool, "CREATE TABLE IF NOT EXISTS core.port_compatibility (
@@ -712,7 +712,7 @@ async fn create_core_connector(pool: &PgPool) {
         point_z DOUBLE PRECISION NOT NULL DEFAULT 0,
         direction_x DOUBLE PRECISION NOT NULL DEFAULT 0, direction_y DOUBLE PRECISION NOT NULL DEFAULT 0,
         direction_z DOUBLE PRECISION NOT NULL DEFAULT 1,
-        description TEXT, port_id UUID, mandatory BOOLEAN,
+        description TEXT, port_id UUID, mandatory BOOLEAN, max_children INTEGER,
         lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, connector_id)
     )", "core.connector").await;
 }
@@ -988,10 +988,10 @@ async fn load_concepts(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, Concep
 }
 
 async fn load_ports(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, PortState>, SessionError> {
-    let rows = sqlx_core::query_as::query_as::<_, (Uuid, String, Option<String>, Option<String>)>(
-        "SELECT port_id, name, description, icon FROM core.port WHERE session_id = $1 AND lifecycle = 'active'"
+    let rows = sqlx_core::query_as::query_as::<_, (Uuid, String, Option<String>, Option<String>, Option<i32>)>(
+        "SELECT port_id, name, description, icon, max_children FROM core.port WHERE session_id = $1 AND lifecycle = 'active'"
     ).bind(sid).fetch_all(pool).await?;
-    Ok(rows.into_iter().map(|r| (r.0, PortState { port_id: r.0, name: r.1, description: r.2, icon: r.3, compatible_port_ids: vec![], lifecycle: Lifecycle::Active })).collect())
+    Ok(rows.into_iter().map(|r| (r.0, PortState { port_id: r.0, name: r.1, description: r.2, icon: r.3, max_children: r.4, compatible_port_ids: vec![], lifecycle: Lifecycle::Active })).collect())
 }
 
 async fn load_qualities(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, QualityState>, SessionError> {
@@ -2279,7 +2279,7 @@ use super::*;
         ts.connectors.insert(cid, ConnectorState {
             connector_id: cid, name: Some("top".into()), t: 0.5,
             point: [0.0, 0.0, 1.0], direction: [0.0, 0.0, 1.0],
-            description: None, port_id: None, mandatory: Some(true), lifecycle: Lifecycle::Active,
+            description: None, port_id: None, mandatory: Some(true), max_children: None, lifecycle: Lifecycle::Active,
         });
         assert_eq!(ts.connectors.len(), 1);
     }

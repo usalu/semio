@@ -485,6 +485,7 @@ type Port {
   name: String!
   description: String
   icon: String
+  maxChildren: Int
   compatiblePorts: [PortId!]
   attributes: [Attribute!]
 }
@@ -494,6 +495,7 @@ type PortMeta {
   name: String!
   description: String
   icon: String
+  maxChildren: Int
 }
 
 type PortShallow {
@@ -501,6 +503,7 @@ type PortShallow {
   name: String!
   description: String
   icon: String
+  maxChildren: Int
   compatiblePorts: [PortId!]
   attributes: [Attribute!]
 }
@@ -510,6 +513,7 @@ type PortDiff {
   name: String
   description: String
   icon: String
+  maxChildren: Int
   compatiblePorts: [PortId!]
   attributes: AttributesDiff
 }
@@ -705,6 +709,7 @@ type Connector {
   description: String
   port: PortId
   mandatory: Boolean
+  maxChildren: Int
   props: [Prop!]
   attributes: [Attribute!]
 }
@@ -718,6 +723,7 @@ type ConnectorMeta {
   description: String
   port: PortId
   mandatory: Boolean
+  maxChildren: Int
 }
 
 type ConnectorShallow {
@@ -729,6 +735,7 @@ type ConnectorShallow {
   description: String
   port: PortId
   mandatory: Boolean
+  maxChildren: Int
   props: [PropMeta!]
   attributes: [AttributeMeta!]
 }
@@ -742,6 +749,7 @@ type ConnectorDiff {
   description: String
   port: PortId
   mandatory: Boolean
+  maxChildren: Int
   props: PropsDiff
   attributes: AttributesDiff
 }

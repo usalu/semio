@@ -63,6 +63,7 @@ CREATE TABLE port (
 	name VARCHAR(256) NOT NULL,
 	description TEXT,
 	icon TEXT,
+	max_children INTEGER,
 	kit_guid VARCHAR(36) NOT NULL,
 	PRIMARY KEY (guid),
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
@@ -198,6 +199,7 @@ CREATE TABLE connector (
 	t FLOAT NOT NULL,
 	mandatory BOOLEAN NOT NULL DEFAULT 0,
 	port_guid VARCHAR(36),
+	max_children INTEGER,
 	description TEXT,
 	type_guid VARCHAR(36) NOT NULL,
 	row_id INTEGER PRIMARY KEY AUTOINCREMENT,

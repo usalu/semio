@@ -206,6 +206,8 @@ type Connector {
     id_?: string;
     # 🗺️ The locators of the connector.
     locators?: Locator[];
+    # 🔢 The optional maximum number of children (connections) that can be connected. Defaults to 1.
+    maxChildren?: number;
     # ✖️ The connection point of the connector that is attracted to another connection point.
     point: Point;
 }

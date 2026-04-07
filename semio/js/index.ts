@@ -1706,7 +1706,7 @@ export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDif
 };
 /**
  * Diff type for tracking applyCamera changes.
-   *
+ *
  * [👤semio📚js💻semio🔖cameraweakentity🪨applycameradiff](repo://p/u/semio/b/l/js/f/semio.ts/s/Camera%20(weak%20entity)/d/i/applyCameraDiff)
  **/
 export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
@@ -2712,6 +2712,7 @@ export const PortSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   icon: z.string().optional(),
+  maxChildren: z.number().int().optional(),
   compatiblePorts: z.array(PortIdSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
@@ -2783,6 +2784,7 @@ export const PortDiffSchema = PortSchema.partial()
     attributes: AttributesDiffSchema.optional(),
     description: z.string().nullable().optional(),
     icon: z.string().nullable().optional(),
+    maxChildren: z.number().int().nullable().optional(),
   });
 /**
  * Diff type for tracking Port changes.
@@ -2799,6 +2801,7 @@ export const getPortDiff = (before: Port, after: Port): PortDiff => {
   if (before.name !== after.name) diff.name = after.name;
   if (before.description !== after.description) diff.description = after.description ?? null;
   if (before.icon !== after.icon) diff.icon = after.icon ?? null;
+  if (before.maxChildren !== after.maxChildren) diff.maxChildren = after.maxChildren ?? null;
   if (JSON.stringify(before.compatiblePorts) !== JSON.stringify(after.compatiblePorts)) diff.compatiblePorts = after.compatiblePorts;
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
@@ -2812,6 +2815,7 @@ export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff
   if (appliedDiff.name !== undefined) inverse.name = original.name;
   if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
   if (appliedDiff.icon !== undefined) inverse.icon = original.icon ?? null;
+  if (appliedDiff.maxChildren !== undefined) inverse.maxChildren = original.maxChildren ?? null;
   if (appliedDiff.compatiblePorts !== undefined) inverse.compatiblePorts = original.compatiblePorts;
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
@@ -2848,6 +2852,11 @@ export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
     if (diff.icon !== null) result.icon = diff.icon;
   } else if (base.icon !== undefined) {
     result.icon = base.icon;
+  }
+  if ("maxChildren" in diff) {
+    if (diff.maxChildren !== null) result.maxChildren = diff.maxChildren;
+  } else if (base.maxChildren !== undefined) {
+    result.maxChildren = base.maxChildren;
   }
   if (diff.compatiblePorts !== undefined || base.compatiblePorts !== undefined) result.compatiblePorts = diff.compatiblePorts ?? base.compatiblePorts;
   if (attributes && attributes.length > 0) result.attributes = attributes;
@@ -4046,6 +4055,7 @@ export const ConnectorSchema = z.object({
   description: z.string().optional(),
   port: PortIdSchema.optional(),
   mandatory: z.boolean().optional(),
+  maxChildren: z.number().int().optional(),
   props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
@@ -4115,6 +4125,7 @@ export const ConnectorDiffSchema = ConnectorSchema.partial().omit({ point: true,
   direction: VectorDiffSchema.optional(),
   props: PropsDiffSchema.optional(),
   attributes: AttributesDiffSchema.optional(),
+  maxChildren: z.number().int().nullable().optional(),
 });
 /**
  * Diff type for tracking Connector changes.
@@ -4132,6 +4143,7 @@ export const getConnectorDiff = (before: Connector, after: Connector): Connector
   if (before.description !== after.description) diff.description = after.description;
   if (before.port?.guid !== after.port?.guid) diff.port = after.port;
   if (before.mandatory !== after.mandatory) diff.mandatory = after.mandatory;
+  if (before.maxChildren !== after.maxChildren) diff.maxChildren = after.maxChildren ?? null;
   if (before.t !== after.t) diff.t = after.t;
   if (!deepEqual(before.point, after.point)) diff.point = getPointDiff(before.point, after.point);
   if (!deepEqual(before.direction, after.direction)) diff.direction = getVectorDiff(before.direction, after.direction);
@@ -4163,6 +4175,7 @@ export const inverseConnectorDiff = (original: Connector, appliedDiff: Connector
   if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.port !== undefined) inverse.port = original.port;
   if (appliedDiff.mandatory !== undefined) inverse.mandatory = original.mandatory;
+  if (appliedDiff.maxChildren !== undefined) inverse.maxChildren = original.maxChildren ?? null;
   if (appliedDiff.t !== undefined) inverse.t = original.t;
   if (appliedDiff.point !== undefined) inverse.point = inversePointDiff(original.point, appliedDiff.point);
   if (appliedDiff.direction !== undefined) inverse.direction = inverseVectorDiff(original.direction, appliedDiff.direction);
@@ -4189,6 +4202,11 @@ export const applyConnectorDiff = (base: Connector, diff: ConnectorDiff): Connec
   if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
   if (diff.port !== undefined || base.port !== undefined) result.port = diff.port ?? base.port;
   if (diff.mandatory !== undefined || base.mandatory !== undefined) result.mandatory = diff.mandatory ?? base.mandatory;
+  if ("maxChildren" in diff) {
+    if (diff.maxChildren !== null) result.maxChildren = diff.maxChildren;
+  } else if (base.maxChildren !== undefined) {
+    result.maxChildren = base.maxChildren;
+  }
   if (props && props.length > 0) result.props = props;
   if (attributes && attributes.length > 0) result.attributes = attributes;
 
@@ -10120,7 +10138,6 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
 
   return { updated };
 };
-
 
 // #region 🔖File Tree Utilities
 // [👤semio📚js💻semio🔖kit🔖filetreeutilities](repo://p/u/semio/b/l/js/f/semio.ts/s/Kit/s/File%20Tree%20Utilities)
@@ -16849,6 +16866,192 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     });
   });
   // #endregion 🔖Hash Tests
+  // #region 🔖MaxChildren Tests
+  describe("MaxChildren", () => {
+    describe("Port", () => {
+      it("Port schema accepts maxChildren", () => {
+        const port: Port = { guid: "p1", name: "TestPort", maxChildren: 3 };
+        const parsed = PortSchema.parse(port);
+        expect(parsed.maxChildren).toBe(3);
+      });
+
+      it("Port schema allows omitting maxChildren", () => {
+        const port: Port = { guid: "p1", name: "TestPort" };
+        const parsed = PortSchema.parse(port);
+        expect(parsed.maxChildren).toBeUndefined();
+      });
+
+      it("Port diff detects maxChildren change", () => {
+        const before: Port = { guid: "p1", name: "TestPort", maxChildren: 1 };
+        const after: Port = { guid: "p1", name: "TestPort", maxChildren: 5 };
+        const diff = getPortDiff(before, after);
+        expect(diff.maxChildren).toBe(5);
+      });
+
+      it("Port diff detects maxChildren removal", () => {
+        const before: Port = { guid: "p1", name: "TestPort", maxChildren: 3 };
+        const after: Port = { guid: "p1", name: "TestPort" };
+        const diff = getPortDiff(before, after);
+        expect(diff.maxChildren).toBeNull();
+      });
+
+      it("Port diff ignores unchanged maxChildren", () => {
+        const before: Port = { guid: "p1", name: "TestPort", maxChildren: 2 };
+        const after: Port = { guid: "p1", name: "TestPort", maxChildren: 2 };
+        const diff = getPortDiff(before, after);
+        expect(diff.maxChildren).toBeUndefined();
+      });
+
+      it("Port apply diff sets maxChildren", () => {
+        const base: Port = { guid: "p1", name: "TestPort" };
+        const diff: PortDiff = { maxChildren: 4 };
+        const result = applyPortDiff(base, diff);
+        expect(result.maxChildren).toBe(4);
+      });
+
+      it("Port apply diff removes maxChildren with null", () => {
+        const base: Port = { guid: "p1", name: "TestPort", maxChildren: 3 };
+        const diff: PortDiff = { maxChildren: null };
+        const result = applyPortDiff(base, diff);
+        expect(result.maxChildren).toBeUndefined();
+      });
+
+      it("Port inverse diff restores maxChildren", () => {
+        const original: Port = { guid: "p1", name: "TestPort", maxChildren: 2 };
+        const diff: PortDiff = { maxChildren: 5 };
+        const inverse = inversePortDiff(original, diff);
+        expect(inverse.maxChildren).toBe(2);
+      });
+    });
+
+    describe("Connector", () => {
+      it("Connector schema accepts maxChildren", () => {
+        const connector: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 3 };
+        const parsed = ConnectorSchema.parse(connector);
+        expect(parsed.maxChildren).toBe(3);
+      });
+
+      it("Connector schema allows omitting maxChildren", () => {
+        const connector: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 } };
+        const parsed = ConnectorSchema.parse(connector);
+        expect(parsed.maxChildren).toBeUndefined();
+      });
+
+      it("Connector diff detects maxChildren change", () => {
+        const before: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 1 };
+        const after: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 5 };
+        const diff = getConnectorDiff(before, after);
+        expect(diff.maxChildren).toBe(5);
+      });
+
+      it("Connector diff detects maxChildren removal", () => {
+        const before: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 3 };
+        const after: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 } };
+        const diff = getConnectorDiff(before, after);
+        expect(diff.maxChildren).toBeNull();
+      });
+
+      it("Connector apply diff sets maxChildren", () => {
+        const base: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 } };
+        const diff: ConnectorDiff = { maxChildren: 4 };
+        const result = applyConnectorDiff(base, diff);
+        expect(result.maxChildren).toBe(4);
+      });
+
+      it("Connector apply diff removes maxChildren with null", () => {
+        const base: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 3 };
+        const diff: ConnectorDiff = { maxChildren: null };
+        const result = applyConnectorDiff(base, diff);
+        expect(result.maxChildren).toBeUndefined();
+      });
+
+      it("Connector inverse diff restores maxChildren", () => {
+        const original: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 2 };
+        const diff: ConnectorDiff = { maxChildren: 5 };
+        const inverse = inverseConnectorDiff(original, diff);
+        expect(inverse.maxChildren).toBe(2);
+      });
+    });
+
+    describe("Kit Roundtrip", () => {
+      it("Kit with maxChildren roundtrips through JSON", () => {
+        const kit: Kit = {
+          guid: "kit-1",
+          name: "TestKit",
+          ports: [{ guid: "p1", name: "Port1", maxChildren: 3 }],
+          types: [
+            {
+              guid: "t1",
+              name: "Type1",
+              connectors: [
+                {
+                  guid: "c1",
+                  t: 0,
+                  point: { x: 0, y: 0, z: 0 },
+                  direction: { x: 0, y: 0, z: 1 },
+                  maxChildren: 5,
+                },
+              ],
+            },
+          ],
+        };
+        const serialized = serializeKit(kit);
+        const deserialized = deserializeKit(serialized);
+        expect(deserialized.ports![0].maxChildren).toBe(3);
+        expect(deserialized.types![0].connectors![0].maxChildren).toBe(5);
+      });
+
+      it("Kit diff captures maxChildren changes on both port and connector", () => {
+        const before: Kit = {
+          guid: "kit-1",
+          name: "TestKit",
+          ports: [{ guid: "p1", name: "Port1", maxChildren: 1 }],
+          types: [
+            {
+              guid: "t1",
+              name: "Type1",
+              connectors: [
+                {
+                  guid: "c1",
+                  t: 0,
+                  point: { x: 0, y: 0, z: 0 },
+                  direction: { x: 0, y: 0, z: 1 },
+                  maxChildren: 1,
+                },
+              ],
+            },
+          ],
+        };
+        const after: Kit = {
+          guid: "kit-1",
+          name: "TestKit",
+          ports: [{ guid: "p1", name: "Port1", maxChildren: 10 }],
+          types: [
+            {
+              guid: "t1",
+              name: "Type1",
+              connectors: [
+                {
+                  guid: "c1",
+                  t: 0,
+                  point: { x: 0, y: 0, z: 0 },
+                  direction: { x: 0, y: 0, z: 1 },
+                  maxChildren: 20,
+                },
+              ],
+            },
+          ],
+        };
+        const diff = getKitDiff(before, after);
+        expect(diff.ports?.updated?.[0]?.diff.maxChildren).toBe(10);
+        expect(diff.types?.updated?.[0]?.diff.connectors?.updated?.[0]?.diff.maxChildren).toBe(20);
+        const applied = applyKitDiff(before, diff);
+        expect(applied.ports![0].maxChildren).toBe(10);
+        expect(applied.types![0].connectors![0].maxChildren).toBe(20);
+      });
+    });
+  });
+  // #endregion 🔖MaxChildren Tests
 } // end vitest guard
 // #endregion 🔖Tests
 

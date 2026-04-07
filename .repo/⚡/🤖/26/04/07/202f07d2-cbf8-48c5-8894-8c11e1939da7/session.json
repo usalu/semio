@@ -1,0 +1,50 @@
+{
+  "id": "202f07d2-cbf8-48c5-8894-8c11e1939da7",
+  "uri": "repo://session/202f07d2-cbf8-48c5-8894-8c11e1939da7",
+  "client": "claude-code",
+  "second": "2026-04-07T08:41:47Z",
+  "checkpoint": "677b4501aab9c3b619e9871bc427fe6da57c79cd",
+  "contributor": "unknown",
+  "transcript": "/home/vscode/.claude/projects/-workspaces-semio/202f07d2-cbf8-48c5-8894-8c11e1939da7.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "677b4501aab9c3b619e9871bc427fe6da57c79cd",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-07T08:41:47Z",
+        "session": "202f07d2-cbf8-48c5-8894-8c11e1939da7",
+        "transcript": "/home/vscode/.claude/projects/-workspaces-semio/202f07d2-cbf8-48c5-8894-8c11e1939da7.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "202f07d2-cbf8-48c5-8894-8c11e1939da7",
+          "transcript_path": "/home/vscode/.claude/projects/-workspaces-semio/202f07d2-cbf8-48c5-8894-8c11e1939da7.jsonl",
+          "cwd": "/workspaces/semio",
+          "permission_mode": "default",
+          "hook_event_name": "PermissionRequest",
+          "tool_name": "Bash",
+          "tool_input": {
+            "command": "ls /tmp/mcp-ext-apps/src/ 2\u003e/dev/null \u0026\u0026 echo \"EXISTS\" || echo \"NOT FOUND\"",
+            "description": "Check if SDK source is available"
+          },
+          "permission_suggestions": [
+            {
+              "type": "addRules",
+              "rules": [
+                {
+                  "toolName": "Read",
+                  "ruleContent": "//tmp/mcp-ext-apps/src/**"
+                }
+              ],
+              "behavior": "allow",
+              "destination": "session"
+            }
+          ]
+        }
+      },
+      "response": {}
+    }
+  ]
+}

@@ -108,6 +108,7 @@ export interface KitPortArtifact {
   name: string;
   description?: string;
   icon?: string;
+  maxChildren?: number;
 }
 
 /** Flattened type {@link Connector} rows for browsing (nested under kinds in the hierarchy). */
@@ -119,6 +120,7 @@ export interface KitConnectorArtifact {
   name?: string;
   description?: string;
   mandatory?: boolean;
+  maxChildren?: number;
 }
 
 export interface KitDesignData extends Pick<Design, "guid" | "name" | "description" | "createdAt" | "updatedAt" | "unit" | "icon" | "image"> {
@@ -236,6 +238,7 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
     name: p.name,
     description: p.description,
     icon: p.icon,
+    maxChildren: p.maxChildren,
   }));
   const connectors: KitConnectorArtifact[] = (kit.types ?? []).flatMap((t) =>
     (t.connectors ?? []).map((c) => ({
@@ -246,6 +249,7 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
       name: c.name || getReferenceLabel(c.port) || "connector",
       description: c.description,
       mandatory: c.mandatory,
+      maxChildren: c.maxChildren,
     })),
   );
   return {
@@ -295,10 +299,7 @@ const addKitMetaEntry = (entries: Array<{ label: string; value: string }>, label
 
 const getKitArtifactHref = (value: Partial<KitData & KitDesignData & KitKindData>): string | undefined => value.image ?? value.icon ?? value.preview ?? value.homepage ?? value.remote;
 
-const buildKitHierarchy = (
-  data: KitData,
-  options: { designDataEnabled: boolean; typeDataEnabled: boolean; portDataEnabled: boolean; connectorDataEnabled: boolean },
-): KitHierarchy => {
+const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean; typeDataEnabled: boolean; portDataEnabled: boolean; connectorDataEnabled: boolean }): KitHierarchy => {
   const rootKey = "scope:kit";
   const kitKey = "kit:root";
   const designGroupKey = "group:designs";
@@ -697,16 +698,7 @@ export const SemioKit: React.FC<KitProps> = ({
     if (portDataEnabled) parts.push(`${effectiveKitPorts.length} ports`);
     if (connectorDataEnabled) parts.push(`${effectiveConnectors.length} connectors`);
     return parts.join(" · ");
-  }, [
-    connectorDataEnabled,
-    designDataEnabled,
-    effectiveConnectors.length,
-    effectiveDesigns.length,
-    effectiveKitPorts.length,
-    effectiveTypes.length,
-    portDataEnabled,
-    typeDataEnabled,
-  ]);
+  }, [connectorDataEnabled, designDataEnabled, effectiveConnectors.length, effectiveDesigns.length, effectiveKitPorts.length, effectiveTypes.length, portDataEnabled, typeDataEnabled]);
 
   const hierarchy = React.useMemo(
     () =>
@@ -725,17 +717,7 @@ export const SemioKit: React.FC<KitProps> = ({
           connectorDataEnabled,
         },
       ),
-    [
-      connectorDataEnabled,
-      designDataEnabled,
-      effectiveConnectors,
-      effectiveData,
-      effectiveDesigns,
-      effectiveKitPorts,
-      effectiveTypes,
-      portDataEnabled,
-      typeDataEnabled,
-    ],
+    [connectorDataEnabled, designDataEnabled, effectiveConnectors, effectiveData, effectiveDesigns, effectiveKitPorts, effectiveTypes, portDataEnabled, typeDataEnabled],
   );
 
   const selectedNodeKey = React.useMemo(() => getSelectedKitNodeKey(hierarchy, resolvedSelection), [hierarchy, resolvedSelection]);
@@ -767,15 +749,7 @@ export const SemioKit: React.FC<KitProps> = ({
       if (node.kind === "connector" && !connectorSelectionEnabled) return;
       setNextSelection(getKitNodeSelection(node));
     },
-    [
-      connectorSelectionEnabled,
-      designSelectionEnabled,
-      effectiveSelectionEnabled,
-      hierarchy.nodesByKey,
-      portSelectionEnabled,
-      setNextSelection,
-      typeSelectionEnabled,
-    ],
+    [connectorSelectionEnabled, designSelectionEnabled, effectiveSelectionEnabled, hierarchy.nodesByKey, portSelectionEnabled, setNextSelection, typeSelectionEnabled],
   );
 
   const breadcrumbItems = React.useMemo(() => {
@@ -1468,10 +1442,10 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
               onClick={
                 onConnectionClick || effectiveConnectionSelectionEnabled
                   ? (event) => {
-                    event.stopPropagation();
-                    selectConnection(line.guid);
-                    onConnectionClick?.(line.connection);
-                  }
+                      event.stopPropagation();
+                      selectConnection(line.guid);
+                      onConnectionClick?.(line.connection);
+                    }
                   : undefined
               }
               pointerEvents="stroke"
@@ -1501,10 +1475,10 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
               onClick={
                 onPieceClick || effectivePieceSelectionEnabled
                   ? (event) => {
-                    event.stopPropagation();
-                    selectPiece(point.guid);
-                    onPieceClick?.(point.piece);
-                  }
+                      event.stopPropagation();
+                      selectPiece(point.guid);
+                      onPieceClick?.(point.piece);
+                    }
                   : undefined
               }
               onPointerEnter={effectivePieceHoverEnabled ? () => setHoveredPiece(point.guid) : undefined}
@@ -1556,8 +1530,8 @@ export const PieceSelection: React.FC<PieceSelectionProps> = ({ selection, defau
       onSelectionChange={
         onSelectionChange
           ? (next) => {
-            onSelectionChange({ pieceGuids: next.pieceGuids ?? [] });
-          }
+              onSelectionChange({ pieceGuids: next.pieceGuids ?? [] });
+            }
           : undefined
       }
     />
@@ -1594,8 +1568,8 @@ export const ConnectionSelection: React.FC<ConnectionSelectionProps> = ({ select
       onSelectionChange={
         onSelectionChange
           ? (next) => {
-            onSelectionChange({ connectionGuids: next.connectionGuids ?? [] });
-          }
+              onSelectionChange({ connectionGuids: next.connectionGuids ?? [] });
+            }
           : undefined
       }
     />
@@ -2100,30 +2074,29 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
   console.debug(`[DEBUG] buildScenePieceAssets: kit.types=${kit.types?.length ?? 0} kit.files=${kit.files?.length ?? 0} pieces=${pieces.length}`);
   const withPlaneAndCenter = pieces.filter(({ piece }) => piece.plane && piece.center);
   console.debug(`[DEBUG] buildScenePieceAssets: pieces with plane+center=${withPlaneAndCenter.length}`);
-  const result = withPlaneAndCenter
-    .map(({ piece, status }) => {
-      const kindGuid = piece.type?.guid;
-      const kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
-      let file: SemioFile | undefined;
-      let selectedModel = kind?.models?.length ? selectBestModel(kind.models, []) : undefined;
-      if (selectedModel?.file?.guid) file = filesByGuid.get(selectedModel.file.guid);
-      if (!isSceneGltfSource(getSceneFileSource(file), file?.name) && kind?.models?.length) {
-        for (const m of kind.models) {
-          const f = m.file?.guid ? filesByGuid.get(m.file.guid) : undefined;
-          if (f && isSceneGltfSource(getSceneFileSource(f), f.name)) {
-            selectedModel = m;
-            file = f;
-            break;
-          }
+  const result = withPlaneAndCenter.map(({ piece, status }) => {
+    const kindGuid = piece.type?.guid;
+    const kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
+    let file: SemioFile | undefined;
+    let selectedModel = kind?.models?.length ? selectBestModel(kind.models, []) : undefined;
+    if (selectedModel?.file?.guid) file = filesByGuid.get(selectedModel.file.guid);
+    if (!isSceneGltfSource(getSceneFileSource(file), file?.name) && kind?.models?.length) {
+      for (const m of kind.models) {
+        const f = m.file?.guid ? filesByGuid.get(m.file.guid) : undefined;
+        if (f && isSceneGltfSource(getSceneFileSource(f), f.name)) {
+          selectedModel = m;
+          file = f;
+          break;
         }
       }
-      return {
-        piece,
-        status,
-        modelName: file?.name,
-        modelSource: getSceneFileSource(file),
-      };
-    });
+    }
+    return {
+      piece,
+      status,
+      modelName: file?.name,
+      modelSource: getSceneFileSource(file),
+    };
+  });
   const withModel = result.filter((a) => a.modelSource);
   console.debug(`[DEBUG] buildScenePieceAssets: assets with modelSource=${withModel.length}/${result.length} first=${withModel[0]?.modelSource?.slice(0, 80)}`);
   return result;
@@ -2253,9 +2226,9 @@ const getSceneModelColorState = (status: DiagramEntityStatus, isSelected: boolea
   const hoveredColor = isHovered ? resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa") : null;
 
   return {
-    meshColor: isSelected ? selectedColor ?? baseColor : isHovered ? hoveredColor ?? baseColor : baseColor,
-    lineColor: isSelected ? selectedColor ?? baseColor : isHovered ? hoveredColor ?? baseColor : baseColor,
-    emissiveColor: isSelected ? selectedColor ?? baseColor : isHovered ? hoveredColor ?? baseColor : isDiffed ? baseColor : undefined,
+    meshColor: isSelected ? (selectedColor ?? baseColor) : isHovered ? (hoveredColor ?? baseColor) : baseColor,
+    lineColor: isSelected ? (selectedColor ?? baseColor) : isHovered ? (hoveredColor ?? baseColor) : baseColor,
+    emissiveColor: isSelected ? (selectedColor ?? baseColor) : isHovered ? (hoveredColor ?? baseColor) : isDiffed ? baseColor : undefined,
     emissiveIntensity: isSelected ? 0.35 : isHovered ? 0.15 : isDiffed ? 0.4 : 0,
     opacity: isRemoved ? 0.35 : 1,
   };
@@ -2317,23 +2290,23 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
 
   const handleClick = onClick
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onClick();
-    }
+        event.stopPropagation();
+        onClick();
+      }
     : undefined;
 
   const handlePointerEnter = onPointerEnter
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onPointerEnter();
-    }
+        event.stopPropagation();
+        onPointerEnter();
+      }
     : undefined;
 
   const handlePointerLeave = onPointerLeave
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onPointerLeave();
-    }
+        event.stopPropagation();
+        onPointerLeave();
+      }
     : undefined;
 
   return (
@@ -2391,23 +2364,23 @@ const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePie
 
   const handleClick = onClick
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onClick();
-    }
+        event.stopPropagation();
+        onClick();
+      }
     : undefined;
 
   const handlePointerEnter = onPointerEnter
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onPointerEnter();
-    }
+        event.stopPropagation();
+        onPointerEnter();
+      }
     : undefined;
 
   const handlePointerLeave = onPointerLeave
     ? (event: { stopPropagation: () => void }) => {
-      event.stopPropagation();
-      onPointerLeave();
-    }
+        event.stopPropagation();
+        onPointerLeave();
+      }
     : undefined;
 
   return (
@@ -2720,9 +2693,9 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
               onClick={
                 effectiveConnectionSelectionEnabled || onConnectionClick
                   ? () => {
-                    handleSelectConnection(connection.guid);
-                    onConnectionClick?.(connection);
-                  }
+                      handleSelectConnection(connection.guid);
+                      onConnectionClick?.(connection);
+                    }
                   : undefined
               }
               onPointerEnter={effectiveConnectionHoverEnabled ? () => handleHoverConnection(connection.guid) : undefined}
@@ -2741,9 +2714,9 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
               onClick={
                 effectivePieceSelectionEnabled || onPieceClick
                   ? () => {
-                    handleSelectPiece(piece.guid);
-                    onPieceClick?.(piece);
-                  }
+                      handleSelectPiece(piece.guid);
+                      onPieceClick?.(piece);
+                    }
                   : undefined
               }
               onPointerEnter={effectivePieceHoverEnabled ? () => handleHoverPiece(piece.guid) : undefined}
@@ -3416,7 +3389,7 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
   const kit = p.kit;
   const design = p.design as Design | undefined;
   const isDiff = mode === "show-diff" || mode === "show-diagram-diff";
-  const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface, isDiff ? p.designDiff : undefined) : (isDiff && design && p.designDiff ? designWithDiff(design, p.designDiff) : undefined);
+  const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface, isDiff ? p.designDiff : undefined) : isDiff && design && p.designDiff ? designWithDiff(design, p.designDiff) : undefined;
   const designGuid = design && typeof design === "object" && "guid" in design && typeof (design as { guid?: unknown }).guid === "string" ? (design as { guid: string }).guid : undefined;
   const hasDiagramPoints = (p.points?.length ?? 0) > 0;
   const fallbackDesign: Design = {
@@ -3433,7 +3406,7 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
   // which always have coordinates (hosts may truncate the design or flatten may fail).
   const candidateDesign = (designFlat ?? design) as Design | undefined;
   const candidateHasCenters = candidateDesign?.pieces?.some((pc) => pc.center) ?? false;
-  const diagramDesign = (candidateHasCenters ? candidateDesign! : (hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign))) as Design;
+  const diagramDesign = (candidateHasCenters ? candidateDesign! : hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign)) as Design;
   const forKitFallback = surface === "diagram" && Boolean(p.kitArtifacts && canDisplayKitArtifactsFallback(p.mode, hasDiagramPoints, designGuid));
   return {
     surface,
@@ -3493,7 +3466,7 @@ export const McpDesignViewer: React.FC = () => {
   const [selectedConnections, setSelectedConnections] = React.useState<Set<string>>(new Set());
   const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
   const appRef = React.useRef<McpApp | null>(null);
-  const tryRefetchRef = React.useRef<() => void>(() => { });
+  const tryRefetchRef = React.useRef<() => void>(() => {});
   const lastDiagramPayloadScoreRef = React.useRef<number>(-1);
 
   const mergeDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
@@ -3572,7 +3545,7 @@ export const McpDesignViewer: React.FC = () => {
           mergeDiagramPayload(parsed);
         }
       };
-      a.ontoolcancelled = () => { };
+      a.ontoolcancelled = () => {};
       a.onteardown = async () => ({});
       a.onerror = console.error;
     },
@@ -3761,7 +3734,7 @@ export const McpKitViewer: React.FC = () => {
   const appRef = React.useRef<McpApp | null>(null);
   const toolInputArgsRef = React.useRef<Record<string, unknown> | null>(null);
   const gotPayloadRef = React.useRef(false);
-  const tryRefetchRef = React.useRef<() => void>(() => { });
+  const tryRefetchRef = React.useRef<() => void>(() => {});
 
   const mergeKitToolArguments = React.useCallback((): Record<string, unknown> | null => {
     const client = appRef.current;
@@ -3836,7 +3809,7 @@ export const McpKitViewer: React.FC = () => {
           applyKitPayload(parsed);
         }
       };
-      a.ontoolcancelled = () => { };
+      a.ontoolcancelled = () => {};
       a.onteardown = async () => ({});
       a.onerror = console.error;
     },
@@ -3989,7 +3962,7 @@ export const McpKitViewer: React.FC = () => {
 export const McpSceneViewer: React.FC = () => {
   const [payload, setPayload] = React.useState<McpDiagramPayload | null>(null);
   const appRef = React.useRef<McpApp | null>(null);
-  const tryRefetchRef = React.useRef<() => void>(() => { });
+  const tryRefetchRef = React.useRef<() => void>(() => {});
 
   const mergeDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
     setPayload((cur) => {
@@ -4025,10 +3998,16 @@ export const McpSceneViewer: React.FC = () => {
       const result = await client.callServerTool({ name: "show_scene", arguments: {} });
       const p = parseDiagramPayloadFromToolResult(result);
       if (p) mergeDiagramPayload(p);
-    } catch { /* Host may not proxy tools/call. */ }
+    } catch {
+      /* Host may not proxy tools/call. */
+    }
   }, [mergeDiagramPayload]);
 
-  React.useEffect(() => { tryRefetchRef.current = () => { void tryRefetchDesignFromServer(); }; }, [tryRefetchDesignFromServer]);
+  React.useEffect(() => {
+    tryRefetchRef.current = () => {
+      void tryRefetchDesignFromServer();
+    };
+  }, [tryRefetchDesignFromServer]);
 
   const { app, isConnected, error } = useApp({
     appInfo: { name: "semio scene viewer", version: "1.0.0" },
@@ -4038,8 +4017,11 @@ export const McpSceneViewer: React.FC = () => {
       a.ontoolinput = () => tryRefetchRef.current();
       a.ontoolinputpartial = () => tryRefetchRef.current();
       a.onhostcontextchanged = () => tryRefetchRef.current();
-      a.ontoolresult = (result) => { const p = parseDiagramPayloadFromToolResult(result); if (p) mergeDiagramPayload(p); };
-      a.ontoolcancelled = () => { };
+      a.ontoolresult = (result) => {
+        const p = parseDiagramPayloadFromToolResult(result);
+        if (p) mergeDiagramPayload(p);
+      };
+      a.ontoolcancelled = () => {};
       a.onteardown = async () => ({});
       a.onerror = console.error;
     },
@@ -4071,18 +4053,39 @@ export const McpSceneViewer: React.FC = () => {
   const mcpTheme = useDocumentTheme();
   React.useEffect(() => {
     const el = document.documentElement;
-    if (mcpTheme === "dark") el.classList.add("dark"); else el.classList.remove("dark");
+    if (mcpTheme === "dark") el.classList.add("dark");
+    else el.classList.remove("dark");
   }, [mcpTheme]);
 
   const shellStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)" };
-  if (error) return <div style={{ ...shellStyle, color: "var(--color-text-danger, #dc2626)" }}><p>Error: {error.message}</p></div>;
-  if (!isConnected || !app) return <div style={shellStyle}><p style={{ color: "var(--color-text-secondary, #737373)" }}>Connecting to host…</p></div>;
-  if (!payload) return <div style={shellStyle}><p style={{ color: "var(--color-text-secondary, #737373)" }}>Waiting for design data…</p></div>;
+  if (error)
+    return (
+      <div style={{ ...shellStyle, color: "var(--color-text-danger, #dc2626)" }}>
+        <p>Error: {error.message}</p>
+      </div>
+    );
+  if (!isConnected || !app)
+    return (
+      <div style={shellStyle}>
+        <p style={{ color: "var(--color-text-secondary, #737373)" }}>Connecting to host…</p>
+      </div>
+    );
+  if (!payload)
+    return (
+      <div style={shellStyle}>
+        <p style={{ color: "var(--color-text-secondary, #737373)" }}>Waiting for design data…</p>
+      </div>
+    );
 
   const design = payload.design as Design | undefined;
   const kit = payload.kit as Kit | undefined;
   const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit, "scene") : design;
-  if (!designFlat) return <div style={shellStyle}><p style={{ color: "var(--color-text-secondary, #737373)" }}>Loading scene…</p></div>;
+  if (!designFlat)
+    return (
+      <div style={shellStyle}>
+        <p style={{ color: "var(--color-text-secondary, #737373)" }}>Loading scene…</p>
+      </div>
+    );
 
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
@@ -4112,7 +4115,7 @@ export const McpDiagramViewer: React.FC = () => {
   const [selectedPieces, setSelectedPieces] = React.useState<Set<string>>(new Set());
   const [selectedConnections, setSelectedConnections] = React.useState<Set<string>>(new Set());
   const appRef = React.useRef<McpApp | null>(null);
-  const tryRefetchRef = React.useRef<() => void>(() => { });
+  const tryRefetchRef = React.useRef<() => void>(() => {});
 
   const mergeDiagramPayload = React.useCallback((p: McpDiagramPayload) => {
     setPayload((cur) => {
@@ -4148,10 +4151,16 @@ export const McpDiagramViewer: React.FC = () => {
       const result = await client.callServerTool({ name: "show_diagram", arguments: {} });
       const p = parseDiagramPayloadFromToolResult(result);
       if (p) mergeDiagramPayload(p);
-    } catch { /* Host may not proxy tools/call. */ }
+    } catch {
+      /* Host may not proxy tools/call. */
+    }
   }, [mergeDiagramPayload]);
 
-  React.useEffect(() => { tryRefetchRef.current = () => { void tryRefetchDesignFromServer(); }; }, [tryRefetchDesignFromServer]);
+  React.useEffect(() => {
+    tryRefetchRef.current = () => {
+      void tryRefetchDesignFromServer();
+    };
+  }, [tryRefetchDesignFromServer]);
 
   const { app, isConnected, error } = useApp({
     appInfo: { name: "semio diagram viewer", version: "1.0.0" },
@@ -4161,8 +4170,11 @@ export const McpDiagramViewer: React.FC = () => {
       a.ontoolinput = () => tryRefetchRef.current();
       a.ontoolinputpartial = () => tryRefetchRef.current();
       a.onhostcontextchanged = () => tryRefetchRef.current();
-      a.ontoolresult = (result) => { const p = parseDiagramPayloadFromToolResult(result); if (p) mergeDiagramPayload(p); };
-      a.ontoolcancelled = () => { };
+      a.ontoolresult = (result) => {
+        const p = parseDiagramPayloadFromToolResult(result);
+        if (p) mergeDiagramPayload(p);
+      };
+      a.ontoolcancelled = () => {};
       a.onteardown = async () => ({});
       a.onerror = console.error;
     },
@@ -4200,7 +4212,8 @@ export const McpDiagramViewer: React.FC = () => {
   const mcpTheme = useDocumentTheme();
   React.useEffect(() => {
     const el = document.documentElement;
-    if (mcpTheme === "dark") el.classList.add("dark"); else el.classList.remove("dark");
+    if (mcpTheme === "dark") el.classList.add("dark");
+    else el.classList.remove("dark");
   }, [mcpTheme]);
 
   const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
@@ -4209,9 +4222,24 @@ export const McpDiagramViewer: React.FC = () => {
   }, []);
 
   const shellStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "system-ui, sans-serif", background: "var(--color-background-primary, #ffffff)" };
-  if (error) return <div style={{ ...shellStyle, color: "var(--color-text-danger, #dc2626)" }}><p>Error: {error.message}</p></div>;
-  if (!isConnected || !app) return <div style={shellStyle}><p style={{ color: "var(--color-text-secondary, #737373)" }}>Connecting to host…</p></div>;
-  if (!payload) return <div style={shellStyle}><p style={{ color: "var(--color-text-secondary, #737373)" }}>Waiting for design data…</p></div>;
+  if (error)
+    return (
+      <div style={{ ...shellStyle, color: "var(--color-text-danger, #dc2626)" }}>
+        <p>Error: {error.message}</p>
+      </div>
+    );
+  if (!isConnected || !app)
+    return (
+      <div style={shellStyle}>
+        <p style={{ color: "var(--color-text-secondary, #737373)" }}>Connecting to host…</p>
+      </div>
+    );
+  if (!payload)
+    return (
+      <div style={shellStyle}>
+        <p style={{ color: "var(--color-text-secondary, #737373)" }}>Waiting for design data…</p>
+      </div>
+    );
 
   const design = payload.design as Design | undefined;
   const kit = payload.kit as Kit | undefined;
@@ -4229,7 +4257,7 @@ export const McpDiagramViewer: React.FC = () => {
   } as unknown as Design;
   const candidateDesign = (designFlat ?? design) as Design | undefined;
   const candidateHasCenters = candidateDesign?.pieces?.some((pc) => pc.center) ?? false;
-  const diagramDesign = (candidateHasCenters ? candidateDesign! : (hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign))) as Design;
+  const diagramDesign = (candidateHasCenters ? candidateDesign! : hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign)) as Design;
   const pieceSelectionEnabled = payload.capabilities?.pieceSelection ?? false;
   const connectionSelectionEnabled = payload.capabilities?.connectionSelection ?? false;
   const selectionEnabled = pieceSelectionEnabled || connectionSelectionEnabled;
@@ -4625,7 +4653,10 @@ if (import.meta.vitest) {
     it("falls back to points/lines when design pieces have no centers", () => {
       const vm = mcpMapPayloadToDesignViewerViewModel({
         mode: "show-diagram",
-        points: [{ guid: "p1", id: "p1", u: 0, v: 0, status: "default" }, { guid: "p2", id: "p2", u: 3, v: 0, status: "default" }],
+        points: [
+          { guid: "p1", id: "p1", u: 0, v: 0, status: "default" },
+          { guid: "p2", id: "p2", u: 3, v: 0, status: "default" },
+        ],
         lines: [{ guid: "c1", sourceU: 0, sourceV: 0, targetU: 3, targetV: 0, status: "default" }],
         design: { guid: "dg", pieces: [{ guid: "p1" }, { guid: "p2" }], connections: [] } as unknown as Design,
       } as McpDiagramPayload);
@@ -5020,14 +5051,8 @@ if (import.meta.vitest) {
   describe("scene model material normalization", () => {
     it("overwrites imported mesh, line, and point materials with homogeneous scene materials", () => {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "#ff0000" }));
-      const line = new THREE.LineSegments(
-        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]),
-        new THREE.LineBasicMaterial({ color: "#00ff00" }),
-      );
-      const points = new THREE.Points(
-        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0)]),
-        new THREE.PointsMaterial({ color: "#0000ff", size: 5 }),
-      );
+      const line = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]), new THREE.LineBasicMaterial({ color: "#00ff00" }));
+      const points = new THREE.Points(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0)]), new THREE.PointsMaterial({ color: "#0000ff", size: 5 }));
       const source = new THREE.Group();
       source.add(mesh, line, points);
 
@@ -5049,10 +5074,7 @@ if (import.meta.vitest) {
       const source = new THREE.Group();
       source.add(
         new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "#ff0000" })),
-        new THREE.LineSegments(
-          new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]),
-          new THREE.LineBasicMaterial({ color: "#00ff00" }),
-        ),
+        new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]), new THREE.LineBasicMaterial({ color: "#00ff00" })),
       );
       const clone = cloneSceneModelWithHomogeneousMaterials(source, "#111111", "#222222");
 
@@ -5443,13 +5465,13 @@ if (import.meta.vitest) {
 // Summary: Standardized algorithm IPO shell using typed WindowKind-based windows.
 
 import {
+  cn,
+  createDefaultLayout,
+  createWindowLayout,
   TreeRow,
   TreeSection,
   UI,
   WindowKind,
-  cn,
-  createDefaultLayout,
-  createWindowLayout,
   type FooterItem,
   type SidePanelTabConfig,
   type UIAppConfig,
@@ -6009,14 +6031,14 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
       },
       ...(context.error
         ? [
-          {
-            id: `${id}.footer.error`,
-            icon: <AlertCircleIcon size={12} />,
-            text: "Error",
-            order: 1,
-            className: "text-destructive",
-          },
-        ]
+            {
+              id: `${id}.footer.error`,
+              icon: <AlertCircleIcon size={12} />,
+              text: "Error",
+              order: 1,
+              className: "text-destructive",
+            },
+          ]
         : []),
     ],
     [id, context.selectedPieceGuids.length, pieceCount, context.error],

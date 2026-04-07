@@ -91,6 +91,10 @@ Something in the repo is spuriously stashing.
 It creates messages that have partially the commit sha and the commit message e.g. `5a1a2ef1e 16`
 This MUST NOT happen.
 
+## 🧩elements
+
+Add a checkbox element which is an action that can be checked and unchecked.
+
 ## 🔬coda
 
 coda:
@@ -144,6 +148,8 @@ type Docks {
 `findExtendableSides(design:Design): Side[]` finds all sides of pieces where new pieces can be added.
 
 ---
+
+Extend port to optionally have a maxChildren (integer) which defaults to 1. Add the same to the connector of types. When both are set, the more specific wins (type connector is more specific than port). When maxChildren is set, no more connections can be connected. Extend all tests, assets, implementations, etc for all programming languages, schema, specs, docs, etc
 
 In the codebase the schema is not yet always aligned. E.g. ports are sometimes confused with connectors. e.g. semio ui and engine mcp show metabolism has 120 ports but that is not true. Whenever a kit is serialized it must always have the Kit schema.
 
@@ -223,7 +229,7 @@ A bounding rectangle is the smallest rectangle (u,v domains) that can contain th
 
 ---
 
-`copyDesign(design:Design, pieces:Guid[], connections:Guid[]): Design`:
+`filterDesignWithSelection(design:Design, selection: {pieces:Guid[], connections:Guid[]}): Design`:
 
 - add every selected fixed pieces
 - add every internal connected pieces
@@ -233,9 +239,7 @@ A bounding rectangle is the smallest rectangle (u,v domains) that can contain th
 
 ---
 
-`pasteHanging(s): DesignDiff` pastes a hanging design …
-
-`pasteDesign(source:Design, target:Design, anchor: "original" | "middle" | "centroid" | "bottomLeft" | "bottomRight" | "topLeft" | "topRight" = "bottomLeft", coord?:Coord): DesignDiff`:
+`pasteDesign(source:Design, target:Design, anchor: "original" | "middle" | "centroid" | "bottomLeft" | "bottomRight" | "topLeft" | "topRight" = "bottomLeft", coord?:Coord, pieces: Guids[], mode: "NoPieces" | "TargetPiece" | "TargetPiecesMultiple" |"TargetPiecesMultiple"): DesignDiff`:
 
 - add every internal piece
 - add fixed pieces with their connections

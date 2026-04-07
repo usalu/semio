@@ -466,6 +466,11 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_kit_lower" value="1"/>
           <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_kit_upper" value="1"/>
         </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_maxChildren" name="maxChildren" type="pt_Integer">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_maxChildren_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_maxChildren_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_maxChildren_default" value="1"/>
+        </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_attributes_lower" value="0"/>
           <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Port_attributes_upper" value="*"/>
@@ -574,6 +579,11 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_isMandatory_lower" value="1"/>
           <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_isMandatory_upper" value="1"/>
           <defaultValue xmi:type="uml:LiteralBoolean" xmi:id="cls_Connector_isMandatory_default" value="false"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_maxChildren" name="maxChildren" type="pt_Integer">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_maxChildren_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_maxChildren_upper" value="1"/>
+          <defaultValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_maxChildren_default" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_t" name="t" type="pt_Real">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_t_lower" value="1"/>

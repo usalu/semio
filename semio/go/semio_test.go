@@ -1892,4 +1892,114 @@ func TestDesignWithDiff(t *testing.T) {
 
 // #endregion 🔖DesignWithDiff Tests
 
+// #region 🔖MaxChildren Tests
+
+func TestMaxChildrenPortSerialization(t *testing.T) {
+	mc := 3
+	port := Port{
+		Guid:        "p1",
+		Name:        "TestPort",
+		MaxChildren: &mc,
+	}
+	data, err := json.Marshal(port)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var restored Port
+	if err := json.Unmarshal(data, &restored); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if restored.MaxChildren == nil || *restored.MaxChildren != 3 {
+		t.Errorf("maxChildren: got %v, want 3", restored.MaxChildren)
+	}
+}
+
+func TestMaxChildrenPortOmitted(t *testing.T) {
+	port := Port{Guid: "p1", Name: "TestPort"}
+	data, err := json.Marshal(port)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	s := string(data)
+	if contains(s, "maxChildren") {
+		t.Errorf("maxChildren should be omitted when nil, got: %s", s)
+	}
+}
+
+func TestMaxChildrenConnectorSerialization(t *testing.T) {
+	mc := 5
+	connector := Connector{
+		Guid:        "c1",
+		T:           0,
+		Point:       Point{X: 0, Y: 0, Z: 0},
+		Direction:   Vector{X: 0, Y: 0, Z: 1},
+		MaxChildren: &mc,
+	}
+	data, err := json.Marshal(connector)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var restored Connector
+	if err := json.Unmarshal(data, &restored); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if restored.MaxChildren == nil || *restored.MaxChildren != 5 {
+		t.Errorf("maxChildren: got %v, want 5", restored.MaxChildren)
+	}
+}
+
+func TestMaxChildrenKitRoundtrip(t *testing.T) {
+	mc3 := 3
+	mc5 := 5
+	kit := Kit{
+		Guid: "kit-1",
+		Name: "TestKit",
+		Ports: []Port{{
+			Guid:        "p1",
+			Name:        "Port1",
+			MaxChildren: &mc3,
+		}},
+		Types: []Type{{
+			Guid: "t1",
+			Name: "Type1",
+			Connectors: []Connector{{
+				Guid:        "c1",
+				T:           0,
+				Point:       Point{X: 0, Y: 0, Z: 0},
+				Direction:   Vector{X: 0, Y: 0, Z: 1},
+				MaxChildren: &mc5,
+			}},
+		}},
+	}
+	data, err := json.Marshal(kit)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var restored Kit
+	if err := json.Unmarshal(data, &restored); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if restored.Ports[0].MaxChildren == nil || *restored.Ports[0].MaxChildren != 3 {
+		t.Errorf("port maxChildren: got %v, want 3", restored.Ports[0].MaxChildren)
+	}
+	if restored.Types[0].Connectors[0].MaxChildren == nil || *restored.Types[0].Connectors[0].MaxChildren != 5 {
+		t.Errorf("connector maxChildren: got %v, want 5", restored.Types[0].Connectors[0].MaxChildren)
+	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
+}
+
+func containsHelper(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
+// #endregion 🔖MaxChildren Tests
+
 // #endregion 🔖KitKind Tests

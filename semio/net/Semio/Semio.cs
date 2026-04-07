@@ -2916,6 +2916,7 @@ public class PortDiff : Entity<PortDiff>
     private string? _description;
     private string? _icon;
     private List<PortId>? _compatiblePorts;
+    private int? _maxChildren;
     private List<Attribute>? _attributes;
 
     public string Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
@@ -2923,6 +2924,7 @@ public class PortDiff : Entity<PortDiff>
     public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
     public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
     public List<PortId>? CompatiblePorts { get => _compatiblePorts; set { _compatiblePorts = value; _setProperties.Add("CompatiblePorts"); } }
+    public int? MaxChildren { get => _maxChildren; set { _maxChildren = value; _setProperties.Add("MaxChildren"); } }
     public List<Attribute>? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
 
     public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
@@ -2930,10 +2932,11 @@ public class PortDiff : Entity<PortDiff>
     public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
     public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
     public bool ShouldSerializeCompatiblePorts() => _setProperties.Contains("CompatiblePorts");
+    public bool ShouldSerializeMaxChildren() => _setProperties.Contains("MaxChildren");
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 
     public static implicit operator PortDiff(PortId id) => new() { Guid = id.Guid };
-    public static implicit operator PortDiff(Port iface) => new() { Guid = iface.Guid, Name = iface.Name, Description = iface.Description, Icon = iface.Icon, CompatiblePorts = iface.CompatiblePorts?.Select(i => (PortId)i).ToList(), Attributes = iface.Attributes };
+    public static implicit operator PortDiff(Port iface) => new() { Guid = iface.Guid, Name = iface.Name, Description = iface.Description, Icon = iface.Icon, CompatiblePorts = iface.CompatiblePorts?.Select(i => (PortId)i).ToList(), MaxChildren = iface.MaxChildren, Attributes = iface.Attributes };
 }
 
 public class PortsDiff : Entity<PortsDiff>
@@ -2952,6 +2955,7 @@ public class Port : Entity<Port>
     public string? Description { get; set; }
     public string? Icon { get; set; }
     public List<PortId> CompatiblePorts { get; set; } = new();
+    public int? MaxChildren { get; set; }
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Port(PortId id) => new() { Guid = id.Guid };
@@ -2962,6 +2966,7 @@ public class Port : Entity<Port>
         Description = diff.Description ?? "",
         Icon = diff.Icon ?? "",
         CompatiblePorts = diff.CompatiblePorts ?? new(),
+        MaxChildren = diff.MaxChildren,
         Attributes = diff.Attributes ?? new()
     };
 
@@ -2974,6 +2979,7 @@ public class Port : Entity<Port>
             Description = diff.Description ?? port.Description,
             Icon = diff.Icon ?? port.Icon,
             CompatiblePorts = diff.CompatiblePorts ?? port.CompatiblePorts,
+            MaxChildren = diff.MaxChildren ?? port.MaxChildren,
             Attributes = diff.Attributes ?? port.Attributes
         };
     }
@@ -2987,6 +2993,7 @@ public class Port : Entity<Port>
             Description = port.Description,
             Icon = port.Icon,
             CompatiblePorts = port.CompatiblePorts,
+            MaxChildren = port.MaxChildren,
             Attributes = port.Attributes
         };
     }
@@ -3000,6 +3007,7 @@ public class Port : Entity<Port>
             Description = !string.IsNullOrEmpty(appliedDiff.Description) ? port.Description : null,
             Icon = !string.IsNullOrEmpty(appliedDiff.Icon) ? port.Icon : null,
             CompatiblePorts = appliedDiff.CompatiblePorts?.Any() == true ? port.CompatiblePorts : null,
+            MaxChildren = appliedDiff.MaxChildren.HasValue ? port.MaxChildren : null,
             Attributes = appliedDiff.Attributes?.Any() == true ? port.Attributes : null
         };
     }
@@ -3238,6 +3246,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
     private string? _description;
     private PortId? _port;
     private bool? _mandatory;
+    private int? _maxChildren;
     private double? _t;
     private Point? _point;
     private Vector? _direction;
@@ -3249,6 +3258,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
     public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
     public PortId? Port { get => _port; set { _port = value; _setProperties.Add("Port"); } }
     public bool? Mandatory { get => _mandatory; set { _mandatory = value; _setProperties.Add("Mandatory"); } }
+    public int? MaxChildren { get => _maxChildren; set { _maxChildren = value; _setProperties.Add("MaxChildren"); } }
     public double? T { get => _t; set { _t = value; _setProperties.Add("T"); } }
     public Point? Point { get => _point; set { _point = value; _setProperties.Add("Point"); } }
     public Vector? Direction { get => _direction; set { _direction = value; _setProperties.Add("Direction"); } }
@@ -3260,6 +3270,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
     public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
     public bool ShouldSerializePort() => _setProperties.Contains("Port");
     public bool ShouldSerializeMandatory() => _setProperties.Contains("Mandatory");
+    public bool ShouldSerializeMaxChildren() => _setProperties.Contains("MaxChildren");
     public bool ShouldSerializeT() => _setProperties.Contains("T");
     public bool ShouldSerializePoint() => _setProperties.Contains("Point");
     public bool ShouldSerializeDirection() => _setProperties.Contains("Direction");
@@ -3267,7 +3278,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 
     public static implicit operator ConnectorDiff(ConnectorId id) => new() { Guid = id.Guid };
-    public static implicit operator ConnectorDiff(Connector connector) => new() { Guid = connector.Guid, Description = connector.Description, Port = connector.Port, Mandatory = connector.Mandatory, T = connector.T, Point = connector.Point, Direction = connector.Direction, Props = connector.Props };
+    public static implicit operator ConnectorDiff(Connector connector) => new() { Guid = connector.Guid, Description = connector.Description, Port = connector.Port, Mandatory = connector.Mandatory, MaxChildren = connector.MaxChildren, T = connector.T, Point = connector.Point, Direction = connector.Direction, Props = connector.Props };
 
     public ConnectorDiff MergeDiff(ConnectorDiff other)
     {
@@ -3277,6 +3288,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
             Description = other.Description ?? Description,
             Port = other.Port ?? Port,
             Mandatory = other.Mandatory ?? Mandatory,
+            MaxChildren = other.MaxChildren ?? MaxChildren,
             T = other.T ?? T,
             Point = other.Point ?? Point,
             Direction = other.Direction ?? Direction,
@@ -3311,6 +3323,7 @@ public class Connector : Entity<Connector>
     public string? Name { get; set; }
     public string? Description { get; set; }
     public bool? Mandatory { get; set; }
+    public int? MaxChildren { get; set; }
     public PortId? Port { get; set; }
     public Point? Point { get; set; } = null;
     public Vector? Direction { get; set; } = null;
@@ -3322,7 +3335,7 @@ public class Connector : Entity<Connector>
     public override string ToString() => $"Por({ToHumanIdString()})";
 
     public static implicit operator Connector(ConnectorId id) => new() { Guid = id.Guid };
-    public static implicit operator Connector(ConnectorDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name, Description = diff.Description, Port = diff.Port, Mandatory = diff.Mandatory, T = diff.T ?? 0, Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes?.Added ?? new() };
+    public static implicit operator Connector(ConnectorDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name, Description = diff.Description, Port = diff.Port, Mandatory = diff.Mandatory, MaxChildren = diff.MaxChildren, T = diff.T ?? 0, Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes?.Added ?? new() };
     public static implicit operator string(Connector connector) => connector.Guid;
     public static implicit operator Connector(string guid) => new() { Guid = guid };
 
@@ -3335,6 +3348,7 @@ public class Connector : Entity<Connector>
             Description = diff.Description ?? connector.Description,
             Port = diff.Port ?? connector.Port,
             Mandatory = diff.Mandatory ?? connector.Mandatory,
+            MaxChildren = diff.MaxChildren ?? connector.MaxChildren,
             T = diff.T ?? connector.T,
             Point = diff.Point ?? connector.Point,
             Direction = diff.Direction ?? connector.Direction,
@@ -3352,6 +3366,7 @@ public class Connector : Entity<Connector>
             Description = connector.Description,
             Port = connector.Port,
             Mandatory = connector.Mandatory,
+            MaxChildren = connector.MaxChildren,
             T = connector.T,
             Point = connector.Point,
             Direction = connector.Direction,
@@ -3369,6 +3384,7 @@ public class Connector : Entity<Connector>
             Description = !string.IsNullOrEmpty(appliedDiff.Description) ? connector.Description : "",
             Port = appliedDiff.Port is not null ? connector.Port : null,
             Mandatory = appliedDiff.Mandatory.HasValue ? connector.Mandatory : null,
+            MaxChildren = appliedDiff.MaxChildren.HasValue ? connector.MaxChildren : null,
             T = appliedDiff.T.HasValue ? connector.T : null,
             Point = appliedDiff.Point is not null ? connector.Point : null,
             Direction = appliedDiff.Direction is not null ? connector.Direction : null,
@@ -10542,6 +10558,7 @@ public class PortMeta
     public string Name { get; set; } = "";
     public string? Description { get; set; }
     public string? Icon { get; set; }
+    public int? MaxChildren { get; set; }
 }
 
 public class ModelMeta
@@ -10562,6 +10579,7 @@ public class ConnectorMeta
     public string? Description { get; set; }
     public PortId? Port { get; set; }
     public bool? Mandatory { get; set; }
+    public int? MaxChildren { get; set; }
 }
 
 public class LayerMeta
@@ -11392,7 +11410,7 @@ public static class KitSqlite
     {
         var ports = new List<Port>();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT guid, name, description, icon FROM port WHERE kit_guid = @kitGuid";
+        cmd.CommandText = "SELECT guid, name, description, icon, max_children FROM port WHERE kit_guid = @kitGuid";
         cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -11402,7 +11420,8 @@ public static class KitSqlite
                 Guid = reader.GetString(0),
                 Name = reader.GetString(1),
                 Description = reader.IsDBNull(2) ? null : reader.GetString(2),
-                Icon = reader.IsDBNull(3) ? null : reader.GetString(3)
+                Icon = reader.IsDBNull(3) ? null : reader.GetString(3),
+                MaxChildren = reader.IsDBNull(4) ? null : reader.GetInt32(4)
             };
             p.CompatiblePorts = LoadCompatiblePorts(connection, p.Guid);
             p.Attributes = LoadAttributes(connection, "port_guid", p.Guid);
@@ -11586,7 +11605,7 @@ public static class KitSqlite
     {
         var connectors = new List<Connector>();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, description FROM connector WHERE type_guid = @typeGuid ORDER BY rowid";
+        cmd.CommandText = "SELECT guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, max_children, description FROM connector WHERE type_guid = @typeGuid ORDER BY rowid";
         cmd.Parameters.AddWithValue("@typeGuid", typeGuid);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -11610,7 +11629,8 @@ public static class KitSqlite
                 T = reader.GetFloat(8),
                 Mandatory = !reader.IsDBNull(9) && reader.GetBoolean(9),
                 Port = reader.IsDBNull(10) ? null : new PortId { Guid = reader.GetString(10) },
-                Description = reader.IsDBNull(11) ? null : reader.GetString(11)
+                MaxChildren = reader.IsDBNull(11) ? null : reader.GetInt32(11),
+                Description = reader.IsDBNull(12) ? null : reader.GetString(12)
             };
             c.Props = LoadConnectorProps(connection, c.Guid);
             c.Attributes = LoadAttributes(connection, "connector_guid", c.Guid);
@@ -12162,10 +12182,10 @@ public static class KitSqlite
         cmd.Parameters.AddWithValue("@defaultSiUnit", (object?)quality.SI ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@defaultImperialUnit", (object?)quality.Imperial ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@minValue", (object?)quality.Min ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@minExcluded", quality.MinExcluded);
+        cmd.Parameters.AddWithValue("@minExcluded", (object?)quality.MinExcluded ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@maxValue", (object?)quality.Max ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@maxExcluded", quality.MaxExcluded);
-        cmd.Parameters.AddWithValue("@canScale", quality.Scalable);
+        cmd.Parameters.AddWithValue("@maxExcluded", (object?)quality.MaxExcluded ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@canScale", quality.Scalable ?? false);
         cmd.Parameters.AddWithValue("@definition", (object?)quality.Formula ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
         cmd.ExecuteNonQuery();
@@ -12185,9 +12205,9 @@ public static class KitSqlite
         cmd.Parameters.AddWithValue("@name", benchmark.Name);
         cmd.Parameters.AddWithValue("@icon", (object?)benchmark.Icon ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@minValue", (object?)benchmark.Min ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@minExcluded", benchmark.MinExcluded);
+        cmd.Parameters.AddWithValue("@minExcluded", (object?)benchmark.MinExcluded ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@maxValue", (object?)benchmark.Max ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@maxExcluded", benchmark.MaxExcluded);
+        cmd.Parameters.AddWithValue("@maxExcluded", (object?)benchmark.MaxExcluded ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@definition", DBNull.Value);
         cmd.Parameters.AddWithValue("@qualityGuid", qualityGuid);
         cmd.ExecuteNonQuery();
@@ -12196,11 +12216,12 @@ public static class KitSqlite
     private static void SavePort(SqliteConnection connection, Port port, string kitGuid)
     {
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "INSERT INTO port (guid, name, description, icon, kit_guid) VALUES (@guid, @name, @description, @icon, @kitGuid)";
+        cmd.CommandText = "INSERT INTO port (guid, name, description, icon, max_children, kit_guid) VALUES (@guid, @name, @description, @icon, @maxChildren, @kitGuid)";
         cmd.Parameters.AddWithValue("@guid", port.Guid);
         cmd.Parameters.AddWithValue("@name", port.Name);
         cmd.Parameters.AddWithValue("@description", (object?)port.Description ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@icon", (object?)port.Icon ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@maxChildren", (object?)port.MaxChildren ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
         cmd.ExecuteNonQuery();
 
@@ -12297,8 +12318,8 @@ public static class KitSqlite
         cmd.Parameters.AddWithValue("@parent", (object?)type.Parent?.Guid ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@isAbstract", type.IsAbstract ?? false);
         cmd.Parameters.AddWithValue("@folder", (object?)type.Folder ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@stock", type.Stock);
-        cmd.Parameters.AddWithValue("@virtual", type.Virtual);
+        cmd.Parameters.AddWithValue("@stock", (object?)type.Stock ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@virtual", type.Virtual ?? false);
         cmd.Parameters.AddWithValue("@unit", (object?)type.Unit ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@description", (object?)type.Description ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@icon", (object?)type.Icon ?? DBNull.Value);
@@ -12337,8 +12358,8 @@ public static class KitSqlite
     private static void SaveConnector(SqliteConnection connection, Connector connector, string typeGuid)
     {
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"INSERT INTO connector (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, description, type_guid)
-            VALUES (@guid, @name, @px, @py, @pz, @dx, @dy, @dz, @t, @mandatory, @portGuid, @description, @typeGuid)";
+        cmd.CommandText = @"INSERT INTO connector (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, max_children, description, type_guid)
+            VALUES (@guid, @name, @px, @py, @pz, @dx, @dy, @dz, @t, @mandatory, @portGuid, @maxChildren, @description, @typeGuid)";
         cmd.Parameters.AddWithValue("@guid", connector.Guid);
         cmd.Parameters.AddWithValue("@name", (object?)connector.Name ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@px", connector.Point?.X ?? 0f);
@@ -12348,8 +12369,9 @@ public static class KitSqlite
         cmd.Parameters.AddWithValue("@dy", connector.Direction?.Y ?? 0f);
         cmd.Parameters.AddWithValue("@dz", connector.Direction?.Z ?? 0f);
         cmd.Parameters.AddWithValue("@t", connector.T);
-        cmd.Parameters.AddWithValue("@mandatory", connector.Mandatory);
+        cmd.Parameters.AddWithValue("@mandatory", (object?)connector.Mandatory ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@portGuid", (object?)connector.Port?.Guid ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@maxChildren", (object?)connector.MaxChildren ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@description", (object?)connector.Description ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@typeGuid", typeGuid);
         cmd.ExecuteNonQuery();
@@ -12555,8 +12577,8 @@ public static class KitSqlite
         cmd.CommandText = "INSERT INTO layer (guid, path, is_hidden, is_locked, color, description, design_guid) VALUES (@guid, @path, @isHidden, @isLocked, @color, @description, @designGuid)";
         cmd.Parameters.AddWithValue("@guid", layer.Guid);
         cmd.Parameters.AddWithValue("@path", layer.Path);
-        cmd.Parameters.AddWithValue("@isHidden", layer.IsHidden);
-        cmd.Parameters.AddWithValue("@isLocked", layer.IsLocked);
+        cmd.Parameters.AddWithValue("@isHidden", layer.IsHidden ?? false);
+        cmd.Parameters.AddWithValue("@isLocked", layer.IsLocked ?? false);
         cmd.Parameters.AddWithValue("@color", (object?)layer.Color ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@description", (object?)layer.Description ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@designGuid", designGuid);

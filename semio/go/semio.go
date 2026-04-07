@@ -870,6 +870,7 @@ type Port struct {
 	Name            string      `json:"name"`
 	Description     *string     `json:"description,omitempty"`
 	Icon            *string     `json:"icon,omitempty"`
+	MaxChildren     *int        `json:"maxChildren,omitempty"`
 	CompatiblePorts []PortId    `json:"compatiblePorts,omitempty"`
 	Attributes      []Attribute `json:"attributes,omitempty"`
 	CreatedAt       string      `json:"createdAt,omitempty"`
@@ -882,6 +883,7 @@ type PortDiff struct {
 	Name            *string         `json:"name,omitempty"`
 	Description     *string         `json:"description,omitempty"`
 	Icon            *string         `json:"icon,omitempty"`
+	MaxChildren     *int            `json:"maxChildren,omitempty"`
 	CompatiblePorts []PortId        `json:"compatiblePorts,omitempty"`
 	Attributes      *AttributesDiff `json:"attributes,omitempty"`
 	setFields       map[string]bool `json:"-"`
@@ -935,6 +937,7 @@ type PortMeta struct {
 	Name        string  `json:"name"`
 	Description *string `json:"description,omitempty"`
 	Icon        *string `json:"icon,omitempty"`
+	MaxChildren *int    `json:"maxChildren,omitempty"`
 	CreatedAt   string  `json:"createdAt,omitempty"`
 	UpdatedAt   string  `json:"updatedAt,omitempty"`
 }
@@ -1204,6 +1207,7 @@ type Connector struct {
 	Direction   Vector      `json:"direction"`
 	T           float64     `json:"t"`
 	Mandatory   *bool       `json:"mandatory,omitempty"`
+	MaxChildren *int        `json:"maxChildren,omitempty"`
 	Port        *PortId     `json:"port,omitempty"`
 	Props       []Prop      `json:"props,omitempty"`
 	Description *string     `json:"description,omitempty"`
@@ -1234,6 +1238,7 @@ type ConnectorDiff struct {
 	Direction   *VectorDiff     `json:"direction,omitempty"`
 	T           *float64        `json:"t,omitempty"`
 	Mandatory   *bool           `json:"mandatory,omitempty"`
+	MaxChildren *int            `json:"maxChildren,omitempty"`
 	Port        *PortId         `json:"port,omitempty"`
 	Props       *PropsDiff      `json:"props,omitempty"`
 	Description *string         `json:"description,omitempty"`
@@ -1259,6 +1264,7 @@ type ConnectorMeta struct {
 	Direction   Vector  `json:"direction"`
 	T           float64 `json:"t"`
 	Mandatory   *bool   `json:"mandatory,omitempty"`
+	MaxChildren *int    `json:"maxChildren,omitempty"`
 	Port        *PortId `json:"port,omitempty"`
 	Description *string `json:"description,omitempty"`
 }

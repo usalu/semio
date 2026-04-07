@@ -2064,6 +2064,13 @@
             "description": "\ud83d\udcaf Whether the connector is mandatory. A mandatory connector must be connected in a design.",
             "default": false
           },
+          "maxChildren": {
+            "default": 1,
+            "description": "The optional maximum number of children (connections) that can be connected.",
+            "minimum": 0,
+            "title": "Maxchildren",
+            "type": "integer"
+          },
           "port": {
             "type": "string",
             "maxLength": 64,
@@ -2146,6 +2153,13 @@
             "description": "\ud83d\udcaf Whether the connector is mandatory. A mandatory connector must be connected in a design.",
             "default": false
           },
+          "maxChildren": {
+            "default": 1,
+            "description": "The optional maximum number of children (connections) that can be connected.",
+            "minimum": 0,
+            "title": "Maxchildren",
+            "type": "integer"
+          },
           "port": {
             "type": "string",
             "maxLength": 64,
@@ -2213,6 +2227,13 @@
             "title": "Mandatory",
             "description": "\ud83d\udcaf Whether the connector is mandatory. A mandatory connector must be connected in a design.",
             "default": false
+          },
+          "maxChildren": {
+            "default": 1,
+            "description": "The optional maximum number of children (connections) that can be connected.",
+            "minimum": 0,
+            "title": "Maxchildren",
+            "type": "integer"
           },
           "port": {
             "type": "string",

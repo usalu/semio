@@ -18,7 +18,6 @@
 // #endregion 🔖Header
 
 import type { Decorator } from "@storybook/react";
-import React from "react";
 import { Level, LevelProvider, getLevelBgClass } from "..";
 
 export const withLevel: Decorator = (Story, context) => {

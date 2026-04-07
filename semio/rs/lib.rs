@@ -37,7 +37,8 @@ use uuid::Uuid;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-mod error_types { // 🔖Error Types
+mod error_types {
+    // 🔖Error Types
     // [👤semio📚rs💻semio🔖errortypes](repo://p/u/semio/b/l/rs/f/semio.rs/s/Error%20Types)
     // Error Types MUST provide the error types functionality.
 
@@ -70,7 +71,8 @@ mod error_types { // 🔖Error Types
 } // 🔖Error Types
 pub use error_types::*;
 
-mod utility_functions { // 🔖Utility Functions
+mod utility_functions {
+    // 🔖Utility Functions
     // [👤semio📚rs💻semio🔖utilityfunctions](repo://p/u/semio/b/l/rs/f/semio.rs/s/Utility%20Functions)
     // Utility Functions MUST provide the utility functions functionality.
     // [🛠️semio/rs/semio.rs#Utility Functions§Guid](repo://definition/semio/rs/semio.rs/UTILITY-FUNCTIONS/GUID)
@@ -191,7 +193,8 @@ mod utility_functions { // 🔖Utility Functions
 } // 🔖Utility Functions
 pub use utility_functions::*;
 
-mod model_types_attribute { // 🔖Model Types - Attribute
+mod model_types_attribute {
+    // 🔖Model Types - Attribute
     // [👤semio📚rs💻semio🔖modeltypesattribute](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Attribute)
     // Model Types - Attribute MUST provide the model types - attribute functionality.
 
@@ -221,7 +224,8 @@ mod model_types_attribute { // 🔖Model Types - Attribute
 } // 🔖Model Types - Attribute
 pub use model_types_attribute::*;
 
-mod model_types_coord { // 🔖Model Types - Coord
+mod model_types_coord {
+    // 🔖Model Types - Coord
     // [👤semio📚rs💻semio🔖modeltypescoord](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Coord)
     // Model Types - Coord MUST provide the model types - coord functionality.
 
@@ -250,7 +254,8 @@ mod model_types_coord { // 🔖Model Types - Coord
 } // 🔖Model Types - Coord
 pub use model_types_coord::*;
 
-mod model_types_vector { // 🔖Model Types - Vector
+mod model_types_vector {
+    // 🔖Model Types - Vector
     // [👤semio📚rs💻semio🔖modeltypesvector](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Vector)
     // Model Types - Vector MUST provide the model types - vector functionality.
 
@@ -296,7 +301,8 @@ mod model_types_vector { // 🔖Model Types - Vector
 } // 🔖Model Types - Vector
 pub use model_types_vector::*;
 
-mod model_types_plane { // 🔖Model Types - Plane
+mod model_types_plane {
+    // 🔖Model Types - Plane
     // [👤semio📚rs💻semio🔖modeltypesplane](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Plane)
     // Model Types - Plane MUST provide the model types - plane functionality.
 
@@ -383,7 +389,8 @@ mod model_types_plane { // 🔖Model Types - Plane
 } // 🔖Model Types - Plane
 pub use model_types_plane::*;
 
-mod model_types_camera { // 🔖Model Types - Camera
+mod model_types_camera {
+    // 🔖Model Types - Camera
     // [👤semio📚rs💻semio🔖modeltypescamera](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Camera)
     // Model Types - Camera MUST provide the model types - camera functionality.
 
@@ -421,7 +428,8 @@ mod model_types_camera { // 🔖Model Types - Camera
 } // 🔖Model Types - Camera
 pub use model_types_camera::*;
 
-mod model_types_location_author_file_folder { // 🔖Model Types - Location, Author, File, Folder
+mod model_types_location_author_file_folder {
+    // 🔖Model Types - Location, Author, File, Folder
     // [👤semio📚rs💻semio🔖modeltypeslocationauthorfilefolder](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Location,%20Author,%20File,%20Folder)
     // Model Types - Location, Author, File, Folder MUST provide the model types - location, author, file, folder functionality.
 
@@ -540,7 +548,8 @@ mod model_types_location_author_file_folder { // 🔖Model Types - Location, Aut
 } // 🔖Model Types - Location, Author, File, Folder
 pub use model_types_location_author_file_folder::*;
 
-mod model_types_quality_port_tag_concept { // 🔖Model Types - Quality, Port, Tag, Concept
+mod model_types_quality_port_tag_concept {
+    // 🔖Model Types - Quality, Port, Tag, Concept
     // [👤semio📚rs💻semio🔖modeltypesqualityporttagconcept](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Quality,%20Port,%20Tag,%20Concept)
     // Model Types - Quality, Port, Tag, Concept MUST provide the model types - quality, port, tag, concept functionality.
 
@@ -664,6 +673,8 @@ mod model_types_quality_port_tag_concept { // 🔖Model Types - Quality, Port, T
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
+        #[serde(rename = "maxChildren", skip_serializing_if = "Option::is_none")]
+        pub max_children: Option<i32>,
         #[serde(rename = "compatiblePorts", skip_serializing_if = "Option::is_none")]
         pub compatible_interfaces: Option<Vec<PortId>>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -729,7 +740,8 @@ mod model_types_quality_port_tag_concept { // 🔖Model Types - Quality, Port, T
 } // 🔖Model Types - Quality, Port, Tag, Concept
 pub use model_types_quality_port_tag_concept::*;
 
-mod model_types_prop_model_connector { // 🔖Model Types - Prop, Model, Connector
+mod model_types_prop_model_connector {
+    // 🔖Model Types - Prop, Model, Connector
     // [👤semio📚rs💻semio🔖modeltypespropmodelconnector](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Prop,%20Model,%20Connector)
     // Model Types - Prop, Model, Connector MUST provide the model types - prop, model, connector functionality.
 
@@ -816,6 +828,8 @@ mod model_types_prop_model_connector { // 🔖Model Types - Prop, Model, Connect
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub mandatory: Option<bool>,
+        #[serde(rename = "maxChildren", skip_serializing_if = "Option::is_none")]
+        pub max_children: Option<i32>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub port: Option<PortId>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -826,7 +840,8 @@ mod model_types_prop_model_connector { // 🔖Model Types - Prop, Model, Connect
 } // 🔖Model Types - Prop, Model, Connector
 pub use model_types_prop_model_connector::*;
 
-mod model_types_type { // 🔖Model Types - Type
+mod model_types_type {
+    // 🔖Model Types - Type
     // [👤semio📚rs💻semio🔖modeltypestype](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Type)
     // Model Types - Type MUST provide the model types - type functionality.
 
@@ -888,7 +903,8 @@ mod model_types_type { // 🔖Model Types - Type
 } // 🔖Model Types - Type
 pub use model_types_type::*;
 
-mod model_types_layer_piece_group_side_connection_stat { // 🔖Model Types - Layer, Piece, Group, Side, Connection, Stat
+mod model_types_layer_piece_group_side_connection_stat {
+    // 🔖Model Types - Layer, Piece, Group, Side, Connection, Stat
     // [👤semio📚rs💻semio🔖modeltypeslayerpiecegroupsideconnectionstat](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Layer,%20Piece,%20Group,%20Side,%20Connection,%20Stat)
     // Model Types - Layer, Piece, Group, Side, Connection, Stat MUST provide the model types - layer, piece, group, side, connection, stat functionality.
 
@@ -1103,7 +1119,8 @@ mod model_types_layer_piece_group_side_connection_stat { // 🔖Model Types - La
 } // 🔖Model Types - Layer, Piece, Group, Side, Connection, Stat
 pub use model_types_layer_piece_group_side_connection_stat::*;
 
-mod model_types_design { // 🔖Model Types - Design
+mod model_types_design {
+    // 🔖Model Types - Design
     // [👤semio📚rs💻semio🔖modeltypesdesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Design)
     // Model Types - Design MUST provide the model types - design functionality.
 
@@ -1166,13 +1183,15 @@ mod model_types_design { // 🔖Model Types - Design
 } // 🔖Model Types - Design
 pub use model_types_design::*;
 
-mod model_types_kit { // 🔖Model Types - Kit
+mod model_types_kit {
+    // 🔖Model Types - Kit
     // [👤semio📚rs💻semio🔖modeltypeskit](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit)
     // Model Types - Kit MUST provide the model types - kit functionality.
 
     use super::*;
 
-    mod kit_kind { // 🔖KitKind
+    mod kit_kind {
+        // 🔖KitKind
         // [👤semio📚rs💻semio🔖modeltypeskit🔖kitkind](repo://p/u/semio/b/l/rs/f/semio.rs/s/Model%20Types%20-%20Kit/s/KitKind)
         // KitKind discriminates the five persistence/transport forms of a Kit.
 
@@ -1261,7 +1280,8 @@ mod model_types_kit { // 🔖Model Types - Kit
 } // 🔖Model Types - Kit
 pub use model_types_kit::*;
 
-mod finder_functions { // 🔖Finder Functions
+mod finder_functions {
+    // 🔖Finder Functions
     // [👤semio📚rs💻semio🔖finderfunctions](repo://p/u/semio/b/l/rs/f/semio.rs/s/Finder%20Functions)
     // Finder Functions MUST provide the finder functions functionality.
     // [🛠️semio/rs/semio.rs#Finder Functions§find_type_in_kit](repo://definition/semio/rs/semio.rs/FINDER-FUNCTIONS/FIND-TYPE-IN-KIT)
@@ -1458,7 +1478,8 @@ mod finder_functions { // 🔖Finder Functions
 } // 🔖Finder Functions
 pub use finder_functions::*;
 
-mod serialization { // 🔖Serialization
+mod serialization {
+    // 🔖Serialization
     // [👤semio📚rs💻semio🔖serialization](repo://p/u/semio/b/l/rs/f/semio.rs/s/Serialization)
     // Serialization MUST provide the serialization functionality.
 
@@ -1557,7 +1578,8 @@ mod serialization { // 🔖Serialization
 } // 🔖Serialization
 pub use serialization::*;
 
-mod diff_types { // 🔖Diff Types
+mod diff_types {
+    // 🔖Diff Types
     // [👤semio📚rs💻semio🔖difftypes](repo://p/u/semio/b/l/rs/f/semio.rs/s/Diff%20Types)
     // Diff Types MUST provide the diff types functionality.
 
@@ -1773,6 +1795,13 @@ mod diff_types { // 🔖Diff Types
             skip_serializing_if = "Option::is_none"
         )]
         pub mandatory: Option<Option<bool>>,
+        #[serde(
+            rename = "maxChildren",
+            default,
+            deserialize_with = "deserialize_some",
+            skip_serializing_if = "Option::is_none"
+        )]
+        pub max_children: Option<Option<i32>>,
         #[serde(
             default,
             deserialize_with = "deserialize_some",
@@ -2359,6 +2388,13 @@ mod diff_types { // 🔖Diff Types
         )]
         pub icon: Option<Option<String>>,
         #[serde(
+            rename = "maxChildren",
+            default,
+            deserialize_with = "deserialize_some",
+            skip_serializing_if = "Option::is_none"
+        )]
+        pub max_children: Option<Option<i32>>,
+        #[serde(
             rename = "compatiblePorts",
             default,
             deserialize_with = "deserialize_some",
@@ -2732,13 +2768,15 @@ mod diff_types { // 🔖Diff Types
 } // 🔖Diff Types
 pub use diff_types::*;
 
-mod meta_and_shallow_types { // 🔖Meta And Shallow Types
+mod meta_and_shallow_types {
+    // 🔖Meta And Shallow Types
     // [👤semio📚rs💻semio🔖metaandshallowtypes](repo://p/u/semio/b/l/rs/f/semio.rs/s/Meta%20And%20Shallow%20Types)
     // Meta And Shallow Types MUST provide lightweight entity representations.
 
     use super::*;
 
-    mod sub_entity_meta_types { // 🔖Sub-entity Meta Types
+    mod sub_entity_meta_types {
+        // 🔖Sub-entity Meta Types
 
         /// AttributeMeta is identical to Attribute (no Vec fields to omit).
         use super::*;
@@ -2849,6 +2887,8 @@ mod meta_and_shallow_types { // 🔖Meta And Shallow Types
             pub description: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub icon: Option<String>,
+            #[serde(rename = "maxChildren", skip_serializing_if = "Option::is_none")]
+            pub max_children: Option<i32>,
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -2875,6 +2915,8 @@ mod meta_and_shallow_types { // 🔖Meta And Shallow Types
             pub description: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub mandatory: Option<bool>,
+            #[serde(rename = "maxChildren", skip_serializing_if = "Option::is_none")]
+            pub max_children: Option<i32>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub port: Option<PortId>,
         }
@@ -2962,7 +3004,8 @@ mod meta_and_shallow_types { // 🔖Meta And Shallow Types
     } // 🔖Sub-entity Meta Types
     pub use sub_entity_meta_types::*;
 
-    mod main_entity_meta_types { // 🔖Main Entity Meta Types
+    mod main_entity_meta_types {
+        // 🔖Main Entity Meta Types
 
         use super::*;
 
@@ -3196,7 +3239,8 @@ mod meta_and_shallow_types { // 🔖Meta And Shallow Types
     } // 🔖Main Entity Meta Types
     pub use main_entity_meta_types::*;
 
-    mod meta_and_shallow_conversion_functions { // 🔖Meta And Shallow Conversion Functions
+    mod meta_and_shallow_conversion_functions {
+        // 🔖Meta And Shallow Conversion Functions
 
         use super::*;
 
@@ -3277,6 +3321,7 @@ mod meta_and_shallow_types { // 🔖Meta And Shallow Types
                     name: self.name.clone(),
                     description: self.description.clone(),
                     icon: self.icon.clone(),
+                    max_children: self.max_children,
                 }
             }
         }
@@ -3302,6 +3347,7 @@ mod meta_and_shallow_types { // 🔖Meta And Shallow Types
                     name: self.name.clone(),
                     description: self.description.clone(),
                     mandatory: self.mandatory,
+                    max_children: self.max_children,
                     port: self.port.clone(),
                 }
             }
@@ -3559,7 +3605,8 @@ mod meta_and_shallow_types { // 🔖Meta And Shallow Types
 } // 🔖Meta And Shallow Types
 pub use meta_and_shallow_types::*;
 
-mod has_guid_trait { // 🔖HasGuid Trait
+mod has_guid_trait {
+    // 🔖HasGuid Trait
     // [👤semio📚rs💻semio🔖hasguidtrait](repo://p/u/semio/b/l/rs/f/semio.rs/s/HasGuid%20Trait)
     // HasGuid Trait MUST provide the hasguid trait functionality.
     // [✂️semio/rs/semio.rs#HasGuid Trait§HasGuid](repo://definition/semio/rs/semio.rs/HAS-GUID-TRAIT/HAS-GUID)
@@ -3947,7 +3994,8 @@ mod has_guid_trait { // 🔖HasGuid Trait
 } // 🔖HasGuid Trait
 pub use has_guid_trait::*;
 
-mod apply_diff { // 🔖ApplyDiff
+mod apply_diff {
+    // 🔖ApplyDiff
     // [👤semio📚rs💻semio🔖applydiff](repo://p/u/semio/b/l/rs/f/semio.rs/s/ApplyDiff)
     // ApplyDiff MUST provide the applydiff functionality.
 
@@ -4676,7 +4724,8 @@ mod apply_diff { // 🔖ApplyDiff
 } // 🔖ApplyDiff
 pub use apply_diff::*;
 
-mod kit_change_helpers { // 🔖Kit Change Helpers
+mod kit_change_helpers {
+    // 🔖Kit Change Helpers
     // [👤semio📚rs💻semio🔖kitchangehelpers](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Change%20Helpers)
     // Kit Change Helpers MUST provide convenience functions for computing kit and design diffs, inverses, and changes.
 
@@ -4751,7 +4800,8 @@ mod kit_change_helpers { // 🔖Kit Change Helpers
         }
     }
 
-    mod entity_diff_functions { // 🔖Entity Diff Functions
+    mod entity_diff_functions {
+        // 🔖Entity Diff Functions
 
         use super::*;
 
@@ -5640,7 +5690,8 @@ mod kit_change_helpers { // 🔖Kit Change Helpers
 } // 🔖Kit Change Helpers
 pub use kit_change_helpers::*;
 
-mod filter { // 🔖Filter
+mod filter {
+    // 🔖Filter
     // [👤semio📚rs💻semio🔖filter](repo://p/u/semio/b/l/rs/f/semio.rs/s/Filter)
     // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
@@ -6191,7 +6242,8 @@ mod filter { // 🔖Filter
 } // 🔖Filter
 pub use filter::*;
 
-mod flatten_design { // 🔖FlattenDesign
+mod flatten_design {
+    // 🔖FlattenDesign
     // [👤semio📚rs💻semio🔖flattendesign](repo://p/u/semio/b/l/rs/f/semio.rs/s/FlattenDesign)
     // FlattenDesign MUST provide the flattendesign functionality.
 
@@ -6887,7 +6939,8 @@ mod flatten_design { // 🔖FlattenDesign
 } // 🔖FlattenDesign
 pub use flatten_design::*;
 
-mod kit_model_export { // 🔖Kit Model Export
+mod kit_model_export {
+    // 🔖Kit Model Export
     // [👤semio📚rs💻semio🔖kitmodelexport](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Model%20Export)
     // Kit Model Export MUST provide GLB/glTF export of a design's assembled 3D model.
 
@@ -7539,7 +7592,8 @@ mod kit_model_export { // 🔖Kit Model Export
 } // 🔖Kit Model Export
 pub use kit_model_export::*;
 
-mod geometric_insights { // 🔖Geometric Insights
+mod geometric_insights {
+    // 🔖Geometric Insights
     // [👤semio📚rs💻semio🔖geometricinsights](repo://p/u/semio/b/l/rs/f/semio.rs/s/Geometric%20Insights)
     // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
@@ -7963,7 +8017,8 @@ mod geometric_insights { // 🔖Geometric Insights
 } // 🔖Geometric Insights
 pub use geometric_insights::*;
 
-mod validation_types { // 🔖Validation Types
+mod validation_types {
+    // 🔖Validation Types
     // [👤semio📚rs💻semio🔖validationtypes](repo://p/u/semio/b/l/rs/f/semio.rs/s/Validation%20Types)
     // Validation Types MUST provide the validation types functionality.
 
@@ -8463,7 +8518,8 @@ mod validation_types { // 🔖Validation Types
 } // 🔖Validation Types
 pub use validation_types::*;
 
-mod sqlite_import_export { // 🔖SQLite Import/Export
+mod sqlite_import_export {
+    // 🔖SQLite Import/Export
     // [👤semio📚rs💻semio🔖sqliteimport🔖export](repo://p/u/semio/b/l/rs/f/semio.rs/s/SQLite%20Import/Export)
     // SQLite Import/Export MUST provide the sqlite import/export functionality.
 
@@ -8780,6 +8836,7 @@ mod sqlite_import_export { // 🔖SQLite Import/Export
                         name: row.get(1)?,
                         description: row.get(2)?,
                         icon: row.get(3)?,
+                        max_children: None,
                         compatible_interfaces: None,
                         attributes: None,
                     })
@@ -8959,7 +9016,10 @@ mod sqlite_import_export { // 🔖SQLite Import/Export
             Ok(types)
         }
 
-        pub fn load_connectors(conn: &rusqlite::Connection, type_guid: &str) -> Result<Vec<Connector>> {
+        pub fn load_connectors(
+            conn: &rusqlite::Connection,
+            type_guid: &str,
+        ) -> Result<Vec<Connector>> {
             let mut stmt = conn.prepare("SELECT guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, description FROM connector WHERE type_guid = ?1")
             .map_err(|e| SemioError::Database { message: e.to_string() })?;
             let rows = stmt
@@ -8971,6 +9031,7 @@ mod sqlite_import_export { // 🔖SQLite Import/Export
                         direction: Vector::new(row.get(5)?, row.get(6)?, row.get(7)?),
                         t: row.get(8)?,
                         mandatory: Some(row.get(9)?),
+                        max_children: None,
                         port: row
                             .get::<_, Option<String>>(10)?
                             .map(|g| PortId { guid: g }),
@@ -9282,7 +9343,8 @@ mod sqlite_import_export { // 🔖SQLite Import/Export
 } // 🔖SQLite Import/Export
 pub use sqlite_import_export::*;
 
-mod zip_import_export { // 🔖Zip Import/Export
+mod zip_import_export {
+    // 🔖Zip Import/Export
     // [👤semio📚rs💻semio🔖zipimport🔖export](repo://p/u/semio/b/l/rs/f/semio.rs/s/Zip%20Import/Export)
     // Zip Import/Export MUST provide the zip import/export functionality.
 
@@ -9468,7 +9530,8 @@ mod zip_import_export { // 🔖Zip Import/Export
 } // 🔖Zip Import/Export
 pub use zip_import_export::*;
 
-mod kit_workflow { // 🔖Kit Workflow
+mod kit_workflow {
+    // 🔖Kit Workflow
     // [👤semio📚rs💻semio🔖kitworkflow](repo://p/u/semio/b/l/rs/f/semio.rs/s/Kit%20Workflow)
     // Kit Workflow MUST provide cohesive file, folder, archive, remote, and temporary kit operations.
 
@@ -9862,7 +9925,8 @@ mod kit_workflow { // 🔖Kit Workflow
 } // 🔖Kit Workflow
 pub use kit_workflow::*;
 
-mod wasm_bindings { // 🔖WASM Bindings
+mod wasm_bindings {
+    // 🔖WASM Bindings
     // [👤semio📚rs💻semio🔖wasmbindings](repo://p/u/semio/b/l/rs/f/semio.rs/s/WASM%20Bindings)
     // WASM Bindings MUST provide the wasm bindings functionality.
 
@@ -10026,7 +10090,8 @@ mod wasm_bindings { // 🔖WASM Bindings
 } // 🔖WASM Bindings
 pub use wasm_bindings::*;
 
-mod hash { // 🔖Hash
+mod hash {
+    // 🔖Hash
     // Hash MUST provide deterministic SHA-256 Merkle hash functions for all entities.
 
     use super::*;
@@ -10110,7 +10175,8 @@ mod hash { // 🔖Hash
         format!("{}", n)
     }
 
-    mod hash_value_types { // 🔖Hash Value Types
+    mod hash_value_types {
+        // 🔖Hash Value Types
 
         use super::*;
 
@@ -10174,7 +10240,8 @@ mod hash { // 🔖Hash
     } // 🔖Hash Value Types
     pub use hash_value_types::*;
 
-    mod hash_entities { // 🔖Hash Entities
+    mod hash_entities {
+        // 🔖Hash Entities
 
         use super::*;
 
@@ -11113,7 +11180,8 @@ mod hash { // 🔖Hash
     } // 🔖Hash Entities
     pub use hash_entities::*;
 
-    mod hash_diff_value_types { // 🔖Hash Diff Value Types
+    mod hash_diff_value_types {
+        // 🔖Hash Diff Value Types
 
         use super::*;
 
@@ -11165,7 +11233,8 @@ mod hash { // 🔖Hash
     } // 🔖Hash Diff Value Types
     pub use hash_diff_value_types::*;
 
-    mod hash_diff_collection { // 🔖Hash Diff Collection
+    mod hash_diff_collection {
+        // 🔖Hash Diff Collection
 
         use super::*;
 
@@ -11223,7 +11292,8 @@ mod hash { // 🔖Hash
     } // 🔖Hash Diff Collection
     pub use hash_diff_collection::*;
 
-    mod hash_diff_entities { // 🔖Hash Diff Entities
+    mod hash_diff_entities {
+        // 🔖Hash Diff Entities
 
         use super::*;
 
@@ -12882,7 +12952,8 @@ mod hash { // 🔖Hash
 } // 🔖Hash
 pub use hash::*;
 
-mod tests { // 🔖Tests
+mod tests {
+    // 🔖Tests
     // [👤semio📚rs💻semio🔖tests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests)
     // Tests MUST provide the tests functionality.
 
@@ -13161,7 +13232,8 @@ mod tests { // 🔖Tests
             Some(filtered[max_index].clone())
         }
 
-        mod roundtrip_tests { // 🔖Roundtrip Tests
+        mod roundtrip_tests {
+            // 🔖Roundtrip Tests
             // [👤semio📚rs💻semio🔖tests🔖roundtriptests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Roundtrip%20Tests)
             // Roundtrip Tests MUST provide the roundtrip tests functionality.
 
@@ -13221,7 +13293,8 @@ mod tests { // 🔖Tests
         } // 🔖Roundtrip Tests
         pub use roundtrip_tests::*;
 
-        mod design_model_tests { // 🔖DesignModel Tests
+        mod design_model_tests {
+            // 🔖DesignModel Tests
             // [👤semio📚rs💻semio🔖tests🔖designmodeltests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/DesignModel%20Tests)
             // DesignModel Tests MUST provide model-selection regression checks.
 
@@ -13274,7 +13347,8 @@ mod tests { // 🔖Tests
         } // 🔖DesignModel Tests
         pub use design_model_tests::*;
 
-        mod kit_filter_tests { // 🔖KitFilter Tests
+        mod kit_filter_tests {
+            // 🔖KitFilter Tests
             // [👤semio📚rs💻semio🔖tests🔖kitfiltertests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/KitFilter%20Tests)
             // KitFilter Tests MUST verify design-scoped kit extraction.
 
@@ -13555,7 +13629,8 @@ mod tests { // 🔖Tests
         } // 🔖KitFilter Tests
         pub use kit_filter_tests::*;
 
-        mod model_kpi_tests { // 🔖Model/KPI Tests
+        mod model_kpi_tests {
+            // 🔖Model/KPI Tests
             // [👤semio📚rs💻semio🔖tests🔖modelkpi](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Model%20KPI)
             // Model/KPI tests for get_geometric_insights_for_model using nakagin-capsule-tower.gltf.
 
@@ -13640,7 +13715,8 @@ mod tests { // 🔖Tests
         } // 🔖Model/KPI Tests
         pub use model_kpi_tests::*;
 
-        mod flatten_tests { // 🔖Flatten Tests
+        mod flatten_tests {
+            // 🔖Flatten Tests
             // [👤semio📚rs💻semio🔖tests🔖flattentests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Flatten%20Tests)
             // Flatten Tests MUST provide the flatten tests functionality.
 
@@ -13702,7 +13778,8 @@ mod tests { // 🔖Tests
         } // 🔖Flatten Tests
         pub use flatten_tests::*;
 
-        mod change_tests { // 🔖Change Tests
+        mod change_tests {
+            // 🔖Change Tests
             // [👤semio📚rs💻semio🔖tests🔖changetests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Change%20Tests)
             // Change Tests MUST provide the change tests functionality.
 
@@ -13749,7 +13826,8 @@ mod tests { // 🔖Tests
         } // 🔖Change Tests
         pub use change_tests::*;
 
-        mod delete_tests { // 🔖Delete Tests
+        mod delete_tests {
+            // 🔖Delete Tests
             // [👤semio📚rs💻semio🔖tests🔖deletetests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Delete%20Tests)
             // Delete Tests MUST verify delete_pieces_and_connections_in_design functionality.
 
@@ -13759,7 +13837,8 @@ mod tests { // 🔖Tests
                 use super::*;
 
                 #[test]
-                pub fn nakagin_capsule_tower_delete_third_tambour_and_first_small_tower_connection() {
+                pub fn nakagin_capsule_tower_delete_third_tambour_and_first_small_tower_connection()
+                {
                     let kit = load_kit("metabolism.kit.semio.json");
                     let designs = kit.designs.as_ref().expect("Kit has no designs");
                     let design = designs
@@ -13936,7 +14015,8 @@ mod tests { // 🔖Tests
         } // 🔖Delete Tests
         pub use delete_tests::*;
 
-        mod with_diff_tests { // 🔖WithDiff Tests
+        mod with_diff_tests {
+            // 🔖WithDiff Tests
             // [👤semio📚rs💻semio🔖tests🔖withdifftests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/WithDiff%20Tests)
             // WithDiff Tests MUST verify design_with_diff functionality.
 
@@ -14033,7 +14113,8 @@ mod tests { // 🔖Tests
         } // 🔖WithDiff Tests
         pub use with_diff_tests::*;
 
-        mod drag_tests { // 🔖Drag Tests
+        mod drag_tests {
+            // 🔖Drag Tests
             // [👤semio📚rs💻semio🔖tests🔖dragtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Drag%20Tests)
             // Drag Tests MUST verify drag_pieces_in_design functionality.
 
@@ -14169,7 +14250,8 @@ mod tests { // 🔖Tests
         } // 🔖Drag Tests
         pub use drag_tests::*;
 
-        mod validation_tests { // 🔖Validation Tests
+        mod validation_tests {
+            // 🔖Validation Tests
             // [👤semio📚rs💻semio🔖tests🔖validationtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Validation%20Tests)
             // Validation Tests MUST provide the validation tests functionality.
 
@@ -14208,7 +14290,8 @@ mod tests { // 🔖Tests
         } // 🔖Validation Tests
         pub use validation_tests::*;
 
-        mod design_quality_sum_tests { // 🔖Design Quality Sum Tests
+        mod design_quality_sum_tests {
+            // 🔖Design Quality Sum Tests
 
             use super::*;
 
@@ -14247,7 +14330,8 @@ mod tests { // 🔖Tests
         } // 🔖Design Quality Sum Tests
         pub use design_quality_sum_tests::*;
 
-        mod export_design_model_tests { // 🔖Export Design Model Tests
+        mod export_design_model_tests {
+            // 🔖Export Design Model Tests
 
             use super::*;
 
@@ -14361,7 +14445,8 @@ mod tests { // 🔖Tests
         } // 🔖Export Design Model Tests
         pub use export_design_model_tests::*;
 
-        mod meta_and_shallow_tests { // 🔖Meta And Shallow Tests
+        mod meta_and_shallow_tests {
+            // 🔖Meta And Shallow Tests
 
             use super::*;
 
@@ -14508,7 +14593,8 @@ mod tests { // 🔖Tests
         } // 🔖Meta And Shallow Tests
         pub use meta_and_shallow_tests::*;
 
-        mod kit_workflow_tests { // 🔖Kit Workflow Tests
+        mod kit_workflow_tests {
+            // 🔖Kit Workflow Tests
             // [👤semio📚rs💻semio🔖tests🔖kitworkflowtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/Kit%20Workflow%20Tests)
             // Kit Workflow Tests MUST verify file, folder, archive, remote, and temporary kit workflows.
 
@@ -14800,7 +14886,8 @@ mod tests { // 🔖Tests
         } // 🔖Kit Workflow Tests
         pub use kit_workflow_tests::*;
 
-        mod kit_kind_tests { // 🔖KitKind Tests
+        mod kit_kind_tests {
+            // 🔖KitKind Tests
             // [👤semio📚rs💻semio🔖tests🔖kitkindtests](repo://p/u/semio/b/l/rs/f/semio.rs/s/Tests/s/KitKind%20Tests)
             // KitKind Tests MUST verify serialization, deserialization and completeness.
 
@@ -14928,7 +15015,8 @@ mod tests { // 🔖Tests
         } // 🔖KitKind Tests
         pub use kit_kind_tests::*;
 
-        mod hash_tests { // 🔖Hash Tests
+        mod hash_tests {
+            // 🔖Hash Tests
 
             use super::*;
 
@@ -15075,11 +15163,101 @@ mod tests { // 🔖Tests
             }
         } // 🔖Hash Tests
         pub use hash_tests::*;
+
+        mod max_children_tests {
+            // 🔖MaxChildren Tests
+            use super::*;
+
+            #[test]
+            pub fn port_max_children_roundtrip() {
+                let port = Port {
+                    guid: "p1".to_string(),
+                    name: "TestPort".to_string(),
+                    max_children: Some(3),
+                    description: None,
+                    icon: None,
+                    compatible_interfaces: None,
+                    attributes: None,
+                };
+                let json = serde_json::to_string(&port).unwrap();
+                assert!(json.contains("\"maxChildren\":3"));
+                let restored: Port = serde_json::from_str(&json).unwrap();
+                assert_eq!(restored.max_children, Some(3));
+            }
+
+            #[test]
+            pub fn port_max_children_omitted() {
+                let port = Port {
+                    guid: "p1".to_string(),
+                    name: "TestPort".to_string(),
+                    max_children: None,
+                    description: None,
+                    icon: None,
+                    compatible_interfaces: None,
+                    attributes: None,
+                };
+                let json = serde_json::to_string(&port).unwrap();
+                assert!(!json.contains("maxChildren"));
+            }
+
+            #[test]
+            pub fn connector_max_children_roundtrip() {
+                let connector = Connector {
+                    guid: "c1".to_string(),
+                    t: 0.0,
+                    point: Vector {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                    direction: Vector {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 1.0,
+                    },
+                    max_children: Some(5),
+                    name: None,
+                    description: None,
+                    port: None,
+                    mandatory: None,
+                    props: None,
+                    attributes: None,
+                };
+                let json = serde_json::to_string(&connector).unwrap();
+                assert!(json.contains("\"maxChildren\":5"));
+                let restored: Connector = serde_json::from_str(&json).unwrap();
+                assert_eq!(restored.max_children, Some(5));
+            }
+
+            #[test]
+            pub fn kit_with_max_children_roundtrip() {
+                let json = r#"{"guid":"kit-1","name":"TestKit","ports":[{"guid":"p1","name":"Port1","maxChildren":3}],"types":[{"guid":"t1","name":"Type1","connectors":[{"guid":"c1","t":0,"point":{"x":0,"y":0,"z":0},"direction":{"x":0,"y":0,"z":1},"maxChildren":5}]}]}"#;
+                let kit: Kit = serde_json::from_str(json).unwrap();
+                assert_eq!(kit.ports.as_ref().unwrap()[0].max_children, Some(3));
+                assert_eq!(
+                    kit.types.as_ref().unwrap()[0].connectors.as_ref().unwrap()[0].max_children,
+                    Some(5)
+                );
+                let reserialized = serde_json::to_string(&kit).unwrap();
+                let restored: Kit = serde_json::from_str(&reserialized).unwrap();
+                assert_eq!(restored.ports.as_ref().unwrap()[0].max_children, Some(3));
+                assert_eq!(
+                    restored.types.as_ref().unwrap()[0]
+                        .connectors
+                        .as_ref()
+                        .unwrap()[0]
+                        .max_children,
+                    Some(5)
+                );
+            }
+        } // 🔖MaxChildren Tests
+        pub use max_children_tests::*;
     }
 } // 🔖Tests
 pub use tests::*;
 
-mod benchmark { // 🔖Benchmark
+mod benchmark {
+    // 🔖Benchmark
     use super::*;
 
     #[cfg(test)]
