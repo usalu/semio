@@ -929,10 +929,7 @@ const resolveSemioDiagramOriginPixels = (toPixelX: (u: number) => number, toPixe
 });
 
 /** Tips of unit segments from the origin: +1 in u at v=0, +1 in v (diagramY is -v so tip at diagramY=-1). */
-const resolveSemioDiagramUnitAxisTips = (
-  toPixelX: (u: number) => number,
-  toPixelY: (diagramY: number) => number,
-): { uTip: { x: number; y: number }; vTip: { x: number; y: number } } => ({
+const resolveSemioDiagramUnitAxisTips = (toPixelX: (u: number) => number, toPixelY: (diagramY: number) => number): { uTip: { x: number; y: number }; vTip: { x: number; y: number } } => ({
   uTip: { x: toPixelX(1), y: toPixelY(0) },
   vTip: { x: toPixelX(0), y: toPixelY(-1) },
 });
@@ -1306,22 +1303,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
     const toPxX = (u: number) => vpX(offsetX + (u - snapshot.minU) * scale);
     const toPxY = (diagramY: number) => vpY(offsetY + (diagramY - snapshot.minY) * scale);
     return computeDiagramSelectionOverlayRect(snapshot, selectedPieceGuids, selectedConnectionGuids, toPxX, toPxY, piecePadPx, connectionPadPx);
-  }, [
-    centerX,
-    centerY,
-    effectiveSelectionEnabled,
-    offsetX,
-    offsetY,
-    resolvedPan.x,
-    resolvedPan.y,
-    resolvedZoom,
-    scale,
-    selectedConnectionGuids,
-    selectedPieceGuids,
-    snapshot,
-    pieceRadius,
-    strokeWidth,
-  ]);
+  }, [centerX, centerY, effectiveSelectionEnabled, offsetX, offsetY, resolvedPan.x, resolvedPan.y, resolvedZoom, scale, selectedConnectionGuids, selectedPieceGuids, snapshot, pieceRadius, strokeWidth]);
 
   const fittedPanX = fittedViewport.pan.x;
   const fittedPanY = fittedViewport.pan.y;
@@ -1609,13 +1591,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
               }
               onPointerEnter={effectivePieceHoverEnabled ? () => setHoveredPiece(point.guid) : undefined}
               onPointerLeave={effectivePieceHoverEnabled ? () => setHoveredPiece((resolvedHover.pieceGuid ?? null) === point.guid ? null : (resolvedHover.pieceGuid ?? null)) : undefined}
-              r={
-                (selected
-                  ? pieceRadius + DIAGRAM_PIECE_SELECTED_RADIUS_EXTRA
-                  : hovered
-                    ? pieceRadius + DIAGRAM_PIECE_HOVER_RADIUS_EXTRA
-                    : pieceRadius) * pxPerDiagramUnit
-              }
+              r={(selected ? pieceRadius + DIAGRAM_PIECE_SELECTED_RADIUS_EXTRA : hovered ? pieceRadius + DIAGRAM_PIECE_HOVER_RADIUS_EXTRA : pieceRadius) * pxPerDiagramUnit}
               stroke={selected || hovered ? getInteractiveEntityColor(point.status, selected, hovered) : "none"}
               strokeWidth={selected ? Math.max(1, 0.1 * pxPerDiagramUnit) : hovered ? Math.max(1, 0.06 * pxPerDiagramUnit) : 0}
               style={{ cursor: onPieceClick || effectivePieceSelectionEnabled ? "pointer" : "default" }}
@@ -2286,11 +2262,7 @@ const toScenePieceMatrix = (plane: Plane): THREE.Matrix4 => {
 // Specs: Union of {@link THREE.Box3.setFromObject} on registered roots — pieces use transform groups that wrap GLTF or placeholders; connections use cylinder meshes. Excludes abstract planes/connectors.
 // Summary: World AABB for selected rendered scene objects only.
 
-const computeSceneSelectionUnionBox = (
-  rootsByGuid: Map<string, THREE.Object3D>,
-  selectedPieceGuids: Set<string>,
-  selectedConnectionGuids: Set<string>,
-): THREE.Box3 | null => {
+const computeSceneSelectionUnionBox = (rootsByGuid: Map<string, THREE.Object3D>, selectedPieceGuids: Set<string>, selectedConnectionGuids: Set<string>): THREE.Box3 | null => {
   const box = new THREE.Box3();
   let any = false;
   const unionObject = (obj: THREE.Object3D) => {
@@ -2365,10 +2337,7 @@ const SceneSelectionBoundsFromModels: React.FC<{
   }, []);
 
   const selectionNonEmpty = selectedPieceGuids.size > 0 || selectedConnectionGuids.size > 0;
-  const selectionKey = React.useMemo(
-    () => `${Array.from(selectedPieceGuids).sort().join(",")}|${Array.from(selectedConnectionGuids).sort().join(",")}`,
-    [selectedPieceGuids, selectedConnectionGuids],
-  );
+  const selectionKey = React.useMemo(() => `${Array.from(selectedPieceGuids).sort().join(",")}|${Array.from(selectedConnectionGuids).sort().join(",")}`, [selectedPieceGuids, selectedConnectionGuids]);
 
   React.useLayoutEffect(() => {
     if (!selectionEnabled || !selectionNonEmpty) return;
@@ -2670,15 +2639,7 @@ const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePie
     : undefined;
 
   return (
-    <mesh
-      ref={connectionMeshRef}
-      name={connection.guid}
-      position={transform.midpoint}
-      quaternion={transform.quaternion}
-      onClick={handleClick}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-    >
+    <mesh ref={connectionMeshRef} name={connection.guid} position={transform.midpoint} quaternion={transform.quaternion} onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
       <cylinderGeometry args={[radius, radius, transform.length, 12]} />
       <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.2 : 0.05} transparent={status === "removed"} opacity={status === "removed" ? 0.35 : 1} />
     </mesh>
@@ -3040,54 +3001,50 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
             onAxisClick={onProjectionChange ? handleAxisClick : undefined}
             onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}
           >
-            <SceneSelectionBoundsFromModels
-              selectedConnectionGuids={selectedConnectionGuids}
-              selectedPieceGuids={selectedPieceGuids}
-              selectionEnabled={selectionEnabled}
-            />
+            <SceneSelectionBoundsFromModels selectedConnectionGuids={selectedConnectionGuids} selectedPieceGuids={selectedPieceGuids} selectionEnabled={selectionEnabled} />
             {snapshot.connections.map(({ connection, sourcePiece, targetPiece, status }) => (
-            <SceneConnection
-              key={connection.guid}
-              connection={connection}
-              sourcePiece={sourcePiece}
-              targetPiece={targetPiece}
-              status={status}
-              isSelected={selectedConnectionGuids.has(connection.guid)}
-              isHovered={hoveredConnectionGuid === connection.guid}
-              onClick={
-                effectiveConnectionSelectionEnabled || onConnectionClick
-                  ? () => {
-                      handleSelectConnection(connection.guid);
-                      onConnectionClick?.(connection);
-                    }
-                  : undefined
-              }
-              onPointerEnter={effectiveConnectionHoverEnabled ? () => handleHoverConnection(connection.guid) : undefined}
-              onPointerLeave={effectiveConnectionHoverEnabled ? () => handleHoverConnection((resolvedHover.connectionGuid ?? null) === connection.guid ? null : (resolvedHover.connectionGuid ?? null)) : undefined}
-            />
-          ))}
-          {pieceAssets.map(({ piece, status, modelName, modelSource }) => (
-            <ScenePiece
-              key={piece.guid}
-              piece={piece}
-              status={status}
-              modelName={modelName}
-              modelSource={modelSource}
-              isSelected={selectedPieceGuids.has(piece.guid)}
-              isHovered={hoveredPieceGuid === piece.guid}
-              onClick={
-                effectivePieceSelectionEnabled || onPieceClick
-                  ? () => {
-                      handleSelectPiece(piece.guid);
-                      onPieceClick?.(piece);
-                    }
-                  : undefined
-              }
-              onPointerEnter={effectivePieceHoverEnabled ? () => handleHoverPiece(piece.guid) : undefined}
-              onPointerLeave={effectivePieceHoverEnabled ? () => handleHoverPiece((resolvedHover.pieceGuid ?? null) === piece.guid ? null : (resolvedHover.pieceGuid ?? null)) : undefined}
-            />
-          ))}
-        </SceneInnerContent>
+              <SceneConnection
+                key={connection.guid}
+                connection={connection}
+                sourcePiece={sourcePiece}
+                targetPiece={targetPiece}
+                status={status}
+                isSelected={selectedConnectionGuids.has(connection.guid)}
+                isHovered={hoveredConnectionGuid === connection.guid}
+                onClick={
+                  effectiveConnectionSelectionEnabled || onConnectionClick
+                    ? () => {
+                        handleSelectConnection(connection.guid);
+                        onConnectionClick?.(connection);
+                      }
+                    : undefined
+                }
+                onPointerEnter={effectiveConnectionHoverEnabled ? () => handleHoverConnection(connection.guid) : undefined}
+                onPointerLeave={effectiveConnectionHoverEnabled ? () => handleHoverConnection((resolvedHover.connectionGuid ?? null) === connection.guid ? null : (resolvedHover.connectionGuid ?? null)) : undefined}
+              />
+            ))}
+            {pieceAssets.map(({ piece, status, modelName, modelSource }) => (
+              <ScenePiece
+                key={piece.guid}
+                piece={piece}
+                status={status}
+                modelName={modelName}
+                modelSource={modelSource}
+                isSelected={selectedPieceGuids.has(piece.guid)}
+                isHovered={hoveredPieceGuid === piece.guid}
+                onClick={
+                  effectivePieceSelectionEnabled || onPieceClick
+                    ? () => {
+                        handleSelectPiece(piece.guid);
+                        onPieceClick?.(piece);
+                      }
+                    : undefined
+                }
+                onPointerEnter={effectivePieceHoverEnabled ? () => handleHoverPiece(piece.guid) : undefined}
+                onPointerLeave={effectivePieceHoverEnabled ? () => handleHoverPiece((resolvedHover.pieceGuid ?? null) === piece.guid ? null : (resolvedHover.pieceGuid ?? null)) : undefined}
+              />
+            ))}
+          </SceneInnerContent>
         </SceneModelBoundsRegistryProvider>
       </ThreeCanvas>
     </div>
@@ -6073,7 +6030,7 @@ if (import.meta.vitest) {
         ]),
       );
       expect(snapshot.connections.map((asset) => [asset.connection.guid, asset.status])).toEqual([["connection-a", "modified"]]);
-      expect(snapshot.connections[0]?.sourcePiece.guid).toBe("piece-a");
+      expect(snapshot.connections[0]?.sourcePiece.guid).toBe("piece-c");
       expect(snapshot.connections[0]?.targetPiece.guid).toBe("piece-b");
     });
   });
@@ -6103,6 +6060,71 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("buildDiagramSnapshot with diff", () => {
+    it("annotates updated pieces as modified and other pieces as default", () => {
+      const design = {
+        guid: "d",
+        pieces: [
+          { guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece,
+          { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece,
+          { guid: "piece-c", type: { guid: "k" }, plane: testPlane, center: { u: 10, v: 0 } } as unknown as Piece,
+        ],
+        connections: [{ guid: "conn-ab", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection],
+      } as unknown as Design;
+
+      const diff: DesignDiff = {
+        pieces: {
+          updated: [{ piece: { guid: "piece-a" }, diff: { center: { u: 1, v: 2 } } }],
+        },
+        connections: {
+          updated: [{ connection: { guid: "conn-ab" }, diff: { u: 1, v: 2 } }],
+        },
+      } as unknown as DesignDiff;
+
+      const snapshot = buildDiagramSnapshot(design, 12, diff);
+
+      const pieceStatuses = new Map(snapshot.points.map((p) => [p.guid, p.status]));
+      expect(pieceStatuses.get("piece-a")).toBe("modified");
+      expect(pieceStatuses.get("piece-b")).toBe("default");
+      expect(pieceStatuses.get("piece-c")).toBe("default");
+
+      // Updated pieces should be at their NEW positions (diff applied)
+      const pieceA = snapshot.points.find((p) => p.guid === "piece-a")!;
+      expect(pieceA.u).toBe(1);
+      expect(pieceA.v).toBe(2);
+
+      // Unchanged pieces stay at original positions
+      const pieceB = snapshot.points.find((p) => p.guid === "piece-b")!;
+      expect(pieceB.u).toBe(5);
+      expect(pieceB.v).toBe(3);
+
+      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.guid, l.status]));
+      expect(connectionStatuses.get("conn-ab")).toBe("modified");
+    });
+
+    it("annotates added pieces as added and removed pieces as removed", () => {
+      const design = {
+        guid: "d",
+        pieces: [{ guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece],
+        connections: [],
+      } as unknown as Design;
+
+      const diff: DesignDiff = {
+        pieces: {
+          removed: [{ guid: "piece-b" } as unknown as Piece],
+          added: [{ guid: "piece-c", type: { guid: "k" }, plane: testPlane, center: { u: 8, v: 1 } } as unknown as Piece],
+        },
+      } as unknown as DesignDiff;
+
+      const snapshot = buildDiagramSnapshot(design, 12, diff);
+
+      const pieceStatuses = new Map(snapshot.points.map((p) => [p.guid, p.status]));
+      expect(pieceStatuses.get("piece-a")).toBe("default");
+      expect(pieceStatuses.get("piece-b")).toBe("removed");
+      expect(pieceStatuses.get("piece-c")).toBe("added");
+    });
+  });
+
   describe("computeDiagramSelectionOverlayRect", () => {
     it("returns null when no pieces or connections are selected", () => {
       const design = {
@@ -6111,20 +6133,35 @@ if (import.meta.vitest) {
         connections: [],
       } as unknown as Design;
       const snapshot = buildDiagramSnapshot(design, 12, undefined);
-      expect(computeDiagramSelectionOverlayRect(snapshot, new Set(), new Set(), (u) => u, (y) => y, 2, 2)).toBeNull();
+      expect(
+        computeDiagramSelectionOverlayRect(
+          snapshot,
+          new Set(),
+          new Set(),
+          (u) => u,
+          (y) => y,
+          2,
+          2,
+        ),
+      ).toBeNull();
     });
 
     it("wraps selected piece centers with padding in pixel space", () => {
       const design = {
         guid: "d",
-        pieces: [
-          { guid: "a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece,
-          { guid: "b", type: { guid: "k" }, plane: testPlane, center: { u: 10, v: 4 } } as unknown as Piece,
-        ],
+        pieces: [{ guid: "a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "b", type: { guid: "k" }, plane: testPlane, center: { u: 10, v: 4 } } as unknown as Piece],
         connections: [],
       } as unknown as Design;
       const snapshot = buildDiagramSnapshot(design, 12, undefined);
-      const r = computeDiagramSelectionOverlayRect(snapshot, new Set(["a", "b"]), new Set(), (u) => u * 10, (y) => y * 10, 5, 2);
+      const r = computeDiagramSelectionOverlayRect(
+        snapshot,
+        new Set(["a", "b"]),
+        new Set(),
+        (u) => u * 10,
+        (y) => y * 10,
+        5,
+        2,
+      );
       expect(r).toEqual({ x: -5, y: -45, width: 110, height: 50 });
     });
   });

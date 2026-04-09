@@ -1,0 +1,12 @@
+{
+  "title": "Fix Sketchpad Drag Behavior to Match Storybook Algorithms Drag",
+  "status": "open",
+  "description": "The sketchpad drag (both live preview and final diff) still behaves differently from the storybook Drag story. Need to deeply compare what the storybook does vs what the sketchpad does and align them completely.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1308"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪5bf787f12f9e4dac9681280ec6dbc8bf"
+  ]
+}

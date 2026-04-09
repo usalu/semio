@@ -1,0 +1,12 @@
+{
+  "title": "Refine Sketchpad Tree Sibling Spacing",
+  "status": "open",
+  "description": "Refine the shared sketchpad tree spacing so that whenever a sibling transition goes from a leaf/property row to an expandable/group row at the same depth, one empty-row-sized gap is inserted before the group row. Apply this generically based on row kind and sibling transition, preserve compact spacing within consecutive property rows, hierarchy, tree lines, value-column layout, and row actions. Extend existing tests and make them pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1310"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪4704291442ce47ee8bc09af809faa9ef"
+  ]
+}

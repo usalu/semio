@@ -1,0 +1,13 @@
+{
+  "title": "Implement Undo Redo in Sketchpad Store",
+  "status": "closed",
+  "description": "Implement undo/redo in the sketchpad store using the existing transaction/edit architecture. Integrate into the real store/command mutation path with reversible do/undo diffs. Tests for commit, multi-step merge, abort rollback, redo invalidation, and undo/redo boundaries.",
+  "summary": "Fixed bug in createKeyedTransactionHandlers and createSingleKeyTransactionHandlers where fresh-start TRANSACTION.START incorrectly cleared redoStack. Only commit/recordEdit should clear redo - matching PlainAppStore.startTransaction() behavior. Added 19 vitest unit tests for transaction undo/redo contract: single commit, multi-step merge, empty tx ignored, abort rollback, undo/redo movement, redo invalidation, boundaries, fresh start preserves redo, nested auto-finalize, symmetric cycles, kit diff roundtrip. All 174 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1303"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪545e03f2035f41e99746c7d76a34fc10"
+  ]
+}

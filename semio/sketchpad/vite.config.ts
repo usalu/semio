@@ -98,6 +98,10 @@ export default defineConfig(async () => {
         target: "es2020",
       },
     },
+    server: {
+      host: "0.0.0.0",
+      port: 5173,
+    },
     build: {
       rollupOptions: {
         external: ["@playwright/test", "node:fs/promises", "node:path", "node:url", "@semio/assets/semio/metabolism.kit.semio.json", "fs", "path", "url"],

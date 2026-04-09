@@ -4067,8 +4067,10 @@ mod apply_diff {
     }
 
     /// 📌Creates a mixed design keeping old entities with diff status annotations.
-    /// annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added),
-    /// keep deleted entities in place marked as removed, and append added entities marked as added.
+    /// annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added).
+    /// Updated entities are applied (new positions/values) and marked as modified.
+    /// Removed entities are kept in place marked as removed.
+    /// Added entities are appended marked as added.
     pub fn design_with_diff(base: &Design, diff: &DesignDiff) -> Design {
         let status_attr = |status: &str| Attribute {
             guid: format!("semio.diffStatus.{}", status),
@@ -4087,13 +4089,13 @@ mod apply_diff {
                     .unwrap_or_default()
             })
             .unwrap_or_default();
-        let updated_piece_guids: std::collections::HashSet<&str> = diff
+        let updated_piece_map: std::collections::HashMap<&str, &PieceDiff> = diff
             .pieces
             .as_ref()
             .map(|pd| {
                 pd.updated
                     .as_ref()
-                    .map(|u| u.iter().map(|upd| upd.guid.as_str()).collect())
+                    .map(|u| u.iter().map(|upd| (upd.guid.as_str(), &upd.diff)).collect())
                     .unwrap_or_default()
             })
             .unwrap_or_default();
@@ -4108,13 +4110,13 @@ mod apply_diff {
                     .unwrap_or_default()
             })
             .unwrap_or_default();
-        let updated_conn_guids: std::collections::HashSet<&str> = diff
+        let updated_conn_map: std::collections::HashMap<&str, &ConnectionDiff> = diff
             .connections
             .as_ref()
             .map(|cd| {
                 cd.updated
                     .as_ref()
-                    .map(|u| u.iter().map(|upd| upd.guid.as_str()).collect())
+                    .map(|u| u.iter().map(|upd| (upd.guid.as_str(), &upd.diff)).collect())
                     .unwrap_or_default()
             })
             .unwrap_or_default();
@@ -4123,15 +4125,20 @@ mod apply_diff {
         if let Some(ref pieces) = base.pieces {
             for p in pieces {
                 let mut pc = p.clone();
-                let mut attrs = pc.attributes.clone().unwrap_or_default();
                 if removed_piece_guids.contains(pc.guid.as_str()) {
+                    let mut attrs = pc.attributes.clone().unwrap_or_default();
                     attrs.push(status_attr("removed"));
-                } else if updated_piece_guids.contains(pc.guid.as_str()) {
+                    pc.attributes = Some(attrs);
+                } else if let Some(piece_diff) = updated_piece_map.get(pc.guid.as_str()) {
+                    apply_piece_diff(&mut pc, piece_diff);
+                    let mut attrs = pc.attributes.clone().unwrap_or_default();
                     attrs.push(status_attr("modified"));
+                    pc.attributes = Some(attrs);
                 } else {
+                    let mut attrs = pc.attributes.clone().unwrap_or_default();
                     attrs.push(status_attr("unchanged"));
+                    pc.attributes = Some(attrs);
                 }
-                pc.attributes = Some(attrs);
                 result_pieces.push(pc);
             }
         }
@@ -4151,15 +4158,20 @@ mod apply_diff {
         if let Some(ref conns) = base.connections {
             for c in conns {
                 let mut cc = c.clone();
-                let mut attrs = cc.attributes.clone().unwrap_or_default();
                 if removed_conn_guids.contains(cc.guid.as_str()) {
+                    let mut attrs = cc.attributes.clone().unwrap_or_default();
                     attrs.push(status_attr("removed"));
-                } else if updated_conn_guids.contains(cc.guid.as_str()) {
+                    cc.attributes = Some(attrs);
+                } else if let Some(conn_diff) = updated_conn_map.get(cc.guid.as_str()) {
+                    apply_connection_diff(&mut cc, conn_diff);
+                    let mut attrs = cc.attributes.clone().unwrap_or_default();
                     attrs.push(status_attr("modified"));
+                    cc.attributes = Some(attrs);
                 } else {
+                    let mut attrs = cc.attributes.clone().unwrap_or_default();
                     attrs.push(status_attr("unchanged"));
+                    cc.attributes = Some(attrs);
                 }
-                cc.attributes = Some(attrs);
                 result_conns.push(cc);
             }
         }
@@ -7020,22 +7032,36 @@ mod copy_paste_design {
                                             }
                                             if let Some(co) = coord {
                                                 let connected_stub = external_origin_guids
-                                                    .contains(parent_conn.connected.piece.guid.as_str());
+                                                    .contains(
+                                                        parent_conn.connected.piece.guid.as_str(),
+                                                    );
                                                 let connecting_stub = external_origin_guids
-                                                    .contains(parent_conn.connecting.piece.guid.as_str());
-                                                let conn_matches_parentage = (parent_conn.connecting.piece.guid.as_str()
+                                                    .contains(
+                                                        parent_conn.connecting.piece.guid.as_str(),
+                                                    );
+                                                let conn_matches_parentage = (parent_conn
+                                                    .connecting
+                                                    .piece
+                                                    .guid
+                                                    .as_str()
                                                     == piece.guid.as_str()
                                                     && parent_conn.connected.piece.guid.as_str()
                                                         == parent_guid)
                                                     || (parent_conn.connected.piece.guid.as_str()
                                                         == piece.guid.as_str()
-                                                        && parent_conn.connecting.piece.guid.as_str()
+                                                        && parent_conn
+                                                            .connecting
+                                                            .piece
+                                                            .guid
+                                                            .as_str()
                                                             == parent_guid);
                                                 // Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
                                                 // internal–internal source edges (neither side a stub) must keep cloned u/v.
-                                                if conn_matches_parentage && connected_stub != connecting_stub
+                                                if conn_matches_parentage
+                                                    && connected_stub != connecting_stub
                                                 {
-                                                    let mut flat_parent_center: Option<Coord> = candidate.center.clone();
+                                                    let mut flat_parent_center: Option<Coord> =
+                                                        candidate.center.clone();
                                                     if flat_parent_center.is_none() {
                                                         flat_parent_center = candidate
                                                             .attributes
@@ -7044,7 +7070,10 @@ mod copy_paste_design {
                                                             .iter()
                                                             .find(|a| a.key == "semio.center")
                                                             .and_then(|a| a.value.as_ref())
-                                                            .and_then(|v| serde_json::from_str::<Coord>(v).ok());
+                                                            .and_then(|v| {
+                                                                serde_json::from_str::<Coord>(v)
+                                                                    .ok()
+                                                            });
                                                     }
                                                     if flat_parent_center.is_none() {
                                                         flat_parent_center = external_parent
@@ -7054,19 +7083,27 @@ mod copy_paste_design {
                                                             .iter()
                                                             .find(|a| a.key == "semio.center")
                                                             .and_then(|a| a.value.as_ref())
-                                                            .and_then(|v| serde_json::from_str::<Coord>(v).ok());
+                                                            .and_then(|v| {
+                                                                serde_json::from_str::<Coord>(v)
+                                                                    .ok()
+                                                            });
                                                     }
                                                     if flat_parent_center.is_none() {
-                                                        flat_parent_center = external_parent.center.clone();
+                                                        flat_parent_center =
+                                                            external_parent.center.clone();
                                                     }
-                                                    let mut flat_child_center: Option<Coord> = piece
-                                                        .attributes
-                                                        .as_deref()
-                                                        .unwrap_or(&[])
-                                                        .iter()
-                                                        .find(|a| a.key == "semio.center")
-                                                        .and_then(|a| a.value.as_ref())
-                                                        .and_then(|v| serde_json::from_str::<Coord>(v).ok());
+                                                    let mut flat_child_center: Option<Coord> =
+                                                        piece
+                                                            .attributes
+                                                            .as_deref()
+                                                            .unwrap_or(&[])
+                                                            .iter()
+                                                            .find(|a| a.key == "semio.center")
+                                                            .and_then(|a| a.value.as_ref())
+                                                            .and_then(|v| {
+                                                                serde_json::from_str::<Coord>(v)
+                                                                    .ok()
+                                                            });
                                                     if flat_child_center.is_none() {
                                                         flat_child_center = piece.center.clone();
                                                     }

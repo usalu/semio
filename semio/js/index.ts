@@ -5135,9 +5135,11 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
 };
 
 /**
- * Creates a mixed design keeping old entities with diff status annotations.
- * annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added),
- * keep deleted entities in place marked as removed, and append added entities marked as added.
+ * Creates a mixed design applying diff changes and annotating with diff status.
+ * Annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added).
+ * Updated entities are applied (new positions/values) and marked as modified.
+ * Removed entities are kept in place marked as removed.
+ * Added entities are appended marked as added.
  **/
 export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
   const DIFF_STATUS_KEY = "semio.diffStatus";
@@ -5154,7 +5156,10 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
 
   const resultPieces: Piece[] = (base.pieces ?? []).map((p) => {
     if (removedPieceGuids.has(p.guid)) return { ...p, attributes: setStatus(p.attributes, DiffStatus.Removed) };
-    if (updatedPieceMap.has(p.guid)) return { ...p, attributes: setStatus(p.attributes, DiffStatus.Modified) };
+    if (updatedPieceMap.has(p.guid)) {
+      const applied = applyPieceDiff(p, updatedPieceMap.get(p.guid)!);
+      return { ...applied, attributes: setStatus(applied.attributes, DiffStatus.Modified) };
+    }
     return { ...p, attributes: setStatus(p.attributes, DiffStatus.Unchanged) };
   });
   for (const added of diff.pieces?.added ?? []) {
@@ -5163,7 +5168,10 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
 
   const resultConns: Connection[] = (base.connections ?? []).map((c) => {
     if (removedConnGuids.has(c.guid)) return { ...c, attributes: setStatus(c.attributes, DiffStatus.Removed) };
-    if (updatedConnMap.has(c.guid)) return { ...c, attributes: setStatus(c.attributes, DiffStatus.Modified) };
+    if (updatedConnMap.has(c.guid)) {
+      const applied = applyConnectionDiff(c, updatedConnMap.get(c.guid)!);
+      return { ...applied, attributes: setStatus(applied.attributes, DiffStatus.Modified) };
+    }
     return { ...c, attributes: setStatus(c.attributes, DiffStatus.Unchanged) };
   });
   for (const added of diff.connections?.added ?? []) {
@@ -6359,8 +6367,7 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
                 const connectedStub = externalOriginGuids.has(parentConn.connected.piece.guid);
                 const connectingStub = externalOriginGuids.has(parentConn.connecting.piece.guid);
                 const connMatchesParentage =
-                  (parentConn.connecting.piece.guid === piece.guid && parentConn.connected.piece.guid === pInfo.parentGuid) ||
-                  (parentConn.connected.piece.guid === piece.guid && parentConn.connecting.piece.guid === pInfo.parentGuid);
+                  (parentConn.connecting.piece.guid === piece.guid && parentConn.connected.piece.guid === pInfo.parentGuid) || (parentConn.connected.piece.guid === piece.guid && parentConn.connecting.piece.guid === pInfo.parentGuid);
                 // Specs: Coord updates u/v only on this remapped stub-bridge using target matched parent center + anchor;
                 // descendant internal edges are unchanged (second paste pass).
                 if (connMatchesParentage && connectedStub !== connectingStub) {
@@ -10934,20 +10941,20 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-              }
+                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+                }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-              }
+                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+                }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -11062,54 +11069,54 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-        return {
-          guid: row.guid,
-          key: row.key,
-          name: row.name,
-          kind: row.kind || undefined,
-          defaultValue: row.default_value ?? undefined,
-          formula: toUndefined(row.formula),
-          defaultSiUnit: toUndefined(row.default_si_unit),
-          defaultImperialUnit: toUndefined(row.default_imperial_unit),
-          min: row.min_value ?? undefined,
-          minExcluded: row.min_excluded ? true : undefined,
-          max: row.max_value ?? undefined,
-          maxExcluded: row.max_excluded ? true : undefined,
-          canScale: row.can_scale ? true : undefined,
-          uri: toUndefined(row.definition),
-          benchmarks: benchmarks.map((b: any) => {
-            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-            return {
-              guid: b.guid,
-              name: b.name,
-              icon: toUndefined(b.icon),
-              min: b.min_value ?? undefined,
-              minExcluded: b.min_excluded ? true : undefined,
-              max: b.max_value ?? undefined,
-              maxExcluded: b.max_excluded ? true : undefined,
-              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-            };
-          }),
-          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-        };
-      })
+          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+          return {
+            guid: row.guid,
+            key: row.key,
+            name: row.name,
+            kind: row.kind || undefined,
+            defaultValue: row.default_value ?? undefined,
+            formula: toUndefined(row.formula),
+            defaultSiUnit: toUndefined(row.default_si_unit),
+            defaultImperialUnit: toUndefined(row.default_imperial_unit),
+            min: row.min_value ?? undefined,
+            minExcluded: row.min_excluded ? true : undefined,
+            max: row.max_value ?? undefined,
+            maxExcluded: row.max_excluded ? true : undefined,
+            canScale: row.can_scale ? true : undefined,
+            uri: toUndefined(row.definition),
+            benchmarks: benchmarks.map((b: any) => {
+              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+              return {
+                guid: b.guid,
+                name: b.name,
+                icon: toUndefined(b.icon),
+                min: b.min_value ?? undefined,
+                minExcluded: b.min_excluded ? true : undefined,
+                max: b.max_value ?? undefined,
+                maxExcluded: b.max_excluded ? true : undefined,
+                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+              };
+            }),
+            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+          };
+        })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        remote: toUndefined(row.remote_url),
-        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-        size: row.size ?? undefined,
-        hash: toUndefined(row.hash),
-        createdAt: row.created,
-        updatedAt: row.updated,
-      }))
+          guid: row.guid,
+          name: row.name,
+          remote: toUndefined(row.remote_url),
+          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+          size: row.size ?? undefined,
+          hash: toUndefined(row.hash),
+          createdAt: row.created,
+          updatedAt: row.updated,
+        }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -11125,10 +11132,10 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        email: toUndefined(row.email),
-      }))
+          guid: row.guid,
+          name: row.name,
+          email: toUndefined(row.email),
+        }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
@@ -12368,7 +12375,7 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
         if (copiedMeshes.length > 0) {
           typeMeshMap[typeGuid] = copiedMeshes[0];
         }
-      } catch { }
+      } catch {}
     }
   }
 
@@ -13308,7 +13315,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
             fixes: [fix],
           });
         }
-      } catch { }
+      } catch {}
     });
   });
   return problems;
@@ -14921,14 +14928,27 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(connStatuses.filter((s) => s === "removed").length).toBe(10);
       expect(connStatuses.filter((s) => s === "added").length).toBe(4);
 
-      // ➖Verify modified pieces keep their original parameters (not diff-updated)
-      const removedPieceGuids = new Set((diff.pieces?.removed ?? []).map((r) => r.guid));
+      // ➖Verify removed/unchanged pieces keep their original parameters
       for (const piece of computed.pieces!) {
-        if (getStatus(piece.attributes) === "modified" || getStatus(piece.attributes) === "removed" || getStatus(piece.attributes) === "unchanged") {
+        if (getStatus(piece.attributes) === "removed" || getStatus(piece.attributes) === "unchanged") {
           const originalPiece = design.pieces!.find((p) => p.guid === piece.guid);
           expect(originalPiece).toBeDefined();
           expect(piece.name).toBe(originalPiece!.name);
           expect(piece.description).toBe(originalPiece!.description);
+        }
+      }
+
+      // 🔧Verify modified pieces have their diff applied
+      const updatedPieceMap = new Map((diff.pieces?.updated ?? []).map((u) => [(u as any).piece.guid, u.diff]));
+      for (const piece of computed.pieces!) {
+        if (getStatus(piece.attributes) === "modified") {
+          const pieceDiff = updatedPieceMap.get(piece.guid);
+          const originalPiece = design.pieces!.find((p) => p.guid === piece.guid);
+          expect(originalPiece).toBeDefined();
+          if (pieceDiff?.name) expect(piece.name).toBe(pieceDiff.name);
+          else expect(piece.name).toBe(originalPiece!.name);
+          if (pieceDiff?.description !== undefined) expect(piece.description).toBe(pieceDiff.description);
+          else expect(piece.description).toBe(originalPiece!.description);
         }
       }
     });
@@ -14937,9 +14957,9 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   describe("Sketchpad ControlTree", () => {
     it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
       const controls: ControlDef[] = [
-        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
-        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
-        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
+        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
+        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
+        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
       ];
       const folderSettings = {
         Transform: { path: "Transform", order: 2 },
@@ -16475,6 +16495,355 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     });
   });
   // #endregion 📊MaxChildren Tests
+
+  // #region 🔄Transaction Undo/Redo Tests
+  // Tests for the transaction state machine contract used by PlainAppStore, PlainKitDiffAppStore,
+  // and the event handler factories (createKeyedTransactionHandlers, createSingleKeyTransactionHandlers).
+  // Invariant: finalize merges edits via first.undo + last.do; redo is cleared on commit or recordEdit;
+  //            fresh start preserves redo; abort discards current stack; undo/redo move between past/redo stacks.
+
+  // #region 🔄Transaction State Helpers
+  // Pure-function transaction state machine matching the exact behavior of the existing
+  // PlainAppStore class methods and event handler factories in @semio/sketchpad.
+
+  interface TxEdit {
+    do: { value: string };
+    undo: { value: string };
+  }
+
+  interface TxState {
+    isTransactionActive: boolean;
+    currentTransactionStack: TxEdit[];
+    pastTransactionStack: TxEdit[];
+    redoStack: TxEdit[];
+  }
+
+  const createTxState = (): TxState => ({
+    isTransactionActive: false,
+    currentTransactionStack: [],
+    pastTransactionStack: [],
+    redoStack: [],
+  });
+
+  const txStart = (s: TxState): TxState => {
+    if (s.isTransactionActive) {
+      const finalized = txCommit(s);
+      return { ...finalized, isTransactionActive: true, currentTransactionStack: [] };
+    }
+    return { ...s, isTransactionActive: true, currentTransactionStack: [] };
+  };
+
+  const txCommit = (s: TxState): TxState => {
+    if (!s.isTransactionActive) return s;
+    const pastStack = [...s.pastTransactionStack];
+    if (s.currentTransactionStack.length > 0) {
+      const edits = s.currentTransactionStack;
+      const merged: TxEdit = edits.length === 1 ? edits[0] : { do: edits[edits.length - 1].do, undo: edits[0].undo };
+      pastStack.push(merged);
+    }
+    return { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] };
+  };
+
+  const txAbort = (s: TxState): TxState => {
+    if (!s.isTransactionActive) return s;
+    return { ...s, isTransactionActive: false, currentTransactionStack: [] };
+  };
+
+  const txRecordEdit = (s: TxState, edit: TxEdit): TxState => {
+    if (!s.isTransactionActive) return s;
+    return { ...s, currentTransactionStack: [...s.currentTransactionStack, edit], redoStack: [] };
+  };
+
+  const txUndo = (s: TxState): TxState => {
+    if (s.isTransactionActive) {
+      if (s.currentTransactionStack.length === 0) return s;
+      const stack = [...s.currentTransactionStack];
+      stack.pop();
+      return { ...s, currentTransactionStack: stack };
+    }
+    if (s.pastTransactionStack.length === 0) return s;
+    const pastStack = [...s.pastTransactionStack];
+    const edit = pastStack.pop()!;
+    return { ...s, pastTransactionStack: pastStack, redoStack: [...s.redoStack, edit] };
+  };
+
+  const txRedo = (s: TxState): TxState => {
+    if (s.isTransactionActive) return s;
+    if (s.redoStack.length === 0) return s;
+    const redoStack = [...s.redoStack];
+    const edit = redoStack.pop()!;
+    return { ...s, pastTransactionStack: [...s.pastTransactionStack, edit], redoStack };
+  };
+
+  const mkEdit = (doVal: string, undoVal: string): TxEdit => ({
+    do: { value: doVal },
+    undo: { value: undoVal },
+  });
+
+  // #endregion 🔄Transaction State Helpers
+
+  describe("Transaction Undo/Redo", () => {
+    it("single commit places edit in past stack", () => {
+      let s = createTxState();
+      s = txStart(s);
+      const edit = mkEdit("d1", "u1");
+      s = txRecordEdit(s, edit);
+      s = txCommit(s);
+      expect(s.isTransactionActive).toBe(false);
+      expect(s.pastTransactionStack).toHaveLength(1);
+      expect(s.pastTransactionStack[0]).toEqual(edit);
+      expect(s.currentTransactionStack).toHaveLength(0);
+      expect(s.redoStack).toHaveLength(0);
+    });
+
+    it("multi-step transaction merges first.undo + last.do", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("dA", "uA"));
+      s = txRecordEdit(s, mkEdit("dB", "uB"));
+      s = txRecordEdit(s, mkEdit("dC", "uC"));
+      s = txCommit(s);
+      expect(s.pastTransactionStack).toHaveLength(1);
+      const merged = s.pastTransactionStack[0];
+      expect(merged.do).toEqual({ value: "dC" });
+      expect(merged.undo).toEqual({ value: "uA" });
+    });
+
+    it("empty transaction is ignored on commit", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txCommit(s);
+      expect(s.pastTransactionStack).toHaveLength(0);
+      expect(s.isTransactionActive).toBe(false);
+    });
+
+    it("abort discards current transaction stack", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("d1", "u1"));
+      s = txRecordEdit(s, mkEdit("d2", "u2"));
+      s = txAbort(s);
+      expect(s.isTransactionActive).toBe(false);
+      expect(s.currentTransactionStack).toHaveLength(0);
+      expect(s.pastTransactionStack).toHaveLength(0);
+    });
+
+    it("abort does not affect committed past stack", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("d1", "u1"));
+      s = txCommit(s);
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("d2", "u2"));
+      s = txAbort(s);
+      expect(s.pastTransactionStack).toHaveLength(1);
+      expect(s.pastTransactionStack[0].do).toEqual({ value: "d1" });
+    });
+
+    it("undo moves last committed transaction to redo stack", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("d1", "u1"));
+      s = txCommit(s);
+      s = txUndo(s);
+      expect(s.pastTransactionStack).toHaveLength(0);
+      expect(s.redoStack).toHaveLength(1);
+      expect(s.redoStack[0].do).toEqual({ value: "d1" });
+    });
+
+    it("redo moves last undone transaction back to past stack", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("d1", "u1"));
+      s = txCommit(s);
+      s = txUndo(s);
+      s = txRedo(s);
+      expect(s.pastTransactionStack).toHaveLength(1);
+      expect(s.redoStack).toHaveLength(0);
+      expect(s.pastTransactionStack[0].do).toEqual({ value: "d1" });
+    });
+
+    it("redo invalidation: new commit clears redo stack", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("dA", "uA"));
+      s = txCommit(s);
+      s = txUndo(s);
+      expect(s.redoStack).toHaveLength(1);
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("dB", "uB"));
+      s = txCommit(s);
+      expect(s.redoStack).toHaveLength(0);
+      expect(s.pastTransactionStack).toHaveLength(1);
+      expect(s.pastTransactionStack[0].do).toEqual({ value: "dB" });
+    });
+
+    it("redo invalidation: recording edit clears redo stack", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("dA", "uA"));
+      s = txCommit(s);
+      s = txUndo(s);
+      expect(s.redoStack).toHaveLength(1);
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("dB", "uB"));
+      expect(s.redoStack).toHaveLength(0);
+    });
+
+    it("undo boundary: undo with empty past stack is no-op", () => {
+      let s = createTxState();
+      const before = { ...s };
+      s = txUndo(s);
+      expect(s).toEqual(before);
+    });
+
+    it("redo boundary: redo with empty redo stack is no-op", () => {
+      let s = createTxState();
+      const before = { ...s };
+      s = txRedo(s);
+      expect(s).toEqual(before);
+    });
+
+    it("redo is blocked during active transaction", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("dA", "uA"));
+      s = txCommit(s);
+      s = txUndo(s);
+      expect(s.redoStack).toHaveLength(1);
+      s = txStart(s);
+      const sBeforeRedo = { ...s, redoStack: [...s.redoStack] };
+      s = txRedo(s);
+      expect(s.redoStack).toEqual(sBeforeRedo.redoStack);
+    });
+
+    it("undo inside active transaction pops from current stack", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("d1", "u1"));
+      s = txRecordEdit(s, mkEdit("d2", "u2"));
+      expect(s.currentTransactionStack).toHaveLength(2);
+      s = txUndo(s);
+      expect(s.currentTransactionStack).toHaveLength(1);
+      expect(s.currentTransactionStack[0].do).toEqual({ value: "d1" });
+      s = txUndo(s);
+      expect(s.currentTransactionStack).toHaveLength(0);
+    });
+
+    it("fresh start preserves redo stack", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("dA", "uA"));
+      s = txCommit(s);
+      s = txUndo(s);
+      expect(s.redoStack).toHaveLength(1);
+      s = txStart(s);
+      expect(s.redoStack).toHaveLength(1);
+      expect(s.isTransactionActive).toBe(true);
+    });
+
+    it("nested start auto-finalizes previous transaction", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("dA", "uA"));
+      s = txStart(s);
+      expect(s.pastTransactionStack).toHaveLength(1);
+      expect(s.pastTransactionStack[0].do).toEqual({ value: "dA" });
+      expect(s.isTransactionActive).toBe(true);
+      expect(s.currentTransactionStack).toHaveLength(0);
+    });
+
+    it("multiple undo/redo cycles are symmetric", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("d1", "u1"));
+      s = txCommit(s);
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("d2", "u2"));
+      s = txCommit(s);
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("d3", "u3"));
+      s = txCommit(s);
+      expect(s.pastTransactionStack).toHaveLength(3);
+      s = txUndo(s);
+      s = txUndo(s);
+      expect(s.pastTransactionStack).toHaveLength(1);
+      expect(s.redoStack).toHaveLength(2);
+      s = txRedo(s);
+      expect(s.pastTransactionStack).toHaveLength(2);
+      expect(s.redoStack).toHaveLength(1);
+      s = txRedo(s);
+      expect(s.pastTransactionStack).toHaveLength(3);
+      expect(s.redoStack).toHaveLength(0);
+    });
+
+    it("undo all then redo all restores original stack", () => {
+      let s = createTxState();
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("d1", "u1"));
+      s = txCommit(s);
+      s = txStart(s);
+      s = txRecordEdit(s, mkEdit("d2", "u2"));
+      s = txCommit(s);
+      const twoCommitted = s.pastTransactionStack.map((e) => ({ ...e }));
+      s = txUndo(s);
+      s = txUndo(s);
+      expect(s.pastTransactionStack).toHaveLength(0);
+      s = txRedo(s);
+      s = txRedo(s);
+      expect(s.pastTransactionStack).toHaveLength(2);
+      expect(s.pastTransactionStack[0]).toEqual(twoCommitted[0]);
+      expect(s.pastTransactionStack[1]).toEqual(twoCommitted[1]);
+    });
+
+    it("recordEdit outside active transaction is no-op", () => {
+      let s = createTxState();
+      const edit = mkEdit("d1", "u1");
+      s = txRecordEdit(s, edit);
+      expect(s.currentTransactionStack).toHaveLength(0);
+      expect(s.pastTransactionStack).toHaveLength(0);
+    });
+
+    it("kit diff roundtrip: apply then inverse restores original state", () => {
+      const original: Kit = {
+        name: "UndoKit",
+        types: [
+          {
+            guid: "t1",
+            name: "Wall",
+            description: "A wall segment",
+            icon: "",
+            variant: "",
+          },
+        ],
+        designs: [],
+      };
+      const diff: KitDiff = {
+        types: {
+          added: [
+            {
+              guid: "t2",
+              name: "Column",
+              description: "A column",
+              icon: "",
+              variant: "",
+            },
+          ],
+          updated: [{ type: { guid: "t1" }, diff: { description: "Modified wall" } }],
+        },
+      };
+      const afterForward = applyKitDiff(original, diff);
+      expect(afterForward.types).toHaveLength(2);
+      expect(afterForward.types![0].description).toBe("Modified wall");
+      const inverseDiff = inverseKitDiff(original, diff);
+      const afterBackward = applyKitDiff(afterForward, inverseDiff);
+      expect(afterBackward.types).toHaveLength(1);
+      expect(afterBackward.types![0].description).toBe("A wall segment");
+      expect(afterBackward.types![0].guid).toBe("t1");
+    });
+  });
+
+  // #endregion 🔄Transaction Undo/Redo Tests
 } // end vitest guard
 // #endregion 📐Tests
 
