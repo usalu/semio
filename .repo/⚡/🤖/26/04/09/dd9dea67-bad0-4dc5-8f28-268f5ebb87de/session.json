@@ -1958,6 +1958,45 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "25e7e86db49fb06122ee150792ef5ec1ebae866a",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-09T12:58:41Z",
+        "session": "dd9dea67-bad0-4dc5-8f28-268f5ebb87de",
+        "transcript": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/dd9dea67-bad0-4dc5-8f28-268f5ebb87de/dd9dea67-bad0-4dc5-8f28-268f5ebb87de.jsonl"
+      },
+      "native": {
+        "event": {
+          "conversation_id": "dd9dea67-bad0-4dc5-8f28-268f5ebb87de",
+          "generation_id": "76934892-c73e-4a37-8b4d-6846cab28f58",
+          "model": "default",
+          "composer_mode": "agent",
+          "prompt": "undo/redo should be at the toolbar at the left of the selection. also fix name display to undo/redo",
+          "attachments": [
+            {
+              "type": "rule",
+              "file_path": "CLAUDE.md"
+            },
+            {
+              "type": "rule",
+              "file_path": "AGENTS.md"
+            }
+          ],
+          "session_id": "dd9dea67-bad0-4dc5-8f28-268f5ebb87de",
+          "hook_event_name": "beforeSubmitPrompt",
+          "cursor_version": "3.0.13",
+          "workspace_roots": [
+            "/workspaces/semio"
+          ],
+          "user_email": "kinan.sarak@gmail.com",
+          "transcript_path": "/home/vscode/.cursor/projects/workspaces-semio/agent-transcripts/dd9dea67-bad0-4dc5-8f28-268f5ebb87de/dd9dea67-bad0-4dc5-8f28-268f5ebb87de.jsonl"
+        }
+      },
+      "response": {}
     }
   ]
 }
