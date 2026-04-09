@@ -1,5 +1,91 @@
 
 
+Fix the overflow-field refactor so it does not change typography or row metrics. The 2-row overflow state must use the same font size, line height, padding, border thickness, and overall field styling as the normal single-line field, and it must keep the existing Details panel tree rhythm aligned with the tree lines. Only add the extra internal row for overflow; do not upscale text, enlarge the visual style, or alter the shared row/label metric system.
+
+-----------------------------------------------------------------------------
+Refactor the single-line overflow feature in the semio/sketchpad Details panel. The current implementation is incorrectly
+
+Rules:
+- apply only to true  value-side text fields in the property row/value-column layout
+- trigger overflow only when the rendered text actually exceeds the available inner field width
+- never apply it to a field that still fits
+- never affect TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, actions, hierarchy, or tree spacing rules
+
+Required behavior:
+- when overflow is active, the field itself becomes a real 2-row control
+- row 1 = truncated text
+- row 2 = only a centered chevron indicator, no words, no extra label
+- the field box must grow in height
+- the containing property row must grow with it
+- the tree must reflow naturally so the next row is pushed downward
+- absolutely no overlap, clipping, floating overlay, or covering of neighboring rows
+- when the field enters editing/focus mode, collapse back to the normal single-row editing control
+- editing mode must never keep the overflow presentation active
+- truncation must happen at a clean visible boundary, not at an awkward slice point
+
+Priority:
+- respect the existing Details panel tree layout first
+- reorganize row height naturally inside the current shared property layout
+- do not hack this with absolute positioning or visual overlays
+- preserve widths, alignment, right-edge rules, and tree structure everywhere else
+
+This should be a strict reimplementation of the overflow behavior, not a styling tweak
+
+-------------------------------------------------------------------------------------------
+
+Fix the `Ring` row in the semio/sketchpad Details panel so it follows the same shared tree/header structure as the rest of the right-side property inspector. `Ring` should render as a normal collection/group `TreeItem` header: correct name, correct label-start alignment, correct action placement, correct gutter/chevron spacing, and no drift into the value-column area. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, hierarchy, and property row/value-column layout unchanged. Apply the fix generically at the shared Details panel tree layout level so group rows like `Ring` do not become one-off misaligned headers.
+-----------------------------------------------------------------------
+
+Fix the single-line overflow state in the semio/sketchpad Details panel. The current implementation is overlapping adjacent rows and the explicit `MORE` label is too heavy. Rework this at the field-widget level only.
+
+When a true single-line value-side text field actually overflows, the field must expand into a clean real 2-row internal layout and the containing property row must grow with it so the next row is pushed down normally with no overlap or clipping. Keep the first row as the truncated text, but replace the current textual `MORE` treatment with a non-verbal overflow affordance that is subtle and clear — for example a centered second-row overflow indicator such as a small downward chevron pair
+
+Also fix truncation quality:
+- only trigger overflow when the text truly exceeds the available inner field width
+- truncate at a clean visible boundary, not at an awkward slice point
+- keep fields that still fit as normal single-line controls
+
+Do not affect TreeSection, TreeItem, TreeRow, headers, actions, hierarchy, tree lines, Textarea, Stepper, Slider, Toggle, Button, or the shared property row/value-column layout. This should be a narrow correction of the single-line text-field overflow behavior only.
+
+
+------------------------------------------------------------------------------
+
+
+Fix the single-line field overflow feature in the semio/sketchpad Details panel. The current implementation is triggering overflow on fields that actually fit, clipping text at bad breakpoints, using an unclear ellipsis treatment, and overlapping the next row instead of expanding the row cleanly. Rework this narrowly at the field-widget level.
+
+Requirements:
+- only trigger the overflow state when the rendered text truly exceeds the available inner content width of the field
+- do not trigger it for values that still fit within the field box
+- when overflow is active, the field must expand into a real 2-row internal layout and the containing property row must grow with it so nothing overlaps the next row
+- truncate text at a clean visible character boundary; do not slice it awkwardly at an improper position
+- use a clearer overflow affordance than the current dots, so users can immediately understand that more text exists
+- make the overflow indicator visually obvious and centered in the second row
+- keep normal single-line fields unchanged when they fit
+- ensure long values such as description-like content are evaluated correctly and enter the overflow state when appropriate
+
+Constraints:
+- apply this only to true single-line value-side text fields in the Details panel
+- do not affect Textarea, Stepper, Slider, Toggle, Button, tree headers, actions, hierarchy, tree lines, or the shared property row/value-column layout
+- do not change overall panel structure; this is only a correction of the field overflow behavior
+
+------------------------------------------------------------------------------------------------
+
+In the Workbench tree only, add one extra empty-row-sized vertical gap after abstract type rows  before the next sibling/child block begins. Apply this as a structural spacing rule in the shared Workbench tree rendering, not as a hardcoded type-name fix. Keep hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing unchanged.
+-----------------------------------------------------------------------------
+
+Refine the global semio/sketchpad Details panel empty-state styling for editable value-side controls in the right-side property inspector. Any editable field/control on the value side that currently has no value should render in a muted/grayed state while empty (semio styling), but it must remain fully editable. As soon as the user focuses, types, or the control has a real value, it should return to the normal active styling qautomatically.
+
+Apply this generically across editable Input, Textarea, Combobox, slider, Stepper value display, and similar editable value-side widgets used in TreeRow / TreeItem property rows. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, hierarchy, spacing, and property row/value-column layout unchanged. Do not treat empty editable fields as disabled or readOnly; this is only an empty-value visual state that clears immediately on input/value presence. Do not hardcode section names or field names.
+
+------------------------------------------------------------------------------------
+
+Refactor the global semio/sketchpad Details panel tree ordering so structural depth controls render priority. As a general rule, within any TreeSection or parent subtree, all first-level direct child rows / group headers must render before any second-level or deeper nested rows. Expanded nested content must not interrupt remaining first-level sibling rows. In practice, render the first-level skeleton of the section first, then render the bodies of expanded nested TreeItems / SortableTreeItems after all direct-child siblings have been placed. Apply this generically across TreeSection, TreeItem, TreeRow, TreeContent, and collection/group nodes in the right-side property inspector. Keep PanelSection architecture, hierarchy, expand/collapse behavior, actions, spacing, and tree lines unchanged, and do not hardcode section names or field names.
+
+
+------------------------------------------------------------------------------------
+
+
+Refine the global semio/sketchpad Details panel overflow behavior for single-line text fields without changing the current layout system. For any value-side field that currently renders as a one-row text control and whose text exceeds the available width, do not keep it as a normal single truncated row with `...` at the end. Instead, switch that field into a compact two-row overflow state: keep the truncated text on the first row, add a second empty row inside the same field box, and render the ellipsis vertically stacked / centered in that second row so it is clearly readable as overflow. Apply this generically to all single-line text-style fields in the right-side property inspector (editable, readOnly, disabled, and similar text-field variants), while preserving the existing PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, property row/value-column layout, widths, alignment, hierarchy, and spacing. Do not affect real multiline Textarea controls or non-text widgets. This should be a narrow global overflow affordance improvement, not a redesign
 
 
 

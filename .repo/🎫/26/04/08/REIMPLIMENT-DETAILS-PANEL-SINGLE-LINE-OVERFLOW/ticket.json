@@ -1,0 +1,16 @@
+{
+  "title": "Reimpliment Details Panel Single-Line Overflow",
+  "status": "closed",
+  "description": "Strict reimplementation of the single-line overflow behavior in the Details panel. Fix: padding mismatch between single-line CollapsedFieldDisplay and actual input (missing px-single/h-medium causes wrong overflow threshold and height jump), reduce double-chevron indicator to a single centered chevron.",
+  "summary": "Completed the shared Details row-anchor fix by moving header-line anchoring onto the actual runtime TreeRow path used by showLabel controls. TreeRow now detects property-style children and pins the gutter elbow to the fixed header line, while direct property-row Label and HelperRow paths keep the same anchor. Extended the existing UI tests with a TreeRow plus showLabel case and reverified builds.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪902e9d2b82e648baabc7599056c748b9",
+    "⚪cef21d674dd04eddba267125601965e3",
+    "⚪3216c41e489c437888f4f0728cb35820",
+    "⚪9d432a1b979e4ae5b3c7034912fcf8ee",
+    "⚪359985192bc74c92b946ce9ca4f82980",
+    "⚪84bf1cfe5332437cb2d779c7b9f33c4d",
+    "⚪3b8224948c264473b7f266cae92a103c"
+  ]
+}

@@ -3,7 +3,7 @@
   "emoji": "🔧",
   "status": "closed",
   "description": "Analyze and fix all visual inconsistencies across toolbar elements in the sketchpad. Key issues: 1) Icon sizes differ between groups (some use size-tiny, others rely on addIconSize default size-small), 2) Some toolbar content uses ToolbarGroup wrapper while others use raw divs with different gap/padding, 3) getToolbarGroupIcon uses hardcoded size={16} instead of design tokens, 4) Mixed use of Button vs Toggle without consistent sizing.",
-  "summary": "Applied another pass to enforce strict toolbar visual consistency using one shared style contract for interactive controls in toolbar zones.\n\nWhat changed in `elements/ui/globals.css`:\n- Unified typography weight across all toolbar interactive items:\n  - `[data-slot=\"toggle-group-item\"]`, `[data-slot=\"button-group-item\"]`, and `[data-slot=\"action\"]` now use `font-weight: 500`.\n- Removed prior settings-only neutralized `data-state=on` override.\n- Added one consistent active-state style for toolbar toggles across toolbar zones:\n  - `[data-slot=\"toolbar-zone\"] [data-slot=\"toggle-group-item\"][data-state=\"on\"]` now uses `--active-base` + `--active-foreground`.\n  - Matching hover behavior uses color-mix darkening on active base.\n\nWhy:\n- Latest screenshots showed remaining mismatch in active/inactive visual language between group and settings controls.\n- This change removes special-case behavior and enforces one active-state system for toolbar toggles.\n\nValidation:\n- `npx tsc --noEmit --project semio/sketchpad/tsconfig.json` passed.\n- `npm test --workspace elements/ui` passed (24/24).\n- No linter errors on changed file.",
+  "summary": "Restored shared-layout bounding-size interpolation for the sketchpad toolbar settings area without reintroducing sizing regressions by animating only the inner w-fit settings content wrapper. The right-half settings band remains stable, so Filter/Create no longer collapses or shifts. Verified: npx tsc --noEmit --project semio/sketchpad/tsconfig.json and npm test --workspace elements/ui.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1262"
   },
@@ -13,6 +13,9 @@
     "⚪8fe88b49a3cf47b58a7ef6a8871fc561",
     "⚪a74492d08ddc4c2eabeb0e813c2a6283",
     "⚪34b7f177b41d45efb73d9253af63c884",
-    "⚪f418bedd4d594f7c961ec9da5b29cdd5"
+    "⚪f418bedd4d594f7c961ec9da5b29cdd5",
+    "⚪29e72cec6189400999fb2e3d622af8ee",
+    "⚪0a570e3ccfb54ebc935715be15989091",
+    "⚪b9dd85ff859b498398c97b62663ccd68"
   ]
 }

@@ -41,4 +41,13 @@ export const Default: Story = {
   args: defaultArgs,
 };
 
+export const OverflowCollapsed: Story = {
+  args: {
+    ...defaultArgs,
+    value: "Nakagin Capsule Tower Clustered Residential Aggregation With Extended Metadata",
+    className: "w-40",
+    readOnly: true,
+  },
+};
+
 // #endregion 🩺Input

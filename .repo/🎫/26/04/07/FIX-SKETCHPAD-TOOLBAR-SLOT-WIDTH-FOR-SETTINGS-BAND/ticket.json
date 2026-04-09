@@ -1,0 +1,13 @@
+{
+  "title": "Fix Sketchpad Toolbar Slot Width For Settings Band",
+  "status": "closed",
+  "description": "Layout toolbar slot needed explicit full width so sketchpad absolute settings zone (Filter/Create) resolves percentage positioning correctly; sketchpad toolbar root uses w-full max-w-full; calc edges use valid Tailwind arbitrary syntax.",
+  "summary": "Resolved Filter/Create toolbar controls collapsing to a sliver: Layout toolbar slot is now a full-width strip (left-0 right-0, flex justify-center, pointer-events-none) so the sketchpad toolbar has a real containing block width; sketchpad toolbar root uses w-full max-w-full. Edge positioning uses right-[calc(50%_+_4px)] and left-[calc(50%_+_4px)] for valid CSS in Tailwind. Verified: npx tsc --noEmit --project semio/sketchpad/tsconfig.json and npm test --workspace elements/ui pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1287"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪f5787c5fdd704cf1898dc55862ab2e04"
+  ]
+}

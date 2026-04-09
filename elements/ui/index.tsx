@@ -41,8 +41,8 @@ import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, u
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Slot } from "@radix-ui/react-slot";
-import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
-import { Canvas as ThreeCanvas, ThreeEvent, useThree } from "@react-three/fiber";
+import { Edges, Grid, OrbitControls, useGLTF } from "@react-three/drei";
+import { Canvas as ThreeCanvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import {
   applyNodeChanges,
   Background,
@@ -3257,6 +3257,78 @@ const elementUiTranslationBundles = {
               "label": {
                 "normal": "Filter",
                 "beginner": "Design-Elemente nach Sichtbarkeit filtern"
+              }
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Einstellungen",
+              "beginner": "Entwurfs-Einstellungen"
+            },
+            "theme": {
+              "label": {
+                "normal": "Design",
+                "beginner": "Wählen Sie das Farbschema für die Anwendung"
+              }
+            },
+            "language": {
+              "label": {
+                "normal": "Sprache",
+                "beginner": "Wählen Sie die Sprache für die Anwendungsoberfläche"
+              },
+              "placeholder": {
+                "label": {
+                  "normal": "Sprache wählen...",
+                  "beginner": "Wählen Sie die Sprache, in der die Anwendung angezeigt wird"
+                }
+              }
+            },
+            "device": {
+              "label": {
+                "normal": "Gerät",
+                "beginner": "Wählen Sie das Eingabegerät"
+              }
+            },
+            "expertise": {
+              "label": {
+                "normal": "Erfahrung",
+                "beginner": "Wählen Sie Ihr Erfahrungsniveau"
+              }
+            },
+            "mode": {
+              "label": {
+                "normal": "Modus",
+                "beginner": "Wählen Sie den Benutzeroberflächenmodus"
+              }
+            },
+            "panel": {
+              "label": {
+                "normal": "Panels",
+                "beginner": "Panel-Sichtbarkeit konfigurieren"
+              },
+              "toolbar": {
+                "label": {
+                  "normal": "Toolbar anzeigen",
+                  "beginner": "Toolbar-Panel umschalten"
+                }
+              },
+              "workbench": {
+                "label": {
+                  "normal": "Werkbank anzeigen",
+                  "beginner": "Werkbank-Panel umschalten"
+                }
+              },
+              "windows": {
+                "label": {
+                  "normal": "Fenster anzeigen",
+                  "beginner": "Fenster-Panel umschalten"
+                }
+              },
+              "details": {
+                "label": {
+                  "normal": "Details anzeigen",
+                  "beginner": "Details-Panel umschalten"
+                }
               }
             }
           }
@@ -8246,6 +8318,78 @@ const elementUiTranslationBundles = {
                 "beginner": "Filter design elements by visibility"
               }
             }
+          },
+          "settings": {
+            "label": {
+              "normal": "Settings",
+              "beginner": "Design settings"
+            },
+            "theme": {
+              "label": {
+                "normal": "Theme",
+                "beginner": "Choose the color scheme for the application"
+              }
+            },
+            "language": {
+              "label": {
+                "normal": "Language",
+                "beginner": "Choose the language for the application interface"
+              },
+              "placeholder": {
+                "label": {
+                  "normal": "Select language...",
+                  "beginner": "Select the language in which the application is displayed"
+                }
+              }
+            },
+            "device": {
+              "label": {
+                "normal": "Device",
+                "beginner": "Choose the input device"
+              }
+            },
+            "expertise": {
+              "label": {
+                "normal": "Expertise",
+                "beginner": "Choose your experience level"
+              }
+            },
+            "mode": {
+              "label": {
+                "normal": "Mode",
+                "beginner": "Choose the user interface mode"
+              }
+            },
+            "panel": {
+              "label": {
+                "normal": "Panels",
+                "beginner": "Configure panel visibility"
+              },
+              "toolbar": {
+                "label": {
+                  "normal": "Show Toolbar",
+                  "beginner": "Toggle the toolbar panel"
+                }
+              },
+              "workbench": {
+                "label": {
+                  "normal": "Show Workbench",
+                  "beginner": "Toggle the workbench panel"
+                }
+              },
+              "windows": {
+                "label": {
+                  "normal": "Show Windows",
+                  "beginner": "Toggle the windows panel"
+                }
+              },
+              "details": {
+                "label": {
+                  "normal": "Show Details",
+                  "beginner": "Toggle the details panel"
+                }
+              }
+            }
           }
         },
         "type": {
@@ -10430,7 +10574,7 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePa
     )}
     {(footer || toolbar) && (
       <div className="flex-shrink-0 relative">
-        {toolbar && <div className="absolute bottom-[calc(100%+var(--spacing-double))] left-1/2 -translate-x-1/2 z-panel pointer-events-none">{toolbar}</div>}
+        {toolbar && <div className="pointer-events-none absolute bottom-[calc(100%+var(--spacing-double))] left-0 right-0 z-panel flex justify-center">{toolbar}</div>}
         {footer}
       </div>
     )}
@@ -10754,14 +10898,67 @@ interface LabelProps {
   label?: React.ReactNode;
   labelElementId?: string;
   className?: string;
+  /**
+   * Property rows use the label/value grid; tree group headers mirror TreeItem header geometry
+   * (gutter, tree-label slot, trailing control) so collection rows do not drift into the value column.
+   */
+  labelLayoutKind?: "property" | "treeGroupHeader";
   children: React.ReactNode;
 }
-export function Label({ id, rowId, label, labelElementId, className, children }: LabelProps) {
+// [👤semio📚js🗃️sketchpad💻elements🔖basecomponents🪨label](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
+export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property" }: LabelProps) {
   const localizedLabel = useLabel(id);
   const resolvedLabel = label ?? localizedLabel;
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
   const isInsideTreeRow = React.useContext(TreeRowAlignmentContext);
   const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);
+
+  if (labelLayoutKind === "treeGroupHeader") {
+    const treeGroupHeaderLabel = id ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span data-slot="tree-label" id={labelElementId} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]" style={treeItemLabelStyle}>
+            {resolvedLabel}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <DescriptionTooltipContent id={id} />
+        </TooltipContent>
+      </Tooltip>
+    ) : (
+      <span data-slot="tree-label" id={labelElementId} className="flex min-w-0 flex-1 items-center text-xs font-normal text-left truncate text-foreground h-[22px]">
+        {resolvedLabel}
+      </span>
+    );
+
+    const treeGroupHeaderInner = (
+      <div id={rowId} data-slot="tree-group-header-row" className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName, className)}>
+        <div className={cn(treeHeaderMainClassName, "min-h-[22px] items-center")}>
+          {treeGroupHeaderLabel}
+          <div data-slot="tree-group-header-control" className="ml-auto flex min-w-0 shrink-0 items-center justify-end">
+            {children}
+          </div>
+        </div>
+      </div>
+    );
+
+    if (!isTree) {
+      return <TreeRowAlignmentContext.Provider value={false}>{treeGroupHeaderInner}</TreeRowAlignmentContext.Provider>;
+    }
+
+    if (isInsideTreeRow) {
+      return <TreeRowAlignmentContext.Provider value={false}>{treeGroupHeaderInner}</TreeRowAlignmentContext.Provider>;
+    }
+
+    return (
+      <TreeRowAlignmentContext.Provider value={false}>
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
+          {treeGroupHeaderInner}
+        </TreeAlignedRow>
+      </TreeRowAlignmentContext.Provider>
+    );
+  }
+
   const propertyLabelElement = (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -10790,11 +10987,11 @@ export function Label({ id, rowId, label, labelElementId, className, children }:
       id={rowId}
       data-slot="property-row"
       style={isTree ? { marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx > 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : "100%" } : undefined}
-      className={cn("group grid min-w-0 items-center gap-x-[8px] min-h-[24px]", isTree ? "grid-cols-[96px_minmax(0,1fr)]" : "w-full grid-cols-[96px_1fr]", className)}
+      className={cn(detailPanelPropertyRowClassName, isTree ? "grid-cols-[96px_minmax(0,1fr)]" : "w-full grid-cols-[96px_1fr]", className)}
     >
       {propertyLabelElement}
       <div data-slot="property-control" className={detailPanelPropertyControlClassName}>
-        {children}
+        <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
       </div>
     </div>
   );
@@ -10804,7 +11001,7 @@ export function Label({ id, rowId, label, labelElementId, className, children }:
       return propertyRowElement;
     }
     return (
-      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0}>
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0} anchorOffsetPx={detailPanelHeaderLineCenterPx}>
         {propertyRowElement}
       </TreeAlignedRow>
     );
@@ -11895,6 +12092,7 @@ interface ComboboxProps extends ElementProps {
  **/
 export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, className, allowClear = false, showLabel, id }) => {
   const transaction = useTransaction();
+  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
   const [open, setOpen] = React.useState(false);
   const { t } = useTranslation();
   const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
@@ -11920,10 +12118,12 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
     transaction?.finalize?.();
   };
 
+  const comboboxEmptyOpacity = isInPropertyValueColumn && !selectedOption && !open ? 0.6 : 1;
+
   const comboboxElement = (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <ButtonGroup detailPanelWidthMode="fill">
+        <ButtonGroup detailPanelWidthMode="fill" style={{ opacity: comboboxEmptyOpacity, transition: "opacity 150ms" }}>
           <ButtonGroupItem id={id} role="combobox" aria-expanded={open} className="w-full min-w-0 justify-between">
             {selectedOption ? selectedOption.label : computedPlaceholder}
             <ChevronsUpDownIcon className="ml-2 size-tiny shrink-0 opacity-50" />
@@ -11974,13 +12174,16 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
 // #region 📨Input Collapse Helpers
 
 const COLLAPSED_FIELD_ELLIPSIS = "...";
+const collapsedFieldOverflowEpsilonPx = 0.5;
 const collapsedFieldWhitespacePattern = /\s+/g;
 const nonCollapsibleInputTypes = new Set(["button", "checkbox", "color", "file", "hidden", "image", "password", "radio", "range", "reset", "submit"]);
+const stackedOverflowInputTypes = new Set(["email", "search", "tel", "text", "url"]);
 
 interface FitCollapsedFieldTextOptions {
   value: string;
   maxWidth: number;
   ellipsis?: string;
+  appendEllipsis?: boolean;
   measureText: (value: string) => number;
 }
 
@@ -11988,7 +12191,14 @@ function normalizeCollapsedFieldText(value: string) {
   return value.replace(collapsedFieldWhitespacePattern, " ").trim();
 }
 
-function fitCollapsedFieldText({ value, maxWidth, ellipsis = COLLAPSED_FIELD_ELLIPSIS, measureText }: FitCollapsedFieldTextOptions) {
+function getCollapsedFieldGraphemes(value: string) {
+  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+    return Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (segment) => segment.segment);
+  }
+  return Array.from(value);
+}
+
+function fitCollapsedFieldText({ value, maxWidth, ellipsis = COLLAPSED_FIELD_ELLIPSIS, appendEllipsis = true, measureText }: FitCollapsedFieldTextOptions) {
   const normalizedValue = normalizeCollapsedFieldText(value);
   if (!normalizedValue || maxWidth <= 0) {
     return normalizedValue;
@@ -12009,7 +12219,8 @@ function fitCollapsedFieldText({ value, maxWidth, ellipsis = COLLAPSED_FIELD_ELL
 
     while (low <= high) {
       const mid = Math.floor((low + high) / 2);
-      const candidate = `${words.slice(0, mid).join(" ")}${ellipsis}`;
+      const prefix = words.slice(0, mid).join(" ");
+      const candidate = appendEllipsis ? `${prefix}${ellipsis}` : prefix;
       if (measureText(candidate) <= maxWidth) {
         bestWordCount = mid;
         low = mid + 1;
@@ -12019,17 +12230,20 @@ function fitCollapsedFieldText({ value, maxWidth, ellipsis = COLLAPSED_FIELD_ELL
     }
 
     if (bestWordCount > 0 && bestWordCount < words.length) {
-      return `${words.slice(0, bestWordCount).join(" ")}${ellipsis}`;
+      const prefix = words.slice(0, bestWordCount).join(" ");
+      return appendEllipsis ? `${prefix}${ellipsis}` : prefix;
     }
   }
 
+  const graphemes = getCollapsedFieldGraphemes(normalizedValue);
   let low = 1;
-  let high = normalizedValue.length;
+  let high = graphemes.length;
   let bestCharacterCount = 0;
 
   while (low <= high) {
     const mid = Math.floor((low + high) / 2);
-    const candidate = `${normalizedValue.slice(0, mid).trimEnd()}${ellipsis}`;
+    const prefix = graphemes.slice(0, mid).join("").trimEnd();
+    const candidate = appendEllipsis ? `${prefix}${ellipsis}` : prefix;
     if (measureText(candidate) <= maxWidth) {
       bestCharacterCount = mid;
       low = mid + 1;
@@ -12039,17 +12253,69 @@ function fitCollapsedFieldText({ value, maxWidth, ellipsis = COLLAPSED_FIELD_ELL
   }
 
   if (bestCharacterCount <= 0) {
-    return ellipsis;
+    return appendEllipsis ? ellipsis : (graphemes[0] ?? "");
   }
 
-  return `${normalizedValue.slice(0, bestCharacterCount).trimEnd()}${ellipsis}`;
+  const prefix = graphemes.slice(0, bestCharacterCount).join("").trimEnd();
+  return appendEllipsis ? `${prefix}${ellipsis}` : prefix;
 }
 
 function isCollapsibleInputType(type?: string) {
   return !type || !nonCollapsibleInputTypes.has(type);
 }
 
+function isStackedOverflowInputType(type?: string) {
+  return !type || stackedOverflowInputTypes.has(type);
+}
+
+interface ResolveCollapsedFieldDisplayStateOptions {
+  allowStackedOverflow?: boolean;
+  value: string;
+  maxWidth: number;
+  measureText: (value: string) => number;
+}
+
+interface CollapsedFieldDisplayState {
+  value: string;
+  normalizedValue: string;
+  isOverflowing: boolean;
+  layoutKind: "single-line" | "stacked-overflow";
+}
+
+function resolveCollapsedFieldDisplayState({ allowStackedOverflow = false, value, maxWidth, measureText }: ResolveCollapsedFieldDisplayStateOptions): CollapsedFieldDisplayState {
+  const normalizedValue = normalizeCollapsedFieldText(value);
+  if (!normalizedValue || maxWidth <= 0) {
+    return {
+      value: normalizedValue,
+      normalizedValue,
+      isOverflowing: false,
+      layoutKind: "single-line",
+    };
+  }
+
+  const measuredValueWidth = measureText(normalizedValue);
+  const isOverflowing = measuredValueWidth > maxWidth + collapsedFieldOverflowEpsilonPx;
+  if (!isOverflowing) {
+    return {
+      value: normalizedValue,
+      normalizedValue,
+      isOverflowing: false,
+      layoutKind: "single-line",
+    };
+  }
+
+  const collapsedValue = fitCollapsedFieldText({ value: normalizedValue, maxWidth, appendEllipsis: !allowStackedOverflow, measureText });
+
+  return {
+    value: collapsedValue,
+    normalizedValue,
+    isOverflowing,
+    layoutKind: allowStackedOverflow && isOverflowing ? "stacked-overflow" : "single-line",
+  };
+}
+
 interface CollapsedFieldDisplayProps {
+  allowStackedOverflow?: boolean;
   className?: string;
   disabled?: boolean;
   id?: string;
@@ -12060,52 +12326,91 @@ interface CollapsedFieldDisplayProps {
   value: string;
 }
 
-function CollapsedFieldDisplay({ className, disabled, id, mixed, onActivate, placeholder, slot, value }: CollapsedFieldDisplayProps) {
+function CollapsedFieldDisplay({ allowStackedOverflow = false, className, disabled, id, mixed, onActivate, placeholder, slot, value }: CollapsedFieldDisplayProps) {
+  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
   const displayRef = React.useRef<HTMLDivElement>(null);
+  const lineRef = React.useRef<HTMLSpanElement>(null);
   const normalizedValue = React.useMemo(() => normalizeCollapsedFieldText(value), [value]);
-  const [collapsedValue, setCollapsedValue] = React.useState(normalizedValue);
+  const stackedOverflowEnabled = isInPropertyValueColumn && allowStackedOverflow;
+  const [displayState, setDisplayState] = React.useState<CollapsedFieldDisplayState>({
+    value: normalizedValue,
+    normalizedValue,
+    isOverflowing: false,
+    layoutKind: "single-line",
+  });
 
   const updateCollapsedValue = React.useCallback(() => {
     const element = displayRef.current;
-    if (!element) {
+    const lineElement = lineRef.current;
+    if (!element || !lineElement) {
       return;
     }
     if (!normalizedValue) {
-      setCollapsedValue("");
+      setDisplayState({
+        value: "",
+        normalizedValue,
+        isOverflowing: false,
+        layoutKind: "single-line",
+      });
       return;
     }
 
     const computedStyle = window.getComputedStyle(element);
-    const maxWidth = element.clientWidth - parseFloat(computedStyle.paddingLeft || "0") - parseFloat(computedStyle.paddingRight || "0");
+    const maxWidth = lineElement.clientWidth;
     if (maxWidth <= 0) {
-      setCollapsedValue(normalizedValue);
+      setDisplayState({
+        value: normalizedValue,
+        normalizedValue,
+        isOverflowing: false,
+        layoutKind: "single-line",
+      });
       return;
     }
 
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-    const font = computedStyle.font || `${computedStyle.fontStyle} ${computedStyle.fontVariant} ${computedStyle.fontWeight} ${computedStyle.fontSize} / ${computedStyle.lineHeight} ${computedStyle.fontFamily}`;
-    const parsedLetterSpacing = parseFloat(computedStyle.letterSpacing || "0");
-    const letterSpacing = Number.isFinite(parsedLetterSpacing) ? parsedLetterSpacing : 0;
+    const measurementElement = document.createElement("span");
+    measurementElement.style.position = "absolute";
+    measurementElement.style.visibility = "hidden";
+    measurementElement.style.pointerEvents = "none";
+    measurementElement.style.whiteSpace = "nowrap";
+    measurementElement.style.font = computedStyle.font || `${computedStyle.fontStyle} ${computedStyle.fontVariant} ${computedStyle.fontWeight} ${computedStyle.fontSize} / ${computedStyle.lineHeight} ${computedStyle.fontFamily}`;
+    measurementElement.style.letterSpacing = computedStyle.letterSpacing;
+    measurementElement.style.textTransform = computedStyle.textTransform;
+    measurementElement.style.textRendering = computedStyle.textRendering;
+    document.body.appendChild(measurementElement);
+
     const measureText = (candidate: string) => {
-      if (!context) {
-        return candidate.length * 8;
-      }
-      context.font = font;
-      return context.measureText(candidate).width + Math.max(0, candidate.length - 1) * letterSpacing;
+      measurementElement.textContent = candidate;
+      return measurementElement.getBoundingClientRect().width;
     };
 
-    const nextValue = fitCollapsedFieldText({
-      value: normalizedValue,
-      maxWidth,
-      measureText,
-    });
+    const nextState = resolveCollapsedFieldDisplayState({ allowStackedOverflow: stackedOverflowEnabled, value: normalizedValue, maxWidth, measureText });
+    measurementElement.remove();
 
-    setCollapsedValue((previousValue) => (previousValue === nextValue ? previousValue : nextValue));
-  }, [normalizedValue]);
+    setDisplayState((previousState) =>
+      previousState.value === nextState.value && previousState.normalizedValue === nextState.normalizedValue && previousState.isOverflowing === nextState.isOverflowing && previousState.layoutKind === nextState.layoutKind ? previousState : nextState,
+    );
+  }, [normalizedValue, stackedOverflowEnabled]);
 
   React.useEffect(() => {
     updateCollapsedValue();
+  }, [updateCollapsedValue]);
+
+  React.useEffect(() => {
+    const fontSet = document.fonts;
+    if (!fontSet?.ready) {
+      return;
+    }
+
+    let isCancelled = false;
+    void fontSet.ready.then(() => {
+      if (!isCancelled) {
+        updateCollapsedValue();
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [updateCollapsedValue]);
 
   React.useEffect(() => {
@@ -12124,18 +12429,22 @@ function CollapsedFieldDisplay({ className, disabled, id, mixed, onActivate, pla
     }
   };
 
+  const showStackedOverflow = stackedOverflowEnabled && displayState.layoutKind === "stacked-overflow";
+
   return (
     <div
       ref={displayRef}
       data-slot={slot}
       data-collapsed="true"
-      data-overflowing={collapsedValue && collapsedValue !== normalizedValue ? "true" : undefined}
+      data-overflowing={displayState.isOverflowing ? "true" : undefined}
+      data-overflow-layout={showStackedOverflow ? "stacked" : "single-line"}
       id={id}
       className={cn(
-        "text-foreground flex w-full min-w-0 items-center overflow-hidden whitespace-nowrap border bg-transparent text-base text-ellipsis transition-[color,border-color] outline-none md:text-sm",
+        "text-foreground flex w-full min-w-0 overflow-hidden border bg-transparent text-base transition-[color,border-color] outline-none md:text-sm",
+        showStackedOverflow ? "h-auto min-h-0 flex-col px-single" : "h-medium items-center px-single whitespace-nowrap",
         "aria-invalid:border-destructive flex-1 cursor-text",
         disabled && "cursor-not-allowed opacity-50",
-        mixed && !collapsedValue && "italic text-muted-foreground/70",
+        mixed && !displayState.value && "italic text-muted-foreground/70",
         className,
       )}
       tabIndex={disabled ? -1 : 0}
@@ -12151,7 +12460,20 @@ function CollapsedFieldDisplay({ className, disabled, id, mixed, onActivate, pla
         }
       }}
     >
-      {collapsedValue ? collapsedValue : <span className={cn("truncate", mixed ? "italic text-muted-foreground/70" : "text-muted-foreground")}>{placeholder}</span>}
+      <span ref={lineRef} data-slot="collapsed-field-line" className={cn("flex min-w-0 overflow-hidden whitespace-nowrap", showStackedOverflow ? "h-medium w-full items-center" : "w-full items-center")}>
+        {displayState.value ? (
+          <span className={cn("block min-w-0 overflow-hidden whitespace-nowrap", !showStackedOverflow && "text-ellipsis")}>{displayState.value}</span>
+        ) : (
+          <span className={cn("block min-w-0 truncate", mixed ? "italic text-muted-foreground/70" : "text-muted-foreground")}>{placeholder}</span>
+        )}
+      </span>
+      {showStackedOverflow ? (
+        <span data-slot="collapsed-field-overflow" aria-hidden="true" className="flex h-[10px] min-w-0 items-center justify-center overflow-hidden leading-none">
+          <span data-slot="collapsed-field-indicator" className="inline-flex items-center justify-center text-muted-foreground/75 leading-none">
+            <ChevronDownIcon data-slot="collapsed-field-indicator-chevron" className="size-[10px] shrink-0 stroke-[2.5]" />
+          </span>
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -12177,6 +12499,7 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
  **/
 function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, mixed, ...props }: InputProps) {
   const transaction = useTransaction();
+  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const [isFocused, setIsFocused] = React.useState(false);
@@ -12252,11 +12575,25 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const shouldFade = activeInteraction && !isInteracting;
   const inputDisplayValue = inputValue?.toString() || "";
   const showCollapsedDisplay = !!showLabel && !isFocused && isCollapsibleInputType(type);
+  const allowStackedOverflow = isStackedOverflowInputType(type);
+
+  const inputEmptyOpacity = isInPropertyValueColumn && !inputDisplayValue && !isFocused ? 0.6 : 1;
+  const inputFinalOpacity = shouldFade ? 0 : inputEmptyOpacity;
 
   const inputElement = (
-    <div data-slot="input-root" data-detail-panel-control="fill" className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }}>
+    <div data-slot="input-root" data-detail-panel-control="fill" className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: inputFinalOpacity, transition: "opacity 150ms" }}>
       {showCollapsedDisplay ? (
-        <CollapsedFieldDisplay className={className} disabled={props.disabled} id={id} mixed={mixed} onActivate={() => setIsFocused(true)} placeholder={computedPlaceholder} slot="input" value={mixed && !inputDisplayValue ? "" : inputDisplayValue} />
+        <CollapsedFieldDisplay
+          allowStackedOverflow={allowStackedOverflow}
+          className={className}
+          disabled={props.disabled}
+          id={id}
+          mixed={mixed}
+          onActivate={() => setIsFocused(true)}
+          placeholder={computedPlaceholder}
+          slot="input"
+          value={mixed && !inputDisplayValue ? "" : inputDisplayValue}
+        />
       ) : (
         <input
           ref={inputRef}
@@ -12539,9 +12876,11 @@ function Slider({
     snapValues?: number[];
   }) {
   const transaction = useTransaction();
+  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSliding, setIsSliding] = React.useState(false);
   const [editValue, setEditValue] = React.useState("");
+  const [hasBeenEdited, setHasBeenEdited] = React.useState(false);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
   const activeInteraction = useActiveInteraction();
@@ -12582,6 +12921,7 @@ function Slider({
   );
 
   const handleValueClick = () => {
+    if (!hasBeenEdited) setHasBeenEdited(true);
     setEditValue(displayValue.toString());
     setIsEditing(true);
     transaction?.start?.();
@@ -12607,6 +12947,7 @@ function Slider({
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (!hasBeenEdited) setHasBeenEdited(true);
     if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
     if (!isSliding) {
       setIsSliding(true);
@@ -12701,7 +13042,7 @@ function Slider({
   );
 
   const sliderContent = (
-    <div data-slot="slider-content" data-detail-panel-control="fill" style={{ opacity: shouldFade ? 0 : 1, transition: "opacity 150ms" }} className="flex-1 min-w-0">
+    <div data-slot="slider-content" data-detail-panel-control="fill" style={{ opacity: shouldFade ? 0 : isInPropertyValueColumn && !hasBeenEdited ? 0.6 : 1, transition: "opacity 150ms" }} className="flex-1 min-w-0">
       <div data-slot="slider-row" className="grid h-[22px] grid-cols-[minmax(0,1fr)_28px] items-center gap-x-[8px]">
         <div data-slot="slider-track-cell" className="min-w-0">
           {wrappedSlider}
@@ -12769,10 +13110,12 @@ interface StepperProps extends ElementProps {
  **/
 export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, showLabel }) => {
   const transaction = useTransaction();
+  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
   const [internalValue, setInternalValue] = React.useState(value ?? defaultValue);
   const [isEditing, setIsEditing] = React.useState(false);
+  const [hasBeenEdited, setHasBeenEdited] = React.useState(false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const commands = useInteractionCommands();
@@ -12855,6 +13198,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
 
   const handleMouseDown = (increment: number) => {
     return () => {
+      if (!hasBeenEdited) setHasBeenEdited(true);
       if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
       if (!isEditing) {
         setIsEditing(true);
@@ -12896,8 +13240,15 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
 
   const labelElementId = id ? `${id.split(".").join("-")}-label` : undefined;
 
+  const stepperEmptyOpacity = isInPropertyValueColumn && value === undefined && !hasBeenEdited ? 0.6 : 1;
+
   const stepperElement = (
-    <div data-slot="stepper-group" data-detail-panel-control="fill" className={cn("flex h-[22px] w-full min-w-0 items-stretch overflow-hidden rounded-[3px] border transition-[border-color] focus-within:border-accent", borderClass)}>
+    <div
+      data-slot="stepper-group"
+      data-detail-panel-control="fill"
+      className={cn("flex h-[22px] w-full min-w-0 items-stretch overflow-hidden rounded-[3px] border transition-[border-color] focus-within:border-accent", borderClass)}
+      style={{ opacity: stepperEmptyOpacity, transition: "opacity 150ms" }}
+    >
       <button
         data-slot="stepper-minus"
         type="button"
@@ -12918,6 +13269,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         value={displayedValue}
         onChange={handleInputChange}
         onFocus={() => {
+          if (!hasBeenEdited) setHasBeenEdited(true);
           if (!isEditing) {
             setIsEditing(true);
             transaction?.start?.();
@@ -13015,8 +13367,9 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
 
 /**
  **/
-function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, mixed, ...props }: TextareaProps) {
+function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, mixed, rows, ...props }: TextareaProps) {
   const transaction = useTransaction();
+  const isInPropertyValueColumn = React.useContext(PropertyValueColumnContext);
   const [localValue, setLocalValue] = React.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = React.useState(false);
   const [isFocused, setIsFocused] = React.useState(false);
@@ -13077,9 +13430,12 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const textareaValue = lazy ? localValue : externalValue;
   const displayValue = textareaValue?.toString() || "";
   const showCollapsedDisplay = !!showLabel && !isFocused;
+  const useSingleRowPropertyEditor = isInPropertyValueColumn && !!showLabel;
+
+  const textareaEmptyOpacity = isInPropertyValueColumn && !displayValue && !isFocused ? 0.6 : 1;
 
   const textareaElement = (
-    <div data-slot="textarea-root" data-detail-panel-control="fill" className="flex min-w-0 w-full flex-1 items-stretch">
+    <div data-slot="textarea-root" data-detail-panel-control="fill" className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: textareaEmptyOpacity, transition: "opacity 150ms" }}>
       {!showCollapsedDisplay ? (
         <textarea
           ref={textareaRef}
@@ -13087,12 +13443,13 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
           data-mixed={mixed ? "true" : undefined}
           id={id}
           className={cn(
-            "placeholder:text-muted-foreground text-foreground flex w-full border bg-transparent px-tiny py-single text-base transition-[color,border-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+            "placeholder:text-muted-foreground text-foreground flex w-full border bg-transparent text-base transition-[color,border-color] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
             "focus-visible:border-accent",
             "aria-invalid:border-destructive flex-1",
-            "field-sizing-content min-h-huge",
+            useSingleRowPropertyEditor ? "h-medium min-h-[22px] max-h-[22px] resize-none overflow-y-auto px-single py-single leading-normal" : "field-sizing-content min-h-huge px-tiny py-single",
             className,
           )}
+          rows={useSingleRowPropertyEditor ? 1 : rows}
           value={textareaValue}
           onChange={handleChange}
           onFocus={handleFocus}
@@ -13102,7 +13459,17 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
           {...props}
         />
       ) : (
-        <CollapsedFieldDisplay className={className} disabled={props.disabled} id={id} mixed={mixed} onActivate={() => setIsFocused(true)} placeholder={effectivePlaceholder} slot="textarea" value={mixed && !displayValue ? "" : displayValue} />
+        <CollapsedFieldDisplay
+          allowStackedOverflow={true}
+          className={className}
+          disabled={props.disabled}
+          id={id}
+          mixed={mixed}
+          onActivate={() => setIsFocused(true)}
+          placeholder={effectivePlaceholder}
+          slot="textarea"
+          value={mixed && !displayValue ? "" : displayValue}
+        />
       )}
     </div>
   );
@@ -13727,7 +14094,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
   );
   if (showLabel) {
     return (
-      <Label id={id} labelElementId={`${id}-label`} className={className}>
+      <Label id={id} labelElementId={`${id}-label`} className={className} labelLayoutKind="treeGroupHeader">
         {ringElement}
       </Label>
     );
@@ -14373,9 +14740,13 @@ const assertNoNestedTreeSections = (children: React.ReactNode, ownerName: "TreeS
 
 const TreeContext = React.createContext<{ level: number; isLastAtLevel: boolean[]; showLines: boolean; isTree: boolean; indentMultiplier: number }>({ level: 0, isLastAtLevel: [], showLines: true, isTree: false, indentMultiplier: 1 });
 const TreeRowAlignmentContext = React.createContext(false);
+// True when children are rendered inside the value column of a Label property row.
+const PropertyValueColumnContext = React.createContext(false);
 const detailPanelIndentPx = (level: number, multiplier = 1): number => level * 10 * multiplier;
+const detailPanelHeaderLineCenterPx = 11;
+const detailPanelPropertyRowClassName = "group grid min-w-0 items-start gap-x-[8px] min-h-[24px]";
 const detailPanelPropertyControlClassName =
-  "min-w-0 w-full flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ml-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
+  "min-w-0 w-full self-start flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ml-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
 const treeInspectorInnerRowClassName = "min-w-0 w-full";
 const treeHeaderRowClassName = "flex min-w-0 w-full items-center gap-[6px]";
 const treeHeaderMainClassName = "flex min-w-0 flex-1 items-center gap-[6px]";
@@ -14390,7 +14761,9 @@ const treeItemContentPaddingTopPx = 2;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
 const treeItemLabelStyle: React.CSSProperties = {};
 const treeGutterSlotLeftPx = (level: number, extraLeftPx = 0, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + extraLeftPx;
-const treeGutterSlotStyle = (level: number, extraLeftPx = 0, multiplier = 1): React.CSSProperties => ({
+const treeGutterAnchorTop = (anchorOffsetPx?: number): string => (anchorOffsetPx === undefined ? "50%" : `${anchorOffsetPx}px`);
+const treeGutterSlotStyle = (level: number, extraLeftPx = 0, multiplier = 1, anchorOffsetPx?: number): React.CSSProperties => ({
+  top: treeGutterAnchorTop(anchorOffsetPx),
   left: `${treeGutterSlotLeftPx(level, extraLeftPx, multiplier)}px`,
 });
 const treeGutterWidthPx = (level: number, multiplier = 1): number => detailPanelIndentPx(level, multiplier) + treeToggleSlotWidthPx;
@@ -14426,9 +14799,10 @@ interface TreeHierarchyGutterProps {
   slot?: React.ReactNode;
   connectCurrentLevel?: boolean;
   slotOffsetPx?: number;
+  anchorOffsetPx?: number;
 }
 
-const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLines, slot, connectCurrentLevel = false, slotOffsetPx = 0 }) => {
+const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLines, slot, connectCurrentLevel = false, slotOffsetPx = 0, anchorOffsetPx }) => {
   const { indentMultiplier } = React.useContext(TreeContext);
   const currentGuidePx = indentationLinePx(level, indentMultiplier);
   const parentGuidePx = level > 0 ? indentationLinePx(level - 1, indentMultiplier) : 0;
@@ -14442,11 +14816,11 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLi
       React.cloneElement(slot as React.ReactElement<any>, {
         ...(slot as React.ReactElement<any>).props,
         "data-slot": (slot as React.ReactElement<any>).props["data-slot"] ?? "tree-gutter-slot",
-        className: cn("absolute top-1/2 -translate-y-1/2", (slot as React.ReactElement<any>).props.className),
-        style: { ...treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier), ...(slot as React.ReactElement<any>).props.style },
+        className: cn("absolute -translate-y-1/2", (slot as React.ReactElement<any>).props.className),
+        style: { ...treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier, anchorOffsetPx), ...(slot as React.ReactElement<any>).props.style },
       })
     ) : hasSlot ? (
-      <span data-slot="tree-gutter-slot" className="pointer-events-none absolute top-1/2 -translate-y-1/2" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier)}>
+      <span data-slot="tree-gutter-slot" className="pointer-events-none absolute -translate-y-1/2" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier, anchorOffsetPx)}>
         {slot}
       </span>
     ) : null;
@@ -14456,8 +14830,8 @@ const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLi
       {showLines && level > 0 && connectCurrentLevel && (
         <div
           data-slot="tree-branch-elbow"
-          className="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2 transition-[height,background-color] duration-150"
-          style={{ left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }}
+          className="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150"
+          style={{ top: treeGutterAnchorTop(anchorOffsetPx), left: `${parentGuidePx}px`, width: `${elbowWidthPx}px` }}
         />
       )}
       {positionedSlot}
@@ -14477,13 +14851,27 @@ interface TreeAlignedRowProps {
   connectCurrentLevel?: boolean;
   extendCurrentLevelToBottom?: boolean;
   slotOffsetPx?: number;
+  anchorOffsetPx?: number;
 }
 
-const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({ level, isLastAtLevel, showLines, slot, children, className, contentClassName, align = "center", connectCurrentLevel = false, extendCurrentLevelToBottom = false, slotOffsetPx = 0 }) => {
+const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
+  level,
+  isLastAtLevel,
+  showLines,
+  slot,
+  children,
+  className,
+  contentClassName,
+  align = "center",
+  connectCurrentLevel = false,
+  extendCurrentLevelToBottom = false,
+  slotOffsetPx = 0,
+  anchorOffsetPx,
+}) => {
   const { indentMultiplier } = React.useContext(TreeContext);
   return (
     <div data-slot="tree-row-layout" className={cn("grid min-w-0", align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
-      <TreeHierarchyGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} slotOffsetPx={slotOffsetPx} />
+      <TreeHierarchyGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
       <div data-slot="tree-row-content" className={cn("min-w-0", contentClassName)}>
         {children}
       </div>
@@ -15730,6 +16118,20 @@ export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (chi
  * When no label resolves, wraps children in TreeAlignedRow so controls always get proper gutter alignment
  * and tree guide lines regardless of whether the child control uses showLabel.
  **/
+const treeRowUsesPropertyHeaderAnchor = (children: React.ReactNode): boolean => {
+  const childArray = React.Children.toArray(children);
+  return childArray.some((child) => {
+    if (!React.isValidElement(child)) {
+      return false;
+    }
+    if (child.type === React.Fragment) {
+      return treeRowUsesPropertyHeaderAnchor((child.props as { children?: React.ReactNode }).children);
+    }
+    const childProps = child.props as { children?: React.ReactNode; showLabel?: boolean };
+    return child.type === Label || childProps.showLabel === true;
+  });
+};
+
 export const TreeRow: React.FC<{
   children: React.ReactNode;
   className?: string;
@@ -15765,7 +16167,14 @@ export const TreeRow: React.FC<{
   return (
     <TreeRowAlignmentContext.Provider value={true}>
       <div data-slot="tree-row" className={cn("relative min-w-0 w-full", className)}>
-        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0">
+        <TreeAlignedRow
+          level={level}
+          isLastAtLevel={isLastAtLevel}
+          showLines={showLines}
+          connectCurrentLevel={level > 0}
+          contentClassName="min-w-0"
+          anchorOffsetPx={treeRowUsesPropertyHeaderAnchor(children) ? detailPanelHeaderLineCenterPx : undefined}
+        >
           {children}
         </TreeAlignedRow>
       </div>
@@ -15788,11 +16197,11 @@ export const HelperRow: React.FC<{ children: React.ReactNode; className?: string
   if (propertyAligned && isTree) {
     const treePropertyRowOffsetPx = detailPanelIndentPx(level, indentMultiplier);
     return (
-      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0}>
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0} anchorOffsetPx={detailPanelHeaderLineCenterPx}>
         <div
           data-slot="property-row"
           style={{ marginLeft: `${-treePropertyRowOffsetPx}px`, width: treePropertyRowOffsetPx > 0 ? `calc(100% + ${treePropertyRowOffsetPx}px)` : "100%" }}
-          className="grid min-w-0 items-center gap-x-[8px] min-h-[24px] grid-cols-[96px_minmax(0,1fr)]"
+          className={cn(detailPanelPropertyRowClassName, "grid-cols-[96px_minmax(0,1fr)]")}
         >
           <div />
           <div data-slot="property-control" className={detailPanelPropertyControlClassName}>
@@ -17514,14 +17923,8 @@ interface ToolbarZoneProps extends React.ComponentProps<"div"> {
 }
 
 function ToolbarZone({ className, children, ...props }: ToolbarZoneProps) {
-  const level = useLevel();
-  const borderClass = getLevelBorderElementClass(level);
   return (
-    <div
-      data-slot="toolbar-zone"
-      className={cn("bg-panel flex h-[var(--toolbar-item-height)] shrink-0 items-center gap-[var(--toolbar-gap)] border rounded-md px-[var(--toolbar-padding-inline)] shadow-sm overflow-hidden", borderClass, className)}
-      {...props}
-    >
+    <div data-slot="toolbar-zone" className={cn("bg-panel flex h-[var(--toolbar-item-height)] shrink-0 items-center gap-[var(--toolbar-gap)] rounded-md shadow-sm overflow-hidden", className)} {...props}>
       {children}
     </div>
   );
@@ -21190,10 +21593,14 @@ if (treeVitest) {
       expect(markup).toContain("grid-cols-[96px_minmax(0,1fr)]");
       expect(markup).toContain('data-slot="property-control"');
       expect(markup).toContain("justify-end");
+      expect(markup).toContain("self-start");
       expect(markup).toContain("data-detail-panel-control");
       expect(markup).toContain("padding-left:10px");
       expect(markup).not.toContain("margin-left:13px");
       expect(markup).not.toContain("gap-[6px]");
+      expect(markup).toContain('data-slot="tree-branch-elbow"');
+      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:11px;left:7px;width:10px"');
+      expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
     });
 
     it("renders explicit property labels on the shared property-row wrapper", () => {
@@ -21210,8 +21617,24 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-row-layout"');
       expect(markup).toContain('data-slot="property-control"');
       expect(markup).toContain("justify-end");
+      expect(markup).toContain("self-start");
       expect(markup).toContain("data-detail-panel-control");
       expect(markup).toContain(">piece<");
+    });
+
+    it("anchors TreeRow property-control children to the fixed header line", () => {
+      const markup = renderToStaticMarkup(
+        <TreeContext.Provider value={{ level: 1, isLastAtLevel: [true], showLines: true, isTree: true, indentMultiplier: 1 }}>
+          <TreeRow>
+            <Textarea id="tooltip.manual" value="Long value" showLabel />
+          </TreeRow>
+        </TreeContext.Provider>,
+      );
+
+      expect(markup).toContain('data-slot="tree-row"');
+      expect(markup).toContain('data-slot="property-row"');
+      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:11px;left:7px;width:10px"');
+      expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
     });
 
     it("renders property-layout tree items with a dedicated control column", () => {
@@ -21299,11 +21722,26 @@ if (treeVitest) {
       expect(toggleMarkup).toContain("w-fit shrink-0");
     });
 
-    it("anchors ring controls to the shared property edge and exposes the ring label", () => {
-      const ringMarkup = renderToStaticMarkup(<Ring id="semio.sketchpad.app.type.panel.details.section.connector.ring" orbs={[{ id: "connector-1", t: 0.25, selected: true }]} showLabel />);
+    it("renders ring as a tree group header row and exposes the ring label", () => {
+      const ringMarkup = renderToStaticMarkup(
+        <TreeContext.Provider value={{ level: 1, isLastAtLevel: [true], showLines: true, isTree: true, indentMultiplier: 1 }}>
+          <TreeRowAlignmentContext.Provider value={true}>
+            <div data-slot="tree-row">
+              <TreeAlignedRow level={1} isLastAtLevel={[true]} showLines={true} connectCurrentLevel={true} contentClassName="min-w-0">
+                <Ring id="semio.sketchpad.app.type.panel.details.section.connector.ring" orbs={[{ id: "connector-1", t: 0.25, selected: true }]} showLabel />
+              </TreeAlignedRow>
+            </div>
+          </TreeRowAlignmentContext.Provider>
+        </TreeContext.Provider>,
+      );
 
-      expect(ringMarkup).toContain('data-slot="property-control"');
-      expect(ringMarkup).toContain("justify-end");
+      expect(ringMarkup).toContain('data-slot="tree-row-layout"');
+      expect(ringMarkup).toContain('data-slot="tree-gutter"');
+      expect(ringMarkup).toContain('data-slot="tree-group-header-row"');
+      expect(ringMarkup).toContain('data-slot="tree-label"');
+      expect(ringMarkup).toContain('data-slot="tree-group-header-control"');
+      expect(ringMarkup).not.toContain('data-slot="property-row"');
+      expect(ringMarkup).not.toContain('data-slot="property-control"');
       expect(ringMarkup).toContain('data-slot="ring"');
       expect(ringMarkup).toContain('data-detail-panel-control="fit"');
       expect(ringMarkup).toContain("w-fit shrink-0");
@@ -21392,8 +21830,9 @@ if (treeVitest) {
       expect(markup).not.toMatch(/data-slot="tree-gutter"[^>]*><div class="absolute left-0 top-0 bottom-0 pointer-events-none"/);
       expect(markup).not.toContain('data-slot="tree-gutter-slot" class="absolute inset-y-0 left-0 flex items-center justify-center"');
       expect(markup).toContain('data-slot="tree-gutter-slot"');
-      expect(markup).toContain("absolute top-1/2 -translate-y-1/2");
-      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 top-1/2 -translate-y-1/2 transition-[height,background-color] duration-150" style="left:7px;width:3px"');
+      expect(markup).toContain('class="absolute -translate-y-1/2');
+      expect(markup).toContain('style="top:50%;left:0px"');
+      expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:50%;left:7px;width:3px"');
       expect(markup).not.toContain('data-slot="tree-branch-stem"');
       expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40/g)?.length ?? 0).toBe(3);
       expect(markup).not.toContain('data-slot="tree-content" class="relative" style="padding-top:3px;padding-bottom:3px;padding-left:');
@@ -21460,6 +21899,67 @@ if (treeVitest) {
           measureText,
         }),
       ).toBe("Supercali...");
+    });
+
+    it("uses stacked overflow when enabled and inline ellipsis when disabled", () => {
+      const measureText = (value: string) => value.length * 8;
+      const stackedState = resolveCollapsedFieldDisplayState({
+        allowStackedOverflow: true,
+        value: "Alpha beta gamma delta",
+        maxWidth: measureText("Alpha beta gamma"),
+        measureText,
+      });
+      const inlineState = resolveCollapsedFieldDisplayState({
+        value: "Alpha beta gamma delta",
+        maxWidth: measureText("Alpha beta gamma"),
+        measureText,
+      });
+
+      expect(stackedState.value).toBe("Alpha beta gamma");
+      expect(stackedState.isOverflowing).toBe(true);
+      expect(stackedState.layoutKind).toBe("stacked-overflow");
+      expect(stackedState.value.endsWith(COLLAPSED_FIELD_ELLIPSIS)).toBe(false);
+
+      expect(inlineState.value).toBe("Alpha beta...");
+      expect(inlineState.isOverflowing).toBe(true);
+      expect(inlineState.layoutKind).toBe("single-line");
+      expect(inlineState.value.endsWith(COLLAPSED_FIELD_ELLIPSIS)).toBe(true);
+    });
+
+    it("keeps single-line text fields in the normal state when the text still fits", () => {
+      const measureText = (value: string) => value.length * 8;
+      const fittingState = resolveCollapsedFieldDisplayState({
+        allowStackedOverflow: true,
+        value: "Nakagin Capsule Tower",
+        maxWidth: measureText("Nakagin Capsule Tower"),
+        measureText,
+      });
+
+      expect(fittingState.isOverflowing).toBe(false);
+      expect(fittingState.layoutKind).toBe("single-line");
+      expect(fittingState.value).toBe("Nakagin Capsule Tower");
+    });
+
+    it("enables stacked overflow only after the rendered value exceeds the inner field width", () => {
+      const measureText = (value: string) => value.length * 8;
+      const exactFitState = resolveCollapsedFieldDisplayState({
+        allowStackedOverflow: true,
+        value: "Nakagin Capsule Tower",
+        maxWidth: measureText("Nakagin Capsule Tower"),
+        measureText,
+      });
+      const overflowingState = resolveCollapsedFieldDisplayState({
+        allowStackedOverflow: true,
+        value: "Nakagin Capsule Tower",
+        maxWidth: measureText("Nakagin Capsule Towe"),
+        measureText,
+      });
+
+      expect(exactFitState.isOverflowing).toBe(false);
+      expect(exactFitState.layoutKind).toBe("single-line");
+      expect(overflowingState.isOverflowing).toBe(true);
+      expect(overflowingState.layoutKind).toBe("stacked-overflow");
+      expect(overflowingState.value).toBe("Nakagin Capsule");
     });
 
     it("keeps tree section actions inline with the header row when isTree is true", () => {
@@ -21529,6 +22029,88 @@ if (treeVitest) {
       expect(markup).toContain('type="checkbox"');
       expect(markup).toContain('checked=""');
       expect(markup).toContain('aria-label="Toggle item"');
+    });
+
+    it("renders empty Input inside a Label property row with muted opacity and full opacity when value is present", () => {
+      const emptyMarkup = renderToStaticMarkup(
+        <Label id="tooltip.manual">
+          <Input id="tooltip.manual" value="" />
+        </Label>,
+      );
+      const filledMarkup = renderToStaticMarkup(
+        <Label id="tooltip.manual">
+          <Input id="tooltip.manual" value="hello" />
+        </Label>,
+      );
+      const standaloneMarkup = renderToStaticMarkup(<Input id="tooltip.manual" value="" />);
+
+      expect(emptyMarkup).toContain('data-slot="input-root"');
+      expect(emptyMarkup).toContain("opacity:0.6");
+      expect(filledMarkup).toContain("opacity:1");
+      // outside Label (not in property value column) — no muted opacity
+      expect(standaloneMarkup).not.toContain("opacity:0.6");
+    });
+
+    it("renders empty Textarea inside a Label property row with muted opacity and full opacity when value is present", () => {
+      const emptyMarkup = renderToStaticMarkup(
+        <Label id="tooltip.manual">
+          <Textarea id="tooltip.manual" value="" />
+        </Label>,
+      );
+      const filledMarkup = renderToStaticMarkup(
+        <Label id="tooltip.manual">
+          <Textarea id="tooltip.manual" value="some text" />
+        </Label>,
+      );
+      const standaloneMarkup = renderToStaticMarkup(<Textarea id="tooltip.manual" value="" />);
+
+      expect(emptyMarkup).toContain('data-slot="textarea-root"');
+      expect(emptyMarkup).toContain("opacity:0.6");
+      expect(filledMarkup).toContain("opacity:1");
+      expect(standaloneMarkup).not.toContain("opacity:0.6");
+    });
+
+    it("renders empty Combobox inside a Label property row with muted opacity and full opacity when value is selected", () => {
+      const options = [
+        { label: "Alpha", value: "alpha" },
+        { label: "Beta", value: "beta" },
+      ];
+      const emptyMarkup = renderToStaticMarkup(
+        <Label id="tooltip.manual">
+          <Combobox id="tooltip.manual" value="" options={options} onValueChange={() => undefined} />
+        </Label>,
+      );
+      const filledMarkup = renderToStaticMarkup(
+        <Label id="tooltip.manual">
+          <Combobox id="tooltip.manual" value="alpha" options={options} onValueChange={() => undefined} />
+        </Label>,
+      );
+      const standaloneMarkup = renderToStaticMarkup(<Combobox id="tooltip.manual" value="" options={options} onValueChange={() => undefined} />);
+
+      // PopoverTrigger asChild merges ButtonGroup — check class presence instead of data-slot
+      expect(emptyMarkup).toContain("group/button-group");
+      expect(emptyMarkup).toContain("opacity:0.6");
+      expect(filledMarkup).toContain("opacity:1");
+      expect(standaloneMarkup).not.toContain("opacity:0.6");
+    });
+
+    it("renders Stepper with undefined value inside a Label property row with muted opacity and full opacity when value is defined", () => {
+      const emptyMarkup = renderToStaticMarkup(
+        <Label id="tooltip.manual">
+          <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.x" value={undefined} />
+        </Label>,
+      );
+      const filledMarkup = renderToStaticMarkup(
+        <Label id="tooltip.manual">
+          <Stepper id="semio.sketchpad.app.design.panel.details.section.connection.x" value={5} />
+        </Label>,
+      );
+      const standaloneMarkup = renderToStaticMarkup(<Stepper id="semio.sketchpad.app.design.panel.details.section.connection.x" value={undefined} />);
+
+      expect(emptyMarkup).toContain('data-slot="stepper-group"');
+      expect(emptyMarkup).toContain("opacity:0.6");
+      expect(filledMarkup).toContain("opacity:1");
+      expect(standaloneMarkup).not.toContain("opacity:0.6");
     });
   });
 

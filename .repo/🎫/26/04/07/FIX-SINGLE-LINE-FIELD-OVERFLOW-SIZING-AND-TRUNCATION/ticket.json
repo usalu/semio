@@ -1,0 +1,13 @@
+{
+  "title": "Fix Single-Line Field Overflow Sizing and Truncation",
+  "status": "closed",
+  "description": "Fix Single-Line Field Overflow Sizing and Truncation",
+  "summary": "Fixed single-line field overflow in the sketchpad Details panel. Increased chevron indicator icons from 8px to 10px with heavier stroke weight (2.5). Expanded the overflow second-row container from 10px to 14px height and the grid template accordingly. Raised the stacked layout min-height from 32px to 46px so the 2-row expansion properly pushes adjacent rows down with no overlap. Changed the first-row text leading from a tight 12px to leading-normal for cleaner truncation rendering. All 30 existing tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1285"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪4a75da10cea3440a9fa0b02602e823fd"
+  ]
+}
