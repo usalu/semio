@@ -246,8 +246,8 @@ public static class Utility
     }
 
     public static Plane ComputeChildPlane(Plane parentPlane, Point parentPoint, Vector parentDirection,
-        Point childPoint, Vector childDirection, float gap, float shift, float raise, float rotation, float turn,
-        float tilt)
+        Point childPoint, Vector childDirection, double gap, double shift, double raise, double rotation, double turn,
+        double tilt)
     {
         var parentPointR = new Vector3d(parentPoint.Convert());
         var parentDirectionR = parentDirection.Convert();

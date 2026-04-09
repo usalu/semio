@@ -10,17 +10,11 @@
 // #endregion 🧲Header
 
 // #region 🐹Build
-// .NET build script. MUST compile the Semio C# project via MSBuild.
+// .NET build script. MUST compile the Semio C# project via dotnet build (cross-platform).
 
 import { execSync } from "child_process";
 
-/**
- * MSBuild executable path for Visual Studio 2022.
- * MUST point to the installed MSBuild binary.
- **/
-const msbuild = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe";
-
-execSync(`"${msbuild}" Semio.csproj /p:Configuration=Debug`, {
+execSync(`dotnet build Semio.csproj -c Debug`, {
   cwd: __dirname,
   stdio: "inherit",
 });

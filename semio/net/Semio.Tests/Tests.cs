@@ -219,6 +219,7 @@ public class Tests
             }
             finally
             {
+                Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
                 if (Directory.Exists(folderPath)) Directory.Delete(folderPath, true);
             }
         }
@@ -398,6 +399,9 @@ public class Tests
                 }
                 finally
                 {
+                    // On Windows, SQLite connection pooling may hold file handles open.
+                    // Clear the pool before trying to delete the directory.
+                    Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
                     Directory.Delete(tempDir, true);
                 }
             }

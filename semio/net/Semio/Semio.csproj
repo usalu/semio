@@ -32,6 +32,10 @@
     <PackageReference Include="Humanizer" Version="3.0.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="PolySharp" Version="1.15.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="QuikGraph" Version="2.5.0" />
     <PackageReference Include="Refit" Version="9.0.2" />
     <PackageReference Include="Refit.Newtonsoft.Json" Version="9.0.2" />

@@ -24,14 +24,8 @@ const cwd = __dirname;
 
 execSync("tsx ./build-value-lists.ts", { cwd, stdio: "inherit" });
 
-/**
- * MSBuild executable path for Visual Studio 2022.
- * MUST point to the installed MSBuild binary.
- **/
-const msbuild = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe";
-
-execSync(`"${msbuild}" Semio.sln /t:Clean`, { cwd, stdio: "inherit" });
-execSync(`"${msbuild}" Semio.sln /p:Configuration=Debug`, { cwd, stdio: "inherit" });
+execSync(`dotnet clean Semio.Grasshopper.csproj -c Debug`, { cwd, stdio: "inherit" });
+execSync(`dotnet build Semio.Grasshopper.csproj -c Debug`, { cwd, stdio: "inherit" });
 
 /**
  * Yak distribution output folder path.

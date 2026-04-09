@@ -41,7 +41,7 @@ import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, u
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Slot } from "@radix-ui/react-slot";
-import { Edges, Grid, OrbitControls, useGLTF } from "@react-three/drei";
+import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import {
   applyNodeChanges,
@@ -19239,7 +19239,7 @@ const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
         font="16px Inter var, Arial, sans-serif"
         onClick={
           onAxisClick
-            ? (e) => {
+            ? (e: ThreeEvent<MouseEvent>) => {
                 onAxisClick(e.object.position.clone());
                 return null;
               }

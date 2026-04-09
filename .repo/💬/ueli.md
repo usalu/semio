@@ -83,7 +83,18 @@ TODO: Add roomie to discord for verification
 
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)
 
-repo:
+Extend the monorepo to be multi-platform.
+All projects are mainly developed inside the devcontainer but still sometimes need native development.
+Everything MUST work zero-touch on Linux, Windows, Mac.
+You currently have a fresh Windows repo that you can test. All dev and build commands need to run. In particular are native:
+- sketchpad/desktop
+- coda/desktop
+- Semio.Grasshopper
+You MUST adjust all configs and test everything for the complete monorepo (all programming languages etc).
+You MUST fix all bugs. 
+You MUST extend the host machine if something is missing.
+
+---
 
 Every single entity MUST have a unique emoji among the siblings inside the same parent. No white space after the emoji.
 
@@ -107,7 +118,8 @@ Every single entity MUST have a unique emoji among the siblings inside the same 
 
 You MUST adjust the repo implementation, tests and extend all entities and source code in the complete codebase. Current implementation is not clean.
 
-repo:
+---
+
 All tickets MUST have an `emoji` that summarizes the ticket.
 Adjust all implementations, tests and extend all existing tickets manually with a fitting emoji.
 

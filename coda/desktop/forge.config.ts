@@ -28,9 +28,20 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    executableName: "coda-desktop",
+    name: "coda-desktop",
   },
   rebuildConfig: {},
-  makers: [new MakerSquirrel({}), new MakerZIP({}, ["darwin"]), new MakerRpm({}), new MakerDeb({})],
+  makers: [
+    new MakerSquirrel({
+      authors: "Ueli Saluz",
+      name: "coda_desktop",
+      setupExe: "coda-desktop-installer.exe",
+    }),
+    new MakerZIP({}, ["darwin"]),
+    new MakerRpm({}),
+    new MakerDeb({}),
+  ],
   plugins: [
     new VitePlugin({
       build: [

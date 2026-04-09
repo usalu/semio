@@ -12,7 +12,7 @@
     "./postcss.config": "./postcss.config.ts"
   },
   "scripts": {
-    "dev": "CHOKIDAR_USEPOLLING=1 storybook dev -p 6008 --exact-port --host 0.0.0.0 --no-open --debug",
+    "dev": "cross-env CHOKIDAR_USEPOLLING=1 storybook dev -p 6008 --exact-port --host 0.0.0.0 --no-open --debug",
     "build": "storybook build",
     "lint": "eslint --max-warnings 0 --config eslint.config.ts .",
     "test": "vitest run --passWithNoTests --config ../../elements/ui/vitest.config.ts"

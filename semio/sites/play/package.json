@@ -6,7 +6,7 @@
   "version": "0.1.0",
   "description": "semio ⋅ playground",
   "scripts": {
-    "dev": "CHOKIDAR_USEPOLLING=1 vite --strictPort --port 4000 --host 0.0.0.0",
+    "dev": "cross-env CHOKIDAR_USEPOLLING=1 vite --strictPort --port 4000 --host 0.0.0.0",
     "build": "vite build",
     "publish": "vite build && npm publish"
   },

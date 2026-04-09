@@ -42,10 +42,14 @@ copyFileSync(join(cwd, "..", "assets", "icons", "semio_512x512.png"), join(distD
 copyFileSync(join(cwd, "manifest.yml"), join(distDir, "manifest.yml"));
 
 /**
- * Yak CLI executable path for Rhino 8.
- * MUST point to the installed Yak binary.
+ * Yak CLI executable path.
+ * MUST resolve to the installed Yak binary on the current platform.
  **/
-const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
+const yak = process.platform === "win32"
+  ? "C:\\Program Files\\Rhino 8\\System\\Yak.exe"
+  : process.platform === "darwin"
+    ? "/Applications/Rhino 8.app/Contents/Resources/bin/yak"
+    : "yak";
 execSync(`"${yak}" build --platform win`, { cwd: distDir, stdio: "inherit" });
 
 console.log("✅ Yak package built");

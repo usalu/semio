@@ -1810,6 +1810,7 @@ public static class SemioValidator
         var enumerator = StringInfo.GetTextElementEnumerator(text);
         if (!enumerator.MoveNext()) return null;
         var grapheme = enumerator.GetTextElement();
+#if NET5_0_OR_GREATER
         foreach (var rune in grapheme.EnumerateRunes())
         {
             if (Rune.GetUnicodeCategory(rune) == UnicodeCategory.OtherSymbol ||
@@ -1825,6 +1826,35 @@ public static class SemioValidator
                 return grapheme;
         }
         return null;
+#else
+        // .NET Framework 4.8 fallback: inspect code points directly via char pairs
+        for (int i = 0; i < grapheme.Length; )
+        {
+            int codePoint;
+            if (char.IsHighSurrogate(grapheme[i]) && i + 1 < grapheme.Length && char.IsLowSurrogate(grapheme[i + 1]))
+            {
+                codePoint = char.ConvertToUtf32(grapheme[i], grapheme[i + 1]);
+                i += 2;
+            }
+            else
+            {
+                codePoint = grapheme[i];
+                i++;
+            }
+            if (CharUnicodeInfo.GetUnicodeCategory(grapheme, 0) == UnicodeCategory.OtherSymbol ||
+                (codePoint >= 0x1F600 && codePoint <= 0x1F64F) ||
+                (codePoint >= 0x1F300 && codePoint <= 0x1F5FF) ||
+                (codePoint >= 0x1F680 && codePoint <= 0x1F6FF) ||
+                (codePoint >= 0x1F900 && codePoint <= 0x1F9FF) ||
+                (codePoint >= 0x1FA00 && codePoint <= 0x1FA6F) ||
+                (codePoint >= 0x1FA70 && codePoint <= 0x1FAFF) ||
+                (codePoint >= 0x2600 && codePoint <= 0x26FF) ||
+                (codePoint >= 0x2700 && codePoint <= 0x27BF) ||
+                (codePoint >= 0x1F1E0 && codePoint <= 0x1F1FF))
+                return grapheme;
+        }
+        return null;
+#endif
     }
 
     public static List<Issue> CheckDescriptionMissingEmoji(Kit kit)
@@ -8971,7 +9001,7 @@ public static class Hashing
 
         var exponent = int.Parse(value[(exponentIndex + 1)..], CultureInfo.InvariantCulture);
         var decimalIndex = mantissa.IndexOf('.');
-        var digits = mantissa.Replace(".", "", StringComparison.Ordinal);
+        var digits = mantissa.Replace(".", "");
         if (decimalIndex < 0)
             decimalIndex = digits.Length;
 

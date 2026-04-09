@@ -5,9 +5,9 @@
   "sourceRoot": "repo/server",
   "projectType": "application",
   "scripts": {
-    "dev": "next dev --port 8787",
-    "build": "next build",
-    "start": "next start --port 8787",
+    "dev": "go run .",
+    "build": "go build -o server .",
+    "start": "go run .",
     "worker": "tsx lib/worker.ts",
     "migrate": "tsx lib/migrate.ts",
     "test": "vitest run"

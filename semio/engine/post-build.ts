@@ -19,16 +19,17 @@ import { join } from "path";
  * Post-build working directory.
  * MUST resolve to the engine folder.
  **/
- * cwd holds the data fields for a cwd record.
- **/
 const cwd = __dirname;
+/**
+ * Platform-specific executable extension.
+ * Windows uses .exe, other platforms have no extension.
+ **/
+const exeExt = process.platform === "win32" ? ".exe" : "";
 /**
  * Path to the PyInstaller-produced engine executable.
  * MUST match the PyInstaller output name.
  **/
- * exePath holds the data fields for a exePath record.
- **/
-const exePath = join(cwd, "dist", "semio-engine", "semio-engine.exe");
+const exePath = join(cwd, "dist", "semio-engine", `semio-engine${exeExt}`);
 /**
  * Path to the PyInstaller internal dependencies folder.
  * MUST be co-located with the executable.
@@ -38,19 +39,15 @@ const internalPath = join(cwd, "dist", "semio-engine", "_internal");
  * Grasshopper plugin binary output directory.
  * MUST match the .NET build output path.
  **/
-const grasshopperBinPath = join(cwd, "..", "..", "net", "Semio.Grasshopper", "bin", "Debug", "net48");
+const grasshopperBinPath = join(cwd, "..", "gh", "Semio.Grasshopper", "bin", "Debug", "net48");
 /**
  * Target path for the engine executable in the Grasshopper bin folder.
  * MUST use the same executable name as the PyInstaller output.
  **/
- * grasshopperExePath holds the data fields for a grasshopperExePath record.
- **/
-const grasshopperExePath = join(grasshopperBinPath, "semio-engine.exe");
+const grasshopperExePath = join(grasshopperBinPath, `semio-engine${exeExt}`);
 /**
  * Target path for the internal dependencies in the Grasshopper bin folder.
  * MUST mirror the PyInstaller _internal directory structure.
- **/
- * grasshopperInternalPath holds the data fields for a grasshopperInternalPath record.
  **/
 const grasshopperInternalPath = join(grasshopperBinPath, "_internal");
 

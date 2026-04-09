@@ -1,6 +1,7 @@
 {
   "id": "unknown",
   "uri": "repo://session/unknown",
+  "client": "cursor-chat",
   "second": "2026-04-09T00:05:32Z",
   "checkpoint": "cc310f6f090994959cdf1fda1943ef1ea97a285b",
   "contributor": "unknown",
@@ -45,6 +46,28 @@
         "contributor": "unknown",
         "kind": "version.checkpoint.ended",
         "second": "2026-04-09T02:00:03Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f0dfde2a54cd045a038bffceba5c9e1ce716281d",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-04-09T12:17:20Z",
+        "session": "unknown"
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f0dfde2a54cd045a038bffceba5c9e1ce716281d",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-04-09T12:36:22Z",
         "session": "unknown"
       },
       "response": {}

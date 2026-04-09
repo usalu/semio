@@ -13,7 +13,7 @@
     "build": "vite build",
     "test": "playwright test",
     "publish": "vite build && npm publish",
-    "postinstall": "node -e \"require('fs').copyFileSync('../../node_modules/sql.js/dist/sql-wasm.wasm', 'public/sql-wasm.wasm')\""
+    "postinstall": "node -e \"const fs=require('fs'),p=require('path');const s=p.join(__dirname,'..','..','node_modules','sql.js','dist','sql-wasm.wasm');const d=p.join(__dirname,'public');if(fs.existsSync(s)){fs.mkdirSync(d,{recursive:true});fs.copyFileSync(s,p.join(d,'sql-wasm.wasm'))}\""
   },
   "dependencies": {
     "@semio/ui": "*",

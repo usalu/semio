@@ -5,7 +5,7 @@
   "sourceRoot": "semio/engine",
   "projectType": "application",
   "scripts": {
-    "dev": "uv run main.py",
+    "dev": "cross-env UV_PROJECT_ENVIRONMENT=.venv uv run main.py",
     "build": "tsx ./build.ts",
     "build:mcp-app": "npx vite build --config vite.mcp-app.config.ts",
     "test": "tsx ./test.ts"

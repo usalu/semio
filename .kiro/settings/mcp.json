@@ -2,8 +2,10 @@
   "mcpServers": {
     "repo": {
       "type": "stdio",
-      "command": "/workspaces/semio/repo/cli/cli",
+      "command": "go",
       "args": [
+        "run",
+        "./repo/cli",
         "mcp"
       ]
     }

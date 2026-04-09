@@ -9,9 +9,13 @@
 
 // #region 📷Test Runner
 import { execSync } from "child_process";
+import { join } from "path";
+
+const env = { ...process.env, UV_PROJECT_ENVIRONMENT: join(__dirname, ".venv") };
 
 execSync("uv run pytest --cov --cov-config=pyproject.toml --cov-report html", {
   cwd: __dirname,
+  env,
   stdio: "inherit",
 });
 

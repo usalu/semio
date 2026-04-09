@@ -15202,7 +15202,7 @@ func TestIsToolBlocked(t *testing.T) {
 		{"case insensitive", "TERMINAL", "GIT CHECKOUT main", true},
 		{"grep with git checkout pattern not blocked", "", `grep "git checkout" file.go`, false},
 		{"echo with git stash not blocked", "", `echo "git stash"`, false},
-		{"semio cli command not blocked", "", `./repo/cli/cli tree "hooks events inlet adapter cli"`, false},
+		{"semio cli command not blocked", "", `go run ./repo/cli tree "hooks events inlet adapter cli"`, false},
 		{"cd then git checkout blocked", "", "cd /workspaces && git checkout feature", true},
 		{"pipe grep allowed", "", `ls | grep "git checkout"`, false},
 		{"git checkout after semicolon blocked", "", "echo done; git checkout main", true},
@@ -15295,7 +15295,7 @@ func TestIsCommandSegmentBlocked(t *testing.T) {
 		{`bash -lc "git stash && echo done"`, true},
 		{`grep "git checkout" file.go`, false},
 		{`echo "git stash"`, false},
-		{"./repo/cli/cli tree hooks", false},
+		{"go run ./repo/cli tree hooks", false},
 		{"git status", false},
 		{"git log --oneline -n 5", false},
 		{"git diff", false},
@@ -16843,9 +16843,11 @@ func TestDeriveRepoOpFromCLICommand(t *testing.T) {
 		cmd      string
 		expected string
 	}{
-		{"ticket open full path", "./repo/cli/cli ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
+		{"ticket open full path", "go run ./repo/cli ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
+		{"ticket open exe path", ".\\repo\\cli\\cli.exe ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
 		{"ticket close", "./cli ticket close 26 03 05 MY-SLUG 'Summary' semio/go/semio.go", "ticket.close"},
 		{"ticket reopen", "/workspaces/semio/repo/cli/cli ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
+		{"ticket reopen go run", "go run ./repo/cli ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
 		{"goal open", "./cli goal open 'Title' 'Desc' 'Prompt' claude-code sonnet-4-5", "goal.open"},
 		{"goal close", "./cli goal close MY-GOAL 'Summary'", "goal.close"},
 		{"contributor add", "./cli contributor add github-user", "contributor.add"},
@@ -16992,7 +16994,7 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 				HookResultBase: HookResultBase{Allowed: true},
 				Session:        "sess2",
 			},
-			Command: "./repo/cli/cli ticket open MY-GOAL 'My Title' claude-code sonnet-4-5",
+			Command: "go run ./repo/cli ticket open MY-GOAL 'My Title' claude-code sonnet-4-5",
 		}
 		hctx := HookContext{
 			Event:    HookAgentToolTerminalStarting,

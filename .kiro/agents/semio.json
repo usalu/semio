@@ -11,8 +11,10 @@
       ]
     },
     "repo": {
-      "command": "./repo/cli/cli",
+      "command": "go",
       "args": [
+        "run",
+        "./repo/cli",
         "mcp"
       ]
     },
@@ -126,27 +128,27 @@
   "hooks": {
     "agentSpawn": [
       {
-        "command": "./repo/cli/cli hook agentSpawn kiro-cli"
+        "command": "go run ./repo/cli hook agentSpawn kiro-cli"
       }
     ],
     "userPromptSubmit": [
       {
-        "command": "./repo/cli/cli hook userPromptSubmit kiro-cli"
+        "command": "go run ./repo/cli hook userPromptSubmit kiro-cli"
       }
     ],
     "preToolUse": [
       {
-        "command": "./repo/cli/cli hook preToolUse kiro-cli"
+        "command": "go run ./repo/cli hook preToolUse kiro-cli"
       }
     ],
     "postToolUse": [
       {
-        "command": "./repo/cli/cli hook postToolUse kiro-cli"
+        "command": "go run ./repo/cli hook postToolUse kiro-cli"
       }
     ],
     "stop": [
       {
-        "command": "./repo/cli/cli hook stop kiro-cli"
+        "command": "go run ./repo/cli hook stop kiro-cli"
       }
     ]
   },

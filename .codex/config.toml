@@ -7,8 +7,8 @@ args = ["playwright", "run-test-mcp-server"]
 enabled = true
 
 [mcp_servers.repo]
-command = "./repo/cli/cli"
-args = ["mcp"]
+command = "go"
+args = ["run", "./repo/cli", "mcp"]
 enabled = true
 
 [mcp_servers.semio]

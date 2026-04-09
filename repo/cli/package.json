@@ -5,8 +5,8 @@
   "sourceRoot": "repo/cli",
   "projectType": "application",
   "scripts": {
-    "dev": "go run",
-    "build": "go build",
+    "dev": "go run .",
+    "build": "go build -o cli",
     "test": "go test -v ./..."
   },
   "author": {

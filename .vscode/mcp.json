@@ -3,8 +3,10 @@
 	"servers": {
 		"repo": {
 			"type": "stdio",
-			"command": "./repo/cli/cli",
+			"command": "go",
 			"args": [
+				"run",
+				"./repo/cli",
 				"mcp"
 			]
 		},

@@ -55,8 +55,10 @@
     },
     "repo": {
       "type": "stdio",
-      "command": "./repo/cli/cli",
+      "command": "go",
       "args": [
+        "run",
+        "./repo/cli",
         "mcp"
       ]
     },
@@ -84,5 +86,6 @@
     }
   },
   "chat.subagents.allowInvocationsFromSubagents": false,
-  "python.terminal.activateEnvironment": false
+  "python.terminal.activateEnvironment": false,
+  "kiroAgent.configureMCP": "Disabled"
 }

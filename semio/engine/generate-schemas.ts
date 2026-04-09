@@ -13,9 +13,13 @@
 // Schema generation script. MUST invoke the Python engine schema generator.
 
 import { execSync } from "child_process";
+import { join } from "path";
+
+const env = { ...process.env, UV_PROJECT_ENVIRONMENT: join(__dirname, ".venv") };
 
 execSync('uv run python -c "from main import generateSchemas; generateSchemas()"', {
   cwd: __dirname,
+  env,
   stdio: "inherit",
 });
 
