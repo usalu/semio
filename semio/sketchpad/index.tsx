@@ -321,6 +321,7 @@ import {
   RecordIcon,
   RemoteKitIcon,
   RemoveIcon,
+  ResetIcon,
   SceneIcon,
   SearchIcon,
   SelectToolIcon,
@@ -15912,6 +15913,22 @@ const MultiWindowApp: FC = () => {
     });
 
     addSection("toolbar", {
+      id: "semio.sketchpad.app.kit.toolbar.reset",
+      specificity: 20,
+      order: 6,
+      toolbarGroup: {
+        id: "history",
+        labelId: "semio.sketchpad.toolbar.parent.actions",
+        order: 5,
+      },
+      content: () => (
+        <KitScopeProvider guid={kitGuid}>
+          <KitToolbarReset />
+        </KitScopeProvider>
+      ),
+    });
+
+    addSection("toolbar", {
       id: "semio.sketchpad.app.kit.toolbar.selection",
       specificity: 20,
       order: 10,
@@ -15963,6 +15980,7 @@ const MultiWindowApp: FC = () => {
 
     return () => {
       removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.history");
+      removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.reset");
       removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.selection");
       removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.filters");
       removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.create");
@@ -16207,6 +16225,18 @@ export const KitToolbarSelection: FC = () => {
   );
 };
 
+type ToolbarCommandButtonProps = {
+  id: string;
+  icon: ReactNode;
+  text: string;
+  disabled?: boolean;
+  onClick: () => void;
+};
+
+const ToolbarCommandButton: FC<ToolbarCommandButtonProps> = ({ id, icon, text, disabled, onClick }) => (
+  <Button id={id} icon={icon} text={text} disabled={disabled} onClick={onClick} />
+);
+
 export const KitToolbarHistory: FC = () => {
   const store = useKitAppStore();
   const canUndo = useSyncExternalStore(
@@ -16223,22 +16253,42 @@ export const KitToolbarHistory: FC = () => {
 
   return (
     <ToolbarGroup>
-      <Toggle
+      <ToolbarCommandButton
         id="semio.sketchpad.app.kit.history.undo"
         icon={<SkipBackIcon className="size-tiny" />}
         text="Undo"
         disabled={!canUndo}
-        onPressedChange={(pressed) => {
-          if (pressed) undo?.();
-        }}
+        onClick={() => undo?.()}
       />
-      <Toggle
+      <ToolbarCommandButton
         id="semio.sketchpad.app.kit.history.redo"
         icon={<SkipForwardIcon className="size-tiny" />}
         text="Redo"
         disabled={!canRedo}
-        onPressedChange={(pressed) => {
-          if (pressed) redo?.();
+        onClick={() => redo?.()}
+      />
+    </ToolbarGroup>
+  );
+};
+
+/**
+ * Reset toolbar button for the Kit app.
+ * MUST re-import the kit from its remote URL, discarding all local changes.
+ **/
+export const KitToolbarReset: FC = () => {
+  const kit = useKit() as Kit | undefined;
+  const kitCommands = useKitCommands();
+  const resetLabel = useLabel("semio.sketchpad.app.kit.toolbar.reset");
+  const remoteUrl = kit?.remote;
+  return (
+    <ToolbarGroup>
+      <ToolbarCommandButton
+        id="semio.sketchpad.app.kit.toolbar.reset"
+        icon={<ResetIcon className="size-tiny" />}
+        text={resetLabel}
+        disabled={!remoteUrl}
+        onClick={() => {
+          if (remoteUrl && kitCommands) kitCommands.importKit(remoteUrl);
         }}
       />
     </ToolbarGroup>
@@ -24879,6 +24929,13 @@ const LayoutWrapper: FC = () => {
                       <div ref={toolbarToolsZoneRef} id="semio.sketchpad.toolbar.zone.tools" className="absolute top-0 left-0 h-full max-w-[calc(50vw-1rem)] right-[calc(50%_+_4px)] pointer-events-auto flex items-center justify-end">
                         <LevelProvider level="panel">
                           <ToolbarZone>
+                            {toolbarGroups.history && (
+                              <ToolbarScopeWrapper>
+                                {toolbarGroups.history.map((section) => {
+                                  return <ToolbarItem key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</ToolbarItem>;
+                                })}
+                              </ToolbarScopeWrapper>
+                            )}
                             {["hand", "selection", "filter", "create", "view", "actions"].map((groupId) => {
                               if (!toolbarGroups[groupId]) return null;
                               const isActive = activeToolbarGroup === groupId;
@@ -29743,29 +29800,98 @@ function getTransactionAffectedPieces(store: DesignStore | null): { changedPiece
   }
   const currentStack = store.currentTransactionStack;
   if (!currentStack || currentStack.length === 0) return { changedPieces, statusMap };
+  const designSnapshot = store.design().snapshot() as Design | null;
+  const connectionEndpointsByGuid = new Map<string, { connectedPieceGuid?: string; connectingPieceGuid?: string }>();
+  for (const connection of designSnapshot?.connections ?? []) {
+    if (!connection?.guid) continue;
+    connectionEndpointsByGuid.set(connection.guid, {
+      connectedPieceGuid: connection.connected?.piece?.guid,
+      connectingPieceGuid: connection.connecting?.piece?.guid,
+    });
+  }
+
+  const markPieceStatus = (pieceGuid: string | undefined, status: DiffStatus): void => {
+    if (!pieceGuid) return;
+    changedPieces.add(pieceGuid);
+    if (status === DiffStatus.Modified) {
+      if (!statusMap.has(pieceGuid)) statusMap.set(pieceGuid, DiffStatus.Modified);
+      return;
+    }
+    statusMap.set(pieceGuid, status);
+  };
+
+  const markConnectionEndpoints = (
+    connection: { guid?: string; connected?: { piece?: { guid?: string } }; connecting?: { piece?: { guid?: string } } } | undefined,
+    status: DiffStatus,
+  ): void => {
+    if (!connection) return;
+    const connectedPieceGuid = connection.connected?.piece?.guid;
+    const connectingPieceGuid = connection.connecting?.piece?.guid;
+    if (connectedPieceGuid || connectingPieceGuid) {
+      markPieceStatus(connectedPieceGuid, status);
+      markPieceStatus(connectingPieceGuid, status);
+      return;
+    }
+    const fallback = connection.guid ? connectionEndpointsByGuid.get(connection.guid) : undefined;
+    markPieceStatus(fallback?.connectedPieceGuid, status);
+    markPieceStatus(fallback?.connectingPieceGuid, status);
+  };
 
   for (const edit of currentStack) {
-    if (edit.do?.kitDiff?.designs) {
-      for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
-        if (designUpdate.diff.pieces?.updated) {
-          for (const pieceUpdate of designUpdate.diff.pieces.updated) {
-            changedPieces.add(pieceUpdate.piece.guid);
-            if (!statusMap.has(pieceUpdate.piece.guid)) {
-              statusMap.set(pieceUpdate.piece.guid, DiffStatus.Modified);
-            }
+    // Connection removals in `do` may only include GUIDs. Use inverse edit data when available
+    // to recover endpoints and keep both ends in sync.
+    const undoDesignUpdates = edit.undo?.kitDiff?.designs?.updated || [];
+    for (const designUpdate of undoDesignUpdates) {
+      if (designUpdate.diff.connections?.added) {
+        for (const connection of designUpdate.diff.connections.added) {
+          const connectionGuid = connection?.guid;
+          if (!connectionGuid) continue;
+          if (!connectionEndpointsByGuid.has(connectionGuid)) {
+            connectionEndpointsByGuid.set(connectionGuid, {
+              connectedPieceGuid: connection.connected?.piece?.guid,
+              connectingPieceGuid: connection.connecting?.piece?.guid,
+            });
           }
         }
-        if (designUpdate.diff.pieces?.added) {
-          for (const piece of designUpdate.diff.pieces.added) {
-            changedPieces.add(piece.guid);
-            statusMap.set(piece.guid, DiffStatus.Added);
+      }
+    }
+
+    const doDesignUpdates = edit.do?.kitDiff?.designs?.updated || [];
+    for (const designUpdate of doDesignUpdates) {
+      if (designUpdate.diff.pieces?.updated) {
+        for (const pieceUpdate of designUpdate.diff.pieces.updated) {
+          markPieceStatus(pieceUpdate.piece.guid, DiffStatus.Modified);
+        }
+      }
+      if (designUpdate.diff.pieces?.added) {
+        for (const piece of designUpdate.diff.pieces.added) {
+          markPieceStatus(piece.guid, DiffStatus.Added);
+        }
+      }
+      if (designUpdate.diff.pieces?.removed) {
+        for (const removedPieceId of designUpdate.diff.pieces.removed) {
+          markPieceStatus(removedPieceId.guid, DiffStatus.Removed);
+        }
+      }
+      if (designUpdate.diff.connections?.updated) {
+        for (const connectionUpdate of designUpdate.diff.connections.updated) {
+          markConnectionEndpoints(connectionUpdate.connection, DiffStatus.Modified);
+          if (connectionUpdate.diff?.connected?.piece?.guid) {
+            markPieceStatus(connectionUpdate.diff.connected.piece.guid, DiffStatus.Modified);
+          }
+          if (connectionUpdate.diff?.connecting?.piece?.guid) {
+            markPieceStatus(connectionUpdate.diff.connecting.piece.guid, DiffStatus.Modified);
           }
         }
-        if (designUpdate.diff.pieces?.removed) {
-          for (const removedPieceId of designUpdate.diff.pieces.removed) {
-            changedPieces.add(removedPieceId.guid);
-            statusMap.set(removedPieceId.guid, DiffStatus.Removed);
-          }
+      }
+      if (designUpdate.diff.connections?.added) {
+        for (const connection of designUpdate.diff.connections.added) {
+          markConnectionEndpoints(connection, DiffStatus.Added);
+        }
+      }
+      if (designUpdate.diff.connections?.removed) {
+        for (const removedConnection of designUpdate.diff.connections.removed) {
+          markConnectionEndpoints(removedConnection, DiffStatus.Removed);
         }
       }
     }
@@ -30796,23 +30922,19 @@ export const DesignHistorySettings: FC = () => {
   const { undo, redo } = useDesignAppCommands();
   return (
     <ToolbarGroup>
-      <Toggle
+      <ToolbarCommandButton
         id="semio.sketchpad.app.design.history.undo"
         icon={<SkipBackIcon className="size-tiny" />}
         text="Undo"
         disabled={!canUndo}
-        onPressedChange={(pressed) => {
-          if (pressed) undo?.();
-        }}
+        onClick={() => undo?.()}
       />
-      <Toggle
+      <ToolbarCommandButton
         id="semio.sketchpad.app.design.history.redo"
         icon={<SkipForwardIcon className="size-tiny" />}
         text="Redo"
         disabled={!canRedo}
-        onPressedChange={(pressed) => {
-          if (pressed) redo?.();
-        }}
+        onClick={() => redo?.()}
       />
     </ToolbarGroup>
   );
@@ -33066,15 +33188,15 @@ function syncPieceRenderData(store: PieceRenderDataStoreApi, designStore: Design
     let stroke = "var(--foreground)";
     let opacity = 1;
     if (diffStatus === DiffStatus.Added) {
-      fill = "var(--color-success)";
-      stroke = "var(--color-success)";
+      fill = "var(--color-new, #22c55e)";
+      stroke = "var(--color-new, #22c55e)";
     } else if (diffStatus === DiffStatus.Removed) {
-      fill = "var(--color-danger)";
-      stroke = "var(--color-danger)";
+      fill = "var(--color-removed, #ef4444)";
+      stroke = "var(--color-removed, #ef4444)";
       opacity = 0.2;
     } else if (diffStatus === DiffStatus.Modified) {
-      fill = "var(--color-warning)";
-      stroke = "var(--color-warning)";
+      fill = "var(--color-modified, #f59e0b)";
+      stroke = "var(--color-modified, #f59e0b)";
     } else if (isChangedInTransaction) {
       fill = "var(--color-changed-base)";
       stroke = "var(--color-changed-base)";
@@ -33993,13 +34115,13 @@ const ConnectionEdgeFallback: React.FC<EdgeProps<ConnectionEdge>> = ({ sourceX, 
   let opacity = 1;
 
   if (diff === DiffStatus.Added) {
-    stroke = "var(--color-success)";
+    stroke = "var(--color-new, #22c55e)";
     dasharray = "5 5";
   } else if (diff === DiffStatus.Removed) {
-    stroke = "var(--color-danger)";
+    stroke = "var(--color-removed, #ef4444)";
     opacity = 0.25;
   } else if (diff === DiffStatus.Modified) {
-    stroke = "var(--color-warning)";
+    stroke = "var(--color-modified, #f59e0b)";
   }
   if (isParentConnection) {
     stroke = "var(--accent-secondary)";
@@ -34051,13 +34173,13 @@ const ConnectionEdgeInner: React.FC<ConnectionEdgeInnerProps> = ({ sourceX, sour
   let opacity = 1;
 
   if (diff === DiffStatus.Added) {
-    stroke = "var(--color-success)";
+    stroke = "var(--color-new, #22c55e)";
     dasharray = "5 5";
   } else if (diff === DiffStatus.Removed) {
-    stroke = "var(--color-danger)";
+    stroke = "var(--color-removed, #ef4444)";
     opacity = 0.25;
   } else if (diff === DiffStatus.Modified) {
-    stroke = "var(--color-warning)";
+    stroke = "var(--color-modified, #f59e0b)";
   }
   if (isParentConnection) {
     stroke = "var(--accent-secondary)";
@@ -41465,23 +41587,19 @@ export const TypeHistorySettings: FC = () => {
   const canRedo = useSelector(actor, (snapshot) => snapshot.can({ type: "TYPE.TRANSACTION.REDO", kitGuid, typeGuid }));
   return (
     <ToolbarGroup>
-      <Toggle
+      <ToolbarCommandButton
         id="semio.sketchpad.app.type.history.undo"
         icon={<SkipBackIcon className="size-tiny" />}
         text="Undo"
         disabled={!canUndo}
-        onPressedChange={(pressed) => {
-          if (pressed) undo?.();
-        }}
+        onClick={() => undo?.()}
       />
-      <Toggle
+      <ToolbarCommandButton
         id="semio.sketchpad.app.type.history.redo"
         icon={<SkipForwardIcon className="size-tiny" />}
         text="Redo"
         disabled={!canRedo}
-        onPressedChange={(pressed) => {
-          if (pressed) redo?.();
-        }}
+        onClick={() => redo?.()}
       />
     </ToolbarGroup>
   );
@@ -43898,23 +44016,19 @@ export const QualityHistorySettings: FC = () => {
   const { undo, redo } = useQualityAppCommands();
   return (
     <ToolbarGroup>
-      <Toggle
+      <ToolbarCommandButton
         id="semio.sketchpad.app.quality.history.undo"
         icon={<SkipBackIcon className="size-tiny" />}
         text="Undo"
         disabled={!canUndo}
-        onPressedChange={(pressed) => {
-          if (pressed) undo?.("semio.sketchpad.app.quality.history.undo");
-        }}
+        onClick={() => undo?.("semio.sketchpad.app.quality.history.undo")}
       />
-      <Toggle
+      <ToolbarCommandButton
         id="semio.sketchpad.app.quality.history.redo"
         icon={<SkipForwardIcon className="size-tiny" />}
         text="Redo"
         disabled={!canRedo}
-        onPressedChange={(pressed) => {
-          if (pressed) redo?.("semio.sketchpad.app.quality.history.redo");
-        }}
+        onClick={() => redo?.("semio.sketchpad.app.quality.history.redo")}
       />
     </ToolbarGroup>
   );
@@ -46248,7 +46362,7 @@ export { useHome };
 
 // #region 🛎️Table
 
-export {};
+    export { };
 
 // #endregion 🛎️Table
 
@@ -48214,10 +48328,10 @@ export { FeedbackIcon };
 // #region 🎆Entrypoint
 // --- Combined from index.tsx and index.ts ---
 
-import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
-import type { KitJsonFileAdapter } from "../studio/studio";
-import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
-import "./globals.css";
+    import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
+    import type { KitJsonFileAdapter } from "../studio/studio";
+    import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
+    import "./globals.css";
 
 export { createJsonFileKitStore, JsonFileKitStore };
 export type { BlobAssetStore, KitJsonFileAdapter, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };
@@ -48818,6 +48932,35 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     if (foldersToggle) {
       await setKitKindTogglePressed(page, foldersToggle, kinds.includes("folders"));
     }
+  }
+
+  async function expectMomentaryToolbarCommandButton(button: Locator, label: string): Promise<void> {
+    await expect(button).toBeVisible({ timeout: 5000 });
+    const ariaPressed = await button.getAttribute("aria-pressed").catch(() => null);
+    console.log(`[${label}] aria-pressed attribute: ${ariaPressed}`);
+    expect(ariaPressed).toBeNull();
+  }
+
+  async function readDesignHistoryState(page: PlaywrightPage): Promise<{ pastCount: number; redoCount: number; canUndo: boolean; canRedo: boolean }> {
+    return page.evaluate(() => {
+      const store = (window as any).__SEMIO_STORE__;
+      if (!store) return { pastCount: 0, redoCount: 0, canUndo: false, canRedo: false };
+      const url = window.location.pathname;
+      const designGuid = url.match(/\/designs\/([^/]+)/)?.[1];
+      if (!designGuid) return { pastCount: 0, redoCount: 0, canUndo: false, canRedo: false };
+      const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
+      if (kitGuids.length === 0) return { pastCount: 0, redoCount: 0, canUndo: false, canRedo: false };
+      const designApps = (store as any).designApps;
+      const kitMap = designApps?.get?.(kitGuids[0]);
+      const designApp = kitMap?.get?.(designGuid);
+      if (!designApp) return { pastCount: 0, redoCount: 0, canUndo: false, canRedo: false };
+      return {
+        pastCount: designApp.pastTransactionsStack?.length ?? 0,
+        redoCount: designApp.redoStack?.length ?? 0,
+        canUndo: designApp.canUndo?.() === true,
+        canRedo: designApp.canRedo?.() === true,
+      };
+    });
   }
 
   async function createKitZipFixture(page: PlaywrightPage): Promise<KitZipFixture> {
@@ -49993,6 +50136,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await expect(kitToolbar).toBeVisible({ timeout: 5000 });
       const kitToolsZone = page.locator('[id="semio.sketchpad.toolbar.zone.tools"]');
       await expect(kitToolsZone).toBeVisible({ timeout: 5000 });
+      await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.history.undo"]'), "Kit History Undo");
+      await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.history.redo"]'), "Kit History Redo");
+      await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.toolbar.reset"]'), "Kit Toolbar Reset");
 
       console.log("[Kit] Testing toolbar group toggles");
       const kitSelectionGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.selection"]');
@@ -50865,6 +51011,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await expect(toolbar).toBeVisible({ timeout: 5000 });
       const typeToolsZone = page.locator('[id="semio.sketchpad.toolbar.zone.tools"]');
       await expect(typeToolsZone).toBeVisible({ timeout: 5000 });
+      await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.type.history.undo"]'), "Type History Undo");
+      await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.type.history.redo"]'), "Type History Redo");
 
       console.log("[Type] Testing toolbar group toggles");
       const typeSelectionGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.selection"]');
@@ -55799,27 +55947,21 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const nodeBoxAfterDrag = await firstNode.boundingBox();
       const movedAfterDrag = nodeBoxAfterDrag ? Math.abs(nodeBoxAfterDrag.x - nodeBox!.x) : 0;
       console.log(`[Design Undo Redo] Node moved after drag: ${movedAfterDrag.toFixed(1)}px`);
-      const storeHasUndoStack = await page.evaluate(() => {
-        const store = (window as any).__SEMIO_STORE__;
-        if (!store) return false;
-        const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
-        if (kitGuids.length === 0) return false;
-        const url = window.location.pathname;
-        const designGuidMatch = url.match(/\/designs\/([^/]+)/);
-        const designGuid = designGuidMatch?.[1];
-        if (!designGuid) return false;
-        const kitGuid = kitGuids[0];
-        const designApps = (store as any).designApps;
-        if (!designApps) return false;
-        const kitMap = designApps.get?.(kitGuid);
-        if (!kitMap) return false;
-        const designApp = kitMap.get?.(designGuid);
-        if (!designApp) return false;
-        return (designApp.pastTransactionsStack?.length ?? 0) > 0 || designApp.canUndo?.() === true;
-      });
-      console.log(`[Design Undo Redo] Store has undo stack: ${storeHasUndoStack}`);
-      await page.keyboard.press("Control+z");
+      const undoButton = page.locator('[id="semio.sketchpad.app.design.history.undo"]');
+      const redoButton = page.locator('[id="semio.sketchpad.app.design.history.redo"]');
+      await expectMomentaryToolbarCommandButton(undoButton, "Design History Undo");
+      await expectMomentaryToolbarCommandButton(redoButton, "Design History Redo");
+      const historyBeforeUndo = await readDesignHistoryState(page);
+      console.log(`[Design Undo Redo] History before undo: ${JSON.stringify(historyBeforeUndo)}`);
+      expect(historyBeforeUndo.pastCount).toBeGreaterThan(0);
+      expect(historyBeforeUndo.canUndo).toBe(true);
+      await undoButton.click();
       await page.waitForTimeout(1500);
+      const historyAfterUndo = await readDesignHistoryState(page);
+      console.log(`[Design Undo Redo] History after undo: ${JSON.stringify(historyAfterUndo)}`);
+      expect(historyAfterUndo.pastCount).toBe(historyBeforeUndo.pastCount - 1);
+      expect(historyAfterUndo.redoCount).toBe(historyBeforeUndo.redoCount + 1);
+      expect(historyAfterUndo.canRedo).toBe(true);
       const nodeBoxAfterUndo = await firstNode.boundingBox();
       const movedAfterUndo = nodeBoxAfterUndo ? Math.abs(nodeBoxAfterUndo.x - nodeBox!.x) : 0;
       console.log(`[Design Undo Redo] Node position after undo: x=${nodeBoxAfterUndo?.x?.toFixed(1)}, moved=${movedAfterUndo.toFixed(1)}px from original`);
@@ -55829,8 +55971,12 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       } else {
         console.log("[Design Undo Redo] Drag did not produce significant movement, checking undo is harmless");
       }
-      await page.keyboard.press("Control+y");
+      await redoButton.click();
       await page.waitForTimeout(1500);
+      const historyAfterRedo = await readDesignHistoryState(page);
+      console.log(`[Design Undo Redo] History after redo: ${JSON.stringify(historyAfterRedo)}`);
+      expect(historyAfterRedo.pastCount).toBe(historyBeforeUndo.pastCount);
+      expect(historyAfterRedo.redoCount).toBe(historyBeforeUndo.redoCount);
       const nodeBoxAfterRedo = await firstNode.boundingBox();
       const movedAfterRedo = nodeBoxAfterRedo ? Math.abs(nodeBoxAfterRedo.x - nodeBox!.x) : 0;
       console.log(`[Design Undo Redo] Node position after redo: x=${nodeBoxAfterRedo?.x?.toFixed(1)}, moved=${movedAfterRedo.toFixed(1)}px from original`);
