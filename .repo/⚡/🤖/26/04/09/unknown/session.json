@@ -71,6 +71,17 @@
         "session": "unknown"
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "0bd40e81f270cc680615e153d4ce19e153733917",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-04-09T13:12:13Z",
+        "session": "unknown"
+      },
+      "response": {}
     }
   ]
 }

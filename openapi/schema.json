@@ -1,0 +1,3883 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "semio REST API",
+        "summary": "This is the local rest API of the semio engine.",
+        "version": "4.3.0-beta"
+    },
+    "paths": {
+        "/api/native-algorithms/execute": {
+            "post": {
+                "summary": "Native Algorithms Execute",
+                "description": "Execute flatten or delete in python, go, or rust native stacks (typescript runs in the browser).",
+                "operationId": "native_algorithms_execute_native_algorithms_execute_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NativeAlgorithmExecuteBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/app/design-viewer": {
+            "get": {
+                "summary": "App Design Viewer",
+                "description": "Return the embeddable design viewer HTML shell.\nCallers MUST use this endpoint to embed the semio design viewer in an iframe.",
+                "operationId": "app_design_viewer_app_design_viewer_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/app/kit-viewer": {
+            "get": {
+                "summary": "App Kit Viewer",
+                "description": "Return the embeddable kit viewer HTML shell (SemioKit from @semio/ui).",
+                "operationId": "app_kit_viewer_app_kit_viewer_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/app/scene-viewer": {
+            "get": {
+                "summary": "App Scene Viewer",
+                "description": "Return the embeddable scene viewer HTML shell (SemioScene 3D only from @semio/ui).",
+                "operationId": "app_scene_viewer_app_scene_viewer_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/app/diagram-viewer": {
+            "get": {
+                "summary": "App Diagram Viewer",
+                "description": "Return the embeddable diagram viewer HTML shell (SemioDiagram 2D only from @semio/ui).",
+                "operationId": "app_diagram_viewer_app_diagram_viewer_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/app/payload/{token}": {
+            "get": {
+                "summary": "App Payload",
+                "description": "Return the full MCP app payload by token. Used by MCP app iframes to bypass host truncation.",
+                "operationId": "app_payload_app_payload__token__get",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Token"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/app/files/{file_guid}": {
+            "get": {
+                "summary": "App File",
+                "description": "Serve a kit file blob by guid. Used by MCP app iframes to load 3D models.",
+                "operationId": "app_file_app_files__file_guid__get",
+                "parameters": [
+                    {
+                        "name": "file_guid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "File Guid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/kits/{encodedKitUri}": {
+            "get": {
+                "summary": "Kit",
+                "description": "Retrieves a kit by its encoded URI path.\nCallers MUST provide a valid encoded kit URI in the URL path.",
+                "operationId": "kit_kits__encodedKitUri__get",
+                "parameters": [
+                    {
+                        "name": "encodedKitUri",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
+                            "title": "Encodedkituri"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Kit"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "summary": "Create Kit",
+                "description": "Creates a new kit at the specified encoded URI.\nCallers MUST provide a valid KitInput body and encoded URI.",
+                "operationId": "create_kit_kits__encodedKitUri__put",
+                "parameters": [
+                    {
+                        "name": "encodedKitUri",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
+                            "title": "Encodedkituri"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/KitInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete Kit",
+                "description": "Deletes an existing kit at the specified encoded URI.\nCallers MUST provide a valid encoded URI for an existing kit.",
+                "operationId": "delete_kit_kits__encodedKitUri__delete",
+                "parameters": [
+                    {
+                        "name": "encodedKitUri",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
+                            "title": "Encodedkituri"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}": {
+            "put": {
+                "summary": "Put Type",
+                "description": "Creates or replaces a type in a kit by encoded URI and type identifier.\nCallers MUST provide a valid TypeInput body with matching name and variant.",
+                "operationId": "put_type_kits__encodedKitUri__types__encodedTypeNameAndVariant__put",
+                "parameters": [
+                    {
+                        "name": "encodedKitUri",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
+                            "title": "Encodedkituri"
+                        }
+                    },
+                    {
+                        "name": "encodedTypeNameAndVariant",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodedtypenameandvariant"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TypeInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete Type",
+                "description": "Deletes a type from a kit by encoded URI and type identifier.\nCallers MUST provide a valid encoded URI and type name with variant.",
+                "operationId": "delete_type_kits__encodedKitUri__types__encodedTypeNameAndVariant__delete",
+                "parameters": [
+                    {
+                        "name": "encodedKitUri",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
+                            "title": "Encodedkituri"
+                        }
+                    },
+                    {
+                        "name": "encodedTypeNameAndVariant",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodedtypenameandvariant"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}": {
+            "put": {
+                "summary": "Put Design",
+                "description": "Creates or replaces a design in a kit by encoded URI and design identifier.\nCallers MUST provide a valid DesignInput body with matching name, variant, and view.",
+                "operationId": "put_design_kits__encodedKitUri__designs__encodedDesignNameAndVariantAndView__put",
+                "parameters": [
+                    {
+                        "name": "encodedKitUri",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
+                            "title": "Encodedkituri"
+                        }
+                    },
+                    {
+                        "name": "encodedDesignNameAndVariantAndView",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodeddesignnameandvariantandview"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DesignInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete Design",
+                "description": "Deletes a design from a kit by encoded URI and design identifier.\nCallers MUST provide a valid encoded URI and design name with variant and view.",
+                "operationId": "delete_design_kits__encodedKitUri__designs__encodedDesignNameAndVariantAndView__delete",
+                "parameters": [
+                    {
+                        "name": "encodedKitUri",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+",
+                            "title": "Encodedkituri"
+                        }
+                    },
+                    {
+                        "name": "encodedDesignNameAndVariantAndView",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "[a-zA-Z0-9\\-._~%]+,[a-zA-Z0-9\\-._~%]*,[a-zA-Z0-9\\-._~%]*",
+                            "title": "Encodeddesignnameandvariantandview"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/assistant/predictDesign": {
+            "get": {
+                "summary": "Predict Design",
+                "description": "Predicts a design via the assistant based on a description and available types.\nCallers MUST provide a description and at least one TypeContext in the request body.",
+                "operationId": "predict_design_assistant_predictDesign_get",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_predict_design_assistant_predictDesign_get"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DesignPrediction"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/prepare/kit": {
+            "post": {
+                "summary": "Prepare Kit",
+                "description": "Validates and returns a KitContext from the provided KitInput body.\nCallers MUST provide a valid KitInput in the request body.",
+                "operationId": "prepare_kit_prepare_kit_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/KitInput"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/KitContext"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "summary": "Rest Login",
+                "description": "Login to a remote server and store the auth token.\nCallers MUST provide serverUrl, email and password.",
+                "operationId": "rest_login_auth_login_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "summary": "Rest Logout",
+                "description": "Logout from a remote server and remove the stored token.\nCallers MUST provide serverUrl.",
+                "operationId": "rest_logout_auth_logout_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LogoutRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": true,
+                                    "type": "object",
+                                    "title": "Response Rest Logout Auth Logout Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/status": {
+            "get": {
+                "summary": "Rest Auth Status",
+                "description": "Get the auth status for a remote server.\nCallers MUST provide serverUrl as a query parameter.",
+                "operationId": "rest_auth_status_auth_status_get",
+                "parameters": [
+                    {
+                        "name": "serverUrl",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Serverurl"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthStatusResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AttributeContext": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "value": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Value",
+                        "default": ""
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "AttributeContext",
+                "description": "\ud83d\udfe9Context fields for understanding a attribute by an LLM."
+            },
+            "AttributeInput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "value": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Value",
+                        "default": ""
+                    },
+                    "definition": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Definition",
+                        "default": ""
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "AttributeInput",
+                "description": "\ud83d\udcddInput fields for creating or updating a attribute."
+            },
+            "Attribute": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "value": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Value",
+                        "default": ""
+                    },
+                    "definition": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Definition",
+                        "default": ""
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "Attribute",
+                "description": "\ud83d\udfe6Output fields returned when fetching a attribute."
+            },
+            "AuthStatusResponse": {
+                "properties": {
+                    "authenticated": {
+                        "type": "boolean",
+                        "title": "Authenticated"
+                    },
+                    "serverUrl": {
+                        "type": "string",
+                        "title": "Serverurl"
+                    },
+                    "email": {
+                        "type": "string",
+                        "title": "Email"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "authenticated",
+                    "serverUrl",
+                    "email"
+                ],
+                "title": "AuthStatusResponse",
+                "description": "\ud83d\udca0Auth status response body.\n    "
+            },
+            "Body_predict_design_assistant_predictDesign_get": {
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    },
+                    "types": {
+                        "items": {
+                            "$ref": "#/components/schemas/TypeContext-Input"
+                        },
+                        "type": "array",
+                        "title": "Types"
+                    },
+                    "design": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DesignContext-Input"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "description",
+                    "types"
+                ],
+                "title": "Body_predict_design_assistant_predictDesign_get"
+            },
+            "ConnectionContext-Input": {
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "gap": {
+                        "type": "number",
+                        "title": "Gap",
+                        "default": 0
+                    },
+                    "shift": {
+                        "type": "number",
+                        "title": "Shift",
+                        "default": 0
+                    },
+                    "rise": {
+                        "type": "number",
+                        "title": "Rise",
+                        "default": 0
+                    },
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "default": 0
+                    },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "default": 0
+                    },
+                    "u": {
+                        "type": "number",
+                        "title": "U",
+                        "default": 0
+                    },
+                    "v": {
+                        "type": "number",
+                        "title": "V",
+                        "default": 0
+                    },
+                    "connected": {
+                        "$ref": "#/components/schemas/SideContext"
+                    },
+                    "connecting": {
+                        "$ref": "#/components/schemas/SideContext"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "connected",
+                    "connecting"
+                ],
+                "title": "ConnectionContext",
+                "description": "Context fields for understanding a connection by an LLM."
+            },
+            "ConnectionContext-": {
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "gap": {
+                        "type": "number",
+                        "title": "Gap",
+                        "default": 0
+                    },
+                    "shift": {
+                        "type": "number",
+                        "title": "Shift",
+                        "default": 0
+                    },
+                    "rise": {
+                        "type": "number",
+                        "title": "Rise",
+                        "default": 0
+                    },
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "default": 0
+                    },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "default": 0
+                    },
+                    "u": {
+                        "type": "number",
+                        "title": "U",
+                        "default": 0
+                    },
+                    "v": {
+                        "type": "number",
+                        "title": "V",
+                        "default": 0
+                    },
+                    "connected": {
+                        "$ref": "#/components/schemas/SideContext"
+                    },
+                    "connecting": {
+                        "$ref": "#/components/schemas/SideContext"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "connected",
+                    "connecting"
+                ],
+                "title": "ConnectionContext",
+                "description": "Context fields for understanding a connection by an LLM."
+            },
+            "ConnectionInput": {
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "gap": {
+                        "type": "number",
+                        "title": "Gap",
+                        "default": 0
+                    },
+                    "shift": {
+                        "type": "number",
+                        "title": "Shift",
+                        "default": 0
+                    },
+                    "rise": {
+                        "type": "number",
+                        "title": "Rise",
+                        "default": 0
+                    },
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "default": 0
+                    },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "default": 0
+                    },
+                    "u": {
+                        "type": "number",
+                        "title": "U",
+                        "default": 0
+                    },
+                    "v": {
+                        "type": "number",
+                        "title": "V",
+                        "default": 0
+                    },
+                    "connected": {
+                        "$ref": "#/components/schemas/SideInput"
+                    },
+                    "connecting": {
+                        "$ref": "#/components/schemas/SideInput"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "connected",
+                    "connecting"
+                ],
+                "title": "ConnectionInput",
+                "description": "Input fields for creating or updating a connection."
+            },
+            "Connection": {
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "gap": {
+                        "type": "number",
+                        "title": "Gap",
+                        "default": 0
+                    },
+                    "shift": {
+                        "type": "number",
+                        "title": "Shift",
+                        "default": 0
+                    },
+                    "rise": {
+                        "type": "number",
+                        "title": "Rise",
+                        "default": 0
+                    },
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "default": 0
+                    },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "default": 0
+                    },
+                    "u": {
+                        "type": "number",
+                        "title": "U",
+                        "default": 0
+                    },
+                    "v": {
+                        "type": "number",
+                        "title": "V",
+                        "default": 0
+                    },
+                    "connected": {
+                        "$ref": "#/components/schemas/Side"
+                    },
+                    "connecting": {
+                        "$ref": "#/components/schemas/Side"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "connected",
+                    "connecting"
+                ],
+                "title": "Connection",
+                "description": "Output fields returned when fetching a connection."
+            },
+            "ConnectionPrediction": {
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "gap": {
+                        "type": "number",
+                        "title": "Gap",
+                        "default": 0
+                    },
+                    "shift": {
+                        "type": "number",
+                        "title": "Shift",
+                        "default": 0
+                    },
+                    "rise": {
+                        "type": "number",
+                        "title": "Rise",
+                        "default": 0
+                    },
+                    "rotation": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Rotation",
+                        "default": 0
+                    },
+                    "turn": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Turn",
+                        "default": 0
+                    },
+                    "tilt": {
+                        "type": "number",
+                        "exclusiveMaximum": 360.0,
+                        "minimum": 0.0,
+                        "title": "Tilt",
+                        "default": 0
+                    },
+                    "u": {
+                        "type": "number",
+                        "title": "U",
+                        "default": 0
+                    },
+                    "v": {
+                        "type": "number",
+                        "title": "V",
+                        "default": 0
+                    },
+                    "connected": {
+                        "$ref": "#/components/schemas/SidePrediction"
+                    },
+                    "connecting": {
+                        "$ref": "#/components/schemas/SidePrediction"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "connected",
+                    "connecting"
+                ],
+                "title": "ConnectionPrediction",
+                "description": "Prediction fields for LLM-based connection inference."
+            },
+            "ConnectorContext": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "is_mandatory": {
+                        "type": "boolean",
+                        "title": "Is Mandatory",
+                        "default": false
+                    },
+                    "maxChildren": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "title": "Maxchildren",
+                        "default": 1
+                    },
+                    "port": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Port",
+                        "default": ""
+                    },
+                    "compatiblePorts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Compatibleports"
+                    },
+                    "point": {
+                        "$ref": "#/components/schemas/Point"
+                    },
+                    "direction": {
+                        "$ref": "#/components/schemas/Vector"
+                    },
+                    "t": {
+                        "type": "number",
+                        "title": "T",
+                        "default": 0.0
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeContext"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "point",
+                    "direction"
+                ],
+                "title": "ConnectorContext",
+                "description": "Context fields for understanding a connector by an LLM."
+            },
+            "ConnectorId": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "default": ""
+                    }
+                },
+                "type": "object",
+                "title": "ConnectorId",
+                "description": "\ud83d\udd16Identity fields for uniquely identifying a connector."
+            },
+            "ConnectorInput": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "is_mandatory": {
+                        "type": "boolean",
+                        "title": "Is Mandatory",
+                        "default": false
+                    },
+                    "maxChildren": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "title": "Maxchildren",
+                        "default": 1
+                    },
+                    "port": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Port",
+                        "default": ""
+                    },
+                    "compatiblePorts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Compatibleports"
+                    },
+                    "t": {
+                        "type": "number",
+                        "title": "T",
+                        "default": 0.0
+                    },
+                    "point": {
+                        "$ref": "#/components/schemas/PointInput"
+                    },
+                    "direction": {
+                        "$ref": "#/components/schemas/VectorInput"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeInput"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "point",
+                    "direction"
+                ],
+                "title": "ConnectorInput",
+                "description": "Input fields for creating or updating a connector."
+            },
+            "Connector": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "is_mandatory": {
+                        "type": "boolean",
+                        "title": "Is Mandatory",
+                        "default": false
+                    },
+                    "maxChildren": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "title": "Maxchildren",
+                        "default": 1
+                    },
+                    "port": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Port",
+                        "default": ""
+                    },
+                    "compatiblePorts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Compatibleports"
+                    },
+                    "point": {
+                        "$ref": "#/components/schemas/Point"
+                    },
+                    "direction": {
+                        "$ref": "#/components/schemas/Vector"
+                    },
+                    "t": {
+                        "type": "number",
+                        "title": "T",
+                        "default": 0.0
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/Attribute"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "point",
+                    "direction"
+                ],
+                "title": "Connector",
+                "description": "Output fields returned when fetching a connector."
+            },
+            "CoordContext": {
+                "properties": {
+                    "u": {
+                        "type": "number",
+                        "title": "U"
+                    },
+                    "v": {
+                        "type": "number",
+                        "title": "V"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "u",
+                    "v"
+                ],
+                "title": "CoordContext",
+                "description": "\ud83d\udfe0Context fields for understanding a coord by an LLM."
+            },
+            "CoordInput": {
+                "properties": {
+                    "u": {
+                        "type": "number",
+                        "title": "U"
+                    },
+                    "v": {
+                        "type": "number",
+                        "title": "V"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "u",
+                    "v"
+                ],
+                "title": "CoordInput",
+                "description": "\ud83d\udd34Input fields for creating or updating a coord."
+            },
+            "Coord": {
+                "properties": {
+                    "u": {
+                        "type": "number",
+                        "title": "U"
+                    },
+                    "v": {
+                        "type": "number",
+                        "title": "V"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "u",
+                    "v"
+                ],
+                "title": "Coord",
+                "description": "\ud83d\udfe1Output fields returned when fetching a coord."
+            },
+            "DesignContext-Input": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "default": ""
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "pieces": {
+                        "items": {
+                            "$ref": "#/components/schemas/PieceContext-Input"
+                        },
+                        "type": "array",
+                        "title": "Pieces"
+                    },
+                    "connections": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectionContext-Input"
+                        },
+                        "type": "array",
+                        "title": "Connections"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeContext"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    },
+                    "concepts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Concepts"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "DesignContext",
+                "description": "Context fields for understanding a design by an LLM."
+            },
+            "DesignContext-": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "default": ""
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "pieces": {
+                        "items": {
+                            "$ref": "#/components/schemas/PieceContext-"
+                        },
+                        "type": "array",
+                        "title": "Pieces"
+                    },
+                    "connections": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectionContext-"
+                        },
+                        "type": "array",
+                        "title": "Connections"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeContext"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    },
+                    "concepts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Concepts"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "DesignContext",
+                "description": "Context fields for understanding a design by an LLM."
+            },
+            "DesignId": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "DesignId",
+                "description": "\ud83d\udd16Identity fields for uniquely identifying a design."
+            },
+            "DesignInput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Image",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "default": ""
+                    },
+                    "parent": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent"
+                    },
+                    "is_abstract": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Abstract"
+                    },
+                    "folder": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Folder"
+                    },
+                    "activeLayer": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Activelayer"
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationInput"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "pieces": {
+                        "items": {
+                            "$ref": "#/components/schemas/PieceInput"
+                        },
+                        "type": "array",
+                        "title": "Pieces"
+                    },
+                    "connections": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectionInput"
+                        },
+                        "type": "array",
+                        "title": "Connections"
+                    },
+                    "props": {
+                        "items": {
+                            "$ref": "#/components/schemas/PropInput"
+                        },
+                        "type": "array",
+                        "title": "Props"
+                    },
+                    "authors": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Authors"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeInput"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    },
+                    "concepts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Concepts"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "DesignInput",
+                "description": "Input fields for creating or updating a design."
+            },
+            "Design": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Image",
+                        "default": ""
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "default": ""
+                    },
+                    "created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created"
+                    },
+                    "updated": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated"
+                    },
+                    "parent": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent"
+                    },
+                    "is_abstract": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Abstract"
+                    },
+                    "folder": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Folder"
+                    },
+                    "activeLayer": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Activelayer"
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/Location"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "pieces": {
+                        "items": {
+                            "$ref": "#/components/schemas/Piece"
+                        },
+                        "type": "array",
+                        "title": "Pieces"
+                    },
+                    "connections": {
+                        "items": {
+                            "$ref": "#/components/schemas/Connection"
+                        },
+                        "type": "array",
+                        "title": "Connections"
+                    },
+                    "props": {
+                        "items": {
+                            "$ref": "#/components/schemas/Prop"
+                        },
+                        "type": "array",
+                        "title": "Props"
+                    },
+                    "authors": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Authors"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/Attribute"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    },
+                    "concepts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Concepts"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "Design",
+                "description": "Output fields returned when fetching a design."
+            },
+            "DesignPrediction": {
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "pieces": {
+                        "items": {
+                            "$ref": "#/components/schemas/PiecePrediction"
+                        },
+                        "type": "array",
+                        "title": "Pieces"
+                    },
+                    "connections": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectionPrediction"
+                        },
+                        "type": "array",
+                        "title": "Connections"
+                    }
+                },
+                "type": "object",
+                "title": "DesignPrediction",
+                "description": "\ud83d\udd16Prediction fields for LLM-based design inference."
+            },
+            "FolderInput": {
+                "properties": {
+                    "guid": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Guid"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "parent": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 128
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat"
+                    },
+                    "createdBy": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 128
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Createdby"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updatedat"
+                    },
+                    "updatedBy": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 128
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Updatedby"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeInput"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "guid",
+                    "name",
+                    "createdAt",
+                    "updatedAt"
+                ],
+                "title": "FolderInput",
+                "description": "Input fields for creating or updating a folder."
+            },
+            "Folder": {
+                "properties": {
+                    "guid": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Guid"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "parent": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 128
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat"
+                    },
+                    "createdBy": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 128
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Createdby"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updatedat"
+                    },
+                    "updatedBy": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 128
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Updatedby"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/Attribute"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "guid",
+                    "name",
+                    "createdAt",
+                    "updatedAt"
+                ],
+                "title": "Folder",
+                "description": "Output fields returned when fetching a folder."
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "KitContext": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "types": {
+                        "items": {
+                            "$ref": "#/components/schemas/TypeContext-"
+                        },
+                        "type": "array",
+                        "title": "Types"
+                    },
+                    "designs": {
+                        "items": {
+                            "$ref": "#/components/schemas/DesignContext-"
+                        },
+                        "type": "array",
+                        "title": "Designs"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeContext"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "KitContext",
+                "description": "\ud83d\udd16Context fields for understanding a kit by an LLM."
+            },
+            "KitInput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Image",
+                        "default": ""
+                    },
+                    "preview": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Preview",
+                        "default": ""
+                    },
+                    "version": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Version",
+                        "default": ""
+                    },
+                    "remote": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Remote",
+                        "default": ""
+                    },
+                    "homepage": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Homepage",
+                        "default": ""
+                    },
+                    "license": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "License",
+                        "default": ""
+                    },
+                    "types": {
+                        "items": {
+                            "$ref": "#/components/schemas/TypeInput"
+                        },
+                        "type": "array",
+                        "title": "Types"
+                    },
+                    "designs": {
+                        "items": {
+                            "$ref": "#/components/schemas/DesignInput"
+                        },
+                        "type": "array",
+                        "title": "Designs"
+                    },
+                    "folders": {
+                        "items": {
+                            "$ref": "#/components/schemas/FolderInput"
+                        },
+                        "type": "array",
+                        "title": "Folders"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeInput"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    },
+                    "concepts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Concepts"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "KitInput",
+                "description": "Input fields for creating or updating a kit."
+            },
+            "Kit": {
+                "properties": {
+                    "uri": {
+                        "type": "string",
+                        "maxLength": 2048,
+                        "title": "Uri"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Image",
+                        "default": ""
+                    },
+                    "preview": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Preview",
+                        "default": ""
+                    },
+                    "version": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Version",
+                        "default": ""
+                    },
+                    "remote": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Remote",
+                        "default": ""
+                    },
+                    "homepage": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Homepage",
+                        "default": ""
+                    },
+                    "license": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "License",
+                        "default": ""
+                    },
+                    "created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created"
+                    },
+                    "updated": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated"
+                    },
+                    "types": {
+                        "items": {
+                            "$ref": "#/components/schemas/Type"
+                        },
+                        "type": "array",
+                        "title": "Types"
+                    },
+                    "designs": {
+                        "items": {
+                            "$ref": "#/components/schemas/Design"
+                        },
+                        "type": "array",
+                        "title": "Designs"
+                    },
+                    "folders": {
+                        "items": {
+                            "$ref": "#/components/schemas/Folder"
+                        },
+                        "type": "array",
+                        "title": "Folders"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/Attribute"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    },
+                    "concepts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Concepts"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "uri",
+                    "name"
+                ],
+                "title": "Kit",
+                "description": "Output fields returned when fetching a kit."
+            },
+            "LocationContext": {
+                "properties": {
+                    "longitude": {
+                        "type": "number",
+                        "title": "Longitude"
+                    },
+                    "latitude": {
+                        "type": "number",
+                        "title": "Latitude"
+                    },
+                    "altitude": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Altitude"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "longitude",
+                    "latitude"
+                ],
+                "title": "LocationContext",
+                "description": "\ud83d\udd16Context fields for understanding a location by an LLM."
+            },
+            "LocationInput": {
+                "properties": {
+                    "longitude": {
+                        "type": "number",
+                        "title": "Longitude"
+                    },
+                    "latitude": {
+                        "type": "number",
+                        "title": "Latitude"
+                    },
+                    "altitude": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Altitude"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "longitude",
+                    "latitude"
+                ],
+                "title": "LocationInput",
+                "description": "\ud83d\udd16Input fields for creating or updating a location."
+            },
+            "Location": {
+                "properties": {
+                    "longitude": {
+                        "type": "number",
+                        "title": "Longitude"
+                    },
+                    "latitude": {
+                        "type": "number",
+                        "title": "Latitude"
+                    },
+                    "altitude": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Altitude"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "longitude",
+                    "latitude"
+                ],
+                "title": "Location",
+                "description": "\ud83d\udd16Output fields returned when fetching a location."
+            },
+            "LoginRequest": {
+                "properties": {
+                    "serverUrl": {
+                        "type": "string",
+                        "title": "Serverurl"
+                    },
+                    "email": {
+                        "type": "string",
+                        "title": "Email"
+                    },
+                    "password": {
+                        "type": "string",
+                        "title": "Password"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "serverUrl",
+                    "email",
+                    "password"
+                ],
+                "title": "LoginRequest",
+                "description": "\ud83d\udcdcLogin request body.\n    "
+            },
+            "LoginResponse": {
+                "properties": {
+                    "ok": {
+                        "type": "boolean",
+                        "title": "Ok"
+                    },
+                    "serverUrl": {
+                        "type": "string",
+                        "title": "Serverurl"
+                    },
+                    "email": {
+                        "type": "string",
+                        "title": "Email"
+                    },
+                    "token": {
+                        "type": "string",
+                        "title": "Token"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "ok",
+                    "serverUrl",
+                    "email",
+                    "token"
+                ],
+                "title": "LoginResponse",
+                "description": "\ud83d\udfeaLogin response body.\n    "
+            },
+            "LogoutRequest": {
+                "properties": {
+                    "serverUrl": {
+                        "type": "string",
+                        "title": "Serverurl"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "serverUrl"
+                ],
+                "title": "LogoutRequest",
+                "description": "\ud83d\udfebLogout request body.\n    "
+            },
+            "ModelInput": {
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Url"
+                    },
+                    "file": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "File"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 64
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "tags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Tags"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeInput"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "url",
+                    "file"
+                ],
+                "title": "ModelInput",
+                "description": "Input fields for creating or updating a model."
+            },
+            "Model": {
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Url"
+                    },
+                    "file": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "File"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 64
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "tags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Tags"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/Attribute"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "url",
+                    "file"
+                ],
+                "title": "Model",
+                "description": "Output fields returned when fetching a model."
+            },
+            "NativeAlgorithmExecuteBody": {
+                "properties": {
+                    "language": {
+                        "type": "string",
+                        "enum": [
+                            "python",
+                            "go",
+                            "rust"
+                        ],
+                        "title": "Language"
+                    },
+                    "operation": {
+                        "type": "string",
+                        "enum": [
+                            "flatten",
+                            "delete"
+                        ],
+                        "title": "Operation"
+                    },
+                    "kit": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Kit"
+                    },
+                    "design": {
+                        "additionalProperties": true,
+                        "type": "object",
+                        "title": "Design"
+                    },
+                    "designGuid": {
+                        "type": "string",
+                        "title": "Designguid"
+                    },
+                    "pieceGuids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Pieceguids",
+                        "default": []
+                    },
+                    "connectionGuids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Connectionguids",
+                        "default": []
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "language",
+                    "operation",
+                    "kit",
+                    "design",
+                    "designGuid"
+                ],
+                "title": "NativeAlgorithmExecuteBody",
+                "description": "\ud83d\udd3aRequest body for POST /api/native-algorithms/execute.\n    "
+            },
+            "PieceContext-Input": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "type": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/TypeId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "designPiece": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DesignId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "plane": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PlaneContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "center": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CoordContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeContext"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "title": "PieceContext",
+                "description": "\ud83d\udd16Context fields for understanding a piece by an LLM."
+            },
+            "PieceContext-": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "type": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/TypeId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "designPiece": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DesignId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "plane": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PlaneContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "center": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CoordContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeContext"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "title": "PieceContext",
+                "description": "\ud83d\udd16Context fields for understanding a piece by an LLM."
+            },
+            "PieceId": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "default": ""
+                    }
+                },
+                "type": "object",
+                "title": "PieceId",
+                "description": "\ud83d\udd16Identity fields for uniquely identifying a piece."
+            },
+            "PieceInput": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "type": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/TypeId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "designPiece": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DesignId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "plane": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PlaneInput"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "center": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CoordInput"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeInput"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "title": "PieceInput",
+                "description": "\ud83d\udd16Input fields for creating or updating a piece."
+            },
+            "Piece": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "type": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/TypeId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "designPiece": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DesignId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "plane": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/Plane"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "center": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/Coord"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/Attribute"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "title": "Piece",
+                "description": "\ud83d\udd16Output fields returned when fetching a piece."
+            },
+            "PiecePrediction": {
+                "properties": {
+                    "id_": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id",
+                        "default": ""
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "type": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/TypeId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "designPiece": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DesignId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "title": "PiecePrediction",
+                "description": "\ud83d\udd16Prediction fields for LLM-based piece inference."
+            },
+            "PlaneContext": {
+                "properties": {
+                    "origin": {
+                        "$ref": "#/components/schemas/PointContext"
+                    },
+                    "xAxis": {
+                        "$ref": "#/components/schemas/VectorContext"
+                    },
+                    "yAxis": {
+                        "$ref": "#/components/schemas/VectorContext"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "origin",
+                    "xAxis",
+                    "yAxis"
+                ],
+                "title": "PlaneContext",
+                "description": "\ud83d\udd16Context fields for understanding a plane by an LLM."
+            },
+            "PlaneInput": {
+                "properties": {
+                    "origin": {
+                        "$ref": "#/components/schemas/PointInput"
+                    },
+                    "xAxis": {
+                        "$ref": "#/components/schemas/VectorInput"
+                    },
+                    "yAxis": {
+                        "$ref": "#/components/schemas/VectorInput"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "origin",
+                    "xAxis",
+                    "yAxis"
+                ],
+                "title": "PlaneInput",
+                "description": "\ud83d\udc95Input fields for creating or updating a plane."
+            },
+            "Plane": {
+                "properties": {
+                    "origin": {
+                        "$ref": "#/components/schemas/Point"
+                    },
+                    "xAxis": {
+                        "$ref": "#/components/schemas/Vector"
+                    },
+                    "yAxis": {
+                        "$ref": "#/components/schemas/Vector"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "origin",
+                    "xAxis",
+                    "yAxis"
+                ],
+                "title": "Plane",
+                "description": "\ud83d\udd16Output fields returned when fetching a plane."
+            },
+            "Point": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X"
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y"
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "Point",
+                "description": "\u26abPoint in 3D space with x, y and z coordinates."
+            },
+            "PointContext": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X"
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y"
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "PointContext",
+                "description": "\ud83e\ude76Context fields for understanding a point by an LLM."
+            },
+            "PointInput": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X"
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y"
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "PointInput",
+                "description": "\ud83e\ude75Input fields for creating or updating a point."
+            },
+            "PropInput": {
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Key"
+                    },
+                    "value": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Value"
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "default": ""
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "key",
+                    "value"
+                ],
+                "title": "PropInput",
+                "description": "\ud83d\udd16Input fields for creating or updating a prop."
+            },
+            "Prop": {
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Key"
+                    },
+                    "value": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Value"
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "default": ""
+                    },
+                    "created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created"
+                    },
+                    "updated": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/Attribute"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "key",
+                    "value"
+                ],
+                "title": "Prop",
+                "description": "Output fields returned when fetching a prop."
+            },
+            "SideContext": {
+                "properties": {
+                    "piece": {
+                        "$ref": "#/components/schemas/PieceId"
+                    },
+                    "designPiece": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PieceId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "connector": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ConnectorId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "piece"
+                ],
+                "title": "SideContext",
+                "description": "\ud83d\udd16Context fields for understanding a side by an LLM."
+            },
+            "SideInput": {
+                "properties": {
+                    "piece": {
+                        "$ref": "#/components/schemas/PieceId"
+                    },
+                    "designPiece": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PieceId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "connector": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ConnectorId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "piece"
+                ],
+                "title": "SideInput",
+                "description": "\ud83d\udd16Input fields for creating or updating a side."
+            },
+            "Side": {
+                "properties": {
+                    "piece": {
+                        "$ref": "#/components/schemas/PieceId"
+                    },
+                    "designPiece": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PieceId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "connector": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ConnectorId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "piece"
+                ],
+                "title": "Side",
+                "description": "\ud83d\udd16Output fields returned when fetching a side."
+            },
+            "SidePrediction": {
+                "properties": {
+                    "piece": {
+                        "$ref": "#/components/schemas/PieceId"
+                    },
+                    "designPiece": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PieceId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "connector": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ConnectorId"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "piece"
+                ],
+                "title": "SidePrediction",
+                "description": "\ud83d\udd16Prediction fields for LLM-based side inference."
+            },
+            "TypeContext-Input": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "variant": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "default": ""
+                    },
+                    "stock": {
+                        "type": "integer",
+                        "title": "Stock",
+                        "default": 2147483647
+                    },
+                    "is_virtual": {
+                        "type": "boolean",
+                        "title": "Is Virtual",
+                        "default": false
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "default": ""
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "connectors": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectorContext"
+                        },
+                        "type": "array",
+                        "title": "Connectors"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeContext"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    },
+                    "concepts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Concepts"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "TypeContext",
+                "description": "Context fields for understanding a type by an LLM."
+            },
+            "TypeContext-": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "variant": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "default": ""
+                    },
+                    "stock": {
+                        "type": "integer",
+                        "title": "Stock",
+                        "default": 2147483647
+                    },
+                    "is_virtual": {
+                        "type": "boolean",
+                        "title": "Is Virtual",
+                        "default": false
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "default": ""
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "connectors": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectorContext"
+                        },
+                        "type": "array",
+                        "title": "Connectors"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeContext"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    },
+                    "concepts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Concepts"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "TypeContext",
+                "description": "Context fields for understanding a type by an LLM."
+            },
+            "TypeId": {
+                "properties": {
+                    "variant": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Variant",
+                        "default": ""
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "TypeId",
+                "description": "\ud83d\udd16Identity fields for uniquely identifying a type."
+            },
+            "TypeInput": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Image",
+                        "default": ""
+                    },
+                    "stock": {
+                        "type": "integer",
+                        "title": "Stock",
+                        "default": 2147483647
+                    },
+                    "is_virtual": {
+                        "type": "boolean",
+                        "title": "Is Virtual",
+                        "default": false
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "default": ""
+                    },
+                    "parent": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent"
+                    },
+                    "is_abstract": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Abstract"
+                    },
+                    "folder": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Folder"
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationInput"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "models": {
+                        "items": {
+                            "$ref": "#/components/schemas/ModelInput"
+                        },
+                        "type": "array",
+                        "title": "Models"
+                    },
+                    "connectors": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConnectorInput"
+                        },
+                        "type": "array",
+                        "title": "Connectors"
+                    },
+                    "props": {
+                        "items": {
+                            "$ref": "#/components/schemas/PropInput"
+                        },
+                        "type": "array",
+                        "title": "Props"
+                    },
+                    "authors": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Authors"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeInput"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    },
+                    "concepts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Concepts"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "TypeInput",
+                "description": "Input fields for creating or updating a type."
+            },
+            "Type": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "image": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Image",
+                        "default": ""
+                    },
+                    "stock": {
+                        "type": "integer",
+                        "title": "Stock",
+                        "default": 2147483647
+                    },
+                    "is_virtual": {
+                        "type": "boolean",
+                        "title": "Is Virtual",
+                        "default": false
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "title": "Unit",
+                        "default": ""
+                    },
+                    "created": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created"
+                    },
+                    "updated": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated"
+                    },
+                    "parent": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent"
+                    },
+                    "is_abstract": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Is Abstract"
+                    },
+                    "folder": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Folder"
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/Location"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "models": {
+                        "items": {
+                            "$ref": "#/components/schemas/Model"
+                        },
+                        "type": "array",
+                        "title": "Models"
+                    },
+                    "connectors": {
+                        "items": {
+                            "$ref": "#/components/schemas/Connector"
+                        },
+                        "type": "array",
+                        "title": "Connectors"
+                    },
+                    "props": {
+                        "items": {
+                            "$ref": "#/components/schemas/Prop"
+                        },
+                        "type": "array",
+                        "title": "Props"
+                    },
+                    "authors": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Authors"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/Attribute"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    },
+                    "concepts": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Concepts"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "Type",
+                "description": "Output fields returned when fetching a type."
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            },
+            "Vector": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X"
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y"
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "Vector",
+                "description": "\ud83d\udc9bDirection vector in 3D space with x, y and z components."
+            },
+            "VectorContext": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X"
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y"
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "VectorContext",
+                "description": "\u2764\ufe0fContext fields for understanding a vector by an LLM."
+            },
+            "VectorInput": {
+                "properties": {
+                    "x": {
+                        "type": "number",
+                        "title": "X"
+                    },
+                    "y": {
+                        "type": "number",
+                        "title": "Y"
+                    },
+                    "z": {
+                        "type": "number",
+                        "title": "Z"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "title": "VectorInput",
+                "description": "\ud83e\udde1Input fields for creating or updating a vector."
+            }
+        }
+    }
+}

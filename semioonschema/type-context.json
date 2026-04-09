@@ -1,0 +1,242 @@
+{
+    "$defs": {
+        "Attribute": {
+            "description": "\ud83d\udfe9Context fields for understanding a attribute by an LLM.",
+            "properties": {
+                "name": {
+                    "maxLength": 64,
+                    "title": "Name",
+                    "type": "string"
+                },
+                "value": {
+                    "default": "",
+                    "maxLength": 64,
+                    "title": "Value",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "Attribute",
+            "type": "object"
+        },
+        "Connector": {
+            "description": "Context fields for understanding a connector by an LLM.",
+            "properties": {
+                "id_": {
+                    "default": "",
+                    "maxLength": 128,
+                    "title": "Id",
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "maxLength": 512,
+                    "title": "Description",
+                    "type": "string"
+                },
+                "is_mandatory": {
+                    "default": false,
+                    "title": "Is Mandatory",
+                    "type": "boolean"
+                },
+                "maxChildren": {
+                    "default": 1,
+                    "minimum": 0,
+                    "title": "Maxchildren",
+                    "type": "integer"
+                },
+                "port": {
+                    "default": "",
+                    "maxLength": 64,
+                    "title": "Port",
+                    "type": "string"
+                },
+                "compatiblePorts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Compatibleports",
+                    "type": "array"
+                },
+                "point": {
+                    "$ref": "#/$defs/Point"
+                },
+                "direction": {
+                    "$ref": "#/$defs/Vector"
+                },
+                "t": {
+                    "default": 0.0,
+                    "title": "T",
+                    "type": "number"
+                },
+                "attributes": {
+                    "items": {
+                        "$ref": "#/$defs/Attribute"
+                    },
+                    "title": "Attributes",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "point",
+                "direction"
+            ],
+            "title": "Connector",
+            "type": "object"
+        },
+        "Location": {
+            "description": "\ud83d\udd16Context fields for understanding a location by an LLM.",
+            "properties": {
+                "longitude": {
+                    "title": "Longitude",
+                    "type": "number"
+                },
+                "latitude": {
+                    "title": "Latitude",
+                    "type": "number"
+                },
+                "altitude": {
+                    "anyOf": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Altitude"
+                }
+            },
+            "required": [
+                "longitude",
+                "latitude"
+            ],
+            "title": "Location",
+            "type": "object"
+        },
+        "Point": {
+            "description": "\u26abPoint in 3D space with x, y and z coordinates.",
+            "properties": {
+                "x": {
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "title": "Y",
+                    "type": "number"
+                },
+                "z": {
+                    "title": "Z",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
+            "title": "Point",
+            "type": "object"
+        },
+        "Vector": {
+            "description": "\ud83d\udc9bDirection vector in 3D space with x, y and z components.",
+            "properties": {
+                "x": {
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "title": "Y",
+                    "type": "number"
+                },
+                "z": {
+                    "title": "Z",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
+            "title": "Vector",
+            "type": "object"
+        }
+    },
+    "description": "Context fields for understanding a type by an LLM.",
+    "properties": {
+        "name": {
+            "maxLength": 64,
+            "title": "Name",
+            "type": "string"
+        },
+        "description": {
+            "default": "",
+            "maxLength": 512,
+            "title": "Description",
+            "type": "string"
+        },
+        "variant": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Variant",
+            "type": "string"
+        },
+        "stock": {
+            "default": 2147483647,
+            "title": "Stock",
+            "type": "integer"
+        },
+        "is_virtual": {
+            "default": false,
+            "title": "Is Virtual",
+            "type": "boolean"
+        },
+        "unit": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Unit",
+            "type": "string"
+        },
+        "location": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Location"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
+        },
+        "connectors": {
+            "items": {
+                "$ref": "#/$defs/Connector"
+            },
+            "title": "Connectors",
+            "type": "array"
+        },
+        "attributes": {
+            "items": {
+                "$ref": "#/$defs/Attribute"
+            },
+            "title": "Attributes",
+            "type": "array"
+        },
+        "concepts": {
+            "items": {
+                "type": "string"
+            },
+            "title": "Concepts",
+            "type": "array"
+        }
+    },
+    "required": [
+        "name"
+    ],
+    "title": "Type",
+    "type": "object"
+}

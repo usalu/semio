@@ -3725,10 +3725,14 @@ def generateSchemas():
     else:
         os.makedirs("temp")
 
-    with open("../../openapi/schema.json", "w", encoding="utf-8") as f:
+    openapiPath = "../../openapi/schema.json"
+    os.makedirs(os.path.dirname(openapiPath), exist_ok=True)
+    with open(openapiPath, "w", encoding="utf-8") as f:
         json.dump(rest.openapi(), f, indent=4)
 
-    with open("../../semioonschema/kit.json", "w", encoding="utf-8") as f:
+    outputKitPath = "../../semioonschema/kit.json"
+    os.makedirs(os.path.dirname(outputKitPath), exist_ok=True)
+    with open(outputKitPath, "w", encoding="utf-8") as f:
         json.dump(
             KitOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
             f,
@@ -3763,7 +3767,9 @@ def generateSchemas():
             indent=4,
         )
 
-    with open("../../semioonschema/type-context.json", "w", encoding="utf-8") as f:
+    typeContextPath = "../../semioonschema/type-context.json"
+    os.makedirs(os.path.dirname(typeContextPath), exist_ok=True)
+    with open(typeContextPath, "w", encoding="utf-8") as f:
         json.dump(
             TypeContext.model_json_schema(schema_generator=ContextGenerateJsonSchema),
             f,
@@ -3774,7 +3780,9 @@ def generateSchemas():
     # SQLite schema is now maintained manually in sqlite/schema.sql
     # No auto-generation from ORM metadata
 
-    with open("../../graphql/schema.graphql", "w", encoding="utf-8") as f:
+    graphqlSchemaPath = "../../graphql/schema.graphql"
+    os.makedirs(os.path.dirname(graphqlSchemaPath), exist_ok=True)
+    with open(graphqlSchemaPath, "w", encoding="utf-8") as f:
         f.write(str(graphqlSchema))
 
 

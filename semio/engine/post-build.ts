@@ -12,7 +12,7 @@
 // #region 💾Post Build
 // Post-build script. MUST relocate the PyInstaller output to the Grasshopper bin folder.
 
-import { existsSync, renameSync, rmSync } from "fs";
+import { copyFileSync, cpSync, existsSync, rmSync } from "fs";
 import { join } from "path";
 
 /**
@@ -58,8 +58,8 @@ if (existsSync(grasshopperInternalPath)) {
   rmSync(grasshopperInternalPath, { recursive: true });
 }
 
-renameSync(exePath, grasshopperExePath);
-renameSync(internalPath, grasshopperInternalPath);
+copyFileSync(exePath, grasshopperExePath);
+cpSync(internalPath, grasshopperInternalPath, { force: true, recursive: true });
 
 console.log("✅ Post-build complete");
 
