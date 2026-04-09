@@ -1,12 +1,14 @@
 {
   "title": "Refine Sketchpad Tree Sibling Spacing",
-  "status": "open",
+  "status": "closed",
   "description": "Refine the shared sketchpad tree spacing so that whenever a sibling transition goes from a leaf/property row to an expandable/group row at the same depth, one empty-row-sized gap is inserted before the group row. Apply this generically based on row kind and sibling transition, preserve compact spacing within consecutive property rows, hierarchy, tree lines, value-column layout, and row actions. Extend existing tests and make them pass.",
+  "summary": "Follow-up fix for the shared sketchpad tree spacing: the previous generic gap rule did not apply to details-panel transitions like Color -\u003e Center because raw TreeRow wrappers were not treated as sibling rows by the branch spacing engine. Updated elements/ui so TreeRow emits a generic row kind (property/content), TreeBranchContent recognizes tree-row siblings, and hover-path row matching includes tree-row. This lets same-depth property/leaf -\u003e group transitions receive the intended empty-row-sized gap generically without field-name special cases. Added UI tests covering TreeRow row-kind emission. Verified @elements/ui:test passes (35/35) and @semio/ui:test passes (253/253). @semio/sketchpad:test remains blocked by the existing Playwright CSS-loader issue (Unknown file extension .css for @xyflow/react/dist/style.css, then No tests found).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1310"
   },
   "goal": "🎯sketchpadimprovements",
   "sessions": [
-    "⚪4704291442ce47ee8bc09af809faa9ef"
+    "⚪4704291442ce47ee8bc09af809faa9ef",
+    "⚪c358c3e899854bdc9c0c77fb4f17fec1"
   ]
 }

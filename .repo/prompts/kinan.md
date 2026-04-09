@@ -1,4 +1,8 @@
 
+
+Refine the shared semio/sketchpad tree spacing so that whenever a sibling transition goes from a leaf/property row to an expandable/group row at the same depth, insert one empty-row-sized gap before the group row. Apply this generically based on row kind and sibling transition, not by field names. Keep compact spacing within consecutive property rows, preserve hierarchy, tree lines, property row/value-column layout, and actions, and do not hardcode specific sections.
+
+
 default should illustrate compatable connectors in the entire design in semio colors 
 when selected a single connector all other connectors grey out and it gets highlighted and show the compatible and incompatible connectors in the design in semio red/green
 

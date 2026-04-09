@@ -41,7 +41,7 @@ import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, u
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Slot } from "@radix-ui/react-slot";
-import { Edges, Grid, OrbitControls, useGLTF } from "@react-three/drei";
+import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import {
   applyNodeChanges,
@@ -14907,15 +14907,7 @@ const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
   const { indentMultiplier } = React.useContext(TreeContext);
   return (
     <div data-slot="tree-row-layout" className={cn("grid min-w-0", align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
-      <TreeHierarchyGutter
-        level={level}
-        showLines={showLines}
-        slot={slot}
-        connectCurrentLevel={connectCurrentLevel}
-        extendCurrentLevelToBottom={extendCurrentLevelToBottom}
-        slotOffsetPx={slotOffsetPx}
-        anchorOffsetPx={anchorOffsetPx}
-      />
+      <TreeHierarchyGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendCurrentLevelToBottom={extendCurrentLevelToBottom} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
       <div data-slot="tree-row-content" className={cn("min-w-0", contentClassName)}>
         {children}
       </div>
@@ -14956,7 +14948,7 @@ const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, c
     }
 
     const branchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content"]);
-    const rowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-content", "control-tree-row"]);
+    const rowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "tree-content", "control-tree-row"]);
     const directChildren = Array.from(branchElement.children) as HTMLElement[];
     const isRowElement = (el: HTMLElement): boolean => rowSlots.has(el.dataset.slot ?? "");
     const isBranchElement = (el: HTMLElement): boolean => branchSlots.has(el.dataset.slot ?? "");
@@ -15004,14 +14996,7 @@ const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, c
   }, [children, isTree]);
 
   return (
-    <div
-      ref={branchRef}
-      data-slot={slot}
-      data-tree-owner-kind={ownerRowKind}
-      data-tree-owner-expanded={ownerExpanded ? "true" : "false"}
-      className={cn("relative flex min-w-0 flex-col", className)}
-      style={treeBranchContentStyle(topPaddingPx)}
-    >
+    <div ref={branchRef} data-slot={slot} data-tree-owner-kind={ownerRowKind} data-tree-owner-expanded={ownerExpanded ? "true" : "false"} className={cn("relative flex min-w-0 flex-col", className)} style={treeBranchContentStyle(topPaddingPx)}>
       {isTree ? <IndentationLines level={level} showLines={showLines} /> : null}
       {children}
     </div>
@@ -16262,6 +16247,7 @@ export const TreeRow: React.FC<{
   const localizedLabel = id ? useLabel(id) : undefined;
   const resolvedLabel = label !== undefined ? label : localizedLabel;
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = React.useContext(TreeContext);
+  const rowKind = treeRowUsesPropertyHeaderAnchor(children) ? "property" : "content";
 
   if (resolvedLabel) {
     return (
@@ -16274,7 +16260,7 @@ export const TreeRow: React.FC<{
   if (!isTree) {
     return (
       <TreeRowAlignmentContext.Provider value={true}>
-        <div data-slot="tree-row" className={cn("min-w-0 w-full min-h-[24px]", className)}>
+        <div data-slot="tree-row" data-tree-row-kind={rowKind} className={cn("min-w-0 w-full min-h-[24px]", className)}>
           {children}
         </div>
       </TreeRowAlignmentContext.Provider>
@@ -16283,15 +16269,8 @@ export const TreeRow: React.FC<{
 
   return (
     <TreeRowAlignmentContext.Provider value={true}>
-      <div data-slot="tree-row" className={cn("relative min-w-0 w-full", className)}>
-        <TreeAlignedRow
-          level={level}
-          isLastAtLevel={isLastAtLevel}
-          showLines={showLines}
-          connectCurrentLevel={level > 0}
-          contentClassName="min-w-0"
-          anchorOffsetPx={treeRowUsesPropertyHeaderAnchor(children) ? detailPanelHeaderLineCenterPx : undefined}
-        >
+      <div data-slot="tree-row" data-tree-row-kind={rowKind} className={cn("relative min-w-0 w-full", className)}>
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" anchorOffsetPx={rowKind === "property" ? detailPanelHeaderLineCenterPx : undefined}>
           {children}
         </TreeAlignedRow>
       </div>
@@ -16374,8 +16353,8 @@ export interface FileTreeNode {
 // 🌳Branch containers that hold child rows and render IndentationLines.
 const treeBranchSlots = new Set(["tree-section-content", "tree-item-content", "tree-property-content", "control-tree-folder-content"]);
 // 🔷Row-level elements that own an elbow connector.
-const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "control-tree-row"]);
-const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="control-tree-row"], [data-slot="tree-content"]';
+const treeRowSlots = new Set(["tree-item-row", "tree-section-row", "tree-property-item", "tree-row", "control-tree-row"]);
+const treeHoverPathRowSelector = '[data-slot="tree-item-row"], [data-slot="tree-section-row"], [data-slot="tree-property-item"], [data-slot="tree-row"], [data-slot="control-tree-row"], [data-slot="tree-content"]';
 const treeHoverPathBranchSelector = '[data-slot="tree-section-content"], [data-slot="tree-item-content"], [data-slot="tree-property-content"], [data-slot="control-tree-folder-content"]';
 const treeHoverPathAttr = "data-tree-hover-path";
 
@@ -21757,9 +21736,23 @@ if (treeVitest) {
       );
 
       expect(markup).toContain('data-slot="tree-row"');
+      expect(markup).toContain('data-tree-row-kind="property"');
       expect(markup).toContain('data-slot="property-row"');
       expect(markup).toContain('data-slot="tree-branch-elbow" class="pointer-events-none absolute h-px bg-muted-foreground/40 -translate-y-1/2 transition-[height,background-color] duration-150" style="top:11px;left:7px;width:10px"');
       expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
+    });
+
+    it("marks unlabeled non-property TreeRow wrappers as content rows", () => {
+      const markup = renderToStaticMarkup(
+        <TreeContext.Provider value={{ level: 1, isLastAtLevel: [true], showLines: true, isTree: true, indentMultiplier: 1 }}>
+          <TreeRow>
+            <span>Note</span>
+          </TreeRow>
+        </TreeContext.Provider>,
+      );
+
+      expect(markup).toContain('data-slot="tree-row"');
+      expect(markup).toContain('data-tree-row-kind="content"');
     });
 
     it("renders property-layout tree items with a dedicated control column", () => {

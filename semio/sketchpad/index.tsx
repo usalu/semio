@@ -15896,6 +15896,22 @@ const MultiWindowApp: FC = () => {
     if (!kitGuid) return;
 
     addSection("toolbar", {
+      id: "semio.sketchpad.app.kit.toolbar.history",
+      specificity: 20,
+      order: 5,
+      toolbarGroup: {
+        id: "history",
+        labelId: "semio.sketchpad.toolbar.parent.actions",
+        order: 5,
+      },
+      content: () => (
+        <KitScopeProvider guid={kitGuid}>
+          <KitToolbarHistory />
+        </KitScopeProvider>
+      ),
+    });
+
+    addSection("toolbar", {
       id: "semio.sketchpad.app.kit.toolbar.selection",
       specificity: 20,
       order: 10,
@@ -15946,6 +15962,7 @@ const MultiWindowApp: FC = () => {
     });
 
     return () => {
+      removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.history");
       removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.selection");
       removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.filters");
       removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.create");
@@ -16126,12 +16143,6 @@ export const KitFilters: FC = () => {
  *MUST render selection mode toggle buttons.
  **/
 export const KitToolbarSelection: FC = () => {
-  const store = useKitAppStore();
-  const canUndo = useSyncDeep(store, (s: KitAppState | null) => s?.canUndo ?? false);
-  const canRedo = useSyncDeep(store, (s: KitAppState | null) => s?.canRedo ?? false);
-  const { undo, redo } = useKitAppCommands();
-  const undoLabel = useLabel("semio.sketchpad.app.kit.history.undo");
-  const redoLabel = useLabel("semio.sketchpad.app.kit.history.redo");
   const [activeTool, setActiveTool] = useKitAppActiveTool();
   const additiveLabel = useLabel("semio.sketchpad.app.kit.tools.select.mode.additive");
   const subtractiveLabel = useLabel("semio.sketchpad.app.kit.tools.select.mode.subtractive");
@@ -16142,27 +16153,6 @@ export const KitToolbarSelection: FC = () => {
 
   return (
     <ToolbarGroup>
-      <ToolbarGroup>
-        <Toggle
-          id="semio.sketchpad.app.kit.history.undo"
-          icon={<SkipBackIcon className="size-tiny" />}
-          text={undoLabel}
-          disabled={!canUndo}
-          onPressedChange={(pressed) => {
-            if (pressed) undo?.();
-          }}
-        />
-        <Toggle
-          id="semio.sketchpad.app.kit.history.redo"
-          icon={<SkipForwardIcon className="size-tiny" />}
-          text={redoLabel}
-          disabled={!canRedo}
-          onPressedChange={(pressed) => {
-            if (pressed) redo?.();
-          }}
-        />
-      </ToolbarGroup>
-      <ToolbarDivider />
       <ToolbarGroup>
         <Toggle
           id="semio.sketchpad.app.kit.tools.select.mode.additive"
@@ -16213,6 +16203,44 @@ export const KitToolbarSelection: FC = () => {
           onPressedChange={(pressed) => setActiveTool?.(pressed ? ToolKind.HAND : ToolKind.SELECTION_NORMAL)}
         />
       </ToolbarGroup>
+    </ToolbarGroup>
+  );
+};
+
+export const KitToolbarHistory: FC = () => {
+  const store = useKitAppStore();
+  const canUndo = useSyncExternalStore(
+    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
+    () => store?.canUndo() ?? false,
+    () => false,
+  );
+  const canRedo = useSyncExternalStore(
+    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
+    () => store?.canRedo() ?? false,
+    () => false,
+  );
+  const { undo, redo } = useKitAppCommands();
+
+  return (
+    <ToolbarGroup>
+      <Toggle
+        id="semio.sketchpad.app.kit.history.undo"
+        icon={<SkipBackIcon className="size-tiny" />}
+        text="Undo"
+        disabled={!canUndo}
+        onPressedChange={(pressed) => {
+          if (pressed) undo?.();
+        }}
+      />
+      <Toggle
+        id="semio.sketchpad.app.kit.history.redo"
+        icon={<SkipForwardIcon className="size-tiny" />}
+        text="Redo"
+        disabled={!canRedo}
+        onPressedChange={(pressed) => {
+          if (pressed) redo?.();
+        }}
+      />
     </ToolbarGroup>
   );
 };
@@ -30697,12 +30725,6 @@ export const DesignAppTools: Tool<DesignAppState>[] = [SelectionAdditiveTool, Se
  *MUST render toggle buttons for each selection sub-mode.
  **/
 export const DesignSelectSettings: FC = () => {
-  const store = useDesignStore() as DesignStore | null;
-  const canUndo = useSyncDeep(store, (s: any) => s?.canUndo ?? false);
-  const canRedo = useSyncDeep(store, (s: any) => s?.canRedo ?? false);
-  const { undo, redo } = useDesignAppCommands();
-  const undoLabel = useLabel("semio.sketchpad.app.design.history.undo");
-  const redoLabel = useLabel("semio.sketchpad.app.design.history.redo");
   const [activeTool, setActiveTool] = useDesignAppActiveTool();
   const additiveLabel = useLabel("semio.sketchpad.app.design.tools.select.mode.additive");
   const subtractiveLabel = useLabel("semio.sketchpad.app.design.tools.select.mode.subtractive");
@@ -30713,25 +30735,6 @@ export const DesignSelectSettings: FC = () => {
 
   return (
     <ToolbarGroup>
-      <Toggle
-        id="semio.sketchpad.app.design.history.undo"
-        icon={<SkipBackIcon className="size-tiny" />}
-        text={undoLabel}
-        disabled={!canUndo}
-        onPressedChange={(pressed) => {
-          if (pressed) undo?.();
-        }}
-      />
-      <Toggle
-        id="semio.sketchpad.app.design.history.redo"
-        icon={<SkipForwardIcon className="size-tiny" />}
-        text={redoLabel}
-        disabled={!canRedo}
-        onPressedChange={(pressed) => {
-          if (pressed) redo?.();
-        }}
-      />
-      <ToolbarDivider />
       <Toggle
         id="semio.sketchpad.app.design.tools.select.mode.additive"
         icon={<AddIcon className="size-tiny" />}
@@ -30773,6 +30776,43 @@ export const DesignSelectSettings: FC = () => {
         text={handLabel}
         pressed={activeTool === ToolKind.HAND}
         onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.HAND : ToolKind.SELECTION_NORMAL)}
+      />
+    </ToolbarGroup>
+  );
+};
+
+export const DesignHistorySettings: FC = () => {
+  const store = useDesignStore() as DesignStore | null;
+  const canUndo = useSyncExternalStore(
+    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
+    () => store?.canUndo() ?? false,
+    () => false,
+  );
+  const canRedo = useSyncExternalStore(
+    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
+    () => store?.canRedo() ?? false,
+    () => false,
+  );
+  const { undo, redo } = useDesignAppCommands();
+  return (
+    <ToolbarGroup>
+      <Toggle
+        id="semio.sketchpad.app.design.history.undo"
+        icon={<SkipBackIcon className="size-tiny" />}
+        text="Undo"
+        disabled={!canUndo}
+        onPressedChange={(pressed) => {
+          if (pressed) undo?.();
+        }}
+      />
+      <Toggle
+        id="semio.sketchpad.app.design.history.redo"
+        icon={<SkipForwardIcon className="size-tiny" />}
+        text="Redo"
+        disabled={!canRedo}
+        onPressedChange={(pressed) => {
+          if (pressed) redo?.();
+        }}
       />
     </ToolbarGroup>
   );
@@ -38183,6 +38223,18 @@ const DesignApp: FC = () => {
 
   useEffect(() => {
     addSection("toolbar", {
+      id: "semio.sketchpad.app.design.toolbar.history",
+      specificity: 20,
+      order: 0,
+      toolbarGroup: {
+        id: "history",
+        labelId: "semio.sketchpad.toolbar.parent.actions",
+        order: 5,
+      },
+      content: <DesignHistorySettings />,
+    });
+
+    addSection("toolbar", {
       id: "semio.sketchpad.app.design.tools.select",
       specificity: 20,
       order: 0,
@@ -38207,6 +38259,7 @@ const DesignApp: FC = () => {
     });
 
     return () => {
+      removeSection("toolbar", "semio.sketchpad.app.design.toolbar.history");
       removeSection("toolbar", "semio.sketchpad.app.design.tools.select");
       removeSection("toolbar", "semio.sketchpad.app.design.toolbar.filters");
     };
@@ -41377,41 +41430,12 @@ export const TypeHandTool: Tool<TypeAppState> = {
  *MUST render toggle buttons for each selection sub-mode.
  **/
 export const TypeSelectSettings: FC = () => {
-  const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
-  const { undo, redo } = useTypeAppCommands();
-  const undoLabel = useLabel("semio.sketchpad.app.type.history.undo");
-  const redoLabel = useLabel("semio.sketchpad.app.type.history.redo");
-  const kitGuid = kitScope?.guid ?? "";
-  const typeGuid = typeScope?.guid ?? "";
-  const canUndo = useSelector(actor, (snapshot) => snapshot.can({ type: "TYPE.TRANSACTION.UNDO", kitGuid, typeGuid }));
-  const canRedo = useSelector(actor, (snapshot) => snapshot.can({ type: "TYPE.TRANSACTION.REDO", kitGuid, typeGuid }));
   const [activeTool, setActiveTool] = useTypeAppActiveTool();
   const additiveLabel = useLabel("semio.sketchpad.app.type.tools.select.additive");
   const subtractiveLabel = useLabel("semio.sketchpad.app.type.tools.select.subtractive");
 
   return (
     <ToolbarGroup>
-      <Toggle
-        id="semio.sketchpad.app.type.history.undo"
-        icon={<SkipBackIcon className="size-tiny" />}
-        text={undoLabel}
-        disabled={!canUndo}
-        onPressedChange={(pressed) => {
-          if (pressed) undo?.();
-        }}
-      />
-      <Toggle
-        id="semio.sketchpad.app.type.history.redo"
-        icon={<SkipForwardIcon className="size-tiny" />}
-        text={redoLabel}
-        disabled={!canRedo}
-        onPressedChange={(pressed) => {
-          if (pressed) redo?.();
-        }}
-      />
-      <ToolbarDivider />
       <Toggle
         id="semio.sketchpad.app.type.tools.select.additive"
         icon={<AddIcon className="size-tiny" />}
@@ -41425,6 +41449,39 @@ export const TypeSelectSettings: FC = () => {
         text={subtractiveLabel}
         pressed={activeTool === ToolKind.SELECTION_SUBTRACTIVE}
         onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_SUBTRACTIVE : ToolKind.SELECTION_NORMAL)}
+      />
+    </ToolbarGroup>
+  );
+};
+
+export const TypeHistorySettings: FC = () => {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const typeScope = useTypeScope();
+  const { undo, redo } = useTypeAppCommands();
+  const kitGuid = kitScope?.guid ?? "";
+  const typeGuid = typeScope?.guid ?? "";
+  const canUndo = useSelector(actor, (snapshot) => snapshot.can({ type: "TYPE.TRANSACTION.UNDO", kitGuid, typeGuid }));
+  const canRedo = useSelector(actor, (snapshot) => snapshot.can({ type: "TYPE.TRANSACTION.REDO", kitGuid, typeGuid }));
+  return (
+    <ToolbarGroup>
+      <Toggle
+        id="semio.sketchpad.app.type.history.undo"
+        icon={<SkipBackIcon className="size-tiny" />}
+        text="Undo"
+        disabled={!canUndo}
+        onPressedChange={(pressed) => {
+          if (pressed) undo?.();
+        }}
+      />
+      <Toggle
+        id="semio.sketchpad.app.type.history.redo"
+        icon={<SkipForwardIcon className="size-tiny" />}
+        text="Redo"
+        disabled={!canRedo}
+        onPressedChange={(pressed) => {
+          if (pressed) redo?.();
+        }}
       />
     </ToolbarGroup>
   );
@@ -41850,6 +41907,18 @@ const TypeApp: FC = () => {
     if (appType !== "type") return;
 
     addSection("toolbar", {
+      id: "semio.sketchpad.app.type.toolbar.history",
+      specificity: 20,
+      order: 0,
+      toolbarGroup: {
+        id: "history",
+        labelId: "semio.sketchpad.toolbar.parent.actions",
+        order: 0,
+      },
+      content: <TypeHistorySettings />,
+    });
+
+    addSection("toolbar", {
       id: "semio.sketchpad.app.type.toolbar.filters",
       specificity: 10,
       order: 0,
@@ -41899,6 +41968,7 @@ const TypeApp: FC = () => {
     });
 
     return () => {
+      removeSection("toolbar", "semio.sketchpad.app.type.toolbar.history");
       removeSection("toolbar", "semio.sketchpad.app.type.toolbar.filters");
       removeSection("toolbar", "semio.sketchpad.app.type.tools.selection");
       removeSection("toolbar", "semio.sketchpad.app.type.tools.hand");
@@ -43782,37 +43852,12 @@ const QualityWorkbenchQualities: FC = () => {
  *MUST render toggle buttons for each selection sub-mode.
  **/
 export const QualitySelectSettings: FC = () => {
-  const store = useQualityAppStore() as QualityAppStore | null;
-  const canUndo = useSyncDeep(store, (s: any) => s?.canUndo ?? false);
-  const canRedo = useSyncDeep(store, (s: any) => s?.canRedo ?? false);
-  const { undo, redo } = useQualityAppCommands();
-  const undoLabel = useLabel("semio.sketchpad.app.quality.history.undo");
-  const redoLabel = useLabel("semio.sketchpad.app.quality.history.redo");
   const [activeTool, setActiveTool] = useQualityAppActiveTool();
   const additiveLabel = useLabel("semio.sketchpad.app.quality.tools.select.additive");
   const subtractiveLabel = useLabel("semio.sketchpad.app.quality.tools.select.subtractive");
   const intersectLabel = useLabel("semio.sketchpad.app.quality.tools.select.intersect");
   return (
     <ToolbarGroup>
-      <Toggle
-        id="semio.sketchpad.app.quality.history.undo"
-        icon={<SkipBackIcon className="size-tiny" />}
-        text={undoLabel}
-        disabled={!canUndo}
-        onPressedChange={(pressed) => {
-          if (pressed) undo?.("semio.sketchpad.app.quality.history.undo");
-        }}
-      />
-      <Toggle
-        id="semio.sketchpad.app.quality.history.redo"
-        icon={<SkipForwardIcon className="size-tiny" />}
-        text={redoLabel}
-        disabled={!canRedo}
-        onPressedChange={(pressed) => {
-          if (pressed) redo?.("semio.sketchpad.app.quality.history.redo");
-        }}
-      />
-      <ToolbarDivider />
       <Toggle
         id="semio.sketchpad.app.quality.tools.select.additive"
         icon={<AddIcon className="size-tiny" />}
@@ -43833,6 +43878,43 @@ export const QualitySelectSettings: FC = () => {
         text={intersectLabel}
         pressed={activeTool === ToolKind.SELECTION_INTERSECT}
         onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_INTERSECT : ToolKind.SELECTION_NORMAL)}
+      />
+    </ToolbarGroup>
+  );
+};
+
+export const QualityHistorySettings: FC = () => {
+  const store = useQualityAppStore() as QualityAppStore | null;
+  const canUndo = useSyncExternalStore(
+    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
+    () => store?.canUndo() ?? false,
+    () => false,
+  );
+  const canRedo = useSyncExternalStore(
+    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
+    () => store?.canRedo() ?? false,
+    () => false,
+  );
+  const { undo, redo } = useQualityAppCommands();
+  return (
+    <ToolbarGroup>
+      <Toggle
+        id="semio.sketchpad.app.quality.history.undo"
+        icon={<SkipBackIcon className="size-tiny" />}
+        text="Undo"
+        disabled={!canUndo}
+        onPressedChange={(pressed) => {
+          if (pressed) undo?.("semio.sketchpad.app.quality.history.undo");
+        }}
+      />
+      <Toggle
+        id="semio.sketchpad.app.quality.history.redo"
+        icon={<SkipForwardIcon className="size-tiny" />}
+        text="Redo"
+        disabled={!canRedo}
+        onPressedChange={(pressed) => {
+          if (pressed) redo?.("semio.sketchpad.app.quality.history.redo");
+        }}
       />
     </ToolbarGroup>
   );
@@ -44017,6 +44099,18 @@ const QualityApp: FC<QualityAppProps> = () => {
     if (appType !== "quality") return;
 
     addSection("toolbar", {
+      id: "semio.sketchpad.app.quality.toolbar.history",
+      specificity: 20,
+      order: 0,
+      toolbarGroup: {
+        id: "history",
+        labelId: "semio.sketchpad.toolbar.parent.actions",
+        order: 5,
+      },
+      content: <QualityHistorySettings />,
+    });
+
+    addSection("toolbar", {
       id: "semio.sketchpad.app.quality.tools.selection",
       specificity: 20,
       order: 0,
@@ -44053,6 +44147,7 @@ const QualityApp: FC<QualityAppProps> = () => {
     });
 
     return () => {
+      removeSection("toolbar", "semio.sketchpad.app.quality.toolbar.history");
       removeSection("toolbar", "semio.sketchpad.app.quality.tools.selection");
       removeSection("toolbar", "semio.sketchpad.app.quality.toolbar.view");
       removeSection("toolbar", "semio.sketchpad.app.quality.toolbar.actions");
