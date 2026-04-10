@@ -2256,7 +2256,7 @@ class Model(
         entity = cls(**props.model_dump())
         try:
             entity.tags = obj["tags"]
-        except (KeyError, AttributeError, Exception):
+        except KeyError:
             pass
         try:
             entity.attributes = [typing.cast(Attribute, Attribute.parse(attribute)) for attribute in obj["attributes"]]
@@ -10239,6 +10239,41 @@ def _extractUpdateGuid(update: dict, entityKeys: list[str]) -> str:
 
 FLOAT_EPSILON = 1e-10
 
+_VECTOR3_KEYS = frozenset({"x", "y", "z"})
+_UV_KEYS = frozenset({"u", "v"})
+_CONNECTION_OPTIONAL_NUMERIC_KEYS = frozenset({"gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"})
+
+
+def _expandConnectionEntityDict(d: dict) -> dict:
+    """🔖Full connection snapshots may omit numeric fields when zero; golden fixtures often spell them out."""
+    if not isinstance(d, dict):
+        return d
+    if "connected" not in d or "connecting" not in d:
+        return d
+    out = dict(d)
+    for k in _CONNECTION_OPTIONAL_NUMERIC_KEYS:
+        if k not in out:
+            out[k] = 0
+    return out
+
+
+def _expandSparseNumericDict(d: dict) -> dict:
+    """🔖Make sparse xyz / uv dicts comparable to fully populated ones (missing axis ≡ 0)."""
+    keys = set(d.keys())
+    if keys and keys <= _VECTOR3_KEYS:
+        if not all(isinstance(d.get(k), (int, float)) for k in keys):
+            return d
+        return {
+            "x": float(d.get("x", 0)),
+            "y": float(d.get("y", 0)),
+            "z": float(d.get("z", 0)),
+        }
+    if keys and keys <= _UV_KEYS:
+        if not all(isinstance(d.get(k), (int, float)) for k in keys):
+            return d
+        return {"u": float(d.get("u", 0)), "v": float(d.get("v", 0))}
+    return d
+
 
 def _areDiffDictsEqual(a: dict, b: dict) -> bool:
     """🔖Deep equality check for diff dicts with float epsilon tolerance."""
@@ -10249,6 +10284,9 @@ def _areDiffDictsEqual(a: dict, b: dict) -> bool:
             return abs(float(a) - float(b)) < FLOAT_EPSILON
         return _normalizeValue(a) == _normalizeValue(b)
     if isinstance(a, dict):
+        if isinstance(b, dict):
+            a = _expandConnectionEntityDict(_expandSparseNumericDict(a))
+            b = _expandConnectionEntityDict(_expandSparseNumericDict(b))
         keysA = {k for k, v in a.items() if _normalizeValue(v) is not None}
         keysB = {k for k, v in b.items() if _normalizeValue(v) is not None}
         if keysA != keysB:

@@ -13,7 +13,7 @@ enabled = true
 
 [mcp_servers.semio]
 command = "uv"
-args = ["--directory", "semio/engine", "run", "engine.py", "--mcp-stdio"]
+args = ["--directory", "semio/engine", "run", "main.py", "--mcp-stdio"]
 enabled = true
 
 [mcp_servers.coda]
