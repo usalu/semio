@@ -25,6 +25,11 @@
         "command": "go run ./repo/cli hook afterShellExecution cursor-chat"
       }
     ],
+    "afterTabFileEdit": [
+      {
+        "command": "go run ./repo/cli hook afterTabFileEdit cursor-chat"
+      }
+    ],
     "beforeMCPExecution": [
       {
         "command": "go run ./repo/cli hook beforeMCPExecution cursor-chat"
@@ -43,6 +48,11 @@
     "beforeSubmitPrompt": [
       {
         "command": "go run ./repo/cli hook beforeSubmitPrompt cursor-chat"
+      }
+    ],
+    "beforeTabFileRead": [
+      {
+        "command": "go run ./repo/cli hook beforeTabFileRead cursor-chat"
       }
     ],
     "postToolUse": [

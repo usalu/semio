@@ -35,7 +35,7 @@ import (
 	"io"
 	"net/http"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -13760,7 +13760,7 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 
 // 🗄️KitFromSqlite reads a Kit from a SQLite database file
 func KitFromSqlite(dbPath string) (*Kit, error) {
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -14087,7 +14087,7 @@ func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
 
 // ✏️KitToSqlite writes a Kit to a SQLite database file
 func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return err
 	}

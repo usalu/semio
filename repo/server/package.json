@@ -6,7 +6,7 @@
   "projectType": "application",
   "scripts": {
     "dev": "go run .",
-    "build": "go build -o server .",
+    "build": "node -e \"const cp=require('child_process');const ext=process.platform==='win32'?'.exe':'';cp.execFileSync('go',['build','-o','server'+ext,'.'],{stdio:'inherit'});\"",
     "start": "go run .",
     "worker": "tsx lib/worker.ts",
     "migrate": "tsx lib/migrate.ts",

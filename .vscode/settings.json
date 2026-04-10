@@ -44,47 +44,55 @@
       "onAutoForward": "silent"
     }
   },
-  "mcp.servers": {
-    "playwright-test": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "playwright",
-        "run-test-mcp-server"
-      ]
-    },
-    "repo": {
-      "type": "stdio",
-      "command": "go",
-      "args": [
-        "run",
-        "./repo/cli",
-        "mcp"
-      ]
-    },
-    "semio": {
-      "type": "stdio",
-      "command": "uv",
-      "args": [
-        "--directory",
-        "semio/engine",
-        "run",
-        "main.py",
-        "--mcp-stdio"
-      ]
-    },
-    "coda": {
-      "type": "stdio",
-      "command": "uv",
-      "args": [
-        "--directory",
-        "coda/engine",
-        "run",
-        "coda.py",
-        "--mcp-stdio"
-      ]
-    }
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "always"
   },
+  "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "prettier.configPath": ".prettierrc.json",
+  "prettier.ignorePath": ".prettierignore",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp"
+  },
+  "python.analysis.typeCheckingMode": "off",
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": [
+    "."
+  ],
+  "python.testing.cwd": "${containerWorkspaceFolder}",
+  "python.analysis.languageServerMode": "full",
+  "sqltools.useNodeRuntime": true,
+  "sqltools.connections": [
+    {
+      "name": "metabolism",
+      "database": "./examples/metabolism/.semio/kit.db",
+      "driver": "SQLite",
+      "previewLimit": 50
+    }
+  ],
+  "dotnet.defaultSolution": "Monorepo.sln",
+  "chat.agent.maxRequests": 5000,
+  "editor.minimap.enabled": true,
+  "[svg]": {
+    "editor.defaultFormatter": "jock.svg"
+  },
+  "rust-analyzer.linkedProjects": [
+    "semio/rs/Cargo.toml"
+  ],
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "file": ".agents/skills/committing.SKILL.md"
+    }
+  ],
   "chat.subagents.allowInvocationsFromSubagents": false,
   "python.terminal.activateEnvironment": false,
   "kiroAgent.configureMCP": "Disabled"

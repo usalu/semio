@@ -1,0 +1,9 @@
+{
+  "title": "Multi Platform Support",
+  "status": "open",
+  "description": "Extend the monorepo to work zero-touch on Linux, Windows, Mac. Fix all configs, build commands, dev commands for all programming languages and all projects.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪f01a9139add44b40bdade6379729290a"
+  ]
+}

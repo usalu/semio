@@ -9,28 +9,6 @@
 				"./repo/cli",
 				"mcp"
 			]
-		},
-		"semio": {
-			"type": "stdio",
-			"command": "uv",
-			"args": [
-				"--directory",
-				"semio/engine",
-				"run",
-				"main.py",
-				"--mcp-stdio"
-			]
-		},
-		"coda": {
-			"type": "stdio",
-			"command": "uv",
-			"args": [
-				"--directory",
-				"coda/engine",
-				"run",
-				"coda.py",
-				"--mcp-stdio"
-			]
 		}
 	}
 }

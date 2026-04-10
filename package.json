@@ -38,7 +38,10 @@
   },
   "packageManager": "npm@11.7.0",
   "scripts": {
-    "mcp:inspector": "cross-env HOST=0.0.0.0 npx @mcpjam/inspector@latest uv --directory semio/engine run main.py --mcp-stdio",
+    "git:setup": "node -e \"const cp=require('child_process');const fs=require('fs');const path=require('path');const root=process.cwd();const source='AGENTS.md';const aliases=['CLAUDE.md','GEMINI.md'];const run=(cmd,args)=>cp.execFileSync(cmd,args,{stdio:'inherit'});run('git',['config','--local','core.symlinks','true']);const repoCli=process.platform==='win32'&&fs.existsSync(path.join(root,'cli.exe'))?{cmd:path.join(root,'cli.exe'),args:['configure']}:{cmd:'go',args:['run','./repo/cli','configure']};run(repoCli.cmd,repoCli.args);for(const alias of aliases){const aliasPath=path.join(root,alias);if(fs.existsSync(aliasPath))fs.rmSync(aliasPath,{force:true});try{fs.symlinkSync(source,aliasPath,'file');}catch(error){if(process.platform!=='win32')throw error;fs.linkSync(path.join(root,source),aliasPath);}}\"",
+    "pre-commit:install": "pre-commit install",
+    "pre-commit": "pre-commit run --all-files",
+    "mcp:inspector": "node -e \"require('child_process').spawn('npx',['-y','@mcpjam/inspector@latest','uv','--directory',require('path').resolve('semio/engine'),'run','main.py','--mcp-stdio'],{stdio:'inherit',env:Object.assign({},process.env,{HOST:'0.0.0.0'}),shell:true}).on('exit',c=>process.exit(c||0))\"",
     "mcp:inspector:repo": "cross-env HOST=0.0.0.0 npx @modelcontextprotocol/inspector --config .cursor/mcp.json --server repo",
     "dev:elements:ui:storybook": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev elements/ui",
     "dev:js:sketchpad": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev:sketchpad semio/js",
