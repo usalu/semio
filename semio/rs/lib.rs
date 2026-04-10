@@ -8316,9 +8316,6 @@ mod validation_types {
         check_port_name_uniqueness(kit, &mut problems);
         check_file_name_uniqueness(kit, &mut problems);
         check_folder_name_uniqueness(kit, &mut problems);
-        check_description_missing_emoji(kit, &mut problems);
-        check_description_emoji_unique(kit, &mut problems);
-
         ValidationResult { problems }
     }
     /// 🔒<summary>🧪check_guid_uniqueness_constraint holds the data fields for a check_guid_uniqueness_constraint record.</summary>
@@ -8726,242 +8723,6 @@ mod validation_types {
         }
     }
 
-    /// 🔣 Extract the first emoji from a string, or None if none.
-    pub fn extract_first_emoji(text: &str) -> Option<String> {
-        if text.is_empty() {
-            return None;
-        }
-        let mut chars = text.chars();
-        let first = chars.next()?;
-        let mut cluster = String::new();
-        cluster.push(first);
-        for ch in chars {
-            if ch == '\u{FE0F}'
-                || ch == '\u{FE0E}'
-                || ch == '\u{200D}'
-                || ('\u{1F3FB}'..='\u{1F3FF}').contains(&ch)
-            {
-                cluster.push(ch);
-                continue;
-            }
-            break;
-        }
-        fn is_emoji_char(c: char) -> bool {
-            matches!(c,
-                '\u{1F600}'..='\u{1F64F}' | '\u{1F300}'..='\u{1F5FF}' |
-                '\u{1F680}'..='\u{1F6FF}' | '\u{1F900}'..='\u{1F9FF}' |
-                '\u{1FA00}'..='\u{1FA6F}' | '\u{1FA70}'..='\u{1FAFF}' |
-                '\u{2600}'..='\u{26FF}' | '\u{2700}'..='\u{27BF}' |
-                '\u{231A}'..='\u{231B}' | '\u{2328}' | '\u{23CF}' |
-                '\u{23E9}'..='\u{23F3}' | '\u{23F8}'..='\u{23FA}' |
-                '\u{25AA}'..='\u{25AB}' | '\u{25B6}' | '\u{25C0}' |
-                '\u{25FB}'..='\u{25FE}' |
-                '\u{203C}' | '\u{2049}' | '\u{2122}' | '\u{2139}' |
-                '\u{2194}'..='\u{2199}' | '\u{21A9}'..='\u{21AA}' |
-                '\u{00A9}' | '\u{00AE}' | '\u{1F1E0}'..='\u{1F1FF}'
-            )
-        }
-        if is_emoji_char(first) {
-            Some(cluster)
-        } else {
-            None
-        }
-    }
-
-    /// 🚫 Check that every entity description starts with an emoji.
-    pub fn check_description_missing_emoji(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
-        let check = |kind: &str,
-                     guid: &str,
-                     desc: &Option<String>,
-                     problems: &mut Vec<ValidationProblem>| {
-            if let Some(ref d) = desc {
-                if !d.is_empty() && extract_first_emoji(d).is_none() {
-                    problems.push(ValidationProblem {
-                        constraint_id: "description-missing-emoji".to_string(),
-                        message: format!(
-                            "Description of {} \"{}\" must start with an emoji.",
-                            kind, guid
-                        ),
-                        entity_kind: Some(kind.to_string()),
-                        entity_guid: Some(guid.to_string()),
-                        fixes: vec![],
-                    });
-                }
-            }
-        };
-        check("Kit", &kit.guid, &kit.description, problems);
-        if let Some(ref types) = kit.types {
-            for t in types {
-                check("Type", &t.guid, &t.description, problems);
-                if let Some(ref connectors) = t.connectors {
-                    for c in connectors {
-                        check("Connector", &c.guid, &c.description, problems);
-                    }
-                }
-                if let Some(ref models) = t.models {
-                    for m in models {
-                        check("Model", &m.guid, &m.description, problems);
-                    }
-                }
-            }
-        }
-        if let Some(ref designs) = kit.designs {
-            for d in designs {
-                check("Design", &d.guid, &d.description, problems);
-                if let Some(ref pieces) = d.pieces {
-                    for p in pieces {
-                        check("Piece", &p.guid, &p.description, problems);
-                    }
-                }
-                if let Some(ref connections) = d.connections {
-                    for c in connections {
-                        check("Connection", &c.guid, &c.description, problems);
-                    }
-                }
-            }
-        }
-        if let Some(ref qualities) = kit.qualities {
-            for q in qualities {
-                check("Quality", &q.guid, &q.description, problems);
-            }
-        }
-        if let Some(ref ports) = kit.ports {
-            for p in ports {
-                check("Port", &p.guid, &p.description, problems);
-            }
-        }
-        if let Some(ref files) = kit.files {
-            for _f in files {}
-        }
-        if let Some(ref folders) = kit.folders {
-            for f in folders {
-                check("Folder", &f.guid, &f.description, problems);
-            }
-        }
-    }
-
-    /// 🔤 Check that sibling entity descriptions have unique leading emojis.
-    pub fn check_description_emoji_unique(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
-        fn check_siblings(
-            kind: &str,
-            siblings: &[(String, Option<String>)],
-            problems: &mut Vec<ValidationProblem>,
-        ) {
-            let mut emoji_map: HashMap<String, Vec<String>> = HashMap::new();
-            for (guid, desc) in siblings {
-                if let Some(ref d) = desc {
-                    if let Some(emoji) = extract_first_emoji(d) {
-                        emoji_map.entry(emoji).or_default().push(guid.clone());
-                    }
-                }
-            }
-            for (emoji, guids) in &emoji_map {
-                if guids.len() > 1 {
-                    for guid in guids.iter().skip(1) {
-                        problems.push(ValidationProblem {
-                            constraint_id: "description-emoji-unique".to_string(),
-                            message: format!(
-                                "Duplicate leading emoji \"{}\" in {} descriptions among siblings.",
-                                emoji, kind
-                            ),
-                            entity_kind: Some(kind.to_string()),
-                            entity_guid: Some(guid.clone()),
-                            fixes: vec![],
-                        });
-                    }
-                }
-            }
-        }
-        if let Some(ref types) = kit.types {
-            let mut by_parent: HashMap<Option<String>, Vec<(String, Option<String>)>> =
-                HashMap::new();
-            for t in types {
-                let pid = t.parent.as_ref().map(|p| p.guid.clone());
-                by_parent
-                    .entry(pid)
-                    .or_default()
-                    .push((t.guid.clone(), t.description.clone()));
-            }
-            for (_, siblings) in &by_parent {
-                check_siblings("Type", siblings, problems);
-            }
-            for t in types {
-                if let Some(ref connectors) = t.connectors {
-                    let s: Vec<_> = connectors
-                        .iter()
-                        .map(|c| (c.guid.clone(), c.description.clone()))
-                        .collect();
-                    check_siblings("Connector", &s, problems);
-                }
-                if let Some(ref models) = t.models {
-                    let s: Vec<_> = models
-                        .iter()
-                        .map(|m| (m.guid.clone(), m.description.clone()))
-                        .collect();
-                    check_siblings("Model", &s, problems);
-                }
-            }
-        }
-        if let Some(ref designs) = kit.designs {
-            let mut by_parent: HashMap<Option<String>, Vec<(String, Option<String>)>> =
-                HashMap::new();
-            for d in designs {
-                let pid = d.parent.as_ref().map(|p| p.guid.clone());
-                by_parent
-                    .entry(pid)
-                    .or_default()
-                    .push((d.guid.clone(), d.description.clone()));
-            }
-            for (_, siblings) in &by_parent {
-                check_siblings("Design", siblings, problems);
-            }
-            for d in designs {
-                if let Some(ref pieces) = d.pieces {
-                    let s: Vec<_> = pieces
-                        .iter()
-                        .map(|p| (p.guid.clone(), p.description.clone()))
-                        .collect();
-                    check_siblings("Piece", &s, problems);
-                }
-                if let Some(ref connections) = d.connections {
-                    let s: Vec<_> = connections
-                        .iter()
-                        .map(|c| (c.guid.clone(), c.description.clone()))
-                        .collect();
-                    check_siblings("Connection", &s, problems);
-                }
-            }
-        }
-        if let Some(ref qualities) = kit.qualities {
-            let s: Vec<_> = qualities
-                .iter()
-                .map(|q| (q.guid.clone(), q.description.clone()))
-                .collect();
-            check_siblings("Quality", &s, problems);
-        }
-        if let Some(ref ports) = kit.ports {
-            let s: Vec<_> = ports
-                .iter()
-                .map(|p| (p.guid.clone(), p.description.clone()))
-                .collect();
-            check_siblings("Port", &s, problems);
-        }
-        if let Some(ref _files) = kit.files {}
-        if let Some(ref folders) = kit.folders {
-            let mut by_parent: HashMap<Option<String>, Vec<(String, Option<String>)>> =
-                HashMap::new();
-            for f in folders {
-                let pid = f.parent.as_ref().map(|p| p.guid.clone());
-                by_parent
-                    .entry(pid)
-                    .or_default()
-                    .push((f.guid.clone(), f.description.clone()));
-            }
-            for (_, siblings) in &by_parent {
-                check_siblings("Folder", siblings, problems);
-            }
-        }
-    }
 } // 🌿Validation Types
 pub use validation_types::*;
 
@@ -14991,6 +14752,28 @@ mod tests {
                             result.problems.len(),
                             expected.problems.len(),
                             "Number of problems mismatch"
+                        );
+                    }
+
+                    #[test]
+                    pub fn plain_descriptions_do_not_create_emoji_validation_problems() {
+                        let mut kit = load_kit("metabolism.kit.semio.json");
+                        kit.description = Some("Plain kit summary".to_string());
+                        if let Some(types) = kit.types.as_mut() {
+                            for (index, entry) in types.iter_mut().enumerate() {
+                                entry.description =
+                                    Some(format!("Repeated plain description {}", index % 2));
+                            }
+                        }
+
+                        let result = validate_kit(&kit);
+                        assert!(
+                            result.problems.iter().all(|problem| {
+                                problem.constraint_id != "description-missing-emoji"
+                                    && problem.constraint_id != "description-emoji-unique"
+                            }),
+                            "unexpected emoji validation problem: {:?}",
+                            result.problems
                         );
                     }
                 }

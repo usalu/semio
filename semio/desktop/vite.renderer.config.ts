@@ -36,11 +36,15 @@ export default defineConfig(async () => {
       },
     },
     resolve: {
+      dedupe: ["react", "react-dom", "use-sync-external-store"],
       alias: {
         "@semio/js": path.resolve(__dirname, "../js"),
         "@semio/sketchpad": path.resolve(__dirname, "../sketchpad"),
         "@semio/studio": path.resolve(__dirname, "../studio"),
         "@semio/assets": path.resolve(__dirname, "../assets"),
+        // use-sync-external-store/shim is CJS (module.exports); Vite exposes it as ESM and breaks
+        // named imports. React 19 exports the same hook — use it instead (@xstate/react, zustand, …).
+        "use-sync-external-store/shim": "react",
       },
     },
     plugins: [
@@ -59,7 +63,12 @@ export default defineConfig(async () => {
     ],
     optimizeDeps: {
       entries: ["./renderer.tsx", "../sketchpad/index.tsx"],
-      include: ["golden-layout", "@mdx-js/react"],
+      include: [
+        "golden-layout",
+        "@mdx-js/react",
+        "use-sync-external-store/shim/with-selector",
+        "use-sync-external-store/with-selector",
+      ],
       exclude: ["@semio/js", "@semio/sketchpad", "@semio/studio", "@playwright/test", "playwright", "playwright-core"],
     },
   };

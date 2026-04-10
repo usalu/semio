@@ -53,12 +53,11 @@ const createWindow = () => {
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
 };
-
-app.on("ready", createWindow);
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -198,6 +197,8 @@ app.whenReady().then(() => {
     fs.writeFileSync(configPath, JSON.stringify(recent), "utf-8");
   });
   // #endregion 🗂️FolderIPC
+
+  createWindow();
 });
 
 // #endregion 🐙Main Process

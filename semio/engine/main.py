@@ -1327,24 +1327,26 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
 # #endregion 🎗️Assistant
 
 # #region 🎬Graphql
-# Graphql MUST serve the hand-written SDL under graphql/schema.graphql with bound resolvers (schema-first).
+# Graphql MUST serve the hand-written SDL next to this module (semio/engine/schema.graphql) with bound resolvers (schema-first).
 
 
-def _schema_bundle_root() -> pathlib.Path:
-    # Resolve the directory that contains graphql/ and openapi/ schema assets (source tree or PyInstaller bundle).
-    if getattr(sys, "frozen", False):
-        return pathlib.Path(sys._MEIPASS)
-    return pathlib.Path(__file__).resolve().parent.parent.parent
+def _engine_bundle_dir() -> pathlib.Path:
+    # Directory containing engine entrypoint and bundled schema.graphql (source tree).
+    return pathlib.Path(__file__).resolve().parent
 
 
 def _graphql_schema_file() -> pathlib.Path:
-    # Path to the canonical GraphQL SDL file.
-    return _schema_bundle_root() / "graphql" / "schema.graphql"
+    # Path to the engine HTTP GraphQL SDL (PyInstaller places schema.graphql at bundle root).
+    if getattr(sys, "frozen", False):
+        return pathlib.Path(sys._MEIPASS) / "schema.graphql"
+    return _engine_bundle_dir() / "schema.graphql"
 
 
 def _openapi_schema_file() -> pathlib.Path:
-    # Path to the canonical OpenAPI document (manually maintained).
-    return _schema_bundle_root() / "openapi" / "schema.json"
+    # Path to the canonical OpenAPI document under semio/openapi/ (PyInstaller keeps openapi/ prefix).
+    if getattr(sys, "frozen", False):
+        return pathlib.Path(sys._MEIPASS) / "openapi" / "schema.json"
+    return _engine_bundle_dir().parent / "openapi" / "schema.json"
 
 
 graphql_datetime_scalar = ScalarType("DateTime")
@@ -1855,7 +1857,7 @@ async def prepare_kit(request: fastapi.Request, kit: KitInput = fastapi.Body(...
 
 
 def custom_openapi():
-    """Loads the hand-written OpenAPI document from openapi/schema.json and caches it on the app.
+    """Loads the hand-written OpenAPI document from semio/openapi/schema.json and caches it on the app.
     Callers MUST NOT call this directly; it is assigned to rest.openapi.
     """
     if rest.openapi_schema:

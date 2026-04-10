@@ -182,19 +182,6 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
  **/
 export type Guid = string;
 
-/**
- * 🔣 Extracts the first grapheme cluster from a string, if it is an emoji.
- **/
-export const extractFirstEmoji = (text: string | undefined): string | undefined => {
-  if (!text) return undefined;
-  const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
-  const first = segmenter.segment(text)[Symbol.iterator]().next().value;
-  if (!first) return undefined;
-  const grapheme = first.segment;
-  const emojiRegex = /\p{Extended_Pictographic}/u;
-  return emojiRegex.test(grapheme) ? grapheme : undefined;
-};
-
 // #endregion 🎼Utilities
 // #region 🐍Entity IDs
 // Entity identifier types and comparison functions MUST be defined here.
@@ -13329,113 +13316,6 @@ const getPrimitiveDesignFromContext = (ctx: ValidationContext, designGuid: strin
 
 // #endregion 🎄Constraint: Design piece same family constraint
 
-// #region 🪄Constraint: Description missing emoji
-// Description missing emoji constraint MUST be enforced here.
-
-/**
- * 🚫 Constraint validating that every entity description starts with an emoji.
- **/
-export const semioDescriptionMissingEmojiConstraint: Constraint = (ctx) => {
-  const problems: Problem[] = [];
-  const check = (entityKind: EntityKind, entityGuid: Guid, description: string | undefined) => {
-    if (!description) return;
-    const emoji = extractFirstEmoji(description);
-    if (!emoji) {
-      problems.push({
-        constraintId: "description-missing-emoji",
-        message: `Description of ${entityKind} "${entityGuid}" must start with an emoji.`,
-        location: { entityKind, entityGuid, field: "description" },
-        fixes: [],
-      });
-    }
-  };
-  check("Kit", ctx.kit.guid, ctx.kit.description);
-  toArray(ctx.kit.types).forEach((t) => {
-    check("Type", t.guid, t.description);
-    toArray(t.connectors).forEach((c) => check("Connector", c.guid, c.description));
-    toArray(t.models).forEach((m) => check("Model", m.guid, m.description));
-  });
-  toArray(ctx.kit.designs).forEach((d) => {
-    check("Design", d.guid, d.description);
-    toArray(d.pieces).forEach((p) => check("Piece", p.guid, p.description));
-    toArray(d.connections).forEach((c) => check("Connection", c.guid, c.description));
-  });
-  toArray(ctx.kit.qualities).forEach((q) => check("Quality", q.guid, q.description));
-  toArray(ctx.kit.ports).forEach((i) => check("Port", i.guid, i.description));
-  toArray(ctx.kit.files).forEach((f) => check("File", f.guid, f.description));
-  toArray(ctx.kit.folders).forEach((f) => check("Folder", f.guid, f.description));
-  return problems;
-};
-
-// #endregion 🪄Constraint: Description missing emoji
-
-// #region ⛑️Constraint: Description emoji unique
-// Description emoji unique constraint MUST be enforced here.
-
-/**
- * 🔤 Constraint validating that sibling entity descriptions have unique leading emojis.
- **/
-export const semioDescriptionEmojiUniqueConstraint: Constraint = (ctx) => {
-  const problems: Problem[] = [];
-  const checkSiblings = (entityKind: EntityKind, siblings: { guid: Guid; description?: string }[]) => {
-    const emojiMap = new Map<string, { guid: Guid; description?: string }[]>();
-    siblings.forEach((entity) => {
-      const emoji = extractFirstEmoji(entity.description);
-      if (!emoji) return;
-      if (!emojiMap.has(emoji)) emojiMap.set(emoji, []);
-      emojiMap.get(emoji)!.push(entity);
-    });
-    for (const [emoji, group] of emojiMap) {
-      if (group.length <= 1) continue;
-      const [, ...rest] = group;
-      rest.forEach((entity) => {
-        problems.push({
-          constraintId: "description-emoji-unique",
-          message: `Duplicate leading emoji "${emoji}" in ${entityKind} descriptions among siblings.`,
-          location: { entityKind, entityGuid: entity.guid, field: "description" },
-          relatedGuids: group.map((e) => e.guid),
-          fixes: [],
-        });
-      });
-    }
-  };
-  const typesByParent = new Map<Guid | undefined, Type[]>();
-  toArray(ctx.kit.types).forEach((t) => {
-    const pid = t.parent?.guid as Guid | undefined;
-    if (!typesByParent.has(pid)) typesByParent.set(pid, []);
-    typesByParent.get(pid)!.push(t);
-  });
-  for (const [, siblings] of typesByParent) checkSiblings("Type", siblings);
-  const designsByParent = new Map<Guid | undefined, Design[]>();
-  toArray(ctx.kit.designs).forEach((d) => {
-    const pid = d.parent?.guid as Guid | undefined;
-    if (!designsByParent.has(pid)) designsByParent.set(pid, []);
-    designsByParent.get(pid)!.push(d);
-  });
-  for (const [, siblings] of designsByParent) checkSiblings("Design", siblings);
-  toArray(ctx.kit.designs).forEach((d) => {
-    checkSiblings("Piece", toArray(d.pieces));
-    checkSiblings("Connection", toArray(d.connections));
-  });
-  checkSiblings("Quality", toArray(ctx.kit.qualities));
-  checkSiblings("Port", toArray(ctx.kit.ports));
-  checkSiblings("File", toArray(ctx.kit.files));
-  const foldersByParent = new Map<Guid | undefined, Folder[]>();
-  toArray(ctx.kit.folders).forEach((f) => {
-    const pid = f.parent?.guid as Guid | undefined;
-    if (!foldersByParent.has(pid)) foldersByParent.set(pid, []);
-    foldersByParent.get(pid)!.push(f);
-  });
-  for (const [, siblings] of foldersByParent) checkSiblings("Folder", siblings);
-  toArray(ctx.kit.types).forEach((t) => {
-    checkSiblings("Connector", toArray(t.connectors));
-    checkSiblings("Model", toArray(t.models));
-  });
-  return problems;
-};
-
-// #endregion ⛑️Constraint: Description emoji unique
-
 // #region 🖋️Constraint registration
 // Constraint registration and default configurations MUST be defined here.
 
@@ -13452,8 +13332,6 @@ defaultConstraints = [
   semioModelNameUniquenessConstraint,
   semioLayerPathUniquenessConstraint,
   semioDesignPieceSameFamilyConstraint,
-  semioDescriptionMissingEmojiConstraint,
-  semioDescriptionEmojiUniqueConstraint,
 ];
 
 // #endregion 🖋️Constraint registration
@@ -14589,6 +14467,22 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
         const result = validateKit(invalidKit);
         const expected = InvalidKitValidation as unknown as ValidationResult;
         expect(areValidationResultsEqual(result, expected)).toBe(true);
+      });
+
+      it("Plain descriptions do not create emoji validation problems", () => {
+        const kit = structuredClone(MetabolismKit) as Kit;
+        kit.description = "Plain kit summary";
+        kit.types = (kit.types ?? []).map((entry, index) => ({
+          ...entry,
+          description: `Repeated plain description ${index % 2}`,
+        }));
+
+        const result = validateKit(kit);
+        const emojiProblems = result.problems.filter((problem) =>
+          ["description-missing-emoji", "description-emoji-unique"].includes(problem.constraintId),
+        );
+
+        expect(emojiProblems).toEqual([]);
       });
     });
   });

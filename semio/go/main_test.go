@@ -988,6 +988,22 @@ func TestValidation(t *testing.T) {
 					len(serializedResult.Problems), len(expected.Problems))
 			}
 		})
+
+		t.Run("Plain descriptions do not create emoji validation problems", func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, "metabolism.kit.semio.json", &kit)
+			kit.Description = stringPtr("Plain kit summary")
+			for i := range kit.Types {
+				kit.Types[i].Description = stringPtr(fmt.Sprintf("Repeated plain description %d", i%2))
+			}
+
+			result := ValidateKit(kit)
+			for _, problem := range result.Problems {
+				if problem.ConstraintId == "description-missing-emoji" || problem.ConstraintId == "description-emoji-unique" {
+					t.Fatalf("Unexpected emoji validation problem: %+v", problem)
+				}
+			}
+		})
 	})
 }
 

@@ -13,7 +13,6 @@
 using System.Collections;
 using System.Collections.Immutable;
 using System.Drawing;
-using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Numerics;
@@ -1798,133 +1797,7 @@ public static class SemioValidator
             }
         }
 
-        issues.AddRange(CheckDescriptionMissingEmoji(kit));
-        issues.AddRange(CheckDescriptionEmojiUnique(kit));
-
         return new ValidationResult { Issues = issues };
-    }
-
-    public static string? ExtractFirstEmoji(string? text)
-    {
-        if (string.IsNullOrEmpty(text)) return null;
-        var enumerator = StringInfo.GetTextElementEnumerator(text);
-        if (!enumerator.MoveNext()) return null;
-        var grapheme = enumerator.GetTextElement();
-#if NET5_0_OR_GREATER
-        foreach (var rune in grapheme.EnumerateRunes())
-        {
-            if (Rune.GetUnicodeCategory(rune) == UnicodeCategory.OtherSymbol ||
-                (rune.Value >= 0x1F600 && rune.Value <= 0x1F64F) ||
-                (rune.Value >= 0x1F300 && rune.Value <= 0x1F5FF) ||
-                (rune.Value >= 0x1F680 && rune.Value <= 0x1F6FF) ||
-                (rune.Value >= 0x1F900 && rune.Value <= 0x1F9FF) ||
-                (rune.Value >= 0x1FA00 && rune.Value <= 0x1FA6F) ||
-                (rune.Value >= 0x1FA70 && rune.Value <= 0x1FAFF) ||
-                (rune.Value >= 0x2600 && rune.Value <= 0x26FF) ||
-                (rune.Value >= 0x2700 && rune.Value <= 0x27BF) ||
-                (rune.Value >= 0x1F1E0 && rune.Value <= 0x1F1FF))
-                return grapheme;
-        }
-        return null;
-#else
-        // .NET Framework 4.8 fallback: inspect code points directly via char pairs
-        for (int i = 0; i < grapheme.Length; )
-        {
-            int codePoint;
-            if (char.IsHighSurrogate(grapheme[i]) && i + 1 < grapheme.Length && char.IsLowSurrogate(grapheme[i + 1]))
-            {
-                codePoint = char.ConvertToUtf32(grapheme[i], grapheme[i + 1]);
-                i += 2;
-            }
-            else
-            {
-                codePoint = grapheme[i];
-                i++;
-            }
-            if (CharUnicodeInfo.GetUnicodeCategory(grapheme, 0) == UnicodeCategory.OtherSymbol ||
-                (codePoint >= 0x1F600 && codePoint <= 0x1F64F) ||
-                (codePoint >= 0x1F300 && codePoint <= 0x1F5FF) ||
-                (codePoint >= 0x1F680 && codePoint <= 0x1F6FF) ||
-                (codePoint >= 0x1F900 && codePoint <= 0x1F9FF) ||
-                (codePoint >= 0x1FA00 && codePoint <= 0x1FA6F) ||
-                (codePoint >= 0x1FA70 && codePoint <= 0x1FAFF) ||
-                (codePoint >= 0x2600 && codePoint <= 0x26FF) ||
-                (codePoint >= 0x2700 && codePoint <= 0x27BF) ||
-                (codePoint >= 0x1F1E0 && codePoint <= 0x1F1FF))
-                return grapheme;
-        }
-        return null;
-#endif
-    }
-
-    public static List<Issue> CheckDescriptionMissingEmoji(Kit kit)
-    {
-        var issues = new List<Issue>();
-        void Check(string entityKind, string entityGuid, string? description)
-        {
-            if (string.IsNullOrEmpty(description)) return;
-            var emoji = ExtractFirstEmoji(description);
-            if (emoji == null)
-                issues.Add(new Issue { ConstraintId = "description-missing-emoji", Message = $"Description of {entityKind} \"{entityGuid}\" must start with an emoji.", EntityKind = entityKind, EntityGuid = entityGuid });
-        }
-        Check("Kit", kit.Guid, kit.Description);
-        foreach (var t in kit.Types)
-        {
-            Check("Type", t.Guid, t.Description);
-            foreach (var c in t.Connectors) Check("Connector", c.Guid, c.Description);
-            foreach (var m in t.Models) Check("Model", m.Guid, m.Description);
-        }
-        foreach (var d in kit.Designs)
-        {
-            Check("Design", d.Guid, d.Description);
-            foreach (var p in d.Pieces) Check("Piece", p.Guid, p.Description);
-            foreach (var c in d.Connections) Check("Connection", c.Guid, c.Description);
-        }
-        foreach (var q in kit.Qualities) Check("Quality", q.Guid, q.Description);
-        foreach (var p in kit.Ports) Check("Port", p.Guid, p.Description);
-        foreach (var fo in kit.Folders) Check("Folder", fo.Guid, fo.Description);
-        return issues;
-    }
-
-    public static List<Issue> CheckDescriptionEmojiUnique(Kit kit)
-    {
-        var issues = new List<Issue>();
-        void CheckSiblings(string entityKind, IEnumerable<(string guid, string? description)> siblings)
-        {
-            var emojiMap = new Dictionary<string, List<string>>();
-            foreach (var (guid, description) in siblings)
-            {
-                var emoji = ExtractFirstEmoji(description);
-                if (emoji == null) continue;
-                if (!emojiMap.ContainsKey(emoji)) emojiMap[emoji] = new List<string>();
-                emojiMap[emoji].Add(guid);
-            }
-            foreach (var kvp in emojiMap)
-            {
-                if (kvp.Value.Count <= 1) continue;
-                foreach (var guid in kvp.Value.Skip(1))
-                    issues.Add(new Issue { ConstraintId = "description-emoji-unique", Message = $"Duplicate leading emoji \"{kvp.Key}\" in {entityKind} descriptions among siblings.", EntityKind = entityKind, EntityGuid = guid });
-            }
-        }
-        foreach (var group in kit.Types.GroupBy(t => t.Parent?.Guid))
-            CheckSiblings("Type", group.Select(t => (t.Guid, t.Description)));
-        foreach (var group in kit.Designs.GroupBy(d => d.Parent?.Guid))
-            CheckSiblings("Design", group.Select(d => (d.Guid, d.Description)));
-        foreach (var d in kit.Designs)
-        {
-            CheckSiblings("Piece", d.Pieces.Select(p => (p.Guid, p.Description)));
-            CheckSiblings("Connection", d.Connections.Select(c => (c.Guid, c.Description)));
-        }
-        CheckSiblings("Quality", kit.Qualities.Select(q => (q.Guid, q.Description)));
-        CheckSiblings("Port", kit.Ports.Select(p => (p.Guid, p.Description)));
-        foreach (var group in kit.Folders.GroupBy(f => f.Parent))
-            CheckSiblings("Folder", group.Select(f => (f.Guid, f.Description)));
-        foreach (var t in kit.Types)
-        {
-            CheckSiblings("Connector", t.Connectors.Select(c => (c.Guid, c.Description)));
-            CheckSiblings("Model", t.Models.Select(m => (m.Guid, m.Description)));
-        }
-        return issues;
     }
 }
 

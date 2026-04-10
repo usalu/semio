@@ -5876,127 +5876,6 @@ def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
     return problems
 
 
-def extractFirstEmoji(text: str | None) -> str | None:
-    """🔣 Extract the first emoji grapheme from a string, or None if none."""
-    import re as _re
-
-    if not text:
-        return None
-    match = _re.match(r"(\p{Extended_Pictographic}[\u200D\uFE0F\uFE0E\U0001F3FB-\U0001F3FF]*(?:\u200D\p{Extended_Pictographic}[\u200D\uFE0F\uFE0E\U0001F3FB-\U0001F3FF]*)*)", text)
-    if not match:
-        match = _re.match(
-            r"([\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F900-\U0001F9FF\U0001FA00-\U0001FA6F\U0001FA70-\U0001FAFF\U00002600-\U000026FF\U00002700-\U000027BF\U0000231A-\U0000231B\U00002328\U000023CF\U000023E9-\U000023F3\U000023F8-\U000023FA\U000025AA-\U000025AB\U000025B6\U000025C0\U000025FB-\U000025FE\U00002614-\U00002615\U00002648-\U00002653\U0000267F\U00002702\U0000203C\U00002049\U00002122\U00002139\U00002194-\U00002199\U000021A9-\U000021AA\U000000A9\U000000AE]+[\uFE0F\uFE0E\u200D]*)",
-            text,
-        )
-    if match:
-        return match.group(1)
-    return None
-
-
-def validateDescriptionMissingEmoji(kit: Kit) -> list[Problem]:
-    """🚫 Validate that every entity description starts with an emoji."""
-    problems: list[Problem] = []
-
-    def check(entity_kind: str, entity_guid: str, description: str | None) -> None:
-        if not description:
-            return
-        emoji = extractFirstEmoji(description)
-        if not emoji:
-            problems.append(
-                Problem(
-                    constraintId="description-missing-emoji",
-                    message=f'Description of {entity_kind} "{entity_guid}" must start with an emoji.',
-                    entityKind=entity_kind,
-                    entityGuid=entity_guid,
-                )
-            )
-
-    check("Kit", kit.guid, kit.description)
-    for t in kit.types or []:
-        check("Type", t.guid, t.description)
-        for c in t.connectors or []:
-            check("Connector", c.guid, c.description)
-        for m in t.models or []:
-            check("Model", m.guid, m.description)
-    for d in kit.designs or []:
-        check("Design", d.guid, d.description)
-        for p in d.pieces or []:
-            check("Piece", p.guid, p.description)
-        for c in d.connections or []:
-            check("Connection", c.guid, c.description)
-    for q in kit.qualities or []:
-        check("Quality", q.guid, q.description)
-    for p in kit.ports or []:
-        check("Port", p.guid, p.description)
-    for f in kit.files or []:
-        check("File", f.guid, f.description)
-    for f in kit.folders or []:
-        check("Folder", f.guid, f.description)
-    return problems
-
-
-def validateDescriptionEmojiUnique(kit: Kit) -> list[Problem]:
-    """🔤 Validate that sibling entity descriptions have unique leading emojis."""
-    problems: list[Problem] = []
-
-    def check_siblings(entity_kind: str, siblings: list[tuple[str, str | None]]) -> None:
-        emoji_map: dict[str, list[str]] = {}
-        for guid, description in siblings:
-            emoji = extractFirstEmoji(description)
-            if not emoji:
-                continue
-            if emoji not in emoji_map:
-                emoji_map[emoji] = []
-            emoji_map[emoji].append(guid)
-        for emoji, guids in emoji_map.items():
-            if len(guids) <= 1:
-                continue
-            for guid in guids[1:]:
-                problems.append(
-                    Problem(
-                        constraintId="description-emoji-unique",
-                        message=f'Duplicate leading emoji "{emoji}" in {entity_kind} descriptions among siblings.',
-                        entityKind=entity_kind,
-                        entityGuid=guid,
-                    )
-                )
-
-    types_by_parent: dict[str, list[tuple[str, str | None]]] = {}
-    for t in kit.types or []:
-        pid = t.parent.guid if t.parent else ""
-        if pid not in types_by_parent:
-            types_by_parent[pid] = []
-        types_by_parent[pid].append((t.guid, t.description))
-    for siblings in types_by_parent.values():
-        check_siblings("Type", siblings)
-    designs_by_parent: dict[str, list[tuple[str, str | None]]] = {}
-    for d in kit.designs or []:
-        pid = d.parent.guid if d.parent else ""
-        if pid not in designs_by_parent:
-            designs_by_parent[pid] = []
-        designs_by_parent[pid].append((d.guid, d.description))
-    for siblings in designs_by_parent.values():
-        check_siblings("Design", siblings)
-    for d in kit.designs or []:
-        check_siblings("Piece", [(p.guid, p.description) for p in d.pieces or []])
-        check_siblings("Connection", [(c.guid, c.description) for c in d.connections or []])
-    check_siblings("Quality", [(q.guid, q.description) for q in kit.qualities or []])
-    check_siblings("Port", [(p.guid, p.description) for p in kit.ports or []])
-    check_siblings("File", [(f.guid, f.description) for f in kit.files or []])
-    folders_by_parent: dict[str, list[tuple[str, str | None]]] = {}
-    for f in kit.folders or []:
-        pid = f.parent.guid if f.parent else ""
-        if pid not in folders_by_parent:
-            folders_by_parent[pid] = []
-        folders_by_parent[pid].append((f.guid, f.description))
-    for siblings in folders_by_parent.values():
-        check_siblings("Folder", siblings)
-    for t in kit.types or []:
-        check_siblings("Connector", [(c.guid, c.description) for c in t.connectors or []])
-        check_siblings("Model", [(m.guid, m.description) for m in t.models or []])
-    return problems
-
-
 def validateKit(kit: Kit) -> ValidationResult:
     """🔖Validate a kit entity against all constraint rules."""
     problems: list[Problem] = []
@@ -6009,8 +5888,6 @@ def validateKit(kit: Kit) -> ValidationResult:
     problems.extend(validateQualityNameUniqueness(kit))
     problems.extend(validateFolderNameUniqueness(kit))
     problems.extend(validateLayerPathUniqueness(kit))
-    problems.extend(validateDescriptionMissingEmoji(kit))
-    problems.extend(validateDescriptionEmojiUnique(kit))
     return ValidationResult(problems=problems)
 
 
@@ -16723,6 +16600,21 @@ class TestValidation:
             result = validateKitDict(invalid_kit)
             expected = parseValidationResult(json.dumps(_test_load_json("validation.semio.json")))
             assert areValidationResultsEqual(result, expected)
+
+        def test_plain_descriptions_do_not_create_emoji_validation_problems(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            kit["description"] = "Plain kit summary"
+            for index, entry in enumerate(kit.get("types", [])):
+                entry["description"] = f"Repeated plain description {index % 2}"
+
+            result = validateKitDict(kit)
+            emoji_constraint_ids = {
+                problem.constraintId
+                for problem in result.problems
+                if problem.constraintId in {"description-missing-emoji", "description-emoji-unique"}
+            }
+
+            assert not emoji_constraint_ids
 
 
 class TestDesignModel:

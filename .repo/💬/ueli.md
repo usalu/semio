@@ -720,6 +720,8 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 ## 🧰repo
 
 repo:
+Every single definition MUST have a unique emoji and a non-generic description. Currently there are missing, wrong, random emojis, same for description.
+Check the complete monorepo manually and dont solve the problem with creating new scripts that again randomly automate generic emojis or descriptions. Dont stop until all programming languages are completed.
 
 Currently all tool calls that involve modifying git commands are blocked. Make sure to also check any program such as python, bash, etc to contain loc that contain those git commands in all kinds of syntaxes. We want to there is absolutely no way that this happens. Block all of them and return the reason why they a
 re blocked.

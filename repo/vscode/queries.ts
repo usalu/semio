@@ -9,9 +9,9 @@
 // #endregion 🧲Header
 
 //#region ⌛Queries
-// Typed GraphQL document constants MUST use generated graphql tag functions.
+// Typed GraphQL document constants MUST use the hand-maintained graphql tag in codegen/gql.ts.
 
-import { graphql } from "./generated/gql";
+import { graphql } from "./codegen/gql";
 
 /**
  * GraphQL document for querying the full repo structure with technologies and bundles.

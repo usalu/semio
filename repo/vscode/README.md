@@ -24,13 +24,13 @@ URI resolution uses the `repo://` scheme. the `semio.navigate` command accepts e
 
 VS Code extension manifest with unscoped name for vsce packaging, command contributions, scripts, and engine compatibility for Cursor support.
 
-## generated/
+## codegen/
 
-GraphQL codegen outputs for the VS Code extension.
+Hand-maintained GraphQL typed document helpers for the VS Code extension (no codegen pipeline).
 
-## generated/graphql.ts
+## codegen/graphql.ts
 
-Generated GraphQL types and typed documents for the VS Code extension.
+GraphQL operation result types used by the extension queries.
 
 ## Command Tree
 

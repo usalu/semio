@@ -19725,16 +19725,31 @@ export const SketchpadScopeProvider = (props: {
   const [configsReady, setConfigsReady] = useState(false);
 
   useEffect(() => {
-    loadAppConfigs().then(() => setConfigsReady(true));
+    void loadAppConfigs()
+      .then(() => setConfigsReady(true))
+      .catch((err) => {
+        console.error("[DEBUG] loadAppConfigs failed:", err);
+        setConfigsReady(true);
+      });
   }, []);
 
   useEffect(() => {
     let cancelled = false;
     const hydrateInitialState = async () => {
-      const persistedKits = props.kitStore ? undefined : ((await readSketchpadKitsFromIndexedDb(id)) ?? readSketchpadKitsFromLocalStorage(id));
-      if (cancelled) return;
-      setInitialState(mergeExtendedInitialStateWithPersistedKits(props.initialState, persistedKits));
-      setPersistedKitsReady(true);
+      try {
+        const persistedKits = props.kitStore ? undefined : ((await readSketchpadKitsFromIndexedDb(id)) ?? readSketchpadKitsFromLocalStorage(id));
+        if (cancelled) return;
+        setInitialState(mergeExtendedInitialStateWithPersistedKits(props.initialState, persistedKits));
+      } catch (err) {
+        console.error("[DEBUG] hydrateInitialState failed:", err);
+        if (!cancelled) {
+          setInitialState(mergeExtendedInitialStateWithPersistedKits(props.initialState, undefined));
+        }
+      } finally {
+        if (!cancelled) {
+          setPersistedKitsReady(true);
+        }
+      }
     };
     void hydrateInitialState();
     return () => {
@@ -19780,10 +19795,26 @@ export const SketchpadScopeProvider = (props: {
   }, [configsReady, props.importKitUrls, store]);
 
   if (!persistedKitsReady || !actor || !store) {
-    return null;
+    return (
+      <div className="flex h-full min-h-screen w-full items-center justify-center bg-neutral-950 text-neutral-200">
+        Starting sketchpad…
+      </div>
+    );
   }
 
-  return React.createElement(SketchpadScopeContext.Provider, { value: { id, remote: props.remote, onWindowEvents: props.onWindowEvents } }, React.createElement(SketchpadActorContext.Provider, { value: actor }, configsReady ? props.children : null));
+  return React.createElement(
+    SketchpadScopeContext.Provider,
+    { value: { id, remote: props.remote, onWindowEvents: props.onWindowEvents } },
+    React.createElement(
+      SketchpadActorContext.Provider,
+      { value: actor },
+      configsReady ? (
+        props.children
+      ) : (
+        <div className="flex h-full min-h-screen w-full items-center justify-center bg-neutral-950 text-neutral-200">Loading configuration…</div>
+      ),
+    ),
+  );
 };
 
 /**
@@ -23836,7 +23867,13 @@ const AppRouter: FC = () => {
 
   useEffect(() => {
     if (!appsInitialized) {
-      appRegistry.initialize().then(() => setAppsInitialized(true));
+      void appRegistry
+        .initialize()
+        .then(() => setAppsInitialized(true))
+        .catch((err) => {
+          console.error("[DEBUG] appRegistry.initialize failed:", err);
+          setAppsInitialized(true);
+        });
     }
   }, [appsInitialized]);
 
@@ -23880,7 +23917,9 @@ const AppRouter: FC = () => {
   };
 
   if (!appsInitialized) {
-    return <div className="h-screen w-screen" />;
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-neutral-950 text-neutral-200">Loading apps…</div>
+    );
   }
 
   return (

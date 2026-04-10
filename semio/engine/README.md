@@ -1,6 +1,6 @@
 # Summary
 
-Python engine providing schema generation, validation, and backend functionality.
+Python engine serving hand-written OpenAPI and GraphQL schemas with validation and backend functionality.
 
 # Docs
 
@@ -8,8 +8,7 @@ Python engine providing schema generation, validation, and backend functionality
 
 - `main.py` - Main engine module with Kit parsing, validation, transformation, dev-mode startup flag, and stdio MCP startup flag
 - `engine.test.py` - Unit tests for engine functionality
-- `generate-schemas.ts` - Generates GraphQL, JSON, and SQL schemas from TypeScript definitions
-- `sqliteschema.ts` - SQLite schema generation utilities
+- `schema.graphql` - Hand-written GraphQL SDL for the engine HTTP API (sibling bundles hold domain GraphQL, OpenAPI, and JSON Schema assets)
 
 # 💯Requirements
 

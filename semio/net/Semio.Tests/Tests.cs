@@ -529,6 +529,19 @@ public class Tests
 
             Assert.True(ValidationResult.AreEqual(expected, result), $"Expected {expected.Issues.Count} issues, got {result.Issues.Count}. Expected:\n{expected.Serialize()}\nActual:\n{result.Serialize()}");
         }
+
+        [Fact]
+        public void Plain_Descriptions_Do_Not_Create_Emoji_Validation_Issues()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            kit.Description = "Plain kit summary";
+            for (var i = 0; i < kit.Types.Count; i++)
+                kit.Types[i].Description = $"Repeated plain description {i % 2}";
+
+            var result = SemioValidator.ValidateKit(kit);
+
+            Assert.DoesNotContain(result.Issues, issue => issue.ConstraintId == "description-missing-emoji" || issue.ConstraintId == "description-emoji-unique");
+        }
     }
 
     public class Drag
