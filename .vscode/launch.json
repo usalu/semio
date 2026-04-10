@@ -41,7 +41,6 @@
         "mcp:inspector"
       ],
       "env": {
-        "HOST": "0.0.0.0",
         "CLIENT_PORT": "6274",
         "SERVER_PORT": "6277"
       },
@@ -63,7 +62,6 @@
       "env": {
         "DATABASE_URL": "postgres://semio:semio@localhost:5432/semio",
         "RUST_LOG": "info",
-        "HOST": "0.0.0.0",
         "PORT": "8080"
       },
       "cwd": "${workspaceFolder}",

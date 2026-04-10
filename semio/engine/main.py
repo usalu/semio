@@ -39,21 +39,21 @@ import subprocess
 import signal
 import sqlite3
 import sys
+import tempfile
 import typing
 import uuid
 import zipfile
 
 import fastapi
-import fastapi.openapi
-import graphene
 import jinja2
 import lark
 import pydantic
 import requests
 import starlette.applications
 import starlette.middleware.cors
-import starlette_graphene3
 import uvicorn
+from ariadne import InterfaceType, MutationType, ObjectType, QueryType, ScalarType, load_schema_from_path, make_executable_schema
+from ariadne.asgi import GraphQL
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.types import CallToolResult, EmbeddedResource, TextContent, TextResourceContents
 
@@ -82,23 +82,17 @@ from semio_core import (
     USER_FOLDER,
     VERSION,
     Attribute,
-    AttributeNode,
     AuthenticationError,
     Author,
-    AuthorNode,
     AuthTokenNotFound,
     ClientError,
     CodeUnreachable,
     Connection,
-    ConnectionNode,
     Connector,
-    ConnectorNode,
     Coord,
-    CoordNode,
     Design,
     DesignContext,
     DesignInput,
-    DesignNode,
     DesignOutput,
     DesignPrediction,
     Error,
@@ -108,39 +102,28 @@ from semio_core import (
     KitAlreadyExists,
     KitContext,
     KitInput,
-    KitInputNode,
-    KitNode,
     KitNotFound,
     KitOutput,
     KitZipDoesNotContainSemioFolder,
     LocalKitUriIsNotAbsolute,
     Location,
-    LocationNode,
     Model,
-    ModelNode,
     OnlyRemoteKitsCanBeCached,
     Piece,
-    PieceNode,
     Plane,
-    PlaneNode,
     Point,
-    PointNode,
-    RelayNode,
     RemoteKitsNotYetSupported,
     RemoteKitUriNotValid,
     ServerError,
     ServerUnreachable,
     Side,
-    SideNode,
     Type,
     TypeContext,
     TypeHasNotAllUsedConnectors,
     TypeInput,
-    TypeNode,
     TypeOutput,
     ValidationResult,
     Vector,
-    VectorNode,
     applyKitDiffDict,
     areDesignsInSameFamilyDict,
     areKitDiffsDictEqual,
@@ -1344,96 +1327,97 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
 # #endregion 🎗️Assistant
 
 # #region 🎬Graphql
-# Graphql MUST map semio domain types to Graphene schema nodes for query and mutation.
-
-GRAPHQLTYPES = {
-    "str": graphene.NonNull(graphene.String),
-    "int": graphene.NonNull(graphene.Int),
-    "float": graphene.NonNull(graphene.Float),
-    "bool": graphene.NonNull(graphene.Boolean),
-    "list[str]": graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
-    "Attribute": graphene.NonNull(lambda: AttributeNode),
-    "list[Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
-    "list[__main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
-    "list[__mp_main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
-    "list[main.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
-    "Coord": graphene.NonNull(lambda: CoordNode),
-    "typing.Optional[__main__.Coord]": lambda: CoordNode,
-    "typing.Optional[__mp_main__.Coord]": lambda: CoordNode,
-    "typing.Optional[main.Coord]": lambda: CoordNode,
-    "Location": graphene.NonNull(lambda: LocationNode),
-    "typing.Optional[__main__.Location]": lambda: LocationNode,
-    "typing.Optional[__mp_main__.Location]": lambda: LocationNode,
-    "typing.Optional[main.Location]": lambda: LocationNode,
-    "Point": graphene.NonNull(lambda: PointNode),
-    "Vector": graphene.NonNull(lambda: VectorNode),
-    "Plane": graphene.NonNull(lambda: PlaneNode),
-    "Connector": graphene.NonNull(lambda: ConnectorNode),
-    "ConnectorId": graphene.NonNull(lambda: ConnectorNode),
-    "list[Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
-    "list[__main__.Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
-    "list[__mp_main__.Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
-    "list[main.Connector]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectorNode))),
-    "Model": graphene.NonNull(lambda: ModelNode),
-    "list[Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
-    "list[__main__.Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
-    "list[__mp_main__.Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
-    "list[main.Model]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ModelNode))),
-    "Author": graphene.NonNull(lambda: AuthorNode),
-    "list[Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
-    "list[__main__.Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
-    "list[__mp_main__.Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
-    "list[main.Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
-    "Type": graphene.NonNull(lambda: TypeNode),
-    "TypeId": graphene.NonNull(lambda: TypeNode),
-    "DesignId": graphene.NonNull(lambda: DesignNode),
-    "list[Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
-    "list[__main__.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
-    "list[__mp_main__.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
-    "list[main.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
-    "Piece": graphene.NonNull(lambda: PieceNode),
-    "PieceId": graphene.NonNull(lambda: PieceNode),
-    "typing.Optional[__main__.PieceId]": lambda: PieceNode,
-    "typing.Optional[__mp_main__.PieceId]": lambda: PieceNode,
-    "typing.Optional[main.PieceId]": lambda: PieceNode,
-    "typing.Optional[__main__.DesignId]": lambda: DesignNode,
-    "typing.Optional[__mp_main__.DesignId]": lambda: DesignNode,
-    "typing.Optional[main.DesignId]": lambda: DesignNode,
-    "Side": graphene.NonNull(lambda: SideNode),
-    "Connection": graphene.NonNull(lambda: ConnectionNode),
-    "list['Connection']": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
-    "list[__main__.Connection]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
-    "list[__mp_main__.Connection]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
-    "list[main.Connection]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
-    "Design": graphene.NonNull(lambda: DesignNode),
-    "Kit": graphene.NonNull(lambda: KitNode),
-}
+# Graphql MUST serve the hand-written SDL under graphql/schema.graphql with bound resolvers (schema-first).
 
 
-class Query(graphene.ObjectType):
-    """🕸️GraphQL root query type exposing kit retrieval by URI.
-    Callers MUST provide a valid URI when resolving kit queries.
-    """
-
-    node = RelayNode.Field()
-    kit = graphene.Field(KitNode, uri=graphene.String(required=True))
-
-    def resolve_kit(self, info, uri):
-        return get(encode(uri))
+def _schema_bundle_root() -> pathlib.Path:
+    # Resolve the directory that contains graphql/ and openapi/ schema assets (source tree or PyInstaller bundle).
+    if getattr(sys, "frozen", False):
+        return pathlib.Path(sys._MEIPASS)
+    return pathlib.Path(__file__).resolve().parent.parent.parent
 
 
-class Mutation(graphene.ObjectType):
-    """🌱GraphQL root mutation type exposing kit creation.
-    Callers MUST provide a valid KitInput when creating kits.
-    """
-
-    createKit = graphene.Field(KitNode, kit=KitInputNode(required=True))
+def _graphql_schema_file() -> pathlib.Path:
+    # Path to the canonical GraphQL SDL file.
+    return _schema_bundle_root() / "graphql" / "schema.graphql"
 
 
-graphqlSchema = graphene.Schema(
-    query=Query,
-    mutation=Mutation,
+def _openapi_schema_file() -> pathlib.Path:
+    # Path to the canonical OpenAPI document (manually maintained).
+    return _schema_bundle_root() / "openapi" / "schema.json"
+
+
+graphql_datetime_scalar = ScalarType("DateTime")
+
+
+@graphql_datetime_scalar.serializer
+def _serialize_graphql_datetime(value: typing.Any) -> typing.Any:
+    if value is None:
+        return None
+    if isinstance(value, datetime.datetime):
+        return value.isoformat()
+    return value
+
+
+graphql_node_iface = InterfaceType("Node")
+
+
+@graphql_node_iface.type_resolver
+def _resolve_graphql_node_type(obj: typing.Any, info: typing.Any, abstract_type: typing.Any) -> str:
+    return "Kit"
+
+
+graphql_kit_type = ObjectType("Kit")
+
+
+@graphql_kit_type.field("id")
+def _resolve_kit_graphql_id(obj: typing.Any, info: typing.Any) -> str:
+    if hasattr(obj, "guid") and callable(obj.guid):
+        return typing.cast(str, obj.guid())
+    u = getattr(obj, "uri", None)
+    if u is not None:
+        return str(u)
+    return ""
+
+
+graphql_query = QueryType()
+
+
+@graphql_query.field("kit")
+def _resolve_graphql_kit(_: typing.Any, info: typing.Any, uri: str) -> typing.Any:
+    return get(encode(uri))
+
+
+@graphql_query.field("node")
+def _resolve_graphql_node(_: typing.Any, info: typing.Any, id: str) -> typing.Any:
+    return get(id)
+
+
+graphql_mutation = MutationType()
+
+
+@graphql_mutation.field("createKit")
+def _resolve_graphql_create_kit(_: typing.Any, info: typing.Any, kit: dict[str, typing.Any]) -> typing.Any:
+    ki = KitInput.model_validate(kit)
+    parent = os.path.join(os.path.expanduser(USER_FOLDER), "graphql-kits")
+    os.makedirs(parent, exist_ok=True)
+    kit_dir = tempfile.mkdtemp(dir=parent)
+    code = encode(str(pathlib.Path(kit_dir).resolve()))
+    return put(code, ki)
+
+
+graphql_type_defs = load_schema_from_path(str(_graphql_schema_file()))
+graphql_schema = make_executable_schema(
+    graphql_type_defs,
+    graphql_query,
+    graphql_mutation,
+    graphql_node_iface,
+    graphql_kit_type,
+    graphql_datetime_scalar,
 )
+graphqlSchema = graphql_schema
+graphql_http_app = GraphQL(graphql_schema, debug=True)
+
 
 # #endregion 🎬Graphql
 
@@ -1870,66 +1854,15 @@ async def prepare_kit(request: fastapi.Request, kit: KitInput = fastapi.Body(...
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 
-class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
-    """🟨JSON schema generator that strips Context suffixes from type references.
-    Callers MUST use this generator when exporting context model schemas.
-    """
-
-    def generate(self, schema, mode="validation"):
-        json_schema = super().generate(schema, mode=mode)
-        changeValues(json_schema, "$ref", lambda x: x.removesuffix("Context"))
-        changeValues(json_schema, "title", lambda x: x.removesuffix("Context"))
-        changeKeys(json_schema, lambda x: x.removesuffix("Context"))
-        return json_schema
-
-
-class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
-    """🟩JSON schema generator that strips Output suffixes from type references.
-    Callers MUST use this generator when exporting output model schemas.
-    """
-
-    def generate(self, schema, mode="validation"):
-        json_schema = super().generate(schema, mode=mode)
-        changeValues(json_schema, "$ref", lambda x: x.removesuffix("Output"))
-        changeValues(json_schema, "title", lambda x: x.removesuffix("Output"))
-        changeKeys(json_schema, lambda x: x.removesuffix("Output"))
-        return json_schema
-
-
-class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
-    """🟦JSON schema generator that strips Prediction suffixes from type references.
-    Callers MUST use this generator when exporting prediction model schemas.
-    """
-
-    def generate(self, schema, mode="validation"):
-        json_schema = super().generate(schema, mode=mode)
-        changeValues(json_schema, "$ref", lambda x: x.removesuffix("Prediction"))
-        changeValues(json_schema, "title", lambda x: x.removesuffix("Prediction"))
-        changeKeys(json_schema, lambda x: x.removesuffix("Prediction"))
-        return json_schema
-
-
 def custom_openapi():
-    """🛤️Generates a custom OpenAPI schema with /api path prefix and cleaned type names.
+    """Loads the hand-written OpenAPI document from openapi/schema.json and caches it on the app.
     Callers MUST NOT call this directly; it is assigned to rest.openapi.
     """
     if rest.openapi_schema:
         return rest.openapi_schema
-    openapi_schema = fastapi.openapi.utils.get_openapi(
-        title="semio REST API",
-        version=VERSION,
-        summary="This is the local rest API of the semio engine.",
-        routes=rest.routes,
-    )
-
-    updated_paths = {}
-    for path, path_item in openapi_schema["paths"].items():
-        updated_paths[f"/api{path}"] = path_item
-    openapi_schema["paths"] = updated_paths
-
-    changeValues(openapi_schema, "$ref", lambda x: x.removesuffix("Output"))
-    changeValues(openapi_schema, "title", lambda x: x.removesuffix("Output"))
-    changeKeys(openapi_schema, lambda x: x.removesuffix("Output"))
+    with open(_openapi_schema_file(), encoding="utf-8") as f:
+        openapi_schema = json.load(f)
+    openapi_schema.setdefault("info", {})["version"] = VERSION
     rest.openapi_schema = openapi_schema
     return rest.openapi_schema
 
@@ -3705,85 +3638,8 @@ async def engineLifespan(app):
 mcp.settings.streamable_http_path = "/"
 engine = starlette.applications.Starlette(lifespan=engineLifespan)
 engine.mount("/api", rest)
-engine.mount(
-    "/graphql",
-    starlette_graphene3.GraphQLApp(graphqlSchema, on_get=starlette_graphene3.make_graphiql_handler()),
-)
+engine.mount("/graphql", graphql_http_app)
 engine.mount("/mcp", mcp.streamable_http_app())
-
-
-def generateSchemas():
-    """📤Exports OpenAPI, JSON Schema, SQLite schema, and GraphQL schema files to disk.
-    Callers MUST run this from the engine directory with write access to output paths.
-    """
-    if os.path.exists("temp"):
-        for root, dirs, files in os.walk("temp", topdown=False):
-            for name in files:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
-    else:
-        os.makedirs("temp")
-
-    openapiPath = "../../openapi/schema.json"
-    os.makedirs(os.path.dirname(openapiPath), exist_ok=True)
-    with open(openapiPath, "w", encoding="utf-8") as f:
-        json.dump(rest.openapi(), f, indent=4)
-
-    outputKitPath = "../../semioonschema/kit.json"
-    os.makedirs(os.path.dirname(outputKitPath), exist_ok=True)
-    with open(outputKitPath, "w", encoding="utf-8") as f:
-        json.dump(
-            KitOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
-            f,
-            indent=4,
-        )
-
-    with open("../../semioonschema/design-context.json", "w", encoding="utf-8") as f:
-        json.dump(
-            DesignContext.model_json_schema(schema_generator=ContextGenerateJsonSchema),
-            f,
-            indent=4,
-        )
-
-    with open("../../semioonschema/design.json", "w", encoding="utf-8") as f:
-        json.dump(
-            DesignOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
-            f,
-            indent=4,
-        )
-
-    with open("../../semioonschema/design-prediction.json", "w", encoding="utf-8") as f:
-        json.dump(
-            DesignPrediction.model_json_schema(schema_generator=PredictionGenerateJsonSchema),
-            f,
-            indent=4,
-        )
-
-    with open("../../semioonschema/type.json", "w", encoding="utf-8") as f:
-        json.dump(
-            TypeOutput.model_json_schema(schema_generator=OutputGenerateJsonSchema),
-            f,
-            indent=4,
-        )
-
-    typeContextPath = "../../semioonschema/type-context.json"
-    os.makedirs(os.path.dirname(typeContextPath), exist_ok=True)
-    with open(typeContextPath, "w", encoding="utf-8") as f:
-        json.dump(
-            TypeContext.model_json_schema(schema_generator=ContextGenerateJsonSchema),
-            f,
-            indent=4,
-        )
-
-    sqliteSchemaPath = "../../sqlite/schema.sql"
-    # SQLite schema is now maintained manually in sqlite/schema.sql
-    # No auto-generation from ORM metadata
-
-    graphqlSchemaPath = "../../graphql/schema.graphql"
-    os.makedirs(os.path.dirname(graphqlSchemaPath), exist_ok=True)
-    with open(graphqlSchemaPath, "w", encoding="utf-8") as f:
-        f.write(str(graphqlSchema))
 
 
 def start_engine():
@@ -3835,7 +3691,7 @@ def run(dev_mode: bool | None = None):
         logger.debug("Starting debugpy for semio engine")
         import debugpy
 
-        debugpy.listen(("0.0.0.0", 5678))
+        debugpy.listen(("0.0.0.0" if os.environ.get("DEVCONTAINER") == "true" else "127.0.0.1", 5678))
         logger.debug("Waiting for debugger to attach to semio engine")
         debugpy.wait_for_client()
         preDev()
@@ -4086,10 +3942,13 @@ class TestRestApi:
 class TestGraphQL:
     def test_graphql_schema_exists(self):
         assert engine.graphqlSchema is not None
+        assert engine.graphql_http_app is not None
 
-    def test_graphql_query_class(self):
-        assert hasattr(engine.Query, "kit")
-        assert hasattr(engine.Query, "node")
+    def test_graphql_query_fields(self):
+        qt = engine.graphql_schema.query_type
+        assert qt is not None
+        assert "kit" in qt.fields
+        assert "node" in qt.fields
 
 
 # #endregion 🥁GraphQL Tests

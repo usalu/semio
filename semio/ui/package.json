@@ -12,7 +12,7 @@
     "./postcss.config": "./postcss.config.ts"
   },
   "scripts": {
-    "dev": "cross-env CHOKIDAR_USEPOLLING=1 storybook dev -p 6008 --exact-port --host 0.0.0.0 --no-open --debug",
+    "dev": "node -e \"const h=process.env.DEVCONTAINER==='true'?'0.0.0.0':'127.0.0.1';require('child_process').spawn('npx',['storybook','dev','-p','6008','--exact-port','--host',h,'--no-open','--debug'],{stdio:'inherit',shell:true,env:Object.assign({},process.env,{CHOKIDAR_USEPOLLING:'1'})}).on('exit',c=>process.exit(c||0))\"",
     "build": "storybook build",
     "lint": "eslint --max-warnings 0 --config eslint.config.ts .",
     "test": "vitest run --passWithNoTests --config ../../elements/ui/vitest.config.ts"

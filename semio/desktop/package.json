@@ -6,8 +6,8 @@
   "description": "A sketchpad for semio 🧩",
   "main": ".vite/build/main.js",
   "scripts": {
-    "dev": "electron-forge start -- --no-sandbox",
-    "build": "electron-forge make",
+    "dev": "cross-env ELECTRON_DISABLE_SANDBOX=1 electron-forge start",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 electron-forge make",
     "publish": "electron-forge publish"
   },
   "dependencies": {

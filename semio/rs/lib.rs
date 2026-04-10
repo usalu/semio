@@ -7020,22 +7020,36 @@ mod copy_paste_design {
                                             }
                                             if let Some(co) = coord {
                                                 let connected_stub = external_origin_guids
-                                                    .contains(parent_conn.connected.piece.guid.as_str());
+                                                    .contains(
+                                                        parent_conn.connected.piece.guid.as_str(),
+                                                    );
                                                 let connecting_stub = external_origin_guids
-                                                    .contains(parent_conn.connecting.piece.guid.as_str());
-                                                let conn_matches_parentage = (parent_conn.connecting.piece.guid.as_str()
+                                                    .contains(
+                                                        parent_conn.connecting.piece.guid.as_str(),
+                                                    );
+                                                let conn_matches_parentage = (parent_conn
+                                                    .connecting
+                                                    .piece
+                                                    .guid
+                                                    .as_str()
                                                     == piece.guid.as_str()
                                                     && parent_conn.connected.piece.guid.as_str()
                                                         == parent_guid)
                                                     || (parent_conn.connected.piece.guid.as_str()
                                                         == piece.guid.as_str()
-                                                        && parent_conn.connecting.piece.guid.as_str()
+                                                        && parent_conn
+                                                            .connecting
+                                                            .piece
+                                                            .guid
+                                                            .as_str()
                                                             == parent_guid);
                                                 // Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
                                                 // internal–internal source edges (neither side a stub) must keep cloned u/v.
-                                                if conn_matches_parentage && connected_stub != connecting_stub
+                                                if conn_matches_parentage
+                                                    && connected_stub != connecting_stub
                                                 {
-                                                    let mut flat_parent_center: Option<Coord> = candidate.center.clone();
+                                                    let mut flat_parent_center: Option<Coord> =
+                                                        candidate.center.clone();
                                                     if flat_parent_center.is_none() {
                                                         flat_parent_center = candidate
                                                             .attributes
@@ -7044,7 +7058,10 @@ mod copy_paste_design {
                                                             .iter()
                                                             .find(|a| a.key == "semio.center")
                                                             .and_then(|a| a.value.as_ref())
-                                                            .and_then(|v| serde_json::from_str::<Coord>(v).ok());
+                                                            .and_then(|v| {
+                                                                serde_json::from_str::<Coord>(v)
+                                                                    .ok()
+                                                            });
                                                     }
                                                     if flat_parent_center.is_none() {
                                                         flat_parent_center = external_parent
@@ -7054,19 +7071,27 @@ mod copy_paste_design {
                                                             .iter()
                                                             .find(|a| a.key == "semio.center")
                                                             .and_then(|a| a.value.as_ref())
-                                                            .and_then(|v| serde_json::from_str::<Coord>(v).ok());
+                                                            .and_then(|v| {
+                                                                serde_json::from_str::<Coord>(v)
+                                                                    .ok()
+                                                            });
                                                     }
                                                     if flat_parent_center.is_none() {
-                                                        flat_parent_center = external_parent.center.clone();
+                                                        flat_parent_center =
+                                                            external_parent.center.clone();
                                                     }
-                                                    let mut flat_child_center: Option<Coord> = piece
-                                                        .attributes
-                                                        .as_deref()
-                                                        .unwrap_or(&[])
-                                                        .iter()
-                                                        .find(|a| a.key == "semio.center")
-                                                        .and_then(|a| a.value.as_ref())
-                                                        .and_then(|v| serde_json::from_str::<Coord>(v).ok());
+                                                    let mut flat_child_center: Option<Coord> =
+                                                        piece
+                                                            .attributes
+                                                            .as_deref()
+                                                            .unwrap_or(&[])
+                                                            .iter()
+                                                            .find(|a| a.key == "semio.center")
+                                                            .and_then(|a| a.value.as_ref())
+                                                            .and_then(|v| {
+                                                                serde_json::from_str::<Coord>(v)
+                                                                    .ok()
+                                                            });
                                                     if flat_child_center.is_none() {
                                                         flat_child_center = piece.center.clone();
                                                     }
@@ -14200,8 +14225,9 @@ mod tests {
                         // [DEBUG] Write both to files for comparison
                         let inv_json = serde_json::to_string_pretty(&applied_inverse).unwrap();
                         let orig_json = serde_json::to_string_pretty(&kit_original).unwrap();
-                        std::fs::write("/tmp/inverse_applied.json", &inv_json).unwrap();
-                        std::fs::write("/tmp/original.json", &orig_json).unwrap();
+                        let tmp_dir = std::env::temp_dir();
+                        std::fs::write(tmp_dir.join("inverse_applied.json"), &inv_json).unwrap();
+                        std::fs::write(tmp_dir.join("original.json"), &orig_json).unwrap();
                         assert!(
                             are_kits_equal(&applied_inverse, &kit_original),
                             "ApplyKitDiff inverse: applied inverse kit doesn't match original kit"

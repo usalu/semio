@@ -25,8 +25,6 @@ const env = { ...process.env, UV_PROJECT_ENVIRONMENT: join(cwd, ".venv") };
 
 execSync("uv sync --python 3.13", { cwd: join(cwd, "../.."), env, stdio: "inherit" });
 
-execSync("npx tsx ./generate-schemas.ts", { cwd, env, stdio: "inherit" });
-
 if (existsSync(join(cwd, "build"))) {
   rmSync(join(cwd, "build"), { recursive: true });
 }
@@ -51,12 +49,18 @@ const args = [
   "--clean",
   "--noconfirm",
   "--copy-metadata",
-  "graphene",
+  "ariadne",
+  "--copy-metadata",
+  "graphql",
   "--copy-metadata",
   "sqlalchemy",
   "--copy-metadata",
   "loguru",
   "--hidden-import=loguru",
+  "--add-data",
+  `../../graphql/schema.graphql${addDataSep}graphql/`,
+  "--add-data",
+  `../../openapi/schema.json${addDataSep}openapi/`,
   "--add-data",
   `../assets/icons/semio_512x512.png${addDataSep}icons/`,
   "--icon",

@@ -50,7 +50,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "NODE_OPTIONS='' npx vite preview --port 4181 --host 0.0.0.0",
+    command: `NODE_OPTIONS='' npx vite preview --port 4181 --host ${process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1"}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 300000,

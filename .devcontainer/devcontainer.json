@@ -112,6 +112,7 @@
   ],
   "remoteUser": "vscode",
   "containerEnv": {
+    "DEVCONTAINER": "true",
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
     "SEMIO_GITKRAKEN_WORKSPACE_NAME": "semio",

@@ -83,7 +83,7 @@ NAME = "semio"
 EMAIL = "mail@semio-tech.com"
 RELEASE = "r25.07-1"
 VERSION = "4.3.0-beta"
-HOST = "0.0.0.0"
+HOST = "0.0.0.0" if os.environ.get("DEVCONTAINER") == "true" else "127.0.0.1"
 PORT = 2507
 ADDRESS = "http://127.0.0.1:2507"
 NAME_LENGTH_LIMIT = 64

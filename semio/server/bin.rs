@@ -1914,8 +1914,9 @@ async fn main() {
     run_migrations(&pool).await;
     let app_state = AppState::new(pool);
     let app_router = router(app_state);
+    let default_host = if std::env::var("DEVCONTAINER").as_deref() == Ok("true") { "0.0.0.0" } else { "127.0.0.1" };
     let addr: std::net::SocketAddr = std::env::var("LISTEN_ADDR")
-        .unwrap_or_else(|_| "0.0.0.0:8080".to_string())
+        .unwrap_or_else(|_| format!("{}:8080", default_host))
         .parse().expect("invalid LISTEN_ADDR");
     tracing::info!("semio-session listening on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();

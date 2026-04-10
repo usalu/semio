@@ -58,7 +58,7 @@ export default defineConfig(async () => {
       topLevelAwait(),
     ],
     optimizeDeps: {
-      entries: ["./renderer.tsx", "../sketchpad/index.ts"],
+      entries: ["./renderer.tsx", "../sketchpad/index.tsx"],
       include: ["golden-layout", "@mdx-js/react"],
       exclude: ["@semio/js", "@semio/sketchpad", "@semio/studio", "@playwright/test", "playwright", "playwright-core"],
     },

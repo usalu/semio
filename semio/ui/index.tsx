@@ -2434,6 +2434,16 @@ const createSceneLineMaterial = (color: string): THREE.LineBasicMaterial => new 
 
 const createScenePointsMaterial = (color: string): THREE.PointsMaterial => new THREE.PointsMaterial({ color, size: 1 });
 
+const SCENE_MESH_OUTLINE_USER_DATA_KEY = "__semioSceneMeshOutline";
+
+const createSceneMeshOutline = (geometry: THREE.BufferGeometry, color: string): THREE.LineSegments => {
+  const outline = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), createSceneLineMaterial(color));
+  outline.name = "SemioSceneMeshOutline";
+  outline.scale.setScalar(1.001);
+  outline.userData[SCENE_MESH_OUTLINE_USER_DATA_KEY] = true;
+  return outline;
+};
+
 const cloneSceneModelWithHomogeneousMaterials = (scene: THREE.Object3D, meshColor: string, lineColor: string): THREE.Object3D => {
   const cloned = cloneSkeleton(scene);
   cloned.traverse((object) => {
@@ -2443,9 +2453,14 @@ const cloneSceneModelWithHomogeneousMaterials = (scene: THREE.Object3D, meshColo
       } else {
         object.material = createSceneMeshMaterial(meshColor);
       }
+      const meshGeometry = object.geometry;
+      if (meshGeometry) {
+        object.add(createSceneMeshOutline(meshGeometry, lineColor));
+      }
       return;
     }
     if (object instanceof THREE.Line || object instanceof THREE.LineSegments) {
+      if (object.userData[SCENE_MESH_OUTLINE_USER_DATA_KEY]) return;
       object.material = createSceneLineMaterial(lineColor);
       return;
     }
@@ -5782,7 +5797,7 @@ if (import.meta.vitest) {
   });
 
   describe("scene model material normalization", () => {
-    it("overwrites imported mesh, line, and point materials with homogeneous scene materials", () => {
+    it("overwrites imported mesh, line, and point materials with homogeneous scene materials and adds mesh outlines", () => {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "#ff0000" }));
       const line = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]), new THREE.LineBasicMaterial({ color: "#00ff00" }));
       const points = new THREE.Points(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0)]), new THREE.PointsMaterial({ color: "#0000ff", size: 5 }));
@@ -5794,9 +5809,14 @@ if (import.meta.vitest) {
       const clonedMesh = clone.children[0] as THREE.Mesh;
       const clonedLine = clone.children[1] as THREE.LineSegments;
       const clonedPoints = clone.children[2] as THREE.Points;
+      const clonedOutline = clonedMesh.children[0] as THREE.LineSegments;
 
       expect(clonedMesh.material).toBeInstanceOf(THREE.MeshStandardMaterial);
       expect((clonedMesh.material as THREE.MeshStandardMaterial).color.getHexString()).toBe("112233");
+      expect(clonedOutline).toBeInstanceOf(THREE.LineSegments);
+      expect(clonedOutline.userData[SCENE_MESH_OUTLINE_USER_DATA_KEY]).toBe(true);
+      expect(clonedOutline.material).toBeInstanceOf(THREE.LineBasicMaterial);
+      expect((clonedOutline.material as THREE.LineBasicMaterial).color.getHexString()).toBe("445566");
       expect(clonedLine.material).toBeInstanceOf(THREE.LineBasicMaterial);
       expect((clonedLine.material as THREE.LineBasicMaterial).color.getHexString()).toBe("445566");
       expect(clonedPoints.material).toBeInstanceOf(THREE.PointsMaterial);
@@ -5821,14 +5841,19 @@ if (import.meta.vitest) {
 
       const clonedMesh = clone.children[0] as THREE.Mesh;
       const clonedLine = clone.children[1] as THREE.LineSegments;
+      const clonedOutline = clonedMesh.children[0] as THREE.LineSegments;
       const meshMaterial = clonedMesh.material as THREE.MeshStandardMaterial;
       const lineMaterial = clonedLine.material as THREE.LineBasicMaterial;
+      const outlineMaterial = clonedOutline.material as THREE.LineBasicMaterial;
 
       expect(meshMaterial.color.getHexString()).toBe("334455");
       expect(meshMaterial.emissive.getHexString()).toBe("778899");
       expect(meshMaterial.emissiveIntensity).toBe(0.35);
       expect(meshMaterial.transparent).toBe(true);
       expect(meshMaterial.opacity).toBe(0.35);
+      expect(outlineMaterial.color.getHexString()).toBe("556677");
+      expect(outlineMaterial.transparent).toBe(true);
+      expect(outlineMaterial.opacity).toBe(0.35);
       expect(lineMaterial.color.getHexString()).toBe("556677");
       expect(lineMaterial.transparent).toBe(true);
       expect(lineMaterial.opacity).toBe(0.35);
