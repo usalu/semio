@@ -508,6 +508,62 @@ public class Tests
         }
     }
 
+    public class ValidateKitDiffFacts
+    {
+        private sealed class ValidateKitDiffAsset
+        {
+            [JsonProperty("tinyKit")]
+            public Kit TinyKit { get; set; } = null!;
+            public List<ValidateKitDiffCase> Cases { get; set; } = new();
+        }
+
+        private sealed class ValidateKitDiffCase
+        {
+            public string Id { get; set; } = "";
+            public KitDiff Diff { get; set; } = null!;
+            [JsonProperty("expectOk")]
+            public bool ExpectOk { get; set; }
+            [JsonProperty("errorCodes")]
+            public List<string> ErrorCodes { get; set; } = new();
+            [JsonProperty("warningCodes")]
+            public List<string> WarningCodes { get; set; } = new();
+        }
+
+        private static List<string> Codes(IReadOnlyList<KitDiffValidationNote> notes) =>
+            notes.Where(n => !string.IsNullOrEmpty(n.Code)).Select(n => n.Code!).ToList();
+
+        [Fact]
+        public void Shared_Asset_Cases()
+        {
+            var asset = Tests.LoadAsset<ValidateKitDiffAsset>("validate-kit-diff.cases.semio.json");
+            foreach (var c in asset.Cases)
+            {
+                var r = SemioDiff.ValidateKitDiff(asset.TinyKit, c.Diff, false);
+                Assert.Equal(c.ExpectOk, r.Ok);
+                var errCodes = Codes(r.Errors);
+                foreach (var code in c.ErrorCodes)
+                    Assert.Contains(code, errCodes);
+                var warnCodes = Codes(r.Warnings);
+                foreach (var code in c.WarningCodes)
+                    Assert.Contains(code, warnCodes);
+            }
+        }
+
+        [Fact]
+        public void Heal_Drops_Invalid_Design_Update()
+        {
+            var asset = Tests.LoadAsset<ValidateKitDiffAsset>("validate-kit-diff.cases.semio.json");
+            var badJson = """{"designs":{"updated":[{"design":{"guid":"99999999-9999-9999-9999-999999999999"},"diff":{"name":"X"}}]}}""";
+            var bad = Utility.Deserialize<KitDiff>(badJson);
+            Assert.NotNull(bad);
+            var r = SemioDiff.ValidateKitDiff(asset.TinyKit, bad!, true);
+            Assert.NotNull(r.Diff);
+            var d = r.Diff!;
+            Assert.True(d.Designs == null || d.Designs.Updated == null || d.Designs.Updated.Count == 0,
+                "heal should drop invalid design update");
+        }
+    }
+
     public class Validation
     {
         [Fact]

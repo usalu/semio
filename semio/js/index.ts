@@ -1,4 +1,4 @@
-// #region 🧲Header
+﻿// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -47,7 +47,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  **/
 export const guid = () => uuidv7();
-// 💿SeededRandom holds the data fields for a SeededRandom record.
+// 🎲SeededRandom provides deterministic pseudo-random number generation.
 class SeededRandom {
   private seed: number;
   constructor(seed: number) {
@@ -612,9 +612,9 @@ export const getTagGuid = (id: TagId): Guid => id.guid;
 export const getConceptGuid = (id: ConceptId): Guid => id.guid;
 
 // #endregion 🐍Entity IDs
-// #region 📊Attribute
+// #region 💎Attribute
 // Attribute entity types, schemas, and helper functions MUST be defined here.
-// 💿DateProperty holds the data fields for a DateProperty record.
+// 📅DateProperty represents a date-time value as ISO string.
 const DateProperty = () => z.string().optional();
 
 /**
@@ -727,7 +727,7 @@ export const AttributesDiffSchema = z.object({
  **/
 export type AttributesDiff = z.infer<typeof AttributesDiffSchema>;
 
-// 🔷getAttributesDiff holds the data fields for a getAttributesDiff record.
+// 💎getAttributesDiff computes the diff between two attribute collections.
 const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesDiff => {
   const beforeGuids = new Set(before.map((a) => a.guid));
   const afterGuids = new Set(after.map((a) => a.guid));
@@ -795,9 +795,9 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
   return result;
 };
 
-// #endregion 📊Attribute
+// #endregion 💎Attribute
 
-// #region 🗑️Coord (weak entity)
+// #region 📺Coord (weak entity)
 // Coord weak entity types and schemas MUST be defined here.
 
 /**
@@ -865,9 +865,9 @@ export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
   };
 };
 
-// #endregion 🗑️Coord (weak entity)
+// #endregion 📺Coord (weak entity)
 
-// #region 📝Vec (weak entity)
+// #region ➡️Vec (weak entity)
 // Vec weak entity types and schemas MUST be defined here.
 
 /**
@@ -935,9 +935,9 @@ export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
   };
 };
 
-// #endregion 📝Vec (weak entity)
+// #endregion ➡️Vec (weak entity)
 
-// #region 🐹Point (weak entity)
+// #region ✖️Point (weak entity)
 // Point weak entity types and schemas MUST be defined here.
 
 /**
@@ -1015,9 +1015,9 @@ export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
   };
 };
 
-// #endregion 🐹Point (weak entity)
+// #endregion ✖️Point (weak entity)
 
-// #region 🤖Vector (weak entity)
+// #region ↗️Vector (weak entity)
 // Vector weak entity types and schemas MUST be defined here.
 
 /**
@@ -1095,9 +1095,9 @@ export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
   };
 };
 
-// #endregion 🤖Vector (weak entity)
+// #endregion ↗️Vector (weak entity)
 
-// #region 📬Plane (weak entity)
+// #region ◻️Plane (weak entity)
 // Plane weak entity types and schemas MUST be defined here.
 
 /**
@@ -1170,7 +1170,7 @@ export const averagePlane = (planes: Plane[]): Plane | null => {
     yAxis: baseYAxis,
   };
 };
-// 💿roundPlane holds the data fields for a roundPlane record.
+// ◻️roundPlane rounds plane components to a specified number of decimal places.
 const roundPlane = (plane: Plane): Plane => ({
   origin: {
     x: round(plane.origin.x),
@@ -1247,9 +1247,9 @@ export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
   };
 };
 
-// #endregion 📬Plane (weak entity)
+// #endregion ◻️Plane (weak entity)
 
-// #region 🐘Camera (weak entity)
+// #region 🎥Camera (weak entity)
 
 // Camera weak entity types and schemas MUST be defined here.
 
@@ -1329,9 +1329,9 @@ export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
   };
 };
 
-// #endregion 🐘Camera (weak entity)
+// #endregion 🎥Camera (weak entity)
 
-// #region 🔷Location
+// #region 📍Location
 // Location entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -1410,9 +1410,9 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
   return result;
 };
 
-// #endregion 🔷Location
+// #endregion 📍Location
 
-// #region 🩺Author
+// #region ✍️Author
 // Author entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -1528,9 +1528,9 @@ export const AuthorsDiffSchema = z.object({
  **/
 export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
-// #endregion 🩺Author
+// #endregion ✍️Author
 
-// #region ✏️File
+// #region 📄File
 // File entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -1674,9 +1674,9 @@ export const FilesDiffSchema = z.object({
  **/
 export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 
-// #endregion ✏️File
+// #endregion 📄File
 
-// #region 🌨️Folder
+// #region 📁Folder
 // Folder entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -1817,9 +1817,9 @@ export const FoldersDiffSchema = z.object({
  **/
 export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
 
-// #endregion 🌨️Folder
+// #endregion 📁Folder
 
-// #region 🔬Benchmark
+// #region 📏Benchmark
 // Benchmark entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -1923,7 +1923,7 @@ export const BenchmarksDiffSchema = z.object({
  * Diff type for tracking Benchmarks changes.
  **/
 export type BenchmarksDiff = z.infer<typeof BenchmarksDiffSchema>;
-// 💿getBenchmarksDiff holds the data fields for a getBenchmarksDiff record.
+// 📏getBenchmarksDiff computes the diff between two benchmark collections.
 const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksDiff => {
   const beforeGuids = new Set(before.map((b) => b.guid));
   const afterGuids = new Set(after.map((b) => b.guid));
@@ -1944,7 +1944,7 @@ const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksD
   return diff;
 };
 
-// 🔷inverseBenchmarksDiff holds the data fields for a inverseBenchmarksDiff record.
+// 📏inverseBenchmarksDiff inverts a benchmark diff to reverse its effect.
 const inverseBenchmarksDiff = (original: Benchmark[], appliedDiff: BenchmarksDiff): BenchmarksDiff => {
   const addedGuids = appliedDiff.added?.map((b) => b.guid) ?? [];
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -1959,12 +1959,12 @@ const inverseBenchmarksDiff = (original: Benchmark[], appliedDiff: BenchmarksDif
     }),
   };
 };
-// 🔶mergeBenchmarksDiff holds the data fields for a mergeBenchmarksDiff record.
+// 📏mergeBenchmarksDiff merges two benchmark diffs into one.
 const mergeBenchmarksDiff = (first: BenchmarksDiff, second: BenchmarksDiff): BenchmarksDiff => {
   return { ...first, ...second };
 };
 
-// 🔹applyBenchmarksDiff holds the data fields for a applyBenchmarksDiff record.
+// 📏applyBenchmarksDiff applies a benchmark diff to a collection.
 const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark[] => {
   let result = [...base];
   if (diff.removed) {
@@ -1987,9 +1987,9 @@ const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark
   return result;
 };
 
-// #endregion 🔬Benchmark
+// #endregion 📏Benchmark
 
-// #region 📷Quality
+// #region 🔬Quality
 // Quality entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -2179,9 +2179,9 @@ export const QualitiesDiffSchema = z.object({
 });
 export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>;
 
-// #endregion 📷Quality
+// #endregion 🔬Quality
 
-// #region 🌈Port
+// #region ⚓Port
 // Port entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -2419,9 +2419,9 @@ export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | unde
   return iface1Compatible.some((c) => c.guid === iface2.guid) || iface2Compatible.some((c) => c.guid === iface1.guid);
 };
 
-// #endregion 🌈Port
+// #endregion ⚓Port
 
-// #region 📋Prop
+// #region 📊Prop
 // Prop entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -2545,7 +2545,7 @@ export const PropsDiffSchema = z.object({
  * Diff type for tracking Props changes.
  **/
 export type PropsDiff = z.infer<typeof PropsDiffSchema>;
-// 💿getPropsDiff holds the data fields for a getPropsDiff record.
+// 📊getPropsDiff computes the diff between two prop collections.
 const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
   const beforeGuids = new Set(before.map((p) => p.guid));
   const afterGuids = new Set(after.map((p) => p.guid));
@@ -2565,7 +2565,7 @@ const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
   if (added.length > 0) diff.added = added;
   return diff;
 };
-// 🔷inversePropsDiff holds the data fields for a inversePropsDiff record.
+// 📊inversePropsDiff inverts a prop diff to reverse its effect.
 const inversePropsDiff = (original: Prop[], appliedDiff: PropsDiff): PropsDiff => {
   const addedGuids = appliedDiff.added?.map((p) => p.guid) ?? [];
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -2580,11 +2580,11 @@ const inversePropsDiff = (original: Prop[], appliedDiff: PropsDiff): PropsDiff =
     }),
   };
 };
-// 🔶mergePropsDiff holds the data fields for a mergePropsDiff record.
+// 📊mergePropsDiff merges two prop diffs into one.
 const mergePropsDiff = (first: PropsDiff, second: PropsDiff): PropsDiff => {
   return { ...first, ...second };
 };
-// 🔹applyPropsDiff holds the data fields for a applyPropsDiff record.
+// 📊applyPropsDiff applies a prop diff to a collection.
 const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
   let result = [...base];
   if (diff.removed) {
@@ -2605,9 +2605,9 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
   return result;
 };
 
-// #endregion 📋Prop
+// #endregion 📊Prop
 
-// #region 🛎️Tag
+// #region 🏷️Tag
 // Tag entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -2832,9 +2832,9 @@ export const findTag = (tags: Tag[], guid: string): Tag => {
   return tag;
 };
 
-// #endregion 🛎️Tag
+// #endregion 🏷️Tag
 
-// #region 📦Concept
+// #region 💡Concept
 // Concept entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -3059,9 +3059,9 @@ export const findConcept = (concepts: Concept[], guid: string): Concept => {
   return concept;
 };
 
-// #endregion 📦Concept
+// #endregion 💡Concept
 
-// #region 🖋️Model
+// #region 🗿Model
 // Model entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -3353,9 +3353,9 @@ export const validateModelFile = (filename: string): ModelFileValidation => {
   return { isValid: true, extension: ext };
 };
 
-// #endregion 🖋️Model
+// #endregion 🗿Model
 
-// #region 💧Connector
+// #region 🔌Connector
 // Connector entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -3519,7 +3519,7 @@ export const ConnectorsDiffSchema = z.object({
  * Diff type for tracking Connectors changes.
  **/
 export type ConnectorsDiff = z.infer<typeof ConnectorsDiffSchema>;
-// 💿getConnectorsDiff holds the data fields for a getConnectorsDiff record.
+// 🔌getConnectorsDiff computes the diff between two connector collections.
 const getConnectorsDiff = (before: Connector[], after: Connector[]): ConnectorsDiff => {
   const beforeGuids = new Set(before.map((p) => p.guid));
   const afterGuids = new Set(after.map((p) => p.guid));
@@ -3561,9 +3561,9 @@ export const findConnector = (connectors: Connector[], connectorGuid: string): C
   return connector;
 };
 
-// #endregion 💧Connector
+// #endregion 🔌Connector
 
-// #region ⚡Type
+// #region 🧱Type
 // Type entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -3780,9 +3780,9 @@ export type TypesDiff = z.infer<typeof TypesDiffSchema>;
  **/
 export const findConnectorInType = (type: Type, connectorGuid: string): Connector => findConnector(type.connectors ?? [], connectorGuid);
 
-// #endregion ⚡Type
+// #endregion 🧱Type
 
-// #region 🎈Layer
+// #region 🎨Layer
 // Layer entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -3916,9 +3916,9 @@ export const LayersDiffSchema = z.object({
  **/
 export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
-// #endregion 🎈Layer
+// #endregion 🎨Layer
 
-// #region 🔊Piece
+// #region 🧩Piece
 // Piece entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -4171,9 +4171,9 @@ export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
   return piece;
 };
 
-// #endregion 🔊Piece
+// #endregion 🧩Piece
 
-// #region 🎯Group
+// #region 👥Group
 // Group entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -4302,9 +4302,9 @@ export const serializeGroupShallow = (group: GroupShallow): string => JSON.strin
  **/
 export const deserializeGroupShallow = (json: string): GroupShallow => GroupShallowSchema.parse(JSON.parse(json));
 
-// #endregion 🎯Group
+// #endregion 👥Group
 
-// #region 🎶Side
+// #region ↔️Side
 // Side entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -4398,9 +4398,9 @@ export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.par
  **/
 export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.connector?.guid === b.connector?.guid;
 
-// #endregion 🎶Side
+// #endregion ↔️Side
 
-// #region 🦀Connection
+// #region 🔗Connection
 // Connection entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -4610,9 +4610,9 @@ export const findConnectorForPieceInConnection = (type: Type, connection: Connec
   return findConnectorInType(type, connectorGuid);
 };
 
-// #endregion 🦀Connection
+// #endregion 🔗Connection
 
-// #region 🎻Stat
+// #region 📈Stat
 // Stat entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -4736,9 +4736,9 @@ export const serializeStatShallow = (stat: StatShallow): string => JSON.stringif
  **/
 export const deserializeStatShallow = (json: string): StatShallow => StatShallowSchema.parse(JSON.parse(json));
 
-// #endregion 🎻Stat
+// #endregion 📈Stat
 
-// #region 📌Design
+// #region 📐Design
 // Design entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -5288,7 +5288,7 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string,
   const backward = inverseDesignDiff(design, delRes.change);
   return operationOk({ forward: delRes.change, backward }, delRes.warnings, delRes.infos);
 };
-// 💿computeChildPlane holds the data fields for a computeChildPlane record.
+// ◻️computeChildPlane computes a child plane from parent plane and connection parameters.
 const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector, connection: Connection): Plane => {
   const parentMatrix = planeToMatrix(parentPlane);
   const parentPoint = vectorToThree(parentConnector.point);
@@ -6501,12 +6501,12 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
   return diff;
 };
 
-// #endregion 📌Design
+// #endregion 📐Design
 
 // #region ⏱️Kit
 // Kit entity types, schemas, and helpers MUST be defined here.
 
-// #region 🎆KitKind
+// #region 🧬KitKind
 // KitKind discriminates the five persistence/transport forms of a Kit.
 
 /**
@@ -6528,7 +6528,7 @@ export type KitKind = z.infer<typeof KitKindSchema>;
  * All valid KitKind values as a readonly tuple.
  **/
 export const ALL_KIT_KINDS: readonly KitKind[] = KitKindSchema.options;
-// #endregion 🎆KitKind
+// #endregion 🧬KitKind
 
 /**
  * Zod schema for Kit validation.
@@ -6690,15 +6690,15 @@ export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: tr
  * Diff type for tracking Kit changes.
  **/
 export type KitDiff = z.infer<typeof KitDiffSchema>;
-// 💿EntityIdType holds the data fields for a EntityIdType record.
+// 🧬EntityIdType maps entity kind names to their ID interface types.
 type EntityIdType = { guid: string };
-// 🔷CollectionDiff holds the data fields for a CollectionDiff record.
+// 🔀CollectionDiff represents added, removed, and changed items in a collection.
 type CollectionDiff<K extends string, T extends { guid: string }, D> = {
   removed?: EntityIdType[];
   updated?: Array<{ [key in K]: EntityIdType } & { diff: D }>;
   added?: T[];
 };
-// 🔶getCollectionDiff holds the data fields for a getCollectionDiff record.
+// 🔀getCollectionDiff computes the diff between two collections by key.
 const getCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, before: T[], after: T[], getItemDiff: (before: T, after: T) => D): CollectionDiff<K, T, D> => {
   const diff: CollectionDiff<K, T, D> = {};
   const beforeGuids = new Set(before.map((i) => i.guid));
@@ -6718,7 +6718,7 @@ const getCollectionDiff = <K extends string, T extends { guid: string }, D>(enti
   if (added.length > 0) diff.added = added;
   return diff;
 };
-// 🔹inverseCollectionDiff holds the data fields for a inverseCollectionDiff record.
+// 🔀inverseCollectionDiff inverts a collection diff to reverse its effect.
 const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, original: T[], appliedDiff: CollectionDiff<K, T, D>, inverseItemDiff: (original: T, appliedDiff: D) => D): CollectionDiff<K, T, D> => {
   const inverse: CollectionDiff<K, T, D> = {};
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -6738,7 +6738,7 @@ const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(
   }
   return inverse;
 };
-// 🔸applyCollectionDiff holds the data fields for a applyCollectionDiff record.
+// 🔀applyCollectionDiff applies a collection diff to produce an updated collection.
 const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, base: T[], diff: CollectionDiff<K, T, D> | undefined, applyItemDiff: (base: T, diff: D) => T): T[] => {
   if (!diff) return base;
   let result = [...base];
@@ -6761,7 +6761,7 @@ const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(en
   return result;
 };
 
-// 🔺mergeCollectionDiff holds the data fields for a mergeCollectionDiff record.
+// 🔀mergeCollectionDiff merges two collection diffs into one.
 const mergeCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, diff1: CollectionDiff<K, T, D>, diff2: CollectionDiff<K, T, D>, mergeItemDiff: (diff1: D, diff2: D) => D): CollectionDiff<K, T, D> => {
   const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
   const added = [...(diff1.added ?? []), ...(diff2.added ?? [])];
@@ -6928,7 +6928,7 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
   return result as Kit;
 };
 
-// #region 🔖KitDiffValidation
+// #region 📦KitDiffValidation
 // Validates kit diffs before apply; optional heal trims ineffective operations.
 
 /**
@@ -7283,7 +7283,7 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
   return heal ? { ok, errors: ctx.errors, warnings: ctx.warnings, diff: ctx.diff } : { ok, errors: ctx.errors, warnings: ctx.warnings };
 };
 
-// #endregion 🔖KitDiffValidation
+// #endregion 📦KitDiffValidation
 
 /**
  * Represents a bidirectional change between two Kit states.
@@ -7837,7 +7837,7 @@ export const filterKit = (kit: Kit, filter: KitFilter): Kit => {
   };
 };
 
-// #region 🏗️Design Family Helpers
+// #region 📐Design Family Helpers
 // Design family traversal helpers MUST be defined here.
 
 /**
@@ -7910,9 +7910,9 @@ export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[
   });
 };
 
-// #endregion 🏗️Design Family Helpers
+// #endregion 📐Design Family Helpers
 
-// #region 🗺️Type Family Helpers
+// #region 🧱Type Family Helpers
 // Type family traversal helpers MUST be defined here.
 
 /**
@@ -7967,7 +7967,7 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
   return primitiveA.guid === primitiveB.guid;
 };
 
-// #endregion 🗺️Type Family Helpers
+// #endregion 🧱Type Family Helpers
 
 // #region 🖥️Hash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
@@ -10048,9 +10048,9 @@ export interface KitImportResult {
   kind?: KitKind;
   files?: Record<string, Uint8Array>;
 }
-// 💿cachedSqlJs holds the data fields for a cachedSqlJs record.
+// 🗄️cachedSqlJs caches the SQL.js WASM module for reuse.
 let cachedSqlJs: any = null;
-// 🔷getSqlJs holds the data fields for a getSqlJs record.
+// 🗄️getSqlJs loads and returns the SQL.js WASM module.
 export const getSqlJs = async () => {
   if (!cachedSqlJs) {
     const initSqlJs = (await import("sql.js")).default;
@@ -11225,7 +11225,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
 
   return true;
 };
-// 🔶sqliteToKit holds the data fields for a sqliteToKit record.
+// 📦sqliteToKit converts a SQLite database into a kit object.
 export const sqliteToKit = async (db: any): Promise<Kit> => {
   const existingTables = new Set<string>();
   const tableStmt = db.prepare("SELECT name FROM sqlite_master WHERE type='table'");
@@ -12107,7 +12107,7 @@ CREATE TABLE attribute (
 );
 `;
 
-// 🔹kitToSqlite holds the data fields for a kitToSqlite record.
+// 📦kitToSqlite converts a kit object into a SQLite database.
 export const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
   db.exec(KIT_SQLITE_SCHEMA);
 
@@ -13139,7 +13139,7 @@ export const getGeometricInsightsForModel = async (model: string | ArrayBuffer |
 };
 
 // #endregion ❄️Geometric Insights
-// #region 🔓Validation
+// #region 🛡️Validation
 
 // #region 🗡️Validation core types
 
@@ -13190,7 +13190,7 @@ export const hasErrors = (res: ValidationResult) => res.problems.length > 0;
 
 // #endregion 🗡️Validation core types
 
-// #region 📷Validation context & engine
+// #region 🔍Validation context & engine
 // Validation context construction and engine MUST be defined here.
 
 /**
@@ -13252,7 +13252,7 @@ export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationRes
   return { problems: constraints.flatMap((constraint) => constraint(ctx)) };
 };
 
-// #endregion 📷Validation context & engine
+// #endregion 🔍Validation context & engine
 
 // #region 📡Fix helper
 // Validation fix helper functions MUST be defined here.
@@ -13269,10 +13269,10 @@ export const semioMakeFix = (ctx: ValidationContext, title: string, mutate: (clo
 
 // #endregion 📡Fix helper
 
-// #region 🦀GUID update helper
+// #region 🔑GUID update helper
 // GUID regeneration helper functions MUST be defined here.
 
-// 💿updateGuidEverywhere holds the data fields for a updateGuidEverywhere record.
+// 🔑updateGuidEverywhere replaces an old GUID with a new GUID across all kit entities.
 const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
   const update = (obj: any) => {
     if (!obj || typeof obj !== "object") return;
@@ -13301,9 +13301,9 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
   update(kit);
 };
 
-// #endregion 🦀GUID update helper
+// #endregion 🔑GUID update helper
 
-// #region 🎏Constraint: GUID uniqueness
+// #region 🔑Constraint: GUID uniqueness
 // GUID uniqueness constraint MUST be enforced here.
 
 /**
@@ -13347,9 +13347,9 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🎏Constraint: GUID uniqueness
+// #endregion 🔑Constraint: GUID uniqueness
 
-// #region 🎶Constraint: Type name uniqueness
+// #region 🧱Constraint: Type name uniqueness
 // Type name uniqueness constraint MUST be enforced here.
 
 /**
@@ -13394,9 +13394,9 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🎶Constraint: Type name uniqueness
+// #endregion 🧱Constraint: Type name uniqueness
 
-// #region 🛡️Constraint: Design name uniqueness
+// #region 📐Constraint: Design name uniqueness
 // Design name uniqueness constraint MUST be enforced here.
 
 /**
@@ -13441,9 +13441,9 @@ export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🛡️Constraint: Design name uniqueness
+// #endregion 📐Constraint: Design name uniqueness
 
-// #region 🎑Constraint: Piece name uniqueness
+// #region 🧩Constraint: Piece name uniqueness
 // Piece name uniqueness constraint MUST be enforced here.
 
 /**
@@ -13486,9 +13486,9 @@ export const semioPieceNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🎑Constraint: Piece name uniqueness
+// #endregion 🧩Constraint: Piece name uniqueness
 
-// #region 🎻Constraint: Quality name uniqueness
+// #region 🔬Constraint: Quality name uniqueness
 // Quality name uniqueness constraint MUST be enforced here.
 
 /**
@@ -13525,9 +13525,9 @@ export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🎻Constraint: Quality name uniqueness
+// #endregion 🔬Constraint: Quality name uniqueness
 
-// #region 🖥️Constraint: Port name uniqueness
+// #region ⚓Constraint: Port name uniqueness
 // Port name uniqueness constraint MUST be enforced here.
 
 /**
@@ -13564,9 +13564,9 @@ export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🖥️Constraint: Port name uniqueness
+// #endregion ⚓Constraint: Port name uniqueness
 
-// #region 🔓Constraint: File name uniqueness
+// #region 📄Constraint: File name uniqueness
 // File name uniqueness constraint MUST be enforced here.
 
 /**
@@ -13603,9 +13603,9 @@ export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🔓Constraint: File name uniqueness
+// #endregion 📄Constraint: File name uniqueness
 
-// #region 🎪Constraint: Folder name uniqueness
+// #region 📁Constraint: Folder name uniqueness
 // Folder name uniqueness constraint MUST be enforced here.
 
 /**
@@ -13650,9 +13650,9 @@ export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🎪Constraint: Folder name uniqueness
+// #endregion 📁Constraint: Folder name uniqueness
 
-// #region ⚡Constraint: Connector name uniqueness within type
+// #region 🔌Constraint: Connector name uniqueness within type
 // Connector name uniqueness within type constraint MUST be enforced here.
 
 /**
@@ -13695,9 +13695,9 @@ export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion ⚡Constraint: Connector name uniqueness within type
+// #endregion 🔌Constraint: Connector name uniqueness within type
 
-// #region 🔎Constraint: Model name uniqueness within type
+// #region 🗿Constraint: Model name uniqueness within type
 // Model name uniqueness within type constraint MUST be enforced here.
 
 /**
@@ -13740,9 +13740,9 @@ export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🔎Constraint: Model name uniqueness within type
+// #endregion 🗿Constraint: Model name uniqueness within type
 
-// #region ⭐Constraint: Layer path uniqueness within design
+// #region 🎨Constraint: Layer path uniqueness within design
 // Layer path uniqueness within design constraint MUST be enforced here.
 
 /**
@@ -13784,9 +13784,9 @@ export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion ⭐Constraint: Layer path uniqueness within design
+// #endregion 🎨Constraint: Layer path uniqueness within design
 
-// #region 🎄Constraint: Design piece same family constraint
+// #region 📐Constraint: Design piece same family constraint
 // Design piece same family constraint MUST be enforced here.
 
 /**
@@ -13826,7 +13826,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
   });
   return problems;
 };
-// 💿getPrimitiveDesignFromContext holds the data fields for a getPrimitiveDesignFromContext record.
+// 📐getPrimitiveDesignFromContext retrieves the primitive design for a piece type from validation context.
 const getPrimitiveDesignFromContext = (ctx: ValidationContext, designGuid: string): string => {
   let currentGuid = designGuid;
   let interactions = 0;
@@ -13840,9 +13840,9 @@ const getPrimitiveDesignFromContext = (ctx: ValidationContext, designGuid: strin
   return currentGuid;
 };
 
-// #endregion 🎄Constraint: Design piece same family constraint
+// #endregion 📐Constraint: Design piece same family constraint
 
-// #region 🖋️Constraint registration
+// #region ✅Constraint registration
 // Constraint registration and default configurations MUST be defined here.
 
 defaultConstraints = [
@@ -13860,7 +13860,7 @@ defaultConstraints = [
   semioDesignPieceSameFamilyConstraint,
 ];
 
-// #endregion 🖋️Constraint registration
+// #endregion ✅Constraint registration
 
 // #region 🌧️Validation serialization
 // Validation result serialization and deserialization MUST be defined here.
@@ -13921,7 +13921,7 @@ export const serializeValidationResult = (result: ValidationResult): string => {
  * Parses ValidationResult from serialized input.
  **/
 export const parseValidationResult = (json: string): SerializableValidationResult => JSON.parse(json);
-// 💿isGuid holds the data fields for a isGuid record.
+// 🔑isGuid checks whether a string is a valid GUID format.
 const isGuid = (s: string): boolean => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
 /**
@@ -13970,7 +13970,7 @@ export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResu
 
 // #endregion 🌧️Validation serialization
 
-// #endregion 🔓Validation
+// #endregion 🛡️Validation
 
 // #region 🏰KitStore
 // Storage-agnostic kit store contracts MUST be defined here.
@@ -15449,14 +15449,14 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
       const getStatus = (attrs?: Attribute[]) => (attrs ?? []).find((a) => a.key === "semio.diffStatus")?.value;
 
-      // 🔷Verify piece status counts
+      // 🧩Verify piece status counts
       const pieceStatuses = computed.pieces!.map((p) => getStatus(p.attributes));
       expect(pieceStatuses.filter((s) => s === "unchanged").length).toBe(163);
       expect(pieceStatuses.filter((s) => s === "modified").length).toBe(7);
       expect(pieceStatuses.filter((s) => s === "removed").length).toBe(10);
       expect(pieceStatuses.filter((s) => s === "added").length).toBe(5);
 
-      // 🔶Verify connection status counts
+      // 🔗Verify connection status counts
       const connStatuses = computed.connections!.map((c) => getStatus(c.attributes));
       expect(connStatuses.filter((s) => s === "unchanged").length).toBe(168);
       expect(connStatuses.filter((s) => s === "modified").length).toBe(1);
@@ -17026,11 +17026,11 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 // Run via: npx tsx index.ts --bench
 
 // Number of iterations per benchmark run.
-// 🔷MUST be at least 1 for meaningful timing.
+// ⏱️MUST be at least 1 for meaningful timing.
 const BENCH_ITERATIONS = 3;
 
 // Runs a function multiple times, measures elapsed time and logs CSV output.
-// ⚡MUST await async functions within the iteration loop.
+// ⏱️MUST await async functions within the iteration loop.
 async function bench(name: string, fn: () => Promise<void> | void) {
   const start = performance.now();
   for (let i = 0; i < BENCH_ITERATIONS; i++) {

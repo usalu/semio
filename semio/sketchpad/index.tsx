@@ -47868,7 +47868,8 @@ export { FeedbackIcon };
 
 import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
 import type { KitJsonFileAdapter } from "../studio/studio";
-import { createFetchKitFolderAdapter, createFolderKitStore, createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
+import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
+import "./globals.css";
 
 export { createJsonFileKitStore, JsonFileKitStore };
 export type { BlobAssetStore, KitJsonFileAdapter, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };
@@ -47912,14 +47913,8 @@ function createVscodeFileKitStoreFactory(): SketchpadKitStoreFactory {
 const temporaryKitStoreFactory: SketchpadKitStoreFactory = (kit) => new InMemoryKitStore(kit);
 
 async function boot() {
-  // Load styles only when booting the browser app. A static import runs when Playwright loads this file in Node and breaks TS/CSS tooling.
-  await import("./globals.css");
   let kitStore = undefined;
   let fileKitStoreFactory: SketchpadKitStoreFactory | undefined = undefined;
-  const e2eFolderHttpRoot =
-    !isVscodeWebview && typeof window !== "undefined"
-      ? String((window as unknown as { __SEMIO_BOOT_FOLDER_KIT_HTTP_ROOT__?: string }).__SEMIO_BOOT_FOLDER_KIT_HTTP_ROOT__ ?? "").trim()
-      : "";
   if (isVscodeWebview) {
     const adapter = createVscodeAdapter();
     kitStore = await createJsonFileKitStore(adapter);
@@ -47936,8 +47931,6 @@ async function boot() {
       }
     };
     // Auto-save is handled centrally by SketchpadStore.registerKitStore.
-  } else if (e2eFolderHttpRoot) {
-    kitStore = await createFolderKitStore(createFetchKitFolderAdapter(e2eFolderHttpRoot));
   }
 
   const indexeddbPersistenceFactory = isVscodeWebview ? undefined : createIndexeddbPersistenceFactory();
@@ -47957,7 +47950,9 @@ async function boot() {
 // Auto-boot only in standalone mode. In VS Code webview, webview.tsx handles its own boot.
 // The extension host injects __SEMIO_VSCODE_API__ in the head before module scripts run.
 if (typeof document !== "undefined" && document.getElementById("root") && !isVscodeWebview) {
-  boot();
+  void boot().catch((err) => {
+    console.error("[semio.sketchpad boot]", err);
+  });
 }
 // #endregion 🎆Entrypoint
 
@@ -55461,20 +55456,6 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       );
       expect(nakagin).toBeTruthy();
       expect((nakagin!.pieces ?? []).length).toBeGreaterThan(0);
-    });
-
-    test("Browser loads metabolism folder via /assets and opens Nakagin Capsule Tower design", async ({ page }) => {
-      test.setTimeout(300000);
-      await ensureMetabolismFolderKitDbFile();
-      await page.addInitScript({ content: "window.__SEMIO_BOOT_FOLDER_KIT_HTTP_ROOT__ = '/assets/semio/metabolism';" });
-      const { errors } = await initConsole(page);
-      await warmSketchpadEntrypoint(page);
-      await page.goto("/", { waitUntil: "networkidle" });
-      await page.waitForTimeout(3000);
-      await initDesign(page);
-      expect(errors.filter((e) => e.includes("Maximum update depth"))).toHaveLength(0);
-      await expect(page).toHaveURL(/\/designs\/[^/]+/);
-      await expect(page.getByText("Nakagin Capsule Tower", { exact: true }).first()).toBeVisible({ timeout: 60000 });
     });
 
     test("Settings Panel In All Apps", async ({ page }) => {

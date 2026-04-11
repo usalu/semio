@@ -505,6 +505,75 @@ func TestChange(t *testing.T) {
 	})
 }
 
+func TestValidateKitDiffAsset(t *testing.T) {
+	var asset struct {
+		TinyKit Kit `json:"tinyKit"`
+		Cases   []struct {
+			ID           string   `json:"id"`
+			Diff         KitDiff  `json:"diff"`
+			ExpectOk     bool     `json:"expectOk"`
+			ErrorCodes   []string `json:"errorCodes"`
+			WarningCodes []string `json:"warningCodes"`
+		} `json:"cases"`
+	}
+	loadJSON(t, "validate-kit-diff.cases.semio.json", &asset)
+	for _, c := range asset.Cases {
+		t.Run(c.ID, func(t *testing.T) {
+			r := ValidateKitDiff(asset.TinyKit, c.Diff, false)
+			if r.Ok != c.ExpectOk {
+				t.Fatalf("ok=%v want %v errors=%v warnings=%v", r.Ok, c.ExpectOk, r.Errors, r.Warnings)
+			}
+			errCodes := make([]string, 0, len(r.Errors))
+			for _, e := range r.Errors {
+				if e.Code != "" {
+					errCodes = append(errCodes, e.Code)
+				}
+			}
+			warnCodes := make([]string, 0, len(r.Warnings))
+			for _, w := range r.Warnings {
+				if w.Code != "" {
+					warnCodes = append(warnCodes, w.Code)
+				}
+			}
+			for _, code := range c.ErrorCodes {
+				if !slicesContains(errCodes, code) {
+					t.Fatalf("missing error code %q got %v", code, errCodes)
+				}
+			}
+			for _, code := range c.WarningCodes {
+				if !slicesContains(warnCodes, code) {
+					t.Fatalf("missing warning code %q got %v", code, warnCodes)
+				}
+			}
+		})
+	}
+	bad := KitDiff{}
+	bad.Designs = &DesignsDiff{
+		Updated: []struct {
+			Design DesignId   `json:"design"`
+			Diff   DesignDiff `json:"diff"`
+		}{{Design: DesignId{Guid: "99999999-9999-9999-9999-999999999999"}, Diff: DesignDiff{Name: ptrStringGoTest("X")}}},
+	}
+	r := ValidateKitDiff(asset.TinyKit, bad, true)
+	if r.Diff == nil {
+		t.Fatal("expected healed diff")
+	}
+	if r.Diff.Designs != nil && len(r.Diff.Designs.Updated) != 0 {
+		t.Fatalf("heal should drop invalid design update: %#v", r.Diff.Designs)
+	}
+}
+
+func slicesContains(haystack []string, needle string) bool {
+	for _, s := range haystack {
+		if s == needle {
+			return true
+		}
+	}
+	return false
+}
+
+func ptrStringGoTest(s string) *string { return &s }
+
 func TestDelete(t *testing.T) {
 	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
 		t.Run("Delete Third Tambour And First Small Tower Connection", func(t *testing.T) {

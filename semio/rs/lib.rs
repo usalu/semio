@@ -42,7 +42,7 @@ mod error_types {
     use super::*;
 
     #[derive(Error, Debug, Clone, Serialize, Deserialize)]
-    /// 📋<summary>❌SemioError holds the data fields for a SemioError record.</summary>
+    /// <summary>❌SemioError represents a domain error with context message.</summary>
     /// <remarks>
     /// </remarks>
     pub enum SemioError {
@@ -57,7 +57,7 @@ mod error_types {
         #[error("Invalid operation: {message}")]
         InvalidOperation { message: String },
     }
-    /// 💿<summary>💿Result holds the data fields for a Result record.</summary>
+    /// <summary>✅Result represents a success or SemioError outcome.</summary>
     /// <remarks>
     /// </remarks>
     pub type Result<T> = std::result::Result<T, SemioError>;
@@ -67,32 +67,32 @@ pub use error_types::*;
 mod utility_functions {
     // 🏭Utility Functions
     // Utility Functions MUST provide the utility functions functionality.
-    /// <summary>🔑Guid holds the data fields for a Guid record.</summary>
+    /// <summary>🔑Guid represents a UUID string identifier.</summary>
     /// <remarks>
     /// </remarks>
     use super::*;
 
     pub type Guid = String;
 
-    /// 🔷<summary>🧱guid holds the data fields for a guid record.</summary>
+    /// <summary>🔑generates a new v7 UUID string.</summary>
     pub fn guid() -> String {
         Uuid::now_v7().to_string()
     }
 
-    /// 🔶<summary>📦normalize holds the data fields for a normalize record.</summary>
+    /// <summary>📐rounds a float to the given number of decimal places.</summary>
     pub fn normalize(value: f64, decimals: u32) -> f64 {
         let factor = 10_f64.powi(decimals as i32);
         (value * factor).round() / factor
     }
 
-    /// 🔹<summary>🔷round holds the data fields for a round record.</summary>
+    /// <summary>📐rounds a float to 3 decimal places.</summary>
     /// <remarks>
     /// </remarks>
     pub fn round(value: f64) -> f64 {
         normalize(value, 3)
     }
 
-    /// 🔸<summary>🔶jaccard holds the data fields for a jaccard record.</summary>
+    /// <summary>📊computes Jaccard similarity between two sets.</summary>
     pub fn jaccard<T: Eq + std::hash::Hash>(a: &HashSet<T>, b: &HashSet<T>) -> f64 {
         if a.is_empty() && b.is_empty() {
             return 1.0;
@@ -106,7 +106,7 @@ mod utility_functions {
         }
     }
 
-    /// 🔺<summary>🔹deep_equal holds the data fields for a deep_equal record.</summary>
+    /// <summary>🔄compares two serializable values for deep equality.</summary>
     pub fn deep_equal<T: Serialize>(a: &T, b: &T) -> bool {
         pub fn normalize_json(v: &mut serde_json::Value) {
             match v {
@@ -157,7 +157,7 @@ mod utility_functions {
             _ => false,
         }
     }
-    /// 🔻<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn generate_unique_name(base: &str, existing: &[String]) -> String {
         let existing_set: HashSet<_> = existing.iter().collect();
@@ -177,13 +177,13 @@ mod utility_functions {
 pub use utility_functions::*;
 
 mod model_types_attribute {
-    // 📆Model Types - Attribute
-    // Model Types - Attribute MUST provide the model types - attribute functionality.
+    // 💎Model Types - Attribute
+    // 💎Model Types - Attribute MUST provide the model types - attribute functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// ⬛<summary>⚡Attribute holds the data fields for a Attribute record.</summary>
+    /// <summary>💎Attribute represents a key-value metadata entry with optional definition.</summary>
     pub struct Attribute {
         pub guid: Guid,
         pub key: String,
@@ -194,30 +194,30 @@ mod model_types_attribute {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// ⬜<summary>🪄AttributeId holds the data fields for a AttributeId record.</summary>
+    /// <summary>💎AttributeId identifies an attribute entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct AttributeId {
         pub guid: Guid,
     }
-} // 🗻Model Types - Attribute
+} // 💎Model Types - Attribute
 pub use model_types_attribute::*;
 
 mod model_types_coord {
-    // 🥇Model Types - Coord
-    // Model Types - Coord MUST provide the model types - coord functionality.
+    // 📺Model Types - Coord
+    // 📺Model Types - Coord MUST provide the model types - coord functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🟥<summary>🔸Coord holds the data fields for a Coord record.</summary>
+    /// <summary>📺Coord represents a 2D coordinate with U and V components.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Coord {
         pub u: f64,
         pub v: f64,
     }
-    /// 🟧<summary>🔺Coord holds the data fields for a Coord record.</summary>
+    /// <summary>📺Coord represents a 2D coordinate with U and V components.</summary>
     /// <remarks>
     /// </remarks>
     impl Coord {
@@ -225,17 +225,17 @@ mod model_types_coord {
             Self { u, v }
         }
     }
-} // 🤸Model Types - Coord
+} // 📺Model Types - Coord
 pub use model_types_coord::*;
 
 mod model_types_vector {
-    // 🎒Model Types - Vector
-    // Model Types - Vector MUST provide the model types - vector functionality.
+    // ↗️Model Types - Vector
+    // ↗️Model Types - Vector MUST provide the model types - vector functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🟨<summary>📋Vector holds the data fields for a Vector record.</summary>
+    /// <summary>↗️Vector represents a 3D vector with X, Y and Z components.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Vector {
@@ -244,7 +244,7 @@ mod model_types_vector {
         pub z: f64,
     }
 
-    /// 🟩<summary>📍Vector holds the data fields for a Vector record.</summary>
+    /// <summary>↗️Vector represents a 3D vector with X, Y and Z components.</summary>
     impl Vector {
         pub fn new(x: f64, y: f64, z: f64) -> Self {
             Self { x, y, z }
@@ -268,17 +268,17 @@ mod model_types_vector {
             Self::new(v.x, v.y, v.z)
         }
     }
-} // 👓Model Types - Vector
+} // ↗️Model Types - Vector
 pub use model_types_vector::*;
 
 mod model_types_plane {
-    // 🩹Model Types - Plane
-    // Model Types - Plane MUST provide the model types - plane functionality.
+    // ◻️Model Types - Plane
+    // ◻️Model Types - Plane MUST provide the model types - plane functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 🟦<summary>📐Plane holds the data fields for a Plane record.</summary>
+    /// <summary>◻️Plane represents a plane defined by origin point and two axis vectors.</summary>
     pub struct Plane {
         pub origin: Vector,
         #[serde(rename = "xAxis")]
@@ -287,7 +287,7 @@ mod model_types_plane {
         pub y_axis: Vector,
     }
 
-    /// 🟪<summary>🔻Default holds the data fields for a Default record.</summary>
+    /// <summary>◻️Default implementation for Plane.</summary>
     impl Default for Plane {
         fn default() -> Self {
             Self {
@@ -298,7 +298,7 @@ mod model_types_plane {
         }
     }
 
-    /// 🟫<summary>⬛Plane holds the data fields for a Plane record.</summary>
+    /// <summary>◻️Plane represents a plane defined by origin point and two axis vectors.</summary>
     impl Plane {
         pub fn new(origin: Vector, x_axis: Vector, y_axis: Vector) -> Self {
             Self {
@@ -352,17 +352,17 @@ mod model_types_plane {
             }
         }
     }
-} // 🧭Model Types - Plane
+} // ◻️Model Types - Plane
 pub use model_types_plane::*;
 
 mod model_types_camera {
-    // 🧣Model Types - Camera
-    // Model Types - Camera MUST provide the model types - camera functionality.
+    // 🎥Model Types - Camera
+    // 🎥Model Types - Camera MUST provide the model types - camera functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 💠<summary>⬜Camera holds the data fields for a Camera record.</summary>
+    /// <summary>🎥Camera represents a camera defined by position, forward and up vectors.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Camera {
@@ -374,7 +374,7 @@ mod model_types_camera {
         pub far: f64,
     }
 
-    /// 🔳<summary>🟥Default holds the data fields for a Default record.</summary>
+    /// <summary>🎥Default implementation for Camera.</summary>
     impl Default for Camera {
         fn default() -> Self {
             Self {
@@ -387,18 +387,17 @@ mod model_types_camera {
             }
         }
     }
-} // 🎖️Model Types - Camera
+} // 🎥Model Types - Camera
 pub use model_types_camera::*;
 
 mod model_types_location_author_file_folder {
-    // 🧣Model Types - Location, Author, File, Folder
-    // Model Types - Location, Author, File, Folder MUST provide the model types - location, author, file, folder functionality.
+    // 📍Model Types - Location, Author, File, Folder
+    // 📍Model Types - Location, Author, File, Folder MUST provide the model types - location, author, file, folder functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔲<summary>🟧LocationId holds the data fields for a LocationId record.</summary>
-    /// <summary>🟨LocationId holds the data fields for a LocationId record.</summary>
+    /// <summary>📍LocationId identifies a location entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct LocationId {
@@ -406,7 +405,7 @@ mod model_types_location_author_file_folder {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// ▪️<summary>🟩Location holds the data fields for a Location record.</summary>
+    /// <summary>📍Location represents a geographic point with longitude, latitude and optional altitude.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Location {
@@ -419,13 +418,13 @@ mod model_types_location_author_file_folder {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// ✍️<summary>🟦AuthorId holds the data fields for a AuthorId record.</summary>
+    /// <summary>✍️AuthorId identifies an author entity by GUID.</summary>
     pub struct AuthorId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 🔐<summary>🟪Author holds the data fields for a Author record.</summary>
+    /// <summary>✍️Author represents a named contributor with email and custom attributes.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Author {
@@ -442,13 +441,13 @@ mod model_types_location_author_file_folder {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 📁<summary>📄FolderId holds the data fields for a FolderId record.</summary>
+    /// <summary>📁FolderId identifies a folder entity by GUID.</summary>
     pub struct FolderId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// ▫️<summary>🟫Folder holds the data fields for a Folder record.</summary>
+    /// <summary>📁Folder represents a named directory for organizing files.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Folder {
@@ -467,7 +466,7 @@ mod model_types_location_author_file_folder {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 📄<summary>💠FileId holds the data fields for a FileId record.</summary>
+    /// <summary>📄FileId identifies a file entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct FileId {
@@ -475,7 +474,7 @@ mod model_types_location_author_file_folder {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// ◾<summary>🔳File holds the data fields for a File record.</summary>
+    /// <summary>📄File represents a named binary resource with optional remote URL and folder.</summary>
     /// <remarks>
     /// </remarks>
     pub struct File {
@@ -496,17 +495,17 @@ mod model_types_location_author_file_folder {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 📰Model Types - Location, Author, File, Folder
+} // 📍Model Types - Location, Author, File, Folder
 pub use model_types_location_author_file_folder::*;
 
 mod model_types_quality_port_tag_concept {
-    // 🗞️Model Types - Quality, Port, Tag, Concept
-    // Model Types - Quality, Port, Tag, Concept MUST provide the model types - quality, port, tag, concept functionality.
+    // 🔬Model Types - Quality, Port, Tag, Concept
+    // 🔬Model Types - Quality, Port, Tag, Concept MUST provide the model types - quality, port, tag, concept functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// ◽<summary>🔲QualityId holds the data fields for a QualityId record.</summary>
+    /// <summary>🔬QualityId identifies a quality entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct QualityId {
@@ -538,9 +537,9 @@ mod model_types_quality_port_tag_concept {
         pub attributes: Option<Vec<Attribute>>,
     }
 
-    #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
     #[repr(i32)]
-    /// 🏷️<summary>🏷️QualityKind holds the data fields for a QualityKind record.</summary>
+    /// <summary>🔬QualityKind represents the numeric kind of a quality (integer, float or boolean).</summary>
     pub enum QualityKind {
         #[default]
         Integer = 0,
@@ -548,8 +547,31 @@ mod model_types_quality_port_tag_concept {
         Boolean = 2,
     }
 
+    impl Serialize for QualityKind {
+        fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            serializer.serialize_i32(*self as i32)
+        }
+    }
+
+    impl<'de> Deserialize<'de> for QualityKind {
+        fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            let v = i32::deserialize(deserializer)?;
+            match v {
+                0 => Ok(QualityKind::Integer),
+                1 => Ok(QualityKind::Float),
+                2 => Ok(QualityKind::Boolean),
+                _ => Err(serde::de::Error::custom("invalid QualityKind discriminant")),
+            }
+        }
+    }
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// ◻️<summary>▪️Quality holds the data fields for a Quality record.</summary>
+    /// <summary>🔬Quality represents a measurable property with formula, units and benchmarks.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Quality {
@@ -596,7 +618,7 @@ mod model_types_quality_port_tag_concept {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// ◼️<summary>🔌PortId holds the data fields for a PortId record.</summary>
+    /// <summary>⚓PortId identifies a port entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct PortId {
@@ -604,7 +626,7 @@ mod model_types_quality_port_tag_concept {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 🔵<summary>▫️Port holds the data fields for a Port record.</summary>
+    /// <summary>⚓Port represents a named connection interface with compatible ports.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Port {
@@ -623,7 +645,7 @@ mod model_types_quality_port_tag_concept {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔴<summary>◾TagId holds the data fields for a TagId record.</summary>
+    /// <summary>🏷️TagId identifies a tag entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct TagId {
@@ -631,8 +653,7 @@ mod model_types_quality_port_tag_concept {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 🟠<summary>◽Tag holds the data fields for a Tag record.</summary>
-    /// <summary>◻️Tag holds the data fields for a Tag record.</summary>
+    /// <summary>🏷️Tag represents a named categorization label with optional description and icon.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Tag {
@@ -647,7 +668,7 @@ mod model_types_quality_port_tag_concept {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🟡<summary>◼️ConceptId holds the data fields for a ConceptId record.</summary>
+    /// <summary>💡ConceptId identifies a concept entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct ConceptId {
@@ -655,7 +676,7 @@ mod model_types_quality_port_tag_concept {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 🟢<summary>🔵Concept holds the data fields for a Concept record.</summary>
+    /// <summary>💡Concept represents a named categorization concept with optional description and icon.</summary>
     /// <remarks>
     /// </remarks>
     /// <remarks>
@@ -670,17 +691,17 @@ mod model_types_quality_port_tag_concept {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub attributes: Option<Vec<Attribute>>,
     }
-} // 🗝️Model Types - Quality, Port, Tag, Concept
+} // 🔬Model Types - Quality, Port, Tag, Concept
 pub use model_types_quality_port_tag_concept::*;
 
 mod model_types_prop_model_connector {
-    // 🏸Model Types - Prop, Model, Connector
-    // Model Types - Prop, Model, Connector MUST provide the model types - prop, model, connector functionality.
+    // 📊Model Types - Prop, Model, Connector
+    // 📊Model Types - Prop, Model, Connector MUST provide the model types - prop, model, connector functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🟣<summary>🔴PropId holds the data fields for a PropId record.</summary>
+    /// <summary>📊PropId identifies a prop entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct PropId {
@@ -688,8 +709,7 @@ mod model_types_prop_model_connector {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 🟤<summary>🟠Prop holds the data fields for a Prop record.</summary>
-    /// <summary>🟡Prop holds the data fields for a Prop record.</summary>
+    /// <summary>📊Prop represents a quality measurement value with optional unit.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Prop {
@@ -703,13 +723,13 @@ mod model_types_prop_model_connector {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// ⚪<summary>🟢ModelId holds the data fields for a ModelId record.</summary>
+    /// <summary>🗿ModelId identifies a model entity by GUID.</summary>
     pub struct ModelId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// ⚫<summary>🟣Model holds the data fields for a Model record.</summary>
+    /// <summary>🗿Model represents a 3D model reference linking a file with tags and description.</summary>
     /// <remarks>
     /// </remarks>
     /// <remarks>
@@ -728,7 +748,7 @@ mod model_types_prop_model_connector {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🩵<summary>🔗ConnectorId holds the data fields for a ConnectorId record.</summary>
+    /// <summary>🔌ConnectorId identifies a connector entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct ConnectorId {
@@ -736,7 +756,7 @@ mod model_types_prop_model_connector {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 🩶<summary>🟤Connector holds the data fields for a Connector record.</summary>
+    /// <summary>🔌Connector represents a connection point on a type with position, direction and parameter.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Connector {
@@ -759,23 +779,23 @@ mod model_types_prop_model_connector {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub attributes: Option<Vec<Attribute>>,
     }
-} // 👝Model Types - Prop, Model, Connector
+} // 📊Model Types - Prop, Model, Connector
 pub use model_types_prop_model_connector::*;
 
 mod model_types_type {
-    // 🧢Model Types - Type
-    // Model Types - Type MUST provide the model types - type functionality.
+    // 🧱Model Types - Type
+    // 🧱Model Types - Type MUST provide the model types - type functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🩷<summary>⚪TypeId holds the data fields for a TypeId record.</summary>
+    /// <summary>🧱TypeId identifies a type entity by GUID.</summary>
     pub struct TypeId {
         pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 💜<summary>⚫Type holds the data fields for a Type record.</summary>
+    /// <summary>🧱Type represents a reusable element blueprint with connectors, models and props.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Type {
@@ -818,17 +838,17 @@ mod model_types_type {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 🥈Model Types - Type
+} // 🧱Model Types - Type
 pub use model_types_type::*;
 
 mod model_types_layer_piece_group_side_connection_stat {
-    // 💾Model Types - Layer, Piece, Group, Side, Connection, Stat
-    // Model Types - Layer, Piece, Group, Side, Connection, Stat MUST provide the model types - layer, piece, group, side, connection, stat functionality.
+    // 🎨Model Types - Layer, Piece, Group, Side, Connection, Stat
+    // 🎨Model Types - Layer, Piece, Group, Side, Connection, Stat MUST provide the model types - layer, piece, group, side, connection, stat functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 💙<summary>🩵LayerId holds the data fields for a LayerId record.</summary>
+    /// <summary>🎨LayerId identifies a layer entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct LayerId {
@@ -836,7 +856,7 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 💚<summary>🩶Layer holds the data fields for a Layer record.</summary>
+    /// <summary>🎨Layer represents a named visibility and color layer within a design.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Layer {
@@ -855,7 +875,7 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 💛<summary>🧩PieceId holds the data fields for a PieceId record.</summary>
+    /// <summary>🧩PieceId identifies a piece entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct PieceId {
@@ -863,7 +883,7 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🧡<summary>🩷DesignId holds the data fields for a DesignId record.</summary>
+    /// <summary>📐DesignId identifies a design entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct DesignId {
@@ -871,7 +891,7 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// ❤️<summary>💜Piece holds the data fields for a Piece record.</summary>
+    /// <summary>🧩Piece represents a positioned instance of a type within a design.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Piece {
@@ -905,7 +925,7 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🤍<summary>💙GroupId holds the data fields for a GroupId record.</summary>
+    /// <summary>👥GroupId identifies a group entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct GroupId {
@@ -913,8 +933,7 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 🖤<summary>💚Group holds the data fields for a Group record.</summary>
-    /// <summary>💛Group holds the data fields for a Group record.</summary>
+    /// <summary>👥Group represents a named collection of pieces within a design.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Group {
@@ -932,7 +951,7 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 💻<summary>🧡Side holds the data fields for a Side record.</summary>
+    /// <summary>↔️Side represents one side of a connection identifying a piece and optional connector.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Side {
@@ -944,8 +963,7 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔌<summary>❤️ConnectionId holds the data fields for a ConnectionId record.</summary>
-    /// <summary>🤍ConnectionId holds the data fields for a ConnectionId record.</summary>
+    /// <summary>🔗ConnectionId identifies a connection entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct ConnectionId {
@@ -953,7 +971,7 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 🤎<summary>🖤Connection holds the data fields for a Connection record.</summary>
+    /// <summary>🔗Connection represents a spatial relationship between two pieces with gap, shift and rotation.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Connection {
@@ -983,7 +1001,7 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 💗<summary>🤎StatId holds the data fields for a StatId record.</summary>
+    /// <summary>📈StatId identifies a stat entity by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct StatId {
@@ -991,7 +1009,7 @@ mod model_types_layer_piece_group_side_connection_stat {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 💖<summary>💗Stat holds the data fields for a Stat record.</summary>
+    /// <summary>📈Stat represents a statistical quality measurement with min/max bounds and unit.</summary>
     /// <remarks>
     /// </remarks>
     /// <remarks>
@@ -1010,17 +1028,17 @@ mod model_types_layer_piece_group_side_connection_stat {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
     }
-} // ⛑️Model Types - Layer, Piece, Group, Side, Connection, Stat
+} // 🎨Model Types - Layer, Piece, Group, Side, Connection, Stat
 pub use model_types_layer_piece_group_side_connection_stat::*;
 
 mod model_types_design {
-    // 🌋Model Types - Design
-    // Model Types - Design MUST provide the model types - design functionality.
+    // 📐Model Types - Design
+    // 📐Model Types - Design MUST provide the model types - design functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 💝<summary>💖Design holds the data fields for a Design record.</summary>
+    /// <summary>📐Design represents an assembly of pieces, connections, layers and groups.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Design {
@@ -1071,12 +1089,12 @@ mod model_types_design {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 📊Model Types - Design
+} // 📐Model Types - Design
 pub use model_types_design::*;
 
 mod model_types_kit {
-    // 📢Model Types - Kit
-    // Model Types - Kit MUST provide the model types - kit functionality.
+    // 📦Model Types - Kit
+    // 📦Model Types - Kit MUST provide the model types - kit functionality.
 
     use super::*;
 
@@ -1104,7 +1122,7 @@ mod model_types_kit {
             Temporary,
         }
 
-        /// 💘All valid KitKind values.
+        /// 📦All valid KitKind values.
         pub const ALL_KIT_KINDS: [KitKind; 5] = [
             KitKind::File,
             KitKind::Folder,
@@ -1116,7 +1134,7 @@ mod model_types_kit {
     pub use kit_kind::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 💕<summary>🧰Kit holds the data fields for a Kit record.</summary>
+    /// <summary>📦Kit represents the root container for all domain entities.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Kit {
@@ -1163,13 +1181,13 @@ mod model_types_kit {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 🌎Model Types - Kit
+} // 📦Model Types - Kit
 pub use model_types_kit::*;
 
 mod finder_functions {
     // 🥿Finder Functions
     // Finder Functions MUST provide the finder functions functionality.
-    /// <summary>📖find_type_in_kit holds the data fields for a find_type_in_kit record.</summary>
+    /// <summary>🔍finds a type in a kit by GUID.</summary>
     /// <remarks>
     /// </remarks>
     use super::*;
@@ -1177,31 +1195,31 @@ mod finder_functions {
     pub fn find_type_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Type> {
         kit.types.as_ref()?.iter().find(|t| t.guid == guid)
     }
-    /// 🔖<summary>💝find_type_in_kit_mut holds the data fields for a find_type_in_kit_mut record.</summary>
+    /// <summary>🔍finds a type in a kit mutably by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_type_in_kit_mut<'a>(kit: &'a mut Kit, guid: &str) -> Option<&'a mut Type> {
         kit.types.as_mut()?.iter_mut().find(|t| t.guid == guid)
     }
-    /// 🔖<summary>💘find_design_in_kit holds the data fields for a find_design_in_kit record.</summary>
+    /// <summary>🔍finds a design in a kit by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_design_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Design> {
         kit.designs.as_ref()?.iter().find(|d| d.guid == guid)
     }
-    /// 🔖<summary>💕find_design_in_kit_mut holds the data fields for a find_design_in_kit_mut record.</summary>
+    /// <summary>🔍finds a design in a kit mutably by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_design_in_kit_mut<'a>(kit: &'a mut Kit, guid: &str) -> Option<&'a mut Design> {
         kit.designs.as_mut()?.iter_mut().find(|d| d.guid == guid)
     }
-    /// 🔖<summary>🔖find_piece_in_design holds the data fields for a find_piece_in_design record.</summary>
+    /// <summary>🔍finds a piece in a design by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_piece_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Piece> {
         design.pieces.as_ref()?.iter().find(|p| p.guid == guid)
     }
-    /// 🔖<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn find_piece_in_design_mut<'a>(
         design: &'a mut Design,
@@ -1209,77 +1227,77 @@ mod finder_functions {
     ) -> Option<&'a mut Piece> {
         design.pieces.as_mut()?.iter_mut().find(|p| p.guid == guid)
     }
-    /// 🔖<summary>🔖find_connection_in_design holds the data fields for a find_connection_in_design record.</summary>
+    /// <summary>🔍finds a connection in a design by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_connection_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Connection> {
         design.connections.as_ref()?.iter().find(|c| c.guid == guid)
     }
-    /// 🔖<summary>🔖find_connector_in_type holds the data fields for a find_connector_in_type record.</summary>
+    /// <summary>🔍finds a connector in a type by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_connector_in_type<'a>(t: &'a Type, guid: &str) -> Option<&'a Connector> {
         t.connectors.as_ref()?.iter().find(|c| c.guid == guid)
     }
-    /// 🔖<summary>🔖find_model_in_type holds the data fields for a find_model_in_type record.</summary>
+    /// <summary>🔍finds a model in a type by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_model_in_type<'a>(t: &'a Type, guid: &str) -> Option<&'a Model> {
         t.models.as_ref()?.iter().find(|m| m.guid == guid)
     }
-    /// 🔖<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn find_file_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a File> {
         kit.files.as_ref()?.iter().find(|f| f.guid == guid)
     }
 
-    /// 🔖<summary>🔖find_folder_in_kit holds the data fields for a find_folder_in_kit record.</summary>
+    /// <summary>🔍finds a folder in a kit by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_folder_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Folder> {
         kit.folders.as_ref()?.iter().find(|f| f.guid == guid)
     }
-    /// 🔖<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn find_author_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Author> {
         kit.authors.as_ref()?.iter().find(|a| a.guid == guid)
     }
-    /// 🔖<summary>🔖find_tag_in_kit holds the data fields for a find_tag_in_kit record.</summary>
+    /// <summary>🔍find tag in kit.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_tag_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Tag> {
         kit.tags.as_ref()?.iter().find(|t| t.guid == guid)
     }
-    /// 🔖<summary>🔖find_concept_in_kit holds the data fields for a find_concept_in_kit record.</summary>
+    /// <summary>🔍finds a concept in a kit by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_concept_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Concept> {
         kit.concepts.as_ref()?.iter().find(|c| c.guid == guid)
     }
-    /// 🔖<summary>🔖find_quality_in_kit holds the data fields for a find_quality_in_kit record.</summary>
+    /// <summary>🔍finds a quality in a kit by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_quality_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Quality> {
         kit.qualities.as_ref()?.iter().find(|q| q.guid == guid)
     }
-    /// 🔖<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn find_interface_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Port> {
         kit.ports.as_ref()?.iter().find(|i| i.guid == guid)
     }
 
-    /// 🔖<summary>🔖find_layer_in_design holds the data fields for a find_layer_in_design record.</summary>
+    /// <summary>🔍finds a layer in a design by GUID.</summary>
     pub fn find_layer_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Layer> {
         design.layers.as_ref()?.iter().find(|l| l.guid == guid)
     }
-    /// 🔖<summary>🔖find_group_in_design holds the data fields for a find_group_in_design record.</summary>
+    /// <summary>🔍finds a group in a design by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_group_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Group> {
         design.groups.as_ref()?.iter().find(|g| g.guid == guid)
     }
 
-    /// 🔖<summary>🔖find_stat_in_design holds the data fields for a find_stat_in_design record.</summary>
+    /// <summary>🔍finds a stat in a design by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub fn find_stat_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Stat> {
@@ -1331,7 +1349,7 @@ mod serialization {
     // 👑Serialization
     // Serialization MUST provide the serialization functionality.
 
-    /// <summary>🔖serialize_kit holds the data fields for a serialize_kit record.</summary>
+    /// <summary>💾serialize kit.</summary>
     use super::*;
 
     pub fn serialize_kit(kit: &Kit) -> Result<String> {
@@ -1339,7 +1357,7 @@ mod serialization {
             message: e.to_string(),
         })
     }
-    /// 🔖<summary>🔖deserialize_kit holds the data fields for a deserialize_kit record.</summary>
+    /// <summary>💾deserialize kit.</summary>
     /// <remarks>
     /// </remarks>
     pub fn deserialize_kit(json: &str) -> Result<Kit> {
@@ -1347,14 +1365,14 @@ mod serialization {
             message: e.to_string(),
         })
     }
-    /// 🔖<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn serialize_design(design: &Design) -> Result<String> {
         serde_json::to_string_pretty(design).map_err(|e| SemioError::Serialization {
             message: e.to_string(),
         })
     }
-    /// 🔖<summary>🔖deserialize_design holds the data fields for a deserialize_design record.</summary>
+    /// <summary>💾deserialize design.</summary>
     /// <remarks>
     /// </remarks>
     pub fn deserialize_design(json: &str) -> Result<Design> {
@@ -1363,7 +1381,7 @@ mod serialization {
         })
     }
 
-    /// 🔖<summary>🔖serialize_type holds the data fields for a serialize_type record.</summary>
+    /// <summary>💾serialize type.</summary>
     /// <remarks>
     /// </remarks>
     pub fn serialize_type(t: &Type) -> Result<String> {
@@ -1371,7 +1389,7 @@ mod serialization {
             message: e.to_string(),
         })
     }
-    /// 🔖<summary>🔖deserialize_type holds the data fields for a deserialize_type record.</summary>
+    /// <summary>💾deserialize type.</summary>
     /// <remarks>
     /// </remarks>
     pub fn deserialize_type(json: &str) -> Result<Type> {
@@ -1379,27 +1397,27 @@ mod serialization {
             message: e.to_string(),
         })
     }
-    /// 🔖<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn are_kits_equal(a: &Kit, b: &Kit) -> bool {
         deep_equal(a, b)
     }
-    /// 🔖<summary>🔖are_designs_equal holds the data fields for a are_designs_equal record.</summary>
+    /// <summary>🔄compares two designs entities for deep equality.</summary>
     /// <remarks>
     /// </remarks>
     pub fn are_designs_equal(a: &Design, b: &Design) -> bool {
         deep_equal(a, b)
     }
-    /// 🔖<summary>🔖are_types_equal holds the data fields for a are_types_equal record.</summary>
+    /// <summary>🔄compares two types entities for deep equality.</summary>
     pub fn are_types_equal(a: &Type, b: &Type) -> bool {
         deep_equal(a, b)
     }
 
-    /// 🔖<summary>🔖SUPPORTED_MODEL_EXTENSIONS holds the data fields for a SUPPORTED_MODEL_EXTENSIONS record.</summary>
+    /// <summary>🗿the list of supported 3D model file extensions.</summary>
     pub const SUPPORTED_MODEL_EXTENSIONS: &[&str] = &[
         "gltf", "glb", "fbx", "obj", "dae", "3ds", "stl", "ply", "usdz", "vrm", "ifc", "3mf",
     ];
-    /// 🔖<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn is_supported_model_extension(ext: &str) -> bool {
         SUPPORTED_MODEL_EXTENSIONS.contains(&ext.to_lowercase().as_str())
@@ -1414,8 +1432,8 @@ mod diff_types {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🚚<summary>🗑️RemovedItem holds the data fields for a RemovedItem record.</summary>
-    /// <summary>✏️RemovedItem holds the data fields for a RemovedItem record.</summary>
+    /// <summary>🗑️RemovedItem represents an entity marked for removal by GUID.</summary>
+    /// <summary>🗑️RemovedItem represents an entity marked for removal by GUID.</summary>
     /// <remarks>
     /// </remarks>
     pub struct RemovedItem {
@@ -1423,7 +1441,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, PartialEq)]
-    /// 🔁<summary>♻️DiffUpdate holds the data fields for a DiffUpdate record.</summary>
+    /// <summary>🔄DiffUpdate represents a before-after pair for entity updates.</summary>
     /// <remarks>
     /// </remarks>
     pub struct DiffUpdate<D> {
@@ -1527,7 +1545,7 @@ mod diff_types {
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     #[serde(bound(deserialize = "T: Deserialize<'de>, D: serde::de::DeserializeOwned"))]
-    /// 🔖<summary>🔖CollectionDiff holds the data fields for a CollectionDiff record.</summary>
+    /// <summary>🔄CollectionDiff represents batched entity additions, removals and updates.</summary>
     /// <remarks>
     /// </remarks>
     pub struct CollectionDiff<T, D> {
@@ -1540,7 +1558,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖AttributeDiff holds the data fields for a AttributeDiff record.</summary>
+    /// <summary>💎AttributeDiff represents a partial update to attribute's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct AttributeDiff {
@@ -1562,7 +1580,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖PropDiff holds the data fields for a PropDiff record.</summary>
+    /// <summary>📊PropDiff represents a partial update to prop's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct PropDiff {
@@ -1582,7 +1600,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖ConnectorDiff holds the data fields for a ConnectorDiff record.</summary>
+    /// <summary>🔌ConnectorDiff represents a partial update to connector's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct ConnectorDiff {
@@ -1631,7 +1649,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖ModelDiff holds the data fields for a ModelDiff record.</summary>
+    /// <summary>🗿ModelDiff represents a partial update to model's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct ModelDiff {
@@ -1661,7 +1679,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖TypeDiff holds the data fields for a TypeDiff record.</summary>
+    /// <summary>🧱TypeDiff represents a partial update to type's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct TypeDiff {
@@ -1753,7 +1771,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖SideDiff holds the data fields for a SideDiff record.</summary>
+    /// <summary>↔️SideDiff represents a partial update to side's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct SideDiff {
@@ -1775,7 +1793,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖ConnectionDiff holds the data fields for a ConnectionDiff record.</summary>
+    /// <summary>🔗ConnectionDiff represents a partial update to connection's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct ConnectionDiff {
@@ -1819,7 +1837,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖PieceDiff holds the data fields for a PieceDiff record.</summary>
+    /// <summary>🧩PieceDiff represents a partial update to piece's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct PieceDiff {
@@ -1901,7 +1919,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖LayerDiff holds the data fields for a LayerDiff record.</summary>
+    /// <summary>🎨LayerDiff represents a partial update to layer's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct LayerDiff {
@@ -1939,7 +1957,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖GroupDiff holds the data fields for a GroupDiff record.</summary>
+    /// <summary>👥GroupDiff represents a partial update to group's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct GroupDiff {
@@ -1973,7 +1991,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖StatDiff holds the data fields for a StatDiff record.</summary>
+    /// <summary>📈StatDiff represents a partial update to stat's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct StatDiff {
@@ -2015,7 +2033,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖DesignDiff holds the data fields for a DesignDiff record.</summary>
+    /// <summary>📐DesignDiff represents a partial update to design's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct DesignDiff {
@@ -2116,7 +2134,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖TagDiff holds the data fields for a TagDiff record.</summary>
+    /// <summary>🏷️TagDiff represents a partial update to tag's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct TagDiff {
@@ -2138,7 +2156,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖ConceptDiff holds the data fields for a ConceptDiff record.</summary>
+    /// <summary>💡ConceptDiff represents a partial update to concept's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct ConceptDiff {
@@ -2160,7 +2178,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖PortDiff holds the data fields for a PortDiff record.</summary>
+    /// <summary>⚓PortDiff represents a partial update to port's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct PortDiff {
@@ -2198,7 +2216,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖QualityDiff holds the data fields for a QualityDiff record.</summary>
+    /// <summary>🔬QualityDiff represents a partial update to quality's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct QualityDiff {
@@ -2280,7 +2298,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖FileDiff holds the data fields for a FileDiff record.</summary>
+    /// <summary>📄FileDiff represents a partial update to file's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct FileDiff {
@@ -2314,7 +2332,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖FolderDiff holds the data fields for a FolderDiff record.</summary>
+    /// <summary>📁FolderDiff represents a partial update to folder's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct FolderDiff {
@@ -2332,7 +2350,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖AuthorDiff holds the data fields for a AuthorDiff record.</summary>
+    /// <summary>✍️AuthorDiff represents a partial update to author's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct AuthorDiff {
@@ -2350,7 +2368,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖KitDiff holds the data fields for a KitDiff record.</summary>
+    /// <summary>📦KitDiff represents a partial update to kit's fields.</summary>
     /// <remarks>
     /// </remarks>
     pub struct KitDiff {
@@ -2429,7 +2447,7 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// ♻️<summary>🔖Change holds the data fields for a Change record.</summary>
+    /// <summary>🔄Change represents a tracked modification with timestamp and author.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Change<TEntity, TDiff> {
@@ -2444,73 +2462,73 @@ mod diff_types {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub after: Option<TEntity>,
     }
-    /// 🔖<summary>🔖AttributeChange holds the data fields for a AttributeChange record.</summary>
+    /// <summary>💎AttributeChange represents tracks attribute modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type AttributeChange = Change<Attribute, AttributeDiff>;
-    /// 🔖<summary>🔖AuthorChange holds the data fields for a AuthorChange record.</summary>
+    /// <summary>✍️AuthorChange represents tracks author modifications in a kit change.</summary>
     pub type AuthorChange = Change<Author, AuthorDiff>;
-    /// 🔖<summary>🔖FileChange holds the data fields for a FileChange record.</summary>
+    /// <summary>📄FileChange represents tracks file modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type FileChange = Change<File, FileDiff>;
-    /// 🔖<summary>🔖FolderChange holds the data fields for a FolderChange record.</summary>
+    /// <summary>📁FolderChange represents tracks folder modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type FolderChange = Change<Folder, FolderDiff>;
-    /// 🔖<summary>🔖QualityChange holds the data fields for a QualityChange record.</summary>
+    /// <summary>🔬QualityChange represents tracks quality modifications in a kit change.</summary>
     pub type QualityChange = Change<Quality, QualityDiff>;
-    /// 🔖<summary>🔖PortChange holds the data fields for a PortChange record.</summary>
+    /// <summary>⚓PortChange represents tracks port modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type PortChange = Change<Port, PortDiff>;
-    /// 🔖<summary>🔖PropChange holds the data fields for a PropChange record.</summary>
+    /// <summary>📊PropChange represents tracks prop modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type PropChange = Change<Prop, PropDiff>;
-    /// 🔖<summary>🔖TagChange holds the data fields for a TagChange record.</summary>
+    /// <summary>🏷️TagChange represents tracks tag modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type TagChange = Change<Tag, TagDiff>;
-    /// 🔖<summary>🔖ConceptChange holds the data fields for a ConceptChange record.</summary>
+    /// <summary>💡ConceptChange represents tracks concept modifications in a kit change.</summary>
     pub type ConceptChange = Change<Concept, ConceptDiff>;
-    /// 🔖<summary>🔖ModelChange holds the data fields for a ModelChange record.</summary>
+    /// <summary>🗿ModelChange represents tracks model modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type ModelChange = Change<Model, ModelDiff>;
-    /// 🔖<summary>🔖ConnectorChange holds the data fields for a ConnectorChange record.</summary>
+    /// <summary>🔌ConnectorChange represents tracks connector modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type ConnectorChange = Change<Connector, ConnectorDiff>;
-    /// 🔖<summary>🔖TypeChange holds the data fields for a TypeChange record.</summary>
+    /// <summary>🧱TypeChange represents tracks type modifications in a kit change.</summary>
     pub type TypeChange = Change<Type, TypeDiff>;
-    /// 🔖<summary>🔖LayerChange holds the data fields for a LayerChange record.</summary>
+    /// <summary>🎨LayerChange represents tracks layer modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type LayerChange = Change<Layer, LayerDiff>;
-    /// 🔖<summary>🔖PieceChange holds the data fields for a PieceChange record.</summary>
+    /// <summary>🧩PieceChange represents tracks piece modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type PieceChange = Change<Piece, PieceDiff>;
-    /// 🔖<summary>🔖GroupChange holds the data fields for a GroupChange record.</summary>
+    /// <summary>👥GroupChange represents tracks group modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type GroupChange = Change<Group, GroupDiff>;
-    /// 🔖<summary>🔖SideChange holds the data fields for a SideChange record.</summary>
+    /// <summary>↔️SideChange represents tracks side modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type SideChange = Change<Side, SideDiff>;
-    /// 🔖<summary>🔖ConnectionChange holds the data fields for a ConnectionChange record.</summary>
+    /// <summary>🔗ConnectionChange represents tracks connection modifications in a kit change.</summary>
     pub type ConnectionChange = Change<Connection, ConnectionDiff>;
-    /// 🔖<summary>🔖StatChange holds the data fields for a StatChange record.</summary>
+    /// <summary>📈StatChange represents tracks stat modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type StatChange = Change<Stat, StatDiff>;
-    /// 🔖<summary>🔖DesignChange holds the data fields for a DesignChange record.</summary>
+    /// <summary>📐DesignChange represents tracks design modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
     pub type DesignChange = Change<Design, DesignDiff>;
-    /// 🔖<summary>🔖KitChange holds the data fields for a KitChange record.</summary>
+    /// <summary>📦KitChange represents tracks kit-level modifications.</summary>
     pub type KitChange = Change<Kit, KitDiff>;
 } // 🏩Diff Types
 pub use diff_types::*;
@@ -2529,17 +2547,17 @@ mod meta_and_shallow_types {
 
         pub type AttributeMeta = Attribute;
 
-        /// 🔖StatMeta is identical to Stat (no Vec fields to omit).
+        /// 📈StatMeta represents scalar-only view of stat excluding nested arrays.
         pub type StatMeta = Stat;
 
-        /// 🔖TagMeta is identical to Tag (no Vec fields to omit).
+        /// 🏷️TagMeta represents scalar-only view of tag excluding nested arrays.
         pub type TagMeta = Tag;
 
-        /// 🔖ConceptMeta is identical to Concept (no Vec fields to omit).
+        /// 💡ConceptMeta represents scalar-only view of concept excluding nested arrays.
         pub type ConceptMeta = Concept;
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖PropMeta is Prop without attributes.
+        /// 📊PropMeta represents scalar-only view of prop excluding nested arrays.
         pub struct PropMeta {
             pub guid: Guid,
             pub quality: QualityId,
@@ -2549,7 +2567,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖AuthorMeta is Author without attributes.
+        /// ✍️AuthorMeta represents scalar-only view of author excluding nested arrays.
         pub struct AuthorMeta {
             pub guid: Guid,
             pub name: String,
@@ -2558,7 +2576,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖FileMeta is File without blob.
+        /// 📄FileMeta represents scalar-only view of file excluding nested arrays.
         pub struct FileMeta {
             pub guid: Guid,
             pub name: String,
@@ -2577,7 +2595,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖FolderMeta is Folder without attributes.
+        /// 📁FolderMeta represents scalar-only view of folder excluding nested arrays.
         pub struct FolderMeta {
             pub guid: Guid,
             pub name: String,
@@ -2592,7 +2610,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖QualityMeta is Quality without attributes.
+        /// 🔬QualityMeta represents scalar-only view of quality excluding nested arrays.
         pub struct QualityMeta {
             pub guid: Guid,
             pub key: String,
@@ -2625,7 +2643,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖PortMeta is Port without compatible_ports and attributes.
+        /// ⚓PortMeta represents scalar-only view of port excluding nested arrays.
         pub struct PortMeta {
             pub guid: Guid,
             pub name: String,
@@ -2638,7 +2656,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖ModelMeta is Model without tags and attributes.
+        /// 🗿ModelMeta represents scalar-only view of model excluding nested arrays.
         pub struct ModelMeta {
             pub guid: Guid,
             pub file: FileId,
@@ -2649,7 +2667,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖ConnectorMeta is Connector without props and attributes.
+        /// 🔌ConnectorMeta represents scalar-only view of connector excluding nested arrays.
         pub struct ConnectorMeta {
             pub guid: Guid,
             pub point: Vector,
@@ -2668,7 +2686,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖LayerMeta is Layer without attributes.
+        /// 🎨LayerMeta represents scalar-only view of layer excluding nested arrays.
         pub struct LayerMeta {
             pub guid: Guid,
             pub path: String,
@@ -2683,7 +2701,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-        /// 🔖PieceMeta is Piece without props and attributes.
+        /// 🧩PieceMeta represents scalar-only view of piece excluding nested arrays.
         pub struct PieceMeta {
             pub guid: Guid,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -2711,7 +2729,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖GroupMeta is Group without pieces and attributes.
+        /// 👥GroupMeta represents scalar-only view of group excluding nested arrays.
         pub struct GroupMeta {
             pub guid: Guid,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -2723,7 +2741,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖ConnectionMeta is Connection without attributes.
+        /// 🔗ConnectionMeta represents scalar-only view of connection excluding nested arrays.
         pub struct ConnectionMeta {
             pub guid: Guid,
             pub connected: Side,
@@ -2756,7 +2774,7 @@ mod meta_and_shallow_types {
         use super::*;
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖TypeMeta is Type with only scalar fields (no models, connectors, props, attributes, authors, concepts).
+        /// 🧱TypeMeta represents scalar-only view of type excluding nested arrays.
         pub struct TypeMeta {
             pub guid: Guid,
             pub name: String,
@@ -2830,7 +2848,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖DesignMeta is Design with only scalar fields.
+        /// 📐DesignMeta represents scalar-only view of design excluding nested arrays.
         pub struct DesignMeta {
             pub guid: Guid,
             pub name: String,
@@ -2910,7 +2928,7 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🔖KitMeta is Kit with only scalar fields.
+        /// 📦KitMeta represents scalar-only view of kit excluding nested arrays.
         pub struct KitMeta {
             pub guid: Guid,
             pub name: String,
@@ -3354,7 +3372,7 @@ pub use meta_and_shallow_types::*;
 mod has_guid_trait {
     // 🎮HasGuid Trait
     // HasGuid Trait MUST provide the hasguid trait functionality.
-    /// <summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>🔧d.</summary>
     /// <remarks>
     /// </remarks>
     use super::*;
@@ -3362,7 +3380,7 @@ mod has_guid_trait {
     pub trait HasGuid {
         fn guid(&self) -> &str;
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>💎HasGuid implementation for Attribute.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Attribute {
@@ -3370,19 +3388,19 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>📊HasGuid implementation for Prop.</summary>
     impl HasGuid for Prop {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>🔌HasGuid implementation for Connector.</summary>
     impl HasGuid for Connector {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>🗿HasGuid implementation for Model.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Model {
@@ -3390,7 +3408,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>🧱HasGuid implementation for Type.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Type {
@@ -3398,13 +3416,13 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>🧩HasGuid implementation for Piece.</summary>
     impl HasGuid for Piece {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>🔗HasGuid implementation for Connection.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Connection {
@@ -3412,13 +3430,13 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>🎨HasGuid implementation for Layer.</summary>
     impl HasGuid for Layer {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>👥HasGuid implementation for Group.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Group {
@@ -3426,7 +3444,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>📈HasGuid implementation for Stat.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Stat {
@@ -3434,13 +3452,13 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>📐HasGuid implementation for Design.</summary>
     impl HasGuid for Design {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>🏷️HasGuid implementation for Tag.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Tag {
@@ -3448,7 +3466,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>💡HasGuid implementation for Concept.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Concept {
@@ -3456,7 +3474,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>⚓HasGuid implementation for Port.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Port {
@@ -3464,7 +3482,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>🔬HasGuid implementation for Quality.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Quality {
@@ -3472,7 +3490,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>📄HasGuid implementation for File.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for File {
@@ -3480,7 +3498,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>📁HasGuid implementation for Folder.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Folder {
@@ -3488,7 +3506,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>✍️HasGuid implementation for Author.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Author {
@@ -3496,7 +3514,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖HasGuid holds the data fields for a HasGuid record.</summary>
+    /// <summary>📦HasGuid implementation for Kit.</summary>
     /// <remarks>
     /// </remarks>
     impl HasGuid for Kit {
@@ -3504,13 +3522,13 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>💎DiffHasGuid implementation for AttributeDiff.</summary>
     /// <remarks>
     /// </remarks>
     pub trait DiffHasGuid {
         fn guid(&self) -> &str;
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>💎HasGuid implementation for AttributeDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for AttributeDiff {
@@ -3518,7 +3536,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>📊HasGuid implementation for PropDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for PropDiff {
@@ -3526,7 +3544,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>🔌HasGuid implementation for ConnectorDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for ConnectorDiff {
@@ -3534,7 +3552,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>🗿HasGuid implementation for ModelDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for ModelDiff {
@@ -3542,7 +3560,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>🧱HasGuid implementation for TypeDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for TypeDiff {
@@ -3550,7 +3568,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>🧩HasGuid implementation for PieceDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for PieceDiff {
@@ -3558,7 +3576,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>🔗HasGuid implementation for ConnectionDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for ConnectionDiff {
@@ -3566,7 +3584,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>🎨HasGuid implementation for LayerDiff.</summary>
     /// <remarks>
     /// </remarks>
     /// <remarks>
@@ -3576,13 +3594,13 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>👥HasGuid implementation for GroupDiff.</summary>
     impl DiffHasGuid for GroupDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>📈HasGuid implementation for StatDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for StatDiff {
@@ -3590,7 +3608,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>📐HasGuid implementation for DesignDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for DesignDiff {
@@ -3598,7 +3616,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>🏷️HasGuid implementation for TagDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for TagDiff {
@@ -3606,7 +3624,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>💡HasGuid implementation for ConceptDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for ConceptDiff {
@@ -3614,7 +3632,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>⚓HasGuid implementation for PortDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for PortDiff {
@@ -3622,7 +3640,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>🔬HasGuid implementation for QualityDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for QualityDiff {
@@ -3630,7 +3648,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>📄HasGuid implementation for FileDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for FileDiff {
@@ -3638,7 +3656,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>📁HasGuid implementation for FolderDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for FolderDiff {
@@ -3646,7 +3664,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>✍️HasGuid implementation for AuthorDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for AuthorDiff {
@@ -3654,7 +3672,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// 🔖<summary>🔖DiffHasGuid holds the data fields for a DiffHasGuid record.</summary>
+    /// <summary>📦HasGuid implementation for KitDiff.</summary>
     /// <remarks>
     /// </remarks>
     impl DiffHasGuid for KitDiff {
@@ -3669,7 +3687,7 @@ mod apply_diff {
     // 🎲ApplyDiff
     // ApplyDiff MUST provide the applydiff functionality.
 
-    /// <summary>🔖apply_collection_diff holds the data fields for a apply_collection_diff record.</summary>
+    /// <summary>🔄applies a diff to update collection.</summary>
     /// <remarks>
     /// </remarks>
     use super::*;
@@ -3714,7 +3732,7 @@ mod apply_diff {
             };
         }
     }
-    /// 🔖<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn apply_attribute_diff(item: &mut Attribute, diff: &AttributeDiff) {
         if let Some(value) = &diff.key {
@@ -3727,7 +3745,7 @@ mod apply_diff {
             item.definition = value.clone();
         }
     }
-    /// 🔖<summary>🔖apply_prop_diff holds the data fields for a apply_prop_diff record.</summary>
+    /// <summary>🔄applies a diff to update prop.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_prop_diff(item: &mut Prop, diff: &PropDiff) {
@@ -3742,7 +3760,7 @@ mod apply_diff {
         }
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    /// 🔖<summary>🔖apply_connector_diff holds the data fields for a apply_connector_diff record.</summary>
+    /// <summary>🔄applies a diff to update connector.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_connector_diff(item: &mut Connector, diff: &ConnectorDiff) {
@@ -3774,7 +3792,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    /// 🔖<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn apply_model_diff(item: &mut Model, diff: &ModelDiff) {
         if let Some(value) = &diff.file {
@@ -3791,7 +3809,7 @@ mod apply_diff {
         }
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    /// 🔖<summary>🔖apply_type_diff holds the data fields for a apply_type_diff record.</summary>
+    /// <summary>🔄applies a diff to update type.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_type_diff(item: &mut Type, diff: &TypeDiff) {
@@ -3840,7 +3858,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
 
-    /// 🔖<summary>🔖apply_layer_diff holds the data fields for a apply_layer_diff record.</summary>
+    /// <summary>🔄applies a diff to update layer.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_layer_diff(item: &mut Layer, diff: &LayerDiff) {
@@ -3862,7 +3880,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
 
-    /// 🔖<summary>🔖apply_group_diff holds the data fields for a apply_group_diff record.</summary>
+    /// <summary>🔄applies a diff to update group.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_group_diff(item: &mut Group, diff: &GroupDiff) {
@@ -3881,7 +3899,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
 
-    /// 🔖<summary>🔖apply_stat_diff holds the data fields for a apply_stat_diff record.</summary>
+    /// <summary>🔄applies a diff to update stat.</summary>
     pub fn apply_stat_diff(item: &mut Stat, diff: &StatDiff) {
         if let Some(value) = &diff.quality {
             item.quality = value.clone();
@@ -3902,7 +3920,7 @@ mod apply_diff {
             item.unit = value.clone();
         }
     }
-    /// 🔖<summary>🔖apply_piece_diff holds the data fields for a apply_piece_diff record.</summary>
+    /// <summary>🔄applies a diff to update piece.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_piece_diff(item: &mut Piece, diff: &PieceDiff) {
@@ -3942,7 +3960,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    /// 🔖<summary>🔖apply_connection_diff holds the data fields for a apply_connection_diff record.</summary>
+    /// <summary>🔄applies a diff to update connection.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_connection_diff(item: &mut Connection, diff: &ConnectionDiff) {
@@ -4011,7 +4029,7 @@ mod apply_diff {
         }
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    /// 🔖<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn apply_design_diff(item: &mut Design, diff: &DesignDiff) {
         if let Some(value) = &diff.name {
@@ -4181,7 +4199,7 @@ mod apply_diff {
         result
     }
 
-    /// 🔖<summary>🔖apply_tag_diff holds the data fields for a apply_tag_diff record.</summary>
+    /// <summary>🔄applies a diff to update tag.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_tag_diff(item: &mut Tag, diff: &TagDiff) {
@@ -4196,7 +4214,7 @@ mod apply_diff {
         }
     }
 
-    /// 🔖<summary>🔖apply_concept_diff holds the data fields for a apply_concept_diff record.</summary>
+    /// <summary>🔄applies a diff to update concept.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_concept_diff(item: &mut Concept, diff: &ConceptDiff) {
@@ -4211,7 +4229,7 @@ mod apply_diff {
         }
     }
 
-    /// 🔖<summary>🔢apply_interface_diff holds the data fields for a apply_interface_diff record.</summary>
+    /// <summary>🔄applies a diff to update interface.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_interface_diff(item: &mut Port, diff: &PortDiff) {
@@ -4230,7 +4248,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
 
-    /// 🔖<summary>🔖apply_quality_diff holds the data fields for a apply_quality_diff record.</summary>
+    /// <summary>🔄applies a diff to update quality.</summary>
     pub fn apply_quality_diff(item: &mut Quality, diff: &QualityDiff) {
         if let Some(value) = &diff.key {
             item.key = value.clone();
@@ -4273,7 +4291,7 @@ mod apply_diff {
         }
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    /// 🔖<summary>🔖apply_file_diff holds the data fields for a apply_file_diff record.</summary>
+    /// <summary>🔄applies a diff to update file.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_file_diff(item: &mut File, diff: &FileDiff) {
@@ -4293,7 +4311,7 @@ mod apply_diff {
             item.hash = value.clone();
         }
     }
-    /// 🔖<remarks>
+    /// <remarks>
     /// </remarks>
     pub fn apply_folder_diff(item: &mut Folder, diff: &FolderDiff) {
         if let Some(value) = &diff.name {
@@ -4305,7 +4323,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
 
-    /// 🔖<summary>🔖apply_author_diff holds the data fields for a apply_author_diff record.</summary>
+    /// <summary>🔄applies a diff to update author.</summary>
     pub fn apply_author_diff(item: &mut Author, diff: &AuthorDiff) {
         if let Some(value) = &diff.name {
             item.name = value.clone();
@@ -4315,7 +4333,7 @@ mod apply_diff {
         }
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-    /// 🔖<summary>🔖apply_kit_diff holds the data fields for a apply_kit_diff record.</summary>
+    /// <summary>🔄applies a diff to update kit.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_kit_diff(item: &mut Kit, diff: &KitDiff) {
@@ -4359,6 +4377,12 @@ mod apply_diff {
     }
 } // ✈️ApplyDiff
 pub use apply_diff::*;
+
+mod kit_diff_validation {
+    // Kit diff validation: errors vs warnings; optional JSON heal aligned with Go/TS asset cases.
+    include!("kit_diff_validation.inc.rs");
+}
+pub use kit_diff_validation::*;
 
 mod kit_change_helpers {
     // 🏬Kit Change Helpers
@@ -5870,7 +5894,7 @@ mod flatten_design {
     // 🏦FlattenDesign
     // FlattenDesign MUST provide the flattendesign functionality.
 
-    /// <summary>🔖FlattenedPiece holds the data fields for a FlattenedPiece record.</summary>
+    /// <summary>🧩FlattenedPiece represents a piece with fully resolved world-space transform.</summary>
     use super::*;
 
     pub struct FlattenedPiece {
@@ -5881,7 +5905,7 @@ mod flatten_design {
         pub path: Vec<String>,
     }
 
-    /// 🔖<summary>🔖flatten_design holds the data fields for a flatten_design record.</summary>
+    /// <summary>📐flattens nested design references into a single design.</summary>
     /// <remarks>
     /// </remarks>
     pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
@@ -6155,7 +6179,7 @@ mod flatten_design {
             after: Some(after_design),
         }
     }
-    /// 🔖<summary>🔖planes_equal_approx holds the data fields for a planes_equal_approx record.</summary>
+    /// <summary>◻️compares two planes for approximate equality.</summary>
     /// <remarks>
     /// </remarks>
     pub fn planes_equal_approx(a: &Plane, b: &Plane) -> bool {
@@ -6170,7 +6194,7 @@ mod flatten_design {
             && (a.y_axis.y - b.y_axis.y).abs() < TOL
             && (a.y_axis.z - b.y_axis.z).abs() < TOL
     }
-    /// 🔖<summary>💾compute_connection_matrix_fast holds the data fields for a compute_connection_matrix_fast record.</summary>
+    /// <summary>💻compute connection matrix fast.</summary>
     /// <remarks>
     /// </remarks>
     pub fn compute_connection_matrix_fast(
@@ -6194,7 +6218,7 @@ mod flatten_design {
             conn,
         ))
     }
-    /// 🔖<summary>🔖compute_child_plane_matrix holds the data fields for a compute_child_plane_matrix record.</summary>
+    /// <summary>💻compute child plane matrix.</summary>
     /// <remarks>
     /// </remarks>
     pub fn compute_child_plane_matrix(
@@ -6337,7 +6361,7 @@ mod flatten_design {
 
         transform
     }
-    /// 🔖<summary>🔄quat_to_matrix4 holds the data fields for a quat_to_matrix4 record.</summary>
+    /// <summary>🔄converts quaternion to a 4x4 rotation matrix.</summary>
     /// <remarks>
     /// </remarks>
     pub fn quat_to_matrix4(q: &nalgebra::UnitQuaternion<f64>) -> Matrix4<f64> {
@@ -6362,7 +6386,7 @@ mod flatten_design {
             1.0,
         )
     }
-    /// 🔖<summary>🔖make_translation holds the data fields for a make_translation record.</summary>
+    /// <summary>🔧make translation.</summary>
     /// <remarks>
     /// </remarks>
     pub fn make_translation(x: f64, y: f64, z: f64) -> Matrix4<f64> {
@@ -6370,7 +6394,7 @@ mod flatten_design {
             1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0,
         )
     }
-    /// 🔖<summary>🔖apply_matrix4_to_vec3 holds the data fields for a apply_matrix4_to_vec3 record.</summary>
+    /// <summary>💻applies a 4x4 matrix to a 3D vector.</summary>
     /// <remarks>
     /// </remarks>
     pub fn apply_matrix4_to_vec3(
@@ -6383,7 +6407,7 @@ mod flatten_design {
             m[(2, 0)] * v.x + m[(2, 1)] * v.y + m[(2, 2)] * v.z,
         )
     }
-    /// 🔖<summary>🔖get_connector_for_side_fast holds the data fields for a get_connector_for_side_fast record.</summary>
+    /// <summary>🔍get connector for side fast.</summary>
     /// <remarks>
     /// </remarks>
     pub fn get_connector_for_side_fast<'a>(
@@ -6397,7 +6421,7 @@ mod flatten_design {
         let connector_guid = side.connector.as_ref().map(|c| c.guid.as_str());
         get_connector_from_type(types_map, t, connector_guid).map(|c| c.clone())
     }
-    /// 🔖<summary>🔖get_connector_from_type holds the data fields for a get_connector_from_type record.</summary>
+    /// <summary>🔍get connector from type.</summary>
     /// <remarks>
     /// </remarks>
     pub fn get_connector_from_type<'a>(
@@ -6444,7 +6468,7 @@ mod flatten_design {
             }
         }
     }
-    /// 🔖<summary>🔖connector_to_plane holds the data fields for a connector_to_plane record.</summary>
+    /// <summary>🔌converts a connector to a plane representation.</summary>
     /// <remarks>
     /// </remarks>
     pub fn connector_to_plane(connector: &Connector) -> Plane {
@@ -7304,7 +7328,7 @@ mod kit_model_export {
         result
     }
 
-    /// 📚<summary>🔖Converts a nalgebra Matrix4 to glTF column-major array of 16 f64.</summary>
+    /// <summary>🔧matrix4 to gltf column major.</summary>
     pub fn matrix4_to_gltf_column_major(m: &Matrix4<f64>) -> [f64; 16] {
         let transformed = semio_matrix_to_gltf_matrix(m);
         [
@@ -7337,7 +7361,7 @@ mod kit_model_export {
         basis * matrix * basis_inv
     }
 
-    /// 🔗<summary>🔖Preserves source mesh geometry while clearing unresolved material links.</summary>
+    /// <summary>🔧strip mesh material references.</summary>
     pub fn strip_mesh_material_references(mesh: &mut serde_json::Value) {
         if let Some(primitives) = mesh
             .get_mut("primitives")
@@ -7351,7 +7375,7 @@ mod kit_model_export {
         }
     }
 
-    /// 📖<summary>🔤Assigns a human-readable source file name to a merged mesh.</summary>
+    /// <summary>🔧set mesh name.</summary>
     pub fn set_mesh_name(mesh: &mut serde_json::Value, mesh_name: &str) {
         mesh["name"] = serde_json::json!(mesh_name);
     }
@@ -7463,7 +7487,7 @@ mod kit_model_export {
         }));
     }
 
-    /// 🔖<summary>🔖Selects the best model for a type given desired tag guids.</summary>
+    /// <summary>🔧select model for type.</summary>
     pub fn select_model_for_type<'a>(t: &'a Type, tags: &[String]) -> Option<&'a Model> {
         let models = t.models.as_ref()?;
         if models.is_empty() {
@@ -8281,7 +8305,7 @@ mod validation_types {
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     #[serde(rename_all = "camelCase")]
-    /// 🔖<summary>✔️ValidationProblem holds the data fields for a ValidationProblem record.</summary>
+    /// <summary>⚠️ValidationProblem represents a validation issue with severity and location.</summary>
     /// <remarks>
     /// </remarks>
     /// <remarks>
@@ -8298,7 +8322,7 @@ mod validation_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// 🔧<summary>🔖ValidationFix holds the data fields for a ValidationFix record.</summary>
+    /// <summary>🔧ValidationFix represents a suggested fix for a validation problem.</summary>
     /// <remarks>
     /// </remarks>
     pub struct ValidationFix {
@@ -8308,14 +8332,14 @@ mod validation_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// 🔖<summary>🔖ValidationResult holds the data fields for a ValidationResult record.</summary>
+    /// <summary>✅ValidationResult represents the outcome of a kit validation.</summary>
     /// <remarks>
     /// </remarks>
     pub struct ValidationResult {
         pub problems: Vec<ValidationProblem>,
     }
 
-    /// 🔖<summary>🔖validate_kit holds the data fields for a validate_kit record.</summary>
+    /// <summary>✅validates a kit for structural and referential integrity.</summary>
     pub fn validate_kit(kit: &Kit) -> ValidationResult {
         let mut problems = Vec::new();
 
@@ -8333,7 +8357,7 @@ mod validation_types {
         check_folder_name_uniqueness(kit, &mut problems);
         ValidationResult { problems }
     }
-    /// 🔒<summary>🧪check_guid_uniqueness_constraint holds the data fields for a check_guid_uniqueness_constraint record.</summary>
+    /// <summary>🔑generates a new v7 UUID string.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_guid_uniqueness_constraint(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
@@ -8413,7 +8437,7 @@ mod validation_types {
             }
         }
     }
-    /// 🔖<summary>🔖check_guid holds the data fields for a check_guid record.</summary>
+    /// <summary>🔑generates a new v7 UUID string.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_guid(
@@ -8434,7 +8458,7 @@ mod validation_types {
             guids.insert(guid.to_string());
         }
     }
-    /// 🔖<summary>🔖check_type_name_uniqueness holds the data fields for a check_type_name_uniqueness record.</summary>
+    /// <summary>✅check type name uniqueness.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_type_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
@@ -8464,7 +8488,7 @@ mod validation_types {
             }
         }
     }
-    /// 🔖<summary>🔖check_design_name_uniqueness holds the data fields for a check_design_name_uniqueness record.</summary>
+    /// <summary>✅check design name uniqueness.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_design_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
@@ -8496,7 +8520,7 @@ mod validation_types {
             }
         }
     }
-    /// 🔖<summary>🔖check_piece_name_uniqueness holds the data fields for a check_piece_name_uniqueness record.</summary>
+    /// <summary>✅check piece name uniqueness.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_piece_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
@@ -8531,11 +8555,11 @@ mod validation_types {
             }
         }
     }
-    /// 🔖<summary>🔖check_connection_name_uniqueness holds the data fields for a check_connection_name_uniqueness record.</summary>
+    /// <summary>✅check connection name uniqueness.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_connection_name_uniqueness(_kit: &Kit, _problems: &mut Vec<ValidationProblem>) {}
-    /// 🔖<summary>🔖check_connector_name_uniqueness holds the data fields for a check_connector_name_uniqueness record.</summary>
+    /// <summary>✅check connector name uniqueness.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_connector_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
@@ -8568,7 +8592,7 @@ mod validation_types {
             }
         }
     }
-    /// 🔖<summary>🔖check_model_name_uniqueness holds the data fields for a check_model_name_uniqueness record.</summary>
+    /// <summary>✅check model name uniqueness.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_model_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
@@ -8601,7 +8625,7 @@ mod validation_types {
             }
         }
     }
-    /// 🛤️<summary>🔖check_layer_path_uniqueness holds the data fields for a check_layer_path_uniqueness record.</summary>
+    /// <summary>✅check layer path uniqueness.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_layer_path_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
@@ -8634,7 +8658,7 @@ mod validation_types {
             }
         }
     }
-    /// 🔖<summary>🔖check_quality_name_uniqueness holds the data fields for a check_quality_name_uniqueness record.</summary>
+    /// <summary>✅check quality name uniqueness.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_quality_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
@@ -8659,7 +8683,7 @@ mod validation_types {
             }
         }
     }
-    /// 🔖<summary>🔖check_port_name_uniqueness holds the data fields for a check_port_name_uniqueness record.</summary>
+    /// <summary>✅check port name uniqueness.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_port_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
@@ -8682,7 +8706,7 @@ mod validation_types {
             }
         }
     }
-    /// 🔖<summary>🔖check_file_name_uniqueness holds the data fields for a check_file_name_uniqueness record.</summary>
+    /// <summary>✅check file name uniqueness.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_file_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
@@ -8705,7 +8729,7 @@ mod validation_types {
             }
         }
     }
-    /// 🔖<summary>🔖check_folder_name_uniqueness holds the data fields for a check_folder_name_uniqueness record.</summary>
+    /// <summary>✅check folder name uniqueness.</summary>
     /// <remarks>
     /// </remarks>
     pub fn check_folder_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
@@ -8737,7 +8761,6 @@ mod validation_types {
             }
         }
     }
-
 } // 🌿Validation Types
 pub use validation_types::*;
 
@@ -8748,7 +8771,7 @@ mod sqlite_import_export {
     use super::*;
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖sqlite holds the data fields for a sqlite record.</summary>
+    /// <summary>📤export kit to sqlite.</summary>
     pub mod sqlite {
         use super::*;
         use rusqlite::params;
@@ -9571,7 +9594,7 @@ mod zip_import_export {
     use super::*;
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖zip_roundtrip holds the data fields for a zip_roundtrip record.</summary>
+    /// <summary>📄mime from filename.</summary>
     pub fn mime_from_filename(filename: &str) -> &'static str {
         let ext = filename.rsplit('.').next().unwrap_or("").to_lowercase();
         match ext.as_str() {
@@ -9949,7 +9972,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 📥<summary>🔖import_file_kit holds the data fields for a import_file_kit record.</summary>
+    /// <summary>📥import file kit.</summary>
     pub fn import_file_kit(path: &str) -> Result<Kit> {
         let content = std::fs::read_to_string(path)
             .map_err(|error| io_semio_error("Failed to read kit file", error))?;
@@ -9957,7 +9980,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 📤<summary>🔖export_file_kit holds the data fields for a export_file_kit record.</summary>
+    /// <summary>📤export file kit.</summary>
     pub fn export_file_kit(kit: &Kit, path: &str) -> Result<()> {
         let json = serialize_kit(kit)?;
         std::fs::write(path, json)
@@ -9965,7 +9988,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖import_folder_kit holds the data fields for a import_folder_kit record.</summary>
+    /// <summary>📥import folder kit.</summary>
     pub fn import_folder_kit(folder_path: &str) -> Result<zip_roundtrip::KitImportResult> {
         let database_path = build_folder_database_path(folder_path);
         let database_path_str = database_path.to_str().ok_or(SemioError::InvalidOperation {
@@ -10000,7 +10023,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖export_folder_kit holds the data fields for a export_folder_kit record.</summary>
+    /// <summary>📤export folder kit.</summary>
     pub fn export_folder_kit(
         kit: &Kit,
         files: &HashMap<String, Vec<u8>>,
@@ -10042,7 +10065,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖import_remote_kit holds the data fields for a import_remote_kit record.</summary>
+    /// <summary>📥import remote kit.</summary>
     pub fn import_remote_kit(url: &str) -> Result<zip_roundtrip::KitImportResult> {
         let response = reqwest::blocking::get(url).map_err(|error| SemioError::Database {
             message: format!("Failed to fetch remote kit {}: {}", url, error),
@@ -10077,7 +10100,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖edit_temporary_kit holds the data fields for a edit_temporary_kit record.</summary>
+    /// <summary>✏️edit temporary kit.</summary>
     pub fn edit_temporary_kit(kit: &Kit, diff: &KitDiff) -> Kit {
         let mut edited = kit.clone();
         apply_kit_diff(&mut edited, diff);
@@ -10085,7 +10108,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖edit_file_kit holds the data fields for a edit_file_kit record.</summary>
+    /// <summary>✏️edit file kit.</summary>
     pub fn edit_file_kit(path: &str, diff: &KitDiff) -> Result<Kit> {
         let kit = import_file_kit(path)?;
         let edited = edit_temporary_kit(&kit, diff);
@@ -10094,7 +10117,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖edit_folder_kit holds the data fields for a edit_folder_kit record.</summary>
+    /// <summary>✏️edit folder kit.</summary>
     pub fn edit_folder_kit(folder_path: &str, diff: &KitDiff) -> Result<Kit> {
         let imported = import_folder_kit(folder_path)?;
         let edited = edit_temporary_kit(&imported.kit, diff);
@@ -10105,7 +10128,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖edit_archive_kit holds the data fields for a edit_archive_kit record.</summary>
+    /// <summary>✏️edit archive kit.</summary>
     pub fn edit_archive_kit(path: &str, diff: &KitDiff) -> Result<Kit> {
         let imported = zip_roundtrip::import_kit_from_zip(path)?;
         let edited = edit_temporary_kit(&imported.kit, diff);
@@ -10115,7 +10138,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖edit_remote_kit holds the data fields for a edit_remote_kit record.</summary>
+    /// <summary>✏️edit remote kit.</summary>
     pub fn edit_remote_kit(url: &str, diff: &KitDiff) -> Result<Kit> {
         let imported = import_remote_kit(url)?;
         Ok(edit_temporary_kit(&imported.kit, diff))
@@ -10130,7 +10153,7 @@ mod wasm_bindings {
     use super::*;
 
     #[cfg(target_arch = "wasm32")]
-    /// 🔖<summary>🔖wasm holds the data fields for a wasm record.</summary>
+    /// <summary>🌐WasmResult represents a WebAssembly-compatible result wrapper.</summary>
     pub mod wasm {
         use super::*;
         use wasm_bindgen::prelude::*;
@@ -13155,7 +13178,7 @@ mod tests {
     use super::*;
 
     #[cfg(test)]
-    /// 🧪<summary>🔖tests holds the data fields for a tests record.</summary>
+    /// <summary>🔧ASSETS_DIR.</summary>
     /// <remarks>
     /// </remarks>
     mod tests {
@@ -14789,6 +14812,91 @@ mod tests {
                             }),
                             "unexpected emoji validation problem: {:?}",
                             result.problems
+                        );
+                    }
+                }
+                mod kit_diff_asset {
+                    use super::*;
+                    use serde::Deserialize;
+
+                    #[derive(Deserialize)]
+                    struct Asset {
+                        #[serde(rename = "tinyKit")]
+                        tiny_kit: Kit,
+                        cases: Vec<Case>,
+                    }
+                    #[derive(Deserialize)]
+                    struct Case {
+                        id: String,
+                        diff: KitDiff,
+                        #[serde(rename = "expectOk")]
+                        expect_ok: bool,
+                        #[serde(rename = "errorCodes")]
+                        error_codes: Vec<String>,
+                        #[serde(rename = "warningCodes")]
+                        warning_codes: Vec<String>,
+                    }
+
+                    fn codes(notes: &[crate::KitDiffValidationNote]) -> Vec<String> {
+                        notes.iter().filter_map(|n| n.code.clone()).collect()
+                    }
+
+                    #[test]
+                    pub fn shared_semio_asset_cases() {
+                        let path = Path::new(ASSETS_DIR).join("validate-kit-diff.cases.semio.json");
+                        let data = fs::read_to_string(&path).expect("read validate-kit-diff asset");
+                        let asset: Asset = serde_json::from_str(&data).expect("parse asset");
+                        for c in asset.cases {
+                            let r = crate::validate_kit_diff(&asset.tiny_kit, &c.diff, false);
+                            assert_eq!(
+                                r.ok, c.expect_ok,
+                                "case {}: err={:?} warn={:?}",
+                                c.id, r.errors, r.warnings
+                            );
+                            let err_codes = codes(&r.errors);
+                            for code in &c.error_codes {
+                                assert!(
+                                    err_codes.iter().any(|e| e == code),
+                                    "case {}: missing error {} got {:?}",
+                                    c.id,
+                                    code,
+                                    err_codes
+                                );
+                            }
+                            let warn_codes = codes(&r.warnings);
+                            for code in &c.warning_codes {
+                                assert!(
+                                    warn_codes.iter().any(|w| w == code),
+                                    "case {}: missing warning {} got {:?}",
+                                    c.id,
+                                    code,
+                                    warn_codes
+                                );
+                            }
+                        }
+                    }
+
+                    #[test]
+                    pub fn heal_drops_invalid_design_update() {
+                        let path = Path::new(ASSETS_DIR).join("validate-kit-diff.cases.semio.json");
+                        let data = fs::read_to_string(&path).expect("read asset");
+                        let asset: Asset = serde_json::from_str(&data).expect("parse asset");
+                        let bad: KitDiff = serde_json::from_str(
+                            r#"{"designs":{"updated":[{"design":{"guid":"99999999-9999-9999-9999-999999999999"},"diff":{"name":"X"}}]}}"#,
+                        )
+                        .expect("bad diff");
+                        let r = crate::validate_kit_diff(&asset.tiny_kit, &bad, true);
+                        let d = r.diff.expect("healed diff");
+                        assert!(
+                            d.designs.is_none()
+                                || d.designs
+                                    .as_ref()
+                                    .unwrap()
+                                    .updated
+                                    .as_ref()
+                                    .map_or(true, |u| u.is_empty()),
+                            "heal should drop invalid design update: {:?}",
+                            d.designs
                         );
                     }
                 }
