@@ -8246,1506 +8246,6 @@ def sumQualityInDesignDict(kit: dict, design_guid: str, quality_guid: str) -> fl
 
 
 
-# #region 🧭Moved Graphene Nodes
-# Graphene node definitions moved here due to forward-reference resolution order.
-
-
-class AttributeNode(TableEntityNode):
-    """🔖GraphQL node exposing attribute data."""
-
-    class Meta:
-        model = Attribute
-
-
-class PlaneNode(TableNode):
-    """🔖GraphQL node exposing plane data."""
-
-    class Meta:
-        model = Plane
-
-
-class AuthorNode(TableEntityNode):
-    """🔖GraphQL node exposing author data."""
-
-    class Meta:
-        model = Author
-
-
-class ModelNode(TableEntityNode):
-    """🔖GraphQL node exposing model data."""
-
-    class Meta:
-        model = Model
-        excludedFields = ("tags_",)
-
-
-class ConnectorNode(TableEntityNode):
-    """🔖GraphQL node exposing connector data."""
-
-    class Meta:
-        model = Connector
-        exclude_fields = ("connecteds", "connectings")
-
-    localId = graphene.String()
-
-    def resolve_localId(self, info):
-        return getattr(self, "id_", "")
-
-
-class TypeNode(TableEntityNode):
-    """🔖GraphQL node exposing type data."""
-
-    class Meta:
-        model = Type
-
-
-class PieceNode(TableEntityNode):
-    """🔖GraphQL node exposing piece data."""
-
-    class Meta:
-        model = Piece
-        exclude_fields = ("connecteds", "connectings")
-
-    localId = graphene.String()
-
-    def resolve_localId(self, info):
-        return getattr(self, "id_", "")
-
-
-class ConnectionNode(TableEntityNode):
-    """🔖GraphQL node exposing connection data."""
-
-    class Meta:
-        model = Connection
-        exclude_fields = (
-            "connectedPiece",
-            "connectedConnector",
-            "connectingPiece",
-            "connectingConnector",
-        )
-
-    connected = graphene.NonNull(lambda: SideNode)
-    connecting = graphene.NonNull(lambda: SideNode)
-
-    def resolve_connected(self, info):
-        return self.connected
-
-    def resolve_connecting(self, info):
-        return self.connecting
-
-
-class DesignNode(TableEntityNode):
-    """🔖GraphQL node exposing design data."""
-
-    class Meta:
-        model = Design
-
-
-class KitNotFound(NotFound):
-    """🚚endregion 🧭Moved Graphene Nodes"""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"🔍 Couldn't find an local or remote kit under uri:\n {self.uri}."
-
-
-class NoKitToDelete(KitNotFound):
-    """🗑️No Kit To Delete definition."""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"🔍 Couldn't delete the kit because no local or remote kit was found under uri:\n {self.uri}."
-
-
-class KitZipDoesNotContainSemioFolder(KitNotFound):
-    """🔖Kit Zip Does Not Contain Semio Folder definition."""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"🔍 The remote zip kit ({self.uri}) is not a valid kit."
-
-
-class OnlyRemoteKitsCanBeCached(ClientError):
-    """💾Only Remote Kits Can Be Cached definition."""
-
-    def __init__(self, nonRemoteUri: str) -> None:
-        self.nonRemoteUri = nonRemoteUri
-
-    def __str__(self):
-        return f"🔍 Only remote kits can be cached. The uri ({self.nonRemoteUri}) doesn't start with http and ends with .zip"
-
-
-class KitUriNotValid(ClientError, abc.ABC):
-    """🆔 The base for all kit uri not valid errors."""
-
-
-class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
-    """📂 The base for all local kit uri not valid errors."""
-
-
-class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
-    """🔖Local Kit Uri Is Not Absolute definition."""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"📂 The local kit uri ({self.uri}) is relative. It needs to be absolute (include the parent folders, drives, ...)."
-
-
-class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
-    """🔖Local Kit Uri Is Not Directory definition."""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"📂 The local kit uri ({self.uri}) is not a directory."
-
-
-class NoKitAssigned(NoParentAssigned):
-    """🔖No Kit Assigned definition."""
-
-    def __str__(self):
-        return "👪 The entity has no parent kit assigned."
-
-
-class KitAlreadyExists(AlreadyExists, abc.ABC):
-    """🔖Exception for attempting to create a kit that already exists."""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self) -> str:
-        return f"♊ A kit under uri ({self.uri}) already exists."
-
-
-class KitInputNode(InputNode):
-    """🔖GraphQL input node for kit mutations."""
-
-    class Meta:
-        model = KitInput
-
-
-class KitNode(TableEntityNode):
-    """🔖GraphQL node exposing kit data."""
-
-    class Meta:
-        model = Kit
-
-
-# #endregion 🧭Moved Graphene Nodes
-
-
-
-
-# #region 🛡️Validation
-# Validation logic for checking kit constraints and uniqueness rules.
-
-
-@dataclasses.dataclass
-class ValidationFix:
-    """🔧A proposed fix for a validation problem with a title and diff."""
-
-    title: str
-    diff: dict
-
-    def toDict(self) -> dict:
-        return {"title": self.title, "diff": self.diff}
-
-
-@dataclasses.dataclass
-class Problem:
-    """🔒A validation problem with a constraint identifier and message."""
-
-    constraintId: str
-    message: str
-    entityKind: str
-    entityGuid: str
-    fixes: list[ValidationFix] = dataclasses.field(default_factory=list)
-
-    def toDict(self) -> dict:
-        return {
-            "constraintId": self.constraintId,
-            "message": self.message,
-            "entityKind": self.entityKind,
-            "entityGuid": self.entityGuid,
-            "fixes": [f.toDict() for f in self.fixes],
-        }
-
-
-@dataclasses.dataclass
-class ValidationResult:
-    """🔖A validation result aggregating problems and fixes for an entity."""
-
-    problems: list[Problem]
-
-    def hasErrors(self) -> bool:
-        return len(self.problems) > 0
-
-    def toDict(self) -> dict:
-        sortedProblems = sorted(self.problems, key=lambda i: (i.constraintId, i.entityGuid))
-        return {"problems": [i.toDict() for i in sortedProblems]}
-
-    def serialize(self) -> str:
-        return json.dumps(self.toDict(), indent=2)
-
-
-def _isGuid(s: str) -> bool:
-    """🔖_isGuid performs the _isGuid operation."""
-    import re
-
-    return bool(
-        re.match(
-            r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            s,
-            re.IGNORECASE,
-        )
-    )
-
-
-def _normalizeGuids(obj: typing.Any) -> typing.Any:
-    """🔖_normalizeGuids performs the _normalizeGuids operation."""
-    if obj is None:
-        return obj
-    if isinstance(obj, str) and _isGuid(obj):
-        return "<GUID>"
-    if isinstance(obj, list):
-        return [_normalizeGuids(x) for x in obj]
-    if isinstance(obj, dict):
-        return {k: _normalizeGuids(v) for k, v in obj.items()}
-    return obj
-
-
-def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
-    """✔️Check whether two validation results are semantically equal."""
-    if len(a.problems) != len(b.problems):
-        return False
-    sortedA = sorted(a.problems, key=lambda i: (i.constraintId, i.entityGuid))
-    sortedB = sorted(b.problems, key=lambda i: (i.constraintId, i.entityGuid))
-    for ia, ib in zip(sortedA, sortedB):
-        if ia.constraintId != ib.constraintId or ia.message != ib.message or ia.entityKind != ib.entityKind or ia.entityGuid != ib.entityGuid:
-            return False
-        if len(ia.fixes) != len(ib.fixes):
-            return False
-        for fa, fb in zip(ia.fixes, ib.fixes):
-            if fa.title != fb.title:
-                return False
-
-            if ia.constraintId == "guid-unique":
-                continue
-            if json.dumps(_normalizeGuids(fa.diff), sort_keys=True) != json.dumps(_normalizeGuids(fb.diff), sort_keys=True):
-                return False
-    return True
-
-
-def parseValidationResult(jsonStr: str) -> ValidationResult:
-    """🔬Parse a validation result from a dictionary representation."""
-    data = json.loads(jsonStr)
-    problems = []
-    for i in data["problems"]:
-        fixes = [ValidationFix(title=f["title"], diff=f["diff"]) for f in i.get("fixes", [])]
-        problems.append(
-            Problem(
-                constraintId=i["constraintId"],
-                message=i["message"],
-                entityKind=i["entityKind"],
-                entityGuid=i["entityGuid"],
-                fixes=fixes,
-            )
-        )
-    return ValidationResult(problems=problems)
-
-
-def validateGuidUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all GUIDs within a collection are unique."""
-    problems: list[Problem] = []
-    seen: dict[str, str] = {}
-
-    def check(entityKind: str, entityGuid: str) -> None:
-        if entityGuid in seen:
-            problems.append(
-                Problem(
-                    constraintId="guid-unique",
-                    message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
-                    entityKind=entityKind,
-                    entityGuid=entityGuid,
-                )
-            )
-        else:
-            seen[entityGuid] = entityKind
-
-    check("Kit", kit.guid)
-    for t in kit.types or []:
-        check("Type", t.guid)
-    for d in kit.designs or []:
-        check("Design", d.guid)
-        for p in d.pieces or []:
-            check("Piece", p.guid)
-        for c in d.connections or []:
-            check("Connection", c.guid)
-        for s in d.stats or []:
-            check("Stat", s.guid)
-    for q in kit.qualities or []:
-        check("Quality", q.guid)
-    for f in kit.files_ or []:
-        check("File", f.guid)
-    for fo in kit.folders_ or []:
-        check("Folder", fo.guid)
-    return problems
-
-
-def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all type names within a kit are unique."""
-    problems: list[Problem] = []
-    byParent: dict[str | None, list[Type]] = {}
-    for t in kit.types or []:
-        parentGuid = t.parent.guid if t.parent else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(t)
-    for parentGuid, siblings in byParent.items():
-        names: dict[str, list[Type]] = {}
-        for t in siblings:
-            if t.name not in names:
-                names[t.name] = []
-            names[t.name].append(t)
-        for name, group in names.items():
-            if len(group) > 1:
-                for t in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="type-name-unique",
-                            message=f'Duplicate type name "{name}" among siblings.',
-                            entityKind="Type",
-                            entityGuid=t.guid,
-                        )
-                    )
-    return problems
-
-
-def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all design names within a kit are unique."""
-    problems: list[Problem] = []
-    byParent: dict[str | None, list[Design]] = {}
-    for d in kit.designs or []:
-        parentGuid = d.parent.guid if d.parent else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(d)
-    for parentGuid, siblings in byParent.items():
-        names: dict[str, list[Design]] = {}
-        for d in siblings:
-            if d.name not in names:
-                names[d.name] = []
-            names[d.name].append(d)
-        for name, group in names.items():
-            if len(group) > 1:
-                for d in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="design-name-unique",
-                            message=f'Duplicate design name "{name}" among siblings.',
-                            entityKind="Design",
-                            entityGuid=d.guid,
-                        )
-                    )
-    return problems
-
-
-def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all piece names within a design are unique."""
-    problems: list[Problem] = []
-    for design in kit.designs or []:
-        names: dict[str, list[Piece]] = {}
-        for p in design.pieces or []:
-            if p.name_ and p.name_ not in names:
-                names[p.name_] = []
-            if p.name_:
-                names[p.name_].append(p)
-        for name, group in names.items():
-            if len(group) > 1:
-                for p in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="piece-name-unique",
-                            message=f'Duplicate piece name "{name}" in design.',
-                            entityKind="Piece",
-                            entityGuid=p.guid,
-                        )
-                    )
-    return problems
-
-
-def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all port names within a type are unique."""
-    problems: list[Problem] = []
-    for t in kit.types or []:
-        names: dict[str, list[Connector]] = {}
-        for connector in t.connectors or []:
-            if connector.name_ and connector.name_ not in names:
-                names[connector.name_] = []
-            if connector.name_:
-                names[connector.name_].append(connector)
-        for name, group in names.items():
-            if len(group) > 1:
-                for connector in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="connector-name-unique",
-                            message=f'Duplicate connector name "{name}" in type.',
-                            entityKind="Connector",
-                            entityGuid=connector.guid,
-                        )
-                    )
-    return problems
-
-
-def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all model names within a type are unique."""
-    problems: list[Problem] = []
-    for t in kit.types or []:
-        names: dict[str, list[Model]] = {}
-        for model in t.models or []:
-            if model.name and model.name not in names:
-                names[model.name] = []
-            if model.name:
-                names[model.name].append(model)
-        for name, group in names.items():
-            if len(group) > 1:
-                for model in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="model-name-unique",
-                            message=f'Duplicate model name "{name}" in type.',
-                            entityKind="Model",
-                            entityGuid=model.guid,
-                        )
-                    )
-    return problems
-
-
-def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all quality names within a kit are unique."""
-    problems: list[Problem] = []
-    names: dict[str, list[Quality]] = {}
-    for q in kit.qualities or []:
-        if q.name not in names:
-            names[q.name] = []
-        names[q.name].append(q)
-    for name, group in names.items():
-        if len(group) > 1:
-            for q in group[1:]:
-                problems.append(
-                    Problem(
-                        constraintId="quality-name-unique",
-                        message=f'Duplicate quality name "{name}".',
-                        entityKind="Quality",
-                        entityGuid=q.guid,
-                    )
-                )
-    return problems
-
-
-def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all file names within a kit are unique."""
-    problems: list[Problem] = []
-    names: dict[str, list[File]] = {}
-    for f in kit.files_ or []:
-        if f.name not in names:
-            names[f.name] = []
-        names[f.name].append(f)
-    for name, group in names.items():
-        if len(group) > 1:
-            for f in group[1:]:
-                problems.append(
-                    Problem(
-                        constraintId="file-name-unique",
-                        message=f'Duplicate file name "{name}".',
-                        entityKind="File",
-                        entityGuid=f.guid,
-                    )
-                )
-    return problems
-
-
-def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all folder names within a kit are unique."""
-    problems: list[Problem] = []
-    byParent: dict[str | None, list[Folder]] = {}
-    for fo in kit.folders_ or []:
-        parentGuid = fo.parent if fo.parent else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(fo)
-    for parentGuid, siblings in byParent.items():
-        names: dict[str, list[Folder]] = {}
-        for fo in siblings:
-            if fo.name not in names:
-                names[fo.name] = []
-            names[fo.name].append(fo)
-        for name, group in names.items():
-            if len(group) > 1:
-                for fo in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="folder-name-unique",
-                            message=f'Duplicate folder name "{name}" among siblings.',
-                            entityKind="Folder",
-                            entityGuid=fo.guid,
-                        )
-                    )
-    return problems
-
-
-def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all layer paths within a design are unique."""
-    problems: list[Problem] = []
-    for design in kit.designs or []:
-        paths: dict[str, list[Layer]] = {}
-        for layer in design.layers or []:
-            if layer.path not in paths:
-                paths[layer.path] = []
-            paths[layer.path].append(layer)
-        for path, group in paths.items():
-            if len(group) > 1:
-                for layer in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="layer-path-unique",
-                            message=f'Duplicate layer path "{path}" in design.',
-                            entityKind="Layer",
-                            entityGuid=layer.guid,
-                        )
-                    )
-    return problems
-
-
-def validateKit(kit: Kit) -> ValidationResult:
-    """🔖Validate a kit entity against all constraint rules."""
-    problems: list[Problem] = []
-    problems.extend(validateGuidUniqueness(kit))
-    problems.extend(validateTypeNameUniqueness(kit))
-    problems.extend(validateDesignNameUniqueness(kit))
-    problems.extend(validatePieceNameUniqueness(kit))
-    problems.extend(validatePortNameUniqueness(kit))
-    problems.extend(validateModelNameUniqueness(kit))
-    problems.extend(validateQualityNameUniqueness(kit))
-    problems.extend(validateFolderNameUniqueness(kit))
-    problems.extend(validateLayerPathUniqueness(kit))
-    return ValidationResult(problems=problems)
-
-
-# #region 📧Dict-based Validation
-# Dictionary-based validation functions for kit data integrity.
-
-
-def _makeFix(title: str, diff: dict) -> ValidationFix:
-    """🔖_makeFix performs the _makeFix operation."""
-    return ValidationFix(title=title, diff=diff)
-
-
-def _deepCopy(obj: typing.Any) -> typing.Any:
-    """🔖_deepCopy performs the _deepCopy operation."""
-    return json.loads(json.dumps(obj))
-
-
-def _newGuid() -> str:
-    """🔖_newGuid performs the _newGuid operation."""
-    import uuid
-
-    return str(uuid.uuid4())
-
-
-def validateKitDict(kit: dict) -> ValidationResult:
-    """🔖Validate a kit dictionary against all constraint rules."""
-    problems: list[Problem] = []
-    seen: dict[str, str] = {}
-    seenEntities: dict[str, dict] = {}
-
-    def checkGuid(entityKind: str, entityGuid: str, entity: dict) -> None:
-        if entityGuid in seen:
-            newGuid = _newGuid()
-            entityCopy = _deepCopy(entity)
-            entityCopy["guid"] = newGuid
-            collectionKey = {
-                "Type": "types",
-                "Design": "designs",
-                "Piece": "pieces",
-                "Connection": "connections",
-                "Connector": "connectors",
-                "Model": "models",
-                "Quality": "qualities",
-                "Port": "ports",
-                "File": "files",
-                "Folder": "folders",
-                "Stat": "stats",
-                "Layer": "layers",
-            }.get(entityKind, "")
-            if collectionKey:
-                diff = {
-                    collectionKey: {
-                        "removed": [{"guid": entityGuid}],
-                        "added": [entityCopy],
-                    }
-                }
-                fix = _makeFix("Regenerate GUID", diff)
-                problems.append(
-                    Problem(
-                        constraintId="guid-unique",
-                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
-                        entityKind=entityKind,
-                        entityGuid=entityGuid,
-                        fixes=[fix],
-                    )
-                )
-            else:
-                problems.append(
-                    Problem(
-                        constraintId="guid-unique",
-                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
-                        entityKind=entityKind,
-                        entityGuid=entityGuid,
-                        fixes=[],
-                    )
-                )
-        else:
-            seen[entityGuid] = entityKind
-            seenEntities[entityGuid] = entity
-
-    checkGuid("Kit", kit.get("guid", ""), kit)
-    for t in kit.get("types", []):
-        checkGuid("Type", t.get("guid", ""), t)
-        for connector in t.get("connectors", []):
-            checkGuid("Connector", connector.get("guid", ""), connector)
-        for model in t.get("models", []):
-            checkGuid("Model", model.get("guid", ""), model)
-    for d in kit.get("designs", []):
-        checkGuid("Design", d.get("guid", ""), d)
-        for p in d.get("pieces", []):
-            checkGuid("Piece", p.get("guid", ""), p)
-        for c in d.get("connections", []):
-            checkGuid("Connection", c.get("guid", ""), c)
-        for s in d.get("stats", []):
-            checkGuid("Stat", s.get("guid", ""), s)
-    for q in kit.get("qualities", []):
-        checkGuid("Quality", q.get("guid", ""), q)
-    for i in kit.get("ports", []):
-        checkGuid("Port", i.get("guid", ""), i)
-    for f in kit.get("files", []):
-        checkGuid("File", f.get("guid", ""), f)
-    for fo in kit.get("folders", []):
-        checkGuid("Folder", fo.get("guid", ""), fo)
-    byParent: dict[str | None, list[dict]] = {}
-    for t in kit.get("types", []):
-        parent = t.get("parent")
-        parentGuid = parent.get("guid") if isinstance(parent, dict) else parent if parent else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(t)
-    for parentGuid, siblings in byParent.items():
-        names: dict[str, list[dict]] = {}
-        for t in siblings:
-            name = t.get("name", "")
-            if name not in names:
-                names[name] = []
-            names[name].append(t)
-        for name, group in names.items():
-            if len(group) > 1:
-                for t in group[1:]:
-                    fix = _makeFix(
-                        f'Rename "{name}"',
-                        {
-                            "types": {
-                                "updated": [
-                                    {
-                                        "type": {"guid": t.get("guid", "")},
-                                        "diff": {"name": f"{name} 2"},
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="type-name-unique",
-                            message=f'Duplicate type name "{name}" among siblings.',
-                            entityKind="Type",
-                            entityGuid=t.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    byParent = {}
-    for d in kit.get("designs", []):
-        parent = d.get("parent")
-        parentGuid = parent.get("guid") if isinstance(parent, dict) else parent if parent else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(d)
-    for parentGuid, siblings in byParent.items():
-        names: dict[str, list[dict]] = {}
-        for d in siblings:
-            name = d.get("name", "")
-            if name not in names:
-                names[name] = []
-            names[name].append(d)
-        for name, group in names.items():
-            if len(group) > 1:
-                for d in group[1:]:
-                    fix = _makeFix(
-                        f'Rename "{name}"',
-                        {
-                            "designs": {
-                                "updated": [
-                                    {
-                                        "design": {"guid": d.get("guid", "")},
-                                        "diff": {"name": f"{name} 2"},
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="design-name-unique",
-                            message=f'Duplicate design name "{name}" among siblings.',
-                            entityKind="Design",
-                            entityGuid=d.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    for design in kit.get("designs", []):
-        designName = design.get("name", "")
-        designGuid = design.get("guid", "")
-        names = {}
-        for p in design.get("pieces", []):
-            name = p.get("name", "")
-            if name and name not in names:
-                names[name] = []
-            if name:
-                names[name].append(p)
-        for name, group in names.items():
-            if len(group) > 1:
-                for p in group[1:]:
-                    fix = _makeFix(
-                        f'Rename piece "{name}"',
-                        {
-                            "designs": {
-                                "updated": [
-                                    {
-                                        "design": {"guid": designGuid},
-                                        "diff": {
-                                            "pieces": {
-                                                "updated": [
-                                                    {
-                                                        "piece": {"guid": p.get("guid", "")},
-                                                        "diff": {"name": f"{name} 2"},
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="piece-name-unique",
-                            message=f'Duplicate piece name "{name}" inside design "{designName}".',
-                            entityKind="Piece",
-                            entityGuid=p.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    for t in kit.get("types", []):
-        typeName = t.get("name", "")
-        typeGuid = t.get("guid", "")
-        names = {}
-        for connector in t.get("connectors", []):
-            name = connector.get("name", "")
-            if name and name not in names:
-                names[name] = []
-            if name:
-                names[name].append(connector)
-        for name, group in names.items():
-            if len(group) > 1:
-                for connector in group[1:]:
-                    fix = _makeFix(
-                        f'Rename connector "{name}"',
-                        {
-                            "types": {
-                                "updated": [
-                                    {
-                                        "type": {"guid": typeGuid},
-                                        "diff": {
-                                            "connectors": {
-                                                "updated": [
-                                                    {
-                                                        "connector": {"guid": connector.get("guid", "")},
-                                                        "diff": {"name": f"{name} 2"},
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="connector-name-unique",
-                            message=f'Duplicate connector name "{name}" inside type "{typeName}".',
-                            entityKind="Connector",
-                            entityGuid=connector.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    for t in kit.get("types", []):
-        typeName = t.get("name", "")
-        typeGuid = t.get("guid", "")
-        names = {}
-        for model in t.get("models", []):
-            name = model.get("name", "")
-            if name and name not in names:
-                names[name] = []
-            if name:
-                names[name].append(model)
-        for name, group in names.items():
-            if len(group) > 1:
-                for model in group[1:]:
-                    fix = _makeFix(
-                        f'Rename model "{name}"',
-                        {
-                            "types": {
-                                "updated": [
-                                    {
-                                        "type": {"guid": typeGuid},
-                                        "diff": {
-                                            "models": {
-                                                "updated": [
-                                                    {
-                                                        "model": {"guid": model.get("guid", "")},
-                                                        "diff": {"name": f"{name} 2"},
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="model-name-unique",
-                            message=f'Duplicate model name "{name}" inside type "{typeName}".',
-                            entityKind="Model",
-                            entityGuid=model.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    names = {}
-    for q in kit.get("qualities", []):
-        name = q.get("name", "")
-        if name not in names:
-            names[name] = []
-        names[name].append(q)
-    for name, group in names.items():
-        if len(group) > 1:
-            for q in group[1:]:
-                fix = _makeFix(
-                    f'Rename quality "{name}"',
-                    {
-                        "qualities": {
-                            "updated": [
-                                {
-                                    "quality": {"guid": q.get("guid", "")},
-                                    "diff": {"name": f"{name} 2"},
-                                }
-                            ]
-                        }
-                    },
-                )
-                problems.append(
-                    Problem(
-                        constraintId="quality-name-unique",
-                        message=f'Duplicate quality name "{name}".',
-                        entityKind="Quality",
-                        entityGuid=q.get("guid", ""),
-                        fixes=[fix],
-                    )
-                )
-    names = {}
-    for i in kit.get("ports", []):
-        name = i.get("name", "")
-        if name not in names:
-            names[name] = []
-        names[name].append(i)
-    for name, group in names.items():
-        if len(group) > 1:
-            for iface in group[1:]:
-                fix = _makeFix(
-                    f'Rename port "{name}"',
-                    {
-                        "ports": {
-                            "updated": [
-                                {
-                                    "port": {"guid": iface.get("guid", "")},
-                                    "diff": {"name": f"{name} 2"},
-                                }
-                            ]
-                        }
-                    },
-                )
-                problems.append(
-                    Problem(
-                        constraintId="port-name-unique",
-                        message=f'Duplicate port name "{name}".',
-                        entityKind="Port",
-                        entityGuid=iface.get("guid", ""),
-                        fixes=[fix],
-                    )
-                )
-    names = {}
-    for f in kit.get("files", []):
-        name = f.get("name", "")
-        if name not in names:
-            names[name] = []
-        names[name].append(f)
-    for name, group in names.items():
-        if len(group) > 1:
-            for f in group[1:]:
-                fix = _makeFix(
-                    f'Rename file "{name}"',
-                    {
-                        "files": {
-                            "updated": [
-                                {
-                                    "file": {"guid": f.get("guid", "")},
-                                    "diff": {"name": f"{name} 2"},
-                                }
-                            ]
-                        }
-                    },
-                )
-                problems.append(
-                    Problem(
-                        constraintId="file-name-unique",
-                        message=f'Duplicate file name "{name}".',
-                        entityKind="File",
-                        entityGuid=f.get("guid", ""),
-                        fixes=[fix],
-                    )
-                )
-    byParent = {}
-    for fo in kit.get("folders", []):
-        parentGuid = fo.get("parent", {}).get("guid") if fo.get("parent") else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(fo)
-    for parentGuid, siblings in byParent.items():
-        names = {}
-        for fo in siblings:
-            name = fo.get("name", "")
-            if name not in names:
-                names[name] = []
-            names[name].append(fo)
-        for name, group in names.items():
-            if len(group) > 1:
-                for fo in group[1:]:
-                    fix = _makeFix(
-                        f'Rename folder "{name}"',
-                        {
-                            "folders": {
-                                "updated": [
-                                    {
-                                        "folder": {"guid": fo.get("guid", "")},
-                                        "diff": {"name": f"{name} 2"},
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="folder-name-unique",
-                            message=f'Duplicate folder name "{name}" among siblings.',
-                            entityKind="Folder",
-                            entityGuid=fo.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    for design in kit.get("designs", []):
-        designName = design.get("name", "")
-        designGuid = design.get("guid", "")
-        paths: dict[str, list[dict]] = {}
-        for layer in design.get("layers", []):
-            path = layer.get("path", "")
-            if path not in paths:
-                paths[path] = []
-            paths[path].append(layer)
-        for path, group in paths.items():
-            if len(group) > 1:
-                for layer in group[1:]:
-                    fix = _makeFix(
-                        f'Rename layer "{path}"',
-                        {
-                            "designs": {
-                                "updated": [
-                                    {
-                                        "design": {"guid": designGuid},
-                                        "diff": {
-                                            "layers": {
-                                                "updated": [
-                                                    {
-                                                        "layer": {"guid": layer.get("guid", "")},
-                                                        "diff": {"path": f"{path} 2"},
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="layer-path-unique",
-                            message=f'Duplicate layer path "{path}" inside design "{designName}".',
-                            entityKind="Layer",
-                            entityGuid=layer.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    return ValidationResult(problems=problems)
-
-
-# #endregion 📧Dict-based Validation
-
-# #region 🕌Graph Operations
-# Graph construction and traversal for piece connectivity analysis.
-
-
-def buildPieceGraph(design: Design | dict) -> networkx.Graph:
-    """🏗️Build a networkx graph from pieces and connections."""
-    G = networkx.Graph()
-    pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
-    connections = design.get("connections", []) if isinstance(design, dict) else design.connections
-    for piece in pieces:
-        pieceGuid = piece["guid"] if isinstance(piece, dict) else piece.guid
-        G.add_node(pieceGuid, piece=piece)
-    for connection in connections:
-        if isinstance(connection, dict):
-            sourceId = connection["connected"]["piece"]["guid"]
-            targetId = connection["connecting"]["piece"]["guid"]
-        else:
-            sourceId = connection.connectedPiece.guid
-            targetId = connection.connectingPiece.guid
-        if G.has_node(sourceId) and G.has_node(targetId):
-            G.add_edge(sourceId, targetId, connection=connection)
-    return G
-
-
-def findFixedPieces(design: Design | dict) -> list[str]:
-    """🔖Find all pieces that are fixed in the design hierarchy."""
-    pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
-    result = []
-    for p in pieces:
-        if isinstance(p, dict):
-            hasPlane = p.get("plane") is not None
-            hasCenter = p.get("center") is not None
-            if hasPlane != hasCenter:
-                raise ValueError(f"Piece {p.get('guid')} has inconsistent plane and center")
-            if hasPlane:
-                result.append(p["guid"])
-        else:
-            hasPlane = p.plane is not None
-            hasCenter = p.center is not None
-            if hasPlane != hasCenter:
-                raise ValueError(f"Piece {p.guid} has inconsistent plane and center")
-            if hasPlane:
-                result.append(p.guid)
-    return result
-
-
-def getConnectedComponents(design: Design | dict) -> list[set[str]]:
-    """🔖Get connected components of the piece graph."""
-    G = buildPieceGraph(design)
-
-
-def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
-    """🍃Get the hierarchical ordering of pieces from root to leaf."""
-    G = buildPieceGraph(design)
-    if rootGuid not in G:
-        return {}
-
-
-# #endregion 🕌Graph Operations
-
-# #endregion 🛡️Validation
-
-
-
-
-# #region 🌤️Flatten Design
-# Design flattening to resolve nested sub-designs into a single coordinate space.
-
-
-def getTypeByGuid(kit: dict, guid: str) -> dict | None:
-    """🔖Look up a type by its GUID within a kit dictionary."""
-    for t in kit.get("types", []):
-        if t.get("guid") == guid:
-            return t
-    return None
-
-
-def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | None) -> dict | None:
-    """🔖Look up a connector by name from a type dictionary."""
-    if typeData is None:
-        return None
-    if connectorGuid is None:
-        connectors = typeData.get("connectors", [])
-        if connectors:
-            return connectors[0]
-        parent = typeData.get("parent")
-        if parent:
-            parentType = getTypeByGuid(kit, parent.get("guid", ""))
-            return getConnectorFromType(kit, parentType, connectorGuid)
-        return None
-    for connector in typeData.get("connectors", []):
-        if connector.get("guid") == connectorGuid:
-            return connector
-    parent = typeData.get("parent")
-    if parent:
-        parentType = getTypeByGuid(kit, parent.get("guid", ""))
-        return getConnectorFromType(kit, parentType, connectorGuid)
-    connectors = typeData.get("connectors", [])
-    if connectors:
-        return connectors[0]
-    return None
-
-
-def planeToMatrixDict(plane: dict) -> numpy.ndarray:
-    """🔖Convert a plane dictionary to a 4x4 transformation matrix."""
-    origin = numpy.array([plane["origin"]["x"], plane["origin"]["y"], plane["origin"]["z"]])
-    xAxis = numpy.array([plane["xAxis"]["x"], plane["xAxis"]["y"], plane["xAxis"]["z"]])
-    yAxis = numpy.array([plane["yAxis"]["x"], plane["yAxis"]["y"], plane["yAxis"]["z"]])
-    zAxis = numpy.cross(xAxis, yAxis)
-    zAxis = normalizeVector(zAxis)
-    matrix = numpy.eye(4)
-    matrix[:3, 0] = xAxis
-    matrix[:3, 1] = yAxis
-    matrix[:3, 2] = zAxis
-    matrix[:3, 3] = origin
-    return matrix
-
-
-def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
-    """🔖Convert a 4x4 transformation matrix to a plane dictionary."""
-    origin = matrix[:3, 3]
-    xAxis = matrix[:3, 0]
-    yAxis = matrix[:3, 1]
-    return {
-        "origin": {"x": float(origin[0]), "y": float(origin[1]), "z": float(origin[2])},
-        "xAxis": {"x": float(xAxis[0]), "y": float(xAxis[1]), "z": float(xAxis[2])},
-        "yAxis": {"x": float(yAxis[0]), "y": float(yAxis[1]), "z": float(yAxis[2])},
-    }
-
-
-def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> numpy.ndarray:
-    """🔖Compute a quaternion rotating one unit vector onto another."""
-    r = numpy.dot(vFrom, vTo) + 1
-    if r < 0.000001:
-        if abs(vFrom[0]) > abs(vFrom[2]):
-            q = numpy.array([-vFrom[1], vFrom[0], 0, 0])
-        else:
-            q = numpy.array([0, -vFrom[2], vFrom[1], 0])
-    else:
-        cross = numpy.cross(vFrom, vTo)
-        q = numpy.array([cross[0], cross[1], cross[2], r])
-    return q / numpy.linalg.norm(q)
-
-
-def quaternionFromAxisAngleDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
-    """🔖Compute a quaternion from an axis-angle representation."""
-    halfAngle = angle / 2
-    s = numpy.sin(halfAngle)
-    return numpy.array([axis[0] * s, axis[1] * s, axis[2] * s, numpy.cos(halfAngle)])
-
-
-def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
-    """🔖Convert a quaternion to a 3x3 rotation matrix."""
-    x, y, z, w = q
-    x2, y2, z2 = x + x, y + y, z + z
-    xx, xy, xz = x * x2, x * y2, x * z2
-    yy, yz, zz = y * y2, y * z2, z * z2
-    wx, wy, wz = w * x2, w * y2, w * z2
-    m = numpy.eye(4)
-    m[0, 0] = 1 - (yy + zz)
-    m[0, 1] = xy - wz
-    m[0, 2] = xz + wy
-    m[1, 0] = xy + wz
-    m[1, 1] = 1 - (xx + zz)
-    m[1, 2] = yz - wx
-    m[2, 0] = xz - wy
-    m[2, 1] = yz + wx
-    m[2, 2] = 1 - (xx + yy)
-    return m
-
-
-def makeRotationAxisDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
-    """🔖Create a 4x4 rotation matrix around an arbitrary axis."""
-    return quaternionToMatrixDict(quaternionFromAxisAngleDict(axis, angle))
-
-
-def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
-    """🔖Create a 4x4 translation matrix from a displacement vector."""
-    m = numpy.eye(4)
-    m[0, 3] = x
-    m[1, 3] = y
-    m[2, 3] = z
-    return m
-
-
-def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
-    """🔖Apply a 4x4 matrix to a 3D vector dictionary."""
-    return numpy.array(
-        [
-            m[0, 0] * v[0] + m[0, 1] * v[1] + m[0, 2] * v[2],
-            m[1, 0] * v[0] + m[1, 1] * v[1] + m[1, 2] * v[2],
-            m[2, 0] * v[0] + m[2, 1] * v[1] + m[2, 2] * v[2],
-        ]
-    )
-
-
-def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict) -> dict:
-    """🔖Compute the world-space plane of a child piece from parent and local planes."""
-    parentMatrix = planeToMatrixDict(parentPlane)
-    parentPoint = numpy.array(
-        [
-            parentConnector["point"]["x"],
-            parentConnector["point"]["y"],
-            parentConnector["point"]["z"],
-        ]
-    )
-    parentDirection = normalizeVector(
-        numpy.array(
-            [
-                parentConnector["direction"]["x"],
-                parentConnector["direction"]["y"],
-                parentConnector["direction"]["z"],
-            ]
-        )
-    )
-    childPoint = numpy.array(
-        [
-            childConnector["point"]["x"],
-            childConnector["point"]["y"],
-            childConnector["point"]["z"],
-        ]
-    )
-    childDirection = normalizeVector(
-        numpy.array(
-            [
-                childConnector["direction"]["x"],
-                childConnector["direction"]["y"],
-                childConnector["direction"]["z"],
-            ]
-        )
-    )
-    gap = connection.get("gap", 0) or 0
-    shift = connection.get("shift", 0) or 0
-    rise = connection.get("rise", 0) or 0
-    rotation = connection.get("rotation", 0) or 0
-    turn = connection.get("turn", 0) or 0
-    tilt = connection.get("tilt", 0) or 0
-    rotationRad = numpy.deg2rad(rotation)
-    turnRad = numpy.deg2rad(turn)
-    tiltRad = numpy.deg2rad(tilt)
-    reverseChildDirection = -childDirection
-    crossVec = numpy.cross(parentDirection, reverseChildDirection)
-    crossLen = numpy.linalg.norm(crossVec)
-    if crossLen < 0.01:
-        if abs(parentDirection[2]) < TOLERANCE:
-            alignQuat = quaternionFromAxisAngleDict(numpy.array([0.0, 0.0, 1.0]), numpy.pi)
-        else:
-            axis = normalizeVector(numpy.cross(numpy.array([0.0, 0.0, 1.0]), parentDirection))
-            alignQuat = quaternionFromAxisAngleDict(axis, numpy.pi)
-    else:
-        alignQuat = quaternionFromUnitVectorsDict(reverseChildDirection, parentDirection)
-    directionT = quaternionToMatrixDict(alignQuat)
-    yAxis = numpy.array([0.0, 1.0, 0.0])
-    parentConnectorQuat = quaternionFromUnitVectorsDict(yAxis, parentDirection)
-    parentRotationT = quaternionToMatrixDict(parentConnectorQuat)
-    gapDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 1.0, 0.0]))
-    shiftDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([1.0, 0.0, 0.0]))
-    raiseDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 0.0, 1.0]))
-    turnAxis = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 0.0, 1.0]))
-    tiltAxis = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([1.0, 0.0, 0.0]))
-    orientationT = directionT.copy()
-    rotateT = makeRotationAxisDict(parentDirection, -rotationRad)
-    orientationT = rotateT @ orientationT
-    turnAxis = applyMatrix4ToVec3Dict(rotateT, turnAxis)
-    tiltAxis = applyMatrix4ToVec3Dict(rotateT, tiltAxis)
-    turnT = makeRotationAxisDict(turnAxis, turnRad)
-    orientationT = turnT @ orientationT
-    tiltT = makeRotationAxisDict(tiltAxis, tiltRad)
-    orientationT = tiltT @ orientationT
-    centerChildT = makeTranslationDict(-childPoint[0], -childPoint[1], -childPoint[2])
-    transform = orientationT @ centerChildT
-    gapTransform = makeTranslationDict(gapDirection[0] * gap, gapDirection[1] * gap, gapDirection[2] * gap)
-    shiftTransform = makeTranslationDict(shiftDirection[0] * shift, shiftDirection[1] * shift, shiftDirection[2] * shift)
-    raiseTransform = makeTranslationDict(raiseDirection[0] * rise, raiseDirection[1] * rise, raiseDirection[2] * rise)
-    translationT = raiseTransform @ shiftTransform @ gapTransform
-    transform = translationT @ transform
-    moveToParentT = makeTranslationDict(parentPoint[0], parentPoint[1], parentPoint[2])
-    transform = moveToParentT @ transform
-    finalMatrix = parentMatrix @ transform
-    result = matrixToPlaneDict(finalMatrix)
-    return {
-        "origin": {
-            "x": round(result["origin"]["x"] / TOLERANCE) * TOLERANCE,
-            "y": round(result["origin"]["y"] / TOLERANCE) * TOLERANCE,
-            "z": round(result["origin"]["z"] / TOLERANCE) * TOLERANCE,
-        },
-        "xAxis": {
-            "x": round(result["xAxis"]["x"] / TOLERANCE) * TOLERANCE,
-            "y": round(result["xAxis"]["y"] / TOLERANCE) * TOLERANCE,
-            "z": round(result["xAxis"]["z"] / TOLERANCE) * TOLERANCE,
-        },
-        "yAxis": {
-            "x": round(result["yAxis"]["x"] / TOLERANCE) * TOLERANCE,
-            "y": round(result["yAxis"]["y"] / TOLERANCE) * TOLERANCE,
-            "z": round(result["yAxis"]["z"] / TOLERANCE) * TOLERANCE,
-        },
-    }
-
-
-def flattenDesignDict(kit: dict, designGuid: str) -> dict:
-    """🔖Flatten a nested design hierarchy into a single flat coordinate space."""
-    design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
-    if design is None:
-        raise ValueError(f"Design {designGuid} not found")
-    pieces = design.get("pieces", [])
-    if not pieces:
-        return {}
-    pieceMap = {p["guid"]: dict(p) for p in pieces}
-    piecePlanes: dict[str, dict] = {}
-    piecePaths: dict[str, str] = {}
-    G = buildPieceGraph(design)
-    components = list(networkx.connected_components(G))
-    for component in components:
-        rootNode = None
-        for nodeId in component:
-            piece = pieceMap.get(nodeId)
-            if piece and piece.get("plane") is not None and piece.get("center") is not None:
-                rootNode = nodeId
-                break
-        if rootNode is None and component:
-            rootNode = next(iter(component))
-        if rootNode is None:
-            continue
-        rootPiece = pieceMap[rootNode]
-        piecePaths[rootNode] = rootNode
-        if rootPiece.get("plane") and rootPiece.get("center") is not None:
-            piecePlanes[rootNode] = rootPiece["plane"]
-        else:
-            piecePlanes[rootNode] = {
-                "origin": {"x": 0, "y": 0, "z": 0},
-                "xAxis": {"x": 1, "y": 0, "z": 0},
-                "yAxis": {"x": 0, "y": 1, "z": 0},
-            }
-        for source, target in networkx.bfs_edges(G, rootNode):
-            if target in piecePlanes:
-                continue
-            parentId = source
-            childId = target
-            parentPlane = piecePlanes.get(parentId)
-            if parentPlane is None:
-                continue
-            edgeData = G.get_edge_data(parentId, childId)
-            connection = edgeData.get("connection") if edgeData else None
-            if connection is None:
-                continue
-            parentPiece = pieceMap[parentId]
-            childPiece = pieceMap[childId]
-            parentType = getTypeByGuid(kit, parentPiece.get("type", {}).get("guid", ""))
-            childType = getTypeByGuid(kit, childPiece.get("type", {}).get("guid", ""))
-            parentSide = connection["connected"] if connection["connected"]["piece"]["guid"] == parentId else connection["connecting"]
-            childSide = connection["connecting"] if connection["connecting"]["piece"]["guid"] == childId else connection["connected"]
-            parentConnectorGuid = parentSide.get("connector", {}).get("guid") if parentSide.get("connector") else None
-            childConnectorGuid = childSide.get("connector", {}).get("guid") if childSide.get("connector") else None
-            parentConnector = getConnectorFromType(kit, parentType, parentConnectorGuid)
-            childConnector = getConnectorFromType(kit, childType, childConnectorGuid)
-            if parentConnector is None or childConnector is None:
-                continue
-            childPlane = computeChildPlaneDict(parentPlane, parentConnector, childConnector, connection)
-            piecePlanes[childId] = childPlane
-            radius = 2.697
-            verticalVExtra = 1.0
-            horizontalScale = 3.0633
-            parentCenter = parentPiece.get("center") or {"u": 0, "v": 0}
-            connectionU = connection.get("u", 0) or 0
-            connectionV = connection.get("v", 0) or 0
-            if parentCenter["u"] == 0 and parentCenter["v"] == 0:
-                t = parentConnector.get("t", 0) or 0
-                angle = 2 * numpy.pi * t
-                childU = radius * numpy.sin(angle)
-                childV = radius * numpy.cos(angle)
-            else:
-                parentDirZ = (parentConnector.get("direction") or {}).get("z", 0) or 0
-                isVerticalConnection = abs(parentDirZ) > 0.5
-                if isVerticalConnection:
-                    childU = parentCenter["u"] + connectionU
-                    childV = parentCenter["v"] + connectionV + verticalVExtra
-                else:
-                    childU = parentCenter["u"] + connectionU * horizontalScale
-                    childV = parentCenter["v"] + connectionV * horizontalScale
-            childCenter = {
-                "u": round(childU / TOLERANCE) * TOLERANCE,
-                "v": round(childV / TOLERANCE) * TOLERANCE,
-            }
-            pieceMap[childId]["center"] = childCenter
-            piecePaths[childId] = piecePaths.get(parentId, parentId) + "," + childId
-    updatedPieces = []
-    for piece in pieces:
-        newPiece = dict(piece)
-        if piece["guid"] in piecePlanes:
-            newPiece["plane"] = piecePlanes[piece["guid"]]
-        if piece["guid"] in pieceMap and pieceMap[piece["guid"]].get("center"):
-            newPiece["center"] = pieceMap[piece["guid"]]["center"]
-        elif newPiece.get("center") is None:
-            newPiece["center"] = {"u": 0, "v": 0}
-        updatedPieces.append(newPiece)
-    return {
-        "pieces": {
-            "updated": [
-                {
-                    "id": p["guid"],
-                    "diff": {"plane": p.get("plane"), "center": p.get("center")},
-                }
-                for p in updatedPieces
-                if p["guid"] in piecePlanes
-            ]
-        },
-        "_piecePaths": piecePaths,
-    }
-
-
-# #endregion 🌤️Flatten Design
-
-
-
-
 # #region 🎗️Kit Diff Operations
 # Diffing and patching operations for comparing and merging kit versions.
 
@@ -12888,6 +11388,1506 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
 
 
 # #endregion 🎗️Kit Diff Operations
+
+
+
+
+# #region 🧭Moved Graphene Nodes
+# Graphene node definitions moved here due to forward-reference resolution order.
+
+
+class AttributeNode(TableEntityNode):
+    """🔖GraphQL node exposing attribute data."""
+
+    class Meta:
+        model = Attribute
+
+
+class PlaneNode(TableNode):
+    """🔖GraphQL node exposing plane data."""
+
+    class Meta:
+        model = Plane
+
+
+class AuthorNode(TableEntityNode):
+    """🔖GraphQL node exposing author data."""
+
+    class Meta:
+        model = Author
+
+
+class ModelNode(TableEntityNode):
+    """🔖GraphQL node exposing model data."""
+
+    class Meta:
+        model = Model
+        excludedFields = ("tags_",)
+
+
+class ConnectorNode(TableEntityNode):
+    """🔖GraphQL node exposing connector data."""
+
+    class Meta:
+        model = Connector
+        exclude_fields = ("connecteds", "connectings")
+
+    localId = graphene.String()
+
+    def resolve_localId(self, info):
+        return getattr(self, "id_", "")
+
+
+class TypeNode(TableEntityNode):
+    """🔖GraphQL node exposing type data."""
+
+    class Meta:
+        model = Type
+
+
+class PieceNode(TableEntityNode):
+    """🔖GraphQL node exposing piece data."""
+
+    class Meta:
+        model = Piece
+        exclude_fields = ("connecteds", "connectings")
+
+    localId = graphene.String()
+
+    def resolve_localId(self, info):
+        return getattr(self, "id_", "")
+
+
+class ConnectionNode(TableEntityNode):
+    """🔖GraphQL node exposing connection data."""
+
+    class Meta:
+        model = Connection
+        exclude_fields = (
+            "connectedPiece",
+            "connectedConnector",
+            "connectingPiece",
+            "connectingConnector",
+        )
+
+    connected = graphene.NonNull(lambda: SideNode)
+    connecting = graphene.NonNull(lambda: SideNode)
+
+    def resolve_connected(self, info):
+        return self.connected
+
+    def resolve_connecting(self, info):
+        return self.connecting
+
+
+class DesignNode(TableEntityNode):
+    """🔖GraphQL node exposing design data."""
+
+    class Meta:
+        model = Design
+
+
+class KitNotFound(NotFound):
+    """🚚endregion 🧭Moved Graphene Nodes"""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"🔍 Couldn't find an local or remote kit under uri:\n {self.uri}."
+
+
+class NoKitToDelete(KitNotFound):
+    """🗑️No Kit To Delete definition."""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"🔍 Couldn't delete the kit because no local or remote kit was found under uri:\n {self.uri}."
+
+
+class KitZipDoesNotContainSemioFolder(KitNotFound):
+    """🔖Kit Zip Does Not Contain Semio Folder definition."""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"🔍 The remote zip kit ({self.uri}) is not a valid kit."
+
+
+class OnlyRemoteKitsCanBeCached(ClientError):
+    """💾Only Remote Kits Can Be Cached definition."""
+
+    def __init__(self, nonRemoteUri: str) -> None:
+        self.nonRemoteUri = nonRemoteUri
+
+    def __str__(self):
+        return f"🔍 Only remote kits can be cached. The uri ({self.nonRemoteUri}) doesn't start with http and ends with .zip"
+
+
+class KitUriNotValid(ClientError, abc.ABC):
+    """🆔 The base for all kit uri not valid errors."""
+
+
+class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
+    """📂 The base for all local kit uri not valid errors."""
+
+
+class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
+    """🔖Local Kit Uri Is Not Absolute definition."""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"📂 The local kit uri ({self.uri}) is relative. It needs to be absolute (include the parent folders, drives, ...)."
+
+
+class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
+    """🔖Local Kit Uri Is Not Directory definition."""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"📂 The local kit uri ({self.uri}) is not a directory."
+
+
+class NoKitAssigned(NoParentAssigned):
+    """🔖No Kit Assigned definition."""
+
+    def __str__(self):
+        return "👪 The entity has no parent kit assigned."
+
+
+class KitAlreadyExists(AlreadyExists, abc.ABC):
+    """🔖Exception for attempting to create a kit that already exists."""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self) -> str:
+        return f"♊ A kit under uri ({self.uri}) already exists."
+
+
+class KitInputNode(InputNode):
+    """🔖GraphQL input node for kit mutations."""
+
+    class Meta:
+        model = KitInput
+
+
+class KitNode(TableEntityNode):
+    """🔖GraphQL node exposing kit data."""
+
+    class Meta:
+        model = Kit
+
+
+# #endregion 🧭Moved Graphene Nodes
+
+
+
+
+# #region 🛡️Validation
+# Validation logic for checking kit constraints and uniqueness rules.
+
+
+@dataclasses.dataclass
+class ValidationFix:
+    """🔧A proposed fix for a validation problem with a title and diff."""
+
+    title: str
+    diff: dict
+
+    def toDict(self) -> dict:
+        return {"title": self.title, "diff": self.diff}
+
+
+@dataclasses.dataclass
+class Problem:
+    """🔒A validation problem with a constraint identifier and message."""
+
+    constraintId: str
+    message: str
+    entityKind: str
+    entityGuid: str
+    fixes: list[ValidationFix] = dataclasses.field(default_factory=list)
+
+    def toDict(self) -> dict:
+        return {
+            "constraintId": self.constraintId,
+            "message": self.message,
+            "entityKind": self.entityKind,
+            "entityGuid": self.entityGuid,
+            "fixes": [f.toDict() for f in self.fixes],
+        }
+
+
+@dataclasses.dataclass
+class ValidationResult:
+    """🔖A validation result aggregating problems and fixes for an entity."""
+
+    problems: list[Problem]
+
+    def hasErrors(self) -> bool:
+        return len(self.problems) > 0
+
+    def toDict(self) -> dict:
+        sortedProblems = sorted(self.problems, key=lambda i: (i.constraintId, i.entityGuid))
+        return {"problems": [i.toDict() for i in sortedProblems]}
+
+    def serialize(self) -> str:
+        return json.dumps(self.toDict(), indent=2)
+
+
+def _isGuid(s: str) -> bool:
+    """🔖_isGuid performs the _isGuid operation."""
+    import re
+
+    return bool(
+        re.match(
+            r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            s,
+            re.IGNORECASE,
+        )
+    )
+
+
+def _normalizeGuids(obj: typing.Any) -> typing.Any:
+    """🔖_normalizeGuids performs the _normalizeGuids operation."""
+    if obj is None:
+        return obj
+    if isinstance(obj, str) and _isGuid(obj):
+        return "<GUID>"
+    if isinstance(obj, list):
+        return [_normalizeGuids(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _normalizeGuids(v) for k, v in obj.items()}
+    return obj
+
+
+def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
+    """✔️Check whether two validation results are semantically equal."""
+    if len(a.problems) != len(b.problems):
+        return False
+    sortedA = sorted(a.problems, key=lambda i: (i.constraintId, i.entityGuid))
+    sortedB = sorted(b.problems, key=lambda i: (i.constraintId, i.entityGuid))
+    for ia, ib in zip(sortedA, sortedB):
+        if ia.constraintId != ib.constraintId or ia.message != ib.message or ia.entityKind != ib.entityKind or ia.entityGuid != ib.entityGuid:
+            return False
+        if len(ia.fixes) != len(ib.fixes):
+            return False
+        for fa, fb in zip(ia.fixes, ib.fixes):
+            if fa.title != fb.title:
+                return False
+
+            if ia.constraintId == "guid-unique":
+                continue
+            if json.dumps(_normalizeGuids(fa.diff), sort_keys=True) != json.dumps(_normalizeGuids(fb.diff), sort_keys=True):
+                return False
+    return True
+
+
+def parseValidationResult(jsonStr: str) -> ValidationResult:
+    """🔬Parse a validation result from a dictionary representation."""
+    data = json.loads(jsonStr)
+    problems = []
+    for i in data["problems"]:
+        fixes = [ValidationFix(title=f["title"], diff=f["diff"]) for f in i.get("fixes", [])]
+        problems.append(
+            Problem(
+                constraintId=i["constraintId"],
+                message=i["message"],
+                entityKind=i["entityKind"],
+                entityGuid=i["entityGuid"],
+                fixes=fixes,
+            )
+        )
+    return ValidationResult(problems=problems)
+
+
+def validateGuidUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all GUIDs within a collection are unique."""
+    problems: list[Problem] = []
+    seen: dict[str, str] = {}
+
+    def check(entityKind: str, entityGuid: str) -> None:
+        if entityGuid in seen:
+            problems.append(
+                Problem(
+                    constraintId="guid-unique",
+                    message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
+                    entityKind=entityKind,
+                    entityGuid=entityGuid,
+                )
+            )
+        else:
+            seen[entityGuid] = entityKind
+
+    check("Kit", kit.guid)
+    for t in kit.types or []:
+        check("Type", t.guid)
+    for d in kit.designs or []:
+        check("Design", d.guid)
+        for p in d.pieces or []:
+            check("Piece", p.guid)
+        for c in d.connections or []:
+            check("Connection", c.guid)
+        for s in d.stats or []:
+            check("Stat", s.guid)
+    for q in kit.qualities or []:
+        check("Quality", q.guid)
+    for f in kit.files_ or []:
+        check("File", f.guid)
+    for fo in kit.folders_ or []:
+        check("Folder", fo.guid)
+    return problems
+
+
+def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all type names within a kit are unique."""
+    problems: list[Problem] = []
+    byParent: dict[str | None, list[Type]] = {}
+    for t in kit.types or []:
+        parentGuid = t.parent.guid if t.parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(t)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[Type]] = {}
+        for t in siblings:
+            if t.name not in names:
+                names[t.name] = []
+            names[t.name].append(t)
+        for name, group in names.items():
+            if len(group) > 1:
+                for t in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="type-name-unique",
+                            message=f'Duplicate type name "{name}" among siblings.',
+                            entityKind="Type",
+                            entityGuid=t.guid,
+                        )
+                    )
+    return problems
+
+
+def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all design names within a kit are unique."""
+    problems: list[Problem] = []
+    byParent: dict[str | None, list[Design]] = {}
+    for d in kit.designs or []:
+        parentGuid = d.parent.guid if d.parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(d)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[Design]] = {}
+        for d in siblings:
+            if d.name not in names:
+                names[d.name] = []
+            names[d.name].append(d)
+        for name, group in names.items():
+            if len(group) > 1:
+                for d in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="design-name-unique",
+                            message=f'Duplicate design name "{name}" among siblings.',
+                            entityKind="Design",
+                            entityGuid=d.guid,
+                        )
+                    )
+    return problems
+
+
+def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all piece names within a design are unique."""
+    problems: list[Problem] = []
+    for design in kit.designs or []:
+        names: dict[str, list[Piece]] = {}
+        for p in design.pieces or []:
+            if p.name_ and p.name_ not in names:
+                names[p.name_] = []
+            if p.name_:
+                names[p.name_].append(p)
+        for name, group in names.items():
+            if len(group) > 1:
+                for p in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="piece-name-unique",
+                            message=f'Duplicate piece name "{name}" in design.',
+                            entityKind="Piece",
+                            entityGuid=p.guid,
+                        )
+                    )
+    return problems
+
+
+def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all port names within a type are unique."""
+    problems: list[Problem] = []
+    for t in kit.types or []:
+        names: dict[str, list[Connector]] = {}
+        for connector in t.connectors or []:
+            if connector.name_ and connector.name_ not in names:
+                names[connector.name_] = []
+            if connector.name_:
+                names[connector.name_].append(connector)
+        for name, group in names.items():
+            if len(group) > 1:
+                for connector in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="connector-name-unique",
+                            message=f'Duplicate connector name "{name}" in type.',
+                            entityKind="Connector",
+                            entityGuid=connector.guid,
+                        )
+                    )
+    return problems
+
+
+def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all model names within a type are unique."""
+    problems: list[Problem] = []
+    for t in kit.types or []:
+        names: dict[str, list[Model]] = {}
+        for model in t.models or []:
+            if model.name and model.name not in names:
+                names[model.name] = []
+            if model.name:
+                names[model.name].append(model)
+        for name, group in names.items():
+            if len(group) > 1:
+                for model in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="model-name-unique",
+                            message=f'Duplicate model name "{name}" in type.',
+                            entityKind="Model",
+                            entityGuid=model.guid,
+                        )
+                    )
+    return problems
+
+
+def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all quality names within a kit are unique."""
+    problems: list[Problem] = []
+    names: dict[str, list[Quality]] = {}
+    for q in kit.qualities or []:
+        if q.name not in names:
+            names[q.name] = []
+        names[q.name].append(q)
+    for name, group in names.items():
+        if len(group) > 1:
+            for q in group[1:]:
+                problems.append(
+                    Problem(
+                        constraintId="quality-name-unique",
+                        message=f'Duplicate quality name "{name}".',
+                        entityKind="Quality",
+                        entityGuid=q.guid,
+                    )
+                )
+    return problems
+
+
+def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all file names within a kit are unique."""
+    problems: list[Problem] = []
+    names: dict[str, list[File]] = {}
+    for f in kit.files_ or []:
+        if f.name not in names:
+            names[f.name] = []
+        names[f.name].append(f)
+    for name, group in names.items():
+        if len(group) > 1:
+            for f in group[1:]:
+                problems.append(
+                    Problem(
+                        constraintId="file-name-unique",
+                        message=f'Duplicate file name "{name}".',
+                        entityKind="File",
+                        entityGuid=f.guid,
+                    )
+                )
+    return problems
+
+
+def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all folder names within a kit are unique."""
+    problems: list[Problem] = []
+    byParent: dict[str | None, list[Folder]] = {}
+    for fo in kit.folders_ or []:
+        parentGuid = fo.parent if fo.parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(fo)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[Folder]] = {}
+        for fo in siblings:
+            if fo.name not in names:
+                names[fo.name] = []
+            names[fo.name].append(fo)
+        for name, group in names.items():
+            if len(group) > 1:
+                for fo in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="folder-name-unique",
+                            message=f'Duplicate folder name "{name}" among siblings.',
+                            entityKind="Folder",
+                            entityGuid=fo.guid,
+                        )
+                    )
+    return problems
+
+
+def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all layer paths within a design are unique."""
+    problems: list[Problem] = []
+    for design in kit.designs or []:
+        paths: dict[str, list[Layer]] = {}
+        for layer in design.layers or []:
+            if layer.path not in paths:
+                paths[layer.path] = []
+            paths[layer.path].append(layer)
+        for path, group in paths.items():
+            if len(group) > 1:
+                for layer in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="layer-path-unique",
+                            message=f'Duplicate layer path "{path}" in design.',
+                            entityKind="Layer",
+                            entityGuid=layer.guid,
+                        )
+                    )
+    return problems
+
+
+def validateKit(kit: Kit) -> ValidationResult:
+    """🔖Validate a kit entity against all constraint rules."""
+    problems: list[Problem] = []
+    problems.extend(validateGuidUniqueness(kit))
+    problems.extend(validateTypeNameUniqueness(kit))
+    problems.extend(validateDesignNameUniqueness(kit))
+    problems.extend(validatePieceNameUniqueness(kit))
+    problems.extend(validatePortNameUniqueness(kit))
+    problems.extend(validateModelNameUniqueness(kit))
+    problems.extend(validateQualityNameUniqueness(kit))
+    problems.extend(validateFolderNameUniqueness(kit))
+    problems.extend(validateLayerPathUniqueness(kit))
+    return ValidationResult(problems=problems)
+
+
+# #region 📧Dict-based Validation
+# Dictionary-based validation functions for kit data integrity.
+
+
+def _makeFix(title: str, diff: dict) -> ValidationFix:
+    """🔖_makeFix performs the _makeFix operation."""
+    return ValidationFix(title=title, diff=diff)
+
+
+def _deepCopy(obj: typing.Any) -> typing.Any:
+    """🔖_deepCopy performs the _deepCopy operation."""
+    return json.loads(json.dumps(obj))
+
+
+def _newGuid() -> str:
+    """🔖_newGuid performs the _newGuid operation."""
+    import uuid
+
+    return str(uuid.uuid4())
+
+
+def validateKitDict(kit: dict) -> ValidationResult:
+    """🔖Validate a kit dictionary against all constraint rules."""
+    problems: list[Problem] = []
+    seen: dict[str, str] = {}
+    seenEntities: dict[str, dict] = {}
+
+    def checkGuid(entityKind: str, entityGuid: str, entity: dict) -> None:
+        if entityGuid in seen:
+            newGuid = _newGuid()
+            entityCopy = _deepCopy(entity)
+            entityCopy["guid"] = newGuid
+            collectionKey = {
+                "Type": "types",
+                "Design": "designs",
+                "Piece": "pieces",
+                "Connection": "connections",
+                "Connector": "connectors",
+                "Model": "models",
+                "Quality": "qualities",
+                "Port": "ports",
+                "File": "files",
+                "Folder": "folders",
+                "Stat": "stats",
+                "Layer": "layers",
+            }.get(entityKind, "")
+            if collectionKey:
+                diff = {
+                    collectionKey: {
+                        "removed": [{"guid": entityGuid}],
+                        "added": [entityCopy],
+                    }
+                }
+                fix = _makeFix("Regenerate GUID", diff)
+                problems.append(
+                    Problem(
+                        constraintId="guid-unique",
+                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
+                        entityKind=entityKind,
+                        entityGuid=entityGuid,
+                        fixes=[fix],
+                    )
+                )
+            else:
+                problems.append(
+                    Problem(
+                        constraintId="guid-unique",
+                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
+                        entityKind=entityKind,
+                        entityGuid=entityGuid,
+                        fixes=[],
+                    )
+                )
+        else:
+            seen[entityGuid] = entityKind
+            seenEntities[entityGuid] = entity
+
+    checkGuid("Kit", kit.get("guid", ""), kit)
+    for t in kit.get("types", []):
+        checkGuid("Type", t.get("guid", ""), t)
+        for connector in t.get("connectors", []):
+            checkGuid("Connector", connector.get("guid", ""), connector)
+        for model in t.get("models", []):
+            checkGuid("Model", model.get("guid", ""), model)
+    for d in kit.get("designs", []):
+        checkGuid("Design", d.get("guid", ""), d)
+        for p in d.get("pieces", []):
+            checkGuid("Piece", p.get("guid", ""), p)
+        for c in d.get("connections", []):
+            checkGuid("Connection", c.get("guid", ""), c)
+        for s in d.get("stats", []):
+            checkGuid("Stat", s.get("guid", ""), s)
+    for q in kit.get("qualities", []):
+        checkGuid("Quality", q.get("guid", ""), q)
+    for i in kit.get("ports", []):
+        checkGuid("Port", i.get("guid", ""), i)
+    for f in kit.get("files", []):
+        checkGuid("File", f.get("guid", ""), f)
+    for fo in kit.get("folders", []):
+        checkGuid("Folder", fo.get("guid", ""), fo)
+    byParent: dict[str | None, list[dict]] = {}
+    for t in kit.get("types", []):
+        parent = t.get("parent")
+        parentGuid = parent.get("guid") if isinstance(parent, dict) else parent if parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(t)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[dict]] = {}
+        for t in siblings:
+            name = t.get("name", "")
+            if name not in names:
+                names[name] = []
+            names[name].append(t)
+        for name, group in names.items():
+            if len(group) > 1:
+                for t in group[1:]:
+                    fix = _makeFix(
+                        f'Rename "{name}"',
+                        {
+                            "types": {
+                                "updated": [
+                                    {
+                                        "type": {"guid": t.get("guid", "")},
+                                        "diff": {"name": f"{name} 2"},
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="type-name-unique",
+                            message=f'Duplicate type name "{name}" among siblings.',
+                            entityKind="Type",
+                            entityGuid=t.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    byParent = {}
+    for d in kit.get("designs", []):
+        parent = d.get("parent")
+        parentGuid = parent.get("guid") if isinstance(parent, dict) else parent if parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(d)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[dict]] = {}
+        for d in siblings:
+            name = d.get("name", "")
+            if name not in names:
+                names[name] = []
+            names[name].append(d)
+        for name, group in names.items():
+            if len(group) > 1:
+                for d in group[1:]:
+                    fix = _makeFix(
+                        f'Rename "{name}"',
+                        {
+                            "designs": {
+                                "updated": [
+                                    {
+                                        "design": {"guid": d.get("guid", "")},
+                                        "diff": {"name": f"{name} 2"},
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="design-name-unique",
+                            message=f'Duplicate design name "{name}" among siblings.',
+                            entityKind="Design",
+                            entityGuid=d.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    for design in kit.get("designs", []):
+        designName = design.get("name", "")
+        designGuid = design.get("guid", "")
+        names = {}
+        for p in design.get("pieces", []):
+            name = p.get("name", "")
+            if name and name not in names:
+                names[name] = []
+            if name:
+                names[name].append(p)
+        for name, group in names.items():
+            if len(group) > 1:
+                for p in group[1:]:
+                    fix = _makeFix(
+                        f'Rename piece "{name}"',
+                        {
+                            "designs": {
+                                "updated": [
+                                    {
+                                        "design": {"guid": designGuid},
+                                        "diff": {
+                                            "pieces": {
+                                                "updated": [
+                                                    {
+                                                        "piece": {"guid": p.get("guid", "")},
+                                                        "diff": {"name": f"{name} 2"},
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="piece-name-unique",
+                            message=f'Duplicate piece name "{name}" inside design "{designName}".',
+                            entityKind="Piece",
+                            entityGuid=p.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    for t in kit.get("types", []):
+        typeName = t.get("name", "")
+        typeGuid = t.get("guid", "")
+        names = {}
+        for connector in t.get("connectors", []):
+            name = connector.get("name", "")
+            if name and name not in names:
+                names[name] = []
+            if name:
+                names[name].append(connector)
+        for name, group in names.items():
+            if len(group) > 1:
+                for connector in group[1:]:
+                    fix = _makeFix(
+                        f'Rename connector "{name}"',
+                        {
+                            "types": {
+                                "updated": [
+                                    {
+                                        "type": {"guid": typeGuid},
+                                        "diff": {
+                                            "connectors": {
+                                                "updated": [
+                                                    {
+                                                        "connector": {"guid": connector.get("guid", "")},
+                                                        "diff": {"name": f"{name} 2"},
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="connector-name-unique",
+                            message=f'Duplicate connector name "{name}" inside type "{typeName}".',
+                            entityKind="Connector",
+                            entityGuid=connector.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    for t in kit.get("types", []):
+        typeName = t.get("name", "")
+        typeGuid = t.get("guid", "")
+        names = {}
+        for model in t.get("models", []):
+            name = model.get("name", "")
+            if name and name not in names:
+                names[name] = []
+            if name:
+                names[name].append(model)
+        for name, group in names.items():
+            if len(group) > 1:
+                for model in group[1:]:
+                    fix = _makeFix(
+                        f'Rename model "{name}"',
+                        {
+                            "types": {
+                                "updated": [
+                                    {
+                                        "type": {"guid": typeGuid},
+                                        "diff": {
+                                            "models": {
+                                                "updated": [
+                                                    {
+                                                        "model": {"guid": model.get("guid", "")},
+                                                        "diff": {"name": f"{name} 2"},
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="model-name-unique",
+                            message=f'Duplicate model name "{name}" inside type "{typeName}".',
+                            entityKind="Model",
+                            entityGuid=model.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    names = {}
+    for q in kit.get("qualities", []):
+        name = q.get("name", "")
+        if name not in names:
+            names[name] = []
+        names[name].append(q)
+    for name, group in names.items():
+        if len(group) > 1:
+            for q in group[1:]:
+                fix = _makeFix(
+                    f'Rename quality "{name}"',
+                    {
+                        "qualities": {
+                            "updated": [
+                                {
+                                    "quality": {"guid": q.get("guid", "")},
+                                    "diff": {"name": f"{name} 2"},
+                                }
+                            ]
+                        }
+                    },
+                )
+                problems.append(
+                    Problem(
+                        constraintId="quality-name-unique",
+                        message=f'Duplicate quality name "{name}".',
+                        entityKind="Quality",
+                        entityGuid=q.get("guid", ""),
+                        fixes=[fix],
+                    )
+                )
+    names = {}
+    for i in kit.get("ports", []):
+        name = i.get("name", "")
+        if name not in names:
+            names[name] = []
+        names[name].append(i)
+    for name, group in names.items():
+        if len(group) > 1:
+            for iface in group[1:]:
+                fix = _makeFix(
+                    f'Rename port "{name}"',
+                    {
+                        "ports": {
+                            "updated": [
+                                {
+                                    "port": {"guid": iface.get("guid", "")},
+                                    "diff": {"name": f"{name} 2"},
+                                }
+                            ]
+                        }
+                    },
+                )
+                problems.append(
+                    Problem(
+                        constraintId="port-name-unique",
+                        message=f'Duplicate port name "{name}".',
+                        entityKind="Port",
+                        entityGuid=iface.get("guid", ""),
+                        fixes=[fix],
+                    )
+                )
+    names = {}
+    for f in kit.get("files", []):
+        name = f.get("name", "")
+        if name not in names:
+            names[name] = []
+        names[name].append(f)
+    for name, group in names.items():
+        if len(group) > 1:
+            for f in group[1:]:
+                fix = _makeFix(
+                    f'Rename file "{name}"',
+                    {
+                        "files": {
+                            "updated": [
+                                {
+                                    "file": {"guid": f.get("guid", "")},
+                                    "diff": {"name": f"{name} 2"},
+                                }
+                            ]
+                        }
+                    },
+                )
+                problems.append(
+                    Problem(
+                        constraintId="file-name-unique",
+                        message=f'Duplicate file name "{name}".',
+                        entityKind="File",
+                        entityGuid=f.get("guid", ""),
+                        fixes=[fix],
+                    )
+                )
+    byParent = {}
+    for fo in kit.get("folders", []):
+        parentGuid = fo.get("parent", {}).get("guid") if fo.get("parent") else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(fo)
+    for parentGuid, siblings in byParent.items():
+        names = {}
+        for fo in siblings:
+            name = fo.get("name", "")
+            if name not in names:
+                names[name] = []
+            names[name].append(fo)
+        for name, group in names.items():
+            if len(group) > 1:
+                for fo in group[1:]:
+                    fix = _makeFix(
+                        f'Rename folder "{name}"',
+                        {
+                            "folders": {
+                                "updated": [
+                                    {
+                                        "folder": {"guid": fo.get("guid", "")},
+                                        "diff": {"name": f"{name} 2"},
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="folder-name-unique",
+                            message=f'Duplicate folder name "{name}" among siblings.',
+                            entityKind="Folder",
+                            entityGuid=fo.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    for design in kit.get("designs", []):
+        designName = design.get("name", "")
+        designGuid = design.get("guid", "")
+        paths: dict[str, list[dict]] = {}
+        for layer in design.get("layers", []):
+            path = layer.get("path", "")
+            if path not in paths:
+                paths[path] = []
+            paths[path].append(layer)
+        for path, group in paths.items():
+            if len(group) > 1:
+                for layer in group[1:]:
+                    fix = _makeFix(
+                        f'Rename layer "{path}"',
+                        {
+                            "designs": {
+                                "updated": [
+                                    {
+                                        "design": {"guid": designGuid},
+                                        "diff": {
+                                            "layers": {
+                                                "updated": [
+                                                    {
+                                                        "layer": {"guid": layer.get("guid", "")},
+                                                        "diff": {"path": f"{path} 2"},
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="layer-path-unique",
+                            message=f'Duplicate layer path "{path}" inside design "{designName}".',
+                            entityKind="Layer",
+                            entityGuid=layer.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    return ValidationResult(problems=problems)
+
+
+# #endregion 📧Dict-based Validation
+
+# #region 🕌Graph Operations
+# Graph construction and traversal for piece connectivity analysis.
+
+
+def buildPieceGraph(design: Design | dict) -> networkx.Graph:
+    """🏗️Build a networkx graph from pieces and connections."""
+    G = networkx.Graph()
+    pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
+    connections = design.get("connections", []) if isinstance(design, dict) else design.connections
+    for piece in pieces:
+        pieceGuid = piece["guid"] if isinstance(piece, dict) else piece.guid
+        G.add_node(pieceGuid, piece=piece)
+    for connection in connections:
+        if isinstance(connection, dict):
+            sourceId = connection["connected"]["piece"]["guid"]
+            targetId = connection["connecting"]["piece"]["guid"]
+        else:
+            sourceId = connection.connectedPiece.guid
+            targetId = connection.connectingPiece.guid
+        if G.has_node(sourceId) and G.has_node(targetId):
+            G.add_edge(sourceId, targetId, connection=connection)
+    return G
+
+
+def findFixedPieces(design: Design | dict) -> list[str]:
+    """🔖Find all pieces that are fixed in the design hierarchy."""
+    pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
+    result = []
+    for p in pieces:
+        if isinstance(p, dict):
+            hasPlane = p.get("plane") is not None
+            hasCenter = p.get("center") is not None
+            if hasPlane != hasCenter:
+                raise ValueError(f"Piece {p.get('guid')} has inconsistent plane and center")
+            if hasPlane:
+                result.append(p["guid"])
+        else:
+            hasPlane = p.plane is not None
+            hasCenter = p.center is not None
+            if hasPlane != hasCenter:
+                raise ValueError(f"Piece {p.guid} has inconsistent plane and center")
+            if hasPlane:
+                result.append(p.guid)
+    return result
+
+
+def getConnectedComponents(design: Design | dict) -> list[set[str]]:
+    """🔖Get connected components of the piece graph."""
+    G = buildPieceGraph(design)
+
+
+def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
+    """🍃Get the hierarchical ordering of pieces from root to leaf."""
+    G = buildPieceGraph(design)
+    if rootGuid not in G:
+        return {}
+
+
+# #endregion 🕌Graph Operations
+
+# #endregion 🛡️Validation
+
+
+
+
+# #region 🌤️Flatten Design
+# Design flattening to resolve nested sub-designs into a single coordinate space.
+
+
+def getTypeByGuid(kit: dict, guid: str) -> dict | None:
+    """🔖Look up a type by its GUID within a kit dictionary."""
+    for t in kit.get("types", []):
+        if t.get("guid") == guid:
+            return t
+    return None
+
+
+def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | None) -> dict | None:
+    """🔖Look up a connector by name from a type dictionary."""
+    if typeData is None:
+        return None
+    if connectorGuid is None:
+        connectors = typeData.get("connectors", [])
+        if connectors:
+            return connectors[0]
+        parent = typeData.get("parent")
+        if parent:
+            parentType = getTypeByGuid(kit, parent.get("guid", ""))
+            return getConnectorFromType(kit, parentType, connectorGuid)
+        return None
+    for connector in typeData.get("connectors", []):
+        if connector.get("guid") == connectorGuid:
+            return connector
+    parent = typeData.get("parent")
+    if parent:
+        parentType = getTypeByGuid(kit, parent.get("guid", ""))
+        return getConnectorFromType(kit, parentType, connectorGuid)
+    connectors = typeData.get("connectors", [])
+    if connectors:
+        return connectors[0]
+    return None
+
+
+def planeToMatrixDict(plane: dict) -> numpy.ndarray:
+    """🔖Convert a plane dictionary to a 4x4 transformation matrix."""
+    origin = numpy.array([plane["origin"]["x"], plane["origin"]["y"], plane["origin"]["z"]])
+    xAxis = numpy.array([plane["xAxis"]["x"], plane["xAxis"]["y"], plane["xAxis"]["z"]])
+    yAxis = numpy.array([plane["yAxis"]["x"], plane["yAxis"]["y"], plane["yAxis"]["z"]])
+    zAxis = numpy.cross(xAxis, yAxis)
+    zAxis = normalizeVector(zAxis)
+    matrix = numpy.eye(4)
+    matrix[:3, 0] = xAxis
+    matrix[:3, 1] = yAxis
+    matrix[:3, 2] = zAxis
+    matrix[:3, 3] = origin
+    return matrix
+
+
+def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
+    """🔖Convert a 4x4 transformation matrix to a plane dictionary."""
+    origin = matrix[:3, 3]
+    xAxis = matrix[:3, 0]
+    yAxis = matrix[:3, 1]
+    return {
+        "origin": {"x": float(origin[0]), "y": float(origin[1]), "z": float(origin[2])},
+        "xAxis": {"x": float(xAxis[0]), "y": float(xAxis[1]), "z": float(xAxis[2])},
+        "yAxis": {"x": float(yAxis[0]), "y": float(yAxis[1]), "z": float(yAxis[2])},
+    }
+
+
+def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> numpy.ndarray:
+    """🔖Compute a quaternion rotating one unit vector onto another."""
+    r = numpy.dot(vFrom, vTo) + 1
+    if r < 0.000001:
+        if abs(vFrom[0]) > abs(vFrom[2]):
+            q = numpy.array([-vFrom[1], vFrom[0], 0, 0])
+        else:
+            q = numpy.array([0, -vFrom[2], vFrom[1], 0])
+    else:
+        cross = numpy.cross(vFrom, vTo)
+        q = numpy.array([cross[0], cross[1], cross[2], r])
+    return q / numpy.linalg.norm(q)
+
+
+def quaternionFromAxisAngleDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
+    """🔖Compute a quaternion from an axis-angle representation."""
+    halfAngle = angle / 2
+    s = numpy.sin(halfAngle)
+    return numpy.array([axis[0] * s, axis[1] * s, axis[2] * s, numpy.cos(halfAngle)])
+
+
+def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
+    """🔖Convert a quaternion to a 3x3 rotation matrix."""
+    x, y, z, w = q
+    x2, y2, z2 = x + x, y + y, z + z
+    xx, xy, xz = x * x2, x * y2, x * z2
+    yy, yz, zz = y * y2, y * z2, z * z2
+    wx, wy, wz = w * x2, w * y2, w * z2
+    m = numpy.eye(4)
+    m[0, 0] = 1 - (yy + zz)
+    m[0, 1] = xy - wz
+    m[0, 2] = xz + wy
+    m[1, 0] = xy + wz
+    m[1, 1] = 1 - (xx + zz)
+    m[1, 2] = yz - wx
+    m[2, 0] = xz - wy
+    m[2, 1] = yz + wx
+    m[2, 2] = 1 - (xx + yy)
+    return m
+
+
+def makeRotationAxisDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
+    """🔖Create a 4x4 rotation matrix around an arbitrary axis."""
+    return quaternionToMatrixDict(quaternionFromAxisAngleDict(axis, angle))
+
+
+def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
+    """🔖Create a 4x4 translation matrix from a displacement vector."""
+    m = numpy.eye(4)
+    m[0, 3] = x
+    m[1, 3] = y
+    m[2, 3] = z
+    return m
+
+
+def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
+    """🔖Apply a 4x4 matrix to a 3D vector dictionary."""
+    return numpy.array(
+        [
+            m[0, 0] * v[0] + m[0, 1] * v[1] + m[0, 2] * v[2],
+            m[1, 0] * v[0] + m[1, 1] * v[1] + m[1, 2] * v[2],
+            m[2, 0] * v[0] + m[2, 1] * v[1] + m[2, 2] * v[2],
+        ]
+    )
+
+
+def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict) -> dict:
+    """🔖Compute the world-space plane of a child piece from parent and local planes."""
+    parentMatrix = planeToMatrixDict(parentPlane)
+    parentPoint = numpy.array(
+        [
+            parentConnector["point"]["x"],
+            parentConnector["point"]["y"],
+            parentConnector["point"]["z"],
+        ]
+    )
+    parentDirection = normalizeVector(
+        numpy.array(
+            [
+                parentConnector["direction"]["x"],
+                parentConnector["direction"]["y"],
+                parentConnector["direction"]["z"],
+            ]
+        )
+    )
+    childPoint = numpy.array(
+        [
+            childConnector["point"]["x"],
+            childConnector["point"]["y"],
+            childConnector["point"]["z"],
+        ]
+    )
+    childDirection = normalizeVector(
+        numpy.array(
+            [
+                childConnector["direction"]["x"],
+                childConnector["direction"]["y"],
+                childConnector["direction"]["z"],
+            ]
+        )
+    )
+    gap = connection.get("gap", 0) or 0
+    shift = connection.get("shift", 0) or 0
+    rise = connection.get("rise", 0) or 0
+    rotation = connection.get("rotation", 0) or 0
+    turn = connection.get("turn", 0) or 0
+    tilt = connection.get("tilt", 0) or 0
+    rotationRad = numpy.deg2rad(rotation)
+    turnRad = numpy.deg2rad(turn)
+    tiltRad = numpy.deg2rad(tilt)
+    reverseChildDirection = -childDirection
+    crossVec = numpy.cross(parentDirection, reverseChildDirection)
+    crossLen = numpy.linalg.norm(crossVec)
+    if crossLen < 0.01:
+        if abs(parentDirection[2]) < TOLERANCE:
+            alignQuat = quaternionFromAxisAngleDict(numpy.array([0.0, 0.0, 1.0]), numpy.pi)
+        else:
+            axis = normalizeVector(numpy.cross(numpy.array([0.0, 0.0, 1.0]), parentDirection))
+            alignQuat = quaternionFromAxisAngleDict(axis, numpy.pi)
+    else:
+        alignQuat = quaternionFromUnitVectorsDict(reverseChildDirection, parentDirection)
+    directionT = quaternionToMatrixDict(alignQuat)
+    yAxis = numpy.array([0.0, 1.0, 0.0])
+    parentConnectorQuat = quaternionFromUnitVectorsDict(yAxis, parentDirection)
+    parentRotationT = quaternionToMatrixDict(parentConnectorQuat)
+    gapDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 1.0, 0.0]))
+    shiftDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([1.0, 0.0, 0.0]))
+    raiseDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 0.0, 1.0]))
+    turnAxis = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 0.0, 1.0]))
+    tiltAxis = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([1.0, 0.0, 0.0]))
+    orientationT = directionT.copy()
+    rotateT = makeRotationAxisDict(parentDirection, -rotationRad)
+    orientationT = rotateT @ orientationT
+    turnAxis = applyMatrix4ToVec3Dict(rotateT, turnAxis)
+    tiltAxis = applyMatrix4ToVec3Dict(rotateT, tiltAxis)
+    turnT = makeRotationAxisDict(turnAxis, turnRad)
+    orientationT = turnT @ orientationT
+    tiltT = makeRotationAxisDict(tiltAxis, tiltRad)
+    orientationT = tiltT @ orientationT
+    centerChildT = makeTranslationDict(-childPoint[0], -childPoint[1], -childPoint[2])
+    transform = orientationT @ centerChildT
+    gapTransform = makeTranslationDict(gapDirection[0] * gap, gapDirection[1] * gap, gapDirection[2] * gap)
+    shiftTransform = makeTranslationDict(shiftDirection[0] * shift, shiftDirection[1] * shift, shiftDirection[2] * shift)
+    raiseTransform = makeTranslationDict(raiseDirection[0] * rise, raiseDirection[1] * rise, raiseDirection[2] * rise)
+    translationT = raiseTransform @ shiftTransform @ gapTransform
+    transform = translationT @ transform
+    moveToParentT = makeTranslationDict(parentPoint[0], parentPoint[1], parentPoint[2])
+    transform = moveToParentT @ transform
+    finalMatrix = parentMatrix @ transform
+    result = matrixToPlaneDict(finalMatrix)
+    return {
+        "origin": {
+            "x": round(result["origin"]["x"] / TOLERANCE) * TOLERANCE,
+            "y": round(result["origin"]["y"] / TOLERANCE) * TOLERANCE,
+            "z": round(result["origin"]["z"] / TOLERANCE) * TOLERANCE,
+        },
+        "xAxis": {
+            "x": round(result["xAxis"]["x"] / TOLERANCE) * TOLERANCE,
+            "y": round(result["xAxis"]["y"] / TOLERANCE) * TOLERANCE,
+            "z": round(result["xAxis"]["z"] / TOLERANCE) * TOLERANCE,
+        },
+        "yAxis": {
+            "x": round(result["yAxis"]["x"] / TOLERANCE) * TOLERANCE,
+            "y": round(result["yAxis"]["y"] / TOLERANCE) * TOLERANCE,
+            "z": round(result["yAxis"]["z"] / TOLERANCE) * TOLERANCE,
+        },
+    }
+
+
+def flattenDesignDict(kit: dict, designGuid: str) -> dict:
+    """🔖Flatten a nested design hierarchy into a single flat coordinate space."""
+    design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
+    if design is None:
+        raise ValueError(f"Design {designGuid} not found")
+    pieces = design.get("pieces", [])
+    if not pieces:
+        return {}
+    pieceMap = {p["guid"]: dict(p) for p in pieces}
+    piecePlanes: dict[str, dict] = {}
+    piecePaths: dict[str, str] = {}
+    G = buildPieceGraph(design)
+    components = list(networkx.connected_components(G))
+    for component in components:
+        rootNode = None
+        for nodeId in component:
+            piece = pieceMap.get(nodeId)
+            if piece and piece.get("plane") is not None and piece.get("center") is not None:
+                rootNode = nodeId
+                break
+        if rootNode is None and component:
+            rootNode = next(iter(component))
+        if rootNode is None:
+            continue
+        rootPiece = pieceMap[rootNode]
+        piecePaths[rootNode] = rootNode
+        if rootPiece.get("plane") and rootPiece.get("center") is not None:
+            piecePlanes[rootNode] = rootPiece["plane"]
+        else:
+            piecePlanes[rootNode] = {
+                "origin": {"x": 0, "y": 0, "z": 0},
+                "xAxis": {"x": 1, "y": 0, "z": 0},
+                "yAxis": {"x": 0, "y": 1, "z": 0},
+            }
+        for source, target in networkx.bfs_edges(G, rootNode):
+            if target in piecePlanes:
+                continue
+            parentId = source
+            childId = target
+            parentPlane = piecePlanes.get(parentId)
+            if parentPlane is None:
+                continue
+            edgeData = G.get_edge_data(parentId, childId)
+            connection = edgeData.get("connection") if edgeData else None
+            if connection is None:
+                continue
+            parentPiece = pieceMap[parentId]
+            childPiece = pieceMap[childId]
+            parentType = getTypeByGuid(kit, parentPiece.get("type", {}).get("guid", ""))
+            childType = getTypeByGuid(kit, childPiece.get("type", {}).get("guid", ""))
+            parentSide = connection["connected"] if connection["connected"]["piece"]["guid"] == parentId else connection["connecting"]
+            childSide = connection["connecting"] if connection["connecting"]["piece"]["guid"] == childId else connection["connected"]
+            parentConnectorGuid = parentSide.get("connector", {}).get("guid") if parentSide.get("connector") else None
+            childConnectorGuid = childSide.get("connector", {}).get("guid") if childSide.get("connector") else None
+            parentConnector = getConnectorFromType(kit, parentType, parentConnectorGuid)
+            childConnector = getConnectorFromType(kit, childType, childConnectorGuid)
+            if parentConnector is None or childConnector is None:
+                continue
+            childPlane = computeChildPlaneDict(parentPlane, parentConnector, childConnector, connection)
+            piecePlanes[childId] = childPlane
+            radius = 2.697
+            verticalVExtra = 1.0
+            horizontalScale = 3.0633
+            parentCenter = parentPiece.get("center") or {"u": 0, "v": 0}
+            connectionU = connection.get("u", 0) or 0
+            connectionV = connection.get("v", 0) or 0
+            if parentCenter["u"] == 0 and parentCenter["v"] == 0:
+                t = parentConnector.get("t", 0) or 0
+                angle = 2 * numpy.pi * t
+                childU = radius * numpy.sin(angle)
+                childV = radius * numpy.cos(angle)
+            else:
+                parentDirZ = (parentConnector.get("direction") or {}).get("z", 0) or 0
+                isVerticalConnection = abs(parentDirZ) > 0.5
+                if isVerticalConnection:
+                    childU = parentCenter["u"] + connectionU
+                    childV = parentCenter["v"] + connectionV + verticalVExtra
+                else:
+                    childU = parentCenter["u"] + connectionU * horizontalScale
+                    childV = parentCenter["v"] + connectionV * horizontalScale
+            childCenter = {
+                "u": round(childU / TOLERANCE) * TOLERANCE,
+                "v": round(childV / TOLERANCE) * TOLERANCE,
+            }
+            pieceMap[childId]["center"] = childCenter
+            piecePaths[childId] = piecePaths.get(parentId, parentId) + "," + childId
+    updatedPieces = []
+    for piece in pieces:
+        newPiece = dict(piece)
+        if piece["guid"] in piecePlanes:
+            newPiece["plane"] = piecePlanes[piece["guid"]]
+        if piece["guid"] in pieceMap and pieceMap[piece["guid"]].get("center"):
+            newPiece["center"] = pieceMap[piece["guid"]]["center"]
+        elif newPiece.get("center") is None:
+            newPiece["center"] = {"u": 0, "v": 0}
+        updatedPieces.append(newPiece)
+    return {
+        "pieces": {
+            "updated": [
+                {
+                    "id": p["guid"],
+                    "diff": {"plane": p.get("plane"), "center": p.get("center")},
+                }
+                for p in updatedPieces
+                if p["guid"] in piecePlanes
+            ]
+        },
+        "_piecePaths": piecePaths,
+    }
+
+
+# #endregion 🌤️Flatten Design
 
 
 

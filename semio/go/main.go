@@ -10829,6 +10829,600 @@ func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
 
 
 
+// #region 📋Copy Paste Design
+// Copy Paste Design MUST provide copy and paste functionality for designs.
+// Specs: CopyDesign extracts selected pieces and connections from a design. PasteDesign inserts them into a target design.
+
+// deepClonePiece deep-clones a Piece via JSON marshal/unmarshal.
+func deepClonePiece(p Piece) Piece {
+	data, _ := json.Marshal(p)
+	var cloned Piece
+	json.Unmarshal(data, &cloned)
+	return cloned
+}
+
+// deepCloneConnection deep-clones a Connection via JSON marshal/unmarshal.
+func deepCloneConnection(c Connection) Connection {
+	data, _ := json.Marshal(c)
+	var cloned Connection
+	json.Unmarshal(data, &cloned)
+	return cloned
+}
+
+// 📋CopyDesign extracts selected pieces and connections from a design into a new Design.
+// Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
+// Internal pieces are copied as-is. Parent-piece-exclusive parent-connection-inclusive pieces get semio.center and semio.plane attributes.
+// Non-internal connections include their external pieces marked with semio.piece.origin = "external".
+func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []string) Design {
+	selectedPieceSet := make(map[string]bool)
+	for _, g := range pieceGuids {
+		selectedPieceSet[g] = true
+	}
+	selectedConnectionSet := make(map[string]bool)
+	for _, g := range connectionGuids {
+		selectedConnectionSet[g] = true
+	}
+
+	// Build parent map: child guid -> (parent guid, connection)
+	type parentInfo struct {
+		parentGuid string
+		connection Connection
+	}
+	parentMap := make(map[string]parentInfo)
+	for _, conn := range design.Connections {
+		parentMap[conn.Connecting.Piece.Guid] = parentInfo{conn.Connected.Piece.Guid, conn}
+	}
+
+	// Flatten the design to get absolute planes/centers
+	flatDiff := FlattenDesign(kit, design.Guid)
+	flatDesign := ApplyDesignDiff(design, flatDiff)
+	flatPieceMap := make(map[string]*Piece)
+	for i := range flatDesign.Pieces {
+		flatPieceMap[flatDesign.Pieces[i].Guid] = &flatDesign.Pieces[i]
+	}
+
+	var copyPieces []Piece
+	addedPieceGuids := make(map[string]bool)
+	var copyConnections []Connection
+
+	// Process selected pieces
+	for _, pieceGuid := range pieceGuids {
+		var piece *Piece
+		for i := range design.Pieces {
+			if design.Pieces[i].Guid == pieceGuid {
+				piece = &design.Pieces[i]
+				break
+			}
+		}
+		if piece == nil {
+			continue
+		}
+
+		isFixed := piece.Plane != nil
+		pInfo, isConnected := parentMap[pieceGuid]
+
+		isInternalConnected := false
+		isInternalFixed := isFixed && selectedPieceSet[pieceGuid]
+		isPpExclPcIncl := false
+
+		if isConnected {
+			parentPieceSelected := selectedPieceSet[pInfo.parentGuid]
+			parentConnSelected := selectedConnectionSet[pInfo.connection.Guid]
+			isInternalConnected = parentPieceSelected && parentConnSelected
+			isPpExclPcIncl = !parentPieceSelected && parentConnSelected
+		}
+
+		if isInternalFixed || isInternalConnected {
+			copyPieces = append(copyPieces, deepClonePiece(*piece))
+			addedPieceGuids[pieceGuid] = true
+		} else if isPpExclPcIncl {
+			copied := deepClonePiece(*piece)
+			if flatPiece, ok := flatPieceMap[pieceGuid]; ok {
+				centerValue := `{"u":0,"v":0}`
+				if flatPiece.Center != nil {
+					data, _ := json.Marshal(flatPiece.Center)
+					centerValue = string(data)
+				}
+				planeValue := `{"origin":{"x":0,"y":0,"z":0},"xAxis":{"x":1,"y":0,"z":0},"yAxis":{"x":0,"y":1,"z":0}}`
+				if flatPiece.Plane != nil {
+					data, _ := json.Marshal(flatPiece.Plane)
+					planeValue = string(data)
+				}
+				copied.Attributes = append(copied.Attributes,
+					Attribute{Key: "semio.center", Value: &centerValue},
+					Attribute{Key: "semio.plane", Value: &planeValue},
+				)
+			}
+			copyPieces = append(copyPieces, copied)
+			addedPieceGuids[pieceGuid] = true
+		}
+	}
+
+	// Process selected connections
+	for _, connGuid := range connectionGuids {
+		var conn *Connection
+		for i := range design.Connections {
+			if design.Connections[i].Guid == connGuid {
+				conn = &design.Connections[i]
+				break
+			}
+		}
+		if conn == nil {
+			continue
+		}
+
+		connectedGuid := conn.Connected.Piece.Guid
+		connectingGuid := conn.Connecting.Piece.Guid
+		connectedSelected := selectedPieceSet[connectedGuid]
+		connectingSelected := selectedPieceSet[connectingGuid]
+
+		isInternal := connectedSelected && connectingSelected
+
+		if isInternal {
+			copyConnections = append(copyConnections, deepCloneConnection(*conn))
+		} else {
+			// Orphaned, parent-excl-child-incl, or parent-incl-child-excl
+			copyConnections = append(copyConnections, deepCloneConnection(*conn))
+
+			var externalGuids []string
+			if !connectedSelected {
+				externalGuids = append(externalGuids, connectedGuid)
+			}
+			if !connectingSelected {
+				externalGuids = append(externalGuids, connectingGuid)
+			}
+
+			for _, extGuid := range externalGuids {
+				if !addedPieceGuids[extGuid] {
+					var extPiece *Piece
+					for i := range design.Pieces {
+						if design.Pieces[i].Guid == extGuid {
+							extPiece = &design.Pieces[i]
+							break
+						}
+					}
+					if extPiece != nil {
+						cloned := deepClonePiece(*extPiece)
+						extVal := "external"
+						extAttrs := []Attribute{
+							{Key: "semio.piece.origin", Value: &extVal},
+						}
+						if flatPiece, ok := flatPieceMap[extGuid]; ok {
+							centerValue := `{"u":0,"v":0}`
+							if flatPiece.Center != nil {
+								data, _ := json.Marshal(flatPiece.Center)
+								centerValue = string(data)
+							}
+							extAttrs = append(extAttrs, Attribute{Key: "semio.center", Value: &centerValue})
+						}
+						cloned.Attributes = append(cloned.Attributes, extAttrs...)
+						copyPieces = append(copyPieces, cloned)
+						addedPieceGuids[extGuid] = true
+					}
+				}
+			}
+		}
+	}
+
+	return Design{
+		Pieces:      copyPieces,
+		Connections: copyConnections,
+	}
+}
+
+// 📋PasteDesign pastes a copied design into a target design, returning a DesignDiff.
+// Specs: Anchoring determines the reference point within the bounding rectangle of the source.
+// Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
+// Connected pieces with non-external parents are added as-is.
+// Connected pieces with external-origin parents: if a matching piece with a matching connector is found in target,
+// the parent connection is remapped; otherwise treated as fixed using semio.center/semio.plane attributes.
+// With coord, remapped stub-bridge u/v use the target matched parent’s diagram center: parent.center − (coord + (anchor − child.center));
+// other internal clipboard connections keep deep-cloned u/v.
+func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord *Coord) DesignDiff {
+	typesMap := make(map[string]*Type)
+	for i := range kit.Types {
+		typesMap[kit.Types[i].Guid] = &kit.Types[i]
+	}
+	portsMap := make(map[string]*Port)
+	for i := range kit.Ports {
+		portsMap[kit.Ports[i].Guid] = &kit.Ports[i]
+	}
+
+	// Classify source pieces
+	externalOriginGuids := make(map[string]bool)
+	for _, piece := range source.Pieces {
+		for _, attr := range piece.Attributes {
+			if attr.Key == "semio.piece.origin" && attr.Value != nil && *attr.Value == "external" {
+				externalOriginGuids[piece.Guid] = true
+			}
+		}
+	}
+
+	sourcePieceMap := make(map[string]*Piece)
+	for i := range source.Pieces {
+		sourcePieceMap[source.Pieces[i].Guid] = &source.Pieces[i]
+	}
+
+	type parentInfo struct {
+		parentGuid string
+		connection Connection
+	}
+	sourceParentMap := make(map[string]parentInfo)
+	for _, conn := range source.Connections {
+		childGuid := conn.Connecting.Piece.Guid
+		parentGuid := conn.Connected.Piece.Guid
+		prev, exists := sourceParentMap[childGuid]
+		if !exists {
+			sourceParentMap[childGuid] = parentInfo{parentGuid, conn}
+			continue
+		}
+		prevStub := externalOriginGuids[prev.parentGuid]
+		nextStub := externalOriginGuids[parentGuid]
+		if prevStub != nextStub && nextStub {
+			sourceParentMap[childGuid] = parentInfo{parentGuid, conn}
+		}
+	}
+
+	// Compute bounding rectangle from flat centers
+	var centerCoords []Coord
+	for _, piece := range source.Pieces {
+		if externalOriginGuids[piece.Guid] {
+			continue
+		}
+		var center *Coord
+		if piece.Center != nil {
+			center = piece.Center
+		}
+		if center == nil {
+			for _, attr := range piece.Attributes {
+				if attr.Key == "semio.center" && attr.Value != nil {
+					var c Coord
+					if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
+						center = &c
+					}
+				}
+			}
+		}
+		if center != nil {
+			centerCoords = append(centerCoords, *center)
+		}
+	}
+
+	if len(centerCoords) == 0 {
+		centerCoords = append(centerCoords, Coord{})
+	}
+
+	minU, maxU := centerCoords[0].U, centerCoords[0].U
+	minV, maxV := centerCoords[0].V, centerCoords[0].V
+	for _, c := range centerCoords[1:] {
+		if c.U < minU {
+			minU = c.U
+		}
+		if c.U > maxU {
+			maxU = c.U
+		}
+		if c.V < minV {
+			minV = c.V
+		}
+		if c.V > maxV {
+			maxV = c.V
+		}
+	}
+
+	var anchor Coord
+	switch anchoring {
+	case "middle":
+		anchor = Coord{U: (minU + maxU) / 2, V: (minV + maxV) / 2}
+	case "centroid":
+		sumU, sumV := 0.0, 0.0
+		for _, c := range centerCoords {
+			sumU += c.U
+			sumV += c.V
+		}
+		n := float64(len(centerCoords))
+		anchor = Coord{U: sumU / n, V: sumV / n}
+	case "bottomLeft":
+		anchor = Coord{U: minU, V: minV}
+	case "bottomRight":
+		anchor = Coord{U: maxU, V: minV}
+	case "topLeft":
+		anchor = Coord{U: minU, V: maxV}
+	case "topRight":
+		anchor = Coord{U: maxU, V: maxV}
+	default: // "original"
+		anchor = Coord{U: 0, V: 0}
+	}
+
+	// Build target piece maps for matching
+	targetPiecesByName := make(map[string][]Piece)
+	for _, tp := range target.Pieces {
+		if tp.Name != nil {
+			targetPiecesByName[*tp.Name] = append(targetPiecesByName[*tp.Name], tp)
+		}
+	}
+
+	// Helper: check port compatibility
+	arePortsCompatible := func(portGuid1, portGuid2 string) bool {
+		if portGuid1 == "" || portGuid2 == "" {
+			return false
+		}
+		if portGuid1 == portGuid2 {
+			return true
+		}
+		port1, ok1 := portsMap[portGuid1]
+		port2, ok2 := portsMap[portGuid2]
+		if !ok1 || !ok2 {
+			return false
+		}
+		for _, cp := range port1.CompatiblePorts {
+			if cp.Guid == portGuid2 {
+				return true
+			}
+		}
+		for _, cp := range port2.CompatiblePorts {
+			if cp.Guid == portGuid1 {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Helper: check connector compatibility
+	areConnectorsCompatible := func(c1, c2 Connector) bool {
+		pg1, pg2 := "", ""
+		if c1.Port != nil {
+			pg1 = c1.Port.Guid
+		}
+		if c2.Port != nil {
+			pg2 = c2.Port.Guid
+		}
+		return arePortsCompatible(pg1, pg2)
+	}
+
+	// Helper: find matching connector on a type
+	findMatchingConnector := func(typeGuid string, sourceConnector Connector) *Connector {
+		t, ok := typesMap[typeGuid]
+		if !ok {
+			return nil
+		}
+		srcName := ""
+		if sourceConnector.Name != nil {
+			srcName = *sourceConnector.Name
+		}
+		for i := range t.Connectors {
+			cName := ""
+			if t.Connectors[i].Name != nil {
+				cName = *t.Connectors[i].Name
+			}
+			if cName == srcName && areConnectorsCompatible(t.Connectors[i], sourceConnector) {
+				return &t.Connectors[i]
+			}
+		}
+		return nil
+	}
+
+	var addedPieces []Piece
+	var addedConnections []Connection
+
+	// Process source pieces
+	for _, piece := range source.Pieces {
+		if externalOriginGuids[piece.Guid] {
+			continue
+		}
+
+		isFixed := piece.Plane != nil
+		pInfo, isConnected := sourceParentMap[piece.Guid]
+
+		if isFixed && !isConnected {
+			// Fixed piece: apply -anchor offset, then +coord if given
+			copied := deepClonePiece(piece)
+			center := Coord{}
+			if copied.Center != nil {
+				center = *copied.Center
+			}
+			center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
+			if coord != nil {
+				center = Coord{U: center.U + coord.U, V: center.V + coord.V}
+			}
+			copied.Center = &center
+			addedPieces = append(addedPieces, copied)
+		} else if isConnected {
+			if externalOriginGuids[pInfo.parentGuid] {
+				// Parent is external-origin: try to match in target
+				externalParent := sourcePieceMap[pInfo.parentGuid]
+				matched := false
+
+				extName := ""
+				if externalParent.Name != nil {
+					extName = *externalParent.Name
+				}
+
+				if candidates, ok := targetPiecesByName[extName]; ok && extName != "" {
+					parentConn := pInfo.connection
+					isParentConnected := parentConn.Connected.Piece.Guid == pInfo.parentGuid
+					parentConnectorGuid := ""
+					if isParentConnected {
+						if parentConn.Connected.Connector != nil {
+							parentConnectorGuid = parentConn.Connected.Connector.Guid
+						}
+					} else {
+						if parentConn.Connecting.Connector != nil {
+							parentConnectorGuid = parentConn.Connecting.Connector.Guid
+						}
+					}
+
+					// Find the source parent connector
+					var sourceParentConnector *Connector
+					if externalParent.Type != nil {
+						if parentType, ok := typesMap[externalParent.Type.Guid]; ok {
+							for i := range parentType.Connectors {
+								if parentType.Connectors[i].Guid == parentConnectorGuid {
+									sourceParentConnector = &parentType.Connectors[i]
+									break
+								}
+							}
+						}
+					}
+
+					if sourceParentConnector != nil {
+						for _, candidate := range candidates {
+							if candidate.Type == nil {
+								continue
+							}
+							matchingConnector := findMatchingConnector(candidate.Type.Guid, *sourceParentConnector)
+							if matchingConnector != nil {
+								matched = true
+								copied := deepClonePiece(piece)
+								addedPieces = append(addedPieces, copied)
+
+								copiedConn := deepCloneConnection(parentConn)
+								if isParentConnected {
+									copiedConn.Connected = Side{
+										Piece:     PieceId{Guid: candidate.Guid},
+										Connector: &ConnectorId{Guid: matchingConnector.Guid},
+									}
+								} else {
+									copiedConn.Connecting = Side{
+										Piece:     PieceId{Guid: candidate.Guid},
+										Connector: &ConnectorId{Guid: matchingConnector.Guid},
+									}
+								}
+								if coord != nil {
+									connectedStub := externalOriginGuids[parentConn.Connected.Piece.Guid]
+									connectingStub := externalOriginGuids[parentConn.Connecting.Piece.Guid]
+									connMatchesParentage := (parentConn.Connecting.Piece.Guid == piece.Guid && parentConn.Connected.Piece.Guid == pInfo.parentGuid) ||
+										(parentConn.Connected.Piece.Guid == piece.Guid && parentConn.Connecting.Piece.Guid == pInfo.parentGuid)
+									// Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
+									// internal–internal source edges (neither side a stub) must keep cloned u/v.
+									if connMatchesParentage && connectedStub != connectingStub {
+										flatParentCenter := Coord{}
+										hasParentCenter := false
+										if candidate.Center != nil {
+											flatParentCenter = *candidate.Center
+											hasParentCenter = true
+										}
+										if !hasParentCenter {
+											for _, attr := range candidate.Attributes {
+												if attr.Key == "semio.center" && attr.Value != nil {
+													if err := json.Unmarshal([]byte(*attr.Value), &flatParentCenter); err == nil {
+														hasParentCenter = true
+														break
+													}
+												}
+											}
+										}
+										if !hasParentCenter {
+											for _, attr := range externalParent.Attributes {
+												if attr.Key == "semio.center" && attr.Value != nil {
+													if err := json.Unmarshal([]byte(*attr.Value), &flatParentCenter); err == nil {
+														hasParentCenter = true
+														break
+													}
+												}
+											}
+										}
+										if !hasParentCenter && externalParent.Center != nil {
+											flatParentCenter = *externalParent.Center
+											hasParentCenter = true
+										}
+										flatChildCenter := Coord{}
+										hasChildCenter := false
+										for _, attr := range piece.Attributes {
+											if attr.Key == "semio.center" && attr.Value != nil {
+												if err := json.Unmarshal([]byte(*attr.Value), &flatChildCenter); err == nil {
+													hasChildCenter = true
+												}
+											}
+										}
+										if !hasChildCenter && piece.Center != nil {
+											flatChildCenter = *piece.Center
+											hasChildCenter = true
+										}
+										if hasParentCenter && hasChildCenter {
+											offsetU := flatParentCenter.U - (coord.U + (anchor.U - flatChildCenter.U))
+											offsetV := flatParentCenter.V - (coord.V + (anchor.V - flatChildCenter.V))
+											copiedConn.U = offsetU
+											copiedConn.V = offsetV
+										}
+									}
+								}
+								addedConnections = append(addedConnections, copiedConn)
+								break
+							}
+						}
+					}
+				}
+
+				if !matched {
+					// Treat as fixed piece using semio.center and semio.plane attributes
+					copied := deepClonePiece(piece)
+					for _, attr := range piece.Attributes {
+						if attr.Key == "semio.center" && attr.Value != nil {
+							var c Coord
+							if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
+								copied.Center = &c
+							}
+						}
+						if attr.Key == "semio.plane" && attr.Value != nil {
+							var p Plane
+							if err := json.Unmarshal([]byte(*attr.Value), &p); err == nil {
+								copied.Plane = &p
+							}
+						}
+					}
+					center := Coord{}
+					if copied.Center != nil {
+						center = *copied.Center
+					}
+					center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
+					if coord != nil {
+						center = Coord{U: center.U + coord.U, V: center.V + coord.V}
+					}
+					copied.Center = &center
+					addedPieces = append(addedPieces, copied)
+				}
+			} else {
+				// Parent is not external: add connected piece as-is
+				addedPieces = append(addedPieces, deepClonePiece(piece))
+			}
+		}
+	}
+
+	// Process source connections (non-external internal connections)
+	addedPieceGuids := make(map[string]bool)
+	for _, p := range addedPieces {
+		addedPieceGuids[p.Guid] = true
+	}
+	for _, conn := range source.Connections {
+		connectedGuid := conn.Connected.Piece.Guid
+		connectingGuid := conn.Connecting.Piece.Guid
+
+		if externalOriginGuids[connectedGuid] || externalOriginGuids[connectingGuid] {
+			continue
+		}
+
+		if !addedPieceGuids[connectedGuid] || !addedPieceGuids[connectingGuid] {
+			continue
+		}
+
+		addedConnections = append(addedConnections, deepCloneConnection(conn))
+	}
+
+	diff := DesignDiff{}
+	if len(addedPieces) > 0 {
+		diff.Pieces = &PiecesDiff{Added: addedPieces}
+	}
+	if len(addedConnections) > 0 {
+		diff.Connections = &ConnectionsDiff{Added: addedConnections}
+	}
+	return diff
+}
+
+// #endregion 📋Copy Paste Design
+
+
+
+
 // #region 🛡️Validation
 
 // 🏛️SemioEntityKind enumerates the kinds of semio domain entities.
@@ -12459,600 +13053,6 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 }
 
 // #endregion 🌤️Flatten Design
-
-
-
-
-// #region 📋Copy Paste Design
-// Copy Paste Design MUST provide copy and paste functionality for designs.
-// Specs: CopyDesign extracts selected pieces and connections from a design. PasteDesign inserts them into a target design.
-
-// deepClonePiece deep-clones a Piece via JSON marshal/unmarshal.
-func deepClonePiece(p Piece) Piece {
-	data, _ := json.Marshal(p)
-	var cloned Piece
-	json.Unmarshal(data, &cloned)
-	return cloned
-}
-
-// deepCloneConnection deep-clones a Connection via JSON marshal/unmarshal.
-func deepCloneConnection(c Connection) Connection {
-	data, _ := json.Marshal(c)
-	var cloned Connection
-	json.Unmarshal(data, &cloned)
-	return cloned
-}
-
-// 📋CopyDesign extracts selected pieces and connections from a design into a new Design.
-// Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
-// Internal pieces are copied as-is. Parent-piece-exclusive parent-connection-inclusive pieces get semio.center and semio.plane attributes.
-// Non-internal connections include their external pieces marked with semio.piece.origin = "external".
-func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []string) Design {
-	selectedPieceSet := make(map[string]bool)
-	for _, g := range pieceGuids {
-		selectedPieceSet[g] = true
-	}
-	selectedConnectionSet := make(map[string]bool)
-	for _, g := range connectionGuids {
-		selectedConnectionSet[g] = true
-	}
-
-	// Build parent map: child guid -> (parent guid, connection)
-	type parentInfo struct {
-		parentGuid string
-		connection Connection
-	}
-	parentMap := make(map[string]parentInfo)
-	for _, conn := range design.Connections {
-		parentMap[conn.Connecting.Piece.Guid] = parentInfo{conn.Connected.Piece.Guid, conn}
-	}
-
-	// Flatten the design to get absolute planes/centers
-	flatDiff := FlattenDesign(kit, design.Guid)
-	flatDesign := ApplyDesignDiff(design, flatDiff)
-	flatPieceMap := make(map[string]*Piece)
-	for i := range flatDesign.Pieces {
-		flatPieceMap[flatDesign.Pieces[i].Guid] = &flatDesign.Pieces[i]
-	}
-
-	var copyPieces []Piece
-	addedPieceGuids := make(map[string]bool)
-	var copyConnections []Connection
-
-	// Process selected pieces
-	for _, pieceGuid := range pieceGuids {
-		var piece *Piece
-		for i := range design.Pieces {
-			if design.Pieces[i].Guid == pieceGuid {
-				piece = &design.Pieces[i]
-				break
-			}
-		}
-		if piece == nil {
-			continue
-		}
-
-		isFixed := piece.Plane != nil
-		pInfo, isConnected := parentMap[pieceGuid]
-
-		isInternalConnected := false
-		isInternalFixed := isFixed && selectedPieceSet[pieceGuid]
-		isPpExclPcIncl := false
-
-		if isConnected {
-			parentPieceSelected := selectedPieceSet[pInfo.parentGuid]
-			parentConnSelected := selectedConnectionSet[pInfo.connection.Guid]
-			isInternalConnected = parentPieceSelected && parentConnSelected
-			isPpExclPcIncl = !parentPieceSelected && parentConnSelected
-		}
-
-		if isInternalFixed || isInternalConnected {
-			copyPieces = append(copyPieces, deepClonePiece(*piece))
-			addedPieceGuids[pieceGuid] = true
-		} else if isPpExclPcIncl {
-			copied := deepClonePiece(*piece)
-			if flatPiece, ok := flatPieceMap[pieceGuid]; ok {
-				centerValue := `{"u":0,"v":0}`
-				if flatPiece.Center != nil {
-					data, _ := json.Marshal(flatPiece.Center)
-					centerValue = string(data)
-				}
-				planeValue := `{"origin":{"x":0,"y":0,"z":0},"xAxis":{"x":1,"y":0,"z":0},"yAxis":{"x":0,"y":1,"z":0}}`
-				if flatPiece.Plane != nil {
-					data, _ := json.Marshal(flatPiece.Plane)
-					planeValue = string(data)
-				}
-				copied.Attributes = append(copied.Attributes,
-					Attribute{Key: "semio.center", Value: &centerValue},
-					Attribute{Key: "semio.plane", Value: &planeValue},
-				)
-			}
-			copyPieces = append(copyPieces, copied)
-			addedPieceGuids[pieceGuid] = true
-		}
-	}
-
-	// Process selected connections
-	for _, connGuid := range connectionGuids {
-		var conn *Connection
-		for i := range design.Connections {
-			if design.Connections[i].Guid == connGuid {
-				conn = &design.Connections[i]
-				break
-			}
-		}
-		if conn == nil {
-			continue
-		}
-
-		connectedGuid := conn.Connected.Piece.Guid
-		connectingGuid := conn.Connecting.Piece.Guid
-		connectedSelected := selectedPieceSet[connectedGuid]
-		connectingSelected := selectedPieceSet[connectingGuid]
-
-		isInternal := connectedSelected && connectingSelected
-
-		if isInternal {
-			copyConnections = append(copyConnections, deepCloneConnection(*conn))
-		} else {
-			// Orphaned, parent-excl-child-incl, or parent-incl-child-excl
-			copyConnections = append(copyConnections, deepCloneConnection(*conn))
-
-			var externalGuids []string
-			if !connectedSelected {
-				externalGuids = append(externalGuids, connectedGuid)
-			}
-			if !connectingSelected {
-				externalGuids = append(externalGuids, connectingGuid)
-			}
-
-			for _, extGuid := range externalGuids {
-				if !addedPieceGuids[extGuid] {
-					var extPiece *Piece
-					for i := range design.Pieces {
-						if design.Pieces[i].Guid == extGuid {
-							extPiece = &design.Pieces[i]
-							break
-						}
-					}
-					if extPiece != nil {
-						cloned := deepClonePiece(*extPiece)
-						extVal := "external"
-						extAttrs := []Attribute{
-							{Key: "semio.piece.origin", Value: &extVal},
-						}
-						if flatPiece, ok := flatPieceMap[extGuid]; ok {
-							centerValue := `{"u":0,"v":0}`
-							if flatPiece.Center != nil {
-								data, _ := json.Marshal(flatPiece.Center)
-								centerValue = string(data)
-							}
-							extAttrs = append(extAttrs, Attribute{Key: "semio.center", Value: &centerValue})
-						}
-						cloned.Attributes = append(cloned.Attributes, extAttrs...)
-						copyPieces = append(copyPieces, cloned)
-						addedPieceGuids[extGuid] = true
-					}
-				}
-			}
-		}
-	}
-
-	return Design{
-		Pieces:      copyPieces,
-		Connections: copyConnections,
-	}
-}
-
-// 📋PasteDesign pastes a copied design into a target design, returning a DesignDiff.
-// Specs: Anchoring determines the reference point within the bounding rectangle of the source.
-// Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
-// Connected pieces with non-external parents are added as-is.
-// Connected pieces with external-origin parents: if a matching piece with a matching connector is found in target,
-// the parent connection is remapped; otherwise treated as fixed using semio.center/semio.plane attributes.
-// With coord, remapped stub-bridge u/v use the target matched parent’s diagram center: parent.center − (coord + (anchor − child.center));
-// other internal clipboard connections keep deep-cloned u/v.
-func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord *Coord) DesignDiff {
-	typesMap := make(map[string]*Type)
-	for i := range kit.Types {
-		typesMap[kit.Types[i].Guid] = &kit.Types[i]
-	}
-	portsMap := make(map[string]*Port)
-	for i := range kit.Ports {
-		portsMap[kit.Ports[i].Guid] = &kit.Ports[i]
-	}
-
-	// Classify source pieces
-	externalOriginGuids := make(map[string]bool)
-	for _, piece := range source.Pieces {
-		for _, attr := range piece.Attributes {
-			if attr.Key == "semio.piece.origin" && attr.Value != nil && *attr.Value == "external" {
-				externalOriginGuids[piece.Guid] = true
-			}
-		}
-	}
-
-	sourcePieceMap := make(map[string]*Piece)
-	for i := range source.Pieces {
-		sourcePieceMap[source.Pieces[i].Guid] = &source.Pieces[i]
-	}
-
-	type parentInfo struct {
-		parentGuid string
-		connection Connection
-	}
-	sourceParentMap := make(map[string]parentInfo)
-	for _, conn := range source.Connections {
-		childGuid := conn.Connecting.Piece.Guid
-		parentGuid := conn.Connected.Piece.Guid
-		prev, exists := sourceParentMap[childGuid]
-		if !exists {
-			sourceParentMap[childGuid] = parentInfo{parentGuid, conn}
-			continue
-		}
-		prevStub := externalOriginGuids[prev.parentGuid]
-		nextStub := externalOriginGuids[parentGuid]
-		if prevStub != nextStub && nextStub {
-			sourceParentMap[childGuid] = parentInfo{parentGuid, conn}
-		}
-	}
-
-	// Compute bounding rectangle from flat centers
-	var centerCoords []Coord
-	for _, piece := range source.Pieces {
-		if externalOriginGuids[piece.Guid] {
-			continue
-		}
-		var center *Coord
-		if piece.Center != nil {
-			center = piece.Center
-		}
-		if center == nil {
-			for _, attr := range piece.Attributes {
-				if attr.Key == "semio.center" && attr.Value != nil {
-					var c Coord
-					if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
-						center = &c
-					}
-				}
-			}
-		}
-		if center != nil {
-			centerCoords = append(centerCoords, *center)
-		}
-	}
-
-	if len(centerCoords) == 0 {
-		centerCoords = append(centerCoords, Coord{})
-	}
-
-	minU, maxU := centerCoords[0].U, centerCoords[0].U
-	minV, maxV := centerCoords[0].V, centerCoords[0].V
-	for _, c := range centerCoords[1:] {
-		if c.U < minU {
-			minU = c.U
-		}
-		if c.U > maxU {
-			maxU = c.U
-		}
-		if c.V < minV {
-			minV = c.V
-		}
-		if c.V > maxV {
-			maxV = c.V
-		}
-	}
-
-	var anchor Coord
-	switch anchoring {
-	case "middle":
-		anchor = Coord{U: (minU + maxU) / 2, V: (minV + maxV) / 2}
-	case "centroid":
-		sumU, sumV := 0.0, 0.0
-		for _, c := range centerCoords {
-			sumU += c.U
-			sumV += c.V
-		}
-		n := float64(len(centerCoords))
-		anchor = Coord{U: sumU / n, V: sumV / n}
-	case "bottomLeft":
-		anchor = Coord{U: minU, V: minV}
-	case "bottomRight":
-		anchor = Coord{U: maxU, V: minV}
-	case "topLeft":
-		anchor = Coord{U: minU, V: maxV}
-	case "topRight":
-		anchor = Coord{U: maxU, V: maxV}
-	default: // "original"
-		anchor = Coord{U: 0, V: 0}
-	}
-
-	// Build target piece maps for matching
-	targetPiecesByName := make(map[string][]Piece)
-	for _, tp := range target.Pieces {
-		if tp.Name != nil {
-			targetPiecesByName[*tp.Name] = append(targetPiecesByName[*tp.Name], tp)
-		}
-	}
-
-	// Helper: check port compatibility
-	arePortsCompatible := func(portGuid1, portGuid2 string) bool {
-		if portGuid1 == "" || portGuid2 == "" {
-			return false
-		}
-		if portGuid1 == portGuid2 {
-			return true
-		}
-		port1, ok1 := portsMap[portGuid1]
-		port2, ok2 := portsMap[portGuid2]
-		if !ok1 || !ok2 {
-			return false
-		}
-		for _, cp := range port1.CompatiblePorts {
-			if cp.Guid == portGuid2 {
-				return true
-			}
-		}
-		for _, cp := range port2.CompatiblePorts {
-			if cp.Guid == portGuid1 {
-				return true
-			}
-		}
-		return false
-	}
-
-	// Helper: check connector compatibility
-	areConnectorsCompatible := func(c1, c2 Connector) bool {
-		pg1, pg2 := "", ""
-		if c1.Port != nil {
-			pg1 = c1.Port.Guid
-		}
-		if c2.Port != nil {
-			pg2 = c2.Port.Guid
-		}
-		return arePortsCompatible(pg1, pg2)
-	}
-
-	// Helper: find matching connector on a type
-	findMatchingConnector := func(typeGuid string, sourceConnector Connector) *Connector {
-		t, ok := typesMap[typeGuid]
-		if !ok {
-			return nil
-		}
-		srcName := ""
-		if sourceConnector.Name != nil {
-			srcName = *sourceConnector.Name
-		}
-		for i := range t.Connectors {
-			cName := ""
-			if t.Connectors[i].Name != nil {
-				cName = *t.Connectors[i].Name
-			}
-			if cName == srcName && areConnectorsCompatible(t.Connectors[i], sourceConnector) {
-				return &t.Connectors[i]
-			}
-		}
-		return nil
-	}
-
-	var addedPieces []Piece
-	var addedConnections []Connection
-
-	// Process source pieces
-	for _, piece := range source.Pieces {
-		if externalOriginGuids[piece.Guid] {
-			continue
-		}
-
-		isFixed := piece.Plane != nil
-		pInfo, isConnected := sourceParentMap[piece.Guid]
-
-		if isFixed && !isConnected {
-			// Fixed piece: apply -anchor offset, then +coord if given
-			copied := deepClonePiece(piece)
-			center := Coord{}
-			if copied.Center != nil {
-				center = *copied.Center
-			}
-			center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
-			if coord != nil {
-				center = Coord{U: center.U + coord.U, V: center.V + coord.V}
-			}
-			copied.Center = &center
-			addedPieces = append(addedPieces, copied)
-		} else if isConnected {
-			if externalOriginGuids[pInfo.parentGuid] {
-				// Parent is external-origin: try to match in target
-				externalParent := sourcePieceMap[pInfo.parentGuid]
-				matched := false
-
-				extName := ""
-				if externalParent.Name != nil {
-					extName = *externalParent.Name
-				}
-
-				if candidates, ok := targetPiecesByName[extName]; ok && extName != "" {
-					parentConn := pInfo.connection
-					isParentConnected := parentConn.Connected.Piece.Guid == pInfo.parentGuid
-					parentConnectorGuid := ""
-					if isParentConnected {
-						if parentConn.Connected.Connector != nil {
-							parentConnectorGuid = parentConn.Connected.Connector.Guid
-						}
-					} else {
-						if parentConn.Connecting.Connector != nil {
-							parentConnectorGuid = parentConn.Connecting.Connector.Guid
-						}
-					}
-
-					// Find the source parent connector
-					var sourceParentConnector *Connector
-					if externalParent.Type != nil {
-						if parentType, ok := typesMap[externalParent.Type.Guid]; ok {
-							for i := range parentType.Connectors {
-								if parentType.Connectors[i].Guid == parentConnectorGuid {
-									sourceParentConnector = &parentType.Connectors[i]
-									break
-								}
-							}
-						}
-					}
-
-					if sourceParentConnector != nil {
-						for _, candidate := range candidates {
-							if candidate.Type == nil {
-								continue
-							}
-							matchingConnector := findMatchingConnector(candidate.Type.Guid, *sourceParentConnector)
-							if matchingConnector != nil {
-								matched = true
-								copied := deepClonePiece(piece)
-								addedPieces = append(addedPieces, copied)
-
-								copiedConn := deepCloneConnection(parentConn)
-								if isParentConnected {
-									copiedConn.Connected = Side{
-										Piece:     PieceId{Guid: candidate.Guid},
-										Connector: &ConnectorId{Guid: matchingConnector.Guid},
-									}
-								} else {
-									copiedConn.Connecting = Side{
-										Piece:     PieceId{Guid: candidate.Guid},
-										Connector: &ConnectorId{Guid: matchingConnector.Guid},
-									}
-								}
-								if coord != nil {
-									connectedStub := externalOriginGuids[parentConn.Connected.Piece.Guid]
-									connectingStub := externalOriginGuids[parentConn.Connecting.Piece.Guid]
-									connMatchesParentage := (parentConn.Connecting.Piece.Guid == piece.Guid && parentConn.Connected.Piece.Guid == pInfo.parentGuid) ||
-										(parentConn.Connected.Piece.Guid == piece.Guid && parentConn.Connecting.Piece.Guid == pInfo.parentGuid)
-									// Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
-									// internal–internal source edges (neither side a stub) must keep cloned u/v.
-									if connMatchesParentage && connectedStub != connectingStub {
-										flatParentCenter := Coord{}
-										hasParentCenter := false
-										if candidate.Center != nil {
-											flatParentCenter = *candidate.Center
-											hasParentCenter = true
-										}
-										if !hasParentCenter {
-											for _, attr := range candidate.Attributes {
-												if attr.Key == "semio.center" && attr.Value != nil {
-													if err := json.Unmarshal([]byte(*attr.Value), &flatParentCenter); err == nil {
-														hasParentCenter = true
-														break
-													}
-												}
-											}
-										}
-										if !hasParentCenter {
-											for _, attr := range externalParent.Attributes {
-												if attr.Key == "semio.center" && attr.Value != nil {
-													if err := json.Unmarshal([]byte(*attr.Value), &flatParentCenter); err == nil {
-														hasParentCenter = true
-														break
-													}
-												}
-											}
-										}
-										if !hasParentCenter && externalParent.Center != nil {
-											flatParentCenter = *externalParent.Center
-											hasParentCenter = true
-										}
-										flatChildCenter := Coord{}
-										hasChildCenter := false
-										for _, attr := range piece.Attributes {
-											if attr.Key == "semio.center" && attr.Value != nil {
-												if err := json.Unmarshal([]byte(*attr.Value), &flatChildCenter); err == nil {
-													hasChildCenter = true
-												}
-											}
-										}
-										if !hasChildCenter && piece.Center != nil {
-											flatChildCenter = *piece.Center
-											hasChildCenter = true
-										}
-										if hasParentCenter && hasChildCenter {
-											offsetU := flatParentCenter.U - (coord.U + (anchor.U - flatChildCenter.U))
-											offsetV := flatParentCenter.V - (coord.V + (anchor.V - flatChildCenter.V))
-											copiedConn.U = offsetU
-											copiedConn.V = offsetV
-										}
-									}
-								}
-								addedConnections = append(addedConnections, copiedConn)
-								break
-							}
-						}
-					}
-				}
-
-				if !matched {
-					// Treat as fixed piece using semio.center and semio.plane attributes
-					copied := deepClonePiece(piece)
-					for _, attr := range piece.Attributes {
-						if attr.Key == "semio.center" && attr.Value != nil {
-							var c Coord
-							if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
-								copied.Center = &c
-							}
-						}
-						if attr.Key == "semio.plane" && attr.Value != nil {
-							var p Plane
-							if err := json.Unmarshal([]byte(*attr.Value), &p); err == nil {
-								copied.Plane = &p
-							}
-						}
-					}
-					center := Coord{}
-					if copied.Center != nil {
-						center = *copied.Center
-					}
-					center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
-					if coord != nil {
-						center = Coord{U: center.U + coord.U, V: center.V + coord.V}
-					}
-					copied.Center = &center
-					addedPieces = append(addedPieces, copied)
-				}
-			} else {
-				// Parent is not external: add connected piece as-is
-				addedPieces = append(addedPieces, deepClonePiece(piece))
-			}
-		}
-	}
-
-	// Process source connections (non-external internal connections)
-	addedPieceGuids := make(map[string]bool)
-	for _, p := range addedPieces {
-		addedPieceGuids[p.Guid] = true
-	}
-	for _, conn := range source.Connections {
-		connectedGuid := conn.Connected.Piece.Guid
-		connectingGuid := conn.Connecting.Piece.Guid
-
-		if externalOriginGuids[connectedGuid] || externalOriginGuids[connectingGuid] {
-			continue
-		}
-
-		if !addedPieceGuids[connectedGuid] || !addedPieceGuids[connectingGuid] {
-			continue
-		}
-
-		addedConnections = append(addedConnections, deepCloneConnection(conn))
-	}
-
-	diff := DesignDiff{}
-	if len(addedPieces) > 0 {
-		diff.Pieces = &PiecesDiff{Added: addedPieces}
-	}
-	if len(addedConnections) > 0 {
-		diff.Connections = &ConnectionsDiff{Added: addedConnections}
-	}
-	return diff
-}
-
-// #endregion 📋Copy Paste Design
 
 
 

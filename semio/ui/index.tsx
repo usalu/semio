@@ -2210,87 +2210,6 @@ export const Vec: React.FC<VecProps> = ({ id, vec, minU = -1, maxU = 1, minV = -
 
 // #endregion 🏪Vec
 
-// #region GapShiftRiseInput
-
-// Specs: Numeric gap, shift, and rise for 3D placement (move algorithms); distinct from the 2D Vec pad.
-// Summary: Three bounded number fields aligned with MoveVector from @semio/js.
-
-export interface GapShiftRiseInputProps {
-  id: string;
-  value: MoveVector;
-  min?: MoveVector;
-  max?: MoveVector;
-  onChange?: (next: MoveVector) => void;
-  className?: string;
-}
-
-const clampMoveAxis = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
-
-/**
- * Bounded inputs for gap (along piece yAxis), shift (along xAxis), and rise (along plane normal).
- */
-export const GapShiftRiseInput: React.FC<GapShiftRiseInputProps> = ({
-  id,
-  value,
-  min = { gap: -10, shift: -10, rise: -10 },
-  max = { gap: 10, shift: 10, rise: 10 },
-  onChange,
-  className = "",
-}) => {
-  const patch = React.useCallback(
-    (partial: Partial<MoveVector>) => {
-      const next = {
-        gap: partial.gap ?? value.gap,
-        shift: partial.shift ?? value.shift,
-        rise: partial.rise ?? value.rise,
-      };
-      onChange?.({
-        gap: clampMoveAxis(next.gap, min.gap, max.gap),
-        shift: clampMoveAxis(next.shift, min.shift, max.shift),
-        rise: clampMoveAxis(next.rise, min.rise, max.rise),
-      });
-    },
-    [value.gap, value.shift, value.rise, min.gap, min.shift, min.rise, max.gap, max.shift, max.rise, onChange],
-  );
-
-  return (
-    <div data-slot={id} className={`flex flex-col gap-2 ${className}`}>
-      <div className="flex items-center gap-1">
-        <span className="text-xs font-mono text-muted-foreground w-10">gap</span>
-        <input
-          className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
-          type="number"
-          step="0.1"
-          value={value.gap}
-          onChange={(e) => patch({ gap: Number(e.target.value) })}
-        />
-      </div>
-      <div className="flex items-center gap-1">
-        <span className="text-xs font-mono text-muted-foreground w-10">shift</span>
-        <input
-          className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
-          type="number"
-          step="0.1"
-          value={value.shift}
-          onChange={(e) => patch({ shift: Number(e.target.value) })}
-        />
-      </div>
-      <div className="flex items-center gap-1">
-        <span className="text-xs font-mono text-muted-foreground w-10">rise</span>
-        <input
-          className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
-          type="number"
-          step="0.1"
-          value={value.rise}
-          onChange={(e) => patch({ rise: Number(e.target.value) })}
-        />
-      </div>
-    </div>
-  );
-};
-
-// #endregion GapShiftRiseInput
-
 // #region 🔤Vector
 
 // Specs: Semio 3D vector component supporting display/select modes with partial/full
@@ -2331,6 +2250,8 @@ export interface VectorProps {
   minZ?: number;
   maxZ?: number;
   step?: number;
+  /** Overrides default X/Y/Z labels (e.g. shift/gap/rise for placement vectors). */
+  axisLabels?: Partial<Record<"x" | "y" | "z", string>>;
   className?: string;
 }
 
@@ -2392,6 +2313,7 @@ export const Vector: React.FC<VectorProps> = ({
   minZ = -1,
   maxZ = 1,
   step = 0.1,
+  axisLabels,
   className = "",
 }) => {
   const [resolvedVector, setResolvedVector] = useInteractiveControllableValue<VectorValue>(vector, normalizeVector(defaultVector), onVectorChange);
@@ -2443,20 +2365,62 @@ export const Vector: React.FC<VectorProps> = ({
     );
   };
 
+  const labelFor = (axis: "x" | "y" | "z") => axisLabels?.[axis] ?? axis.toUpperCase();
+
   if (!displayEnabled) return null;
   return (
     <div id={id} data-slot="vector" className={`flex flex-col gap-3 ${className}`}>
       <div className="h-40 w-full overflow-hidden rounded-md border border-border bg-background">
         <VectorPreview3D vector={currentVector} />
       </div>
-      {renderAxisRow("x", "X", currentVector.x, minX, maxX, xDisplayEnabled, xSelectionEnabled)}
-      {renderAxisRow("y", "Y", currentVector.y, minY, maxY, yDisplayEnabled, ySelectionEnabled)}
-      {renderAxisRow("z", "Z", currentVector.z, minZ, maxZ, zDisplayEnabled, zSelectionEnabled)}
+      {renderAxisRow("x", labelFor("x"), currentVector.x, minX, maxX, xDisplayEnabled, xSelectionEnabled)}
+      {renderAxisRow("y", labelFor("y"), currentVector.y, minY, maxY, yDisplayEnabled, ySelectionEnabled)}
+      {renderAxisRow("z", labelFor("z"), currentVector.z, minZ, maxZ, zDisplayEnabled, zSelectionEnabled)}
     </div>
   );
 };
 
 // #endregion 🔤Vector
+
+// #region MoveVectorInput
+
+// Specs: Maps MoveVector (gap/shift/rise) onto Vector axes x/y/z per placement frame (shift to x, gap to y, rise to z).
+// Summary: Algorithm VECTOR_INPUT control backed by the shared Vector editor and preview.
+
+export interface MoveVectorInputProps {
+  id: string;
+  value: MoveVector;
+  min?: MoveVector;
+  max?: MoveVector;
+  onChange?: (next: MoveVector) => void;
+  className?: string;
+}
+
+export const MoveVectorInput: React.FC<MoveVectorInputProps> = ({
+  id,
+  value,
+  min = { gap: -10, shift: -10, rise: -10 },
+  max = { gap: 10, shift: 10, rise: 10 },
+  onChange,
+  className = "",
+}) => (
+  <Vector
+    id={id}
+    vector={{ x: value.shift, y: value.gap, z: value.rise }}
+    onVectorChange={(v) => onChange?.({ shift: v.x, gap: v.y, rise: v.z })}
+    minX={min.shift}
+    maxX={max.shift}
+    minY={min.gap}
+    maxY={max.gap}
+    minZ={min.rise}
+    maxZ={max.rise}
+    step={0.1}
+    axisLabels={{ x: "shift", y: "gap", z: "rise" }}
+    className={className}
+  />
+);
+
+// #endregion MoveVectorInput
 
 // #region 📍Scene
 
@@ -2661,10 +2625,9 @@ const SceneModelBoundsRegistryProvider: React.FC<{ children: React.ReactNode }> 
 };
 
 const SceneSelectionBoundsFromModels: React.FC<{
-  selectionEnabled: boolean;
   selectedPieceGuids: Set<string>;
   selectedConnectionGuids: Set<string>;
-}> = ({ selectionEnabled, selectedPieceGuids, selectedConnectionGuids }) => {
+}> = ({ selectedPieceGuids, selectedConnectionGuids }) => {
   const registry = React.useContext(SceneModelBoundsRegistryContext);
   const { invalidate } = useThree();
   const groupRef = React.useRef<THREE.Group>(null);
@@ -2685,12 +2648,12 @@ const SceneSelectionBoundsFromModels: React.FC<{
   );
 
   React.useLayoutEffect(() => {
-    if (!selectionEnabled || !selectionNonEmpty) return;
+    if (!selectionNonEmpty) return;
     invalidate();
-  }, [invalidate, selectionEnabled, selectionKey, selectionNonEmpty]);
+  }, [invalidate, selectionKey, selectionNonEmpty]);
 
   useFrame(() => {
-    if (!registry || !selectionEnabled || !selectionNonEmpty) {
+    if (!registry || !selectionNonEmpty) {
       if (groupRef.current) groupRef.current.visible = false;
       return;
     }
@@ -3283,8 +3246,8 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   const effectiveConnectionHoverEnabled = hoverEnabled && connectionHoverEnabled && (effectiveConnectionSelectionEnabled || !!onConnectionClick);
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeSelection(defaultSelection), onSelectionChange);
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeHover(defaultHover), onHoverChange);
-  const selectedPieceGuids = React.useMemo(() => new Set(selectionEnabled ? (resolvedSelection.pieceGuids ?? []) : []), [selectionEnabled, resolvedSelection.pieceGuids]);
-  const selectedConnectionGuids = React.useMemo(() => new Set(selectionEnabled ? (resolvedSelection.connectionGuids ?? []) : []), [selectionEnabled, resolvedSelection.connectionGuids]);
+  const selectedPieceGuids = React.useMemo(() => new Set(resolvedSelection.pieceGuids ?? []), [resolvedSelection.pieceGuids]);
+  const selectedConnectionGuids = React.useMemo(() => new Set(resolvedSelection.connectionGuids ?? []), [resolvedSelection.connectionGuids]);
   const hoveredPieceGuid = effectivePieceHoverEnabled ? (resolvedHover.pieceGuid ?? null) : null;
   const hoveredConnectionGuid = effectiveConnectionHoverEnabled ? (resolvedHover.connectionGuid ?? null) : null;
 
@@ -3380,11 +3343,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
             onAxisClick={onProjectionChange ? handleAxisClick : undefined}
             onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}
           >
-            <SceneSelectionBoundsFromModels
-              selectedConnectionGuids={selectedConnectionGuids}
-              selectedPieceGuids={selectedPieceGuids}
-              selectionEnabled={selectionEnabled}
-            />
+            <SceneSelectionBoundsFromModels selectedConnectionGuids={selectedConnectionGuids} selectedPieceGuids={selectedPieceGuids} />
             {snapshot.connections.map(({ connection, sourcePiece, targetPiece, status }) => (
             <SceneConnection
               key={connection.guid}
@@ -6939,7 +6898,7 @@ type AlgorithmWindowKind =
 
 type AlgorithmUiComponentId =
   | "semio/ui:Vec"
-  | "semio/ui:GapShiftRiseInput"
+  | "semio/ui:MoveVectorInput"
   | "semio/ui:PieceSelection"
   | "semio/ui:DiagramSelection"
   | "semio/ui:Diagram"
@@ -7009,49 +6968,6 @@ const renderAlgorithmVecWindow = (component: React.ReactElement, context: Algori
   );
 };
 
-const renderAlgorithmMoveVectorWindow = (component: React.ReactElement, context: AlgorithmContextValue): React.ReactElement => {
-  const { moveVector, onMoveVectorChange } = context;
-  if (!moveVector || !onMoveVectorChange) return <></>;
-
-  return (
-    <div className="h-full flex flex-col items-center justify-center gap-2 p-2">
-      {component}
-      <div className="flex gap-2">
-        <div className="flex items-center gap-1">
-          <span className="text-xs font-mono text-muted-foreground">gap</span>
-          <input
-            className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
-            type="number"
-            step="0.1"
-            value={moveVector.gap}
-            onChange={(e) => onMoveVectorChange({ ...moveVector, gap: Number(e.target.value) })}
-          />
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs font-mono text-muted-foreground">shift</span>
-          <input
-            className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
-            type="number"
-            step="0.1"
-            value={moveVector.shift}
-            onChange={(e) => onMoveVectorChange({ ...moveVector, shift: Number(e.target.value) })}
-          />
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs font-mono text-muted-foreground">rise</span>
-          <input
-            className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
-            type="number"
-            step="0.1"
-            value={moveVector.rise}
-            onChange={(e) => onMoveVectorChange({ ...moveVector, rise: Number(e.target.value) })}
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const getAlgorithmStatusTone = (message: string): "muted" | "destructive" => {
   const m = message.trim().toLowerCase();
   if (m.startsWith("loading")) return "muted";
@@ -7087,11 +7003,11 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     render: renderAlgorithmVecWindow,
   },
   [WindowKind.VECTOR_INPUT]: {
-    uiComponentId: "semio/ui:GapShiftRiseInput",
+    uiComponentId: "semio/ui:MoveVectorInput",
     selectionEnabled: false,
     diffEnabled: false,
     usesPieceSelection: false,
-    component: GapShiftRiseInput,
+    component: MoveVectorInput,
     createProps: (context) => ({
       id: "algorithm-vector-input",
       value: context.moveVector ?? { gap: 0, shift: 0, rise: 0 },
@@ -7099,7 +7015,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
       min: context.moveVectorMin ?? { gap: -10, shift: -10, rise: -10 },
       max: context.moveVectorMax ?? { gap: 10, shift: 10, rise: 10 },
     }),
-    render: renderAlgorithmMoveVectorWindow,
+    render: renderAlgorithmFullWindow,
   },
   [WindowKind.PIECES_SELECTION_INPUT]: {
     uiComponentId: "semio/ui:PieceSelection",
@@ -7205,6 +7121,9 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
       diffEnabled: false,
       zoomTarget: "design" as ZoomTarget,
       selectionEnabled: false,
+      pieceSelectionEnabled: false,
+      connectionSelectionEnabled: false,
+      selection: { pieceGuids: context.selectedPieceGuids },
     }),
     render: renderAlgorithmStatusWindow,
   },
@@ -7716,7 +7635,7 @@ if (algorithmVitest) {
 
     it("maps algorithm selection and output windows to shared semio/ui components", () => {
       expect(getAlgorithmWindowBehavior(WindowKind.VEC_INPUT)?.component).toBe(Vec);
-      expect(getAlgorithmWindowBehavior(WindowKind.VECTOR_INPUT)?.component).toBe(GapShiftRiseInput);
+      expect(getAlgorithmWindowBehavior(WindowKind.VECTOR_INPUT)?.component).toBe(MoveVectorInput);
       expect(getAlgorithmWindowBehavior(WindowKind.PIECES_SELECTION_INPUT)?.component).toBe(PieceSelection);
       expect(getAlgorithmWindowBehavior(WindowKind.SELECTION_INPUT)?.component).toBe(DiagramSelection);
       expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_INPUT)?.component).toBe(SemioDiagram);

@@ -11787,32 +11787,6 @@ public static class Hashing
 
 
 
-#region 📦Kit Diff Validation
-
-public sealed class KitDiffValidationNote
-{
-    [JsonProperty("code", NullValueHandling = NullValueHandling.Ignore)]
-    public string? Code { get; set; }
-    [JsonProperty("message")]
-    public string Message { get; set; } = "";
-}
-
-public sealed class KitDiffValidationResult
-{
-    [JsonProperty("ok")]
-    public bool Ok { get; set; }
-    public List<KitDiffValidationNote> Errors { get; set; } = new();
-    public List<KitDiffValidationNote> Warnings { get; set; } = new();
-    [JsonProperty("diff", NullValueHandling = NullValueHandling.Ignore)]
-    public KitDiff? Diff { get; set; }
-}
-
-#endregion 📦Kit Diff Validation
-
-
-
-
-
 #region 🎪Api
 // Callers MUST use these methods to communicate with the semio engine.
 
@@ -11939,6 +11913,380 @@ public class ServerException : Exception
 }
 
 #endregion 🎪Api
+
+
+
+
+#region 📦Kit Diff Validation
+
+public sealed class KitDiffValidationNote
+{
+    [JsonProperty("code", NullValueHandling = NullValueHandling.Ignore)]
+    public string? Code { get; set; }
+    [JsonProperty("message")]
+    public string Message { get; set; } = "";
+}
+
+public sealed class KitDiffValidationResult
+{
+    [JsonProperty("ok")]
+    public bool Ok { get; set; }
+    public List<KitDiffValidationNote> Errors { get; set; } = new();
+    public List<KitDiffValidationNote> Warnings { get; set; } = new();
+    [JsonProperty("diff", NullValueHandling = NullValueHandling.Ignore)]
+    public KitDiff? Diff { get; set; }
+}
+
+#endregion 📦Kit Diff Validation
+
+
+
+
+
+#region 🎪ZipRoundtrip
+// Callers MUST use these methods to import and export kits as ZIP archives.
+
+public class KitImportResult
+{
+    public Kit Kit { get; set; } = new();
+    public Dictionary<string, byte[]> Files { get; set; } = new();
+}
+
+public static class ZipRoundtrip
+{
+    private static string BuildFolderPath(Kit kit, string folderGuid)
+    {
+        if (kit.Folders == null) return "";
+        foreach (var f in kit.Folders)
+        {
+            if (f.Guid == folderGuid)
+            {
+                if (f.Parent != null)
+                {
+                    var parentPath = BuildFolderPath(kit, f.Parent?.Guid);
+                    if (!string.IsNullOrEmpty(parentPath))
+                        return $"{parentPath}/{f.Name}";
+                }
+                return f.Name;
+            }
+        }
+        return "";
+    }
+
+    private static string BuildFilePath(Kit kit, File file)
+    {
+        if (file.Folder != null && !string.IsNullOrEmpty(file.Folder.Guid))
+        {
+            var folderPath = BuildFolderPath(kit, file.Folder.Guid);
+            if (!string.IsNullOrEmpty(folderPath))
+                return $"{folderPath}/{file.Name}";
+        }
+        return file.Name;
+    }
+
+    public static KitImportResult ImportKit(string zipPath)
+    {
+        var result = new KitImportResult();
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            ZipFile.ExtractToDirectory(zipPath, tempDir);
+
+            var kitDbPath = Path.Combine(tempDir, ".semio", "kit.db");
+            var kitJsonPath = Path.Combine(tempDir, "kit.json");
+
+            if (System.IO.File.Exists(kitDbPath))
+            {
+                result.Kit = KitSqlite.LoadKit(tempDir);
+            }
+            else if (System.IO.File.Exists(kitJsonPath))
+            {
+                var kitJson = System.IO.File.ReadAllText(kitJsonPath);
+                result.Kit = Utility.Deserialize<Kit>(kitJson)!;
+            }
+            else
+            {
+                throw new FileNotFoundException("No kit data found in zip (expected .semio/kit.db or kit.json)");
+            }
+
+            foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
+            {
+                var relativePath = file.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
+                if (relativePath != "kit.json" && !relativePath.StartsWith(".semio/"))
+                    result.Files[relativePath] = System.IO.File.ReadAllBytes(file);
+            }
+
+            if (result.Kit.Files != null)
+            {
+                foreach (var kitFile in result.Kit.Files)
+                {
+                    var filePath = BuildFilePath(result.Kit, kitFile);
+                    if (result.Files.TryGetValue(filePath, out var bytes))
+                    {
+                        kitFile.Blob = $"data:application/octet-stream;base64,{Convert.ToBase64String(bytes)}";
+                    }
+                }
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+
+        return result;
+    }
+
+    public static void ExportKit(Kit kit, string zipPath)
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+
+            var kitForZip = kitJson_StripBlobs(kit);
+            var kitJsonStr = Utility.Serialize(kitForZip);
+            System.IO.File.WriteAllText(Path.Combine(tempDir, "kit.json"), kitJsonStr);
+
+            if (kit.Files != null)
+            {
+                foreach (var file in kit.Files)
+                {
+                    if (!string.IsNullOrEmpty(file.Blob))
+                    {
+                        var filePath = BuildFilePath(kit, file);
+                        var fullPath = Path.Combine(tempDir, filePath);
+                        var dir = Path.GetDirectoryName(fullPath);
+                        if (!string.IsNullOrEmpty(dir))
+                            Directory.CreateDirectory(dir);
+                        var blobData = file.Blob.StartsWith("data:") && file.Blob.Contains(",")
+                            ? file.Blob.Substring(file.Blob.IndexOf(',') + 1)
+                            : file.Blob;
+                        System.IO.File.WriteAllBytes(fullPath, Convert.FromBase64String(blobData));
+                    }
+                }
+            }
+
+            if (System.IO.File.Exists(zipPath))
+                System.IO.File.Delete(zipPath);
+            ZipFile.CreateFromDirectory(tempDir, zipPath);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+    }
+
+    private static Kit kitJson_StripBlobs(Kit kit)
+    {
+        var json = Utility.Serialize(kit);
+        var clone = Utility.Deserialize<Kit>(json)!;
+        if (clone.Files != null)
+        {
+            foreach (var file in clone.Files)
+            {
+                file.Blob = null;
+            }
+        }
+        return clone;
+    }
+
+    private static Kit LoadKitFromSqlite(string dbPath)
+    {
+        using var connection = new SqliteConnection($"Data Source={dbPath}");
+        connection.Open();
+
+        var kit = new Kit();
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = "SELECT guid, name, version, description, icon, image, preview, remote, homepage, license FROM kit LIMIT 1";
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                kit.Guid = reader.GetString(0);
+                kit.Name = reader.GetString(1);
+                kit.Version = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                kit.Description = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                kit.Icon = reader.IsDBNull(4) ? "" : reader.GetString(4);
+                kit.Image = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                kit.Preview = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                kit.Remote = reader.IsDBNull(7) ? "" : reader.GetString(7);
+                kit.Homepage = reader.IsDBNull(8) ? "" : reader.GetString(8);
+                kit.License = reader.IsDBNull(9) ? "" : reader.GetString(9);
+            }
+        }
+
+        kit.Types = LoadTypes(connection, kit.Guid);
+        kit.Designs = LoadDesigns(connection, kit.Guid);
+
+        return kit;
+    }
+
+    private static List<Type> LoadTypes(SqliteConnection connection, string kitGuid)
+    {
+        var types = new List<Type>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var t = new Type
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Parent = reader.IsDBNull(2) ? null : new TypeId { Guid = reader.GetString(2) },
+                IsAbstract = !reader.IsDBNull(3) && reader.GetBoolean(3),
+                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                Stock = reader.IsDBNull(5) ? 2147483647 : reader.GetInt32(5),
+                Virtual = !reader.IsDBNull(6) && reader.GetBoolean(6),
+                Unit = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
+            };
+            types.Add(t);
+        }
+        return types;
+    }
+
+    private static List<Design> LoadDesigns(SqliteConnection connection, string kitGuid)
+    {
+        var designs = new List<Design>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image FROM design WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var d = new Design
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Parent = reader.IsDBNull(2) ? null : new DesignId { Guid = reader.GetString(2) },
+                Unit = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                IsAbstract = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                CanScale = reader.IsDBNull(6) || reader.GetBoolean(6),
+                CanMirror = reader.IsDBNull(7) || reader.GetBoolean(7),
+                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
+            };
+            designs.Add(d);
+        }
+        return designs;
+    }
+
+    private static List<T> TopologicalSort<T>(IEnumerable<T> items, Func<T, string> getGuid, Func<T, string?> getParentGuid) where T : class
+    {
+        var itemsByGuid = items.ToDictionary(getGuid);
+        var visited = new HashSet<string>();
+        var result = new List<T>();
+
+        void Visit(T item)
+        {
+            var guid = getGuid(item);
+            if (visited.Contains(guid)) return;
+            visited.Add(guid);
+
+            var parentGuid = getParentGuid(item);
+            if (parentGuid != null && itemsByGuid.TryGetValue(parentGuid, out var parent))
+            {
+                Visit(parent);
+            }
+            result.Add(item);
+        }
+
+        foreach (var item in items)
+        {
+            Visit(item);
+        }
+
+        return result;
+    }
+
+    private static void SaveKitToSqlite(Kit kit, string dbPath, string schemaSQL)
+    {
+        using var connection = new SqliteConnection($"Data Source={dbPath}");
+        connection.Open();
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = schemaSQL;
+            cmd.ExecuteNonQuery();
+        }
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
+                VALUES (@guid, @name, @version, @description, @icon, @image, @preview, @remote, @homepage, @license, datetime('now'), datetime('now'))";
+            cmd.Parameters.AddWithValue("@guid", kit.Guid);
+            cmd.Parameters.AddWithValue("@name", kit.Name);
+            cmd.Parameters.AddWithValue("@version", kit.Version);
+            cmd.Parameters.AddWithValue("@description", kit.Description);
+            cmd.Parameters.AddWithValue("@icon", kit.Icon);
+            cmd.Parameters.AddWithValue("@image", kit.Image);
+            cmd.Parameters.AddWithValue("@preview", kit.Preview);
+            cmd.Parameters.AddWithValue("@remote", kit.Remote);
+            cmd.Parameters.AddWithValue("@homepage", kit.Homepage);
+            cmd.Parameters.AddWithValue("@license", kit.License);
+            cmd.ExecuteNonQuery();
+        }
+
+        var sortedTypes = TopologicalSort(kit.Types, t => t.Guid, t => t.Parent?.Guid);
+        foreach (var t in sortedTypes)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
+                VALUES (@guid, @name, @parent, @isAbstract, @folder, @stock, @virtual, @unit, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
+            cmd.Parameters.AddWithValue("@guid", t.Guid);
+            cmd.Parameters.AddWithValue("@name", t.Name);
+            cmd.Parameters.AddWithValue("@parent", (object?)t.Parent?.Guid ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract);
+            cmd.Parameters.AddWithValue("@folder", t.Folder);
+            cmd.Parameters.AddWithValue("@stock", t.Stock);
+            cmd.Parameters.AddWithValue("@virtual", t.Virtual);
+            cmd.Parameters.AddWithValue("@unit", t.Unit);
+            cmd.Parameters.AddWithValue("@description", t.Description);
+            cmd.Parameters.AddWithValue("@icon", t.Icon);
+            cmd.Parameters.AddWithValue("@image", t.Image);
+            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
+            cmd.ExecuteNonQuery();
+        }
+
+        var sortedDesigns = TopologicalSort(kit.Designs, d => d.Guid, d => d.Parent?.Guid);
+        foreach (var d in sortedDesigns)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"INSERT INTO design (guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
+                VALUES (@guid, @name, @parent, @unit, @folder, @isAbstract, @canScale, @canMirror, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
+            cmd.Parameters.AddWithValue("@guid", d.Guid);
+            cmd.Parameters.AddWithValue("@name", d.Name);
+            cmd.Parameters.AddWithValue("@parent", (object?)d.Parent?.Guid ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@unit", d.Unit);
+            cmd.Parameters.AddWithValue("@folder", d.Folder);
+            cmd.Parameters.AddWithValue("@isAbstract", d.IsAbstract);
+            cmd.Parameters.AddWithValue("@canScale", d.CanScale);
+            cmd.Parameters.AddWithValue("@canMirror", d.CanMirror);
+            cmd.Parameters.AddWithValue("@description", d.Description);
+            cmd.Parameters.AddWithValue("@icon", d.Icon);
+            cmd.Parameters.AddWithValue("@image", d.Image);
+            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
+            cmd.ExecuteNonQuery();
+        }
+    }
+}
+
+#endregion 🎪ZipRoundtrip
+
 
 
 
@@ -13477,354 +13825,6 @@ public static class KitSqlite
 }
 
 #endregion 🔓KitSqlite
-
-
-
-
-#region 🎪ZipRoundtrip
-// Callers MUST use these methods to import and export kits as ZIP archives.
-
-public class KitImportResult
-{
-    public Kit Kit { get; set; } = new();
-    public Dictionary<string, byte[]> Files { get; set; } = new();
-}
-
-public static class ZipRoundtrip
-{
-    private static string BuildFolderPath(Kit kit, string folderGuid)
-    {
-        if (kit.Folders == null) return "";
-        foreach (var f in kit.Folders)
-        {
-            if (f.Guid == folderGuid)
-            {
-                if (f.Parent != null)
-                {
-                    var parentPath = BuildFolderPath(kit, f.Parent?.Guid);
-                    if (!string.IsNullOrEmpty(parentPath))
-                        return $"{parentPath}/{f.Name}";
-                }
-                return f.Name;
-            }
-        }
-        return "";
-    }
-
-    private static string BuildFilePath(Kit kit, File file)
-    {
-        if (file.Folder != null && !string.IsNullOrEmpty(file.Folder.Guid))
-        {
-            var folderPath = BuildFolderPath(kit, file.Folder.Guid);
-            if (!string.IsNullOrEmpty(folderPath))
-                return $"{folderPath}/{file.Name}";
-        }
-        return file.Name;
-    }
-
-    public static KitImportResult ImportKit(string zipPath)
-    {
-        var result = new KitImportResult();
-        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
-        Directory.CreateDirectory(tempDir);
-
-        try
-        {
-            ZipFile.ExtractToDirectory(zipPath, tempDir);
-
-            var kitDbPath = Path.Combine(tempDir, ".semio", "kit.db");
-            var kitJsonPath = Path.Combine(tempDir, "kit.json");
-
-            if (System.IO.File.Exists(kitDbPath))
-            {
-                result.Kit = KitSqlite.LoadKit(tempDir);
-            }
-            else if (System.IO.File.Exists(kitJsonPath))
-            {
-                var kitJson = System.IO.File.ReadAllText(kitJsonPath);
-                result.Kit = Utility.Deserialize<Kit>(kitJson)!;
-            }
-            else
-            {
-                throw new FileNotFoundException("No kit data found in zip (expected .semio/kit.db or kit.json)");
-            }
-
-            foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
-            {
-                var relativePath = file.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
-                if (relativePath != "kit.json" && !relativePath.StartsWith(".semio/"))
-                    result.Files[relativePath] = System.IO.File.ReadAllBytes(file);
-            }
-
-            if (result.Kit.Files != null)
-            {
-                foreach (var kitFile in result.Kit.Files)
-                {
-                    var filePath = BuildFilePath(result.Kit, kitFile);
-                    if (result.Files.TryGetValue(filePath, out var bytes))
-                    {
-                        kitFile.Blob = $"data:application/octet-stream;base64,{Convert.ToBase64String(bytes)}";
-                    }
-                }
-            }
-        }
-        finally
-        {
-            if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, true);
-        }
-
-        return result;
-    }
-
-    public static void ExportKit(Kit kit, string zipPath)
-    {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
-        Directory.CreateDirectory(tempDir);
-
-        try
-        {
-
-            var kitForZip = kitJson_StripBlobs(kit);
-            var kitJsonStr = Utility.Serialize(kitForZip);
-            System.IO.File.WriteAllText(Path.Combine(tempDir, "kit.json"), kitJsonStr);
-
-            if (kit.Files != null)
-            {
-                foreach (var file in kit.Files)
-                {
-                    if (!string.IsNullOrEmpty(file.Blob))
-                    {
-                        var filePath = BuildFilePath(kit, file);
-                        var fullPath = Path.Combine(tempDir, filePath);
-                        var dir = Path.GetDirectoryName(fullPath);
-                        if (!string.IsNullOrEmpty(dir))
-                            Directory.CreateDirectory(dir);
-                        var blobData = file.Blob.StartsWith("data:") && file.Blob.Contains(",")
-                            ? file.Blob.Substring(file.Blob.IndexOf(',') + 1)
-                            : file.Blob;
-                        System.IO.File.WriteAllBytes(fullPath, Convert.FromBase64String(blobData));
-                    }
-                }
-            }
-
-            if (System.IO.File.Exists(zipPath))
-                System.IO.File.Delete(zipPath);
-            ZipFile.CreateFromDirectory(tempDir, zipPath);
-        }
-        finally
-        {
-            if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, true);
-        }
-    }
-
-    private static Kit kitJson_StripBlobs(Kit kit)
-    {
-        var json = Utility.Serialize(kit);
-        var clone = Utility.Deserialize<Kit>(json)!;
-        if (clone.Files != null)
-        {
-            foreach (var file in clone.Files)
-            {
-                file.Blob = null;
-            }
-        }
-        return clone;
-    }
-
-    private static Kit LoadKitFromSqlite(string dbPath)
-    {
-        using var connection = new SqliteConnection($"Data Source={dbPath}");
-        connection.Open();
-
-        var kit = new Kit();
-
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = "SELECT guid, name, version, description, icon, image, preview, remote, homepage, license FROM kit LIMIT 1";
-            using var reader = cmd.ExecuteReader();
-            if (reader.Read())
-            {
-                kit.Guid = reader.GetString(0);
-                kit.Name = reader.GetString(1);
-                kit.Version = reader.IsDBNull(2) ? "" : reader.GetString(2);
-                kit.Description = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                kit.Icon = reader.IsDBNull(4) ? "" : reader.GetString(4);
-                kit.Image = reader.IsDBNull(5) ? "" : reader.GetString(5);
-                kit.Preview = reader.IsDBNull(6) ? "" : reader.GetString(6);
-                kit.Remote = reader.IsDBNull(7) ? "" : reader.GetString(7);
-                kit.Homepage = reader.IsDBNull(8) ? "" : reader.GetString(8);
-                kit.License = reader.IsDBNull(9) ? "" : reader.GetString(9);
-            }
-        }
-
-        kit.Types = LoadTypes(connection, kit.Guid);
-        kit.Designs = LoadDesigns(connection, kit.Guid);
-
-        return kit;
-    }
-
-    private static List<Type> LoadTypes(SqliteConnection connection, string kitGuid)
-    {
-        var types = new List<Type>();
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = @kitGuid";
-        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
-
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
-        {
-            var t = new Type
-            {
-                Guid = reader.GetString(0),
-                Name = reader.GetString(1),
-                Parent = reader.IsDBNull(2) ? null : new TypeId { Guid = reader.GetString(2) },
-                IsAbstract = !reader.IsDBNull(3) && reader.GetBoolean(3),
-                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                Stock = reader.IsDBNull(5) ? 2147483647 : reader.GetInt32(5),
-                Virtual = !reader.IsDBNull(6) && reader.GetBoolean(6),
-                Unit = reader.IsDBNull(7) ? "" : reader.GetString(7),
-                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
-                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
-                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
-            };
-            types.Add(t);
-        }
-        return types;
-    }
-
-    private static List<Design> LoadDesigns(SqliteConnection connection, string kitGuid)
-    {
-        var designs = new List<Design>();
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image FROM design WHERE kit_guid = @kitGuid";
-        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
-
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
-        {
-            var d = new Design
-            {
-                Guid = reader.GetString(0),
-                Name = reader.GetString(1),
-                Parent = reader.IsDBNull(2) ? null : new DesignId { Guid = reader.GetString(2) },
-                Unit = reader.IsDBNull(3) ? "" : reader.GetString(3),
-                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                IsAbstract = !reader.IsDBNull(5) && reader.GetBoolean(5),
-                CanScale = reader.IsDBNull(6) || reader.GetBoolean(6),
-                CanMirror = reader.IsDBNull(7) || reader.GetBoolean(7),
-                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
-                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
-                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
-            };
-            designs.Add(d);
-        }
-        return designs;
-    }
-
-    private static List<T> TopologicalSort<T>(IEnumerable<T> items, Func<T, string> getGuid, Func<T, string?> getParentGuid) where T : class
-    {
-        var itemsByGuid = items.ToDictionary(getGuid);
-        var visited = new HashSet<string>();
-        var result = new List<T>();
-
-        void Visit(T item)
-        {
-            var guid = getGuid(item);
-            if (visited.Contains(guid)) return;
-            visited.Add(guid);
-
-            var parentGuid = getParentGuid(item);
-            if (parentGuid != null && itemsByGuid.TryGetValue(parentGuid, out var parent))
-            {
-                Visit(parent);
-            }
-            result.Add(item);
-        }
-
-        foreach (var item in items)
-        {
-            Visit(item);
-        }
-
-        return result;
-    }
-
-    private static void SaveKitToSqlite(Kit kit, string dbPath, string schemaSQL)
-    {
-        using var connection = new SqliteConnection($"Data Source={dbPath}");
-        connection.Open();
-
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = schemaSQL;
-            cmd.ExecuteNonQuery();
-        }
-
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = @"INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
-                VALUES (@guid, @name, @version, @description, @icon, @image, @preview, @remote, @homepage, @license, datetime('now'), datetime('now'))";
-            cmd.Parameters.AddWithValue("@guid", kit.Guid);
-            cmd.Parameters.AddWithValue("@name", kit.Name);
-            cmd.Parameters.AddWithValue("@version", kit.Version);
-            cmd.Parameters.AddWithValue("@description", kit.Description);
-            cmd.Parameters.AddWithValue("@icon", kit.Icon);
-            cmd.Parameters.AddWithValue("@image", kit.Image);
-            cmd.Parameters.AddWithValue("@preview", kit.Preview);
-            cmd.Parameters.AddWithValue("@remote", kit.Remote);
-            cmd.Parameters.AddWithValue("@homepage", kit.Homepage);
-            cmd.Parameters.AddWithValue("@license", kit.License);
-            cmd.ExecuteNonQuery();
-        }
-
-        var sortedTypes = TopologicalSort(kit.Types, t => t.Guid, t => t.Parent?.Guid);
-        foreach (var t in sortedTypes)
-        {
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = @"INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
-                VALUES (@guid, @name, @parent, @isAbstract, @folder, @stock, @virtual, @unit, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
-            cmd.Parameters.AddWithValue("@guid", t.Guid);
-            cmd.Parameters.AddWithValue("@name", t.Name);
-            cmd.Parameters.AddWithValue("@parent", (object?)t.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract);
-            cmd.Parameters.AddWithValue("@folder", t.Folder);
-            cmd.Parameters.AddWithValue("@stock", t.Stock);
-            cmd.Parameters.AddWithValue("@virtual", t.Virtual);
-            cmd.Parameters.AddWithValue("@unit", t.Unit);
-            cmd.Parameters.AddWithValue("@description", t.Description);
-            cmd.Parameters.AddWithValue("@icon", t.Icon);
-            cmd.Parameters.AddWithValue("@image", t.Image);
-            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
-            cmd.ExecuteNonQuery();
-        }
-
-        var sortedDesigns = TopologicalSort(kit.Designs, d => d.Guid, d => d.Parent?.Guid);
-        foreach (var d in sortedDesigns)
-        {
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = @"INSERT INTO design (guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
-                VALUES (@guid, @name, @parent, @unit, @folder, @isAbstract, @canScale, @canMirror, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
-            cmd.Parameters.AddWithValue("@guid", d.Guid);
-            cmd.Parameters.AddWithValue("@name", d.Name);
-            cmd.Parameters.AddWithValue("@parent", (object?)d.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@unit", d.Unit);
-            cmd.Parameters.AddWithValue("@folder", d.Folder);
-            cmd.Parameters.AddWithValue("@isAbstract", d.IsAbstract);
-            cmd.Parameters.AddWithValue("@canScale", d.CanScale);
-            cmd.Parameters.AddWithValue("@canMirror", d.CanMirror);
-            cmd.Parameters.AddWithValue("@description", d.Description);
-            cmd.Parameters.AddWithValue("@icon", d.Icon);
-            cmd.Parameters.AddWithValue("@image", d.Image);
-            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
-            cmd.ExecuteNonQuery();
-        }
-    }
-}
-
-#endregion 🎪ZipRoundtrip
-
 
 
 
