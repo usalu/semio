@@ -45,27 +45,17 @@ function FlattenFrame() {
     };
   }, [kit, language]);
 
-  const inputDesign = React.useMemo(() => {
-    if (!flatDesign) return null;
-    return { ...flatDesign, connections: rawDesign.connections ?? [] };
-  }, [flatDesign]);
-
-  const connectionsOnlyDiff = React.useMemo(() => {
-    if (!change) return undefined;
-    return { connections: change.forward.connections };
-  }, [change]);
-
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: inputDesign ?? rawDesign,
+      design: rawDesign,
       selectedPieceGuids: [],
-      designDiff: connectionsOnlyDiff,
-      diffDesign: inputDesign ?? rawDesign,
-      outputDesign: flatDesign ?? rawDesign,
+      designDiff: change?.forward,
+      diffDesign: rawDesign,
+      outputDesign: (flatDesign ?? rawDesign) as any,
       error: !change || !flatDesign ? `Loading flatten (${language})…` : undefined,
     }),
-    [kit, inputDesign, flatDesign, connectionsOnlyDiff, change, language],
+    [kit, flatDesign, change, language],
   );
 
   return <AlgorithmApp id="flatten" label="Flatten" windows={WINDOWS} context={context} className="h-full w-full" />;

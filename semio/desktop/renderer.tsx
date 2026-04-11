@@ -36,6 +36,8 @@ const LazySketchpad = lazy(() =>
 
 declare global {
   interface Window {
+    /** Set by preload when `SEMIO_E2E_KIT_FOLDER` is defined (desktop E2E / automation). */
+    __SEMIO_E2E_KIT_FOLDER__?: string;
     windowControls: {
       minimize(): Promise<any>;
       maximize(): Promise<any>;
@@ -139,6 +141,12 @@ function App() {
 
   // 🏭Folder kit store factory for creating/opening local kits via Electron IPC.
   const folderKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (kit) => {
+    const e2eFolder = typeof window !== "undefined" ? window.__SEMIO_E2E_KIT_FOLDER__ : undefined;
+    if (e2eFolder && e2eFolder.length > 0) {
+      await window.kitFolder.addRecentFolder(e2eFolder);
+      const adapter = createElectronFolderAdapter(e2eFolder);
+      return createFolderKitStore(adapter);
+    }
     const selectedFolder = await window.kitFolder.selectFolder();
     if (!selectedFolder) {
       throw new Error("No folder selected for kit storage");

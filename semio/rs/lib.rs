@@ -6127,6 +6127,21 @@ mod flatten_design {
             });
         }
 
+        if !connections.is_empty() {
+            forward.connections = Some(CollectionDiff {
+                added: None,
+                removed: Some(
+                    connections
+                        .iter()
+                        .map(|c| RemovedItem {
+                            guid: c.guid.clone(),
+                        })
+                        .collect(),
+                ),
+                updated: None,
+            });
+        }
+
         let mut after_design = before_design.clone();
         apply_design_diff(&mut after_design, &forward);
         let backward = inverse_design_diff(&before_design, &forward);

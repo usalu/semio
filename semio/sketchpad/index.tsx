@@ -47868,8 +47868,7 @@ export { FeedbackIcon };
 
 import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
 import type { KitJsonFileAdapter } from "../studio/studio";
-import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
-import "./globals.css";
+import { createFetchKitFolderAdapter, createFolderKitStore, createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
 
 export { createJsonFileKitStore, JsonFileKitStore };
 export type { BlobAssetStore, KitJsonFileAdapter, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };
@@ -47913,8 +47912,14 @@ function createVscodeFileKitStoreFactory(): SketchpadKitStoreFactory {
 const temporaryKitStoreFactory: SketchpadKitStoreFactory = (kit) => new InMemoryKitStore(kit);
 
 async function boot() {
+  // Load styles only when booting the browser app. A static import runs when Playwright loads this file in Node and breaks TS/CSS tooling.
+  await import("./globals.css");
   let kitStore = undefined;
   let fileKitStoreFactory: SketchpadKitStoreFactory | undefined = undefined;
+  const e2eFolderHttpRoot =
+    !isVscodeWebview && typeof window !== "undefined"
+      ? String((window as unknown as { __SEMIO_BOOT_FOLDER_KIT_HTTP_ROOT__?: string }).__SEMIO_BOOT_FOLDER_KIT_HTTP_ROOT__ ?? "").trim()
+      : "";
   if (isVscodeWebview) {
     const adapter = createVscodeAdapter();
     kitStore = await createJsonFileKitStore(adapter);
@@ -47931,6 +47936,8 @@ async function boot() {
       }
     };
     // Auto-save is handled centrally by SketchpadStore.registerKitStore.
+  } else if (e2eFolderHttpRoot) {
+    kitStore = await createFolderKitStore(createFetchKitFolderAdapter(e2eFolderHttpRoot));
   }
 
   const indexeddbPersistenceFactory = isVscodeWebview ? undefined : createIndexeddbPersistenceFactory();
@@ -47963,10 +47970,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   const { fileURLToPath } = await import(/* @vite-ignore */ "node" + ":url");
 
   test.use({
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4181",
   });
 
-  const SKETCHPAD_BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:5173";
+  const SKETCHPAD_BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4181";
 
   const designs = (MetabolismKitData as any).designs ?? [];
   const nakaginCapsuleTowerDesign = designs.find((d: any) => d.name === "Nakagin Capsule Tower");
@@ -47981,6 +47988,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   const METABOLISM_ZIP_PATH = path.resolve(__dirname, "../assets/semio/metabolism.zip");
+  const METABOLISM_DIR_PATH = path.resolve(__dirname, "../assets/semio/metabolism");
 
   const TOLERANCE = 0.001;
   let cachedMetabolismKitFixtureJson: string | null = null;
@@ -48011,6 +48019,85 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     }
 
     return JSON.parse(cachedMetabolismKitFixtureJson);
+  }
+
+  /**
+   * Writes `semio/assets/semio/metabolism/.semio/kit.db` from the metabolism zip fixture.
+   * Specs: Desktop folder kits expect SQLite at `.semio/kit.db`; the repo ships zip + icons only.
+   **/
+  async function ensureMetabolismFolderKitDbFile(): Promise<void> {
+    const fs = await import(/* @vite-ignore */ "node" + ":fs");
+    const { getSqlJs, kitToSqlite } = await import("@semio/js");
+    const semioDir = path.join(METABOLISM_DIR_PATH, ".semio");
+    const dbPath = path.join(semioDir, "kit.db");
+    fs.mkdirSync(semioDir, { recursive: true });
+    const metabolismKit = await loadMetabolismKitFixture();
+    const SQL = await getSqlJs();
+    const db = new SQL.Database();
+    await kitToSqlite(metabolismKit, db);
+    const data = db.export();
+    db.close();
+    fs.writeFileSync(dbPath, Buffer.from(data));
+  }
+
+  async function createNodeMetabolismFolderAdapter() {
+    const fs = await import(/* @vite-ignore */ "node" + ":fs");
+    const pathMod = path;
+    const root = METABOLISM_DIR_PATH;
+    return {
+      readKit: async () => {
+        const p = pathMod.join(root, ".semio", "kit.db");
+        if (!fs.existsSync(p)) return null;
+        const buf = fs.readFileSync(p);
+        return new Uint8Array(buf);
+      },
+      writeKit: async (data: Uint8Array) => {
+        const semioDir = pathMod.join(root, ".semio");
+        fs.mkdirSync(semioDir, { recursive: true });
+        fs.writeFileSync(pathMod.join(semioDir, "kit.db"), Buffer.from(data));
+      },
+      readFile: async (rel: string) => {
+        const p = pathMod.join(root, rel);
+        if (!fs.existsSync(p)) return null;
+        const buf = fs.readFileSync(p);
+        return new Blob([buf]);
+      },
+      writeFile: async (rel: string, blob: Blob) => {
+        const buf = Buffer.from(await blob.arrayBuffer());
+        const p = pathMod.join(root, rel);
+        fs.mkdirSync(pathMod.dirname(p), { recursive: true });
+        fs.writeFileSync(p, buf);
+      },
+      deleteFile: async (rel: string) => {
+        try {
+          fs.unlinkSync(pathMod.join(root, rel));
+        } catch {
+          void 0;
+        }
+      },
+      listFiles: async () => {
+        const results: string[] = [];
+        function walk(dir: string, base: string) {
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            if (entry.name === ".semio" || entry.name === "node_modules") continue;
+            const rel = base ? `${base}/${entry.name}` : entry.name;
+            const full = pathMod.join(dir, entry.name);
+            if (entry.isDirectory()) {
+              walk(full, rel);
+            } else {
+              results.push(rel.split(pathMod.sep).join("/"));
+            }
+          }
+        }
+        try {
+          walk(root, "");
+        } catch {
+          void 0;
+        }
+        return results;
+      },
+    };
   }
 
   async function ensureMetabolismKitLoaded(page: PlaywrightPage): Promise<string> {
@@ -55361,6 +55448,34 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await settingsToggle.click();
       await page.waitForTimeout(300);
     }
+
+    test("Metabolism folder kit semio/assets/semio/metabolism contains Nakagin Capsule Tower", async () => {
+      test.setTimeout(120000);
+      await ensureMetabolismFolderKitDbFile();
+      const { createFolderKitStore } = await import("@semio/studio");
+      const adapter = await createNodeMetabolismFolderAdapter();
+      const store = await createFolderKitStore(adapter);
+      const kit = store.getSnapshot().kit;
+      const nakagin = kit.designs?.find(
+        (d: any) => d.name === "Nakagin Capsule Tower" || (d.guid && String(d.guid).includes("9a890dd4")),
+      );
+      expect(nakagin).toBeTruthy();
+      expect((nakagin!.pieces ?? []).length).toBeGreaterThan(0);
+    });
+
+    test("Browser loads metabolism folder via /assets and opens Nakagin Capsule Tower design", async ({ page }) => {
+      test.setTimeout(300000);
+      await ensureMetabolismFolderKitDbFile();
+      await page.addInitScript({ content: "window.__SEMIO_BOOT_FOLDER_KIT_HTTP_ROOT__ = '/assets/semio/metabolism';" });
+      const { errors } = await initConsole(page);
+      await warmSketchpadEntrypoint(page);
+      await page.goto("/", { waitUntil: "networkidle" });
+      await page.waitForTimeout(3000);
+      await initDesign(page);
+      expect(errors.filter((e) => e.includes("Maximum update depth"))).toHaveLength(0);
+      await expect(page).toHaveURL(/\/designs\/[^/]+/);
+      await expect(page.getByText("Nakagin Capsule Tower", { exact: true }).first()).toBeVisible({ timeout: 60000 });
+    });
 
     test("Settings Panel In All Apps", async ({ page }) => {
       test.setTimeout(180000);

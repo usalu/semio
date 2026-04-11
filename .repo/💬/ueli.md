@@ -237,11 +237,20 @@ TODO: Introduce Design/Interpolate algorithm.
 
 semio:
 
+All semio functions are Operations which return a Result [(change and warnings and infos) or errors]. E.g. flatten design when no piece is a fixed piece, it selects the first piece but this is not recommended and a there should be warning that every clump (connected pieces) should have a fixed piece, etc. Same for other functions. Info is just information about decisions that were taken during the algorithms.
+
 ---
 
-Introduce a
+semio:
+Introduce a function to `validateKitDiff(kit:Kit, diff:KitDiff, heal: bool)` that checks if a diff is valid and optionally attempts to fix it. Return a result with errors and warnings.
+An error is something that is not valid and applying the diff wont work.
+A warning is something that is not ideal but still valid and can be accepted with a justification.
+e.g. an error: adding a piece to a design that doesnt exist.
+e.g. a warning: something that doesnt exist cant be removed. If something is added and removed or removed and then added yielding the exact same entity, then this is probably not intended.
 
-`validateKitDiff(diff:KitDiff): Report`
+Do this for all every single diff feature.
+You MUST implement a test asset, a test and for all programming languages (ts, py, rs, c#, go).
+
 
 ---
 
@@ -509,7 +518,9 @@ There MUST be only one schema, no migrations or legacy api support.
 
 semio ui:
 
-When a diff is displayed add a
+The Kit component should use all other components to display. E.g. a design should use semio/ui/Design, type semio/ui/Type, etc
+There should be buttons for navigation in front ov the navbar.
+When double clicking on a piece (scene or diagram) navigate to the respective design or type, etc.
 
 semio ui diagram:
 

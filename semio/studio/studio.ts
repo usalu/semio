@@ -888,6 +888,50 @@ export async function createFolderKitStore(adapter: KitFolderAdapter): Promise<F
   return FolderKitStore.create(adapter);
 }
 
+
+// #region FetchKitFolderAdapter
+/**
+ * Read-only HTTP folder adapter for kit data served under a URL prefix (e.g. Vite `/assets/...`).
+ *
+ * Specs: writeKit/writeFile/deleteFile are no-ops so autosave does not fail in read-only E2E.
+ * listFiles returns [] (not used on initial load).
+ **/
+export function createFetchKitFolderAdapter(baseUrl: string): KitFolderAdapter {
+  const root = baseUrl.replace(/\/$/, "");
+  const toUrl = (rel: string) =>
+    `${root}/${rel
+      .split("/")
+      .filter(Boolean)
+      .map(encodeURIComponent)
+      .join("/")}`;
+  return {
+    async readKit() {
+      const res = await fetch(toUrl(".semio/kit.db"));
+      if (!res.ok) return null;
+      return new Uint8Array(await res.arrayBuffer());
+    },
+    async readFile(relPath: string) {
+      const res = await fetch(toUrl(relPath));
+      if (!res.ok) return null;
+      return await res.blob();
+    },
+    async writeKit() {
+      return;
+    },
+    async writeFile() {
+      return;
+    },
+    async deleteFile() {
+      return;
+    },
+    async listFiles() {
+      return [];
+    },
+  };
+}
+
+// #endregion FetchKitFolderAdapter
+
 // #endregion 📯FolderKitStore
 
 // #region ⚙️SessionKitStore

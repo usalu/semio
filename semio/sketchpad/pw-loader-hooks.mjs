@@ -1,11 +1,22 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 
-const require = createRequire('/workspaces/semio/package.json');
+// Resolve `esbuild` from repo root (hoisted); devcontainer used a fixed `/workspaces/semio` path.
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(join(__dirname, '..', '..', 'package.json'));
 const esbuild = require('esbuild');
 
 export async function resolve(specifier, context, nextResolve) {
+  // Stub every CSS module as empty ESM. Relying on `format: css-noop` + load() still hit Node's
+  // "Unknown file extension .css" for some package subpaths (e.g. @xyflow/react/dist/style.css).
+  const cssish =
+    /\.css(\?|#|$)/i.test(specifier) ||
+    (specifier.startsWith("file:") && /\.css(\?|#|$)/i.test(specifier));
+  if (cssish) {
+    return { url: "data:text/javascript,export default {}", format: "module", shortCircuit: true };
+  }
   let result;
   try {
     result = await nextResolve(specifier, context);
@@ -15,8 +26,9 @@ export async function resolve(specifier, context, nextResolve) {
     }
     throw e;
   }
-  if (result.url.endsWith('.css')) {
-    return { ...result, format: 'css-noop' };
+  const resolvedPath = String(result.url).split(/[?#]/)[0];
+  if (resolvedPath.endsWith(".css")) {
+    return { url: "data:text/javascript,export default {}", format: "module", shortCircuit: true };
   }
   if ((result.url.endsWith('.ts') || result.url.endsWith('.tsx')) && !result.url.includes('node_modules')) {
     return { ...result, format: 'ts-esm' };

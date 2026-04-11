@@ -2415,8 +2415,20 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const refreshOn = new Set([
+      "project_files_changed",
+      "project_ready",
+      "run_started",
+      "iteration_started",
+      "translation_saved",
+      "report_saved",
+      "validation_saved",
+      "validation_completed",
+      "translate_started",
+    ]);
     const unsubEvent = window.coda.onEvent((evt: CodaEvent) => {
       setEvents((prev) => [evt, ...prev]);
+      if (refreshOn.has(evt.event)) setRefreshKey((k) => k + 1);
     });
     const unsubConnection = window.coda.onConnectionStatus((connected: boolean) => {
       setSidecarConnected(connected);

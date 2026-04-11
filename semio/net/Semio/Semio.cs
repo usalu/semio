@@ -13,6 +13,7 @@
 using System.Collections;
 using System.Collections.Immutable;
 using System.Drawing;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Numerics;
@@ -7969,11 +7970,8 @@ public class Kit : Entity<Kit>
         }).Where(u => u != null).Cast<PieceDiffUpdate>().ToList();
 
         var removedConnections = (design.Connections ?? new List<Connection>())
-            .Select(c => new ConnectionId
-            {
-                Connected = new Side { Piece = new PieceId { Guid = c.Connected.Piece.Guid } },
-                Connecting = new Side { Piece = new PieceId { Guid = c.Connecting.Piece.Guid } }
-            }).ToList();
+            .Select(c => new ConnectionId { Guid = c.Guid })
+            .ToList();
 
         var designDiff = new DesignDiff();
         if (updatedPieces.Count > 0) designDiff.Pieces = new PiecesDiff { Updated = updatedPieces };

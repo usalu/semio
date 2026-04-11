@@ -82,7 +82,9 @@ export * from "@elements/ui/elements";
 // Specs: Kit provides a kit-scoped artifact picker (designs, kinds, kit-level ports, type connectors)
 // with the standard Semio UI controllable-state pattern: partial/full controlled/uncontrolled for
 // both available data and selection. It supports partial/full select via per-group enable flags.
-// Summary: Kit hierarchy browser with controllable data + selection, metadata, and artifact open action.
+// Summary: Kit hierarchy browser with composed Semio viewers, browse history, metadata, and open action.
+// Specs (navigation): Back/forward buttons appear before the breadcrumb; double-click on a scene or diagram piece
+// navigates to the nested design or referenced kind when that node exists in the current hierarchy.
 
 export type KitGroupKind = "design" | "type" | "port" | "connector";
 
@@ -614,6 +616,39 @@ const getKitTitle = (data: KitData, fallbackTitle: string): string => {
   return fallbackTitle;
 };
 
+//#region 🧲KitArtifactShells
+// Specs: When only {@link KitData} shells exist, synthesize minimal {@link Design}/{@link SemioKind} so {@link SemioDesign}/{@link SemioType} can mount.
+// Summary: Shell entities for kit-browser previews without full geometry.
+
+const kitDesignDataToShellDesign = (d: KitDesignData): Design =>
+  ({
+    guid: d.guid,
+    name: d.name,
+    description: d.description,
+    createdAt: d.createdAt,
+    updatedAt: d.updatedAt,
+    unit: d.unit,
+    icon: d.icon,
+    image: d.image,
+    pieces: [],
+    connections: [],
+  }) as Design;
+
+const kitKindDataToShellKind = (k: KitKindData): SemioKind =>
+  ({
+    guid: k.guid,
+    name: k.name,
+    description: k.description,
+    createdAt: k.createdAt,
+    updatedAt: k.updatedAt,
+    icon: k.icon,
+    image: k.image,
+    models: [],
+    connectors: [],
+  }) as SemioKind;
+
+//#endregion 🧲KitArtifactShells
+
 export const SemioKit: React.FC<KitProps> = ({
   kit,
   data,
@@ -707,6 +742,13 @@ export const SemioKit: React.FC<KitProps> = ({
   const selectedNodeKey = React.useMemo(() => getSelectedKitNodeKey(hierarchy, resolvedSelection), [hierarchy, resolvedSelection]);
   const [focusedNodeKey, setFocusedNodeKey] = React.useState<string>(() => selectedNodeKey ?? getDefaultKitNodeKey(hierarchy));
 
+  const kitBrowseScopeKey = effectiveData.guid ?? kit?.guid ?? effectiveData.name ?? "__semio-kit__";
+
+  const [browse, setBrowse] = React.useState<{ stack: string[]; index: number }>(() => ({
+    stack: [selectedNodeKey ?? getDefaultKitNodeKey(hierarchy)],
+    index: 0,
+  }));
+
   React.useEffect(() => {
     const preferredKey = selectedNodeKey ?? focusedNodeKey;
     if (preferredKey && hierarchy.nodesByKey.has(preferredKey)) {
@@ -721,7 +763,7 @@ export const SemioKit: React.FC<KitProps> = ({
   const path = React.useMemo(() => getKitNodePath(hierarchy, focusedNode.key).filter((node) => node.kind !== "scope" && node.kind !== "kit"), [focusedNode.key, hierarchy]);
   const resolvedTitle = React.useMemo(() => getKitTitle(effectiveData, title), [effectiveData, title]);
 
-  const focusNode = React.useCallback(
+  const applyKitFocus = React.useCallback(
     (nodeKey: string) => {
       const node = hierarchy.nodesByKey.get(nodeKey);
       if (!node) return;
@@ -736,6 +778,101 @@ export const SemioKit: React.FC<KitProps> = ({
     [connectorSelectionEnabled, designSelectionEnabled, effectiveSelectionEnabled, hierarchy.nodesByKey, portSelectionEnabled, setNextSelection, typeSelectionEnabled],
   );
 
+  const prevKitBrowseScopeRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (prevKitBrowseScopeRef.current === null) {
+      prevKitBrowseScopeRef.current = kitBrowseScopeKey;
+      return;
+    }
+    if (prevKitBrowseScopeRef.current === kitBrowseScopeKey) return;
+    prevKitBrowseScopeRef.current = kitBrowseScopeKey;
+    const k = getDefaultKitNodeKey(hierarchy);
+    setBrowse({ stack: [k], index: 0 });
+    applyKitFocus(k);
+  }, [applyKitFocus, hierarchy, kitBrowseScopeKey]);
+
+  const browsePush = React.useCallback(
+    (nodeKey: string) => {
+      setBrowse((b) => {
+        const base = b.stack.slice(0, b.index + 1);
+        if (base[base.length - 1] === nodeKey) return { stack: base, index: base.length - 1 };
+        const stack = [...base, nodeKey];
+        return { stack, index: stack.length - 1 };
+      });
+      applyKitFocus(nodeKey);
+    },
+    [applyKitFocus],
+  );
+
+  const browseBack = React.useCallback(() => {
+    setBrowse((b) => {
+      if (b.index <= 0) return b;
+      const nextIndex = b.index - 1;
+      const key = b.stack[nextIndex];
+      applyKitFocus(key);
+      return { ...b, index: nextIndex };
+    });
+  }, [applyKitFocus]);
+
+  const browseForward = React.useCallback(() => {
+    setBrowse((b) => {
+      if (b.index >= b.stack.length - 1) return b;
+      const nextIndex = b.index + 1;
+      const key = b.stack[nextIndex];
+      applyKitFocus(key);
+      return { ...b, index: nextIndex };
+    });
+  }, [applyKitFocus]);
+
+  const canBrowseBack = browse.index > 0;
+  const canBrowseForward = browse.index < browse.stack.length - 1;
+
+  const onKitPieceDoubleClick = React.useCallback(
+    (piece: Piece) => {
+      const nestedDesignGuid = piece.design?.guid;
+      if (nestedDesignGuid && hierarchy.nodesByKey.has(`design:${nestedDesignGuid}`)) {
+        browsePush(`design:${nestedDesignGuid}`);
+        return;
+      }
+      const kindGuid = piece.type?.guid;
+      if (kindGuid && hierarchy.nodesByKey.has(`kind:${kindGuid}`)) {
+        browsePush(`kind:${kindGuid}`);
+      }
+    },
+    [browsePush, hierarchy.nodesByKey],
+  );
+
+  const artifactDesign: Design | null = React.useMemo(() => {
+    if (focusedNode.kind !== "design" || !focusedNode.guid) return null;
+    const full = kit?.designs?.find((d) => d.guid === focusedNode.guid);
+    if (full) return full;
+    const shell = effectiveDesigns.find((d) => d.guid === focusedNode.guid);
+    return shell ? kitDesignDataToShellDesign(shell) : null;
+  }, [effectiveDesigns, focusedNode.guid, focusedNode.kind, kit?.designs]);
+
+  const artifactKind: SemioKind | null = React.useMemo(() => {
+    if (focusedNode.kind !== "kind" || !focusedNode.guid) return null;
+    const full = kit?.types?.find((t) => t.guid === focusedNode.guid);
+    if (full) return full;
+    const shell = effectiveTypes.find((t) => t.guid === focusedNode.guid);
+    return shell ? kitKindDataToShellKind(shell) : null;
+  }, [effectiveTypes, focusedNode.guid, focusedNode.kind, kit?.types]);
+
+  const connectorParentKindNode = React.useMemo(() => {
+    if (focusedNode.kind !== "connector" || !focusedNode.parentKey) return null;
+    const parent = hierarchy.nodesByKey.get(focusedNode.parentKey);
+    if (parent?.kind !== "kind" || !parent.guid) return null;
+    return parent;
+  }, [focusedNode, hierarchy.nodesByKey]);
+
+  const connectorHostKind: SemioKind | null = React.useMemo(() => {
+    if (!connectorParentKindNode?.guid) return null;
+    const full = kit?.types?.find((t) => t.guid === connectorParentKindNode.guid);
+    if (full) return full;
+    const shell = effectiveTypes.find((t) => t.guid === connectorParentKindNode.guid);
+    return shell ? kitKindDataToShellKind(shell) : null;
+  }, [connectorParentKindNode?.guid, effectiveTypes, kit?.types]);
+
   const breadcrumbItems = React.useMemo(() => {
     const rootOptions = (hierarchy.childKeysByParentKey.get("kit:root") ?? [])
       .map((key) => hierarchy.nodesByKey.get(key))
@@ -746,14 +883,14 @@ export const SemioKit: React.FC<KitProps> = ({
       {
         content: <span style={{ display: "inline-block", width: 1, overflow: "hidden" }}>&nbsp;</span>,
         options: rootOptions,
-        onNavigate: focusNode,
+        onNavigate: browsePush,
       },
       ...path.map((node) => ({
         id: node.guid,
         content: (
           <button
             type="button"
-            onClick={() => focusNode(node.key)}
+            onClick={() => browsePush(node.key)}
             style={{
               border: 0,
               background: "transparent",
@@ -767,10 +904,10 @@ export const SemioKit: React.FC<KitProps> = ({
           </button>
         ),
         options: getKitChildNodes(hierarchy, node).map((child) => ({ label: child.label, href: child.key, id: child.guid })),
-        onNavigate: focusNode,
+        onNavigate: browsePush,
       })),
     ];
-  }, [focusNode, focusedNode.key, hierarchy, path]);
+  }, [browsePush, focusedNode.key, hierarchy, path]);
 
   const openArtifact = React.useCallback(() => {
     if (focusedNode.kind === "scope" || focusedNode.kind === "group") return;
@@ -795,7 +932,13 @@ export const SemioKit: React.FC<KitProps> = ({
       <div style={{ display: "grid", gap: 6 }}>
         <div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.2 }}>{headerStats}</div>
 
-        <Breadcrumb items={renderedBreadcrumbItems} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <Button onClick={browseBack} disabled={!canBrowseBack} text="Back" />
+          <Button onClick={browseForward} disabled={!canBrowseForward} text="Forward" />
+          <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+            <Breadcrumb items={renderedBreadcrumbItems} />
+          </div>
+        </div>
 
         {secondaryMetadata.length > 0 ? (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 11, opacity: 0.58, lineHeight: 1.1 }}>
@@ -834,6 +977,61 @@ export const SemioKit: React.FC<KitProps> = ({
             }}
           >
             {focusedNode.summary}
+          </div>
+        ) : null}
+
+        {artifactDesign && designDataEnabled ? (
+          <div
+            style={{
+              minHeight: 280,
+              width: "100%",
+              borderRadius: 8,
+              overflow: "hidden",
+              border: "1px solid var(--border, rgba(0,0,0,0.12))",
+            }}
+          >
+            <SemioDesign
+              design={artifactDesign}
+              kit={kit}
+              title={artifactDesign.name ?? focusedNode.label}
+              selectionEnabled={false}
+              onPieceDoubleClick={onKitPieceDoubleClick}
+            />
+          </div>
+        ) : null}
+
+        {artifactKind && typeDataEnabled && focusedNode.kind === "kind" ? (
+          <div
+            style={{
+              minHeight: 280,
+              width: "100%",
+              borderRadius: 8,
+              overflow: "hidden",
+              border: "1px solid var(--border, rgba(0,0,0,0.12))",
+            }}
+          >
+            <SemioType type={artifactKind} kit={kit} title={artifactKind.name ?? focusedNode.label} selectionEnabled={false} />
+          </div>
+        ) : null}
+
+        {focusedNode.kind === "connector" && connectorHostKind && typeDataEnabled ? (
+          <div
+            style={{
+              minHeight: 280,
+              width: "100%",
+              borderRadius: 8,
+              overflow: "hidden",
+              border: "1px solid var(--border, rgba(0,0,0,0.12))",
+            }}
+          >
+            <SemioType
+              type={connectorHostKind}
+              kit={kit}
+              title={connectorHostKind.name ?? connectorParentKindNode?.label ?? "Type"}
+              defaultSelection={{ connectorGuids: focusedNode.guid ? [focusedNode.guid] : [] }}
+              selectionEnabled={true}
+              connectorSelectionEnabled={false}
+            />
           </div>
         ) : null}
 
@@ -1002,6 +1200,8 @@ export interface SemioDiagramProps {
   /** When true, draws origin + unit-length u/v markers (length 1 in piece u,v) behind edges and nodes. */
   showOrigin?: boolean;
   onPieceClick?: (piece: Piece) => void;
+  /** Fires on piece double-click in the diagram (does not reset zoom; stops propagation to the diagram shell). */
+  onPieceDoubleClick?: (piece: Piece) => void;
   onConnectionClick?: (connection: Connection) => void;
 }
 
@@ -1217,6 +1417,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   title = "Design Diagram",
   showOrigin = true,
   onPieceClick,
+  onPieceDoubleClick,
   onConnectionClick,
 }) => {
   const effectiveDiffEnabled = diffEnabled ?? true;
@@ -1224,7 +1425,8 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   const effectivePieceSelectionEnabled = effectiveSelectionEnabled && pieceSelectionEnabled;
   const effectiveConnectionSelectionEnabled = effectiveSelectionEnabled && connectionSelectionEnabled;
   const effectiveHoverEnabled = hoverEnabled ?? true;
-  const effectivePieceHoverEnabled = effectiveHoverEnabled && pieceHoverEnabled && (effectivePieceSelectionEnabled || !!onPieceClick);
+  const effectivePieceHoverEnabled =
+    effectiveHoverEnabled && pieceHoverEnabled && (effectivePieceSelectionEnabled || !!onPieceClick || !!onPieceDoubleClick);
   const effectiveConnectionHoverEnabled = effectiveHoverEnabled && connectionHoverEnabled && (effectiveConnectionSelectionEnabled || !!onConnectionClick);
   const resolvedDesignDiff = useResolvedValue(designDiff, defaultDesignDiff);
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeSelection(defaultSelection), onSelectionChange);
@@ -1592,6 +1794,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
         {snapshot.points.map((point) => {
           const selected = isSelected(point.guid, selectedPieceGuids);
           const hovered = hoveredPieceGuid === point.guid;
+          const pieceInteractive = Boolean(onPieceClick || onPieceDoubleClick || effectivePieceSelectionEnabled);
           return (
             <circle
               key={point.guid}
@@ -1607,6 +1810,15 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
                     }
                   : undefined
               }
+              onDoubleClick={
+                onPieceDoubleClick
+                  ? (event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      onPieceDoubleClick(point.piece);
+                    }
+                  : undefined
+              }
               onPointerEnter={effectivePieceHoverEnabled ? () => setHoveredPiece(point.guid) : undefined}
               onPointerLeave={effectivePieceHoverEnabled ? () => setHoveredPiece((resolvedHover.pieceGuid ?? null) === point.guid ? null : (resolvedHover.pieceGuid ?? null)) : undefined}
               r={
@@ -1618,7 +1830,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
               }
               stroke={selected || hovered ? getInteractiveEntityColor(point.status, selected, hovered) : "none"}
               strokeWidth={selected ? Math.max(1, 0.1 * pxPerDiagramUnit) : hovered ? Math.max(1, 0.06 * pxPerDiagramUnit) : 0}
-              style={{ cursor: onPieceClick || effectivePieceSelectionEnabled ? "pointer" : "default" }}
+              style={{ cursor: pieceInteractive ? "pointer" : "default" }}
             />
           );
         })}
@@ -2549,9 +2761,10 @@ interface ScenePieceProps {
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
   onClick?: () => void;
+  onDoubleClick?: () => void;
 }
 
-const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, modelSource, isSelected, isHovered, onPointerEnter, onPointerLeave, onClick }) => {
+const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, modelSource, isSelected, isHovered, onPointerEnter, onPointerLeave, onClick, onDoubleClick }) => {
   const defaultColor = React.useMemo(() => resolveSceneColor(getEntityStatusColor(status), "#888888"), [status]);
   const activeColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, true, false), "#3b82f6"), [status]);
   const hoverColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa"), [status]);
@@ -2586,6 +2799,13 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
       }
     : undefined;
 
+  const handleDoubleClick = onDoubleClick
+    ? (event: { stopPropagation: () => void }) => {
+        event.stopPropagation();
+        onDoubleClick();
+      }
+    : undefined;
+
   const handlePointerEnter = onPointerEnter
     ? (event: { stopPropagation: () => void }) => {
         event.stopPropagation();
@@ -2603,13 +2823,13 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
   return (
     <group ref={pieceBoundsRootRef} matrix={matrix} matrixAutoUpdate={false}>
       {canRenderModel && modelSource ? (
-        <group onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
+        <group onClick={handleClick} onDoubleClick={handleDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
           <React.Suspense fallback={null}>
             <ScenePieceModel modelSource={modelSource} status={status} isSelected={isSelected} isHovered={isHovered} />
           </React.Suspense>
         </group>
       ) : (
-        <mesh onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
+        <mesh onClick={handleClick} onDoubleClick={handleDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
           <boxGeometry args={[SCENE_BOX_SIZE, SCENE_BOX_SIZE, SCENE_BOX_SIZE]} />
           <meshStandardMaterial color={meshColor} emissive={meshColor} emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.2 : 0.05} transparent={isRemoved} opacity={isRemoved ? 0.35 : 1} />
           <Edges scale={1.001} color={edgeColor} />
@@ -2790,6 +3010,7 @@ export interface SemioSceneProps {
   connectionHoverEnabled?: boolean;
   onHoverChange?: (hover: DiagramHover) => void;
   onPieceClick?: (piece: Piece) => void;
+  onPieceDoubleClick?: (piece: Piece) => void;
   onConnectionClick?: (connection: Connection) => void;
   showGrid?: boolean;
   showGizmo?: boolean;
@@ -2936,6 +3157,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   connectionHoverEnabled = true,
   onHoverChange,
   onPieceClick,
+  onPieceDoubleClick,
   onConnectionClick,
   showGrid = true,
   showGizmo = true,
@@ -2954,7 +3176,8 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
 
   const effectivePieceSelectionEnabled = selectionEnabled && pieceSelectionEnabled;
   const effectiveConnectionSelectionEnabled = selectionEnabled && connectionSelectionEnabled;
-  const effectivePieceHoverEnabled = hoverEnabled && pieceHoverEnabled && (effectivePieceSelectionEnabled || !!onPieceClick);
+  const effectivePieceHoverEnabled =
+    hoverEnabled && pieceHoverEnabled && (effectivePieceSelectionEnabled || !!onPieceClick || !!onPieceDoubleClick);
   const effectiveConnectionHoverEnabled = hoverEnabled && connectionHoverEnabled && (effectiveConnectionSelectionEnabled || !!onConnectionClick);
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeSelection(defaultSelection), onSelectionChange);
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeHover(defaultHover), onHoverChange);
@@ -3098,6 +3321,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
                     }
                   : undefined
               }
+              onDoubleClick={onPieceDoubleClick ? () => onPieceDoubleClick(piece) : undefined}
               onPointerEnter={effectivePieceHoverEnabled ? () => handleHoverPiece(piece.guid) : undefined}
               onPointerLeave={effectivePieceHoverEnabled ? () => handleHoverPiece((resolvedHover.pieceGuid ?? null) === piece.guid ? null : (resolvedHover.pieceGuid ?? null)) : undefined}
             />
@@ -3495,6 +3719,7 @@ export interface SemioDesignProps {
   connectionHoverEnabled?: boolean;
   onHoverChange?: (hover: DiagramHover) => void;
   onPieceClick?: (piece: Piece) => void;
+  onPieceDoubleClick?: (piece: Piece) => void;
   onConnectionClick?: (connection: Connection) => void;
   showGrid?: boolean;
   showGizmo?: boolean;
@@ -3527,6 +3752,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
   connectionHoverEnabled = true,
   onHoverChange,
   onPieceClick,
+  onPieceDoubleClick,
   onConnectionClick,
   showGrid = true,
   showGizmo = true,
@@ -3586,6 +3812,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
             connectionHoverEnabled={connectionHoverEnabled}
             onHoverChange={setResolvedHover}
             onPieceClick={onPieceClick}
+            onPieceDoubleClick={onPieceDoubleClick}
             onConnectionClick={onConnectionClick}
             showGrid={showGrid}
             showGizmo={showGizmo}
@@ -3612,6 +3839,7 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
           connectionHoverEnabled={connectionHoverEnabled}
           onHoverChange={setResolvedHover}
           onPieceClick={onPieceClick}
+          onPieceDoubleClick={onPieceDoubleClick}
           onConnectionClick={onConnectionClick}
           title={`${title} Diagram`}
         />

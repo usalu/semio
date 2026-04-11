@@ -265,12 +265,12 @@ func DeepEqual(a, b interface{}) bool {
 // #region 🐍Entity IDs
 // Entity IDs MUST define identifier types for all semio domain entities.
 
-// 💻AttributeId identifies an attribute entity by GUID.
+// �AttributeId identifies an attribute entity by GUID.
 type AttributeId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔷LocationId identifies a location entity by GUID.
+// �LocationId identifies a location entity by GUID.
 type LocationId struct {
 	Guid string `json:"guid"`
 }
@@ -290,22 +290,22 @@ type FolderId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔶BenchmarkId identifies a benchmark entity by GUID.
+// �BenchmarkId identifies a benchmark entity by GUID.
 type BenchmarkId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔹QualityId identifies a quality entity by GUID.
+// �QualityId identifies a quality entity by GUID.
 type QualityId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔸PortId identifies a port entity by GUID.
+// ⚓PortId identifies a port entity by GUID.
 type PortId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔺PropId identifies a prop entity by GUID.
+// �PropId identifies a prop entity by GUID.
 type PropId struct {
 	Guid string `json:"guid"`
 }
@@ -315,64 +315,64 @@ type TagId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔻ConceptId identifies a concept entity by GUID.
+// �ConceptId identifies a concept entity by GUID.
 type ConceptId struct {
 	Guid string `json:"guid"`
 }
 
-// ⬛ModelId identifies a model entity by GUID.
+// 🗿ModelId identifies a model entity by GUID.
 type ModelId struct {
 	Guid string `json:"guid"`
 }
 
-// ⬜ConnectorId identifies a connector entity by GUID.
+// 🔌ConnectorId identifies a connector entity by GUID.
 type ConnectorId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟥TypeId identifies a type entity by GUID.
+// 🧱TypeId identifies a type entity by GUID.
 type TypeId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟧LayerId identifies a layer entity by GUID.
+// 🎨LayerId identifies a layer entity by GUID.
 type LayerId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟨PieceId identifies a piece entity by GUID.
+// 🧩PieceId identifies a piece entity by GUID.
 type PieceId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟩GroupId identifies a group entity by GUID.
+// �GroupId identifies a group entity by GUID.
 type GroupId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔌SideId identifies a connection side by piece, design piece and connector references.
+// ↔️SideId identifies a connection side by piece, design piece and connector references.
 type SideId struct {
 	Piece       PieceId      `json:"piece"`
 	DesignPiece *PieceId     `json:"designPiece,omitempty"`
 	Connector   *ConnectorId `json:"connector,omitempty"`
 }
 
-// 🟦ConnectionId identifies a connection entity by GUID.
+// �ConnectionId identifies a connection entity by GUID.
 type ConnectionId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟪StatId identifies a stat entity by GUID.
+// �StatId identifies a stat entity by GUID.
 type StatId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟫DesignId identifies a design entity by GUID.
+// �DesignId identifies a design entity by GUID.
 type DesignId struct {
 	Guid string `json:"guid"`
 }
 
-// 💠KitId identifies a kit entity by GUID.
+// �KitId identifies a kit entity by GUID.
 type KitId struct {
 	Guid string `json:"guid"`
 }
@@ -382,40 +382,40 @@ type KitId struct {
 // #region 🖥️Weak Entities
 // Weak Entities MUST define value types that exist only as part of parent entities.
 
-// 🔷Coord represents a 2D coordinate with U and V components.
+// �Coord represents a 2D coordinate with U and V components.
 type Coord struct {
 	U float64 `json:"u"`
 	V float64 `json:"v"`
 }
 
-// 🔶Vec represents a 2D vector with U and V components.
+// ➡️Vec represents a 2D vector with U and V components.
 type Vec struct {
 	U float64 `json:"u"`
 	V float64 `json:"v"`
 }
 
-// 🔹Point represents a 3D point with X, Y and Z components.
+// ✖️Point represents a 3D point with X, Y and Z components.
 type Point struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 	Z float64 `json:"z"`
 }
 
-// 🔸Vector represents a 3D vector with X, Y and Z components.
+// ↗️Vector represents a 3D vector with X, Y and Z components.
 type Vector struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 	Z float64 `json:"z"`
 }
 
-// 🔺Plane represents a 3D plane defined by origin, X-axis and Y-axis.
+// ◻️Plane represents a 3D plane defined by origin, X-axis and Y-axis.
 type Plane struct {
 	Origin Point  `json:"origin"`
 	XAxis  Vector `json:"xAxis"`
 	YAxis  Vector `json:"yAxis"`
 }
 
-// 🔻Camera represents a 3D camera with position, forward and up vectors.
+// 🎥Camera represents a 3D camera with position, forward and up vectors.
 type Camera struct {
 	Position Point  `json:"position"`
 	Forward  Vector `json:"forward"`
@@ -426,7 +426,7 @@ type Camera struct {
 
 // #region 📊Attribute
 
-// 📖Attribute represents a key-value metadata entry with optional definition.
+// �Attribute represents a key-value metadata entry with optional definition.
 type Attribute struct {
 	Guid       string  `json:"guid"`
 	Key        string  `json:"key"`
@@ -434,14 +434,14 @@ type Attribute struct {
 	Definition *string `json:"definition,omitempty"`
 }
 
-// ♻️AttributeDiff represents changes to an attribute entity.
+// ✏️AttributeDiff represents a partial update to an attribute's key, value or definition.
 type AttributeDiff struct {
 	Key        *string `json:"key,omitempty"`
 	Value      *string `json:"value,omitempty"`
 	Definition *string `json:"definition,omitempty"`
 }
 
-// 🔁AttributesDiff represents a collection of attribute additions, removals and updates.
+// �️AttributesDiff represents batched attribute additions, removals and per-attribute updates.
 type AttributesDiff struct {
 	Removed []AttributeId `json:"removed,omitempty"`
 	Updated []struct {
@@ -451,7 +451,7 @@ type AttributesDiff struct {
 	Added []Attribute `json:"added,omitempty"`
 }
 
-// 📚AttributeMeta represents the scalar-only projection of an Attribute (no arrays).
+// �AttributeMeta represents the scalar-only view of an attribute excluding nested arrays.
 type AttributeMeta struct {
 	Guid       string  `json:"guid"`
 	Key        string  `json:"key"`
@@ -463,7 +463,7 @@ type AttributeMeta struct {
 
 // #region 🔷Location
 
-// 🐙Location represents a geographic location with longitude, latitude and optional altitude.
+// �Location represents a geographic point with longitude, latitude and optional altitude.
 type Location struct {
 	Guid       string      `json:"guid"`
 	Longitude  float64     `json:"longitude"`
@@ -472,7 +472,7 @@ type Location struct {
 	Attributes []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️LocationDiff represents changes to a location entity.
+// 🗺️LocationDiff represents a partial update to a location's coordinates, altitude or attributes.
 type LocationDiff struct {
 	Longitude  *float64        `json:"longitude,omitempty"`
 	Latitude   *float64        `json:"latitude,omitempty"`
@@ -484,7 +484,7 @@ type LocationDiff struct {
 
 // #region 🩺Author
 
-// ✍️Author represents a named authorship entity with optional email.
+// ✍️Author represents a named contributor with optional email and timestamps.
 type Author struct {
 	Guid       string      `json:"guid"`
 	Name       string      `json:"name"`
@@ -494,14 +494,14 @@ type Author struct {
 	UpdatedAt  string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️AuthorDiff represents changes to an author entity.
+// 🖊️AuthorDiff represents a partial update to an author's name, email or attributes.
 type AuthorDiff struct {
 	Name       *string         `json:"name,omitempty"`
 	Email      *string         `json:"email,omitempty"`
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁AuthorsDiff represents a collection of author additions, removals and updates.
+// �AuthorsDiff represents batched author additions, removals and per-author updates.
 type AuthorsDiff struct {
 	Removed []AuthorId `json:"removed,omitempty"`
 	Updated []struct {
@@ -511,7 +511,7 @@ type AuthorsDiff struct {
 	Added []Author `json:"added,omitempty"`
 }
 
-// 📚AuthorMeta represents the scalar-only projection of an Author (no Attributes array).
+// �AuthorMeta represents the scalar-only view of an author excluding the attributes array.
 type AuthorMeta struct {
 	Guid      string  `json:"guid"`
 	Name      string  `json:"name"`
@@ -539,7 +539,7 @@ type File struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️FileDiff represents changes to a file entity.
+// 📝FileDiff represents a partial update to a file's name, URL, hash, blob or description.
 type FileDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Remote      *string         `json:"remote,omitempty"`
@@ -551,7 +551,7 @@ type FileDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁FilesDiff represents a collection of file additions, removals and updates.
+// �FilesDiff represents batched file additions, removals and per-file updates.
 type FilesDiff struct {
 	Removed []FileId `json:"removed,omitempty"`
 	Updated []struct {
@@ -561,7 +561,7 @@ type FilesDiff struct {
 	Added []File `json:"added,omitempty"`
 }
 
-// 🔷FileMeta represents the scalar-only projection of a File (no Blob, no Attributes).
+// �️FileMeta represents the scalar-only view of a file excluding blob data and attributes.
 type FileMeta struct {
 	Guid        string    `json:"guid"`
 	Name        string    `json:"name"`
@@ -589,7 +589,7 @@ type Folder struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️FolderDiff represents changes to a folder entity.
+// 📂FolderDiff represents a partial update to a folder's name, parent or description.
 type FolderDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Parent      *FolderId       `json:"parent,omitempty"`
@@ -597,7 +597,7 @@ type FolderDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁FoldersDiff represents a collection of folder additions, removals and updates.
+// �️FoldersDiff represents batched folder additions, removals and per-folder updates.
 type FoldersDiff struct {
 	Removed []FolderId `json:"removed,omitempty"`
 	Updated []struct {
@@ -607,7 +607,7 @@ type FoldersDiff struct {
 	Added []Folder `json:"added,omitempty"`
 }
 
-// 🔷FolderMeta represents the scalar-only projection of a Folder (no Attributes).
+// 🏠FolderMeta represents the scalar-only view of a folder excluding attributes.
 type FolderMeta struct {
 	Guid        string    `json:"guid"`
 	Name        string    `json:"name"`
@@ -621,7 +621,7 @@ type FolderMeta struct {
 
 // #region 🔬Benchmark
 
-// 🔷Benchmark represents a named metric threshold with min and max bounds.
+// �Benchmark represents a named metric range with min/max bounds and optional icon.
 type Benchmark struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -634,7 +634,7 @@ type Benchmark struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️BenchmarkDiff represents changes to a benchmark entity.
+// ↕️BenchmarkDiff represents a partial update to a benchmark's name, bounds, icon or definition.
 type BenchmarkDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Icon        *string         `json:"icon,omitempty"`
@@ -646,7 +646,7 @@ type BenchmarkDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁BenchmarksDiff represents a collection of benchmark additions, removals and updates.
+// 🧮BenchmarksDiff represents batched benchmark additions, removals and per-benchmark updates.
 type BenchmarksDiff struct {
 	Removed []BenchmarkId `json:"removed,omitempty"`
 	Updated []struct {
@@ -672,7 +672,7 @@ const (
 	QualityKindConnector
 )
 
-// 📋Quality represents a measurable property with formula, units and benchmarks.
+// �Quality represents a measurable property with formula, units and benchmarks.
 type Quality struct {
 	Guid                string      `json:"guid"`
 	Key                 string      `json:"key"`
@@ -698,7 +698,7 @@ type Quality struct {
 	UpdatedAt           string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️QualityDiff represents changes to a quality entity.
+// 🧪QualityDiff represents a partial update to a quality's formula, bounds, units or benchmarks.
 type QualityDiff struct {
 	Key                 *string         `json:"key,omitempty"`
 	Name                *string         `json:"name,omitempty"`
@@ -721,7 +721,7 @@ type QualityDiff struct {
 	Attributes          *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁QualitiesDiff represents a collection of quality additions, removals and updates.
+// ⚗️QualitiesDiff represents batched quality additions, removals and per-quality updates.
 type QualitiesDiff struct {
 	Removed []QualityId `json:"removed,omitempty"`
 	Updated []struct {
@@ -731,7 +731,7 @@ type QualitiesDiff struct {
 	Added []Quality `json:"added,omitempty"`
 }
 
-// 🔷QualityMeta represents the scalar-only projection of a Quality (no Benchmarks, no Attributes).
+// �QualityMeta represents the scalar-only view of a quality excluding benchmarks and attributes.
 type QualityMeta struct {
 	Guid                string      `json:"guid"`
 	Key                 string      `json:"key"`
@@ -759,7 +759,7 @@ type QualityMeta struct {
 
 // #region 🌈Port
 
-// 🔷Port represents a named connector port with compatible port references.
+// ⚓Port represents a named connector port category with compatible port references.
 type Port struct {
 	Guid            string      `json:"guid"`
 	Name            string      `json:"name"`
@@ -772,7 +772,7 @@ type Port struct {
 	UpdatedAt       string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️PortDiff represents changes to a port entity.
+// ⚙️PortDiff represents a partial update to a port's name, icon or compatible ports.
 type PortDiff struct {
 	Name            *string         `json:"name,omitempty"`
 	Description     *string         `json:"description,omitempty"`
@@ -783,7 +783,7 @@ type PortDiff struct {
 	setFields       map[string]bool `json:"-"`
 }
 
-// 📋UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
+// �UnmarshalJSON deserializes PortDiff JSON while tracking which fields are explicitly set.
 func (d *PortDiff) UnmarshalJSON(data []byte) error {
 	type Alias PortDiff
 	aux := &struct {
@@ -802,7 +802,7 @@ func (d *PortDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
-// 🔶HasField returns whether a JSON field was present in the unmarshaled data.
+// �HasField checks whether a specific JSON field was present during PortDiff deserialization.
 func (d *PortDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -810,7 +810,7 @@ func (d *PortDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
-// 🔁PortsDiff represents a collection of port additions, removals and updates.
+// ⛵PortsDiff represents batched port additions, removals and per-port updates.
 type PortsDiff struct {
 	Removed []PortId `json:"removed,omitempty"`
 	Updated []struct {
@@ -820,7 +820,7 @@ type PortsDiff struct {
 	Added []Port `json:"added,omitempty"`
 }
 
-// 🔹PortMeta represents the scalar-only projection of a Port (no CompatiblePorts, no Attributes).
+// 🪝PortMeta represents the scalar-only view of a port excluding compatible ports and attributes.
 type PortMeta struct {
 	Guid        string  `json:"guid"`
 	Name        string  `json:"name"`
@@ -835,7 +835,7 @@ type PortMeta struct {
 
 // #region 📋Prop
 
-// 🔷Prop represents a quality property value with optional unit.
+// �Prop represents a quality measurement value with optional unit.
 type Prop struct {
 	Guid       string      `json:"guid"`
 	Quality    QualityId   `json:"quality"`
@@ -844,7 +844,7 @@ type Prop struct {
 	Attributes []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️PropDiff represents changes to a prop entity.
+// 🔧PropDiff represents a partial update to a prop's quality reference, value or unit.
 type PropDiff struct {
 	Quality    *QualityId      `json:"quality,omitempty"`
 	Value      *string         `json:"value,omitempty"`
@@ -852,7 +852,7 @@ type PropDiff struct {
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁PropsDiff represents a collection of prop additions, removals and updates.
+// �PropsDiff represents batched prop additions, removals and per-prop updates.
 type PropsDiff struct {
 	Removed []PropId `json:"removed,omitempty"`
 	Updated []struct {
@@ -862,7 +862,7 @@ type PropsDiff struct {
 	Added []Prop `json:"added,omitempty"`
 }
 
-// 🔶PropMeta represents the scalar-only projection of a Prop (no Attributes).
+// 🏺PropMeta represents the scalar-only view of a prop excluding attributes.
 type PropMeta struct {
 	Guid    string    `json:"guid"`
 	Quality QualityId `json:"quality"`
@@ -874,7 +874,7 @@ type PropMeta struct {
 
 // #region 🛎️Tag
 
-// 📝Tag represents a named classification tag with optional description and icon.
+// 🏷️Tag represents a named classification label with optional description and icon.
 type Tag struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -885,7 +885,7 @@ type Tag struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️TagDiff represents changes to a tag entity.
+// 🏳️TagDiff represents a partial update to a tag's name, description or icon.
 type TagDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Description *string         `json:"description,omitempty"`
@@ -894,7 +894,7 @@ type TagDiff struct {
 	setFields   map[string]bool `json:"-"`
 }
 
-// 📋UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
+// �UnmarshalJSON deserializes TagDiff JSON while tracking which fields are explicitly set.
 func (d *TagDiff) UnmarshalJSON(data []byte) error {
 	type Alias TagDiff
 	aux := &struct {
@@ -913,7 +913,7 @@ func (d *TagDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
-// 🔷HasField returns whether a JSON field was present in the unmarshaled data.
+// �️HasField checks whether a specific JSON field was present during TagDiff deserialization.
 func (d *TagDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -921,7 +921,7 @@ func (d *TagDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
-// 🔁TagsDiff represents a collection of tag additions, removals and updates.
+// 🏴TagsDiff represents batched tag additions, removals and per-tag updates.
 type TagsDiff struct {
 	Removed []TagId `json:"removed,omitempty"`
 	Updated []struct {
@@ -931,7 +931,7 @@ type TagsDiff struct {
 	Added []Tag `json:"added,omitempty"`
 }
 
-// 🏷️TagMeta represents the scalar-only projection of a Tag (no Attributes).
+// �️TagMeta represents the scalar-only view of a tag excluding attributes.
 type TagMeta struct {
 	Guid        string  `json:"guid"`
 	Name        string  `json:"name"`
@@ -945,7 +945,7 @@ type TagMeta struct {
 
 // #region 🎯Concept
 
-// 📝Concept represents a named categorization concept with optional description.
+// �Concept represents a named categorization concept with optional description and icon.
 type Concept struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -956,7 +956,7 @@ type Concept struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️ConceptDiff represents changes to a concept entity.
+// 🔮ConceptDiff represents a partial update to a concept's name, description or icon.
 type ConceptDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Description *string         `json:"description,omitempty"`
@@ -965,7 +965,7 @@ type ConceptDiff struct {
 	setFields   map[string]bool `json:"-"`
 }
 
-// 📋UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
+// �UnmarshalJSON deserializes ConceptDiff JSON while tracking which fields are explicitly set.
 func (d *ConceptDiff) UnmarshalJSON(data []byte) error {
 	type Alias ConceptDiff
 	aux := &struct {
@@ -984,7 +984,7 @@ func (d *ConceptDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
-// 🔷HasField returns whether a JSON field was present in the unmarshaled data.
+// �️HasField checks whether a specific JSON field was present during ConceptDiff deserialization.
 func (d *ConceptDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -992,7 +992,7 @@ func (d *ConceptDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
-// 🔁ConceptsDiff represents a collection of concept additions, removals and updates.
+// �ConceptsDiff represents batched concept additions, removals and per-concept updates.
 type ConceptsDiff struct {
 	Removed []ConceptId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1002,7 +1002,7 @@ type ConceptsDiff struct {
 	Added []Concept `json:"added,omitempty"`
 }
 
-// 🔶ConceptMeta represents the scalar-only projection of a Concept (no Attributes).
+// 🧠ConceptMeta represents the scalar-only view of a concept excluding attributes.
 type ConceptMeta struct {
 	Guid        string  `json:"guid"`
 	Name        string  `json:"name"`
@@ -1016,7 +1016,7 @@ type ConceptMeta struct {
 
 // #region 🖋️Model
 
-// 📄Model represents a 3D model reference associated with a file and tags.
+// �Model represents a 3D model reference linking a file with tags and description.
 type Model struct {
 	Guid        string      `json:"guid"`
 	File        FileId      `json:"file"`
@@ -1026,7 +1026,7 @@ type Model struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️ModelDiff represents changes to a model entity.
+// 🖼️ModelDiff represents a partial update to a model's file, name, tags or description.
 type ModelDiff struct {
 	File        *FileId         `json:"file,omitempty"`
 	Name        *string         `json:"name,omitempty"`
@@ -1035,7 +1035,7 @@ type ModelDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁ModelsDiff represents a collection of model additions, removals and updates.
+// 🎴ModelsDiff represents batched model additions, removals and per-model updates.
 type ModelsDiff struct {
 	Removed []ModelId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1045,7 +1045,7 @@ type ModelsDiff struct {
 	Added []Model `json:"added,omitempty"`
 }
 
-// 🏷️ModelMeta represents the scalar-only projection of a Model (no Tags, no Attributes).
+// �ModelMeta represents the scalar-only view of a model excluding tags and attributes.
 type ModelMeta struct {
 	Guid        string  `json:"guid"`
 	File        FileId  `json:"file"`
@@ -1072,21 +1072,21 @@ type Connector struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️PointDiff represents changes to a 3D point.
+// 📌PointDiff represents a partial update to a 3D point's X, Y or Z coordinate.
 type PointDiff struct {
 	X *float64 `json:"x,omitempty"`
 	Y *float64 `json:"y,omitempty"`
 	Z *float64 `json:"z,omitempty"`
 }
 
-// 🔷VectorDiff represents changes to a 3D vector.
+// 🧭VectorDiff represents a partial update to a 3D vector's X, Y or Z component.
 type VectorDiff struct {
 	X *float64 `json:"x,omitempty"`
 	Y *float64 `json:"y,omitempty"`
 	Z *float64 `json:"z,omitempty"`
 }
 
-// 🔶ConnectorDiff represents changes to a connector entity.
+// �️ConnectorDiff represents a partial update to a connector's position, direction, port or props.
 type ConnectorDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Point       *PointDiff      `json:"point,omitempty"`
@@ -1100,7 +1100,7 @@ type ConnectorDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁ConnectorsDiff represents a collection of connector additions, removals and updates.
+// �ConnectorsDiff represents batched connector additions, removals and per-connector updates.
 type ConnectorsDiff struct {
 	Removed []ConnectorId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1110,7 +1110,7 @@ type ConnectorsDiff struct {
 	Added []Connector `json:"added,omitempty"`
 }
 
-// 🔹ConnectorMeta represents the scalar-only projection of a Connector (no Props, no Attributes).
+// �ConnectorMeta represents the scalar-only view of a connector excluding props and attributes.
 type ConnectorMeta struct {
 	Guid        string  `json:"guid"`
 	Name        *string `json:"name,omitempty"`
@@ -1127,7 +1127,7 @@ type ConnectorMeta struct {
 
 // #region ⚡Type
 
-// 🏷️Type represents a component type with models, connectors and hierarchical inheritance.
+// 🧱Type represents a component blueprint with models, connectors and hierarchical inheritance.
 type Type struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -1151,7 +1151,7 @@ type Type struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️TypeDiff represents changes to a type entity.
+// ⚒️TypeDiff represents a partial update to a type's name, parent, models, connectors or props.
 type TypeDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Parent      *TypeId         `json:"parent,omitempty"`
@@ -1173,7 +1173,7 @@ type TypeDiff struct {
 	setFields   map[string]bool `json:"-"`
 }
 
-// 📋UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
+// �UnmarshalJSON deserializes TypeDiff JSON while tracking which fields are explicitly set.
 func (d *TypeDiff) UnmarshalJSON(data []byte) error {
 	type Alias TypeDiff
 	aux := &struct {
@@ -1192,7 +1192,7 @@ func (d *TypeDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
-// 🔷HasField returns whether a JSON field was present in the unmarshaled data.
+// �HasField checks whether a specific JSON field was present during TypeDiff deserialization.
 func (d *TypeDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -1200,7 +1200,7 @@ func (d *TypeDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
-// 🔁TypesDiff represents a collection of type additions, removals and updates.
+// 🏗️TypesDiff represents batched type additions, removals and per-type updates.
 type TypesDiff struct {
 	Removed []TypeId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1210,7 +1210,7 @@ type TypesDiff struct {
 	Added []Type `json:"added,omitempty"`
 }
 
-// 🔶TypeMeta represents the scalar-only projection of a Type (no slices).
+// 🧊TypeMeta represents the scalar-only view of a type excluding models, connectors, props and attributes.
 type TypeMeta struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -11132,8 +11132,6 @@ var DefaultConstraints = []Constraint{
 	ConnectorNameUniquenessConstraint,
 	ModelNameUniquenessConstraint,
 	LayerPathUniquenessConstraint,
-	DescriptionMissingEmojiConstraint,
-	DescriptionEmojiUniqueConstraint,
 }
 
 // 🗃️ValidateKit validates a kit using the default set of constraints.
@@ -11491,6 +11489,11 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 		return DesignDiff{}
 	}
 
+	removedConnList := make([]ConnectionId, 0, len(design.Connections))
+	for i := range design.Connections {
+		removedConnList = append(removedConnList, ConnectionId{Guid: design.Connections[i].Guid})
+	}
+
 	typesDict := make(map[string]*Type)
 	for i := range kit.Types {
 		typesDict[kit.Types[i].Guid] = &kit.Types[i]
@@ -11693,6 +11696,9 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 	result := DesignDiff{}
 	if len(updatedPieces) > 0 {
 		result.Pieces = &PiecesDiff{Updated: updatedPieces}
+	}
+	if len(removedConnList) > 0 {
+		result.Connections = &ConnectionsDiff{Removed: removedConnList}
 	}
 	return result
 }

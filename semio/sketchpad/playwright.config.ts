@@ -14,16 +14,23 @@
 // Uses esbuild-based ESM loader hook (pw-loader.mjs) to handle CSS stubs, TypeScript
 // type stripping, Vite import.meta.glob stubs, and JSON imports without type attributes.
 
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { resolve } from "node:path";
 
 const __dirname = resolve(fileURLToPath(import.meta.url), "..");
-const loaderPath = resolve(__dirname, "pw-loader.mjs");
-process.env.NODE_OPTIONS = `${process.env.NODE_OPTIONS || ""} --import file://${loaderPath}`.trim();
+const loaderImportFlag = `--import ${pathToFileURL(resolve(__dirname, "pw-loader.mjs")).href}`;
+const prevNodeOpts = process.env.NODE_OPTIONS ?? "";
+process.env.NODE_OPTIONS = prevNodeOpts.includes("pw-loader.mjs")
+  ? prevNodeOpts
+  : `${prevNodeOpts} ${loaderImportFlag}`.trim();
 
 import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4181";
+const repoRoot = resolve(__dirname, "..", "..");
+const crossEnvBin = resolve(repoRoot, "node_modules/cross-env/dist/bin/cross-env.js");
+const viteBin = resolve(repoRoot, "node_modules/vite/bin/vite.js");
+const previewHost = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
 
 export default defineConfig({
   testMatch: ["**/*.spec.ts", "**/index.tsx"],
@@ -50,7 +57,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: `NODE_OPTIONS='' npx vite preview --port 4181 --host ${process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1"}`,
+    cwd: __dirname,
+    command: `node "${crossEnvBin}" NODE_OPTIONS= node "${viteBin}" preview --port 4181 --host ${previewHost}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 300000,

@@ -992,9 +992,14 @@ func TestValidation(t *testing.T) {
 		t.Run("Plain descriptions do not create emoji validation problems", func(t *testing.T) {
 			var kit Kit
 			loadJSON(t, "metabolism.kit.semio.json", &kit)
-			kit.Description = stringPtr("Plain kit summary")
+			kitDescription := "Plain kit summary"
+			kit.Description = &kitDescription
 			for i := range kit.Types {
-				kit.Types[i].Description = stringPtr(fmt.Sprintf("Repeated plain description %d", i%2))
+				description := "Repeated plain description"
+				if i%2 == 1 {
+					description = "Repeated plain description alternate"
+				}
+				kit.Types[i].Description = &description
 			}
 
 			result := ValidateKit(kit)

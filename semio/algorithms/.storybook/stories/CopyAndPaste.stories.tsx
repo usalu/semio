@@ -1,9 +1,10 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/CopyAndPaste.stories.tsx
-// Specs: One story with SELECTION_INPUT (source), DESIGN_INPUT (target below source), VEC_INPUT (coord), and two DESIGN_DIFF_OUTPUT (WithoutCoord + WithCoord). Copy from flattened NCT, paste into second storey target.
-// Summary: CopyAndPaste story using nativeFlattenDesign/nativeCopyDesign/nativePasteDesign with the Storybook language toolbar.
+// Specs: WithoutCoord and WithCoord match IPO row order: inputs left, Diff center, Output right (same as Delete and other algorithm stories).
+// Summary: Copy & paste Storybook stories using nativeFlattenDesign/nativeCopyDesign/nativePasteDesign with the language toolbar.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
+
 
 import type { Design, DesignChange, DesignDiff } from "@semio/js";
 import { applyDesignDiff } from "@semio/js";
@@ -42,16 +43,9 @@ const selectionConnectionGuids = Array.from(
 
 interface CopyPasteWindowContextValue {
   flatPasteTargetDesign: Design | null;
-  withCoordDiff: DesignDiff | undefined;
 }
 
-const CopyPasteWindowContext = React.createContext<CopyPasteWindowContextValue>({ flatPasteTargetDesign: null, withCoordDiff: undefined });
-
-const WithCoordDiffWindow: React.FC = () => {
-  const { flatPasteTargetDesign, withCoordDiff } = React.useContext(CopyPasteWindowContext);
-  const design = flatPasteTargetDesign ?? pasteTargetDesign;
-  return <SemioDiagram design={design} designDiff={withCoordDiff} diffEnabled={true} zoomTarget="design" selectionEnabled={false} panEnabled={true} zoomEnabled={true} />;
-};
+const CopyPasteWindowContext = React.createContext<CopyPasteWindowContextValue>({ flatPasteTargetDesign: null });
 
 const TargetDesignWindow: React.FC = () => {
   const { flatPasteTargetDesign } = React.useContext(CopyPasteWindowContext);
@@ -59,42 +53,61 @@ const TargetDesignWindow: React.FC = () => {
   return <SemioDiagram design={design} diffEnabled={false} zoomTarget="design" selectionEnabled={false} panEnabled={true} zoomEnabled={true} />;
 };
 
-const WINDOWS: AlgorithmWindowDef[] = [
-  { id: "copypaste-input", kind: WindowKind.SELECTION_INPUT, label: "Source Selection" },
-  { id: "copypaste-target", kind: WindowKind.DESIGN_INPUT, label: "Target Design", component: TargetDesignWindow },
-  { id: "copypaste-vec", kind: WindowKind.VEC_INPUT, label: "Coord" },
-  { id: "copypaste-without-coord-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "WithoutCoord" },
-  { id: "copypaste-with-coord-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "WithCoord", component: WithCoordDiffWindow },
+const WINDOWS_WITHOUT: AlgorithmWindowDef[] = [
+  { id: "cp-src", kind: WindowKind.SELECTION_INPUT, label: "Source Selection" },
+  { id: "cp-tgt", kind: WindowKind.DESIGN_INPUT, label: "Target Design", component: TargetDesignWindow },
+  { id: "cp-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
+  { id: "cp-out", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
 ];
 
-const LAYOUT = {
+const WINDOWS_WITH: AlgorithmWindowDef[] = [
+  { id: "cp-src", kind: WindowKind.SELECTION_INPUT, label: "Source Selection" },
+  { id: "cp-tgt", kind: WindowKind.DESIGN_INPUT, label: "Target Design", component: TargetDesignWindow },
+  { id: "cp-vec", kind: WindowKind.VEC_INPUT, label: "Coord" },
+  { id: "cp-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
+  { id: "cp-out", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
+];
+
+const LAYOUT_WITHOUT = {
   root: {
     kind: "row" as const,
     children: [
       {
         kind: "column" as const,
-        size: 33,
+        size: 34,
         children: [
-          { kind: "stack" as const, size: 50, children: [{ kind: "window" as const, windowKindId: "copypaste-input", title: "Source Selection" }] },
-          { kind: "stack" as const, size: 30, children: [{ kind: "window" as const, windowKindId: "copypaste-target", title: "Target Design" }] },
-          { kind: "stack" as const, size: 20, children: [{ kind: "window" as const, windowKindId: "copypaste-vec", title: "Coord" }] },
+          { kind: "stack" as const, size: 50, children: [{ kind: "window" as const, windowKindId: "cp-src", title: "Source Selection" }] },
+          { kind: "stack" as const, size: 50, children: [{ kind: "window" as const, windowKindId: "cp-tgt", title: "Target Design" }] },
         ],
       },
-      {
-        kind: "stack" as const,
-        size: 33,
-        children: [{ kind: "window" as const, windowKindId: "copypaste-without-coord-diff", title: "WithoutCoord" }],
-      },
-      {
-        kind: "stack" as const,
-        size: 34,
-        children: [{ kind: "window" as const, windowKindId: "copypaste-with-coord-diff", title: "WithCoord" }],
-      },
+      { kind: "stack" as const, size: 33, children: [{ kind: "window" as const, windowKindId: "cp-diff", title: "Diff" }] },
+      { kind: "stack" as const, size: 33, children: [{ kind: "window" as const, windowKindId: "cp-out", title: "Output" }] },
     ],
   },
 };
 
-function CopyAndPasteFrame() {
+const LAYOUT_WITH = {
+  root: {
+    kind: "row" as const,
+    children: [
+      {
+        kind: "column" as const,
+        size: 34,
+        children: [
+          { kind: "stack" as const, size: 50, children: [{ kind: "window" as const, windowKindId: "cp-src", title: "Source Selection" }] },
+          { kind: "stack" as const, size: 30, children: [{ kind: "window" as const, windowKindId: "cp-tgt", title: "Target Design" }] },
+          { kind: "stack" as const, size: 20, children: [{ kind: "window" as const, windowKindId: "cp-vec", title: "Coord" }] },
+        ],
+      },
+      { kind: "stack" as const, size: 33, children: [{ kind: "window" as const, windowKindId: "cp-diff", title: "Diff" }] },
+      { kind: "stack" as const, size: 33, children: [{ kind: "window" as const, windowKindId: "cp-out", title: "Output" }] },
+    ],
+  },
+};
+
+export type CopyPasteStoryMode = "without" | "with";
+
+function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
   const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const kitWithPasteTarget = React.useMemo(() => ({ ...kit, designs: [...(kit.designs ?? []), pasteTargetDesign] }), [kit]);
@@ -104,16 +117,17 @@ function CopyAndPasteFrame() {
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>(selectionPieceGuids);
   const [selectedConnectionGuids, setSelectedConnectionGuids] = React.useState<string[]>(selectionConnectionGuids);
   const [vec, setVec] = React.useState<VecValue>({ u: 10, v: 10 });
-  const [withoutCoordDiff, setWithoutCoordDiff] = React.useState<DesignDiff | undefined>(undefined);
-  const [withCoordDiff, setWithCoordDiff] = React.useState<DesignDiff | undefined>(undefined);
+  const [designDiff, setDesignDiff] = React.useState<DesignDiff | undefined>(undefined);
+
+  const windows = mode === "with" ? WINDOWS_WITH : WINDOWS_WITHOUT;
+  const defaultLayout = mode === "with" ? LAYOUT_WITH : LAYOUT_WITHOUT;
 
   React.useEffect(() => {
     let cancelled = false;
     setFlattenChange(null);
     setBaseDesign(null);
     setFlatPasteTargetDesign(null);
-    setWithoutCoordDiff(undefined);
-    setWithCoordDiff(undefined);
+    setDesignDiff(undefined);
     void (async () => {
       const [fc, pastefc] = await Promise.all([nativeFlattenDesign(kit, rawDesign.guid, language), nativeFlattenDesign(kitWithPasteTarget, pasteTargetDesign.guid, language)]);
       if (cancelled) return;
@@ -132,43 +146,44 @@ function CopyAndPasteFrame() {
     let cancelled = false;
     void (async () => {
       if (selectedPieceGuids.length === 0 && selectedConnectionGuids.length === 0) {
-        if (!cancelled) {
-          setWithoutCoordDiff(undefined);
-          setWithCoordDiff(undefined);
-        }
+        if (!cancelled) setDesignDiff(undefined);
         return;
       }
-      setWithoutCoordDiff(undefined);
-      setWithCoordDiff(undefined);
+      setDesignDiff(undefined);
       const copied = await nativeCopyDesign(kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, language);
       if (cancelled) return;
-      const [diffNoCoord, diffWithCoord] = await Promise.all([nativePasteDesign(kit, copied, pasteTargetDesign, "original", undefined, language), nativePasteDesign(kit, copied, pasteTargetDesign, "original", { u: vec.u, v: vec.v }, language)]);
-      if (!cancelled) {
-        setWithoutCoordDiff(diffNoCoord);
-        setWithCoordDiff(diffWithCoord);
-      }
+      const coord = mode === "with" ? { u: vec.u, v: vec.v } : undefined;
+      const diff = await nativePasteDesign(kit, copied, pasteTargetDesign, "original", coord, language);
+      if (!cancelled) setDesignDiff(diff);
     })();
     return () => {
       cancelled = true;
     };
-  }, [kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, vec, language]);
+  }, [kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, language, mode, mode === "with" ? vec.u : 0, mode === "with" ? vec.v : 0]);
 
   const flatOrRawPasteTarget = flatPasteTargetDesign ?? pasteTargetDesign;
-  const outputDesign = React.useMemo(() => (withCoordDiff ? (applyDesignDiff(flatOrRawPasteTarget, withCoordDiff) as Design) : flatOrRawPasteTarget), [withCoordDiff, flatOrRawPasteTarget]);
+  const outputDesign = React.useMemo(
+    () => (designDiff ? (applyDesignDiff(flatOrRawPasteTarget, designDiff) as Design) : flatOrRawPasteTarget),
+    [designDiff, flatOrRawPasteTarget],
+  );
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
       design: baseDesign ?? rawDesign,
-      vec,
-      onVecChange: setVec,
-      vecMin: { u: -50, v: -50 },
-      vecMax: { u: 50, v: 50 },
+      ...(mode === "with"
+        ? {
+            vec,
+            onVecChange: setVec,
+            vecMin: { u: -50, v: -50 },
+            vecMax: { u: 50, v: 50 },
+          }
+        : {}),
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
       selectedConnectionGuids,
       onSelectedConnectionGuidsChange: setSelectedConnectionGuids,
-      designDiff: withoutCoordDiff,
+      designDiff,
       diffDesign: flatPasteTargetDesign ?? pasteTargetDesign,
       outputDesign,
       error:
@@ -176,18 +191,18 @@ function CopyAndPasteFrame() {
           ? `Loading copy & paste preview (${language})…`
           : selectedPieceGuids.length === 0 && selectedConnectionGuids.length === 0
             ? "Select at least one piece or connection to copy."
-            : !withoutCoordDiff || !withCoordDiff
+            : !designDiff
               ? `Loading paste result (${language})…`
               : undefined,
     }),
-    [kit, baseDesign, flatPasteTargetDesign, selectedPieceGuids, selectedConnectionGuids, vec, withoutCoordDiff, withCoordDiff, outputDesign, flattenChange, language],
+    [kit, baseDesign, flatPasteTargetDesign, selectedPieceGuids, selectedConnectionGuids, vec, designDiff, outputDesign, flattenChange, language, mode],
   );
 
-  const windowContextValue = React.useMemo<CopyPasteWindowContextValue>(() => ({ flatPasteTargetDesign, withCoordDiff }), [flatPasteTargetDesign, withCoordDiff]);
+  const windowContextValue = React.useMemo<CopyPasteWindowContextValue>(() => ({ flatPasteTargetDesign }), [flatPasteTargetDesign]);
 
   return (
     <CopyPasteWindowContext.Provider value={windowContextValue}>
-      <AlgorithmApp id="copypaste" label="Copy & Paste" windows={WINDOWS} defaultLayout={LAYOUT} context={context} className="h-full w-full" />
+      <AlgorithmApp id={`copypaste-${mode}`} label="Copy & Paste" windows={windows} defaultLayout={defaultLayout} context={context} className="h-full w-full" />
     </CopyPasteWindowContext.Provider>
   );
 }
@@ -199,10 +214,18 @@ const meta = {
   component: CopyAndPasteFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
-} satisfies Meta;
+} satisfies Meta<typeof CopyAndPasteFrame>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: () => <CopyAndPasteFrame /> };
+export const WithoutCoord: Story = {
+  args: { mode: "without" },
+  render: (args) => <CopyAndPasteFrame {...args} />,
+};
+
+export const WithCoord: Story = {
+  args: { mode: "with" },
+  render: (args) => <CopyAndPasteFrame {...args} />,
+};

@@ -5203,7 +5203,7 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
  * Removes stale connections referencing deleted pieces.
  * Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
  **/
-export const deletePiecesAndConnectionsInDesign = (kit: Kit, design: Design, pieceGuids: string[], connectionGuids: string[]): DesignDiff => {
+export const deletePiecesAndConnectionsInDesign = (kit: Kit, design: Design, pieceGuids: string[], connectionGuids: string[]): DesignDiffOperationResult => {
   const deletedPieceSet = new Set(pieceGuids);
   const connections = design.connections ?? [];
 
@@ -5233,7 +5233,11 @@ export const deletePiecesAndConnectionsInDesign = (kit: Kit, design: Design, pie
   }
 
   // ♻️Flatten the design to get absolute plane and center for each piece
-  const flatChange = flattenDesign(kit, design.guid);
+  const flatRes = flattenDesign(kit, design.guid);
+  if (!flatRes.ok) {
+    return { ok: false, errors: flatRes.errors };
+  }
+  const flatChange = flatRes.change;
   const flatPieceMap: { [guid: string]: { plane?: Plane; center?: Coord } } = {};
   for (const piece of design.pieces ?? []) {
     if (piece.plane) flatPieceMap[piece.guid] = { plane: piece.plane, center: piece.center };
@@ -5269,17 +5273,20 @@ export const deletePiecesAndConnectionsInDesign = (kit: Kit, design: Design, pie
     diff.connections = { removed: connectionsRemoved };
   }
 
-  return diff;
+  return operationOk(diff, flatRes.warnings, flatRes.infos);
 };
 
 /**
  * Removes a PiecesAndConnectionsFromDesign element.
  **/
-export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignChange => {
+export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignOperationResult => {
   const design = findDesignInKit(kit, designId);
-  const forward = deletePiecesAndConnectionsInDesign(kit, design, pieceIds, connectionIds);
-  const backward = inverseDesignDiff(design, forward);
-  return { forward, backward };
+  const delRes = deletePiecesAndConnectionsInDesign(kit, design, pieceIds, connectionIds);
+  if (!delRes.ok) {
+    return { ok: false, errors: delRes.errors };
+  }
+  const backward = inverseDesignDiff(design, delRes.change);
+  return operationOk({ forward: delRes.change, backward }, delRes.warnings, delRes.infos);
 };
 // 💿computeChildPlane holds the data fields for a computeChildPlane record.
 const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector, connection: Connection): Plane => {
@@ -5352,14 +5359,24 @@ const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, child
 /**
  * Flattens nested Design structure.
  **/
-export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
+export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult => {
   const design = findDesignInKit(kit, designId);
   if (!design) {
-    throw new Error(`Design ${designId} not found in kit ${kit.name}`);
+    return operationErr([{ code: "flatten.design-not-found", message: `Design ${designId} not found in kit ${kit.name}` }]);
   }
   const types = kit.types ?? [];
 
-  if (!design.pieces || design.pieces.length === 0) return { forward: {}, backward: {} };
+  if (!design.pieces || design.pieces.length === 0) {
+    return operationOk(
+      { forward: {}, backward: {} },
+      [],
+      [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }],
+    );
+  }
+
+  const warnings: OperationNote[] = [];
+  const infos: OperationNote[] = [];
+  const placementErrors: OperationNote[] = [];
 
   const typesDict: { [key: string]: Type } = {};
   types.forEach((t) => {
@@ -5417,11 +5434,17 @@ export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
       const sourceExists = pieceMap[sourceId];
       const targetExists = pieceMap[targetId];
       if (!sourceExists) {
-        console.warn(`[ORIGIN] flattenDesign: Skipping connection ${connection.guid} - source piece ${sourceId} not found`);
+        warnings.push({
+          code: "flatten.connection-skipped-missing-endpoint",
+          message: `Skipping connection ${connection.guid}: source piece ${sourceId} not found in design.`,
+        });
         return false;
       }
       if (!targetExists) {
-        console.warn(`[ORIGIN] flattenDesign: Skipping connection ${connection.guid} - target piece ${targetId} not found`);
+        warnings.push({
+          code: "flatten.connection-skipped-missing-endpoint",
+          message: `Skipping connection ${connection.guid}: target piece ${targetId} not found in design.`,
+        });
         return false;
       }
       return true;
@@ -5465,12 +5488,23 @@ export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
   };
 
   components.forEach((component) => {
-    let roots = component.nodes().filter((node) => {
+    const roots = component.nodes().filter((node) => {
       const piece = pieceMap[node.id()];
       return piece?.plane !== undefined && piece?.center !== undefined;
     });
     let rootNode = roots.length > 0 ? roots[0] : component.nodes().length > 0 ? component.nodes()[0] : undefined;
     if (!rootNode) return;
+    if (roots.length === 0) {
+      warnings.push({
+        code: "flatten.no-fixed-piece-in-clump",
+        message: `Connected pieces have no fixed root (no piece with both plane and center). Using piece ${rootNode.id()} as breadth-first root. Each connected set of pieces (clump) should include at least one fixed piece for stable, recommended layout.`,
+      });
+    } else if (roots.length > 1) {
+      infos.push({
+        code: "flatten.multiple-fixed-roots",
+        message: `This clump has ${roots.length} fixed pieces; using the first (${rootNode.id()}) as breadth-first root.`,
+      });
+    }
     const rootPiece = pieceMap[rootNode.id()];
     if (!rootPiece || !rootPiece.guid) return;
     const updatedRootPiece = setAttributes(rootPiece, [
@@ -5533,7 +5567,10 @@ export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
         if (piecePlanes[childPiece.guid]) return;
         const parentPlane = piecePlanes[parentPiece.guid];
         if (!parentPlane) {
-          console.error(`Error during flatten: Parent piece ${parentPiece.guid} plane not found.`);
+          placementErrors.push({
+            code: "flatten.parent-plane-missing",
+            message: `Parent piece ${parentPiece.guid} has no plane while flattening edge to child ${childPiece.guid}.`,
+          });
           skipCount++;
           return;
         }
@@ -5548,7 +5585,10 @@ export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
         const childConnector = getConnector(childType, childConnectorGuid);
 
         if (!parentConnector || !childConnector) {
-          console.error(`Error during flatten: Connectors not found for connection between ${parentId} and ${childId}. Parent Connector: ${parentConnectorGuid}, Child Connector: ${childConnectorGuid}`);
+          placementErrors.push({
+            code: "flatten.connectors-not-found",
+            message: `Connectors not found for connection between ${parentId} and ${childId}. Parent connector: ${parentConnectorGuid ?? "(default)"}, child connector: ${childConnectorGuid ?? "(default)"}.`,
+          });
           skipCount++;
           return;
         }
@@ -5652,14 +5692,30 @@ export const flattenDesign = (kit: Kit, designId: string): DesignChange => {
     })
     .filter((update) => update !== null) as Array<{ piece: PieceId; diff: PieceDiff }>;
 
-  const removedConnections = design.connections?.map((c) => ({ connected: { piece: c.connected.piece.guid }, connecting: { piece: c.connecting.piece.guid } })) || [];
+  const removedConnections = design.connections?.map((c) => ({ guid: c.guid })) || [];
 
   const forward = {
     pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
     connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined,
   } as DesignDiff;
+
+  if (piecesWithoutPlanes > 0) {
+    placementErrors.push({
+      code: "flatten.piece-missing-plane",
+      message: `After flatten, ${piecesWithoutPlanes} piece(s) still have no plane (see prior placement messages).`,
+    });
+  }
+  if (placementErrors.length > 0) {
+    return operationErr(placementErrors);
+  }
+
+  infos.push({
+    code: "flatten.summary",
+    message: `Flatten removed ${removedConnections.length} connection(s); updated ${updatedPieces.length} piece record(s); ${piecesWithPlanes} piece(s) with planes.`,
+  });
+
   const backward = inverseDesignDiff(design, forward);
-  return { forward, backward };
+  return operationOk({ forward, backward }, warnings, infos);
 };
 
 /**
@@ -6044,11 +6100,13 @@ export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coord
  * Internal pieces are copied as-is. Pp-excl-pc-incl pieces get semio.center and semio.plane attributes.
  * Non-internal connections include their external pieces marked with semio.piece.origin = "external".
  **/
-export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], connectionGuids: string[]): Design => {
+export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], connectionGuids: string[]): OperationResult<Design> => {
   const selectedPieceSet = new Set(pieceGuids);
   const selectedConnectionSet = new Set(connectionGuids);
 
-  const connections = design.connections ?? [];
+  const kitDesign = design.guid ? findDesignInKit(kit, design.guid) : undefined;
+  const connections =
+    design.connections && design.connections.length > 0 ? design.connections : (kitDesign?.connections ?? []);
   const pieces = design.pieces ?? [];
 
   // Build parent map: child guid -> { parentGuid, connection }
@@ -6058,7 +6116,11 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
   }
 
   // Flatten the design to get absolute planes/centers
-  const flatChange = flattenDesign(kit, design.guid);
+  const flatRes = flattenDesign(kit, design.guid);
+  if (!flatRes.ok) {
+    return { ok: false, errors: flatRes.errors };
+  }
+  const flatChange = flatRes.change;
   const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatChange.forward);
   const flatPieceMap = new Map<string, Piece>();
   for (const p of flatDesign.pieces ?? []) {
@@ -6146,7 +6208,17 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
     }
   }
 
-  return { guid: "", name: "", pieces: copyPieces, connections: copyConnections };
+  return operationOk(
+    { guid: "", name: "", pieces: copyPieces, connections: copyConnections },
+    flatRes.warnings,
+    [
+      ...flatRes.infos,
+      {
+        code: "copy.summary",
+        message: `Copied ${copyPieces.length} piece(s) and ${copyConnections.length} connection(s) to clipboard design.`,
+      },
+    ],
+  );
 };
 
 /**
@@ -6879,6 +6951,71 @@ export interface DesignChange {
   forward: DesignDiff;
   backward: DesignDiff;
 }
+
+//#region OperationResult
+/**
+ * Human-readable note attached to an algorithm {@link OperationResult} (warning, info, or error).
+ **/
+export interface OperationNote {
+  /** Stable machine id e.g. flatten.no-fixed-piece-in-clump */
+  code?: string;
+  message: string;
+}
+
+/**
+ * Successful operation: produced change plus non-fatal warnings and informational notes.
+ **/
+export interface OperationOk<Change> {
+  ok: true;
+  change: Change;
+  warnings: OperationNote[];
+  infos: OperationNote[];
+}
+
+/**
+ * Failed operation: no change; carries one or more errors.
+ **/
+export interface OperationErr {
+  ok: false;
+  errors: OperationNote[];
+}
+
+/**
+ * Discriminated union returned by semio algorithms: either ok with change or failed with errors.
+ **/
+export type OperationResult<Change> = OperationOk<Change> | OperationErr;
+
+/** {@link OperationResult} specialized for {@link DesignChange} (flatten, etc.). */
+export type DesignOperationResult = OperationResult<DesignChange>;
+
+/** {@link OperationResult} specialized for {@link DesignDiff}. */
+export type DesignDiffOperationResult = OperationResult<DesignDiff>;
+
+/**
+ * Builds a successful {@link OperationResult}.
+ **/
+export const operationOk = <Change>(change: Change, warnings: OperationNote[] = [], infos: OperationNote[] = []): OperationOk<Change> => ({
+  ok: true,
+  change,
+  warnings,
+  infos,
+});
+
+/**
+ * Builds a failed {@link OperationResult}.
+ **/
+export const operationErr = (errors: OperationNote[]): OperationErr => ({ ok: false, errors });
+
+/**
+ * Wraps a native/REST payload that may still be a bare change object into {@link DesignOperationResult}.
+ **/
+export const normalizeDesignFlattenResult = (raw: unknown): DesignOperationResult => {
+  if (raw !== null && typeof raw === "object" && "ok" in raw) {
+    return raw as DesignOperationResult;
+  }
+  return operationOk(raw as DesignChange, [], []);
+};
+//#endregion OperationResult
 /**
  * Computes the forward and backward diffs between two design states.
  **/
@@ -9089,7 +9226,9 @@ export const findPieceTypeInDesign = (kit: Kit, designGuid: string, pieceGuid: s
  * Searches for matching ParentPieceInDesign entry.
  **/
 export const findParentPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece => {
-  const parentPieceId = piecesMetadata(kit, designGuid).get(pieceGuid)?.parentPieceId;
+  const meta = piecesMetadata(kit, designGuid);
+  if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
+  const parentPieceId = meta.change.get(pieceGuid)?.parentPieceId;
   if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece`);
   return findPieceInDesign(findDesignInKit(kit, designGuid), parentPieceId);
 };
@@ -9098,7 +9237,9 @@ export const findParentPieceInDesign = (kit: Kit, designGuid: string, pieceGuid:
  * Searches for matching ParentConnectionForPieceInDesign entry.
  **/
 export const findParentConnectionForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Connection => {
-  const parentPieceId = piecesMetadata(kit, designGuid).get(pieceGuid)?.parentPieceId;
+  const meta = piecesMetadata(kit, designGuid);
+  if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
+  const parentPieceId = meta.change.get(pieceGuid)?.parentPieceId;
   if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece and connection`);
   return findConnectionInDesign(findDesignInKit(kit, designGuid), parentPieceId);
 };
@@ -9108,7 +9249,9 @@ export const findParentConnectionForPieceInDesign = (kit: Kit, designGuid: strin
  **/
 export const findChildrenPiecesInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece[] => {
   const design = findDesignInKit(kit, designGuid);
-  const metadata = piecesMetadata(kit, designGuid);
+  const meta = piecesMetadata(kit, designGuid);
+  if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
+  const metadata = meta.change;
   const children: Piece[] = [];
   for (const [id, data] of Array.from(metadata)) {
     if (data.parentPieceId === pieceGuid) {
@@ -9229,28 +9372,30 @@ export const sumQualityInDesign = (kit: Kit, designGuid: string, qualityGuid: st
 };
 
 /**
+ * Per-piece placement metadata derived from a flattened design (fixed root, parent link, depth, path).
+ **/
+export type PiecePlacementMetadata = {
+  plane: Plane;
+  center: Coord;
+  fixedPieceId: string;
+  parentPieceId: string | null;
+  depth: number;
+  path: string[];
+};
+
+/**
  * Definition of piecesMetadata.
  **/
-export const piecesMetadata = (
-  kit: Kit,
-  designGuid: string,
-): Map<
-  string,
-  {
-    plane: Plane;
-    center: Coord;
-    fixedPieceId: string;
-    parentPieceId: string | null;
-    depth: number;
-    path: string[];
-  }
-> => {
+export const piecesMetadata = (kit: Kit, designGuid: string): OperationResult<Map<string, PiecePlacementMetadata>> => {
   const design = findDesignInKit(kit, designGuid);
   if (!design) {
-    throw new Error(`Design ${designGuid} not found in kit ${kit.name}`);
+    return operationErr([{ code: "pieces-metadata.design-not-found", message: `Design ${designGuid} not found in kit ${kit.name}` }]);
   }
   const flattenChange = flattenDesign(kit, designGuid);
-  const flatDesign = applyDesignDiff(design, flattenChange.forward);
+  if (!flattenChange.ok) {
+    return { ok: false, errors: flattenChange.errors };
+  }
+  const flatDesign = applyDesignDiff(design, flattenChange.change.forward);
   const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid);
   const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
   const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
@@ -9258,18 +9403,22 @@ export const piecesMetadata = (
     const raw = findAttributeValue(p, "semio.path", p.guid);
     return raw ? raw.split(",").filter(Boolean) : [p.guid!];
   });
-  return new Map(
-    flatDesign.pieces?.map((p, index) => [
-      p.guid,
-      {
-        plane: p.plane!,
-        center: p.center!,
-        fixedPieceId: fixedPieceIds![index],
-        parentPieceId: parentPieceIds![index],
-        depth: depths![index],
-        path: paths![index],
-      },
-    ]),
+  return operationOk(
+    new Map(
+      flatDesign.pieces?.map((p, index) => [
+        p.guid,
+        {
+          plane: p.plane!,
+          center: p.center!,
+          fixedPieceId: fixedPieceIds![index],
+          parentPieceId: parentPieceIds![index],
+          depth: depths![index],
+          path: paths![index],
+        },
+      ]),
+    ),
+    flattenChange.warnings,
+    flattenChange.infos,
   );
 };
 
@@ -14388,8 +14537,10 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       const design = findDesign(kit, designName, parentName);
       const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design.guid);
       expect(expectedDesign).toBeDefined();
-      const flatDesignChange = flattenDesign(kit, design.guid);
-      const flatDesign = applyDesignDiff(design, flatDesignChange.forward);
+      const flatOp = flattenDesign(kit, design.guid);
+      expect(flatOp.ok).toBe(true);
+      if (!flatOp.ok) return;
+      const flatDesign = applyDesignDiff(design, flatOp.change.forward);
 
       flatDesign!.pieces?.forEach((p) => {
         const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
@@ -14426,6 +14577,67 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
         testFlatten("Capsule Dream");
       });
+    });
+
+    it("forward diff lists every connection removal by guid and apply clears connections", () => {
+      const design = findDesign(kit, "Nakagin Capsule Tower");
+      const origConnCount = design.connections?.length ?? 0;
+      expect(origConnCount).toBeGreaterThan(0);
+      const flatOp = flattenDesign(kit, design.guid);
+      expect(flatOp.ok).toBe(true);
+      if (!flatOp.ok) return;
+      const removed = flatOp.change.forward.connections?.removed ?? [];
+      expect(removed.length).toBe(origConnCount);
+      const removedSet = new Set(removed.map((r) => r.guid));
+      for (const c of design.connections ?? []) {
+        expect(removedSet.has(c.guid)).toBe(true);
+      }
+      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.change.forward);
+      expect(flatDesign.connections?.length ?? 0).toBe(0);
+    });
+
+    it("warns when a connected clump has no fixed piece and still flattens", () => {
+      const floatingA: Piece = { guid: "floating-a", name: "A", type: { guid: "t1" } };
+      const floatingB: Piece = { guid: "floating-b", name: "B", type: { guid: "t1" } };
+      const design: Design = {
+        guid: "design-float",
+        name: "Float",
+        unit: "mm",
+        pieces: [floatingA, floatingB],
+        connections: [
+          {
+            guid: "c-ab",
+            connected: { piece: { guid: "floating-a" }, connector: { guid: "c1" } },
+            connecting: { piece: { guid: "floating-b" }, connector: { guid: "c2" } },
+          },
+        ],
+        createdAt: "2025-01-01T00:00:00.000Z",
+        updatedAt: "2025-01-01T00:00:00.000Z",
+      };
+      const miniKit: Kit = {
+        guid: "k1",
+        name: "k",
+        designs: [design],
+        types: [
+          {
+            guid: "t1",
+            name: "T",
+            unit: "mm",
+            connectors: [
+              { guid: "c1", point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 1, z: 0 }, t: 0 },
+              { guid: "c2", point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 1, z: 0 }, t: 0.5 },
+            ],
+            createdAt: "2025-01-01T00:00:00.000Z",
+            updatedAt: "2025-01-01T00:00:00.000Z",
+          },
+        ],
+        createdAt: "2025-01-01T00:00:00.000Z",
+        updatedAt: "2025-01-01T00:00:00.000Z",
+      };
+      const op = flattenDesign(miniKit, design.guid);
+      expect(op.ok).toBe(true);
+      if (!op.ok) return;
+      expect(op.warnings.some((w) => w.code === "flatten.no-fixed-piece-in-clump")).toBe(true);
     });
   });
 
@@ -14553,23 +14765,26 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       }
     });
 
-    it("Nakagin Capsule Tower flattened non-fixed piece produces connection diff and piece center update", () => {
+    it("Nakagin Capsule Tower flattened piece drag uses piece center diff (flat design has no connections)", () => {
       const kit = MetabolismKit as unknown as Kit;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
-      const flatChange = flattenDesign(kit, design.guid);
-      const flatDesign = applyDesignDiff(design, flatChange.forward);
+      const flatOp = flattenDesign(kit, design.guid);
+      expect(flatOp.ok).toBe(true);
+      if (!flatOp.ok) return;
+      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.change.forward);
+      expect((flatDesign.connections ?? []).length).toBe(0);
       const pieceGuid = "9d18882e-d90b-40de-a171-47cb4564ffa6";
-      const parentConnectionGuids = new Set((flatDesign.connections ?? []).filter((c) => c.connecting.piece.guid === pieceGuid).map((c) => c.guid));
       const flatPiece = flatDesign.pieces!.find((p) => p.guid === pieceGuid)!;
       const pieces = { ...flatDesign, pieces: [flatPiece] } as Design;
       const offset = { u: 3, v: -1 };
       const diff = dragPiecesInDesign(flatDesign, pieces, offset);
-      expect(diff.connections).toBeDefined();
-      expect(diff.connections!.updated!.length).toBe(1);
-      expect(parentConnectionGuids.has(diff.connections!.updated![0].connection.guid)).toBe(true);
-      expect(diff.connections!.updated![0].diff.u).toBe(3);
-      expect(diff.connections!.updated![0].diff.v).toBe(-1);
-      expect(diff.pieces).toBeUndefined();
+      expect(diff.connections).toBeUndefined();
+      expect(diff.pieces?.updated?.length).toBe(1);
+      expect(diff.pieces!.updated![0].piece.guid).toBe(pieceGuid);
+      const baseU = flatPiece.center?.u ?? 0;
+      const baseV = flatPiece.center?.v ?? 0;
+      expect(diff.pieces!.updated![0].diff.center?.u).toBeCloseTo(baseU + offset.u, 6);
+      expect(diff.pieces!.updated![0].diff.center?.v).toBeCloseTo(baseV + offset.v, 6);
     });
   });
 
@@ -14713,8 +14928,10 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     it("Nakagin t_f5 and br_sl0 internal connection stays identical to clipboard when pasting with coord", () => {
       const kit = MetabolismKit as unknown as Kit;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
-      const flatChange = flattenDesign(kit, design.guid);
-      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatChange.forward);
+      const flatOp = flattenDesign(kit, design.guid);
+      expect(flatOp.ok).toBe(true);
+      if (!flatOp.ok) return;
+      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.change.forward);
       const t5 = "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9";
       const br = "5feebbf8-33d9-41ad-a13a-24c271a1860b";
       const connInternal = "eb8ce9ce-091c-4495-a651-fa703748dfef";

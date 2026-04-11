@@ -37,15 +37,14 @@ export default defineConfig(async () => {
     },
     resolve: {
       dedupe: ["react", "react-dom", "use-sync-external-store"],
-      alias: {
-        "@semio/js": path.resolve(__dirname, "../js"),
-        "@semio/sketchpad": path.resolve(__dirname, "../sketchpad"),
-        "@semio/studio": path.resolve(__dirname, "../studio"),
-        "@semio/assets": path.resolve(__dirname, "../assets"),
-        // use-sync-external-store/shim is CJS (module.exports); Vite exposes it as ESM and breaks
-        // named imports. React 19 exports the same hook — use it instead (@xstate/react, zustand, …).
-        "use-sync-external-store/shim": "react",
-      },
+      // Rely on `use-sync-external-store` package.json `exports` for `./shim` and `./shim/with-selector`.
+      // Do not alias `…/shim` to a single `.js` file — Vite then resolves `…/shim/with-selector` as that file + suffix and breaks.
+      alias: [
+        { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
+        { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
+        { find: "@semio/studio", replacement: path.resolve(__dirname, "../studio") },
+        { find: "@semio/assets", replacement: path.resolve(__dirname, "../assets") },
+      ],
     },
     plugins: [
       tailwind.default(),

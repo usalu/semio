@@ -36,6 +36,29 @@ const __filename = fileURLToPath(import.meta.url);
  **/
 const __dirname = path.dirname(__filename);
 
+function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: any, res: any, next: any) => void) => void } }, fsMod: typeof import("fs")) {
+  const sketchpadPublicPath = path.resolve(__dirname, "public");
+  const assetsPath = path.resolve(__dirname, "../assets");
+  server.middlewares.use((req: any, res: any, next: any) => {
+    if (req.url?.endsWith(".wasm")) {
+      const wasmFile = path.join(sketchpadPublicPath, req.url);
+      if (fsMod.existsSync(wasmFile) && fsMod.statSync(wasmFile).isFile()) {
+        res.setHeader("Content-Type", "application/wasm");
+        fsMod.createReadStream(wasmFile).pipe(res);
+        return;
+      }
+    }
+    if (req.url?.startsWith("/assets/")) {
+      const filePath = path.join(assetsPath, req.url.replace("/assets/", ""));
+      if (fsMod.existsSync(filePath) && fsMod.statSync(filePath).isFile()) {
+        fsMod.createReadStream(filePath).pipe(res);
+        return;
+      }
+    }
+    next();
+  });
+}
+
 // Vite configuration with plugins, resolve aliases, and asset serving.
 // Export MUST call defineConfig with the complete build configuration.
 export default defineConfig(async () => {
@@ -68,26 +91,10 @@ export default defineConfig(async () => {
         name: "serve-wasm-and-assets",
         enforce: "pre" as const,
         configureServer(server: any) {
-          const sketchpadPublicPath = path.resolve(__dirname, "public");
-          const assetsPath = path.resolve(__dirname, "../assets");
-          server.middlewares.use((req: any, res: any, next: any) => {
-            if (req.url?.endsWith(".wasm")) {
-              const wasmFile = path.join(sketchpadPublicPath, req.url);
-              if (fs.existsSync(wasmFile) && fs.statSync(wasmFile).isFile()) {
-                res.setHeader("Content-Type", "application/wasm");
-                fs.createReadStream(wasmFile).pipe(res);
-                return;
-              }
-            }
-            if (req.url?.startsWith("/assets/")) {
-              const filePath = path.join(assetsPath, req.url.replace("/assets/", ""));
-              if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-                fs.createReadStream(filePath).pipe(res);
-                return;
-              }
-            }
-            next();
-          });
+          attachWasmAndAssetsMiddleware(server, fs);
+        },
+        configurePreviewServer(server: any) {
+          attachWasmAndAssetsMiddleware(server, fs);
         },
       },
     ],

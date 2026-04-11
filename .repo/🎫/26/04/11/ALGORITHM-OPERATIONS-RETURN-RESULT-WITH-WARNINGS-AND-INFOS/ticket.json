@@ -1,0 +1,9 @@
+{
+  "title": "Algorithm Operations Return Result With Warnings And Infos",
+  "status": "open",
+  "description": "Introduce OperationResult for semio algorithms; migrate flattenDesign, delete/copy paths, callers; clump fixed-piece warnings.",
+  "goal": "🎯semio",
+  "sessions": [
+    "⚪1faf6774ffbd4ab7929ab344b00c5c38"
+  ]
+}
