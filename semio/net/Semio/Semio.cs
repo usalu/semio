@@ -1,4 +1,4 @@
-#region 📱Header
+#region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,9 +6,11 @@
 
 // Core .NET library implementing the semio domain model and serialization.
 
-#endregion 📱Header
+#endregion 🧲Header
 
-#region ⌛Imports
+
+
+#region ⛩️Imports
 // Callers MUST import all required namespaces listed here.
 using System.Collections;
 using System.Collections.Immutable;
@@ -44,14 +46,11 @@ using SharpGLTF.Scenes;
 using GltfModel = SharpGLTF.Schema2.ModelRoot;
 using GltfNode = SharpGLTF.Schema2.Node;
 
-#endregion ⌛Imports
+#endregion ⛩️Imports
 
-#region ✨Namespace
-// Implementations MUST reside in this namespace.
-namespace Semio;
-#endregion ✨Namespace
 
-#region 🎠Constants
+
+#region 🎞️Constants
 // Consumers MUST use these shared constants for configuration.
 
 public static class Constants
@@ -110,9 +109,11 @@ public enum DiffStatus
     Modified
 }
 
-#endregion 🎠Constants
+#endregion 🎞️Constants
 
-#region 🎇Utility
+
+
+#region 📦Utilities
 // Callers MUST use these utility functions for encoding and serialization.
 
 public static class Utility
@@ -1463,7 +1464,16 @@ public class Expression
 
 #endregion ❄️Expressions
 
-#endregion 🎇Utility
+#endregion 📦Utilities
+
+
+
+#region 🏠Namespace
+// Implementations MUST reside in this namespace.
+namespace Semio;
+#endregion 🏠Namespace
+
+
 
 #region 🔓Entitying
 // Implementations MUST extend Entity for equality, validation, and diff support.
@@ -1523,6 +1533,10 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
     {
     }
 }
+
+#endregion 🔓Entitying
+
+
 
 #region ✨SemioValidation
 // Callers MUST use ValidationResult to report kit-level validation issues.
@@ -1804,6 +1818,8 @@ public static class SemioValidator
 
 #endregion ✨SemioValidation
 
+
+
 public class AttributeDiffUpdate
 {
     [JsonProperty("attribute")]
@@ -1976,7 +1992,7 @@ public class StatChange : Change<Stat, StatDiff> { }
 public class DesignChange : Change<Design, DesignDiff> { }
 public class KitChange : Change<Kit, KitDiff> { }
 
-#region 🧲Attribute
+#region 💎Attribute
 // Implementations MUST provide key-value metadata for annotating entities.
 
 public class AttributeId : Entity<AttributeId>
@@ -2102,9 +2118,11 @@ public class Attribute : Entity<Attribute>
     public override string ToString() => $"Atr({ToHumanIdString()})";
 }
 
-#endregion 🧲Attribute
+#endregion 💎Attribute
 
-#region 🌥️Coord
+
+
+#region 📺Coord
 // Implementations MUST share X, Y, Z coordinate fields for spatial types.
 
 public class Coord : Entity<Coord>
@@ -2119,9 +2137,11 @@ public class Coord : Entity<Coord>
     }
 }
 
-#endregion 🌥️Coord
+#endregion 📺Coord
 
-#region 🧩Point
+
+
+#region ✖️Point
 // Implementations MUST represent a 3D point with X, Y, Z coordinates.
 
 public class Point : Entity<Point>
@@ -2131,9 +2151,11 @@ public class Point : Entity<Point>
     public double Z { get; set; } = 0;
 }
 
-#endregion 🧩Point
+#endregion ✖️Point
 
-#region 🤖Vector
+
+
+#region ↗️Vector
 // Implementations MUST represent a 3D vector with X, Y, Z components.
 
 public class Vector : Entity<Vector>
@@ -2165,9 +2187,11 @@ public class Vector : Entity<Vector>
     }
 }
 
-#endregion 🤖Vector
+#endregion ↗️Vector
 
-#region 🌡️Plane
+
+
+#region ◻️Plane
 // Implementations MUST define a 3D plane by origin and X/Y direction vectors.
 
 public class Plane : Entity<Plane>
@@ -2198,9 +2222,11 @@ public class Plane : Entity<Plane>
     }
 }
 
-#endregion 🌡️Plane
+#endregion ◻️Plane
 
-#region ⏲️Location
+
+
+#region 📍Location
 // Implementations MUST combine a plane with rotation and elevation for placement.
 
 public class LocationId : Entity<LocationId>
@@ -2224,9 +2250,11 @@ public class Location : Entity<Location>
     public override string ToString() => $"Loc({ToHumanIdString()})";
 }
 
-#endregion ⏲️Location
+#endregion 📍Location
 
-#region 🤸Author
+
+
+#region ✍️Author
 // Implementations MUST provide author identity with name and contact.
 
 public class AuthorId : Entity<AuthorId>
@@ -2344,9 +2372,11 @@ public class AuthorsDiff : Entity<AuthorsDiff>
     public static implicit operator AuthorsDiff(List<Author> authors) => new() { Updated = authors.Select(a => new AuthorDiffUpdate { Author = a, Diff = (AuthorDiff)a }).ToList() };
 }
 
-#endregion 🤸Author
+#endregion ✍️Author
 
-#region 🪨File
+
+
+#region 📄File
 // Implementations MUST reference a file with URI, MIME type, and optional content.
 
 public class FileId : Entity<FileId>
@@ -2453,9 +2483,11 @@ public class File : Entity<File>
     public static implicit operator File(FileDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Remote = diff.Remote, Folder = diff.Folder, Size = diff.Size, Hash = diff.Hash, Blob = diff.Blob, CreatedAt = diff.CreatedAt ?? default, CreatedBy = diff.CreatedBy, UpdatedAt = diff.UpdatedAt ?? default, UpdatedBy = diff.UpdatedBy };
     public static implicit operator FileDiff(File file) => new() { Guid = file.Guid, Name = file.Name, Remote = file.Remote, Folder = file.Folder, Size = file.Size, Hash = file.Hash, Blob = file.Blob, CreatedAt = file.CreatedAt, CreatedBy = file.CreatedBy, UpdatedAt = file.UpdatedAt, UpdatedBy = file.UpdatedBy };
 }
-#endregion 🪨File
+#endregion 📄File
 
-#region 🪩Folder
+
+
+#region 📁Folder
 // Implementations MUST reference a folder with name and optional parent.
 
 public class FolderId : Entity<FolderId>
@@ -2565,9 +2597,11 @@ public class Folder : Entity<Folder>
     }
 }
 
-#endregion 🪩Folder
+#endregion 📁Folder
 
-#region 💾Benchmark
+
+
+#region 📏Benchmark
 // Implementations MUST capture benchmark metadata for performance measurement.
 
 public class BenchmarkId : Entity<BenchmarkId>
@@ -2625,7 +2659,9 @@ public class BenchmarkDiff : Entity<BenchmarkDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 💾Benchmark
+#endregion 📏Benchmark
+
+
 
 #region 🖨️QualityKind
 // Implementations MUST categorize quality metrics by kind.
@@ -2643,7 +2679,9 @@ public enum QualityKind
 
 #endregion 🖨️QualityKind
 
-#region 🎊Quality
+
+
+#region 🔬Quality
 // Implementations MUST combine kind, name, value, and unit for quality metrics.
 
 public class QualityId : Entity<QualityId>
@@ -2727,137 +2765,11 @@ public class Quality : Entity<Quality>
 
 }
 
-#endregion 🎊Quality
+#endregion 🔬Quality
 
-#region 🪄Tag
-// Implementations MUST provide lightweight labels for categorizing entities.
 
-public class TagId : Entity<TagId>
-{
-    public string Guid { get; set; } = "";
 
-    public static implicit operator TagId(Tag tag) => new() { Guid = tag.Guid };
-}
-
-public class Tag : Entity<Tag>
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public List<Attribute> Attributes { get; set; } = new();
-
-    public static implicit operator Tag(TagId id) => new() { Guid = id.Guid };
-
-    public static Tag Find(List<Tag> tags, string guid)
-    {
-        var tag = tags.FirstOrDefault(t => t.Guid == guid);
-        if (tag == null) throw new Exception($"Tag {guid} not found in tags");
-        return tag;
-    }
-}
-
-public class TagDiff : Entity<TagDiff>
-{
-    private readonly HashSet<string> _setProperties = new();
-    private string? _guid;
-    private string? _name;
-    private string? _description;
-    private string? _icon;
-    private AttributesDiff? _attributes;
-
-    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
-    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
-    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
-    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
-    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
-
-    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
-    public bool ShouldSerializeName() => _setProperties.Contains("Name");
-    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
-    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
-    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
-}
-
-public class TagsDiff : Entity<TagsDiff>
-{
-    public List<TagId> Removed { get; set; } = new();
-    public List<Tag> Added { get; set; } = new();
-    public List<TagDiffUpdate> Updated { get; set; } = new();
-}
-
-#endregion 🪄Tag
-
-#region 🎑Concept
-// Implementations MUST link a semantic concept name to description and icon.
-
-public class ConceptId : Entity<ConceptId>
-{
-    public string Guid { get; set; } = "";
-
-    public static implicit operator ConceptId(Concept concept) => new() { Guid = concept.Guid };
-}
-
-public class Concept : Entity<Concept>
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public List<Attribute> Attributes { get; set; } = new();
-
-    public static implicit operator Concept(ConceptId id) => new() { Guid = id.Guid };
-
-    public static Concept Find(List<Concept> concepts, string guid)
-    {
-        var concept = concepts.FirstOrDefault(c => c.Guid == guid);
-        if (concept == null) throw new Exception($"Concept {guid} not found in concepts");
-        return concept;
-    }
-}
-
-public class ConceptDiff : Entity<ConceptDiff>
-{
-    private readonly HashSet<string> _setProperties = new();
-    private string? _guid;
-    private string? _name;
-    private string? _description;
-    private string? _icon;
-    private AttributesDiff? _attributes;
-
-    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
-    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
-    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
-    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
-    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
-
-    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
-    public bool ShouldSerializeName() => _setProperties.Contains("Name");
-    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
-    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
-    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
-}
-
-public class ConceptsDiff : Entity<ConceptsDiff>
-{
-    public List<ConceptId> Removed { get; set; } = new();
-    public List<Concept> Added { get; set; } = new();
-    public List<ConceptDiffUpdate> Updated { get; set; } = new();
-
-    public ConceptsDiff MergeDiff(ConceptsDiff other)
-    {
-        return new ConceptsDiff
-        {
-            Removed = Removed.Concat(other.Removed).Distinct().ToList(),
-            Added = Added.Concat(other.Added).ToList(),
-            Updated = Updated.Concat(other.Updated).ToList()
-        };
-    }
-}
-
-#endregion 🎑Concept
-
-#region 🎀Port
+#region ⚓Port
 // Implementations MUST define connection ports as typed interfaces on a type.
 
 public class PortId : Entity<PortId>
@@ -2973,9 +2885,11 @@ public class Port : Entity<Port>
     }
 }
 
-#endregion 🎀Port
+#endregion ⚓Port
 
-#region 🎆Prop
+
+
+#region 📊Prop
 // Implementations MUST bind a property name to an expression value.
 
 public class PropId : Entity<PropId>
@@ -3022,9 +2936,143 @@ public class PropDiff : Entity<PropDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 🎆Prop
+#endregion 📊Prop
 
-#region 🧊Model
+
+
+#region 🏷️Tag
+// Implementations MUST provide lightweight labels for categorizing entities.
+
+public class TagId : Entity<TagId>
+{
+    public string Guid { get; set; } = "";
+
+    public static implicit operator TagId(Tag tag) => new() { Guid = tag.Guid };
+}
+
+public class Tag : Entity<Tag>
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator Tag(TagId id) => new() { Guid = id.Guid };
+
+    public static Tag Find(List<Tag> tags, string guid)
+    {
+        var tag = tags.FirstOrDefault(t => t.Guid == guid);
+        if (tag == null) throw new Exception($"Tag {guid} not found in tags");
+        return tag;
+    }
+}
+
+public class TagDiff : Entity<TagDiff>
+{
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private string? _icon;
+    private AttributesDiff? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
+}
+
+public class TagsDiff : Entity<TagsDiff>
+{
+    public List<TagId> Removed { get; set; } = new();
+    public List<Tag> Added { get; set; } = new();
+    public List<TagDiffUpdate> Updated { get; set; } = new();
+}
+
+#endregion 🏷️Tag
+
+
+
+#region 💡Concept
+// Implementations MUST link a semantic concept name to description and icon.
+
+public class ConceptId : Entity<ConceptId>
+{
+    public string Guid { get; set; } = "";
+
+    public static implicit operator ConceptId(Concept concept) => new() { Guid = concept.Guid };
+}
+
+public class Concept : Entity<Concept>
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator Concept(ConceptId id) => new() { Guid = id.Guid };
+
+    public static Concept Find(List<Concept> concepts, string guid)
+    {
+        var concept = concepts.FirstOrDefault(c => c.Guid == guid);
+        if (concept == null) throw new Exception($"Concept {guid} not found in concepts");
+        return concept;
+    }
+}
+
+public class ConceptDiff : Entity<ConceptDiff>
+{
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private string? _icon;
+    private AttributesDiff? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
+}
+
+public class ConceptsDiff : Entity<ConceptsDiff>
+{
+    public List<ConceptId> Removed { get; set; } = new();
+    public List<Concept> Added { get; set; } = new();
+    public List<ConceptDiffUpdate> Updated { get; set; } = new();
+
+    public ConceptsDiff MergeDiff(ConceptsDiff other)
+    {
+        return new ConceptsDiff
+        {
+            Removed = Removed.Concat(other.Removed).Distinct().ToList(),
+            Added = Added.Concat(other.Added).ToList(),
+            Updated = Updated.Concat(other.Updated).ToList()
+        };
+    }
+}
+
+#endregion 💡Concept
+
+
+
+#region 🗿Model
 // Implementations MUST reference a 3D model with URI, MIME type, and local plane.
 
 public class ModelId : Entity<ModelId>
@@ -3178,9 +3226,11 @@ public class Model : Entity<Model>
     }
 }
 
-#endregion 🧊Model
+#endregion 🗿Model
 
-#region 🦀Connector
+
+
+#region 🔌Connector
 // Implementations MUST define located interface points on a type.
 
 public class ConnectorId : Entity<ConnectorId>
@@ -3465,9 +3515,11 @@ public class Connector : Entity<Connector>
     }
 }
 
-#endregion 🦀Connector
+#endregion 🔌Connector
 
-#region 🐘Type
+
+
+#region 🧱Type
 // Implementations MUST compose ports, connectors, and models into a parametric type.
 
 public class TypeId : Entity<TypeId>
@@ -3844,9 +3896,11 @@ public class Type : Entity<Type>
     }
 }
 
-#endregion 🐘Type
+#endregion 🧱Type
 
-#region ⏳Layer
+
+
+#region 🎨Layer
 // Implementations MUST organize pieces into named layers within a design.
 
 public class LayerId : Entity<LayerId>
@@ -3901,62 +3955,11 @@ public class LayerDiff : Entity<LayerDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion ⏳Layer
+#endregion 🎨Layer
 
-#region 🔍Group
-// Implementations MUST group pieces by name within a design.
 
-public class GroupId : Entity<GroupId>
-{
-    public string Guid { get; set; } = "";
-    public static implicit operator GroupId(Group group) => new() { Guid = group.Guid };
-    public string ToIdString() => $"{Guid}";
-    public string ToHumanIdString() => $"{ToIdString()}";
-    public override string ToString() => $"GrpI({ToHumanIdString()})";
-}
 
-public class Group : Entity<Group>
-{
-    public string Guid { get; set; } = "";
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public List<PieceId> Pieces { get; set; } = new();
-    public string? Color { get; set; }
-    public List<Attribute> Attributes { get; set; } = new();
-
-    public string ToIdString() => $"{Guid}";
-    public string ToHumanIdString() => $"{Name ?? Guid}";
-    public override string ToString() => $"Grp({ToHumanIdString()})";
-}
-
-public class GroupDiff : Entity<GroupDiff>
-{
-    private readonly HashSet<string> _setProperties = new();
-    private string? _guid;
-    private string? _name;
-    private string? _description;
-    private List<PieceId>? _pieces;
-    private string? _color;
-    private AttributesDiff? _attributes;
-
-    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
-    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
-    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
-    public List<PieceId>? Pieces { get => _pieces; set { _pieces = value; _setProperties.Add("Pieces"); } }
-    public string? Color { get => _color; set { _color = value; _setProperties.Add("Color"); } }
-    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
-
-    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
-    public bool ShouldSerializeName() => _setProperties.Contains("Name");
-    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
-    public bool ShouldSerializePieces() => _setProperties.Contains("Pieces");
-    public bool ShouldSerializeColor() => _setProperties.Contains("Color");
-    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
-}
-
-#endregion 🔍Group
-
-#region 🎈Piece
+#region 🧩Piece
 // Implementations MUST place an instantiated type within a design hierarchy.
 
 public class PieceId : Entity<PieceId>
@@ -4120,8 +4123,65 @@ public class Piece : Entity<Piece>
     }
 }
 
-#endregion 🎈Piece
-#region 🎺Side
+#endregion 🧩Piece
+
+
+
+#region 👥Group
+// Implementations MUST group pieces by name within a design.
+
+public class GroupId : Entity<GroupId>
+{
+    public string Guid { get; set; } = "";
+    public static implicit operator GroupId(Group group) => new() { Guid = group.Guid };
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"GrpI({ToHumanIdString()})";
+}
+
+public class Group : Entity<Group>
+{
+    public string Guid { get; set; } = "";
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public List<PieceId> Pieces { get; set; } = new();
+    public string? Color { get; set; }
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{Name ?? Guid}";
+    public override string ToString() => $"Grp({ToHumanIdString()})";
+}
+
+public class GroupDiff : Entity<GroupDiff>
+{
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private List<PieceId>? _pieces;
+    private string? _color;
+    private AttributesDiff? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public List<PieceId>? Pieces { get => _pieces; set { _pieces = value; _setProperties.Add("Pieces"); } }
+    public string? Color { get => _color; set { _color = value; _setProperties.Add("Color"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializePieces() => _setProperties.Contains("Pieces");
+    public bool ShouldSerializeColor() => _setProperties.Contains("Color");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
+}
+
+#endregion 👥Group
+
+
+#region ↔️Side
 // Implementations MUST reference a piece and connector as a connection endpoint.
 
 public class SideDiff : Entity<SideDiff>
@@ -4215,9 +4275,11 @@ public class Side : Entity<Side>
     public override string ToString() => $"Sde({Piece.Guid}" + (Connector.Guid != "" ? ":" + Connector.Guid : "") + ")";
 }
 
-#endregion 🎺Side
+#endregion ↔️Side
 
-#region 💡Connection
+
+
+#region 🔗Connection
 // Implementations MUST link two sides to connect pieces in a design.
 
 public class ConnectionId : Entity<ConnectionId>
@@ -4492,9 +4554,11 @@ public class Connection : Entity<Connection>
     }
 }
 
-#endregion 💡Connection
+#endregion 🔗Connection
 
-#region 🪵Stat
+
+
+#region 📈Stat
 // Implementations MUST associate statistical metrics with a design.
 
 public class StatId : Entity<StatId>
@@ -4549,9 +4613,11 @@ public class StatDiff : Entity<StatDiff>
     public bool ShouldSerializeMaxExcluded() => _setProperties.Contains("MaxExcluded");
 }
 
-#endregion 🪵Stat
+#endregion 📈Stat
 
-#region 🧬Design
+
+
+#region 📐Design
 // Implementations MUST compose pieces, connections, and metadata into a layout.
 
 public class DesignsDiff : Entity<DesignsDiff>
@@ -6598,12 +6664,14 @@ text {
     }
 }
 
-#endregion 🧬Design
+#endregion 📐Design
 
-#region 🧳Kit
+
+
+#region ⏱️Kit
 // Implementations MUST collect types and designs into a reusable library.
 
-#region 💧KitKind
+#region 🧬KitKind
 // KitKind discriminates the five persistence/transport forms of a Kit.
 
 /// <summary>
@@ -6639,7 +6707,7 @@ public static class KitKinds
     public static readonly KitKind[] All = (KitKind[])Enum.GetValues(typeof(KitKind));
 }
 
-#endregion 💧KitKind
+#endregion 🧬KitKind
 
 public class KitDiff : Entity<KitDiff>
 {
@@ -7240,7 +7308,7 @@ public class Kit : Entity<Kit>
 
     #endregion 📻Design Family Helpers
 
-    #region ⛅Type Family Helpers
+    #region 🧊Type Family Helpers
     // Callers MUST use these helpers to traverse type parent-child hierarchies.
 
     public static Type FindTypeByGuid(Kit kit, string typeGuid)
@@ -7286,9 +7354,9 @@ public class Kit : Entity<Kit>
         return primitiveA.Guid == primitiveB.Guid;
     }
 
-    #endregion ⛅Type Family Helpers
+    #endregion 🧊Type Family Helpers
 
-    #region 📯Kit Finders
+    #region 🔍Kit Finders
     // Callers MUST use these methods to locate entities within a kit by GUID.
 
     public static File FindFile(Kit kit, string fileGuid)
@@ -7491,7 +7559,7 @@ public class Kit : Entity<Kit>
         return sum;
     }
 
-    #endregion 📯Kit Finders
+    #endregion 🔍Kit Finders
 
     #region 🎠Filter
     // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
@@ -7717,7 +7785,7 @@ public class Kit : Entity<Kit>
 
     #endregion 🎠Filter
 
-    #region 🕸️Flatten Design
+    #region 🌤️Flatten Design
     // Callers MUST use FlattenDesign to compute a DesignDiff that assigns world-space planes to all pieces.
 
     public static DesignDiff FlattenDesign(Kit kit, string designId)
@@ -8015,9 +8083,9 @@ public class Kit : Entity<Kit>
         };
     }
 
-    #endregion 🕸️Flatten Design
+    #endregion 🌤️Flatten Design
 
-    #region 📡Kit Model Export
+    #region 🔩Kit Model Export
     // Callers MUST use ExportDesignModel to produce a valid 3D file from a design.
     // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
     // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
@@ -8233,7 +8301,7 @@ public class Kit : Entity<Kit>
         return ExportSceneBuilderToFormat(sceneBuilder, format);
     }
 
-    #region 🔩Kit Model Export Helpers
+    #region 🔧Kit Model Export Helpers
 
     private static System.Numerics.Matrix4x4 ExportPlaneToMatrix4x4(Plane p)
     {
@@ -8463,7 +8531,7 @@ public class Kit : Entity<Kit>
         }
     }
 
-    #region ⏱️Geometric Insights
+    #region ❄️Geometric Insights
     // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
     /// <summary>🔷Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).</summary>
@@ -8604,7 +8672,7 @@ public class Kit : Entity<Kit>
         return out_;
     }
 
-    #endregion ⏱️Geometric Insights
+    #endregion ❄️Geometric Insights
 
     private static byte[] ExportModelRootToObj(GltfModel model)
     {
@@ -8749,14 +8817,668 @@ public class Kit : Entity<Kit>
             ExportNodeToStlTriangles(child, worldMatrix, triangles);
     }
 
-    #endregion 🔩Kit Model Export Helpers
+    #endregion 🔧Kit Model Export Helpers
 
-    #endregion 📡Kit Model Export
+    #endregion 🔩Kit Model Export
 }
 
-#endregion 🧳Kit
+#endregion ⏱️Kit
 
-#region 🎬Hash
+
+
+#region 🔑Meta And Shallow
+// Meta classes strip List<> and heavy blob properties. Shallow classes replace List<> properties with Meta item lists.
+
+#region 🎼Sub-entity Meta
+
+public class AttributeMeta
+{
+    public string Guid { get; set; } = "";
+    public string Key { get; set; } = "";
+    public string Value { get; set; } = "";
+    public string Definition { get; set; } = "";
+}
+
+public class PropMeta
+{
+    public string Guid { get; set; } = "";
+    public QualityId Quality { get; set; } = new();
+    public string Value { get; set; } = "";
+    public string? Unit { get; set; }
+}
+
+public class TagMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+}
+
+public class ConceptMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+}
+
+public class AuthorMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Email { get; set; } = "";
+}
+
+public class FileMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Remote { get; set; }
+    public FolderId? Folder { get; set; }
+    public int? Size { get; set; }
+    public string? Hash { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public string? UpdatedBy { get; set; }
+}
+
+public class FolderMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public FolderId? Parent { get; set; }
+    public string? Description { get; set; }
+    public string CreatedAt { get; set; } = "";
+    public string? CreatedBy { get; set; }
+    public string UpdatedAt { get; set; } = "";
+    public string? UpdatedBy { get; set; }
+}
+
+public class QualityMeta
+{
+    public string Guid { get; set; } = "";
+    public string Key { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Uri { get; set; }
+    public string? Folder { get; set; }
+    public bool? Scalable { get; set; }
+    public QualityKind Kind { get; set; } = QualityKind.General;
+    public string? SI { get; set; }
+    public string? Imperial { get; set; }
+    public double? Min { get; set; }
+    public bool? MinExcluded { get; set; }
+    public double? Max { get; set; }
+    public bool? MaxExcluded { get; set; }
+    public double? Default { get; set; }
+    public string? Formula { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public string? Unit { get; set; }
+}
+
+public class PortMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public int? MaxChildren { get; set; }
+}
+
+public class ModelMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public FileId File { get; set; } = new();
+    public string? Description { get; set; }
+}
+
+public class ConnectorMeta
+{
+    public string Guid { get; set; } = "";
+    public string? Name { get; set; }
+    public double T { get; set; } = 0;
+    public Point? Point { get; set; }
+    public Vector? Direction { get; set; }
+    public string? Description { get; set; }
+    public PortId? Port { get; set; }
+    public bool? Mandatory { get; set; }
+    public int? MaxChildren { get; set; }
+}
+
+public class LayerMeta
+{
+    public string Guid { get; set; } = "";
+    public string Path { get; set; } = "";
+    public bool IsHidden { get; set; } = false;
+    public bool IsLocked { get; set; } = false;
+    public string Color { get; set; } = "";
+    public string? Description { get; set; }
+}
+
+public class PieceMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public TypeId? Type { get; set; }
+    public DesignId? Design { get; set; }
+    public Plane? Plane { get; set; }
+    public Coord? Center { get; set; }
+    public double? Scale { get; set; }
+    public Plane? MirrorPlane { get; set; }
+    public bool? IsHidden { get; set; }
+    public bool? IsLocked { get; set; }
+    public string? Color { get; set; }
+}
+
+public class GroupMeta
+{
+    public string Guid { get; set; } = "";
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public string? Color { get; set; }
+}
+
+public class ConnectionMeta
+{
+    public string Guid { get; set; } = "";
+    public Side Connected { get; set; } = new();
+    public Side Connecting { get; set; } = new();
+    public string? Description { get; set; }
+    public double Gap { get; set; } = 0;
+    public double Shift { get; set; } = 0;
+    public double Rise { get; set; } = 0;
+    public double Rotation { get; set; } = 0;
+    public double Turn { get; set; } = 0;
+    public double Tilt { get; set; } = 0;
+    public double? U { get; set; }
+    public double? V { get; set; }
+}
+
+public class StatMeta
+{
+    public string Guid { get; set; } = "";
+    public QualityId Quality { get; set; } = new();
+    public string? Unit { get; set; }
+    public double? Min { get; set; }
+    public bool? MinExcluded { get; set; }
+    public double? Max { get; set; }
+    public bool? MaxExcluded { get; set; }
+}
+
+#endregion 🎼Sub-entity Meta
+
+#region 🪁TypeMetaShallow
+
+public class TypeMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public TypeId? Parent { get; set; }
+    public bool? IsAbstract { get; set; }
+    public string? Folder { get; set; }
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public int? Stock { get; set; }
+    public bool? Virtual { get; set; }
+    public string? Uri { get; set; }
+    public Location? Location { get; set; }
+    public string? Unit { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class TypeShallow
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public TypeId? Parent { get; set; }
+    public bool? IsAbstract { get; set; }
+    public string? Folder { get; set; }
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public int? Stock { get; set; }
+    public bool? Virtual { get; set; }
+    public string? Uri { get; set; }
+    public Location? Location { get; set; }
+    public string? Unit { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public List<ModelMeta> Models { get; set; } = new();
+    public List<ConnectorMeta> Connectors { get; set; } = new();
+    public List<PropMeta> Props { get; set; } = new();
+    public List<AuthorId> Authors { get; set; } = new();
+    public List<ConceptId> Concepts { get; set; } = new();
+    public List<AttributeMeta> Attributes { get; set; } = new();
+}
+
+#endregion 🪁TypeMetaShallow
+
+#region ✨DesignMetaShallow
+
+public class DesignMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public DesignId? Parent { get; set; }
+    public bool? IsAbstract { get; set; }
+    public string? Folder { get; set; }
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public Location? Location { get; set; }
+    public string Unit { get; set; } = "";
+    public bool? CanScale { get; set; }
+    public bool? CanMirror { get; set; }
+    public LayerId? ActiveLayer { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class DesignShallow
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public DesignId? Parent { get; set; }
+    public bool? IsAbstract { get; set; }
+    public string? Folder { get; set; }
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public Location? Location { get; set; }
+    public string Unit { get; set; } = "";
+    public bool? CanScale { get; set; }
+    public bool? CanMirror { get; set; }
+    public LayerId? ActiveLayer { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public List<PieceMeta> Pieces { get; set; } = new();
+    public List<ConnectionMeta> Connections { get; set; } = new();
+    public List<StatMeta> Stats { get; set; } = new();
+    public List<PropMeta> Props { get; set; } = new();
+    public List<LayerMeta> Layers { get; set; } = new();
+    public List<GroupMeta> Groups { get; set; } = new();
+    public List<AttributeMeta> Attributes { get; set; } = new();
+    public List<AuthorId> Authors { get; set; } = new();
+    public List<ConceptId> Concepts { get; set; } = new();
+}
+
+#endregion ✨DesignMetaShallow
+
+#region 🏗️KitMetaShallow
+
+public class KitMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Version { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public string Remote { get; set; } = "";
+    public string Homepage { get; set; } = "";
+    public string License { get; set; } = "";
+    public string Preview { get; set; } = "";
+    public string CreatedAt { get; set; } = "";
+    public string UpdatedAt { get; set; } = "";
+}
+
+public class KitShallow
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Version { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public string Remote { get; set; } = "";
+    public string Homepage { get; set; } = "";
+    public string License { get; set; } = "";
+    public string Preview { get; set; } = "";
+    public string CreatedAt { get; set; } = "";
+    public string UpdatedAt { get; set; } = "";
+    public List<TypeMeta> Types { get; set; } = new();
+    public List<DesignMeta> Designs { get; set; } = new();
+    public List<TagMeta> Tags { get; set; } = new();
+    public List<ConceptMeta> Concepts { get; set; } = new();
+    public List<PortMeta> Ports { get; set; } = new();
+    public List<QualityMeta> Qualities { get; set; } = new();
+    public List<FileMeta> Files { get; set; } = new();
+    public List<FolderMeta> Folders { get; set; } = new();
+    public List<AuthorMeta> Authors { get; set; } = new();
+    public List<AttributeMeta> Attributes { get; set; } = new();
+}
+
+#endregion 🏗️KitMetaShallow
+
+#region 📎Meta And Shallow Conversions
+
+public static class MetaShallowConversions
+{
+    public static AttributeMeta ToMeta(this Attribute a) => new()
+    {
+        Guid = a.Guid,
+        Key = a.Key,
+        Value = a.Value,
+        Definition = a.Definition
+    };
+
+    public static PropMeta ToMeta(this Prop p) => new()
+    {
+        Guid = p.Guid,
+        Quality = p.Quality,
+        Value = p.Value,
+        Unit = p.Unit
+    };
+
+    public static TagMeta ToMeta(this Tag t) => new()
+    {
+        Guid = t.Guid,
+        Name = t.Name,
+        Description = t.Description,
+        Icon = t.Icon
+    };
+
+    public static ConceptMeta ToMeta(this Concept c) => new()
+    {
+        Guid = c.Guid,
+        Name = c.Name,
+        Description = c.Description,
+        Icon = c.Icon
+    };
+
+    public static AuthorMeta ToMeta(this Author a) => new()
+    {
+        Guid = a.Guid,
+        Name = a.Name,
+        Email = a.Email
+    };
+
+    public static FileMeta ToMeta(this File f) => new()
+    {
+        Guid = f.Guid,
+        Name = f.Name,
+        Remote = f.Remote,
+        Folder = f.Folder,
+        Size = f.Size,
+        Hash = f.Hash,
+        CreatedAt = f.CreatedAt,
+        CreatedBy = f.CreatedBy,
+        UpdatedAt = f.UpdatedAt,
+        UpdatedBy = f.UpdatedBy
+    };
+
+    public static FolderMeta ToMeta(this Folder f) => new()
+    {
+        Guid = f.Guid,
+        Name = f.Name,
+        Parent = f.Parent,
+        Description = f.Description,
+        CreatedAt = f.CreatedAt,
+        CreatedBy = f.CreatedBy,
+        UpdatedAt = f.UpdatedAt,
+        UpdatedBy = f.UpdatedBy
+    };
+
+    public static QualityMeta ToMeta(this Quality q) => new()
+    {
+        Guid = q.Guid,
+        Key = q.Key,
+        Name = q.Name,
+        Description = q.Description,
+        Uri = q.Uri,
+        Folder = q.Folder,
+        Scalable = q.Scalable,
+        Kind = q.Kind,
+        SI = q.SI,
+        Imperial = q.Imperial,
+        Min = q.Min,
+        MinExcluded = q.MinExcluded,
+        Max = q.Max,
+        MaxExcluded = q.MaxExcluded,
+        Default = q.Default,
+        Formula = q.Formula,
+        Icon = q.Icon,
+        Image = q.Image,
+        Unit = q.Unit
+    };
+
+    public static PortMeta ToMeta(this Port p) => new()
+    {
+        Guid = p.Guid,
+        Name = p.Name,
+        Description = p.Description,
+        Icon = p.Icon
+    };
+
+    public static ModelMeta ToMeta(this Model m) => new()
+    {
+        Guid = m.Guid,
+        Name = m.Name,
+        File = m.File,
+        Description = m.Description
+    };
+
+    public static ConnectorMeta ToMeta(this Connector c) => new()
+    {
+        Guid = c.Guid,
+        Name = c.Name,
+        T = c.T,
+        Point = c.Point,
+        Direction = c.Direction,
+        Description = c.Description,
+        Port = c.Port,
+        Mandatory = c.Mandatory
+    };
+
+    public static LayerMeta ToMeta(this Layer l) => new()
+    {
+        Guid = l.Guid,
+        Path = l.Path,
+        IsHidden = l.IsHidden ?? false,
+        IsLocked = l.IsLocked ?? false,
+        Color = l.Color ?? "",
+        Description = l.Description
+    };
+
+    public static PieceMeta ToMeta(this Piece p) => new()
+    {
+        Guid = p.Guid,
+        Name = p.Name,
+        Description = p.Description,
+        Type = p.Type,
+        Design = p.Design,
+        Plane = p.Plane,
+        Center = p.Center,
+        Scale = p.Scale,
+        MirrorPlane = p.MirrorPlane,
+        IsHidden = p.IsHidden,
+        IsLocked = p.IsLocked,
+        Color = p.Color
+    };
+
+    public static GroupMeta ToMeta(this Group g) => new()
+    {
+        Guid = g.Guid,
+        Name = g.Name,
+        Description = g.Description,
+        Color = g.Color
+    };
+
+    public static ConnectionMeta ToMeta(this Connection c) => new()
+    {
+        Guid = c.Guid,
+        Connected = c.Connected,
+        Connecting = c.Connecting,
+        Description = c.Description,
+        Gap = c.Gap,
+        Shift = c.Shift,
+        Rise = c.Rise,
+        Rotation = c.Rotation,
+        Turn = c.Turn,
+        Tilt = c.Tilt,
+        U = c.U,
+        V = c.V
+    };
+
+    public static StatMeta ToMeta(this Stat s) => new()
+    {
+        Guid = s.Guid,
+        Quality = s.Quality,
+        Unit = s.Unit,
+        Min = s.Min,
+        MinExcluded = s.MinExcluded,
+        Max = s.Max,
+        MaxExcluded = s.MaxExcluded
+    };
+
+    public static TypeMeta ToMeta(this Type t) => new()
+    {
+        Guid = t.Guid,
+        Name = t.Name,
+        Parent = t.Parent,
+        IsAbstract = t.IsAbstract,
+        Folder = t.Folder,
+        Description = t.Description,
+        Icon = t.Icon,
+        Image = t.Image,
+        Stock = t.Stock,
+        Virtual = t.Virtual,
+        Uri = t.Uri,
+        Location = t.Location,
+        Unit = t.Unit,
+        CreatedAt = t.CreatedAt,
+        UpdatedAt = t.UpdatedAt
+    };
+
+    public static TypeShallow ToShallow(this Type t) => new()
+    {
+        Guid = t.Guid,
+        Name = t.Name,
+        Parent = t.Parent,
+        IsAbstract = t.IsAbstract,
+        Folder = t.Folder,
+        Description = t.Description,
+        Icon = t.Icon,
+        Image = t.Image,
+        Stock = t.Stock,
+        Virtual = t.Virtual,
+        Uri = t.Uri,
+        Location = t.Location,
+        Unit = t.Unit,
+        CreatedAt = t.CreatedAt,
+        UpdatedAt = t.UpdatedAt,
+        Models = t.Models.Select(m => m.ToMeta()).ToList(),
+        Connectors = t.Connectors.Select(c => c.ToMeta()).ToList(),
+        Props = t.Props.Select(p => p.ToMeta()).ToList(),
+        Authors = t.Authors,
+        Concepts = t.Concepts,
+        Attributes = t.Attributes.Select(a => a.ToMeta()).ToList()
+    };
+
+    public static DesignMeta ToMeta(this Design d) => new()
+    {
+        Guid = d.Guid,
+        Name = d.Name,
+        Parent = d.Parent,
+        IsAbstract = d.IsAbstract,
+        Folder = d.Folder,
+        Description = d.Description,
+        Icon = d.Icon,
+        Image = d.Image,
+        Location = d.Location,
+        Unit = d.Unit,
+        CanScale = d.CanScale,
+        CanMirror = d.CanMirror,
+        ActiveLayer = d.ActiveLayer,
+        CreatedAt = d.CreatedAt,
+        UpdatedAt = d.UpdatedAt
+    };
+
+    public static DesignShallow ToShallow(this Design d) => new()
+    {
+        Guid = d.Guid,
+        Name = d.Name,
+        Parent = d.Parent,
+        IsAbstract = d.IsAbstract,
+        Folder = d.Folder,
+        Description = d.Description,
+        Icon = d.Icon,
+        Image = d.Image,
+        Location = d.Location,
+        Unit = d.Unit,
+        CanScale = d.CanScale,
+        CanMirror = d.CanMirror,
+        ActiveLayer = d.ActiveLayer,
+        CreatedAt = d.CreatedAt,
+        UpdatedAt = d.UpdatedAt,
+        Pieces = d.Pieces.Select(p => p.ToMeta()).ToList(),
+        Connections = d.Connections.Select(c => c.ToMeta()).ToList(),
+        Stats = d.Stats.Select(s => s.ToMeta()).ToList(),
+        Props = d.Props.Select(p => p.ToMeta()).ToList(),
+        Layers = d.Layers.Select(l => l.ToMeta()).ToList(),
+        Groups = d.Groups.Select(g => g.ToMeta()).ToList(),
+        Attributes = d.Attributes.Select(a => a.ToMeta()).ToList(),
+        Authors = d.Authors,
+        Concepts = d.Concepts
+    };
+
+    public static KitMeta ToMeta(this Kit k) => new()
+    {
+        Guid = k.Guid,
+        Name = k.Name,
+        Version = k.Version,
+        Description = k.Description,
+        Icon = k.Icon,
+        Image = k.Image,
+        Remote = k.Remote,
+        Homepage = k.Homepage,
+        License = k.License,
+        Preview = k.Preview,
+        CreatedAt = k.CreatedAt,
+        UpdatedAt = k.UpdatedAt
+    };
+
+    public static KitShallow ToShallow(this Kit k) => new()
+    {
+        Guid = k.Guid,
+        Name = k.Name,
+        Version = k.Version,
+        Description = k.Description,
+        Icon = k.Icon,
+        Image = k.Image,
+        Remote = k.Remote,
+        Homepage = k.Homepage,
+        License = k.License,
+        Preview = k.Preview,
+        CreatedAt = k.CreatedAt,
+        UpdatedAt = k.UpdatedAt,
+        Types = k.Types.Select(t => t.ToMeta()).ToList(),
+        Designs = k.Designs.Select(d => d.ToMeta()).ToList(),
+        Tags = k.Tags.Select(t => t.ToMeta()).ToList(),
+        Concepts = k.Concepts.Select(c => c.ToMeta()).ToList(),
+        Ports = k.Ports.Select(p => p.ToMeta()).ToList(),
+        Qualities = k.Qualities.Select(q => q.ToMeta()).ToList(),
+        Files = k.Files.Select(f => f.ToMeta()).ToList(),
+        Folders = k.Folders.Select(f => f.ToMeta()).ToList(),
+        Authors = k.Authors.Select(a => a.ToMeta()).ToList(),
+        Attributes = k.Attributes.Select(a => a.ToMeta()).ToList()
+    };
+}
+
+#endregion 📎Meta And Shallow Conversions
+
+#endregion 🔑Meta And Shallow
+
+
+
+#region 🖥️Hash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
 // SHA-256 hex digest. Collections are hashed by sorting child hashes alphabetically.
 // Field order is alphabetical by JSON field name. Missing/null/empty fields are skipped.
@@ -10884,657 +11606,33 @@ public static class Hashing
     // #endregion 🔗Hash Diffs
 }
 
-#endregion 🎬Hash
+#endregion 🖥️Hash
 
-#region 🔑MetaShallow
-// Meta classes strip List<> and heavy blob properties. Shallow classes replace List<> properties with Meta item lists.
 
-#region 🔷SubEntityMeta
 
-public class AttributeMeta
+#region 📦Kit Diff Validation
+
+public sealed class KitDiffValidationNote
 {
-    public string Guid { get; set; } = "";
-    public string Key { get; set; } = "";
-    public string Value { get; set; } = "";
-    public string Definition { get; set; } = "";
+    [JsonProperty("code", NullValueHandling = NullValueHandling.Ignore)]
+    public string? Code { get; set; }
+    [JsonProperty("message")]
+    public string Message { get; set; } = "";
 }
 
-public class PropMeta
+public sealed class KitDiffValidationResult
 {
-    public string Guid { get; set; } = "";
-    public QualityId Quality { get; set; } = new();
-    public string Value { get; set; } = "";
-    public string? Unit { get; set; }
+    [JsonProperty("ok")]
+    public bool Ok { get; set; }
+    public List<KitDiffValidationNote> Errors { get; set; } = new();
+    public List<KitDiffValidationNote> Warnings { get; set; } = new();
+    [JsonProperty("diff", NullValueHandling = NullValueHandling.Ignore)]
+    public KitDiff? Diff { get; set; }
 }
 
-public class TagMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-}
+#endregion 📦Kit Diff Validation
 
-public class ConceptMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-}
 
-public class AuthorMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Email { get; set; } = "";
-}
-
-public class FileMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Remote { get; set; }
-    public FolderId? Folder { get; set; }
-    public int? Size { get; set; }
-    public string? Hash { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public string? CreatedBy { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public string? UpdatedBy { get; set; }
-}
-
-public class FolderMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public FolderId? Parent { get; set; }
-    public string? Description { get; set; }
-    public string CreatedAt { get; set; } = "";
-    public string? CreatedBy { get; set; }
-    public string UpdatedAt { get; set; } = "";
-    public string? UpdatedBy { get; set; }
-}
-
-public class QualityMeta
-{
-    public string Guid { get; set; } = "";
-    public string Key { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Uri { get; set; }
-    public string? Folder { get; set; }
-    public bool? Scalable { get; set; }
-    public QualityKind Kind { get; set; } = QualityKind.General;
-    public string? SI { get; set; }
-    public string? Imperial { get; set; }
-    public double? Min { get; set; }
-    public bool? MinExcluded { get; set; }
-    public double? Max { get; set; }
-    public bool? MaxExcluded { get; set; }
-    public double? Default { get; set; }
-    public string? Formula { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public string? Unit { get; set; }
-}
-
-public class PortMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public int? MaxChildren { get; set; }
-}
-
-public class ModelMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public FileId File { get; set; } = new();
-    public string? Description { get; set; }
-}
-
-public class ConnectorMeta
-{
-    public string Guid { get; set; } = "";
-    public string? Name { get; set; }
-    public double T { get; set; } = 0;
-    public Point? Point { get; set; }
-    public Vector? Direction { get; set; }
-    public string? Description { get; set; }
-    public PortId? Port { get; set; }
-    public bool? Mandatory { get; set; }
-    public int? MaxChildren { get; set; }
-}
-
-public class LayerMeta
-{
-    public string Guid { get; set; } = "";
-    public string Path { get; set; } = "";
-    public bool IsHidden { get; set; } = false;
-    public bool IsLocked { get; set; } = false;
-    public string Color { get; set; } = "";
-    public string? Description { get; set; }
-}
-
-public class PieceMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public TypeId? Type { get; set; }
-    public DesignId? Design { get; set; }
-    public Plane? Plane { get; set; }
-    public Coord? Center { get; set; }
-    public double? Scale { get; set; }
-    public Plane? MirrorPlane { get; set; }
-    public bool? IsHidden { get; set; }
-    public bool? IsLocked { get; set; }
-    public string? Color { get; set; }
-}
-
-public class GroupMeta
-{
-    public string Guid { get; set; } = "";
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? Color { get; set; }
-}
-
-public class ConnectionMeta
-{
-    public string Guid { get; set; } = "";
-    public Side Connected { get; set; } = new();
-    public Side Connecting { get; set; } = new();
-    public string? Description { get; set; }
-    public double Gap { get; set; } = 0;
-    public double Shift { get; set; } = 0;
-    public double Rise { get; set; } = 0;
-    public double Rotation { get; set; } = 0;
-    public double Turn { get; set; } = 0;
-    public double Tilt { get; set; } = 0;
-    public double? U { get; set; }
-    public double? V { get; set; }
-}
-
-public class StatMeta
-{
-    public string Guid { get; set; } = "";
-    public QualityId Quality { get; set; } = new();
-    public string? Unit { get; set; }
-    public double? Min { get; set; }
-    public bool? MinExcluded { get; set; }
-    public double? Max { get; set; }
-    public bool? MaxExcluded { get; set; }
-}
-
-#endregion 🔷SubEntityMeta
-
-#region 🪁TypeMetaShallow
-
-public class TypeMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public TypeId? Parent { get; set; }
-    public bool? IsAbstract { get; set; }
-    public string? Folder { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public int? Stock { get; set; }
-    public bool? Virtual { get; set; }
-    public string? Uri { get; set; }
-    public Location? Location { get; set; }
-    public string? Unit { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-}
-
-public class TypeShallow
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public TypeId? Parent { get; set; }
-    public bool? IsAbstract { get; set; }
-    public string? Folder { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public int? Stock { get; set; }
-    public bool? Virtual { get; set; }
-    public string? Uri { get; set; }
-    public Location? Location { get; set; }
-    public string? Unit { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public List<ModelMeta> Models { get; set; } = new();
-    public List<ConnectorMeta> Connectors { get; set; } = new();
-    public List<PropMeta> Props { get; set; } = new();
-    public List<AuthorId> Authors { get; set; } = new();
-    public List<ConceptId> Concepts { get; set; } = new();
-    public List<AttributeMeta> Attributes { get; set; } = new();
-}
-
-#endregion 🪁TypeMetaShallow
-
-#region ✨DesignMetaShallow
-
-public class DesignMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public DesignId? Parent { get; set; }
-    public bool? IsAbstract { get; set; }
-    public string? Folder { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public Location? Location { get; set; }
-    public string Unit { get; set; } = "";
-    public bool? CanScale { get; set; }
-    public bool? CanMirror { get; set; }
-    public LayerId? ActiveLayer { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-}
-
-public class DesignShallow
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public DesignId? Parent { get; set; }
-    public bool? IsAbstract { get; set; }
-    public string? Folder { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public Location? Location { get; set; }
-    public string Unit { get; set; } = "";
-    public bool? CanScale { get; set; }
-    public bool? CanMirror { get; set; }
-    public LayerId? ActiveLayer { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public List<PieceMeta> Pieces { get; set; } = new();
-    public List<ConnectionMeta> Connections { get; set; } = new();
-    public List<StatMeta> Stats { get; set; } = new();
-    public List<PropMeta> Props { get; set; } = new();
-    public List<LayerMeta> Layers { get; set; } = new();
-    public List<GroupMeta> Groups { get; set; } = new();
-    public List<AttributeMeta> Attributes { get; set; } = new();
-    public List<AuthorId> Authors { get; set; } = new();
-    public List<ConceptId> Concepts { get; set; } = new();
-}
-
-#endregion ✨DesignMetaShallow
-
-#region 🏗️KitMetaShallow
-
-public class KitMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Version { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public string Remote { get; set; } = "";
-    public string Homepage { get; set; } = "";
-    public string License { get; set; } = "";
-    public string Preview { get; set; } = "";
-    public string CreatedAt { get; set; } = "";
-    public string UpdatedAt { get; set; } = "";
-}
-
-public class KitShallow
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Version { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public string Remote { get; set; } = "";
-    public string Homepage { get; set; } = "";
-    public string License { get; set; } = "";
-    public string Preview { get; set; } = "";
-    public string CreatedAt { get; set; } = "";
-    public string UpdatedAt { get; set; } = "";
-    public List<TypeMeta> Types { get; set; } = new();
-    public List<DesignMeta> Designs { get; set; } = new();
-    public List<TagMeta> Tags { get; set; } = new();
-    public List<ConceptMeta> Concepts { get; set; } = new();
-    public List<PortMeta> Ports { get; set; } = new();
-    public List<QualityMeta> Qualities { get; set; } = new();
-    public List<FileMeta> Files { get; set; } = new();
-    public List<FolderMeta> Folders { get; set; } = new();
-    public List<AuthorMeta> Authors { get; set; } = new();
-    public List<AttributeMeta> Attributes { get; set; } = new();
-}
-
-#endregion 🏗️KitMetaShallow
-
-#region 🎠MetaShallowConversions
-
-public static class MetaShallowConversions
-{
-    public static AttributeMeta ToMeta(this Attribute a) => new()
-    {
-        Guid = a.Guid,
-        Key = a.Key,
-        Value = a.Value,
-        Definition = a.Definition
-    };
-
-    public static PropMeta ToMeta(this Prop p) => new()
-    {
-        Guid = p.Guid,
-        Quality = p.Quality,
-        Value = p.Value,
-        Unit = p.Unit
-    };
-
-    public static TagMeta ToMeta(this Tag t) => new()
-    {
-        Guid = t.Guid,
-        Name = t.Name,
-        Description = t.Description,
-        Icon = t.Icon
-    };
-
-    public static ConceptMeta ToMeta(this Concept c) => new()
-    {
-        Guid = c.Guid,
-        Name = c.Name,
-        Description = c.Description,
-        Icon = c.Icon
-    };
-
-    public static AuthorMeta ToMeta(this Author a) => new()
-    {
-        Guid = a.Guid,
-        Name = a.Name,
-        Email = a.Email
-    };
-
-    public static FileMeta ToMeta(this File f) => new()
-    {
-        Guid = f.Guid,
-        Name = f.Name,
-        Remote = f.Remote,
-        Folder = f.Folder,
-        Size = f.Size,
-        Hash = f.Hash,
-        CreatedAt = f.CreatedAt,
-        CreatedBy = f.CreatedBy,
-        UpdatedAt = f.UpdatedAt,
-        UpdatedBy = f.UpdatedBy
-    };
-
-    public static FolderMeta ToMeta(this Folder f) => new()
-    {
-        Guid = f.Guid,
-        Name = f.Name,
-        Parent = f.Parent,
-        Description = f.Description,
-        CreatedAt = f.CreatedAt,
-        CreatedBy = f.CreatedBy,
-        UpdatedAt = f.UpdatedAt,
-        UpdatedBy = f.UpdatedBy
-    };
-
-    public static QualityMeta ToMeta(this Quality q) => new()
-    {
-        Guid = q.Guid,
-        Key = q.Key,
-        Name = q.Name,
-        Description = q.Description,
-        Uri = q.Uri,
-        Folder = q.Folder,
-        Scalable = q.Scalable,
-        Kind = q.Kind,
-        SI = q.SI,
-        Imperial = q.Imperial,
-        Min = q.Min,
-        MinExcluded = q.MinExcluded,
-        Max = q.Max,
-        MaxExcluded = q.MaxExcluded,
-        Default = q.Default,
-        Formula = q.Formula,
-        Icon = q.Icon,
-        Image = q.Image,
-        Unit = q.Unit
-    };
-
-    public static PortMeta ToMeta(this Port p) => new()
-    {
-        Guid = p.Guid,
-        Name = p.Name,
-        Description = p.Description,
-        Icon = p.Icon
-    };
-
-    public static ModelMeta ToMeta(this Model m) => new()
-    {
-        Guid = m.Guid,
-        Name = m.Name,
-        File = m.File,
-        Description = m.Description
-    };
-
-    public static ConnectorMeta ToMeta(this Connector c) => new()
-    {
-        Guid = c.Guid,
-        Name = c.Name,
-        T = c.T,
-        Point = c.Point,
-        Direction = c.Direction,
-        Description = c.Description,
-        Port = c.Port,
-        Mandatory = c.Mandatory
-    };
-
-    public static LayerMeta ToMeta(this Layer l) => new()
-    {
-        Guid = l.Guid,
-        Path = l.Path,
-        IsHidden = l.IsHidden ?? false,
-        IsLocked = l.IsLocked ?? false,
-        Color = l.Color ?? "",
-        Description = l.Description
-    };
-
-    public static PieceMeta ToMeta(this Piece p) => new()
-    {
-        Guid = p.Guid,
-        Name = p.Name,
-        Description = p.Description,
-        Type = p.Type,
-        Design = p.Design,
-        Plane = p.Plane,
-        Center = p.Center,
-        Scale = p.Scale,
-        MirrorPlane = p.MirrorPlane,
-        IsHidden = p.IsHidden,
-        IsLocked = p.IsLocked,
-        Color = p.Color
-    };
-
-    public static GroupMeta ToMeta(this Group g) => new()
-    {
-        Guid = g.Guid,
-        Name = g.Name,
-        Description = g.Description,
-        Color = g.Color
-    };
-
-    public static ConnectionMeta ToMeta(this Connection c) => new()
-    {
-        Guid = c.Guid,
-        Connected = c.Connected,
-        Connecting = c.Connecting,
-        Description = c.Description,
-        Gap = c.Gap,
-        Shift = c.Shift,
-        Rise = c.Rise,
-        Rotation = c.Rotation,
-        Turn = c.Turn,
-        Tilt = c.Tilt,
-        U = c.U,
-        V = c.V
-    };
-
-    public static StatMeta ToMeta(this Stat s) => new()
-    {
-        Guid = s.Guid,
-        Quality = s.Quality,
-        Unit = s.Unit,
-        Min = s.Min,
-        MinExcluded = s.MinExcluded,
-        Max = s.Max,
-        MaxExcluded = s.MaxExcluded
-    };
-
-    public static TypeMeta ToMeta(this Type t) => new()
-    {
-        Guid = t.Guid,
-        Name = t.Name,
-        Parent = t.Parent,
-        IsAbstract = t.IsAbstract,
-        Folder = t.Folder,
-        Description = t.Description,
-        Icon = t.Icon,
-        Image = t.Image,
-        Stock = t.Stock,
-        Virtual = t.Virtual,
-        Uri = t.Uri,
-        Location = t.Location,
-        Unit = t.Unit,
-        CreatedAt = t.CreatedAt,
-        UpdatedAt = t.UpdatedAt
-    };
-
-    public static TypeShallow ToShallow(this Type t) => new()
-    {
-        Guid = t.Guid,
-        Name = t.Name,
-        Parent = t.Parent,
-        IsAbstract = t.IsAbstract,
-        Folder = t.Folder,
-        Description = t.Description,
-        Icon = t.Icon,
-        Image = t.Image,
-        Stock = t.Stock,
-        Virtual = t.Virtual,
-        Uri = t.Uri,
-        Location = t.Location,
-        Unit = t.Unit,
-        CreatedAt = t.CreatedAt,
-        UpdatedAt = t.UpdatedAt,
-        Models = t.Models.Select(m => m.ToMeta()).ToList(),
-        Connectors = t.Connectors.Select(c => c.ToMeta()).ToList(),
-        Props = t.Props.Select(p => p.ToMeta()).ToList(),
-        Authors = t.Authors,
-        Concepts = t.Concepts,
-        Attributes = t.Attributes.Select(a => a.ToMeta()).ToList()
-    };
-
-    public static DesignMeta ToMeta(this Design d) => new()
-    {
-        Guid = d.Guid,
-        Name = d.Name,
-        Parent = d.Parent,
-        IsAbstract = d.IsAbstract,
-        Folder = d.Folder,
-        Description = d.Description,
-        Icon = d.Icon,
-        Image = d.Image,
-        Location = d.Location,
-        Unit = d.Unit,
-        CanScale = d.CanScale,
-        CanMirror = d.CanMirror,
-        ActiveLayer = d.ActiveLayer,
-        CreatedAt = d.CreatedAt,
-        UpdatedAt = d.UpdatedAt
-    };
-
-    public static DesignShallow ToShallow(this Design d) => new()
-    {
-        Guid = d.Guid,
-        Name = d.Name,
-        Parent = d.Parent,
-        IsAbstract = d.IsAbstract,
-        Folder = d.Folder,
-        Description = d.Description,
-        Icon = d.Icon,
-        Image = d.Image,
-        Location = d.Location,
-        Unit = d.Unit,
-        CanScale = d.CanScale,
-        CanMirror = d.CanMirror,
-        ActiveLayer = d.ActiveLayer,
-        CreatedAt = d.CreatedAt,
-        UpdatedAt = d.UpdatedAt,
-        Pieces = d.Pieces.Select(p => p.ToMeta()).ToList(),
-        Connections = d.Connections.Select(c => c.ToMeta()).ToList(),
-        Stats = d.Stats.Select(s => s.ToMeta()).ToList(),
-        Props = d.Props.Select(p => p.ToMeta()).ToList(),
-        Layers = d.Layers.Select(l => l.ToMeta()).ToList(),
-        Groups = d.Groups.Select(g => g.ToMeta()).ToList(),
-        Attributes = d.Attributes.Select(a => a.ToMeta()).ToList(),
-        Authors = d.Authors,
-        Concepts = d.Concepts
-    };
-
-    public static KitMeta ToMeta(this Kit k) => new()
-    {
-        Guid = k.Guid,
-        Name = k.Name,
-        Version = k.Version,
-        Description = k.Description,
-        Icon = k.Icon,
-        Image = k.Image,
-        Remote = k.Remote,
-        Homepage = k.Homepage,
-        License = k.License,
-        Preview = k.Preview,
-        CreatedAt = k.CreatedAt,
-        UpdatedAt = k.UpdatedAt
-    };
-
-    public static KitShallow ToShallow(this Kit k) => new()
-    {
-        Guid = k.Guid,
-        Name = k.Name,
-        Version = k.Version,
-        Description = k.Description,
-        Icon = k.Icon,
-        Image = k.Image,
-        Remote = k.Remote,
-        Homepage = k.Homepage,
-        License = k.License,
-        Preview = k.Preview,
-        CreatedAt = k.CreatedAt,
-        UpdatedAt = k.UpdatedAt,
-        Types = k.Types.Select(t => t.ToMeta()).ToList(),
-        Designs = k.Designs.Select(d => d.ToMeta()).ToList(),
-        Tags = k.Tags.Select(t => t.ToMeta()).ToList(),
-        Concepts = k.Concepts.Select(c => c.ToMeta()).ToList(),
-        Ports = k.Ports.Select(p => p.ToMeta()).ToList(),
-        Qualities = k.Qualities.Select(q => q.ToMeta()).ToList(),
-        Files = k.Files.Select(f => f.ToMeta()).ToList(),
-        Folders = k.Folders.Select(f => f.ToMeta()).ToList(),
-        Authors = k.Authors.Select(a => a.ToMeta()).ToList(),
-        Attributes = k.Attributes.Select(a => a.ToMeta()).ToList()
-    };
-}
-
-#endregion 🎠MetaShallowConversions
-
-#endregion 🔑MetaShallow
 
 #region 🎪Api
 // Callers MUST use these methods to communicate with the semio engine.
@@ -11662,6 +11760,9 @@ public class ServerException : Exception
 }
 
 #endregion 🎪Api
+
+
+#region 🔓KitSqlite
 // Callers MUST use KitSqlite for direct CRUD operations on local static SQLite kit databases.
 
 /// <summary>🗄️Direct CRUD operations on local SQLite kit databases (.semio/kit.db).</summary>
@@ -13196,6 +13297,7 @@ public static class KitSqlite
 
 #endregion 🔓KitSqlite
 
+
 #region 🎪ZipRoundtrip
 // Callers MUST use these methods to import and export kits as ZIP archives.
 
@@ -13540,6 +13642,8 @@ public static class ZipRoundtrip
 
 #endregion 🎪ZipRoundtrip
 
+
+
 #region 📷FileKit
 // Callers MUST use FileKit for JSON file kit import, export, and edit operations.
 
@@ -13565,6 +13669,8 @@ public static class FileKit
 }
 
 #endregion 📷FileKit
+
+
 
 #region 🏰FolderKit
 // Callers MUST use FolderKit for local folder kit import, export, and edit operations.
@@ -13663,6 +13769,8 @@ public static class FolderKit
 
 #endregion 🏰FolderKit
 
+
+
 #region 📐ArchiveKit
 // Callers MUST use ArchiveKit for ZIP archive import, export, and edit operations.
 
@@ -13682,6 +13790,8 @@ public static class ArchiveKit
 }
 
 #endregion 📐ArchiveKit
+
+
 
 #region 🎆RemoteKit
 // Callers MUST use RemoteKit for HTTP-based JSON and ZIP kit import and in-memory edits.
@@ -13723,6 +13833,8 @@ public static class RemoteKit
 
 #endregion 🎆RemoteKit
 
+
+
 #region 🔤TemporaryKit
 // Callers MUST use TemporaryKit for in-memory kit edits without persistence.
 
@@ -13737,6 +13849,8 @@ public static class TemporaryKit
 
 #endregion 🔤TemporaryKit
 
+
+
 #region 📦KitImporter
 // Callers MUST use ImportFromZip for high-level kit import.
 
@@ -13749,6 +13863,8 @@ public static class KitImporter
 }
 
 #endregion 📦KitImporter
+
+
 
 #region 🪁KitExporter
 // Callers MUST use ExportToZip for high-level kit export.
@@ -13763,27 +13879,7 @@ public static class KitExporter
 
 #endregion 🪁KitExporter
 
-#region KitDiffValidation
 
-public sealed class KitDiffValidationNote
-{
-    [JsonProperty("code", NullValueHandling = NullValueHandling.Ignore)]
-    public string? Code { get; set; }
-    [JsonProperty("message")]
-    public string Message { get; set; } = "";
-}
-
-public sealed class KitDiffValidationResult
-{
-    [JsonProperty("ok")]
-    public bool Ok { get; set; }
-    public List<KitDiffValidationNote> Errors { get; set; } = new();
-    public List<KitDiffValidationNote> Warnings { get; set; } = new();
-    [JsonProperty("diff", NullValueHandling = NullValueHandling.Ignore)]
-    public KitDiff? Diff { get; set; }
-}
-
-#endregion KitDiffValidation
 
 #region ❄️SemioDiff
 // Callers MUST use these methods for diff computation and application on kits.

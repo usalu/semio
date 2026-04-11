@@ -1,8 +1,0 @@
-{
-  "id": "2026/04/11/CODA-MCP-APPS-AND-DESKTOP-SYNC",
-  "title": "Coda MCP Apps and Desktop Sync",
-  "status": "open",
-  "description": "MCP Apps for coda; desktop auto-refresh; sidecar events.",
-  "client": "cursor-chat",
-  "llm": "gpt-5-2-codex"
-}

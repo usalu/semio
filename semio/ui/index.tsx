@@ -6582,6 +6582,10 @@ export interface AlgorithmContextValue {
   diffDesign?: Design;
   /** Passed to {@link SemioDiagram} as `layoutDiff` so linked pieces get u/v without mutating `design`. */
   diagramLayoutDiff?: DesignDiff;
+  /** When set, the design-diff output window uses this as `layoutDiff` instead of `diagramLayoutDiff`. */
+  diffDiagramLayoutDiff?: DesignDiff;
+  /** When set, the design output window uses this as `layoutDiff` instead of `diagramLayoutDiff`. */
+  outputDiagramLayoutDiff?: DesignDiff;
   outputDesign: Design;
   error?: string;
 }
@@ -7005,7 +7009,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     component: SemioDiagram,
     createProps: (context) => ({
       design: context.diffDesign ?? context.design,
-      layoutDiff: context.diagramLayoutDiff,
+      layoutDiff: context.diffDiagramLayoutDiff ?? context.diagramLayoutDiff,
       designDiff: context.filteredDesignDiff,
       diffEnabled: true,
       zoomTarget: "design" as ZoomTarget,
@@ -7022,7 +7026,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     component: SemioDiagram,
     createProps: (context) => ({
       design: context.outputDesign,
-      layoutDiff: context.diagramLayoutDiff,
+      layoutDiff: context.outputDiagramLayoutDiff ?? context.diagramLayoutDiff,
       diffEnabled: false,
       zoomTarget: "design" as ZoomTarget,
       selectionEnabled: false,

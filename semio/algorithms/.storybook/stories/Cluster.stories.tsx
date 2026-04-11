@@ -1,12 +1,11 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Cluster.stories.tsx
 // Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Cluster story using nativeFlattenDesign with the Storybook language toolbar.
+// Summary: Selection on raw design; flatten forward diff only for diagramLayoutDiff; diff/output are local story fixtures.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { DesignChange } from "@semio/js";
-import { applyDesignDiff } from "@semio/js";
+import type { DesignChange, DesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -29,7 +28,7 @@ function ClusterFrame() {
   const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const [flattenChange, setFlattenChange] = React.useState<DesignChange | null>(null);
-  const [baseDesign, setBaseDesign] = React.useState<any | null>(null);
+  const [diagramLayoutDiff, setDiagramLayoutDiff] = React.useState<DesignDiff | undefined>(undefined);
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
 
   React.useEffect(() => {
@@ -39,13 +38,12 @@ function ClusterFrame() {
       if (cancelled) return;
       if (!fc.ok) {
         setFlattenChange(null);
-        setBaseDesign(null);
+        setDiagramLayoutDiff(undefined);
         return;
       }
       setFlattenChange(fc.change);
-      const bd = applyDesignDiff(rawDesign, fc.change.forward) as any;
-      setBaseDesign(bd);
-      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
+      setDiagramLayoutDiff(fc.change.forward);
+      setSelectedPieceGuids((rawDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
     })();
     return () => {
       cancelled = true;
@@ -58,7 +56,7 @@ function ClusterFrame() {
         ? undefined
         : {
             pieces: {
-              added: [{ guid: `cluster-${selectedPieceGuids.length}`, name: `Clustered (${selectedPieceGuids.length} pieces)` }],
+              added: [{ guid: `storybook-group-${selectedPieceGuids.length}`, name: `Storybook group (${selectedPieceGuids.length})` }],
               updated: selectedPieceGuids.map((guid) => ({ piece: { guid }, diff: {} })),
             },
           },
@@ -68,15 +66,16 @@ function ClusterFrame() {
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: baseDesign ?? rawDesign,
+      design: rawDesign,
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
       designDiff,
-      diffDesign: baseDesign ?? rawDesign,
-      outputDesign: baseDesign ?? rawDesign,
-      error: !flattenChange || !baseDesign ? `Loading cluster preview (${language})…` : selectedPieceGuids.length < 2 ? "Select at least 2 pieces to cluster." : undefined,
+      diffDesign: rawDesign,
+      diagramLayoutDiff,
+      outputDesign: rawDesign,
+      error: !flattenChange ? `Loading cluster preview (${language})…` : selectedPieceGuids.length < 2 ? "Select at least 2 pieces to cluster." : undefined,
     }),
-    [kit, baseDesign, selectedPieceGuids, designDiff, flattenChange, language],
+    [kit, selectedPieceGuids, designDiff, flattenChange, diagramLayoutDiff, language],
   );
 
   return <AlgorithmApp id="cluster" label="Cluster" windows={WINDOWS} context={context} className="h-full w-full" />;

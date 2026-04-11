@@ -21,9 +21,35 @@ import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
+
+type CjsFacadeResolveOpts = {
+  shimMain: string;
+  shimWithSelector: string;
+  schedulerEntry: string;
+};
+
+function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
+  return {
+    name: "semio-react-cjs-facades",
+    enforce: "pre",
+    resolveId(id) {
+      const n = id.replace(/\\/g, "/");
+      if (n.includes("use-sync-external-store/shim/with-selector")) {
+        return opts.shimWithSelector;
+      }
+      if (n.includes("use-sync-external-store/shim")) {
+        return opts.shimMain;
+      }
+      if (n === "scheduler" || (n.includes("scheduler/index.js") && !n.includes("/cjs/scheduler."))) {
+        return opts.schedulerEntry;
+      }
+      return undefined;
+    },
+  };
+}
 
 /**
  * Absolute file path of the current module.
@@ -61,20 +87,35 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
 
 // Vite configuration with plugins, resolve aliases, and asset serving.
 // Export MUST call defineConfig with the complete build configuration.
-export default defineConfig(async () => {
+export default defineConfig(async ({ mode }) => {
   // 📥normal import fails in electron due to esm stuff
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
+  const prod = mode === "production";
+  const useSyncRoot = path.resolve(__dirname, "../../node_modules/use-sync-external-store/cjs");
+  const shimMain = path.join(useSyncRoot, prod ? "use-sync-external-store-shim.production.js" : "use-sync-external-store-shim.development.js");
+  const shimWithSelector = path.join(
+    useSyncRoot,
+    "use-sync-external-store-shim",
+    prod ? "with-selector.production.js" : "with-selector.development.js",
+  );
+  const schedulerRoot = path.resolve(__dirname, "../../node_modules/scheduler/cjs");
+  const schedulerEntry = path.join(schedulerRoot, prod ? "scheduler.production.js" : "scheduler.development.js");
   return {
     resolve: {
+      dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
       alias: {
         "@semio/js": path.resolve(__dirname, "../js"),
         "@semio/sketchpad": path.resolve(__dirname),
         "@semio/studio": path.resolve(__dirname, "../studio"),
         "@semio/assets": path.resolve(__dirname, "../assets"),
+        "use-sync-external-store/shim/with-selector": shimWithSelector,
+        "use-sync-external-store/shim": shimMain,
+        scheduler: schedulerEntry,
       },
     },
     plugins: [
+      reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),
       tailwind.default(),
       {
         ...mdx({
@@ -99,7 +140,13 @@ export default defineConfig(async () => {
       },
     ],
     optimizeDeps: {
-      include: ["golden-layout"],
+      include: [
+        "golden-layout",
+        "scheduler",
+        "use-sync-external-store/shim",
+        "use-sync-external-store/shim/with-selector",
+        "use-sync-external-store/with-selector",
+      ],
       exclude: ["@semio/js", "@semio/sketchpad", "@playwright/test", "playwright", "playwright-core"],
       esbuildOptions: {
         target: "es2020",

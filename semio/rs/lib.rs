@@ -31,11 +31,10 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::f64::consts::PI;
 use thiserror::Error;
 use uuid::Uuid;
-
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-mod error_types {
+mod error_types { // ⚠️Exceptions
     // 🎪Error Types
     // Error Types MUST provide the error types functionality.
 
@@ -61,10 +60,10 @@ mod error_types {
     /// <remarks>
     /// </remarks>
     pub type Result<T> = std::result::Result<T, SemioError>;
-} // 📃Error Types
+} // ⚠️Exceptions
 pub use error_types::*;
 
-mod utility_functions {
+mod utility_functions { // 📦Utilities
     // 🏭Utility Functions
     // Utility Functions MUST provide the utility functions functionality.
     /// <summary>🔑Guid represents a UUID string identifier.</summary>
@@ -173,10 +172,324 @@ mod utility_functions {
             counter += 1;
         }
     }
-} // 🤸Utility Functions
+} // 📦Utilities
 pub use utility_functions::*;
 
-mod model_types_attribute {
+mod has_guid_trait { // 🐍Entity IDs
+    // 🎮HasGuid Trait
+    // HasGuid Trait MUST provide the hasguid trait functionality.
+    /// <summary>🔧d.</summary>
+    /// <remarks>
+    /// </remarks>
+    use super::*;
+
+    pub trait HasGuid {
+        fn guid(&self) -> &str;
+    }
+    /// <summary>💎HasGuid implementation for Attribute.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Attribute {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📊HasGuid implementation for Prop.</summary>
+    impl HasGuid for Prop {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🔌HasGuid implementation for Connector.</summary>
+    impl HasGuid for Connector {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🗿HasGuid implementation for Model.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Model {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🧱HasGuid implementation for Type.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Type {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🧩HasGuid implementation for Piece.</summary>
+    impl HasGuid for Piece {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🔗HasGuid implementation for Connection.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Connection {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🎨HasGuid implementation for Layer.</summary>
+    impl HasGuid for Layer {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>👥HasGuid implementation for Group.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Group {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📈HasGuid implementation for Stat.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Stat {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📐HasGuid implementation for Design.</summary>
+    impl HasGuid for Design {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🏷️HasGuid implementation for Tag.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Tag {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>💡HasGuid implementation for Concept.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Concept {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>⚓HasGuid implementation for Port.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Port {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🔬HasGuid implementation for Quality.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Quality {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📄HasGuid implementation for File.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for File {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📁HasGuid implementation for Folder.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Folder {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>✍️HasGuid implementation for Author.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Author {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📦HasGuid implementation for Kit.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl HasGuid for Kit {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>💎DiffHasGuid implementation for AttributeDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub trait DiffHasGuid {
+        fn guid(&self) -> &str;
+    }
+    /// <summary>💎HasGuid implementation for AttributeDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for AttributeDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📊HasGuid implementation for PropDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for PropDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🔌HasGuid implementation for ConnectorDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for ConnectorDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🗿HasGuid implementation for ModelDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for ModelDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🧱HasGuid implementation for TypeDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for TypeDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🧩HasGuid implementation for PieceDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for PieceDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🔗HasGuid implementation for ConnectionDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for ConnectionDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🎨HasGuid implementation for LayerDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for LayerDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>👥HasGuid implementation for GroupDiff.</summary>
+    impl DiffHasGuid for GroupDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📈HasGuid implementation for StatDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for StatDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📐HasGuid implementation for DesignDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for DesignDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🏷️HasGuid implementation for TagDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for TagDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>💡HasGuid implementation for ConceptDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for ConceptDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>⚓HasGuid implementation for PortDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for PortDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>🔬HasGuid implementation for QualityDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for QualityDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📄HasGuid implementation for FileDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for FileDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📁HasGuid implementation for FolderDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for FolderDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>✍️HasGuid implementation for AuthorDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for AuthorDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    /// <summary>📦HasGuid implementation for KitDiff.</summary>
+    /// <remarks>
+    /// </remarks>
+    impl DiffHasGuid for KitDiff {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+} // 🐍Entity IDs
+pub use has_guid_trait::*;
+
+mod model_types_attribute { // 💎Attribute
     // 💎Model Types - Attribute
     // 💎Model Types - Attribute MUST provide the model types - attribute functionality.
 
@@ -200,10 +513,10 @@ mod model_types_attribute {
     pub struct AttributeId {
         pub guid: Guid,
     }
-} // 💎Model Types - Attribute
+} // 💎Attribute
 pub use model_types_attribute::*;
 
-mod model_types_coord {
+mod model_types_coord { // 📺Coord
     // 📺Model Types - Coord
     // 📺Model Types - Coord MUST provide the model types - coord functionality.
 
@@ -225,10 +538,10 @@ mod model_types_coord {
             Self { u, v }
         }
     }
-} // 📺Model Types - Coord
+} // 📺Coord
 pub use model_types_coord::*;
 
-mod model_types_vector {
+mod model_types_vector { // ↗️Vector
     // ↗️Model Types - Vector
     // ↗️Model Types - Vector MUST provide the model types - vector functionality.
 
@@ -268,10 +581,10 @@ mod model_types_vector {
             Self::new(v.x, v.y, v.z)
         }
     }
-} // ↗️Model Types - Vector
+} // ↗️Vector
 pub use model_types_vector::*;
 
-mod model_types_plane {
+mod model_types_plane { // ◻️Plane
     // ◻️Model Types - Plane
     // ◻️Model Types - Plane MUST provide the model types - plane functionality.
 
@@ -352,10 +665,10 @@ mod model_types_plane {
             }
         }
     }
-} // ◻️Model Types - Plane
+} // ◻️Plane
 pub use model_types_plane::*;
 
-mod model_types_camera {
+mod model_types_camera { // 🎥Camera
     // 🎥Model Types - Camera
     // 🎥Model Types - Camera MUST provide the model types - camera functionality.
 
@@ -387,12 +700,12 @@ mod model_types_camera {
             }
         }
     }
-} // 🎥Model Types - Camera
+} // 🎥Camera
 pub use model_types_camera::*;
 
-mod model_types_location_author_file_folder {
-    // 📍Model Types - Location, Author, File, Folder
-    // 📍Model Types - Location, Author, File, Folder MUST provide the model types - location, author, file, folder functionality.
+mod location { // 📍Location
+    // 📍Location
+    // 📍Location MUST provide the location functionality.
 
     use super::*;
 
@@ -417,6 +730,15 @@ mod model_types_location_author_file_folder {
         pub attributes: Option<Vec<Attribute>>,
     }
 
+} // 📍Location
+pub use location::*;
+
+mod author { // ✍️Author
+    // ✍️Author
+    // ✍️Author MUST provide the author functionality.
+
+    use super::*;
+
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     /// <summary>✍️AuthorId identifies an author entity by GUID.</summary>
     pub struct AuthorId {
@@ -440,30 +762,14 @@ mod model_types_location_author_file_folder {
         pub updated_at: Option<String>,
     }
 
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>📁FolderId identifies a folder entity by GUID.</summary>
-    pub struct FolderId {
-        pub guid: Guid,
-    }
+} // ✍️Author
+pub use author::*;
 
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>📁Folder represents a named directory for organizing files.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct Folder {
-        pub guid: Guid,
-        pub name: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub parent: Option<FolderId>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<Vec<Attribute>>,
-        #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
-        pub created_at: Option<String>,
-        #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
-        pub updated_at: Option<String>,
-    }
+mod file_entity { // 📄File
+    // 📄File
+    // 📄File MUST provide the file functionality.
+
+    use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     /// <summary>📄FileId identifies a file entity by GUID.</summary>
@@ -495,22 +801,49 @@ mod model_types_location_author_file_folder {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 📍Model Types - Location, Author, File, Folder
-pub use model_types_location_author_file_folder::*;
+} // 📄File
+pub use file_entity::*;
 
-mod model_types_quality_port_tag_concept {
-    // 🔬Model Types - Quality, Port, Tag, Concept
-    // 🔬Model Types - Quality, Port, Tag, Concept MUST provide the model types - quality, port, tag, concept functionality.
+
+mod folder_entity { // 📁Folder
+    // 📁Folder
+    // 📁Folder MUST provide the folder functionality.
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>🔬QualityId identifies a quality entity by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct QualityId {
+    /// <summary>📁FolderId identifies a folder entity by GUID.</summary>
+    pub struct FolderId {
         pub guid: Guid,
     }
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    /// <summary>📁Folder represents a named directory for organizing files.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct Folder {
+        pub guid: Guid,
+        pub name: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub parent: Option<FolderId>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<Attribute>>,
+        #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
+        pub created_at: Option<String>,
+        #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
+        pub updated_at: Option<String>,
+    }
+
+} // 📁Folder
+pub use folder_entity::*;
+
+mod benchmark_entity { // 📏Benchmark
+    // 📏Benchmark
+    // 📏Benchmark MUST provide the benchmark functionality.
+
+    use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     pub struct BenchmarkId {
@@ -535,6 +868,23 @@ mod model_types_quality_port_tag_concept {
         pub definition: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub attributes: Option<Vec<Attribute>>,
+    }
+
+} // 📏Benchmark
+pub use benchmark_entity::*;
+
+mod quality { // 🔬Quality
+    // 🔬Quality
+    // 🔬Quality MUST provide the quality functionality.
+
+    use super::*;
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+    /// <summary>🔬QualityId identifies a quality entity by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct QualityId {
+        pub guid: Guid,
     }
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -617,6 +967,15 @@ mod model_types_quality_port_tag_concept {
         pub attributes: Option<Vec<Attribute>>,
     }
 
+} // 🔬Quality
+pub use quality::*;
+
+mod port { // ⚓Port
+    // ⚓Port
+    // ⚓Port MUST provide the port functionality.
+
+    use super::*;
+
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     /// <summary>⚓PortId identifies a port entity by GUID.</summary>
     /// <remarks>
@@ -644,59 +1003,12 @@ mod model_types_quality_port_tag_concept {
         pub attributes: Option<Vec<Attribute>>,
     }
 
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>🏷️TagId identifies a tag entity by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct TagId {
-        pub guid: Guid,
-    }
+} // ⚓Port
+pub use port::*;
 
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>🏷️Tag represents a named categorization label with optional description and icon.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct Tag {
-        pub guid: Guid,
-        pub name: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<Vec<Attribute>>,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>💡ConceptId identifies a concept entity by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct ConceptId {
-        pub guid: Guid,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>💡Concept represents a named categorization concept with optional description and icon.</summary>
-    /// <remarks>
-    /// </remarks>
-    /// <remarks>
-    /// </remarks>
-    pub struct Concept {
-        pub guid: Guid,
-        pub name: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<Vec<Attribute>>,
-    }
-} // 🔬Model Types - Quality, Port, Tag, Concept
-pub use model_types_quality_port_tag_concept::*;
-
-mod model_types_prop_model_connector {
-    // 📊Model Types - Prop, Model, Connector
-    // 📊Model Types - Prop, Model, Connector MUST provide the model types - prop, model, connector functionality.
+mod prop { // 📊Prop
+    // 📊Prop
+    // 📊Prop MUST provide the prop functionality.
 
     use super::*;
 
@@ -722,6 +1034,81 @@ mod model_types_prop_model_connector {
         pub attributes: Option<Vec<Attribute>>,
     }
 
+} // 📊Prop
+pub use prop::*;
+
+mod tag { // 🏷️Tag
+    // 🏷️Tag
+    // 🏷️Tag MUST provide the tag functionality.
+
+    use super::*;
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+    /// <summary>🏷️TagId identifies a tag entity by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct TagId {
+        pub guid: Guid,
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    /// <summary>🏷️Tag represents a named categorization label with optional description and icon.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct Tag {
+        pub guid: Guid,
+        pub name: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub icon: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<Attribute>>,
+    }
+
+} // 🏷️Tag
+pub use tag::*;
+
+mod concept { // 💡Concept
+    // 💡Concept
+    // 💡Concept MUST provide the concept functionality.
+
+    use super::*;
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+    /// <summary>💡ConceptId identifies a concept entity by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct ConceptId {
+        pub guid: Guid,
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    /// <summary>💡Concept represents a named categorization concept with optional description and icon.</summary>
+    /// <remarks>
+    /// </remarks>
+    /// <remarks>
+    /// </remarks>
+    pub struct Concept {
+        pub guid: Guid,
+        pub name: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub icon: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<Attribute>>,
+    }
+} // 💡Concept
+pub use concept::*;
+
+
+mod model_entity { // 🗿Model
+    // 🗿Model
+    // 🗿Model MUST provide the model functionality.
+
+    use super::*;
+
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     /// <summary>🗿ModelId identifies a model entity by GUID.</summary>
     pub struct ModelId {
@@ -746,6 +1133,15 @@ mod model_types_prop_model_connector {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub attributes: Option<Vec<Attribute>>,
     }
+
+} // 🗿Model
+pub use model_entity::*;
+
+mod connector { // 🔌Connector
+    // 🔌Connector
+    // 🔌Connector MUST provide the connector functionality.
+
+    use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     /// <summary>🔌ConnectorId identifies a connector entity by GUID.</summary>
@@ -779,10 +1175,11 @@ mod model_types_prop_model_connector {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub attributes: Option<Vec<Attribute>>,
     }
-} // 📊Model Types - Prop, Model, Connector
-pub use model_types_prop_model_connector::*;
+} // 🔌Connector
+pub use connector::*;
 
-mod model_types_type {
+
+mod model_types_type { // 🧱Type
     // 🧱Model Types - Type
     // 🧱Model Types - Type MUST provide the model types - type functionality.
 
@@ -838,12 +1235,12 @@ mod model_types_type {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 🧱Model Types - Type
+} // 🧱Type
 pub use model_types_type::*;
 
-mod model_types_layer_piece_group_side_connection_stat {
-    // 🎨Model Types - Layer, Piece, Group, Side, Connection, Stat
-    // 🎨Model Types - Layer, Piece, Group, Side, Connection, Stat MUST provide the model types - layer, piece, group, side, connection, stat functionality.
+mod layer { // 🎨Layer
+    // 🎨Layer
+    // 🎨Layer MUST provide the layer functionality.
 
     use super::*;
 
@@ -873,6 +1270,15 @@ mod model_types_layer_piece_group_side_connection_stat {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub attributes: Option<Vec<Attribute>>,
     }
+
+} // 🎨Layer
+pub use layer::*;
+
+mod piece { // 🧩Piece
+    // 🧩Piece
+    // 🧩Piece MUST provide the piece functionality.
+
+    use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     /// <summary>🧩PieceId identifies a piece entity by GUID.</summary>
@@ -924,6 +1330,15 @@ mod model_types_layer_piece_group_side_connection_stat {
         pub attributes: Option<Vec<Attribute>>,
     }
 
+} // 🧩Piece
+pub use piece::*;
+
+mod group { // 👥Group
+    // 👥Group
+    // 👥Group MUST provide the group functionality.
+
+    use super::*;
+
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     /// <summary>👥GroupId identifies a group entity by GUID.</summary>
     /// <remarks>
@@ -950,6 +1365,15 @@ mod model_types_layer_piece_group_side_connection_stat {
         pub attributes: Option<Vec<Attribute>>,
     }
 
+} // 👥Group
+pub use group::*;
+
+mod side { // ↔️Side
+    // ↔️Side
+    // ↔️Side MUST provide the side functionality.
+
+    use super::*;
+
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
     /// <summary>↔️Side represents one side of a connection identifying a piece and optional connector.</summary>
     /// <remarks>
@@ -961,6 +1385,15 @@ mod model_types_layer_piece_group_side_connection_stat {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub connector: Option<ConnectorId>,
     }
+
+} // ↔️Side
+pub use side::*;
+
+mod connection { // 🔗Connection
+    // 🔗Connection
+    // 🔗Connection MUST provide the connection functionality.
+
+    use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     /// <summary>🔗ConnectionId identifies a connection entity by GUID.</summary>
@@ -1000,6 +1433,15 @@ mod model_types_layer_piece_group_side_connection_stat {
         pub attributes: Option<Vec<Attribute>>,
     }
 
+} // 🔗Connection
+pub use connection::*;
+
+mod stat { // 📈Stat
+    // 📈Stat
+    // 📈Stat MUST provide the stat functionality.
+
+    use super::*;
+
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
     /// <summary>📈StatId identifies a stat entity by GUID.</summary>
     /// <remarks>
@@ -1028,10 +1470,11 @@ mod model_types_layer_piece_group_side_connection_stat {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
     }
-} // 🎨Model Types - Layer, Piece, Group, Side, Connection, Stat
-pub use model_types_layer_piece_group_side_connection_stat::*;
+} // 📈Stat
+pub use stat::*;
 
-mod model_types_design {
+
+mod model_types_design { // 📐Design
     // 📐Model Types - Design
     // 📐Model Types - Design MUST provide the model types - design functionality.
 
@@ -1089,10 +1532,10 @@ mod model_types_design {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 📐Model Types - Design
+} // 📐Design
 pub use model_types_design::*;
 
-mod model_types_kit {
+mod model_types_kit { // ⏱️Kit
     // 📦Model Types - Kit
     // 📦Model Types - Kit MUST provide the model types - kit functionality.
 
@@ -1181,171 +1624,10 @@ mod model_types_kit {
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
-} // 📦Model Types - Kit
+} // ⏱️Kit
 pub use model_types_kit::*;
 
-mod finder_functions {
-    // 🥿Finder Functions
-    // Finder Functions MUST provide the finder functions functionality.
-    /// <summary>🔍finds a type in a kit by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    use super::*;
-
-    pub fn find_type_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Type> {
-        kit.types.as_ref()?.iter().find(|t| t.guid == guid)
-    }
-    /// <summary>🔍finds a type in a kit mutably by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_type_in_kit_mut<'a>(kit: &'a mut Kit, guid: &str) -> Option<&'a mut Type> {
-        kit.types.as_mut()?.iter_mut().find(|t| t.guid == guid)
-    }
-    /// <summary>🔍finds a design in a kit by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_design_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Design> {
-        kit.designs.as_ref()?.iter().find(|d| d.guid == guid)
-    }
-    /// <summary>🔍finds a design in a kit mutably by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_design_in_kit_mut<'a>(kit: &'a mut Kit, guid: &str) -> Option<&'a mut Design> {
-        kit.designs.as_mut()?.iter_mut().find(|d| d.guid == guid)
-    }
-    /// <summary>🔍finds a piece in a design by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_piece_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Piece> {
-        design.pieces.as_ref()?.iter().find(|p| p.guid == guid)
-    }
-    /// <remarks>
-    /// </remarks>
-    pub fn find_piece_in_design_mut<'a>(
-        design: &'a mut Design,
-        guid: &str,
-    ) -> Option<&'a mut Piece> {
-        design.pieces.as_mut()?.iter_mut().find(|p| p.guid == guid)
-    }
-    /// <summary>🔍finds a connection in a design by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_connection_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Connection> {
-        design.connections.as_ref()?.iter().find(|c| c.guid == guid)
-    }
-    /// <summary>🔍finds a connector in a type by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_connector_in_type<'a>(t: &'a Type, guid: &str) -> Option<&'a Connector> {
-        t.connectors.as_ref()?.iter().find(|c| c.guid == guid)
-    }
-    /// <summary>🔍finds a model in a type by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_model_in_type<'a>(t: &'a Type, guid: &str) -> Option<&'a Model> {
-        t.models.as_ref()?.iter().find(|m| m.guid == guid)
-    }
-    /// <remarks>
-    /// </remarks>
-    pub fn find_file_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a File> {
-        kit.files.as_ref()?.iter().find(|f| f.guid == guid)
-    }
-
-    /// <summary>🔍finds a folder in a kit by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_folder_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Folder> {
-        kit.folders.as_ref()?.iter().find(|f| f.guid == guid)
-    }
-    /// <remarks>
-    /// </remarks>
-    pub fn find_author_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Author> {
-        kit.authors.as_ref()?.iter().find(|a| a.guid == guid)
-    }
-    /// <summary>🔍find tag in kit.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_tag_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Tag> {
-        kit.tags.as_ref()?.iter().find(|t| t.guid == guid)
-    }
-    /// <summary>🔍finds a concept in a kit by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_concept_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Concept> {
-        kit.concepts.as_ref()?.iter().find(|c| c.guid == guid)
-    }
-    /// <summary>🔍finds a quality in a kit by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_quality_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Quality> {
-        kit.qualities.as_ref()?.iter().find(|q| q.guid == guid)
-    }
-    /// <remarks>
-    /// </remarks>
-    pub fn find_interface_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Port> {
-        kit.ports.as_ref()?.iter().find(|i| i.guid == guid)
-    }
-
-    /// <summary>🔍finds a layer in a design by GUID.</summary>
-    pub fn find_layer_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Layer> {
-        design.layers.as_ref()?.iter().find(|l| l.guid == guid)
-    }
-    /// <summary>🔍finds a group in a design by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_group_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Group> {
-        design.groups.as_ref()?.iter().find(|g| g.guid == guid)
-    }
-
-    /// <summary>🔍finds a stat in a design by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_stat_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Stat> {
-        design.stats.as_ref()?.iter().find(|s| s.guid == guid)
-    }
-
-    /// ✔️For each piece, it checks piece-level props first, then falls back to type-level props.
-    pub fn sum_quality_in_design(kit: &Kit, design_guid: &str, quality_guid: &str) -> f64 {
-        let design = match find_design_in_kit(kit, design_guid) {
-            Some(d) => d,
-            None => return 0.0,
-        };
-        let pieces = match &design.pieces {
-            Some(p) => p,
-            None => return 0.0,
-        };
-        let mut sum = 0.0;
-        for piece in pieces {
-            let piece_prop = piece
-                .props
-                .as_ref()
-                .and_then(|props| props.iter().find(|p| p.quality.guid == quality_guid));
-            if let Some(prop) = piece_prop {
-                if let Ok(val) = prop.value.parse::<f64>() {
-                    sum += val;
-                }
-                continue;
-            }
-            if let Some(type_ref) = &piece.type_ref {
-                if let Some(t) = find_type_in_kit(kit, &type_ref.guid) {
-                    if let Some(prop) = t
-                        .props
-                        .as_ref()
-                        .and_then(|props| props.iter().find(|p| p.quality.guid == quality_guid))
-                    {
-                        if let Ok(val) = prop.value.parse::<f64>() {
-                            sum += val;
-                        }
-                    }
-                }
-            }
-        }
-        sum
-    }
-} // 🎖️Finder Functions
-pub use finder_functions::*;
-
-mod serialization {
+mod serialization { // ⏰Serialization
     // 👑Serialization
     // Serialization MUST provide the serialization functionality.
 
@@ -1422,10 +1704,10 @@ mod serialization {
     pub fn is_supported_model_extension(ext: &str) -> bool {
         SUPPORTED_MODEL_EXTENSIONS.contains(&ext.to_lowercase().as_str())
     }
-} // 🤸Serialization
+} // ⏰Serialization
 pub use serialization::*;
 
-mod diff_types {
+mod diff_types { // ✂️Diff Types
     // ✂️Diff Types
     // Diff Types MUST provide the diff types functionality.
 
@@ -2530,10 +2812,10 @@ mod diff_types {
     pub type DesignChange = Change<Design, DesignDiff>;
     /// <summary>📦KitChange represents tracks kit-level modifications.</summary>
     pub type KitChange = Change<Kit, KitDiff>;
-} // 🏩Diff Types
+} // ✂️Diff Types
 pub use diff_types::*;
 
-mod meta_and_shallow_types {
+mod meta_and_shallow_types { // 🔑Meta And Shallow
     // 🥉Meta And Shallow Types
     // Meta And Shallow Types MUST provide lightweight entity representations.
 
@@ -3366,324 +3648,10 @@ mod meta_and_shallow_types {
         }
     } // 🤸Meta And Shallow Conversion Functions
     pub use meta_and_shallow_conversion_functions::*;
-} // 🖋️Meta And Shallow Types
+} // 🔑Meta And Shallow
 pub use meta_and_shallow_types::*;
 
-mod has_guid_trait {
-    // 🎮HasGuid Trait
-    // HasGuid Trait MUST provide the hasguid trait functionality.
-    /// <summary>🔧d.</summary>
-    /// <remarks>
-    /// </remarks>
-    use super::*;
-
-    pub trait HasGuid {
-        fn guid(&self) -> &str;
-    }
-    /// <summary>💎HasGuid implementation for Attribute.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Attribute {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📊HasGuid implementation for Prop.</summary>
-    impl HasGuid for Prop {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🔌HasGuid implementation for Connector.</summary>
-    impl HasGuid for Connector {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🗿HasGuid implementation for Model.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Model {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🧱HasGuid implementation for Type.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Type {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🧩HasGuid implementation for Piece.</summary>
-    impl HasGuid for Piece {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🔗HasGuid implementation for Connection.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Connection {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🎨HasGuid implementation for Layer.</summary>
-    impl HasGuid for Layer {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>👥HasGuid implementation for Group.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Group {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📈HasGuid implementation for Stat.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Stat {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📐HasGuid implementation for Design.</summary>
-    impl HasGuid for Design {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🏷️HasGuid implementation for Tag.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Tag {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>💡HasGuid implementation for Concept.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Concept {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>⚓HasGuid implementation for Port.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Port {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🔬HasGuid implementation for Quality.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Quality {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📄HasGuid implementation for File.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for File {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📁HasGuid implementation for Folder.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Folder {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>✍️HasGuid implementation for Author.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Author {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📦HasGuid implementation for Kit.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl HasGuid for Kit {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>💎DiffHasGuid implementation for AttributeDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub trait DiffHasGuid {
-        fn guid(&self) -> &str;
-    }
-    /// <summary>💎HasGuid implementation for AttributeDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for AttributeDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📊HasGuid implementation for PropDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for PropDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🔌HasGuid implementation for ConnectorDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for ConnectorDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🗿HasGuid implementation for ModelDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for ModelDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🧱HasGuid implementation for TypeDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for TypeDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🧩HasGuid implementation for PieceDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for PieceDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🔗HasGuid implementation for ConnectionDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for ConnectionDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🎨HasGuid implementation for LayerDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for LayerDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>👥HasGuid implementation for GroupDiff.</summary>
-    impl DiffHasGuid for GroupDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📈HasGuid implementation for StatDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for StatDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📐HasGuid implementation for DesignDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for DesignDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🏷️HasGuid implementation for TagDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for TagDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>💡HasGuid implementation for ConceptDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for ConceptDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>⚓HasGuid implementation for PortDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for PortDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>🔬HasGuid implementation for QualityDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for QualityDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📄HasGuid implementation for FileDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for FileDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📁HasGuid implementation for FolderDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for FolderDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>✍️HasGuid implementation for AuthorDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for AuthorDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-    /// <summary>📦HasGuid implementation for KitDiff.</summary>
-    /// <remarks>
-    /// </remarks>
-    impl DiffHasGuid for KitDiff {
-        fn guid(&self) -> &str {
-            &self.guid
-        }
-    }
-} // 🧵HasGuid Trait
-pub use has_guid_trait::*;
-
-mod apply_diff {
+mod apply_diff { // 🎪Kit Operations
     // 🎲ApplyDiff
     // ApplyDiff MUST provide the applydiff functionality.
 
@@ -4375,16 +4343,16 @@ mod apply_diff {
         apply_collection_diff(&mut item.authors, &diff.authors, apply_author_diff);
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
     }
-} // ✈️ApplyDiff
+} // 🎪Kit Operations
 pub use apply_diff::*;
 
-mod kit_diff_validation {
+mod kit_diff_validation { // 📦Kit Diff Validation
     // Kit diff validation: errors vs warnings; optional JSON heal aligned with Go/TS asset cases.
     include!("kit_diff_validation.inc.rs");
-}
+} // 📦Kit Diff Validation
 pub use kit_diff_validation::*;
 
-mod kit_change_helpers {
+mod kit_change_helpers { // 🌊Kit Change Helpers
     // 🏬Kit Change Helpers
     // Kit Change Helpers MUST provide convenience functions for computing kit and design diffs, inverses, and changes.
 
@@ -5338,10 +5306,10 @@ mod kit_change_helpers {
             after: Some(after.clone()),
         }
     }
-} // 🎽Kit Change Helpers
+} // 🌊Kit Change Helpers
 pub use kit_change_helpers::*;
 
-mod filter {
+mod filter { // 🔍Filter
     // 📷Filter
     // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
@@ -5887,10 +5855,171 @@ mod filter {
             updated_at: base.updated_at,
         }
     }
-} // 🧩Filter
+} // 🔍Filter
 pub use filter::*;
 
-mod flatten_design {
+mod finder_functions { // 🔍Helpers
+    // 🥿Finder Functions
+    // Finder Functions MUST provide the finder functions functionality.
+    /// <summary>🔍finds a type in a kit by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    use super::*;
+
+    pub fn find_type_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Type> {
+        kit.types.as_ref()?.iter().find(|t| t.guid == guid)
+    }
+    /// <summary>🔍finds a type in a kit mutably by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_type_in_kit_mut<'a>(kit: &'a mut Kit, guid: &str) -> Option<&'a mut Type> {
+        kit.types.as_mut()?.iter_mut().find(|t| t.guid == guid)
+    }
+    /// <summary>🔍finds a design in a kit by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_design_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Design> {
+        kit.designs.as_ref()?.iter().find(|d| d.guid == guid)
+    }
+    /// <summary>🔍finds a design in a kit mutably by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_design_in_kit_mut<'a>(kit: &'a mut Kit, guid: &str) -> Option<&'a mut Design> {
+        kit.designs.as_mut()?.iter_mut().find(|d| d.guid == guid)
+    }
+    /// <summary>🔍finds a piece in a design by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_piece_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Piece> {
+        design.pieces.as_ref()?.iter().find(|p| p.guid == guid)
+    }
+    /// <remarks>
+    /// </remarks>
+    pub fn find_piece_in_design_mut<'a>(
+        design: &'a mut Design,
+        guid: &str,
+    ) -> Option<&'a mut Piece> {
+        design.pieces.as_mut()?.iter_mut().find(|p| p.guid == guid)
+    }
+    /// <summary>🔍finds a connection in a design by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_connection_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Connection> {
+        design.connections.as_ref()?.iter().find(|c| c.guid == guid)
+    }
+    /// <summary>🔍finds a connector in a type by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_connector_in_type<'a>(t: &'a Type, guid: &str) -> Option<&'a Connector> {
+        t.connectors.as_ref()?.iter().find(|c| c.guid == guid)
+    }
+    /// <summary>🔍finds a model in a type by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_model_in_type<'a>(t: &'a Type, guid: &str) -> Option<&'a Model> {
+        t.models.as_ref()?.iter().find(|m| m.guid == guid)
+    }
+    /// <remarks>
+    /// </remarks>
+    pub fn find_file_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a File> {
+        kit.files.as_ref()?.iter().find(|f| f.guid == guid)
+    }
+
+    /// <summary>🔍finds a folder in a kit by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_folder_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Folder> {
+        kit.folders.as_ref()?.iter().find(|f| f.guid == guid)
+    }
+    /// <remarks>
+    /// </remarks>
+    pub fn find_author_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Author> {
+        kit.authors.as_ref()?.iter().find(|a| a.guid == guid)
+    }
+    /// <summary>🔍find tag in kit.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_tag_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Tag> {
+        kit.tags.as_ref()?.iter().find(|t| t.guid == guid)
+    }
+    /// <summary>🔍finds a concept in a kit by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_concept_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Concept> {
+        kit.concepts.as_ref()?.iter().find(|c| c.guid == guid)
+    }
+    /// <summary>🔍finds a quality in a kit by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_quality_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Quality> {
+        kit.qualities.as_ref()?.iter().find(|q| q.guid == guid)
+    }
+    /// <remarks>
+    /// </remarks>
+    pub fn find_interface_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Port> {
+        kit.ports.as_ref()?.iter().find(|i| i.guid == guid)
+    }
+
+    /// <summary>🔍finds a layer in a design by GUID.</summary>
+    pub fn find_layer_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Layer> {
+        design.layers.as_ref()?.iter().find(|l| l.guid == guid)
+    }
+    /// <summary>🔍finds a group in a design by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_group_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Group> {
+        design.groups.as_ref()?.iter().find(|g| g.guid == guid)
+    }
+
+    /// <summary>🔍finds a stat in a design by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn find_stat_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Stat> {
+        design.stats.as_ref()?.iter().find(|s| s.guid == guid)
+    }
+
+    /// ✔️For each piece, it checks piece-level props first, then falls back to type-level props.
+    pub fn sum_quality_in_design(kit: &Kit, design_guid: &str, quality_guid: &str) -> f64 {
+        let design = match find_design_in_kit(kit, design_guid) {
+            Some(d) => d,
+            None => return 0.0,
+        };
+        let pieces = match &design.pieces {
+            Some(p) => p,
+            None => return 0.0,
+        };
+        let mut sum = 0.0;
+        for piece in pieces {
+            let piece_prop = piece
+                .props
+                .as_ref()
+                .and_then(|props| props.iter().find(|p| p.quality.guid == quality_guid));
+            if let Some(prop) = piece_prop {
+                if let Ok(val) = prop.value.parse::<f64>() {
+                    sum += val;
+                }
+                continue;
+            }
+            if let Some(type_ref) = &piece.type_ref {
+                if let Some(t) = find_type_in_kit(kit, &type_ref.guid) {
+                    if let Some(prop) = t
+                        .props
+                        .as_ref()
+                        .and_then(|props| props.iter().find(|p| p.quality.guid == quality_guid))
+                    {
+                        if let Ok(val) = prop.value.parse::<f64>() {
+                            sum += val;
+                        }
+                    }
+                }
+            }
+        }
+        sum
+    }
+} // 🔍Helpers
+pub use finder_functions::*;
+
+mod flatten_design { // 🌤️Flatten Design
     // 🏦FlattenDesign
     // FlattenDesign MUST provide the flattendesign functionality.
 
@@ -6578,10 +6707,10 @@ mod flatten_design {
         }
         diff
     }
-} // 🕍FlattenDesign
+} // 🌤️Flatten Design
 pub use flatten_design::*;
 
-mod copy_paste_design {
+mod copy_paste_design { // 📋Copy Paste Design
     // 📋Copy Paste Design
     // Copy Paste Design MUST provide copy and paste functionality for designs.
     // Specs: CopyDesign extracts selected pieces and connections. PasteDesign inserts them into a target design.
@@ -7232,10 +7361,10 @@ mod copy_paste_design {
         }
         diff
     }
-} // 📋CopyPasteDesign
+} // 📋Copy Paste Design
 pub use copy_paste_design::*;
 
-mod kit_model_export {
+mod kit_model_export { // 🔩Kit Model Export
     // 🏤Kit Model Export
     // Kit Model Export MUST provide GLB/glTF export of a design's assembled 3D model.
 
@@ -7874,10 +8003,10 @@ mod kit_model_export {
         }
         // 📢Output
     }
-} // 🔮Kit Model Export
+} // 🔩Kit Model Export
 pub use kit_model_export::*;
 
-mod geometric_insights {
+mod geometric_insights { // ❄️Geometric Insights
     // 🥽Geometric Insights
     // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
@@ -8294,10 +8423,10 @@ mod geometric_insights {
         }
         get_geometric_insights_for_model(&data)
     }
-} // 🏥Geometric Insights
+} // ❄️Geometric Insights
 pub use geometric_insights::*;
 
-mod validation_types {
+mod validation_types { // 🛡️Validation
     // 🌸Validation Types
     // Validation Types MUST provide the validation types functionality.
 
@@ -8761,10 +8890,10 @@ mod validation_types {
             }
         }
     }
-} // 🌿Validation Types
+} // 🛡️Validation
 pub use validation_types::*;
 
-mod sqlite_import_export {
+mod sqlite_import_export { // 📡SQLite
     // 🏢SQLite Import/Export
     // SQLite Import/Export MUST provide the sqlite import/export functionality.
 
@@ -9584,10 +9713,10 @@ mod sqlite_import_export {
                 })
         }
     }
-} // 👠SQLite Import/Export
+} // 📡SQLite
 pub use sqlite_import_export::*;
 
-mod zip_import_export {
+mod zip_import_export { // 📦ZipRoundtrip
     // 📋Zip Import/Export
     // Zip Import/Export MUST provide the zip import/export functionality.
 
@@ -9769,10 +9898,10 @@ mod zip_import_export {
             Ok(())
         }
     }
-} // 🎽Zip Import/Export
+} // 📦ZipRoundtrip
 pub use zip_import_export::*;
 
-mod kit_workflow {
+mod kit_workflow { // 🏗️Kit Workflow
     // 📭Kit Workflow
     // Kit Workflow MUST provide cohesive file, folder, archive, remote, and temporary kit operations.
 
@@ -10143,10 +10272,10 @@ mod kit_workflow {
         let imported = import_remote_kit(url)?;
         Ok(edit_temporary_kit(&imported.kit, diff))
     }
-} // 🚣Kit Workflow
+} // 🏗️Kit Workflow
 pub use kit_workflow::*;
 
-mod wasm_bindings {
+mod wasm_bindings { // 🥇WASM Bindings
     // 🥈WASM Bindings
     // WASM Bindings MUST provide the wasm bindings functionality.
 
@@ -10306,10 +10435,10 @@ mod wasm_bindings {
             console_error_panic_hook::set_once();
         }
     }
-} // 🎰WASM Bindings
+} // 🥇WASM Bindings
 pub use wasm_bindings::*;
 
-mod hash {
+mod hash { // 🖥️Hash
     // 📭Hash
     // Hash MUST provide deterministic SHA-256 Merkle hash functions for all entities.
 
@@ -13168,10 +13297,10 @@ mod hash {
         }
     } // 📄Hash Diff Entities
     pub use hash_diff_entities::*;
-} // 🌋Hash
+} // 🖥️Hash
 pub use hash::*;
 
-mod tests {
+mod tests { // 🧪Tests
     // 🏘️Tests
     // Tests MUST provide the tests functionality.
 
@@ -15865,10 +15994,10 @@ mod tests {
         } // ⚡MaxChildren Tests
         pub use max_children_tests::*;
     }
-} // 🏦Tests
+} // 🧪Tests
 pub use tests::*;
 
-mod benchmark {
+mod benchmark { // 🏋️Benchmarks
     // 🕹️Benchmark
     use super::*;
 
@@ -16004,5 +16133,5 @@ mod benchmark {
             });
         }
     }
-} // 🏯Benchmark
+} // 🏋️Benchmarks
 pub use benchmark::*;

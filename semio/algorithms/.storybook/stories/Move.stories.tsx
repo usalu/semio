@@ -1,9 +1,9 @@
-// #region ���Header
-// �� semio/algorithms/.storybook/stories/Move.stories.tsx
+// #region 🧲Header
+// 💻 semio/algorithms/.storybook/stories/Move.stories.tsx
 // Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, SCENE windows.
 // Summary: Wires nativeFlattenDesign for diagram layout metadata; move diff is a local vec overlay on raw design.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-��Header
+// #endregion 🧲Header
 
 import type { DesignChange, DesignDiff } from "@semio/js";
 import { applyDesignDiff } from "@semio/js";

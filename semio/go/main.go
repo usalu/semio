@@ -8,6 +8,8 @@
 
 // #endregion 🧲Header
 
+
+
 // #region ⛩️Imports
 
 package semio
@@ -41,6 +43,8 @@ import (
 
 // #endregion ⛩️Imports
 
+
+
 // #region 🎞️Constants
 
 const (
@@ -52,7 +56,9 @@ const AssetsPath = "../assets/semio"
 
 // #endregion 🎞️Constants
 
-// #region 📦Utils
+
+
+// #region 📦Utilities
 
 // 🎲Guid generates a new random 128-bit hex-encoded unique identifier.
 // 📎ptrString returns a pointer to the given string value.
@@ -260,7 +266,9 @@ func DeepEqual(a, b interface{}) bool {
 	return string(aJSON) == string(bJSON)
 }
 
-// #endregion 📦Utils
+// #endregion 📦Utilities
+
+
 
 // #region 🐍Entity IDs
 // Entity IDs MUST define identifier types for all semio domain entities.
@@ -379,6 +387,8 @@ type KitId struct {
 
 // #endregion 🐍Entity IDs
 
+
+
 // #region 🖥️Weak Entities
 // Weak Entities MUST define value types that exist only as part of parent entities.
 
@@ -424,7 +434,9 @@ type Camera struct {
 
 // #endregion 🖥️Weak Entities
 
-// #region 📊Attribute
+
+
+// #region 💎Attribute
 
 // 💎Attribute represents a key-value metadata entry with optional definition.
 type Attribute struct {
@@ -459,9 +471,11 @@ type AttributeMeta struct {
 	Definition *string `json:"definition,omitempty"`
 }
 
-// #endregion 📊Attribute
+// #endregion 💎Attribute
 
-// #region �Location
+
+
+// #region 📍Location
 
 // 📍Location represents a geographic point with longitude, latitude and optional altitude.
 type Location struct {
@@ -480,9 +494,11 @@ type LocationDiff struct {
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// #endregion �Location
+// #endregion 📍Location
 
-// #region 🩺Author
+
+
+// #region ✍️Author
 
 // ✍️Author represents a named contributor with optional email and timestamps.
 type Author struct {
@@ -520,9 +536,11 @@ type AuthorMeta struct {
 	UpdatedAt string  `json:"updatedAt,omitempty"`
 }
 
-// #endregion 🩺Author
+// #endregion ✍️Author
 
-// #region ✏️File
+
+
+// #region 📄File
 
 // 📄File represents a file reference entity with name, remote URL and metadata.
 type File struct {
@@ -574,9 +592,11 @@ type FileMeta struct {
 	UpdatedAt   string    `json:"updatedAt,omitempty"`
 }
 
-// #endregion ✏️File
+// #endregion 📄File
 
-// #region 🌨️Folder
+
+
+// #region 📁Folder
 
 // 📁Folder represents a folder hierarchy entity with name and parent reference.
 type Folder struct {
@@ -617,9 +637,11 @@ type FolderMeta struct {
 	UpdatedAt   string    `json:"updatedAt,omitempty"`
 }
 
-// #endregion 🌨️Folder
+// #endregion 📁Folder
 
-// #region 🔬Benchmark
+
+
+// #region 📏Benchmark
 
 // 📏Benchmark represents a named metric range with min/max bounds and optional icon.
 type Benchmark struct {
@@ -656,9 +678,11 @@ type BenchmarksDiff struct {
 	Added []Benchmark `json:"added,omitempty"`
 }
 
-// #endregion 🔬Benchmark
+// #endregion 📏Benchmark
 
-// #region 📷Quality
+
+
+// #region 🔬Quality
 
 // 🔭QualityKind is a bitfield enum for quality scope classification.
 type QualityKind int
@@ -755,9 +779,11 @@ type QualityMeta struct {
 	UpdatedAt           string      `json:"updatedAt,omitempty"`
 }
 
-// #endregion 📷Quality
+// #endregion 🔬Quality
 
-// #region 🌈Port
+
+
+// #region ⚓Port
 
 // ⚓Port represents a named connector port category with compatible port references.
 type Port struct {
@@ -831,9 +857,11 @@ type PortMeta struct {
 	UpdatedAt   string  `json:"updatedAt,omitempty"`
 }
 
-// #endregion 🌈Port
+// #endregion ⚓Port
 
-// #region 📋Prop
+
+
+// #region 📊Prop
 
 // 📊Prop represents a quality measurement value with optional unit.
 type Prop struct {
@@ -870,9 +898,11 @@ type PropMeta struct {
 	Unit    *string   `json:"unit,omitempty"`
 }
 
-// #endregion 📋Prop
+// #endregion 📊Prop
 
-// #region 🛎️Tag
+
+
+// #region 🏷️Tag
 
 // 🏷️Tag represents a named classification label with optional description and icon.
 type Tag struct {
@@ -941,9 +971,11 @@ type TagMeta struct {
 	UpdatedAt   string  `json:"updatedAt,omitempty"`
 }
 
-// #endregion 🛎️Tag
+// #endregion 🏷️Tag
 
-// #region 🎯Concept
+
+
+// #region 💡Concept
 
 // 💡Concept represents a named categorization concept with optional description and icon.
 type Concept struct {
@@ -1012,9 +1044,11 @@ type ConceptMeta struct {
 	UpdatedAt   string  `json:"updatedAt,omitempty"`
 }
 
-// #endregion 🎯Concept
+// #endregion 💡Concept
 
-// #region 🖋️Model
+
+
+// #region 🗿Model
 
 // 🗿Model represents a 3D model reference linking a file with tags and description.
 type Model struct {
@@ -1053,9 +1087,11 @@ type ModelMeta struct {
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 🖋️Model
+// #endregion 🗿Model
 
-// #region 💧Connector
+
+
+// #region 🔌Connector
 
 // 🔌Connector represents a spatial connection point on a type with position and direction.
 type Connector struct {
@@ -1123,9 +1159,11 @@ type ConnectorMeta struct {
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 💧Connector
+// #endregion 🔌Connector
 
-// #region ⚡Type
+
+
+// #region 🧱Type
 
 // 🧱Type represents a component blueprint with models, connectors and hierarchical inheritance.
 type Type struct {
@@ -1252,9 +1290,11 @@ type TypeShallow struct {
 	UpdatedAt   string          `json:"updatedAt,omitempty"`
 }
 
-// #endregion ⚡Type
+// #endregion 🧱Type
 
-// #region 🎈Layer
+
+
+// #region 🎨Layer
 
 // 🎨Layer represents a named layer with visibility, lock and color properties.
 type Layer struct {
@@ -1297,9 +1337,11 @@ type LayerMeta struct {
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 🎈Layer
+// #endregion 🎨Layer
 
-// #region 🔊Piece
+
+
+// #region 🧩Piece
 
 // 🧩Piece represents a positioned component instance within a design with optional transform.
 type Piece struct {
@@ -1375,9 +1417,11 @@ type PieceMeta struct {
 	Description *string   `json:"description,omitempty"`
 }
 
-// #endregion 🔊Piece
+// #endregion 🧩Piece
 
-// #region 🗺️Group
+
+
+// #region 👥Group
 
 // 👥Group represents a named collection of pieces within a design.
 type Group struct {
@@ -1416,9 +1460,11 @@ type GroupMeta struct {
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 🗺️Group
+// #endregion 👥Group
 
-// #region 🎶Side
+
+
+// #region ↔️Side
 
 // ↔️Side represents one end of a connection referencing a piece and optional connector.
 type Side struct {
@@ -1434,9 +1480,11 @@ type SideDiff struct {
 	Connector   *ConnectorId `json:"connector,omitempty"`
 }
 
-// #endregion 🎶Side
+// #endregion ↔️Side
 
-// #region 🦀Connection
+
+
+// #region 🔗Connection
 
 // 🔗Connection represents a spatial relationship between two pieces with gap, shift and rotation.
 type Connection struct {
@@ -1497,9 +1545,11 @@ type ConnectionMeta struct {
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 🦀Connection
+// #endregion 🔗Connection
 
-// #region 🎻Stat
+
+
+// #region 📈Stat
 
 // 📈Stat represents a statistical quality measurement with min/max bounds and unit.
 type Stat struct {
@@ -1541,9 +1591,11 @@ type StatMeta struct {
 	Unit    *string   `json:"unit,omitempty"`
 }
 
-// #endregion 🎻Stat
+// #endregion 📈Stat
 
-// #region 📌Design
+
+
+// #region 📐Design
 
 // 📐Design represents an assembly of pieces, connections, layers and groups.
 type Design struct {
@@ -1666,11 +1718,13 @@ type DesignShallow struct {
 	UpdatedAt   string           `json:"updatedAt,omitempty"`
 }
 
-// #endregion 📌Design
+// #endregion 📐Design
+
+
 
 // #region ⏱️Kit
 
-// #region 🎆KitKind
+// #region 🧬KitKind
 // KitKind discriminates the five persistence/transport forms of a Kit.
 
 // 🧬KitKind represents the five persistence/transport forms of a kit.
@@ -1708,7 +1762,7 @@ func IsValidKitKind(kind KitKind) bool {
 	return false
 }
 
-// #endregion 🎆KitKind
+// #endregion 🧬KitKind
 
 // 📦Kit represents the root container for all domain entities.
 type Kit struct {
@@ -1836,7 +1890,7 @@ type KitShallow struct {
 	UpdatedAt   string          `json:"updatedAt,omitempty"`
 }
 
-// #region 🔭Meta/Shallow Conversions
+// #region 🔑Meta And Shallow
 
 // 💎ToAttributeMeta converts an Attribute to its scalar-only Meta view.
 func ToAttributeMeta(a Attribute) AttributeMeta {
@@ -2032,7 +2086,7 @@ func ToKitShallow(k Kit) KitShallow {
 	return KitShallow{Guid: k.Guid, Name: k.Name, Version: k.Version, Types: types, Designs: designs, Tags: tags, Concepts: concepts, Ports: ports, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
 }
 
-// #endregion 🔭Meta/Shallow Conversions
+// #endregion 🔑Meta And Shallow
 
 // ⚖️Change represents a reversible entity change with forward and backward diffs.
 type Change[TEntity any, TDiff any] struct {
@@ -2247,13 +2301,45 @@ func GetKitChange(before, after Kit, author *string, time *string) KitChange {
 
 // #endregion ⏱️Kit
 
-// #region 🎬Hash
+
+
+// #region ⏰Serialization
+
+// 📤SerializeKit marshals a Kit to indented JSON bytes.
+func SerializeKit(kit Kit) ([]byte, error) {
+	return json.MarshalIndent(kit, "", "  ")
+}
+
+// 📥DeserializeKit unmarshals JSON bytes into a Kit.
+func DeserializeKit(data []byte) (Kit, error) {
+	var kit Kit
+	err := json.Unmarshal(data, &kit)
+	return kit, err
+}
+
+// ✉️SerializeKitDiff marshals a KitDiff to indented JSON bytes.
+func SerializeKitDiff(diff KitDiff) ([]byte, error) {
+	return json.MarshalIndent(diff, "", "  ")
+}
+
+// 📩DeserializeKitDiff unmarshals JSON bytes into a KitDiff.
+func DeserializeKitDiff(data []byte) (KitDiff, error) {
+	var diff KitDiff
+	err := json.Unmarshal(data, &diff)
+	return diff, err
+}
+
+// #endregion ⏰Serialization
+
+
+
+// #region 🖥️Hash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
 // SHA-256 hex digest. Collections are hashed by sorting child hashes alphabetically.
 // Field order is alphabetical by JSON field name. Missing/null fields are skipped.
 // Number format: integer if no fractional part, else shortest decimal representation.
 
-// ✏️#region 🌩️HashWriter
+// #region 🌩️HashWriter
 // 💾hashWriter accumulates binary data for deterministic SHA-256 hashing.
 type hashWriter struct {
 	buf bytes.Buffer
@@ -3449,6 +3535,9 @@ func HashKit(k Kit) string {
 // #region 🔗Hash Diffs
 // Deterministic SHA-256 Merkle hash functions for all diff types.
 
+// #region 🐹Hash Diff Value Types
+// Helper functions for writing diff fields.
+
 func writeNullableStringDiff(w *hashWriter, key string, val *string, isSet bool) {
 	if val != nil {
 		w.writeString(key)
@@ -3535,6 +3624,11 @@ func hashCollectionDiffGeneric(
 	}
 	return w.digest()
 }
+
+// #endregion 🐹Hash Diff Value Types
+
+// #region ⚗️Hash Diff Entities
+// Hash functions for all diff entity types.
 
 func HashCoordDiff(d CoordDiff) string {
 	w := &hashWriter{}
@@ -4645,41 +4739,15 @@ func HashKitDiff(d KitDiff) string {
 	return w.digest()
 }
 
-// #endregion 🔗Hash Diff Entities
+// #endregion ⚗️Hash Diff Entities
 
-// #endregion 🎬Hash Diffs
+// #endregion 🔗Hash Diffs
 
-//#endregion 🎬Hash
+// #endregion 🖥️Hash
 
-// #region ⏰Serialization
 
-// 📤SerializeKit marshals a Kit to indented JSON bytes.
-func SerializeKit(kit Kit) ([]byte, error) {
-	return json.MarshalIndent(kit, "", "  ")
-}
 
-// 📥DeserializeKit unmarshals JSON bytes into a Kit.
-func DeserializeKit(data []byte) (Kit, error) {
-	var kit Kit
-	err := json.Unmarshal(data, &kit)
-	return kit, err
-}
-
-// ✉️SerializeKitDiff marshals a KitDiff to indented JSON bytes.
-func SerializeKitDiff(diff KitDiff) ([]byte, error) {
-	return json.MarshalIndent(diff, "", "  ")
-}
-
-// 📩DeserializeKitDiff unmarshals JSON bytes into a KitDiff.
-func DeserializeKitDiff(data []byte) (KitDiff, error) {
-	var diff KitDiff
-	err := json.Unmarshal(data, &diff)
-	return diff, err
-}
-
-// #endregion ⏰Serialization
-
-// #region 🎼Helpers
+// #region 🔍Helpers
 
 // 🧱FindTypeInKit returns a pointer to the type with the given GUID or nil.
 func FindTypeInKit(kit *Kit, typeGuid string) *Type {
@@ -4843,7 +4911,9 @@ func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64
 	return total
 }
 
-// #endregion 🎼Helpers
+// #endregion 🔍Helpers
+
+
 
 // #region 🗡️Factories
 
@@ -4987,7 +5057,9 @@ func NewAuthor(name string) Author {
 
 // #endregion 🗡️Factories
 
-// #region 📍Kit Operations
+
+
+// #region 🎪Kit Operations
 // Kit Operations MUST provide comparison, diffing, and application of kit changes.
 
 // 🧱AreKitsEqual compares two kits for structural equality.
@@ -10126,7 +10198,7 @@ func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model 
 	return &filtered[bestIndex]
 }
 
-// #region 🪵Filter
+// #region 🎠Filter
 
 // 🧩GlobFilter provides include/exclude glob patterns for name-based entity filtering.
 // If Include is non-empty, only names matching at least one include pattern are kept.
@@ -10566,9 +10638,11 @@ func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
 	return float64(intersection) / float64(union)
 }
 
-// #endregion 🪵Filter
+// #endregion 🎠Filter
 
-// #endregion 📍Kit Operations
+// #endregion 🎪Kit Operations
+
+
 
 // #region 🌊Kit Change Helpers
 // Kit Change Helpers MUST provide convenience functions for single-entity kit changes.
@@ -10719,7 +10793,9 @@ func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
 
 // #endregion 🌊Kit Change Helpers
 
-// #region 🔓Validation
+
+
+// #region 🛡️Validation
 
 // 🏛️SemioEntityKind enumerates the kinds of semio domain entities.
 type SemioEntityKind string
@@ -11585,7 +11661,7 @@ func HasErrors(result ValidationResult) bool {
 	return false
 }
 
-// #region 🌡️Validation Serialization
+// #region 🌧️Validation Serialization
 // Validation Serialization MUST provide serializable representations of validation results.
 
 // ⚠️ProblemSerialized is the JSON-serializable representation of a validation problem.
@@ -11653,9 +11729,11 @@ func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 	return true
 }
 
-// #endregion 🌡️Validation Serialization
+// #endregion 🌧️Validation Serialization
 
-// #endregion 🔓Validation
+// #endregion 🛡️Validation
+
+
 
 // #region 🌤️Flatten Design
 // 💾Flatten Design MUST compute absolute piece planes from relative connections.
@@ -12234,6 +12312,8 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 }
 
 // #endregion 🌤️Flatten Design
+
+
 
 // #region 📋Copy Paste Design
 // Copy Paste Design MUST provide copy and paste functionality for designs.
@@ -12826,7 +12906,9 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 
 // #endregion 📋Copy Paste Design
 
-// #region 🤖ExportDesignModel
+
+
+// #region 🔩Kit Model Export
 
 // 📤ExportModelFormats maps supported export format extensions.
 var ExportModelFormats = map[string]string{
@@ -12834,7 +12916,7 @@ var ExportModelFormats = map[string]string{
 	".gltf": ".gltf",
 }
 
-// #region 🎶ExportDesignModel/Helpers
+// #region 🔧Kit Model Export Helpers
 
 // 📤exportMeshData holds extracted or generated mesh geometry for a single type.
 type exportMeshData struct {
@@ -13280,7 +13362,7 @@ func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) 
 	return &typ.Models[0]
 }
 
-// #endregion 🎶ExportDesignModel/Helpers
+// #endregion 🔧Kit Model Export Helpers
 
 // 📐ExportDesignModel exports the 3D model of a design to GLB or glTF format.
 func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string, options map[string]interface{}) ([]byte, error) {
@@ -13313,7 +13395,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
 	}
 
-	// #region 🌦️ExportDesignModel/BFS
+	// #region 🌦️Kit Model Export BFS
 	piecePlanes := make(map[string]*Plane)
 	parentOf := make(map[string]string)
 	childrenOf := make(map[string][]string)
@@ -13416,9 +13498,9 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 			bfsExport(piece.Guid)
 		}
 	}
-	// #endregion 🌦️ExportDesignModel/BFS
+	// #endregion 🌦️Kit Model Export BFS
 
-	// #region ⚙️ExportDesignModel/MeshData
+	// #region ⚙️Kit Model Export MeshData
 	usedTypes := make(map[string]bool)
 	for _, piece := range design.Pieces {
 		if piece.Type != nil {
@@ -13454,9 +13536,9 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		}
 		typeMeshData[typeGuid] = meshData
 	}
-	// #endregion ⚙️ExportDesignModel/MeshData
+	// #endregion ⚙️Kit Model Export MeshData
 
-	// #region 💻ExportDesignModel/BuildGLTF
+	// #region 💻Kit Model Export BuildGLTF
 	typeOrder := make([]string, 0, len(usedTypes))
 	for typeGuid := range typeMeshData {
 		typeOrder = append(typeOrder, typeGuid)
@@ -13735,10 +13817,12 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 	out.Write(binBytes)
 
 	return out.Bytes(), nil
-	// #endregion 💻ExportDesignModel/BuildGLTF
+	// #endregion 💻Kit Model Export BuildGLTF
 }
 
-// #endregion 🤖ExportDesignModel
+// #endregion 🔩Kit Model Export
+
+
 
 // #region ❄️Geometric Insights
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
@@ -13963,7 +14047,9 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 
 // #endregion ❄️Geometric Insights
 
-// #region 🎹SQLite Kit Operations
+
+
+// #region 📡SQLite
 // SQLite kit operations. MUST provide serialization and deserialization of Kit to and from SQLite and zip formats.
 
 // 🗄️KitFromSqlite reads a Kit from a SQLite database file
@@ -14576,7 +14662,7 @@ func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL strin
 	return nil
 }
 
-// #region 🔑Kit Workflow Operations
+// #region 🔄Kit Workflow
 // Kit workflow operations MUST provide direct import, export, and edit flows for file, folder, archive, remote, and temporary kit kinds.
 
 // 📥ImportFileKit reads a JSON file kit from disk.
@@ -14810,6 +14896,6 @@ func mustReadKitSchemaSQL() string {
 	panic("failed to locate sqlite/schema.sql for kit workflow operations")
 }
 
-// #endregion 🔑Kit Workflow Operations
+// #endregion 🔄Kit Workflow
 
-// #endregion 🎹SQLite Kit Operations
+// #endregion 📡SQLite

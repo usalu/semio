@@ -1,9 +1,9 @@
-��Header
-// �� semio/algorithms/.storybook/stories/Flatten.stories.tsx
+// #region 🧲Header
+// 💻 semio/algorithms/.storybook/stories/Flatten.stories.tsx
 // Specs: Uses the AlgorithmApp shell with DESIGN_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
 // Summary: Wires kit + nativeFlattenDesign; UI applies diagramLayoutDiff for 2D layout metadata only.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-��Header
+// #endregion 🧲Header
 
 import type { DesignChange } from "@semio/js";
 import { applyDesignDiff } from "@semio/js";

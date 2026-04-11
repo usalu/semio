@@ -1,12 +1,11 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx
 // Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Drag story using nativeFlattenDesign and nativeDragPieces with the Storybook language toolbar.
+// Summary: Raw kit design in diagrams; nativeFlattenDesign supplies diagramLayoutDiff only; nativeDragPieces returns output + dragDiff.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 import type { DesignChange, Design, DesignDiff } from "@semio/js";
-import { applyDesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -35,33 +34,30 @@ function DragFrame() {
   }), []) as any;
 
   const [flattenChange, setFlattenChange] = React.useState<DesignChange | null>(null);
-  const [baseDesign, setBaseDesign] = React.useState<any | null>(null);
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>((DragPieces as any).pieces?.map((p: any) => p.guid) ?? []);
   const [vec, setVec] = React.useState(DragOffset);
   const [outputDesign, setOutputDesign] = React.useState<Design | undefined>(undefined);
   const [designDiff, setDesignDiff] = React.useState<DesignDiff | undefined>(undefined);
+  const [dragError, setDragError] = React.useState<string | undefined>(undefined);
 
   React.useEffect(() => {
     let cancelled = false;
     // Clear stale preview state immediately on language change to avoid rendering an old diff/output.
     // Keep user inputs (selection, vec) stable so different languages can be compared easily.
     setFlattenChange(null);
-    setBaseDesign(null);
     setOutputDesign(undefined);
     setDesignDiff(undefined);
+    setDragError(undefined);
     void (async () => {
       const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
       if (cancelled) return;
       if (!fc.ok) {
         setFlattenChange(null);
-        setBaseDesign(null);
         return;
       }
       setFlattenChange(fc.change);
-      const bd = applyDesignDiff(rawDesign, fc.change.forward) as any;
-      setBaseDesign(bd);
       setSelectedPieceGuids((prev) => {
-        const pieceGuids = new Set<string>((bd?.pieces ?? []).map((p: any) => p.guid));
+        const pieceGuids = new Set<string>((rawDesign?.pieces ?? []).map((p: any) => p.guid));
         const filtered = prev.filter((g) => pieceGuids.has(g));
         if (filtered.length > 0) return filtered;
         return (DragPieces as any).pieces?.map((p: any) => p.guid) ?? [];
@@ -73,30 +69,42 @@ function DragFrame() {
   }, [kit, language]);
 
   React.useEffect(() => {
-    if (!baseDesign) return;
+    if (!flattenChange) return;
     let cancelled = false;
     void (async () => {
       if (selectedPieceGuids.length === 0) {
-        if (!cancelled) { setOutputDesign(undefined); setDesignDiff(undefined); }
+        if (!cancelled) {
+          setOutputDesign(undefined);
+          setDesignDiff(undefined);
+        }
         return;
       }
       setOutputDesign(undefined);
       setDesignDiff(undefined);
-      const { dragPiecesInDesign } = await import("@semio/js");
-      const piecesDesign = { guid: baseDesign.guid, name: baseDesign.name, pieces: (baseDesign.pieces ?? []).filter((p: any) => selectedPieceGuids.includes(p.guid)) };
-      const diff = dragPiecesInDesign(baseDesign, piecesDesign, vec);
-      const result = await nativeDragPieces(kit, rawDesign as any, baseDesign, selectedPieceGuids, vec, language);
-      if (!cancelled) { setDesignDiff(diff); setOutputDesign(result); }
+      setDragError(undefined);
+      try {
+        const { output, dragDiff } = await nativeDragPieces(kit, rawDesign as Design, selectedPieceGuids, vec, language);
+        if (!cancelled) {
+          setDesignDiff(dragDiff);
+          setOutputDesign(output);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setDesignDiff(undefined);
+          setOutputDesign(undefined);
+          setDragError(e instanceof Error ? e.message : String(e));
+        }
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [baseDesign, selectedPieceGuids, vec, language]);
+  }, [flattenChange, kit, selectedPieceGuids, vec, language]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: baseDesign ?? rawDesign,
+      design: rawDesign,
       vec,
       onVecChange: setVec,
       vecMin: { u: -10, v: -10 },
@@ -104,10 +112,20 @@ function DragFrame() {
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
       designDiff,
-      outputDesign: outputDesign ?? baseDesign ?? rawDesign,
-      error: !flattenChange || !baseDesign ? `Loading drag preview (${language})…` : selectedPieceGuids.length === 0 ? "Select at least one piece to drag." : !outputDesign ? `Loading drag result (${language})…` : undefined,
+      diffDesign: rawDesign,
+      diagramLayoutDiff: flattenChange?.forward,
+      outputDesign: outputDesign ?? rawDesign,
+      error: dragError
+        ? dragError
+        : !flattenChange
+          ? `Loading drag preview (${language})…`
+          : selectedPieceGuids.length === 0
+            ? "Select at least one piece to drag."
+            : !outputDesign
+              ? `Loading drag result (${language})…`
+              : undefined,
     }),
-    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],
+    [kit, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, dragError, language],
   );
 
   return <AlgorithmApp id="drag" label="Drag" windows={WINDOWS} context={context} className="h-full w-full" />;

@@ -1,12 +1,12 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/CopyAndPaste.stories.tsx
 // Specs: IPO row matches other algorithm stories; input column includes paste anchoring (all pasteDesign anchoring strings) plus optional Coord.
-// Summary: Copy & paste Storybook stories using nativeFlattenDesign/nativeCopyDesign/nativePasteDesign with the language toolbar.
+// Summary: Raw source/target in diagrams; flatten forwards only as layoutDiff; copy/paste run on raw designs via native adapters.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 
-import type { Design, DesignChange, DesignDiff, PasteDesignAnchoringKind } from "@semio/js";
+import type { Design, DesignDiff, PasteDesignAnchoringKind } from "@semio/js";
 import { PASTE_DESIGN_ANCHORING_KINDS, applyDesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
@@ -57,21 +57,20 @@ const PASTE_DESIGN_ANCHOR_OPTIONS: readonly { anchoringKind: PasteDesignAnchorin
 }));
 
 interface CopyPasteWindowContextValue {
-  flatPasteTargetDesign: Design | null;
+  pasteTargetLayoutDiff: DesignDiff | undefined;
   pasteAnchoring: PasteDesignAnchoringKind;
   onPasteAnchoringChange: (next: PasteDesignAnchoringKind) => void;
 }
 
 const CopyPasteWindowContext = React.createContext<CopyPasteWindowContextValue>({
-  flatPasteTargetDesign: null,
+  pasteTargetLayoutDiff: undefined,
   pasteAnchoring: "original",
   onPasteAnchoringChange: () => {},
 });
 
 const TargetDesignWindow: React.FC = () => {
-  const { flatPasteTargetDesign } = React.useContext(CopyPasteWindowContext);
-  const design = flatPasteTargetDesign ?? pasteTargetDesign;
-  return <SemioDiagram design={design} diffEnabled={false} zoomTarget="design" selectionEnabled={false} panEnabled={true} zoomEnabled={true} />;
+  const { pasteTargetLayoutDiff } = React.useContext(CopyPasteWindowContext);
+  return <SemioDiagram design={pasteTargetDesign} layoutDiff={pasteTargetLayoutDiff} diffEnabled={false} zoomTarget="design" selectionEnabled={false} panEnabled={true} zoomEnabled={true} />;
 };
 
 const PasteAnchoringWindow: React.FC = () => {
@@ -159,9 +158,9 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
   const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const kitWithPasteTarget = React.useMemo(() => ({ ...kit, designs: [...(kit.designs ?? []), pasteTargetDesign] }), [kit]);
-  const [flattenChange, setFlattenChange] = React.useState<DesignChange | null>(null);
-  const [baseDesign, setBaseDesign] = React.useState<any | null>(null);
-  const [flatPasteTargetDesign, setFlatPasteTargetDesign] = React.useState<Design | null>(null);
+  const [sourceLayoutDiff, setSourceLayoutDiff] = React.useState<DesignDiff | undefined>(undefined);
+  const [pasteTargetLayoutDiff, setPasteTargetLayoutDiff] = React.useState<DesignDiff | undefined>(undefined);
+  const [layoutReady, setLayoutReady] = React.useState(false);
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>(selectionPieceGuids);
   const [selectedConnectionGuids, setSelectedConnectionGuids] = React.useState<string[]>(selectionConnectionGuids);
   const [vec, setVec] = React.useState<VecValue>({ u: 10, v: 10 });
@@ -173,23 +172,22 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
 
   React.useEffect(() => {
     let cancelled = false;
-    setFlattenChange(null);
-    setBaseDesign(null);
-    setFlatPasteTargetDesign(null);
+    setSourceLayoutDiff(undefined);
+    setPasteTargetLayoutDiff(undefined);
+    setLayoutReady(false);
     setDesignDiff(undefined);
     void (async () => {
       const [fc, pastefc] = await Promise.all([nativeFlattenDesign(kit, rawDesign.guid, language), nativeFlattenDesign(kitWithPasteTarget, pasteTargetDesign.guid, language)]);
       if (cancelled) return;
       if (!fc.ok || !pastefc.ok) {
-        setFlattenChange(null);
-        setBaseDesign(null);
-        setFlatPasteTargetDesign(null);
+        setSourceLayoutDiff(undefined);
+        setPasteTargetLayoutDiff(undefined);
+        setLayoutReady(false);
         return;
       }
-      setFlattenChange(fc.change);
-      const bd = applyDesignDiff(rawDesign, fc.change.forward) as any;
-      setBaseDesign(bd);
-      setFlatPasteTargetDesign(applyDesignDiff(pasteTargetDesign, pastefc.change.forward) as Design);
+      setSourceLayoutDiff(fc.change.forward);
+      setPasteTargetLayoutDiff(pastefc.change.forward);
+      setLayoutReady(true);
     })();
     return () => {
       cancelled = true;
@@ -197,7 +195,7 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
   }, [kit, kitWithPasteTarget, language]);
 
   React.useEffect(() => {
-    if (!baseDesign) return;
+    if (!layoutReady) return;
     let cancelled = false;
     void (async () => {
       if (selectedPieceGuids.length === 0 && selectedConnectionGuids.length === 0) {
@@ -205,7 +203,7 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
         return;
       }
       setDesignDiff(undefined);
-      const copyRes = await nativeCopyDesign(kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, language);
+      const copyRes = await nativeCopyDesign(kit, rawDesign, selectedPieceGuids, selectedConnectionGuids, language);
       if (cancelled) return;
       if (!copyRes.ok) return;
       const copied = copyRes.change;
@@ -216,18 +214,20 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
     return () => {
       cancelled = true;
     };
-  }, [kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, language, mode, pasteAnchoring, mode === "with" ? vec.u : 0, mode === "with" ? vec.v : 0]);
+  }, [kit, layoutReady, selectedPieceGuids, selectedConnectionGuids, language, mode, pasteAnchoring, mode === "with" ? vec.u : 0, mode === "with" ? vec.v : 0]);
 
-  const flatOrRawPasteTarget = flatPasteTargetDesign ?? pasteTargetDesign;
   const outputDesign = React.useMemo(
-    () => (designDiff ? (applyDesignDiff(flatOrRawPasteTarget, designDiff) as Design) : flatOrRawPasteTarget),
-    [designDiff, flatOrRawPasteTarget],
+    () => (designDiff ? (applyDesignDiff(pasteTargetDesign, designDiff) as Design) : pasteTargetDesign),
+    [designDiff],
   );
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: baseDesign ?? rawDesign,
+      design: rawDesign,
+      diagramLayoutDiff: sourceLayoutDiff,
+      diffDiagramLayoutDiff: pasteTargetLayoutDiff,
+      outputDiagramLayoutDiff: pasteTargetLayoutDiff,
       ...(mode === "with"
         ? {
             vec,
@@ -241,10 +241,10 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
       selectedConnectionGuids,
       onSelectedConnectionGuidsChange: setSelectedConnectionGuids,
       designDiff,
-      diffDesign: flatPasteTargetDesign ?? pasteTargetDesign,
+      diffDesign: pasteTargetDesign,
       outputDesign,
       error:
-        !flattenChange || !baseDesign
+        !layoutReady
           ? `Loading copy & paste preview (${language})…`
           : selectedPieceGuids.length === 0 && selectedConnectionGuids.length === 0
             ? "Select at least one piece or connection to copy."
@@ -252,12 +252,12 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
               ? `Loading paste result (${language})…`
               : undefined,
     }),
-    [kit, baseDesign, flatPasteTargetDesign, selectedPieceGuids, selectedConnectionGuids, vec, designDiff, outputDesign, flattenChange, language, mode],
+    [kit, layoutReady, sourceLayoutDiff, selectedPieceGuids, selectedConnectionGuids, vec, designDiff, outputDesign, language, mode],
   );
 
   const windowContextValue = React.useMemo<CopyPasteWindowContextValue>(
-    () => ({ flatPasteTargetDesign, pasteAnchoring, onPasteAnchoringChange: setPasteAnchoring }),
-    [flatPasteTargetDesign, pasteAnchoring],
+    () => ({ pasteTargetLayoutDiff, pasteAnchoring, onPasteAnchoringChange: setPasteAnchoring }),
+    [pasteTargetLayoutDiff, pasteAnchoring],
   );
 
   return (

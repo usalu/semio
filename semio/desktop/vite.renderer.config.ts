@@ -24,17 +24,27 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
 
-function useSyncExternalStoreShimResolvePlugin(shimMain: string, shimWithSelector: string): Plugin {
+type CjsFacadeResolveOpts = {
+  shimMain: string;
+  shimWithSelector: string;
+  schedulerEntry: string;
+};
+
+function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
   return {
-    name: "semio-use-sync-external-store-shim",
+    name: "semio-react-cjs-facades",
     enforce: "pre",
     resolveId(id) {
       const n = id.replace(/\\/g, "/");
       if (n.includes("use-sync-external-store/shim/with-selector")) {
-        return shimWithSelector;
+        return opts.shimWithSelector;
       }
       if (n.includes("use-sync-external-store/shim")) {
-        return shimMain;
+        return opts.shimMain;
+      }
+      // `scheduler/index.js` is a CJS re-export (`module.exports = require('./cjs/...')`); Vite `/@fs/...` breaks default import.
+      if (n === "scheduler" || (n.includes("scheduler/index.js") && !n.includes("/cjs/scheduler."))) {
+        return opts.schedulerEntry;
       }
       return undefined;
     },
@@ -53,6 +63,8 @@ export default defineConfig(async ({ mode }) => {
     "use-sync-external-store-shim",
     prod ? "with-selector.production.js" : "with-selector.development.js",
   );
+  const schedulerRoot = path.resolve(__dirname, "../../node_modules/scheduler/cjs");
+  const schedulerEntry = path.join(schedulerRoot, prod ? "scheduler.production.js" : "scheduler.development.js");
   return {
     server: {
       watch: {
@@ -61,12 +73,13 @@ export default defineConfig(async ({ mode }) => {
       },
     },
     resolve: {
-      dedupe: ["react", "react-dom", "use-sync-external-store"],
+      dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
       // `shim/index.js` is CJS (`module.exports`); Vite would serve it as ESM and break `import { useSyncExternalStore }`.
       // Point bare specifiers at the CJS builds under `cjs/` so Rollup/commonjs rewrites exports (VS Code / zustand compatible).
       alias: [
         { find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/, replacement: shimWithSelector },
         { find: /^use-sync-external-store\/shim(\/index\.js)?$/, replacement: shimMain },
+        { find: /^scheduler$/, replacement: schedulerEntry },
         { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../studio") },
@@ -74,7 +87,7 @@ export default defineConfig(async ({ mode }) => {
       ],
     },
     plugins: [
-      useSyncExternalStoreShimResolvePlugin(shimMain, shimWithSelector),
+      reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),
       tailwind.default(),
       {
         ...mdx({
@@ -93,6 +106,7 @@ export default defineConfig(async ({ mode }) => {
       include: [
         "golden-layout",
         "@mdx-js/react",
+        "scheduler",
         "use-sync-external-store/shim",
         "use-sync-external-store/shim/with-selector",
         "use-sync-external-store/with-selector",

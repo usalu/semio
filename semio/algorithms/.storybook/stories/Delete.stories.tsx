@@ -1,9 +1,9 @@
-// #region ���Header
-// �� semio/algorithms/.storybook/stories/Delete.stories.tsx
+// #region 🧲Header
+// 💻 semio/algorithms/.storybook/stories/Delete.stories.tsx
 // Specs: Uses the AlgorithmApp shell with SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
 // Summary: Wires nativeFlattenDesign (layout metadata) and nativeDeletePieces on the raw kit design.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-//��Header
+// #endregion 🧲Header
 
 import type { DesignChange, DesignDiff } from "@semio/js";
 import { applyDesignDiff } from "@semio/js";

@@ -237,6 +237,13 @@ TODO: Introduce Design/Interpolate algorithm.
 
 semio:
 
+move algorithm:
+- It is not vec but vector
+- The scene camera is not visible.
+- The movePiecesInDesign function MUST be the same as dragPiecesInDesign but instead of vec use vector and instead of updating center update plane and instead of updating u, v update gap, shift, rise (due to rotation, turn, tilt it is not so easy as in the diagram)
+- Use the same test case as drag but add a move vector.
+- You MUST implement it for every programming languages (code, tests, benchmark, etc)
+
 The implementations are structurally not consistent.
 - All sections MUST be identical (same nesting, same order)
 - All functions MUST have same naming and same order in the source code.
