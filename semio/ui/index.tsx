@@ -4363,7 +4363,8 @@ export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undef
     } as Kit;
 
     const fc = flattenDesign(kitForFlatten, merged.guid);
-    const piecesDiff = fc.forward?.pieces;
+    if (!fc.ok) return merged;
+    const piecesDiff = fc.change.forward?.pieces;
     if (!piecesDiff) return merged;
     const result = applyDesignDiff(merged, { pieces: piecesDiff });
     return result;

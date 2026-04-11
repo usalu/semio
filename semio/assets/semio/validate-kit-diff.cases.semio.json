@@ -1,0 +1,137 @@
+{
+  "tinyKit": {
+    "guid": "00000000-0000-0000-0000-000000000001",
+    "name": "Tiny",
+    "version": "1",
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-01-01T00:00:00.000Z",
+    "types": [
+      {
+        "guid": "10000000-0000-0000-0000-000000000001",
+        "name": "T1",
+        "unit": "m",
+        "createdAt": "2025-01-01T00:00:00.000Z",
+        "updatedAt": "2025-01-01T00:00:00.000Z"
+      }
+    ],
+    "designs": [
+      {
+        "guid": "20000000-0000-0000-0000-000000000001",
+        "name": "D1",
+        "unit": "m",
+        "createdAt": "2025-01-01T00:00:00.000Z",
+        "updatedAt": "2025-01-01T00:00:00.000Z",
+        "pieces": [
+          {
+            "guid": "30000000-0000-0000-0000-000000000001",
+            "type": { "guid": "10000000-0000-0000-0000-000000000001" },
+            "name": "P1"
+          }
+        ],
+        "connections": []
+      }
+    ],
+    "qualities": [
+      {
+        "guid": "40000000-0000-0000-0000-000000000001",
+        "key": "q1",
+        "name": "Q1",
+        "kind": 1
+      }
+    ],
+    "files": [],
+    "folders": [],
+    "authors": [],
+    "tags": [],
+    "concepts": [],
+    "ports": [
+      {
+        "guid": "50000000-0000-0000-0000-000000000001",
+        "name": "default"
+      }
+    ],
+    "attributes": []
+  },
+  "cases": [
+    {
+      "id": "empty-diff-ok",
+      "diff": {},
+      "expectOk": true,
+      "errorCodes": [],
+      "warningCodes": []
+    },
+    {
+      "id": "update-missing-design",
+      "diff": {
+        "designs": {
+          "updated": [
+            {
+              "design": { "guid": "99999999-9999-9999-9999-999999999999" },
+              "diff": { "name": "Ghost" }
+            }
+          ]
+        }
+      },
+      "expectOk": false,
+      "errorCodes": ["kitdiff.update.missing-target"],
+      "warningCodes": []
+    },
+    {
+      "id": "remove-missing-type-warns",
+      "diff": {
+        "types": {
+          "removed": [{ "guid": "ffffffff-ffff-ffff-ffff-ffffffffffff" }]
+        }
+      },
+      "expectOk": true,
+      "errorCodes": [],
+      "warningCodes": ["kitdiff.remove.missing-target"]
+    },
+    {
+      "id": "add-piece-bad-type",
+      "diff": {
+        "designs": {
+          "updated": [
+            {
+              "design": { "guid": "20000000-0000-0000-0000-000000000001" },
+              "diff": {
+                "pieces": {
+                  "added": [
+                    {
+                      "guid": "31000000-0000-0000-0000-000000000001",
+                      "name": "Bad",
+                      "type": { "guid": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee" }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expectOk": false,
+      "errorCodes": ["kitdiff.ref.piece-type-missing"],
+      "warningCodes": []
+    },
+    {
+      "id": "noop-remove-add-type-warns",
+      "diff": {
+        "types": {
+          "removed": [{ "guid": "10000000-0000-0000-0000-000000000001" }],
+          "added": [
+            {
+              "guid": "10000000-0000-0000-0000-000000000001",
+              "name": "T1",
+              "unit": "m",
+              "createdAt": "2025-01-01T00:00:00.000Z",
+              "updatedAt": "2025-01-01T00:00:00.000Z"
+            }
+          ]
+        }
+      },
+      "expectOk": true,
+      "errorCodes": [],
+      "warningCodes": ["kitdiff.cycle.noop-restore"]
+    }
+  ]
+}

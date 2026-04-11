@@ -30,9 +30,9 @@
       "command": "uv",
       "args": [
         "--directory",
-        "coda/engine",
+        "coda/assistant",
         "run",
-        "coda.py",
+        "main.py",
         "--mcp-stdio"
       ],
       "disabled": false

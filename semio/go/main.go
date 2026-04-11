@@ -54,8 +54,8 @@ const AssetsPath = "../assets/semio"
 
 // #region 📦Utils
 
-// 🔤Guid generates a new random 128-bit hex-encoded unique identifier.
-// 🔤ptrString returns a pointer to the given string value.
+// 🎲Guid generates a new random 128-bit hex-encoded unique identifier.
+// 📎ptrString returns a pointer to the given string value.
 func ptrString(s string) *string { return &s }
 
 func ptrFloat64(f float64) *float64 { return &f }
@@ -239,7 +239,7 @@ func Guid() string {
 	return hex.EncodeToString(bytes)
 }
 
-// 📋Normalize converts a string to lowercase trimmed form.
+// �Normalize converts a string to lowercase trimmed form.
 func Normalize(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
 }
@@ -253,7 +253,7 @@ func Round(value float64, decimals int) float64 {
 	return float64(int64(value*shift+0.5)) / shift
 }
 
-// 🔷DeepEqual compares two values for deep equality via JSON serialization.
+// ⚖️DeepEqual compares two values for deep equality via JSON serialization.
 func DeepEqual(a, b interface{}) bool {
 	aJSON, _ := json.Marshal(a)
 	bJSON, _ := json.Marshal(b)
@@ -1267,7 +1267,7 @@ type Layer struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️LayerDiff represents changes to a layer entity.
+// 🖌️LayerDiff represents a partial update to a layer's path, visibility, lock state or color.
 type LayerDiff struct {
 	Path        *string         `json:"path,omitempty"`
 	IsHidden    *bool           `json:"isHidden,omitempty"`
@@ -1277,7 +1277,7 @@ type LayerDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁LayersDiff represents a collection of layer additions, removals and updates.
+// �️LayersDiff represents batched layer additions, removals and per-layer updates.
 type LayersDiff struct {
 	Removed []LayerId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1287,7 +1287,7 @@ type LayersDiff struct {
 	Added []Layer `json:"added,omitempty"`
 }
 
-// 🔷LayerMeta represents the scalar-only projection of a Layer (no Attributes).
+// 🪟LayerMeta represents the scalar-only view of a layer excluding attributes.
 type LayerMeta struct {
 	Guid        string  `json:"guid"`
 	Path        string  `json:"path"`
@@ -1301,7 +1301,7 @@ type LayerMeta struct {
 
 // #region 🔊Piece
 
-// 🔷Piece represents a placed component instance within a design.
+// 🧩Piece represents a positioned component instance within a design with optional transform.
 type Piece struct {
 	Guid        string      `json:"guid"`
 	Name        *string     `json:"name,omitempty"`
@@ -1319,20 +1319,20 @@ type Piece struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️CoordDiff represents changes to a 2D coordinate.
+// 🎯CoordDiff represents a partial update to a 2D coordinate's U or V value.
 type CoordDiff struct {
 	U *float64 `json:"u,omitempty"`
 	V *float64 `json:"v,omitempty"`
 }
 
-// 🔶PlaneDiff represents changes to a 3D plane.
+// �PlaneDiff represents a partial update to a plane's origin, X-axis or Y-axis.
 type PlaneDiff struct {
 	Origin *PointDiff  `json:"origin,omitempty"`
 	XAxis  *VectorDiff `json:"xAxis,omitempty"`
 	YAxis  *VectorDiff `json:"yAxis,omitempty"`
 }
 
-// 🔹PieceDiff represents changes to a piece entity.
+// �PieceDiff represents a partial update to a piece's type, plane, scale, center or props.
 type PieceDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Type        *TypeId         `json:"type,omitempty"`
@@ -1349,7 +1349,7 @@ type PieceDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁PiecesDiff represents a collection of piece additions, removals and updates.
+// 🎪PiecesDiff represents batched piece additions, removals and per-piece updates.
 type PiecesDiff struct {
 	Removed []PieceId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1359,7 +1359,7 @@ type PiecesDiff struct {
 	Added []Piece `json:"added,omitempty"`
 }
 
-// 🔸PieceMeta represents the scalar-only projection of a Piece (no Props, no Attributes).
+// 🧲PieceMeta represents the scalar-only view of a piece excluding props and attributes.
 type PieceMeta struct {
 	Guid        string    `json:"guid"`
 	Name        *string   `json:"name,omitempty"`
@@ -1379,7 +1379,7 @@ type PieceMeta struct {
 
 // #region 🗺️Group
 
-// 🔷Group represents a named collection of pieces within a design.
+// �Group represents a named collection of pieces within a design.
 type Group struct {
 	Guid        string      `json:"guid"`
 	Pieces      []PieceId   `json:"pieces,omitempty"`
@@ -1389,7 +1389,7 @@ type Group struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️GroupDiff represents changes to a group entity.
+// 🤝GroupDiff represents a partial update to a group's pieces, name or color.
 type GroupDiff struct {
 	Pieces      []PieceId       `json:"pieces,omitempty"`
 	Name        *string         `json:"name,omitempty"`
@@ -1398,7 +1398,7 @@ type GroupDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁GroupsDiff represents a collection of group additions, removals and updates.
+// 🏘️GroupsDiff represents batched group additions, removals and per-group updates.
 type GroupsDiff struct {
 	Removed []GroupId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1408,7 +1408,7 @@ type GroupsDiff struct {
 	Added []Group `json:"added,omitempty"`
 }
 
-// 🔶GroupMeta represents the scalar-only projection of a Group (no Pieces, no Attributes).
+// �️GroupMeta represents the scalar-only view of a group excluding pieces and attributes.
 type GroupMeta struct {
 	Guid        string  `json:"guid"`
 	Name        *string `json:"name,omitempty"`
@@ -1420,14 +1420,14 @@ type GroupMeta struct {
 
 // #region 🎶Side
 
-// 🔌Side represents one end of a connection referencing a piece and optional connector.
+// ↔️Side represents one end of a connection referencing a piece and optional connector.
 type Side struct {
 	Piece       PieceId      `json:"piece"`
 	DesignPiece *PieceId     `json:"designPiece,omitempty"`
 	Connector   *ConnectorId `json:"connector,omitempty"`
 }
 
-// ♻️SideDiff represents changes to a connection side.
+// ↩️SideDiff represents a partial update to a side's piece or connector reference.
 type SideDiff struct {
 	Piece       *PieceId     `json:"piece,omitempty"`
 	DesignPiece *PieceId     `json:"designPiece,omitempty"`
@@ -1438,7 +1438,7 @@ type SideDiff struct {
 
 // #region 🦀Connection
 
-// 🔌Connection represents a spatial relationship between two pieces with transform parameters.
+// �Connection represents a spatial relationship between two pieces with gap, shift and rotation.
 type Connection struct {
 	Guid        string      `json:"guid"`
 	Connected   Side        `json:"connected"`
@@ -1455,7 +1455,7 @@ type Connection struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️ConnectionDiff represents changes to a connection entity.
+// ⛓️ConnectionDiff represents a partial update to a connection's sides, gap, shift, rotation or tilt.
 type ConnectionDiff struct {
 	Connected   *SideDiff       `json:"connected,omitempty"`
 	Connecting  *SideDiff       `json:"connecting,omitempty"`
@@ -1471,7 +1471,7 @@ type ConnectionDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁ConnectionsDiff represents a collection of connection additions, removals and updates.
+// �ConnectionsDiff represents batched connection additions, removals and per-connection updates.
 type ConnectionsDiff struct {
 	Removed []ConnectionId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1481,7 +1481,7 @@ type ConnectionsDiff struct {
 	Added []Connection `json:"added,omitempty"`
 }
 
-// 🔷ConnectionMeta represents the scalar-only projection of a Connection (no Attributes).
+// 🧷ConnectionMeta represents the scalar-only view of a connection excluding attributes.
 type ConnectionMeta struct {
 	Guid        string  `json:"guid"`
 	Connected   Side    `json:"connected"`
@@ -1501,7 +1501,7 @@ type ConnectionMeta struct {
 
 // #region 🎻Stat
 
-// 🔷Stat represents a statistical quality measurement with min and max bounds.
+// �Stat represents a statistical quality measurement with min/max bounds and unit.
 type Stat struct {
 	Guid        string      `json:"guid"`
 	Quality     QualityId   `json:"quality"`
@@ -1513,7 +1513,7 @@ type Stat struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️StatDiff represents changes to a stat entity.
+// 📉StatDiff represents a partial update to a stat's quality reference, bounds or unit.
 type StatDiff struct {
 	Quality    *QualityId      `json:"quality,omitempty"`
 	Min        *float64        `json:"min,omitempty"`
@@ -1522,7 +1522,7 @@ type StatDiff struct {
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁StatsDiff represents a collection of stat additions, removals and updates.
+// �StatsDiff represents batched stat additions, removals and per-stat updates.
 type StatsDiff struct {
 	Removed []StatId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1532,7 +1532,7 @@ type StatsDiff struct {
 	Added []Stat `json:"added,omitempty"`
 }
 
-// 🔶StatMeta represents the scalar-only projection of a Stat (no Attributes).
+// 🪙StatMeta represents the scalar-only view of a stat excluding attributes.
 type StatMeta struct {
 	Guid    string    `json:"guid"`
 	Quality QualityId `json:"quality"`
@@ -1545,7 +1545,7 @@ type StatMeta struct {
 
 // #region 📌Design
 
-// 🔌Design represents an assembly of pieces, connections, layers and groups.
+// �Design represents an assembly of pieces, connections, layers and groups.
 type Design struct {
 	Guid        string       `json:"guid"`
 	Name        string       `json:"name"`
@@ -1574,14 +1574,14 @@ type Design struct {
 	UpdatedAt   string       `json:"updatedAt,omitempty"`
 }
 
-// ♻️CameraDiff represents changes to a camera view.
+// 🎬CameraDiff represents a partial update to a camera's position, forward or up vector.
 type CameraDiff struct {
 	Position *PointDiff  `json:"position,omitempty"`
 	Forward  *VectorDiff `json:"forward,omitempty"`
 	Up       *VectorDiff `json:"up,omitempty"`
 }
 
-// 🔷DesignDiff represents changes to a design entity.
+// ✒️DesignDiff represents a partial update to a design's name, pieces, connections or layers.
 type DesignDiff struct {
 	Name        *string          `json:"name,omitempty"`
 	Parent      *DesignId        `json:"parent,omitempty"`
@@ -1607,7 +1607,7 @@ type DesignDiff struct {
 	Attributes  *AttributesDiff  `json:"attributes,omitempty"`
 }
 
-// 🔁DesignsDiff represents a collection of design additions, removals and updates.
+// 🏛️DesignsDiff represents batched design additions, removals and per-design updates.
 type DesignsDiff struct {
 	Removed []DesignId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1617,7 +1617,7 @@ type DesignsDiff struct {
 	Added []Design `json:"added,omitempty"`
 }
 
-// 🔶DesignMeta represents the scalar-only projection of a Design (no slices).
+// 🏙️DesignMeta represents the scalar-only view of a design excluding pieces, connections and layers.
 type DesignMeta struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -1637,7 +1637,7 @@ type DesignMeta struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// 🔖DesignShallow represents a Design with slice fields replaced by Meta item slices.
+// �DesignShallow represents a design overview with nested arrays replaced by scalar-only items.
 type DesignShallow struct {
 	Guid        string           `json:"guid"`
 	Name        string           `json:"name"`
@@ -1673,7 +1673,7 @@ type DesignShallow struct {
 // #region 🎆KitKind
 // KitKind discriminates the five persistence/transport forms of a Kit.
 
-// 🏷️KitKind represents the persistence/transport form of a Kit.
+// 🧬KitKind represents the five persistence/transport forms of a kit.
 // Specs: Exactly five kit kinds exist:
 //   - KitKindFile: Self-contained JSON file (.kit.json)
 //   - KitKindFolder: Local folder with .semio/kit.db SQLite file and asset files
@@ -1695,7 +1695,7 @@ const (
 	KitKindTemporary KitKind = "temporary"
 )
 
-// 🔷AllKitKinds contains all valid KitKind values.
+// �AllKitKinds contains the complete list of valid KitKind values.
 var AllKitKinds = []KitKind{KitKindFile, KitKindFolder, KitKindArchive, KitKindRemote, KitKindTemporary}
 
 // ✔️IsValidKitKind checks if a KitKind value is one of the five valid kinds.
@@ -1736,7 +1736,7 @@ type Kit struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️KitDiff represents changes to a kit entity.
+// 🔏KitDiff represents a partial update to a kit's name, version, entities or metadata.
 type KitDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Version     *string         `json:"version,omitempty"`
@@ -1761,7 +1761,7 @@ type KitDiff struct {
 	setFields   map[string]bool `json:"-"`
 }
 
-// 📋UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
+// �UnmarshalJSON deserializes KitDiff JSON while tracking which fields are explicitly set.
 func (d *KitDiff) UnmarshalJSON(data []byte) error {
 	type Alias KitDiff
 	aux := &struct{ *Alias }{Alias: (*Alias)(d)}
@@ -1776,7 +1776,7 @@ func (d *KitDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
-// 🔷HasField returns whether a JSON field was present in the unmarshaled data.
+// �HasField checks whether a specific JSON field was present during KitDiff deserialization.
 func (d *KitDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -1784,7 +1784,7 @@ func (d *KitDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
-// 🔁KitsDiff represents a collection of kit additions, removals and updates.
+// 🎁KitsDiff represents batched kit additions, removals and per-kit updates.
 type KitsDiff struct {
 	Removed []KitId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1794,7 +1794,7 @@ type KitsDiff struct {
 	Added []Kit `json:"added,omitempty"`
 }
 
-// 🔶KitMeta represents the scalar-only projection of a Kit (no slices).
+// 🎀KitMeta represents the scalar-only view of a kit excluding types, designs and entity arrays.
 type KitMeta struct {
 	Guid        string  `json:"guid"`
 	Name        string  `json:"name"`
@@ -1810,7 +1810,7 @@ type KitMeta struct {
 	UpdatedAt   string  `json:"updatedAt,omitempty"`
 }
 
-// 🔖KitShallow represents a Kit with slice fields replaced by Meta item slices.
+// �KitShallow represents a kit overview with nested arrays replaced by scalar-only items.
 type KitShallow struct {
 	Guid        string          `json:"guid"`
 	Name        string          `json:"name"`
@@ -1838,92 +1838,92 @@ type KitShallow struct {
 
 // #region 🔭Meta/Shallow Conversions
 
-// 🔷ToAttributeMeta converts an Attribute to its Meta projection.
+// �ToAttributeMeta converts an Attribute to its scalar-only Meta view.
 func ToAttributeMeta(a Attribute) AttributeMeta {
 	return AttributeMeta{Guid: a.Guid, Key: a.Key, Value: a.Value, Definition: a.Definition}
 }
 
-// ✍️ToAuthorMeta converts an Author to its Meta projection.
+// ✍️ToAuthorMeta converts an Author to its scalar-only Meta view.
 func ToAuthorMeta(a Author) AuthorMeta {
 	return AuthorMeta{Guid: a.Guid, Name: a.Name, Email: a.Email, CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt}
 }
 
-// 📄ToFileMeta converts a File to its Meta projection.
+// 📄ToFileMeta converts a File to its scalar-only Meta view.
 func ToFileMeta(f File) FileMeta {
 	return FileMeta{Guid: f.Guid, Name: f.Name, Remote: f.Remote, Folder: f.Folder, Size: f.Size, Hash: f.Hash, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
 }
 
-// 📁ToFolderMeta converts a Folder to its Meta projection.
+// 📁ToFolderMeta converts a Folder to its scalar-only Meta view.
 func ToFolderMeta(f Folder) FolderMeta {
 	return FolderMeta{Guid: f.Guid, Name: f.Name, Parent: f.Parent, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
 }
 
-// 🔶ToQualityMeta converts a Quality to its Meta projection.
+// �ToQualityMeta converts a Quality to its scalar-only Meta view.
 func ToQualityMeta(q Quality) QualityMeta {
 	return QualityMeta{Guid: q.Guid, Key: q.Key, Name: q.Name, Description: q.Description, Uri: q.Uri, Kind: q.Kind, CanScale: q.CanScale, DefaultSiUnit: q.DefaultSiUnit, DefaultImperialUnit: q.DefaultImperialUnit, Min: q.Min, IsMinExcluded: q.IsMinExcluded, Max: q.Max, IsMaxExcluded: q.IsMaxExcluded, DefaultValue: q.DefaultValue, Formula: q.Formula, Icon: q.Icon, Image: q.Image, Unit: q.Unit, CreatedAt: q.CreatedAt, UpdatedAt: q.UpdatedAt}
 }
 
-// 🔹ToPortMeta converts a Port to its Meta projection.
+// ⚓ToPortMeta converts a Port to its scalar-only Meta view.
 func ToPortMeta(p Port) PortMeta {
 	return PortMeta{Guid: p.Guid, Name: p.Name, Description: p.Description, Icon: p.Icon, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
 }
 
-// 🔸ToPropMeta converts a Prop to its Meta projection.
+// �ToPropMeta converts a Prop to its scalar-only Meta view.
 func ToPropMeta(p Prop) PropMeta {
 	return PropMeta{Guid: p.Guid, Quality: p.Quality, Value: p.Value, Unit: p.Unit}
 }
 
-// 🏷️ToTagMeta converts a Tag to its Meta projection.
+// 🏷️ToTagMeta converts a Tag to its scalar-only Meta view.
 func ToTagMeta(t Tag) TagMeta {
 	return TagMeta{Guid: t.Guid, Name: t.Name, Description: t.Description, Icon: t.Icon, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
-// 🔺ToConceptMeta converts a Concept to its Meta projection.
+// �ToConceptMeta converts a Concept to its scalar-only Meta view.
 func ToConceptMeta(c Concept) ConceptMeta {
 	return ConceptMeta{Guid: c.Guid, Name: c.Name, Description: c.Description, Icon: c.Icon, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
 }
 
-// 🔻ToModelMeta converts a Model to its Meta projection.
+// �ToModelMeta converts a Model to its scalar-only Meta view.
 func ToModelMeta(m Model) ModelMeta {
 	return ModelMeta{Guid: m.Guid, File: m.File, Name: m.Name, Description: m.Description}
 }
 
-// ⬛ToConnectorMeta converts a Connector to its Meta projection.
+// 🔌ToConnectorMeta converts a Connector to its scalar-only Meta view.
 func ToConnectorMeta(c Connector) ConnectorMeta {
 	return ConnectorMeta{Guid: c.Guid, Name: c.Name, Point: c.Point, Direction: c.Direction, T: c.T, Mandatory: c.Mandatory, Port: c.Port, Description: c.Description}
 }
 
-// ⬜ToLayerMeta converts a Layer to its Meta projection.
+// 🎨ToLayerMeta converts a Layer to its scalar-only Meta view.
 func ToLayerMeta(l Layer) LayerMeta {
 	return LayerMeta{Guid: l.Guid, Path: l.Path, IsHidden: l.IsHidden, IsLocked: l.IsLocked, Color: l.Color, Description: l.Description}
 }
 
-// 🟥ToPieceMeta converts a Piece to its Meta projection.
+// 🧩ToPieceMeta converts a Piece to its scalar-only Meta view.
 func ToPieceMeta(p Piece) PieceMeta {
 	return PieceMeta{Guid: p.Guid, Name: p.Name, Type: p.Type, Design: p.Design, Plane: p.Plane, Center: p.Center, Scale: p.Scale, MirrorPlane: p.MirrorPlane, IsHidden: p.IsHidden, IsLocked: p.IsLocked, Color: p.Color, Description: p.Description}
 }
 
-// 🟧ToGroupMeta converts a Group to its Meta projection.
+// �ToGroupMeta converts a Group to its scalar-only Meta view.
 func ToGroupMeta(g Group) GroupMeta {
 	return GroupMeta{Guid: g.Guid, Name: g.Name, Color: g.Color, Description: g.Description}
 }
 
-// 🔌ToConnectionMeta converts a Connection to its Meta projection.
+// �ToConnectionMeta converts a Connection to its scalar-only Meta view.
 func ToConnectionMeta(c Connection) ConnectionMeta {
 	return ConnectionMeta{Guid: c.Guid, Connected: c.Connected, Connecting: c.Connecting, Gap: c.Gap, Shift: c.Shift, Rise: c.Rise, Rotation: c.Rotation, Turn: c.Turn, Tilt: c.Tilt, U: c.U, V: c.V, Description: c.Description}
 }
 
-// 🟨ToStatMeta converts a Stat to its Meta projection.
+// �ToStatMeta converts a Stat to its scalar-only Meta view.
 func ToStatMeta(s Stat) StatMeta {
 	return StatMeta{Guid: s.Guid, Quality: s.Quality, Min: s.Min, Max: s.Max, Unit: s.Unit}
 }
 
-// 🟩ToTypeMeta converts a Type to its Meta projection.
+// 🧱ToTypeMeta converts a Type to its scalar-only Meta view.
 func ToTypeMeta(t Type) TypeMeta {
 	return TypeMeta{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
-// 🟦ToTypeShallow converts a Type to its Shallow projection.
+// 🏗️ToTypeShallow converts a Type to its Shallow overview with scalar-only nested items.
 func ToTypeShallow(t Type) TypeShallow {
 	models := make([]ModelMeta, len(t.Models))
 	for i, m := range t.Models {
@@ -1944,12 +1944,12 @@ func ToTypeShallow(t Type) TypeShallow {
 	return TypeShallow{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
-// 🟪ToDesignMeta converts a Design to its Meta projection.
+// �ToDesignMeta converts a Design to its scalar-only Meta view.
 func ToDesignMeta(d Design) DesignMeta {
 	return DesignMeta{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }
 
-// 🟫ToDesignShallow converts a Design to its Shallow projection.
+// 🏕️ToDesignShallow converts a Design to its Shallow overview with scalar-only nested items.
 func ToDesignShallow(d Design) DesignShallow {
 	pieces := make([]PieceMeta, len(d.Pieces))
 	for i, p := range d.Pieces {
@@ -1982,12 +1982,12 @@ func ToDesignShallow(d Design) DesignShallow {
 	return DesignShallow{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }
 
-// 💠ToKitMeta converts a Kit to its Meta projection.
+// �ToKitMeta converts a Kit to its scalar-only Meta view.
 func ToKitMeta(k Kit) KitMeta {
 	return KitMeta{Guid: k.Guid, Name: k.Name, Version: k.Version, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
 }
 
-// 🔳ToKitShallow converts a Kit to its Shallow projection.
+// �ToKitShallow converts a Kit to its Shallow overview with scalar-only nested items.
 func ToKitShallow(k Kit) KitShallow {
 	types := make([]TypeMeta, len(k.Types))
 	for i, t := range k.Types {
@@ -2346,7 +2346,7 @@ func FormatNumberForHash(n float64) string {
 
 // #region 🎵Hash Value Types
 
-// 🔷HashCoord computes SHA-256 hash of a Coord value.
+// �HashCoord computes SHA-256 hash of a Coord value.
 func HashCoord(c Coord) string {
 	w := &hashWriter{}
 	w.writeString("Coord")
@@ -2357,7 +2357,7 @@ func HashCoord(c Coord) string {
 	return w.digest()
 }
 
-// 🔶HashVec computes SHA-256 hash of a Vec value.
+// ➡️HashVec computes SHA-256 hash of a Vec value.
 func HashVec(v Vec) string {
 	w := &hashWriter{}
 	w.writeString("Vec")
@@ -2368,7 +2368,7 @@ func HashVec(v Vec) string {
 	return w.digest()
 }
 
-// 🔹HashPoint computes SHA-256 hash of a Point value.
+// ✖️HashPoint computes SHA-256 hash of a Point value.
 func HashPoint(p Point) string {
 	w := &hashWriter{}
 	w.writeString("Point")
@@ -2381,7 +2381,7 @@ func HashPoint(p Point) string {
 	return w.digest()
 }
 
-// 🔸HashVector computes SHA-256 hash of a Vector value.
+// ↗️HashVector computes SHA-256 hash of a Vector value.
 func HashVector(v Vector) string {
 	w := &hashWriter{}
 	w.writeString("Vector")
@@ -2394,7 +2394,7 @@ func HashVector(v Vector) string {
 	return w.digest()
 }
 
-// 🔺HashPlane computes SHA-256 hash of a Plane value.
+// ◻️HashPlane computes SHA-256 hash of a Plane value.
 func HashPlane(p Plane) string {
 	w := &hashWriter{}
 	w.writeString("Plane")
@@ -2407,7 +2407,7 @@ func HashPlane(p Plane) string {
 	return w.digest()
 }
 
-// 🔻HashCamera computes SHA-256 hash of a Camera value.
+// 🎥HashCamera computes SHA-256 hash of a Camera value.
 func HashCamera(c Camera) string {
 	w := &hashWriter{}
 	w.writeString("Camera")
@@ -2424,7 +2424,7 @@ func HashCamera(c Camera) string {
 
 // #region 🎩Hash Entities
 
-// 🔷HashAttribute computes SHA-256 hash of an Attribute entity.
+// �HashAttribute computes SHA-256 hash of an Attribute entity.
 func HashAttribute(a Attribute) string {
 	w := &hashWriter{}
 	w.writeString("Attribute")
@@ -2443,7 +2443,7 @@ func HashAttribute(a Attribute) string {
 	return w.digest()
 }
 
-// 🔶HashLocation computes SHA-256 hash of a Location entity.
+// �HashLocation computes SHA-256 hash of a Location entity.
 func HashLocation(l Location) string {
 	w := &hashWriter{}
 	w.writeString("Location")
@@ -2549,7 +2549,7 @@ func HashFolder(f Folder) string {
 	return w.digest()
 }
 
-// 🔹HashBenchmark computes SHA-256 hash of a Benchmark entity.
+// �HashBenchmark computes SHA-256 hash of a Benchmark entity.
 func HashBenchmark(b Benchmark) string {
 	w := &hashWriter{}
 	w.writeString("Benchmark")
@@ -2588,7 +2588,7 @@ func HashBenchmark(b Benchmark) string {
 	return w.digest()
 }
 
-// 🔸HashQuality computes SHA-256 hash of a Quality entity.
+// �HashQuality computes SHA-256 hash of a Quality entity.
 func HashQuality(q Quality) string {
 	w := &hashWriter{}
 	w.writeString("Quality")
@@ -2669,7 +2669,7 @@ func HashQuality(q Quality) string {
 	return w.digest()
 }
 
-// 🔺HashPort computes SHA-256 hash of a Port entity.
+// ⚓HashPort computes SHA-256 hash of a Port entity.
 func HashPort(p Port) string {
 	w := &hashWriter{}
 	w.writeString("Port")
@@ -2704,7 +2704,7 @@ func HashPort(p Port) string {
 	return w.digest()
 }
 
-// 🔻HashProp computes SHA-256 hash of a Prop entity.
+// �HashProp computes SHA-256 hash of a Prop entity.
 func HashProp(p Prop) string {
 	w := &hashWriter{}
 	w.writeString("Prop")
@@ -2756,7 +2756,7 @@ func HashTag(t Tag) string {
 	return w.digest()
 }
 
-// ⬛HashConcept computes SHA-256 hash of a Concept entity.
+// 💡HashConcept computes SHA-256 hash of a Concept entity.
 func HashConcept(c Concept) string {
 	w := &hashWriter{}
 	w.writeString("Concept")
@@ -2783,7 +2783,7 @@ func HashConcept(c Concept) string {
 	return w.digest()
 }
 
-// ⬜HashModel computes SHA-256 hash of a Model entity.
+// 🗿HashModel computes SHA-256 hash of a Model entity.
 func HashModel(m Model) string {
 	w := &hashWriter{}
 	w.writeString("Model")
@@ -2818,7 +2818,7 @@ func HashModel(m Model) string {
 	return w.digest()
 }
 
-// 🟥HashConnector computes SHA-256 hash of a Connector entity.
+// �HashConnector computes SHA-256 hash of a Connector entity.
 func HashConnector(c Connector) string {
 	w := &hashWriter{}
 	w.writeString("Connector")
@@ -2865,7 +2865,7 @@ func HashConnector(c Connector) string {
 	return w.digest()
 }
 
-// 🟧HashType computes SHA-256 hash of a Type entity.
+// 🧱HashType computes SHA-256 hash of a Type entity.
 func HashType(t Type) string {
 	w := &hashWriter{}
 	w.writeString("Type")
@@ -2964,7 +2964,7 @@ func HashType(t Type) string {
 	return w.digest()
 }
 
-// 🟨HashLayer computes SHA-256 hash of a Layer entity.
+// 🎨HashLayer computes SHA-256 hash of a Layer entity.
 func HashLayer(l Layer) string {
 	w := &hashWriter{}
 	w.writeString("Layer")
@@ -2999,7 +2999,7 @@ func HashLayer(l Layer) string {
 	return w.digest()
 }
 
-// 🟩HashStat computes SHA-256 hash of a Stat entity.
+// �HashStat computes SHA-256 hash of a Stat entity.
 func HashStat(s Stat) string {
 	w := &hashWriter{}
 	w.writeString("Stat")
@@ -3030,7 +3030,7 @@ func HashStat(s Stat) string {
 	return w.digest()
 }
 
-// 🟦HashGroup computes SHA-256 hash of a Group entity.
+// �HashGroup computes SHA-256 hash of a Group entity.
 func HashGroup(g Group) string {
 	w := &hashWriter{}
 	w.writeString("Group")
@@ -3065,7 +3065,7 @@ func HashGroup(g Group) string {
 	return w.digest()
 }
 
-// 💻HashSide computes SHA-256 hash of a Side value.
+// ↔️HashSide computes SHA-256 hash of a Side value.
 func HashSide(s Side) string {
 	w := &hashWriter{}
 	w.writeString("Side")
@@ -3125,7 +3125,7 @@ func HashConnection(c Connection) string {
 	return w.digest()
 }
 
-// 🟪HashPiece computes SHA-256 hash of a Piece entity.
+// 🧩HashPiece computes SHA-256 hash of a Piece entity.
 func HashPiece(p Piece) string {
 	w := &hashWriter{}
 	w.writeString("Piece")
@@ -3194,7 +3194,7 @@ func HashPiece(p Piece) string {
 	return w.digest()
 }
 
-// 🟫HashDesign computes SHA-256 Merkle hash of a Design entity.
+// �HashDesign computes SHA-256 Merkle hash of a Design entity.
 func HashDesign(d Design) string {
 	w := &hashWriter{}
 	w.writeString("Design")
@@ -3321,7 +3321,7 @@ func HashDesign(d Design) string {
 	return w.digest()
 }
 
-// 💠HashKit computes SHA-256 Merkle hash of a Kit entity.
+// �HashKit computes SHA-256 Merkle hash of a Kit entity.
 func HashKit(k Kit) string {
 	w := &hashWriter{}
 	w.writeString("Kit")
@@ -8756,6 +8756,432 @@ func ApplyKitDiff(base Kit, diff KitDiff) Kit {
 		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
 	}
 	return result
+}
+
+// KitDiffValidationNote is one machine-addressable validation message.
+type KitDiffValidationNote struct {
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message"`
+}
+
+// KitDiffValidationResult is returned by ValidateKitDiff.
+type KitDiffValidationResult struct {
+	Ok       bool                    `json:"ok"`
+	Errors   []KitDiffValidationNote `json:"errors"`
+	Warnings []KitDiffValidationNote `json:"warnings"`
+	Diff     *KitDiff `json:"diff,omitempty"`
+}
+
+type kitDiffValidateCtx struct {
+	errors   []KitDiffValidationNote
+	warnings []KitDiffValidationNote
+	heal     bool
+}
+
+func kitdiffPush(ctx *kitDiffValidateCtx, kind string, code, msg string) {
+	n := KitDiffValidationNote{Code: code, Message: msg}
+	if kind == "errors" {
+		ctx.errors = append(ctx.errors, n)
+	} else {
+		ctx.warnings = append(ctx.warnings, n)
+	}
+}
+
+func kitdiffDeepEqualJSON(a, b any) bool {
+	ja, e1 := json.Marshal(a)
+	jb, e2 := json.Marshal(b)
+	return e1 == nil && e2 == nil && string(ja) == string(jb)
+}
+
+func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, base []map[string]any, raw map[string]any, onUpdated func(item map[string]any, diff map[string]any, p string)) map[string]any {
+	if raw == nil {
+		return nil
+	}
+	baseBy := map[string]map[string]any{}
+	for _, it := range base {
+		if g, ok := it["guid"].(string); ok {
+			baseBy[g] = it
+		}
+	}
+	removedSet := map[string]bool{}
+	if arr, ok := raw["removed"].([]any); ok {
+		for _, r := range arr {
+			if rm, ok := r.(map[string]any); ok {
+				if g, ok := rm["guid"].(string); ok {
+					removedSet[g] = true
+				}
+			}
+		}
+	}
+	afterRemove := map[string]bool{}
+	for g := range baseBy {
+		if !removedSet[g] {
+			afterRemove[g] = true
+		}
+	}
+	var hRem, hUpd, hAdd []any
+	if ctx.heal {
+		if x, ok := raw["removed"].([]any); ok {
+			hRem = append([]any(nil), x...)
+		}
+		if x, ok := raw["updated"].([]any); ok {
+			hUpd = append([]any(nil), x...)
+		}
+		if x, ok := raw["added"].([]any); ok {
+			hAdd = append([]any(nil), x...)
+		}
+	}
+	if arr, ok := raw["removed"].([]any); ok {
+		for _, r := range arr {
+			rm, ok := r.(map[string]any)
+			if !ok {
+				continue
+			}
+			rg, _ := rm["guid"].(string)
+			if _, ok := baseBy[rg]; !ok {
+				kitdiffPush(ctx, "warnings", "kitdiff.remove.missing-target", path+": remove references missing "+idKey+" "+rg)
+				if ctx.heal && hRem != nil {
+					nr := hRem[:0]
+					for _, x := range hRem {
+						if m, ok := x.(map[string]any); ok && m["guid"] == rg {
+							continue
+						}
+						nr = append(nr, x)
+					}
+					hRem = nr
+				}
+			}
+		}
+	}
+	addBy := map[string]map[string]any{}
+	if arr, ok := raw["added"].([]any); ok {
+		for _, a := range arr {
+			if am, ok := a.(map[string]any); ok {
+				if g, ok := am["guid"].(string); ok {
+					addBy[g] = am
+				}
+			}
+		}
+	}
+	if arr, ok := raw["removed"].([]any); ok {
+		for _, r := range arr {
+			rm, ok := r.(map[string]any)
+			if !ok {
+				continue
+			}
+			rg, _ := rm["guid"].(string)
+			orig := baseBy[rg]
+			add := addBy[rg]
+			if orig != nil && add != nil && kitdiffDeepEqualJSON(orig, add) {
+				kitdiffPush(ctx, "warnings", "kitdiff.cycle.noop-restore", path+": removed and re-added "+idKey+" "+rg+" are deeply equal (no effective change)")
+				if ctx.heal {
+					if hRem != nil {
+						nr := hRem[:0]
+						for _, x := range hRem {
+							if m, ok := x.(map[string]any); ok && m["guid"] == rg {
+								continue
+							}
+							nr = append(nr, x)
+						}
+						hRem = nr
+					}
+					if hAdd != nil {
+						na := hAdd[:0]
+						for _, x := range hAdd {
+							if m, ok := x.(map[string]any); ok && m["guid"] == rg {
+								continue
+							}
+							na = append(na, x)
+						}
+						hAdd = na
+					}
+				}
+			}
+		}
+	}
+	seenAdd := map[string]bool{}
+	if arr, ok := raw["added"].([]any); ok {
+		for _, a := range arr {
+			am, ok := a.(map[string]any)
+			if !ok {
+				continue
+			}
+			ag, _ := am["guid"].(string)
+			if seenAdd[ag] {
+				kitdiffPush(ctx, "errors", "kitdiff.add.duplicate-in-diff", path+": duplicate added "+idKey+" guid "+ag)
+				if ctx.heal && hAdd != nil {
+					first := true
+					na := hAdd[:0]
+					for _, x := range hAdd {
+						m, ok := x.(map[string]any)
+						if !ok {
+							na = append(na, x)
+							continue
+						}
+						if g, _ := m["guid"].(string); g == ag {
+							if first {
+								na = append(na, x)
+								first = false
+							}
+							continue
+						}
+						na = append(na, x)
+					}
+					hAdd = na
+				}
+			}
+			seenAdd[ag] = true
+			if afterRemove[ag] {
+				kitdiffPush(ctx, "errors", "kitdiff.add.duplicate-guid", path+": cannot add "+idKey+" "+ag+" that still exists after removes")
+				if ctx.heal && hAdd != nil {
+					na := hAdd[:0]
+					for _, x := range hAdd {
+						if m, ok := x.(map[string]any); ok && m["guid"] == ag {
+							continue
+						}
+						na = append(na, x)
+					}
+					hAdd = na
+				}
+			}
+		}
+	}
+	if arr, ok := raw["updated"].([]any); ok {
+		for _, u := range arr {
+			um, ok := u.(map[string]any)
+			if !ok {
+				continue
+			}
+			idObj, ok := um[idKey].(map[string]any)
+			if !ok {
+				continue
+			}
+			gid, _ := idObj["guid"].(string)
+			p := path + "." + idKey + "[" + gid + "]"
+			if gid == "" {
+				kitdiffPush(ctx, "errors", "kitdiff.update.bad-id", p+": missing "+idKey+" id")
+				if ctx.heal && hUpd != nil {
+					hUpd = filterUpdatesByGuid(hUpd, idKey, gid)
+				}
+				continue
+			}
+			if !afterRemove[gid] {
+				kitdiffPush(ctx, "errors", "kitdiff.update.missing-target", p+": update targets "+idKey+" not present after removes")
+				if ctx.heal && hUpd != nil {
+					hUpd = filterUpdatesByGuid(hUpd, idKey, gid)
+				}
+				continue
+			}
+			item := baseBy[gid]
+			if item == nil {
+				kitdiffPush(ctx, "errors", "kitdiff.update.missing-base", p+": "+idKey+" not found in base kit")
+				if ctx.heal && hUpd != nil {
+					hUpd = filterUpdatesByGuid(hUpd, idKey, gid)
+				}
+				continue
+			}
+			dm, _ := um["diff"].(map[string]any)
+			if onUpdated != nil {
+				onUpdated(item, dm, p)
+			}
+		}
+	}
+	if !ctx.heal {
+		return raw
+	}
+	out := map[string]any{}
+	if len(hRem) > 0 {
+		out["removed"] = hRem
+	}
+	if len(hUpd) > 0 {
+		out["updated"] = hUpd
+	}
+	if len(hAdd) > 0 {
+		out["added"] = hAdd
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func filterUpdatesByGuid(updates []any, idKey, gid string) []any {
+	n := updates[:0]
+	for _, u := range updates {
+		um, ok := u.(map[string]any)
+		if !ok {
+			n = append(n, u)
+			continue
+		}
+		idObj, ok := um[idKey].(map[string]any)
+		if !ok {
+			n = append(n, u)
+			continue
+		}
+		if g, _ := idObj["guid"].(string); g == gid {
+			continue
+		}
+		n = append(n, u)
+	}
+	return n
+}
+
+func kitToMap(k Kit) map[string]any {
+	b, _ := json.Marshal(k)
+	var m map[string]any
+	_ = json.Unmarshal(b, &m)
+	return m
+}
+
+func kitDiffToMap(d KitDiff) map[string]any {
+	b, _ := json.Marshal(d)
+	var m map[string]any
+	_ = json.Unmarshal(b, &m)
+	return m
+}
+
+func mapToKitDiff(m map[string]any) KitDiff {
+	b, _ := json.Marshal(m)
+	var d KitDiff
+	_ = json.Unmarshal(b, &d)
+	return d
+}
+
+func validateDesignDiffNestedGo(ctx *kitDiffValidateCtx, kitMap map[string]any, path string, design map[string]any, diff map[string]any, refs map[string]map[string]bool) {
+	typeGuids := refs["typeGuids"]
+	designGuids := refs["designGuids"]
+	authorGuids := refs["authorGuids"]
+	if p, ok := diff["parent"].(map[string]any); ok {
+		if pg, ok := p["guid"].(string); ok {
+			if pg != "" && !designGuids[pg] {
+				kitdiffPush(ctx, "errors", "kitdiff.ref.design-parent-missing", path+": parent design "+pg+" not in kit")
+			}
+			if dg, ok := design["guid"].(string); ok && pg == dg {
+				kitdiffPush(ctx, "errors", "kitdiff.ref.design-parent-self", path+": design cannot be its own parent")
+			}
+		}
+	}
+	if da, ok := diff["authors"]; ok {
+		if arr, ok := da.([]any); ok {
+			for _, a := range arr {
+				am, ok := a.(map[string]any)
+				if !ok {
+					continue
+				}
+				if g, ok := am["guid"].(string); ok && g != "" && !authorGuids[g] {
+					kitdiffPush(ctx, "errors", "kitdiff.ref.author-missing", path+": author "+g+" not in kit")
+				}
+			}
+		} else if dm, ok := da.(map[string]any); ok {
+			authArr := toMapSlice(kitMap["authors"])
+			validateGuidCollectionDiffGo(ctx, path+".authors", "author", authArr, dm, nil)
+		}
+	}
+	if pd, ok := diff["pieces"].(map[string]any); ok {
+		pieces := toMapSlice(design["pieces"])
+		validateGuidCollectionDiffGo(ctx, path+".pieces", "piece", pieces, pd, nil)
+		if arr, ok := pd["added"].([]any); ok {
+			for _, a := range arr {
+				am, ok := a.(map[string]any)
+				if !ok {
+					continue
+				}
+				var tg string
+				if t, ok := am["type"].(map[string]any); ok {
+					tg, _ = t["guid"].(string)
+				}
+				if tg != "" && !typeGuids[tg] {
+					kitdiffPush(ctx, "errors", "kitdiff.ref.piece-type-missing", path+".pieces.added: type "+tg+" not in kit")
+				}
+				var dg string
+				if d, ok := am["design"].(map[string]any); ok {
+					dg, _ = d["guid"].(string)
+				}
+				if dg != "" && !designGuids[dg] {
+					kitdiffPush(ctx, "errors", "kitdiff.ref.piece-design-missing", path+".pieces.added: subdesign "+dg+" not in kit")
+				}
+			}
+		}
+	}
+}
+
+func toMapSlice(v any) []map[string]any {
+	arr, ok := v.([]any)
+	if !ok {
+		return nil
+	}
+	out := make([]map[string]any, 0, len(arr))
+	for _, x := range arr {
+		if m, ok := x.(map[string]any); ok {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
+func guidSetFromKitEntities(v any) map[string]bool {
+	s := map[string]bool{}
+	for _, m := range toMapSlice(v) {
+		if g, ok := m["guid"].(string); ok {
+			s[g] = true
+		}
+	}
+	return s
+}
+
+// ValidateKitDiff checks whether a KitDiff can be applied faithfully to kit; heal returns a JSON-scrubbed diff.
+func ValidateKitDiff(kit Kit, diff KitDiff, heal bool) KitDiffValidationResult {
+	ctx := &kitDiffValidateCtx{heal: heal}
+	km := kitToMap(kit)
+	dm := kitDiffToMap(diff)
+	var outDiff map[string]any
+	if heal {
+		b, _ := json.Marshal(dm)
+		_ = json.Unmarshal(b, &outDiff)
+	}
+	refs := map[string]map[string]bool{
+		"typeGuids":    guidSetFromKitEntities(km["types"]),
+		"designGuids":  guidSetFromKitEntities(km["designs"]),
+		"qualityGuids": guidSetFromKitEntities(km["qualities"]),
+		"fileGuids":    guidSetFromKitEntities(km["files"]),
+		"portGuids":    guidSetFromKitEntities(km["ports"]),
+		"conceptGuids": guidSetFromKitEntities(km["concepts"]),
+		"authorGuids":  guidSetFromKitEntities(km["authors"]),
+	}
+	runColl := func(key, idKey, arrKey string, onUpd func(item map[string]any, ddf map[string]any, p string)) {
+		part, ok := dm[key].(map[string]any)
+		if !ok || part == nil {
+			return
+		}
+		fixed := validateGuidCollectionDiffGo(ctx, key, idKey, toMapSlice(km[arrKey]), part, onUpd)
+		if heal && outDiff != nil {
+			if fixed != nil && len(fixed) > 0 {
+				outDiff[key] = fixed
+			} else {
+				delete(outDiff, key)
+			}
+		}
+	}
+	runColl("types", "type", "types", nil)
+	runColl("designs", "design", "designs", func(item map[string]any, ddf map[string]any, p string) {
+		validateDesignDiffNestedGo(ctx, km, p, item, ddf, refs)
+	})
+	runColl("tags", "tag", "tags", nil)
+	runColl("concepts", "concept", "concepts", nil)
+	runColl("ports", "port", "ports", nil)
+	runColl("qualities", "quality", "qualities", nil)
+	runColl("files", "file", "files", nil)
+	runColl("folders", "folder", "folders", nil)
+	runColl("authors", "author", "authors", nil)
+	if a, ok := dm["attributes"].(map[string]any); ok {
+		validateGuidCollectionDiffGo(ctx, "kit.attributes", "attribute", toMapSlice(km["attributes"]), a, nil)
+	}
+	res := KitDiffValidationResult{Ok: len(ctx.errors) == 0, Errors: ctx.errors, Warnings: ctx.warnings}
+	if heal && outDiff != nil {
+		d := mapToKitDiff(outDiff)
+		res.Diff = &d
+	}
+	return res
 }
 
 func applyTypesDiff(base []Type, diff TypesDiff) []Type {

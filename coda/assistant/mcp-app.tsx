@@ -28,8 +28,8 @@ function JsonBlock({ value }: { value: unknown }) {
   );
 }
 
-function WorkspaceBody({ payload }: { payload: Record<string, unknown> }) {
-  const panel = (payload.panel as string) || "dashboard";
+function WorkspaceBody({ payload, activePanel }: { payload: Record<string, unknown>; activePanel: string }) {
+  const panel = activePanel || (payload.panel as string) || "dashboard";
   if (panel === "config") {
     return (
       <CardGrid>
@@ -139,8 +139,6 @@ function McpShell() {
     };
   }, [app?.toolResponse, panel]);
 
-  const effectivePanel = (payload.panel as string) || panel;
-
   return (
     <div className="min-h-full flex flex-col gap-3 p-3 bg-window text-foreground">
       <div className="flex flex-wrap gap-1 border-b border-border pb-2">
@@ -148,14 +146,14 @@ function McpShell() {
           <button
             key={p}
             type="button"
-            className={`rounded px-2 py-1 text-xs capitalize ${effectivePanel === p ? "bg-primary text-primary-foreground" : "bg-panel hover:bg-muted"}`}
+            className={`rounded px-2 py-1 text-xs capitalize ${panel === p ? "bg-primary text-primary-foreground" : "bg-panel hover:bg-muted"}`}
             onClick={() => setPanel(p)}
           >
             {p}
           </button>
         ))}
       </div>
-      <WorkspaceBody payload={{ ...payload, panel: effectivePanel === panel ? effectivePanel : panel }} />
+      <WorkspaceBody payload={payload} activePanel={panel} />
     </div>
   );
 }

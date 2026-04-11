@@ -1,7 +1,8 @@
 {
   "title": "Algorithm Operations Return Result With Warnings And Infos",
-  "status": "open",
+  "status": "closed",
   "description": "Introduce OperationResult for semio algorithms; migrate flattenDesign, delete/copy paths, callers; clump fixed-piece warnings.",
+  "summary": "Introduced OperationResult (ok, change, warnings, infos | errors) in @semio/js: flattenDesign, deletePiecesAndConnectionsInDesign, removePiecesAndConnectionsFromDesign, copyDesign, piecesMetadata. Flatten emits flatten.no-fixed-piece-in-clump warning, connection skips as warnings, placement failures as errors; summary info. Normalizers for native REST. Updated nativeAlgorithmAdapter, UI MCP flatten, algorithm and UI Storybook stories. Extended vitest with floating-clump warning case. All 158 js tests pass.",
   "goal": "🎯semio",
   "sessions": [
     "⚪1faf6774ffbd4ab7929ab344b00c5c38"

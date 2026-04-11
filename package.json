@@ -24,7 +24,7 @@
     "semio/rs",
     "semio/sqlite",
     "repo/sqlite",
-    "coda/engine",
+    "coda/assistant",
     "coda/desktop",
     "semio/sketchpad",
     "semio/studio",

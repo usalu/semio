@@ -8961,6 +8961,252 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
     return diff
 
 
+def _kitdiff_deep_equal(a: typing.Any, b: typing.Any) -> bool:
+    """��Structural equality for noop remove/add detection in kit diff validation."""
+    if a is b:
+        return True
+    if type(a) != type(b):
+        return False
+    if isinstance(a, dict):
+        if set(a.keys()) != set(b.keys()):
+            return False
+        return all(_kitdiff_deep_equal(a[k], b[k]) for k in a)
+    if isinstance(a, list):
+        if len(a) != len(b):
+            return False
+        if len(a) != len(b):
+            return False
+        return all(_kitdiff_deep_equal(x, y) for x, y in zip(a, b))
+    return a == b
+
+
+def _kitdiff_push(ctx: dict, kind: str, code: str, message: str) -> None:
+    ctx[kind].append({"code": code, "message": message})
+
+
+def _validate_guid_collection_diff(
+    ctx: dict,
+    path: str,
+    id_key: str,
+    base: list,
+    raw: dict | None,
+    on_updated: typing.Callable[[dict, dict, str], None] | None = None,
+) -> dict | None:
+    """Validate removed/updated/added guids for one collection diff; heal trims invalid ops when ctx["heal"]."""
+    if not raw:
+        return None
+    heal: bool = ctx["heal"]
+    base_by = {i.get("guid"): i for i in base if isinstance(i, dict) and i.get("guid")}
+    removed_guids = {r.get("guid") for r in raw.get("removed") or [] if isinstance(r, dict)}
+    after_remove = {g for g in base_by if g not in removed_guids}
+    h_rem = list(raw.get("removed") or []) if heal else None
+    h_upd = list(raw.get("updated") or []) if heal else None
+    h_add = list(raw.get("added") or []) if heal else None
+
+    for r in raw.get("removed") or []:
+        if not isinstance(r, dict):
+            continue
+        rg = r.get("guid")
+        if rg not in base_by:
+            _kitdiff_push(ctx, "warnings", "kitdiff.remove.missing-target", f"{path}: remove references missing {id_key} {rg}")
+            if heal and h_rem is not None:
+                h_rem = [x for x in h_rem if x.get("guid") != rg]
+
+    add_by_guid = {a.get("guid"): a for a in raw.get("added") or [] if isinstance(a, dict) and a.get("guid")}
+    for r in raw.get("removed") or []:
+        if not isinstance(r, dict):
+            continue
+        rg = r.get("guid")
+        orig = base_by.get(rg)
+        add = add_by_guid.get(rg)
+        if orig is not None and add is not None and _kitdiff_deep_equal(orig, add):
+            _kitdiff_push(
+                ctx,
+                "warnings",
+                "kitdiff.cycle.noop-restore",
+                f"{path}: removed and re-added {id_key} {rg} are deeply equal (no effective change)",
+            )
+            if heal:
+                if h_rem is not None:
+                    h_rem = [x for x in h_rem if x.get("guid") != rg]
+                if h_add is not None:
+                    h_add = [x for x in h_add if x.get("guid") != rg]
+
+    seen_add: set[str] = set()
+    for a in raw.get("added") or []:
+        if not isinstance(a, dict):
+            continue
+        ag = a.get("guid")
+        if ag in seen_add:
+            _kitdiff_push(ctx, "errors", "kitdiff.add.duplicate-in-diff", f"{path}: duplicate added {id_key} guid {ag}")
+            if heal and h_add is not None:
+                na = []
+                first_kept = False
+                for x in h_add:
+                    if x.get("guid") == ag:
+                        if not first_kept:
+                            na.append(x)
+                            first_kept = True
+                        continue
+                    na.append(x)
+                h_add = na
+        seen_add.add(ag)
+        if ag in after_remove:
+            _kitdiff_push(ctx, "errors", "kitdiff.add.duplicate-guid", f"{path}: cannot add {id_key} {ag} that still exists after removes")
+            if heal and h_add is not None:
+                h_add = [x for x in h_add if x.get("guid") != ag]
+
+    for u in raw.get("updated") or []:
+        if not isinstance(u, dict) or id_key not in u:
+            continue
+        gid = (u.get(id_key) or {}).get("guid")
+        p = f"{path}.{id_key}[{gid}]"
+        if not gid:
+            _kitdiff_push(ctx, "errors", "kitdiff.update.bad-id", f"{p}: missing {id_key} id")
+            if heal and h_upd is not None:
+                h_upd = [x for x in h_upd if (x.get(id_key) or {}).get("guid") != gid]
+            continue
+        if gid not in after_remove:
+            _kitdiff_push(ctx, "errors", "kitdiff.update.missing-target", f"{p}: update targets {id_key} not present after removes")
+            if heal and h_upd is not None:
+                h_upd = [x for x in h_upd if (x.get(id_key) or {}).get("guid") != gid]
+            continue
+        item = base_by.get(gid)
+        if item is None:
+            _kitdiff_push(ctx, "errors", "kitdiff.update.missing-base", f"{p}: {id_key} not found in base kit")
+            if heal and h_upd is not None:
+                h_upd = [x for x in h_upd if (x.get(id_key) or {}).get("guid") != gid]
+            continue
+        if on_updated:
+            on_updated(item, u.get("diff") or {}, p)
+
+    if not heal:
+        return raw
+    out: dict = {}
+    if h_rem:
+        out["removed"] = h_rem
+    if h_upd:
+        out["updated"] = h_upd
+    if h_add:
+        out["added"] = h_add
+    return out or None
+
+
+def _validate_design_diff_nested_py(ctx: dict, kit: dict, path: str, design: dict, diff: dict, refs: dict) -> None:
+    """��Validate nested design diff: piece type refs, authors diff or list."""
+    type_guids: set[str] = refs["typeGuids"]
+    design_guids: set[str] = refs["designGuids"]
+    author_guids: set[str] = refs["authorGuids"]
+
+    if diff.get("parent") and isinstance(diff["parent"], dict):
+        pg = diff["parent"].get("guid")
+        if pg and pg not in design_guids:
+            _kitdiff_push(ctx, "errors", "kitdiff.ref.design-parent-missing", f"{path}: parent design {pg} not in kit")
+        if pg == design.get("guid"):
+            _kitdiff_push(ctx, "errors", "kitdiff.ref.design-parent-self", f"{path}: design cannot be its own parent")
+
+    da = diff.get("authors")
+    if da is not None:
+        if isinstance(da, list):
+            for a in da:
+                if isinstance(a, dict) and a.get("guid") and a["guid"] not in author_guids:
+                    _kitdiff_push(ctx, "errors", "kitdiff.ref.author-missing", f"{path}: author {a['guid']} not in kit")
+        elif isinstance(da, dict):
+            _validate_guid_collection_diff(
+                ctx,
+                f"{path}.authors",
+                "author",
+                kit.get("authors") or [],
+                da,
+                None,
+            )
+
+    pd = diff.get("pieces")
+    if isinstance(pd, dict):
+        _validate_guid_collection_diff(
+            ctx,
+            f"{path}.pieces",
+            "piece",
+            design.get("pieces") or [],
+            pd,
+            None,
+        )
+        for a in pd.get("added") or []:
+            if not isinstance(a, dict):
+                continue
+            tg = (a.get("type") or {}).get("guid")
+            if tg and tg not in type_guids:
+                _kitdiff_push(ctx, "errors", "kitdiff.ref.piece-type-missing", f"{path}.pieces.added: type {tg} not in kit")
+            dg = (a.get("design") or {}).get("guid") if isinstance(a.get("design"), dict) else None
+            if dg and dg not in design_guids:
+                _kitdiff_push(ctx, "errors", "kitdiff.ref.piece-design-missing", f"{path}.pieces.added: subdesign {dg} not in kit")
+
+
+def validate_kit_diff_dict(kit: dict, diff: dict, heal: bool) -> dict:
+    """��Validate a kit diff dict against a base kit dict; optional heal returns a scrubbed diff copy.
+
+    Returns a dict: ok (bool), errors, warnings (list of {code, message}), diff (optional when heal).
+    """
+    import copy
+
+    working = copy.deepcopy(diff) if heal else diff
+    ctx = {"errors": [], "warnings": [], "heal": heal}
+    type_guids = {t.get("guid") for t in kit.get("types") or [] if t.get("guid")}
+    design_guids = {d.get("guid") for d in kit.get("designs") or [] if d.get("guid")}
+    quality_guids = {q.get("guid") for q in kit.get("qualities") or [] if q.get("guid")}
+    file_guids = {f.get("guid") for f in kit.get("files") or [] if f.get("guid")}
+    port_guids = {p.get("guid") for p in kit.get("ports") or [] if p.get("guid")}
+    concept_guids = {c.get("guid") for c in kit.get("concepts") or [] if c.get("guid")}
+    author_guids = {a.get("guid") for a in kit.get("authors") or [] if a.get("guid")}
+    refs = {
+        "typeGuids": type_guids,
+        "designGuids": design_guids,
+        "qualityGuids": quality_guids,
+        "fileGuids": file_guids,
+        "portGuids": port_guids,
+        "conceptGuids": concept_guids,
+        "authorGuids": author_guids,
+    }
+
+    out_diff = copy.deepcopy(diff) if heal else None
+
+    def run_coll(key: str, id_key: str, arr_key: str, on_upd=None):
+        nonlocal out_diff
+        part = working.get(key) if isinstance(working, dict) else None
+        if not part:
+            return
+        fixed = _validate_guid_collection_diff(ctx, key, id_key, kit.get(arr_key) or [], part, on_upd)
+        if heal and out_diff is not None:
+            if fixed:
+                out_diff[key] = fixed
+            elif key in out_diff:
+                del out_diff[key]
+
+    run_coll("types", "type", "types")
+    run_coll(
+        "designs",
+        "design",
+        "designs",
+        lambda item, ddf, p: _validate_design_diff_nested_py(ctx, kit, p, item, ddf, refs),
+    )
+    run_coll("tags", "tag", "tags")
+    run_coll("concepts", "concept", "concepts")
+    run_coll("ports", "port", "ports")
+    run_coll("qualities", "quality", "qualities")
+    run_coll("files", "file", "files")
+    run_coll("folders", "folder", "folders")
+    run_coll("authors", "author", "authors")
+
+    if working.get("attributes"):
+        _validate_guid_collection_diff(ctx, "kit.attributes", "attribute", kit.get("attributes") or [], working["attributes"], None)
+
+    ok = len(ctx["errors"]) == 0
+    result: dict = {"ok": ok, "errors": ctx["errors"], "warnings": ctx["warnings"]}
+    if heal:
+        result["diff"] = out_diff
+    return result
+
+
 def applyKitDiffDict(base: dict, diff: dict) -> dict:
     """🔖Apply a diff to a kit dict."""
     result = dict(base)
@@ -17149,6 +17395,29 @@ class TestKitKind:
         kit = Kit.parse({"name": "TempKit"})
         assert kit.name == "TempKit"
         assert kit.uri.startswith("memory://")
+
+
+class TestValidateKitDiffDict:
+    """Tests for validate_kit_diff_dict using validate-kit-diff.cases.semio.json."""
+
+    def test_validate_kit_diff_asset_cases(self):
+        payload = _test_load_json("validate-kit-diff.cases.semio.json")
+        tiny = payload["tinyKit"]
+        for case in payload["cases"]:
+            r = validate_kit_diff_dict(tiny, case["diff"], False)
+            assert r["ok"] == case["expectOk"], case["id"]
+            err_codes = [e.get("code") for e in r["errors"] if e.get("code")]
+            warn_codes = [w.get("code") for w in r["warnings"] if w.get("code")]
+            for c in case["errorCodes"]:
+                assert c in err_codes, (case["id"], err_codes)
+            for c in case["warningCodes"]:
+                assert c in warn_codes, (case["id"], warn_codes)
+
+    def test_validate_kit_diff_heal_drops_bad_design_update(self):
+        tiny = _test_load_json("validate-kit-diff.cases.semio.json")["tinyKit"]
+        bad = {"designs": {"updated": [{"design": {"guid": "99999999-9999-9999-9999-999999999999"}, "diff": {"name": "X"}}]}}
+        r = validate_kit_diff_dict(tiny, bad, True)
+        assert r.get("diff", {}).get("designs", {}).get("updated", []) == []
 
 
 class TestHash:

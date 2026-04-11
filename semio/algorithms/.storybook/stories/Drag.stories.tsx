@@ -52,8 +52,13 @@ function DragFrame() {
     void (async () => {
       const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
       if (cancelled) return;
-      setFlattenChange(fc);
-      const bd = applyDesignDiff(rawDesign, fc.forward) as any;
+      if (!fc.ok) {
+        setFlattenChange(null);
+        setBaseDesign(null);
+        return;
+      }
+      setFlattenChange(fc.change);
+      const bd = applyDesignDiff(rawDesign, fc.change.forward) as any;
       setBaseDesign(bd);
       setSelectedPieceGuids((prev) => {
         const pieceGuids = new Set<string>((bd?.pieces ?? []).map((p: any) => p.guid));

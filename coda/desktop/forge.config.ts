@@ -20,6 +20,11 @@ import { MakerRpm } from "@electron-forge/maker-rpm";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const assistantBundleRoot = path.resolve(__dirname, "..", "assistant");
 
 /**
  * Electron Forge configuration with Vite plugin and security fuses.
@@ -30,6 +35,7 @@ const config: ForgeConfig = {
     asar: true,
     executableName: "coda-desktop",
     name: "coda-desktop",
+    extraResource: [assistantBundleRoot],
   },
   rebuildConfig: {},
   makers: [

@@ -131,10 +131,16 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
     void (async () => {
       const [fc, pastefc] = await Promise.all([nativeFlattenDesign(kit, rawDesign.guid, language), nativeFlattenDesign(kitWithPasteTarget, pasteTargetDesign.guid, language)]);
       if (cancelled) return;
-      setFlattenChange(fc);
-      const bd = applyDesignDiff(rawDesign, fc.forward) as any;
+      if (!fc.ok || !pastefc.ok) {
+        setFlattenChange(null);
+        setBaseDesign(null);
+        setFlatPasteTargetDesign(null);
+        return;
+      }
+      setFlattenChange(fc.change);
+      const bd = applyDesignDiff(rawDesign, fc.change.forward) as any;
       setBaseDesign(bd);
-      setFlatPasteTargetDesign(applyDesignDiff(pasteTargetDesign, pastefc.forward) as Design);
+      setFlatPasteTargetDesign(applyDesignDiff(pasteTargetDesign, pastefc.change.forward) as Design);
     })();
     return () => {
       cancelled = true;
@@ -150,8 +156,10 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
         return;
       }
       setDesignDiff(undefined);
-      const copied = await nativeCopyDesign(kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, language);
+      const copyRes = await nativeCopyDesign(kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, language);
       if (cancelled) return;
+      if (!copyRes.ok) return;
+      const copied = copyRes.change;
       const coord = mode === "with" ? { u: vec.u, v: vec.v } : undefined;
       const diff = await nativePasteDesign(kit, copied, pasteTargetDesign, "original", coord, language);
       if (!cancelled) setDesignDiff(diff);

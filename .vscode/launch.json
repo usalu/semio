@@ -304,9 +304,9 @@
       "runtimeExecutable": "uv",
       "runtimeArgs": [
         "--directory",
-        "coda/engine",
+        "coda/assistant",
         "run",
-        "coda.py",
+        "main.py",
         "--mcp-stdio"
       ],
       "env": {
@@ -318,7 +318,7 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=uv&serverArgs=--directory&serverArgs=coda/engine&serverArgs=run&serverArgs=coda.py&serverArgs=--mcp-stdio&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=uv&serverArgs=--directory&serverArgs=coda/assistant&serverArgs=run&serverArgs=main.py&serverArgs=--mcp-stdio&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {
@@ -354,7 +354,7 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=uv&serverArgs=--directory&serverArgs=coda/engine&serverArgs=run&serverArgs=coda.py&serverArgs=--mcp-stdio&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=uv&serverArgs=--directory&serverArgs=coda/assistant&serverArgs=run&serverArgs=main.py&serverArgs=--mcp-stdio&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {

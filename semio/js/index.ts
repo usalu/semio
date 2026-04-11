@@ -6928,6 +6928,363 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
   return result as Kit;
 };
 
+// #region 🔖KitDiffValidation
+// Validates kit diffs before apply; optional heal trims ineffective operations.
+
+/**
+ * Outcome of {@link validateKitDiff}: errors block faithful apply, warnings flag suspicious but applicable diffs.
+ **/
+export interface KitDiffValidationResult {
+  ok: boolean;
+  errors: OperationNote[];
+  warnings: OperationNote[];
+  /** When `heal` was true, a copy of the diff with fixable operations removed. */
+  diff?: KitDiff;
+}
+
+// KitDiffValidationCtx holds mutable state while validating a kit diff.
+type KitDiffValidationCtx = {
+  errors: OperationNote[];
+  warnings: OperationNote[];
+  heal: boolean;
+  diff: KitDiff;
+};
+
+const kitDiffPush = (ctx: KitDiffValidationCtx, kind: "errors" | "warnings", code: string, message: string) => {
+  ctx[kind].push({ code, message });
+};
+
+/** Generic collection diff shape used across kit, design, and type entities. */
+type GuidCollDiff = {
+  removed?: Array<{ guid: string }>;
+  updated?: any[];
+  added?: any[];
+};
+
+const collGetUpdatedId = (u: any, idKey: string): string => u?.[idKey]?.guid ?? "";
+
+const validateGuidCollectionDiff = <TItem extends { guid: string }>(
+  ctx: KitDiffValidationCtx,
+  path: string,
+  idKey: string,
+  base: TItem[],
+  raw: GuidCollDiff | undefined,
+  onUpdated: (item: TItem, itemDiff: any, itemPath: string) => void,
+): GuidCollDiff | undefined => {
+  if (!raw) return undefined;
+  const baseByGuid = new Map(base.map((i) => [i.guid, i]));
+  const removedGuids = new Set((raw.removed ?? []).map((r) => r.guid));
+  let healedRemoved = raw.removed ? [...raw.removed] : undefined;
+  let healedUpdated = raw.updated ? [...raw.updated] : undefined;
+  let healedAdded = raw.added ? [...raw.added] : undefined;
+
+  const afterRemoveIds = new Set(base.filter((i) => !removedGuids.has(i.guid)).map((i) => i.guid));
+
+  for (const r of raw.removed ?? []) {
+    if (!baseByGuid.has(r.guid)) {
+      kitDiffPush(ctx, "warnings", "kitdiff.remove.missing-target", `${path}: remove references missing ${idKey} ${r.guid}`);
+      if (ctx.heal && healedRemoved) healedRemoved = healedRemoved.filter((x) => x.guid !== r.guid);
+    }
+  }
+
+  const noopAddedByGuid = new Map<string, { guid: string }>();
+  for (const a of raw.added ?? []) noopAddedByGuid.set(a.guid, a);
+
+  for (const r of raw.removed ?? []) {
+    const orig = baseByGuid.get(r.guid);
+    const add = noopAddedByGuid.get(r.guid);
+    if (orig && add && deepEqual(orig, add)) {
+      kitDiffPush(ctx, "warnings", "kitdiff.cycle.noop-restore", `${path}: removed and re-added ${idKey} ${r.guid} are deeply equal (no effective change)`);
+      if (ctx.heal) {
+        if (healedRemoved) healedRemoved = healedRemoved.filter((x) => x.guid !== r.guid);
+        if (healedAdded) healedAdded = healedAdded.filter((x) => x.guid !== r.guid);
+      }
+    }
+  }
+
+  const seenAdd = new Set<string>();
+  for (const a of raw.added ?? []) {
+    if (seenAdd.has(a.guid)) {
+      kitDiffPush(ctx, "errors", "kitdiff.add.duplicate-in-diff", `${path}: duplicate added ${idKey} guid ${a.guid}`);
+      if (ctx.heal && healedAdded) {
+        const first = healedAdded.findIndex((x) => x.guid === a.guid);
+        healedAdded = healedAdded.filter((x, i) => x.guid !== a.guid || i === first);
+      }
+    }
+    seenAdd.add(a.guid);
+    if (afterRemoveIds.has(a.guid)) {
+      kitDiffPush(ctx, "errors", "kitdiff.add.duplicate-guid", `${path}: cannot add ${idKey} ${a.guid} that still exists after removes`);
+      if (ctx.heal && healedAdded) healedAdded = healedAdded.filter((x) => x.guid !== a.guid);
+    }
+  }
+
+  for (const u of raw.updated ?? []) {
+    const gid = collGetUpdatedId(u, idKey);
+    const p = `${path}.${idKey}[${gid}]`;
+    if (!gid) {
+      kitDiffPush(ctx, "errors", "kitdiff.update.bad-id", `${p}: missing ${idKey} id`);
+      if (ctx.heal && healedUpdated) healedUpdated = healedUpdated.filter((x) => collGetUpdatedId(x, idKey) !== gid);
+      continue;
+    }
+    if (!afterRemoveIds.has(gid)) {
+      kitDiffPush(ctx, "errors", "kitdiff.update.missing-target", `${p}: update targets ${idKey} not present after removes`);
+      if (ctx.heal && healedUpdated) healedUpdated = healedUpdated.filter((x) => collGetUpdatedId(x, idKey) !== gid);
+      continue;
+    }
+    const item = baseByGuid.get(gid);
+    if (!item) {
+      kitDiffPush(ctx, "errors", "kitdiff.update.missing-base", `${p}: ${idKey} not found in base kit`);
+      if (ctx.heal && healedUpdated) healedUpdated = healedUpdated.filter((x) => collGetUpdatedId(x, idKey) !== gid);
+      continue;
+    }
+    onUpdated(item, u.diff, p);
+  }
+
+  if (!ctx.heal) return raw;
+  const out: GuidCollDiff = {};
+  if (healedRemoved && healedRemoved.length > 0) out.removed = healedRemoved;
+  if (healedUpdated && healedUpdated.length > 0) out.updated = healedUpdated;
+  if (healedAdded && healedAdded.length > 0) out.added = healedAdded;
+  return Object.keys(out).length > 0 ? out : undefined;
+};
+
+const validateAttributesDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Attribute[], d: AttributesDiff | undefined): void => {
+  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => {});
+};
+
+const validatePropsDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Prop[], qualities: Set<string>, d: PropsDiff | undefined): void => {
+  validateGuidCollectionDiff(ctx, path, "prop", base, d, (item, diff, p) => {
+    const q = (diff as PropDiff).quality?.guid ?? item.quality?.guid;
+    if (q && !qualities.has(q)) kitDiffPush(ctx, "errors", "kitdiff.ref.quality-missing", `${p}: quality ${q} not in kit`);
+    if ((diff as PropDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (diff as PropDiff).attributes);
+  });
+};
+
+const validateModelDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Model[], files: Set<string>, d: ModelsDiff | undefined): void => {
+  validateGuidCollectionDiff(ctx, path, "model", base, d, (item, diff, p) => {
+    const fid = (diff as ModelDiff).file?.guid ?? item.file?.guid;
+    if (fid && !files.has(fid)) kitDiffPush(ctx, "errors", "kitdiff.ref.file-missing", `${p}: model file ${fid} not in kit`);
+    if ((diff as ModelDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (diff as ModelDiff).attributes);
+  });
+};
+
+const validateConnectorDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Connector[], ports: Set<string>, qualities: Set<string>, d: ConnectorsDiff | undefined): void => {
+  validateGuidCollectionDiff(ctx, path, "connector", base, d, (item, diff, p) => {
+    const pg = (diff as ConnectorDiff).port?.guid ?? item.port?.guid;
+    if (pg && !ports.has(pg)) kitDiffPush(ctx, "errors", "kitdiff.ref.port-missing", `${p}: connector port ${pg} not in kit`);
+    if ((diff as ConnectorDiff).props) validatePropsDiffNested(ctx, `${p}.props`, item.props ?? [], qualities, (diff as ConnectorDiff).props);
+    if ((diff as ConnectorDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (diff as ConnectorDiff).attributes);
+  });
+};
+
+const validateTypeDiffNested = (
+  ctx: KitDiffValidationCtx,
+  path: string,
+  item: Type,
+  diff: TypeDiff,
+  ctxRefs: { typeGuids: Set<string>; fileGuids: Set<string>; portGuids: Set<string>; conceptGuids: Set<string>; authorGuids: Set<string>; qualityGuids: Set<string> },
+): void => {
+  if (diff.parent?.guid) {
+    if (!ctxRefs.typeGuids.has(diff.parent.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.type-parent-missing", `${path}: parent type ${diff.parent.guid} not in kit`);
+    if (diff.parent.guid === item.guid) kitDiffPush(ctx, "errors", "kitdiff.ref.type-parent-self", `${path}: type cannot be its own parent`);
+  }
+  if (diff.models) validateModelDiffNested(ctx, `${path}.models`, item.models ?? [], ctxRefs.fileGuids, diff.models);
+  if (diff.connectors) validateConnectorDiffNested(ctx, `${path}.connectors`, item.connectors ?? [], ctxRefs.portGuids, ctxRefs.qualityGuids, diff.connectors);
+  if (diff.props) validatePropsDiffNested(ctx, `${path}.props`, item.props ?? [], ctxRefs.qualityGuids, diff.props);
+  if (diff.attributes) validateAttributesDiffNested(ctx, `${path}.attributes`, item.attributes ?? [], diff.attributes);
+  if (diff.concepts) {
+    for (const c of diff.concepts ?? []) {
+      if (c?.guid && !ctxRefs.conceptGuids.has(c.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.concept-missing", `${path}: concept ${c.guid} not in kit`);
+    }
+  }
+  if (diff.authors) {
+    for (const a of diff.authors ?? []) {
+      if (a?.guid && !ctxRefs.authorGuids.has(a.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.author-missing", `${path}: author ${a.guid} not in kit`);
+    }
+  }
+};
+
+const validateBenchmarksDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Benchmark[], d: BenchmarksDiff | undefined): void => {
+  validateGuidCollectionDiff(ctx, path, "benchmark", base, d, (_item, diff, p) => {
+    if ((diff as BenchmarkDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, _item.attributes ?? [], (diff as BenchmarkDiff).attributes);
+  });
+};
+
+const validateQualityDiffNested = (ctx: KitDiffValidationCtx, path: string, item: Quality, diff: QualityDiff): void => {
+  if (diff.benchmarks) validateBenchmarksDiffNested(ctx, `${path}.benchmarks`, item.benchmarks ?? [], diff.benchmarks);
+  if (diff.attributes) validateAttributesDiffNested(ctx, `${path}.attributes`, item.attributes ?? [], diff.attributes);
+};
+
+const simulatePiecesForDesign = (base: Design, d?: PiecesDiff): Piece[] => {
+  if (!d) return base.pieces ?? [];
+  return applyCollectionDiff("piece", base.pieces ?? [], d, applyPieceDiff);
+};
+
+const validateDesignDiffNested = (
+  ctx: KitDiffValidationCtx,
+  kit: Kit,
+  path: string,
+  design: Design,
+  diff: DesignDiff,
+  refs: { typeGuids: Set<string>; designGuids: Set<string>; qualityGuids: Set<string>; fileGuids: Set<string>; portGuids: Set<string>; conceptGuids: Set<string>; authorGuids: Set<string> },
+): void => {
+  if (diff.parent?.guid) {
+    if (!refs.designGuids.has(diff.parent.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.design-parent-missing", `${path}: parent design ${diff.parent.guid} not in kit`);
+    if (diff.parent.guid === design.guid) kitDiffPush(ctx, "errors", "kitdiff.ref.design-parent-self", `${path}: design cannot be its own parent`);
+  }
+  if (diff.concepts) {
+    for (const c of diff.concepts ?? []) {
+      if (c?.guid && !refs.conceptGuids.has(c.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.concept-missing", `${path}: concept ${c.guid} not in kit`);
+    }
+  }
+  if (diff.authors !== undefined) {
+    const da = diff.authors as unknown;
+    if (Array.isArray(da)) {
+      for (const a of da as Array<{ guid?: string }>) {
+        if (a?.guid && !refs.authorGuids.has(a.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.author-missing", `${path}: author ${a.guid} not in kit`);
+      }
+    } else if (da !== null && typeof da === "object") {
+      validateGuidCollectionDiff(ctx, `${path}.authors`, "author", kit.authors ?? [], da as GuidCollDiff, (item, adiff, p) => {
+        if ((adiff as AuthorDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (adiff as AuthorDiff).attributes);
+      });
+    }
+  }
+
+  if (diff.pieces) {
+    validateGuidCollectionDiff(ctx, `${path}.pieces`, "piece", design.pieces ?? [], diff.pieces, (item, pDiff, p) => {
+      if ((pDiff as PieceDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (pDiff as PieceDiff).attributes);
+      if ((pDiff as PieceDiff).props) validatePropsDiffNested(ctx, `${p}.props`, item.props ?? [], refs.qualityGuids, (pDiff as PieceDiff).props);
+    });
+    for (const a of diff.pieces.added ?? []) {
+      const tg = a.type?.guid;
+      if (tg && !refs.typeGuids.has(tg)) kitDiffPush(ctx, "errors", "kitdiff.ref.piece-type-missing", `${path}.pieces.added: type ${tg} not in kit`);
+      const dg = a.design?.guid;
+      if (dg && !refs.designGuids.has(dg)) kitDiffPush(ctx, "errors", "kitdiff.ref.piece-design-missing", `${path}.pieces.added: subdesign ${dg} not in kit`);
+    }
+  }
+
+  const simPieces = simulatePiecesForDesign(design, diff.pieces);
+  const pieceGuids = new Set(simPieces.map((p) => p.guid));
+
+  if (diff.connections) {
+    validateGuidCollectionDiff(ctx, `${path}.connections`, "connection", design.connections ?? [], diff.connections, (item, cDiff, p) => {
+      if ((cDiff as ConnectionDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (cDiff as ConnectionDiff).attributes);
+    });
+    const checkSide = (side: Side, label: string, cpath: string) => {
+      if (!pieceGuids.has(side.piece.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.connection-piece-missing", `${cpath}: ${label} piece ${side.piece.guid} not in design after piece diff`);
+      if (side.designPiece?.guid && !pieceGuids.has(side.designPiece.guid))
+        kitDiffPush(ctx, "errors", "kitdiff.ref.connection-designpiece-missing", `${cpath}: ${label} designPiece ${side.designPiece.guid} not in design after piece diff`);
+    };
+    for (const a of diff.connections.added ?? []) {
+      const cp = `${path}.connections.added[${a.guid}]`;
+      checkSide(a.connected, "connected", cp);
+      checkSide(a.connecting, "connecting", cp);
+    }
+    for (const u of diff.connections.updated ?? []) {
+      const conn = design.connections?.find((c) => c.guid === (u as any).connection.guid);
+      const merged = conn ? applyConnectionDiff(conn, u.diff as ConnectionDiff) : undefined;
+      const cp = `${path}.connections.updated[${(u as any).connection.guid}]`;
+      if (merged) {
+        checkSide(merged.connected, "connected", cp);
+        checkSide(merged.connecting, "connecting", cp);
+      }
+    }
+  }
+
+  if (diff.stats) {
+    validateGuidCollectionDiff(ctx, `${path}.stats`, "stat", design.stats ?? [], diff.stats, (item, sdiff, p) => {
+      const q = (sdiff as StatDiff).quality?.guid ?? item.quality?.guid;
+      if (q && !refs.qualityGuids.has(q)) kitDiffPush(ctx, "errors", "kitdiff.ref.quality-missing", `${p}: stat quality ${q} not in kit`);
+    });
+  }
+  if (diff.props) validatePropsDiffNested(ctx, `${path}.props`, design.props ?? [], refs.qualityGuids, diff.props);
+
+  let simLayers = design.layers ?? [];
+  if (diff.layers) {
+    validateGuidCollectionDiff(ctx, `${path}.layers`, "layer", design.layers ?? [], diff.layers, (item, ldiff, p) => {
+      if ((ldiff as LayerDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (ldiff as LayerDiff).attributes);
+    });
+    simLayers = applyCollectionDiff("layer", design.layers ?? [], diff.layers, applyLayerDiff);
+  }
+  const layerGuids = new Set(simLayers.map((l) => l.guid));
+  const active = diff.activeLayer ?? design.activeLayer;
+  if (active?.guid && !layerGuids.has(active.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.active-layer-missing", `${path}: activeLayer ${active.guid} not in layers after diff`);
+
+  if (diff.groups) {
+    validateGuidCollectionDiff(ctx, `${path}.groups`, "group", design.groups ?? [], diff.groups, (item, gdiff, p) => {
+      if ((gdiff as GroupDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (gdiff as GroupDiff).attributes);
+    });
+    const checkGroupPieces = (g: Group, gp: string) => {
+      for (const pid of g.pieces ?? []) {
+        if (!pieceGuids.has(pid.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.group-piece-missing", `${gp}: piece ${pid.guid} not in design`);
+      }
+    };
+    for (const a of diff.groups.added ?? []) checkGroupPieces(a, `${path}.groups.added[${a.guid}]`);
+    for (const u of diff.groups.updated ?? []) {
+      const g = design.groups?.find((x) => x.guid === (u as any).group.guid);
+      if (g) {
+        const ng = applyGroupDiff(g, u.diff as GroupDiff);
+        checkGroupPieces(ng, `${path}.groups.updated[${(u as any).group.guid}]`);
+      }
+    }
+  }
+
+  if (diff.attributes) validateAttributesDiffNested(ctx, `${path}.attributes`, design.attributes ?? [], diff.attributes);
+};
+
+/**
+ * Validates a {@link KitDiff} against a base {@link Kit}. Errors mean apply would skip or mis-apply operations; warnings flag redundant or suspicious edits.
+ * With `heal`, returns a scrubbed diff copy with invalid operations removed where possible.
+ **/
+export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiffValidationResult => {
+  const working: KitDiff = heal ? (JSON.parse(JSON.stringify(diff)) as KitDiff) : diff;
+  const ctx: KitDiffValidationCtx = { errors: [], warnings: [], heal, diff: working };
+
+  const typeGuids = new Set((kit.types ?? []).map((t) => t.guid));
+  const designGuids = new Set((kit.designs ?? []).map((d) => d.guid));
+  const qualityGuids = new Set((kit.qualities ?? []).map((q) => q.guid));
+  const fileGuids = new Set((kit.files ?? []).map((f) => f.guid));
+  const portGuids = new Set((kit.ports ?? []).map((p) => p.guid));
+  const conceptGuids = new Set((kit.concepts ?? []).map((c) => c.guid));
+  const authorGuids = new Set((kit.authors ?? []).map((a) => a.guid));
+  const refs = { typeGuids, designGuids, qualityGuids, fileGuids, portGuids, conceptGuids, authorGuids };
+
+  if (ctx.diff.types) {
+    ctx.diff.types = validateGuidCollectionDiff(ctx, "types", "type", kit.types ?? [], ctx.diff.types, (item, tdiff, p) =>
+      validateTypeDiffNested(ctx, p, item, tdiff as TypeDiff, refs),
+    );
+  }
+  if (ctx.diff.designs) {
+    ctx.diff.designs = validateGuidCollectionDiff(ctx, "designs", "design", kit.designs ?? [], ctx.diff.designs, (item, ddiff, p) =>
+      validateDesignDiffNested(ctx, kit, p, item, ddiff as DesignDiff, refs),
+    );
+  }
+  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => {});
+  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => {});
+  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => {});
+  if (ctx.diff.qualities) {
+    ctx.diff.qualities = validateGuidCollectionDiff(ctx, "qualities", "quality", kit.qualities ?? [], ctx.diff.qualities, (item, qdiff, p) =>
+      validateQualityDiffNested(ctx, p, item, qdiff as QualityDiff),
+    );
+  }
+  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => {});
+  if (ctx.diff.folders) {
+    ctx.diff.folders = validateGuidCollectionDiff(ctx, "folders", "folder", kit.folders ?? [], ctx.diff.folders, (item, fdiff, p) => {
+      const par = (fdiff as FolderDiff).parent?.guid ?? item.parent?.guid;
+      if (par && !(kit.folders ?? []).some((f) => f.guid === par))
+        kitDiffPush(ctx, "errors", "kitdiff.ref.folder-parent-missing", `${p}: parent folder ${par} not in kit`);
+      if ((fdiff as FolderDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (fdiff as FolderDiff).attributes);
+    });
+  }
+  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => {});
+  if (ctx.diff.attributes) validateAttributesDiffNested(ctx, "kit.attributes", kit.attributes ?? [], ctx.diff.attributes);
+
+  const ok = ctx.errors.length === 0;
+  return heal ? { ok, errors: ctx.errors, warnings: ctx.warnings, diff: ctx.diff } : { ok, errors: ctx.errors, warnings: ctx.warnings };
+};
+
+// #endregion 🔖KitDiffValidation
+
 /**
  * Represents a bidirectional change between two Kit states.
  **/
@@ -6952,7 +7309,7 @@ export interface DesignChange {
   backward: DesignDiff;
 }
 
-//#region OperationResult
+// #region OperationResult
 /**
  * Human-readable note attached to an algorithm {@link OperationResult} (warning, info, or error).
  **/
@@ -7015,7 +7372,27 @@ export const normalizeDesignFlattenResult = (raw: unknown): DesignOperationResul
   }
   return operationOk(raw as DesignChange, [], []);
 };
-//#endregion OperationResult
+
+/**
+ * Wraps a native/REST payload that may still be a bare {@link DesignDiff} into {@link DesignDiffOperationResult}.
+ **/
+export const normalizeDesignDiffResult = (raw: unknown): DesignDiffOperationResult => {
+  if (raw !== null && typeof raw === "object" && "ok" in raw) {
+    return raw as DesignDiffOperationResult;
+  }
+  return operationOk(raw as DesignDiff, [], []);
+};
+
+/**
+ * Wraps a native/REST payload that may still be a bare {@link Design} into {@link OperationResult}<{@link Design}>.
+ **/
+export const normalizeDesignCopyResult = (raw: unknown): OperationResult<Design> => {
+  if (raw !== null && typeof raw === "object" && "ok" in raw) {
+    return raw as OperationResult<Design>;
+  }
+  return operationOk(raw as Design, [], []);
+};
+// #endregion OperationResult
 /**
  * Computes the forward and backward diffs between two design states.
  **/
@@ -13857,7 +14234,7 @@ export class InMemoryKitStore implements UndoableKitStore {
 
 // #endregion ⏱️Validation
 
-//#endregion ⏱️Kit
+// #endregion ⏱️Kit
 // #region 📐Tests
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
@@ -13897,6 +14274,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     NakaginCapsuleTowerPasteWithCoordDesignDiff,
     NakaginCapsuleTowerDiffDesign,
     NakaginCapsuleTowerWithDiffDesign,
+    ValidateKitDiffCases,
   } = await import("@semio/assets");
   const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/studio");
   type KitFolderAdapter = import("@semio/studio").KitFolderAdapter;
@@ -14078,6 +14456,45 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     const parsed = JSON.parse(reportText) as { meshes?: Array<{ name?: string }> };
     return (parsed.meshes ?? []).map((mesh) => mesh.name).filter((name): name is string => Boolean(name));
   };
+
+  describe("KitDiffValidation", () => {
+    const cases = ValidateKitDiffCases as {
+      tinyKit: unknown;
+      cases: Array<{
+        id: string;
+        diff: Record<string, unknown>;
+        expectOk: boolean;
+        errorCodes: string[];
+        warningCodes: string[];
+      }>;
+    };
+    const tinyKit = KitSchema.parse(cases.tinyKit);
+    for (const tc of cases.cases) {
+      it(`asset case ${tc.id}`, () => {
+        const r = validateKitDiff(tinyKit, tc.diff as KitDiff, false);
+        expect(r.ok).toBe(tc.expectOk);
+        const errCodes = r.errors.map((e) => e.code).filter(Boolean) as string[];
+        const warnCodes = r.warnings.map((w) => w.code).filter(Boolean) as string[];
+        for (const c of tc.errorCodes) {
+          expect(errCodes).toContain(c);
+        }
+        for (const c of tc.warningCodes) {
+          expect(warnCodes).toContain(c);
+        }
+      });
+    }
+    it("heal drops invalid design update", () => {
+      const bad: KitDiff = {
+        designs: {
+          updated: [
+            { design: { guid: "99999999-9999-9999-9999-999999999999" }, diff: { name: "X" } },
+          ],
+        },
+      };
+      const r = validateKitDiff(tinyKit, bad, true);
+      expect(r.diff?.designs?.updated ?? []).toHaveLength(0);
+    });
+  });
 
   describe("Change", () => {
     describe("Metabolism", () => {
@@ -14797,7 +15214,10 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
       const pieceGuids = (selection.pieces ?? []).map((p) => p.guid);
       const connectionGuids = (selection.connections ?? []).map((c) => c.guid);
-      const computedDiff = deletePiecesAndConnectionsInDesign(kit, design, pieceGuids, connectionGuids);
+      const delOp = deletePiecesAndConnectionsInDesign(kit, design, pieceGuids, connectionGuids);
+      expect(delOp.ok).toBe(true);
+      if (!delOp.ok) return;
+      const computedDiff = delOp.change;
 
       // 🚚Verify removed pieces
       const computedRemovedPieces = (computedDiff.pieces?.removed ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
@@ -14840,7 +15260,10 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
       const pieceGuids = (selection.pieces ?? []).map((p: any) => p.guid);
       const connectionGuids = (selection.connections ?? []).map((c: any) => c.guid);
-      const computedCopy = copyDesign(kit, design, pieceGuids, connectionGuids);
+      const copyOp = copyDesign(kit, design, pieceGuids, connectionGuids);
+      expect(copyOp.ok).toBe(true);
+      if (!copyOp.ok) return;
+      const computedCopy = copyOp.change;
 
       // 🧩Verify piece and connection counts
       expect((computedCopy.pieces ?? []).length).toBe((expectedCopy.pieces ?? []).length);
@@ -14936,7 +15359,10 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       const br = "5feebbf8-33d9-41ad-a13a-24c271a1860b";
       const connInternal = "eb8ce9ce-091c-4495-a651-fa703748dfef";
       const connParent = "4d5ff333-d70a-43e1-8b7a-8849c8c91405";
-      const copied = copyDesign(kit, flatDesign, [t5, br], [connInternal, connParent]);
+      const copyOp2 = copyDesign(kit, flatDesign, [t5, br], [connInternal, connParent]);
+      expect(copyOp2.ok).toBe(true);
+      if (!copyOp2.ok) return;
+      const copied = copyOp2.change;
       const srcConn = copied.connections!.find((c) => c.guid === connInternal)!;
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const withoutCoord = pasteDesign(kit, copied, pasteTarget, "original");
@@ -14954,8 +15380,10 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     it("Nakagin paste remaps t_f2–t_f1 onto target t_f1 when t_f1 is external stub only", () => {
       const kit = MetabolismKit as unknown as Kit;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
-      const flatChange = flattenDesign(kit, design.guid);
-      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatChange.forward);
+      const flatOp3 = flattenDesign(kit, design.guid);
+      expect(flatOp3.ok).toBe(true);
+      if (!flatOp3.ok) return;
+      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp3.change.forward);
       const sel = NakaginCapsuleTowerCopySelection as any;
       const t1 = "31be08e1-e75c-4024-86b4-c3c6d3939fbb";
       const t2t1Conn = "ddf9e0e4-40e1-4079-aa40-c86cf699788b";
@@ -14963,7 +15391,10 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       const pieceGuids = (sel.pieces as { guid: string }[]).map((p) => p.guid).filter((g: string) => g !== t1);
       const connectionGuids = (sel.connections as { guid: string }[]).map((c) => c.guid).filter((g: string) => g !== t1ParentConn);
       expect(connectionGuids).toContain(t2t1Conn);
-      const copied = copyDesign(kit, flatDesign, pieceGuids, connectionGuids);
+      const copyOp3 = copyDesign(kit, flatDesign, pieceGuids, connectionGuids);
+      expect(copyOp3.ok).toBe(true);
+      if (!copyOp3.ok) return;
+      const copied = copyOp3.change;
       const stubT1 = copied.pieces!.find((p) => p.guid === t1);
       expect(stubT1 && (stubT1.attributes ?? []).some((a) => a.key === "semio.piece.origin" && a.value === "external")).toBe(true);
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
@@ -16650,27 +17081,32 @@ async function runBenchmarks() {
 
   const d1 = findBenchDesign(kitMetabolism, "Nakagin Capsule Tower");
   await bench("Flatten Design/Nakagin Capsule Tower", () => {
-    flattenDesign(kitMetabolism, d1.guid);
+    const r = flattenDesign(kitMetabolism, d1.guid);
+    if (!r.ok) throw new Error(r.errors.map((e) => e.message).join("; "));
   });
 
   const d2 = findBenchDesign(kitMetabolism, "Slanted", "Nakagin Capsule Tower");
   await bench("Flatten Design/Nakagin Capsule Tower/Slanted", () => {
-    flattenDesign(kitMetabolism, d2.guid);
+    const r = flattenDesign(kitMetabolism, d2.guid);
+    if (!r.ok) throw new Error(r.errors.map((e) => e.message).join("; "));
   });
 
   const d3 = findBenchDesign(kitMetabolism, "Twisted", "Nakagin Capsule Tower");
   await bench("Flatten Design/Nakagin Capsule Tower/Twisted", () => {
-    flattenDesign(kitMetabolism, d3.guid);
+    const r = flattenDesign(kitMetabolism, d3.guid);
+    if (!r.ok) throw new Error(r.errors.map((e) => e.message).join("; "));
   });
 
   const d4 = findBenchDesign(kitMetabolism, "Dancing", "Nakagin Capsule Tower");
   await bench("Flatten Design/Nakagin Capsule Tower/Dancing", () => {
-    flattenDesign(kitMetabolism, d4.guid);
+    const r = flattenDesign(kitMetabolism, d4.guid);
+    if (!r.ok) throw new Error(r.errors.map((e) => e.message).join("; "));
   });
 
   const d5 = findBenchDesign(kitMetabolism, "Capsule Dream");
   await bench("Flatten Design/Capsule Dream", () => {
-    flattenDesign(kitMetabolism, d5.guid);
+    const r = flattenDesign(kitMetabolism, d5.guid);
+    if (!r.ok) throw new Error(r.errors.map((e) => e.message).join("; "));
   });
 
   await bench("Validation/Invalid Kit", () => {

@@ -39,8 +39,13 @@ function MoveFrame() {
     void (async () => {
       const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
       if (cancelled) return;
-      setFlattenChange(fc);
-      const bd = applyDesignDiff(rawDesign, fc.forward) as any;
+      if (!fc.ok) {
+        setFlattenChange(null);
+        setBaseDesign(null);
+        return;
+      }
+      setFlattenChange(fc.change);
+      const bd = applyDesignDiff(rawDesign, fc.change.forward) as any;
       setBaseDesign(bd);
       setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
     })();

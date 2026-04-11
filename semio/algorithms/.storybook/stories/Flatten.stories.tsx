@@ -35,10 +35,15 @@ function FlattenFrame() {
     let cancelled = false;
     setChange(null);
     setFlatDesign(null);
-    void nativeFlattenDesign(kit, rawDesign.guid, language).then((ch) => {
+    void nativeFlattenDesign(kit, rawDesign.guid, language).then((res) => {
       if (cancelled) return;
-      setChange(ch);
-      setFlatDesign(applyDesignDiff(rawDesign, ch.forward) as any);
+      if (!res.ok) {
+        setChange(null);
+        setFlatDesign(null);
+        return;
+      }
+      setChange(res.change);
+      setFlatDesign(applyDesignDiff(rawDesign, res.change.forward) as any);
     });
     return () => {
       cancelled = true;
