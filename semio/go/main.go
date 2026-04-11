@@ -9,8 +9,6 @@
 // #endregion 🧲Header
 
 
-
-
 // #region ⛩️Imports
 
 package semio
@@ -45,8 +43,6 @@ import (
 // #endregion ⛩️Imports
 
 
-
-
 // #region 🎞️Constants
 
 const (
@@ -57,8 +53,6 @@ const (
 const AssetsPath = "../assets/semio"
 
 // #endregion 🎞️Constants
-
-
 
 
 // #region 📦Utilities
@@ -272,8 +266,6 @@ func DeepEqual(a, b interface{}) bool {
 // #endregion 📦Utilities
 
 
-
-
 // #region 🐍Entity IDs
 // Entity IDs MUST define identifier types for all semio domain entities.
 
@@ -392,8 +384,6 @@ type KitId struct {
 // #endregion 🐍Entity IDs
 
 
-
-
 // #region 🖥️Weak Entities
 // Weak Entities MUST define value types that exist only as part of parent entities.
 
@@ -440,8 +430,6 @@ type Camera struct {
 // #endregion 🖥️Weak Entities
 
 
-
-
 // #region 💎Attribute
 
 // 💎Attribute represents a key-value metadata entry with optional definition.
@@ -480,8 +468,6 @@ type AttributeMeta struct {
 // #endregion 💎Attribute
 
 
-
-
 // #region 📍Location
 
 // 📍Location represents a geographic point with longitude, latitude and optional altitude.
@@ -502,8 +488,6 @@ type LocationDiff struct {
 }
 
 // #endregion 📍Location
-
-
 
 
 // #region ✍️Author
@@ -545,8 +529,6 @@ type AuthorMeta struct {
 }
 
 // #endregion ✍️Author
-
-
 
 
 // #region 📄File
@@ -604,8 +586,6 @@ type FileMeta struct {
 // #endregion 📄File
 
 
-
-
 // #region 📁Folder
 
 // 📁Folder represents a folder hierarchy entity with name and parent reference.
@@ -650,8 +630,6 @@ type FolderMeta struct {
 // #endregion 📁Folder
 
 
-
-
 // #region 📏Benchmark
 
 // 📏Benchmark represents a named metric range with min/max bounds and optional icon.
@@ -690,8 +668,6 @@ type BenchmarksDiff struct {
 }
 
 // #endregion 📏Benchmark
-
-
 
 
 // #region 🔬Quality
@@ -794,8 +770,6 @@ type QualityMeta struct {
 // #endregion 🔬Quality
 
 
-
-
 // #region ⚓Port
 
 // ⚓Port represents a named connector port category with compatible port references.
@@ -873,8 +847,6 @@ type PortMeta struct {
 // #endregion ⚓Port
 
 
-
-
 // #region 📊Prop
 
 // 📊Prop represents a quality measurement value with optional unit.
@@ -913,8 +885,6 @@ type PropMeta struct {
 }
 
 // #endregion 📊Prop
-
-
 
 
 // #region 🏷️Tag
@@ -989,8 +959,6 @@ type TagMeta struct {
 // #endregion 🏷️Tag
 
 
-
-
 // #region 💡Concept
 
 // 💡Concept represents a named categorization concept with optional description and icon.
@@ -1063,8 +1031,6 @@ type ConceptMeta struct {
 // #endregion 💡Concept
 
 
-
-
 // #region 🗿Model
 
 // 🗿Model represents a 3D model reference linking a file with tags and description.
@@ -1105,8 +1071,6 @@ type ModelMeta struct {
 }
 
 // #endregion 🗿Model
-
-
 
 
 // #region 🔌Connector
@@ -1178,8 +1142,6 @@ type ConnectorMeta struct {
 }
 
 // #endregion 🔌Connector
-
-
 
 
 // #region 🧱Type
@@ -1312,8 +1274,6 @@ type TypeShallow struct {
 // #endregion 🧱Type
 
 
-
-
 // #region 🎨Layer
 
 // 🎨Layer represents a named layer with visibility, lock and color properties.
@@ -1358,8 +1318,6 @@ type LayerMeta struct {
 }
 
 // #endregion 🎨Layer
-
-
 
 
 // #region 🧩Piece
@@ -1441,8 +1399,6 @@ type PieceMeta struct {
 // #endregion 🧩Piece
 
 
-
-
 // #region 👥Group
 
 // 👥Group represents a named collection of pieces within a design.
@@ -1485,8 +1441,6 @@ type GroupMeta struct {
 // #endregion 👥Group
 
 
-
-
 // #region ↔️Side
 
 // ↔️Side represents one end of a connection referencing a piece and optional connector.
@@ -1504,8 +1458,6 @@ type SideDiff struct {
 }
 
 // #endregion ↔️Side
-
-
 
 
 // #region 🔗Connection
@@ -1572,8 +1524,6 @@ type ConnectionMeta struct {
 // #endregion 🔗Connection
 
 
-
-
 // #region 📈Stat
 
 // 📈Stat represents a statistical quality measurement with min/max bounds and unit.
@@ -1617,8 +1567,6 @@ type StatMeta struct {
 }
 
 // #endregion 📈Stat
-
-
 
 
 // #region 📐Design
@@ -1745,8 +1693,6 @@ type DesignShallow struct {
 }
 
 // #endregion 📐Design
-
-
 
 
 // #region ⏱️Kit
@@ -1917,203 +1863,8 @@ type KitShallow struct {
 	UpdatedAt   string          `json:"updatedAt,omitempty"`
 }
 
-// #region 🔑Meta And Shallow
+// #endregion ⏱️Kit
 
-// 💎ToAttributeMeta converts an Attribute to its scalar-only Meta view.
-func ToAttributeMeta(a Attribute) AttributeMeta {
-	return AttributeMeta{Guid: a.Guid, Key: a.Key, Value: a.Value, Definition: a.Definition}
-}
-
-// ✍️ToAuthorMeta converts an Author to its scalar-only Meta view.
-func ToAuthorMeta(a Author) AuthorMeta {
-	return AuthorMeta{Guid: a.Guid, Name: a.Name, Email: a.Email, CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt}
-}
-
-// 📄ToFileMeta converts a File to its scalar-only Meta view.
-func ToFileMeta(f File) FileMeta {
-	return FileMeta{Guid: f.Guid, Name: f.Name, Remote: f.Remote, Folder: f.Folder, Size: f.Size, Hash: f.Hash, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
-}
-
-// 📁ToFolderMeta converts a Folder to its scalar-only Meta view.
-func ToFolderMeta(f Folder) FolderMeta {
-	return FolderMeta{Guid: f.Guid, Name: f.Name, Parent: f.Parent, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
-}
-
-// 🔬ToQualityMeta converts a Quality to its scalar-only Meta view.
-func ToQualityMeta(q Quality) QualityMeta {
-	return QualityMeta{Guid: q.Guid, Key: q.Key, Name: q.Name, Description: q.Description, Uri: q.Uri, Kind: q.Kind, CanScale: q.CanScale, DefaultSiUnit: q.DefaultSiUnit, DefaultImperialUnit: q.DefaultImperialUnit, Min: q.Min, IsMinExcluded: q.IsMinExcluded, Max: q.Max, IsMaxExcluded: q.IsMaxExcluded, DefaultValue: q.DefaultValue, Formula: q.Formula, Icon: q.Icon, Image: q.Image, Unit: q.Unit, CreatedAt: q.CreatedAt, UpdatedAt: q.UpdatedAt}
-}
-
-// ⚓ToPortMeta converts a Port to its scalar-only Meta view.
-func ToPortMeta(p Port) PortMeta {
-	return PortMeta{Guid: p.Guid, Name: p.Name, Description: p.Description, Icon: p.Icon, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
-}
-
-// 📊ToPropMeta converts a Prop to its scalar-only Meta view.
-func ToPropMeta(p Prop) PropMeta {
-	return PropMeta{Guid: p.Guid, Quality: p.Quality, Value: p.Value, Unit: p.Unit}
-}
-
-// 🏷️ToTagMeta converts a Tag to its scalar-only Meta view.
-func ToTagMeta(t Tag) TagMeta {
-	return TagMeta{Guid: t.Guid, Name: t.Name, Description: t.Description, Icon: t.Icon, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
-}
-
-// 💡ToConceptMeta converts a Concept to its scalar-only Meta view.
-func ToConceptMeta(c Concept) ConceptMeta {
-	return ConceptMeta{Guid: c.Guid, Name: c.Name, Description: c.Description, Icon: c.Icon, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
-}
-
-// 🗿ToModelMeta converts a Model to its scalar-only Meta view.
-func ToModelMeta(m Model) ModelMeta {
-	return ModelMeta{Guid: m.Guid, File: m.File, Name: m.Name, Description: m.Description}
-}
-
-// 🔌ToConnectorMeta converts a Connector to its scalar-only Meta view.
-func ToConnectorMeta(c Connector) ConnectorMeta {
-	return ConnectorMeta{Guid: c.Guid, Name: c.Name, Point: c.Point, Direction: c.Direction, T: c.T, Mandatory: c.Mandatory, Port: c.Port, Description: c.Description}
-}
-
-// 🎨ToLayerMeta converts a Layer to its scalar-only Meta view.
-func ToLayerMeta(l Layer) LayerMeta {
-	return LayerMeta{Guid: l.Guid, Path: l.Path, IsHidden: l.IsHidden, IsLocked: l.IsLocked, Color: l.Color, Description: l.Description}
-}
-
-// 🧩ToPieceMeta converts a Piece to its scalar-only Meta view.
-func ToPieceMeta(p Piece) PieceMeta {
-	return PieceMeta{Guid: p.Guid, Name: p.Name, Type: p.Type, Design: p.Design, Plane: p.Plane, Center: p.Center, Scale: p.Scale, MirrorPlane: p.MirrorPlane, IsHidden: p.IsHidden, IsLocked: p.IsLocked, Color: p.Color, Description: p.Description}
-}
-
-// 👥ToGroupMeta converts a Group to its scalar-only Meta view.
-func ToGroupMeta(g Group) GroupMeta {
-	return GroupMeta{Guid: g.Guid, Name: g.Name, Color: g.Color, Description: g.Description}
-}
-
-// 🔗ToConnectionMeta converts a Connection to its scalar-only Meta view.
-func ToConnectionMeta(c Connection) ConnectionMeta {
-	return ConnectionMeta{Guid: c.Guid, Connected: c.Connected, Connecting: c.Connecting, Gap: c.Gap, Shift: c.Shift, Rise: c.Rise, Rotation: c.Rotation, Turn: c.Turn, Tilt: c.Tilt, U: c.U, V: c.V, Description: c.Description}
-}
-
-// 📈ToStatMeta converts a Stat to its scalar-only Meta view.
-func ToStatMeta(s Stat) StatMeta {
-	return StatMeta{Guid: s.Guid, Quality: s.Quality, Min: s.Min, Max: s.Max, Unit: s.Unit}
-}
-
-// 🧱ToTypeMeta converts a Type to its scalar-only Meta view.
-func ToTypeMeta(t Type) TypeMeta {
-	return TypeMeta{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
-}
-
-// 🏗️ToTypeShallow converts a Type to its Shallow overview with scalar-only nested items.
-func ToTypeShallow(t Type) TypeShallow {
-	models := make([]ModelMeta, len(t.Models))
-	for i, m := range t.Models {
-		models[i] = ToModelMeta(m)
-	}
-	connectors := make([]ConnectorMeta, len(t.Connectors))
-	for i, c := range t.Connectors {
-		connectors[i] = ToConnectorMeta(c)
-	}
-	props := make([]PropMeta, len(t.Props))
-	for i, p := range t.Props {
-		props[i] = ToPropMeta(p)
-	}
-	attributes := make([]AttributeMeta, len(t.Attributes))
-	for i, a := range t.Attributes {
-		attributes[i] = ToAttributeMeta(a)
-	}
-	return TypeShallow{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
-}
-
-// 📐ToDesignMeta converts a Design to its scalar-only Meta view.
-func ToDesignMeta(d Design) DesignMeta {
-	return DesignMeta{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
-}
-
-// 🏕️ToDesignShallow converts a Design to its Shallow overview with scalar-only nested items.
-func ToDesignShallow(d Design) DesignShallow {
-	pieces := make([]PieceMeta, len(d.Pieces))
-	for i, p := range d.Pieces {
-		pieces[i] = ToPieceMeta(p)
-	}
-	connections := make([]ConnectionMeta, len(d.Connections))
-	for i, c := range d.Connections {
-		connections[i] = ToConnectionMeta(c)
-	}
-	stats := make([]StatMeta, len(d.Stats))
-	for i, s := range d.Stats {
-		stats[i] = ToStatMeta(s)
-	}
-	props := make([]PropMeta, len(d.Props))
-	for i, p := range d.Props {
-		props[i] = ToPropMeta(p)
-	}
-	layers := make([]LayerMeta, len(d.Layers))
-	for i, l := range d.Layers {
-		layers[i] = ToLayerMeta(l)
-	}
-	groups := make([]GroupMeta, len(d.Groups))
-	for i, g := range d.Groups {
-		groups[i] = ToGroupMeta(g)
-	}
-	attributes := make([]AttributeMeta, len(d.Attributes))
-	for i, a := range d.Attributes {
-		attributes[i] = ToAttributeMeta(a)
-	}
-	return DesignShallow{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
-}
-
-// 📦ToKitMeta converts a Kit to its scalar-only Meta view.
-func ToKitMeta(k Kit) KitMeta {
-	return KitMeta{Guid: k.Guid, Name: k.Name, Version: k.Version, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
-}
-
-// 📦ToKitShallow converts a Kit to its Shallow overview with scalar-only nested items.
-func ToKitShallow(k Kit) KitShallow {
-	types := make([]TypeMeta, len(k.Types))
-	for i, t := range k.Types {
-		types[i] = ToTypeMeta(t)
-	}
-	designs := make([]DesignMeta, len(k.Designs))
-	for i, d := range k.Designs {
-		designs[i] = ToDesignMeta(d)
-	}
-	tags := make([]TagMeta, len(k.Tags))
-	for i, t := range k.Tags {
-		tags[i] = ToTagMeta(t)
-	}
-	concepts := make([]ConceptMeta, len(k.Concepts))
-	for i, c := range k.Concepts {
-		concepts[i] = ToConceptMeta(c)
-	}
-	ports := make([]PortMeta, len(k.Ports))
-	for i, p := range k.Ports {
-		ports[i] = ToPortMeta(p)
-	}
-	qualities := make([]QualityMeta, len(k.Qualities))
-	for i, q := range k.Qualities {
-		qualities[i] = ToQualityMeta(q)
-	}
-	files := make([]FileMeta, len(k.Files))
-	for i, f := range k.Files {
-		files[i] = ToFileMeta(f)
-	}
-	folders := make([]FolderMeta, len(k.Folders))
-	for i, f := range k.Folders {
-		folders[i] = ToFolderMeta(f)
-	}
-	authors := make([]AuthorMeta, len(k.Authors))
-	for i, a := range k.Authors {
-		authors[i] = ToAuthorMeta(a)
-	}
-	attributes := make([]AttributeMeta, len(k.Attributes))
-	for i, a := range k.Attributes {
-		attributes[i] = ToAttributeMeta(a)
-	}
-	return KitShallow{Guid: k.Guid, Name: k.Name, Version: k.Version, Types: types, Designs: designs, Tags: tags, Concepts: concepts, Ports: ports, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
-}
-
-// #endregion 🔑Meta And Shallow
 
 // ⚖️Change represents a reversible entity change with forward and backward diffs.
 type Change[TEntity any, TDiff any] struct {
@@ -2326,11 +2077,6 @@ func GetKitChange(before, after Kit, author *string, time *string) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Author: author, Time: time, Before: &before, After: &after}
 }
 
-// #endregion ⏱️Kit
-
-
-
-
 // #region ⏰Serialization
 
 // 📤SerializeKit marshals a Kit to indented JSON bytes.
@@ -2360,6 +2106,203 @@ func DeserializeKitDiff(data []byte) (KitDiff, error) {
 // #endregion ⏰Serialization
 
 
+// #region 🔑Meta And Shallow
+
+// 💎ToAttributeMeta converts an Attribute to its scalar-only Meta view.
+func ToAttributeMeta(a Attribute) AttributeMeta {
+	return AttributeMeta{Guid: a.Guid, Key: a.Key, Value: a.Value, Definition: a.Definition}
+}
+
+// ✍️ToAuthorMeta converts an Author to its scalar-only Meta view.
+func ToAuthorMeta(a Author) AuthorMeta {
+	return AuthorMeta{Guid: a.Guid, Name: a.Name, Email: a.Email, CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt}
+}
+
+// 📄ToFileMeta converts a File to its scalar-only Meta view.
+func ToFileMeta(f File) FileMeta {
+	return FileMeta{Guid: f.Guid, Name: f.Name, Remote: f.Remote, Folder: f.Folder, Size: f.Size, Hash: f.Hash, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
+}
+
+// 📁ToFolderMeta converts a Folder to its scalar-only Meta view.
+func ToFolderMeta(f Folder) FolderMeta {
+	return FolderMeta{Guid: f.Guid, Name: f.Name, Parent: f.Parent, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
+}
+
+// 🔬ToQualityMeta converts a Quality to its scalar-only Meta view.
+func ToQualityMeta(q Quality) QualityMeta {
+	return QualityMeta{Guid: q.Guid, Key: q.Key, Name: q.Name, Description: q.Description, Uri: q.Uri, Kind: q.Kind, CanScale: q.CanScale, DefaultSiUnit: q.DefaultSiUnit, DefaultImperialUnit: q.DefaultImperialUnit, Min: q.Min, IsMinExcluded: q.IsMinExcluded, Max: q.Max, IsMaxExcluded: q.IsMaxExcluded, DefaultValue: q.DefaultValue, Formula: q.Formula, Icon: q.Icon, Image: q.Image, Unit: q.Unit, CreatedAt: q.CreatedAt, UpdatedAt: q.UpdatedAt}
+}
+
+// ⚓ToPortMeta converts a Port to its scalar-only Meta view.
+func ToPortMeta(p Port) PortMeta {
+	return PortMeta{Guid: p.Guid, Name: p.Name, Description: p.Description, Icon: p.Icon, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
+}
+
+// 📊ToPropMeta converts a Prop to its scalar-only Meta view.
+func ToPropMeta(p Prop) PropMeta {
+	return PropMeta{Guid: p.Guid, Quality: p.Quality, Value: p.Value, Unit: p.Unit}
+}
+
+// 🏷️ToTagMeta converts a Tag to its scalar-only Meta view.
+func ToTagMeta(t Tag) TagMeta {
+	return TagMeta{Guid: t.Guid, Name: t.Name, Description: t.Description, Icon: t.Icon, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+}
+
+// 💡ToConceptMeta converts a Concept to its scalar-only Meta view.
+func ToConceptMeta(c Concept) ConceptMeta {
+	return ConceptMeta{Guid: c.Guid, Name: c.Name, Description: c.Description, Icon: c.Icon, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
+}
+
+// 🗿ToModelMeta converts a Model to its scalar-only Meta view.
+func ToModelMeta(m Model) ModelMeta {
+	return ModelMeta{Guid: m.Guid, File: m.File, Name: m.Name, Description: m.Description}
+}
+
+// 🔌ToConnectorMeta converts a Connector to its scalar-only Meta view.
+func ToConnectorMeta(c Connector) ConnectorMeta {
+	return ConnectorMeta{Guid: c.Guid, Name: c.Name, Point: c.Point, Direction: c.Direction, T: c.T, Mandatory: c.Mandatory, Port: c.Port, Description: c.Description}
+}
+
+// 🎨ToLayerMeta converts a Layer to its scalar-only Meta view.
+func ToLayerMeta(l Layer) LayerMeta {
+	return LayerMeta{Guid: l.Guid, Path: l.Path, IsHidden: l.IsHidden, IsLocked: l.IsLocked, Color: l.Color, Description: l.Description}
+}
+
+// 🧩ToPieceMeta converts a Piece to its scalar-only Meta view.
+func ToPieceMeta(p Piece) PieceMeta {
+	return PieceMeta{Guid: p.Guid, Name: p.Name, Type: p.Type, Design: p.Design, Plane: p.Plane, Center: p.Center, Scale: p.Scale, MirrorPlane: p.MirrorPlane, IsHidden: p.IsHidden, IsLocked: p.IsLocked, Color: p.Color, Description: p.Description}
+}
+
+// 👥ToGroupMeta converts a Group to its scalar-only Meta view.
+func ToGroupMeta(g Group) GroupMeta {
+	return GroupMeta{Guid: g.Guid, Name: g.Name, Color: g.Color, Description: g.Description}
+}
+
+// 🔗ToConnectionMeta converts a Connection to its scalar-only Meta view.
+func ToConnectionMeta(c Connection) ConnectionMeta {
+	return ConnectionMeta{Guid: c.Guid, Connected: c.Connected, Connecting: c.Connecting, Gap: c.Gap, Shift: c.Shift, Rise: c.Rise, Rotation: c.Rotation, Turn: c.Turn, Tilt: c.Tilt, U: c.U, V: c.V, Description: c.Description}
+}
+
+// 📈ToStatMeta converts a Stat to its scalar-only Meta view.
+func ToStatMeta(s Stat) StatMeta {
+	return StatMeta{Guid: s.Guid, Quality: s.Quality, Min: s.Min, Max: s.Max, Unit: s.Unit}
+}
+
+// 🧱ToTypeMeta converts a Type to its scalar-only Meta view.
+func ToTypeMeta(t Type) TypeMeta {
+	return TypeMeta{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+}
+
+// 🏗️ToTypeShallow converts a Type to its Shallow overview with scalar-only nested items.
+func ToTypeShallow(t Type) TypeShallow {
+	models := make([]ModelMeta, len(t.Models))
+	for i, m := range t.Models {
+		models[i] = ToModelMeta(m)
+	}
+	connectors := make([]ConnectorMeta, len(t.Connectors))
+	for i, c := range t.Connectors {
+		connectors[i] = ToConnectorMeta(c)
+	}
+	props := make([]PropMeta, len(t.Props))
+	for i, p := range t.Props {
+		props[i] = ToPropMeta(p)
+	}
+	attributes := make([]AttributeMeta, len(t.Attributes))
+	for i, a := range t.Attributes {
+		attributes[i] = ToAttributeMeta(a)
+	}
+	return TypeShallow{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+}
+
+// 📐ToDesignMeta converts a Design to its scalar-only Meta view.
+func ToDesignMeta(d Design) DesignMeta {
+	return DesignMeta{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+}
+
+// 🏕️ToDesignShallow converts a Design to its Shallow overview with scalar-only nested items.
+func ToDesignShallow(d Design) DesignShallow {
+	pieces := make([]PieceMeta, len(d.Pieces))
+	for i, p := range d.Pieces {
+		pieces[i] = ToPieceMeta(p)
+	}
+	connections := make([]ConnectionMeta, len(d.Connections))
+	for i, c := range d.Connections {
+		connections[i] = ToConnectionMeta(c)
+	}
+	stats := make([]StatMeta, len(d.Stats))
+	for i, s := range d.Stats {
+		stats[i] = ToStatMeta(s)
+	}
+	props := make([]PropMeta, len(d.Props))
+	for i, p := range d.Props {
+		props[i] = ToPropMeta(p)
+	}
+	layers := make([]LayerMeta, len(d.Layers))
+	for i, l := range d.Layers {
+		layers[i] = ToLayerMeta(l)
+	}
+	groups := make([]GroupMeta, len(d.Groups))
+	for i, g := range d.Groups {
+		groups[i] = ToGroupMeta(g)
+	}
+	attributes := make([]AttributeMeta, len(d.Attributes))
+	for i, a := range d.Attributes {
+		attributes[i] = ToAttributeMeta(a)
+	}
+	return DesignShallow{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+}
+
+// 📦ToKitMeta converts a Kit to its scalar-only Meta view.
+func ToKitMeta(k Kit) KitMeta {
+	return KitMeta{Guid: k.Guid, Name: k.Name, Version: k.Version, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
+}
+
+// 📦ToKitShallow converts a Kit to its Shallow overview with scalar-only nested items.
+func ToKitShallow(k Kit) KitShallow {
+	types := make([]TypeMeta, len(k.Types))
+	for i, t := range k.Types {
+		types[i] = ToTypeMeta(t)
+	}
+	designs := make([]DesignMeta, len(k.Designs))
+	for i, d := range k.Designs {
+		designs[i] = ToDesignMeta(d)
+	}
+	tags := make([]TagMeta, len(k.Tags))
+	for i, t := range k.Tags {
+		tags[i] = ToTagMeta(t)
+	}
+	concepts := make([]ConceptMeta, len(k.Concepts))
+	for i, c := range k.Concepts {
+		concepts[i] = ToConceptMeta(c)
+	}
+	ports := make([]PortMeta, len(k.Ports))
+	for i, p := range k.Ports {
+		ports[i] = ToPortMeta(p)
+	}
+	qualities := make([]QualityMeta, len(k.Qualities))
+	for i, q := range k.Qualities {
+		qualities[i] = ToQualityMeta(q)
+	}
+	files := make([]FileMeta, len(k.Files))
+	for i, f := range k.Files {
+		files[i] = ToFileMeta(f)
+	}
+	folders := make([]FolderMeta, len(k.Folders))
+	for i, f := range k.Folders {
+		folders[i] = ToFolderMeta(f)
+	}
+	authors := make([]AuthorMeta, len(k.Authors))
+	for i, a := range k.Authors {
+		authors[i] = ToAuthorMeta(a)
+	}
+	attributes := make([]AttributeMeta, len(k.Attributes))
+	for i, a := range k.Attributes {
+		attributes[i] = ToAttributeMeta(a)
+	}
+	return KitShallow{Guid: k.Guid, Name: k.Name, Version: k.Version, Types: types, Designs: designs, Tags: tags, Concepts: concepts, Ports: ports, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
+}
+
+// #endregion 🔑Meta And Shallow
 
 
 // #region 🖥️Hash
@@ -4775,8 +4718,6 @@ func HashKitDiff(d KitDiff) string {
 // #endregion 🖥️Hash
 
 
-
-
 // #region 🔍Helpers
 
 // 🧱FindTypeInKit returns a pointer to the type with the given GUID or nil.
@@ -4944,8 +4885,6 @@ func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64
 // #endregion 🔍Helpers
 
 
-
-
 // #region 🗡️Factories
 
 // 🆕NewKit creates a new kit with the given name and a generated GUID.
@@ -5087,8 +5026,6 @@ func NewAuthor(name string) Author {
 }
 
 // #endregion 🗡️Factories
-
-
 
 
 // #region 🎪Kit Operations
@@ -8873,7 +8810,7 @@ type KitDiffValidationResult struct {
 	Ok       bool                    `json:"ok"`
 	Errors   []KitDiffValidationNote `json:"errors"`
 	Warnings []KitDiffValidationNote `json:"warnings"`
-	Diff     *KitDiff `json:"diff,omitempty"`
+	Diff     *KitDiff                `json:"diff,omitempty"`
 }
 
 type kitDiffValidateCtx struct {
@@ -10675,8 +10612,6 @@ func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
 // #endregion 🎪Kit Operations
 
 
-
-
 // #region 🌊Kit Change Helpers
 // Kit Change Helpers MUST provide convenience functions for single-entity kit changes.
 
@@ -10825,602 +10760,6 @@ func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
 }
 
 // #endregion 🌊Kit Change Helpers
-
-
-
-
-// #region 📋Copy Paste Design
-// Copy Paste Design MUST provide copy and paste functionality for designs.
-// Specs: CopyDesign extracts selected pieces and connections from a design. PasteDesign inserts them into a target design.
-
-// deepClonePiece deep-clones a Piece via JSON marshal/unmarshal.
-func deepClonePiece(p Piece) Piece {
-	data, _ := json.Marshal(p)
-	var cloned Piece
-	json.Unmarshal(data, &cloned)
-	return cloned
-}
-
-// deepCloneConnection deep-clones a Connection via JSON marshal/unmarshal.
-func deepCloneConnection(c Connection) Connection {
-	data, _ := json.Marshal(c)
-	var cloned Connection
-	json.Unmarshal(data, &cloned)
-	return cloned
-}
-
-// 📋CopyDesign extracts selected pieces and connections from a design into a new Design.
-// Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
-// Internal pieces are copied as-is. Parent-piece-exclusive parent-connection-inclusive pieces get semio.center and semio.plane attributes.
-// Non-internal connections include their external pieces marked with semio.piece.origin = "external".
-func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []string) Design {
-	selectedPieceSet := make(map[string]bool)
-	for _, g := range pieceGuids {
-		selectedPieceSet[g] = true
-	}
-	selectedConnectionSet := make(map[string]bool)
-	for _, g := range connectionGuids {
-		selectedConnectionSet[g] = true
-	}
-
-	// Build parent map: child guid -> (parent guid, connection)
-	type parentInfo struct {
-		parentGuid string
-		connection Connection
-	}
-	parentMap := make(map[string]parentInfo)
-	for _, conn := range design.Connections {
-		parentMap[conn.Connecting.Piece.Guid] = parentInfo{conn.Connected.Piece.Guid, conn}
-	}
-
-	// Flatten the design to get absolute planes/centers
-	flatDiff := FlattenDesign(kit, design.Guid)
-	flatDesign := ApplyDesignDiff(design, flatDiff)
-	flatPieceMap := make(map[string]*Piece)
-	for i := range flatDesign.Pieces {
-		flatPieceMap[flatDesign.Pieces[i].Guid] = &flatDesign.Pieces[i]
-	}
-
-	var copyPieces []Piece
-	addedPieceGuids := make(map[string]bool)
-	var copyConnections []Connection
-
-	// Process selected pieces
-	for _, pieceGuid := range pieceGuids {
-		var piece *Piece
-		for i := range design.Pieces {
-			if design.Pieces[i].Guid == pieceGuid {
-				piece = &design.Pieces[i]
-				break
-			}
-		}
-		if piece == nil {
-			continue
-		}
-
-		isFixed := piece.Plane != nil
-		pInfo, isConnected := parentMap[pieceGuid]
-
-		isInternalConnected := false
-		isInternalFixed := isFixed && selectedPieceSet[pieceGuid]
-		isPpExclPcIncl := false
-
-		if isConnected {
-			parentPieceSelected := selectedPieceSet[pInfo.parentGuid]
-			parentConnSelected := selectedConnectionSet[pInfo.connection.Guid]
-			isInternalConnected = parentPieceSelected && parentConnSelected
-			isPpExclPcIncl = !parentPieceSelected && parentConnSelected
-		}
-
-		if isInternalFixed || isInternalConnected {
-			copyPieces = append(copyPieces, deepClonePiece(*piece))
-			addedPieceGuids[pieceGuid] = true
-		} else if isPpExclPcIncl {
-			copied := deepClonePiece(*piece)
-			if flatPiece, ok := flatPieceMap[pieceGuid]; ok {
-				centerValue := `{"u":0,"v":0}`
-				if flatPiece.Center != nil {
-					data, _ := json.Marshal(flatPiece.Center)
-					centerValue = string(data)
-				}
-				planeValue := `{"origin":{"x":0,"y":0,"z":0},"xAxis":{"x":1,"y":0,"z":0},"yAxis":{"x":0,"y":1,"z":0}}`
-				if flatPiece.Plane != nil {
-					data, _ := json.Marshal(flatPiece.Plane)
-					planeValue = string(data)
-				}
-				copied.Attributes = append(copied.Attributes,
-					Attribute{Key: "semio.center", Value: &centerValue},
-					Attribute{Key: "semio.plane", Value: &planeValue},
-				)
-			}
-			copyPieces = append(copyPieces, copied)
-			addedPieceGuids[pieceGuid] = true
-		}
-	}
-
-	// Process selected connections
-	for _, connGuid := range connectionGuids {
-		var conn *Connection
-		for i := range design.Connections {
-			if design.Connections[i].Guid == connGuid {
-				conn = &design.Connections[i]
-				break
-			}
-		}
-		if conn == nil {
-			continue
-		}
-
-		connectedGuid := conn.Connected.Piece.Guid
-		connectingGuid := conn.Connecting.Piece.Guid
-		connectedSelected := selectedPieceSet[connectedGuid]
-		connectingSelected := selectedPieceSet[connectingGuid]
-
-		isInternal := connectedSelected && connectingSelected
-
-		if isInternal {
-			copyConnections = append(copyConnections, deepCloneConnection(*conn))
-		} else {
-			// Orphaned, parent-excl-child-incl, or parent-incl-child-excl
-			copyConnections = append(copyConnections, deepCloneConnection(*conn))
-
-			var externalGuids []string
-			if !connectedSelected {
-				externalGuids = append(externalGuids, connectedGuid)
-			}
-			if !connectingSelected {
-				externalGuids = append(externalGuids, connectingGuid)
-			}
-
-			for _, extGuid := range externalGuids {
-				if !addedPieceGuids[extGuid] {
-					var extPiece *Piece
-					for i := range design.Pieces {
-						if design.Pieces[i].Guid == extGuid {
-							extPiece = &design.Pieces[i]
-							break
-						}
-					}
-					if extPiece != nil {
-						cloned := deepClonePiece(*extPiece)
-						extVal := "external"
-						extAttrs := []Attribute{
-							{Key: "semio.piece.origin", Value: &extVal},
-						}
-						if flatPiece, ok := flatPieceMap[extGuid]; ok {
-							centerValue := `{"u":0,"v":0}`
-							if flatPiece.Center != nil {
-								data, _ := json.Marshal(flatPiece.Center)
-								centerValue = string(data)
-							}
-							extAttrs = append(extAttrs, Attribute{Key: "semio.center", Value: &centerValue})
-						}
-						cloned.Attributes = append(cloned.Attributes, extAttrs...)
-						copyPieces = append(copyPieces, cloned)
-						addedPieceGuids[extGuid] = true
-					}
-				}
-			}
-		}
-	}
-
-	return Design{
-		Pieces:      copyPieces,
-		Connections: copyConnections,
-	}
-}
-
-// 📋PasteDesign pastes a copied design into a target design, returning a DesignDiff.
-// Specs: Anchoring determines the reference point within the bounding rectangle of the source.
-// Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
-// Connected pieces with non-external parents are added as-is.
-// Connected pieces with external-origin parents: if a matching piece with a matching connector is found in target,
-// the parent connection is remapped; otherwise treated as fixed using semio.center/semio.plane attributes.
-// With coord, remapped stub-bridge u/v use the target matched parent’s diagram center: parent.center − (coord + (anchor − child.center));
-// other internal clipboard connections keep deep-cloned u/v.
-func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord *Coord) DesignDiff {
-	typesMap := make(map[string]*Type)
-	for i := range kit.Types {
-		typesMap[kit.Types[i].Guid] = &kit.Types[i]
-	}
-	portsMap := make(map[string]*Port)
-	for i := range kit.Ports {
-		portsMap[kit.Ports[i].Guid] = &kit.Ports[i]
-	}
-
-	// Classify source pieces
-	externalOriginGuids := make(map[string]bool)
-	for _, piece := range source.Pieces {
-		for _, attr := range piece.Attributes {
-			if attr.Key == "semio.piece.origin" && attr.Value != nil && *attr.Value == "external" {
-				externalOriginGuids[piece.Guid] = true
-			}
-		}
-	}
-
-	sourcePieceMap := make(map[string]*Piece)
-	for i := range source.Pieces {
-		sourcePieceMap[source.Pieces[i].Guid] = &source.Pieces[i]
-	}
-
-	type parentInfo struct {
-		parentGuid string
-		connection Connection
-	}
-	sourceParentMap := make(map[string]parentInfo)
-	for _, conn := range source.Connections {
-		childGuid := conn.Connecting.Piece.Guid
-		parentGuid := conn.Connected.Piece.Guid
-		prev, exists := sourceParentMap[childGuid]
-		if !exists {
-			sourceParentMap[childGuid] = parentInfo{parentGuid, conn}
-			continue
-		}
-		prevStub := externalOriginGuids[prev.parentGuid]
-		nextStub := externalOriginGuids[parentGuid]
-		if prevStub != nextStub && nextStub {
-			sourceParentMap[childGuid] = parentInfo{parentGuid, conn}
-		}
-	}
-
-	// Compute bounding rectangle from flat centers
-	var centerCoords []Coord
-	for _, piece := range source.Pieces {
-		if externalOriginGuids[piece.Guid] {
-			continue
-		}
-		var center *Coord
-		if piece.Center != nil {
-			center = piece.Center
-		}
-		if center == nil {
-			for _, attr := range piece.Attributes {
-				if attr.Key == "semio.center" && attr.Value != nil {
-					var c Coord
-					if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
-						center = &c
-					}
-				}
-			}
-		}
-		if center != nil {
-			centerCoords = append(centerCoords, *center)
-		}
-	}
-
-	if len(centerCoords) == 0 {
-		centerCoords = append(centerCoords, Coord{})
-	}
-
-	minU, maxU := centerCoords[0].U, centerCoords[0].U
-	minV, maxV := centerCoords[0].V, centerCoords[0].V
-	for _, c := range centerCoords[1:] {
-		if c.U < minU {
-			minU = c.U
-		}
-		if c.U > maxU {
-			maxU = c.U
-		}
-		if c.V < minV {
-			minV = c.V
-		}
-		if c.V > maxV {
-			maxV = c.V
-		}
-	}
-
-	var anchor Coord
-	switch anchoring {
-	case "middle":
-		anchor = Coord{U: (minU + maxU) / 2, V: (minV + maxV) / 2}
-	case "centroid":
-		sumU, sumV := 0.0, 0.0
-		for _, c := range centerCoords {
-			sumU += c.U
-			sumV += c.V
-		}
-		n := float64(len(centerCoords))
-		anchor = Coord{U: sumU / n, V: sumV / n}
-	case "bottomLeft":
-		anchor = Coord{U: minU, V: minV}
-	case "bottomRight":
-		anchor = Coord{U: maxU, V: minV}
-	case "topLeft":
-		anchor = Coord{U: minU, V: maxV}
-	case "topRight":
-		anchor = Coord{U: maxU, V: maxV}
-	default: // "original"
-		anchor = Coord{U: 0, V: 0}
-	}
-
-	// Build target piece maps for matching
-	targetPiecesByName := make(map[string][]Piece)
-	for _, tp := range target.Pieces {
-		if tp.Name != nil {
-			targetPiecesByName[*tp.Name] = append(targetPiecesByName[*tp.Name], tp)
-		}
-	}
-
-	// Helper: check port compatibility
-	arePortsCompatible := func(portGuid1, portGuid2 string) bool {
-		if portGuid1 == "" || portGuid2 == "" {
-			return false
-		}
-		if portGuid1 == portGuid2 {
-			return true
-		}
-		port1, ok1 := portsMap[portGuid1]
-		port2, ok2 := portsMap[portGuid2]
-		if !ok1 || !ok2 {
-			return false
-		}
-		for _, cp := range port1.CompatiblePorts {
-			if cp.Guid == portGuid2 {
-				return true
-			}
-		}
-		for _, cp := range port2.CompatiblePorts {
-			if cp.Guid == portGuid1 {
-				return true
-			}
-		}
-		return false
-	}
-
-	// Helper: check connector compatibility
-	areConnectorsCompatible := func(c1, c2 Connector) bool {
-		pg1, pg2 := "", ""
-		if c1.Port != nil {
-			pg1 = c1.Port.Guid
-		}
-		if c2.Port != nil {
-			pg2 = c2.Port.Guid
-		}
-		return arePortsCompatible(pg1, pg2)
-	}
-
-	// Helper: find matching connector on a type
-	findMatchingConnector := func(typeGuid string, sourceConnector Connector) *Connector {
-		t, ok := typesMap[typeGuid]
-		if !ok {
-			return nil
-		}
-		srcName := ""
-		if sourceConnector.Name != nil {
-			srcName = *sourceConnector.Name
-		}
-		for i := range t.Connectors {
-			cName := ""
-			if t.Connectors[i].Name != nil {
-				cName = *t.Connectors[i].Name
-			}
-			if cName == srcName && areConnectorsCompatible(t.Connectors[i], sourceConnector) {
-				return &t.Connectors[i]
-			}
-		}
-		return nil
-	}
-
-	var addedPieces []Piece
-	var addedConnections []Connection
-
-	// Process source pieces
-	for _, piece := range source.Pieces {
-		if externalOriginGuids[piece.Guid] {
-			continue
-		}
-
-		isFixed := piece.Plane != nil
-		pInfo, isConnected := sourceParentMap[piece.Guid]
-
-		if isFixed && !isConnected {
-			// Fixed piece: apply -anchor offset, then +coord if given
-			copied := deepClonePiece(piece)
-			center := Coord{}
-			if copied.Center != nil {
-				center = *copied.Center
-			}
-			center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
-			if coord != nil {
-				center = Coord{U: center.U + coord.U, V: center.V + coord.V}
-			}
-			copied.Center = &center
-			addedPieces = append(addedPieces, copied)
-		} else if isConnected {
-			if externalOriginGuids[pInfo.parentGuid] {
-				// Parent is external-origin: try to match in target
-				externalParent := sourcePieceMap[pInfo.parentGuid]
-				matched := false
-
-				extName := ""
-				if externalParent.Name != nil {
-					extName = *externalParent.Name
-				}
-
-				if candidates, ok := targetPiecesByName[extName]; ok && extName != "" {
-					parentConn := pInfo.connection
-					isParentConnected := parentConn.Connected.Piece.Guid == pInfo.parentGuid
-					parentConnectorGuid := ""
-					if isParentConnected {
-						if parentConn.Connected.Connector != nil {
-							parentConnectorGuid = parentConn.Connected.Connector.Guid
-						}
-					} else {
-						if parentConn.Connecting.Connector != nil {
-							parentConnectorGuid = parentConn.Connecting.Connector.Guid
-						}
-					}
-
-					// Find the source parent connector
-					var sourceParentConnector *Connector
-					if externalParent.Type != nil {
-						if parentType, ok := typesMap[externalParent.Type.Guid]; ok {
-							for i := range parentType.Connectors {
-								if parentType.Connectors[i].Guid == parentConnectorGuid {
-									sourceParentConnector = &parentType.Connectors[i]
-									break
-								}
-							}
-						}
-					}
-
-					if sourceParentConnector != nil {
-						for _, candidate := range candidates {
-							if candidate.Type == nil {
-								continue
-							}
-							matchingConnector := findMatchingConnector(candidate.Type.Guid, *sourceParentConnector)
-							if matchingConnector != nil {
-								matched = true
-								copied := deepClonePiece(piece)
-								addedPieces = append(addedPieces, copied)
-
-								copiedConn := deepCloneConnection(parentConn)
-								if isParentConnected {
-									copiedConn.Connected = Side{
-										Piece:     PieceId{Guid: candidate.Guid},
-										Connector: &ConnectorId{Guid: matchingConnector.Guid},
-									}
-								} else {
-									copiedConn.Connecting = Side{
-										Piece:     PieceId{Guid: candidate.Guid},
-										Connector: &ConnectorId{Guid: matchingConnector.Guid},
-									}
-								}
-								if coord != nil {
-									connectedStub := externalOriginGuids[parentConn.Connected.Piece.Guid]
-									connectingStub := externalOriginGuids[parentConn.Connecting.Piece.Guid]
-									connMatchesParentage := (parentConn.Connecting.Piece.Guid == piece.Guid && parentConn.Connected.Piece.Guid == pInfo.parentGuid) ||
-										(parentConn.Connected.Piece.Guid == piece.Guid && parentConn.Connecting.Piece.Guid == pInfo.parentGuid)
-									// Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
-									// internal–internal source edges (neither side a stub) must keep cloned u/v.
-									if connMatchesParentage && connectedStub != connectingStub {
-										flatParentCenter := Coord{}
-										hasParentCenter := false
-										if candidate.Center != nil {
-											flatParentCenter = *candidate.Center
-											hasParentCenter = true
-										}
-										if !hasParentCenter {
-											for _, attr := range candidate.Attributes {
-												if attr.Key == "semio.center" && attr.Value != nil {
-													if err := json.Unmarshal([]byte(*attr.Value), &flatParentCenter); err == nil {
-														hasParentCenter = true
-														break
-													}
-												}
-											}
-										}
-										if !hasParentCenter {
-											for _, attr := range externalParent.Attributes {
-												if attr.Key == "semio.center" && attr.Value != nil {
-													if err := json.Unmarshal([]byte(*attr.Value), &flatParentCenter); err == nil {
-														hasParentCenter = true
-														break
-													}
-												}
-											}
-										}
-										if !hasParentCenter && externalParent.Center != nil {
-											flatParentCenter = *externalParent.Center
-											hasParentCenter = true
-										}
-										flatChildCenter := Coord{}
-										hasChildCenter := false
-										for _, attr := range piece.Attributes {
-											if attr.Key == "semio.center" && attr.Value != nil {
-												if err := json.Unmarshal([]byte(*attr.Value), &flatChildCenter); err == nil {
-													hasChildCenter = true
-												}
-											}
-										}
-										if !hasChildCenter && piece.Center != nil {
-											flatChildCenter = *piece.Center
-											hasChildCenter = true
-										}
-										if hasParentCenter && hasChildCenter {
-											offsetU := flatParentCenter.U - (coord.U + (anchor.U - flatChildCenter.U))
-											offsetV := flatParentCenter.V - (coord.V + (anchor.V - flatChildCenter.V))
-											copiedConn.U = offsetU
-											copiedConn.V = offsetV
-										}
-									}
-								}
-								addedConnections = append(addedConnections, copiedConn)
-								break
-							}
-						}
-					}
-				}
-
-				if !matched {
-					// Treat as fixed piece using semio.center and semio.plane attributes
-					copied := deepClonePiece(piece)
-					for _, attr := range piece.Attributes {
-						if attr.Key == "semio.center" && attr.Value != nil {
-							var c Coord
-							if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
-								copied.Center = &c
-							}
-						}
-						if attr.Key == "semio.plane" && attr.Value != nil {
-							var p Plane
-							if err := json.Unmarshal([]byte(*attr.Value), &p); err == nil {
-								copied.Plane = &p
-							}
-						}
-					}
-					center := Coord{}
-					if copied.Center != nil {
-						center = *copied.Center
-					}
-					center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
-					if coord != nil {
-						center = Coord{U: center.U + coord.U, V: center.V + coord.V}
-					}
-					copied.Center = &center
-					addedPieces = append(addedPieces, copied)
-				}
-			} else {
-				// Parent is not external: add connected piece as-is
-				addedPieces = append(addedPieces, deepClonePiece(piece))
-			}
-		}
-	}
-
-	// Process source connections (non-external internal connections)
-	addedPieceGuids := make(map[string]bool)
-	for _, p := range addedPieces {
-		addedPieceGuids[p.Guid] = true
-	}
-	for _, conn := range source.Connections {
-		connectedGuid := conn.Connected.Piece.Guid
-		connectingGuid := conn.Connecting.Piece.Guid
-
-		if externalOriginGuids[connectedGuid] || externalOriginGuids[connectingGuid] {
-			continue
-		}
-
-		if !addedPieceGuids[connectedGuid] || !addedPieceGuids[connectingGuid] {
-			continue
-		}
-
-		addedConnections = append(addedConnections, deepCloneConnection(conn))
-	}
-
-	diff := DesignDiff{}
-	if len(addedPieces) > 0 {
-		diff.Pieces = &PiecesDiff{Added: addedPieces}
-	}
-	if len(addedConnections) > 0 {
-		diff.Connections = &ConnectionsDiff{Added: addedConnections}
-	}
-	return diff
-}
-
-// #endregion 📋Copy Paste Design
-
-
 
 
 // #region 🛡️Validation
@@ -12362,8 +11701,6 @@ func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 // #endregion 🛡️Validation
 
 
-
-
 // #region 🌤️Flatten Design
 // 💾Flatten Design MUST compute absolute piece planes from relative connections.
 func planeToMatrix(p Plane) *mat.Dense {
@@ -13055,6 +12392,596 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 // #endregion 🌤️Flatten Design
 
 
+// #region 📋Copy Paste Design
+// Copy Paste Design MUST provide copy and paste functionality for designs.
+// Specs: CopyDesign extracts selected pieces and connections from a design. PasteDesign inserts them into a target design.
+
+// deepClonePiece deep-clones a Piece via JSON marshal/unmarshal.
+func deepClonePiece(p Piece) Piece {
+	data, _ := json.Marshal(p)
+	var cloned Piece
+	json.Unmarshal(data, &cloned)
+	return cloned
+}
+
+// deepCloneConnection deep-clones a Connection via JSON marshal/unmarshal.
+func deepCloneConnection(c Connection) Connection {
+	data, _ := json.Marshal(c)
+	var cloned Connection
+	json.Unmarshal(data, &cloned)
+	return cloned
+}
+
+// 📋CopyDesign extracts selected pieces and connections from a design into a new Design.
+// Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
+// Internal pieces are copied as-is. Parent-piece-exclusive parent-connection-inclusive pieces get semio.center and semio.plane attributes.
+// Non-internal connections include their external pieces marked with semio.piece.origin = "external".
+func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []string) Design {
+	selectedPieceSet := make(map[string]bool)
+	for _, g := range pieceGuids {
+		selectedPieceSet[g] = true
+	}
+	selectedConnectionSet := make(map[string]bool)
+	for _, g := range connectionGuids {
+		selectedConnectionSet[g] = true
+	}
+
+	// Build parent map: child guid -> (parent guid, connection)
+	type parentInfo struct {
+		parentGuid string
+		connection Connection
+	}
+	parentMap := make(map[string]parentInfo)
+	for _, conn := range design.Connections {
+		parentMap[conn.Connecting.Piece.Guid] = parentInfo{conn.Connected.Piece.Guid, conn}
+	}
+
+	// Flatten the design to get absolute planes/centers
+	flatDiff := FlattenDesign(kit, design.Guid)
+	flatDesign := ApplyDesignDiff(design, flatDiff)
+	flatPieceMap := make(map[string]*Piece)
+	for i := range flatDesign.Pieces {
+		flatPieceMap[flatDesign.Pieces[i].Guid] = &flatDesign.Pieces[i]
+	}
+
+	var copyPieces []Piece
+	addedPieceGuids := make(map[string]bool)
+	var copyConnections []Connection
+
+	// Process selected pieces
+	for _, pieceGuid := range pieceGuids {
+		var piece *Piece
+		for i := range design.Pieces {
+			if design.Pieces[i].Guid == pieceGuid {
+				piece = &design.Pieces[i]
+				break
+			}
+		}
+		if piece == nil {
+			continue
+		}
+
+		isFixed := piece.Plane != nil
+		pInfo, isConnected := parentMap[pieceGuid]
+
+		isInternalConnected := false
+		isInternalFixed := isFixed && selectedPieceSet[pieceGuid]
+		isPpExclPcIncl := false
+
+		if isConnected {
+			parentPieceSelected := selectedPieceSet[pInfo.parentGuid]
+			parentConnSelected := selectedConnectionSet[pInfo.connection.Guid]
+			isInternalConnected = parentPieceSelected && parentConnSelected
+			isPpExclPcIncl = !parentPieceSelected && parentConnSelected
+		}
+
+		if isInternalFixed || isInternalConnected {
+			copyPieces = append(copyPieces, deepClonePiece(*piece))
+			addedPieceGuids[pieceGuid] = true
+		} else if isPpExclPcIncl {
+			copied := deepClonePiece(*piece)
+			if flatPiece, ok := flatPieceMap[pieceGuid]; ok {
+				centerValue := `{"u":0,"v":0}`
+				if flatPiece.Center != nil {
+					data, _ := json.Marshal(flatPiece.Center)
+					centerValue = string(data)
+				}
+				planeValue := `{"origin":{"x":0,"y":0,"z":0},"xAxis":{"x":1,"y":0,"z":0},"yAxis":{"x":0,"y":1,"z":0}}`
+				if flatPiece.Plane != nil {
+					data, _ := json.Marshal(flatPiece.Plane)
+					planeValue = string(data)
+				}
+				copied.Attributes = append(copied.Attributes,
+					Attribute{Key: "semio.center", Value: &centerValue},
+					Attribute{Key: "semio.plane", Value: &planeValue},
+				)
+			}
+			copyPieces = append(copyPieces, copied)
+			addedPieceGuids[pieceGuid] = true
+		}
+	}
+
+	// Process selected connections
+	for _, connGuid := range connectionGuids {
+		var conn *Connection
+		for i := range design.Connections {
+			if design.Connections[i].Guid == connGuid {
+				conn = &design.Connections[i]
+				break
+			}
+		}
+		if conn == nil {
+			continue
+		}
+
+		connectedGuid := conn.Connected.Piece.Guid
+		connectingGuid := conn.Connecting.Piece.Guid
+		connectedSelected := selectedPieceSet[connectedGuid]
+		connectingSelected := selectedPieceSet[connectingGuid]
+
+		isInternal := connectedSelected && connectingSelected
+
+		if isInternal {
+			copyConnections = append(copyConnections, deepCloneConnection(*conn))
+		} else {
+			// Orphaned, parent-excl-child-incl, or parent-incl-child-excl
+			copyConnections = append(copyConnections, deepCloneConnection(*conn))
+
+			var externalGuids []string
+			if !connectedSelected {
+				externalGuids = append(externalGuids, connectedGuid)
+			}
+			if !connectingSelected {
+				externalGuids = append(externalGuids, connectingGuid)
+			}
+
+			for _, extGuid := range externalGuids {
+				if !addedPieceGuids[extGuid] {
+					var extPiece *Piece
+					for i := range design.Pieces {
+						if design.Pieces[i].Guid == extGuid {
+							extPiece = &design.Pieces[i]
+							break
+						}
+					}
+					if extPiece != nil {
+						cloned := deepClonePiece(*extPiece)
+						extVal := "external"
+						extAttrs := []Attribute{
+							{Key: "semio.piece.origin", Value: &extVal},
+						}
+						if flatPiece, ok := flatPieceMap[extGuid]; ok {
+							centerValue := `{"u":0,"v":0}`
+							if flatPiece.Center != nil {
+								data, _ := json.Marshal(flatPiece.Center)
+								centerValue = string(data)
+							}
+							extAttrs = append(extAttrs, Attribute{Key: "semio.center", Value: &centerValue})
+						}
+						cloned.Attributes = append(cloned.Attributes, extAttrs...)
+						copyPieces = append(copyPieces, cloned)
+						addedPieceGuids[extGuid] = true
+					}
+				}
+			}
+		}
+	}
+
+	return Design{
+		Pieces:      copyPieces,
+		Connections: copyConnections,
+	}
+}
+
+// 📋PasteDesign pastes a copied design into a target design, returning a DesignDiff.
+// Specs: Anchoring determines the reference point within the bounding rectangle of the source.
+// Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
+// Connected pieces with non-external parents are added as-is.
+// Connected pieces with external-origin parents: if a matching piece with a matching connector is found in target,
+// the parent connection is remapped; otherwise treated as fixed using semio.center/semio.plane attributes.
+// With coord, remapped stub-bridge u/v use the target matched parent’s diagram center: parent.center − (coord + (anchor − child.center));
+// other internal clipboard connections keep deep-cloned u/v.
+func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord *Coord) DesignDiff {
+	typesMap := make(map[string]*Type)
+	for i := range kit.Types {
+		typesMap[kit.Types[i].Guid] = &kit.Types[i]
+	}
+	portsMap := make(map[string]*Port)
+	for i := range kit.Ports {
+		portsMap[kit.Ports[i].Guid] = &kit.Ports[i]
+	}
+
+	// Classify source pieces
+	externalOriginGuids := make(map[string]bool)
+	for _, piece := range source.Pieces {
+		for _, attr := range piece.Attributes {
+			if attr.Key == "semio.piece.origin" && attr.Value != nil && *attr.Value == "external" {
+				externalOriginGuids[piece.Guid] = true
+			}
+		}
+	}
+
+	sourcePieceMap := make(map[string]*Piece)
+	for i := range source.Pieces {
+		sourcePieceMap[source.Pieces[i].Guid] = &source.Pieces[i]
+	}
+
+	type parentInfo struct {
+		parentGuid string
+		connection Connection
+	}
+	sourceParentMap := make(map[string]parentInfo)
+	for _, conn := range source.Connections {
+		childGuid := conn.Connecting.Piece.Guid
+		parentGuid := conn.Connected.Piece.Guid
+		prev, exists := sourceParentMap[childGuid]
+		if !exists {
+			sourceParentMap[childGuid] = parentInfo{parentGuid, conn}
+			continue
+		}
+		prevStub := externalOriginGuids[prev.parentGuid]
+		nextStub := externalOriginGuids[parentGuid]
+		if prevStub != nextStub && nextStub {
+			sourceParentMap[childGuid] = parentInfo{parentGuid, conn}
+		}
+	}
+
+	// Compute bounding rectangle from flat centers
+	var centerCoords []Coord
+	for _, piece := range source.Pieces {
+		if externalOriginGuids[piece.Guid] {
+			continue
+		}
+		var center *Coord
+		if piece.Center != nil {
+			center = piece.Center
+		}
+		if center == nil {
+			for _, attr := range piece.Attributes {
+				if attr.Key == "semio.center" && attr.Value != nil {
+					var c Coord
+					if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
+						center = &c
+					}
+				}
+			}
+		}
+		if center != nil {
+			centerCoords = append(centerCoords, *center)
+		}
+	}
+
+	if len(centerCoords) == 0 {
+		centerCoords = append(centerCoords, Coord{})
+	}
+
+	minU, maxU := centerCoords[0].U, centerCoords[0].U
+	minV, maxV := centerCoords[0].V, centerCoords[0].V
+	for _, c := range centerCoords[1:] {
+		if c.U < minU {
+			minU = c.U
+		}
+		if c.U > maxU {
+			maxU = c.U
+		}
+		if c.V < minV {
+			minV = c.V
+		}
+		if c.V > maxV {
+			maxV = c.V
+		}
+	}
+
+	var anchor Coord
+	switch anchoring {
+	case "middle":
+		anchor = Coord{U: (minU + maxU) / 2, V: (minV + maxV) / 2}
+	case "centroid":
+		sumU, sumV := 0.0, 0.0
+		for _, c := range centerCoords {
+			sumU += c.U
+			sumV += c.V
+		}
+		n := float64(len(centerCoords))
+		anchor = Coord{U: sumU / n, V: sumV / n}
+	case "bottomLeft":
+		anchor = Coord{U: minU, V: minV}
+	case "bottomRight":
+		anchor = Coord{U: maxU, V: minV}
+	case "topLeft":
+		anchor = Coord{U: minU, V: maxV}
+	case "topRight":
+		anchor = Coord{U: maxU, V: maxV}
+	default: // "original"
+		anchor = Coord{U: 0, V: 0}
+	}
+
+	// Build target piece maps for matching
+	targetPiecesByName := make(map[string][]Piece)
+	for _, tp := range target.Pieces {
+		if tp.Name != nil {
+			targetPiecesByName[*tp.Name] = append(targetPiecesByName[*tp.Name], tp)
+		}
+	}
+
+	// Helper: check port compatibility
+	arePortsCompatible := func(portGuid1, portGuid2 string) bool {
+		if portGuid1 == "" || portGuid2 == "" {
+			return false
+		}
+		if portGuid1 == portGuid2 {
+			return true
+		}
+		port1, ok1 := portsMap[portGuid1]
+		port2, ok2 := portsMap[portGuid2]
+		if !ok1 || !ok2 {
+			return false
+		}
+		for _, cp := range port1.CompatiblePorts {
+			if cp.Guid == portGuid2 {
+				return true
+			}
+		}
+		for _, cp := range port2.CompatiblePorts {
+			if cp.Guid == portGuid1 {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Helper: check connector compatibility
+	areConnectorsCompatible := func(c1, c2 Connector) bool {
+		pg1, pg2 := "", ""
+		if c1.Port != nil {
+			pg1 = c1.Port.Guid
+		}
+		if c2.Port != nil {
+			pg2 = c2.Port.Guid
+		}
+		return arePortsCompatible(pg1, pg2)
+	}
+
+	// Helper: find matching connector on a type
+	findMatchingConnector := func(typeGuid string, sourceConnector Connector) *Connector {
+		t, ok := typesMap[typeGuid]
+		if !ok {
+			return nil
+		}
+		srcName := ""
+		if sourceConnector.Name != nil {
+			srcName = *sourceConnector.Name
+		}
+		for i := range t.Connectors {
+			cName := ""
+			if t.Connectors[i].Name != nil {
+				cName = *t.Connectors[i].Name
+			}
+			if cName == srcName && areConnectorsCompatible(t.Connectors[i], sourceConnector) {
+				return &t.Connectors[i]
+			}
+		}
+		return nil
+	}
+
+	var addedPieces []Piece
+	var addedConnections []Connection
+
+	// Process source pieces
+	for _, piece := range source.Pieces {
+		if externalOriginGuids[piece.Guid] {
+			continue
+		}
+
+		isFixed := piece.Plane != nil
+		pInfo, isConnected := sourceParentMap[piece.Guid]
+
+		if isFixed && !isConnected {
+			// Fixed piece: apply -anchor offset, then +coord if given
+			copied := deepClonePiece(piece)
+			center := Coord{}
+			if copied.Center != nil {
+				center = *copied.Center
+			}
+			center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
+			if coord != nil {
+				center = Coord{U: center.U + coord.U, V: center.V + coord.V}
+			}
+			copied.Center = &center
+			addedPieces = append(addedPieces, copied)
+		} else if isConnected {
+			if externalOriginGuids[pInfo.parentGuid] {
+				// Parent is external-origin: try to match in target
+				externalParent := sourcePieceMap[pInfo.parentGuid]
+				matched := false
+
+				extName := ""
+				if externalParent.Name != nil {
+					extName = *externalParent.Name
+				}
+
+				if candidates, ok := targetPiecesByName[extName]; ok && extName != "" {
+					parentConn := pInfo.connection
+					isParentConnected := parentConn.Connected.Piece.Guid == pInfo.parentGuid
+					parentConnectorGuid := ""
+					if isParentConnected {
+						if parentConn.Connected.Connector != nil {
+							parentConnectorGuid = parentConn.Connected.Connector.Guid
+						}
+					} else {
+						if parentConn.Connecting.Connector != nil {
+							parentConnectorGuid = parentConn.Connecting.Connector.Guid
+						}
+					}
+
+					// Find the source parent connector
+					var sourceParentConnector *Connector
+					if externalParent.Type != nil {
+						if parentType, ok := typesMap[externalParent.Type.Guid]; ok {
+							for i := range parentType.Connectors {
+								if parentType.Connectors[i].Guid == parentConnectorGuid {
+									sourceParentConnector = &parentType.Connectors[i]
+									break
+								}
+							}
+						}
+					}
+
+					if sourceParentConnector != nil {
+						for _, candidate := range candidates {
+							if candidate.Type == nil {
+								continue
+							}
+							matchingConnector := findMatchingConnector(candidate.Type.Guid, *sourceParentConnector)
+							if matchingConnector != nil {
+								matched = true
+								copied := deepClonePiece(piece)
+								addedPieces = append(addedPieces, copied)
+
+								copiedConn := deepCloneConnection(parentConn)
+								if isParentConnected {
+									copiedConn.Connected = Side{
+										Piece:     PieceId{Guid: candidate.Guid},
+										Connector: &ConnectorId{Guid: matchingConnector.Guid},
+									}
+								} else {
+									copiedConn.Connecting = Side{
+										Piece:     PieceId{Guid: candidate.Guid},
+										Connector: &ConnectorId{Guid: matchingConnector.Guid},
+									}
+								}
+								if coord != nil {
+									connectedStub := externalOriginGuids[parentConn.Connected.Piece.Guid]
+									connectingStub := externalOriginGuids[parentConn.Connecting.Piece.Guid]
+									connMatchesParentage := (parentConn.Connecting.Piece.Guid == piece.Guid && parentConn.Connected.Piece.Guid == pInfo.parentGuid) ||
+										(parentConn.Connected.Piece.Guid == piece.Guid && parentConn.Connecting.Piece.Guid == pInfo.parentGuid)
+									// Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
+									// internal–internal source edges (neither side a stub) must keep cloned u/v.
+									if connMatchesParentage && connectedStub != connectingStub {
+										flatParentCenter := Coord{}
+										hasParentCenter := false
+										if candidate.Center != nil {
+											flatParentCenter = *candidate.Center
+											hasParentCenter = true
+										}
+										if !hasParentCenter {
+											for _, attr := range candidate.Attributes {
+												if attr.Key == "semio.center" && attr.Value != nil {
+													if err := json.Unmarshal([]byte(*attr.Value), &flatParentCenter); err == nil {
+														hasParentCenter = true
+														break
+													}
+												}
+											}
+										}
+										if !hasParentCenter {
+											for _, attr := range externalParent.Attributes {
+												if attr.Key == "semio.center" && attr.Value != nil {
+													if err := json.Unmarshal([]byte(*attr.Value), &flatParentCenter); err == nil {
+														hasParentCenter = true
+														break
+													}
+												}
+											}
+										}
+										if !hasParentCenter && externalParent.Center != nil {
+											flatParentCenter = *externalParent.Center
+											hasParentCenter = true
+										}
+										flatChildCenter := Coord{}
+										hasChildCenter := false
+										for _, attr := range piece.Attributes {
+											if attr.Key == "semio.center" && attr.Value != nil {
+												if err := json.Unmarshal([]byte(*attr.Value), &flatChildCenter); err == nil {
+													hasChildCenter = true
+												}
+											}
+										}
+										if !hasChildCenter && piece.Center != nil {
+											flatChildCenter = *piece.Center
+											hasChildCenter = true
+										}
+										if hasParentCenter && hasChildCenter {
+											offsetU := flatParentCenter.U - (coord.U + (anchor.U - flatChildCenter.U))
+											offsetV := flatParentCenter.V - (coord.V + (anchor.V - flatChildCenter.V))
+											copiedConn.U = offsetU
+											copiedConn.V = offsetV
+										}
+									}
+								}
+								addedConnections = append(addedConnections, copiedConn)
+								break
+							}
+						}
+					}
+				}
+
+				if !matched {
+					// Treat as fixed piece using semio.center and semio.plane attributes
+					copied := deepClonePiece(piece)
+					for _, attr := range piece.Attributes {
+						if attr.Key == "semio.center" && attr.Value != nil {
+							var c Coord
+							if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
+								copied.Center = &c
+							}
+						}
+						if attr.Key == "semio.plane" && attr.Value != nil {
+							var p Plane
+							if err := json.Unmarshal([]byte(*attr.Value), &p); err == nil {
+								copied.Plane = &p
+							}
+						}
+					}
+					center := Coord{}
+					if copied.Center != nil {
+						center = *copied.Center
+					}
+					center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
+					if coord != nil {
+						center = Coord{U: center.U + coord.U, V: center.V + coord.V}
+					}
+					copied.Center = &center
+					addedPieces = append(addedPieces, copied)
+				}
+			} else {
+				// Parent is not external: add connected piece as-is
+				addedPieces = append(addedPieces, deepClonePiece(piece))
+			}
+		}
+	}
+
+	// Process source connections (non-external internal connections)
+	addedPieceGuids := make(map[string]bool)
+	for _, p := range addedPieces {
+		addedPieceGuids[p.Guid] = true
+	}
+	for _, conn := range source.Connections {
+		connectedGuid := conn.Connected.Piece.Guid
+		connectingGuid := conn.Connecting.Piece.Guid
+
+		if externalOriginGuids[connectedGuid] || externalOriginGuids[connectingGuid] {
+			continue
+		}
+
+		if !addedPieceGuids[connectedGuid] || !addedPieceGuids[connectingGuid] {
+			continue
+		}
+
+		addedConnections = append(addedConnections, deepCloneConnection(conn))
+	}
+
+	diff := DesignDiff{}
+	if len(addedPieces) > 0 {
+		diff.Pieces = &PiecesDiff{Added: addedPieces}
+	}
+	if len(addedConnections) > 0 {
+		diff.Connections = &ConnectionsDiff{Added: addedConnections}
+	}
+	return diff
+}
+
+// #endregion 📋Copy Paste Design
 
 
 // #region 🔩Kit Model Export
@@ -13972,8 +13899,6 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 // #endregion 🔩Kit Model Export
 
 
-
-
 // #region ❄️Geometric Insights
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
@@ -14196,8 +14121,6 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 }
 
 // #endregion ❄️Geometric Insights
-
-
 
 
 // #region 📡SQLite

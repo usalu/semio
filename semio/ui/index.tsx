@@ -2347,7 +2347,7 @@ export const Vector: React.FC<VectorProps> = ({
     const canSelect = selectionEnabled && axisSelectionEnabled;
     return (
       <div key={axis} className="grid grid-cols-[24px_1fr_88px] items-center gap-2">
-        <label htmlFor={`${id}-${axis}`} className="text-xs font-semibold uppercase text-muted-foreground">
+        <label htmlFor={`${id}-${axis}`} className={`text-xs font-semibold text-muted-foreground ${label.length <= 1 ? "uppercase" : ""}`}>
           {label}
         </label>
         {canSelect ? <input id={`${id}-${axis}`} type="range" min={min} max={max} step={step} value={value} onChange={(event) => updateAxis(axis, Number(event.target.value))} /> : <div className="h-2 rounded-full bg-muted/60" />}
@@ -2382,7 +2382,7 @@ export const Vector: React.FC<VectorProps> = ({
 
 // #endregion 🔤Vector
 
-// #region MoveVectorInput
+// #region 📦MoveVectorInput
 
 // Specs: Maps MoveVector (gap/shift/rise) onto Vector axes x/y/z per placement frame (shift to x, gap to y, rise to z).
 // Summary: Algorithm VECTOR_INPUT control backed by the shared Vector editor and preview.
@@ -2420,7 +2420,7 @@ export const MoveVectorInput: React.FC<MoveVectorInputProps> = ({
   />
 );
 
-// #endregion MoveVectorInput
+// #endregion 📦MoveVectorInput
 
 // #region 📍Scene
 

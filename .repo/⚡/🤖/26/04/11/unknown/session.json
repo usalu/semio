@@ -70,6 +70,17 @@
         "session": "unknown"
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "eef4249f7aaa0bf03cdcdf579ef8a5054c3bf363",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-11T20:10:26Z",
+        "session": "unknown"
+      },
+      "response": {}
     }
   ]
 }

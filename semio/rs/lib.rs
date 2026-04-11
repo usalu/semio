@@ -489,33 +489,6 @@ mod has_guid_trait { // 🐍Entity IDs
 } // 🐍Entity IDs
 pub use has_guid_trait::*;
 
-mod model_types_attribute { // 💎Attribute
-    // 💎Model Types - Attribute
-    // 💎Model Types - Attribute MUST provide the model types - attribute functionality.
-
-    use super::*;
-
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>💎Attribute represents a key-value metadata entry with optional definition.</summary>
-    pub struct Attribute {
-        pub guid: Guid,
-        pub key: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub value: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub definition: Option<String>,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>💎AttributeId identifies an attribute entity by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct AttributeId {
-        pub guid: Guid,
-    }
-} // 💎Attribute
-pub use model_types_attribute::*;
-
 mod model_types_coord { // 📺Coord
     // 📺Model Types - Coord
     // 📺Model Types - Coord MUST provide the model types - coord functionality.
@@ -702,6 +675,33 @@ mod model_types_camera { // 🎥Camera
     }
 } // 🎥Camera
 pub use model_types_camera::*;
+
+mod model_types_attribute { // 💎Attribute
+    // 💎Model Types - Attribute
+    // 💎Model Types - Attribute MUST provide the model types - attribute functionality.
+
+    use super::*;
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    /// <summary>💎Attribute represents a key-value metadata entry with optional definition.</summary>
+    pub struct Attribute {
+        pub guid: Guid,
+        pub key: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub value: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub definition: Option<String>,
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+    /// <summary>💎AttributeId identifies an attribute entity by GUID.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct AttributeId {
+        pub guid: Guid,
+    }
+} // 💎Attribute
+pub use model_types_attribute::*;
 
 mod location { // 📍Location
     // 📍Location

@@ -1,4 +1,4 @@
-﻿// #region 🧲Header
+// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,6 +7,7 @@
 // Core domain model types, schemas and utilities for the semio platform.
 
 // #endregion 🧲Header
+
 
 // #region ⛩️Imports
 // External dependency imports MUST be declared here.
@@ -23,8 +24,6 @@ import { z } from "zod";
 // #endregion ⛩️Imports
 
 
-
-
 // #region 🎞️Constants
 // Global constants MUST define shared numeric parameters.
 
@@ -37,8 +36,6 @@ export const ICON_WIDTH = 50;
 export const TOLERANCE = 1e-5;
 
 // #endregion 🎞️Constants
-
-
 
 
 // #region 📦Utilities
@@ -189,7 +186,6 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 export type Guid = string;
 
 // #endregion 📦Utilities
-
 
 
 // #region 🐍Entity IDs
@@ -623,6 +619,544 @@ export const getConceptGuid = (id: ConceptId): Guid => id.guid;
 // #endregion 🐍Entity IDs
 
 
+// #region �️Weak Entities
+
+// #region �📺Coord
+// Coord weak entity types and schemas MUST be defined here.
+
+/**
+ * Zod schema for Coord validation.
+ **/
+export const CoordSchema = z.object({ u: z.number(), v: z.number() });
+/**
+ * Type alias for Coord.
+ **/
+export type Coord = z.infer<typeof CoordSchema>;
+/**
+ * Serializes Coord for transport.
+ **/
+export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord));
+/**
+ **/
+export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
+
+/**
+ * Zod schema for Coord diff validation.
+ **/
+export const CoordDiffSchema = CoordSchema.partial();
+/**
+ * Diff type for tracking Coord changes.
+ **/
+export type CoordDiff = z.infer<typeof CoordDiffSchema>;
+/**
+ * Retrieves the CoordDiff value.
+ **/
+export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => {
+  return {
+    u: after.u - before.u,
+    v: after.v - before.v,
+  };
+};
+/**
+ * Diff type for tracking inverseCoord changes.
+ **/
+export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => {
+  const u = appliedDiff.u ?? 0;
+  const v = appliedDiff.v ?? 0;
+  return {
+    u: original.u - u,
+    v: original.v - v,
+  };
+};
+/**
+ * Diff type for tracking mergeCoord changes.
+ **/
+export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => {
+  return {
+    u: (diff1.u ?? 0) + (diff2.u ?? 0),
+    v: (diff1.v ?? 0) + (diff2.v ?? 0),
+  };
+};
+/**
+ * Diff type for tracking applyCoord changes.
+ **/
+export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
+  const u = diff.u ?? 0;
+  const v = diff.v ?? 0;
+  return {
+    u: base.u + u,
+    v: base.v + v,
+  };
+};
+
+// #endregion 📺Coord
+
+// #region ➡️Vec
+// Vec weak entity types and schemas MUST be defined here.
+
+/**
+ * Zod schema for Vec validation.
+ **/
+export const VecSchema = z.object({ u: z.number(), v: z.number() });
+/**
+ * Type alias for Vec.
+ **/
+export type Vec = z.infer<typeof VecSchema>;
+/**
+ * Serializes Vec for transport.
+ **/
+export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse(vec));
+/**
+ **/
+export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
+
+/**
+ * Zod schema for Vec diff validation.
+ **/
+export const VecDiffSchema = VecSchema.partial();
+/**
+ * Diff type for tracking Vec changes.
+ **/
+export type VecDiff = z.infer<typeof VecDiffSchema>;
+/**
+ * Retrieves the VecDiff value.
+ **/
+export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
+  return {
+    u: after.u - before.u,
+    v: after.v - before.v,
+  };
+};
+/**
+ * Diff type for tracking inverseVec changes.
+ **/
+export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => {
+  const u = appliedDiff.u ?? 0;
+  const v = appliedDiff.v ?? 0;
+  return {
+    u: original.u - u,
+    v: original.v - v,
+  };
+};
+/**
+ * Diff type for tracking mergeVec changes.
+ **/
+export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
+  return {
+    u: (diff1.u ?? 0) + (diff2.u ?? 0),
+    v: (diff1.v ?? 0) + (diff2.v ?? 0),
+  };
+};
+/**
+ * Diff type for tracking applyVec changes.
+ **/
+export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
+  const u = diff.u ?? 0;
+  const v = diff.v ?? 0;
+  return {
+    u: base.u + u,
+    v: base.v + v,
+  };
+};
+
+// #endregion ➡️Vec
+
+// #region ✖️Point
+// Point weak entity types and schemas MUST be defined here.
+
+/**
+ * Zod schema for Point validation.
+ **/
+export const PointSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  z: z.number(),
+});
+/**
+ * Type alias for Point.
+ **/
+export type Point = z.infer<typeof PointSchema>;
+/**
+ * Serializes Point for transport.
+ **/
+export const serializePoint = (point: Point): string => JSON.stringify(PointSchema.parse(point));
+/**
+ **/
+export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
+
+/**
+ * Zod schema for Point diff validation.
+ **/
+export const PointDiffSchema = PointSchema.partial();
+/**
+ * Diff type for tracking Point changes.
+ **/
+export type PointDiff = z.infer<typeof PointDiffSchema>;
+/**
+ * Retrieves the PointDiff value.
+ **/
+export const getPointDiff = (before: Point, after: Point): PointDiff => {
+  return {
+    x: after.x - before.x,
+    y: after.y - before.y,
+    z: after.z - before.z,
+  };
+};
+/**
+ * Diff type for tracking inversePoint changes.
+ **/
+export const inversePointDiff = (original: Point, appliedDiff: PointDiff): PointDiff => {
+  const x = appliedDiff.x ?? 0;
+  const y = appliedDiff.y ?? 0;
+  const z = appliedDiff.z ?? 0;
+  return {
+    x: -x,
+    y: -y,
+    z: -z,
+  };
+};
+/**
+ * Diff type for tracking mergePoint changes.
+ **/
+export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff => {
+  return {
+    x: (diff1.x ?? 0) + (diff2.x ?? 0),
+    y: (diff1.y ?? 0) + (diff2.y ?? 0),
+    z: (diff1.z ?? 0) + (diff2.z ?? 0),
+  };
+};
+/**
+ * Diff type for tracking applyPoint changes.
+ **/
+export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
+  const x = diff.x ?? 0;
+  const y = diff.y ?? 0;
+  const z = diff.z ?? 0;
+  return {
+    x: base.x + x,
+    y: base.y + y,
+    z: base.z + z,
+  };
+};
+
+// #endregion ✖️Point
+
+// #region ↗️Vector
+// Vector weak entity types and schemas MUST be defined here.
+
+/**
+ * Zod schema for Vector validation.
+ **/
+export const VectorSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  z: z.number(),
+});
+/**
+ * Type alias for Vector.
+ **/
+export type Vector = z.infer<typeof VectorSchema>;
+/**
+ * Serializes Vector for transport.
+ **/
+export const serializeVector = (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector));
+/**
+ **/
+export const deserializeVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
+
+/**
+ * Zod schema for Vector diff validation.
+ **/
+export const VectorDiffSchema = VectorSchema.partial();
+/**
+ * Diff type for tracking Vector changes.
+ **/
+export type VectorDiff = z.infer<typeof VectorDiffSchema>;
+/**
+ * Retrieves the VectorDiff value.
+ **/
+export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => {
+  return {
+    x: after.x - before.x,
+    y: after.y - before.y,
+    z: after.z - before.z,
+  };
+};
+/**
+ * Diff type for tracking inverseVector changes.
+ **/
+export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): VectorDiff => {
+  const x = appliedDiff.x ?? 0;
+  const y = appliedDiff.y ?? 0;
+  const z = appliedDiff.z ?? 0;
+  return {
+    x: -x,
+    y: -y,
+    z: -z,
+  };
+};
+/**
+ * Diff type for tracking mergeVector changes.
+ **/
+export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDiff => {
+  return {
+    x: (diff1.x ?? 0) + (diff2.x ?? 0),
+    y: (diff1.y ?? 0) + (diff2.y ?? 0),
+    z: (diff1.z ?? 0) + (diff2.z ?? 0),
+  };
+};
+/**
+ * Diff type for tracking applyVector changes.
+ **/
+export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
+  const x = diff.x ?? 0;
+  const y = diff.y ?? 0;
+  const z = diff.z ?? 0;
+  return {
+    x: base.x + x,
+    y: base.y + y,
+    z: base.z + z,
+  };
+};
+
+// #endregion ↗️Vector
+
+// #region ◻️Plane
+// Plane weak entity types and schemas MUST be defined here.
+
+/**
+ * Zod schema for Plane validation.
+ **/
+export const PlaneSchema = z.object({
+  origin: PointSchema,
+  xAxis: VectorSchema,
+  yAxis: VectorSchema,
+});
+/**
+ * Type alias for Plane.
+ **/
+export type Plane = z.infer<typeof PlaneSchema>;
+/**
+ * Serializes Plane for transport.
+ **/
+export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane));
+/**
+ **/
+export const deserializePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
+/**
+ **/
+export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
+  const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
+  const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
+  const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
+  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
+  const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
+  const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin);
+  return matrix;
+};
+/**
+ **/
+export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
+  const origin = new THREE.Vector3();
+  const xAxis = new THREE.Vector3();
+  const yAxis = new THREE.Vector3();
+  const zAxis = new THREE.Vector3();
+  matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3());
+  matrix.extractBasis(xAxis, yAxis, zAxis);
+  return {
+    origin: { x: origin.x, y: origin.y, z: origin.z },
+    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
+    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
+  };
+};
+
+/**
+ **/
+export const averagePlane = (planes: Plane[]): Plane | null => {
+  if (planes.length === 0) return null;
+  if (planes.length === 1) return planes[0];
+
+  const avgOrigin = planes.reduce(
+    (acc, plane) => ({
+      x: acc.x + plane.origin.x / planes.length,
+      y: acc.y + plane.origin.y / planes.length,
+      z: acc.z + plane.origin.z / planes.length,
+    }),
+    { x: 0, y: 0, z: 0 },
+  );
+
+  const baseXAxis = planes[0].xAxis;
+  const baseYAxis = planes[0].yAxis;
+
+  return {
+    origin: avgOrigin,
+    xAxis: baseXAxis,
+    yAxis: baseYAxis,
+  };
+};
+// ◻️roundPlane rounds plane components to a specified number of decimal places.
+const roundPlane = (plane: Plane): Plane => ({
+  origin: {
+    x: round(plane.origin.x),
+    y: round(plane.origin.y),
+    z: round(plane.origin.z),
+  },
+  xAxis: {
+    x: round(plane.xAxis.x),
+    y: round(plane.xAxis.y),
+    z: round(plane.xAxis.z),
+  },
+  yAxis: {
+    x: round(plane.yAxis.x),
+    y: round(plane.yAxis.y),
+    z: round(plane.yAxis.z),
+  },
+});
+
+/**
+ * Zod schema for Plane diff validation.
+ **/
+export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAxis: true })
+  .extend({
+    origin: PointDiffSchema,
+    xAxis: VectorDiffSchema,
+    yAxis: VectorDiffSchema,
+  })
+  .partial();
+/**
+ * Diff type for tracking Plane changes.
+ **/
+export type PlaneDiff = z.infer<typeof PlaneDiffSchema>;
+/**
+ * Retrieves the PlaneDiff value.
+ **/
+export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => {
+  return {
+    origin: getPointDiff(before.origin, after.origin),
+    xAxis: getVectorDiff(before.xAxis, after.xAxis),
+    yAxis: getVectorDiff(before.yAxis, after.yAxis),
+  };
+};
+/**
+ * Diff type for tracking inversePlane changes.
+ **/
+export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): PlaneDiff => {
+  const origin = appliedDiff.origin ?? { x: 0, y: 0, z: 0 };
+  const xAxis = appliedDiff.xAxis ?? { x: 0, y: 0, z: 0 };
+  const yAxis = appliedDiff.yAxis ?? { x: 0, y: 0, z: 0 };
+  return {
+    origin: inversePointDiff(original.origin, origin),
+    xAxis: inverseVectorDiff(original.xAxis, xAxis),
+    yAxis: inverseVectorDiff(original.yAxis, yAxis),
+  };
+};
+/**
+ * Diff type for tracking mergePlane changes.
+ **/
+export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff => {
+  return {
+    origin: diff1.origin ?? diff2.origin ?? mergePointDiff(diff1.origin!, diff2.origin!),
+    xAxis: diff1.xAxis ?? diff2.xAxis ?? mergeVectorDiff(diff1.xAxis!, diff2.xAxis!),
+    yAxis: diff1.yAxis ?? diff2.yAxis ?? mergeVectorDiff(diff1.yAxis!, diff2.yAxis!),
+  };
+};
+/**
+ * Diff type for tracking applyPlane changes.
+ **/
+export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
+  return {
+    origin: diff.origin ? applyPointDiff(base.origin, diff.origin) : base.origin,
+    xAxis: diff.xAxis ? applyVectorDiff(base.xAxis, diff.xAxis) : base.xAxis,
+    yAxis: diff.yAxis ? applyVectorDiff(base.yAxis, diff.yAxis) : base.yAxis,
+  };
+};
+
+// #endregion ◻️Plane
+
+// #region 🎥Camera
+
+// Camera weak entity types and schemas MUST be defined here.
+
+/**
+ * Zod schema for Camera validation.
+ **/
+export const CameraSchema = z.object({
+  position: PointSchema,
+  forward: VectorSchema,
+  up: VectorSchema,
+});
+/**
+ * Type alias for Camera.
+ **/
+export type Camera = z.infer<typeof CameraSchema>;
+/**
+ * Serializes Camera for transport.
+ **/
+export const serializeCamera = (camera: Camera): string => JSON.stringify(CameraSchema.parse(camera));
+/**
+ **/
+export const deserializeCamera = (json: string): Camera => CameraSchema.parse(JSON.parse(json));
+
+/**
+ * Zod schema for Camera diff validation.
+ **/
+export const CameraDiffSchema = CameraSchema.omit({ position: true, forward: true, up: true })
+  .extend({
+    position: PointDiffSchema,
+    forward: VectorDiffSchema,
+    up: VectorDiffSchema,
+  })
+  .partial();
+/**
+ * Diff type for tracking Camera changes.
+ **/
+export type CameraDiff = z.infer<typeof CameraDiffSchema>;
+/**
+ * Retrieves the CameraDiff value.
+ **/
+export const getCameraDiff = (before: Camera, after: Camera): CameraDiff => {
+  return {
+    position: getPointDiff(before.position, after.position),
+    forward: getVectorDiff(before.forward, after.forward),
+    up: getVectorDiff(before.up, after.up),
+  };
+};
+/**
+ * Diff type for tracking inverseCamera changes.
+ **/
+export const inverseCameraDiff = (original: Camera, appliedDiff: CameraDiff): CameraDiff => {
+  return {
+    position: appliedDiff.position ? inversePointDiff(original.position, appliedDiff.position) : original.position,
+    forward: appliedDiff.forward ? inverseVectorDiff(original.forward, appliedDiff.forward) : original.forward,
+    up: appliedDiff.up ? inverseVectorDiff(original.up, appliedDiff.up) : original.up,
+  };
+};
+/**
+ * Diff type for tracking mergeCamera changes.
+ **/
+export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDiff => {
+  return {
+    position: diff1.position ?? diff2.position ?? mergePointDiff(diff1.position!, diff2.position!),
+    forward: diff1.forward ?? diff2.forward ?? mergeVectorDiff(diff1.forward!, diff2.forward!),
+    up: diff1.up ?? diff2.up ?? mergeVectorDiff(diff1.up!, diff2.up!),
+  };
+};
+/**
+ * Diff type for tracking applyCamera changes.
+ *
+ **/
+export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
+  return {
+    position: diff.position ? applyPointDiff(base.position, diff.position) : base.position,
+    forward: diff.forward ? applyVectorDiff(base.forward, diff.forward) : base.forward,
+    up: diff.up ? applyVectorDiff(base.up, diff.up) : base.up,
+  };
+};
+
+// #endregion 🎥Camera
+
+// #endregion 🖥️Weak Entities
+
 
 // #region 💎Attribute
 // Attribute entity types, schemas, and helper functions MUST be defined here.
@@ -810,560 +1344,6 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
 // #endregion 💎Attribute
 
 
-
-
-// #region 📺Coord
-// Coord weak entity types and schemas MUST be defined here.
-
-/**
- * Zod schema for Coord validation.
- **/
-export const CoordSchema = z.object({ u: z.number(), v: z.number() });
-/**
- * Type alias for Coord.
- **/
-export type Coord = z.infer<typeof CoordSchema>;
-/**
- * Serializes Coord for transport.
- **/
-export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord));
-/**
- **/
-export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
-
-/**
- * Zod schema for Coord diff validation.
- **/
-export const CoordDiffSchema = CoordSchema.partial();
-/**
- * Diff type for tracking Coord changes.
- **/
-export type CoordDiff = z.infer<typeof CoordDiffSchema>;
-/**
- * Retrieves the CoordDiff value.
- **/
-export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => {
-  return {
-    u: after.u - before.u,
-    v: after.v - before.v,
-  };
-};
-/**
- * Diff type for tracking inverseCoord changes.
- **/
-export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => {
-  const u = appliedDiff.u ?? 0;
-  const v = appliedDiff.v ?? 0;
-  return {
-    u: original.u - u,
-    v: original.v - v,
-  };
-};
-/**
- * Diff type for tracking mergeCoord changes.
- **/
-export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => {
-  return {
-    u: (diff1.u ?? 0) + (diff2.u ?? 0),
-    v: (diff1.v ?? 0) + (diff2.v ?? 0),
-  };
-};
-/**
- * Diff type for tracking applyCoord changes.
- **/
-export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
-  const u = diff.u ?? 0;
-  const v = diff.v ?? 0;
-  return {
-    u: base.u + u,
-    v: base.v + v,
-  };
-};
-
-// #endregion 📺Coord
-
-
-
-
-// #region ➡️Vec
-// Vec weak entity types and schemas MUST be defined here.
-
-/**
- * Zod schema for Vec validation.
- **/
-export const VecSchema = z.object({ u: z.number(), v: z.number() });
-/**
- * Type alias for Vec.
- **/
-export type Vec = z.infer<typeof VecSchema>;
-/**
- * Serializes Vec for transport.
- **/
-export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse(vec));
-/**
- **/
-export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
-
-/**
- * Zod schema for Vec diff validation.
- **/
-export const VecDiffSchema = VecSchema.partial();
-/**
- * Diff type for tracking Vec changes.
- **/
-export type VecDiff = z.infer<typeof VecDiffSchema>;
-/**
- * Retrieves the VecDiff value.
- **/
-export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
-  return {
-    u: after.u - before.u,
-    v: after.v - before.v,
-  };
-};
-/**
- * Diff type for tracking inverseVec changes.
- **/
-export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => {
-  const u = appliedDiff.u ?? 0;
-  const v = appliedDiff.v ?? 0;
-  return {
-    u: original.u - u,
-    v: original.v - v,
-  };
-};
-/**
- * Diff type for tracking mergeVec changes.
- **/
-export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
-  return {
-    u: (diff1.u ?? 0) + (diff2.u ?? 0),
-    v: (diff1.v ?? 0) + (diff2.v ?? 0),
-  };
-};
-/**
- * Diff type for tracking applyVec changes.
- **/
-export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
-  const u = diff.u ?? 0;
-  const v = diff.v ?? 0;
-  return {
-    u: base.u + u,
-    v: base.v + v,
-  };
-};
-
-// #endregion ➡️Vec
-
-
-
-
-// #region ✖️Point
-// Point weak entity types and schemas MUST be defined here.
-
-/**
- * Zod schema for Point validation.
- **/
-export const PointSchema = z.object({
-  x: z.number(),
-  y: z.number(),
-  z: z.number(),
-});
-/**
- * Type alias for Point.
- **/
-export type Point = z.infer<typeof PointSchema>;
-/**
- * Serializes Point for transport.
- **/
-export const serializePoint = (point: Point): string => JSON.stringify(PointSchema.parse(point));
-/**
- **/
-export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
-
-/**
- * Zod schema for Point diff validation.
- **/
-export const PointDiffSchema = PointSchema.partial();
-/**
- * Diff type for tracking Point changes.
- **/
-export type PointDiff = z.infer<typeof PointDiffSchema>;
-/**
- * Retrieves the PointDiff value.
- **/
-export const getPointDiff = (before: Point, after: Point): PointDiff => {
-  return {
-    x: after.x - before.x,
-    y: after.y - before.y,
-    z: after.z - before.z,
-  };
-};
-/**
- * Diff type for tracking inversePoint changes.
- **/
-export const inversePointDiff = (original: Point, appliedDiff: PointDiff): PointDiff => {
-  const x = appliedDiff.x ?? 0;
-  const y = appliedDiff.y ?? 0;
-  const z = appliedDiff.z ?? 0;
-  return {
-    x: -x,
-    y: -y,
-    z: -z,
-  };
-};
-/**
- * Diff type for tracking mergePoint changes.
- **/
-export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff => {
-  return {
-    x: (diff1.x ?? 0) + (diff2.x ?? 0),
-    y: (diff1.y ?? 0) + (diff2.y ?? 0),
-    z: (diff1.z ?? 0) + (diff2.z ?? 0),
-  };
-};
-/**
- * Diff type for tracking applyPoint changes.
- **/
-export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
-  const x = diff.x ?? 0;
-  const y = diff.y ?? 0;
-  const z = diff.z ?? 0;
-  return {
-    x: base.x + x,
-    y: base.y + y,
-    z: base.z + z,
-  };
-};
-
-// #endregion ✖️Point
-
-
-
-
-// #region ↗️Vector
-// Vector weak entity types and schemas MUST be defined here.
-
-/**
- * Zod schema for Vector validation.
- **/
-export const VectorSchema = z.object({
-  x: z.number(),
-  y: z.number(),
-  z: z.number(),
-});
-/**
- * Type alias for Vector.
- **/
-export type Vector = z.infer<typeof VectorSchema>;
-/**
- * Serializes Vector for transport.
- **/
-export const serializeVector = (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector));
-/**
- **/
-export const deserializeVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
-
-/**
- * Zod schema for Vector diff validation.
- **/
-export const VectorDiffSchema = VectorSchema.partial();
-/**
- * Diff type for tracking Vector changes.
- **/
-export type VectorDiff = z.infer<typeof VectorDiffSchema>;
-/**
- * Retrieves the VectorDiff value.
- **/
-export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => {
-  return {
-    x: after.x - before.x,
-    y: after.y - before.y,
-    z: after.z - before.z,
-  };
-};
-/**
- * Diff type for tracking inverseVector changes.
- **/
-export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): VectorDiff => {
-  const x = appliedDiff.x ?? 0;
-  const y = appliedDiff.y ?? 0;
-  const z = appliedDiff.z ?? 0;
-  return {
-    x: -x,
-    y: -y,
-    z: -z,
-  };
-};
-/**
- * Diff type for tracking mergeVector changes.
- **/
-export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDiff => {
-  return {
-    x: (diff1.x ?? 0) + (diff2.x ?? 0),
-    y: (diff1.y ?? 0) + (diff2.y ?? 0),
-    z: (diff1.z ?? 0) + (diff2.z ?? 0),
-  };
-};
-/**
- * Diff type for tracking applyVector changes.
- **/
-export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
-  const x = diff.x ?? 0;
-  const y = diff.y ?? 0;
-  const z = diff.z ?? 0;
-  return {
-    x: base.x + x,
-    y: base.y + y,
-    z: base.z + z,
-  };
-};
-
-// #endregion ↗️Vector
-
-
-
-
-// #region ◻️Plane
-// Plane weak entity types and schemas MUST be defined here.
-
-/**
- * Zod schema for Plane validation.
- **/
-export const PlaneSchema = z.object({
-  origin: PointSchema,
-  xAxis: VectorSchema,
-  yAxis: VectorSchema,
-});
-/**
- * Type alias for Plane.
- **/
-export type Plane = z.infer<typeof PlaneSchema>;
-/**
- * Serializes Plane for transport.
- **/
-export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane));
-/**
- **/
-export const deserializePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
-/**
- **/
-export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
-  const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
-  const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
-  const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
-  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
-  const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
-  const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin);
-  return matrix;
-};
-/**
- **/
-export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
-  const origin = new THREE.Vector3();
-  const xAxis = new THREE.Vector3();
-  const yAxis = new THREE.Vector3();
-  const zAxis = new THREE.Vector3();
-  matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3());
-  matrix.extractBasis(xAxis, yAxis, zAxis);
-  return {
-    origin: { x: origin.x, y: origin.y, z: origin.z },
-    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
-    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
-  };
-};
-
-/**
- **/
-export const averagePlane = (planes: Plane[]): Plane | null => {
-  if (planes.length === 0) return null;
-  if (planes.length === 1) return planes[0];
-
-  const avgOrigin = planes.reduce(
-    (acc, plane) => ({
-      x: acc.x + plane.origin.x / planes.length,
-      y: acc.y + plane.origin.y / planes.length,
-      z: acc.z + plane.origin.z / planes.length,
-    }),
-    { x: 0, y: 0, z: 0 },
-  );
-
-  const baseXAxis = planes[0].xAxis;
-  const baseYAxis = planes[0].yAxis;
-
-  return {
-    origin: avgOrigin,
-    xAxis: baseXAxis,
-    yAxis: baseYAxis,
-  };
-};
-// ◻️roundPlane rounds plane components to a specified number of decimal places.
-const roundPlane = (plane: Plane): Plane => ({
-  origin: {
-    x: round(plane.origin.x),
-    y: round(plane.origin.y),
-    z: round(plane.origin.z),
-  },
-  xAxis: {
-    x: round(plane.xAxis.x),
-    y: round(plane.xAxis.y),
-    z: round(plane.xAxis.z),
-  },
-  yAxis: {
-    x: round(plane.yAxis.x),
-    y: round(plane.yAxis.y),
-    z: round(plane.yAxis.z),
-  },
-});
-
-/**
- * Zod schema for Plane diff validation.
- **/
-export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAxis: true })
-  .extend({
-    origin: PointDiffSchema,
-    xAxis: VectorDiffSchema,
-    yAxis: VectorDiffSchema,
-  })
-  .partial();
-/**
- * Diff type for tracking Plane changes.
- **/
-export type PlaneDiff = z.infer<typeof PlaneDiffSchema>;
-/**
- * Retrieves the PlaneDiff value.
- **/
-export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => {
-  return {
-    origin: getPointDiff(before.origin, after.origin),
-    xAxis: getVectorDiff(before.xAxis, after.xAxis),
-    yAxis: getVectorDiff(before.yAxis, after.yAxis),
-  };
-};
-/**
- * Diff type for tracking inversePlane changes.
- **/
-export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): PlaneDiff => {
-  const origin = appliedDiff.origin ?? { x: 0, y: 0, z: 0 };
-  const xAxis = appliedDiff.xAxis ?? { x: 0, y: 0, z: 0 };
-  const yAxis = appliedDiff.yAxis ?? { x: 0, y: 0, z: 0 };
-  return {
-    origin: inversePointDiff(original.origin, origin),
-    xAxis: inverseVectorDiff(original.xAxis, xAxis),
-    yAxis: inverseVectorDiff(original.yAxis, yAxis),
-  };
-};
-/**
- * Diff type for tracking mergePlane changes.
- **/
-export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff => {
-  return {
-    origin: diff1.origin ?? diff2.origin ?? mergePointDiff(diff1.origin!, diff2.origin!),
-    xAxis: diff1.xAxis ?? diff2.xAxis ?? mergeVectorDiff(diff1.xAxis!, diff2.xAxis!),
-    yAxis: diff1.yAxis ?? diff2.yAxis ?? mergeVectorDiff(diff1.yAxis!, diff2.yAxis!),
-  };
-};
-/**
- * Diff type for tracking applyPlane changes.
- **/
-export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
-  return {
-    origin: diff.origin ? applyPointDiff(base.origin, diff.origin) : base.origin,
-    xAxis: diff.xAxis ? applyVectorDiff(base.xAxis, diff.xAxis) : base.xAxis,
-    yAxis: diff.yAxis ? applyVectorDiff(base.yAxis, diff.yAxis) : base.yAxis,
-  };
-};
-
-// #endregion ◻️Plane
-
-
-
-
-// #region 🎥Camera
-
-// Camera weak entity types and schemas MUST be defined here.
-
-/**
- * Zod schema for Camera validation.
- **/
-export const CameraSchema = z.object({
-  position: PointSchema,
-  forward: VectorSchema,
-  up: VectorSchema,
-});
-/**
- * Type alias for Camera.
- **/
-export type Camera = z.infer<typeof CameraSchema>;
-/**
- * Serializes Camera for transport.
- **/
-export const serializeCamera = (camera: Camera): string => JSON.stringify(CameraSchema.parse(camera));
-/**
- **/
-export const deserializeCamera = (json: string): Camera => CameraSchema.parse(JSON.parse(json));
-
-/**
- * Zod schema for Camera diff validation.
- **/
-export const CameraDiffSchema = CameraSchema.omit({ position: true, forward: true, up: true })
-  .extend({
-    position: PointDiffSchema,
-    forward: VectorDiffSchema,
-    up: VectorDiffSchema,
-  })
-  .partial();
-/**
- * Diff type for tracking Camera changes.
- **/
-export type CameraDiff = z.infer<typeof CameraDiffSchema>;
-/**
- * Retrieves the CameraDiff value.
- **/
-export const getCameraDiff = (before: Camera, after: Camera): CameraDiff => {
-  return {
-    position: getPointDiff(before.position, after.position),
-    forward: getVectorDiff(before.forward, after.forward),
-    up: getVectorDiff(before.up, after.up),
-  };
-};
-/**
- * Diff type for tracking inverseCamera changes.
- **/
-export const inverseCameraDiff = (original: Camera, appliedDiff: CameraDiff): CameraDiff => {
-  return {
-    position: appliedDiff.position ? inversePointDiff(original.position, appliedDiff.position) : original.position,
-    forward: appliedDiff.forward ? inverseVectorDiff(original.forward, appliedDiff.forward) : original.forward,
-    up: appliedDiff.up ? inverseVectorDiff(original.up, appliedDiff.up) : original.up,
-  };
-};
-/**
- * Diff type for tracking mergeCamera changes.
- **/
-export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDiff => {
-  return {
-    position: diff1.position ?? diff2.position ?? mergePointDiff(diff1.position!, diff2.position!),
-    forward: diff1.forward ?? diff2.forward ?? mergeVectorDiff(diff1.forward!, diff2.forward!),
-    up: diff1.up ?? diff2.up ?? mergeVectorDiff(diff1.up!, diff2.up!),
-  };
-};
-/**
- * Diff type for tracking applyCamera changes.
- *
- **/
-export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
-  return {
-    position: diff.position ? applyPointDiff(base.position, diff.position) : base.position,
-    forward: diff.forward ? applyVectorDiff(base.forward, diff.forward) : base.forward,
-    up: diff.up ? applyVectorDiff(base.up, diff.up) : base.up,
-  };
-};
-
-// #endregion 🎥Camera
-
-
-
-
 // #region 📍Location
 // Location entity types, schemas, and helpers MUST be defined here.
 
@@ -1444,8 +1424,6 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
 };
 
 // #endregion 📍Location
-
-
 
 
 // #region ✍️Author
@@ -1565,8 +1543,6 @@ export const AuthorsDiffSchema = z.object({
 export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
 // #endregion ✍️Author
-
-
 
 
 // #region 📄File
@@ -1716,8 +1692,6 @@ export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 // #endregion 📄File
 
 
-
-
 // #region 📁Folder
 // Folder entity types, schemas, and helpers MUST be defined here.
 
@@ -1860,8 +1834,6 @@ export const FoldersDiffSchema = z.object({
 export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
 
 // #endregion 📁Folder
-
-
 
 
 // #region 📏Benchmark
@@ -2033,8 +2005,6 @@ const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark
 };
 
 // #endregion 📏Benchmark
-
-
 
 
 // #region 🔬Quality
@@ -2228,8 +2198,6 @@ export const QualitiesDiffSchema = z.object({
 export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>;
 
 // #endregion 🔬Quality
-
-
 
 
 // #region ⚓Port
@@ -2473,8 +2441,6 @@ export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | unde
 // #endregion ⚓Port
 
 
-
-
 // #region 📊Prop
 // Prop entity types, schemas, and helpers MUST be defined here.
 
@@ -2660,8 +2626,6 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
 };
 
 // #endregion 📊Prop
-
-
 
 
 // #region 🏷️Tag
@@ -2892,8 +2856,6 @@ export const findTag = (tags: Tag[], guid: string): Tag => {
 // #endregion 🏷️Tag
 
 
-
-
 // #region 💡Concept
 // Concept entity types, schemas, and helpers MUST be defined here.
 
@@ -3120,8 +3082,6 @@ export const findConcept = (concepts: Concept[], guid: string): Concept => {
 };
 
 // #endregion 💡Concept
-
-
 
 
 // #region 🗿Model
@@ -3419,8 +3379,6 @@ export const validateModelFile = (filename: string): ModelFileValidation => {
 // #endregion 🗿Model
 
 
-
-
 // #region 🔌Connector
 // Connector entity types, schemas, and helpers MUST be defined here.
 
@@ -3628,8 +3586,6 @@ export const findConnector = (connectors: Connector[], connectorGuid: string): C
 };
 
 // #endregion 🔌Connector
-
-
 
 
 // #region 🧱Type
@@ -3852,8 +3808,6 @@ export const findConnectorInType = (type: Type, connectorGuid: string): Connecto
 // #endregion 🧱Type
 
 
-
-
 // #region 🎨Layer
 // Layer entity types, schemas, and helpers MUST be defined here.
 
@@ -3989,8 +3943,6 @@ export const LayersDiffSchema = z.object({
 export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
 // #endregion 🎨Layer
-
-
 
 
 // #region 🧩Piece
@@ -4249,8 +4201,6 @@ export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
 // #endregion 🧩Piece
 
 
-
-
 // #region 👥Group
 // Group entity types, schemas, and helpers MUST be defined here.
 
@@ -4383,8 +4333,6 @@ export const deserializeGroupShallow = (json: string): GroupShallow => GroupShal
 // #endregion 👥Group
 
 
-
-
 // #region ↔️Side
 // Side entity types, schemas, and helpers MUST be defined here.
 
@@ -4480,8 +4428,6 @@ export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.par
 export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.connector?.guid === b.connector?.guid;
 
 // #endregion ↔️Side
-
-
 
 
 // #region 🔗Connection
@@ -4697,8 +4643,6 @@ export const findConnectorForPieceInConnection = (type: Type, connection: Connec
 // #endregion 🔗Connection
 
 
-
-
 // #region 📈Stat
 // Stat entity types, schemas, and helpers MUST be defined here.
 
@@ -4824,8 +4768,6 @@ export const serializeStatShallow = (stat: StatShallow): string => JSON.stringif
 export const deserializeStatShallow = (json: string): StatShallow => StatShallowSchema.parse(JSON.parse(json));
 
 // #endregion 📈Stat
-
-
 
 
 // #region 📐Design
@@ -5457,11 +5399,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
   const types = kit.types ?? [];
 
   if (!design.pieces || design.pieces.length === 0) {
-    return operationOk(
-      { forward: {}, backward: {} },
-      [],
-      [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }],
-    );
+    return operationOk({ forward: {}, backward: {} }, [], [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }]);
   }
 
   const warnings: OperationNote[] = [];
@@ -6274,8 +6212,7 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
   const selectedConnectionSet = new Set(connectionGuids);
 
   const kitDesign = design.guid ? findDesignInKit(kit, design.guid) : undefined;
-  const connections =
-    design.connections && design.connections.length > 0 ? design.connections : (kitDesign?.connections ?? []);
+  const connections = design.connections && design.connections.length > 0 ? design.connections : (kitDesign?.connections ?? []);
   const pieces = design.pieces ?? [];
 
   // Build parent map: child guid -> { parentGuid, connection }
@@ -6377,17 +6314,13 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
     }
   }
 
-  return operationOk(
-    { guid: "", name: "", pieces: copyPieces, connections: copyConnections },
-    flatRes.warnings,
-    [
-      ...flatRes.infos,
-      {
-        code: "copy.summary",
-        message: `Copied ${copyPieces.length} piece(s) and ${copyConnections.length} connection(s) to clipboard design.`,
-      },
-    ],
-  );
+  return operationOk({ guid: "", name: "", pieces: copyPieces, connections: copyConnections }, flatRes.warnings, [
+    ...flatRes.infos,
+    {
+      code: "copy.summary",
+      message: `Copied ${copyPieces.length} piece(s) and ${copyConnections.length} connection(s) to clipboard design.`,
+    },
+  ]);
 };
 
 /** Specs: Anchoring strings handled by `pasteDesign` switch; any other string falls through to the default branch (same offset as `original`). */
@@ -6593,8 +6526,7 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
                 const connectedStub = externalOriginGuids.has(parentConn.connected.piece.guid);
                 const connectingStub = externalOriginGuids.has(parentConn.connecting.piece.guid);
                 const connMatchesParentage =
-                  (parentConn.connecting.piece.guid === piece.guid && parentConn.connected.piece.guid === pInfo.parentGuid) ||
-                  (parentConn.connected.piece.guid === piece.guid && parentConn.connecting.piece.guid === pInfo.parentGuid);
+                  (parentConn.connecting.piece.guid === piece.guid && parentConn.connected.piece.guid === pInfo.parentGuid) || (parentConn.connected.piece.guid === piece.guid && parentConn.connecting.piece.guid === pInfo.parentGuid);
                 // Specs: Coord updates u/v only on this remapped stub-bridge using target matched parent center + anchor;
                 // descendant internal edges are unchanged (second paste pass).
                 if (connMatchesParentage && connectedStub !== connectingStub) {
@@ -6677,8 +6609,6 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
 };
 
 // #endregion 📐Design
-
-
 
 
 // #region ⏱️Kit
@@ -7107,8 +7037,6 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
 };
 
 // #endregion ⏱️Kit
-
-
 
 
 // #region 🖥️Hash
@@ -8724,7 +8652,6 @@ export const hashKitDiff = (d: KitDiff): string => {
 // #endregion 🖥️Hash
 
 
-
 /**
  * Computes the forward and backward diffs between two design states.
  **/
@@ -9245,8 +9172,6 @@ export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[
 // #endregion 📻Design Family Helpers
 
 
-
-
 // #region 🧊Type Family Helpers
 // Type family traversal helpers MUST be defined here.
 
@@ -9303,95 +9228,6 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
 };
 
 // #endregion 🧊Type Family Helpers
-
-
-
-
-// #region 🎯OperationResult
-/**
- * Human-readable note attached to an algorithm {@link OperationResult} (warning, info, or error).
- **/
-export interface OperationNote {
-  /** Stable machine id e.g. flatten.no-fixed-piece-in-clump */
-  code?: string;
-  message: string;
-}
-
-/**
- * Successful operation: produced change plus non-fatal warnings and informational notes.
- **/
-export interface OperationOk<Change> {
-  ok: true;
-  change: Change;
-  warnings: OperationNote[];
-  infos: OperationNote[];
-}
-
-/**
- * Failed operation: no change; carries one or more errors.
- **/
-export interface OperationErr {
-  ok: false;
-  errors: OperationNote[];
-}
-
-/**
- * Discriminated union returned by semio algorithms: either ok with change or failed with errors.
- **/
-export type OperationResult<Change> = OperationOk<Change> | OperationErr;
-
-/** {@link OperationResult} specialized for {@link DesignChange} (flatten, etc.). */
-export type DesignOperationResult = OperationResult<DesignChange>;
-
-/** {@link OperationResult} specialized for {@link DesignDiff}. */
-export type DesignDiffOperationResult = OperationResult<DesignDiff>;
-
-/**
- * Builds a successful {@link OperationResult}.
- **/
-export const operationOk = <Change>(change: Change, warnings: OperationNote[] = [], infos: OperationNote[] = []): OperationOk<Change> => ({
-  ok: true,
-  change,
-  warnings,
-  infos,
-});
-
-/**
- * Builds a failed {@link OperationResult}.
- **/
-export const operationErr = (errors: OperationNote[]): OperationErr => ({ ok: false, errors });
-
-/**
- * Wraps a native/REST payload that may still be a bare change object into {@link DesignOperationResult}.
- **/
-export const normalizeDesignFlattenResult = (raw: unknown): DesignOperationResult => {
-  if (raw !== null && typeof raw === "object" && "ok" in raw) {
-    return raw as DesignOperationResult;
-  }
-  return operationOk(raw as DesignChange, [], []);
-};
-
-/**
- * Wraps a native/REST payload that may still be a bare {@link DesignDiff} into {@link DesignDiffOperationResult}.
- **/
-export const normalizeDesignDiffResult = (raw: unknown): DesignDiffOperationResult => {
-  if (raw !== null && typeof raw === "object" && "ok" in raw) {
-    return raw as DesignDiffOperationResult;
-  }
-  return operationOk(raw as DesignDiff, [], []);
-};
-
-/**
- * Wraps a native/REST payload that may still be a bare {@link Design} into {@link OperationResult}<{@link Design}>.
- **/
-export const normalizeDesignCopyResult = (raw: unknown): OperationResult<Design> => {
-  if (raw !== null && typeof raw === "object" && "ok" in raw) {
-    return raw as OperationResult<Design>;
-  }
-  return operationOk(raw as Design, [], []);
-};
-// #endregion 🎯OperationResult
-
 
 
 // #region 📦Kit Diff Validation
@@ -9515,7 +9351,7 @@ const validateGuidCollectionDiff = <TItem extends { guid: string }>(
 };
 
 const validateAttributesDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Attribute[], d: AttributesDiff | undefined): void => {
-  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => { });
+  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => {});
 };
 
 const validatePropsDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Prop[], qualities: Set<string>, d: PropsDiff | undefined): void => {
@@ -9638,8 +9474,7 @@ const validateDesignDiffNested = (
     });
     const checkSide = (side: Side, label: string, cpath: string) => {
       if (!pieceGuids.has(side.piece.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.connection-piece-missing", `${cpath}: ${label} piece ${side.piece.guid} not in design after piece diff`);
-      if (side.designPiece?.guid && !pieceGuids.has(side.designPiece.guid))
-        kitDiffPush(ctx, "errors", "kitdiff.ref.connection-designpiece-missing", `${cpath}: ${label} designPiece ${side.designPiece.guid} not in design after piece diff`);
+      if (side.designPiece?.guid && !pieceGuids.has(side.designPiece.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.connection-designpiece-missing", `${cpath}: ${label} designPiece ${side.designPiece.guid} not in design after piece diff`);
     };
     for (const a of diff.connections.added ?? []) {
       const cp = `${path}.connections.added[${a.guid}]`;
@@ -9716,33 +9551,26 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
   const refs = { typeGuids, designGuids, qualityGuids, fileGuids, portGuids, conceptGuids, authorGuids };
 
   if (ctx.diff.types) {
-    ctx.diff.types = validateGuidCollectionDiff(ctx, "types", "type", kit.types ?? [], ctx.diff.types, (item, tdiff, p) =>
-      validateTypeDiffNested(ctx, p, item, tdiff as TypeDiff, refs),
-    );
+    ctx.diff.types = validateGuidCollectionDiff(ctx, "types", "type", kit.types ?? [], ctx.diff.types, (item, tdiff, p) => validateTypeDiffNested(ctx, p, item, tdiff as TypeDiff, refs));
   }
   if (ctx.diff.designs) {
-    ctx.diff.designs = validateGuidCollectionDiff(ctx, "designs", "design", kit.designs ?? [], ctx.diff.designs, (item, ddiff, p) =>
-      validateDesignDiffNested(ctx, kit, p, item, ddiff as DesignDiff, refs),
-    );
+    ctx.diff.designs = validateGuidCollectionDiff(ctx, "designs", "design", kit.designs ?? [], ctx.diff.designs, (item, ddiff, p) => validateDesignDiffNested(ctx, kit, p, item, ddiff as DesignDiff, refs));
   }
-  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => { });
-  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => { });
-  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => { });
+  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => {});
+  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => {});
+  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => {});
   if (ctx.diff.qualities) {
-    ctx.diff.qualities = validateGuidCollectionDiff(ctx, "qualities", "quality", kit.qualities ?? [], ctx.diff.qualities, (item, qdiff, p) =>
-      validateQualityDiffNested(ctx, p, item, qdiff as QualityDiff),
-    );
+    ctx.diff.qualities = validateGuidCollectionDiff(ctx, "qualities", "quality", kit.qualities ?? [], ctx.diff.qualities, (item, qdiff, p) => validateQualityDiffNested(ctx, p, item, qdiff as QualityDiff));
   }
-  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => { });
+  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => {});
   if (ctx.diff.folders) {
     ctx.diff.folders = validateGuidCollectionDiff(ctx, "folders", "folder", kit.folders ?? [], ctx.diff.folders, (item, fdiff, p) => {
       const par = (fdiff as FolderDiff).parent?.guid ?? item.parent?.guid;
-      if (par && !(kit.folders ?? []).some((f) => f.guid === par))
-        kitDiffPush(ctx, "errors", "kitdiff.ref.folder-parent-missing", `${p}: parent folder ${par} not in kit`);
+      if (par && !(kit.folders ?? []).some((f) => f.guid === par)) kitDiffPush(ctx, "errors", "kitdiff.ref.folder-parent-missing", `${p}: parent folder ${par} not in kit`);
       if ((fdiff as FolderDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (fdiff as FolderDiff).attributes);
     });
   }
-  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => { });
+  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => {});
   if (ctx.diff.attributes) validateAttributesDiffNested(ctx, "kit.attributes", kit.attributes ?? [], ctx.diff.attributes);
 
   const ok = ctx.errors.length === 0;
@@ -9752,6 +9580,90 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
 // #endregion 📦Kit Diff Validation
 
 
+// #region 🎯OperationResult
+/**
+ * Human-readable note attached to an algorithm {@link OperationResult} (warning, info, or error).
+ **/
+export interface OperationNote {
+  /** Stable machine id e.g. flatten.no-fixed-piece-in-clump */
+  code?: string;
+  message: string;
+}
+
+/**
+ * Successful operation: produced change plus non-fatal warnings and informational notes.
+ **/
+export interface OperationOk<Change> {
+  ok: true;
+  change: Change;
+  warnings: OperationNote[];
+  infos: OperationNote[];
+}
+
+/**
+ * Failed operation: no change; carries one or more errors.
+ **/
+export interface OperationErr {
+  ok: false;
+  errors: OperationNote[];
+}
+
+/**
+ * Discriminated union returned by semio algorithms: either ok with change or failed with errors.
+ **/
+export type OperationResult<Change> = OperationOk<Change> | OperationErr;
+
+/** {@link OperationResult} specialized for {@link DesignChange} (flatten, etc.). */
+export type DesignOperationResult = OperationResult<DesignChange>;
+
+/** {@link OperationResult} specialized for {@link DesignDiff}. */
+export type DesignDiffOperationResult = OperationResult<DesignDiff>;
+
+/**
+ * Builds a successful {@link OperationResult}.
+ **/
+export const operationOk = <Change>(change: Change, warnings: OperationNote[] = [], infos: OperationNote[] = []): OperationOk<Change> => ({
+  ok: true,
+  change,
+  warnings,
+  infos,
+});
+
+/**
+ * Builds a failed {@link OperationResult}.
+ **/
+export const operationErr = (errors: OperationNote[]): OperationErr => ({ ok: false, errors });
+
+/**
+ * Wraps a native/REST payload that may still be a bare change object into {@link DesignOperationResult}.
+ **/
+export const normalizeDesignFlattenResult = (raw: unknown): DesignOperationResult => {
+  if (raw !== null && typeof raw === "object" && "ok" in raw) {
+    return raw as DesignOperationResult;
+  }
+  return operationOk(raw as DesignChange, [], []);
+};
+
+/**
+ * Wraps a native/REST payload that may still be a bare {@link DesignDiff} into {@link DesignDiffOperationResult}.
+ **/
+export const normalizeDesignDiffResult = (raw: unknown): DesignDiffOperationResult => {
+  if (raw !== null && typeof raw === "object" && "ok" in raw) {
+    return raw as DesignDiffOperationResult;
+  }
+  return operationOk(raw as DesignDiff, [], []);
+};
+
+/**
+ * Wraps a native/REST payload that may still be a bare {@link Design} into {@link OperationResult}<{@link Design}>.
+ **/
+export const normalizeDesignCopyResult = (raw: unknown): OperationResult<Design> => {
+  if (raw !== null && typeof raw === "object" && "ok" in raw) {
+    return raw as OperationResult<Design>;
+  }
+  return operationOk(raw as Design, [], []);
+};
+// #endregion 🎯OperationResult
 
 
 /**
@@ -10460,7 +10372,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
             fixes: [fix],
           });
         }
-      } catch { }
+      } catch {}
     });
   });
   return problems;
@@ -10610,8 +10522,6 @@ export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResu
 // #endregion 🌧️Validation Serialization
 
 // #endregion 🛡️Validation
-
-
 
 
 /**
@@ -12055,20 +11965,20 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-              }
+                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+                }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-              }
+                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+                }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -12183,54 +12093,54 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-        return {
-          guid: row.guid,
-          key: row.key,
-          name: row.name,
-          kind: row.kind || undefined,
-          defaultValue: row.default_value ?? undefined,
-          formula: toUndefined(row.formula),
-          defaultSiUnit: toUndefined(row.default_si_unit),
-          defaultImperialUnit: toUndefined(row.default_imperial_unit),
-          min: row.min_value ?? undefined,
-          minExcluded: row.min_excluded ? true : undefined,
-          max: row.max_value ?? undefined,
-          maxExcluded: row.max_excluded ? true : undefined,
-          canScale: row.can_scale ? true : undefined,
-          uri: toUndefined(row.definition),
-          benchmarks: benchmarks.map((b: any) => {
-            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-            return {
-              guid: b.guid,
-              name: b.name,
-              icon: toUndefined(b.icon),
-              min: b.min_value ?? undefined,
-              minExcluded: b.min_excluded ? true : undefined,
-              max: b.max_value ?? undefined,
-              maxExcluded: b.max_excluded ? true : undefined,
-              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-            };
-          }),
-          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-        };
-      })
+          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+          return {
+            guid: row.guid,
+            key: row.key,
+            name: row.name,
+            kind: row.kind || undefined,
+            defaultValue: row.default_value ?? undefined,
+            formula: toUndefined(row.formula),
+            defaultSiUnit: toUndefined(row.default_si_unit),
+            defaultImperialUnit: toUndefined(row.default_imperial_unit),
+            min: row.min_value ?? undefined,
+            minExcluded: row.min_excluded ? true : undefined,
+            max: row.max_value ?? undefined,
+            maxExcluded: row.max_excluded ? true : undefined,
+            canScale: row.can_scale ? true : undefined,
+            uri: toUndefined(row.definition),
+            benchmarks: benchmarks.map((b: any) => {
+              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+              return {
+                guid: b.guid,
+                name: b.name,
+                icon: toUndefined(b.icon),
+                min: b.min_value ?? undefined,
+                minExcluded: b.min_excluded ? true : undefined,
+                max: b.max_value ?? undefined,
+                maxExcluded: b.max_excluded ? true : undefined,
+                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+              };
+            }),
+            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+          };
+        })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        remote: toUndefined(row.remote_url),
-        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-        size: row.size ?? undefined,
-        hash: toUndefined(row.hash),
-        createdAt: row.created,
-        updatedAt: row.updated,
-      }))
+          guid: row.guid,
+          name: row.name,
+          remote: toUndefined(row.remote_url),
+          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+          size: row.size ?? undefined,
+          hash: toUndefined(row.hash),
+          createdAt: row.created,
+          updatedAt: row.updated,
+        }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -12246,10 +12156,10 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        email: toUndefined(row.email),
-      }))
+          guid: row.guid,
+          name: row.name,
+          email: toUndefined(row.email),
+        }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
@@ -13085,7 +12995,6 @@ export const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 // #endregion 🧿Kit Import/Export
 
 
-
 // #region 🔩Kit Model Export
 // Design model export to 3D formats (GLB, glTF, OBJ, STL, PLY, USDZ) MUST be defined here.
 
@@ -13492,7 +13401,7 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
         if (copiedMeshes.length > 0) {
           typeMeshMap[typeGuid] = copiedMeshes[0];
         }
-      } catch { }
+      } catch {}
     }
   }
 
@@ -13548,7 +13457,6 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
 };
 
 // #endregion 🔩Kit Model Export
-
 
 
 // #region ❄️Geometric Insights
@@ -13753,8 +13661,6 @@ export const getGeometricInsightsForModel = async (model: string | ArrayBuffer |
 };
 
 // #endregion ❄️Geometric Insights
-
-
 
 
 // #region 🏰KitStore
@@ -14016,8 +13922,6 @@ export class InMemoryKitStore implements UndoableKitStore {
 // #endregion 🖥️InMemoryKitStore
 
 // #endregion 🏰KitStore
-
-
 
 
 /**
@@ -14446,8 +14350,6 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
 // #endregion 🕌File Tree Utilities
 
 
-
-
 // #region 🧪Tests
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
@@ -14701,9 +14603,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     it("heal drops invalid design update", () => {
       const bad: KitDiff = {
         designs: {
-          updated: [
-            { design: { guid: "99999999-9999-9999-9999-999999999999" }, diff: { name: "X" } },
-          ],
+          updated: [{ design: { guid: "99999999-9999-9999-9999-999999999999" }, diff: { name: "X" } }],
         },
       };
       const r = validateKitDiff(tinyKit, bad, true);
@@ -15322,9 +15222,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
         }));
 
         const result = validateKit(kit);
-        const emojiProblems = result.problems.filter((problem) =>
-          ["description-missing-emoji", "description-emoji-unique"].includes(problem.constraintId),
-        );
+        const emojiProblems = result.problems.filter((problem) => ["description-missing-emoji", "description-emoji-unique"].includes(problem.constraintId));
 
         expect(emojiProblems).toEqual([]);
       });
@@ -15736,9 +15634,9 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   describe("Sketchpad ControlTree", () => {
     it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
       const controls: ControlDef[] = [
-        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
-        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
-        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
+        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
+        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
+        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
       ];
       const folderSettings = {
         Transform: { path: "Transform", order: 2 },
@@ -17276,8 +17174,6 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   // #endregion 📊MaxChildren Tests
 } // end vitest guard
 // #endregion 🧪Tests
-
-
 
 
 // #region 🏋️Benchmarks

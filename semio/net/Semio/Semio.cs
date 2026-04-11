@@ -12,6 +12,7 @@
 
 
 
+
 #region ⛩️Imports
 // Callers MUST import all required namespaces listed here.
 using System.Collections;
@@ -54,10 +55,12 @@ using GltfNode = SharpGLTF.Schema2.Node;
 
 
 
+
 #region 🏠Namespace
 // Implementations MUST reside in this namespace.
 namespace Semio;
 #endregion 🏠Namespace
+
 
 
 
@@ -123,6 +126,7 @@ public enum DiffStatus
 }
 
 #endregion 🎞️Constants
+
 
 
 
@@ -1485,6 +1489,7 @@ public class Expression
 
 
 
+
 #region 🔓Entitying
 // Implementations MUST extend Entity for equality, validation, and diff support.
 
@@ -1545,6 +1550,7 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
 }
 
 #endregion 🔓Entitying
+
 
 
 
@@ -1829,6 +1835,142 @@ public static class SemioValidator
 }
 
 #endregion ✨SemioValidation
+
+
+
+
+
+
+#region �️Weak Entities
+
+#region �📺Coord
+// Implementations MUST share X, Y, Z coordinate fields for spatial types.
+
+public class Coord : Entity<Coord>
+{
+    public double U { get; set; }
+    public double V { get; set; }
+
+    public Coord Normalize()
+    {
+        var length = (double)Math.Sqrt(U * U + V * V);
+        return new Coord { U = U / length, V = V / length };
+    }
+}
+
+#endregion 📺Coord
+
+
+#region 📦MoveVector
+// Implementations MUST carry gap/shift/rise deltas in the piece plane frame for move operations.
+
+public class MoveVector
+{
+    public double Gap { get; set; }
+    public double Shift { get; set; }
+    public double Rise { get; set; }
+}
+
+#endregion 📦MoveVector
+
+
+
+
+
+
+#region ✖️Point
+// Implementations MUST represent a 3D point with X, Y, Z coordinates.
+
+public class Point : Entity<Point>
+{
+    public double X { get; set; } = 0;
+    public double Y { get; set; } = 0;
+    public double Z { get; set; } = 0;
+}
+
+#endregion ✖️Point
+
+
+
+
+
+#region ↗️Vector
+// Implementations MUST represent a 3D vector with X, Y, Z components.
+
+public class Vector : Entity<Vector>
+{
+    public double X { get; set; } = 1;
+    public double Y { get; set; }
+    public double Z { get; set; } = 0;
+
+    public static double DotProduct(Vector a, Vector b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+
+    public static bool IsOrthogonal(Vector a, Vector b) => Math.Abs(DotProduct(a, b)) < Constants.Tolerance;
+
+    public override (bool, List<string>) Validate()
+    {
+        var (isValid, errors) = base.Validate();
+        if (Math.Abs(X) < Constants.Tolerance && Math.Abs(Y) < Constants.Tolerance && Math.Abs(Z) < Constants.Tolerance)
+        {
+            isValid = false;
+            errors.Add("The vector must not be the zero vector.");
+        }
+
+        if (Math.Abs(Math.Sqrt(X * X + Y * Y + Z * Z) - 1) > Constants.Tolerance)
+        {
+            isValid = false;
+            errors.Add("The vector must be a unit vector.");
+        }
+
+        return (isValid, errors);
+    }
+}
+
+#endregion ↗️Vector
+
+
+
+
+
+#region ◻️Plane
+// Implementations MUST define a 3D plane by origin and X/Y direction vectors.
+
+public class Plane : Entity<Plane>
+{
+    public Point Origin { get; set; } = new();
+    public Vector XAxis { get; set; } = new() { X = 1 };
+    public Vector YAxis { get; set; } = new() { Y = 1 };
+
+    public override (bool, List<string>) Validate()
+    {
+        var (isValid, errors) = base.Validate();
+        var (isValidOrigin, errorsOrigin) = Origin.Validate();
+        isValid = isValid && isValidOrigin;
+        errors.AddRange(errorsOrigin.Select(e => "The origin is invalid: " + e));
+        var (isValidXAxis, errorsXAxis) = XAxis.Validate();
+        isValid = isValid && isValidXAxis;
+        errors.AddRange(errorsXAxis.Select(e => "The x-axis is invalid: " + e));
+        var (isValidYAxis, errorsYAxis) = YAxis.Validate();
+        isValid = isValid && isValidYAxis;
+        errors.AddRange(errorsYAxis.Select(e => "The y-axis is invalid: " + e));
+        if (!Vector.IsOrthogonal(XAxis, YAxis))
+        {
+            isValid = false;
+            errors.Add("The x-axis and y-axis must be orthogonal.");
+        }
+
+        return (isValid, errors);
+    }
+}
+
+#endregion ◻️Plane
+
+
+
+
+
+#endregion 🖥️Weak Entities
+
 
 
 
@@ -2135,135 +2277,6 @@ public class Attribute : Entity<Attribute>
 #endregion 💎Attribute
 
 
-
-
-
-#region 📺Coord
-// Implementations MUST share X, Y, Z coordinate fields for spatial types.
-
-public class Coord : Entity<Coord>
-{
-    public double U { get; set; }
-    public double V { get; set; }
-
-    public Coord Normalize()
-    {
-        var length = (double)Math.Sqrt(U * U + V * V);
-        return new Coord { U = U / length, V = V / length };
-    }
-}
-
-#endregion 📺Coord
-
-
-#region 📦MoveVector
-// Implementations MUST carry gap/shift/rise deltas in the piece plane frame for move operations.
-
-public class MoveVector
-{
-    public double Gap { get; set; }
-    public double Shift { get; set; }
-    public double Rise { get; set; }
-}
-
-#endregion 📦MoveVector
-
-
-
-
-
-
-#region ✖️Point
-// Implementations MUST represent a 3D point with X, Y, Z coordinates.
-
-public class Point : Entity<Point>
-{
-    public double X { get; set; } = 0;
-    public double Y { get; set; } = 0;
-    public double Z { get; set; } = 0;
-}
-
-#endregion ✖️Point
-
-
-
-
-
-#region ↗️Vector
-// Implementations MUST represent a 3D vector with X, Y, Z components.
-
-public class Vector : Entity<Vector>
-{
-    public double X { get; set; } = 1;
-    public double Y { get; set; }
-    public double Z { get; set; } = 0;
-
-    public static double DotProduct(Vector a, Vector b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
-
-    public static bool IsOrthogonal(Vector a, Vector b) => Math.Abs(DotProduct(a, b)) < Constants.Tolerance;
-
-    public override (bool, List<string>) Validate()
-    {
-        var (isValid, errors) = base.Validate();
-        if (Math.Abs(X) < Constants.Tolerance && Math.Abs(Y) < Constants.Tolerance && Math.Abs(Z) < Constants.Tolerance)
-        {
-            isValid = false;
-            errors.Add("The vector must not be the zero vector.");
-        }
-
-        if (Math.Abs(Math.Sqrt(X * X + Y * Y + Z * Z) - 1) > Constants.Tolerance)
-        {
-            isValid = false;
-            errors.Add("The vector must be a unit vector.");
-        }
-
-        return (isValid, errors);
-    }
-}
-
-#endregion ↗️Vector
-
-
-
-
-
-#region ◻️Plane
-// Implementations MUST define a 3D plane by origin and X/Y direction vectors.
-
-public class Plane : Entity<Plane>
-{
-    public Point Origin { get; set; } = new();
-    public Vector XAxis { get; set; } = new() { X = 1 };
-    public Vector YAxis { get; set; } = new() { Y = 1 };
-
-    public override (bool, List<string>) Validate()
-    {
-        var (isValid, errors) = base.Validate();
-        var (isValidOrigin, errorsOrigin) = Origin.Validate();
-        isValid = isValid && isValidOrigin;
-        errors.AddRange(errorsOrigin.Select(e => "The origin is invalid: " + e));
-        var (isValidXAxis, errorsXAxis) = XAxis.Validate();
-        isValid = isValid && isValidXAxis;
-        errors.AddRange(errorsXAxis.Select(e => "The x-axis is invalid: " + e));
-        var (isValidYAxis, errorsYAxis) = YAxis.Validate();
-        isValid = isValid && isValidYAxis;
-        errors.AddRange(errorsYAxis.Select(e => "The y-axis is invalid: " + e));
-        if (!Vector.IsOrthogonal(XAxis, YAxis))
-        {
-            isValid = false;
-            errors.Add("The x-axis and y-axis must be orthogonal.");
-        }
-
-        return (isValid, errors);
-    }
-}
-
-#endregion ◻️Plane
-
-
-
-
-
 #region 📍Location
 // Implementations MUST combine a plane with rotation and elevation for placement.
 
@@ -2289,6 +2302,7 @@ public class Location : Entity<Location>
 }
 
 #endregion 📍Location
+
 
 
 
@@ -2418,6 +2432,7 @@ public class AuthorsDiff : Entity<AuthorsDiff>
 
 
 
+
 #region 📄File
 // Implementations MUST reference a file with URI, MIME type, and optional content.
 
@@ -2526,6 +2541,7 @@ public class File : Entity<File>
     public static implicit operator FileDiff(File file) => new() { Guid = file.Guid, Name = file.Name, Remote = file.Remote, Folder = file.Folder, Size = file.Size, Hash = file.Hash, Blob = file.Blob, CreatedAt = file.CreatedAt, CreatedBy = file.CreatedBy, UpdatedAt = file.UpdatedAt, UpdatedBy = file.UpdatedBy };
 }
 #endregion 📄File
+
 
 
 
@@ -2647,6 +2663,7 @@ public class Folder : Entity<Folder>
 
 
 
+
 #region 📏Benchmark
 // Implementations MUST capture benchmark metadata for performance measurement.
 
@@ -2711,6 +2728,7 @@ public class BenchmarkDiff : Entity<BenchmarkDiff>
 
 
 
+
 #region 🖨️QualityKind
 // Implementations MUST categorize quality metrics by kind.
 
@@ -2726,6 +2744,7 @@ public enum QualityKind
 }
 
 #endregion 🖨️QualityKind
+
 
 
 
@@ -2816,6 +2835,7 @@ public class Quality : Entity<Quality>
 }
 
 #endregion 🔬Quality
+
 
 
 
@@ -2943,6 +2963,7 @@ public class Port : Entity<Port>
 
 
 
+
 #region 📊Prop
 // Implementations MUST bind a property name to an expression value.
 
@@ -2991,6 +3012,7 @@ public class PropDiff : Entity<PropDiff>
 }
 
 #endregion 📊Prop
+
 
 
 
@@ -3054,6 +3076,7 @@ public class TagsDiff : Entity<TagsDiff>
 }
 
 #endregion 🏷️Tag
+
 
 
 
@@ -3127,6 +3150,7 @@ public class ConceptsDiff : Entity<ConceptsDiff>
 }
 
 #endregion 💡Concept
+
 
 
 
@@ -3287,6 +3311,7 @@ public class Model : Entity<Model>
 }
 
 #endregion 🗿Model
+
 
 
 
@@ -3578,6 +3603,7 @@ public class Connector : Entity<Connector>
 }
 
 #endregion 🔌Connector
+
 
 
 
@@ -3966,6 +3992,7 @@ public class Type : Entity<Type>
 
 
 
+
 #region 🎨Layer
 // Implementations MUST organize pieces into named layers within a design.
 
@@ -4022,6 +4049,7 @@ public class LayerDiff : Entity<LayerDiff>
 }
 
 #endregion 🎨Layer
+
 
 
 
@@ -4197,6 +4225,7 @@ public class Piece : Entity<Piece>
 
 
 
+
 #region 👥Group
 // Implementations MUST group pieces by name within a design.
 
@@ -4249,6 +4278,7 @@ public class GroupDiff : Entity<GroupDiff>
 }
 
 #endregion 👥Group
+
 
 
 
@@ -4348,6 +4378,7 @@ public class Side : Entity<Side>
 }
 
 #endregion ↔️Side
+
 
 
 
@@ -4634,6 +4665,7 @@ public class Connection : Entity<Connection>
 
 
 
+
 #region 📈Stat
 // Implementations MUST associate statistical metrics with a design.
 
@@ -4690,6 +4722,7 @@ public class StatDiff : Entity<StatDiff>
 }
 
 #endregion 📈Stat
+
 
 
 
@@ -6839,6 +6872,7 @@ text {
 
 
 
+
 #region ⏱️Kit
 // Implementations MUST collect types and designs into a reusable library.
 
@@ -7014,7 +7048,7 @@ public class KitsDiff : Entity<KitsDiff>
     public static implicit operator KitsDiff(List<Kit> kits) => new() { Updated = kits.Select(k => new KitDiffUpdate { Kit = k, Diff = (KitDiff)k }).ToList() };
 }
 
-public class Kit : Entity<Kit>
+public partial class Kit : Entity<Kit>
 {
     public string Guid { get; set; } = "";
     public string Name { get; set; } = "";
@@ -7955,1045 +7989,13 @@ public class Kit : Entity<Kit>
     }
 
     #endregion 🎠Filter
-
-    #region 🌤️Flatten Design
-    // Callers MUST use FlattenDesign to compute a DesignDiff that assigns world-space planes to all pieces.
-
-    public static DesignDiff FlattenDesign(Kit kit, string designId)
-    {
-        var design = FindDesign(kit, designId);
-        if (design.Pieces == null || design.Pieces.Count == 0) return new DesignDiff();
-
-        var typesDict = (kit.Types ?? new List<Type>()).ToDictionary(t => t.Guid);
-
-        Type? GetConnectorType(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
-
-        Connector? GetConnector(Type? type, string? connectorGuid)
-        {
-            if (type == null) return null;
-
-            if (string.IsNullOrEmpty(connectorGuid))
-            {
-                if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
-                if (!string.IsNullOrEmpty(type.Parent?.Guid))
-                {
-                    var parentType = GetConnectorType(type.Parent.Guid);
-                    return GetConnector(parentType, connectorGuid);
-                }
-                return null;
-            }
-
-            if (type.Connectors != null && type.Connectors.Count > 0)
-            {
-                var connector = type.Connectors.FirstOrDefault(p => p.Guid == connectorGuid);
-                if (connector != null) return connector;
-            }
-
-            if (!string.IsNullOrEmpty(type.Parent?.Guid))
-            {
-                var parentType = GetConnectorType(type.Parent.Guid);
-                var connector = GetConnector(parentType, connectorGuid);
-                if (connector != null) return connector;
-            }
-
-            if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
-
-            return null;
-        }
-
-        var flatDesignJson = Utility.Serialize(design);
-        var flatDesign = Utility.Deserialize<Design>(flatDesignJson);
-        if (flatDesign == null) return new DesignDiff();
-
-        if (flatDesign.Pieces == null) flatDesign.Pieces = new List<Piece>();
-
-        var piecePlanes = new Dictionary<string, Plane>();
-        var pieceMap = new Dictionary<string, Piece>();
-        foreach (var p in flatDesign.Pieces)
-        {
-            if (!string.IsNullOrEmpty(p.Guid)) pieceMap[p.Guid] = p;
-        }
-
-        var filteredConnections = (flatDesign.Connections ?? new List<Connection>()).Where(connection =>
-        {
-            var sourceId = connection.Connected.Piece.Guid;
-            var targetId = connection.Connecting.Piece.Guid;
-            return pieceMap.ContainsKey(sourceId) && pieceMap.ContainsKey(targetId);
-        }).ToList();
-
-        var graph = new UndirectedGraph<string, Edge<string>>();
-        foreach (var p in flatDesign.Pieces) graph.AddVertex(p.Guid);
-        foreach (var c in filteredConnections) graph.AddEdge(new Edge<string>(c.Connected.Piece.Guid, c.Connecting.Piece.Guid));
-
-        var algorithm = new ConnectedComponentsAlgorithm<string, Edge<string>>(graph);
-        algorithm.Compute();
-
-        var components = algorithm.Components;
-        var componentDict = new Dictionary<int, List<string>>();
-        foreach (var kvp in components)
-        {
-            if (!componentDict.ContainsKey(kvp.Value)) componentDict[kvp.Value] = new List<string>();
-            componentDict[kvp.Value].Add(kvp.Key);
-        }
-
-        Piece SetAttributes(Piece piece, IEnumerable<(string key, string value)> newAttrs)
-        {
-            var updatedAttrs = piece.Attributes?.ToList() ?? new List<Attribute>();
-            foreach (var newAttr in newAttrs)
-            {
-                var existingIndex = updatedAttrs.FindIndex(a => a.Key == newAttr.key);
-                if (existingIndex >= 0)
-                    updatedAttrs[existingIndex].Value = newAttr.value;
-                else
-                    updatedAttrs.Add(new Attribute { Guid = System.Guid.NewGuid().ToString(), Key = newAttr.key, Value = newAttr.value });
-            }
-            piece.Attributes = updatedAttrs;
-            return piece;
-        }
-
-        foreach (var component in componentDict.Values)
-        {
-            var roots = component.Where(nodeId =>
-            {
-                var piece = pieceMap.TryGetValue(nodeId, out var p) ? p : null;
-                return piece?.Plane != null && piece?.Center != null;
-            }).ToList();
-
-            var rootNode = roots.Count > 0 ? roots[0] : (component.Count > 0 ? component[0] : null);
-            if (string.IsNullOrEmpty(rootNode)) continue;
-
-            var rootPiece = pieceMap[rootNode];
-            if (string.IsNullOrEmpty(rootPiece.Guid)) continue;
-
-            var updatedRootPiece = SetAttributes(rootPiece, new[]
-            {
-                ("semio.fixedPieceId", rootPiece.Guid),
-                ("semio.depth", "0"),
-                ("semio.path", rootPiece.Guid)
-            });
-            pieceMap[rootNode] = updatedRootPiece;
-
-            Plane rootPlane = rootPiece.Plane ?? new Plane { XAxis = new Vector { X = 1, Y = 0, Z = 0 }, YAxis = new Vector { X = 0, Y = 1, Z = 0 }, Origin = new Point { X = 0, Y = 0, Z = 0 } };
-            piecePlanes[rootPiece.Guid] = rootPlane;
-
-            var rootPieceIndex = flatDesign.Pieces.FindIndex(p => p.Guid == rootPiece.Guid);
-            if (rootPieceIndex != -1)
-            {
-                flatDesign.Pieces[rootPieceIndex].Plane = rootPlane;
-                flatDesign.Pieces[rootPieceIndex].Center ??= new Coord { U = 0, V = 0 };
-            }
-
-            var bfs = new UndirectedBreadthFirstSearchAlgorithm<string, Edge<string>>(graph);
-            var depths = new Dictionary<string, int>();
-            depths[rootNode] = 0;
-
-            bfs.TreeEdge += (sender, e) =>
-            {
-                var parentId = depths.ContainsKey(e.Source) ? e.Source : e.Target;
-                var childId = parentId == e.Source ? e.Target : e.Source;
-                depths[childId] = depths[parentId] + 1;
-
-                var parentPiece = pieceMap.TryGetValue(parentId, out var pp) ? pp : null;
-                var childPiece = pieceMap.TryGetValue(childId, out var cp) ? cp : null;
-                if (parentPiece == null || childPiece == null || string.IsNullOrEmpty(parentPiece.Guid) || string.IsNullOrEmpty(childPiece.Guid)) return;
-                if (piecePlanes.ContainsKey(childPiece.Guid)) return;
-                if (!piecePlanes.TryGetValue(parentPiece.Guid, out var parentPlane)) return;
-
-                var connection = filteredConnections.FirstOrDefault(c =>
-                    (c.Connected.Piece.Guid == parentId && c.Connecting.Piece.Guid == childId) ||
-                    (c.Connecting.Piece.Guid == parentId && c.Connected.Piece.Guid == childId));
-                if (connection == null) return;
-
-                var parentSide = connection.Connected.Piece.Guid == parentId ? connection.Connected : connection.Connecting;
-                var childSide = connection.Connecting.Piece.Guid == childId ? connection.Connecting : connection.Connected;
-
-                var parentType = parentPiece.Type != null ? GetConnectorType(parentPiece.Type.Guid) : null;
-                var childType = childPiece.Type != null ? GetConnectorType(childPiece.Type.Guid) : null;
-
-                var parentConnector = GetConnector(parentType, parentSide.Connector?.Guid);
-                var childConnector = GetConnector(childType, childSide.Connector?.Guid);
-
-                if (parentConnector == null || childConnector == null) return;
-                if (parentConnector.Point == null || parentConnector.Direction == null || childConnector.Point == null || childConnector.Direction == null) return;
-
-                var childPlane = Design.DefaultComputeChildPlane(
-                    parentPlane, parentConnector.Point, parentConnector.Direction,
-                    childConnector.Point, childConnector.Direction,
-                    connection.Gap, connection.Shift, connection.Rise,
-                    connection.Rotation, connection.Turn, connection.Tilt);
-                piecePlanes[childPiece.Guid] = childPlane;
-
-                var radius = 2.697;
-                var verticalVExtra = 1.0;
-                var horizontalScale = 3.0633;
-                var parentCenter = parentPiece.Center ?? new Coord { U = 0, V = 0 };
-
-                double childU, childV;
-                if (parentCenter.U == 0 && parentCenter.V == 0)
-                {
-                    var angle = 2 * Math.PI * parentConnector.T;
-                    childU = radius * Math.Sin(angle);
-                    childV = radius * Math.Cos(angle);
-                }
-                else
-                {
-                    var isVerticalConnection = Math.Abs(parentConnector.Direction?.Z ?? 0) > 0.5;
-                    if (isVerticalConnection)
-                    {
-                        childU = parentCenter.U + (connection.U ?? 0);
-                        childV = parentCenter.V + (connection.V ?? 0) + verticalVExtra;
-                    }
-                    else
-                    {
-                        childU = parentCenter.U + (connection.U ?? 0) * horizontalScale;
-                        childV = parentCenter.V + (connection.V ?? 0) * horizontalScale;
-                    }
-                }
-
-                var childCenter = new Coord { U = Math.Round(childU, 6), V = Math.Round(childV, 6) };
-                var fixedPieceId = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.fixedPieceId")?.Value ?? "";
-                var parentPath = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.path")?.Value ?? "";
-
-                childPiece.Plane = childPlane;
-                childPiece.Center = childCenter;
-
-                var flatChildPiece = SetAttributes(childPiece, new[]
-                {
-                    ("semio.fixedPieceId", fixedPieceId),
-                    ("semio.parentPieceId", parentPiece.Guid),
-                    ("semio.depth", depths[childId].ToString()),
-                    ("semio.path", parentPath + "," + childPiece.Guid)
-                });
-                pieceMap[childId] = flatChildPiece;
-            };
-
-            bfs.Compute(rootNode);
-        }
-
-        flatDesign.Pieces = flatDesign.Pieces.Select(p => pieceMap.TryGetValue(p.Guid ?? "", out var mapped) ? mapped : p).ToList();
-        flatDesign.Connections = new List<Connection>();
-
-        var updatedPieces = flatDesign.Pieces.Select(flatPiece =>
-        {
-            var originalPiece = design.Pieces?.FirstOrDefault(p => p.Guid == flatPiece.Guid);
-            if (originalPiece == null) return null;
-
-            var pieceDiff = new PieceDiff();
-            bool hasChanges = false;
-
-            if (flatPiece.Plane != null && Utility.Serialize(flatPiece.Plane) != Utility.Serialize(originalPiece.Plane))
-            {
-                pieceDiff.Plane = flatPiece.Plane;
-                hasChanges = true;
-            }
-
-            if (flatPiece.Center != null && Utility.Serialize(flatPiece.Center) != Utility.Serialize(originalPiece.Center))
-            {
-                pieceDiff.Center = flatPiece.Center;
-                hasChanges = true;
-            }
-
-            if (Utility.Serialize(flatPiece.Attributes) != Utility.Serialize(originalPiece.Attributes))
-            {
-                pieceDiff.Attributes = flatPiece.Attributes.ToList();
-                hasChanges = true;
-            }
-
-            if (!hasChanges) return null;
-
-            return new PieceDiffUpdate
-            {
-                Piece = new PieceId { Guid = flatPiece.Guid },
-                Diff = pieceDiff
-            };
-        }).Where(u => u != null).Cast<PieceDiffUpdate>().ToList();
-
-        var removedConnections = (design.Connections ?? new List<Connection>())
-            .Select(c => new ConnectionId { Guid = c.Guid })
-            .ToList();
-
-        var designDiff = new DesignDiff();
-        if (updatedPieces.Count > 0) designDiff.Pieces = new PiecesDiff { Updated = updatedPieces };
-        if (removedConnections.Count > 0) designDiff.Connections = new ConnectionsDiff { Removed = removedConnections };
-
-        return designDiff;
-    }
-
-    public static DesignDiff ReplaceClusterWithDesign(Design originalDesign, List<string> clusterPieceIds, Design clusteredDesign, List<Connection> externalConnections)
-    {
-        var addedPieces = clusteredDesign.Pieces ?? new List<Piece>();
-        var addedConnections = clusteredDesign.Connections ?? new List<Connection>();
-
-        var addedClusteredConnections = externalConnections.Select(c =>
-        {
-            var newConnection = Utility.Deserialize<Connection>(Utility.Serialize(c));
-            if (newConnection != null) newConnection.Guid = System.Guid.NewGuid().ToString();
-            return newConnection;
-        }).Where(c => c != null).Cast<Connection>().ToList();
-
-        addedConnections.AddRange(addedClusteredConnections);
-
-        return new DesignDiff
-        {
-            Pieces = new PiecesDiff
-            {
-                Removed = clusterPieceIds.Select(id => new PieceId { Guid = id }).ToList(),
-                Added = addedPieces
-            },
-            Connections = new ConnectionsDiff
-            {
-                Removed = (originalDesign.Connections ?? new List<Connection>())
-                    .Where(c => clusterPieceIds.Contains(c.Connected.Piece.Guid) || clusterPieceIds.Contains(c.Connecting.Piece.Guid))
-                    .Select(c => new ConnectionId
-                    {
-                        Connected = new Side { Piece = new PieceId { Guid = c.Connected.Piece.Guid } },
-                        Connecting = new Side { Piece = new PieceId { Guid = c.Connecting.Piece.Guid } }
-                    }).ToList(),
-                Added = addedConnections
-            }
-        };
-    }
-
-    #endregion 🌤️Flatten Design
-
-    #region 🔩Kit Model Export
-    // Callers MUST use ExportDesignModel to produce a valid 3D file from a design.
-    // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
-    // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
-
-    /// <summary>📺Supported export formats keyed by file extension.</summary>
-    public static Dictionary<string, string> ExportModelFormats => new()
-    {
-        { ".glb", "GL Transmission Format Binary" },
-        { ".gltf", "GL Transmission Format" },
-        { ".obj", "Wavefront OBJ" },
-        { ".stl", "Stereolithography" },
-    };
-
-    /// <summary>
-    /// Exports the 3D model of a design to the specified format.
-    /// Uses block definitions for types and instances for pieces.
-    /// Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
-    /// </summary>
-    public static byte[] ExportDesignModel(Kit kit, string designId, string format = ".glb", string[] tags = null, Dictionary<string, object> options = null)
-    {
-        if (tags == null) tags = Array.Empty<string>();
-        if (options == null) options = new Dictionary<string, object>();
-        if (!ExportModelFormats.ContainsKey(format))
-            throw new ArgumentException($"Unsupported export format: {format}. Supported: {string.Join(", ", ExportModelFormats.Keys)}", nameof(format));
-
-        var design = FindDesign(kit, designId);
-        var pieces = design.Pieces ?? new List<Piece>();
-        var connections = design.Connections ?? new List<Connection>();
-        var types = kit.Types ?? new List<Type>();
-
-        if (pieces.Count == 0)
-            return ExportSceneBuilderToFormat(new SceneBuilder("empty"), format);
-
-        var typesDict = new Dictionary<string, Type>();
-        foreach (var t in types) typesDict[t.Guid] = t;
-        var piecesDict = new Dictionary<string, Piece>();
-        foreach (var p in pieces) piecesDict[p.Guid] = p;
-
-        var adjacency = new Dictionary<string, List<(Connection connection, string neighborGuid)>>();
-        foreach (var p in pieces) adjacency[p.Guid] = new List<(Connection, string)>();
-        foreach (var conn in connections)
-        {
-            var connectedGuid = conn.Connected.Piece.Guid;
-            var connectingGuid = conn.Connecting.Piece.Guid;
-            if (adjacency.ContainsKey(connectedGuid))
-                adjacency[connectedGuid].Add((conn, connectingGuid));
-            if (adjacency.ContainsKey(connectingGuid))
-                adjacency[connectingGuid].Add((conn, connectedGuid));
-        }
-
-        var piecePlanes = new Dictionary<string, Plane>();
-        var parentOf = new Dictionary<string, string>();
-        var childrenOf = new Dictionary<string, List<string>>();
-        foreach (var p in pieces) childrenOf[p.Guid] = new List<string>();
-
-        var visited = new HashSet<string>();
-        var roots = new List<string>();
-        var queue = new Queue<string>();
-
-        Type GetType(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
-        Connector GetConnector(Type type, string connectorGuid)
-        {
-            if (type == null) return null;
-            if (string.IsNullOrEmpty(connectorGuid))
-                return type.Connectors?.Count > 0 ? type.Connectors[0] : null;
-            return type.Connectors?.FirstOrDefault(c => c.Guid == connectorGuid);
-        }
-
-        foreach (var p in pieces)
-        {
-            if (p.Plane != null && p.Center != null)
-            {
-                piecePlanes[p.Guid] = p.Plane;
-                visited.Add(p.Guid);
-                queue.Enqueue(p.Guid);
-                roots.Add(p.Guid);
-            }
-        }
-
-        if (queue.Count == 0 && pieces.Count > 0)
-        {
-            var identityPlane = new Plane
-            {
-                Origin = new Point { X = 0, Y = 0, Z = 0 },
-                XAxis = new Vector { X = 1, Y = 0, Z = 0 },
-                YAxis = new Vector { X = 0, Y = 1, Z = 0 }
-            };
-            piecePlanes[pieces[0].Guid] = identityPlane;
-            visited.Add(pieces[0].Guid);
-            queue.Enqueue(pieces[0].Guid);
-            roots.Add(pieces[0].Guid);
-        }
-
-        while (queue.Count > 0)
-        {
-            var currentGuid = queue.Dequeue();
-            var currentPlane = piecePlanes[currentGuid];
-            if (!adjacency.TryGetValue(currentGuid, out var edges)) continue;
-            foreach (var edge in edges)
-            {
-                if (visited.Contains(edge.neighborGuid)) continue;
-                var conn = edge.connection;
-                var isParent = conn.Connected.Piece.Guid == currentGuid;
-                if (!isParent) continue;
-
-                var childGuid = edge.neighborGuid;
-                var parentPiece = piecesDict[currentGuid];
-                var childPiece = piecesDict[childGuid];
-                var parentType = parentPiece.Type != null ? GetType(parentPiece.Type.Guid) : null;
-                var childType = childPiece.Type != null ? GetType(childPiece.Type.Guid) : null;
-                var parentConnector = GetConnector(parentType, conn.Connected.Connector?.Guid);
-                var childConnector = GetConnector(childType, conn.Connecting.Connector?.Guid);
-
-                if (parentConnector != null && childConnector != null &&
-                    parentConnector.Point != null && parentConnector.Direction != null &&
-                    childConnector.Point != null && childConnector.Direction != null)
-                {
-                    piecePlanes[childGuid] = Design.DefaultComputeChildPlane(
-                        currentPlane, parentConnector.Point, parentConnector.Direction,
-                        childConnector.Point, childConnector.Direction,
-                        conn.Gap, conn.Shift, conn.Rise,
-                        conn.Rotation, conn.Turn, conn.Tilt);
-                }
-                else
-                {
-                    piecePlanes[childGuid] = currentPlane;
-                }
-
-                parentOf[childGuid] = currentGuid;
-                childrenOf[currentGuid].Add(childGuid);
-                visited.Add(childGuid);
-                queue.Enqueue(childGuid);
-            }
-        }
-
-        foreach (var p in pieces)
-        {
-            if (!visited.Contains(p.Guid))
-            {
-                piecePlanes[p.Guid] = new Plane
-                {
-                    Origin = new Point { X = 0, Y = 0, Z = 0 },
-                    XAxis = new Vector { X = 1, Y = 0, Z = 0 },
-                    YAxis = new Vector { X = 0, Y = 1, Z = 0 }
-                };
-                roots.Add(p.Guid);
-            }
-        }
-
-        var typeMeshBuilders = new Dictionary<string, IMeshBuilder<MaterialBuilder>>();
-        foreach (var piece in pieces)
-        {
-            var typeGuid = piece.Type?.Guid;
-            if (string.IsNullOrEmpty(typeGuid) || typeMeshBuilders.ContainsKey(typeGuid)) continue;
-            if (!typesDict.TryGetValue(typeGuid, out var type)) continue;
-
-            var model = ExportFindMatchingModel(kit, type, tags);
-            if (model != null)
-            {
-                var file = kit.Files?.FirstOrDefault(f => f.Guid == model.File.Guid);
-                if (file?.Blob != null)
-                {
-                    var fileBytes = ExportBlobToBytes(file.Blob);
-                    var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
-                    if (ext == ".glb")
-                    {
-                        var mb = ExportGlbToMeshBuilder(fileBytes, file.Name);
-                        if (mb != null) { typeMeshBuilders[typeGuid] = mb; continue; }
-                    }
-                }
-            }
-            typeMeshBuilders[typeGuid] = ExportCreateBoxMeshBuilder(type.Name);
-        }
-
-        var sceneBuilder = new SceneBuilder(design.Name ?? "design");
-
-        void BuildNodeHierarchy(string pieceGuid, NodeBuilder parent)
-        {
-            var piece = piecesDict[pieceGuid];
-            var worldPlane = piecePlanes[pieceGuid];
-
-            NodeBuilder node;
-            if (parent != null)
-            {
-                node = parent.CreateNode(piece.Name ?? piece.Guid);
-                var parentWorld = ExportPlaneToMatrix4x4(piecePlanes[parentOf[pieceGuid]]);
-                var childWorld = ExportPlaneToMatrix4x4(worldPlane);
-                System.Numerics.Matrix4x4.Invert(parentWorld, out var parentInv);
-                node.LocalMatrix = childWorld * parentInv;
-            }
-            else
-            {
-                node = new NodeBuilder(piece.Name ?? piece.Guid);
-                node.LocalMatrix = ExportPlaneToMatrix4x4(worldPlane);
-            }
-
-            var meshTypeGuid = piece.Type?.Guid;
-            if (!string.IsNullOrEmpty(meshTypeGuid) && typeMeshBuilders.TryGetValue(meshTypeGuid, out var meshBuilder))
-                sceneBuilder.AddRigidMesh(meshBuilder, node);
-            else
-                sceneBuilder.AddNode(node);
-
-            if (childrenOf.TryGetValue(pieceGuid, out var children))
-            {
-                foreach (var childGuid in children)
-                    BuildNodeHierarchy(childGuid, node);
-            }
-        }
-
-        foreach (var rootGuid in roots)
-            BuildNodeHierarchy(rootGuid, null);
-
-        return ExportSceneBuilderToFormat(sceneBuilder, format);
-    }
-
-    #region 🔧Kit Model Export Helpers
-
-    private static System.Numerics.Matrix4x4 ExportPlaneToMatrix4x4(Plane p)
-    {
-        var origin = new System.Numerics.Vector3((float)p.Origin.X, (float)p.Origin.Y, (float)p.Origin.Z);
-        var x = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)p.XAxis.X, (float)p.XAxis.Y, (float)p.XAxis.Z));
-        var yRaw = new System.Numerics.Vector3((float)p.YAxis.X, (float)p.YAxis.Y, (float)p.YAxis.Z);
-        var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
-        var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
-        return ExportApplySemioToGltfBasis(new System.Numerics.Matrix4x4(
-            x.X, x.Y, x.Z, 0,
-            y.X, y.Y, y.Z, 0,
-            z.X, z.Y, z.Z, 0,
-            origin.X, origin.Y, origin.Z, 1));
-    }
-
-    private static System.Numerics.Matrix4x4 ExportApplySemioToGltfBasis(System.Numerics.Matrix4x4 matrix)
-    {
-        var basis = new System.Numerics.Matrix4x4(
-            1, 0, 0, 0,
-            0, 0, -1, 0,
-            0, 1, 0, 0,
-            0, 0, 0, 1);
-        var inverse = new System.Numerics.Matrix4x4(
-            1, 0, 0, 0,
-            0, 0, 1, 0,
-            0, -1, 0, 0,
-            0, 0, 0, 1);
-        return System.Numerics.Matrix4x4.Multiply(System.Numerics.Matrix4x4.Multiply(inverse, matrix), basis);
-    }
-
-    private static byte[] ExportBlobToBytes(string blob)
-    {
-        var base64 = blob;
-        if (blob.StartsWith("data:"))
-        {
-            var commaIdx = blob.IndexOf(',');
-            if (commaIdx >= 0) base64 = blob.Substring(commaIdx + 1);
-        }
-        return Convert.FromBase64String(base64);
-    }
-
-    public static Model ExportFindMatchingModel(Kit kit, Type type, string[] tags)
-    {
-        if (type.Models == null || type.Models.Count == 0) return null;
-        if (tags == null || tags.Length == 0)
-        {
-            var defaultModel = type.Models.FirstOrDefault(m => m.Tags == null || m.Tags.Count == 0);
-            return defaultModel ?? type.Models[0];
-        }
-        var kitTags = kit.Tags ?? new List<Tag>();
-        var selectedTagGuids = new HashSet<string>();
-        foreach (var tagValue in tags)
-        {
-            var byGuid = kitTags.FirstOrDefault(t => t.Guid == tagValue);
-            if (byGuid != null)
-            {
-                selectedTagGuids.Add(byGuid.Guid);
-                continue;
-            }
-            foreach (var tag in kitTags.Where(t => t.Name == tagValue))
-                selectedTagGuids.Add(tag.Guid);
-        }
-        Model bestModel = null;
-        double bestScore = -1;
-        foreach (var model in type.Models)
-        {
-            var modelTagGuids = new HashSet<string>((model.Tags ?? new List<TagId>()).Select(t => t.Guid));
-            if (!selectedTagGuids.All(modelTagGuids.Contains)) continue;
-            var intersection = modelTagGuids.Intersect(selectedTagGuids).Count();
-            var union = modelTagGuids.Union(selectedTagGuids).Count();
-            var score = union > 0 ? (double)intersection / union : 0;
-            if (score > bestScore)
-            {
-                bestScore = score;
-                bestModel = model;
-            }
-        }
-        if (bestModel != null) return bestModel;
-        return type.Models[0];
-    }
-
-    private static IMeshBuilder<MaterialBuilder> ExportGlbToMeshBuilder(byte[] glbBytes, string name)
-    {
-        var srcModel = GltfModel.ReadGLB(new MemoryStream(glbBytes));
-        var meshBuilder = new MeshBuilder<VertexPositionNormal>(name);
-
-        foreach (var srcMesh in srcModel.LogicalMeshes)
-        {
-            foreach (var srcPrim in srcMesh.Primitives)
-            {
-                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
-                if (posAccessor == null) continue;
-                var positions = posAccessor.AsVector3Array();
-
-                var normAccessor = srcPrim.GetVertexAccessor("NORMAL");
-                var normals = normAccessor?.AsVector3Array();
-
-                var matBuilder = new MaterialBuilder(srcPrim.Material?.Name ?? "default")
-                    .WithMetallicRoughnessShader();
-
-                if (srcPrim.Material != null)
-                {
-                    var baseColor = srcPrim.Material.FindChannel("BaseColor");
-                    if (baseColor.HasValue)
-                        matBuilder.UseChannel(KnownChannel.BaseColor).Parameter = baseColor.Value.Color;
-                }
-
-                var prim = meshBuilder.UsePrimitive(matBuilder);
-
-                var idxAccessor = srcPrim.IndexAccessor;
-                if (idxAccessor != null)
-                {
-                    var indices = idxAccessor.AsIndicesArray();
-                    for (int i = 0; i + 2 < indices.Count; i += 3)
-                    {
-                        var i0 = (int)indices[i];
-                        var i1 = (int)indices[i + 1];
-                        var i2 = (int)indices[i + 2];
-                        prim.AddTriangle(
-                            new VertexPositionNormal(positions[i0], normals != null ? normals[i0] : System.Numerics.Vector3.UnitZ),
-                            new VertexPositionNormal(positions[i1], normals != null ? normals[i1] : System.Numerics.Vector3.UnitZ),
-                            new VertexPositionNormal(positions[i2], normals != null ? normals[i2] : System.Numerics.Vector3.UnitZ));
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i + 2 < positions.Count; i += 3)
-                    {
-                        prim.AddTriangle(
-                            new VertexPositionNormal(positions[i], normals != null ? normals[i] : System.Numerics.Vector3.UnitZ),
-                            new VertexPositionNormal(positions[i + 1], normals != null ? normals[i + 1] : System.Numerics.Vector3.UnitZ),
-                            new VertexPositionNormal(positions[i + 2], normals != null ? normals[i + 2] : System.Numerics.Vector3.UnitZ));
-                    }
-                }
-            }
-        }
-
-        return meshBuilder;
-    }
-
-    private static IMeshBuilder<MaterialBuilder> ExportCreateBoxMeshBuilder(string name)
-    {
-        var meshBuilder = new MeshBuilder<VertexPositionNormal>(name);
-        var material = new MaterialBuilder("default").WithUnlitShader();
-        var prim = meshBuilder.UsePrimitive(material);
-
-        const float h = 0.5f;
-        var v = new System.Numerics.Vector3[]
-        {
-            new(-h, -h, -h), new(h, -h, -h), new(h, h, -h), new(-h, h, -h),
-            new(-h, -h, h), new(h, -h, h), new(h, h, h), new(-h, h, h)
-        };
-        var uz = System.Numerics.Vector3.UnitZ;
-        var ux = System.Numerics.Vector3.UnitX;
-        var uy = System.Numerics.Vector3.UnitY;
-        VertexPositionNormal V(System.Numerics.Vector3 pos, System.Numerics.Vector3 nrm) => new(pos, nrm);
-        prim.AddTriangle(V(v[4], uz), V(v[5], uz), V(v[6], uz));
-        prim.AddTriangle(V(v[4], uz), V(v[6], uz), V(v[7], uz));
-        prim.AddTriangle(V(v[1], -uz), V(v[0], -uz), V(v[3], -uz));
-        prim.AddTriangle(V(v[1], -uz), V(v[3], -uz), V(v[2], -uz));
-        prim.AddTriangle(V(v[3], uy), V(v[7], uy), V(v[6], uy));
-        prim.AddTriangle(V(v[3], uy), V(v[6], uy), V(v[2], uy));
-        prim.AddTriangle(V(v[0], -uy), V(v[1], -uy), V(v[5], -uy));
-        prim.AddTriangle(V(v[0], -uy), V(v[5], -uy), V(v[4], -uy));
-        prim.AddTriangle(V(v[1], ux), V(v[2], ux), V(v[6], ux));
-        prim.AddTriangle(V(v[1], ux), V(v[6], ux), V(v[5], ux));
-        prim.AddTriangle(V(v[0], -ux), V(v[4], -ux), V(v[7], -ux));
-        prim.AddTriangle(V(v[0], -ux), V(v[7], -ux), V(v[3], -ux));
-
-        return meshBuilder;
-    }
-
-    private static byte[] ExportSceneBuilderToFormat(SceneBuilder sceneBuilder, string format)
-    {
-        var modelRoot = sceneBuilder.ToGltf2();
-        modelRoot.Asset.Generator = "semio";
-
-        switch (format)
-        {
-            case ".glb":
-                {
-                    using var ms = new MemoryStream();
-                    modelRoot.WriteGLB(ms);
-                    return ms.ToArray();
-                }
-            case ".gltf":
-                {
-                    var tmpDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid());
-                    System.IO.Directory.CreateDirectory(tmpDir);
-                    try
-                    {
-                        var gltfPath = System.IO.Path.Combine(tmpDir, "model.gltf");
-                        modelRoot.SaveGLTF(gltfPath);
-                        var gltfJson = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(gltfPath));
-                        foreach (var buffer in gltfJson["buffers"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
-                        {
-                            var uri = buffer["uri"]?.Value<string>();
-                            if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
-                            var path = System.IO.Path.Combine(tmpDir, uri);
-                            if (!System.IO.File.Exists(path)) continue;
-                            var bytes = System.IO.File.ReadAllBytes(path);
-                            buffer["uri"] = "data:application/octet-stream;base64," + Convert.ToBase64String(bytes);
-                        }
-                        foreach (var image in gltfJson["images"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
-                        {
-                            var uri = image["uri"]?.Value<string>();
-                            if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
-                            var path = System.IO.Path.Combine(tmpDir, uri);
-                            if (!System.IO.File.Exists(path)) continue;
-                            var mime = image["mimeType"]?.Value<string>() ?? "application/octet-stream";
-                            var bytes = System.IO.File.ReadAllBytes(path);
-                            image["uri"] = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
-                        }
-                        return Encoding.UTF8.GetBytes(gltfJson.ToString(Formatting.None));
-                    }
-                    finally
-                    {
-                        System.IO.Directory.Delete(tmpDir, true);
-                    }
-                }
-            case ".obj":
-                return ExportModelRootToObj(modelRoot);
-            case ".stl":
-                return ExportModelRootToStl(modelRoot);
-            default:
-                throw new ArgumentException($"Unsupported export format: {format}");
-        }
-    }
-
-    #region ❄️Geometric Insights
-    // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
-
-    /// <summary>🔷Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).</summary>
-    public class GeometricInsights
-    {
-        public Point? BoundingBoxMin { get; set; }
-        public Point? BoundingBoxMax { get; set; }
-        public double DimensionX { get; set; }
-        public double DimensionY { get; set; }
-        public double DimensionZ { get; set; }
-        public double CharacteristicLength { get; set; }
-        public double FootprintArea { get; set; }
-        public double TotalSurfaceArea { get; set; }
-        public double EnclosedVolume { get; set; }
-        public double SurfaceToVolumeRatio { get; set; }
-        public double AspectRatioXy { get; set; }
-        public double AspectRatioXz { get; set; }
-        public double AspectRatioYz { get; set; }
-        public bool IsWatertight { get; set; }
-        public Point? Centroid { get; set; }
-        public double Slenderness { get; set; }
-        public int VertexCount { get; set; }
-        public int FaceCount { get; set; }
-        public int EulerCharacteristic { get; set; }
-    }
-
-    public static GeometricInsights GetGeometricInsightsForModel(object model)
-    {
-        GltfModel root;
-        if (model is string path)
-        {
-            if (!System.IO.File.Exists(path))
-                throw new FileNotFoundException("Model file not found", path);
-            var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
-            if (ext != ".glb" && ext != ".gltf")
-                throw new ArgumentException("Model MUST be .glb or .gltf", nameof(model));
-            root = GltfModel.Load(path);
-        }
-        else if (model is byte[] bytes)
-        {
-            using var ms = new MemoryStream(bytes);
-            if (bytes.Length >= 4 && Encoding.ASCII.GetString(bytes, 0, 4) == "glTF")
-                root = GltfModel.ReadGLB(ms);
-            else
-            {
-                var tmp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid().ToString("N") + ".gltf");
-                try
-                {
-                    System.IO.File.WriteAllBytes(tmp, bytes);
-                    root = GltfModel.Load(tmp);
-                }
-                finally { try { System.IO.File.Delete(tmp); } catch { } }
-            }
-        }
-        else
-            throw new ArgumentException("Model must be string path or byte[]", nameof(model));
-
-        var out_ = new GeometricInsights();
-        double sxMin = double.MaxValue, syMin = double.MaxValue, szMin = double.MaxValue;
-        double sxMax = double.MinValue, syMax = double.MinValue, szMax = double.MinValue;
-        double sumSx = 0, sumSy = 0, sumSz = 0;
-        double totalArea = 0, totalVolume = 0;
-        int vertexCount = 0, faceCount = 0;
-
-        foreach (var mesh in root.LogicalMeshes)
-        {
-            foreach (var prim in mesh.Primitives)
-            {
-                var posAcc = prim.GetVertexAccessor("POSITION");
-                if (posAcc == null) continue;
-                var positions = posAcc.AsVector3Array();
-                var idxAcc = prim.IndexAccessor;
-                int n = positions.Count;
-                for (int i = 0; i < n; i++)
-                {
-                    var p = positions[i];
-                    double xg = p.X, yg = p.Y, _zg = p.Z;
-                    double sx = xg, sy = -xg, sz = yg;
-                    if (sx < sxMin) sxMin = sx; if (sx > sxMax) sxMax = sx;
-                    if (sy < syMin) syMin = sy; if (sy > syMax) syMax = sy;
-                    if (sz < szMin) szMin = sz; if (sz > szMax) szMax = sz;
-                    sumSx += sx; sumSy += sy; sumSz += sz;
-                }
-                vertexCount += n;
-                if (idxAcc != null)
-                {
-                    var indices = idxAcc.AsIndicesArray();
-                    for (int i = 0; i + 2 < indices.Count; i += 3)
-                    {
-                        int i0 = (int)indices[i], i1 = (int)indices[i + 1], i2 = (int)indices[i + 2];
-                        var a = positions[i0]; var b = positions[i1]; var c = positions[i2];
-                        var ab = b - a; var ac = c - a;
-                        var cross = Vector3.Cross(ab, ac);
-                        totalArea += 0.5 * cross.Length();
-                        totalVolume += (1.0 / 6.0) * Vector3.Dot(a, Vector3.Cross(b, c));
-                        faceCount++;
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i + 2 < n; i += 3)
-                    {
-                        var a = positions[i]; var b = positions[i + 1]; var c = positions[i + 2];
-                        var ab = b - a; var ac = c - a;
-                        totalArea += 0.5 * Vector3.Cross(ab, ac).Length();
-                        totalVolume += (1.0 / 6.0) * Vector3.Dot(a, Vector3.Cross(b, c));
-                        faceCount++;
-                    }
-                }
-            }
-        }
-
-        if (vertexCount == 0) return out_;
-
-        out_.BoundingBoxMin = new Point { X = (float)sxMin, Y = (float)syMin, Z = (float)szMin };
-        out_.BoundingBoxMax = new Point { X = (float)sxMax, Y = (float)syMax, Z = (float)szMax };
-        out_.DimensionX = sxMax - sxMin;
-        out_.DimensionY = syMax - syMin;
-        out_.DimensionZ = szMax - szMin;
-        out_.CharacteristicLength = Math.Pow(out_.DimensionX * out_.DimensionY * out_.DimensionZ, 1.0 / 3.0);
-        out_.FootprintArea = out_.DimensionX * out_.DimensionZ;
-        out_.TotalSurfaceArea = totalArea;
-        out_.VertexCount = vertexCount;
-        out_.FaceCount = faceCount;
-        double nV = vertexCount;
-        out_.Centroid = new Point { X = (float)(sumSx / nV), Y = (float)(sumSy / nV), Z = (float)(sumSz / nV) };
-        totalVolume = Math.Abs(totalVolume);
-        out_.EnclosedVolume = totalVolume;
-        if (totalVolume > 1e-20 && totalArea > 0)
-            out_.SurfaceToVolumeRatio = totalArea / totalVolume;
-        if (out_.DimensionY > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXy = out_.DimensionX / out_.DimensionY;
-        if (out_.DimensionZ > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXz = out_.DimensionX / out_.DimensionZ;
-        if (out_.DimensionZ > 1e-10 && out_.DimensionY > 1e-10) out_.AspectRatioYz = out_.DimensionY / out_.DimensionZ;
-        double maxExt = Math.Max(out_.DimensionX, Math.Max(out_.DimensionY, out_.DimensionZ));
-        if (maxExt > 1e-10 && totalArea > 0)
-            out_.Slenderness = maxExt / Math.Pow(totalArea * maxExt, 1.0 / 3.0);
-        out_.EulerCharacteristic = vertexCount - (3 * faceCount) / 2 + faceCount;
-        return out_;
-    }
-
-    #endregion ❄️Geometric Insights
-
-    private static byte[] ExportModelRootToObj(GltfModel model)
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine("# Generated by semio");
-        int vertexOffset = 1;
-        int normalOffset = 1;
-
-        foreach (var node in model.DefaultScene.VisualChildren)
-            ExportNodeToObj(node, System.Numerics.Matrix4x4.Identity, sb, ref vertexOffset, ref normalOffset);
-
-        return Encoding.UTF8.GetBytes(sb.ToString());
-    }
-
-    private static void ExportNodeToObj(GltfNode node, System.Numerics.Matrix4x4 parentWorld,
-        StringBuilder sb, ref int vertexOffset, ref int normalOffset)
-    {
-        var worldMatrix = node.LocalMatrix * parentWorld;
-
-        if (node.Mesh != null)
-        {
-            sb.AppendLine($"g {node.Name ?? "mesh"}");
-            foreach (var srcPrim in node.Mesh.Primitives)
-            {
-                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
-                if (posAccessor == null) continue;
-                var positions = posAccessor.AsVector3Array();
-                var normAccessor = srcPrim.GetVertexAccessor("NORMAL");
-                var normals = normAccessor?.AsVector3Array();
-
-                int startVert = vertexOffset;
-                int startNorm = normalOffset;
-
-                foreach (var pos in positions)
-                {
-                    var wp = System.Numerics.Vector3.Transform(pos, worldMatrix);
-                    sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "v {0:G9} {1:G9} {2:G9}", wp.X, wp.Y, wp.Z));
-                    vertexOffset++;
-                }
-
-                if (normals != null)
-                {
-                    foreach (var norm in normals)
-                    {
-                        var wn = System.Numerics.Vector3.Normalize(
-                            System.Numerics.Vector3.TransformNormal(norm, worldMatrix));
-                        sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "vn {0:G9} {1:G9} {2:G9}", wn.X, wn.Y, wn.Z));
-                        normalOffset++;
-                    }
-                }
-
-                var idxAccessor = srcPrim.IndexAccessor;
-                if (idxAccessor != null)
-                {
-                    var indices = idxAccessor.AsIndicesArray();
-                    for (int i = 0; i + 2 < indices.Count; i += 3)
-                    {
-                        var i0 = (int)indices[i] + startVert;
-                        var i1 = (int)indices[i + 1] + startVert;
-                        var i2 = (int)indices[i + 2] + startVert;
-                        if (normals != null)
-                        {
-                            var n0 = (int)indices[i] + startNorm;
-                            var n1 = (int)indices[i + 1] + startNorm;
-                            var n2 = (int)indices[i + 2] + startNorm;
-                            sb.AppendLine($"f {i0}//{n0} {i1}//{n1} {i2}//{n2}");
-                        }
-                        else
-                        {
-                            sb.AppendLine($"f {i0} {i1} {i2}");
-                        }
-                    }
-                }
-            }
-        }
-
-        foreach (var child in node.VisualChildren)
-            ExportNodeToObj(child, worldMatrix, sb, ref vertexOffset, ref normalOffset);
-    }
-
-    private static byte[] ExportModelRootToStl(GltfModel model)
-    {
-        var triangles = new List<(System.Numerics.Vector3 normal, System.Numerics.Vector3 v0, System.Numerics.Vector3 v1, System.Numerics.Vector3 v2)>();
-
-        foreach (var node in model.DefaultScene.VisualChildren)
-            ExportNodeToStlTriangles(node, System.Numerics.Matrix4x4.Identity, triangles);
-
-        using var ms = new MemoryStream();
-        using var writer = new BinaryWriter(ms);
-
-        var header = new byte[80];
-        Encoding.ASCII.GetBytes("semio STL", 0, 9, header, 0);
-        writer.Write(header);
-        writer.Write((uint)triangles.Count);
-
-        foreach (var (normal, v0, v1, v2) in triangles)
-        {
-            writer.Write(normal.X); writer.Write(normal.Y); writer.Write(normal.Z);
-            writer.Write(v0.X); writer.Write(v0.Y); writer.Write(v0.Z);
-            writer.Write(v1.X); writer.Write(v1.Y); writer.Write(v1.Z);
-            writer.Write(v2.X); writer.Write(v2.Y); writer.Write(v2.Z);
-            writer.Write((ushort)0);
-        }
-
-        return ms.ToArray();
-    }
-
-    private static void ExportNodeToStlTriangles(GltfNode node, System.Numerics.Matrix4x4 parentWorld,
-        List<(System.Numerics.Vector3, System.Numerics.Vector3, System.Numerics.Vector3, System.Numerics.Vector3)> triangles)
-    {
-        var worldMatrix = node.LocalMatrix * parentWorld;
-
-        if (node.Mesh != null)
-        {
-            foreach (var srcPrim in node.Mesh.Primitives)
-            {
-                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
-                if (posAccessor == null) continue;
-                var positions = posAccessor.AsVector3Array();
-
-                var idxAccessor = srcPrim.IndexAccessor;
-                if (idxAccessor != null)
-                {
-                    var indices = idxAccessor.AsIndicesArray();
-                    for (int i = 0; i + 2 < indices.Count; i += 3)
-                    {
-                        var p0 = System.Numerics.Vector3.Transform(positions[(int)indices[i]], worldMatrix);
-                        var p1 = System.Numerics.Vector3.Transform(positions[(int)indices[i + 1]], worldMatrix);
-                        var p2 = System.Numerics.Vector3.Transform(positions[(int)indices[i + 2]], worldMatrix);
-                        var normal = System.Numerics.Vector3.Normalize(
-                            System.Numerics.Vector3.Cross(p1 - p0, p2 - p0));
-                        if (float.IsNaN(normal.X)) normal = System.Numerics.Vector3.UnitZ;
-                        triangles.Add((normal, p0, p1, p2));
-                    }
-                }
-            }
-        }
-
-        foreach (var child in node.VisualChildren)
-            ExportNodeToStlTriangles(child, worldMatrix, triangles);
-    }
-
-    #endregion 🔧Kit Model Export Helpers
-
-    #endregion 🔩Kit Model Export
 }
 
 #endregion ⏱️Kit
+
+
+public partial class Kit
+{
 
 
 
@@ -9648,6 +8650,7 @@ public static class MetaShallowConversions
 #endregion 📎Meta And Shallow Conversions
 
 #endregion 🔑Meta And Shallow
+
 
 
 
@@ -11787,6 +10790,1079 @@ public static class Hashing
 
 
 
+#region 📦Kit Diff Validation
+
+public sealed class KitDiffValidationNote
+{
+    [JsonProperty("code", NullValueHandling = NullValueHandling.Ignore)]
+    public string? Code { get; set; }
+    [JsonProperty("message")]
+    public string Message { get; set; } = "";
+}
+
+public sealed class KitDiffValidationResult
+{
+    [JsonProperty("ok")]
+    public bool Ok { get; set; }
+    public List<KitDiffValidationNote> Errors { get; set; } = new();
+    public List<KitDiffValidationNote> Warnings { get; set; } = new();
+    [JsonProperty("diff", NullValueHandling = NullValueHandling.Ignore)]
+    public KitDiff? Diff { get; set; }
+}
+
+#endregion 📦Kit Diff Validation
+
+
+#region 🌤️Flatten Design
+// Callers MUST use FlattenDesign to compute a DesignDiff that assigns world-space planes to all pieces.
+
+public partial class Kit
+{
+
+    public static DesignDiff FlattenDesign(Kit kit, string designId)
+    {
+        var design = FindDesign(kit, designId);
+        if (design.Pieces == null || design.Pieces.Count == 0) return new DesignDiff();
+
+        var typesDict = (kit.Types ?? new List<Type>()).ToDictionary(t => t.Guid);
+
+        Type? GetConnectorType(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
+
+        Connector? GetConnector(Type? type, string? connectorGuid)
+        {
+            if (type == null) return null;
+
+            if (string.IsNullOrEmpty(connectorGuid))
+            {
+                if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
+                if (!string.IsNullOrEmpty(type.Parent?.Guid))
+                {
+                    var parentType = GetConnectorType(type.Parent.Guid);
+                    return GetConnector(parentType, connectorGuid);
+                }
+                return null;
+            }
+
+            if (type.Connectors != null && type.Connectors.Count > 0)
+            {
+                var connector = type.Connectors.FirstOrDefault(p => p.Guid == connectorGuid);
+                if (connector != null) return connector;
+            }
+
+            if (!string.IsNullOrEmpty(type.Parent?.Guid))
+            {
+                var parentType = GetConnectorType(type.Parent.Guid);
+                var connector = GetConnector(parentType, connectorGuid);
+                if (connector != null) return connector;
+            }
+
+            if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
+
+            return null;
+        }
+
+        var flatDesignJson = Utility.Serialize(design);
+        var flatDesign = Utility.Deserialize<Design>(flatDesignJson);
+        if (flatDesign == null) return new DesignDiff();
+
+        if (flatDesign.Pieces == null) flatDesign.Pieces = new List<Piece>();
+
+        var piecePlanes = new Dictionary<string, Plane>();
+        var pieceMap = new Dictionary<string, Piece>();
+        foreach (var p in flatDesign.Pieces)
+        {
+            if (!string.IsNullOrEmpty(p.Guid)) pieceMap[p.Guid] = p;
+        }
+
+        var filteredConnections = (flatDesign.Connections ?? new List<Connection>()).Where(connection =>
+        {
+            var sourceId = connection.Connected.Piece.Guid;
+            var targetId = connection.Connecting.Piece.Guid;
+            return pieceMap.ContainsKey(sourceId) && pieceMap.ContainsKey(targetId);
+        }).ToList();
+
+        var graph = new UndirectedGraph<string, Edge<string>>();
+        foreach (var p in flatDesign.Pieces) graph.AddVertex(p.Guid);
+        foreach (var c in filteredConnections) graph.AddEdge(new Edge<string>(c.Connected.Piece.Guid, c.Connecting.Piece.Guid));
+
+        var algorithm = new ConnectedComponentsAlgorithm<string, Edge<string>>(graph);
+        algorithm.Compute();
+
+        var components = algorithm.Components;
+        var componentDict = new Dictionary<int, List<string>>();
+        foreach (var kvp in components)
+        {
+            if (!componentDict.ContainsKey(kvp.Value)) componentDict[kvp.Value] = new List<string>();
+            componentDict[kvp.Value].Add(kvp.Key);
+        }
+
+        Piece SetAttributes(Piece piece, IEnumerable<(string key, string value)> newAttrs)
+        {
+            var updatedAttrs = piece.Attributes?.ToList() ?? new List<Attribute>();
+            foreach (var newAttr in newAttrs)
+            {
+                var existingIndex = updatedAttrs.FindIndex(a => a.Key == newAttr.key);
+                if (existingIndex >= 0)
+                    updatedAttrs[existingIndex].Value = newAttr.value;
+                else
+                    updatedAttrs.Add(new Attribute { Guid = System.Guid.NewGuid().ToString(), Key = newAttr.key, Value = newAttr.value });
+            }
+            piece.Attributes = updatedAttrs;
+            return piece;
+        }
+
+        foreach (var component in componentDict.Values)
+        {
+            var roots = component.Where(nodeId =>
+            {
+                var piece = pieceMap.TryGetValue(nodeId, out var p) ? p : null;
+                return piece?.Plane != null && piece?.Center != null;
+            }).ToList();
+
+            var rootNode = roots.Count > 0 ? roots[0] : (component.Count > 0 ? component[0] : null);
+            if (string.IsNullOrEmpty(rootNode)) continue;
+
+            var rootPiece = pieceMap[rootNode];
+            if (string.IsNullOrEmpty(rootPiece.Guid)) continue;
+
+            var updatedRootPiece = SetAttributes(rootPiece, new[]
+            {
+                ("semio.fixedPieceId", rootPiece.Guid),
+                ("semio.depth", "0"),
+                ("semio.path", rootPiece.Guid)
+            });
+            pieceMap[rootNode] = updatedRootPiece;
+
+            Plane rootPlane = rootPiece.Plane ?? new Plane { XAxis = new Vector { X = 1, Y = 0, Z = 0 }, YAxis = new Vector { X = 0, Y = 1, Z = 0 }, Origin = new Point { X = 0, Y = 0, Z = 0 } };
+            piecePlanes[rootPiece.Guid] = rootPlane;
+
+            var rootPieceIndex = flatDesign.Pieces.FindIndex(p => p.Guid == rootPiece.Guid);
+            if (rootPieceIndex != -1)
+            {
+                flatDesign.Pieces[rootPieceIndex].Plane = rootPlane;
+                flatDesign.Pieces[rootPieceIndex].Center ??= new Coord { U = 0, V = 0 };
+            }
+
+            var bfs = new UndirectedBreadthFirstSearchAlgorithm<string, Edge<string>>(graph);
+            var depths = new Dictionary<string, int>();
+            depths[rootNode] = 0;
+
+            bfs.TreeEdge += (sender, e) =>
+            {
+                var parentId = depths.ContainsKey(e.Source) ? e.Source : e.Target;
+                var childId = parentId == e.Source ? e.Target : e.Source;
+                depths[childId] = depths[parentId] + 1;
+
+                var parentPiece = pieceMap.TryGetValue(parentId, out var pp) ? pp : null;
+                var childPiece = pieceMap.TryGetValue(childId, out var cp) ? cp : null;
+                if (parentPiece == null || childPiece == null || string.IsNullOrEmpty(parentPiece.Guid) || string.IsNullOrEmpty(childPiece.Guid)) return;
+                if (piecePlanes.ContainsKey(childPiece.Guid)) return;
+                if (!piecePlanes.TryGetValue(parentPiece.Guid, out var parentPlane)) return;
+
+                var connection = filteredConnections.FirstOrDefault(c =>
+                    (c.Connected.Piece.Guid == parentId && c.Connecting.Piece.Guid == childId) ||
+                    (c.Connecting.Piece.Guid == parentId && c.Connected.Piece.Guid == childId));
+                if (connection == null) return;
+
+                var parentSide = connection.Connected.Piece.Guid == parentId ? connection.Connected : connection.Connecting;
+                var childSide = connection.Connecting.Piece.Guid == childId ? connection.Connecting : connection.Connected;
+
+                var parentType = parentPiece.Type != null ? GetConnectorType(parentPiece.Type.Guid) : null;
+                var childType = childPiece.Type != null ? GetConnectorType(childPiece.Type.Guid) : null;
+
+                var parentConnector = GetConnector(parentType, parentSide.Connector?.Guid);
+                var childConnector = GetConnector(childType, childSide.Connector?.Guid);
+
+                if (parentConnector == null || childConnector == null) return;
+                if (parentConnector.Point == null || parentConnector.Direction == null || childConnector.Point == null || childConnector.Direction == null) return;
+
+                var childPlane = Design.DefaultComputeChildPlane(
+                    parentPlane, parentConnector.Point, parentConnector.Direction,
+                    childConnector.Point, childConnector.Direction,
+                    connection.Gap, connection.Shift, connection.Rise,
+                    connection.Rotation, connection.Turn, connection.Tilt);
+                piecePlanes[childPiece.Guid] = childPlane;
+
+                var radius = 2.697;
+                var verticalVExtra = 1.0;
+                var horizontalScale = 3.0633;
+                var parentCenter = parentPiece.Center ?? new Coord { U = 0, V = 0 };
+
+                double childU, childV;
+                if (parentCenter.U == 0 && parentCenter.V == 0)
+                {
+                    var angle = 2 * Math.PI * parentConnector.T;
+                    childU = radius * Math.Sin(angle);
+                    childV = radius * Math.Cos(angle);
+                }
+                else
+                {
+                    var isVerticalConnection = Math.Abs(parentConnector.Direction?.Z ?? 0) > 0.5;
+                    if (isVerticalConnection)
+                    {
+                        childU = parentCenter.U + (connection.U ?? 0);
+                        childV = parentCenter.V + (connection.V ?? 0) + verticalVExtra;
+                    }
+                    else
+                    {
+                        childU = parentCenter.U + (connection.U ?? 0) * horizontalScale;
+                        childV = parentCenter.V + (connection.V ?? 0) * horizontalScale;
+                    }
+                }
+
+                var childCenter = new Coord { U = Math.Round(childU, 6), V = Math.Round(childV, 6) };
+                var fixedPieceId = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.fixedPieceId")?.Value ?? "";
+                var parentPath = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.path")?.Value ?? "";
+
+                childPiece.Plane = childPlane;
+                childPiece.Center = childCenter;
+
+                var flatChildPiece = SetAttributes(childPiece, new[]
+                {
+                    ("semio.fixedPieceId", fixedPieceId),
+                    ("semio.parentPieceId", parentPiece.Guid),
+                    ("semio.depth", depths[childId].ToString()),
+                    ("semio.path", parentPath + "," + childPiece.Guid)
+                });
+                pieceMap[childId] = flatChildPiece;
+            };
+
+            bfs.Compute(rootNode);
+        }
+
+        flatDesign.Pieces = flatDesign.Pieces.Select(p => pieceMap.TryGetValue(p.Guid ?? "", out var mapped) ? mapped : p).ToList();
+        flatDesign.Connections = new List<Connection>();
+
+        var updatedPieces = flatDesign.Pieces.Select(flatPiece =>
+        {
+            var originalPiece = design.Pieces?.FirstOrDefault(p => p.Guid == flatPiece.Guid);
+            if (originalPiece == null) return null;
+
+            var pieceDiff = new PieceDiff();
+            bool hasChanges = false;
+
+            if (flatPiece.Plane != null && Utility.Serialize(flatPiece.Plane) != Utility.Serialize(originalPiece.Plane))
+            {
+                pieceDiff.Plane = flatPiece.Plane;
+                hasChanges = true;
+            }
+
+            if (flatPiece.Center != null && Utility.Serialize(flatPiece.Center) != Utility.Serialize(originalPiece.Center))
+            {
+                pieceDiff.Center = flatPiece.Center;
+                hasChanges = true;
+            }
+
+            if (Utility.Serialize(flatPiece.Attributes) != Utility.Serialize(originalPiece.Attributes))
+            {
+                pieceDiff.Attributes = flatPiece.Attributes.ToList();
+                hasChanges = true;
+            }
+
+            if (!hasChanges) return null;
+
+            return new PieceDiffUpdate
+            {
+                Piece = new PieceId { Guid = flatPiece.Guid },
+                Diff = pieceDiff
+            };
+        }).Where(u => u != null).Cast<PieceDiffUpdate>().ToList();
+
+        var removedConnections = (design.Connections ?? new List<Connection>())
+            .Select(c => new ConnectionId { Guid = c.Guid })
+            .ToList();
+
+        var designDiff = new DesignDiff();
+        if (updatedPieces.Count > 0) designDiff.Pieces = new PiecesDiff { Updated = updatedPieces };
+        if (removedConnections.Count > 0) designDiff.Connections = new ConnectionsDiff { Removed = removedConnections };
+
+        return designDiff;
+    }
+
+    public static DesignDiff ReplaceClusterWithDesign(Design originalDesign, List<string> clusterPieceIds, Design clusteredDesign, List<Connection> externalConnections)
+    {
+        var addedPieces = clusteredDesign.Pieces ?? new List<Piece>();
+        var addedConnections = clusteredDesign.Connections ?? new List<Connection>();
+
+        var addedClusteredConnections = externalConnections.Select(c =>
+        {
+            var newConnection = Utility.Deserialize<Connection>(Utility.Serialize(c));
+            if (newConnection != null) newConnection.Guid = System.Guid.NewGuid().ToString();
+            return newConnection;
+        }).Where(c => c != null).Cast<Connection>().ToList();
+
+        addedConnections.AddRange(addedClusteredConnections);
+
+        return new DesignDiff
+        {
+            Pieces = new PiecesDiff
+            {
+                Removed = clusterPieceIds.Select(id => new PieceId { Guid = id }).ToList(),
+                Added = addedPieces
+            },
+            Connections = new ConnectionsDiff
+            {
+                Removed = (originalDesign.Connections ?? new List<Connection>())
+                    .Where(c => clusterPieceIds.Contains(c.Connected.Piece.Guid) || clusterPieceIds.Contains(c.Connecting.Piece.Guid))
+                    .Select(c => new ConnectionId
+                    {
+                        Connected = new Side { Piece = new PieceId { Guid = c.Connected.Piece.Guid } },
+                        Connecting = new Side { Piece = new PieceId { Guid = c.Connecting.Piece.Guid } }
+                    }).ToList(),
+                Added = addedConnections
+            }
+        };
+    }
+
+    #endregion 🌤️Flatten Design
+}
+
+#endregion 🌤️Flatten Design
+
+
+#region 🔩Kit Model Export
+// Callers MUST use ExportDesignModel to produce a valid 3D file from a design.
+
+public partial class Kit
+{
+
+    /// <summary>📺Supported export formats keyed by file extension.</summary>
+    public static Dictionary<string, string> ExportModelFormats => new()
+    {
+        { ".glb", "GL Transmission Format Binary" },
+        { ".gltf", "GL Transmission Format" },
+        { ".obj", "Wavefront OBJ" },
+        { ".stl", "Stereolithography" },
+    };
+
+    /// <summary>
+    /// Exports the 3D model of a design to the specified format.
+    /// Uses block definitions for types and instances for pieces.
+    /// Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
+    /// </summary>
+    public static byte[] ExportDesignModel(Kit kit, string designId, string format = ".glb", string[] tags = null, Dictionary<string, object> options = null)
+    {
+        if (tags == null) tags = Array.Empty<string>();
+        if (options == null) options = new Dictionary<string, object>();
+        if (!ExportModelFormats.ContainsKey(format))
+            throw new ArgumentException($"Unsupported export format: {format}. Supported: {string.Join(", ", ExportModelFormats.Keys)}", nameof(format));
+
+        var design = FindDesign(kit, designId);
+        var pieces = design.Pieces ?? new List<Piece>();
+        var connections = design.Connections ?? new List<Connection>();
+        var types = kit.Types ?? new List<Type>();
+
+        if (pieces.Count == 0)
+            return ExportSceneBuilderToFormat(new SceneBuilder("empty"), format);
+
+        var typesDict = new Dictionary<string, Type>();
+        foreach (var t in types) typesDict[t.Guid] = t;
+        var piecesDict = new Dictionary<string, Piece>();
+        foreach (var p in pieces) piecesDict[p.Guid] = p;
+
+        var adjacency = new Dictionary<string, List<(Connection connection, string neighborGuid)>>();
+        foreach (var p in pieces) adjacency[p.Guid] = new List<(Connection, string)>();
+        foreach (var conn in connections)
+        {
+            var connectedGuid = conn.Connected.Piece.Guid;
+            var connectingGuid = conn.Connecting.Piece.Guid;
+            if (adjacency.ContainsKey(connectedGuid))
+                adjacency[connectedGuid].Add((conn, connectingGuid));
+            if (adjacency.ContainsKey(connectingGuid))
+                adjacency[connectingGuid].Add((conn, connectedGuid));
+        }
+
+        var piecePlanes = new Dictionary<string, Plane>();
+        var parentOf = new Dictionary<string, string>();
+        var childrenOf = new Dictionary<string, List<string>>();
+        foreach (var p in pieces) childrenOf[p.Guid] = new List<string>();
+
+        var visited = new HashSet<string>();
+        var roots = new List<string>();
+        var queue = new Queue<string>();
+
+        Type GetType(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
+        Connector GetConnector(Type type, string connectorGuid)
+        {
+            if (type == null) return null;
+            if (string.IsNullOrEmpty(connectorGuid))
+                return type.Connectors?.Count > 0 ? type.Connectors[0] : null;
+            return type.Connectors?.FirstOrDefault(c => c.Guid == connectorGuid);
+        }
+
+        foreach (var p in pieces)
+        {
+            if (p.Plane != null && p.Center != null)
+            {
+                piecePlanes[p.Guid] = p.Plane;
+                visited.Add(p.Guid);
+                queue.Enqueue(p.Guid);
+                roots.Add(p.Guid);
+            }
+        }
+
+        if (queue.Count == 0 && pieces.Count > 0)
+        {
+            var identityPlane = new Plane
+            {
+                Origin = new Point { X = 0, Y = 0, Z = 0 },
+                XAxis = new Vector { X = 1, Y = 0, Z = 0 },
+                YAxis = new Vector { X = 0, Y = 1, Z = 0 }
+            };
+            piecePlanes[pieces[0].Guid] = identityPlane;
+            visited.Add(pieces[0].Guid);
+            queue.Enqueue(pieces[0].Guid);
+            roots.Add(pieces[0].Guid);
+        }
+
+        while (queue.Count > 0)
+        {
+            var currentGuid = queue.Dequeue();
+            var currentPlane = piecePlanes[currentGuid];
+            if (!adjacency.TryGetValue(currentGuid, out var edges)) continue;
+            foreach (var edge in edges)
+            {
+                if (visited.Contains(edge.neighborGuid)) continue;
+                var conn = edge.connection;
+                var isParent = conn.Connected.Piece.Guid == currentGuid;
+                if (!isParent) continue;
+
+                var childGuid = edge.neighborGuid;
+                var parentPiece = piecesDict[currentGuid];
+                var childPiece = piecesDict[childGuid];
+                var parentType = parentPiece.Type != null ? GetType(parentPiece.Type.Guid) : null;
+                var childType = childPiece.Type != null ? GetType(childPiece.Type.Guid) : null;
+                var parentConnector = GetConnector(parentType, conn.Connected.Connector?.Guid);
+                var childConnector = GetConnector(childType, conn.Connecting.Connector?.Guid);
+
+                if (parentConnector != null && childConnector != null &&
+                    parentConnector.Point != null && parentConnector.Direction != null &&
+                    childConnector.Point != null && childConnector.Direction != null)
+                {
+                    piecePlanes[childGuid] = Design.DefaultComputeChildPlane(
+                        currentPlane, parentConnector.Point, parentConnector.Direction,
+                        childConnector.Point, childConnector.Direction,
+                        conn.Gap, conn.Shift, conn.Rise,
+                        conn.Rotation, conn.Turn, conn.Tilt);
+                }
+                else
+                {
+                    piecePlanes[childGuid] = currentPlane;
+                }
+
+                parentOf[childGuid] = currentGuid;
+                childrenOf[currentGuid].Add(childGuid);
+                visited.Add(childGuid);
+                queue.Enqueue(childGuid);
+            }
+        }
+
+        foreach (var p in pieces)
+        {
+            if (!visited.Contains(p.Guid))
+            {
+                piecePlanes[p.Guid] = new Plane
+                {
+                    Origin = new Point { X = 0, Y = 0, Z = 0 },
+                    XAxis = new Vector { X = 1, Y = 0, Z = 0 },
+                    YAxis = new Vector { X = 0, Y = 1, Z = 0 }
+                };
+                roots.Add(p.Guid);
+            }
+        }
+
+        var typeMeshBuilders = new Dictionary<string, IMeshBuilder<MaterialBuilder>>();
+        foreach (var piece in pieces)
+        {
+            var typeGuid = piece.Type?.Guid;
+            if (string.IsNullOrEmpty(typeGuid) || typeMeshBuilders.ContainsKey(typeGuid)) continue;
+            if (!typesDict.TryGetValue(typeGuid, out var type)) continue;
+
+            var model = ExportFindMatchingModel(kit, type, tags);
+            if (model != null)
+            {
+                var file = kit.Files?.FirstOrDefault(f => f.Guid == model.File.Guid);
+                if (file?.Blob != null)
+                {
+                    var fileBytes = ExportBlobToBytes(file.Blob);
+                    var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
+                    if (ext == ".glb")
+                    {
+                        var mb = ExportGlbToMeshBuilder(fileBytes, file.Name);
+                        if (mb != null) { typeMeshBuilders[typeGuid] = mb; continue; }
+                    }
+                }
+            }
+            typeMeshBuilders[typeGuid] = ExportCreateBoxMeshBuilder(type.Name);
+        }
+
+        var sceneBuilder = new SceneBuilder(design.Name ?? "design");
+
+        void BuildNodeHierarchy(string pieceGuid, NodeBuilder parent)
+        {
+            var piece = piecesDict[pieceGuid];
+            var worldPlane = piecePlanes[pieceGuid];
+
+            NodeBuilder node;
+            if (parent != null)
+            {
+                node = parent.CreateNode(piece.Name ?? piece.Guid);
+                var parentWorld = ExportPlaneToMatrix4x4(piecePlanes[parentOf[pieceGuid]]);
+                var childWorld = ExportPlaneToMatrix4x4(worldPlane);
+                System.Numerics.Matrix4x4.Invert(parentWorld, out var parentInv);
+                node.LocalMatrix = childWorld * parentInv;
+            }
+            else
+            {
+                node = new NodeBuilder(piece.Name ?? piece.Guid);
+                node.LocalMatrix = ExportPlaneToMatrix4x4(worldPlane);
+            }
+
+            var meshTypeGuid = piece.Type?.Guid;
+            if (!string.IsNullOrEmpty(meshTypeGuid) && typeMeshBuilders.TryGetValue(meshTypeGuid, out var meshBuilder))
+                sceneBuilder.AddRigidMesh(meshBuilder, node);
+            else
+                sceneBuilder.AddNode(node);
+
+            if (childrenOf.TryGetValue(pieceGuid, out var children))
+            {
+                foreach (var childGuid in children)
+                    BuildNodeHierarchy(childGuid, node);
+            }
+        }
+
+        foreach (var rootGuid in roots)
+            BuildNodeHierarchy(rootGuid, null);
+
+        return ExportSceneBuilderToFormat(sceneBuilder, format);
+    }
+
+    #region 🔧Kit Model Export Helpers
+
+    private static System.Numerics.Matrix4x4 ExportPlaneToMatrix4x4(Plane p)
+    {
+        var origin = new System.Numerics.Vector3((float)p.Origin.X, (float)p.Origin.Y, (float)p.Origin.Z);
+        var x = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)p.XAxis.X, (float)p.XAxis.Y, (float)p.XAxis.Z));
+        var yRaw = new System.Numerics.Vector3((float)p.YAxis.X, (float)p.YAxis.Y, (float)p.YAxis.Z);
+        var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
+        var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
+        return ExportApplySemioToGltfBasis(new System.Numerics.Matrix4x4(
+            x.X, x.Y, x.Z, 0,
+            y.X, y.Y, y.Z, 0,
+            z.X, z.Y, z.Z, 0,
+            origin.X, origin.Y, origin.Z, 1));
+    }
+
+    private static System.Numerics.Matrix4x4 ExportApplySemioToGltfBasis(System.Numerics.Matrix4x4 matrix)
+    {
+        var basis = new System.Numerics.Matrix4x4(
+            1, 0, 0, 0,
+            0, 0, -1, 0,
+            0, 1, 0, 0,
+            0, 0, 0, 1);
+        var inverse = new System.Numerics.Matrix4x4(
+            1, 0, 0, 0,
+            0, 0, 1, 0,
+            0, -1, 0, 0,
+            0, 0, 0, 1);
+        return System.Numerics.Matrix4x4.Multiply(System.Numerics.Matrix4x4.Multiply(inverse, matrix), basis);
+    }
+
+    private static byte[] ExportBlobToBytes(string blob)
+    {
+        var base64 = blob;
+        if (blob.StartsWith("data:"))
+        {
+            var commaIdx = blob.IndexOf(',');
+            if (commaIdx >= 0) base64 = blob.Substring(commaIdx + 1);
+        }
+        return Convert.FromBase64String(base64);
+    }
+
+    public static Model ExportFindMatchingModel(Kit kit, Type type, string[] tags)
+    {
+        if (type.Models == null || type.Models.Count == 0) return null;
+        if (tags == null || tags.Length == 0)
+        {
+            var defaultModel = type.Models.FirstOrDefault(m => m.Tags == null || m.Tags.Count == 0);
+            return defaultModel ?? type.Models[0];
+        }
+        var kitTags = kit.Tags ?? new List<Tag>();
+        var selectedTagGuids = new HashSet<string>();
+        foreach (var tagValue in tags)
+        {
+            var byGuid = kitTags.FirstOrDefault(t => t.Guid == tagValue);
+            if (byGuid != null)
+            {
+                selectedTagGuids.Add(byGuid.Guid);
+                continue;
+            }
+            foreach (var tag in kitTags.Where(t => t.Name == tagValue))
+                selectedTagGuids.Add(tag.Guid);
+        }
+        Model bestModel = null;
+        double bestScore = -1;
+        foreach (var model in type.Models)
+        {
+            var modelTagGuids = new HashSet<string>((model.Tags ?? new List<TagId>()).Select(t => t.Guid));
+            if (!selectedTagGuids.All(modelTagGuids.Contains)) continue;
+            var intersection = modelTagGuids.Intersect(selectedTagGuids).Count();
+            var union = modelTagGuids.Union(selectedTagGuids).Count();
+            var score = union > 0 ? (double)intersection / union : 0;
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestModel = model;
+            }
+        }
+        if (bestModel != null) return bestModel;
+        return type.Models[0];
+    }
+
+    private static IMeshBuilder<MaterialBuilder> ExportGlbToMeshBuilder(byte[] glbBytes, string name)
+    {
+        var srcModel = GltfModel.ReadGLB(new MemoryStream(glbBytes));
+        var meshBuilder = new MeshBuilder<VertexPositionNormal>(name);
+
+        foreach (var srcMesh in srcModel.LogicalMeshes)
+        {
+            foreach (var srcPrim in srcMesh.Primitives)
+            {
+                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
+                if (posAccessor == null) continue;
+                var positions = posAccessor.AsVector3Array();
+
+                var normAccessor = srcPrim.GetVertexAccessor("NORMAL");
+                var normals = normAccessor?.AsVector3Array();
+
+                var matBuilder = new MaterialBuilder(srcPrim.Material?.Name ?? "default")
+                    .WithMetallicRoughnessShader();
+
+                if (srcPrim.Material != null)
+                {
+                    var baseColor = srcPrim.Material.FindChannel("BaseColor");
+                    if (baseColor.HasValue)
+                        matBuilder.UseChannel(KnownChannel.BaseColor).Parameter = baseColor.Value.Color;
+                }
+
+                var prim = meshBuilder.UsePrimitive(matBuilder);
+
+                var idxAccessor = srcPrim.IndexAccessor;
+                if (idxAccessor != null)
+                {
+                    var indices = idxAccessor.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        var i0 = (int)indices[i];
+                        var i1 = (int)indices[i + 1];
+                        var i2 = (int)indices[i + 2];
+                        prim.AddTriangle(
+                            new VertexPositionNormal(positions[i0], normals != null ? normals[i0] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i1], normals != null ? normals[i1] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i2], normals != null ? normals[i2] : System.Numerics.Vector3.UnitZ));
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i + 2 < positions.Count; i += 3)
+                    {
+                        prim.AddTriangle(
+                            new VertexPositionNormal(positions[i], normals != null ? normals[i] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i + 1], normals != null ? normals[i + 1] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i + 2], normals != null ? normals[i + 2] : System.Numerics.Vector3.UnitZ));
+                    }
+                }
+            }
+        }
+
+        return meshBuilder;
+    }
+
+    private static IMeshBuilder<MaterialBuilder> ExportCreateBoxMeshBuilder(string name)
+    {
+        var meshBuilder = new MeshBuilder<VertexPositionNormal>(name);
+        var material = new MaterialBuilder("default").WithUnlitShader();
+        var prim = meshBuilder.UsePrimitive(material);
+
+        const float h = 0.5f;
+        var v = new System.Numerics.Vector3[]
+        {
+            new(-h, -h, -h), new(h, -h, -h), new(h, h, -h), new(-h, h, -h),
+            new(-h, -h, h), new(h, -h, h), new(h, h, h), new(-h, h, h)
+        };
+        var uz = System.Numerics.Vector3.UnitZ;
+        var ux = System.Numerics.Vector3.UnitX;
+        var uy = System.Numerics.Vector3.UnitY;
+        VertexPositionNormal V(System.Numerics.Vector3 pos, System.Numerics.Vector3 nrm) => new(pos, nrm);
+        prim.AddTriangle(V(v[4], uz), V(v[5], uz), V(v[6], uz));
+        prim.AddTriangle(V(v[4], uz), V(v[6], uz), V(v[7], uz));
+        prim.AddTriangle(V(v[1], -uz), V(v[0], -uz), V(v[3], -uz));
+        prim.AddTriangle(V(v[1], -uz), V(v[3], -uz), V(v[2], -uz));
+        prim.AddTriangle(V(v[3], uy), V(v[7], uy), V(v[6], uy));
+        prim.AddTriangle(V(v[3], uy), V(v[6], uy), V(v[2], uy));
+        prim.AddTriangle(V(v[0], -uy), V(v[1], -uy), V(v[5], -uy));
+        prim.AddTriangle(V(v[0], -uy), V(v[5], -uy), V(v[4], -uy));
+        prim.AddTriangle(V(v[1], ux), V(v[2], ux), V(v[6], ux));
+        prim.AddTriangle(V(v[1], ux), V(v[6], ux), V(v[5], ux));
+        prim.AddTriangle(V(v[0], -ux), V(v[4], -ux), V(v[7], -ux));
+        prim.AddTriangle(V(v[0], -ux), V(v[7], -ux), V(v[3], -ux));
+
+        return meshBuilder;
+    }
+
+    private static byte[] ExportSceneBuilderToFormat(SceneBuilder sceneBuilder, string format)
+    {
+        var modelRoot = sceneBuilder.ToGltf2();
+        modelRoot.Asset.Generator = "semio";
+
+        switch (format)
+        {
+            case ".glb":
+                {
+                    using var ms = new MemoryStream();
+                    modelRoot.WriteGLB(ms);
+                    return ms.ToArray();
+                }
+            case ".gltf":
+                {
+                    var tmpDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid());
+                    System.IO.Directory.CreateDirectory(tmpDir);
+                    try
+                    {
+                        var gltfPath = System.IO.Path.Combine(tmpDir, "model.gltf");
+                        modelRoot.SaveGLTF(gltfPath);
+                        var gltfJson = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(gltfPath));
+                        foreach (var buffer in gltfJson["buffers"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
+                        {
+                            var uri = buffer["uri"]?.Value<string>();
+                            if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
+                            var path = System.IO.Path.Combine(tmpDir, uri);
+                            if (!System.IO.File.Exists(path)) continue;
+                            var bytes = System.IO.File.ReadAllBytes(path);
+                            buffer["uri"] = "data:application/octet-stream;base64," + Convert.ToBase64String(bytes);
+                        }
+                        foreach (var image in gltfJson["images"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
+                        {
+                            var uri = image["uri"]?.Value<string>();
+                            if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
+                            var path = System.IO.Path.Combine(tmpDir, uri);
+                            if (!System.IO.File.Exists(path)) continue;
+                            var mime = image["mimeType"]?.Value<string>() ?? "application/octet-stream";
+                            var bytes = System.IO.File.ReadAllBytes(path);
+                            image["uri"] = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+                        }
+                        return Encoding.UTF8.GetBytes(gltfJson.ToString(Formatting.None));
+                    }
+                    finally
+                    {
+                        System.IO.Directory.Delete(tmpDir, true);
+                    }
+                }
+            case ".obj":
+                return ExportModelRootToObj(modelRoot);
+            case ".stl":
+                return ExportModelRootToStl(modelRoot);
+            default:
+                throw new ArgumentException($"Unsupported export format: {format}");
+        }
+    }
+
+    #region ❄️Geometric Insights
+    // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+
+    /// <summary>🔷Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).</summary>
+    public class GeometricInsights
+    {
+        public Point? BoundingBoxMin { get; set; }
+        public Point? BoundingBoxMax { get; set; }
+        public double DimensionX { get; set; }
+        public double DimensionY { get; set; }
+        public double DimensionZ { get; set; }
+        public double CharacteristicLength { get; set; }
+        public double FootprintArea { get; set; }
+        public double TotalSurfaceArea { get; set; }
+        public double EnclosedVolume { get; set; }
+        public double SurfaceToVolumeRatio { get; set; }
+        public double AspectRatioXy { get; set; }
+        public double AspectRatioXz { get; set; }
+        public double AspectRatioYz { get; set; }
+        public bool IsWatertight { get; set; }
+        public Point? Centroid { get; set; }
+        public double Slenderness { get; set; }
+        public int VertexCount { get; set; }
+        public int FaceCount { get; set; }
+        public int EulerCharacteristic { get; set; }
+    }
+
+    public static GeometricInsights GetGeometricInsightsForModel(object model)
+    {
+        GltfModel root;
+        if (model is string path)
+        {
+            if (!System.IO.File.Exists(path))
+                throw new FileNotFoundException("Model file not found", path);
+            var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+            if (ext != ".glb" && ext != ".gltf")
+                throw new ArgumentException("Model MUST be .glb or .gltf", nameof(model));
+            root = GltfModel.Load(path);
+        }
+        else if (model is byte[] bytes)
+        {
+            using var ms = new MemoryStream(bytes);
+            if (bytes.Length >= 4 && Encoding.ASCII.GetString(bytes, 0, 4) == "glTF")
+                root = GltfModel.ReadGLB(ms);
+            else
+            {
+                var tmp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid().ToString("N") + ".gltf");
+                try
+                {
+                    System.IO.File.WriteAllBytes(tmp, bytes);
+                    root = GltfModel.Load(tmp);
+                }
+                finally { try { System.IO.File.Delete(tmp); } catch { } }
+            }
+        }
+        else
+            throw new ArgumentException("Model must be string path or byte[]", nameof(model));
+
+        var out_ = new GeometricInsights();
+        double sxMin = double.MaxValue, syMin = double.MaxValue, szMin = double.MaxValue;
+        double sxMax = double.MinValue, syMax = double.MinValue, szMax = double.MinValue;
+        double sumSx = 0, sumSy = 0, sumSz = 0;
+        double totalArea = 0, totalVolume = 0;
+        int vertexCount = 0, faceCount = 0;
+
+        foreach (var mesh in root.LogicalMeshes)
+        {
+            foreach (var prim in mesh.Primitives)
+            {
+                var posAcc = prim.GetVertexAccessor("POSITION");
+                if (posAcc == null) continue;
+                var positions = posAcc.AsVector3Array();
+                var idxAcc = prim.IndexAccessor;
+                int n = positions.Count;
+                for (int i = 0; i < n; i++)
+                {
+                    var p = positions[i];
+                    double xg = p.X, yg = p.Y, _zg = p.Z;
+                    double sx = xg, sy = -xg, sz = yg;
+                    if (sx < sxMin) sxMin = sx; if (sx > sxMax) sxMax = sx;
+                    if (sy < syMin) syMin = sy; if (sy > syMax) syMax = sy;
+                    if (sz < szMin) szMin = sz; if (sz > szMax) szMax = sz;
+                    sumSx += sx; sumSy += sy; sumSz += sz;
+                }
+                vertexCount += n;
+                if (idxAcc != null)
+                {
+                    var indices = idxAcc.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        int i0 = (int)indices[i], i1 = (int)indices[i + 1], i2 = (int)indices[i + 2];
+                        var a = positions[i0]; var b = positions[i1]; var c = positions[i2];
+                        var ab = b - a; var ac = c - a;
+                        var cross = Vector3.Cross(ab, ac);
+                        totalArea += 0.5 * cross.Length();
+                        totalVolume += (1.0 / 6.0) * Vector3.Dot(a, Vector3.Cross(b, c));
+                        faceCount++;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i + 2 < n; i += 3)
+                    {
+                        var a = positions[i]; var b = positions[i + 1]; var c = positions[i + 2];
+                        var ab = b - a; var ac = c - a;
+                        totalArea += 0.5 * Vector3.Cross(ab, ac).Length();
+                        totalVolume += (1.0 / 6.0) * Vector3.Dot(a, Vector3.Cross(b, c));
+                        faceCount++;
+                    }
+                }
+            }
+        }
+
+        if (vertexCount == 0) return out_;
+
+        out_.BoundingBoxMin = new Point { X = (float)sxMin, Y = (float)syMin, Z = (float)szMin };
+        out_.BoundingBoxMax = new Point { X = (float)sxMax, Y = (float)syMax, Z = (float)szMax };
+        out_.DimensionX = sxMax - sxMin;
+        out_.DimensionY = syMax - syMin;
+        out_.DimensionZ = szMax - szMin;
+        out_.CharacteristicLength = Math.Pow(out_.DimensionX * out_.DimensionY * out_.DimensionZ, 1.0 / 3.0);
+        out_.FootprintArea = out_.DimensionX * out_.DimensionZ;
+        out_.TotalSurfaceArea = totalArea;
+        out_.VertexCount = vertexCount;
+        out_.FaceCount = faceCount;
+        double nV = vertexCount;
+        out_.Centroid = new Point { X = (float)(sumSx / nV), Y = (float)(sumSy / nV), Z = (float)(sumSz / nV) };
+        totalVolume = Math.Abs(totalVolume);
+        out_.EnclosedVolume = totalVolume;
+        if (totalVolume > 1e-20 && totalArea > 0)
+            out_.SurfaceToVolumeRatio = totalArea / totalVolume;
+        if (out_.DimensionY > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXy = out_.DimensionX / out_.DimensionY;
+        if (out_.DimensionZ > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXz = out_.DimensionX / out_.DimensionZ;
+        if (out_.DimensionZ > 1e-10 && out_.DimensionY > 1e-10) out_.AspectRatioYz = out_.DimensionY / out_.DimensionZ;
+        double maxExt = Math.Max(out_.DimensionX, Math.Max(out_.DimensionY, out_.DimensionZ));
+        if (maxExt > 1e-10 && totalArea > 0)
+            out_.Slenderness = maxExt / Math.Pow(totalArea * maxExt, 1.0 / 3.0);
+        out_.EulerCharacteristic = vertexCount - (3 * faceCount) / 2 + faceCount;
+        return out_;
+    }
+
+    #endregion ❄️Geometric Insights
+
+    private static byte[] ExportModelRootToObj(GltfModel model)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("# Generated by semio");
+        int vertexOffset = 1;
+        int normalOffset = 1;
+
+        foreach (var node in model.DefaultScene.VisualChildren)
+            ExportNodeToObj(node, System.Numerics.Matrix4x4.Identity, sb, ref vertexOffset, ref normalOffset);
+
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    private static void ExportNodeToObj(GltfNode node, System.Numerics.Matrix4x4 parentWorld,
+        StringBuilder sb, ref int vertexOffset, ref int normalOffset)
+    {
+        var worldMatrix = node.LocalMatrix * parentWorld;
+
+        if (node.Mesh != null)
+        {
+            sb.AppendLine($"g {node.Name ?? "mesh"}");
+            foreach (var srcPrim in node.Mesh.Primitives)
+            {
+                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
+                if (posAccessor == null) continue;
+                var positions = posAccessor.AsVector3Array();
+                var normAccessor = srcPrim.GetVertexAccessor("NORMAL");
+                var normals = normAccessor?.AsVector3Array();
+
+                int startVert = vertexOffset;
+                int startNorm = normalOffset;
+
+                foreach (var pos in positions)
+                {
+                    var wp = System.Numerics.Vector3.Transform(pos, worldMatrix);
+                    sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "v {0:G9} {1:G9} {2:G9}", wp.X, wp.Y, wp.Z));
+                    vertexOffset++;
+                }
+
+                if (normals != null)
+                {
+                    foreach (var norm in normals)
+                    {
+                        var wn = System.Numerics.Vector3.Normalize(
+                            System.Numerics.Vector3.TransformNormal(norm, worldMatrix));
+                        sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "vn {0:G9} {1:G9} {2:G9}", wn.X, wn.Y, wn.Z));
+                        normalOffset++;
+                    }
+                }
+
+                var idxAccessor = srcPrim.IndexAccessor;
+                if (idxAccessor != null)
+                {
+                    var indices = idxAccessor.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        var i0 = (int)indices[i] + startVert;
+                        var i1 = (int)indices[i + 1] + startVert;
+                        var i2 = (int)indices[i + 2] + startVert;
+                        if (normals != null)
+                        {
+                            var n0 = (int)indices[i] + startNorm;
+                            var n1 = (int)indices[i + 1] + startNorm;
+                            var n2 = (int)indices[i + 2] + startNorm;
+                            sb.AppendLine($"f {i0}//{n0} {i1}//{n1} {i2}//{n2}");
+                        }
+                        else
+                        {
+                            sb.AppendLine($"f {i0} {i1} {i2}");
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach (var child in node.VisualChildren)
+            ExportNodeToObj(child, worldMatrix, sb, ref vertexOffset, ref normalOffset);
+    }
+
+    private static byte[] ExportModelRootToStl(GltfModel model)
+    {
+        var triangles = new List<(System.Numerics.Vector3 normal, System.Numerics.Vector3 v0, System.Numerics.Vector3 v1, System.Numerics.Vector3 v2)>();
+
+        foreach (var node in model.DefaultScene.VisualChildren)
+            ExportNodeToStlTriangles(node, System.Numerics.Matrix4x4.Identity, triangles);
+
+        using var ms = new MemoryStream();
+        using var writer = new BinaryWriter(ms);
+
+        var header = new byte[80];
+        Encoding.ASCII.GetBytes("semio STL", 0, 9, header, 0);
+        writer.Write(header);
+        writer.Write((uint)triangles.Count);
+
+        foreach (var (normal, v0, v1, v2) in triangles)
+        {
+            writer.Write(normal.X); writer.Write(normal.Y); writer.Write(normal.Z);
+            writer.Write(v0.X); writer.Write(v0.Y); writer.Write(v0.Z);
+            writer.Write(v1.X); writer.Write(v1.Y); writer.Write(v1.Z);
+            writer.Write(v2.X); writer.Write(v2.Y); writer.Write(v2.Z);
+            writer.Write((ushort)0);
+        }
+
+        return ms.ToArray();
+    }
+
+    private static void ExportNodeToStlTriangles(GltfNode node, System.Numerics.Matrix4x4 parentWorld,
+        List<(System.Numerics.Vector3, System.Numerics.Vector3, System.Numerics.Vector3, System.Numerics.Vector3)> triangles)
+    {
+        var worldMatrix = node.LocalMatrix * parentWorld;
+
+        if (node.Mesh != null)
+        {
+            foreach (var srcPrim in node.Mesh.Primitives)
+            {
+                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
+                if (posAccessor == null) continue;
+                var positions = posAccessor.AsVector3Array();
+
+                var idxAccessor = srcPrim.IndexAccessor;
+                if (idxAccessor != null)
+                {
+                    var indices = idxAccessor.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        var p0 = System.Numerics.Vector3.Transform(positions[(int)indices[i]], worldMatrix);
+                        var p1 = System.Numerics.Vector3.Transform(positions[(int)indices[i + 1]], worldMatrix);
+                        var p2 = System.Numerics.Vector3.Transform(positions[(int)indices[i + 2]], worldMatrix);
+                        var normal = System.Numerics.Vector3.Normalize(
+                            System.Numerics.Vector3.Cross(p1 - p0, p2 - p0));
+                        if (float.IsNaN(normal.X)) normal = System.Numerics.Vector3.UnitZ;
+                        triangles.Add((normal, p0, p1, p2));
+                    }
+                }
+            }
+        }
+
+        foreach (var child in node.VisualChildren)
+            ExportNodeToStlTriangles(child, worldMatrix, triangles);
+    }
+
+    #endregion 🔧Kit Model Export Helpers
+}
+
+#endregion 🔩Kit Model Export
+
+
+
+
+
+
 #region 🎪Api
 // Callers MUST use these methods to communicate with the semio engine.
 
@@ -11914,378 +11990,6 @@ public class ServerException : Exception
 
 #endregion 🎪Api
 
-
-
-
-#region 📦Kit Diff Validation
-
-public sealed class KitDiffValidationNote
-{
-    [JsonProperty("code", NullValueHandling = NullValueHandling.Ignore)]
-    public string? Code { get; set; }
-    [JsonProperty("message")]
-    public string Message { get; set; } = "";
-}
-
-public sealed class KitDiffValidationResult
-{
-    [JsonProperty("ok")]
-    public bool Ok { get; set; }
-    public List<KitDiffValidationNote> Errors { get; set; } = new();
-    public List<KitDiffValidationNote> Warnings { get; set; } = new();
-    [JsonProperty("diff", NullValueHandling = NullValueHandling.Ignore)]
-    public KitDiff? Diff { get; set; }
-}
-
-#endregion 📦Kit Diff Validation
-
-
-
-
-
-#region 🎪ZipRoundtrip
-// Callers MUST use these methods to import and export kits as ZIP archives.
-
-public class KitImportResult
-{
-    public Kit Kit { get; set; } = new();
-    public Dictionary<string, byte[]> Files { get; set; } = new();
-}
-
-public static class ZipRoundtrip
-{
-    private static string BuildFolderPath(Kit kit, string folderGuid)
-    {
-        if (kit.Folders == null) return "";
-        foreach (var f in kit.Folders)
-        {
-            if (f.Guid == folderGuid)
-            {
-                if (f.Parent != null)
-                {
-                    var parentPath = BuildFolderPath(kit, f.Parent?.Guid);
-                    if (!string.IsNullOrEmpty(parentPath))
-                        return $"{parentPath}/{f.Name}";
-                }
-                return f.Name;
-            }
-        }
-        return "";
-    }
-
-    private static string BuildFilePath(Kit kit, File file)
-    {
-        if (file.Folder != null && !string.IsNullOrEmpty(file.Folder.Guid))
-        {
-            var folderPath = BuildFolderPath(kit, file.Folder.Guid);
-            if (!string.IsNullOrEmpty(folderPath))
-                return $"{folderPath}/{file.Name}";
-        }
-        return file.Name;
-    }
-
-    public static KitImportResult ImportKit(string zipPath)
-    {
-        var result = new KitImportResult();
-        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
-        Directory.CreateDirectory(tempDir);
-
-        try
-        {
-            ZipFile.ExtractToDirectory(zipPath, tempDir);
-
-            var kitDbPath = Path.Combine(tempDir, ".semio", "kit.db");
-            var kitJsonPath = Path.Combine(tempDir, "kit.json");
-
-            if (System.IO.File.Exists(kitDbPath))
-            {
-                result.Kit = KitSqlite.LoadKit(tempDir);
-            }
-            else if (System.IO.File.Exists(kitJsonPath))
-            {
-                var kitJson = System.IO.File.ReadAllText(kitJsonPath);
-                result.Kit = Utility.Deserialize<Kit>(kitJson)!;
-            }
-            else
-            {
-                throw new FileNotFoundException("No kit data found in zip (expected .semio/kit.db or kit.json)");
-            }
-
-            foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
-            {
-                var relativePath = file.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
-                if (relativePath != "kit.json" && !relativePath.StartsWith(".semio/"))
-                    result.Files[relativePath] = System.IO.File.ReadAllBytes(file);
-            }
-
-            if (result.Kit.Files != null)
-            {
-                foreach (var kitFile in result.Kit.Files)
-                {
-                    var filePath = BuildFilePath(result.Kit, kitFile);
-                    if (result.Files.TryGetValue(filePath, out var bytes))
-                    {
-                        kitFile.Blob = $"data:application/octet-stream;base64,{Convert.ToBase64String(bytes)}";
-                    }
-                }
-            }
-        }
-        finally
-        {
-            if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, true);
-        }
-
-        return result;
-    }
-
-    public static void ExportKit(Kit kit, string zipPath)
-    {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
-        Directory.CreateDirectory(tempDir);
-
-        try
-        {
-
-            var kitForZip = kitJson_StripBlobs(kit);
-            var kitJsonStr = Utility.Serialize(kitForZip);
-            System.IO.File.WriteAllText(Path.Combine(tempDir, "kit.json"), kitJsonStr);
-
-            if (kit.Files != null)
-            {
-                foreach (var file in kit.Files)
-                {
-                    if (!string.IsNullOrEmpty(file.Blob))
-                    {
-                        var filePath = BuildFilePath(kit, file);
-                        var fullPath = Path.Combine(tempDir, filePath);
-                        var dir = Path.GetDirectoryName(fullPath);
-                        if (!string.IsNullOrEmpty(dir))
-                            Directory.CreateDirectory(dir);
-                        var blobData = file.Blob.StartsWith("data:") && file.Blob.Contains(",")
-                            ? file.Blob.Substring(file.Blob.IndexOf(',') + 1)
-                            : file.Blob;
-                        System.IO.File.WriteAllBytes(fullPath, Convert.FromBase64String(blobData));
-                    }
-                }
-            }
-
-            if (System.IO.File.Exists(zipPath))
-                System.IO.File.Delete(zipPath);
-            ZipFile.CreateFromDirectory(tempDir, zipPath);
-        }
-        finally
-        {
-            if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, true);
-        }
-    }
-
-    private static Kit kitJson_StripBlobs(Kit kit)
-    {
-        var json = Utility.Serialize(kit);
-        var clone = Utility.Deserialize<Kit>(json)!;
-        if (clone.Files != null)
-        {
-            foreach (var file in clone.Files)
-            {
-                file.Blob = null;
-            }
-        }
-        return clone;
-    }
-
-    private static Kit LoadKitFromSqlite(string dbPath)
-    {
-        using var connection = new SqliteConnection($"Data Source={dbPath}");
-        connection.Open();
-
-        var kit = new Kit();
-
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = "SELECT guid, name, version, description, icon, image, preview, remote, homepage, license FROM kit LIMIT 1";
-            using var reader = cmd.ExecuteReader();
-            if (reader.Read())
-            {
-                kit.Guid = reader.GetString(0);
-                kit.Name = reader.GetString(1);
-                kit.Version = reader.IsDBNull(2) ? "" : reader.GetString(2);
-                kit.Description = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                kit.Icon = reader.IsDBNull(4) ? "" : reader.GetString(4);
-                kit.Image = reader.IsDBNull(5) ? "" : reader.GetString(5);
-                kit.Preview = reader.IsDBNull(6) ? "" : reader.GetString(6);
-                kit.Remote = reader.IsDBNull(7) ? "" : reader.GetString(7);
-                kit.Homepage = reader.IsDBNull(8) ? "" : reader.GetString(8);
-                kit.License = reader.IsDBNull(9) ? "" : reader.GetString(9);
-            }
-        }
-
-        kit.Types = LoadTypes(connection, kit.Guid);
-        kit.Designs = LoadDesigns(connection, kit.Guid);
-
-        return kit;
-    }
-
-    private static List<Type> LoadTypes(SqliteConnection connection, string kitGuid)
-    {
-        var types = new List<Type>();
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = @kitGuid";
-        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
-
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
-        {
-            var t = new Type
-            {
-                Guid = reader.GetString(0),
-                Name = reader.GetString(1),
-                Parent = reader.IsDBNull(2) ? null : new TypeId { Guid = reader.GetString(2) },
-                IsAbstract = !reader.IsDBNull(3) && reader.GetBoolean(3),
-                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                Stock = reader.IsDBNull(5) ? 2147483647 : reader.GetInt32(5),
-                Virtual = !reader.IsDBNull(6) && reader.GetBoolean(6),
-                Unit = reader.IsDBNull(7) ? "" : reader.GetString(7),
-                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
-                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
-                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
-            };
-            types.Add(t);
-        }
-        return types;
-    }
-
-    private static List<Design> LoadDesigns(SqliteConnection connection, string kitGuid)
-    {
-        var designs = new List<Design>();
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image FROM design WHERE kit_guid = @kitGuid";
-        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
-
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
-        {
-            var d = new Design
-            {
-                Guid = reader.GetString(0),
-                Name = reader.GetString(1),
-                Parent = reader.IsDBNull(2) ? null : new DesignId { Guid = reader.GetString(2) },
-                Unit = reader.IsDBNull(3) ? "" : reader.GetString(3),
-                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                IsAbstract = !reader.IsDBNull(5) && reader.GetBoolean(5),
-                CanScale = reader.IsDBNull(6) || reader.GetBoolean(6),
-                CanMirror = reader.IsDBNull(7) || reader.GetBoolean(7),
-                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
-                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
-                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
-            };
-            designs.Add(d);
-        }
-        return designs;
-    }
-
-    private static List<T> TopologicalSort<T>(IEnumerable<T> items, Func<T, string> getGuid, Func<T, string?> getParentGuid) where T : class
-    {
-        var itemsByGuid = items.ToDictionary(getGuid);
-        var visited = new HashSet<string>();
-        var result = new List<T>();
-
-        void Visit(T item)
-        {
-            var guid = getGuid(item);
-            if (visited.Contains(guid)) return;
-            visited.Add(guid);
-
-            var parentGuid = getParentGuid(item);
-            if (parentGuid != null && itemsByGuid.TryGetValue(parentGuid, out var parent))
-            {
-                Visit(parent);
-            }
-            result.Add(item);
-        }
-
-        foreach (var item in items)
-        {
-            Visit(item);
-        }
-
-        return result;
-    }
-
-    private static void SaveKitToSqlite(Kit kit, string dbPath, string schemaSQL)
-    {
-        using var connection = new SqliteConnection($"Data Source={dbPath}");
-        connection.Open();
-
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = schemaSQL;
-            cmd.ExecuteNonQuery();
-        }
-
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = @"INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
-                VALUES (@guid, @name, @version, @description, @icon, @image, @preview, @remote, @homepage, @license, datetime('now'), datetime('now'))";
-            cmd.Parameters.AddWithValue("@guid", kit.Guid);
-            cmd.Parameters.AddWithValue("@name", kit.Name);
-            cmd.Parameters.AddWithValue("@version", kit.Version);
-            cmd.Parameters.AddWithValue("@description", kit.Description);
-            cmd.Parameters.AddWithValue("@icon", kit.Icon);
-            cmd.Parameters.AddWithValue("@image", kit.Image);
-            cmd.Parameters.AddWithValue("@preview", kit.Preview);
-            cmd.Parameters.AddWithValue("@remote", kit.Remote);
-            cmd.Parameters.AddWithValue("@homepage", kit.Homepage);
-            cmd.Parameters.AddWithValue("@license", kit.License);
-            cmd.ExecuteNonQuery();
-        }
-
-        var sortedTypes = TopologicalSort(kit.Types, t => t.Guid, t => t.Parent?.Guid);
-        foreach (var t in sortedTypes)
-        {
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = @"INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
-                VALUES (@guid, @name, @parent, @isAbstract, @folder, @stock, @virtual, @unit, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
-            cmd.Parameters.AddWithValue("@guid", t.Guid);
-            cmd.Parameters.AddWithValue("@name", t.Name);
-            cmd.Parameters.AddWithValue("@parent", (object?)t.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract);
-            cmd.Parameters.AddWithValue("@folder", t.Folder);
-            cmd.Parameters.AddWithValue("@stock", t.Stock);
-            cmd.Parameters.AddWithValue("@virtual", t.Virtual);
-            cmd.Parameters.AddWithValue("@unit", t.Unit);
-            cmd.Parameters.AddWithValue("@description", t.Description);
-            cmd.Parameters.AddWithValue("@icon", t.Icon);
-            cmd.Parameters.AddWithValue("@image", t.Image);
-            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
-            cmd.ExecuteNonQuery();
-        }
-
-        var sortedDesigns = TopologicalSort(kit.Designs, d => d.Guid, d => d.Parent?.Guid);
-        foreach (var d in sortedDesigns)
-        {
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = @"INSERT INTO design (guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
-                VALUES (@guid, @name, @parent, @unit, @folder, @isAbstract, @canScale, @canMirror, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
-            cmd.Parameters.AddWithValue("@guid", d.Guid);
-            cmd.Parameters.AddWithValue("@name", d.Name);
-            cmd.Parameters.AddWithValue("@parent", (object?)d.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@unit", d.Unit);
-            cmd.Parameters.AddWithValue("@folder", d.Folder);
-            cmd.Parameters.AddWithValue("@isAbstract", d.IsAbstract);
-            cmd.Parameters.AddWithValue("@canScale", d.CanScale);
-            cmd.Parameters.AddWithValue("@canMirror", d.CanMirror);
-            cmd.Parameters.AddWithValue("@description", d.Description);
-            cmd.Parameters.AddWithValue("@icon", d.Icon);
-            cmd.Parameters.AddWithValue("@image", d.Image);
-            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
-            cmd.ExecuteNonQuery();
-        }
-    }
-}
-
-#endregion 🎪ZipRoundtrip
 
 
 
@@ -13829,6 +13533,356 @@ public static class KitSqlite
 
 
 
+
+
+#region 🎪ZipRoundtrip
+// Callers MUST use these methods to import and export kits as ZIP archives.
+
+public class KitImportResult
+{
+    public Kit Kit { get; set; } = new();
+    public Dictionary<string, byte[]> Files { get; set; } = new();
+}
+
+public static class ZipRoundtrip
+{
+    private static string BuildFolderPath(Kit kit, string folderGuid)
+    {
+        if (kit.Folders == null) return "";
+        foreach (var f in kit.Folders)
+        {
+            if (f.Guid == folderGuid)
+            {
+                if (f.Parent != null)
+                {
+                    var parentPath = BuildFolderPath(kit, f.Parent?.Guid);
+                    if (!string.IsNullOrEmpty(parentPath))
+                        return $"{parentPath}/{f.Name}";
+                }
+                return f.Name;
+            }
+        }
+        return "";
+    }
+
+    private static string BuildFilePath(Kit kit, File file)
+    {
+        if (file.Folder != null && !string.IsNullOrEmpty(file.Folder.Guid))
+        {
+            var folderPath = BuildFolderPath(kit, file.Folder.Guid);
+            if (!string.IsNullOrEmpty(folderPath))
+                return $"{folderPath}/{file.Name}";
+        }
+        return file.Name;
+    }
+
+    public static KitImportResult ImportKit(string zipPath)
+    {
+        var result = new KitImportResult();
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            ZipFile.ExtractToDirectory(zipPath, tempDir);
+
+            var kitDbPath = Path.Combine(tempDir, ".semio", "kit.db");
+            var kitJsonPath = Path.Combine(tempDir, "kit.json");
+
+            if (System.IO.File.Exists(kitDbPath))
+            {
+                result.Kit = KitSqlite.LoadKit(tempDir);
+            }
+            else if (System.IO.File.Exists(kitJsonPath))
+            {
+                var kitJson = System.IO.File.ReadAllText(kitJsonPath);
+                result.Kit = Utility.Deserialize<Kit>(kitJson)!;
+            }
+            else
+            {
+                throw new FileNotFoundException("No kit data found in zip (expected .semio/kit.db or kit.json)");
+            }
+
+            foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
+            {
+                var relativePath = file.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
+                if (relativePath != "kit.json" && !relativePath.StartsWith(".semio/"))
+                    result.Files[relativePath] = System.IO.File.ReadAllBytes(file);
+            }
+
+            if (result.Kit.Files != null)
+            {
+                foreach (var kitFile in result.Kit.Files)
+                {
+                    var filePath = BuildFilePath(result.Kit, kitFile);
+                    if (result.Files.TryGetValue(filePath, out var bytes))
+                    {
+                        kitFile.Blob = $"data:application/octet-stream;base64,{Convert.ToBase64String(bytes)}";
+                    }
+                }
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+
+        return result;
+    }
+
+    public static void ExportKit(Kit kit, string zipPath)
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+
+            var kitForZip = kitJson_StripBlobs(kit);
+            var kitJsonStr = Utility.Serialize(kitForZip);
+            System.IO.File.WriteAllText(Path.Combine(tempDir, "kit.json"), kitJsonStr);
+
+            if (kit.Files != null)
+            {
+                foreach (var file in kit.Files)
+                {
+                    if (!string.IsNullOrEmpty(file.Blob))
+                    {
+                        var filePath = BuildFilePath(kit, file);
+                        var fullPath = Path.Combine(tempDir, filePath);
+                        var dir = Path.GetDirectoryName(fullPath);
+                        if (!string.IsNullOrEmpty(dir))
+                            Directory.CreateDirectory(dir);
+                        var blobData = file.Blob.StartsWith("data:") && file.Blob.Contains(",")
+                            ? file.Blob.Substring(file.Blob.IndexOf(',') + 1)
+                            : file.Blob;
+                        System.IO.File.WriteAllBytes(fullPath, Convert.FromBase64String(blobData));
+                    }
+                }
+            }
+
+            if (System.IO.File.Exists(zipPath))
+                System.IO.File.Delete(zipPath);
+            ZipFile.CreateFromDirectory(tempDir, zipPath);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+    }
+
+    private static Kit kitJson_StripBlobs(Kit kit)
+    {
+        var json = Utility.Serialize(kit);
+        var clone = Utility.Deserialize<Kit>(json)!;
+        if (clone.Files != null)
+        {
+            foreach (var file in clone.Files)
+            {
+                file.Blob = null;
+            }
+        }
+        return clone;
+    }
+
+    private static Kit LoadKitFromSqlite(string dbPath)
+    {
+        using var connection = new SqliteConnection($"Data Source={dbPath}");
+        connection.Open();
+
+        var kit = new Kit();
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = "SELECT guid, name, version, description, icon, image, preview, remote, homepage, license FROM kit LIMIT 1";
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                kit.Guid = reader.GetString(0);
+                kit.Name = reader.GetString(1);
+                kit.Version = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                kit.Description = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                kit.Icon = reader.IsDBNull(4) ? "" : reader.GetString(4);
+                kit.Image = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                kit.Preview = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                kit.Remote = reader.IsDBNull(7) ? "" : reader.GetString(7);
+                kit.Homepage = reader.IsDBNull(8) ? "" : reader.GetString(8);
+                kit.License = reader.IsDBNull(9) ? "" : reader.GetString(9);
+            }
+        }
+
+        kit.Types = LoadTypes(connection, kit.Guid);
+        kit.Designs = LoadDesigns(connection, kit.Guid);
+
+        return kit;
+    }
+
+    private static List<Type> LoadTypes(SqliteConnection connection, string kitGuid)
+    {
+        var types = new List<Type>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var t = new Type
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Parent = reader.IsDBNull(2) ? null : new TypeId { Guid = reader.GetString(2) },
+                IsAbstract = !reader.IsDBNull(3) && reader.GetBoolean(3),
+                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                Stock = reader.IsDBNull(5) ? 2147483647 : reader.GetInt32(5),
+                Virtual = !reader.IsDBNull(6) && reader.GetBoolean(6),
+                Unit = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
+            };
+            types.Add(t);
+        }
+        return types;
+    }
+
+    private static List<Design> LoadDesigns(SqliteConnection connection, string kitGuid)
+    {
+        var designs = new List<Design>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image FROM design WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var d = new Design
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Parent = reader.IsDBNull(2) ? null : new DesignId { Guid = reader.GetString(2) },
+                Unit = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                IsAbstract = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                CanScale = reader.IsDBNull(6) || reader.GetBoolean(6),
+                CanMirror = reader.IsDBNull(7) || reader.GetBoolean(7),
+                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
+            };
+            designs.Add(d);
+        }
+        return designs;
+    }
+
+    private static List<T> TopologicalSort<T>(IEnumerable<T> items, Func<T, string> getGuid, Func<T, string?> getParentGuid) where T : class
+    {
+        var itemsByGuid = items.ToDictionary(getGuid);
+        var visited = new HashSet<string>();
+        var result = new List<T>();
+
+        void Visit(T item)
+        {
+            var guid = getGuid(item);
+            if (visited.Contains(guid)) return;
+            visited.Add(guid);
+
+            var parentGuid = getParentGuid(item);
+            if (parentGuid != null && itemsByGuid.TryGetValue(parentGuid, out var parent))
+            {
+                Visit(parent);
+            }
+            result.Add(item);
+        }
+
+        foreach (var item in items)
+        {
+            Visit(item);
+        }
+
+        return result;
+    }
+
+    private static void SaveKitToSqlite(Kit kit, string dbPath, string schemaSQL)
+    {
+        using var connection = new SqliteConnection($"Data Source={dbPath}");
+        connection.Open();
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = schemaSQL;
+            cmd.ExecuteNonQuery();
+        }
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
+                VALUES (@guid, @name, @version, @description, @icon, @image, @preview, @remote, @homepage, @license, datetime('now'), datetime('now'))";
+            cmd.Parameters.AddWithValue("@guid", kit.Guid);
+            cmd.Parameters.AddWithValue("@name", kit.Name);
+            cmd.Parameters.AddWithValue("@version", kit.Version);
+            cmd.Parameters.AddWithValue("@description", kit.Description);
+            cmd.Parameters.AddWithValue("@icon", kit.Icon);
+            cmd.Parameters.AddWithValue("@image", kit.Image);
+            cmd.Parameters.AddWithValue("@preview", kit.Preview);
+            cmd.Parameters.AddWithValue("@remote", kit.Remote);
+            cmd.Parameters.AddWithValue("@homepage", kit.Homepage);
+            cmd.Parameters.AddWithValue("@license", kit.License);
+            cmd.ExecuteNonQuery();
+        }
+
+        var sortedTypes = TopologicalSort(kit.Types, t => t.Guid, t => t.Parent?.Guid);
+        foreach (var t in sortedTypes)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
+                VALUES (@guid, @name, @parent, @isAbstract, @folder, @stock, @virtual, @unit, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
+            cmd.Parameters.AddWithValue("@guid", t.Guid);
+            cmd.Parameters.AddWithValue("@name", t.Name);
+            cmd.Parameters.AddWithValue("@parent", (object?)t.Parent?.Guid ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract);
+            cmd.Parameters.AddWithValue("@folder", t.Folder);
+            cmd.Parameters.AddWithValue("@stock", t.Stock);
+            cmd.Parameters.AddWithValue("@virtual", t.Virtual);
+            cmd.Parameters.AddWithValue("@unit", t.Unit);
+            cmd.Parameters.AddWithValue("@description", t.Description);
+            cmd.Parameters.AddWithValue("@icon", t.Icon);
+            cmd.Parameters.AddWithValue("@image", t.Image);
+            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
+            cmd.ExecuteNonQuery();
+        }
+
+        var sortedDesigns = TopologicalSort(kit.Designs, d => d.Guid, d => d.Parent?.Guid);
+        foreach (var d in sortedDesigns)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"INSERT INTO design (guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
+                VALUES (@guid, @name, @parent, @unit, @folder, @isAbstract, @canScale, @canMirror, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
+            cmd.Parameters.AddWithValue("@guid", d.Guid);
+            cmd.Parameters.AddWithValue("@name", d.Name);
+            cmd.Parameters.AddWithValue("@parent", (object?)d.Parent?.Guid ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@unit", d.Unit);
+            cmd.Parameters.AddWithValue("@folder", d.Folder);
+            cmd.Parameters.AddWithValue("@isAbstract", d.IsAbstract);
+            cmd.Parameters.AddWithValue("@canScale", d.CanScale);
+            cmd.Parameters.AddWithValue("@canMirror", d.CanMirror);
+            cmd.Parameters.AddWithValue("@description", d.Description);
+            cmd.Parameters.AddWithValue("@icon", d.Icon);
+            cmd.Parameters.AddWithValue("@image", d.Image);
+            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
+            cmd.ExecuteNonQuery();
+        }
+    }
+}
+
+#endregion 🎪ZipRoundtrip
+
+
+
+
+
 #region 📷FileKit
 // Callers MUST use FileKit for JSON file kit import, export, and edit operations.
 
@@ -13854,6 +13908,7 @@ public static class FileKit
 }
 
 #endregion 📷FileKit
+
 
 
 
@@ -13960,6 +14015,7 @@ public static class FolderKit
 
 
 
+
 #region 📐ArchiveKit
 // Callers MUST use ArchiveKit for ZIP archive import, export, and edit operations.
 
@@ -13979,6 +14035,7 @@ public static class ArchiveKit
 }
 
 #endregion 📐ArchiveKit
+
 
 
 
@@ -14028,6 +14085,7 @@ public static class RemoteKit
 
 
 
+
 #region 🔤TemporaryKit
 // Callers MUST use TemporaryKit for in-memory kit edits without persistence.
 
@@ -14041,6 +14099,7 @@ public static class TemporaryKit
 }
 
 #endregion 🔤TemporaryKit
+
 
 
 
@@ -14063,6 +14122,7 @@ public static class KitImporter
 
 
 
+
 #region 🪁KitExporter
 // Callers MUST use ExportToZip for high-level kit export.
 
@@ -14075,6 +14135,7 @@ public static class KitExporter
 }
 
 #endregion 🪁KitExporter
+
 
 
 
