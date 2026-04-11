@@ -127,22 +127,32 @@ export async function nativeDeletePieces(
 }
 
 /**
- * Runs drag-pieces in TypeScript using dragPiecesInDesign from @semio/js.
- * Computes the drag diff on the flattened design, applies it to the raw design, then re-flattens
- * so that children move automatically with their parents.
- * Returns the new flattened design.
+ * Runs drag in-process: flattens internally, applies {@link dragPiecesInDesign} on the flat view,
+ * applies that diff to the raw design, re-flattens, and returns the final flat design plus the drag diff for UI preview.
  */
-export async function nativeDragPieces(kit: Kit, rawDesign: Design, flatDesign: Design, pieceGuids: readonly string[], offset: Coord, _language: NativeAlgorithmLanguage): Promise<Design> {
+export async function nativeDragPieces(
+  kit: Kit,
+  rawDesign: Design,
+  pieceGuids: readonly string[],
+  offset: Coord,
+  _language: NativeAlgorithmLanguage,
+): Promise<{ output: Design; dragDiff: DesignDiff }> {
   const { dragPiecesInDesign, applyDesignDiff, flattenDesign } = await import("@semio/js");
+  const fc = flattenDesign(kit, rawDesign.guid);
+  if (!fc.ok) {
+    throw new Error(fc.errors.map((e) => e.message).join("; "));
+  }
+  const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(rawDesign)), fc.change.forward);
   const piecesDesign: Design = { guid: flatDesign.guid, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
-  const diff = dragPiecesInDesign(flatDesign, piecesDesign, offset);
-  const updatedRaw = applyDesignDiff(rawDesign, diff);
+  const dragDiff = dragPiecesInDesign(flatDesign, piecesDesign, offset);
+  const updatedRaw = applyDesignDiff(rawDesign, dragDiff);
   const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === rawDesign.guid ? updatedRaw : d)) };
   const flatChange = flattenDesign(updatedKit, rawDesign.guid);
   if (!flatChange.ok) {
     throw new Error(flatChange.errors.map((e) => e.message).join("; "));
   }
-  return applyDesignDiff(updatedRaw, flatChange.change.forward);
+  const output = applyDesignDiff(updatedRaw, flatChange.change.forward);
+  return { output, dragDiff };
 }
 
 /**

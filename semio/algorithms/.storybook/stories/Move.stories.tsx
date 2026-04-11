@@ -1,11 +1,11 @@
-// #region 🧲Header
-// 💻 semio/algorithms/.storybook/stories/Move.stories.tsx
-// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Move story using nativeFlattenDesign with the Storybook language toolbar.
+// #region ���Header
+// �� semio/algorithms/.storybook/stories/Move.stories.tsx
+// Specs: Uses the AlgorithmApp shell with VEC_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, SCENE windows.
+// Summary: Wires nativeFlattenDesign for diagram layout metadata; move diff is a local vec overlay on raw design.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+��Header
 
-import type { DesignChange } from "@semio/js";
+import type { DesignChange, DesignDiff } from "@semio/js";
 import { applyDesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
@@ -30,7 +30,7 @@ function MoveFrame() {
   const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const [flattenChange, setFlattenChange] = React.useState<DesignChange | null>(null);
-  const [baseDesign, setBaseDesign] = React.useState<any | null>(null);
+  const [diagramLayoutDiff, setDiagramLayoutDiff] = React.useState<DesignDiff | undefined>(undefined);
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
   const [vec, setVec] = React.useState({ u: 1, v: -2 });
 
@@ -41,13 +41,12 @@ function MoveFrame() {
       if (cancelled) return;
       if (!fc.ok) {
         setFlattenChange(null);
-        setBaseDesign(null);
+        setDiagramLayoutDiff(undefined);
         return;
       }
       setFlattenChange(fc.change);
-      const bd = applyDesignDiff(rawDesign, fc.change.forward) as any;
-      setBaseDesign(bd);
-      setSelectedPieceGuids((bd?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
+      setDiagramLayoutDiff(fc.change.forward);
+      setSelectedPieceGuids((rawDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
     })();
     return () => {
       cancelled = true;
@@ -56,12 +55,12 @@ function MoveFrame() {
 
   const designDiff = React.useMemo(() => (selectedPieceGuids.length > 0 ? { pieces: { updated: selectedPieceGuids.map((guid) => ({ piece: { guid }, diff: { center: { ...vec } } })) } } : undefined), [selectedPieceGuids, vec]);
 
-  const outputDesign = React.useMemo(() => (designDiff && baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);
+  const outputDesign = React.useMemo(() => (designDiff ? applyDesignDiff(rawDesign, designDiff) : rawDesign), [designDiff]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: baseDesign ?? rawDesign,
+      design: rawDesign,
       vec,
       onVecChange: setVec,
       vecMin: { u: -10, v: -10 },
@@ -69,10 +68,12 @@ function MoveFrame() {
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
       designDiff,
+      diffDesign: rawDesign,
+      diagramLayoutDiff,
       outputDesign,
-      error: !flattenChange || !baseDesign ? `Loading move preview (${language})…` : selectedPieceGuids.length === 0 ? "Select at least one piece to move." : undefined,
+      error: !flattenChange ? `Loading move preview (${language})…` : selectedPieceGuids.length === 0 ? "Select at least one piece to move." : undefined,
     }),
-    [kit, baseDesign, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, language],
+    [kit, selectedPieceGuids, vec, designDiff, outputDesign, flattenChange, diagramLayoutDiff, language],
   );
 
   return <AlgorithmApp id="move" label="Move" windows={WINDOWS} context={context} className="h-full w-full" />;

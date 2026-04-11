@@ -237,6 +237,11 @@ TODO: Introduce Design/Interpolate algorithm.
 
 semio:
 
+The implementations are structurally not consistent.
+- All sections MUST be identical (same nesting, same order)
+- All functions MUST have same naming and same order in the source code.
+Refactor everything.
+
 All semio functions are Operations which return a Result [(change and warnings and infos) or errors]. E.g. flatten design when no piece is a fixed piece, it selects the first piece but this is not recommended and a there should be warning that every clump (connected pieces) should have a fixed piece, etc. Same for other functions. Info is just information about decisions that were taken during the algorithms.
 
 ---

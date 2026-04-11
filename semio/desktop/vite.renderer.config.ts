@@ -12,7 +12,7 @@
 // Vite configuration for the Electron renderer process with React and Tailwind.
 // Configuration MUST enable the React and Tailwind CSS plugins.
 
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import mdx from "@mdx-js/rollup";
@@ -24,10 +24,35 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
 
+function useSyncExternalStoreShimResolvePlugin(shimMain: string, shimWithSelector: string): Plugin {
+  return {
+    name: "semio-use-sync-external-store-shim",
+    enforce: "pre",
+    resolveId(id) {
+      const n = id.replace(/\\/g, "/");
+      if (n.includes("use-sync-external-store/shim/with-selector")) {
+        return shimWithSelector;
+      }
+      if (n.includes("use-sync-external-store/shim")) {
+        return shimMain;
+      }
+      return undefined;
+    },
+  };
+}
+
 // Async Vite config loading Tailwind CSS, MDX, React and WASM plugins for the renderer.
 // Export MUST return a valid Vite config with all plugins enabled.
-export default defineConfig(async () => {
+export default defineConfig(async ({ mode }) => {
   const tailwind = await import("@tailwindcss/vite");
+  const useSyncRoot = path.resolve(__dirname, "../../node_modules/use-sync-external-store/cjs");
+  const prod = mode === "production";
+  const shimMain = path.join(useSyncRoot, prod ? "use-sync-external-store-shim.production.js" : "use-sync-external-store-shim.development.js");
+  const shimWithSelector = path.join(
+    useSyncRoot,
+    "use-sync-external-store-shim",
+    prod ? "with-selector.production.js" : "with-selector.development.js",
+  );
   return {
     server: {
       watch: {
@@ -37,9 +62,11 @@ export default defineConfig(async () => {
     },
     resolve: {
       dedupe: ["react", "react-dom", "use-sync-external-store"],
-      // Rely on `use-sync-external-store` package.json `exports` for `./shim` and `./shim/with-selector`.
-      // Do not alias `…/shim` to a single `.js` file — Vite then resolves `…/shim/with-selector` as that file + suffix and breaks.
+      // `shim/index.js` is CJS (`module.exports`); Vite would serve it as ESM and break `import { useSyncExternalStore }`.
+      // Point bare specifiers at the CJS builds under `cjs/` so Rollup/commonjs rewrites exports (VS Code / zustand compatible).
       alias: [
+        { find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/, replacement: shimWithSelector },
+        { find: /^use-sync-external-store\/shim(\/index\.js)?$/, replacement: shimMain },
         { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../studio") },
@@ -47,6 +74,7 @@ export default defineConfig(async () => {
       ],
     },
     plugins: [
+      useSyncExternalStoreShimResolvePlugin(shimMain, shimWithSelector),
       tailwind.default(),
       {
         ...mdx({
@@ -65,6 +93,7 @@ export default defineConfig(async () => {
       include: [
         "golden-layout",
         "@mdx-js/react",
+        "use-sync-external-store/shim",
         "use-sync-external-store/shim/with-selector",
         "use-sync-external-store/with-selector",
       ],

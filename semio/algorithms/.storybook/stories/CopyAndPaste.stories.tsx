@@ -1,13 +1,13 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/CopyAndPaste.stories.tsx
-// Specs: WithoutCoord and WithCoord match IPO row order: inputs left, Diff center, Output right (same as Delete and other algorithm stories).
+// Specs: IPO row matches other algorithm stories; input column includes paste anchoring (all pasteDesign anchoring strings) plus optional Coord.
 // Summary: Copy & paste Storybook stories using nativeFlattenDesign/nativeCopyDesign/nativePasteDesign with the language toolbar.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 
-import type { Design, DesignChange, DesignDiff } from "@semio/js";
-import { applyDesignDiff } from "@semio/js";
+import type { Design, DesignChange, DesignDiff, PasteDesignAnchoringKind } from "@semio/js";
+import { PASTE_DESIGN_ANCHORING_KINDS, applyDesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -41,11 +41,32 @@ const selectionConnectionGuids = Array.from(
 
 // #region CopyAndPaste
 
+const PASTE_ANCHOR_LABELS: Record<PasteDesignAnchoringKind, string> = {
+  original: "Original",
+  middle: "Middle (bbox)",
+  centroid: "Centroid",
+  bottomLeft: "Bottom left",
+  bottomRight: "Bottom right",
+  topLeft: "Top left",
+  topRight: "Top right",
+};
+
+const PASTE_DESIGN_ANCHOR_OPTIONS: readonly { anchoringKind: PasteDesignAnchoringKind; label: string }[] = PASTE_DESIGN_ANCHORING_KINDS.map((anchoringKind) => ({
+  anchoringKind,
+  label: PASTE_ANCHOR_LABELS[anchoringKind],
+}));
+
 interface CopyPasteWindowContextValue {
   flatPasteTargetDesign: Design | null;
+  pasteAnchoring: PasteDesignAnchoringKind;
+  onPasteAnchoringChange: (next: PasteDesignAnchoringKind) => void;
 }
 
-const CopyPasteWindowContext = React.createContext<CopyPasteWindowContextValue>({ flatPasteTargetDesign: null });
+const CopyPasteWindowContext = React.createContext<CopyPasteWindowContextValue>({
+  flatPasteTargetDesign: null,
+  pasteAnchoring: "original",
+  onPasteAnchoringChange: () => {},
+});
 
 const TargetDesignWindow: React.FC = () => {
   const { flatPasteTargetDesign } = React.useContext(CopyPasteWindowContext);
@@ -53,9 +74,33 @@ const TargetDesignWindow: React.FC = () => {
   return <SemioDiagram design={design} diffEnabled={false} zoomTarget="design" selectionEnabled={false} panEnabled={true} zoomEnabled={true} />;
 };
 
+const PasteAnchoringWindow: React.FC = () => {
+  const { pasteAnchoring, onPasteAnchoringChange } = React.useContext(CopyPasteWindowContext);
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-2 overflow-auto border-border/40 border-t p-3">
+      <label className="text-xs font-medium text-muted-foreground" htmlFor="semio-algorithms-paste-anchoring">
+        Paste anchoring
+      </label>
+      <select
+        id="semio-algorithms-paste-anchoring"
+        className="border-input bg-background text-foreground w-full max-w-full rounded-md border px-2 py-1.5 text-sm"
+        value={pasteAnchoring}
+        onChange={(e) => onPasteAnchoringChange(e.target.value as PasteDesignAnchoringKind)}
+      >
+        {PASTE_DESIGN_ANCHOR_OPTIONS.map((o) => (
+          <option key={o.anchoringKind} value={o.anchoringKind}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
 const WINDOWS_WITHOUT: AlgorithmWindowDef[] = [
   { id: "cp-src", kind: WindowKind.SELECTION_INPUT, label: "Source Selection" },
   { id: "cp-tgt", kind: WindowKind.DESIGN_INPUT, label: "Target Design", component: TargetDesignWindow },
+  { id: "cp-anchor", kind: WindowKind.DESIGN_INPUT, label: "Paste anchoring", component: PasteAnchoringWindow },
   { id: "cp-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
   { id: "cp-out", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
 ];
@@ -63,6 +108,7 @@ const WINDOWS_WITHOUT: AlgorithmWindowDef[] = [
 const WINDOWS_WITH: AlgorithmWindowDef[] = [
   { id: "cp-src", kind: WindowKind.SELECTION_INPUT, label: "Source Selection" },
   { id: "cp-tgt", kind: WindowKind.DESIGN_INPUT, label: "Target Design", component: TargetDesignWindow },
+  { id: "cp-anchor", kind: WindowKind.DESIGN_INPUT, label: "Paste anchoring", component: PasteAnchoringWindow },
   { id: "cp-vec", kind: WindowKind.VEC_INPUT, label: "Coord" },
   { id: "cp-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
   { id: "cp-out", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
@@ -76,8 +122,9 @@ const LAYOUT_WITHOUT = {
         kind: "column" as const,
         size: 34,
         children: [
-          { kind: "stack" as const, size: 50, children: [{ kind: "window" as const, windowKindId: "cp-src", title: "Source Selection" }] },
-          { kind: "stack" as const, size: 50, children: [{ kind: "window" as const, windowKindId: "cp-tgt", title: "Target Design" }] },
+          { kind: "stack" as const, size: 40, children: [{ kind: "window" as const, windowKindId: "cp-src", title: "Source Selection" }] },
+          { kind: "stack" as const, size: 35, children: [{ kind: "window" as const, windowKindId: "cp-tgt", title: "Target Design" }] },
+          { kind: "stack" as const, size: 25, children: [{ kind: "window" as const, windowKindId: "cp-anchor", title: "Paste anchoring" }] },
         ],
       },
       { kind: "stack" as const, size: 33, children: [{ kind: "window" as const, windowKindId: "cp-diff", title: "Diff" }] },
@@ -94,9 +141,10 @@ const LAYOUT_WITH = {
         kind: "column" as const,
         size: 34,
         children: [
-          { kind: "stack" as const, size: 50, children: [{ kind: "window" as const, windowKindId: "cp-src", title: "Source Selection" }] },
-          { kind: "stack" as const, size: 30, children: [{ kind: "window" as const, windowKindId: "cp-tgt", title: "Target Design" }] },
-          { kind: "stack" as const, size: 20, children: [{ kind: "window" as const, windowKindId: "cp-vec", title: "Coord" }] },
+          { kind: "stack" as const, size: 36, children: [{ kind: "window" as const, windowKindId: "cp-src", title: "Source Selection" }] },
+          { kind: "stack" as const, size: 24, children: [{ kind: "window" as const, windowKindId: "cp-tgt", title: "Target Design" }] },
+          { kind: "stack" as const, size: 18, children: [{ kind: "window" as const, windowKindId: "cp-anchor", title: "Paste anchoring" }] },
+          { kind: "stack" as const, size: 22, children: [{ kind: "window" as const, windowKindId: "cp-vec", title: "Coord" }] },
         ],
       },
       { kind: "stack" as const, size: 33, children: [{ kind: "window" as const, windowKindId: "cp-diff", title: "Diff" }] },
@@ -117,6 +165,7 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>(selectionPieceGuids);
   const [selectedConnectionGuids, setSelectedConnectionGuids] = React.useState<string[]>(selectionConnectionGuids);
   const [vec, setVec] = React.useState<VecValue>({ u: 10, v: 10 });
+  const [pasteAnchoring, setPasteAnchoring] = React.useState<PasteDesignAnchoringKind>("original");
   const [designDiff, setDesignDiff] = React.useState<DesignDiff | undefined>(undefined);
 
   const windows = mode === "with" ? WINDOWS_WITH : WINDOWS_WITHOUT;
@@ -161,13 +210,13 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
       if (!copyRes.ok) return;
       const copied = copyRes.change;
       const coord = mode === "with" ? { u: vec.u, v: vec.v } : undefined;
-      const diff = await nativePasteDesign(kit, copied, pasteTargetDesign, "original", coord, language);
+      const diff = await nativePasteDesign(kit, copied, pasteTargetDesign, pasteAnchoring, coord, language);
       if (!cancelled) setDesignDiff(diff);
     })();
     return () => {
       cancelled = true;
     };
-  }, [kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, language, mode, mode === "with" ? vec.u : 0, mode === "with" ? vec.v : 0]);
+  }, [kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, language, mode, pasteAnchoring, mode === "with" ? vec.u : 0, mode === "with" ? vec.v : 0]);
 
   const flatOrRawPasteTarget = flatPasteTargetDesign ?? pasteTargetDesign;
   const outputDesign = React.useMemo(
@@ -206,7 +255,10 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
     [kit, baseDesign, flatPasteTargetDesign, selectedPieceGuids, selectedConnectionGuids, vec, designDiff, outputDesign, flattenChange, language, mode],
   );
 
-  const windowContextValue = React.useMemo<CopyPasteWindowContextValue>(() => ({ flatPasteTargetDesign }), [flatPasteTargetDesign]);
+  const windowContextValue = React.useMemo<CopyPasteWindowContextValue>(
+    () => ({ flatPasteTargetDesign, pasteAnchoring, onPasteAnchoringChange: setPasteAnchoring }),
+    [flatPasteTargetDesign, pasteAnchoring],
+  );
 
   return (
     <CopyPasteWindowContext.Provider value={windowContextValue}>

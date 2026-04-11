@@ -1203,6 +1203,8 @@ export interface SemioDiagramProps {
   /** Fires on piece double-click in the diagram (does not reset zoom; stops propagation to the diagram shell). */
   onPieceDoubleClick?: (piece: Piece) => void;
   onConnectionClick?: (connection: Connection) => void;
+  /** Optional diff whose `pieces.updated[].diff.center` supplies u/v when a piece has no `center` (diagram layout only). */
+  layoutDiff?: DesignDiff;
 }
 
 interface DiagramPoint {
@@ -1300,14 +1302,28 @@ const computeDiagramSelectionOverlayRect = (
 
 // #endregion 🎯SelectionBoundsOverlay
 
-const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: DesignDiff): DiagramSnapshot => {
+/** u/v from `pieces.updated[].diff.center` for diagram layout when a piece omits `center`. */
+const centersFromLayoutDiff = (layoutDiff?: DesignDiff): Map<string, { u: number; v: number }> => {
+  const m = new Map<string, { u: number; v: number }>();
+  for (const u of layoutDiff?.pieces?.updated ?? []) {
+    const g = u.piece?.guid;
+    const c = u.diff?.center;
+    if (g && c && typeof c.u === "number" && typeof c.v === "number") m.set(g, { u: c.u, v: c.v });
+  }
+  return m;
+};
+
+const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: DesignDiff, layoutDiff?: DesignDiff): DiagramSnapshot => {
   const merged = designDiff ? designWithDiff(design, designDiff) : design;
+  const layoutCenters = centersFromLayoutDiff(layoutDiff);
 
   const pointMap = new Map<string, DiagramPoint>();
   (merged.pieces ?? []).forEach((piece) => {
-    if (!piece.guid || !piece.center) return;
+    if (!piece.guid) return;
+    const center = piece.center ?? layoutCenters.get(piece.guid);
+    if (!center) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
-    pointMap.set(piece.guid, { guid: piece.guid, piece, u: piece.center.u, v: piece.center.v, status });
+    pointMap.set(piece.guid, { guid: piece.guid, piece, u: center.u, v: center.v, status });
   });
 
   const pointsByGuid = new Map(Array.from(pointMap.values()).map((point) => [point.guid, point]));
@@ -1419,6 +1435,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   onPieceClick,
   onPieceDoubleClick,
   onConnectionClick,
+  layoutDiff,
 }) => {
   const effectiveDiffEnabled = diffEnabled ?? true;
   const effectiveSelectionEnabled = selectionEnabled ?? true;
@@ -1433,7 +1450,10 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeHover(defaultHover), onHoverChange);
   const [resolvedPan, setResolvedPan, isPanControlled] = useInteractiveControllableValue(pan, defaultPan ?? { x: 0, y: 0 }, onPanChange);
   const [resolvedZoom, setResolvedZoom, isZoomControlled] = useInteractiveControllableValue(zoom, defaultZoom ?? DEFAULT_DIAGRAM_ZOOM, onZoomChange);
-  const snapshot = React.useMemo(() => buildDiagramSnapshot(design, padding, effectiveDiffEnabled ? resolvedDesignDiff : undefined), [design, effectiveDiffEnabled, padding, resolvedDesignDiff]);
+  const snapshot = React.useMemo(
+    () => buildDiagramSnapshot(design, padding, effectiveDiffEnabled ? resolvedDesignDiff : undefined, layoutDiff),
+    [design, effectiveDiffEnabled, layoutDiff, padding, resolvedDesignDiff],
+  );
   const selectedPieceGuids = React.useMemo(() => new Set(effectiveSelectionEnabled ? (resolvedSelection.pieceGuids ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.pieceGuids]);
   const selectedConnectionGuids = React.useMemo(() => new Set(effectiveSelectionEnabled ? (resolvedSelection.connectionGuids ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.connectionGuids]);
   const hoveredPieceGuid = effectivePieceHoverEnabled ? (resolvedHover.pieceGuid ?? null) : null;
@@ -6560,6 +6580,8 @@ export interface AlgorithmContextValue {
   onSelectedConnectionGuidsChange?: (guids: string[]) => void;
   designDiff?: DesignDiff;
   diffDesign?: Design;
+  /** Passed to {@link SemioDiagram} as `layoutDiff` so linked pieces get u/v without mutating `design`. */
+  diagramLayoutDiff?: DesignDiff;
   outputDesign: Design;
   error?: string;
 }
@@ -6924,6 +6946,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     component: PieceSelection,
     createProps: (context) => ({
       design: context.design,
+      layoutDiff: context.diagramLayoutDiff,
       selection: { pieceGuids: context.selectedPieceGuids },
       onSelectionChange: (next: PieceSelectionState) => context.onSelectedPieceGuidsChange?.(next.pieceGuids ?? []),
       selectionEnabled: true,
@@ -6943,6 +6966,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     component: DiagramSelection,
     createProps: (context) => ({
       design: context.design,
+      layoutDiff: context.diagramLayoutDiff,
       selection: { pieceGuids: context.selectedPieceGuids, connectionGuids: context.selectedConnectionGuids ?? [] },
       onSelectionChange: (next: DiagramSelectionState) => {
         context.onSelectedPieceGuidsChange?.(next.pieceGuids ?? []);
@@ -6965,6 +6989,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     component: SemioDiagram,
     createProps: (context) => ({
       design: context.design,
+      layoutDiff: context.diagramLayoutDiff,
       diffEnabled: false,
       zoomTarget: "design" as ZoomTarget,
       selectionEnabled: false,
@@ -6980,6 +7005,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     component: SemioDiagram,
     createProps: (context) => ({
       design: context.diffDesign ?? context.design,
+      layoutDiff: context.diagramLayoutDiff,
       designDiff: context.filteredDesignDiff,
       diffEnabled: true,
       zoomTarget: "design" as ZoomTarget,
@@ -6996,6 +7022,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     component: SemioDiagram,
     createProps: (context) => ({
       design: context.outputDesign,
+      layoutDiff: context.diagramLayoutDiff,
       diffEnabled: false,
       zoomTarget: "design" as ZoomTarget,
       selectionEnabled: false,

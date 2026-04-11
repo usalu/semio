@@ -6221,6 +6221,11 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
   );
 };
 
+/** Specs: Anchoring strings handled by `pasteDesign` switch; any other string falls through to the default branch (same offset as `original`). */
+export const PASTE_DESIGN_ANCHORING_KINDS = ["original", "middle", "centroid", "bottomLeft", "bottomRight", "topLeft", "topRight"] as const;
+
+export type PasteDesignAnchoringKind = (typeof PASTE_DESIGN_ANCHORING_KINDS)[number];
+
 /**
  * 📋Pastes a copied design into a target design, returning a DesignDiff.
  * Specs: Anchoring determines the reference point within the bounding rectangle of the source.
@@ -6231,6 +6236,7 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
  * With coord, only the remapped child–stub parent bridge updates u/v: target matched parent’s diagram center minus
  * (coord + (anchor − child flat center)). Descendant internal connections keep deep-cloned u/v.
  **/
+
 export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff => {
   const typesMap = new Map<string, Type>();
   for (const t of kit.types ?? []) typesMap.set(t.guid, t);
@@ -15345,6 +15351,18 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       for (let i = 0; i < computedAddedConns.length; i++) {
         expect(computedAddedConns[i].u).toBeCloseTo(expectedAddedConns[i].u, 3);
         expect(computedAddedConns[i].v).toBeCloseTo(expectedAddedConns[i].v, 3);
+      }
+    });
+
+    it("pasteDesign accepts every built-in anchoring string for Nakagin clipboard", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
+      const source = NakaginCapsuleTowerCopyDesign as unknown as Design;
+      for (const kind of PASTE_DESIGN_ANCHORING_KINDS) {
+        const withoutCoord = pasteDesign(kit, source, pasteTarget, kind);
+        expect((withoutCoord.pieces?.added ?? []).length).toBeGreaterThan(0);
+        const withCoord = pasteDesign(kit, source, pasteTarget, kind, { u: 10, v: 10 });
+        expect((withCoord.pieces?.added ?? []).length).toBe((withoutCoord.pieces?.added ?? []).length);
       }
     });
 

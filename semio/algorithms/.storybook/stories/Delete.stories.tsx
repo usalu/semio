@@ -1,11 +1,11 @@
-// #region 🧲Header
-// 💻 semio/algorithms/.storybook/stories/Delete.stories.tsx
-// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Delete story using nativeFlattenDesign/nativeDeletePieces with the Storybook language toolbar.
+// #region ���Header
+// �� semio/algorithms/.storybook/stories/Delete.stories.tsx
+// Specs: Uses the AlgorithmApp shell with SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
+// Summary: Wires nativeFlattenDesign (layout metadata) and nativeDeletePieces on the raw kit design.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+//��Header
 
-import type { DesignChange } from "@semio/js";
+import type { DesignChange, DesignDiff } from "@semio/js";
 import { applyDesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
@@ -29,33 +29,31 @@ function DeleteFrame() {
   const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const [flattenChange, setFlattenChange] = React.useState<DesignChange | null>(null);
-  const [baseDesign, setBaseDesign] = React.useState<any | null>(null);
+  const [diagramLayoutDiff, setDiagramLayoutDiff] = React.useState<DesignDiff | undefined>(undefined);
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
   const [selectedConnectionGuids, setSelectedConnectionGuids] = React.useState<string[]>([]);
   const [designDiff, setDesignDiff] = React.useState<any | undefined>(undefined);
 
   React.useEffect(() => {
     let cancelled = false;
-    // Clear stale preview state immediately on language change to avoid rendering an old diff/output.
     setFlattenChange(null);
-    setBaseDesign(null);
+    setDiagramLayoutDiff(undefined);
     setDesignDiff(undefined);
     void (async () => {
       const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
       if (cancelled) return;
       if (!fc.ok) {
         setFlattenChange(null);
-        setBaseDesign(null);
+        setDiagramLayoutDiff(undefined);
         return;
       }
       setFlattenChange(fc.change);
-      const bd = applyDesignDiff(rawDesign, fc.change.forward) as any;
-      setBaseDesign(bd);
+      setDiagramLayoutDiff(fc.change.forward);
       setSelectedPieceGuids((prev) => {
-        const pieceGuids = new Set<string>((bd?.pieces ?? []).map((p: any) => p.guid));
+        const pieceGuids = new Set<string>((rawDesign?.pieces ?? []).map((p: any) => p.guid));
         const filtered = prev.filter((g) => pieceGuids.has(g));
         if (filtered.length > 0) return filtered;
-        return (bd?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid);
+        return (rawDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid);
       });
     })();
     return () => {
@@ -64,38 +62,39 @@ function DeleteFrame() {
   }, [kit, language]);
 
   React.useEffect(() => {
-    if (!baseDesign) return;
+    if (!flattenChange) return;
     let cancelled = false;
     void (async () => {
       if (selectedPieceGuids.length === 0 && selectedConnectionGuids.length === 0) {
         if (!cancelled) setDesignDiff(undefined);
         return;
       }
-      // Invalidate stale output while recomputing.
       setDesignDiff(undefined);
-      const diffRes = await nativeDeletePieces(kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, language);
+      const diffRes = await nativeDeletePieces(kit, rawDesign, selectedPieceGuids, selectedConnectionGuids, language);
       if (!cancelled) setDesignDiff(diffRes.ok ? diffRes.change : undefined);
     })();
     return () => {
       cancelled = true;
     };
-  }, [kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, language]);
+  }, [kit, flattenChange, selectedPieceGuids, selectedConnectionGuids, language]);
 
-  const outputDesign = React.useMemo(() => (designDiff && baseDesign ? applyDesignDiff(baseDesign, designDiff) : (baseDesign ?? rawDesign)), [designDiff, baseDesign]);
+  const outputDesign = React.useMemo(() => (designDiff ? applyDesignDiff(rawDesign, designDiff) : rawDesign), [designDiff]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: baseDesign ?? rawDesign,
+      design: rawDesign,
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
       selectedConnectionGuids,
       onSelectedConnectionGuidsChange: setSelectedConnectionGuids,
       designDiff,
+      diffDesign: rawDesign,
+      diagramLayoutDiff,
       outputDesign,
-      error: !flattenChange || !baseDesign ? `Loading delete preview (${language})…` : (selectedPieceGuids.length === 0 && selectedConnectionGuids.length === 0) ? "Select at least one piece or connection to delete." : !designDiff ? `Loading delete result (${language})…` : undefined,
+      error: !flattenChange ? `Loading delete preview (${language})…` : selectedPieceGuids.length === 0 && selectedConnectionGuids.length === 0 ? "Select at least one piece or connection to delete." : !designDiff ? `Loading delete result (${language})…` : undefined,
     }),
-    [kit, baseDesign, selectedPieceGuids, selectedConnectionGuids, designDiff, outputDesign, flattenChange, language],
+    [kit, selectedPieceGuids, selectedConnectionGuids, designDiff, outputDesign, flattenChange, diagramLayoutDiff, language],
   );
 
   return <AlgorithmApp id="delete" label="Delete" windows={WINDOWS} context={context} className="h-full w-full" />;

@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 semio/algorithms/.storybook/stories/Flatten.stories.tsx
+��Header
+// �� semio/algorithms/.storybook/stories/Flatten.stories.tsx
 // Specs: Uses the AlgorithmApp shell with DESIGN_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Flatten story using nativeFlattenDesign with the Storybook language toolbar.
+// Summary: Wires kit + nativeFlattenDesign; UI applies diagramLayoutDiff for 2D layout metadata only.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+��Header
 
 import type { DesignChange } from "@semio/js";
 import { applyDesignDiff } from "@semio/js";
@@ -57,6 +57,7 @@ function FlattenFrame() {
       selectedPieceGuids: [],
       designDiff: change?.forward,
       diffDesign: rawDesign,
+      diagramLayoutDiff: change?.forward,
       outputDesign: (flatDesign ?? rawDesign) as any,
       error: !change || !flatDesign ? `Loading flatten (${language})…` : undefined,
     }),
