@@ -24,6 +24,7 @@ import {
   type Design,
   type DesignDiff,
   type Kit,
+  type MoveVector,
   type Piece,
   type Plane,
   type File as SemioFile,
@@ -2208,6 +2209,87 @@ export const Vec: React.FC<VecProps> = ({ id, vec, minU = -1, maxU = 1, minV = -
 };
 
 // #endregion 🏪Vec
+
+// #region GapShiftRiseInput
+
+// Specs: Numeric gap, shift, and rise for 3D placement (move algorithms); distinct from the 2D Vec pad.
+// Summary: Three bounded number fields aligned with MoveVector from @semio/js.
+
+export interface GapShiftRiseInputProps {
+  id: string;
+  value: MoveVector;
+  min?: MoveVector;
+  max?: MoveVector;
+  onChange?: (next: MoveVector) => void;
+  className?: string;
+}
+
+const clampMoveAxis = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
+
+/**
+ * Bounded inputs for gap (along piece yAxis), shift (along xAxis), and rise (along plane normal).
+ */
+export const GapShiftRiseInput: React.FC<GapShiftRiseInputProps> = ({
+  id,
+  value,
+  min = { gap: -10, shift: -10, rise: -10 },
+  max = { gap: 10, shift: 10, rise: 10 },
+  onChange,
+  className = "",
+}) => {
+  const patch = React.useCallback(
+    (partial: Partial<MoveVector>) => {
+      const next = {
+        gap: partial.gap ?? value.gap,
+        shift: partial.shift ?? value.shift,
+        rise: partial.rise ?? value.rise,
+      };
+      onChange?.({
+        gap: clampMoveAxis(next.gap, min.gap, max.gap),
+        shift: clampMoveAxis(next.shift, min.shift, max.shift),
+        rise: clampMoveAxis(next.rise, min.rise, max.rise),
+      });
+    },
+    [value.gap, value.shift, value.rise, min.gap, min.shift, min.rise, max.gap, max.shift, max.rise, onChange],
+  );
+
+  return (
+    <div data-slot={id} className={`flex flex-col gap-2 ${className}`}>
+      <div className="flex items-center gap-1">
+        <span className="text-xs font-mono text-muted-foreground w-10">gap</span>
+        <input
+          className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
+          type="number"
+          step="0.1"
+          value={value.gap}
+          onChange={(e) => patch({ gap: Number(e.target.value) })}
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <span className="text-xs font-mono text-muted-foreground w-10">shift</span>
+        <input
+          className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
+          type="number"
+          step="0.1"
+          value={value.shift}
+          onChange={(e) => patch({ shift: Number(e.target.value) })}
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <span className="text-xs font-mono text-muted-foreground w-10">rise</span>
+        <input
+          className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
+          type="number"
+          step="0.1"
+          value={value.rise}
+          onChange={(e) => patch({ rise: Number(e.target.value) })}
+        />
+      </div>
+    </div>
+  );
+};
+
+// #endregion GapShiftRiseInput
 
 // #region 🔤Vector
 
@@ -6574,6 +6656,11 @@ export interface AlgorithmContextValue {
   onVecChange?: (v: VecValue) => void;
   vecMin?: VecValue;
   vecMax?: VecValue;
+  /** Gap/shift/rise for move algorithms (3D placement); not the 2D drag {@link VecValue}. */
+  moveVector?: MoveVector;
+  onMoveVectorChange?: (v: MoveVector) => void;
+  moveVectorMin?: MoveVector;
+  moveVectorMax?: MoveVector;
   selectedPieceGuids: string[];
   onSelectedPieceGuidsChange?: (guids: string[]) => void;
   selectedConnectionGuids?: string[];
@@ -6840,9 +6927,23 @@ export interface AlgorithmWindowDef {
   component?: React.FC;
 }
 
-type AlgorithmWindowKind = WindowKind.VEC_INPUT | WindowKind.PIECES_SELECTION_INPUT | WindowKind.SELECTION_INPUT | WindowKind.DESIGN_INPUT | WindowKind.DESIGN_DIFF_OUTPUT | WindowKind.DESIGN_OUTPUT | WindowKind.SCENE;
+type AlgorithmWindowKind =
+  | WindowKind.VEC_INPUT
+  | WindowKind.VECTOR_INPUT
+  | WindowKind.PIECES_SELECTION_INPUT
+  | WindowKind.SELECTION_INPUT
+  | WindowKind.DESIGN_INPUT
+  | WindowKind.DESIGN_DIFF_OUTPUT
+  | WindowKind.DESIGN_OUTPUT
+  | WindowKind.SCENE;
 
-type AlgorithmUiComponentId = "semio/ui:Vec" | "semio/ui:PieceSelection" | "semio/ui:DiagramSelection" | "semio/ui:Diagram" | "semio/ui:Scene";
+type AlgorithmUiComponentId =
+  | "semio/ui:Vec"
+  | "semio/ui:GapShiftRiseInput"
+  | "semio/ui:PieceSelection"
+  | "semio/ui:DiagramSelection"
+  | "semio/ui:Diagram"
+  | "semio/ui:Scene";
 
 interface AlgorithmWindowBehavior {
   kind: AlgorithmWindowKind;
@@ -6908,6 +7009,49 @@ const renderAlgorithmVecWindow = (component: React.ReactElement, context: Algori
   );
 };
 
+const renderAlgorithmMoveVectorWindow = (component: React.ReactElement, context: AlgorithmContextValue): React.ReactElement => {
+  const { moveVector, onMoveVectorChange } = context;
+  if (!moveVector || !onMoveVectorChange) return <></>;
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center gap-2 p-2">
+      {component}
+      <div className="flex gap-2">
+        <div className="flex items-center gap-1">
+          <span className="text-xs font-mono text-muted-foreground">gap</span>
+          <input
+            className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
+            type="number"
+            step="0.1"
+            value={moveVector.gap}
+            onChange={(e) => onMoveVectorChange({ ...moveVector, gap: Number(e.target.value) })}
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-xs font-mono text-muted-foreground">shift</span>
+          <input
+            className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
+            type="number"
+            step="0.1"
+            value={moveVector.shift}
+            onChange={(e) => onMoveVectorChange({ ...moveVector, shift: Number(e.target.value) })}
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-xs font-mono text-muted-foreground">rise</span>
+          <input
+            className="w-20 rounded-md border border-element bg-background px-2 py-1 text-sm font-mono"
+            type="number"
+            step="0.1"
+            value={moveVector.rise}
+            onChange={(e) => onMoveVectorChange({ ...moveVector, rise: Number(e.target.value) })}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const getAlgorithmStatusTone = (message: string): "muted" | "destructive" => {
   const m = message.trim().toLowerCase();
   if (m.startsWith("loading")) return "muted";
@@ -6941,6 +7085,21 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
       size: 160,
     }),
     render: renderAlgorithmVecWindow,
+  },
+  [WindowKind.VECTOR_INPUT]: {
+    uiComponentId: "semio/ui:GapShiftRiseInput",
+    selectionEnabled: false,
+    diffEnabled: false,
+    usesPieceSelection: false,
+    component: GapShiftRiseInput,
+    createProps: (context) => ({
+      id: "algorithm-vector-input",
+      value: context.moveVector ?? { gap: 0, shift: 0, rise: 0 },
+      onChange: context.onMoveVectorChange,
+      min: context.moveVectorMin ?? { gap: -10, shift: -10, rise: -10 },
+      max: context.moveVectorMax ?? { gap: 10, shift: 10, rise: 10 },
+    }),
+    render: renderAlgorithmMoveVectorWindow,
   },
   [WindowKind.PIECES_SELECTION_INPUT]: {
     uiComponentId: "semio/ui:PieceSelection",
@@ -7096,7 +7255,13 @@ export function createAlgorithmWindowKinds(windows: AlgorithmWindowDef[]): UIWin
  * one for diff output, one for final design output. Matches the semio UI shell used in elements/UI stories.
  */
 export function createIpoAlgorithmLayout(windows: AlgorithmWindowDef[]): UIWindowLayout {
-  const inputKinds = new Set<WindowKind>([WindowKind.VEC_INPUT, WindowKind.PIECES_SELECTION_INPUT, WindowKind.SELECTION_INPUT, WindowKind.DESIGN_INPUT]);
+  const inputKinds = new Set<WindowKind>([
+    WindowKind.VEC_INPUT,
+    WindowKind.VECTOR_INPUT,
+    WindowKind.PIECES_SELECTION_INPUT,
+    WindowKind.SELECTION_INPUT,
+    WindowKind.DESIGN_INPUT,
+  ]);
   const inputWindows = windows.filter((w) => inputKinds.has(w.kind));
   const diffWindow = windows.find((w) => w.kind === WindowKind.DESIGN_DIFF_OUTPUT);
   const outputWindow = windows.find((w) => w.kind === WindowKind.DESIGN_OUTPUT || w.kind === WindowKind.SCENE);
@@ -7104,8 +7269,8 @@ export function createIpoAlgorithmLayout(windows: AlgorithmWindowDef[]): UIWindo
   const columns: Array<UIWindowLayoutAxisNode | UIWindowLayoutStackNode> = [];
   if (inputWindows.length > 1) {
     // 📝Multiple input windows: arrange as a column with VEC_INPUT at 20% and others at 80%.
-    const vecWindows = inputWindows.filter((w) => w.kind === WindowKind.VEC_INPUT);
-    const otherInputWindows = inputWindows.filter((w) => w.kind !== WindowKind.VEC_INPUT);
+    const vecWindows = inputWindows.filter((w) => w.kind === WindowKind.VEC_INPUT || w.kind === WindowKind.VECTOR_INPUT);
+    const otherInputWindows = inputWindows.filter((w) => w.kind !== WindowKind.VEC_INPUT && w.kind !== WindowKind.VECTOR_INPUT);
     const inputRows: UIWindowLayoutStackNode[] = [];
     if (vecWindows.length > 0) {
       inputRows.push({
@@ -7219,6 +7384,29 @@ const AlgorithmDetailsPanel: React.FC = () => {
             <div className="flex items-center justify-between w-full px-2 py-0.5">
               <span className="text-xs text-muted-foreground">v</span>
               <span className="text-xs font-mono">{ctx.vec.v}</span>
+            </div>
+          </TreeRow>
+        </TreeSection>
+      )}
+
+      {ctx.moveVector && (
+        <TreeSection id="algorithm.details.moveVector" label="Vector" icon={<DetailsIcon size={14} />} defaultOpen={true}>
+          <TreeRow id="algorithm.details.moveVector.gap" label={null}>
+            <div className="flex items-center justify-between w-full px-2 py-0.5">
+              <span className="text-xs text-muted-foreground">gap</span>
+              <span className="text-xs font-mono">{ctx.moveVector.gap}</span>
+            </div>
+          </TreeRow>
+          <TreeRow id="algorithm.details.moveVector.shift" label={null}>
+            <div className="flex items-center justify-between w-full px-2 py-0.5">
+              <span className="text-xs text-muted-foreground">shift</span>
+              <span className="text-xs font-mono">{ctx.moveVector.shift}</span>
+            </div>
+          </TreeRow>
+          <TreeRow id="algorithm.details.moveVector.rise" label={null}>
+            <div className="flex items-center justify-between w-full px-2 py-0.5">
+              <span className="text-xs text-muted-foreground">rise</span>
+              <span className="text-xs font-mono">{ctx.moveVector.rise}</span>
             </div>
           </TreeRow>
         </TreeSection>
@@ -7478,6 +7666,7 @@ if (algorithmVitest) {
   describe("algorithm window helpers", () => {
     it("recognizes the canonical algorithm window kinds", () => {
       expect(isAlgorithmWindowKind(WindowKind.VEC_INPUT)).toBe(true);
+      expect(isAlgorithmWindowKind(WindowKind.VECTOR_INPUT)).toBe(true);
       expect(isAlgorithmWindowKind(WindowKind.PIECES_SELECTION_INPUT)).toBe(true);
       expect(isAlgorithmWindowKind(WindowKind.SELECTION_INPUT)).toBe(true);
       expect(isAlgorithmWindowKind(WindowKind.DESIGN_INPUT)).toBe(true);
@@ -7527,6 +7716,7 @@ if (algorithmVitest) {
 
     it("maps algorithm selection and output windows to shared semio/ui components", () => {
       expect(getAlgorithmWindowBehavior(WindowKind.VEC_INPUT)?.component).toBe(Vec);
+      expect(getAlgorithmWindowBehavior(WindowKind.VECTOR_INPUT)?.component).toBe(GapShiftRiseInput);
       expect(getAlgorithmWindowBehavior(WindowKind.PIECES_SELECTION_INPUT)?.component).toBe(PieceSelection);
       expect(getAlgorithmWindowBehavior(WindowKind.SELECTION_INPUT)?.component).toBe(DiagramSelection);
       expect(getAlgorithmWindowBehavior(WindowKind.DESIGN_INPUT)?.component).toBe(SemioDiagram);

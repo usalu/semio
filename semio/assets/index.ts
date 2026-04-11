@@ -18,6 +18,8 @@ export { default as DragDiffDesignFree } from "./semio/drag/diff.design.free.sem
 export { default as DragDiffDesign } from "./semio/drag/diff.design.semio.json";
 export { default as DragOffset } from "./semio/drag/offset.semio.json";
 export { default as DragPieces } from "./semio/drag/pieces.semio.json";
+export { default as MoveVector } from "./semio/move/vector.semio.json";
+export { default as MoveDiffDesign } from "./semio/move/diff.design.semio.json";
 export { default as InvalidKit } from "./semio/invalid.kit.semio.json";
 export { default as MetabolismKitDiffInverted } from "./semio/metabolism.kit.diff.inverted.semio.json";
 export { default as MetabolismKitDiff } from "./semio/metabolism.kit.diff.semio.json";

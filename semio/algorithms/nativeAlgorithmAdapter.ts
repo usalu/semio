@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion Header
 
-import type { Coord, Design, DesignDiff, DesignDiffOperationResult, DesignOperationResult, Kit, OperationResult } from "@semio/js";
+import type { Coord, Design, DesignDiff, DesignDiffOperationResult, DesignOperationResult, Kit, MoveVector, OperationResult } from "@semio/js";
 import { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js";
 
 /** Language toolbar values; MUST stay aligned with `.storybook/withLanguage` AlgorithmLanguage. */
@@ -153,6 +153,35 @@ export async function nativeDragPieces(
   }
   const output = applyDesignDiff(updatedRaw, flatChange.change.forward);
   return { output, dragDiff };
+}
+
+/**
+ * Runs move in-process: flattens internally, applies {@link movePiecesInDesign} on the flat view,
+ * applies that diff to the raw design, re-flattens, and returns the final flat design plus the move diff for UI preview.
+ */
+export async function nativeMovePieces(
+  kit: Kit,
+  rawDesign: Design,
+  pieceGuids: readonly string[],
+  vector: MoveVector,
+  _language: NativeAlgorithmLanguage,
+): Promise<{ output: Design; moveDiff: DesignDiff }> {
+  const { movePiecesInDesign, applyDesignDiff, flattenDesign } = await import("@semio/js");
+  const fc = flattenDesign(kit, rawDesign.guid);
+  if (!fc.ok) {
+    throw new Error(fc.errors.map((e) => e.message).join("; "));
+  }
+  const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(rawDesign)), fc.change.forward);
+  const piecesDesign: Design = { guid: flatDesign.guid, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
+  const moveDiff = movePiecesInDesign(flatDesign, piecesDesign, vector);
+  const updatedRaw = applyDesignDiff(rawDesign, moveDiff);
+  const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === rawDesign.guid ? updatedRaw : d)) };
+  const flatChange = flattenDesign(updatedKit, rawDesign.guid);
+  if (!flatChange.ok) {
+    throw new Error(flatChange.errors.map((e) => e.message).join("; "));
+  }
+  const output = applyDesignDiff(updatedRaw, flatChange.change.forward);
+  return { output, moveDiff };
 }
 
 /**

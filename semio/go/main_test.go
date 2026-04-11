@@ -819,6 +819,103 @@ func TestDrag(t *testing.T) {
 	})
 }
 
+func TestMove(t *testing.T) {
+	t.Run("same drag fixture + move vector = plane and gap/shift/rise diff", func(t *testing.T) {
+		var design Design
+		loadJSON(t, "drag/design.semio.json", &design)
+		var pieces Design
+		loadJSON(t, "drag/pieces.semio.json", &pieces)
+		var vector MoveVector
+		loadJSON(t, "move/vector.semio.json", &vector)
+		type planeOrig struct {
+			X float64 `json:"x"`
+			Y float64 `json:"y"`
+			Z float64 `json:"z"`
+		}
+		type expPiece struct {
+			Piece struct {
+				Guid string `json:"guid"`
+			} `json:"piece"`
+			Diff struct {
+				Plane struct {
+					Origin planeOrig `json:"origin"`
+				} `json:"plane"`
+			} `json:"diff"`
+		}
+		type expConn struct {
+			Connection struct {
+				Guid string `json:"guid"`
+			} `json:"connection"`
+			Diff struct {
+				Gap   float64 `json:"gap"`
+				Shift float64 `json:"shift"`
+				Rise  float64 `json:"rise"`
+			} `json:"diff"`
+		}
+		type expectedMove struct {
+			Pieces      *struct{ Updated []expPiece } `json:"pieces"`
+			Connections *struct{ Updated []expConn } `json:"connections"`
+		}
+		var expected expectedMove
+		loadJSON(t, "move/diff.design.semio.json", &expected)
+		computed := MovePiecesInDesign(design, pieces, vector)
+		if expected.Pieces == nil {
+			t.Fatal("expected pieces")
+		}
+		if computed.Pieces == nil || len(computed.Pieces.Updated) != len(expected.Pieces.Updated) {
+			t.Fatalf("piece updates: want %d got %v", len(expected.Pieces.Updated), computed.Pieces)
+		}
+		expByGuid := make(map[string]expPiece)
+		for _, u := range expected.Pieces.Updated {
+			expByGuid[u.Piece.Guid] = u
+		}
+		for _, u := range computed.Pieces.Updated {
+			ex, ok := expByGuid[u.Piece.Guid]
+			if !ok {
+				t.Errorf("unexpected piece %s", u.Piece.Guid)
+				continue
+			}
+			if u.Diff.Plane == nil || u.Diff.Plane.Origin == nil {
+				t.Fatalf("nil plane for %s", u.Piece.Guid)
+			}
+			if u.Diff.Plane.Origin.X == nil || u.Diff.Plane.Origin.Y == nil || u.Diff.Plane.Origin.Z == nil {
+				t.Fatalf("nil origin for %s", u.Piece.Guid)
+			}
+			if !floatEqual(*u.Diff.Plane.Origin.X, ex.Diff.Plane.Origin.X, 0.001) ||
+				!floatEqual(*u.Diff.Plane.Origin.Y, ex.Diff.Plane.Origin.Y, 0.001) ||
+				!floatEqual(*u.Diff.Plane.Origin.Z, ex.Diff.Plane.Origin.Z, 0.001) {
+				t.Errorf("piece %s origin mismatch got (%v,%v,%v) want (%f,%f,%f)", u.Piece.Guid,
+					*u.Diff.Plane.Origin.X, *u.Diff.Plane.Origin.Y, *u.Diff.Plane.Origin.Z,
+					ex.Diff.Plane.Origin.X, ex.Diff.Plane.Origin.Y, ex.Diff.Plane.Origin.Z)
+			}
+		}
+		if expected.Connections == nil || computed.Connections == nil {
+			t.Fatal("expected connections")
+		}
+		if len(computed.Connections.Updated) != len(expected.Connections.Updated) {
+			t.Fatalf("conn updates: want %d got %d", len(expected.Connections.Updated), len(computed.Connections.Updated))
+		}
+		expC := make(map[string]expConn)
+		for _, u := range expected.Connections.Updated {
+			expC[u.Connection.Guid] = u
+		}
+		for _, u := range computed.Connections.Updated {
+			ex, ok := expC[u.Connection.Guid]
+			if !ok {
+				t.Errorf("unexpected conn %s", u.Connection.Guid)
+				continue
+			}
+			if u.Diff.Gap == nil || u.Diff.Shift == nil || u.Diff.Rise == nil {
+				t.Fatalf("nil gap/shift/rise for %s", u.Connection.Guid)
+			}
+			if !floatEqual(*u.Diff.Gap, ex.Diff.Gap, 0.001) || !floatEqual(*u.Diff.Shift, ex.Diff.Shift, 0.001) || !floatEqual(*u.Diff.Rise, ex.Diff.Rise, 0.001) {
+				t.Errorf("conn %s mismatch got (%f,%f,%f) want (%f,%f,%f)", u.Connection.Guid,
+					*u.Diff.Gap, *u.Diff.Shift, *u.Diff.Rise, ex.Diff.Gap, ex.Diff.Shift, ex.Diff.Rise)
+			}
+		}
+	})
+}
+
 func TestCopyAndPaste(t *testing.T) {
 	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
 		t.Run("Copy and Paste Roundtrip", func(t *testing.T) {

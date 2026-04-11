@@ -635,6 +635,43 @@ public class Tests
         }
     }
 
+    public class Move
+    {
+        [Fact]
+        public void Design_Pieces_MoveVector_DiffDesign()
+        {
+            var design = Tests.LoadAsset<Design>("drag/design.semio.json");
+            var pieces = Tests.LoadAsset<Design>("drag/pieces.semio.json");
+            var vector = Tests.LoadAsset<MoveVector>("move/vector.semio.json");
+            var expectedDiff = Tests.LoadAsset<DesignDiff>("move/diff.design.semio.json");
+            var computedDiff = Design.MovePiecesInDesign(design, pieces, vector);
+            Assert.NotNull(computedDiff.Pieces);
+            Assert.Equal(expectedDiff.Pieces!.Updated.Count, computedDiff.Pieces!.Updated.Count);
+            var expectedPieceMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Guid, u => u.Diff);
+            foreach (var u in computedDiff.Pieces.Updated)
+            {
+                Assert.True(expectedPieceMap.ContainsKey(u.Piece.Guid), $"Unexpected piece update for {u.Piece.Guid}");
+                var expected = expectedPieceMap[u.Piece.Guid];
+                Assert.NotNull(u.Diff!.Plane);
+                Assert.NotNull(expected!.Plane);
+                Assert.Equal(expected.Plane!.Origin.X, u.Diff.Plane!.Origin.X, 3);
+                Assert.Equal(expected.Plane.Origin.Y, u.Diff.Plane!.Origin.Y, 3);
+                Assert.Equal(expected.Plane.Origin.Z, u.Diff.Plane!.Origin.Z, 3);
+            }
+            Assert.NotNull(computedDiff.Connections);
+            Assert.Equal(expectedDiff.Connections!.Updated.Count, computedDiff.Connections!.Updated.Count);
+            var expectedConnMap = expectedDiff.Connections.Updated.ToDictionary(u => u.Connection.Guid, u => u.Diff);
+            foreach (var u in computedDiff.Connections.Updated)
+            {
+                Assert.True(expectedConnMap.ContainsKey(u.Connection.Guid), $"Unexpected connection update for {u.Connection.Guid}");
+                var expected = expectedConnMap[u.Connection.Guid];
+                Assert.Equal(expected!.Gap!.Value, u.Diff!.Gap!.Value, 3);
+                Assert.Equal(expected.Shift!.Value, u.Diff.Shift!.Value, 3);
+                Assert.Equal(expected.Rise!.Value, u.Diff.Rise!.Value, 3);
+            }
+        }
+    }
+
     public class Delete
     {
         [Fact]

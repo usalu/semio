@@ -6,5 +6,13 @@
 // #endregion 🧲Header
 
 export { AlgorithmApp, WindowKind, createIpoAlgorithmLayout, useAlgorithm, type AlgorithmAppProps, type AlgorithmContextValue, type AlgorithmWindowDef, type VecValue } from "@semio/ui";
-export { nativeDeletePieces, nativeDragPieces, nativeFlattenDesign, type NativeAlgorithmExecutePayload, type NativeAlgorithmLanguage, type NativeAlgorithmOperation } from "./nativeAlgorithmAdapter";
+export {
+  nativeDeletePieces,
+  nativeDragPieces,
+  nativeFlattenDesign,
+  nativeMovePieces,
+  type NativeAlgorithmExecutePayload,
+  type NativeAlgorithmLanguage,
+  type NativeAlgorithmOperation,
+} from "./nativeAlgorithmAdapter";
 

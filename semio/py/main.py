@@ -17,6 +17,7 @@
 
 
 
+
 # #region ⛩️Imports
 # Standard library, third-party and framework imports.
 from __future__ import annotations
@@ -72,6 +73,7 @@ import pytransform3d.rotations
 
 
 
+
 # #region 📝Type Hints
 # Custom type hint aliases used throughout the module.
 
@@ -79,6 +81,7 @@ RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 """🔁 A recursive any list is either any or a list where the items are recursive any list."""
 
 # #endregion 📝Type Hints
+
 
 
 
@@ -145,6 +148,7 @@ dotenv.load_dotenv()
 ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO_")}
 
 # #endregion 🎞️Constants
+
 
 
 
@@ -231,12 +235,14 @@ def normalizeAngle(angle: float) -> float:
 
 
 
+
 # #region 📰Logging
 # Module-level logger configuration.
 
 logger = loguru.logger
 
 # #endregion 📰Logging
+
 
 
 
@@ -372,6 +378,7 @@ class Semio(pydantic.BaseModel):
 
 
 # #endregion ⚠️Exceptions
+
 
 
 
@@ -589,6 +596,7 @@ class TableEntityNode(TableNode):
 
 
 
+
 # #region 💎Attribute
 # Attribute entity with key-value pairs and definitions.
 
@@ -723,6 +731,7 @@ class AttributeInputNode(InputNode):
 
 
 
+
 # #region 📺Coord
 # Coordinate primitive for three-dimensional values.
 
@@ -779,6 +788,7 @@ class CoordInputNode(InputNode):
 
 
 # #endregion 📺Coord
+
 
 
 
@@ -842,6 +852,7 @@ class PointInputNode(InputNode):
 
 
 
+
 # #region ↗️Vector
 # Vector primitive representing a direction in 3D space.
 
@@ -899,6 +910,7 @@ class VectorInputNode(InputNode):
 
 
 # #endregion ↗️Vector
+
 
 
 
@@ -1025,6 +1037,7 @@ class PlaneInputNode(InputNode):
 
 
 
+
 # #region 📍Location
 # Location entity for geographic coordinates with longitude, latitude and altitude.
 
@@ -1114,6 +1127,7 @@ class LocationInputNode(InputNode):
 
 
 
+
 # #region ✍️Author
 # Author entity for tracking contributor identity and rank.
 
@@ -1191,6 +1205,7 @@ class AuthorInputNode(InputNode):
 
 
 
+
 # #region 🔥ArtifactAuthor
 # Artifact-author association entity linking artifacts to authors by email.
 
@@ -1221,6 +1236,7 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity):
 
 
 # #endregion 🔥ArtifactAuthor
+
 
 
 
@@ -1398,6 +1414,7 @@ class FileInputNode(InputNode):
 
 
 # #endregion 📄File
+
 
 
 
@@ -1579,6 +1596,7 @@ class FolderInputNode(InputNode):
 
 
 # #endregion 📁Folder
+
 
 
 
@@ -1773,6 +1791,7 @@ if __name__ == "__main__":
     benchmark_main()
 
 # #endregion 📏Benchmark
+
 
 
 
@@ -2028,6 +2047,7 @@ class Quality(
 
 
 
+
 # #region ⚓Port
 # Port entity for defining connection interfaces on types.
 
@@ -2104,6 +2124,7 @@ class PortInputNode(InputNode):
 
 
 # #endregion ⚓Port
+
 
 
 
@@ -2235,6 +2256,7 @@ class PropInputNode(InputNode):
 
 
 
+
 # #region 🏷️Tag
 # Tag entity for categorizing and labeling kit elements.
 
@@ -2290,6 +2312,7 @@ class Tag(
 
 
 
+
 # #region 💡Concept
 # Concept entity for semantic grouping of design elements.
 
@@ -2342,6 +2365,7 @@ class Concept(
 
 
 # #endregion 💡Concept
+
 
 
 
@@ -2500,6 +2524,7 @@ class ModelInputNode(InputNode):
 
 
 # #endregion 🗿Model
+
 
 
 
@@ -2780,6 +2805,7 @@ class ConnectorIdInputNode(InputNode):
 
 
 # #endregion 🔌Connector
+
 
 
 
@@ -3193,6 +3219,7 @@ class TypeIdInputNode(InputNode):
 
 
 
+
 # #region 🎨Layer
 # Layer entity for organizing design elements into visibility groups.
 
@@ -3287,6 +3314,7 @@ class Layer(
 
 
 # #endregion 🎨Layer
+
 
 
 
@@ -3549,6 +3577,7 @@ class PieceIdInputNode(InputNode):
 
 
 
+
 # #region 👥Group
 # Group entity for named collections of pieces in a design.
 
@@ -3603,6 +3632,7 @@ class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity)
 
 
 # #endregion 👥Group
+
 
 
 
@@ -3697,6 +3727,7 @@ class SideInputNode(InputNode):
 
 
 # #endregion ↔️Side
+
 
 
 
@@ -4059,6 +4090,7 @@ class ConnectionInputNode(InputNode):
 
 
 
+
 # #region 📈Stat
 # Stat entity for recording computed statistics with bounds.
 
@@ -4180,6 +4212,7 @@ class Stat(
 
 
 # #endregion 📈Stat
+
 
 
 
@@ -4549,6 +4582,7 @@ class DesignIdInputNode(InputNode):
 
 
 # #endregion 📐Design
+
 
 
 
@@ -5454,6 +5488,7 @@ class Kit(
 
 
 
+
 # #region 🔑Meta And Shallow
 # Meta And Shallow Types MUST provide lightweight entity representations.
 
@@ -6164,6 +6199,7 @@ def kitToShallow(d: dict) -> KitShallow:
 # #endregion 📎Meta And Shallow Conversions
 
 # #endregion 🔑Meta And Shallow
+
 
 
 
@@ -7648,6 +7684,7 @@ def hash_kit_diff(d: dict) -> str:
 
 
 
+
 # #region 🎪Kit Operations
 # Dict-based pure functions for kit operations exposed via MCP.
 
@@ -8208,6 +8245,7 @@ def sumQualityInDesignDict(kit: dict, design_guid: str, quality_guid: str) -> fl
 
 
 
+
 # #region 🧭Moved Graphene Nodes
 # Graphene node definitions moved here due to forward-reference resolution order.
 
@@ -8403,6 +8441,7 @@ class KitNode(TableEntityNode):
 
 
 # #endregion 🧭Moved Graphene Nodes
+
 
 
 
@@ -9356,6 +9395,7 @@ def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
 
 
 
+
 # #region 🌤️Flatten Design
 # Design flattening to resolve nested sub-designs into a single coordinate space.
 
@@ -9702,6 +9742,7 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
 
 
 # #endregion 🌤️Flatten Design
+
 
 
 
@@ -12850,6 +12891,7 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
 
 
 
+
 # #region 🧿Kit Import/Export
 # Import and export utilities for kit serialization and deserialization.
 
@@ -14175,6 +14217,7 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
 
 
 # #endregion 🧿Kit Import/Export
+
 
 
 
@@ -15881,6 +15924,7 @@ def _export_ifc_from_entities(
 
 
 
+
 # #region ❄️Geometric Insights
 # Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
@@ -16147,6 +16191,7 @@ def geometric_insights_to_report_dict(insights: GeometricInsights, round_digits:
 
 
 
+
 # #region 🔍Spatial Math
 # Spatial math utilities for vector normalization and plane computation.
 
@@ -16262,6 +16307,7 @@ def computeChildPlane(
 
 
 # #endregion 🔍Spatial Math
+
 
 
 

@@ -10,6 +10,8 @@
 
 
 
+
+
 #region ⛩️Imports
 // Callers MUST import all required namespaces listed here.
 using System.Collections;
@@ -47,6 +49,17 @@ using GltfModel = SharpGLTF.Schema2.ModelRoot;
 using GltfNode = SharpGLTF.Schema2.Node;
 
 #endregion ⛩️Imports
+
+
+
+
+
+#region 🏠Namespace
+// Implementations MUST reside in this namespace.
+namespace Semio;
+#endregion 🏠Namespace
+
+
 
 
 
@@ -110,6 +123,8 @@ public enum DiffStatus
 }
 
 #endregion 🎞️Constants
+
+
 
 
 
@@ -1468,11 +1483,6 @@ public class Expression
 
 
 
-#region 🏠Namespace
-// Implementations MUST reside in this namespace.
-namespace Semio;
-#endregion 🏠Namespace
-
 
 
 #region 🔓Entitying
@@ -1535,6 +1545,8 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
 }
 
 #endregion 🔓Entitying
+
+
 
 
 
@@ -1817,6 +1829,8 @@ public static class SemioValidator
 }
 
 #endregion ✨SemioValidation
+
+
 
 
 
@@ -2122,6 +2136,8 @@ public class Attribute : Entity<Attribute>
 
 
 
+
+
 #region 📺Coord
 // Implementations MUST share X, Y, Z coordinate fields for spatial types.
 
@@ -2140,6 +2156,22 @@ public class Coord : Entity<Coord>
 #endregion 📺Coord
 
 
+#region 📦MoveVector
+// Implementations MUST carry gap/shift/rise deltas in the piece plane frame for move operations.
+
+public class MoveVector
+{
+    public double Gap { get; set; }
+    public double Shift { get; set; }
+    public double Rise { get; set; }
+}
+
+#endregion 📦MoveVector
+
+
+
+
+
 
 #region ✖️Point
 // Implementations MUST represent a 3D point with X, Y, Z coordinates.
@@ -2152,6 +2184,8 @@ public class Point : Entity<Point>
 }
 
 #endregion ✖️Point
+
+
 
 
 
@@ -2191,6 +2225,8 @@ public class Vector : Entity<Vector>
 
 
 
+
+
 #region ◻️Plane
 // Implementations MUST define a 3D plane by origin and X/Y direction vectors.
 
@@ -2226,6 +2262,8 @@ public class Plane : Entity<Plane>
 
 
 
+
+
 #region 📍Location
 // Implementations MUST combine a plane with rotation and elevation for placement.
 
@@ -2251,6 +2289,8 @@ public class Location : Entity<Location>
 }
 
 #endregion 📍Location
+
+
 
 
 
@@ -2376,6 +2416,8 @@ public class AuthorsDiff : Entity<AuthorsDiff>
 
 
 
+
+
 #region 📄File
 // Implementations MUST reference a file with URI, MIME type, and optional content.
 
@@ -2484,6 +2526,8 @@ public class File : Entity<File>
     public static implicit operator FileDiff(File file) => new() { Guid = file.Guid, Name = file.Name, Remote = file.Remote, Folder = file.Folder, Size = file.Size, Hash = file.Hash, Blob = file.Blob, CreatedAt = file.CreatedAt, CreatedBy = file.CreatedBy, UpdatedAt = file.UpdatedAt, UpdatedBy = file.UpdatedBy };
 }
 #endregion 📄File
+
+
 
 
 
@@ -2601,6 +2645,8 @@ public class Folder : Entity<Folder>
 
 
 
+
+
 #region 📏Benchmark
 // Implementations MUST capture benchmark metadata for performance measurement.
 
@@ -2663,6 +2709,8 @@ public class BenchmarkDiff : Entity<BenchmarkDiff>
 
 
 
+
+
 #region 🖨️QualityKind
 // Implementations MUST categorize quality metrics by kind.
 
@@ -2678,6 +2726,8 @@ public enum QualityKind
 }
 
 #endregion 🖨️QualityKind
+
+
 
 
 
@@ -2766,6 +2816,8 @@ public class Quality : Entity<Quality>
 }
 
 #endregion 🔬Quality
+
+
 
 
 
@@ -2889,6 +2941,8 @@ public class Port : Entity<Port>
 
 
 
+
+
 #region 📊Prop
 // Implementations MUST bind a property name to an expression value.
 
@@ -2937,6 +2991,8 @@ public class PropDiff : Entity<PropDiff>
 }
 
 #endregion 📊Prop
+
+
 
 
 
@@ -2998,6 +3054,8 @@ public class TagsDiff : Entity<TagsDiff>
 }
 
 #endregion 🏷️Tag
+
+
 
 
 
@@ -3069,6 +3127,8 @@ public class ConceptsDiff : Entity<ConceptsDiff>
 }
 
 #endregion 💡Concept
+
+
 
 
 
@@ -3227,6 +3287,8 @@ public class Model : Entity<Model>
 }
 
 #endregion 🗿Model
+
+
 
 
 
@@ -3516,6 +3578,8 @@ public class Connector : Entity<Connector>
 }
 
 #endregion 🔌Connector
+
+
 
 
 
@@ -3900,6 +3964,8 @@ public class Type : Entity<Type>
 
 
 
+
+
 #region 🎨Layer
 // Implementations MUST organize pieces into named layers within a design.
 
@@ -3956,6 +4022,8 @@ public class LayerDiff : Entity<LayerDiff>
 }
 
 #endregion 🎨Layer
+
+
 
 
 
@@ -4127,6 +4195,8 @@ public class Piece : Entity<Piece>
 
 
 
+
+
 #region 👥Group
 // Implementations MUST group pieces by name within a design.
 
@@ -4179,6 +4249,8 @@ public class GroupDiff : Entity<GroupDiff>
 }
 
 #endregion 👥Group
+
+
 
 
 #region ↔️Side
@@ -4276,6 +4348,8 @@ public class Side : Entity<Side>
 }
 
 #endregion ↔️Side
+
+
 
 
 
@@ -4558,6 +4632,8 @@ public class Connection : Entity<Connection>
 
 
 
+
+
 #region 📈Stat
 // Implementations MUST associate statistical metrics with a design.
 
@@ -4614,6 +4690,8 @@ public class StatDiff : Entity<StatDiff>
 }
 
 #endregion 📈Stat
+
+
 
 
 
@@ -6075,6 +6153,97 @@ text {
         return diff;
     }
 
+    private static Point MoveTranslationWorldFromPiecePlane(Plane plane, MoveVector vector)
+    {
+        var xRaw = new System.Numerics.Vector3((float)plane.XAxis.X, (float)plane.XAxis.Y, (float)plane.XAxis.Z);
+        if (xRaw.LengthSquared() < 1e-12f) return new Point();
+        var x = System.Numerics.Vector3.Normalize(xRaw);
+        var yRaw = new System.Numerics.Vector3((float)plane.YAxis.X, (float)plane.YAxis.Y, (float)plane.YAxis.Z);
+        if (yRaw.LengthSquared() < 1e-12f) return new Point();
+        var y = System.Numerics.Vector3.Normalize(yRaw);
+        var z = System.Numerics.Vector3.Cross(x, y);
+        if (z.LengthSquared() < 1e-12f) return new Point();
+        z = System.Numerics.Vector3.Normalize(z);
+        var t = x * (float)vector.Shift + y * (float)vector.Gap + z * (float)vector.Rise;
+        return new Point { X = t.X, Y = t.Y, Z = t.Z };
+    }
+
+    public static DesignDiff MovePiecesInDesign(Design design, Design pieces, MoveVector vector)
+    {
+        var designConnections = design.Connections;
+        var selectedPieces = pieces.Pieces;
+        var selectedGuids = new HashSet<string>(selectedPieces.Select(p => p.Guid));
+        var connectionByChild = new Dictionary<string, Connection>();
+        foreach (var conn in designConnections)
+        {
+            connectionByChild[conn.Connecting.Piece.Guid] = conn;
+        }
+        var fixedGuids = new HashSet<string>();
+        foreach (var guid in selectedGuids)
+        {
+            if (!connectionByChild.ContainsKey(guid))
+                fixedGuids.Add(guid);
+        }
+        var pieceMap = design.Pieces.ToDictionary(p => p.Guid);
+        var pieceUpdates = new List<PieceDiffUpdate>();
+        foreach (var guid in fixedGuids)
+        {
+            if (!pieceMap.TryGetValue(guid, out var piece) || piece.Plane == null) continue;
+            var basePlane = piece.Plane;
+            var t = MoveTranslationWorldFromPiecePlane(basePlane, vector);
+            pieceUpdates.Add(new PieceDiffUpdate
+            {
+                Piece = new PieceId { Guid = guid },
+                Diff = new PieceDiff
+                {
+                    Plane = new Plane
+                    {
+                        Origin = new Point
+                        {
+                            X = basePlane.Origin.X + t.X,
+                            Y = basePlane.Origin.Y + t.Y,
+                            Z = basePlane.Origin.Z + t.Z,
+                        },
+                        XAxis = new Vector { X = basePlane.XAxis.X, Y = basePlane.XAxis.Y, Z = basePlane.XAxis.Z },
+                        YAxis = new Vector { X = basePlane.YAxis.X, Y = basePlane.YAxis.Y, Z = basePlane.YAxis.Z },
+                    },
+                },
+            });
+        }
+        var connectionUpdates = new List<ConnectionDiffUpdate>();
+        foreach (var guid in selectedGuids)
+        {
+            if (fixedGuids.Contains(guid)) continue;
+            var isDescendant = false;
+            var current = guid;
+            while (connectionByChild.TryGetValue(current, out var conn))
+            {
+                var parentGuid = conn.Connected.Piece.Guid;
+                if (selectedGuids.Contains(parentGuid))
+                {
+                    isDescendant = true;
+                    break;
+                }
+                current = parentGuid;
+            }
+            if (isDescendant) continue;
+            if (connectionByChild.TryGetValue(guid, out var parentConn))
+            {
+                connectionUpdates.Add(new ConnectionDiffUpdate
+                {
+                    Connection = new ConnectionId { Guid = parentConn.Guid },
+                    Diff = new ConnectionDiff { Gap = vector.Gap, Shift = vector.Shift, Rise = vector.Rise },
+                });
+            }
+        }
+        var diff = new DesignDiff();
+        if (pieceUpdates.Count > 0)
+            diff.Pieces = new PiecesDiff { Updated = pieceUpdates };
+        if (connectionUpdates.Count > 0)
+            diff.Connections = new ConnectionsDiff { Updated = connectionUpdates };
+        return diff;
+    }
+
     /// <summary>
     /// Deletes pieces and connections from a design, returning a DesignDiff.
     /// Removes stale connections referencing deleted pieces.
@@ -6665,6 +6834,8 @@ text {
 }
 
 #endregion 📐Design
+
+
 
 
 
@@ -8826,6 +8997,8 @@ public class Kit : Entity<Kit>
 
 
 
+
+
 #region 🔑Meta And Shallow
 // Meta classes strip List<> and heavy blob properties. Shallow classes replace List<> properties with Meta item lists.
 
@@ -9475,6 +9648,8 @@ public static class MetaShallowConversions
 #endregion 📎Meta And Shallow Conversions
 
 #endregion 🔑Meta And Shallow
+
+
 
 
 
@@ -11610,6 +11785,8 @@ public static class Hashing
 
 
 
+
+
 #region 📦Kit Diff Validation
 
 public sealed class KitDiffValidationNote
@@ -11631,6 +11808,8 @@ public sealed class KitDiffValidationResult
 }
 
 #endregion 📦Kit Diff Validation
+
+
 
 
 
@@ -11760,6 +11939,8 @@ public class ServerException : Exception
 }
 
 #endregion 🎪Api
+
+
 
 
 #region 🔓KitSqlite
@@ -13298,6 +13479,8 @@ public static class KitSqlite
 #endregion 🔓KitSqlite
 
 
+
+
 #region 🎪ZipRoundtrip
 // Callers MUST use these methods to import and export kits as ZIP archives.
 
@@ -13644,6 +13827,8 @@ public static class ZipRoundtrip
 
 
 
+
+
 #region 📷FileKit
 // Callers MUST use FileKit for JSON file kit import, export, and edit operations.
 
@@ -13669,6 +13854,8 @@ public static class FileKit
 }
 
 #endregion 📷FileKit
+
+
 
 
 
@@ -13771,6 +13958,8 @@ public static class FolderKit
 
 
 
+
+
 #region 📐ArchiveKit
 // Callers MUST use ArchiveKit for ZIP archive import, export, and edit operations.
 
@@ -13790,6 +13979,8 @@ public static class ArchiveKit
 }
 
 #endregion 📐ArchiveKit
+
+
 
 
 
@@ -13835,6 +14026,8 @@ public static class RemoteKit
 
 
 
+
+
 #region 🔤TemporaryKit
 // Callers MUST use TemporaryKit for in-memory kit edits without persistence.
 
@@ -13848,6 +14041,8 @@ public static class TemporaryKit
 }
 
 #endregion 🔤TemporaryKit
+
+
 
 
 
@@ -13866,6 +14061,8 @@ public static class KitImporter
 
 
 
+
+
 #region 🪁KitExporter
 // Callers MUST use ExportToZip for high-level kit export.
 
@@ -13878,6 +14075,8 @@ public static class KitExporter
 }
 
 #endregion 🪁KitExporter
+
+
 
 
 

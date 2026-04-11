@@ -366,12 +366,12 @@ CANONICAL_ORDER = [
     # Infrastructure
     "Header",
     "Imports",
+    "Namespace",
     "Type Hints",
     "Constants",
     "Utilities",
     "Logging",
     "Exceptions",
-    "Namespace",
     "Expressions",
     "Entitying",
     "SemioValidation",

@@ -6614,6 +6614,145 @@ mod flatten_design { // 🌤️Flatten Design
         Plane::new(origin, x_axis, y_axis)
     }
 
+    #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq)]
+    /// <summary>MoveVector carries gap, shift, and rise in the piece plane frame.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct MoveVector {
+        pub gap: f64,
+        pub shift: f64,
+        pub rise: f64,
+    }
+
+    /// <summary>World translation from a piece plane and move vector (gap along yAxis, shift along xAxis, rise along normal).</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn move_translation_world_from_piece_plane(plane: &Plane, vector: &MoveVector) -> Vector {
+        let mut x = plane.x_axis.to_nalgebra();
+        if x.norm() < 1e-12 {
+            return Vector::zero();
+        }
+        x.normalize_mut();
+        let mut y = plane.y_axis.to_nalgebra();
+        if y.norm() < 1e-12 {
+            return Vector::zero();
+        }
+        y.normalize_mut();
+        let mut z = x.cross(&y);
+        if z.norm() < 1e-12 {
+            return Vector::zero();
+        }
+        z.normalize_mut();
+        let t = x * vector.shift + y * vector.gap + z * vector.rise;
+        Vector::from_nalgebra(&t)
+    }
+
+    /// <summary>Like drag_pieces_in_design but updates root piece planes and parent-connection gap/shift/rise for movers.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn move_pieces_in_design(
+        design_pieces: &[Piece],
+        design_connections: &[Connection],
+        selected_pieces: &[Piece],
+        vector: &MoveVector,
+    ) -> DesignDiff {
+        let selected_guids: HashSet<&str> =
+            selected_pieces.iter().map(|p| p.guid.as_str()).collect();
+        let mut parent_map: HashMap<&str, (&str, &str)> = HashMap::new();
+        for conn in design_connections {
+            let connecting_guid = conn.connecting.piece.guid.as_str();
+            let connected_guid = conn.connected.piece.guid.as_str();
+            parent_map.insert(connecting_guid, (conn.guid.as_str(), connected_guid));
+        }
+        let piece_map: HashMap<&str, &Piece> =
+            design_pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+        let fixed_guids: HashSet<&str> = selected_guids
+            .iter()
+            .filter(|&&guid| !parent_map.contains_key(guid))
+            .copied()
+            .collect();
+        let piece_updates: Vec<DiffUpdate<PieceDiff>> = fixed_guids
+            .iter()
+            .filter_map(|&guid| {
+                let piece = piece_map.get(guid)?;
+                let base = piece.plane.as_ref()?;
+                let t = move_translation_world_from_piece_plane(base, vector);
+                let new_plane = Plane {
+                    origin: Vector::new(
+                        base.origin.x + t.x,
+                        base.origin.y + t.y,
+                        base.origin.z + t.z,
+                    ),
+                    x_axis: base.x_axis.clone(),
+                    y_axis: base.y_axis.clone(),
+                };
+                Some(DiffUpdate {
+                    key: "piece".to_string(),
+                    guid: guid.to_string(),
+                    diff: PieceDiff {
+                        guid: guid.to_string(),
+                        plane: Some(Some(new_plane)),
+                        ..Default::default()
+                    },
+                })
+            })
+            .collect();
+        let connection_updates: Vec<DiffUpdate<ConnectionDiff>> = selected_guids
+            .iter()
+            .filter(|&&guid| {
+                if fixed_guids.contains(guid) {
+                    return false;
+                }
+                let mut current = guid;
+                loop {
+                    match parent_map.get(current) {
+                        Some(&(_conn_guid, ancestor_guid)) => {
+                            if selected_guids.contains(ancestor_guid) {
+                                return false;
+                            }
+                            current = ancestor_guid;
+                        }
+                        None => break,
+                    }
+                }
+                parent_map.contains_key(guid)
+            })
+            .map(|&guid| {
+                let (conn_guid, _parent_guid) = parent_map[guid];
+                DiffUpdate {
+                    key: "connection".to_string(),
+                    guid: conn_guid.to_string(),
+                    diff: ConnectionDiff {
+                        guid: conn_guid.to_string(),
+                        gap: Some(vector.gap),
+                        shift: Some(vector.shift),
+                        rise: Some(vector.rise),
+                        ..Default::default()
+                    },
+                }
+            })
+            .collect();
+        let mut diff = DesignDiff {
+            guid: String::new(),
+            ..Default::default()
+        };
+        if !piece_updates.is_empty() {
+            diff.pieces = Some(CollectionDiff {
+                added: None,
+                removed: None,
+                updated: Some(piece_updates),
+            });
+        }
+        if !connection_updates.is_empty() {
+            diff.connections = Some(CollectionDiff {
+                added: None,
+                removed: None,
+                updated: Some(connection_updates),
+            });
+        }
+        diff
+    }
+
     pub fn drag_pieces_in_design(
         design_pieces: &[Piece],
         design_connections: &[Connection],
@@ -14886,6 +15025,155 @@ mod tests { // 🧪Tests
             }
         } // 🏊Drag Tests
         pub use drag_tests::*;
+
+        mod move_tests {
+            // Move Tests MUST verify move_pieces_in_design against shared drag fixture assets.
+
+            use super::*;
+
+            mod move_op {
+                use super::*;
+
+                #[test]
+                pub fn design_pieces_move_vector_diff_design() {
+                    let design_path = Path::new(ASSETS_DIR).join("drag/design.semio.json");
+                    let design_data =
+                        fs::read_to_string(&design_path).expect("Failed to read design");
+                    let design_json: serde_json::Value =
+                        serde_json::from_str(&design_data).expect("Failed to parse design");
+                    let design_pieces: Vec<Piece> =
+                        serde_json::from_value(design_json["pieces"].clone()).unwrap_or_default();
+                    let design_connections: Vec<Connection> =
+                        serde_json::from_value(design_json["connections"].clone())
+                            .unwrap_or_default();
+                    let pieces_path = Path::new(ASSETS_DIR).join("drag/pieces.semio.json");
+                    let pieces_data =
+                        fs::read_to_string(&pieces_path).expect("Failed to read pieces");
+                    let pieces_json: serde_json::Value =
+                        serde_json::from_str(&pieces_data).expect("Failed to parse pieces");
+                    let selected_pieces: Vec<Piece> =
+                        serde_json::from_value(pieces_json["pieces"].clone()).unwrap_or_default();
+                    let vector_path = Path::new(ASSETS_DIR).join("move/vector.semio.json");
+                    let vector_data =
+                        fs::read_to_string(&vector_path).expect("Failed to read move vector");
+                    let vector: MoveVector =
+                        serde_json::from_str(&vector_data).expect("Failed to parse move vector");
+                    let diff_path = Path::new(ASSETS_DIR).join("move/diff.design.semio.json");
+                    let diff_data = fs::read_to_string(&diff_path).expect("Failed to read diff");
+                    let expected: serde_json::Value =
+                        serde_json::from_str(&diff_data).expect("Failed to parse expected diff");
+                    let computed = move_pieces_in_design(
+                        &design_pieces,
+                        &design_connections,
+                        &selected_pieces,
+                        &vector,
+                    );
+                    let computed_json: serde_json::Value =
+                        serde_json::to_value(&computed).expect("Failed to serialize computed diff");
+                    let expected_pieces = expected["pieces"]["updated"].as_array();
+                    let computed_pieces = computed_json["pieces"]["updated"].as_array();
+                    match (expected_pieces, computed_pieces) {
+                        (Some(ep), Some(cp)) => {
+                            assert_eq!(cp.len(), ep.len(), "Piece updates count mismatch");
+                            let mut expected_map: std::collections::HashMap<
+                                &str,
+                                &serde_json::Value,
+                            > = std::collections::HashMap::new();
+                            for u in ep {
+                                expected_map
+                                    .insert(u["piece"]["guid"].as_str().unwrap(), &u["diff"]);
+                            }
+                            for u in cp {
+                                let guid = u["piece"]["guid"].as_str().unwrap();
+                                let exp = expected_map.get(guid).unwrap_or_else(|| {
+                                    panic!("Unexpected piece update for {}", guid)
+                                });
+                                let tol = 0.001;
+                                let eo = &exp["plane"]["origin"];
+                                let co = &u["diff"]["plane"]["origin"];
+                                assert!(
+                                    (co["x"].as_f64().unwrap() - eo["x"].as_f64().unwrap()).abs()
+                                        < tol,
+                                    "Piece {} plane origin x mismatch",
+                                    guid
+                                );
+                                assert!(
+                                    (co["y"].as_f64().unwrap() - eo["y"].as_f64().unwrap()).abs()
+                                        < tol,
+                                    "Piece {} plane origin y mismatch",
+                                    guid
+                                );
+                                assert!(
+                                    (co["z"].as_f64().unwrap() - eo["z"].as_f64().unwrap()).abs()
+                                        < tol,
+                                    "Piece {} plane origin z mismatch",
+                                    guid
+                                );
+                            }
+                        }
+                        (None, None) => {}
+                        _ => panic!(
+                            "Piece updates mismatch: expected {:?} vs computed {:?}",
+                            expected_pieces.map(|v| v.len()),
+                            computed_pieces.map(|v| v.len())
+                        ),
+                    }
+                    let expected_conns = expected["connections"]["updated"].as_array();
+                    let computed_conns = computed_json["connections"]["updated"].as_array();
+                    match (expected_conns, computed_conns) {
+                        (Some(ec), Some(cc)) => {
+                            assert_eq!(cc.len(), ec.len(), "Connection updates count mismatch");
+                            let mut expected_map: std::collections::HashMap<
+                                &str,
+                                &serde_json::Value,
+                            > = std::collections::HashMap::new();
+                            for u in ec {
+                                expected_map
+                                    .insert(u["connection"]["guid"].as_str().unwrap(), &u["diff"]);
+                            }
+                            for u in cc {
+                                let guid = u["connection"]["guid"].as_str().unwrap();
+                                let exp = expected_map.get(guid).unwrap_or_else(|| {
+                                    panic!("Unexpected connection update for {}", guid)
+                                });
+                                let tol = 0.001;
+                                assert!(
+                                    (u["diff"]["gap"].as_f64().unwrap()
+                                        - exp["gap"].as_f64().unwrap())
+                                        .abs()
+                                        < tol,
+                                    "Connection {} gap mismatch",
+                                    guid
+                                );
+                                assert!(
+                                    (u["diff"]["shift"].as_f64().unwrap()
+                                        - exp["shift"].as_f64().unwrap())
+                                        .abs()
+                                        < tol,
+                                    "Connection {} shift mismatch",
+                                    guid
+                                );
+                                assert!(
+                                    (u["diff"]["rise"].as_f64().unwrap()
+                                        - exp["rise"].as_f64().unwrap())
+                                        .abs()
+                                        < tol,
+                                    "Connection {} rise mismatch",
+                                    guid
+                                );
+                            }
+                        }
+                        (None, None) => {}
+                        _ => panic!(
+                            "Connection updates mismatch: expected {:?} vs computed {:?}",
+                            expected_conns.map(|v| v.len()),
+                            computed_conns.map(|v| v.len())
+                        ),
+                    }
+                }
+            }
+        }
+        pub use move_tests::*;
 
         mod validation_tests {
             // 🗝️Validation Tests

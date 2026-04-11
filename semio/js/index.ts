@@ -24,6 +24,7 @@ import { z } from "zod";
 
 
 
+
 // #region 🎞️Constants
 // Global constants MUST define shared numeric parameters.
 
@@ -36,6 +37,7 @@ export const ICON_WIDTH = 50;
 export const TOLERANCE = 1e-5;
 
 // #endregion 🎞️Constants
+
 
 
 
@@ -187,6 +189,7 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 export type Guid = string;
 
 // #endregion 📦Utilities
+
 
 
 // #region 🐍Entity IDs
@@ -620,6 +623,7 @@ export const getConceptGuid = (id: ConceptId): Guid => id.guid;
 // #endregion 🐍Entity IDs
 
 
+
 // #region 💎Attribute
 // Attribute entity types, schemas, and helper functions MUST be defined here.
 // 📅DateProperty represents a date-time value as ISO string.
@@ -807,6 +811,7 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
 
 
 
+
 // #region 📺Coord
 // Coord weak entity types and schemas MUST be defined here.
 
@@ -879,6 +884,7 @@ export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
 
 
 
+
 // #region ➡️Vec
 // Vec weak entity types and schemas MUST be defined here.
 
@@ -948,6 +954,7 @@ export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
 };
 
 // #endregion ➡️Vec
+
 
 
 
@@ -1033,6 +1040,7 @@ export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
 
 
 
+
 // #region ↗️Vector
 // Vector weak entity types and schemas MUST be defined here.
 
@@ -1112,6 +1120,7 @@ export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
 };
 
 // #endregion ↗️Vector
+
 
 
 
@@ -1269,6 +1278,7 @@ export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
 
 
 
+
 // #region 🎥Camera
 
 // Camera weak entity types and schemas MUST be defined here.
@@ -1353,6 +1363,7 @@ export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
 
 
 
+
 // #region 📍Location
 // Location entity types, schemas, and helpers MUST be defined here.
 
@@ -1433,6 +1444,7 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
 };
 
 // #endregion 📍Location
+
 
 
 
@@ -1553,6 +1565,7 @@ export const AuthorsDiffSchema = z.object({
 export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
 // #endregion ✍️Author
+
 
 
 
@@ -1704,6 +1717,7 @@ export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 
 
 
+
 // #region 📁Folder
 // Folder entity types, schemas, and helpers MUST be defined here.
 
@@ -1846,6 +1860,7 @@ export const FoldersDiffSchema = z.object({
 export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
 
 // #endregion 📁Folder
+
 
 
 
@@ -2018,6 +2033,7 @@ const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark
 };
 
 // #endregion 📏Benchmark
+
 
 
 
@@ -2212,6 +2228,7 @@ export const QualitiesDiffSchema = z.object({
 export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>;
 
 // #endregion 🔬Quality
+
 
 
 
@@ -2457,6 +2474,7 @@ export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | unde
 
 
 
+
 // #region 📊Prop
 // Prop entity types, schemas, and helpers MUST be defined here.
 
@@ -2642,6 +2660,7 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
 };
 
 // #endregion 📊Prop
+
 
 
 
@@ -2874,6 +2893,7 @@ export const findTag = (tags: Tag[], guid: string): Tag => {
 
 
 
+
 // #region 💡Concept
 // Concept entity types, schemas, and helpers MUST be defined here.
 
@@ -3100,6 +3120,7 @@ export const findConcept = (concepts: Concept[], guid: string): Concept => {
 };
 
 // #endregion 💡Concept
+
 
 
 
@@ -3399,6 +3420,7 @@ export const validateModelFile = (filename: string): ModelFileValidation => {
 
 
 
+
 // #region 🔌Connector
 // Connector entity types, schemas, and helpers MUST be defined here.
 
@@ -3606,6 +3628,7 @@ export const findConnector = (connectors: Connector[], connectorGuid: string): C
 };
 
 // #endregion 🔌Connector
+
 
 
 
@@ -3830,6 +3853,7 @@ export const findConnectorInType = (type: Type, connectorGuid: string): Connecto
 
 
 
+
 // #region 🎨Layer
 // Layer entity types, schemas, and helpers MUST be defined here.
 
@@ -3965,6 +3989,7 @@ export const LayersDiffSchema = z.object({
 export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
 // #endregion 🎨Layer
+
 
 
 
@@ -4225,6 +4250,7 @@ export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
 
 
 
+
 // #region 👥Group
 // Group entity types, schemas, and helpers MUST be defined here.
 
@@ -4358,6 +4384,7 @@ export const deserializeGroupShallow = (json: string): GroupShallow => GroupShal
 
 
 
+
 // #region ↔️Side
 // Side entity types, schemas, and helpers MUST be defined here.
 
@@ -4453,6 +4480,7 @@ export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.par
 export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.connector?.guid === b.connector?.guid;
 
 // #endregion ↔️Side
+
 
 
 
@@ -4670,6 +4698,7 @@ export const findConnectorForPieceInConnection = (type: Type, connection: Connec
 
 
 
+
 // #region 📈Stat
 // Stat entity types, schemas, and helpers MUST be defined here.
 
@@ -4795,6 +4824,7 @@ export const serializeStatShallow = (stat: StatShallow): string => JSON.stringif
 export const deserializeStatShallow = (json: string): StatShallow => StatShallowSchema.parse(JSON.parse(json));
 
 // #endregion 📈Stat
+
 
 
 
@@ -6106,6 +6136,85 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
  * Computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
  * A piece's parent connection is the connection where it is the connecting (child) piece.
  **/
+/**
+ * Placement deltas in the piece plane frame: gap along yAxis, shift along xAxis, rise along the plane normal.
+ **/
+export type MoveVector = { gap: number; shift: number; rise: number };
+
+/**
+ * World-space translation from a piece plane and placement vector (matches connection gap/shift/rise axes).
+ **/
+export const moveTranslationWorldFromPiecePlane = (plane: Plane, vector: MoveVector): Point => {
+  const x = vectorToThree(plane.xAxis).normalize();
+  const y = vectorToThree(plane.yAxis).normalize();
+  const z = new THREE.Vector3().crossVectors(x, y);
+  if (z.lengthSq() < 1e-12) {
+    return { x: 0, y: 0, z: 0 };
+  }
+  z.normalize();
+  const t = new THREE.Vector3().addScaledVector(y, vector.gap).addScaledVector(x, vector.shift).addScaledVector(z, vector.rise);
+  return { x: t.x, y: t.y, z: t.z };
+};
+
+/**
+ * Like {@link dragPiecesInDesign} but moves in 3D placement space: updates piece planes (origin) for roots and gap/shift/rise on parent connections for non-root movers.
+ **/
+export const movePiecesInDesign = (design: Design, pieces: Design, vector: MoveVector): DesignDiff => {
+  const selectedGuids = new Set((pieces.pieces ?? []).map((p) => p.guid));
+  const connections = design.connections ?? [];
+  const parentMap = new Map<string, { connectionGuid: string; parentGuid: string }>();
+  for (const c of connections) {
+    parentMap.set(c.connecting.piece.guid, { connectionGuid: c.guid, parentGuid: c.connected.piece.guid });
+  }
+  const pieceMap = new Map<string, Piece>();
+  for (const p of design.pieces ?? []) {
+    pieceMap.set(p.guid, p);
+  }
+  const fixedGuids = new Set<string>();
+  for (const guid of selectedGuids) {
+    if (!parentMap.has(guid)) {
+      fixedGuids.add(guid);
+    }
+  }
+  const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
+  for (const guid of fixedGuids) {
+    const base = pieceMap.get(guid)?.plane;
+    if (base === undefined) continue;
+    const t = moveTranslationWorldFromPiecePlane(base, vector);
+    const newPlane: Plane = {
+      origin: { x: base.origin.x + t.x, y: base.origin.y + t.y, z: base.origin.z + t.z },
+      xAxis: { ...base.xAxis },
+      yAxis: { ...base.yAxis },
+    };
+    pieceUpdates.push({ piece: { guid }, diff: { plane: newPlane } });
+  }
+  const connectionUpdates: { connection: { guid: string }; diff: ConnectionDiff }[] = [];
+  for (const guid of selectedGuids) {
+    if (fixedGuids.has(guid)) continue;
+    let isDescendant = false;
+    let current = guid;
+    while (parentMap.has(current)) {
+      const ancestor = parentMap.get(current)!.parentGuid;
+      if (selectedGuids.has(ancestor)) {
+        isDescendant = true;
+        break;
+      }
+      current = ancestor;
+    }
+    if (isDescendant) continue;
+    const parent = parentMap.get(guid);
+    if (!parent) continue;
+    connectionUpdates.push({
+      connection: { guid: parent.connectionGuid },
+      diff: { gap: vector.gap, shift: vector.shift, rise: vector.rise },
+    });
+  }
+  const diff: DesignDiff = {};
+  if (pieceUpdates.length > 0) diff.pieces = { updated: pieceUpdates };
+  if (connectionUpdates.length > 0) diff.connections = { updated: connectionUpdates };
+  return diff;
+};
+
 export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coord): DesignDiff => {
   const selectedGuids = new Set((pieces.pieces ?? []).map((p) => p.guid));
   const connections = design.connections ?? [];
@@ -6571,6 +6680,7 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
 
 
 
+
 // #region ⏱️Kit
 // Kit entity types, schemas, and helpers MUST be defined here.
 
@@ -6997,6 +7107,7 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
 };
 
 // #endregion ⏱️Kit
+
 
 
 
@@ -8613,6 +8724,7 @@ export const hashKitDiff = (d: KitDiff): string => {
 // #endregion 🖥️Hash
 
 
+
 /**
  * Computes the forward and backward diffs between two design states.
  **/
@@ -9134,6 +9246,7 @@ export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[
 
 
 
+
 // #region 🧊Type Family Helpers
 // Type family traversal helpers MUST be defined here.
 
@@ -9190,6 +9303,7 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
 };
 
 // #endregion 🧊Type Family Helpers
+
 
 
 
@@ -9552,6 +9666,7 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
 
 
 
+
 /**
  * Represents a bidirectional change between two Kit states.
  **/
@@ -9660,6 +9775,7 @@ export const normalizeDesignCopyResult = (raw: unknown): OperationResult<Design>
   return operationOk(raw as Design, [], []);
 };
 // #endregion 🎯OperationResult
+
 
 
 // #region 🛡️Validation
@@ -10494,6 +10610,7 @@ export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResu
 // #endregion 🌧️Validation Serialization
 
 // #endregion 🛡️Validation
+
 
 
 
@@ -12968,6 +13085,7 @@ export const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 // #endregion 🧿Kit Import/Export
 
 
+
 // #region 🔩Kit Model Export
 // Design model export to 3D formats (GLB, glTF, OBJ, STL, PLY, USDZ) MUST be defined here.
 
@@ -13432,6 +13550,7 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
 // #endregion 🔩Kit Model Export
 
 
+
 // #region ❄️Geometric Insights
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
@@ -13634,6 +13753,7 @@ export const getGeometricInsightsForModel = async (model: string | ArrayBuffer |
 };
 
 // #endregion ❄️Geometric Insights
+
 
 
 
@@ -13896,6 +14016,7 @@ export class InMemoryKitStore implements UndoableKitStore {
 // #endregion 🖥️InMemoryKitStore
 
 // #endregion 🏰KitStore
+
 
 
 
@@ -14326,6 +14447,7 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
 
 
 
+
 // #region 🧪Tests
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
@@ -14341,6 +14463,8 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     DragDiffDesign,
     DragOffset,
     DragPieces,
+    MoveDiffDesign,
+    MoveVector,
     InvalidKit,
     InvalidKitValidation,
     MetabolismKit,
@@ -15293,6 +15417,36 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       const baseV = flatPiece.center?.v ?? 0;
       expect(diff.pieces!.updated![0].diff.center?.u).toBeCloseTo(baseU + offset.u, 6);
       expect(diff.pieces!.updated![0].diff.center?.v).toBeCloseTo(baseV + offset.v, 6);
+    });
+  });
+
+  describe("Move", () => {
+    it("same drag fixture: Design + Pieces + MoveVector = plane and gap/shift/rise diff", () => {
+      const design = DragDesign as unknown as Design;
+      const pieces = DragPieces as unknown as Design;
+      const vector = MoveVector as { gap: number; shift: number; rise: number };
+      const expectedDiff = MoveDiffDesign as any;
+      const computedDiff = movePiecesInDesign(design, pieces, vector);
+      const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
+      const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) => a.piece.guid.localeCompare(b.piece.guid));
+      expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);
+      for (let i = 0; i < computedPieceUpdates.length; i++) {
+        expect(computedPieceUpdates[i].piece.guid).toBe(expectedPieceUpdates[i].piece.guid);
+        const po = computedPieceUpdates[i].diff.plane?.origin;
+        const eo = expectedPieceUpdates[i].diff.plane.origin;
+        expect(po?.x).toBeCloseTo(eo.x, 5);
+        expect(po?.y).toBeCloseTo(eo.y, 5);
+        expect(po?.z).toBeCloseTo(eo.z, 5);
+      }
+      const computedConnUpdates = (computedDiff.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
+      const expectedConnUpdates = (expectedDiff.connections?.updated ?? []).sort((a: any, b: any) => a.connection.guid.localeCompare(b.connection.guid));
+      expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);
+      for (let i = 0; i < computedConnUpdates.length; i++) {
+        expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);
+        expect(computedConnUpdates[i].diff.gap).toBe(expectedConnUpdates[i].diff.gap);
+        expect(computedConnUpdates[i].diff.shift).toBe(expectedConnUpdates[i].diff.shift);
+        expect(computedConnUpdates[i].diff.rise).toBe(expectedConnUpdates[i].diff.rise);
+      }
     });
   });
 
@@ -17122,6 +17276,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   // #endregion 📊MaxChildren Tests
 } // end vitest guard
 // #endregion 🧪Tests
+
 
 
 

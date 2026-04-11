@@ -10,6 +10,7 @@
 
 
 
+
 // #region ⛩️Imports
 
 package semio
@@ -45,6 +46,7 @@ import (
 
 
 
+
 // #region 🎞️Constants
 
 const (
@@ -55,6 +57,7 @@ const (
 const AssetsPath = "../assets/semio"
 
 // #endregion 🎞️Constants
+
 
 
 
@@ -270,6 +273,7 @@ func DeepEqual(a, b interface{}) bool {
 
 
 
+
 // #region 🐍Entity IDs
 // Entity IDs MUST define identifier types for all semio domain entities.
 
@@ -389,6 +393,7 @@ type KitId struct {
 
 
 
+
 // #region 🖥️Weak Entities
 // Weak Entities MUST define value types that exist only as part of parent entities.
 
@@ -436,6 +441,7 @@ type Camera struct {
 
 
 
+
 // #region 💎Attribute
 
 // 💎Attribute represents a key-value metadata entry with optional definition.
@@ -475,6 +481,7 @@ type AttributeMeta struct {
 
 
 
+
 // #region 📍Location
 
 // 📍Location represents a geographic point with longitude, latitude and optional altitude.
@@ -495,6 +502,7 @@ type LocationDiff struct {
 }
 
 // #endregion 📍Location
+
 
 
 
@@ -537,6 +545,7 @@ type AuthorMeta struct {
 }
 
 // #endregion ✍️Author
+
 
 
 
@@ -596,6 +605,7 @@ type FileMeta struct {
 
 
 
+
 // #region 📁Folder
 
 // 📁Folder represents a folder hierarchy entity with name and parent reference.
@@ -641,6 +651,7 @@ type FolderMeta struct {
 
 
 
+
 // #region 📏Benchmark
 
 // 📏Benchmark represents a named metric range with min/max bounds and optional icon.
@@ -679,6 +690,7 @@ type BenchmarksDiff struct {
 }
 
 // #endregion 📏Benchmark
+
 
 
 
@@ -783,6 +795,7 @@ type QualityMeta struct {
 
 
 
+
 // #region ⚓Port
 
 // ⚓Port represents a named connector port category with compatible port references.
@@ -861,6 +874,7 @@ type PortMeta struct {
 
 
 
+
 // #region 📊Prop
 
 // 📊Prop represents a quality measurement value with optional unit.
@@ -899,6 +913,7 @@ type PropMeta struct {
 }
 
 // #endregion 📊Prop
+
 
 
 
@@ -975,6 +990,7 @@ type TagMeta struct {
 
 
 
+
 // #region 💡Concept
 
 // 💡Concept represents a named categorization concept with optional description and icon.
@@ -1048,6 +1064,7 @@ type ConceptMeta struct {
 
 
 
+
 // #region 🗿Model
 
 // 🗿Model represents a 3D model reference linking a file with tags and description.
@@ -1088,6 +1105,7 @@ type ModelMeta struct {
 }
 
 // #endregion 🗿Model
+
 
 
 
@@ -1160,6 +1178,7 @@ type ConnectorMeta struct {
 }
 
 // #endregion 🔌Connector
+
 
 
 
@@ -1294,6 +1313,7 @@ type TypeShallow struct {
 
 
 
+
 // #region 🎨Layer
 
 // 🎨Layer represents a named layer with visibility, lock and color properties.
@@ -1338,6 +1358,7 @@ type LayerMeta struct {
 }
 
 // #endregion 🎨Layer
+
 
 
 
@@ -1421,6 +1442,7 @@ type PieceMeta struct {
 
 
 
+
 // #region 👥Group
 
 // 👥Group represents a named collection of pieces within a design.
@@ -1464,6 +1486,7 @@ type GroupMeta struct {
 
 
 
+
 // #region ↔️Side
 
 // ↔️Side represents one end of a connection referencing a piece and optional connector.
@@ -1481,6 +1504,7 @@ type SideDiff struct {
 }
 
 // #endregion ↔️Side
+
 
 
 
@@ -1549,6 +1573,7 @@ type ConnectionMeta struct {
 
 
 
+
 // #region 📈Stat
 
 // 📈Stat represents a statistical quality measurement with min/max bounds and unit.
@@ -1592,6 +1617,7 @@ type StatMeta struct {
 }
 
 // #endregion 📈Stat
+
 
 
 
@@ -1719,6 +1745,7 @@ type DesignShallow struct {
 }
 
 // #endregion 📐Design
+
 
 
 
@@ -2303,6 +2330,7 @@ func GetKitChange(before, after Kit, author *string, time *string) KitChange {
 
 
 
+
 // #region ⏰Serialization
 
 // 📤SerializeKit marshals a Kit to indented JSON bytes.
@@ -2330,6 +2358,7 @@ func DeserializeKitDiff(data []byte) (KitDiff, error) {
 }
 
 // #endregion ⏰Serialization
+
 
 
 
@@ -4747,6 +4776,7 @@ func HashKitDiff(d KitDiff) string {
 
 
 
+
 // #region 🔍Helpers
 
 // 🧱FindTypeInKit returns a pointer to the type with the given GUID or nil.
@@ -4915,6 +4945,7 @@ func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64
 
 
 
+
 // #region 🗡️Factories
 
 // 🆕NewKit creates a new kit with the given name and a generated GUID.
@@ -5056,6 +5087,7 @@ func NewAuthor(name string) Author {
 }
 
 // #endregion 🗡️Factories
+
 
 
 
@@ -10644,6 +10676,7 @@ func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
 
 
 
+
 // #region 🌊Kit Change Helpers
 // Kit Change Helpers MUST provide convenience functions for single-entity kit changes.
 
@@ -10792,6 +10825,7 @@ func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
 }
 
 // #endregion 🌊Kit Change Helpers
+
 
 
 
@@ -11735,6 +11769,7 @@ func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 
 
 
+
 // #region 🌤️Flatten Design
 // 💾Flatten Design MUST compute absolute piece planes from relative connections.
 func planeToMatrix(p Plane) *mat.Dense {
@@ -12225,6 +12260,118 @@ func ApplyDesignDiff(base Design, diff DesignDiff) Design {
 	return applyDesignDiff(base, diff)
 }
 
+// MoveVector carries gap/shift/rise deltas in the piece plane frame (gap along yAxis, shift along xAxis, rise along normal).
+type MoveVector struct {
+	Gap   float64 `json:"gap"`
+	Shift float64 `json:"shift"`
+	Rise  float64 `json:"rise"`
+}
+
+func movePlaneOriginDelta(plane *Plane, mv MoveVector) PointDiff {
+	if plane == nil {
+		return PointDiff{}
+	}
+	xAxis := []float64{plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z}
+	yAxis := []float64{plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z}
+	normalize(xAxis)
+	normalize(yAxis)
+	zAxis := cross(xAxis, yAxis)
+	normalize(zAxis)
+	tx := mv.Shift*xAxis[0] + mv.Gap*yAxis[0] + mv.Rise*zAxis[0]
+	ty := mv.Shift*xAxis[1] + mv.Gap*yAxis[1] + mv.Rise*zAxis[1]
+	tz := mv.Shift*xAxis[2] + mv.Gap*yAxis[2] + mv.Rise*zAxis[2]
+	nx := plane.Origin.X + tx
+	ny := plane.Origin.Y + ty
+	nz := plane.Origin.Z + tz
+	return PointDiff{X: &nx, Y: &ny, Z: &nz}
+}
+
+// MovePiecesInDesign computes a DesignDiff that translates root piece planes and adjusts gap/shift/rise on parent connections for selected child movers.
+// A piece's parent connection is the connection where it is the Connecting (child) piece.
+func MovePiecesInDesign(design Design, pieces Design, vector MoveVector) DesignDiff {
+	selectedGuids := make(map[string]bool)
+	for _, p := range pieces.Pieces {
+		selectedGuids[p.Guid] = true
+	}
+	parentMap := make(map[string]struct{ connectionGuid, parentGuid string })
+	for _, c := range design.Connections {
+		parentMap[c.Connecting.Piece.Guid] = struct{ connectionGuid, parentGuid string }{c.Guid, c.Connected.Piece.Guid}
+	}
+	fixedGuids := make(map[string]bool)
+	for guid := range selectedGuids {
+		if _, hasParent := parentMap[guid]; !hasParent {
+			fixedGuids[guid] = true
+		}
+	}
+	var pieceUpdates []struct {
+		Piece PieceId   `json:"piece"`
+		Diff  PieceDiff `json:"diff"`
+	}
+	pieceMap := make(map[string]*Piece)
+	for i := range design.Pieces {
+		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
+	}
+	for guid := range fixedGuids {
+		p, ok := pieceMap[guid]
+		if !ok || p.Plane == nil {
+			continue
+		}
+		orig := movePlaneOriginDelta(p.Plane, vector)
+		pieceUpdates = append(pieceUpdates, struct {
+			Piece PieceId   `json:"piece"`
+			Diff  PieceDiff `json:"diff"`
+		}{
+			Piece: PieceId{Guid: guid},
+			Diff:  PieceDiff{Plane: &PlaneDiff{Origin: &orig}},
+		})
+	}
+	var connectionUpdates []struct {
+		Connection ConnectionId   `json:"connection"`
+		Diff       ConnectionDiff `json:"diff"`
+	}
+	for guid := range selectedGuids {
+		if fixedGuids[guid] {
+			continue
+		}
+		isDescendant := false
+		current := guid
+		for {
+			p, ok := parentMap[current]
+			if !ok {
+				break
+			}
+			if selectedGuids[p.parentGuid] {
+				isDescendant = true
+				break
+			}
+			current = p.parentGuid
+		}
+		if isDescendant {
+			continue
+		}
+		parent, ok := parentMap[guid]
+		if !ok {
+			continue
+		}
+		g, s, r := vector.Gap, vector.Shift, vector.Rise
+		connectionUpdates = append(connectionUpdates, struct {
+			Connection ConnectionId   `json:"connection"`
+			Diff       ConnectionDiff `json:"diff"`
+		}{
+			Connection: ConnectionId{Guid: parent.connectionGuid},
+			Diff:       ConnectionDiff{Gap: &g, Shift: &s, Rise: &r},
+		})
+	}
+	diff := DesignDiff{}
+	if len(pieceUpdates) > 0 {
+		diff.Pieces = &PiecesDiff{Updated: pieceUpdates}
+	}
+	if len(connectionUpdates) > 0 {
+		diff.Connections = &ConnectionsDiff{Updated: connectionUpdates}
+	}
+	return diff
+}
+
 // 🔌DragPiecesInDesign computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
 // 🔗A piece's parent connection is the connection where it is the Connecting (child) piece.
 func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
@@ -12312,6 +12459,7 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 }
 
 // #endregion 🌤️Flatten Design
+
 
 
 
@@ -12905,6 +13053,7 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 }
 
 // #endregion 📋Copy Paste Design
+
 
 
 
@@ -13824,6 +13973,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 
 
 
+
 // #region ❄️Geometric Insights
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
@@ -14046,6 +14196,7 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 }
 
 // #endregion ❄️Geometric Insights
+
 
 
 

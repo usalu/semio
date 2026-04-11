@@ -20110,6 +20110,8 @@ export enum WindowKind {
   CHAT = "chat",
   WORKBENCH = "workbench",
   VEC_INPUT = "vec-input",
+  /**3D placement deltas (gap, shift, rise) for move algorithms; not the 2D vec pad. */
+  VECTOR_INPUT = "vector-input",
   PIECES_SELECTION_INPUT = "pieces-selection-input",
   SELECTION_INPUT = "selection-input",
   DESIGN_INPUT = "design-input",
