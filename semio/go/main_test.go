@@ -820,7 +820,9 @@ func TestDrag(t *testing.T) {
 }
 
 func TestMove(t *testing.T) {
-	t.Run("same drag fixture + move vector = plane and gap/shift/rise diff", func(t *testing.T) {
+	t.Run("same drag fixture + move vector = plane and connection Jacobian diff", func(t *testing.T) {
+		var kit Kit
+		loadJSON(t, "metabolism.kit.semio.json", &kit)
 		var design Design
 		loadJSON(t, "drag/design.semio.json", &design)
 		var pieces Design
@@ -842,23 +844,29 @@ func TestMove(t *testing.T) {
 				} `json:"plane"`
 			} `json:"diff"`
 		}
+		type expConnDiff struct {
+			Gap      *float64 `json:"gap,omitempty"`
+			Shift    *float64 `json:"shift,omitempty"`
+			Rise     *float64 `json:"rise,omitempty"`
+			Rotation *float64 `json:"rotation,omitempty"`
+			Turn     *float64 `json:"turn,omitempty"`
+			Tilt     *float64 `json:"tilt,omitempty"`
+			U        *float64 `json:"u,omitempty"`
+			V        *float64 `json:"v,omitempty"`
+		}
 		type expConn struct {
 			Connection struct {
 				Guid string `json:"guid"`
 			} `json:"connection"`
-			Diff struct {
-				Gap   float64 `json:"gap"`
-				Shift float64 `json:"shift"`
-				Rise  float64 `json:"rise"`
-			} `json:"diff"`
+			Diff expConnDiff `json:"diff"`
 		}
 		type expectedMove struct {
 			Pieces      *struct{ Updated []expPiece } `json:"pieces"`
-			Connections *struct{ Updated []expConn } `json:"connections"`
+			Connections *struct{ Updated []expConn }  `json:"connections"`
 		}
 		var expected expectedMove
 		loadJSON(t, "move/diff.design.semio.json", &expected)
-		computed := MovePiecesInDesign(design, pieces, vector)
+		computed := MovePiecesInDesign(kit, design, pieces, vector)
 		if expected.Pieces == nil {
 			t.Fatal("expected pieces")
 		}
@@ -899,18 +907,35 @@ func TestMove(t *testing.T) {
 		for _, u := range expected.Connections.Updated {
 			expC[u.Connection.Guid] = u
 		}
+		optF := func(p *float64) float64 {
+			if p == nil {
+				return 0
+			}
+			return *p
+		}
 		for _, u := range computed.Connections.Updated {
 			ex, ok := expC[u.Connection.Guid]
 			if !ok {
 				t.Errorf("unexpected conn %s", u.Connection.Guid)
 				continue
 			}
-			if u.Diff.Gap == nil || u.Diff.Shift == nil || u.Diff.Rise == nil {
-				t.Fatalf("nil gap/shift/rise for %s", u.Connection.Guid)
-			}
-			if !floatEqual(*u.Diff.Gap, ex.Diff.Gap, 0.001) || !floatEqual(*u.Diff.Shift, ex.Diff.Shift, 0.001) || !floatEqual(*u.Diff.Rise, ex.Diff.Rise, 0.001) {
-				t.Errorf("conn %s mismatch got (%f,%f,%f) want (%f,%f,%f)", u.Connection.Guid,
-					*u.Diff.Gap, *u.Diff.Shift, *u.Diff.Rise, ex.Diff.Gap, ex.Diff.Shift, ex.Diff.Rise)
+			for _, kv := range []struct {
+				name     string
+				got      *float64
+				expected *float64
+			}{
+				{"gap", u.Diff.Gap, ex.Diff.Gap},
+				{"shift", u.Diff.Shift, ex.Diff.Shift},
+				{"rise", u.Diff.Rise, ex.Diff.Rise},
+				{"rotation", u.Diff.Rotation, ex.Diff.Rotation},
+				{"turn", u.Diff.Turn, ex.Diff.Turn},
+				{"tilt", u.Diff.Tilt, ex.Diff.Tilt},
+				{"u", u.Diff.U, ex.Diff.U},
+				{"v", u.Diff.V, ex.Diff.V},
+			} {
+				if !floatEqual(optF(kv.got), optF(kv.expected), 0.001) {
+					t.Errorf("conn %s %s mismatch got %f want %f", u.Connection.Guid, kv.name, optF(kv.got), optF(kv.expected))
+				}
 			}
 		}
 	})
@@ -2082,7 +2107,7 @@ func TestHashKit(t *testing.T) {
 
 	t.Run("hashKit of metabolism kit matches expected hash", func(t *testing.T) {
 		h := HashKit(kit)
-		expected := "d786ae5cd2cb18d78f0d80df92ded94905adf708df077206f72162d43dd8767c"
+		expected := "2ebfdb63f7f1a329702f4c4852c1a7c7c11cf550b74a1f280d7538fc5c25dd0a"
 		if h != expected {
 			t.Errorf("expected %s, got %s", expected, h)
 		}

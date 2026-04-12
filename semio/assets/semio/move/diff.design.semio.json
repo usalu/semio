@@ -27,7 +27,7 @@
     "updated": [
       {
         "connection": { "guid": "b9c2feb0-4c1d-4cf0-adc6-c5bf4cd1beac" },
-        "diff": { "u": -1, "v": 2 }
+        "diff": { "shift": -1, "rise": -2 }
       }
     ]
   }

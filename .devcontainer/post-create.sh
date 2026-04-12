@@ -212,7 +212,7 @@ install_gitkraken_cli
 #endregion 🔖GitKrakenCli
 #region 🔖Python
 echo "Setting up Python environment..."
-if uv sync; then
+if uv sync --all-packages --all-groups; then
   echo "✅ Python environment setup completed."
 else
   echo "⚠️  uv sync failed, but continuing..."
@@ -230,7 +230,7 @@ fi
 #endregion 🔖Go
 #region 🔖Dotnet
 echo "Restoring .NET packages..."
-if dotnet restore net/Semio.sln; then
+if dotnet restore Monorepo.sln; then
   echo "✅ .NET packages restored successfully."
 else
   echo "⚠️  .NET restore failed, but continuing..."
@@ -321,9 +321,9 @@ cat << 'MCPCONFIG' > /home/vscode/.gemini/antigravity/mcp_config.json
       "command": "uv",
       "args": [
         "--directory",
-        "/workspaces/semio/coda/engine",
+        "/workspaces/semio/coda/assistant",
         "run",
-        "coda.py",
+        "main.py",
         "--mcp-stdio"
       ]
     }

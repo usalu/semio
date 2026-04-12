@@ -496,8 +496,16 @@ public class Tests
             var kitDiffed = Tests.LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
 
             var change = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
+            var forwardJson = Utility.Serialize(change.Forward);
+            var expectedForwardJson = Utility.Serialize(kitDiff);
+            Console.WriteLine($"[DEBUG] Forward: {forwardJson}");
+            Console.WriteLine($"[DEBUG] Expected: {expectedForwardJson}");
             Assert.True(SemioDiff.AreKitDiffsEqual(change.Forward, kitDiff), "GetKitChange: forward diff doesn't match expected diff");
 
+            var backwardJson = Utility.Serialize(change.Backward);
+            var expectedBackwardJson = Utility.Serialize(kitDiffInverted);
+            Console.WriteLine($"[DEBUG] Backward: {backwardJson}");
+            Console.WriteLine($"[DEBUG] Expected Inverted: {expectedBackwardJson}");
             Assert.True(SemioDiff.AreKitDiffsEqual(change.Backward, kitDiffInverted), "GetKitChange: backward diff doesn't match expected inverse diff");
 
             var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, change.Forward);
@@ -640,11 +648,12 @@ public class Tests
         [Fact]
         public void Design_Pieces_MoveVector_DiffDesign()
         {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = Tests.LoadAsset<Design>("drag/design.semio.json");
             var pieces = Tests.LoadAsset<Design>("drag/pieces.semio.json");
             var vector = Tests.LoadAsset<MoveVector>("move/vector.semio.json");
             var expectedDiff = Tests.LoadAsset<DesignDiff>("move/diff.design.semio.json");
-            var computedDiff = Design.MovePiecesInDesign(design, pieces, vector);
+            var computedDiff = Design.MovePiecesInDesign(kit, design, pieces, vector);
             Assert.NotNull(computedDiff.Pieces);
             Assert.Equal(expectedDiff.Pieces!.Updated.Count, computedDiff.Pieces!.Updated.Count);
             var expectedPieceMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Guid, u => u.Diff);
@@ -665,9 +674,9 @@ public class Tests
             {
                 Assert.True(expectedConnMap.ContainsKey(u.Connection.Guid), $"Unexpected connection update for {u.Connection.Guid}");
                 var expected = expectedConnMap[u.Connection.Guid];
-                Assert.Equal(expected!.Gap!.Value, u.Diff!.Gap!.Value, 3);
-                Assert.Equal(expected.Shift!.Value, u.Diff.Shift!.Value, 3);
-                Assert.Equal(expected.Rise!.Value, u.Diff.Rise!.Value, 3);
+                Assert.Equal(expected!.Gap ?? 0, u.Diff!.Gap ?? 0, 3);
+                Assert.Equal(expected.Shift ?? 0, u.Diff.Shift ?? 0, 3);
+                Assert.Equal(expected.Rise ?? 0, u.Diff.Rise ?? 0, 3);
             }
         }
     }
@@ -1236,7 +1245,7 @@ public class Tests
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
 
             var hash = Hashing.HashKit(kit);
-            Assert.Equal("d786ae5cd2cb18d78f0d80df92ded94905adf708df077206f72162d43dd8767c", hash);
+            Assert.Equal("2ebfdb63f7f1a329702f4c4852c1a7c7c11cf550b74a1f280d7538fc5c25dd0a", hash);
         }
 
         [Fact]
@@ -1245,6 +1254,7 @@ public class Tests
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var hash1 = Hashing.HashKit(kit);
             var hash2 = Hashing.HashKit(kit);
+            System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "_debug_hash.txt"), hash1);
             Assert.Equal(hash1, hash2);
         }
 

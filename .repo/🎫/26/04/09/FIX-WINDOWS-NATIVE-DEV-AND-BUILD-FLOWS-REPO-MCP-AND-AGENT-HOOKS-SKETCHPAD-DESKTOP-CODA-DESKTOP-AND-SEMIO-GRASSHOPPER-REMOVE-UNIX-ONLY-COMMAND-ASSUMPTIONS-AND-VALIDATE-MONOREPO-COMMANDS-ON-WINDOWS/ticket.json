@@ -1,11 +1,14 @@
 {
   "title": "Fix Windows native dev and build flows, repo MCP and agent hooks, sketchpad/desktop, coda/desktop, and Semio.Grasshopper; remove Unix-only command assumptions and validate monorepo commands on Windows.",
-  "status": "closed",
+  "status": "open",
   "description": "codex",
-  "summary": "Continued multi-platform cross-platform work. Fixed Python dependency resolution (uv sync --all-packages --group test), added typing._eval_type monkey-patch in conftest.py for Pydantic/Python 3.14 beta compatibility, and updated all agent hook/MCP config files (.claude/settings.json, .github/hooks/repo.json, .github/hooks/semio-repo.json, .kiro/settings/mcp.json, .kiro/agents/semio.json) to use cross-platform go run ./repo/cli instead of ./repo/cli/cli binary paths. Verified all platforms: Go (5 modules build clean), .NET (0 errors, 63/67 tests pass), Python (240/246 pass), JS/TS vitest (154/155 pass), Electron desktop apps (both semio and coda build Windows installers).",
+  "summary": "Completed the native bootstrap to converge with the devcontainer baseline: the PowerShell installer now upgrades machine dependencies, installs workspace/test Python dependencies across all UV packages, handles repo-local Python locks, installs the repo VSIX into supported editors, removes .NET 7 from the declared baseline, fixes the devcontainer restore path, and validates the Windows-native bootstrap plus Python test suite. Residual non-bootstrap failures remain in semio/rs and semio/net.",
   "goal": "🎯multiplatform",
   "sessions": [
     "⚪8dbd87e6070e4644b7283df65fa12cd4",
-    "⚪16cfbdff966842e283b538c6c050ec14"
+    "⚪16cfbdff966842e283b538c6c050ec14",
+    "⚪59236fed3dd148fa9dc67cdbe2d7d0fe",
+    "⚪99ac88dded1447e5848ac66ee010cc6a",
+    "⚪e55bf7e6d7e74899a06340990df86d2c"
   ]
 }

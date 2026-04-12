@@ -109,9 +109,11 @@ const config: StorybookConfig = {
 
     config.optimizeDeps = config.optimizeDeps || {};
     config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
+    // @semio/js embeds Vitest suites behind `if (__vitest_worker__)` using top-level await; es2020
+    // cannot parse that during dep-scan and Storybook then skips pre-bundling — dynamic story imports fail.
     config.optimizeDeps.esbuildOptions = {
       ...config.optimizeDeps.esbuildOptions,
-      target: "es2020",
+      target: "es2022",
     };
 
     config.mode = "development";

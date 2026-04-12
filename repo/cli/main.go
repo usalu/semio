@@ -5692,7 +5692,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}()
 	wg.Wait()
 
-	codebaseNode := &TreeNode{Kind: TreeNodeCategory, ID: "codebase", Label: "�️Codebase", URI: "repo://codebase"}
+	codebaseNode := &TreeNode{Kind: TreeNodeCategory, ID: "codebase", Label: emojiText(EmojiCodebase) + "Codebase", URI: "repo://codebase"}
 	sort.Slice(technologies, func(i, j int) bool { return technologies[i].Name < technologies[j].Name })
 
 	type folderEntry struct {
@@ -8979,7 +8979,7 @@ const (
 
 var (
 	EmojiRepo         = ""
-	EmojiCodebase     = "�️"
+	EmojiCodebase     = "🖥️"
 	EmojiTechnologies = "🏗️"
 	EmojiBundles      = "📦"
 	EmojiFolders      = "📁"
@@ -11470,8 +11470,29 @@ type CodexEditorProvider struct{}
 // ⚫Kind holds the data fields for a Kind record.
 func (p *CodexEditorProvider) Kind() string { return "codex" }
 
+type codexMcpServerConfig struct {
+	Name    string
+	Command string
+	Args    []string
+	Enabled *bool
+	Cwd     string
+}
+
 // 🩵Configure holds the data fields for a Configure record.
-func (p *CodexEditorProvider) Configure(repoRoot string) error { return nil }
+func (p *CodexEditorProvider) Configure(repoRoot string) error {
+	content, err := generateCodexConfig(repoRoot)
+	if err != nil {
+		return err
+	}
+	targetPath, err := resolveCodexConfigPath()
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(targetPath, []byte(content), 0644)
+}
 
 // 🩶ResolveNativeEvent holds the data fields for a ResolveNativeEvent record.
 func (p *CodexEditorProvider) ResolveNativeEvent(nativeEvent string, toolKind ToolKind) (HookEvent, string, error) {
@@ -11494,7 +11515,7 @@ func (p *CodexEditorProvider) GenerateHookConfig(repoRoot string) (string, error
 
 // 💚HookMapping holds the data fields for a HookMapping record.
 func (p *CodexEditorProvider) HookMapping() EditorHookMapping {
-	return EditorHookMapping{Client: "codex", ConfigPath: ""}
+	return EditorHookMapping{Client: "codex", ConfigPath: "~/.codex/config.toml"}
 }
 
 // 💛AntigravityEditorProvider holds the data fields for an antigravity editor provider record.
@@ -36734,14 +36755,15 @@ func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 			var errs []error
 			for _, provider := range AllEditorProviders() {
 				mapping := provider.HookMapping()
-				if mapping.ConfigPath == "" {
-					continue
-				}
 				if err := provider.Configure(repoRoot); err != nil {
 					errs = append(errs, fmt.Errorf("%s: %w", provider.Kind(), err))
 					continue
 				}
-				fmt.Printf("✓ %s → %s\n", provider.Kind(), mapping.ConfigPath)
+				if mapping.ConfigPath != "" {
+					fmt.Printf("✓ %s → %s\n", provider.Kind(), mapping.ConfigPath)
+				} else {
+					fmt.Printf("✓ %s configured\n", provider.Kind())
+				}
 			}
 			if err := configureGitHooks(repoRoot); err != nil {
 				errs = append(errs, fmt.Errorf("git hooks: %w", err))
@@ -36792,7 +36814,7 @@ exit 1
 		return err
 	}
 	postCheckpointPath := filepath.Join(hooksDir, "post-commit")
-postCheckpointScript := `#!/usr/bin/env sh
+	postCheckpointScript := `#!/usr/bin/env sh
 set -eu
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 if [ -z "$repo_root" ]; then
@@ -37014,6 +37036,201 @@ func generateWindsurfConfig(repoRoot string) (string, error) {
 		return "", err
 	}
 	return string(out) + "\n", nil
+}
+
+func resolveCodexConfigPath() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(homeDir, ".codex", "config.toml"), nil
+}
+
+func readCodexServerTemplate(repoRoot string) ([]codexMcpServerConfig, error) {
+	templatePath := filepath.Join(repoRoot, ".codex", "config.toml")
+	data, err := os.ReadFile(templatePath)
+	if err != nil {
+		return nil, err
+	}
+	return parseCodexMcpServers(string(data)), nil
+}
+
+func parseCodexMcpServers(content string) []codexMcpServerConfig {
+	lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
+	var servers []codexMcpServerConfig
+	var current *codexMcpServerConfig
+	for _, rawLine := range lines {
+		line := strings.TrimSpace(rawLine)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			current = nil
+			section := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, "["), "]"))
+			if strings.HasPrefix(section, "mcp_servers.") {
+				name := strings.TrimPrefix(section, "mcp_servers.")
+				servers = append(servers, codexMcpServerConfig{Name: name})
+				current = &servers[len(servers)-1]
+			}
+			continue
+		}
+		if current == nil {
+			continue
+		}
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+		switch key {
+		case "command":
+			current.Command = trimTomlString(value)
+		case "cwd":
+			current.Cwd = trimTomlString(value)
+		case "enabled":
+			enabled := strings.EqualFold(value, "true")
+			current.Enabled = &enabled
+		case "args":
+			current.Args = parseTomlStringArray(value)
+		}
+	}
+	return servers
+}
+
+func trimTomlString(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if len(trimmed) >= 2 && strings.HasPrefix(trimmed, "\"") && strings.HasSuffix(trimmed, "\"") {
+		if unquoted, err := strconv.Unquote(trimmed); err == nil {
+			return unquoted
+		}
+	}
+	return strings.Trim(trimmed, "\"")
+}
+
+func parseTomlStringArray(value string) []string {
+	trimmed := strings.TrimSpace(value)
+	if !strings.HasPrefix(trimmed, "[") || !strings.HasSuffix(trimmed, "]") {
+		return nil
+	}
+	trimmed = strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(trimmed, "["), "]"))
+	if trimmed == "" {
+		return nil
+	}
+	parts := strings.Split(trimmed, ",")
+	args := make([]string, 0, len(parts))
+	for _, part := range parts {
+		args = append(args, trimTomlString(part))
+	}
+	return args
+}
+
+func normalizeCodexServerConfigs(repoRoot string, servers []codexMcpServerConfig) []codexMcpServerConfig {
+	normalized := make([]codexMcpServerConfig, 0, len(servers))
+	for _, server := range servers {
+		entry := server
+		for i := 0; i < len(entry.Args)-1; i++ {
+			if entry.Args[i] == "--directory" && entry.Args[i+1] != "" && !filepath.IsAbs(entry.Args[i+1]) {
+				entry.Args[i+1] = filepath.Join(repoRoot, filepath.FromSlash(entry.Args[i+1]))
+			}
+		}
+		if entry.Cwd == "" {
+			entry.Cwd = repoRoot
+		} else if !filepath.IsAbs(entry.Cwd) {
+			entry.Cwd = filepath.Join(repoRoot, filepath.FromSlash(entry.Cwd))
+		}
+		normalized = append(normalized, entry)
+	}
+	return normalized
+}
+
+func renderCodexServerBlock(server codexMcpServerConfig) string {
+	var lines []string
+	lines = append(lines, fmt.Sprintf("[mcp_servers.%s]", server.Name))
+	lines = append(lines, fmt.Sprintf("command = %q", server.Command))
+	if server.Args != nil {
+		quotedArgs := make([]string, 0, len(server.Args))
+		for _, arg := range server.Args {
+			quotedArgs = append(quotedArgs, fmt.Sprintf("%q", arg))
+		}
+		lines = append(lines, fmt.Sprintf("args = [%s]", strings.Join(quotedArgs, ", ")))
+	}
+	if server.Enabled != nil {
+		lines = append(lines, fmt.Sprintf("enabled = %t", *server.Enabled))
+	}
+	if server.Cwd != "" {
+		lines = append(lines, fmt.Sprintf("cwd = %q", server.Cwd))
+	}
+	return strings.Join(lines, "\n")
+}
+
+func stripCodexServerBlocks(content string, names map[string]struct{}) string {
+	lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
+	var kept []string
+	skip := false
+	for _, rawLine := range lines {
+		line := strings.TrimSpace(rawLine)
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			section := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(line, "["), "]"))
+			if strings.HasPrefix(section, "mcp_servers.") {
+				name := strings.TrimPrefix(section, "mcp_servers.")
+				_, skip = names[name]
+				if skip {
+					continue
+				}
+			} else {
+				skip = false
+			}
+		}
+		if skip {
+			continue
+		}
+		kept = append(kept, rawLine)
+	}
+	return strings.TrimRight(strings.Join(kept, "\n"), "\n")
+}
+
+func mergeCodexConfig(existing string, servers []codexMcpServerConfig) string {
+	serverNames := make(map[string]struct{}, len(servers))
+	for _, server := range servers {
+		serverNames[server.Name] = struct{}{}
+		switch server.Name {
+		case "repo":
+			serverNames["semio-repo"] = struct{}{}
+		}
+	}
+	base := stripCodexServerBlocks(existing, serverNames)
+	blocks := make([]string, 0, len(servers))
+	for _, server := range servers {
+		blocks = append(blocks, renderCodexServerBlock(server))
+	}
+	switch {
+	case base == "":
+		return strings.Join(blocks, "\n\n") + "\n"
+	case len(blocks) == 0:
+		return base + "\n"
+	default:
+		return base + "\n\n" + strings.Join(blocks, "\n\n") + "\n"
+	}
+}
+
+func generateCodexConfig(repoRoot string) (string, error) {
+	servers, err := readCodexServerTemplate(repoRoot)
+	if err != nil {
+		return "", err
+	}
+	normalizedServers := normalizeCodexServerConfigs(repoRoot, servers)
+	targetPath, err := resolveCodexConfigPath()
+	if err != nil {
+		return "", err
+	}
+	existing := ""
+	if data, readErr := os.ReadFile(targetPath); readErr == nil {
+		existing = string(data)
+	} else if !errors.Is(readErr, os.ErrNotExist) {
+		return "", readErr
+	}
+	return mergeCodexConfig(existing, normalizedServers), nil
 }
 
 // 🔹generateClaudeCodeConfig holds the data fields for a generateClaudeCodeConfig record.
@@ -42460,6 +42677,9 @@ func firstNonEmpty(values ...string) string {
 }
 
 func writeHookArtifacts(ctx HookContext, result HookResult) {
+	if HookEventKind(ctx.Event) == HookKindVersion {
+		return
+	}
 	repoRoot := ctx.RepoRoot
 	if repoRoot == "" {
 		repoRoot = GetRootDir()

@@ -14,7 +14,7 @@
 
 import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "@semio/sketchpad";
 import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
-import { createIndexeddbPersistenceFactory } from "@semio/studio";
+
 import { InMemoryKitStore } from "@semio/js";
 import { createRoot, type Root } from "react-dom/client";
 import "./globals.css";
@@ -27,7 +27,6 @@ appRegistry.register(kitConfig);
 appRegistry.register(qualityConfig);
 appRegistry.register(typeConfig);
 
-const indexeddbPersistenceFactory = createIndexeddbPersistenceFactory();
 const temporaryKitStoreFactory: SketchpadKitStoreFactory = (kit) => new InMemoryKitStore(kit);
 
 type RootHostElement = HTMLElement & { __semioReactRoot__?: Root };
@@ -47,7 +46,7 @@ if (!rootElement) {
 
 getOrCreateDomRoot(rootElement).render(
   <div className="h-screen w-screen">
-    <Sketchpad persistenceFactory={indexeddbPersistenceFactory} temporaryKitStoreFactory={temporaryKitStoreFactory} importKitUrls={["/metabolism.zip"]} />
+    <Sketchpad temporaryKitStoreFactory={temporaryKitStoreFactory} importKitUrls={["/metabolism.zip"]} />
   </div>,
 );
 // #endregion 🛎️Entrypoint

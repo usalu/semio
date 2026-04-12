@@ -1,7 +1,7 @@
 // #region Header
 // semio/algorithms/nativeAlgorithmAdapter.ts
-// Specs: Route algorithm work to in-browser TypeScript or to the engine REST native-algorithms endpoint by language.
-// Summary: Single adapter: @semio/js for ts, POST /api/native-algorithms/execute for python, go, rust.
+// Specs: Route algorithm work to in-browser TypeScript or to the engine REST native-algorithms endpoint by language. Output designs always have the operation diff fully applied (no withDiff overlay, no connection preservation).
+// Summary: Single adapter: @semio/js for ts, POST /api/native-algorithms/execute for python, go, rust. All flat/output designs are produced by applying the full forward diff.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion Header
 
@@ -121,9 +121,10 @@ export async function nativeDeletePieces(kit: Kit, design: Design, pieceGuids: r
 }
 
 /**
- * Runs drag in-process: flattens internally, applies {@link dragPiecesInDesign} on the flat view,
- * Returns a flat design with connections preserved (for display).
- * Flatten only applies piece position updates; connections are kept from the raw design.
+ * Returns the flat design used as a display base for input and diff windows.
+ * Applies only the piece updates from the flatten diff while keeping the original connections,
+ * so the diagram can render the connections that the diff is about to remove.
+ * For an output window, use {@link nativeFlattenedDesign} so the full diff is applied.
  */
 export async function nativeFlatDesign(kit: Kit, designGuid: string, language: NativeAlgorithmLanguage): Promise<Design | null> {
   const result = await nativeFlattenDesign(kit, designGuid, language);
@@ -134,9 +135,24 @@ export async function nativeFlatDesign(kit: Kit, designGuid: string, language: N
 }
 
 /**
- * Runs drag in-process: flattens (preserving connections), applies {@link dragPiecesInDesign},
- * re-flattens, and returns the flat input (pre-drag), flat output (post-drag), and the drag diff.
- * All returned designs preserve connections for display.
+ * Returns the flat design produced by fully applying the flatten forward diff.
+ * The flatten diff removes all connections (they are absorbed into piece planes/centers),
+ * so the returned design has no connections. Use this for output windows where the rule
+ * is "diff fully applied, not withDiff overlay".
+ */
+export async function nativeFlattenedDesign(kit: Kit, designGuid: string, language: NativeAlgorithmLanguage): Promise<Design | null> {
+  const result = await nativeFlattenDesign(kit, designGuid, language);
+  if (!result.ok) return null;
+  const design = (kit.designs ?? []).find((d) => d.guid === designGuid);
+  if (!design) return null;
+  return applyDesignDiff(JSON.parse(JSON.stringify(design)), result.change.forward);
+}
+
+/**
+ * Runs drag in-process: flattens, applies {@link dragPiecesInDesign}, re-flattens, and returns
+ * the flat input (pre-drag), the flat output (post-drag), and the drag diff. Drag's diff only
+ * updates piece centers, so both flat designs keep their connections for display by applying
+ * only the piece updates from the (re-)flatten diff.
  */
 export async function nativeDragPieces(kit: Kit, rawDesign: Design, pieceGuids: readonly string[], offset: Coord, _language: NativeAlgorithmLanguage): Promise<{ inputDesign: Design; output: Design; dragDiff: DesignDiff }> {
   const { dragPiecesInDesign, applyDesignDiff: apply, flattenDesign } = await import("@semio/js");
@@ -158,9 +174,10 @@ export async function nativeDragPieces(kit: Kit, rawDesign: Design, pieceGuids: 
 }
 
 /**
- * Runs move in-process: flattens (preserving connections), applies {@link movePiecesInDesign},
- * re-flattens, and returns the flat input (pre-move), flat output (post-move), and the move diff.
- * All returned designs preserve connections for display.
+ * Runs move in-process: flattens, applies {@link movePiecesInDesign} (needs kit types for parent connector frames), re-flattens, and returns
+ * the flat input (pre-move), the flat output (post-move), and the move diff. Move's diff only
+ * updates piece planes/centers, so both flat designs keep their connections for display by
+ * applying only the piece updates from the (re-)flatten diff.
  */
 export async function nativeMovePieces(kit: Kit, rawDesign: Design, pieceGuids: readonly string[], vector: MoveVector, _language: NativeAlgorithmLanguage): Promise<{ inputDesign: Design; output: Design; moveDiff: DesignDiff }> {
   const { movePiecesInDesign, applyDesignDiff: apply, flattenDesign } = await import("@semio/js");
@@ -170,7 +187,7 @@ export async function nativeMovePieces(kit: Kit, rawDesign: Design, pieceGuids: 
   }
   const flatDesign = apply(JSON.parse(JSON.stringify(rawDesign)), { pieces: fc.change.forward.pieces });
   const piecesDesign: Design = { guid: flatDesign.guid, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
-  const moveDiff = movePiecesInDesign(flatDesign, piecesDesign, vector);
+  const moveDiff = movePiecesInDesign(kit, flatDesign, piecesDesign, vector);
   const updatedRaw = apply(rawDesign, moveDiff);
   const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === rawDesign.guid ? updatedRaw : d)) };
   const flatChange = flattenDesign(updatedKit, rawDesign.guid);

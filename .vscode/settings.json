@@ -48,7 +48,7 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "always"
   },
-  "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -65,9 +65,12 @@
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
   "python.testing.pytestArgs": [
-    "."
+    "--rootdir=${workspaceFolder}",
+    "semio/py",
+    "semio/engine"
   ],
-  "python.testing.cwd": "${containerWorkspaceFolder}",
+  "python.testing.cwd": "${workspaceFolder}",
+  "python.testing.autoTestDiscoverOnSaveEnabled": true,
   "python.analysis.languageServerMode": "full",
   "sqltools.useNodeRuntime": true,
   "sqltools.connections": [
@@ -87,6 +90,7 @@
   "rust-analyzer.linkedProjects": [
     "semio/rs/Cargo.toml"
   ],
+  "rust-analyzer.testExplorer": true,
   "terminal.integrated.defaultProfile.linux": "bash",
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {

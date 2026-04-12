@@ -1,0 +1,5 @@
+{
+  "title": "Fix Empty MCP Kit Viewer Via Fetchurl",
+  "status": "open",
+  "description": "McpKitViewer did not fetch engine fetchUrl when hosts truncated tool results; kit/scoped tools showed empty UI. Align with design/scene/diagram viewers."
+}

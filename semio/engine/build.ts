@@ -23,7 +23,7 @@ import { join } from "path";
 const cwd = __dirname;
 const env = { ...process.env, UV_PROJECT_ENVIRONMENT: join(cwd, ".venv") };
 
-execSync("uv sync --python 3.13", { cwd: join(cwd, "../.."), env, stdio: "inherit" });
+execSync("uv sync --python 3.14", { cwd: join(cwd, "../.."), env, stdio: "inherit" });
 
 if (existsSync(join(cwd, "build"))) {
   rmSync(join(cwd, "build"), { recursive: true });

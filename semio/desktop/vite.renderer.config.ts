@@ -221,7 +221,6 @@ export default defineConfig(async ({ mode }) => {
         { find: /^stats\.js$/, replacement: statsEntry },
         { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
-        { find: "@semio/studio", replacement: path.resolve(__dirname, "../studio") },
         { find: "@semio/assets", replacement: path.resolve(__dirname, "../assets") },
       ],
     },
@@ -259,7 +258,7 @@ export default defineConfig(async ({ mode }) => {
         "use-sync-external-store/with-selector",
         "void-elements",
       ],
-      exclude: ["@semio/js", "@semio/sketchpad", "@semio/studio", "@playwright/test", "playwright", "playwright-core"],
+      exclude: ["@semio/js", "@semio/sketchpad", "@playwright/test", "playwright", "playwright-core"],
     },
   };
 });

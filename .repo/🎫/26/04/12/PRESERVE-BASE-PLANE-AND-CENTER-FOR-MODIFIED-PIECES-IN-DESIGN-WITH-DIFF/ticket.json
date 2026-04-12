@@ -1,0 +1,10 @@
+{
+  "title": "Preserve Base Plane and Center for Modified Pieces in designWithDiff",
+  "status": "closed",
+  "description": "When a designWithDiff is shown, modified pieces should keep their old center and planes and only be colored as updated. Currently designWithDiff applies new positions to modified pieces, which moves them. Fix designWithDiff so updated pieces retain base.plane and base.center while still applying other diff fields and being marked as Modified.",
+  "summary": "Fixed designWithDiff so modified pieces preserve base plane and center, ensuring they only get recolored as 'modified' instead of moving to new positions when shown in the design diagram and 3D scene. Applied analogous fix to JS, Go, Python, and Rust ports. Extended JS test in `Design/WithDiff` describe block with a new it() that constructs a synthetic diff modifying plane/center and asserts base geometry is preserved. Also fixed an unrelated pre-existing Python syntax error (`except json.JSONDecodeError, TypeError:` → parenthesized) blocking pytest collection. JS tests (187 passing), Go TestDesignWithDiff, and Python TestDesignWithDiff all pass. Pre-existing TestMove failure (Go) and Rust compile errors are unrelated to this change.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪e9500abc0ea14eb69e0b480f9a3ae3cc"
+  ]
+}

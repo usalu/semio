@@ -1,0 +1,98 @@
+{
+  "id": "0226b748-e2e9-4e44-9085-ec96681c9751",
+  "uri": "repo://session/0226b748-e2e9-4e44-9085-ec96681c9751",
+  "client": "claude-code",
+  "second": "2026-04-13T22:20:29Z",
+  "checkpoint": "73386d515af6e1314d4a55d30bc90cfbd220ce47",
+  "contributor": "unknown",
+  "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\0226b748-e2e9-4e44-9085-ec96681c9751.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "73386d515af6e1314d4a55d30bc90cfbd220ce47",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-04-13T22:20:29Z",
+        "session": "0226b748-e2e9-4e44-9085-ec96681c9751",
+        "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\0226b748-e2e9-4e44-9085-ec96681c9751.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "0226b748-e2e9-4e44-9085-ec96681c9751",
+          "transcript_path": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\0226b748-e2e9-4e44-9085-ec96681c9751.jsonl",
+          "cwd": "C:\\git\\semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "PermissionRequest",
+          "tool_name": "Edit",
+          "tool_input": {
+            "file_path": "c:\\git\\semio\\.vscode\\settings.json",
+            "old_string": "  \"python.testing.pytestEnabled\": true,\n  \"python.testing.unittestEnabled\": false,\n  \"python.testing.pytestArgs\": [\n    \".\"\n  ],\n  \"python.testing.cwd\": \"${workspaceFolder}\",",
+            "new_string": "  \"python.testing.pytestEnabled\": true,\n  \"python.testing.unittestEnabled\": false,\n  \"python.testing.pytestArgs\": [\n    \"--rootdir=${workspaceFolder}\",\n    \"semio/py\",\n    \"semio/engine\"\n  ],\n  \"python.testing.cwd\": \"${workspaceFolder}\",\n  \"python.testing.autoTestDiscoverOnSaveEnabled\": true,",
+            "replace_all": false
+          },
+          "permission_suggestions": []
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "73386d515af6e1314d4a55d30bc90cfbd220ce47",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-04-13T22:21:21Z",
+        "session": "0226b748-e2e9-4e44-9085-ec96681c9751",
+        "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\0226b748-e2e9-4e44-9085-ec96681c9751.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "0226b748-e2e9-4e44-9085-ec96681c9751",
+          "transcript_path": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\0226b748-e2e9-4e44-9085-ec96681c9751.jsonl",
+          "cwd": "C:\\git\\semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "PermissionRequest",
+          "tool_name": "Edit",
+          "tool_input": {
+            "file_path": "c:\\git\\semio\\.vscode\\settings.json",
+            "old_string": "  \"rust-analyzer.linkedProjects\": [\n    \"semio/rs/Cargo.toml\"\n  ],",
+            "new_string": "  \"rust-analyzer.linkedProjects\": [\n    \"Cargo.toml\"\n  ],\n  \"rust-analyzer.testExplorer\": true,\n  \"rust-analyzer.runnables.extraTestBinaryArgs\": [\n    \"--show-output\",\n    \"--nocapture\"\n  ],\n  \"rust-analyzer.check.command\": \"check\",\n  \"rust-analyzer.cargo.allTargets\": true,",
+            "replace_all": false
+          },
+          "permission_suggestions": []
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "76891e5d5c2f50f5366e1b32462d002d29014656",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-04-13T22:43:33Z",
+        "session": "0226b748-e2e9-4e44-9085-ec96681c9751",
+        "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\0226b748-e2e9-4e44-9085-ec96681c9751.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "0226b748-e2e9-4e44-9085-ec96681c9751",
+          "transcript_path": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\0226b748-e2e9-4e44-9085-ec96681c9751.jsonl",
+          "cwd": "c:\\git\\semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "PermissionRequest",
+          "tool_name": "Edit",
+          "tool_input": {
+            "file_path": "c:\\git\\semio\\.vscode\\settings.json",
+            "old_string": "  \"rust-analyzer.linkedProjects\": [\n    \"semio/rs/Cargo.toml\"\n  ],",
+            "new_string": "  \"rust-analyzer.linkedProjects\": [\n    \"semio/rs/Cargo.toml\"\n  ],\n  \"rust-analyzer.testExplorer\": true,",
+            "replace_all": false
+          },
+          "permission_suggestions": []
+        }
+      },
+      "response": {}
+    }
+  ]
+}

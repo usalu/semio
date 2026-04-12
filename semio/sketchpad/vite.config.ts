@@ -94,11 +94,7 @@ export default defineConfig(async ({ mode }) => {
   const prod = mode === "production";
   const useSyncRoot = path.resolve(__dirname, "../../node_modules/use-sync-external-store/cjs");
   const shimMain = path.join(useSyncRoot, prod ? "use-sync-external-store-shim.production.js" : "use-sync-external-store-shim.development.js");
-  const shimWithSelector = path.join(
-    useSyncRoot,
-    "use-sync-external-store-shim",
-    prod ? "with-selector.production.js" : "with-selector.development.js",
-  );
+  const shimWithSelector = path.join(useSyncRoot, "use-sync-external-store-shim", prod ? "with-selector.production.js" : "with-selector.development.js");
   const schedulerRoot = path.resolve(__dirname, "../../node_modules/scheduler/cjs");
   const schedulerEntry = path.join(schedulerRoot, prod ? "scheduler.production.js" : "scheduler.development.js");
   return {
@@ -107,9 +103,10 @@ export default defineConfig(async ({ mode }) => {
       alias: {
         "@semio/js": path.resolve(__dirname, "../js"),
         "@semio/sketchpad": path.resolve(__dirname),
-        "@semio/studio": path.resolve(__dirname, "../studio"),
         "@semio/assets": path.resolve(__dirname, "../assets"),
+        "use-sync-external-store/shim/with-selector.js": shimWithSelector,
         "use-sync-external-store/shim/with-selector": shimWithSelector,
+        "use-sync-external-store/shim.js": shimMain,
         "use-sync-external-store/shim": shimMain,
         scheduler: schedulerEntry,
       },
@@ -140,13 +137,7 @@ export default defineConfig(async ({ mode }) => {
       },
     ],
     optimizeDeps: {
-      include: [
-        "golden-layout",
-        "scheduler",
-        "use-sync-external-store/shim",
-        "use-sync-external-store/shim/with-selector",
-        "use-sync-external-store/with-selector",
-      ],
+      include: ["golden-layout", "scheduler", "use-sync-external-store/shim", "use-sync-external-store/shim/with-selector", "use-sync-external-store/with-selector"],
       exclude: ["@semio/js", "@semio/sketchpad", "@playwright/test", "playwright", "playwright-core"],
       esbuildOptions: {
         target: "es2020",

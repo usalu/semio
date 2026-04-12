@@ -1076,8 +1076,8 @@ suite("treeNodeDisplayLabel Test Suite", () => {
   });
 
   test("File node uses emoji prefix plus Label", () => {
-    const node: TreeNodeData = { Kind: "file", ID: "�semio/go/semio.go", Label: "semio.go", URI: "" };
-    assert.strictEqual(treeNodeDisplayLabel(node), "📄semio.go");
+    const node: TreeNodeData = { Kind: "file", ID: "💻semio/go/semio.go", Label: "semio.go", URI: "" };
+    assert.strictEqual(treeNodeDisplayLabel(node), "💻semio.go");
   });
 
   test("Goal node includes status icon", () => {
@@ -1637,7 +1637,7 @@ suite("Entity Emoji Registry Test Suite", () => {
   test("ENTITY_EMOJIS contains all technology kind emojis", () => {
     assert.ok(ENTITY_EMOJIS.has("👤"), "should contain user technology emoji");
     assert.ok(ENTITY_EMOJIS.has("🧰"), "should contain infra technology emoji");
-    assert.ok(ENTITY_EMOJIS.has("�"), "should contain code file emoji");
+    assert.ok(ENTITY_EMOJIS.has("🔬"), "should contain research technology emoji");
     assert.ok(ENTITY_EMOJIS.has("🔖"), "should contain section emoji");
     assert.ok(ENTITY_EMOJIS.has("🛠️"), "should contain impl definition emoji");
     assert.ok(ENTITY_EMOJIS.has("🎯"), "should contain goal emoji");

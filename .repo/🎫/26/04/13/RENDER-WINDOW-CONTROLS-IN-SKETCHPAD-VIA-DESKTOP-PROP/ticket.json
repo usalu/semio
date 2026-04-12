@@ -1,0 +1,10 @@
+{
+  "title": "Render Window Controls in Sketchpad via Desktop Prop",
+  "status": "closed",
+  "description": "Sketchpad does not render window controls (minimize/maximize/close). All desktop functionality must be implemented in sketchpad and passed via a single `desktop` prop. When the desktop prop is not provided, sketchpad runs in non-desktop mode. Replace the existing `onWindowEvents` prop with a `desktop` prop and render window controls at the right end of the navbar when desktop mode is active. Update semio/desktop/renderer.tsx to pass a `desktop` prop.",
+  "summary": "Replaced `onWindowEvents`/`WindowEvents` with a single `desktop` prop and `Desktop` type on Sketchpad. Presence of the `desktop` prop is now the sole signal that sketchpad is running in desktop mode. Rendered minimize/maximize/close controls as a new `windowControls` navbar item (rightmost, appears only when `desktop` is set). Plumbed the prop through `SketchpadScopeProvider` and the outer `Sketchpad` component. Updated `semio/desktop/renderer.tsx` to pass `desktop` instead of `onWindowEvents`. Drag region CSS in `elements/ui/globals.css` already marks `#navbar` as drag and interactive elements as no-drag, so the new controls are clickable over the window drag area.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪828960569a5f4b5e8630bbbfdbf9bdf8"
+  ]
+}

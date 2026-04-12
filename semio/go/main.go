@@ -8,7 +8,6 @@
 
 // #endregion 🧲Header
 
-
 // #region ⛩️Imports
 
 package semio
@@ -42,7 +41,6 @@ import (
 
 // #endregion ⛩️Imports
 
-
 // #region 🎞️Constants
 
 const (
@@ -53,7 +51,6 @@ const (
 const AssetsPath = "../assets/semio"
 
 // #endregion 🎞️Constants
-
 
 // #region 📦Utilities
 
@@ -265,7 +262,6 @@ func DeepEqual(a, b interface{}) bool {
 
 // #endregion 📦Utilities
 
-
 // #region 🐍Entity IDs
 // Entity IDs MUST define identifier types for all semio domain entities.
 
@@ -383,7 +379,6 @@ type KitId struct {
 
 // #endregion 🐍Entity IDs
 
-
 // #region 🖥️Weak Entities
 // Weak Entities MUST define value types that exist only as part of parent entities.
 
@@ -429,7 +424,6 @@ type Camera struct {
 
 // #endregion 🖥️Weak Entities
 
-
 // #region 💎Attribute
 
 // 💎Attribute represents a key-value metadata entry with optional definition.
@@ -467,7 +461,6 @@ type AttributeMeta struct {
 
 // #endregion 💎Attribute
 
-
 // #region 📍Location
 
 // 📍Location represents a geographic point with longitude, latitude and optional altitude.
@@ -488,7 +481,6 @@ type LocationDiff struct {
 }
 
 // #endregion 📍Location
-
 
 // #region ✍️Author
 
@@ -529,7 +521,6 @@ type AuthorMeta struct {
 }
 
 // #endregion ✍️Author
-
 
 // #region 📄File
 
@@ -585,7 +576,6 @@ type FileMeta struct {
 
 // #endregion 📄File
 
-
 // #region 📁Folder
 
 // 📁Folder represents a folder hierarchy entity with name and parent reference.
@@ -629,7 +619,6 @@ type FolderMeta struct {
 
 // #endregion 📁Folder
 
-
 // #region 📏Benchmark
 
 // 📏Benchmark represents a named metric range with min/max bounds and optional icon.
@@ -668,7 +657,6 @@ type BenchmarksDiff struct {
 }
 
 // #endregion 📏Benchmark
-
 
 // #region 🔬Quality
 
@@ -769,7 +757,6 @@ type QualityMeta struct {
 
 // #endregion 🔬Quality
 
-
 // #region ⚓Port
 
 // ⚓Port represents a named connector port category with compatible port references.
@@ -846,7 +833,6 @@ type PortMeta struct {
 
 // #endregion ⚓Port
 
-
 // #region 📊Prop
 
 // 📊Prop represents a quality measurement value with optional unit.
@@ -885,7 +871,6 @@ type PropMeta struct {
 }
 
 // #endregion 📊Prop
-
 
 // #region 🏷️Tag
 
@@ -958,7 +943,6 @@ type TagMeta struct {
 
 // #endregion 🏷️Tag
 
-
 // #region 💡Concept
 
 // 💡Concept represents a named categorization concept with optional description and icon.
@@ -1030,7 +1014,6 @@ type ConceptMeta struct {
 
 // #endregion 💡Concept
 
-
 // #region 🗿Model
 
 // 🗿Model represents a 3D model reference linking a file with tags and description.
@@ -1071,7 +1054,6 @@ type ModelMeta struct {
 }
 
 // #endregion 🗿Model
-
 
 // #region 🔌Connector
 
@@ -1142,7 +1124,6 @@ type ConnectorMeta struct {
 }
 
 // #endregion 🔌Connector
-
 
 // #region 🧱Type
 
@@ -1273,7 +1254,6 @@ type TypeShallow struct {
 
 // #endregion 🧱Type
 
-
 // #region 🎨Layer
 
 // 🎨Layer represents a named layer with visibility, lock and color properties.
@@ -1318,7 +1298,6 @@ type LayerMeta struct {
 }
 
 // #endregion 🎨Layer
-
 
 // #region 🧩Piece
 
@@ -1398,7 +1377,6 @@ type PieceMeta struct {
 
 // #endregion 🧩Piece
 
-
 // #region 👥Group
 
 // 👥Group represents a named collection of pieces within a design.
@@ -1440,7 +1418,6 @@ type GroupMeta struct {
 
 // #endregion 👥Group
 
-
 // #region ↔️Side
 
 // ↔️Side represents one end of a connection referencing a piece and optional connector.
@@ -1458,7 +1435,6 @@ type SideDiff struct {
 }
 
 // #endregion ↔️Side
-
 
 // #region 🔗Connection
 
@@ -1523,7 +1499,6 @@ type ConnectionMeta struct {
 
 // #endregion 🔗Connection
 
-
 // #region 📈Stat
 
 // 📈Stat represents a statistical quality measurement with min/max bounds and unit.
@@ -1567,7 +1542,6 @@ type StatMeta struct {
 }
 
 // #endregion 📈Stat
-
 
 // #region 📐Design
 
@@ -1693,7 +1667,6 @@ type DesignShallow struct {
 }
 
 // #endregion 📐Design
-
 
 // #region ⏱️Kit
 
@@ -1864,7 +1837,6 @@ type KitShallow struct {
 }
 
 // #endregion ⏱️Kit
-
 
 // ⚖️Change represents a reversible entity change with forward and backward diffs.
 type Change[TEntity any, TDiff any] struct {
@@ -2105,7 +2077,6 @@ func DeserializeKitDiff(data []byte) (KitDiff, error) {
 
 // #endregion ⏰Serialization
 
-
 // #region 🔑Meta And Shallow
 
 // 💎ToAttributeMeta converts an Attribute to its scalar-only Meta view.
@@ -2303,7 +2274,6 @@ func ToKitShallow(k Kit) KitShallow {
 }
 
 // #endregion 🔑Meta And Shallow
-
 
 // #region 🖥️Hash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
@@ -4717,7 +4687,6 @@ func HashKitDiff(d KitDiff) string {
 
 // #endregion 🖥️Hash
 
-
 // #region 🔍Helpers
 
 // 🧱FindTypeInKit returns a pointer to the type with the given GUID or nil.
@@ -4884,7 +4853,6 @@ func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64
 
 // #endregion 🔍Helpers
 
-
 // #region 🗡️Factories
 
 // 🆕NewKit creates a new kit with the given name and a generated GUID.
@@ -5026,7 +4994,6 @@ func NewAuthor(name string) Author {
 }
 
 // #endregion 🗡️Factories
-
 
 // #region 🎪Kit Operations
 // Kit Operations MUST provide comparison, diffing, and application of kit changes.
@@ -9555,7 +9522,12 @@ func DesignWithDiff(base Design, diff DesignDiff) Design {
 			attrs = append(attrs, statusAttr("removed"))
 			pc.Attributes = attrs
 		} else if pDiff, ok := updatedPieceMap[pc.Guid]; ok {
+			basePlane := pc.Plane
+			baseCenter := pc.Center
 			pc = applyPieceDiff(pc, pDiff)
+			// 📌Preserve base geometry so modified pieces stay in place and only get recolored.
+			pc.Plane = basePlane
+			pc.Center = baseCenter
 			attrs := append([]Attribute{}, pc.Attributes...)
 			attrs = append(attrs, statusAttr("modified"))
 			pc.Attributes = attrs
@@ -10621,7 +10593,6 @@ func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
 
 // #endregion 🎪Kit Operations
 
-
 // #region 🌊Kit Change Helpers
 // Kit Change Helpers MUST provide convenience functions for single-entity kit changes.
 
@@ -10770,7 +10741,6 @@ func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
 }
 
 // #endregion 🌊Kit Change Helpers
-
 
 // #region 📋Copy Paste Design
 // Copy Paste Design MUST provide copy and paste functionality for designs.
@@ -11362,7 +11332,6 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 }
 
 // #endregion 📋Copy Paste Design
-
 
 // #region 🛡️Validation
 
@@ -12302,7 +12271,6 @@ func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 
 // #endregion 🛡️Validation
 
-
 // #region 🌤️Flatten Design
 // 💾Flatten Design MUST compute absolute piece planes from relative connections.
 func planeToMatrix(p Plane) *mat.Dense {
@@ -12819,9 +12787,288 @@ func movePlaneOriginDelta(plane *Plane, mv MoveVector) PointDiff {
 	return PointDiff{X: &nx, Y: &ny, Z: &nz}
 }
 
-// MovePiecesInDesign computes a DesignDiff that translates root piece planes and adjusts gap/shift/rise on parent connections for selected child movers.
+// moveTranslationWorld computes world-space translation from a piece plane and a MoveVector.
+func moveTranslationWorld(plane Plane, mv MoveVector) []float64 {
+	xAxis := []float64{plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z}
+	yAxis := []float64{plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z}
+	normalize(xAxis)
+	normalize(yAxis)
+	zAxis := cross(xAxis, yAxis)
+	if zAxis[0]*zAxis[0]+zAxis[1]*zAxis[1]+zAxis[2]*zAxis[2] < 1e-12 {
+		return []float64{0, 0, 0}
+	}
+	normalize(zAxis)
+	return []float64{
+		mv.Shift*xAxis[0] + mv.Gap*yAxis[0] + mv.Rise*zAxis[0],
+		mv.Shift*xAxis[1] + mv.Gap*yAxis[1] + mv.Rise*zAxis[1],
+		mv.Shift*xAxis[2] + mv.Gap*yAxis[2] + mv.Rise*zAxis[2],
+	}
+}
+
+// identityPlaneForStructuralMove returns an identity plane (origin at 0, xAxis = +X, yAxis = +Y).
+func identityPlaneForStructuralMove() Plane {
+	return Plane{
+		Origin: Point{X: 0, Y: 0, Z: 0},
+		XAxis:  Vector{X: 1, Y: 0, Z: 0},
+		YAxis:  Vector{X: 0, Y: 1, Z: 0},
+	}
+}
+
+// connectionPlacementTranslationBasis returns gap/shift/rise unit vectors from a parent connector direction.
+func connectionPlacementTranslationBasis(parentConnector Connector) (gapDir, shiftDir, raiseDir []float64) {
+	parentDirection := []float64{parentConnector.Direction.X, parentConnector.Direction.Y, parentConnector.Direction.Z}
+	normalize(parentDirection)
+	yAxis := []float64{0, 1, 0}
+	parentConnectorQuat := quaternionFromUnitVectors(yAxis, parentDirection)
+	parentRotationT := quaternionToMatrix(parentConnectorQuat)
+	gapDir = applyMatrix4ToVec3(parentRotationT, []float64{0, 1, 0})
+	normalize(gapDir)
+	shiftDir = applyMatrix4ToVec3(parentRotationT, []float64{1, 0, 0})
+	normalize(shiftDir)
+	raiseDir = applyMatrix4ToVec3(parentRotationT, []float64{0, 0, 1})
+	normalize(raiseDir)
+	return
+}
+
+// childConnectorOriginWorld computes the child plane origin in world space.
+func childConnectorOriginWorld(parentPlane Plane, parentConnector, childConnector Connector, connection Connection) []float64 {
+	plane := computeChildPlane(parentPlane, parentConnector, childConnector, connection)
+	return []float64{plane.Origin.X, plane.Origin.Y, plane.Origin.Z}
+}
+
+// connectionNumericAt returns the value of a connection's numeric field by key name.
+func connectionNumericAt(connection Connection, key string) float64 {
+	switch key {
+	case "gap":
+		return connection.Gap
+	case "shift":
+		return connection.Shift
+	case "rise":
+		return connection.Rise
+	case "rotation":
+		return connection.Rotation
+	case "turn":
+		return connection.Turn
+	case "tilt":
+		return connection.Tilt
+	}
+	return 0
+}
+
+// connectionWithNumericDelta returns a copy of the connection with a numeric field perturbed by delta.
+func connectionWithNumericDelta(connection Connection, key string, delta float64) Connection {
+	c := connection
+	switch key {
+	case "gap":
+		c.Gap += delta
+	case "shift":
+		c.Shift += delta
+	case "rise":
+		c.Rise += delta
+	case "rotation":
+		c.Rotation += delta
+	case "turn":
+		c.Turn += delta
+	case "tilt":
+		c.Tilt += delta
+	}
+	return c
+}
+
+// solveConnectionOriginMinNorm solves the min-norm problem: find deltas such that J*deltas ≈ t, using (JJ^T)^{-1}.
+func solveConnectionOriginMinNorm(cols [][]float64, t []float64) []float64 {
+	if len(cols) == 0 {
+		return nil
+	}
+	// Build 3x3 JJ^T matrix (row-major)
+	var jjt [9]float64
+	for c := 0; c < 3; c++ {
+		for r := 0; r < 3; r++ {
+			s := 0.0
+			for _, col := range cols {
+				s += col[r] * col[c]
+			}
+			jjt[r+c*3] = s
+		}
+	}
+	// Regularization
+	jjt[0] += 1e-14
+	jjt[4] += 1e-14
+	jjt[8] += 1e-14
+	// Determinant
+	det := jjt[0]*(jjt[4]*jjt[8]-jjt[7]*jjt[5]) -
+		jjt[3]*(jjt[1]*jjt[8]-jjt[7]*jjt[2]) +
+		jjt[6]*(jjt[1]*jjt[5]-jjt[4]*jjt[2])
+	if math.Abs(det) < 1e-22 {
+		return nil
+	}
+	// 3x3 inverse (column-major like THREE.Matrix3: elements[r+c*3])
+	invDet := 1.0 / det
+	var inv [9]float64
+	inv[0] = (jjt[4]*jjt[8] - jjt[5]*jjt[7]) * invDet
+	inv[1] = (jjt[2]*jjt[7] - jjt[1]*jjt[8]) * invDet
+	inv[2] = (jjt[1]*jjt[5] - jjt[2]*jjt[4]) * invDet
+	inv[3] = (jjt[5]*jjt[6] - jjt[3]*jjt[8]) * invDet
+	inv[4] = (jjt[0]*jjt[8] - jjt[2]*jjt[6]) * invDet
+	inv[5] = (jjt[2]*jjt[3] - jjt[0]*jjt[5]) * invDet
+	inv[6] = (jjt[3]*jjt[7] - jjt[4]*jjt[6]) * invDet
+	inv[7] = (jjt[1]*jjt[6] - jjt[0]*jjt[7]) * invDet
+	inv[8] = (jjt[0]*jjt[4] - jjt[1]*jjt[3]) * invDet
+	if math.IsInf(inv[0], 0) || math.IsNaN(inv[0]) {
+		return nil
+	}
+	// u = inv * t (column-major multiply: u[r] = sum_c inv[r+c*3]*t[c])
+	u := []float64{
+		inv[0]*t[0] + inv[3]*t[1] + inv[6]*t[2],
+		inv[1]*t[0] + inv[4]*t[1] + inv[7]*t[2],
+		inv[2]*t[0] + inv[5]*t[1] + inv[8]*t[2],
+	}
+	// deltas[i] = cols[i] · u
+	deltas := make([]float64, len(cols))
+	for i, col := range cols {
+		deltas[i] = col[0]*u[0] + col[1]*u[1] + col[2]*u[2]
+	}
+	return deltas
+}
+
+// connectionDiffTranslationFallback projects translation onto connector gap/shift/rise basis, residual onto parent plane x/y.
+func connectionDiffTranslationFallback(parentPlane Plane, parentConnector Connector, t []float64) ConnectionDiff {
+	gapDir, shiftDir, raiseDir := connectionPlacementTranslationBasis(parentConnector)
+	dgap := dot(t, gapDir)
+	dshift := dot(t, shiftDir)
+	drise := dot(t, raiseDir)
+	res := []float64{
+		t[0] - dgap*gapDir[0] - dshift*shiftDir[0] - drise*raiseDir[0],
+		t[1] - dgap*gapDir[1] - dshift*shiftDir[1] - drise*raiseDir[1],
+		t[2] - dgap*gapDir[2] - dshift*shiftDir[2] - drise*raiseDir[2],
+	}
+	px := []float64{parentPlane.XAxis.X, parentPlane.XAxis.Y, parentPlane.XAxis.Z}
+	py := []float64{parentPlane.YAxis.X, parentPlane.YAxis.Y, parentPlane.YAxis.Z}
+	diff := ConnectionDiff{}
+	eps := 1e-9
+	if math.Abs(dgap) > eps {
+		diff.Gap = &dgap
+	}
+	if math.Abs(dshift) > eps {
+		diff.Shift = &dshift
+	}
+	if math.Abs(drise) > eps {
+		diff.Rise = &drise
+	}
+	pxSq := px[0]*px[0] + px[1]*px[1] + px[2]*px[2]
+	pySq := py[0]*py[0] + py[1]*py[1] + py[2]*py[2]
+	if pxSq > 1e-24 && pySq > 1e-24 {
+		pxN := []float64{px[0] / math.Sqrt(pxSq), px[1] / math.Sqrt(pxSq), px[2] / math.Sqrt(pxSq)}
+		pyN := []float64{py[0] / math.Sqrt(pySq), py[1] / math.Sqrt(pySq), py[2] / math.Sqrt(pySq)}
+		du := dot(res, pxN)
+		dv := dot(res, pyN)
+		if math.Abs(du) > eps {
+			diff.U = &du
+		}
+		if math.Abs(dv) > eps {
+			diff.V = &dv
+		}
+	}
+	return diff
+}
+
+// connectionDiffFromStructuralMoveVector computes connection diffs using a numerical Jacobian of computeChildPlane.
+func connectionDiffFromStructuralMoveVector(
+	parentPlane Plane,
+	parentConnector Connector,
+	childConnector *Connector,
+	connection Connection,
+	childPlane *Plane,
+	vector MoveVector,
+) ConnectionDiff {
+	child := identityPlaneForStructuralMove()
+	if childPlane != nil {
+		child = *childPlane
+	}
+	tw := moveTranslationWorld(child, vector)
+	tSq := tw[0]*tw[0] + tw[1]*tw[1] + tw[2]*tw[2]
+	if tSq < 1e-24 {
+		return ConnectionDiff{}
+	}
+	if childConnector == nil {
+		return connectionDiffTranslationFallback(parentPlane, parentConnector, tw)
+	}
+	jacobianKeys := []string{"gap", "shift", "rise", "rotation", "turn", "tilt"}
+	jacobianEps := map[string]float64{
+		"gap": 1e-6, "shift": 1e-6, "rise": 1e-6,
+		"rotation": 1e-4, "turn": 1e-4, "tilt": 1e-4,
+	}
+	o0 := childConnectorOriginWorld(parentPlane, parentConnector, *childConnector, connection)
+	cols := make([][]float64, len(jacobianKeys))
+	for i, key := range jacobianKeys {
+		eps := jacobianEps[key]
+		perturbed := connectionWithNumericDelta(connection, key, eps)
+		o1 := childConnectorOriginWorld(parentPlane, parentConnector, *childConnector, perturbed)
+		cols[i] = []float64{
+			(o1[0] - o0[0]) / eps,
+			(o1[1] - o0[1]) / eps,
+			(o1[2] - o0[2]) / eps,
+		}
+	}
+	deltas := solveConnectionOriginMinNorm(cols, tw)
+	diff := ConnectionDiff{}
+	epsOut := 1e-9
+	if deltas != nil {
+		for i, key := range jacobianKeys {
+			if math.Abs(deltas[i]) > epsOut {
+				v := deltas[i]
+				switch key {
+				case "gap":
+					diff.Gap = &v
+				case "shift":
+					diff.Shift = &v
+				case "rise":
+					diff.Rise = &v
+				case "rotation":
+					diff.Rotation = &v
+				case "turn":
+					diff.Turn = &v
+				case "tilt":
+					diff.Tilt = &v
+				}
+			}
+		}
+		// Compute residual
+		pred := []float64{0, 0, 0}
+		for i, col := range cols {
+			pred[0] += col[0] * deltas[i]
+			pred[1] += col[1] * deltas[i]
+			pred[2] += col[2] * deltas[i]
+		}
+		res := []float64{tw[0] - pred[0], tw[1] - pred[1], tw[2] - pred[2]}
+		px := []float64{parentPlane.XAxis.X, parentPlane.XAxis.Y, parentPlane.XAxis.Z}
+		py := []float64{parentPlane.YAxis.X, parentPlane.YAxis.Y, parentPlane.YAxis.Z}
+		pxSq := px[0]*px[0] + px[1]*px[1] + px[2]*px[2]
+		pySq := py[0]*py[0] + py[1]*py[1] + py[2]*py[2]
+		if pxSq > 1e-24 && pySq > 1e-24 {
+			pxN := []float64{px[0] / math.Sqrt(pxSq), px[1] / math.Sqrt(pxSq), px[2] / math.Sqrt(pxSq)}
+			pyN := []float64{py[0] / math.Sqrt(pySq), py[1] / math.Sqrt(pySq), py[2] / math.Sqrt(pySq)}
+			du := dot(res, pxN)
+			dv := dot(res, pyN)
+			if math.Abs(du) > epsOut {
+				diff.U = &du
+			}
+			if math.Abs(dv) > epsOut {
+				diff.V = &dv
+			}
+		}
+		return diff
+	}
+	return connectionDiffTranslationFallback(parentPlane, parentConnector, tw)
+}
+
+// MovePiecesInDesign computes a DesignDiff that translates root piece planes and adjusts connection diffs using a numerical Jacobian for selected child movers.
 // A piece's parent connection is the connection where it is the Connecting (child) piece.
-func MovePiecesInDesign(design Design, pieces Design, vector MoveVector) DesignDiff {
+func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector) DesignDiff {
+	typesDict := make(map[string]*Type)
+	for i := range kit.Types {
+		typesDict[kit.Types[i].Guid] = &kit.Types[i]
+	}
 	selectedGuids := make(map[string]bool)
 	for _, p := range pieces.Pieces {
 		selectedGuids[p.Guid] = true
@@ -12858,6 +13105,10 @@ func MovePiecesInDesign(design Design, pieces Design, vector MoveVector) DesignD
 			Diff:  PieceDiff{Plane: &PlaneDiff{Origin: &orig}},
 		})
 	}
+	connMap := make(map[string]*Connection)
+	for i := range design.Connections {
+		connMap[design.Connections[i].Guid] = &design.Connections[i]
+	}
 	var connectionUpdates []struct {
 		Connection ConnectionId   `json:"connection"`
 		Diff       ConnectionDiff `json:"diff"`
@@ -12886,13 +13137,52 @@ func MovePiecesInDesign(design Design, pieces Design, vector MoveVector) DesignD
 		if !ok {
 			continue
 		}
-		g, s, r := vector.Gap, vector.Shift, vector.Rise
+		connection := connMap[parent.connectionGuid]
+		if connection == nil {
+			continue
+		}
+		parentPiece := pieceMap[parent.parentGuid]
+		childPiece := pieceMap[guid]
+		if parentPiece == nil || childPiece == nil {
+			continue
+		}
+		if parentPiece.Type == nil || childPiece.Type == nil {
+			continue
+		}
+		parentType := typesDict[parentPiece.Type.Guid]
+		childType := typesDict[childPiece.Type.Guid]
+		parentConnector := getConnector(typesDict, parentType, func() *string {
+			if connection.Connected.Connector != nil {
+				return &connection.Connected.Connector.Guid
+			}
+			return nil
+		}())
+		childConnector := getConnector(typesDict, childType, func() *string {
+			if connection.Connecting.Connector != nil {
+				return &connection.Connecting.Connector.Guid
+			}
+			return nil
+		}())
+		if parentConnector == nil {
+			continue
+		}
+		parentPlane := identityPlaneForStructuralMove()
+		if parentPiece.Plane != nil {
+			parentPlane = *parentPiece.Plane
+		}
+		connDiff := connectionDiffFromStructuralMoveVector(parentPlane, *parentConnector, childConnector, *connection, childPiece.Plane, vector)
+		hasFields := connDiff.Gap != nil || connDiff.Shift != nil || connDiff.Rise != nil ||
+			connDiff.Rotation != nil || connDiff.Turn != nil || connDiff.Tilt != nil ||
+			connDiff.U != nil || connDiff.V != nil
+		if !hasFields {
+			continue
+		}
 		connectionUpdates = append(connectionUpdates, struct {
 			Connection ConnectionId   `json:"connection"`
 			Diff       ConnectionDiff `json:"diff"`
 		}{
 			Connection: ConnectionId{Guid: parent.connectionGuid},
-			Diff:       ConnectionDiff{Gap: &g, Shift: &s, Rise: &r},
+			Diff:       connDiff,
 		})
 	}
 	diff := DesignDiff{}
@@ -12992,7 +13282,6 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 }
 
 // #endregion 🌤️Flatten Design
-
 
 // #region 🔩Kit Model Export
 
@@ -13908,7 +14197,6 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 
 // #endregion 🔩Kit Model Export
 
-
 // #region ❄️Geometric Insights
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
@@ -14131,7 +14419,6 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 }
 
 // #endregion ❄️Geometric Insights
-
 
 // #region 📡SQLite
 // SQLite kit operations. MUST provide serialization and deserialization of Kit to and from SQLite and zip formats.

@@ -158,6 +158,7 @@ from semio_core import (
     getTypeChildrenDict,
     getTypeFamilyDict,
     getTypeSiblingsDict,
+    designWithDiffDict,
     inverseKitDiffDict,
     logger,
     normalizeAngle,
@@ -3204,12 +3205,13 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
         design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
     if design is None:
         return {"points": [], "lines": []}
+    design_for_diagram = designWithDiffDict(design, design_diff) if design_diff else design
 
     # Flatten the design to get absolute piece positions.
     # Inject the full design into kit so flattenDesignDict can find all pieces.
     try:
         kit_for_flatten = dict(kit)
-        kit_for_flatten["designs"] = [d for d in kit.get("designs", []) if d.get("guid") != design_guid] + [design]
+        kit_for_flatten["designs"] = [d for d in kit.get("designs", []) if d.get("guid") != design_guid] + [design_for_diagram]
         flatten_result = flattenDesignDict(kit_for_flatten, design_guid)
     except Exception:
         flatten_result = {}
@@ -3223,7 +3225,7 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
             piece_centers[pid] = center
 
     # Build piece map with positions
-    pieces = design.get("pieces", [])
+    pieces = design_for_diagram.get("pieces", [])
     piece_map: dict[str, dict] = {}
     for p in pieces:
         guid = p.get("guid")
@@ -3250,7 +3252,14 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
             center = p.get("center") or {"u": 0, "v": 0}
             piece_map[guid] = {"guid": guid, "id": p.get("id", ""), "center": center}
         for p in design_diff.get("pieces", {}).get("updated", []):
-            modified_piece_guids.add(p.get("piece", {}).get("guid", ""))
+            guid = p.get("piece", {}).get("guid", "")
+            modified_piece_guids.add(guid)
+            center = p.get("diff", {}).get("center")
+            if guid and center:
+                if guid in piece_map:
+                    piece_map[guid]["center"] = center
+                else:
+                    piece_map[guid] = {"guid": guid, "id": p.get("piece", {}).get("id", ""), "center": center}
         for c in design_diff.get("connections", {}).get("removed", []):
             removed_conn_guids.add(c.get("guid", ""))
         for c in design_diff.get("connections", {}).get("added", []):
@@ -3320,9 +3329,10 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
     return {"points": points, "lines": lines}
 
 
-def _enrich_design(kit: dict, design: dict) -> dict:
+def _enrich_design(kit: dict, design: dict, design_diff: dict | None = None) -> dict:
     """🔖Enrich design pieces with flattened plane/center data from flattenDesignDict."""
     design_guid = design.get("guid")
+    design_for_enrichment = designWithDiffDict(design, design_diff) if design_diff else design
     try:
         # Inject the full session design into the kit for flattening.
         # The kit's designs list may have a shallow entry (no pieces) when the
@@ -3330,7 +3340,7 @@ def _enrich_design(kit: dict, design: dict) -> dict:
         # flattenDesignDict reads the design from kit["designs"], so it must
         # contain the full design with all pieces.
         kit_for_flatten = dict(kit)
-        kit_for_flatten["designs"] = [d for d in kit.get("designs", []) if d.get("guid") != design_guid] + [design]
+        kit_for_flatten["designs"] = [d for d in kit.get("designs", []) if d.get("guid") != design_guid] + [design_for_enrichment]
         flatten_result = flattenDesignDict(kit_for_flatten, design_guid)
         flatten_by_guid: dict[str, dict] = {}
         for update in flatten_result.get("pieces", {}).get("updated", []):
@@ -3338,7 +3348,7 @@ def _enrich_design(kit: dict, design: dict) -> dict:
             if pid:
                 flatten_by_guid[pid] = update.get("diff", {})
         enriched_pieces = []
-        for p in design.get("pieces", []):
+        for p in design_for_enrichment.get("pieces", []):
             guid = p.get("guid")
             flat = flatten_by_guid.get(guid) if guid else None
             if flat:
@@ -3350,11 +3360,22 @@ def _enrich_design(kit: dict, design: dict) -> dict:
                 enriched_pieces.append(ep)
             else:
                 enriched_pieces.append(p)
-        enriched_design = dict(design)
+        if design_diff:
+            updated_centers_by_guid = {
+                update.get("piece", {}).get("guid"): update.get("diff", {}).get("center")
+                for update in design_diff.get("pieces", {}).get("updated", [])
+                if update.get("piece", {}).get("guid") and update.get("diff", {}).get("center")
+            }
+            if updated_centers_by_guid:
+                enriched_pieces = [
+                    ({**piece, "center": updated_centers_by_guid[piece.get("guid")]} if piece.get("guid") in updated_centers_by_guid else piece)
+                    for piece in enriched_pieces
+                ]
+        enriched_design = dict(design_for_enrichment)
         enriched_design["pieces"] = enriched_pieces
         return enriched_design
     except Exception:
-        return design
+        return design_for_enrichment
 
 
 def _is_gltf_file(file: dict) -> bool:
@@ -3437,7 +3458,7 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
     The JS diagram renderer uses Python-enriched piece centers from enriched_design instead."""
     kit = _get_session_kit(ctx)
     design = _get_session_design(ctx)
-    enriched_design = _enrich_design(kit, design)
+    enriched_design = _enrich_design(kit, design, design_diff)
 
     payload: dict[str, typing.Any] = {
         "mode": mode,
@@ -4919,6 +4940,28 @@ class TestMcp:
         data = _mcp_app_tool_payload(result)
         assert "points" in data
         assert "lines" in data
+
+    def test_show_diagram_diff_flattens_the_diffed_design(self):
+        """🔖show_diagram_diff must flatten the design after applying the diff so diagram centers come from the diffed design."""
+        mock_ctx = type("MockCtx", (), {"session": object()})()
+        sid = mock_ctx.session
+        kit = {
+            "name": "Diff Diagram Kit",
+            "types": [],
+            "designs": [{"guid": "dg-1", "name": "D", "pieces": [{"guid": "p-1", "id": "p-1"}], "connections": []}],
+        }
+        engine._mcp_session_kits[sid] = kit
+        engine._mcp_session_designs[sid] = kit["designs"][0]
+
+        diff = {"pieces": {"updated": [{"piece": {"guid": "p-1"}, "diff": {"center": {"u": 12, "v": -4}}}]}}
+        result = engine.show_diagram_diff(mock_ctx, design_diff=diff)
+        data = _mcp_app_tool_payload(result)
+
+        points_by_guid = {point["guid"]: point for point in data["points"]}
+        assert points_by_guid["p-1"]["u"] == 12
+        assert points_by_guid["p-1"]["v"] == -4
+        piece = next(piece for piece in data["design"]["pieces"] if piece["guid"] == "p-1")
+        assert piece["center"] == {"u": 12, "v": -4}
 
     def test_show_diff_with_design_diff_adds_pieces(self, kitMetabolismJson: dict):
         """➕show_diff with design_diff includes designDiff in payload."""

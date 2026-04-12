@@ -15,28 +15,28 @@
     },
     "ghcr.io/balazs23/devcontainers-features/nx:1": {},
     "ghcr.io/devcontainers/features/go:1": {
-      "version": "1.25"
+      "version": "1.26"
     },
     "ghcr.io/devcontainers-community/npm-features/prettier:1": {},
     "ghcr.io/devcontainers/features/python:1": {
       "version": "3.14"
     },
     "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {
-      "version": "0.9.26"
+      "version": "0.11.6"
     },
     "ghcr.io/jsburckhardt/devcontainer-features/ruff:1": {
-      "version": "0.14.13"
+      "version": "0.15.10"
     },
     "ghcr.io/devcontainers/features/dotnet:2": {
       "version": "8.0",
-      "additionalVersions": "7.0 9.0 10.0"
+      "additionalVersions": "9.0 10.0"
     },
     "ghcr.io/devcontainers/features/rust:1": {
       "version": "1.92",
       "targets": "wasm32-unknown-unknown"
     },
     "ghcr.io/devcontainers/features/git:1": {
-      "version": "2.52"
+      "version": "2.53"
     },
     "ghcr.io/devcontainers/features/git-lfs:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},

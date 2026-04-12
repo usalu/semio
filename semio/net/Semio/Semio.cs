@@ -5324,47 +5324,49 @@ public class Design : Entity<Design>
         double turn,
         double tilt)
     {
+        // All math uses double[] arrays for 64-bit precision:
+        // Vec3 = double[3] {x,y,z}, Quat = double[4] {x,y,z,w}, Mat4 = double[16] row-major
         var pMatrix = PlaneToMatrix(parentPlane);
 
-        var pPoint = new System.Numerics.Vector3((float)parentPoint.X, (float)parentPoint.Y, (float)parentPoint.Z);
-        var pDir = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)parentDirection.X, (float)parentDirection.Y, (float)parentDirection.Z));
-        var cPoint = new System.Numerics.Vector3((float)childPoint.X, (float)childPoint.Y, (float)childPoint.Z);
-        var cDir = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)childDirection.X, (float)childDirection.Y, (float)childDirection.Z));
+        var pPoint = new double[] { parentPoint.X, parentPoint.Y, parentPoint.Z };
+        var pDir = Vec3Normalize(new double[] { parentDirection.X, parentDirection.Y, parentDirection.Z });
+        var cPoint = new double[] { childPoint.X, childPoint.Y, childPoint.Z };
+        var cDir = Vec3Normalize(new double[] { childDirection.X, childDirection.Y, childDirection.Z });
 
         var rotationRad = DegreesToRadians(rotation);
         var turnRad = DegreesToRadians(turn);
         var tiltRad = DegreesToRadians(tilt);
 
-        var reverseChildDirection = -cDir;
+        var reverseChildDirection = new double[] { -cDir[0], -cDir[1], -cDir[2] };
 
-        System.Numerics.Quaternion alignQuat;
-        var cross = System.Numerics.Vector3.Cross(pDir, reverseChildDirection);
-        if (cross.LengthSquared() < 0.0001f)
+        double[] alignQuat; // Quat {x,y,z,w}
+        var cross = Vec3Cross(pDir, reverseChildDirection);
+        if (Vec3LengthSquared(cross) < 0.0001)
         {
-            var dotProduct = System.Numerics.Vector3.Dot(pDir, reverseChildDirection);
+            var dotProduct = Vec3Dot(pDir, reverseChildDirection);
             if (dotProduct > 0)
             {
-                alignQuat = System.Numerics.Quaternion.Identity;
+                alignQuat = QuatIdentity();
             }
             else
             {
-                if (Math.Abs(pDir.Z) < 1e-5f)
+                if (Math.Abs(pDir[2]) < 1e-5)
                 {
-                    alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(System.Numerics.Vector3.UnitZ, (float)Math.PI);
+                    alignQuat = QuatFromAxisAngle(UnitZ, Math.PI);
                 }
                 else
                 {
-                    var crossAxis = System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitZ, pDir);
-                    System.Numerics.Vector3 axis;
-                    if (crossAxis.LengthSquared() < 0.0001f)
+                    var crossAxis = Vec3Cross(UnitZ, pDir);
+                    double[] axis;
+                    if (Vec3LengthSquared(crossAxis) < 0.0001)
                     {
-                        axis = System.Numerics.Vector3.UnitX;
+                        axis = UnitX;
                     }
                     else
                     {
-                        axis = System.Numerics.Vector3.Normalize(crossAxis);
+                        axis = Vec3Normalize(crossAxis);
                     }
-                    alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(axis, (float)Math.PI);
+                    alignQuat = QuatFromAxisAngle(axis, Math.PI);
                 }
             }
         }
@@ -5375,15 +5377,14 @@ public class Design : Entity<Design>
 
         var directionT = QuaternionToMatrix(alignQuat);
 
-        var yAxis = System.Numerics.Vector3.UnitY;
-        var parentConnectorQuat = CreateFromTwoVectors(yAxis, pDir);
+        var parentConnectorQuat = CreateFromTwoVectors(UnitY, pDir);
         var parentRotationT = QuaternionToMatrix(parentConnectorQuat);
 
-        var gapDirection = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitY);
-        var shiftDirection = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitX);
-        var raiseDirection = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitZ);
-        var turnAxis = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitZ);
-        var tiltAxis = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitX);
+        var gapDirection = ApplyMatrix4ToVec3(parentRotationT, UnitY);
+        var shiftDirection = ApplyMatrix4ToVec3(parentRotationT, UnitX);
+        var raiseDirection = ApplyMatrix4ToVec3(parentRotationT, UnitZ);
+        var turnAxis = ApplyMatrix4ToVec3(parentRotationT, UnitZ);
+        var tiltAxis = ApplyMatrix4ToVec3(parentRotationT, UnitX);
 
         var orientationT = directionT;
         var rotateT = MakeRotationAxis(pDir, -rotationRad);
@@ -5398,18 +5399,18 @@ public class Design : Entity<Design>
         var tiltT = MakeRotationAxis(tiltAxis, tiltRad);
         orientationT = MultiplyMatrices(tiltT, orientationT);
 
-        var centerChildT = MakeTranslation(-cPoint.X, -cPoint.Y, -cPoint.Z);
+        var centerChildT = MakeTranslation(-cPoint[0], -cPoint[1], -cPoint[2]);
 
         var transform = MultiplyMatrices(orientationT, centerChildT);
 
-        var gapT = MakeTranslation(gapDirection.X * (float)gap, gapDirection.Y * (float)gap, gapDirection.Z * (float)gap);
-        var shiftT = MakeTranslation(shiftDirection.X * (float)shift, shiftDirection.Y * (float)shift, shiftDirection.Z * (float)shift);
-        var raiseT = MakeTranslation(raiseDirection.X * (float)rise, raiseDirection.Y * (float)rise, raiseDirection.Z * (float)rise);
+        var gapT = MakeTranslation(gapDirection[0] * gap, gapDirection[1] * gap, gapDirection[2] * gap);
+        var shiftT = MakeTranslation(shiftDirection[0] * shift, shiftDirection[1] * shift, shiftDirection[2] * shift);
+        var raiseT = MakeTranslation(raiseDirection[0] * rise, raiseDirection[1] * rise, raiseDirection[2] * rise);
 
         var translationT = MultiplyMatrices(raiseT, MultiplyMatrices(shiftT, gapT));
         transform = MultiplyMatrices(translationT, transform);
 
-        var moveToParentT = MakeTranslation(pPoint.X, pPoint.Y, pPoint.Z);
+        var moveToParentT = MakeTranslation(pPoint[0], pPoint[1], pPoint[2]);
         transform = MultiplyMatrices(moveToParentT, transform);
 
         var finalMatrix = MultiplyMatrices(pMatrix, transform);
@@ -5417,128 +5418,165 @@ public class Design : Entity<Design>
         return MatrixToPlane(finalMatrix);
     }
 
-    private static float DegreesToRadians(double deg) => (float)(deg * Math.PI / 180.0);
+    // double-precision unit vectors
+    private static readonly double[] UnitX = new double[] { 1, 0, 0 };
+    private static readonly double[] UnitY = new double[] { 0, 1, 0 };
+    private static readonly double[] UnitZ = new double[] { 0, 0, 1 };
 
-    private static System.Numerics.Quaternion CreateFromTwoVectors(System.Numerics.Vector3 u, System.Numerics.Vector3 v)
+    private static double Vec3Dot(double[] a, double[] b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    private static double Vec3LengthSquared(double[] v) => v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+    private static double[] Vec3Cross(double[] a, double[] b) => new double[] {
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+    };
+    private static double[] Vec3Normalize(double[] v)
     {
-        float dot = System.Numerics.Vector3.Dot(u, v);
-        if (dot > 0.999999f) return System.Numerics.Quaternion.Identity;
-        if (dot < -0.999999f)
+        var len = Math.Sqrt(Vec3LengthSquared(v));
+        if (len < 1e-15) return new double[] { 0, 0, 0 };
+        return new double[] { v[0] / len, v[1] / len, v[2] / len };
+    }
+
+    private static double[] QuatIdentity() => new double[] { 0, 0, 0, 1 }; // {x,y,z,w}
+    private static double[] QuatFromAxisAngle(double[] axis, double angle)
+    {
+        var halfAngle = angle * 0.5;
+        var s = Math.Sin(halfAngle);
+        return new double[] { axis[0] * s, axis[1] * s, axis[2] * s, Math.Cos(halfAngle) };
+    }
+    private static double[] QuatNormalize(double[] q)
+    {
+        var len = Math.Sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+        if (len < 1e-15) return QuatIdentity();
+        return new double[] { q[0] / len, q[1] / len, q[2] / len, q[3] / len };
+    }
+
+    private static double DegreesToRadians(double deg) => deg * Math.PI / 180.0;
+
+    private static double[] CreateFromTwoVectors(double[] u, double[] v)
+    {
+        // Returns quaternion {x,y,z,w} that rotates u to v
+        double dot = Vec3Dot(u, v);
+        if (dot > 0.999999) return QuatIdentity();
+        if (dot < -0.999999)
         {
-            var axis = System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitX, u);
-            if (axis.LengthSquared() < 0.001f)
-                axis = System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitY, u);
-            axis = System.Numerics.Vector3.Normalize(axis);
-            return System.Numerics.Quaternion.CreateFromAxisAngle(axis, (float)Math.PI);
+            var axis = Vec3Cross(UnitX, u);
+            if (Vec3LengthSquared(axis) < 0.001)
+                axis = Vec3Cross(UnitY, u);
+            axis = Vec3Normalize(axis);
+            return QuatFromAxisAngle(axis, Math.PI);
         }
 
-        var axisNorm = System.Numerics.Vector3.Cross(u, v);
-        var q = new System.Numerics.Quaternion(axisNorm.X, axisNorm.Y, axisNorm.Z, 1 + dot);
-        return System.Numerics.Quaternion.Normalize(q);
+        var axisNorm = Vec3Cross(u, v);
+        var q = new double[] { axisNorm[0], axisNorm[1], axisNorm[2], 1 + dot };
+        return QuatNormalize(q);
     }
 
-    private static System.Numerics.Matrix4x4 PlaneToMatrix(Plane p)
+    private static double[] PlaneToMatrix(Plane p)
     {
-        var origin = new System.Numerics.Vector3((float)p.Origin.X, (float)p.Origin.Y, (float)p.Origin.Z);
-        var x = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)p.XAxis.X, (float)p.XAxis.Y, (float)p.XAxis.Z));
-        var yRaw = new System.Numerics.Vector3((float)p.YAxis.X, (float)p.YAxis.Y, (float)p.YAxis.Z);
+        // Returns double[16] row-major 4x4 matrix
+        var origin = new double[] { p.Origin.X, p.Origin.Y, p.Origin.Z };
+        var x = Vec3Normalize(new double[] { p.XAxis.X, p.XAxis.Y, p.XAxis.Z });
+        var yRaw = new double[] { p.YAxis.X, p.YAxis.Y, p.YAxis.Z };
 
-        var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
-        var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
+        var z = Vec3Normalize(Vec3Cross(x, yRaw));
+        var y = Vec3Normalize(Vec3Cross(z, x));
 
-        return new System.Numerics.Matrix4x4(
-            x.X, y.X, z.X, origin.X,
-            x.Y, y.Y, z.Y, origin.Y,
-            x.Z, y.Z, z.Z, origin.Z,
-            0, 0, 0, 1
-        );
+        return new double[] {
+            x[0], y[0], z[0], origin[0],
+            x[1], y[1], z[1], origin[1],
+            x[2], y[2], z[2], origin[2],
+            0,     0,     0,     1
+        };
     }
 
-    private static System.Numerics.Vector3 ApplyMatrix4ToVec3(System.Numerics.Matrix4x4 m, System.Numerics.Vector3 v)
+    private static double[] ApplyMatrix4ToVec3(double[] m, double[] v)
     {
-        return new System.Numerics.Vector3(
-            m.M11 * v.X + m.M12 * v.Y + m.M13 * v.Z,
-            m.M21 * v.X + m.M22 * v.Y + m.M23 * v.Z,
-            m.M31 * v.X + m.M32 * v.Y + m.M33 * v.Z
-        );
+        // m = double[16] row-major, v = double[3]
+        return new double[] {
+            m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
+            m[4] * v[0] + m[5] * v[1] + m[6] * v[2],
+            m[8] * v[0] + m[9] * v[1] + m[10] * v[2]
+        };
     }
 
-    private static System.Numerics.Matrix4x4 QuaternionToMatrix(System.Numerics.Quaternion q)
+    private static double[] QuaternionToMatrix(double[] q)
     {
-        float x = q.X, y = q.Y, z = q.Z, w = q.W;
-        float xx = x * x, yy = y * y, zz = z * z;
-        float xy = x * y, xz = x * z, yz = y * z;
-        float wx = w * x, wy = w * y, wz = w * z;
+        // q = double[4] {x,y,z,w}, returns double[16] row-major
+        double x = q[0], y = q[1], z = q[2], w = q[3];
+        double xx = x * x, yy = y * y, zz = z * z;
+        double xy = x * y, xz = x * z, yz = y * z;
+        double wx = w * x, wy = w * y, wz = w * z;
 
-        return new System.Numerics.Matrix4x4(
-            1 - 2 * (yy + zz), 2 * (xy - wz), 2 * (xz + wy), 0,
-            2 * (xy + wz), 1 - 2 * (xx + zz), 2 * (yz - wx), 0,
-            2 * (xz - wy), 2 * (yz + wx), 1 - 2 * (xx + yy), 0,
-            0, 0, 0, 1
-        );
+        return new double[] {
+            1 - 2 * (yy + zz), 2 * (xy - wz),     2 * (xz + wy),     0,
+            2 * (xy + wz),     1 - 2 * (xx + zz), 2 * (yz - wx),     0,
+            2 * (xz - wy),     2 * (yz + wx),     1 - 2 * (xx + yy), 0,
+            0,                 0,                 0,                 1
+        };
     }
 
-    private static System.Numerics.Matrix4x4 MakeTranslation(float x, float y, float z)
+    private static double[] MakeTranslation(double x, double y, double z)
     {
-        return new System.Numerics.Matrix4x4(
+        // Returns double[16] row-major translation matrix
+        return new double[] {
             1, 0, 0, x,
             0, 1, 0, y,
             0, 0, 1, z,
             0, 0, 0, 1
-        );
+        };
     }
 
-    private static System.Numerics.Matrix4x4 MakeRotationAxis(System.Numerics.Vector3 axis, float angle)
+    private static double[] MakeRotationAxis(double[] axis, double angle)
     {
-        float c = (float)Math.Cos(angle);
-        float s = (float)Math.Sin(angle);
-        float t = 1 - c;
-        float x = axis.X, y = axis.Y, z = axis.Z;
+        // axis = double[3], angle = radians, returns double[16] row-major
+        double c = Math.Cos(angle);
+        double s = Math.Sin(angle);
+        double t = 1 - c;
+        double ax = axis[0], ay = axis[1], az = axis[2];
 
-        return new System.Numerics.Matrix4x4(
-            t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0,
-            t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0,
-            t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0,
-            0, 0, 0, 1
-        );
+        return new double[] {
+            t * ax * ax + c,      t * ax * ay - s * az, t * ax * az + s * ay, 0,
+            t * ax * ay + s * az, t * ay * ay + c,      t * ay * az - s * ax, 0,
+            t * ax * az - s * ay, t * ay * az + s * ax, t * az * az + c,      0,
+            0,                    0,                    0,                    1
+        };
     }
 
-    private static System.Numerics.Matrix4x4 MultiplyMatrices(System.Numerics.Matrix4x4 a, System.Numerics.Matrix4x4 b)
+    private static double[] MultiplyMatrices(double[] a, double[] b)
     {
-        return new System.Numerics.Matrix4x4(
-            a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31 + a.M14 * b.M41,
-            a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32 + a.M14 * b.M42,
-            a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33 + a.M14 * b.M43,
-            a.M11 * b.M14 + a.M12 * b.M24 + a.M13 * b.M34 + a.M14 * b.M44,
+        // a,b = double[16] row-major, returns double[16] row-major
+        return new double[] {
+            a[0]*b[0] + a[1]*b[4] + a[2]*b[8]  + a[3]*b[12],
+            a[0]*b[1] + a[1]*b[5] + a[2]*b[9]  + a[3]*b[13],
+            a[0]*b[2] + a[1]*b[6] + a[2]*b[10] + a[3]*b[14],
+            a[0]*b[3] + a[1]*b[7] + a[2]*b[11] + a[3]*b[15],
 
-            a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31 + a.M24 * b.M41,
-            a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32 + a.M24 * b.M42,
-            a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33 + a.M24 * b.M43,
-            a.M21 * b.M14 + a.M22 * b.M24 + a.M23 * b.M34 + a.M24 * b.M44,
+            a[4]*b[0] + a[5]*b[4] + a[6]*b[8]  + a[7]*b[12],
+            a[4]*b[1] + a[5]*b[5] + a[6]*b[9]  + a[7]*b[13],
+            a[4]*b[2] + a[5]*b[6] + a[6]*b[10] + a[7]*b[14],
+            a[4]*b[3] + a[5]*b[7] + a[6]*b[11] + a[7]*b[15],
 
-            a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31 + a.M34 * b.M41,
-            a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32 + a.M34 * b.M42,
-            a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33 + a.M34 * b.M43,
-            a.M31 * b.M14 + a.M32 * b.M24 + a.M33 * b.M34 + a.M34 * b.M44,
+            a[8]*b[0]  + a[9]*b[4]  + a[10]*b[8]  + a[11]*b[12],
+            a[8]*b[1]  + a[9]*b[5]  + a[10]*b[9]  + a[11]*b[13],
+            a[8]*b[2]  + a[9]*b[6]  + a[10]*b[10] + a[11]*b[14],
+            a[8]*b[3]  + a[9]*b[7]  + a[10]*b[11] + a[11]*b[15],
 
-            a.M41 * b.M11 + a.M42 * b.M21 + a.M43 * b.M31 + a.M44 * b.M41,
-            a.M41 * b.M12 + a.M42 * b.M22 + a.M43 * b.M32 + a.M44 * b.M42,
-            a.M41 * b.M13 + a.M42 * b.M23 + a.M43 * b.M33 + a.M44 * b.M43,
-            a.M41 * b.M14 + a.M42 * b.M24 + a.M43 * b.M34 + a.M44 * b.M44
-        );
+            a[12]*b[0] + a[13]*b[4] + a[14]*b[8]  + a[15]*b[12],
+            a[12]*b[1] + a[13]*b[5] + a[14]*b[9]  + a[15]*b[13],
+            a[12]*b[2] + a[13]*b[6] + a[14]*b[10] + a[15]*b[14],
+            a[12]*b[3] + a[13]*b[7] + a[14]*b[11] + a[15]*b[15]
+        };
     }
 
-    private static Plane MatrixToPlane(System.Numerics.Matrix4x4 m)
+    private static Plane MatrixToPlane(double[] m)
     {
-        var x = new System.Numerics.Vector3(m.M11, m.M21, m.M31);
-        var y = new System.Numerics.Vector3(m.M12, m.M22, m.M32);
-        var origin = new System.Numerics.Vector3(m.M14, m.M24, m.M34);
-
+        // m = double[16] row-major
         return new Plane
         {
-            Origin = new Point { X = origin.X, Y = origin.Y, Z = origin.Z },
-            XAxis = new Vector { X = x.X, Y = x.Y, Z = x.Z },
-            YAxis = new Vector { X = y.X, Y = y.Y, Z = y.Z }
+            Origin = new Point { X = m[3], Y = m[7], Z = m[11] },
+            XAxis = new Vector { X = m[0], Y = m[4], Z = m[8] },
+            YAxis = new Vector { X = m[1], Y = m[5], Z = m[9] }
         };
     }
 
@@ -6188,35 +6226,296 @@ text {
 
     private static Point MoveTranslationWorldFromPiecePlane(Plane plane, MoveVector vector)
     {
-        var xRaw = new System.Numerics.Vector3((float)plane.XAxis.X, (float)plane.XAxis.Y, (float)plane.XAxis.Z);
-        if (xRaw.LengthSquared() < 1e-12f) return new Point();
-        var x = System.Numerics.Vector3.Normalize(xRaw);
-        var yRaw = new System.Numerics.Vector3((float)plane.YAxis.X, (float)plane.YAxis.Y, (float)plane.YAxis.Z);
-        if (yRaw.LengthSquared() < 1e-12f) return new Point();
-        var y = System.Numerics.Vector3.Normalize(yRaw);
-        var z = System.Numerics.Vector3.Cross(x, y);
-        if (z.LengthSquared() < 1e-12f) return new Point();
-        z = System.Numerics.Vector3.Normalize(z);
-        var t = x * (float)vector.Shift + y * (float)vector.Gap + z * (float)vector.Rise;
-        return new Point { X = t.X, Y = t.Y, Z = t.Z };
+        var xAxis = new double[] { plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z };
+        var yAxis = new double[] { plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z };
+        if (xAxis[0] * xAxis[0] + xAxis[1] * xAxis[1] + xAxis[2] * xAxis[2] < 1e-12) return new Point();
+        NormalizeD(xAxis);
+        if (yAxis[0] * yAxis[0] + yAxis[1] * yAxis[1] + yAxis[2] * yAxis[2] < 1e-12) return new Point();
+        NormalizeD(yAxis);
+        var zAxis = CrossD(xAxis, yAxis);
+        if (zAxis[0] * zAxis[0] + zAxis[1] * zAxis[1] + zAxis[2] * zAxis[2] < 1e-12) return new Point();
+        NormalizeD(zAxis);
+        return new Point
+        {
+            X = vector.Shift * xAxis[0] + vector.Gap * yAxis[0] + vector.Rise * zAxis[0],
+            Y = vector.Shift * xAxis[1] + vector.Gap * yAxis[1] + vector.Rise * zAxis[1],
+            Z = vector.Shift * xAxis[2] + vector.Gap * yAxis[2] + vector.Rise * zAxis[2],
+        };
     }
 
-    public static DesignDiff MovePiecesInDesign(Design design, Design pieces, MoveVector vector)
+    private static double[] MoveTranslationWorld(Plane plane, MoveVector mv)
     {
-        var designConnections = design.Connections;
-        var selectedPieces = pieces.Pieces;
-        var selectedGuids = new HashSet<string>(selectedPieces.Select(p => p.Guid));
-        var connectionByChild = new Dictionary<string, Connection>();
-        foreach (var conn in designConnections)
+        var xAxis = new double[] { plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z };
+        var yAxis = new double[] { plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z };
+        NormalizeD(xAxis);
+        NormalizeD(yAxis);
+        var zAxis = CrossD(xAxis, yAxis);
+        if (zAxis[0] * zAxis[0] + zAxis[1] * zAxis[1] + zAxis[2] * zAxis[2] < 1e-12)
+            return new double[] { 0, 0, 0 };
+        NormalizeD(zAxis);
+        return new double[]
         {
-            connectionByChild[conn.Connecting.Piece.Guid] = conn;
+            mv.Shift * xAxis[0] + mv.Gap * yAxis[0] + mv.Rise * zAxis[0],
+            mv.Shift * xAxis[1] + mv.Gap * yAxis[1] + mv.Rise * zAxis[1],
+            mv.Shift * xAxis[2] + mv.Gap * yAxis[2] + mv.Rise * zAxis[2],
+        };
+    }
+
+    private static void NormalizeD(double[] v)
+    {
+        var len = Math.Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+        if (len < 1e-12) return;
+        v[0] /= len; v[1] /= len; v[2] /= len;
+    }
+
+    private static double[] CrossD(double[] a, double[] b) =>
+        new double[] { a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] };
+
+    private static double DotD(double[] a, double[] b) =>
+        a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+
+    private static Plane IdentityPlaneForStructuralMove() => new Plane
+    {
+        Origin = new Point { X = 0, Y = 0, Z = 0 },
+        XAxis = new Vector { X = 1, Y = 0, Z = 0 },
+        YAxis = new Vector { X = 0, Y = 1, Z = 0 },
+    };
+
+    private static Connector GetConnectorFromType(Dictionary<string, Type> typesDict, Type typ, string connectorGuid)
+    {
+        if (typ == null) return null;
+        if (string.IsNullOrEmpty(connectorGuid))
+        {
+            if (typ.Connectors.Count > 0) return typ.Connectors[0];
+            if (typ.Parent != null && typesDict.TryGetValue(typ.Parent.Guid, out var parentType))
+                return GetConnectorFromType(typesDict, parentType, connectorGuid);
+            return null;
         }
+        foreach (var c in typ.Connectors)
+            if (c.Guid == connectorGuid) return c;
+        if (typ.Parent != null && typesDict.TryGetValue(typ.Parent.Guid, out var pt))
+        {
+            var found = GetConnectorFromType(typesDict, pt, connectorGuid);
+            if (found != null) return found;
+        }
+        if (typ.Connectors.Count > 0) return typ.Connectors[0];
+        return null;
+    }
+
+    private static void ConnectionPlacementTranslationBasis(Connector parentConnector, out double[] gapDir, out double[] shiftDir, out double[] raiseDir)
+    {
+        var parentDirection = new double[] { parentConnector.Direction?.X ?? 0, parentConnector.Direction?.Y ?? 1, parentConnector.Direction?.Z ?? 0 };
+        NormalizeD(parentDirection);
+        var parentConnectorQuat = CreateFromTwoVectors(UnitY, parentDirection);
+        var parentRotationT = QuaternionToMatrix(parentConnectorQuat);
+        gapDir = Vec3Normalize(ApplyMatrix4ToVec3(parentRotationT, UnitY));
+        shiftDir = Vec3Normalize(ApplyMatrix4ToVec3(parentRotationT, UnitX));
+        raiseDir = Vec3Normalize(ApplyMatrix4ToVec3(parentRotationT, UnitZ));
+    }
+
+    private static double[] ChildConnectorOriginWorld(Plane parentPlane, Connector parentConnector, Connector childConnector, Connection connection)
+    {
+        var childPlane = DefaultComputeChildPlane(
+            parentPlane,
+            parentConnector.Point ?? new Point(),
+            parentConnector.Direction ?? new Vector { X = 0, Y = 1, Z = 0 },
+            childConnector.Point ?? new Point(),
+            childConnector.Direction ?? new Vector { X = 0, Y = 1, Z = 0 },
+            connection.Gap, connection.Shift, connection.Rise,
+            connection.Rotation, connection.Turn, connection.Tilt);
+        return new double[] { childPlane.Origin.X, childPlane.Origin.Y, childPlane.Origin.Z };
+    }
+
+    private static Connection ConnectionWithNumericDelta(Connection connection, string key, double delta)
+    {
+        var c = new Connection
+        {
+            Guid = connection.Guid,
+            Connected = connection.Connected,
+            Connecting = connection.Connecting,
+            Description = connection.Description,
+            Gap = connection.Gap,
+            Shift = connection.Shift,
+            Rise = connection.Rise,
+            Rotation = connection.Rotation,
+            Turn = connection.Turn,
+            Tilt = connection.Tilt,
+            U = connection.U,
+            V = connection.V,
+        };
+        switch (key)
+        {
+            case "gap": c.Gap += delta; break;
+            case "shift": c.Shift += delta; break;
+            case "rise": c.Rise += delta; break;
+            case "rotation": c.Rotation += delta; break;
+            case "turn": c.Turn += delta; break;
+            case "tilt": c.Tilt += delta; break;
+        }
+        return c;
+    }
+
+    private static double[] SolveConnectionOriginMinNorm(double[][] cols, double[] t)
+    {
+        if (cols.Length == 0) return null;
+        var jjt = new double[9];
+        for (int c = 0; c < 3; c++)
+            for (int r = 0; r < 3; r++)
+            {
+                double s = 0;
+                foreach (var col in cols) s += col[r] * col[c];
+                jjt[r + c * 3] = s;
+            }
+        jjt[0] += 1e-14; jjt[4] += 1e-14; jjt[8] += 1e-14;
+        var det = jjt[0] * (jjt[4] * jjt[8] - jjt[7] * jjt[5])
+                - jjt[3] * (jjt[1] * jjt[8] - jjt[7] * jjt[2])
+                + jjt[6] * (jjt[1] * jjt[5] - jjt[4] * jjt[2]);
+        if (Math.Abs(det) < 1e-22) return null;
+        var invDet = 1.0 / det;
+        var inv = new double[9];
+        inv[0] = (jjt[4] * jjt[8] - jjt[5] * jjt[7]) * invDet;
+        inv[1] = (jjt[2] * jjt[7] - jjt[1] * jjt[8]) * invDet;
+        inv[2] = (jjt[1] * jjt[5] - jjt[2] * jjt[4]) * invDet;
+        inv[3] = (jjt[5] * jjt[6] - jjt[3] * jjt[8]) * invDet;
+        inv[4] = (jjt[0] * jjt[8] - jjt[2] * jjt[6]) * invDet;
+        inv[5] = (jjt[2] * jjt[3] - jjt[0] * jjt[5]) * invDet;
+        inv[6] = (jjt[3] * jjt[7] - jjt[4] * jjt[6]) * invDet;
+        inv[7] = (jjt[1] * jjt[6] - jjt[0] * jjt[7]) * invDet;
+        inv[8] = (jjt[0] * jjt[4] - jjt[1] * jjt[3]) * invDet;
+        if (double.IsInfinity(inv[0]) || double.IsNaN(inv[0])) return null;
+        var u = new double[]
+        {
+            inv[0] * t[0] + inv[3] * t[1] + inv[6] * t[2],
+            inv[1] * t[0] + inv[4] * t[1] + inv[7] * t[2],
+            inv[2] * t[0] + inv[5] * t[1] + inv[8] * t[2],
+        };
+        var deltas = new double[cols.Length];
+        for (int i = 0; i < cols.Length; i++)
+            deltas[i] = cols[i][0] * u[0] + cols[i][1] * u[1] + cols[i][2] * u[2];
+        return deltas;
+    }
+
+    private static ConnectionDiff ConnectionDiffTranslationFallback(Plane parentPlane, Connector parentConnector, double[] tw)
+    {
+        ConnectionPlacementTranslationBasis(parentConnector, out var gapDir, out var shiftDir, out var raiseDir);
+        var dgap = DotD(tw, gapDir);
+        var dshift = DotD(tw, shiftDir);
+        var drise = DotD(tw, raiseDir);
+        var res = new double[]
+        {
+            tw[0] - dgap * gapDir[0] - dshift * shiftDir[0] - drise * raiseDir[0],
+            tw[1] - dgap * gapDir[1] - dshift * shiftDir[1] - drise * raiseDir[1],
+            tw[2] - dgap * gapDir[2] - dshift * shiftDir[2] - drise * raiseDir[2],
+        };
+        var px = new double[] { parentPlane.XAxis.X, parentPlane.XAxis.Y, parentPlane.XAxis.Z };
+        var py = new double[] { parentPlane.YAxis.X, parentPlane.YAxis.Y, parentPlane.YAxis.Z };
+        var diff = new ConnectionDiff();
+        const double eps = 1e-9;
+        if (Math.Abs(dgap) > eps) diff.Gap = dgap;
+        if (Math.Abs(dshift) > eps) diff.Shift = dshift;
+        if (Math.Abs(drise) > eps) diff.Rise = drise;
+        var pxSq = px[0] * px[0] + px[1] * px[1] + px[2] * px[2];
+        var pySq = py[0] * py[0] + py[1] * py[1] + py[2] * py[2];
+        if (pxSq > 1e-24 && pySq > 1e-24)
+        {
+            var pxN = new double[] { px[0] / Math.Sqrt(pxSq), px[1] / Math.Sqrt(pxSq), px[2] / Math.Sqrt(pxSq) };
+            var pyN = new double[] { py[0] / Math.Sqrt(pySq), py[1] / Math.Sqrt(pySq), py[2] / Math.Sqrt(pySq) };
+            var du = DotD(res, pxN);
+            var dv = DotD(res, pyN);
+            if (Math.Abs(du) > eps) diff.U = du;
+            if (Math.Abs(dv) > eps) diff.V = dv;
+        }
+        return diff;
+    }
+
+    private static ConnectionDiff ConnectionDiffFromStructuralMoveVector(
+        Plane parentPlane, Connector parentConnector, Connector childConnector,
+        Connection connection, Plane childPlane, MoveVector vector)
+    {
+        var child = childPlane ?? IdentityPlaneForStructuralMove();
+        var tw = MoveTranslationWorld(child, vector);
+        var tSq = tw[0] * tw[0] + tw[1] * tw[1] + tw[2] * tw[2];
+        if (tSq < 1e-24) return new ConnectionDiff();
+        if (childConnector == null)
+            return ConnectionDiffTranslationFallback(parentPlane, parentConnector, tw);
+
+        var jacobianKeys = new[] { "gap", "shift", "rise", "rotation", "turn", "tilt" };
+        var jacobianEps = new Dictionary<string, double>
+        {
+            { "gap", 1e-6 }, { "shift", 1e-6 }, { "rise", 1e-6 },
+            { "rotation", 1e-4 }, { "turn", 1e-4 }, { "tilt", 1e-4 },
+        };
+        var o0 = ChildConnectorOriginWorld(parentPlane, parentConnector, childConnector, connection);
+        var cols = new double[jacobianKeys.Length][];
+        for (int i = 0; i < jacobianKeys.Length; i++)
+        {
+            var epsVal = jacobianEps[jacobianKeys[i]];
+            var perturbed = ConnectionWithNumericDelta(connection, jacobianKeys[i], epsVal);
+            var o1 = ChildConnectorOriginWorld(parentPlane, parentConnector, childConnector, perturbed);
+            cols[i] = new double[] { (o1[0] - o0[0]) / epsVal, (o1[1] - o0[1]) / epsVal, (o1[2] - o0[2]) / epsVal };
+        }
+        var deltas = SolveConnectionOriginMinNorm(cols, tw);
+        var diff = new ConnectionDiff();
+        const double epsOut = 1e-9;
+        if (deltas != null)
+        {
+            for (int i = 0; i < jacobianKeys.Length; i++)
+            {
+                if (Math.Abs(deltas[i]) > epsOut)
+                {
+                    var v = deltas[i];
+                    switch (jacobianKeys[i])
+                    {
+                        case "gap": diff.Gap = v; break;
+                        case "shift": diff.Shift = v; break;
+                        case "rise": diff.Rise = v; break;
+                        case "rotation": diff.Rotation = v; break;
+                        case "turn": diff.Turn = v; break;
+                        case "tilt": diff.Tilt = v; break;
+                    }
+                }
+            }
+            var pred = new double[] { 0, 0, 0 };
+            for (int i = 0; i < cols.Length; i++)
+            {
+                pred[0] += cols[i][0] * deltas[i];
+                pred[1] += cols[i][1] * deltas[i];
+                pred[2] += cols[i][2] * deltas[i];
+            }
+            var res = new double[] { tw[0] - pred[0], tw[1] - pred[1], tw[2] - pred[2] };
+            var px = new double[] { parentPlane.XAxis.X, parentPlane.XAxis.Y, parentPlane.XAxis.Z };
+            var py = new double[] { parentPlane.YAxis.X, parentPlane.YAxis.Y, parentPlane.YAxis.Z };
+            var pxSq = px[0] * px[0] + px[1] * px[1] + px[2] * px[2];
+            var pySq = py[0] * py[0] + py[1] * py[1] + py[2] * py[2];
+            if (pxSq > 1e-24 && pySq > 1e-24)
+            {
+                var pxN = new double[] { px[0] / Math.Sqrt(pxSq), px[1] / Math.Sqrt(pxSq), px[2] / Math.Sqrt(pxSq) };
+                var pyN = new double[] { py[0] / Math.Sqrt(pySq), py[1] / Math.Sqrt(pySq), py[2] / Math.Sqrt(pySq) };
+                var du = DotD(res, pxN);
+                var dv = DotD(res, pyN);
+                if (Math.Abs(du) > epsOut) diff.U = du;
+                if (Math.Abs(dv) > epsOut) diff.V = dv;
+            }
+            return diff;
+        }
+        return ConnectionDiffTranslationFallback(parentPlane, parentConnector, tw);
+    }
+
+    public static DesignDiff MovePiecesInDesign(Kit kit, Design design, Design pieces, MoveVector vector)
+    {
+        var typesDict = new Dictionary<string, Type>();
+        foreach (var t in kit.Types) typesDict[t.Guid] = t;
+
+        var selectedGuids = new HashSet<string>(pieces.Pieces.Select(p => p.Guid));
+        var connectionByChild = new Dictionary<string, Connection>();
+        foreach (var conn in design.Connections)
+            connectionByChild[conn.Connecting.Piece.Guid] = conn;
+
         var fixedGuids = new HashSet<string>();
         foreach (var guid in selectedGuids)
-        {
             if (!connectionByChild.ContainsKey(guid))
                 fixedGuids.Add(guid);
-        }
+
         var pieceMap = design.Pieces.ToDictionary(p => p.Guid);
         var pieceUpdates = new List<PieceDiffUpdate>();
         foreach (var guid in fixedGuids)
@@ -6252,22 +6551,35 @@ text {
             while (connectionByChild.TryGetValue(current, out var conn))
             {
                 var parentGuid = conn.Connected.Piece.Guid;
-                if (selectedGuids.Contains(parentGuid))
-                {
-                    isDescendant = true;
-                    break;
-                }
+                if (selectedGuids.Contains(parentGuid)) { isDescendant = true; break; }
                 current = parentGuid;
             }
             if (isDescendant) continue;
-            if (connectionByChild.TryGetValue(guid, out var parentConn))
+            if (!connectionByChild.TryGetValue(guid, out var parentConn)) continue;
+            pieceMap.TryGetValue(parentConn.Connected.Piece.Guid, out var parentPiece);
+            pieceMap.TryGetValue(guid, out var childPiece);
+            if (parentPiece == null || childPiece == null) continue;
+            if (parentPiece.Type == null || childPiece.Type == null) continue;
+            typesDict.TryGetValue(parentPiece.Type.Guid, out var parentType);
+            typesDict.TryGetValue(childPiece.Type.Guid, out var childType);
+            var parentConnector = GetConnectorFromType(typesDict, parentType,
+                parentConn.Connected.Connector?.Guid ?? "");
+            var childConnector = GetConnectorFromType(typesDict, childType,
+                parentConn.Connecting.Connector?.Guid ?? "");
+            if (parentConnector == null) continue;
+            var parentPlane = parentPiece.Plane ?? IdentityPlaneForStructuralMove();
+            var connDiff = ConnectionDiffFromStructuralMoveVector(
+                parentPlane, parentConnector, childConnector,
+                parentConn, childPiece.Plane, vector);
+            var hasFields = connDiff.Gap.HasValue || connDiff.Shift.HasValue || connDiff.Rise.HasValue ||
+                connDiff.Rotation.HasValue || connDiff.Turn.HasValue || connDiff.Tilt.HasValue ||
+                connDiff.U.HasValue || connDiff.V.HasValue;
+            if (!hasFields) continue;
+            connectionUpdates.Add(new ConnectionDiffUpdate
             {
-                connectionUpdates.Add(new ConnectionDiffUpdate
-                {
-                    Connection = new ConnectionId { Guid = parentConn.Guid },
-                    Diff = new ConnectionDiff { Gap = vector.Gap, Shift = vector.Shift, Rise = vector.Rise },
-                });
-            }
+                Connection = new ConnectionId { Guid = parentConn.Guid },
+                Diff = connDiff,
+            });
         }
         var diff = new DesignDiff();
         if (pieceUpdates.Count > 0)
@@ -7996,9 +8308,7 @@ public partial class Kit : Entity<Kit>
 
 public partial class Kit
 {
-
-
-
+}
 
 
 #region 🔑Meta And Shallow
@@ -8650,8 +8960,6 @@ public static class MetaShallowConversions
 #endregion 📎Meta And Shallow Conversions
 
 #endregion 🔑Meta And Shallow
-
-
 
 
 
@@ -11245,8 +11553,6 @@ public partial class Kit
             }
         };
     }
-
-    #endregion 🌤️Flatten Design
 }
 
 #endregion 🌤️Flatten Design
@@ -14211,7 +14517,7 @@ public static class SemioDiff
             {
                 var typeDiff = GetTypeDiff(beforeType, afterType);
                 if (typeDiff != null)
-                    updated.Add(new TypeDiffUpdate { Type = afterType, Diff = typeDiff });
+                    updated.Add(new TypeDiffUpdate { Type = new TypeId { Guid = afterType.Guid }, Diff = typeDiff });
             }
         }
 
@@ -14381,7 +14687,7 @@ public static class SemioDiff
             {
                 var designDiff = GetDesignDiff(beforeDesign, afterDesign);
                 if (designDiff != null)
-                    updated.Add(new DesignDiffUpdate { Design = afterDesign, Diff = designDiff });
+                    updated.Add(new DesignDiffUpdate { Design = new DesignId { Guid = afterDesign.Guid }, Diff = designDiff });
             }
         }
 
@@ -16468,7 +16774,66 @@ public static class SemioDiff
 
     public static bool AreKitDiffsEqual(KitDiff a, KitDiff b)
     {
-        return Utility.Serialize(a) == Utility.Serialize(b);
+        var jsonA = Utility.Serialize(a);
+        var jsonB = Utility.Serialize(b);
+        if (jsonA == jsonB) return true;
+        var tokenA = CanonicalizeToken(JToken.Parse(jsonA));
+        var tokenB = CanonicalizeToken(JToken.Parse(jsonB));
+        return JToken.DeepEquals(tokenA ?? JValue.CreateNull(), tokenB ?? JValue.CreateNull());
+    }
+
+    private static readonly HashSet<string> DefaultZeroKeys = new() { "x", "y", "z", "u", "v", "gap", "shift", "rise", "rotation", "turn", "tilt", "t" };
+    private static readonly HashSet<string> DefaultFalseKeys = new() { "mandatory", "isHidden", "isLocked", "isAbstract", "virtual" };
+
+    private static string? GetComparableId(JToken? token)
+    {
+        if (token == null || token.Type != JTokenType.Object) return null;
+        var obj = (JObject)token;
+        return (string?)(obj["guid"]
+            ?? (obj["type"] as JObject)?["guid"]
+            ?? (obj["design"] as JObject)?["guid"]
+            ?? (obj["piece"] as JObject)?["guid"]
+            ?? (obj["connection"] as JObject)?["guid"]
+            ?? (obj["model"] as JObject)?["guid"]
+            ?? (obj["port"] as JObject)?["guid"]
+            ?? (obj["connector"] as JObject)?["guid"]
+            ?? (obj["prop"] as JObject)?["guid"]
+            ?? (obj["attribute"] as JObject)?["guid"]);
+    }
+
+    private static JToken? CanonicalizeToken(JToken? token, string key = "")
+    {
+        if (token == null || token.Type == JTokenType.Null) return null;
+        switch (token.Type)
+        {
+            case JTokenType.String:
+                var s = token.Value<string>();
+                return string.IsNullOrEmpty(s) ? null : token;
+            case JTokenType.Integer:
+            case JTokenType.Float:
+                var n = token.Value<double>();
+                return DefaultZeroKeys.Contains(key) && n == 0 ? null : token;
+            case JTokenType.Boolean:
+                var b = token.Value<bool>();
+                return DefaultFalseKeys.Contains(key) && !b ? null : token;
+            case JTokenType.Array:
+                var items = token.Children()
+                    .Select(c => CanonicalizeToken(c, key))
+                    .Where(c => c != null)
+                    .OrderBy(c => GetComparableId(c) ?? c!.ToString(Formatting.None))
+                    .ToList();
+                return items.Count > 0 ? new JArray(items) : null;
+            case JTokenType.Object:
+                var result = new JObject();
+                foreach (var prop in ((JObject)token).Properties().OrderBy(p => p.Name))
+                {
+                    var val = CanonicalizeToken(prop.Value, prop.Name);
+                    if (val != null) result[prop.Name] = val;
+                }
+                return result.Count > 0 ? result : null;
+            default:
+                return token;
+        }
     }
 }
 

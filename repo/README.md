@@ -101,7 +101,7 @@ No problem, let them write what they know, until the tests are extended and let 
 
 ### 🚀 Zero-touch development
 
-### � Shared test infrastructure
+### 🧪 Shared test infrastructure
 
 ### 💯 Consistent requirements
 

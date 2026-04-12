@@ -8,7 +8,6 @@
 
 // #endregion 🧲Header
 
-
 // #region ⛩️Imports
 // External dependency imports MUST be declared here.
 import { Accessor as GltfAccessor, Buffer as GltfBuffer, Document as GltfDocument, Material as GltfMaterial, Mesh as GltfMesh, Node as GltfNode, Texture as GltfTexture, NodeIO } from "@gltf-transform/core";
@@ -23,7 +22,6 @@ import { z } from "zod";
 
 // #endregion ⛩️Imports
 
-
 // #region 🎞️Constants
 // Global constants MUST define shared numeric parameters.
 
@@ -36,7 +34,6 @@ export const ICON_WIDTH = 50;
 export const TOLERANCE = 1e-5;
 
 // #endregion 🎞️Constants
-
 
 // #region 📦Utilities
 // General-purpose utility functions MUST be defined here.
@@ -186,7 +183,6 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 export type Guid = string;
 
 // #endregion 📦Utilities
-
 
 // #region 🐍Entity IDs
 // Entity identifier types and comparison functions MUST be defined here.
@@ -617,7 +613,6 @@ export const getTagGuid = (id: TagId): Guid => id.guid;
 export const getConceptGuid = (id: ConceptId): Guid => id.guid;
 
 // #endregion 🐍Entity IDs
-
 
 // #region 🖥️Weak Entities
 
@@ -1157,7 +1152,6 @@ export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
 
 // #endregion 🖥️Weak Entities
 
-
 // #region 💎Attribute
 // Attribute entity types, schemas, and helper functions MUST be defined here.
 // 📅DateProperty represents a date-time value as ISO string.
@@ -1343,7 +1337,6 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
 
 // #endregion 💎Attribute
 
-
 // #region 📍Location
 // Location entity types, schemas, and helpers MUST be defined here.
 
@@ -1424,7 +1417,6 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
 };
 
 // #endregion 📍Location
-
 
 // #region ✍️Author
 // Author entity types, schemas, and helpers MUST be defined here.
@@ -1544,7 +1536,6 @@ export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
 // #endregion ✍️Author
 
-
 // #region 📄File
 // File entity types, schemas, and helpers MUST be defined here.
 
@@ -1622,9 +1613,11 @@ export type FileDiff = z.infer<typeof FileDiffSchema>;
 export const getFileDiff = (before: File, after: File): FileDiff => {
   const diff: FileDiff = {};
   if (before.name !== after.name) diff.name = after.name;
+  if (before.description !== after.description) diff.description = after.description;
   if (before.remote !== after.remote) diff.remote = after.remote;
   if (before.size !== after.size) diff.size = after.size;
   if (before.hash !== after.hash) diff.hash = after.hash;
+  if (before.blob !== after.blob) diff.blob = after.blob;
   if (before.createdAt !== after.createdAt) diff.createdAt = after.createdAt;
   if (before.createdBy !== after.createdBy) diff.createdBy = after.createdBy;
   if (before.updatedAt !== after.updatedAt) diff.updatedAt = after.updatedAt;
@@ -1638,9 +1631,11 @@ export const getFileDiff = (before: File, after: File): FileDiff => {
 export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => {
   const inverse: FileDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
+  if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.remote !== undefined) inverse.remote = original.remote;
   if (appliedDiff.size !== undefined) inverse.size = original.size;
   if (appliedDiff.hash !== undefined) inverse.hash = original.hash;
+  if (appliedDiff.blob !== undefined) inverse.blob = original.blob;
   if (appliedDiff.createdAt !== undefined) inverse.createdAt = original.createdAt;
   if (appliedDiff.createdBy !== undefined) inverse.createdBy = original.createdBy;
   if (appliedDiff.updatedAt !== undefined) inverse.updatedAt = original.updatedAt;
@@ -1663,6 +1658,7 @@ export const applyFileDiff = (base: File, diff: FileDiff): File => {
     name: diff.name ?? base.name,
   };
 
+  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
   if (diff.remote !== undefined || base.remote !== undefined) result.remote = diff.remote ?? base.remote;
   if (diff.size !== undefined || base.size !== undefined) result.size = diff.size ?? base.size;
   if (diff.hash !== undefined || base.hash !== undefined) result.hash = diff.hash ?? base.hash;
@@ -1671,7 +1667,7 @@ export const applyFileDiff = (base: File, diff: FileDiff): File => {
   if (diff.updatedAt !== undefined || base.updatedAt !== undefined) result.updatedAt = diff.updatedAt ?? base.updatedAt;
   if (diff.updatedBy !== undefined || base.updatedBy !== undefined) result.updatedBy = diff.updatedBy ?? base.updatedBy;
   if (diff.folder !== undefined || base.folder !== undefined) result.folder = diff.folder ?? base.folder;
-  if (base.blob !== undefined) result.blob = base.blob;
+  if (diff.blob !== undefined || base.blob !== undefined) result.blob = diff.blob ?? base.blob;
 
   return result;
 };
@@ -1690,7 +1686,6 @@ export const FilesDiffSchema = z.object({
 export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 
 // #endregion 📄File
-
 
 // #region 📁Folder
 // Folder entity types, schemas, and helpers MUST be defined here.
@@ -1834,7 +1829,6 @@ export const FoldersDiffSchema = z.object({
 export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
 
 // #endregion 📁Folder
-
 
 // #region 📏Benchmark
 // Benchmark entity types, schemas, and helpers MUST be defined here.
@@ -2005,7 +1999,6 @@ const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark
 };
 
 // #endregion 📏Benchmark
-
 
 // #region 🔬Quality
 // Quality entity types, schemas, and helpers MUST be defined here.
@@ -2198,7 +2191,6 @@ export const QualitiesDiffSchema = z.object({
 export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>;
 
 // #endregion 🔬Quality
-
 
 // #region ⚓Port
 // Port entity types, schemas, and helpers MUST be defined here.
@@ -2440,7 +2432,6 @@ export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | unde
 
 // #endregion ⚓Port
 
-
 // #region 📊Prop
 // Prop entity types, schemas, and helpers MUST be defined here.
 
@@ -2626,7 +2617,6 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
 };
 
 // #endregion 📊Prop
-
 
 // #region 🏷️Tag
 // Tag entity types, schemas, and helpers MUST be defined here.
@@ -2855,7 +2845,6 @@ export const findTag = (tags: Tag[], guid: string): Tag => {
 
 // #endregion 🏷️Tag
 
-
 // #region 💡Concept
 // Concept entity types, schemas, and helpers MUST be defined here.
 
@@ -3082,7 +3071,6 @@ export const findConcept = (concepts: Concept[], guid: string): Concept => {
 };
 
 // #endregion 💡Concept
-
 
 // #region 🗿Model
 // Model entity types, schemas, and helpers MUST be defined here.
@@ -3378,7 +3366,6 @@ export const validateModelFile = (filename: string): ModelFileValidation => {
 
 // #endregion 🗿Model
 
-
 // #region 🔌Connector
 // Connector entity types, schemas, and helpers MUST be defined here.
 
@@ -3586,7 +3573,6 @@ export const findConnector = (connectors: Connector[], connectorGuid: string): C
 };
 
 // #endregion 🔌Connector
-
 
 // #region 🧱Type
 // Type entity types, schemas, and helpers MUST be defined here.
@@ -3807,7 +3793,6 @@ export const findConnectorInType = (type: Type, connectorGuid: string): Connecto
 
 // #endregion 🧱Type
 
-
 // #region 🎨Layer
 // Layer entity types, schemas, and helpers MUST be defined here.
 
@@ -3943,7 +3928,6 @@ export const LayersDiffSchema = z.object({
 export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
 // #endregion 🎨Layer
-
 
 // #region 🧩Piece
 // Piece entity types, schemas, and helpers MUST be defined here.
@@ -4200,7 +4184,6 @@ export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
 
 // #endregion 🧩Piece
 
-
 // #region 👥Group
 // Group entity types, schemas, and helpers MUST be defined here.
 
@@ -4332,7 +4315,6 @@ export const deserializeGroupShallow = (json: string): GroupShallow => GroupShal
 
 // #endregion 👥Group
 
-
 // #region ↔️Side
 // Side entity types, schemas, and helpers MUST be defined here.
 
@@ -4428,7 +4410,6 @@ export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.par
 export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.connector?.guid === b.connector?.guid;
 
 // #endregion ↔️Side
-
 
 // #region 🔗Connection
 // Connection entity types, schemas, and helpers MUST be defined here.
@@ -4642,7 +4623,6 @@ export const findConnectorForPieceInConnection = (type: Type, connection: Connec
 
 // #endregion 🔗Connection
 
-
 // #region 📈Stat
 // Stat entity types, schemas, and helpers MUST be defined here.
 
@@ -4768,7 +4748,6 @@ export const serializeStatShallow = (stat: StatShallow): string => JSON.stringif
 export const deserializeStatShallow = (json: string): StatShallow => StatShallowSchema.parse(JSON.parse(json));
 
 // #endregion 📈Stat
-
 
 // #region 📐Design
 // Design entity types, schemas, and helpers MUST be defined here.
@@ -5154,10 +5133,11 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
 };
 
 /**
- * Creates a mixed design applying diff changes and annotating with diff status.
+ * Creates a mixed design for visualization, annotating entities with diff status.
  * Annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added).
- * Updated entities are applied (new positions/values) and marked as modified.
- * Removed entities are kept in place marked as removed.
+ * Updated pieces apply non-geometric diff fields but KEEP base plane and center so
+ * they render in their original location and only change color. Updated connections
+ * apply the full diff. Removed entities are kept in place marked as removed.
  * Added entities are appended marked as added.
  **/
 export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
@@ -5177,7 +5157,13 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
     if (removedPieceGuids.has(p.guid)) return { ...p, attributes: setStatus(p.attributes, DiffStatus.Removed) };
     if (updatedPieceMap.has(p.guid)) {
       const applied = applyPieceDiff(p, updatedPieceMap.get(p.guid)!);
-      return { ...applied, attributes: setStatus(applied.attributes, DiffStatus.Modified) };
+      // 📌Preserve base geometry so modified pieces stay in place and only get recolored.
+      const preserved: Piece = { ...applied };
+      if (p.plane !== undefined) preserved.plane = p.plane;
+      else delete preserved.plane;
+      if (p.center !== undefined) preserved.center = p.center;
+      else delete preserved.center;
+      return { ...preserved, attributes: setStatus(preserved.attributes, DiffStatus.Modified) };
     }
     return { ...p, attributes: setStatus(p.attributes, DiffStatus.Unchanged) };
   });
@@ -5328,6 +5314,66 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string,
   const backward = inverseDesignDiff(design, delRes.change);
   return operationOk({ forward: delRes.change, backward }, delRes.warnings, delRes.infos);
 };
+
+/**
+ * Resolves {@link Type} and {@link Connector} from a kit the same way {@link flattenDesign} does.
+ * Specs: Used when move needs parent connector frames from kit types.
+ **/
+const buildConnectorResolverFromKit = (kit: Kit): { getType: (typeGuid: string) => Type | undefined; getConnector: (type: Type | undefined, connectorGuid: string | undefined) => Connector | undefined } => {
+  const typesDict: { [key: string]: Type } = {};
+  (kit.types ?? []).forEach((t) => {
+    typesDict[t.guid] = t;
+  });
+  const getType = (typeGuid: string): Type | undefined => typesDict[typeGuid];
+  const getConnector = (type: Type | undefined, connectorGuid: string | undefined): Connector | undefined => {
+    if (!type) return undefined;
+
+    if (!connectorGuid) {
+      if (type.connectors && type.connectors.length > 0) {
+        return type.connectors[0];
+      }
+
+      if (type.parent?.guid) {
+        const parentType = getType(type.parent.guid);
+        return getConnector(parentType, connectorGuid);
+      }
+      return undefined;
+    }
+
+    if (type.connectors && type.connectors.length > 0) {
+      const connector = type.connectors.find((p) => p.guid === connectorGuid);
+      if (connector) return connector;
+    }
+
+    if (type.parent?.guid) {
+      const parentType = getType(type.parent.guid);
+      const connector = getConnector(parentType, connectorGuid);
+      if (connector) return connector;
+    }
+
+    if (type.connectors && type.connectors.length > 0) {
+      return type.connectors[0];
+    }
+
+    return undefined;
+  };
+  return { getType, getConnector };
+};
+
+/**
+ * Parent-connector rotation and unit world axes for gap (local +Y), shift (+X), rise (+Z) before child orientation, matching {@link computeChildPlane}.
+ **/
+const connectionPlacementTranslationBasis = (parentConnector: Connector): { gap: THREE.Vector3; shift: THREE.Vector3; raise: THREE.Vector3; parentRotationT: THREE.Matrix4 } => {
+  const parentDirection = vectorToThree(parentConnector.direction).normalize();
+  const yAxis = new THREE.Vector3(0, 1, 0);
+  const parentConnectorQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection);
+  const parentRotationT = new THREE.Matrix4().makeRotationFromQuaternion(parentConnectorQuat);
+  const gapDirection = new THREE.Vector3(0, 1, 0).applyMatrix4(parentRotationT).normalize();
+  const shiftDirection = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT).normalize();
+  const raiseDirection = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT).normalize();
+  return { gap: gapDirection, shift: shiftDirection, raise: raiseDirection, parentRotationT };
+};
+
 // ◻️computeChildPlane computes a child plane from parent plane and connection parameters.
 const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector, connection: Connection): Plane => {
   const parentMatrix = planeToMatrix(parentPlane);
@@ -5357,13 +5403,7 @@ const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, child
 
   const directionT = new THREE.Matrix4().makeRotationFromQuaternion(alignQuat);
 
-  const yAxis = new THREE.Vector3(0, 1, 0);
-  const parentConnectorQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection);
-  const parentRotationT = new THREE.Matrix4().makeRotationFromQuaternion(parentConnectorQuat);
-
-  const gapDirection = new THREE.Vector3(0, 1, 0).applyMatrix4(parentRotationT);
-  const shiftDirection = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT);
-  const raiseDirection = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT);
+  const { gap: gapDirection, shift: shiftDirection, raise: raiseDirection, parentRotationT } = connectionPlacementTranslationBasis(parentConnector);
   const turnAxis = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT);
   const tiltAxis = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT);
 
@@ -5404,7 +5444,6 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
   if (!design) {
     return operationErr([{ code: "flatten.design-not-found", message: `Design ${designId} not found in kit ${kit.name}` }]);
   }
-  const types = kit.types ?? [];
 
   if (!design.pieces || design.pieces.length === 0) {
     return operationOk({ forward: {}, backward: {} }, [], [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }]);
@@ -5414,45 +5453,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
   const infos: OperationNote[] = [];
   const placementErrors: OperationNote[] = [];
 
-  const typesDict: { [key: string]: Type } = {};
-  types.forEach((t) => {
-    typesDict[t.guid] = t;
-  });
-  const getType = (typeGuid: string): Type | undefined => {
-    return typesDict[typeGuid];
-  };
-  const getConnector = (type: Type | undefined, connectorGuid: string | undefined): Connector | undefined => {
-    if (!type) return undefined;
-
-    if (!connectorGuid) {
-      if (type.connectors && type.connectors.length > 0) {
-        return type.connectors[0];
-      }
-
-      if (type.parent?.guid) {
-        const parentType = getType(type.parent.guid);
-        return getConnector(parentType, connectorGuid);
-      }
-      return undefined;
-    }
-
-    if (type.connectors && type.connectors.length > 0) {
-      const connector = type.connectors.find((p) => p.guid === connectorGuid);
-      if (connector) return connector;
-    }
-
-    if (type.parent?.guid) {
-      const parentType = getType(type.parent.guid);
-      const connector = getConnector(parentType, connectorGuid);
-      if (connector) return connector;
-    }
-
-    if (type.connectors && type.connectors.length > 0) {
-      return type.connectors[0];
-    }
-
-    return undefined;
-  };
+  const { getType, getConnector } = buildConnectorResolverFromKit(kit);
 
   const flatDesign: Design = JSON.parse(JSON.stringify(design));
   if (!flatDesign.pieces) flatDesign.pieces = [];
@@ -6083,8 +6084,8 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
  * A piece's parent connection is the connection where it is the connecting (child) piece.
  **/
 /**
- * Placement deltas in the piece plane frame: gap along yAxis, shift along xAxis, rise along the plane normal.
- * On parent connections, shift and gap apply as u and v deltas (same as {@link dragPiecesInDesign} with offset { u: shift, v: gap }); rise adds the connection rise delta when non-zero.
+ * Placement deltas in the **selected piece plane** frame: gap along yAxis, shift along xAxis, rise along the plane normal.
+ * For connected pieces, {@link movePiecesInDesign} maps that translation into connection deltas for gap, shift, rise, rotation, turn, tilt (see {@link computeChildPlane} Jacobian step), then any leftover translation into u/v on the parent plane.
  **/
 export type MoveVector = { gap: number; shift: number; rise: number };
 
@@ -6121,11 +6122,7 @@ const buildDragMoveStructuralContext = (
 /**
  * True when walking parent links finds a selected ancestor (same descendant suppression as drag).
  **/
-const pieceHasSelectedAncestorInDragMoveTree = (
-  pieceGuid: string,
-  selectedGuids: Set<string>,
-  parentMap: Map<string, { connectionGuid: string; parentGuid: string }>,
-): boolean => {
+const pieceHasSelectedAncestorInDragMoveTree = (pieceGuid: string, selectedGuids: Set<string>, parentMap: Map<string, { connectionGuid: string; parentGuid: string }>): boolean => {
   let current = pieceGuid;
   while (parentMap.has(current)) {
     const ancestor = parentMap.get(current)!.parentGuid;
@@ -6151,11 +6148,146 @@ export const moveTranslationWorldFromPiecePlane = (plane: Plane, vector: MoveVec
   return { x: t.x, y: t.y, z: t.z };
 };
 
+const identityPlaneForStructuralMove = (): Plane => ({
+  origin: { x: 0, y: 0, z: 0 },
+  xAxis: { x: 1, y: 0, z: 0 },
+  yAxis: { x: 0, y: 1, z: 0 },
+});
+
+type ConnectionPlacementNumericKey = "gap" | "shift" | "rise" | "rotation" | "turn" | "tilt";
+
+const CONNECTION_MOVE_JACOBIAN_KEYS: readonly ConnectionPlacementNumericKey[] = ["gap", "shift", "rise", "rotation", "turn", "tilt"];
+
+const CONNECTION_MOVE_JACOBIAN_EPS: Record<ConnectionPlacementNumericKey, number> = {
+  gap: 1e-6,
+  shift: 1e-6,
+  rise: 1e-6,
+  rotation: 1e-4,
+  turn: 1e-4,
+  tilt: 1e-4,
+};
+
+const childConnectorOriginWorld = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector, connection: Connection): THREE.Vector3 => {
+  const plane = computeChildPlane(parentPlane, parentConnector, childConnector, connection);
+  return vectorToThree(plane.origin);
+};
+
+/**
+ * Minimum-norm δ with Jδ = t for 3×n Jacobian J whose columns are cols[i] = ∂origin/∂param_i; δ = Jᵀ(JJᵀ)⁻¹t.
+ **/
+const solveConnectionOriginMinNorm = (cols: THREE.Vector3[], t: THREE.Vector3): number[] | undefined => {
+  if (cols.length === 0) return undefined;
+  const jjt = new THREE.Matrix3();
+  for (let c = 0; c < 3; c++) {
+    for (let r = 0; r < 3; r++) {
+      let s = 0;
+      for (const col of cols) s += col.getComponent(r) * col.getComponent(c);
+      jjt.elements[r + c * 3] = s;
+    }
+  }
+  jjt.elements[0] += 1e-14;
+  jjt.elements[4] += 1e-14;
+  jjt.elements[8] += 1e-14;
+  if (Math.abs(jjt.determinant()) < 1e-22) return undefined;
+  const inv = new THREE.Matrix3().copy(jjt).invert();
+  if (!Number.isFinite(inv.elements[0])) return undefined;
+  const u = t.clone().applyMatrix3(inv);
+  return cols.map((col) => col.dot(u));
+};
+
+const connectionNumericAt = (connection: Connection, key: ConnectionPlacementNumericKey): number => {
+  const v = connection[key];
+  return v !== undefined && v !== null ? v : 0;
+};
+
+const connectionWithNumericDelta = (connection: Connection, key: ConnectionPlacementNumericKey, delta: number): Connection => {
+  return { ...connection, [key]: connectionNumericAt(connection, key) + delta };
+};
+
+/**
+ * Fallback when Jacobian is unavailable: project translation onto connector gap/shift/rise only, then u/v on parent plane.
+ **/
+const connectionDiffTranslationFallback = (parentPlane: Plane, parentConnector: Connector, t: THREE.Vector3): ConnectionDiff => {
+  const { gap: g, shift: s, raise: r } = connectionPlacementTranslationBasis(parentConnector);
+  const dgap = t.dot(g);
+  const dshift = t.dot(s);
+  const drise = t.dot(r);
+  const res = t.clone().addScaledVector(g, -dgap).addScaledVector(s, -dshift).addScaledVector(r, -drise);
+  const px = vectorToThree(parentPlane.xAxis);
+  const py = vectorToThree(parentPlane.yAxis);
+  const diff: ConnectionDiff = {};
+  const eps = 1e-9;
+  if (Math.abs(dgap) > eps) diff.gap = dgap;
+  if (Math.abs(dshift) > eps) diff.shift = dshift;
+  if (Math.abs(drise) > eps) diff.rise = drise;
+  if (px.lengthSq() > 1e-24 && py.lengthSq() > 1e-24) {
+    const pxN = px.clone().normalize();
+    const pyN = py.clone().normalize();
+    const du = res.dot(pxN);
+    const dv = res.dot(pyN);
+    if (Math.abs(du) > eps) diff.u = du;
+    if (Math.abs(dv) > eps) diff.v = dv;
+  }
+  return diff;
+};
+
+/**
+ * Converts a move vector (connecting piece plane) into connection diffs using a numerical Jacobian of {@link computeChildPlane}
+ * w.r.t. gap, shift, rise, rotation, turn, tilt (degrees for angles), then puts the remaining translation into u/v on the parent plane.
+ * Specs: One Gauss–Newton step; matches flatten placement when child connector exists. Falls back to translation-only basis if singular.
+ **/
+const connectionDiffFromStructuralMoveVector = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector | undefined, connection: Connection, childPlane: Plane | undefined, vector: MoveVector): ConnectionDiff => {
+  const child = childPlane ?? identityPlaneForStructuralMove();
+  const tw = moveTranslationWorldFromPiecePlane(child, vector);
+  const t = vectorToThree(tw);
+  if (t.lengthSq() < 1e-24) return {};
+
+  if (!childConnector) {
+    return connectionDiffTranslationFallback(parentPlane, parentConnector, t);
+  }
+
+  const o0 = childConnectorOriginWorld(parentPlane, parentConnector, childConnector, connection);
+  const cols: THREE.Vector3[] = [];
+  for (const key of CONNECTION_MOVE_JACOBIAN_KEYS) {
+    const eps = CONNECTION_MOVE_JACOBIAN_EPS[key];
+    const perturbed = connectionWithNumericDelta(connection, key, eps);
+    const o1 = childConnectorOriginWorld(parentPlane, parentConnector, childConnector, perturbed);
+    cols.push(o1.clone().sub(o0).divideScalar(eps));
+  }
+
+  const deltas = solveConnectionOriginMinNorm(cols, t);
+  const diff: ConnectionDiff = {};
+  const epsOut = 1e-9;
+  if (deltas) {
+    CONNECTION_MOVE_JACOBIAN_KEYS.forEach((key, i) => {
+      if (Math.abs(deltas[i]) > epsOut) diff[key] = deltas[i];
+    });
+    const pred = new THREE.Vector3();
+    cols.forEach((col, i) => pred.addScaledVector(col, deltas[i]));
+    const res = t.clone().sub(pred);
+    const px = vectorToThree(parentPlane.xAxis);
+    const py = vectorToThree(parentPlane.yAxis);
+    if (px.lengthSq() > 1e-24 && py.lengthSq() > 1e-24) {
+      const pxN = px.clone().normalize();
+      const pyN = py.clone().normalize();
+      const du = res.dot(pxN);
+      const dv = res.dot(pyN);
+      if (Math.abs(du) > epsOut) diff.u = du;
+      if (Math.abs(dv) > epsOut) diff.v = dv;
+    }
+    return diff;
+  }
+
+  return connectionDiffTranslationFallback(parentPlane, parentConnector, t);
+};
+
 /**
  * Like {@link dragPiecesInDesign}: same fixed vs connected selection and descendant suppression.
- * Root movers get plane origin translation from {@link moveTranslationWorldFromPiecePlane}; connected movers get parent-connection diffs using the same fields as drag (u ← shift, v ← gap) plus optional rise on the connection.
+ * Root movers get plane origin translation from {@link moveTranslationWorldFromPiecePlane}.
+ * Connected movers need {@link buildConnectorResolverFromKit}: world delta from the child plane is split across * gap, shift, rise, rotation, turn, tilt (via Jacobian of {@link computeChildPlane}) and residual u/v on the parent plane.
  **/
-export const movePiecesInDesign = (design: Design, pieces: Design, vector: MoveVector): DesignDiff => {
+export const movePiecesInDesign = (kit: Kit, design: Design, pieces: Design, vector: MoveVector): DesignDiff => {
+  const { getType, getConnector } = buildConnectorResolverFromKit(kit);
   const { selectedGuids, parentMap, pieceMap, fixedGuids } = buildDragMoveStructuralContext(design, pieces);
   const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
   for (const guid of fixedGuids) {
@@ -6175,8 +6307,19 @@ export const movePiecesInDesign = (design: Design, pieces: Design, vector: MoveV
     if (pieceHasSelectedAncestorInDragMoveTree(guid, selectedGuids, parentMap)) continue;
     const parent = parentMap.get(guid);
     if (!parent) continue;
-    const connDiff: ConnectionDiff = { u: vector.shift, v: vector.gap };
-    if (vector.rise !== 0) connDiff.rise = vector.rise;
+    const connection = design.connections?.find((c) => c.guid === parent.connectionGuid);
+    if (!connection) continue;
+    const parentPiece = pieceMap.get(parent.parentGuid);
+    const childPiece = pieceMap.get(guid);
+    if (!parentPiece?.type?.guid || !childPiece?.type?.guid) continue;
+    const parentType = getType(parentPiece.type.guid);
+    const childType = getType(childPiece.type.guid);
+    const parentConnector = getConnector(parentType, connection.connected.connector?.guid);
+    const childConnector = getConnector(childType, connection.connecting.connector?.guid);
+    if (!parentConnector) continue;
+    const parentPlane = parentPiece.plane ?? identityPlaneForStructuralMove();
+    const connDiff = connectionDiffFromStructuralMoveVector(parentPlane, parentConnector, childConnector, connection, childPiece.plane, vector);
+    if (Object.keys(connDiff).length === 0) continue;
     connectionUpdates.push({ connection: { guid: parent.connectionGuid }, diff: connDiff });
   }
   const diff: DesignDiff = {};
@@ -6661,7 +6804,6 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
 
 // #endregion 📐Design
 
-
 // #region ⏱️Kit
 // Kit entity types, schemas, and helpers MUST be defined here.
 
@@ -6726,7 +6868,7 @@ export type Kit = z.infer<typeof KitSchema>;
 export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
 /**
  **/
-export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
+export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json, (_key, value) => (value === null ? undefined : value)));
 
 /**
  * Definition of KitMetaSchema.
@@ -7088,7 +7230,6 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
 };
 
 // #endregion ⏱️Kit
-
 
 // #region 🖥️Hash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
@@ -8702,7 +8843,6 @@ export const hashKitDiff = (d: KitDiff): string => {
 
 // #endregion 🖥️Hash
 
-
 /**
  * Computes the forward and backward diffs between two design states.
  **/
@@ -9222,7 +9362,6 @@ export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[
 
 // #endregion 📻Design Family Helpers
 
-
 // #region 🧊Type Family Helpers
 // Type family traversal helpers MUST be defined here.
 
@@ -9279,7 +9418,6 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
 };
 
 // #endregion 🧊Type Family Helpers
-
 
 // #region 🎯OperationResult
 /**
@@ -9365,7 +9503,6 @@ export const normalizeDesignCopyResult = (raw: unknown): OperationResult<Design>
   return operationOk(raw as Design, [], []);
 };
 // #endregion 🎯OperationResult
-
 
 /**
  * Represents a bidirectional change between two Kit states.
@@ -9739,7 +9876,6 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
 };
 
 // #endregion 📦Kit Diff Validation
-
 
 // #region 🛡️Validation
 
@@ -10574,7 +10710,6 @@ export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResu
 
 // #endregion 🛡️Validation
 
-
 /**
  **/
 export const createFileFromDataUri = (name: string, dataUri: string): File => {
@@ -10636,8 +10771,10 @@ export const getSqlJs = async () => {
           locateFile: () => wasmPath,
         });
       } else {
+        // Specs: Vite/Electron dev server serves `/sql-wasm.wasm` as HTML (SPA fallback) unless the asset is bundled.
+        // Resolve the wasm from the hoisted `sql.js` package so `fetch` returns real WASM bytes and MIME checks pass.
         cachedSqlJs = await initSqlJs({
-          locateFile: (file: string) => `/${file}`,
+          locateFile: (file: string) => new URL(`../../node_modules/sql.js/dist/${file}`, import.meta.url).href,
         });
       }
     } catch (error) {
@@ -10669,6 +10806,7 @@ const buildFilePath = (kit: Kit, file: File): string => {
   return file.name;
 };
 const bytesToUtf8 = (bytes: Uint8Array): string => new TextDecoder().decode(bytes);
+const hasZipSignature = (bytes: Uint8Array): boolean => bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04;
 const collectKitFiles = (kit: Kit): Record<string, Uint8Array> => {
   const files: Record<string, Uint8Array> = {};
   for (const file of kit.files || []) {
@@ -10696,7 +10834,7 @@ export const importFileKit = async (source: string | ArrayBuffer | Buffer | Blob
       }
       json = await response.text();
     }
-  } else if (source instanceof Buffer) {
+  } else if (typeof Buffer !== "undefined" && source instanceof Buffer) {
     json = bytesToUtf8(new Uint8Array(source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength)));
   } else {
     json = bytesToUtf8(new Uint8Array(source));
@@ -10716,7 +10854,7 @@ export const importArchiveKit = async (source: string | ArrayBuffer | Buffer | B
       throw new Error(`Failed to fetch archive kit from ${source}: ${response.statusText}`);
     }
     arrayBuffer = await response.arrayBuffer();
-  } else if (source instanceof Buffer) {
+  } else if (typeof Buffer !== "undefined" && source instanceof Buffer) {
     arrayBuffer = source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength) as ArrayBuffer;
   } else {
     arrayBuffer = source as ArrayBuffer;
@@ -10817,9 +10955,30 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
       return importFileKit(source);
     }
   }
+  if (source instanceof Blob) {
+    const header = new Uint8Array(await source.slice(0, 4).arrayBuffer());
+    if (hasZipSignature(header)) {
+      return importArchiveKit(source);
+    }
+    return importFileKit(source);
+  }
+  if (typeof Buffer !== "undefined" && source instanceof Buffer) {
+    const header = new Uint8Array(source.buffer.slice(source.byteOffset, source.byteOffset + Math.min(source.byteLength, 4)));
+    if (hasZipSignature(header)) {
+      return importArchiveKit(source);
+    }
+  } else if (source instanceof ArrayBuffer) {
+    const header = new Uint8Array(source.slice(0, 4));
+    if (hasZipSignature(header)) {
+      return importArchiveKit(source);
+    }
+  }
   try {
     return await importArchiveKit(source);
-  } catch {
+  } catch (archiveError) {
+    if (typeof source !== "string") {
+      throw archiveError;
+    }
     return importFileKit(source);
   }
 };
@@ -13045,7 +13204,6 @@ export const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 
 // #endregion 🧿Kit Import/Export
 
-
 // #region 🔩Kit Model Export
 // Design model export to 3D formats (GLB, glTF, OBJ, STL, PLY, USDZ) MUST be defined here.
 
@@ -13509,7 +13667,6 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
 
 // #endregion 🔩Kit Model Export
 
-
 // #region ❄️Geometric Insights
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
@@ -13712,7 +13869,6 @@ export const getGeometricInsightsForModel = async (model: string | ArrayBuffer |
 };
 
 // #endregion ❄️Geometric Insights
-
 
 // #region 🏰KitStore
 // Storage-agnostic kit store contracts MUST be defined here.
@@ -13973,7 +14129,6 @@ export class InMemoryKitStore implements UndoableKitStore {
 // #endregion 🖥️InMemoryKitStore
 
 // #endregion 🏰KitStore
-
 
 /**
  * Searches for matching PortInKit entry.
@@ -14400,11 +14555,15 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
 
 // #endregion 🕌File Tree Utilities
 
-
 // #region 🧪Tests
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
-if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
+// Specs: Other workspaces (e.g. @semio/ui) import this module while Vitest runs their tests; `SEMIO_JS_RUN_EMBEDDED_TESTS` is set only in @semio/js `npm test` so we do not pull @semio/sketchpad into unrelated Vitest SSR graphs.
+if (
+  typeof (globalThis as any).__vitest_worker__ !== "undefined" &&
+  typeof process !== "undefined" &&
+  process.env.SEMIO_JS_RUN_EMBEDDED_TESTS === "1"
+) {
   const { beforeAll, describe, expect, it, vi } = await import("vitest");
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
@@ -14444,9 +14603,9 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     NakaginCapsuleTowerWithDiffDesign,
     ValidateKitDiffCases,
   } = await import("@semio/assets");
-  const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/studio");
-  type KitFolderAdapter = import("@semio/studio").KitFolderAdapter;
-  type KitJsonFileAdapter = import("@semio/studio").KitJsonFileAdapter;
+  const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/sketchpad");
+  type KitFolderAdapter = import("@semio/sketchpad").KitFolderAdapter;
+  type KitJsonFileAdapter = import("@semio/sketchpad").KitJsonFileAdapter;
 
   const TEST_TOLERANCE = 0.001;
 
@@ -14597,10 +14756,20 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
   const runExportReportCommand = async (command: string, args: string[], cwd: string) => {
     const { execFileSync } = await import("node:child_process");
-    execFileSync(command, args, {
-      cwd,
-      stdio: "pipe",
-    });
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        execFileSync(command, args, {
+          cwd,
+          stdio: "pipe",
+        });
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === 2) break;
+      }
+    }
+    throw lastError;
   };
 
   const parseSelfContainedGltf = async (reportText: string) => {
@@ -15238,7 +15407,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
         const zipPath = path.join(__dirname, "../assets/semio/metabolism.zip");
         const zipBuffer = fs.readFileSync(zipPath);
-        const { kit: zipKit } = await importKit(zipBuffer.buffer);
+        const { kit: zipKit } = await importKit(zipBuffer);
         expect(areKitsEqual(kit, zipKit)).toBe(true);
 
         const exportedZip = await exportKit(kit);
@@ -15370,12 +15539,13 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   });
 
   describe("Move", () => {
-    it("same drag fixture: plane origins for roots; parent connection u v match drag (shift, gap)", () => {
+    it("same drag fixture: roots get plane translation; connected mover gets connector-frame split (gap/shift/rise + residual u/v)", () => {
+      const kit = MetabolismKit as unknown as Kit;
       const design = DragDesign as unknown as Design;
       const pieces = DragPieces as unknown as Design;
       const vector = MoveVector as { gap: number; shift: number; rise: number };
       const expectedDiff = MoveDiffDesign as any;
-      const computedDiff = movePiecesInDesign(design, pieces, vector);
+      const computedDiff = movePiecesInDesign(kit, design, pieces, vector);
       const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
       const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) => a.piece.guid.localeCompare(b.piece.guid));
       expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);
@@ -15392,34 +15562,38 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);
       for (let i = 0; i < computedConnUpdates.length; i++) {
         expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);
-        expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);
-        expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);
+        const ed = expectedConnUpdates[i].diff;
+        const cd = computedConnUpdates[i].diff;
+        for (const key of ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"] as const) {
+          if (ed[key] !== undefined) expect(cd[key]).toBeCloseTo(ed[key] as number, 8);
+        }
       }
       const dragParity = dragPiecesInDesign(design, pieces, { u: vector.shift, v: vector.gap });
       const dragConn = (dragParity.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
       expect(computedConnUpdates.map((c) => c.connection.guid)).toEqual(dragConn.map((c) => c.connection.guid));
-      for (let i = 0; i < computedConnUpdates.length; i++) {
-        expect(computedConnUpdates[i].diff.u).toBe(dragConn[i].diff.u);
-        expect(computedConnUpdates[i].diff.v).toBe(dragConn[i].diff.v);
-      }
       const dragPiecesUp = (dragParity.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
       expect(computedPieceUpdates.map((p) => p.piece.guid)).toEqual(dragPiecesUp.map((p) => p.piece.guid));
     });
 
-    it("non-zero rise adds connection rise delta; u v still match drag offset (shift, gap)", () => {
+    it("vertical parent connector: world move decomposes into shift, gap, rise on connection (not diagram u/v only)", () => {
+      const kit = MetabolismKit as unknown as Kit;
       const design = DragDesign as unknown as Design;
       const pieces = DragPieces as unknown as Design;
       const vector = { gap: 2, shift: -1, rise: 0.5 };
-      const diff = movePiecesInDesign(design, pieces, vector);
+      const diff = movePiecesInDesign(kit, design, pieces, vector);
       const dragParity = dragPiecesInDesign(design, pieces, { u: vector.shift, v: vector.gap });
       const moveConn = (diff.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
       const dragConn = (dragParity.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
       expect(moveConn.length).toBe(dragConn.length);
       for (let i = 0; i < moveConn.length; i++) {
         expect(moveConn[i].connection.guid).toBe(dragConn[i].connection.guid);
-        expect(moveConn[i].diff.u).toBe(dragConn[i].diff.u);
-        expect(moveConn[i].diff.v).toBe(dragConn[i].diff.v);
-        expect(moveConn[i].diff.rise).toBe(0.5);
+        expect(moveConn[i].diff.gap).toBeCloseTo(0.5, 5);
+        expect(moveConn[i].diff.shift).toBeCloseTo(-1, 5);
+        expect(moveConn[i].diff.rise).toBeCloseTo(-2, 5);
+        for (const ang of ["rotation", "turn", "tilt"] as const) {
+          const av = moveConn[i].diff[ang];
+          if (av !== undefined) expect(av).toBeCloseTo(0, 3);
+        }
       }
     });
   });
@@ -15782,7 +15956,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
         }
       }
 
-      // 🔧Verify modified pieces have their diff applied
+      // 🔧Verify modified pieces have non-geometric diff applied but keep base plane/center
       const updatedPieceMap = new Map((diff.pieces?.updated ?? []).map((u) => [(u as any).piece.guid, u.diff]));
       for (const piece of computed.pieces!) {
         if (getStatus(piece.attributes) === "modified") {
@@ -15793,8 +15967,35 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
           else expect(piece.name).toBe(originalPiece!.name);
           if (pieceDiff?.description !== undefined) expect(piece.description).toBe(pieceDiff.description);
           else expect(piece.description).toBe(originalPiece!.description);
+          // 📌Modified pieces MUST keep base geometry so they only get recolored, not moved.
+          expect(piece.plane).toEqual(originalPiece!.plane);
+          expect(piece.center).toEqual(originalPiece!.center);
         }
       }
+    });
+
+    it("modified pieces keep base plane and center even when diff specifies new geometry", () => {
+      const basePiece: Piece = {
+        guid: "p1",
+        name: "Base",
+        type: { name: "K" },
+        plane: { origin: { x: 1, y: 2, z: 3 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
+        center: { u: 4, v: 5 },
+      };
+      const base: Design = { guid: "d1", name: "D", pieces: [basePiece] };
+      const newPlane: Plane = { origin: { x: 9, y: 9, z: 9 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+      const diff: DesignDiff = {
+        pieces: {
+          updated: [{ piece: { guid: "p1" }, diff: { name: "Renamed", plane: newPlane, center: { u: 99, v: 99 } } }],
+        },
+      };
+      const computed = designWithDiff(base, diff);
+      const piece = computed.pieces!.find((p) => p.guid === "p1")!;
+      const status = (piece.attributes ?? []).find((a) => a.key === "semio.diffStatus")?.value;
+      expect(status).toBe("modified");
+      expect(piece.name).toBe("Renamed");
+      expect(piece.plane).toEqual(basePiece.plane);
+      expect(piece.center).toEqual(basePiece.center);
     });
   });
 
@@ -16497,6 +16698,166 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(statuses).toContain("saving");
       expect(store.getSnapshot().sync.status).toBe("ready");
     });
+
+    it("embedFileBlob inlines dropped file as data URL persisted in kit JSON", async () => {
+      const fileGuid = "file-1";
+      const kit = makeKit({
+        files: [
+          {
+            guid: fileGuid,
+            name: "cube.txt",
+            size: 5,
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          },
+        ],
+      });
+      const adapter = makeAdapter(kit);
+      const store = await createJsonFileKitStore(adapter);
+
+      const blob = new Blob(["HELLO"], { type: "text/plain" });
+      await store.embedFileBlob(fileGuid, blob);
+
+      const fileAfter = store.getSnapshot().kit.files?.find((f) => f.guid === fileGuid);
+      expect(fileAfter?.blob).toBeDefined();
+      expect(fileAfter!.blob!.startsWith("data:text/plain")).toBe(true);
+      expect(fileAfter!.blob).toContain("base64,");
+
+      await store.save();
+      const saved = JSON.parse(adapter.stored!);
+      const persistedFile = saved.files.find((f: any) => f.guid === fileGuid);
+      expect(persistedFile.blob).toBe(fileAfter!.blob);
+
+      // Round-trip: reloading the JSON preserves the embedded blob.
+      const reloaded = await createJsonFileKitStore(adapter);
+      const reloadedFile = reloaded.getSnapshot().kit.files?.find((f) => f.guid === fileGuid);
+      expect(reloadedFile?.blob).toBe(fileAfter!.blob);
+    });
+
+    it("addFile diff followed by embedFileBlob embeds the blob on the newly added file", async () => {
+      // Simulates executeKitCommand("semio.kit.addFile", ...) → syncKitFileCommandResult → embedFileBlob.
+      // Step 1: apply the addFile diff (what kitCommands["semio.kit.addFile"] returns).
+      // Step 2: embedFileBlob reads the file from kit.files and applies a second diff setting blob.
+      const adapter = makeAdapter(makeKit());
+      const store = await createJsonFileKitStore(adapter);
+
+      const newFileGuid = "dropped-file-guid";
+      const newFile = {
+        guid: newFileGuid,
+        name: "drop.txt",
+        size: 3,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      };
+      store.apply({ files: { added: [newFile] } });
+
+      const addedFile = store.getSnapshot().kit.files?.find((f) => f.guid === newFileGuid);
+      expect(addedFile).toBeDefined();
+      expect(addedFile?.blob).toBeUndefined();
+
+      const blob = new Blob(["HEY"], { type: "text/plain" });
+      await store.embedFileBlob(newFileGuid, blob);
+
+      const embeddedFile = store.getSnapshot().kit.files?.find((f) => f.guid === newFileGuid);
+      expect(embeddedFile?.blob).toBeDefined();
+      expect(embeddedFile!.blob!.startsWith("data:text/plain")).toBe(true);
+      expect(embeddedFile?.name).toBe("drop.txt");
+
+      await store.save();
+      const saved = JSON.parse(adapter.stored!);
+      const persistedFile = saved.files.find((f: any) => f.guid === newFileGuid);
+      expect(persistedFile.blob).toBe(embeddedFile!.blob);
+      expect(persistedFile.name).toBe("drop.txt");
+    });
+
+    it("save preserves dirty flag when an apply interleaves with an in-flight adapter.write", async () => {
+      // Regression: JsonFileKitStore.embedFileBlob awaits blob.arrayBuffer()
+      // which yields to the event loop. If a scheduled save() fires during
+      // that await, save() serializes the pre-embed kit and clears dirty
+      // after adapter.write — clobbering the embed apply that ran mid-save.
+      // save() MUST only clear dirty when the kit reference is unchanged, so
+      // the next auto-save still runs with the embedded blob.
+      let resolveFirstWrite: (() => void) | null = null;
+      let writeCount = 0;
+      const adapter = {
+        stored: null as string | null,
+        async read(): Promise<string | null> {
+          return adapter.stored;
+        },
+        async write(json: string): Promise<void> {
+          writeCount++;
+          if (writeCount === 1) {
+            adapter.stored = json;
+            await new Promise<void>((resolve) => {
+              resolveFirstWrite = resolve;
+            });
+          } else {
+            adapter.stored = json;
+          }
+        },
+      };
+      const fileGuid = "file-race";
+      adapter.stored = JSON.stringify({
+        guid: "race-kit",
+        name: "Race",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+        files: [
+          {
+            guid: fileGuid,
+            name: "race.txt",
+            size: 2,
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          },
+        ],
+      });
+      const store = await createJsonFileKitStore(adapter);
+
+      const savePromise = store.save();
+      await Promise.resolve();
+
+      const blob = new Blob(["HI"], { type: "text/plain" });
+      await store.embedFileBlob(fileGuid, blob);
+
+      resolveFirstWrite!();
+      await savePromise;
+
+      expect(store.getSnapshot().sync.dirty).toBe(true);
+      const embeddedFile = store.getSnapshot().kit.files?.find((f) => f.guid === fileGuid);
+      expect(embeddedFile?.blob).toBeDefined();
+      expect(embeddedFile!.blob!.startsWith("data:text/plain")).toBe(true);
+
+      await store.save();
+      const saved = JSON.parse(adapter.stored!);
+      const persistedFile = saved.files.find((f: any) => f.guid === fileGuid);
+      expect(persistedFile.blob).toBe(embeddedFile!.blob);
+    });
+
+    it("embedFileBlob is a no-op when the target file is missing from the kit", async () => {
+      const store = await createJsonFileKitStore(makeAdapter(makeKit()));
+      const blob = new Blob(["X"], { type: "application/octet-stream" });
+      await store.embedFileBlob("nonexistent", blob);
+      expect(store.getSnapshot().kit.files ?? []).toHaveLength(0);
+      expect(store.getSnapshot().sync.dirty).toBe(false);
+    });
+
+    it("getFileDiff and inverseFileDiff include blob for kit change metadata", () => {
+      const before: File = {
+        guid: "f1",
+        name: "a.bin",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      };
+      const after: File = {
+        ...before,
+        blob: "data:application/octet-stream;base64,QUI=",
+      };
+      const forward = getFileDiff(before, after);
+      expect(forward.blob).toBe(after.blob);
+      const backward = inverseFileDiff(before, forward);
+      expect(backward.blob).toBeUndefined();
+    });
   });
 
   // #endregion ⛅JsonFileKitStore Tests
@@ -16809,6 +17170,415 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     });
   });
   // #endregion 🔊FolderKitStore Tests
+
+  // #region 🚪Open Synchronized Kit E2E Tests
+  // End-to-end tests for opening synchronized kits across all three supported source kinds:
+  // file (*.kit.semio.json with embedded base64 blobs), folder (.semio/kit.db + binary files on disk),
+  // and remote (SessionKitStore over HTTP + WebSocket against semio/server).
+  // Specs: These tests MUST verify the full open → mutate → save/sync → reload cycle using real file
+  // system access or mocked server transport to guarantee the desktop/vscode/web entry points work.
+
+  describe("Open Synchronized Kit E2E", () => {
+    const { createJsonFileKitStore: makeJsonFileKitStore, createFolderKitStore: makeFolderKitStore, createSessionKitStore: makeSessionKitStore } = (async () => await import("@semio/sketchpad"))() as any;
+
+    const loadStudio = async () => {
+      const studio = await import("@semio/sketchpad");
+      return studio;
+    };
+
+    const getMetabolismKitJsonPath = async (): Promise<string> => {
+      const { resolve, dirname } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const here = dirname(fileURLToPath(import.meta.url));
+      return resolve(here, "../assets/semio/metabolism.kit.semio.json");
+    };
+
+    const getMetabolismFolderPath = async (): Promise<string> => {
+      const { resolve, dirname } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const here = dirname(fileURLToPath(import.meta.url));
+      return resolve(here, "../assets/semio/metabolism");
+    };
+
+    const makeNodeJsonFileAdapter = async (filePath: string) => {
+      const fs = await import("node:fs/promises");
+      return {
+        async read(): Promise<string | null> {
+          try {
+            return await fs.readFile(filePath, "utf-8");
+          } catch {
+            return null;
+          }
+        },
+        async write(json: string): Promise<void> {
+          await fs.writeFile(filePath, json, "utf-8");
+        },
+      };
+    };
+
+    const makeNodeFolderAdapter = async (folderPath: string) => {
+      const fs = await import("node:fs/promises");
+      const nodePath = await import("node:path");
+      return {
+        async readKit(): Promise<Uint8Array | null> {
+          try {
+            const buf = await fs.readFile(nodePath.join(folderPath, ".semio", "kit.db"));
+            return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+          } catch {
+            return null;
+          }
+        },
+        async writeKit(data: Uint8Array): Promise<void> {
+          const dir = nodePath.join(folderPath, ".semio");
+          await fs.mkdir(dir, { recursive: true });
+          await fs.writeFile(nodePath.join(dir, "kit.db"), Buffer.from(data));
+        },
+        async readFile(rel: string): Promise<Blob | null> {
+          try {
+            const buf = await fs.readFile(nodePath.join(folderPath, rel));
+            return new Blob([new Uint8Array(buf)]);
+          } catch {
+            return null;
+          }
+        },
+        async writeFile(rel: string, blob: Blob): Promise<void> {
+          const abs = nodePath.join(folderPath, rel);
+          await fs.mkdir(nodePath.dirname(abs), { recursive: true });
+          const ab = await blob.arrayBuffer();
+          await fs.writeFile(abs, Buffer.from(ab));
+        },
+        async deleteFile(rel: string): Promise<void> {
+          try {
+            await fs.unlink(nodePath.join(folderPath, rel));
+          } catch {
+            /* ignore */
+          }
+        },
+        async createDirectory(rel: string): Promise<void> {
+          await fs.mkdir(nodePath.join(folderPath, rel), { recursive: true });
+        },
+        async moveEntry(fromRel: string, toRel: string): Promise<void> {
+          const sourcePath = nodePath.join(folderPath, fromRel);
+          const targetPath = nodePath.join(folderPath, toRel);
+          await fs.mkdir(nodePath.dirname(targetPath), { recursive: true });
+          await fs.rename(sourcePath, targetPath);
+        },
+        async listFiles(): Promise<string[]> {
+          const out: string[] = [];
+          const walk = async (dir: string, base: string) => {
+            const entries = await fs.readdir(dir, { withFileTypes: true });
+            for (const entry of entries) {
+              if (entry.name === ".semio" || entry.name === "node_modules") continue;
+              const rel = base ? `${base}/${entry.name}` : entry.name;
+              if (entry.isDirectory()) await walk(nodePath.join(dir, entry.name), rel);
+              else out.push(rel);
+            }
+          };
+          try {
+            await walk(folderPath, "");
+          } catch {
+            /* ignore */
+          }
+          return out;
+        },
+      };
+    };
+
+    describe("File Kit (JsonFileKitStore)", () => {
+      it("opens metabolism.kit.semio.json with embedded blob files preserved", async () => {
+        const studio = await loadStudio();
+        const filePath = await getMetabolismKitJsonPath();
+        const adapter = await makeNodeJsonFileAdapter(filePath);
+        const store = await studio.createJsonFileKitStore(adapter);
+
+        const snap = store.getSnapshot();
+        expect(snap.sync.status).toBe("ready");
+        expect(snap.kit.name).toBe("Metabolism");
+        expect((snap.kit.types ?? []).length).toBeGreaterThan(0);
+        expect((snap.kit.designs ?? []).length).toBeGreaterThan(0);
+        expect((snap.kit.files ?? []).length).toBeGreaterThan(0);
+
+        const filesWithBlob = (snap.kit.files ?? []).filter((f) => typeof f.blob === "string" && f.blob.length > 0);
+        expect(filesWithBlob.length).toBeGreaterThan(0);
+        const glb = filesWithBlob.find((f) => f.name.endsWith(".glb"));
+        expect(glb).toBeDefined();
+        expect(glb!.blob!.startsWith("data:")).toBe(true);
+      });
+
+      it("synchronizes apply() → save() back to the JSON file on disk", async () => {
+        const fs = await import("node:fs/promises");
+        const os = await import("node:os");
+        const nodePath = await import("node:path");
+        const srcPath = await getMetabolismKitJsonPath();
+        const tmpDir = await fs.mkdtemp(nodePath.join(os.tmpdir(), "semio-file-kit-"));
+        const tmpPath = nodePath.join(tmpDir, "metabolism.kit.semio.json");
+        await fs.copyFile(srcPath, tmpPath);
+
+        try {
+          const studio = await loadStudio();
+          const adapter = await makeNodeJsonFileAdapter(tmpPath);
+          const store = await studio.createJsonFileKitStore(adapter);
+
+          store.apply({ description: "Edited via JsonFileKitStore E2E" });
+          expect(store.getSnapshot().sync.dirty).toBe(true);
+          await store.save();
+          expect(store.getSnapshot().sync.dirty).toBe(false);
+
+          const rawAfter = JSON.parse(await fs.readFile(tmpPath, "utf-8"));
+          expect(rawAfter.description).toBe("Edited via JsonFileKitStore E2E");
+          expect(rawAfter.name).toBe("Metabolism");
+          expect(Array.isArray(rawAfter.files)).toBe(true);
+          expect(rawAfter.files.length).toBeGreaterThan(0);
+        } finally {
+          await fs.rm(tmpDir, { recursive: true, force: true });
+        }
+      });
+
+      it("synchronizes type and piece edits round-trip through the JSON file", async () => {
+        const fs = await import("node:fs/promises");
+        const os = await import("node:os");
+        const nodePath = await import("node:path");
+        const tmpDir = await fs.mkdtemp(nodePath.join(os.tmpdir(), "semio-file-kit-edit-"));
+        const tmpPath = nodePath.join(tmpDir, "mini.kit.semio.json");
+        const initial: Kit = {
+          guid: "mini-kit-guid",
+          name: "Mini Kit",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          types: [],
+        };
+        await fs.writeFile(tmpPath, JSON.stringify(initial, null, 2));
+
+        try {
+          const studio = await loadStudio();
+          const adapter = await makeNodeJsonFileAdapter(tmpPath);
+          const store = await studio.createJsonFileKitStore(adapter);
+
+          store.apply({
+            types: {
+              added: [{ guid: "t1", name: "Column", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
+            },
+          });
+          await store.save();
+
+          const onDisk = JSON.parse(await fs.readFile(tmpPath, "utf-8"));
+          expect(onDisk.types).toHaveLength(1);
+          expect(onDisk.types[0].name).toBe("Column");
+
+          const reopened = await studio.createJsonFileKitStore(await makeNodeJsonFileAdapter(tmpPath));
+          expect(reopened.getSnapshot().kit.types?.[0]?.name).toBe("Column");
+        } finally {
+          await fs.rm(tmpDir, { recursive: true, force: true });
+        }
+      });
+    });
+
+    describe("Folder Kit (FolderKitStore)", () => {
+      it("opens existing metabolism folder via .semio/kit.db without creating a new kit", async () => {
+        const studio = await loadStudio();
+        const folderPath = await getMetabolismFolderPath();
+        const adapter = await makeNodeFolderAdapter(folderPath);
+        const store = await studio.createFolderKitStore(adapter);
+
+        const snap = store.getSnapshot();
+        expect(snap.sync.status).toBe("ready");
+        expect(snap.kit.guid).not.toBe("");
+        expect(snap.kit.name).toBe("Metabolism");
+        expect((snap.kit.types ?? []).length).toBeGreaterThan(0);
+      });
+
+      it("reads real binary files (e.g. representations/base.glb) via the folder adapter", async () => {
+        const studio = await loadStudio();
+        const folderPath = await getMetabolismFolderPath();
+        const adapter = await makeNodeFolderAdapter(folderPath);
+        const store = await studio.createFolderKitStore(adapter);
+
+        const blob = await store.readFile("representations/base.glb");
+        expect(blob).not.toBeNull();
+        expect(blob!.size).toBeGreaterThan(0);
+
+        const files = await store.listFiles();
+        expect(files.some((p) => p === "representations/base.glb")).toBe(true);
+      });
+
+      it("loads types with models pointing at kit files so 3D meshes resolve", async () => {
+        const studio = await loadStudio();
+        const folderPath = await getMetabolismFolderPath();
+        const adapter = await makeNodeFolderAdapter(folderPath);
+        const store = await studio.createFolderKitStore(adapter);
+        const kit = store.getSnapshot().kit;
+
+        const typesWithModels = (kit.types ?? []).filter((t: any) => (t.models ?? []).length > 0);
+        expect(typesWithModels.length).toBeGreaterThan(0);
+
+        const fileGuidSet = new Set((kit.files ?? []).map((f: any) => f.guid));
+        for (const type of typesWithModels) {
+          for (const model of (type as any).models ?? []) {
+            expect(model.file?.guid).toBeDefined();
+            expect(fileGuidSet.has(model.file.guid)).toBe(true);
+          }
+        }
+
+        const firstModel = typesWithModels[0].models?.[0];
+        const firstFile = (kit.files ?? []).find((f: any) => f.guid === firstModel?.file?.guid);
+        expect(firstFile).toBeDefined();
+        const storagePath = (() => {
+          const foldersByGuid = new Map((kit.folders ?? []).map((f: any) => [f.guid, f]));
+          const segments: string[] = [firstFile!.name];
+          let current = firstFile!.folder?.guid;
+          while (current) {
+            const folder: any = foldersByGuid.get(current);
+            if (!folder) break;
+            segments.unshift(folder.name);
+            current = folder.parent?.guid;
+          }
+          return segments.join("/");
+        })();
+        const blob = await store.readFile(storagePath);
+        expect(blob).not.toBeNull();
+        expect(blob!.size).toBeGreaterThan(0);
+      });
+
+      it("synchronizes apply() → save() back to .semio/kit.db on disk", async () => {
+        const fs = await import("node:fs/promises");
+        const os = await import("node:os");
+        const nodePath = await import("node:path");
+        const tmpDir = await fs.mkdtemp(nodePath.join(os.tmpdir(), "semio-folder-kit-"));
+
+        try {
+          const studio = await loadStudio();
+          const adapter = await makeNodeFolderAdapter(tmpDir);
+          const initial = await studio.createFolderKitStore(adapter);
+          initial.replace({
+            guid: "seeded-folder-kit",
+            name: "Seeded Folder Kit",
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+            types: [{ guid: "seed-type", name: "Seed", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
+          });
+          await initial.save();
+
+          const kitDbPath = nodePath.join(tmpDir, ".semio", "kit.db");
+          const stat = await fs.stat(kitDbPath);
+          expect(stat.size).toBeGreaterThan(0);
+
+          initial.apply({
+            types: {
+              added: [{ guid: "added-type", name: "Added", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
+            },
+          });
+          await initial.save();
+
+          const reopened = await studio.createFolderKitStore(await makeNodeFolderAdapter(tmpDir));
+          const snap = reopened.getSnapshot();
+          expect(snap.kit.name).toBe("Seeded Folder Kit");
+          expect((snap.kit.types ?? []).map((t: any) => t.name).sort()).toEqual(["Added", "Seed"]);
+        } finally {
+          await fs.rm(tmpDir, { recursive: true, force: true });
+        }
+      });
+    });
+
+    describe("Remote Kit (SessionKitStore)", () => {
+      const makeMockWebSocket = () => {
+        const instances: any[] = [];
+        class MockWebSocket {
+          onopen: any = null;
+          onmessage: any = null;
+          onclose: any = null;
+          onerror: any = null;
+          readyState = 1;
+          sent: string[] = [];
+          url: string;
+          constructor(url: string) {
+            this.url = url;
+            instances.push(this);
+            setTimeout(() => this.onopen?.(), 0);
+          }
+          send(data: string) {
+            this.sent.push(data);
+          }
+          close() {
+            this.readyState = 3;
+            this.onclose?.();
+          }
+          emit(event: any) {
+            this.onmessage?.({ data: JSON.stringify(event) });
+          }
+        }
+        return { MockWebSocket, instances };
+      };
+
+      it("creates a remote session, loads snapshot, and handles server events", async () => {
+        const studio = await loadStudio();
+        const { MockWebSocket, instances } = makeMockWebSocket();
+        const originalFetch = globalThis.fetch;
+        const originalWebSocket = (globalThis as any).WebSocket;
+        (globalThis as any).WebSocket = MockWebSocket;
+
+        const snapshotKit = {
+          guid: "remote-session-kit",
+          name: "Remote Session Kit",
+          types: [],
+          designs: [],
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        };
+        globalThis.fetch = (async (input: any, init?: any) => {
+          const url = String(input);
+          if (url.endsWith("/sessions") && init?.method === "POST") {
+            return new Response(JSON.stringify({ session_id: "session-42" }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          if (url.endsWith("/sessions/session-42/snapshot")) {
+            return new Response(JSON.stringify({ kit: snapshotKit, domain_version: 1, semio_version: 0 }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          if (url.endsWith("/sessions/session-42/commands") && init?.method === "POST") {
+            return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
+          }
+          return new Response("{}", { status: 200 });
+        }) as typeof fetch;
+
+        try {
+          const store = await studio.createSessionKitStore({ serverUrl: "http://localhost:12345", kitName: "Remote Session Kit" });
+          expect(store.sessionId).toBe("session-42");
+          expect(store.getSnapshot().kit.name).toBe("Remote Session Kit");
+          expect(store.getSnapshot().sync.status).toBe("ready");
+
+          // Wait for mock ws to fire onopen
+          await new Promise((r) => setTimeout(r, 5));
+          const ws = instances[0];
+          expect(ws).toBeDefined();
+
+          // Server pushes a type creation event
+          ws.emit({
+            event: "DomainCommandAccepted",
+            domain_version: 2,
+            changes: [
+              {
+                op: "Created",
+                entity_kind: "type",
+                entity_id: "remote-type-1",
+                snapshot: { name: "Remote Type", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" },
+              },
+            ],
+          });
+          const types = store.getSnapshot().kit.types ?? [];
+          expect(types.some((t: any) => t.guid === "remote-type-1" && t.name === "Remote Type")).toBe(true);
+          store.dispose?.();
+        } finally {
+          globalThis.fetch = originalFetch;
+          (globalThis as any).WebSocket = originalWebSocket;
+        }
+      });
+    });
+  });
+  // #endregion 🚪Open Synchronized Kit E2E Tests
 
   // #region 🎀Meta And Shallow Tests
   // Tests for Meta and Shallow schema parsing, conversion functions, and roundtrips.
@@ -17690,7 +18460,6 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   // #endregion 🔄Transaction Undo/Redo Tests
 } // end vitest guard
 // #endregion 🧪Tests
-
 
 // #region 🏋️Benchmarks
 // Performance benchmarks for kit roundtrip, diff, flatten and validation operations.

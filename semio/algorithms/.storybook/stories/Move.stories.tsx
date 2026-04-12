@@ -1,7 +1,7 @@
 // #region Header
 // semio/algorithms/.storybook/stories/Move.stories.tsx
-// Specs: Pure UI proxy to nativeFlatDesign + nativeMovePieces. No domain logic. All designs include connections.
-// Summary: Flat input design via nativeFlatDesign; nativeMovePieces returns flat input, output with connections, and move diff.
+// Specs: Pure UI proxy to nativeFlatDesign + nativeMovePieces. Uses MoveStoryDesign (tilted root plane, rich connection params). Diff panel lists connection numeric fields.
+// Summary: Flat input design via nativeFlatDesign; nativeMovePieces returns flat input, output with connections, and move diff; AlgorithmApp details show gap/shift/rise/rotation/turn/tilt/u/v per connection update.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion Header
 
@@ -14,9 +14,9 @@ import { nativeFlatDesign, nativeMovePieces, type NativeAlgorithmLanguage } from
 import { useAlgorithmLanguage } from "../withLanguage";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
-import { DragDesign, DragPieces, MoveVector } from "../../../assets/index";
+import { DragPieces, MoveStoryDesign, MoveVector } from "../../../assets/index";
 
-const rawDesign = { ...DragDesign, guid: "move-preset-guid", name: "Move Preset" };
+const rawDesign = { ...MoveStoryDesign, guid: "move-preset-guid", name: "Move Preset" };
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "move-vector", kind: WindowKind.VECTOR_INPUT, label: "Vector" },

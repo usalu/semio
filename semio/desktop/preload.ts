@@ -20,6 +20,11 @@ if (e2eKitFolder.length > 0) {
   contextBridge.exposeInMainWorld("__SEMIO_E2E_KIT_FOLDER__", e2eKitFolder);
 }
 
+const e2eKitFile = process.env.SEMIO_E2E_KIT_FILE?.trim() ?? "";
+if (e2eKitFile.length > 0) {
+  contextBridge.exposeInMainWorld("__SEMIO_E2E_KIT_FILE__", e2eKitFile);
+}
+
 contextBridge.exposeInMainWorld("windowControls", {
   minimize: () => ipcRenderer.invoke("minimize-window"),
   maximize: () => ipcRenderer.invoke("maximize-window"),
@@ -39,9 +44,31 @@ contextBridge.exposeInMainWorld("kitFolder", {
   readFile: (folderPath: string, filePath: string) => ipcRenderer.invoke("read-file", folderPath, filePath),
   writeFile: (folderPath: string, filePath: string, data: ArrayBuffer) => ipcRenderer.invoke("write-file", folderPath, filePath, data),
   deleteFile: (folderPath: string, filePath: string) => ipcRenderer.invoke("delete-file", folderPath, filePath),
+  createDirectory: (folderPath: string, directoryPath: string) => ipcRenderer.invoke("create-directory", folderPath, directoryPath),
+  moveEntry: (folderPath: string, fromPath: string, toPath: string) => ipcRenderer.invoke("move-entry", folderPath, fromPath, toPath),
   listFiles: (folderPath: string) => ipcRenderer.invoke("list-files", folderPath),
   getRecentFolders: () => ipcRenderer.invoke("get-recent-folders"),
   addRecentFolder: (folderPath: string) => ipcRenderer.invoke("add-recent-folder", folderPath),
+  watchFolder: (folderPath: string, onChanged: () => void) => {
+    ipcRenderer.send("kit-folder-watch-subscribe", folderPath);
+    const handler = (_e: unknown, changedPath: string) => {
+      if (changedPath === folderPath) onChanged();
+    };
+    ipcRenderer.on("kit-folder-changed", handler);
+    return () => {
+      ipcRenderer.removeListener("kit-folder-changed", handler);
+      ipcRenderer.send("kit-folder-watch-unsubscribe", folderPath);
+    };
+  },
 });
 // #endregion 🎗️FolderBridge
+
+// #region 📄FileBridge
+// Exposes JSON-file-based kit storage operations to the renderer process.
+contextBridge.exposeInMainWorld("kitFile", {
+  selectFile: () => ipcRenderer.invoke("select-file"),
+  readJson: (filePath: string) => ipcRenderer.invoke("read-kit-json-file", filePath),
+  writeJson: (filePath: string, json: string) => ipcRenderer.invoke("write-kit-json-file", filePath, json),
+});
+// #endregion 📄FileBridge
 // #endregion 🎋Preload

@@ -1,0 +1,13 @@
+{
+  "title": "Surface Rust and Python Tests in VSCode Test Editor",
+  "status": "closed",
+  "description": "All semio tests must appear in the VSCode test editor. Go, Playwright, Vitest and F# already show up. Rust (cargo tests in semio/rs/lib.rs) and Python (pytest tests in semio/py/main.py and semio/engine/main.py) are missing. Fix .vscode/settings.json and any configuration so rust-analyzer Test Explorer surfaces the Rust tests and the Python extension discovers the pytest tests.",
+  "summary": "Implemented auth and sharable links for server and sketchpad.\\n\\nServer (semio/server/bin.rs):\\n- Added AccessMode enum (Owner/Viewer), ShareTokenId newtype\\n- Added Unauthorized/Forbidden error variants with 401/403 HTTP status\\n- Added owner_token column to runtime.session table\\n- Added runtime.share_token table for sharable links\\n- create_session() now returns owner_token UUID\\n- Added auth persistence: load_owner_token, create/resolve/list/delete_share_token, resolve_access\\n- Mutation endpoints (domain commands, semio commands, compact) require Owner access via bearer token\\n- Read endpoints work without token (viewer mode)\\n- New endpoints: POST/GET /sessions/{id}/shares, DELETE /sessions/{id}/shares/{token}, GET /shares/{token}\\n- All 83 tests pass including 2 new E2E tests (e2e_auth_forbidden_without_token, e2e_share_token_flow)\\n\\nSketchpad (semio/sketchpad/index.tsx):\\n- Added ResolvedShareToken and ShareTokenEntry interfaces\\n- SessionKitStoreConfig: added authToken and readOnly fields\\n- SessionKitStore: added authToken property, readOnly flag, authHeaders() helper\\n- create() captures owner_token from session creation response\\n- All fetch calls send Authorization bearer header when authToken is set\\n- Read-only guards on apply, replace, undo, redo, sendKitDiffToServer, compactHistory, createShare, deleteShare\\n- getSnapshot() returns actual readOnly state\\n- Auth region: getAuthToken(), createShare(), listShares(), deleteShare()\\n- Static methods: resolveShare(), createFromShareToken() for opening share links",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪4b1e4c64d3a8459cacccdd82e7b9c9ed",
+    "⚪d2aad5cdf0a64a04868e232ab611a4f5",
+    "⚪cb92dde878ce4bf8a504608b05997060",
+    "⚪6176ec0bffc345978d3e595974bdba65"
+  ]
+}

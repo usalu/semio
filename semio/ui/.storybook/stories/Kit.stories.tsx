@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 semio/ui/.storybook/stories/Kit.stories.tsx
-// Specs: One component per stories file. First story is Default with max features and minimal setup. Uses the shallow kit prop directly.
-// Summary: Kit stories: Default, DesignsOnly, TypesOnly, PortsOnly, SelectionDisabled, DataDisabled, OpenArtifact.
+// Specs: One component per stories file. First story is Default with max features and minimal setup.
+// Summary: Default uses full Metabolism kit (GLTF blobs in files) so embedded viewers render; ShallowKitArtifactsOnly keeps shallow JSON for metadata-only.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -9,11 +9,13 @@ import type { Kit as SemioKit } from "@semio/js";
 import { SemioKit as Kit } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
+import metabolismFullKit from "../../../assets/semio/metabolism.kit.semio.json";
 import metabolismShallowKit from "../../../assets/semio/metabolism.shallow.kit.semio.json";
 
 // #region 🖥️Data
 
-const kit = metabolismShallowKit as unknown as SemioKit;
+const kit = metabolismFullKit as unknown as SemioKit;
+const shallowKit = metabolismShallowKit as unknown as SemioKit;
 
 // #endregion 🖥️Data
 
@@ -23,14 +25,16 @@ const meta: Meta<typeof Kit> = {
   title: "semio/Kit",
   component: Kit,
   tags: ["autodocs"],
-  parameters: { layout: "centered" },
+  parameters: { layout: "padded" },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof Kit>;
 
-const frame = (node: React.ReactNode) => <div className="w-96 rounded-md border border-border bg-card p-3 text-foreground shadow-sm">{node}</div>;
+const frame = (node: React.ReactNode) => (
+  <div className="min-h-[420px] w-full max-w-5xl min-w-[20rem] rounded-md border border-border bg-card p-3 text-foreground shadow-sm">{node}</div>
+);
 
 export const Default: Story = {
   args: { kit },
@@ -59,6 +63,12 @@ export const SelectionDisabled: Story = {
 
 export const DataDisabled: Story = {
   args: { kit, dataEnabled: false },
+  render: (args) => frame(<Kit {...args} />),
+};
+
+/** Shallow kit has no `files` / embedded GLTF — viewers fall back to placeholders; use for hierarchy/metadata-only checks. */
+export const ShallowKitArtifactsOnly: Story = {
+  args: { kit: shallowKit },
   render: (args) => frame(<Kit {...args} />),
 };
 

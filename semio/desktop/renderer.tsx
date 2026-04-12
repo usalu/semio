@@ -14,9 +14,11 @@
 
 import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { createFolderKitStore } from "@semio/studio";
-import type { KitFolderAdapter } from "@semio/studio";
+import { createFolderKitStore, createSessionKitStore } from "@semio/sketchpad";
+import type { KitFolderAdapter, KitJsonFileAdapter } from "@semio/sketchpad";
 import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
+import { createJsonFileKitStore } from "@semio/sketchpad";
+import { InMemoryKitStore } from "@semio/js";
 
 import "./globals.css";
 
@@ -36,9 +38,10 @@ const LazySketchpad = lazy(() =>
 
 declare global {
   interface Window {
-    __SEMIO_DESKTOP_REACT_ROOT__?: Root;
     /** Set by preload when `SEMIO_E2E_KIT_FOLDER` is defined (desktop E2E / automation). */
     __SEMIO_E2E_KIT_FOLDER__?: string;
+    /** Set by preload when `SEMIO_E2E_KIT_FILE` is defined (desktop E2E / automation). */
+    __SEMIO_E2E_KIT_FILE__?: string;
     windowControls: {
       minimize(): Promise<any>;
       maximize(): Promise<any>;
@@ -54,9 +57,17 @@ declare global {
       readFile(folderPath: string, filePath: string): Promise<ArrayBuffer | null>;
       writeFile(folderPath: string, filePath: string, data: ArrayBuffer): Promise<void>;
       deleteFile(folderPath: string, filePath: string): Promise<void>;
+      createDirectory(folderPath: string, directoryPath: string): Promise<void>;
+      moveEntry(folderPath: string, fromPath: string, toPath: string): Promise<void>;
       listFiles(folderPath: string): Promise<string[]>;
       getRecentFolders(): Promise<string[]>;
       addRecentFolder(folderPath: string): Promise<void>;
+      watchFolder(folderPath: string, onChanged: () => void): () => void;
+    };
+    kitFile: {
+      selectFile(): Promise<string | null>;
+      readJson(filePath: string): Promise<string | null>;
+      writeJson(filePath: string, json: string): Promise<void>;
     };
   }
 }
@@ -74,13 +85,15 @@ const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
 };
 
 /**
- * Window event handlers for minimize, maximize and close actions.
- *MUST delegate to invokeWindowControl for each action.
+ * Desktop integration surface. Presence of this object is how sketchpad detects desktop mode.
+ *MUST delegate to invokeWindowControl for each action. Includes native kit callbacks.
  **/
-const windowEvents = {
+const desktop = {
   minimize: () => invokeWindowControl("minimize"),
   maximize: () => invokeWindowControl("maximize"),
   close: () => invokeWindowControl("close"),
+  kitFolder: window.kitFolder,
+  kitFile: window.kitFile,
 };
 
 /**
@@ -114,7 +127,10 @@ function createElectronFolderAdapter(folderPath: string): KitFolderAdapter {
       await window.kitFolder.writeFile(folderPath, path, buffer);
     },
     deleteFile: (path: string) => window.kitFolder.deleteFile(folderPath, path),
+    createDirectory: (path: string) => window.kitFolder.createDirectory(folderPath, path),
+    moveEntry: (fromPath: string, toPath: string) => window.kitFolder.moveEntry(folderPath, fromPath, toPath),
     listFiles: () => window.kitFolder.listFiles(folderPath),
+    watch: (callback: () => void) => window.kitFolder.watchFolder(folderPath, callback),
   };
 }
 // #endregion 🗄️FolderAdapter
@@ -143,18 +159,70 @@ function App() {
   // 🏭Folder kit store factory for creating/opening local kits via Electron IPC.
   const folderKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (kit) => {
     const e2eFolder = typeof window !== "undefined" ? window.__SEMIO_E2E_KIT_FOLDER__ : undefined;
-    if (e2eFolder && e2eFolder.length > 0) {
-      await window.kitFolder.addRecentFolder(e2eFolder);
-      const adapter = createElectronFolderAdapter(e2eFolder);
-      return createFolderKitStore(adapter);
-    }
-    const selectedFolder = await window.kitFolder.selectFolder();
+    const source = (kit as any)?.__semioKitPersistenceSource as { kind?: string; path?: string } | undefined;
+    const requestedFolder = source?.kind === "folder" && source.path ? source.path : undefined;
+    const selectedFolder = requestedFolder ?? (e2eFolder && e2eFolder.length > 0 ? e2eFolder : await window.kitFolder.selectFolder());
     if (!selectedFolder) {
       throw new Error("No folder selected for kit storage");
     }
     await window.kitFolder.addRecentFolder(selectedFolder);
     const adapter = createElectronFolderAdapter(selectedFolder);
-    return createFolderKitStore(adapter);
+    const store = await createFolderKitStore(adapter, kit);
+    (store as any).__semioKitPersistenceSource = { kind: "folder", path: selectedFolder };
+    return store;
+  }, []);
+
+  // 🏭Temporary kit store factory for in-memory kits.
+  const temporaryKitStoreFactory: SketchpadKitStoreFactory = useCallback((kit) => new InMemoryKitStore(kit), []);
+
+  // 🏭File kit store factory for opening JSON kit files via native file dialog.
+  // Specs: In Electron, uses dialog.showOpenDialog via IPC for native file picker.
+  // Falls back to File System Access API only when the preload bridge is unavailable.
+  const fileKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (_kit) => {
+    const e2eFile = typeof window !== "undefined" ? window.__SEMIO_E2E_KIT_FILE__ : undefined;
+    const source = (_kit as any)?.__semioKitPersistenceSource as { kind?: string; path?: string } | undefined;
+    if (window.kitFile) {
+      const selectedFile = source?.kind === "file" && source.path ? source.path : e2eFile && e2eFile.length > 0 ? e2eFile : await window.kitFile.selectFile();
+      if (!selectedFile) {
+        throw new Error("No file selected for kit storage");
+      }
+      const adapter: KitJsonFileAdapter = {
+        read: async () => await window.kitFile.readJson(selectedFile),
+        write: async (json: string) => await window.kitFile.writeJson(selectedFile, json),
+      };
+      const store = await createJsonFileKitStore(adapter);
+      (store as any).__semioKitPersistenceSource = { kind: "file", path: selectedFile };
+      return store;
+    }
+    if (typeof window !== "undefined" && "showOpenFilePicker" in window) {
+      const [fileHandle] = await (window as any).showOpenFilePicker({
+        types: [{ description: "Semio Kit JSON", accept: { "application/json": [".json"] } }],
+      });
+      const adapter: KitJsonFileAdapter = {
+        read: async () => {
+          const file = await fileHandle.getFile();
+          return file.text();
+        },
+        write: async (json: string) => {
+          const writable = await fileHandle.createWritable();
+          await writable.write(json);
+          await writable.close();
+        },
+      };
+      return createJsonFileKitStore(adapter);
+    }
+    throw new Error("File kit store not available in this environment");
+  }, []);
+
+  // 🏭Remote kit store factory for connecting to semio/server.
+  // Specs: The server URL is passed in kit.name by the openKit command.
+  const remoteKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (kit) => {
+    const source = (kit as any)?.__semioKitPersistenceSource as { kind?: string; url?: string } | undefined;
+    const serverUrl = source?.kind === "remote" && source.url ? source.url : kit.name;
+    if (!serverUrl) throw new Error("No server URL provided for remote kit");
+    const store = await createSessionKitStore({ serverUrl });
+    (store as any).__semioKitPersistenceSource = { kind: "remote", url: serverUrl };
+    return store;
   }, []);
 
   if (!userId) {
@@ -164,7 +232,15 @@ function App() {
   return (
     <div className="h-screen w-screen">
       <Suspense fallback={<div className="flex h-full w-full items-center justify-center bg-neutral-950 text-white">Loading sketchpad...</div>}>
-        <LazySketchpad onWindowEvents={windowEvents} id={userId} folderKitStoreFactory={folderKitStoreFactory} />
+        {/* Specs: desktop skips browser kit snapshot persistence (folder/file/remote); reopen kits via Open each session. */}
+        <LazySketchpad
+          desktop={desktop}
+          id={userId}
+          folderKitStoreFactory={folderKitStoreFactory}
+          fileKitStoreFactory={fileKitStoreFactory}
+          temporaryKitStoreFactory={temporaryKitStoreFactory}
+          remoteKitStoreFactory={remoteKitStoreFactory}
+        />
       </Suspense>
     </div>
   );
@@ -177,8 +253,11 @@ const rootElement = document.getElementById("root");
 if (!rootElement) {
   throw new Error("Renderer root element '#root' is missing.");
 }
-const reactRoot = window.__SEMIO_DESKTOP_REACT_ROOT__ ?? createRoot(rootElement);
-window.__SEMIO_DESKTOP_REACT_ROOT__ = reactRoot;
+const SEMIO_REACT_ROOT = Symbol.for("semio.desktop.reactRoot");
+type RootHost = HTMLElement & { [SEMIO_REACT_ROOT]?: Root };
+const host = rootElement as RootHost;
+const reactRoot = host[SEMIO_REACT_ROOT] ?? createRoot(rootElement);
+host[SEMIO_REACT_ROOT] = reactRoot;
 reactRoot.render(
   <React.StrictMode>
     <App />

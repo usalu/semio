@@ -16,7 +16,6 @@
 # #endregion 🧲Header
 
 
-
 # #region ⛩️Imports
 # Standard library, third-party and framework imports.
 from __future__ import annotations
@@ -71,7 +70,6 @@ import pytransform3d.rotations
 # #endregion ⛩️Imports
 
 
-
 # #region 📝Type Hints
 # Custom type hint aliases used throughout the module.
 
@@ -79,7 +77,6 @@ RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 """🔁 A recursive any list is either any or a list where the items are recursive any list."""
 
 # #endregion 📝Type Hints
-
 
 
 # #region 🎞️Constants
@@ -145,7 +142,6 @@ dotenv.load_dotenv()
 ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO_")}
 
 # #endregion 🎞️Constants
-
 
 
 # #region 📦Utilities
@@ -230,14 +226,12 @@ def normalizeAngle(angle: float) -> float:
 # #endregion 📦Utilities
 
 
-
 # #region 📰Logging
 # Module-level logger configuration.
 
 logger = loguru.logger
 
 # #endregion 📰Logging
-
 
 
 # #region ⚠️Exceptions
@@ -372,7 +366,6 @@ class Semio(pydantic.BaseModel):
 
 
 # #endregion ⚠️Exceptions
-
 
 
 # #region 🎲Modeling
@@ -586,7 +579,6 @@ class TableEntityNode(TableNode):
 # #endregion 🎬Graphql
 
 # #endregion 🎲Modeling
-
 
 
 # #region 🖥️Weak Entities
@@ -892,7 +884,6 @@ class PlaneInputNode(InputNode):
 # #endregion 🖥️Weak Entities
 
 
-
 # #region 💎Attribute
 # Attribute entity with key-value pairs and definitions.
 
@@ -1114,7 +1105,6 @@ class LocationInputNode(InputNode):
 # #endregion 📍Location
 
 
-
 # #region ✍️Author
 # Author entity for tracking contributor identity and rank.
 
@@ -1191,7 +1181,6 @@ class AuthorInputNode(InputNode):
 # #endregion ✍️Author
 
 
-
 # #region 🔥ArtifactAuthor
 # Artifact-author association entity linking artifacts to authors by email.
 
@@ -1222,7 +1211,6 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity):
 
 
 # #endregion 🔥ArtifactAuthor
-
 
 
 # #region 📄File
@@ -1399,7 +1387,6 @@ class FileInputNode(InputNode):
 
 
 # #endregion 📄File
-
 
 
 # #region 📁Folder
@@ -1580,7 +1567,6 @@ class FolderInputNode(InputNode):
 
 
 # #endregion 📁Folder
-
 
 
 # #region 📏Benchmark
@@ -1774,7 +1760,6 @@ if __name__ == "__main__":
     benchmark_main()
 
 # #endregion 📏Benchmark
-
 
 
 # #region 🔬Quality
@@ -2028,7 +2013,6 @@ class Quality(
 # #endregion 🔬Quality
 
 
-
 # #region ⚓Port
 # Port entity for defining connection interfaces on types.
 
@@ -2105,7 +2089,6 @@ class PortInputNode(InputNode):
 
 
 # #endregion ⚓Port
-
 
 
 # #region 📊Prop
@@ -2235,7 +2218,6 @@ class PropInputNode(InputNode):
 # #endregion 📊Prop
 
 
-
 # #region 🏷️Tag
 # Tag entity for categorizing and labeling kit elements.
 
@@ -2290,7 +2272,6 @@ class Tag(
 # #endregion 🏷️Tag
 
 
-
 # #region 💡Concept
 # Concept entity for semantic grouping of design elements.
 
@@ -2343,7 +2324,6 @@ class Concept(
 
 
 # #endregion 💡Concept
-
 
 
 # #region 🗿Model
@@ -2501,7 +2481,6 @@ class ModelInputNode(InputNode):
 
 
 # #endregion 🗿Model
-
 
 
 # #region 🔌Connector
@@ -2781,7 +2760,6 @@ class ConnectorIdInputNode(InputNode):
 
 
 # #endregion 🔌Connector
-
 
 
 # #region 🧱Type
@@ -3193,7 +3171,6 @@ class TypeIdInputNode(InputNode):
 # #endregion 🧱Type
 
 
-
 # #region 🎨Layer
 # Layer entity for organizing design elements into visibility groups.
 
@@ -3288,7 +3265,6 @@ class Layer(
 
 
 # #endregion 🎨Layer
-
 
 
 # #region 🧩Piece
@@ -3549,7 +3525,6 @@ class PieceIdInputNode(InputNode):
 # #endregion 🧩Piece
 
 
-
 # #region 👥Group
 # Group entity for named collections of pieces in a design.
 
@@ -3604,7 +3579,6 @@ class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity)
 
 
 # #endregion 👥Group
-
 
 
 # #region ↔️Side
@@ -3698,7 +3672,6 @@ class SideInputNode(InputNode):
 
 
 # #endregion ↔️Side
-
 
 
 # #region 🔗Connection
@@ -4059,7 +4032,6 @@ class ConnectionInputNode(InputNode):
 # #endregion 🔗Connection
 
 
-
 # #region 📈Stat
 # Stat entity for recording computed statistics with bounds.
 
@@ -4181,7 +4153,6 @@ class Stat(
 
 
 # #endregion 📈Stat
-
 
 
 # #region 📐Design
@@ -4550,7 +4521,6 @@ class DesignIdInputNode(InputNode):
 
 
 # #endregion 📐Design
-
 
 
 # #region ⏱️Kit
@@ -5453,7 +5423,6 @@ class Kit(
 # #endregion ⏱️Kit
 
 
-
 # #region 🔑Meta And Shallow
 # Meta And Shallow Types MUST provide lightweight entity representations.
 
@@ -6164,7 +6133,6 @@ def kitToShallow(d: dict) -> KitShallow:
 # #endregion 📎Meta And Shallow Conversions
 
 # #endregion 🔑Meta And Shallow
-
 
 
 # #region 🖥️Hash
@@ -7646,7 +7614,6 @@ def hash_kit_diff(d: dict) -> str:
 # #endregion 🖥️Hash
 
 
-
 # #region 🎪Kit Operations
 # Dict-based pure functions for kit operations exposed via MCP.
 
@@ -8204,7 +8171,6 @@ def sumQualityInDesignDict(kit: dict, design_guid: str, quality_guid: str) -> fl
 # #endregion 📍Kit Query Helpers Dict
 
 # #endregion 🎪Kit Operations
-
 
 
 # #region 🎗️Kit Diff Operations
@@ -9281,7 +9247,18 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
             attrs.append(status_attr("removed"))
             pc["attributes"] = attrs
         elif pc["guid"] in updated_piece_map:
+            base_plane = pc.get("plane")
+            base_center = pc.get("center")
             pc = _applyPieceDiff(pc, updated_piece_map[pc["guid"]])
+            # 📌Preserve base geometry so modified pieces stay in place and only get recolored.
+            if base_plane is not None:
+                pc["plane"] = base_plane
+            elif "plane" in pc:
+                del pc["plane"]
+            if base_center is not None:
+                pc["center"] = base_center
+            elif "center" in pc:
+                del pc["center"]
             attrs = pc.get("attributes", []) or []
             attrs.append(status_attr("modified"))
             pc["attributes"] = attrs
@@ -9836,7 +9813,7 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
 
 
 def _kitdiff_deep_equal(a: typing.Any, b: typing.Any) -> bool:
-    """��Structural equality for noop remove/add detection in kit diff validation."""
+    """Deep structural equality for noop remove/add detection in kit diff validation."""
     if a is b:
         return True
     if type(a) != type(b):
@@ -9967,7 +9944,7 @@ def _validate_guid_collection_diff(
 
 
 def _validate_design_diff_nested_py(ctx: dict, kit: dict, path: str, design: dict, diff: dict, refs: dict) -> None:
-    """��Validate nested design diff: piece type refs, authors diff or list."""
+    """Validate nested design diff: piece type refs, authors diff or list."""
     type_guids: set[str] = refs["typeGuids"]
     design_guids: set[str] = refs["designGuids"]
     author_guids: set[str] = refs["authorGuids"]
@@ -10017,7 +9994,7 @@ def _validate_design_diff_nested_py(ctx: dict, kit: dict, path: str, design: dic
 
 
 def validate_kit_diff_dict(kit: dict, diff: dict, heal: bool) -> dict:
-    """��Validate a kit diff dict against a base kit dict; optional heal returns a scrubbed diff copy.
+    """Validate a kit diff dict against a base kit dict; optional heal returns a scrubbed diff copy.
 
     Returns a dict: ok (bool), errors, warnings (list of {code, message}), diff (optional when heal).
     """
@@ -11015,7 +10992,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except json.JSONDecodeError, TypeError:
+                                                    except (json.JSONDecodeError, TypeError):
                                                         pass
                                         if flatParentCenter is None:
                                             for attr in externalParent.get("attributes", []):
@@ -11023,7 +11000,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except json.JSONDecodeError, TypeError:
+                                                    except (json.JSONDecodeError, TypeError):
                                                         pass
                                         if flatParentCenter is None and externalParent.get("center"):
                                             flatParentCenter = externalParent["center"]
@@ -11357,7 +11334,6 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
 # #endregion 🎗️Kit Diff Operations
 
 
-
 # #region 🧭Moved Graphene Nodes
 # Graphene node definitions moved here due to forward-reference resolution order.
 
@@ -11553,7 +11529,6 @@ class KitNode(TableEntityNode):
 
 
 # #endregion 🧭Moved Graphene Nodes
-
 
 
 # #region 🛡️Validation
@@ -12505,7 +12480,6 @@ def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
 # #endregion 🛡️Validation
 
 
-
 # #region 🌤️Flatten Design
 # Design flattening to resolve nested sub-designs into a single coordinate space.
 
@@ -12852,7 +12826,6 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
 
 
 # #endregion 🌤️Flatten Design
-
 
 
 # #region 🧿Kit Import/Export
@@ -14180,7 +14153,6 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
 
 
 # #endregion 🧿Kit Import/Export
-
 
 
 # #region 🔩Kit Model Export
@@ -15885,7 +15857,6 @@ def _export_ifc_from_entities(
 # #endregion 🔩Kit Model Export
 
 
-
 # #region ❄️Geometric Insights
 # Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
@@ -16151,7 +16122,6 @@ def geometric_insights_to_report_dict(insights: GeometricInsights, round_digits:
 # #endregion ❄️Geometric Insights
 
 
-
 # #region 🔍Spatial Math
 # Spatial math utilities for vector normalization and plane computation.
 
@@ -16267,7 +16237,6 @@ def computeChildPlane(
 
 
 # #endregion 🔍Spatial Math
-
 
 
 # #region 🧪Tests
@@ -17605,7 +17574,7 @@ class TestHash:
     def test_metabolism_kit_hash(self):
         kit_dict = _test_load_json("metabolism.kit.semio.json")
         result = hash_kit(kit_dict)
-        assert result == "d786ae5cd2cb18d78f0d80df92ded94905adf708df077206f72162d43dd8767c"
+        assert result == "2ebfdb63f7f1a329702f4c4852c1a7c7c11cf550b74a1f280d7538fc5c25dd0a"
 
     def test_kit_diff_canonical_hash(self):
         d = {"name": "updated", "description": None}

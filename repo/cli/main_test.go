@@ -261,8 +261,6 @@ func TestDevcontainerPostAttachGitKrakenWorkspaceBootstrap(t *testing.T) {
 		t.Fatal("failed to resolve current test file path")
 	}
 	repoRoot := filepath.Dir(filepath.Dir(filepath.Dir(currentFile)))
-	scriptPath := filepath.Join(repoRoot, ".devcontainer", "post-attach.sh")
-
 	t.Run("creates workspace from root and submodules", func(t *testing.T) {
 		workspaceDir := t.TempDir()
 		homeDir := t.TempDir()
@@ -319,7 +317,7 @@ exit 0
 			t.Fatalf("failed to seed Codex config: %v", err)
 		}
 
-		cmd := exec.Command("bash", scriptPath)
+		cmd := exec.Command("bash", ".devcontainer/post-attach.sh")
 		cmd.Dir = repoRoot
 		cmd.Env = append(os.Environ(),
 			"PATH="+binDir+":"+os.Getenv("PATH"),
@@ -360,8 +358,11 @@ exit 0
 		if !strings.Contains(configText, "\"repo\"") {
 			t.Fatalf("expected Windsurf MCP config to include repo server, got:\n%s", configData)
 		}
-		if !strings.Contains(configText, filepath.Join(repoRoot, "repo", "cli", "cli")) {
-			t.Fatalf("expected Windsurf MCP config to normalize repo command to an absolute path, got:\n%s", configData)
+		if !strings.Contains(configText, "\"command\": \"go\"") {
+			t.Fatalf("expected Windsurf MCP config to keep the portable go command, got:\n%s", configData)
+		}
+		if !strings.Contains(configText, "\"args\": [\n        \"run\",\n        \"./repo/cli\",\n        \"mcp\"\n      ]") {
+			t.Fatalf("expected Windsurf MCP config to keep portable repo args, got:\n%s", configData)
 		}
 
 		codexPath := filepath.Join(homeDir, ".codex", "config.toml")
@@ -376,8 +377,11 @@ exit 0
 		if !strings.Contains(codexText, "personality = \"pragmatic\"") || !strings.Contains(codexText, "model = \"gpt-5.4\"") {
 			t.Fatalf("expected Codex MCP sync to preserve existing user settings, got:\n%s", codexData)
 		}
-		if !strings.Contains(codexText, fmt.Sprintf("command = %q", filepath.Join(repoRoot, "repo", "cli", "cli"))) {
-			t.Fatalf("expected Codex MCP config to normalize repo command to an absolute path, got:\n%s", codexData)
+		if !strings.Contains(codexText, `command = "go"`) {
+			t.Fatalf("expected Codex MCP config to keep the portable go command, got:\n%s", codexData)
+		}
+		if !strings.Contains(codexText, `args = ["run", "./repo/cli", "mcp"]`) {
+			t.Fatalf("expected Codex MCP config to keep portable repo args, got:\n%s", codexData)
 		}
 		if !strings.Contains(codexText, fmt.Sprintf("cwd = %q", repoRoot)) {
 			t.Fatalf("expected Codex MCP config to set cwd to repo root, got:\n%s", codexData)
@@ -437,7 +441,7 @@ fi
 exit 0
 `, logPath, workspaceDir))
 
-		cmd := exec.Command("bash", scriptPath)
+		cmd := exec.Command("bash", ".devcontainer/post-attach.sh")
 		cmd.Dir = repoRoot
 		cmd.Env = append(os.Environ(),
 			"PATH="+binDir+":"+os.Getenv("PATH"),
@@ -471,6 +475,210 @@ exit 0
 			t.Fatalf("expected workspace set call, got log:\n%s", logText)
 		}
 	})
+}
+
+func TestCodexEditorProviderConfigureMergesMcpServers(t *testing.T) {
+	repoRoot := t.TempDir()
+	homeDir := t.TempDir()
+	t.Setenv("HOME", homeDir)
+	t.Setenv("USERPROFILE", homeDir)
+
+	codexTemplateDir := filepath.Join(repoRoot, ".codex")
+	if err := os.MkdirAll(codexTemplateDir, 0755); err != nil {
+		t.Fatalf("failed to create repo codex dir: %v", err)
+	}
+	repoCliDir := filepath.Join(repoRoot, "repo", "cli")
+	if err := os.MkdirAll(repoCliDir, 0755); err != nil {
+		t.Fatalf("failed to create repo cli dir: %v", err)
+	}
+	semioEngineDir := filepath.Join(repoRoot, "semio", "engine")
+	if err := os.MkdirAll(semioEngineDir, 0755); err != nil {
+		t.Fatalf("failed to create semio engine dir: %v", err)
+	}
+
+	template := `# Codex MCP Server Configuration
+personality = "ignored-template-value"
+
+[mcp_servers.repo]
+command = "go"
+args = ["run", "./repo/cli", "mcp"]
+enabled = true
+
+[mcp_servers.semio]
+command = "uv"
+args = ["--directory", "semio/engine", "run", "main.py", "--mcp-stdio"]
+enabled = true
+`
+	if err := os.WriteFile(filepath.Join(codexTemplateDir, "config.toml"), []byte(template), 0644); err != nil {
+		t.Fatalf("failed to write repo codex template: %v", err)
+	}
+
+	userCodexDir := filepath.Join(homeDir, ".codex")
+	if err := os.MkdirAll(userCodexDir, 0755); err != nil {
+		t.Fatalf("failed to create user codex dir: %v", err)
+	}
+	existing := "personality = \"pragmatic\"\nmodel = \"gpt-5.4\"\n\n[mcp_servers.semio-repo]\ncommand = \"C:\\\\legacy\\\\mcp.exe\"\n\n[mcp_servers.repo]\ncommand = \"broken\"\nargs = [\"old\"]\n"
+	if err := os.WriteFile(filepath.Join(userCodexDir, "config.toml"), []byte(existing), 0644); err != nil {
+		t.Fatalf("failed to seed user codex config: %v", err)
+	}
+
+	provider := &CodexEditorProvider{}
+	if err := provider.Configure(repoRoot); err != nil {
+		t.Fatalf("configure failed: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(userCodexDir, "config.toml"))
+	if err != nil {
+		t.Fatalf("failed to read configured codex config: %v", err)
+	}
+	text := string(data)
+	if !strings.Contains(text, "personality = \"pragmatic\"") || !strings.Contains(text, "model = \"gpt-5.4\"") {
+		t.Fatalf("expected existing user settings to be preserved, got:\n%s", text)
+	}
+	if strings.Contains(text, "command = \"broken\"") {
+		t.Fatalf("expected repo server block to be replaced, got:\n%s", text)
+	}
+	if strings.Contains(text, "[mcp_servers.semio-repo]") || strings.Contains(text, `C:\\legacy\\mcp.exe`) {
+		t.Fatalf("expected legacy semio-repo server block to be removed, got:\n%s", text)
+	}
+	if !strings.Contains(text, `command = "go"`) {
+		t.Fatalf("expected repo command to stay portable, got:\n%s", text)
+	}
+	if !strings.Contains(text, `args = ["run", "./repo/cli", "mcp"]`) {
+		t.Fatalf("expected repo args to stay portable, got:\n%s", text)
+	}
+	if !strings.Contains(text, fmt.Sprintf("cwd = %q", repoRoot)) {
+		t.Fatalf("expected codex config to set repo root cwd, got:\n%s", text)
+	}
+	if !strings.Contains(text, fmt.Sprintf("%q", semioEngineDir)) {
+		t.Fatalf("expected relative --directory arguments to be normalized, got:\n%s", text)
+	}
+}
+
+func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
+	repoRoot := findTestRepoRoot(".")
+
+	cases := []struct {
+		name              string
+		path              string
+		requiredFragments []string
+		forbiddenFragments []string
+	}{
+		{
+			name: "codex template uses coda assistant",
+			path: filepath.Join(repoRoot, ".codex", "config.toml"),
+			requiredFragments: []string{
+				`"--directory", "semio/engine", "run", "main.py", "--mcp-stdio"`,
+				`"--directory", "coda/assistant", "run", "main.py", "--mcp-stdio"`,
+			},
+			forbiddenFragments: []string{
+				"coda/engine",
+				"coda.py",
+			},
+		},
+		{
+			name: "kiro settings stay repo relative",
+			path: filepath.Join(repoRoot, ".kiro", "settings", "mcp.json"),
+			requiredFragments: []string{
+				`"semio/engine"`,
+				`"coda/assistant"`,
+				`"main.py"`,
+			},
+			forbiddenFragments: []string{
+				"/workspaces/semio/",
+				"coda/engine",
+				"coda.py",
+			},
+		},
+		{
+			name: "kiro semio agent uses coda assistant",
+			path: filepath.Join(repoRoot, ".kiro", "agents", "semio.json"),
+			requiredFragments: []string{
+				`"semio/engine"`,
+				`"coda/assistant"`,
+				`"main.py"`,
+			},
+			forbiddenFragments: []string{
+				"coda/engine",
+				"coda.py",
+			},
+		},
+		{
+			name: "devcontainer post-create antigravity config uses coda assistant",
+			path: filepath.Join(repoRoot, ".devcontainer", "post-create.sh"),
+			requiredFragments: []string{
+				"/workspaces/semio/semio/engine",
+				"/workspaces/semio/coda/assistant",
+				"main.py",
+			},
+			forbiddenFragments: []string{
+				"/workspaces/semio/coda/engine",
+				"coda.py",
+			},
+		},
+		{
+			name: "native bootstrap script performs repo bootstrap",
+			path: filepath.Join(repoRoot, ".devcontainer", "install-native.ps1"),
+			requiredFragments: []string{
+				"PLAYWRIGHT_BROWSERS_PATH",
+				`$script:PythonKind = "3.14"`,
+				`Sync-WingetPackage -Id "Microsoft.DotNet.SDK.10" -Label ".NET SDK 10.0"`,
+				`Sync-WingetPackage -Id "Microsoft.VisualStudio.2022.BuildTools" -Label "Visual Studio Build Tools"`,
+				`Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"`,
+				`Stop-RepoPythonProcesses -RepoRoot $repoRoot`,
+				`@("sync", "--all-packages", "--all-groups", "--python", $script:PythonKind)`,
+				`@("run", "./repo/cli", "configure", "--repo", $repoRoot)`,
+				`@("playwright", "install", "chromium")`,
+				`@("run", "git:setup")`,
+			},
+			forbiddenFragments: []string{
+				`Microsoft.DotNet.SDK.7`,
+			},
+		},
+		{
+			name: "devcontainer excludes dotnet 7 and restores monorepo solution",
+			path: filepath.Join(repoRoot, ".devcontainer", "devcontainer.json"),
+			requiredFragments: []string{
+				`"version": "1.26"`,
+				`"version": "2.53"`,
+				`"additionalVersions": "9.0 10.0"`,
+			},
+			forbiddenFragments: []string{
+				`7.0`,
+			},
+		},
+		{
+			name: "devcontainer post-create restores monorepo solution",
+			path: filepath.Join(repoRoot, ".devcontainer", "post-create.sh"),
+			requiredFragments: []string{
+				"uv sync --all-packages --all-groups",
+				"dotnet restore Monorepo.sln",
+			},
+			forbiddenFragments: []string{
+				"dotnet restore net/Semio.sln",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			data, err := os.ReadFile(tc.path)
+			if err != nil {
+				t.Fatalf("failed to read %s: %v", tc.path, err)
+			}
+			text := string(data)
+			for _, fragment := range tc.requiredFragments {
+				if !strings.Contains(text, fragment) {
+					t.Fatalf("expected %s to contain %q", tc.path, fragment)
+				}
+			}
+			for _, fragment := range tc.forbiddenFragments {
+				if strings.Contains(text, fragment) {
+					t.Fatalf("expected %s to exclude %q", tc.path, fragment)
+				}
+			}
+		})
+	}
 }
 
 // 📌#region 🔑Semio Repo ID Conversion
@@ -17157,6 +17365,14 @@ func getLogFiles(t *testing.T, tmpDir string) []string {
 	return logFiles
 }
 
+func assertNoHookLogFiles(t *testing.T, tmpDir string) {
+	t.Helper()
+	logFiles := getLogFiles(t, tmpDir)
+	if len(logFiles) != 0 {
+		t.Fatalf("expected no hook log files under .repo/⚡, got %v", logFiles)
+	}
+}
+
 func TestTrackHookAllEventsLogged(t *testing.T) {
 	tmpDir, ticketJSON := setupTicketDir(t)
 	SetRootDir(tmpDir)
@@ -20614,6 +20830,47 @@ func TestCheckpointInAllVersionEvents(t *testing.T) {
 			if checkpoint != expectedSHA {
 				t.Errorf("expected checkpoint=%s, got %v", expectedSHA, checkpoint)
 			}
+		})
+	}
+}
+
+func TestVersionHooksDoNotWriteSessionLogs(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	SetRootDir(tmpDir)
+
+	headCmd := exec.Command("git", "rev-parse", "HEAD")
+	headCmd.Dir = tmpDir
+	headOut, err := headCmd.Output()
+	if err != nil {
+		t.Fatalf("cannot get HEAD: %v", err)
+	}
+	expectedSHA := strings.TrimSpace(string(headOut))
+
+	events := []struct {
+		name  string
+		event HookEvent
+		input json.RawMessage
+	}{
+		{"checkpoint starting", HookVersionCheckpointStarting, nil},
+		{"checkpoint ended", HookVersionCheckpointEnded, json.RawMessage(`{"sha":"` + expectedSHA + `","message":"test commit"}`)},
+		{"checkin starting", HookVersionCheckinStarting, nil},
+		{"checkin ended", HookVersionCheckinEnded, nil},
+		{"checkout starting", HookVersionCheckoutStarting, nil},
+		{"checkout ended", HookVersionCheckoutEnded, nil},
+	}
+
+	for _, tc := range events {
+		t.Run(tc.name, func(t *testing.T) {
+			result := RunHook(HookContext{
+				Event:    tc.event,
+				Second:   "2026-02-25T12:00:00Z",
+				RepoRoot: tmpDir,
+				Input:    tc.input,
+			})
+			if !result.IsAllowed() {
+				t.Fatalf("expected %s to be allowed, got %s", tc.event, result.GetMessage())
+			}
+			assertNoHookLogFiles(t, tmpDir)
 		})
 	}
 }

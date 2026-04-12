@@ -1,5 +1,4 @@
 // #region 🧲Header
-
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -12,7 +11,7 @@
 // Electron main process that creates the browser window and registers IPC handlers.
 // MUST quit on all windows closed except on macOS.
 
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, type WebContents } from "electron";
 import started from "electron-squirrel-startup";
 import path from "node:path";
 import fs from "node:fs";
@@ -75,6 +74,16 @@ app.on("activate", () => {
 app.whenReady().then(async () => {
   app.setAppUserModelId("com.electron");
 
+  const resolveKitEntryPath = (folderPath: string, entryPath: string) => {
+    const rootPath = path.resolve(folderPath);
+    const targetPath = path.resolve(rootPath, entryPath);
+    const relativePath = path.relative(rootPath, targetPath);
+    if (relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath))) {
+      return targetPath;
+    }
+    throw new Error(`Kit path escapes selected folder: ${entryPath}`);
+  };
+
   ipcMain.handle("minimize-window", (event) => {
     const window = BrowserWindow.getFocusedWindow();
     if (window) window.minimize();
@@ -127,18 +136,44 @@ app.whenReady().then(async () => {
     fs.writeFileSync(path.join(semioDir, "kit.db"), Buffer.from(data));
   });
 
+  ipcMain.handle("select-file", async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ["openFile"],
+      title: "Select Kit JSON File",
+      filters: [{ name: "Semio Kit JSON", extensions: ["json"] }],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
+  });
+
+  ipcMain.handle("read-kit-json-file", async (_event, filePath: string) => {
+    try {
+      return fs.readFileSync(filePath, "utf-8");
+    } catch {
+      return null;
+    }
+  });
+
+  ipcMain.handle("write-kit-json-file", async (_event, filePath: string, json: string) => {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(filePath, json, "utf-8");
+  });
+
   ipcMain.handle("read-file", async (_event, folderPath: string, filePath: string) => {
-    const fullPath = path.join(folderPath, filePath);
+    const fullPath = resolveKitEntryPath(folderPath, filePath);
     try {
       const buffer = fs.readFileSync(fullPath);
-      return buffer.buffer;
+      return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
     } catch {
       return null;
     }
   });
 
   ipcMain.handle("write-file", async (_event, folderPath: string, filePath: string, data: ArrayBuffer) => {
-    const fullPath = path.join(folderPath, filePath);
+    const fullPath = resolveKitEntryPath(folderPath, filePath);
     const dir = path.dirname(fullPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -147,12 +182,24 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle("delete-file", async (_event, folderPath: string, filePath: string) => {
-    const fullPath = path.join(folderPath, filePath);
+    const fullPath = resolveKitEntryPath(folderPath, filePath);
     try {
       fs.unlinkSync(fullPath);
     } catch {
       /* ignore */
     }
+  });
+
+  ipcMain.handle("create-directory", async (_event, folderPath: string, directoryPath: string) => {
+    const fullPath = resolveKitEntryPath(folderPath, directoryPath);
+    fs.mkdirSync(fullPath, { recursive: true });
+  });
+
+  ipcMain.handle("move-entry", async (_event, folderPath: string, fromPath: string, toPath: string) => {
+    const sourcePath = resolveKitEntryPath(folderPath, fromPath);
+    const targetPath = resolveKitEntryPath(folderPath, toPath);
+    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+    fs.renameSync(sourcePath, targetPath);
   });
 
   ipcMain.handle("list-files", async (_event, folderPath: string) => {
@@ -196,6 +243,53 @@ app.whenReady().then(async () => {
     }
     recent = [folderPath, ...recent.filter((f: string) => f !== folderPath)].slice(0, 10);
     fs.writeFileSync(configPath, JSON.stringify(recent), "utf-8");
+  });
+
+  // Specs: One recursive watcher per kit folder; debounced IPC notifies renderer to reload `.semio/kit.db` and asset files.
+  type KitFolderWatchEntry = { watcher: fs.FSWatcher; subscribers: Set<WebContents>; debounce?: NodeJS.Timeout };
+  const kitFolderWatches = new Map<string, KitFolderWatchEntry>();
+
+  const notifyKitFolderSubscribers = (folderPath: string) => {
+    const entry = kitFolderWatches.get(folderPath);
+    if (!entry) return;
+    if (entry.debounce) clearTimeout(entry.debounce);
+    entry.debounce = setTimeout(() => {
+      entry!.debounce = undefined;
+      for (const wc of entry!.subscribers) {
+        if (!wc.isDestroyed()) wc.send("kit-folder-changed", folderPath);
+      }
+    }, 120);
+  };
+
+  ipcMain.on("kit-folder-watch-subscribe", (event, folderPath: string) => {
+    const wc = event.sender;
+    let entry = kitFolderWatches.get(folderPath);
+    if (!entry) {
+      try {
+        const watcher = fs.watch(folderPath, { recursive: true }, () => notifyKitFolderSubscribers(folderPath));
+        entry = { watcher, subscribers: new Set() };
+        kitFolderWatches.set(folderPath, entry);
+      } catch {
+        return;
+      }
+    }
+    entry.subscribers.add(wc);
+  });
+
+  ipcMain.on("kit-folder-watch-unsubscribe", (event, folderPath: string) => {
+    const wc = event.sender;
+    const entry = kitFolderWatches.get(folderPath);
+    if (!entry) return;
+    entry.subscribers.delete(wc);
+    if (entry.subscribers.size === 0) {
+      if (entry.debounce) clearTimeout(entry.debounce);
+      try {
+        entry.watcher.close();
+      } catch {
+        /* ignore */
+      }
+      kitFolderWatches.delete(folderPath);
+    }
   });
   // #endregion 🗂️FolderIPC
 

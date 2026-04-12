@@ -1,0 +1,14 @@
+{
+  "id": "2026/04/14/FIX-REPLACEMENT-CHAR-AND-EMOJI",
+  "title": "Fix Replacement Character And Emoji Mojibake",
+  "status": "closed",
+  "summary": "Replaced U+FFFD mojibake in repo CLI, vscode tests, semio JS/Python, README; set codebase�️; restored Jacobian comment and kit diff docstring.",
+  "files": [
+    "repo/cli/main.go",
+    "repo/README.md",
+    "repo/vscode/extension.test.ts",
+    "repo/vscode/out/test/extension.test.js",
+    "semio/js/index.ts",
+    "semio/py/main.py"
+  ]
+}
