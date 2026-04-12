@@ -1,0 +1,417 @@
+#region 🧲Header
+#
+# 2026 Ueli Saluz <ueli@semio-tech.com>
+#
+# Specs: Zero-touch Windows bootstrap that mirrors the devcontainer toolchain, upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, configures repo-managed hooks/MCP clients, installs required global CLIs, and installs the local VS Code extension when editor CLIs are available.
+#
+# Summary: Windows-native bootstrap for the semio monorepo with devcontainer parity.
+#
+#endregion 🧲Header
+
+[CmdletBinding()]
+param(
+    [switch]$SkipMachineInstall,
+    [switch]$SkipGlobalCliInstall,
+    [switch]$SkipEditorInstall,
+    [switch]$SkipPlaywrightInstall,
+    [switch]$SkipRepoBootstrap
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+#region 🎯Targets
+$script:PythonKind = "3.14"
+$script:NodePackageManager = "npm@11.7.0"
+#endregion 🎯Targets
+
+#region 🔧Helpers
+function Write-Step {
+    param([string]$Message)
+    Write-Host "[semio] $Message"
+}
+
+function Get-RepoRoot {
+    return (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+}
+
+function Join-HomePath {
+    param([string[]]$Segments)
+    $path = $HOME
+    foreach ($segment in $Segments) {
+        $path = Join-Path $path $segment
+    }
+    return $path
+}
+
+function Ensure-Directory {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) {
+        New-Item -ItemType Directory -Path $Path -Force | Out-Null
+    }
+}
+
+function Refresh-CurrentProcessPath {
+    $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+    $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    $extraPaths = @(
+        (Join-HomePath @(".cargo", "bin")),
+        (Join-HomePath @(".local", "bin")),
+        (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links")
+    ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
+    $segments = @($machinePath, $userPath) + $extraPaths + @($env:Path)
+    $env:Path = (($segments -join ";") -split ";" | Where-Object { $_ } | Select-Object -Unique) -join ";"
+}
+
+function Set-UserPathPriority {
+    param([string[]]$PreferredEntries)
+
+    $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    $segments = @()
+    if ($userPath) {
+        $segments = ($userPath -split ";") | Where-Object { $_ }
+    }
+
+    $normalizedPreferred = $PreferredEntries | Where-Object { $_ } | Select-Object -Unique
+    $remaining = $segments | Where-Object { $normalizedPreferred -notcontains $_ }
+    $ordered = @($normalizedPreferred + $remaining | Select-Object -Unique)
+    $updated = $ordered -join ";"
+    [Environment]::SetEnvironmentVariable("Path", $updated, "User")
+    $env:Path = (($ordered + (($env:Path -split ";") | Where-Object { $_ })) | Select-Object -Unique) -join ";"
+}
+
+function Test-WingetPackageInstalled {
+    param([string]$Id)
+    $output = & winget list --exact --id $Id --accept-source-agreements --disable-interactivity 2>&1
+    return $LASTEXITCODE -eq 0 -and (($output | Out-String) -match [Regex]::Escape($Id))
+}
+
+function Sync-WingetPackage {
+    param(
+        [string]$Id,
+        [string]$Label,
+        [string[]]$AdditionalArguments = @()
+    )
+
+    $baseArguments = @(
+        "--exact",
+        "--id",
+        $Id,
+        "--accept-package-agreements",
+        "--accept-source-agreements",
+        "--disable-interactivity",
+        "--silent"
+    ) + $AdditionalArguments
+
+    if (Test-WingetPackageInstalled -Id $Id) {
+        Write-Step "Upgrading $Label ($Id) to the latest stable release..."
+        & winget upgrade @baseArguments
+        if ($LASTEXITCODE -eq 0) {
+            return
+        }
+
+        $upgradeOutput = (& winget upgrade --exact --id $Id --accept-source-agreements --disable-interactivity 2>&1 | Out-String)
+        if ($upgradeOutput -match "No available upgrade found" -or $upgradeOutput -match "No newer package versions are available") {
+            Write-Step "$Label already on the latest stable release."
+            return
+        }
+    }
+
+    Write-Step "Installing $Label ($Id)..."
+    & winget install @baseArguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "winget install failed for $Id"
+    }
+}
+
+function Set-UserEnvironmentVariable {
+    param(
+        [string]$Name,
+        [string]$Value
+    )
+
+    [Environment]::SetEnvironmentVariable($Name, $Value, "User")
+    Set-Item -Path ("Env:{0}" -f $Name) -Value $Value
+}
+
+function Invoke-RepoCommand {
+    param(
+        [string]$FilePath,
+        [string[]]$ArgumentList,
+        [string]$WorkingDirectory
+    )
+
+    Write-Step ("Running: {0} {1}" -f $FilePath, ($ArgumentList -join " "))
+    Push-Location $WorkingDirectory
+    try {
+        & $FilePath @ArgumentList
+        if ($LASTEXITCODE -ne 0) {
+            throw "Command failed: $FilePath $($ArgumentList -join ' ')"
+        }
+    } finally {
+        Pop-Location
+    }
+}
+
+function Get-FirstCommandPath {
+    param([string[]]$Candidates)
+
+    foreach ($candidate in $Candidates) {
+        $command = Get-Command $candidate -ErrorAction SilentlyContinue
+        if ($null -ne $command) {
+            return $command.Source
+        }
+        if (Test-Path -LiteralPath $candidate) {
+            return (Resolve-Path $candidate).Path
+        }
+    }
+
+    return $null
+}
+
+function Get-CommandPathOrThrow {
+    param(
+        [string]$Label,
+        [string[]]$Candidates
+    )
+
+    $path = Get-FirstCommandPath -Candidates $Candidates
+    if (-not $path) {
+        throw "$Label was not found on PATH after bootstrap."
+    }
+
+    return $path
+}
+
+function Install-UvTool {
+    param(
+        [string]$ToolName,
+        [string]$UvPath
+    )
+
+    $toolPath = Join-HomePath @(".local", "bin", "$ToolName.exe")
+    $arguments = @("tool", "install", "--upgrade", $ToolName)
+    if (Test-Path -LiteralPath $toolPath) {
+        $arguments = @("tool", "upgrade", $ToolName)
+    }
+
+    Invoke-RepoCommand -FilePath $UvPath -ArgumentList $arguments -WorkingDirectory (Get-RepoRoot)
+}
+
+function Install-EditorExtensions {
+    param(
+        [string]$RepoRoot,
+        [string[]]$EditorCliPaths
+    )
+
+    if ($EditorCliPaths.Count -eq 0) {
+        Write-Step "No editor CLI detected; skipping extension install."
+        return
+    }
+
+    $extensionsPath = Join-Path $RepoRoot ".vscode\extensions.json"
+    $recommendations = (Get-Content $extensionsPath -Raw | ConvertFrom-Json).recommendations
+    $vsixPath = Join-Path $RepoRoot "repo\vscode\repo.vsix"
+
+    Invoke-RepoCommand -FilePath "npm.cmd" -ArgumentList @("--workspace", "repo/vscode", "run", "package") -WorkingDirectory $RepoRoot
+
+    foreach ($editorCli in $EditorCliPaths) {
+        foreach ($extension in $recommendations) {
+            & $editorCli --install-extension $extension --force | Out-Null
+        }
+        & $editorCli --install-extension $vsixPath --force | Out-Null
+        Write-Step "Installed workspace extensions via $editorCli."
+    }
+}
+
+function Configure-GitSafeDirectories {
+    param([string]$RepoRoot)
+
+    & git config --global --add safe.directory $RepoRoot | Out-Null
+    $gitmodulesPath = Join-Path $RepoRoot ".gitmodules"
+    if (-not (Test-Path -LiteralPath $gitmodulesPath)) {
+        return
+    }
+
+    $submodulePaths = & git config -f $gitmodulesPath --get-regexp '^submodule\..*\.path$' 2>$null
+    foreach ($line in $submodulePaths) {
+        $parts = $line -split "\s+", 2
+        if ($parts.Count -eq 2 -and $parts[1]) {
+            & git config --global --add safe.directory (Join-Path $RepoRoot $parts[1]) | Out-Null
+        }
+    }
+}
+
+function Configure-GitKrakenWorkspace {
+    param([string]$RepoRoot)
+
+    $gkPath = Get-FirstCommandPath @("gk")
+    if (-not $gkPath) {
+        Write-Step "GitKraken CLI not on PATH yet; skipping workspace bootstrap."
+        return
+    }
+
+    & $gkPath auth status *> $null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Step "GitKraken CLI is not authenticated; skipping workspace bootstrap."
+        return
+    }
+
+    $workspaceName = $env:SEMIO_GITKRAKEN_WORKSPACE_NAME
+    $repos = [System.Collections.Generic.List[string]]::new()
+    $repos.Add($RepoRoot)
+
+    $gitmodulesPath = Join-Path $RepoRoot ".gitmodules"
+    if (Test-Path -LiteralPath $gitmodulesPath) {
+        $submodulePaths = & git config -f $gitmodulesPath --get-regexp '^submodule\..*\.path$' 2>$null
+        foreach ($line in $submodulePaths) {
+            $parts = $line -split "\s+", 2
+            if ($parts.Count -eq 2 -and $parts[1]) {
+                $repos.Add((Join-Path $RepoRoot $parts[1]))
+            }
+        }
+    }
+
+    $repoCsv = ($repos | Select-Object -Unique) -join ","
+    $infoOutput = & $gkPath ws info $workspaceName 2>$null | Out-String
+    if ($LASTEXITCODE -eq 0 -and $infoOutput -and -not ($infoOutput -match "no workspace with name")) {
+        $missing = $repos | Where-Object { $infoOutput -notmatch [Regex]::Escape($_) }
+        if ($missing.Count -gt 0) {
+            & $gkPath ws update $workspaceName --add-repos (($missing | Select-Object -Unique) -join ",") | Out-Null
+            & $gkPath ws refresh $workspaceName | Out-Null
+        }
+    } else {
+        & $gkPath ws create $workspaceName --add-repos $repoCsv | Out-Null
+        & $gkPath ws refresh $workspaceName | Out-Null
+    }
+    & $gkPath ws set $workspaceName | Out-Null
+    Write-Step "GitKraken workspace ready: $workspaceName."
+}
+#endregion 🔧Helpers
+
+$repoRoot = Get-RepoRoot
+Set-Location $repoRoot
+Refresh-CurrentProcessPath
+
+#region 🧰MachineInstall
+if (-not $SkipMachineInstall) {
+    Sync-WingetPackage -Id "Git.Git" -Label "Git"
+    Sync-WingetPackage -Id "GitHub.GitLFS" -Label "Git LFS"
+    Sync-WingetPackage -Id "GitHub.cli" -Label "GitHub CLI"
+    Sync-WingetPackage -Id "BurntSushi.ripgrep.MSVC" -Label "ripgrep"
+    Sync-WingetPackage -Id "jqlang.jq" -Label "jq"
+    Sync-WingetPackage -Id "SQLite.SQLite" -Label "SQLite"
+    Sync-WingetPackage -Id "OpenJS.NodeJS.LTS" -Label "Node.js 24 LTS"
+    Sync-WingetPackage -Id "GoLang.Go" -Label "Go"
+    Sync-WingetPackage -Id "Python.Python.3.14" -Label "Python 3.14"
+    Sync-WingetPackage -Id "astral-sh.uv" -Label "uv"
+    Sync-WingetPackage -Id "Rustlang.Rustup" -Label "rustup"
+    Sync-WingetPackage -Id "Microsoft.DotNet.SDK.8" -Label ".NET SDK 8.0"
+    Sync-WingetPackage -Id "Microsoft.DotNet.SDK.9" -Label ".NET SDK 9.0"
+    Sync-WingetPackage -Id "Microsoft.DotNet.SDK.10" -Label ".NET SDK 10.0"
+    Sync-WingetPackage -Id "Microsoft.VisualStudio.2022.BuildTools" -Label "Visual Studio Build Tools" -AdditionalArguments @("--override", "--wait --quiet --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
+    Sync-WingetPackage -Id "Axosoft.GitKraken" -Label "GitKraken Desktop"
+    Sync-WingetPackage -Id "GitKraken.cli" -Label "GitKraken CLI"
+    Sync-WingetPackage -Id "f3d-app.f3d" -Label "F3D"
+    Sync-WingetPackage -Id "Microsoft.VisualStudioCode" -Label "VS Code"
+    Sync-WingetPackage -Id "Microsoft.VisualStudioCode.CLI" -Label "VS Code CLI"
+    Set-UserPathPriority -PreferredEntries @(
+        (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314\Scripts"),
+        (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314"),
+        (Join-Path $env:LOCALAPPDATA "Programs\Python\Launcher"),
+        (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links"),
+        (Join-HomePath @(".local", "bin")),
+        (Join-HomePath @(".cargo", "bin"))
+    )
+    Refresh-CurrentProcessPath
+}
+#endregion 🧰MachineInstall
+
+#region 🗂️UserState
+@(
+    (Join-HomePath @(".claude")),
+    (Join-HomePath @(".codex")),
+    (Join-HomePath @(".config", "gh")),
+    (Join-HomePath @(".config", "cursor")),
+    (Join-HomePath @(".config", "antigravity")),
+    (Join-HomePath @(".config", "openai")),
+    (Join-HomePath @(".codeium", "windsurf")),
+    (Join-HomePath @(".gitkraken")),
+    (Join-HomePath @(".local", "share", "GitKrakenCLI")),
+    (Join-HomePath @(".local", "share", "gk")),
+    (Join-HomePath @(".cache", "ms-playwright")),
+    (Join-HomePath @(".cargo")),
+    (Join-HomePath @(".config", "F3D"))
+) | ForEach-Object { Ensure-Directory -Path $_ }
+
+$playwrightPath = Join-Path $repoRoot "node_modules\.cache\ms-playwright"
+Ensure-Directory -Path $playwrightPath
+Set-UserEnvironmentVariable -Name "DEVCONTAINER" -Value "false"
+Set-UserEnvironmentVariable -Name "DOTNET_CLI_TELEMETRY_OPTOUT" -Value "1"
+Set-UserEnvironmentVariable -Name "PLAYWRIGHT_BROWSERS_PATH" -Value $playwrightPath
+Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_WORKSPACE_NAME" -Value "semio"
+Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_AUTO_START" -Value "false"
+Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"
+Set-UserEnvironmentVariable -Name "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL" -Value ""
+Set-UserEnvironmentVariable -Name "EDITOR" -Value "code --wait"
+#endregion 🗂️UserState
+
+#region 🌐GlobalCliInstall
+if (-not $SkipGlobalCliInstall) {
+    Refresh-CurrentProcessPath
+    $npmPath = Get-CommandPathOrThrow -Label "npm" -Candidates @("npm.cmd")
+    $rustupPath = Get-CommandPathOrThrow -Label "rustup" -Candidates @("rustup.exe")
+    $uvPath = Get-CommandPathOrThrow -Label "uv" -Candidates @("uv.exe")
+
+    Invoke-RepoCommand -FilePath $npmPath -ArgumentList @("install", "-g", $script:NodePackageManager, "@google/gemini-cli", "typescript-language-server", "typescript", "pyright") -WorkingDirectory $repoRoot
+    Install-UvTool -ToolName "ruff" -UvPath $uvPath
+    Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("target", "add", "wasm32-unknown-unknown") -WorkingDirectory $repoRoot
+    $cargoConfigPath = Join-HomePath @(".cargo", "config.toml")
+    @"
+[target.wasm32-unknown-unknown]
+rustflags = ["--cfg", "getrandom_backend=wasm_js"]
+"@ | Set-Content -Path $cargoConfigPath -Encoding UTF8
+}
+#endregion 🌐GlobalCliInstall
+
+#region 🧱RepoBootstrap
+if (-not $SkipRepoBootstrap) {
+    Refresh-CurrentProcessPath
+    $npmPath = Get-CommandPathOrThrow -Label "npm" -Candidates @("npm.cmd")
+    $uvPath = Get-CommandPathOrThrow -Label "uv" -Candidates @("uv.exe")
+    $goPath = Get-CommandPathOrThrow -Label "go" -Candidates @("go.exe")
+    $dotnetPath = Get-CommandPathOrThrow -Label "dotnet" -Candidates @("dotnet.exe")
+
+    Configure-GitSafeDirectories -RepoRoot $repoRoot
+    Invoke-RepoCommand -FilePath $npmPath -ArgumentList @("install") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $uvPath -ArgumentList @("sync", "--python", $script:PythonKind) -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $uvPath -ArgumentList @("sync", "--python", $script:PythonKind) -WorkingDirectory (Join-Path $repoRoot "coda\assistant")
+    Invoke-RepoCommand -FilePath $goPath -ArgumentList @("build", "-o", (Join-Path $repoRoot "repo\cli\cli.exe"), "./repo/cli") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $dotnetPath -ArgumentList @("restore", "Monorepo.sln") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $npmPath -ArgumentList @("run", "git:setup") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $goPath -ArgumentList @("run", "./repo/cli", "configure", "--repo", $repoRoot) -WorkingDirectory $repoRoot
+    Configure-GitKrakenWorkspace -RepoRoot $repoRoot
+}
+#endregion 🧱RepoBootstrap
+
+#region 🎭Editors
+if (-not $SkipEditorInstall) {
+    Refresh-CurrentProcessPath
+    $editorCliPaths = @(
+        (Get-FirstCommandPath @("code", (Join-Path $env:LOCALAPPDATA "Programs\Microsoft VS Code\bin\code.cmd"))),
+        (Get-FirstCommandPath @("cursor")),
+        (Get-FirstCommandPath @("windsurf"))
+    ) | Where-Object { $_ } | Select-Object -Unique
+    Install-EditorExtensions -RepoRoot $repoRoot -EditorCliPaths $editorCliPaths
+}
+#endregion 🎭Editors
+
+#region 🎬Playwright
+if (-not $SkipPlaywrightInstall) {
+    Refresh-CurrentProcessPath
+    $npxPath = Get-CommandPathOrThrow -Label "npx" -Candidates @("npx.cmd")
+    Invoke-RepoCommand -FilePath $npxPath -ArgumentList @("playwright", "install", "chromium") -WorkingDirectory $repoRoot
+}
+#endregion 🎬Playwright
+
+Write-Step "Native bootstrap complete. Open a new shell to pick up the persisted PATH/env vars."

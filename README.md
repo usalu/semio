@@ -522,32 +522,28 @@ The recommended way to develop is using the devcontainer which provides a consis
 
 The devcontainer includes:
 
-- Node.js 22.x, Go 1.24, Python 3.13, .NET SDK 7.0/8.0, Rust
+- Node.js 24 LTS, Go 1.26, Python 3.14, .NET SDK 8.0/9.0/10.0, Rust 1.92
 - All required VS Code extensions
 - Pre-configured development environment
 - Port forwarding for all dev servers (3000, 4000, 4321, 5678, 6006, 2507)
 
-## 🪟 Windows Setup (Legacy) [↑](#-development)
+## 🪟 Windows Setup [↑](#-development)
 
-For a complete setup you need:
+Native Windows development is zero-touch through the checked-in bootstrap script:
 
-- Windows 10 or 11
-- [Visual Studio Code](https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user)
-- [Visual Studio 2022 Community](https://visualstudio.microsoft.com/de/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022)
-- [Rhino 8](https://www.rhino3d.com/download/rhino-for-windows/8/latest/)
-- Python 3.14
-- [uv](https://docs.astral.sh/uv/)
-- [Node](https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi)
-
-If you do not have Python installed, I recommend to install it over the [Microsoft Store](<(https://www.microsoft.com/store/productId/9NCVDN91XZQP?ocid=pdpshare)>) 🏪
-
-Afterwards you can install uv with this command:
-
-```bash
-irm https://astral.sh/uv/install.ps1 | iex
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .devcontainer/install-native.ps1
 ```
 
-Then you can run `npm run build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️️
+The script installs the same baseline toolchain the devcontainer provides on a fresh machine:
+
+- Git, Git LFS, GitHub CLI, ripgrep, jq, SQLite
+- Node.js 24 LTS + npm 11.7, Go 1.26, Python 3.14, uv, rustup, .NET SDK 8/9/10
+- GitKraken Desktop + CLI, F3D, VS Code + `code`
+- Gemini CLI, TypeScript LSP, Pyright
+- repo hooks, MCP client config, Python/Rust/Playwright setup, npm/uv dependencies, and the local repo VSIX
+
+After the bootstrap completes, open a new terminal and use the same repo commands as in the devcontainer. The script also keeps `PLAYWRIGHT_BROWSERS_PATH` on the repo-local shared cache so Playwright downloads stay warm across runs.
 
 ## 🪄 [AI](AGENTS.md) [↑](#-development-)
 

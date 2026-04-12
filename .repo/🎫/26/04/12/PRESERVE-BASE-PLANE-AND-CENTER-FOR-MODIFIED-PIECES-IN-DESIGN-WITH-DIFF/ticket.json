@@ -1,0 +1,9 @@
+{
+  "title": "Preserve Base Plane and Center for Modified Pieces in designWithDiff",
+  "status": "open",
+  "description": "When a designWithDiff is shown, modified pieces should keep their old center and planes and only be colored as updated. Currently designWithDiff applies new positions to modified pieces, which moves them. Fix designWithDiff so updated pieces retain base.plane and base.center while still applying other diff fields and being marked as Modified.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪e9500abc0ea14eb69e0b480f9a3ae3cc"
+  ]
+}

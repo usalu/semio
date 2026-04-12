@@ -83,6 +83,11 @@ TODO: Add roomie to discord for verification
 
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)
 
+## general
+
+The monorepo needs to work both in devcontainer but also native. Currently we are native. Complete the install powershell script that installs and sets up everything that would overthise be available in devcontainer. Both setups need to be 100% zero-touch config and work out-of-the-box. Update every framework to use the latest available stable versions (git, python, node, rust, go, etc). There are some exceptions e.g. net 8 is needed for semio grasshopper, remove net 7
+Make sure everything runs, builds, tests, etc on all platforms.
+
 Extend the monorepo to be multi-platform.
 All projects are mainly developed inside the devcontainer but still sometimes need native development.
 Everything MUST work zero-touch on Linux, Windows, Mac.
@@ -239,6 +244,8 @@ semio:
 
 The copy and paste function is not correct (adjust typescript for now and once we are done, I'll tell you to implement it for the remaining languages).
 - e.g. When selecting only one connected piece (t_f0_b_c0) in the source design, the diff doesnt show it anywhere. See algorithm board.
+
+Move in 3d is signicficantly more complicated than drag because the planes (hence frame of references are different). You need to convert a global vector into the connection local connection paramters which depends on the parent plane and the ports, etc. A simple x ->gap, y->shift, z->rise mapping is not working.
 
 move algorithm:
 - It is not vec but vector
@@ -533,6 +540,8 @@ There MUST be only one schema, no migrations or legacy api support.
 
 semio ui:
 
+When a designWithDiff is shown then the pieces should keep their old center and planes and only be colored as updated. Either the mistake is ui or semio. Make sure to fix it in the correct location.
+
 The Kit component should use all other components to display. E.g. a design should use semio/ui/Design, type semio/ui/Type, etc
 There should be buttons for navigation in front ov the navbar.
 When double clicking on a piece (scene or diagram) navigate to the respective design or type, etc.
@@ -581,6 +590,8 @@ Create a new bundle semio/ui that holds reusable ui components. Make sure that a
 ## 👤semio🖱️algorithms
 
 semio algorithms:
+It is just a clean visualization boad but some things are not right. The output MUST always have the diff applied (not withDiff but just applied). e.g. the output from flattenDesign still has connections in the diagram
+
 All boards are pure proxies to the native implemenations. There MUST be no additional domain logic. E.g. drag is showing the correct piece centers but somehow the connections are missing and the diff is showing the wrong information. You MUST refactor all boards to be 100% clean and just ui for calling the native functions.
 
 The drag algorithm is not working correctly.
@@ -667,6 +678,15 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 ## 👤semio🗃️sketchpad
 
 semio sketchpad:
+Add Open functionality to open synchronized kits. 
+Check the different folder kinds. Some are only available in native environments such as semio/desktop.
+E.g.
+file kit opens a file picker
+folder kit opens a folder picker
+remote kit asks for an url that then connects to a semio/server
+.
+Make sure that everything is tests end-to-end. Extend semio if necessary.
+
 Yjs-based logic and implementation needs to dissapear completly. You need to generalize the api. Right now, you mostly renamed Y to R. You MUST NOT rename but structurally refactor. You MUST NOT use the Array and Map based primitivies from Yjs as abstraction. Those are yjs internal impelemntation details. Central is that a kit can be synchronized. The what is important not the how (using primitive maps and arrays such as yjs for kit and s3 for file, using just a single json for everything including blobled files, or using a sqlite for kit and actual files for files)
 The term `yjs` should not appear anywhere in Sketchpad after the refactor.
 This is a huge refactor. Plan it well and be through.

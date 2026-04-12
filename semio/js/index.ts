@@ -5328,6 +5328,71 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string,
   const backward = inverseDesignDiff(design, delRes.change);
   return operationOk({ forward: delRes.change, backward }, delRes.warnings, delRes.infos);
 };
+
+
+/**
+ * Resolves {@link Type} and {@link Connector} from a kit the same way {@link flattenDesign} does.
+ * Specs: Used when move needs parent connector frames from kit types.
+ **/
+const buildConnectorResolverFromKit = (
+  kit: Kit,
+): { getType: (typeGuid: string) => Type | undefined; getConnector: (type: Type | undefined, connectorGuid: string | undefined) => Connector | undefined } => {
+  const typesDict: { [key: string]: Type } = {};
+  (kit.types ?? []).forEach((t) => {
+    typesDict[t.guid] = t;
+  });
+  const getType = (typeGuid: string): Type | undefined => typesDict[typeGuid];
+  const getConnector = (type: Type | undefined, connectorGuid: string | undefined): Connector | undefined => {
+    if (!type) return undefined;
+
+    if (!connectorGuid) {
+      if (type.connectors && type.connectors.length > 0) {
+        return type.connectors[0];
+      }
+
+      if (type.parent?.guid) {
+        const parentType = getType(type.parent.guid);
+        return getConnector(parentType, connectorGuid);
+      }
+      return undefined;
+    }
+
+    if (type.connectors && type.connectors.length > 0) {
+      const connector = type.connectors.find((p) => p.guid === connectorGuid);
+      if (connector) return connector;
+    }
+
+    if (type.parent?.guid) {
+      const parentType = getType(type.parent.guid);
+      const connector = getConnector(parentType, connectorGuid);
+      if (connector) return connector;
+    }
+
+    if (type.connectors && type.connectors.length > 0) {
+      return type.connectors[0];
+    }
+
+    return undefined;
+  };
+  return { getType, getConnector };
+};
+
+/**
+ * Parent-connector rotation and unit world axes for gap (local +Y), shift (+X), rise (+Z) before child orientation, matching {@link computeChildPlane}.
+ **/
+const connectionPlacementTranslationBasis = (
+  parentConnector: Connector,
+): { gap: THREE.Vector3; shift: THREE.Vector3; raise: THREE.Vector3; parentRotationT: THREE.Matrix4 } => {
+  const parentDirection = vectorToThree(parentConnector.direction).normalize();
+  const yAxis = new THREE.Vector3(0, 1, 0);
+  const parentConnectorQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection);
+  const parentRotationT = new THREE.Matrix4().makeRotationFromQuaternion(parentConnectorQuat);
+  const gapDirection = new THREE.Vector3(0, 1, 0).applyMatrix4(parentRotationT).normalize();
+  const shiftDirection = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT).normalize();
+  const raiseDirection = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT).normalize();
+  return { gap: gapDirection, shift: shiftDirection, raise: raiseDirection, parentRotationT };
+};
+
 // ◻️computeChildPlane computes a child plane from parent plane and connection parameters.
 const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector, connection: Connection): Plane => {
   const parentMatrix = planeToMatrix(parentPlane);
@@ -5357,13 +5422,7 @@ const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, child
 
   const directionT = new THREE.Matrix4().makeRotationFromQuaternion(alignQuat);
 
-  const yAxis = new THREE.Vector3(0, 1, 0);
-  const parentConnectorQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection);
-  const parentRotationT = new THREE.Matrix4().makeRotationFromQuaternion(parentConnectorQuat);
-
-  const gapDirection = new THREE.Vector3(0, 1, 0).applyMatrix4(parentRotationT);
-  const shiftDirection = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT);
-  const raiseDirection = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT);
+  const { gap: gapDirection, shift: shiftDirection, raise: raiseDirection, parentRotationT } = connectionPlacementTranslationBasis(parentConnector);
   const turnAxis = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT);
   const tiltAxis = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT);
 
@@ -5404,7 +5463,6 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
   if (!design) {
     return operationErr([{ code: "flatten.design-not-found", message: `Design ${designId} not found in kit ${kit.name}` }]);
   }
-  const types = kit.types ?? [];
 
   if (!design.pieces || design.pieces.length === 0) {
     return operationOk({ forward: {}, backward: {} }, [], [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }]);
@@ -5414,45 +5472,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
   const infos: OperationNote[] = [];
   const placementErrors: OperationNote[] = [];
 
-  const typesDict: { [key: string]: Type } = {};
-  types.forEach((t) => {
-    typesDict[t.guid] = t;
-  });
-  const getType = (typeGuid: string): Type | undefined => {
-    return typesDict[typeGuid];
-  };
-  const getConnector = (type: Type | undefined, connectorGuid: string | undefined): Connector | undefined => {
-    if (!type) return undefined;
-
-    if (!connectorGuid) {
-      if (type.connectors && type.connectors.length > 0) {
-        return type.connectors[0];
-      }
-
-      if (type.parent?.guid) {
-        const parentType = getType(type.parent.guid);
-        return getConnector(parentType, connectorGuid);
-      }
-      return undefined;
-    }
-
-    if (type.connectors && type.connectors.length > 0) {
-      const connector = type.connectors.find((p) => p.guid === connectorGuid);
-      if (connector) return connector;
-    }
-
-    if (type.parent?.guid) {
-      const parentType = getType(type.parent.guid);
-      const connector = getConnector(parentType, connectorGuid);
-      if (connector) return connector;
-    }
-
-    if (type.connectors && type.connectors.length > 0) {
-      return type.connectors[0];
-    }
-
-    return undefined;
-  };
+  const { getType, getConnector } = buildConnectorResolverFromKit(kit);
 
   const flatDesign: Design = JSON.parse(JSON.stringify(design));
   if (!flatDesign.pieces) flatDesign.pieces = [];
@@ -6083,8 +6103,8 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
  * A piece's parent connection is the connection where it is the connecting (child) piece.
  **/
 /**
- * Placement deltas in the piece plane frame: gap along yAxis, shift along xAxis, rise along the plane normal.
- * On parent connections, shift and gap apply as u and v deltas (same as {@link dragPiecesInDesign} with offset { u: shift, v: gap }); rise adds the connection rise delta when non-zero.
+ * Placement deltas in the **selected piece plane** frame: gap along yAxis, shift along xAxis, rise along the plane normal.
+ * For connected pieces, {@link movePiecesInDesign} turns that into world translation, projects onto the parent-connector gap/shift/rise frame (same as {@link computeChildPlane}), then puts the residual on the parent piece plane as u/v.
  **/
 export type MoveVector = { gap: number; shift: number; rise: number };
 
@@ -6151,11 +6171,55 @@ export const moveTranslationWorldFromPiecePlane = (plane: Plane, vector: MoveVec
   return { x: t.x, y: t.y, z: t.z };
 };
 
+const identityPlaneForStructuralMove = (): Plane => ({
+  origin: { x: 0, y: 0, z: 0 },
+  xAxis: { x: 1, y: 0, z: 0 },
+  yAxis: { x: 0, y: 1, z: 0 },
+});
+
+/**
+ * Converts a move vector (in the connecting piece plane) into connection parameter deltas using the parent connector translation basis and parent plane for residual u/v.
+ * Specs: Aligns with {@link computeChildPlane} gap/shift/rise axes; u/v absorb the in-plane residual on the parent's xAxis/yAxis.
+ **/
+const connectionDiffFromStructuralMoveVector = (
+  parentPlane: Plane,
+  parentConnector: Connector,
+  childPlane: Plane | undefined,
+  vector: MoveVector,
+): ConnectionDiff => {
+  const child = childPlane ?? identityPlaneForStructuralMove();
+  const tw = moveTranslationWorldFromPiecePlane(child, vector);
+  const t = vectorToThree(tw);
+  const { gap: g, shift: s, raise: r } = connectionPlacementTranslationBasis(parentConnector);
+  const dgap = t.dot(g);
+  const dshift = t.dot(s);
+  const drise = t.dot(r);
+  const res = t.clone().addScaledVector(g, -dgap).addScaledVector(s, -dshift).addScaledVector(r, -drise);
+  const px = vectorToThree(parentPlane.xAxis);
+  const py = vectorToThree(parentPlane.yAxis);
+  const diff: ConnectionDiff = {};
+  const eps = 1e-9;
+  if (Math.abs(dgap) > eps) diff.gap = dgap;
+  if (Math.abs(dshift) > eps) diff.shift = dshift;
+  if (Math.abs(drise) > eps) diff.rise = drise;
+  if (px.lengthSq() > 1e-24 && py.lengthSq() > 1e-24) {
+    const pxN = px.clone().normalize();
+    const pyN = py.clone().normalize();
+    const du = res.dot(pxN);
+    const dv = res.dot(pyN);
+    if (Math.abs(du) > eps) diff.u = du;
+    if (Math.abs(dv) > eps) diff.v = dv;
+  }
+  return diff;
+};
+
 /**
  * Like {@link dragPiecesInDesign}: same fixed vs connected selection and descendant suppression.
- * Root movers get plane origin translation from {@link moveTranslationWorldFromPiecePlane}; connected movers get parent-connection diffs using the same fields as drag (u ← shift, v ← gap) plus optional rise on the connection.
+ * Root movers get plane origin translation from {@link moveTranslationWorldFromPiecePlane}.
+ * Connected movers need {@link buildConnectorResolverFromKit}: world delta from the child plane is split across parent-connector gap/shift/rise and residual u/v on the parent plane.
  **/
-export const movePiecesInDesign = (design: Design, pieces: Design, vector: MoveVector): DesignDiff => {
+export const movePiecesInDesign = (kit: Kit, design: Design, pieces: Design, vector: MoveVector): DesignDiff => {
+  const { getType, getConnector } = buildConnectorResolverFromKit(kit);
   const { selectedGuids, parentMap, pieceMap, fixedGuids } = buildDragMoveStructuralContext(design, pieces);
   const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
   for (const guid of fixedGuids) {
@@ -6175,8 +6239,17 @@ export const movePiecesInDesign = (design: Design, pieces: Design, vector: MoveV
     if (pieceHasSelectedAncestorInDragMoveTree(guid, selectedGuids, parentMap)) continue;
     const parent = parentMap.get(guid);
     if (!parent) continue;
-    const connDiff: ConnectionDiff = { u: vector.shift, v: vector.gap };
-    if (vector.rise !== 0) connDiff.rise = vector.rise;
+    const connection = design.connections?.find((c) => c.guid === parent.connectionGuid);
+    if (!connection) continue;
+    const parentPiece = pieceMap.get(parent.parentGuid);
+    const childPiece = pieceMap.get(guid);
+    if (!parentPiece?.type?.guid || !childPiece?.type?.guid) continue;
+    const parentType = getType(parentPiece.type.guid);
+    const parentConnector = getConnector(parentType, connection.connected.connector?.guid);
+    if (!parentConnector) continue;
+    const parentPlane = parentPiece.plane ?? identityPlaneForStructuralMove();
+    const connDiff = connectionDiffFromStructuralMoveVector(parentPlane, parentConnector, childPiece.plane, vector);
+    if (Object.keys(connDiff).length === 0) continue;
     connectionUpdates.push({ connection: { guid: parent.connectionGuid }, diff: connDiff });
   }
   const diff: DesignDiff = {};
@@ -15370,12 +15443,13 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   });
 
   describe("Move", () => {
-    it("same drag fixture: plane origins for roots; parent connection u v match drag (shift, gap)", () => {
+    it("same drag fixture: roots get plane translation; connected mover gets connector-frame split (gap/shift/rise + residual u/v)", () => {
+      const kit = MetabolismKit as unknown as Kit;
       const design = DragDesign as unknown as Design;
       const pieces = DragPieces as unknown as Design;
       const vector = MoveVector as { gap: number; shift: number; rise: number };
       const expectedDiff = MoveDiffDesign as any;
-      const computedDiff = movePiecesInDesign(design, pieces, vector);
+      const computedDiff = movePiecesInDesign(kit, design, pieces, vector);
       const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
       const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) => a.piece.guid.localeCompare(b.piece.guid));
       expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);
@@ -15392,34 +15466,34 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);
       for (let i = 0; i < computedConnUpdates.length; i++) {
         expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);
-        expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);
-        expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);
+        const ed = expectedConnUpdates[i].diff;
+        const cd = computedConnUpdates[i].diff;
+        for (const key of ["gap", "shift", "rise", "u", "v"] as const) {
+          if (ed[key] !== undefined) expect(cd[key]).toBeCloseTo(ed[key] as number, 8);
+        }
       }
       const dragParity = dragPiecesInDesign(design, pieces, { u: vector.shift, v: vector.gap });
       const dragConn = (dragParity.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
       expect(computedConnUpdates.map((c) => c.connection.guid)).toEqual(dragConn.map((c) => c.connection.guid));
-      for (let i = 0; i < computedConnUpdates.length; i++) {
-        expect(computedConnUpdates[i].diff.u).toBe(dragConn[i].diff.u);
-        expect(computedConnUpdates[i].diff.v).toBe(dragConn[i].diff.v);
-      }
       const dragPiecesUp = (dragParity.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
       expect(computedPieceUpdates.map((p) => p.piece.guid)).toEqual(dragPiecesUp.map((p) => p.piece.guid));
     });
 
-    it("non-zero rise adds connection rise delta; u v still match drag offset (shift, gap)", () => {
+    it("vertical parent connector: world move decomposes into shift, gap, rise on connection (not diagram u/v only)", () => {
+      const kit = MetabolismKit as unknown as Kit;
       const design = DragDesign as unknown as Design;
       const pieces = DragPieces as unknown as Design;
       const vector = { gap: 2, shift: -1, rise: 0.5 };
-      const diff = movePiecesInDesign(design, pieces, vector);
+      const diff = movePiecesInDesign(kit, design, pieces, vector);
       const dragParity = dragPiecesInDesign(design, pieces, { u: vector.shift, v: vector.gap });
       const moveConn = (diff.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
       const dragConn = (dragParity.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
       expect(moveConn.length).toBe(dragConn.length);
       for (let i = 0; i < moveConn.length; i++) {
         expect(moveConn[i].connection.guid).toBe(dragConn[i].connection.guid);
-        expect(moveConn[i].diff.u).toBe(dragConn[i].diff.u);
-        expect(moveConn[i].diff.v).toBe(dragConn[i].diff.v);
-        expect(moveConn[i].diff.rise).toBe(0.5);
+        expect(moveConn[i].diff.gap).toBeCloseTo(0.5, 8);
+        expect(moveConn[i].diff.shift).toBeCloseTo(-1, 8);
+        expect(moveConn[i].diff.rise).toBeCloseTo(-2, 8);
       }
     });
   });

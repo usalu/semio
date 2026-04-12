@@ -1,0 +1,9 @@
+{
+  "title": "Add Open Functionality to Sketchpad for Synchronized Kits",
+  "status": "open",
+  "description": "Add Open functionality to the sketchpad to open synchronized kits. Implement different folder kinds: file kit opens a file picker, folder kit opens a folder picker, remote kit asks for a URL that connects to semio/server. Some folder kinds are only available in native environments such as semio/desktop. Make sure everything is tested end-to-end. Extend semio if necessary.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e599dc4a7b31481fa2e66c8349993d79"
+  ]
+}

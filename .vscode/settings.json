@@ -48,7 +48,7 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "always"
   },
-  "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -67,7 +67,7 @@
   "python.testing.pytestArgs": [
     "."
   ],
-  "python.testing.cwd": "${containerWorkspaceFolder}",
+  "python.testing.cwd": "${workspaceFolder}",
   "python.analysis.languageServerMode": "full",
   "sqltools.useNodeRuntime": true,
   "sqltools.connections": [

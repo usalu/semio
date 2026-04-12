@@ -473,6 +473,210 @@ exit 0
 	})
 }
 
+func TestCodexEditorProviderConfigureMergesMcpServers(t *testing.T) {
+	repoRoot := t.TempDir()
+	homeDir := t.TempDir()
+	t.Setenv("HOME", homeDir)
+	t.Setenv("USERPROFILE", homeDir)
+
+	codexTemplateDir := filepath.Join(repoRoot, ".codex")
+	if err := os.MkdirAll(codexTemplateDir, 0755); err != nil {
+		t.Fatalf("failed to create repo codex dir: %v", err)
+	}
+	repoCliDir := filepath.Join(repoRoot, "repo", "cli")
+	if err := os.MkdirAll(repoCliDir, 0755); err != nil {
+		t.Fatalf("failed to create repo cli dir: %v", err)
+	}
+	semioEngineDir := filepath.Join(repoRoot, "semio", "engine")
+	if err := os.MkdirAll(semioEngineDir, 0755); err != nil {
+		t.Fatalf("failed to create semio engine dir: %v", err)
+	}
+
+	repoBinaryName := "cli"
+	if runtime.GOOS == "windows" {
+		repoBinaryName += ".exe"
+	}
+	repoBinaryPath := filepath.Join(repoCliDir, repoBinaryName)
+	if err := os.WriteFile(repoBinaryPath, []byte("stub"), 0755); err != nil {
+		t.Fatalf("failed to create repo cli binary: %v", err)
+	}
+
+	template := `# Codex MCP Server Configuration
+personality = "ignored-template-value"
+
+[mcp_servers.repo]
+command = "go"
+args = ["run", "./repo/cli", "mcp"]
+enabled = true
+
+[mcp_servers.semio]
+command = "uv"
+args = ["--directory", "semio/engine", "run", "main.py", "--mcp-stdio"]
+enabled = true
+`
+	if err := os.WriteFile(filepath.Join(codexTemplateDir, "config.toml"), []byte(template), 0644); err != nil {
+		t.Fatalf("failed to write repo codex template: %v", err)
+	}
+
+	userCodexDir := filepath.Join(homeDir, ".codex")
+	if err := os.MkdirAll(userCodexDir, 0755); err != nil {
+		t.Fatalf("failed to create user codex dir: %v", err)
+	}
+	existing := "personality = \"pragmatic\"\nmodel = \"gpt-5.4\"\n\n[mcp_servers.repo]\ncommand = \"broken\"\nargs = [\"old\"]\n"
+	if err := os.WriteFile(filepath.Join(userCodexDir, "config.toml"), []byte(existing), 0644); err != nil {
+		t.Fatalf("failed to seed user codex config: %v", err)
+	}
+
+	provider := &CodexEditorProvider{}
+	if err := provider.Configure(repoRoot); err != nil {
+		t.Fatalf("configure failed: %v", err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(userCodexDir, "config.toml"))
+	if err != nil {
+		t.Fatalf("failed to read configured codex config: %v", err)
+	}
+	text := string(data)
+	if !strings.Contains(text, "personality = \"pragmatic\"") || !strings.Contains(text, "model = \"gpt-5.4\"") {
+		t.Fatalf("expected existing user settings to be preserved, got:\n%s", text)
+	}
+	if strings.Contains(text, "command = \"broken\"") {
+		t.Fatalf("expected repo server block to be replaced, got:\n%s", text)
+	}
+	if !strings.Contains(text, fmt.Sprintf("command = %q", repoBinaryPath)) {
+		t.Fatalf("expected repo command to use compiled cli binary, got:\n%s", text)
+	}
+	if !strings.Contains(text, fmt.Sprintf("cwd = %q", repoRoot)) {
+		t.Fatalf("expected codex config to set repo root cwd, got:\n%s", text)
+	}
+	if !strings.Contains(text, fmt.Sprintf("%q", semioEngineDir)) {
+		t.Fatalf("expected relative --directory arguments to be normalized, got:\n%s", text)
+	}
+}
+
+func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
+	repoRoot := findTestRepoRoot(".")
+
+	cases := []struct {
+		name              string
+		path              string
+		requiredFragments []string
+		forbiddenFragments []string
+	}{
+		{
+			name: "codex template uses coda assistant",
+			path: filepath.Join(repoRoot, ".codex", "config.toml"),
+			requiredFragments: []string{
+				`"--directory", "semio/engine", "run", "main.py", "--mcp-stdio"`,
+				`"--directory", "coda/assistant", "run", "main.py", "--mcp-stdio"`,
+			},
+			forbiddenFragments: []string{
+				"coda/engine",
+				"coda.py",
+			},
+		},
+		{
+			name: "kiro settings stay repo relative",
+			path: filepath.Join(repoRoot, ".kiro", "settings", "mcp.json"),
+			requiredFragments: []string{
+				`"semio/engine"`,
+				`"coda/assistant"`,
+				`"main.py"`,
+			},
+			forbiddenFragments: []string{
+				"/workspaces/semio/",
+				"coda/engine",
+				"coda.py",
+			},
+		},
+		{
+			name: "kiro semio agent uses coda assistant",
+			path: filepath.Join(repoRoot, ".kiro", "agents", "semio.json"),
+			requiredFragments: []string{
+				`"semio/engine"`,
+				`"coda/assistant"`,
+				`"main.py"`,
+			},
+			forbiddenFragments: []string{
+				"coda/engine",
+				"coda.py",
+			},
+		},
+		{
+			name: "devcontainer post-create antigravity config uses coda assistant",
+			path: filepath.Join(repoRoot, ".devcontainer", "post-create.sh"),
+			requiredFragments: []string{
+				"/workspaces/semio/semio/engine",
+				"/workspaces/semio/coda/assistant",
+				"main.py",
+			},
+			forbiddenFragments: []string{
+				"/workspaces/semio/coda/engine",
+				"coda.py",
+			},
+		},
+		{
+			name: "native bootstrap script performs repo bootstrap",
+			path: filepath.Join(repoRoot, ".devcontainer", "install-native.ps1"),
+			requiredFragments: []string{
+				"PLAYWRIGHT_BROWSERS_PATH",
+				`$script:PythonKind = "3.14"`,
+				`Sync-WingetPackage -Id "Microsoft.DotNet.SDK.10" -Label ".NET SDK 10.0"`,
+				`Sync-WingetPackage -Id "Microsoft.VisualStudio.2022.BuildTools" -Label "Visual Studio Build Tools"`,
+				`Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"`,
+				`@("run", "./repo/cli", "configure", "--repo", $repoRoot)`,
+				`@("playwright", "install", "chromium")`,
+				`@("run", "git:setup")`,
+			},
+			forbiddenFragments: []string{
+				`Microsoft.DotNet.SDK.7`,
+			},
+		},
+		{
+			name: "devcontainer excludes dotnet 7 and restores monorepo solution",
+			path: filepath.Join(repoRoot, ".devcontainer", "devcontainer.json"),
+			requiredFragments: []string{
+				`"version": "1.26"`,
+				`"version": "2.53"`,
+				`"additionalVersions": "9.0 10.0"`,
+			},
+			forbiddenFragments: []string{
+				`7.0`,
+			},
+		},
+		{
+			name: "devcontainer post-create restores monorepo solution",
+			path: filepath.Join(repoRoot, ".devcontainer", "post-create.sh"),
+			requiredFragments: []string{
+				"dotnet restore Monorepo.sln",
+			},
+			forbiddenFragments: []string{
+				"dotnet restore net/Semio.sln",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			data, err := os.ReadFile(tc.path)
+			if err != nil {
+				t.Fatalf("failed to read %s: %v", tc.path, err)
+			}
+			text := string(data)
+			for _, fragment := range tc.requiredFragments {
+				if !strings.Contains(text, fragment) {
+					t.Fatalf("expected %s to contain %q", tc.path, fragment)
+				}
+			}
+			for _, fragment := range tc.forbiddenFragments {
+				if strings.Contains(text, fragment) {
+					t.Fatalf("expected %s to exclude %q", tc.path, fragment)
+				}
+			}
+		})
+	}
+}
+
 // 📌#region 🔑Semio Repo ID Conversion
 func TestGoalPathToSemioID(t *testing.T) {
 	cases := []struct {

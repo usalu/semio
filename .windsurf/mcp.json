@@ -9,8 +9,10 @@
       "disabled": false
     },
     "repo": {
-      "command": "./repo/cli/cli",
+      "command": "go",
       "args": [
+        "run",
+        "./repo/cli",
         "mcp"
       ],
       "disabled": false

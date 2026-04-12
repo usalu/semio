@@ -373,6 +373,19 @@ install_gitkraken_cli
 configure_gitkraken_workspace
 install_f3d
 
+#region 🔖RepoConfigure
+echo "🔧 Syncing repo hook and MCP configuration..."
+if [ -x "$REPO_ROOT/repo/cli/cli" ]; then
+  if "$REPO_ROOT/repo/cli/cli" configure --repo "$REPO_ROOT"; then
+    echo "✅ Repo hook and MCP configuration synced."
+  else
+    echo "⚠️  Repo configure failed, continuing without blocking attach."
+  fi
+else
+  echo "⚠️  Repo CLI binary not found, skipping repo configure."
+fi
+#endregion 🔖RepoConfigure
+
 #region 🔖InstallExtension
 if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
   exec 201>"$INSTALL_LOCK_FILE"

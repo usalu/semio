@@ -1116,7 +1116,7 @@ const DEFAULT_DIAGRAM_PADDING = 12;
 const DEFAULT_DIAGRAM_PIECE_RADIUS = 0.5;
 const DIAGRAM_PIECE_HOVER_RADIUS_EXTRA = 0.06;
 const DIAGRAM_PIECE_SELECTED_RADIUS_EXTRA = 0.12;
-const DEFAULT_DIAGRAM_STROKE_WIDTH = 1;
+const DEFAULT_DIAGRAM_STROKE_WIDTH = 2;
 const DEFAULT_DIAGRAM_ZOOM = 1;
 /** Lower bound for wheel zoom and fit-to-bounds (smaller = zoom out further). */
 const MIN_DIAGRAM_ZOOM = 0.15;
@@ -5687,6 +5687,29 @@ if (import.meta.vitest) {
       const flattened = mcpFlattenDesignForSemioSurface(design, kit, "design");
       const hasPlanes = (flattened.pieces ?? []).some((p) => p.plane && p.center);
       expect(hasPlanes).toBe(true);
+    });
+
+    it("flattens the diffed design instead of flattening first and applying the diff later", () => {
+      const design = {
+        guid: "dg-1",
+        pieces: [{ guid: "p-1" }],
+        connections: [],
+      } as unknown as Design;
+
+      const kit = {
+        name: "K",
+        types: [],
+        designs: [],
+      } as unknown as Kit;
+
+      const flattened = mcpFlattenDesignForSemioSurface(design, kit, "diagram", {
+        pieces: {
+          updated: [{ piece: { guid: "p-1" }, diff: { center: { u: 12, v: -4 } } }],
+        },
+      } as unknown as DesignDiff);
+
+      expect(flattened.pieces?.[0]?.center).toEqual({ u: 12, v: -4 });
+      expect(flattened.pieces?.[0]?.plane).toBeTruthy();
     });
   });
 
