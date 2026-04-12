@@ -9250,9 +9250,11 @@ def _applyDesignDiff(base: dict, diff: dict) -> dict:
 
 
 def designWithDiffDict(base: dict, diff: dict) -> dict:
-    """🔖Create a mixed design keeping old entities with diff status annotations.
-    annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added),
-    keep deleted entities in place marked as removed, and append added entities marked as added.
+    """🔖Create a mixed design applying diff changes and annotating with diff status.
+    Annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added).
+    Updated entities are applied (new positions/values) and marked as modified.
+    Removed entities are kept in place marked as removed.
+    Added entities are appended marked as added.
     """
     import copy
 
@@ -9265,23 +9267,28 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
 
     pieces_diff = diff.get("pieces", {})
     removed_piece_guids = {r["guid"] for r in pieces_diff.get("removed", [])}
-    updated_piece_guids = {u.get("piece", {}).get("guid") for u in pieces_diff.get("updated", [])}
+    updated_piece_map = {u.get("piece", {}).get("guid"): u.get("diff", {}) for u in pieces_diff.get("updated", [])}
 
     conns_diff = diff.get("connections", {})
     removed_conn_guids = {r["guid"] for r in conns_diff.get("removed", [])}
-    updated_conn_guids = {u.get("connection", {}).get("guid") for u in conns_diff.get("updated", [])}
+    updated_conn_map = {u.get("connection", {}).get("guid"): u.get("diff", {}) for u in conns_diff.get("updated", [])}
 
     result_pieces = []
     for p in base.get("pieces", []):
         pc = copy.deepcopy(p)
-        attrs = pc.get("attributes", []) or []
         if pc["guid"] in removed_piece_guids:
+            attrs = pc.get("attributes", []) or []
             attrs.append(status_attr("removed"))
-        elif pc["guid"] in updated_piece_guids:
+            pc["attributes"] = attrs
+        elif pc["guid"] in updated_piece_map:
+            pc = _applyPieceDiff(pc, updated_piece_map[pc["guid"]])
+            attrs = pc.get("attributes", []) or []
             attrs.append(status_attr("modified"))
+            pc["attributes"] = attrs
         else:
+            attrs = pc.get("attributes", []) or []
             attrs.append(status_attr("unchanged"))
-        pc["attributes"] = attrs
+            pc["attributes"] = attrs
         result_pieces.append(pc)
     for added in pieces_diff.get("added", []):
         ac = copy.deepcopy(added)
@@ -9293,14 +9300,19 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
     result_conns = []
     for c in base.get("connections", []):
         cc = copy.deepcopy(c)
-        attrs = cc.get("attributes", []) or []
         if cc["guid"] in removed_conn_guids:
+            attrs = cc.get("attributes", []) or []
             attrs.append(status_attr("removed"))
-        elif cc["guid"] in updated_conn_guids:
+            cc["attributes"] = attrs
+        elif cc["guid"] in updated_conn_map:
+            cc = _applyConnectionDiff(cc, updated_conn_map[cc["guid"]])
+            attrs = cc.get("attributes", []) or []
             attrs.append(status_attr("modified"))
+            cc["attributes"] = attrs
         else:
+            attrs = cc.get("attributes", []) or []
             attrs.append(status_attr("unchanged"))
-        cc["attributes"] = attrs
+            cc["attributes"] = attrs
         result_conns.append(cc)
     for added in conns_diff.get("added", []):
         ac = copy.deepcopy(added)
@@ -11003,7 +11015,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except (json.JSONDecodeError, TypeError):
+                                                    except json.JSONDecodeError, TypeError:
                                                         pass
                                         if flatParentCenter is None:
                                             for attr in externalParent.get("attributes", []):
@@ -11011,7 +11023,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except (json.JSONDecodeError, TypeError):
+                                                    except json.JSONDecodeError, TypeError:
                                                         pass
                                         if flatParentCenter is None and externalParent.get("center"):
                                             flatParentCenter = externalParent["center"]

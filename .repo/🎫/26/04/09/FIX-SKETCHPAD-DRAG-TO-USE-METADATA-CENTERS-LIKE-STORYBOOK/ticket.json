@@ -1,0 +1,14 @@
+{
+  "title": "Fix Sketchpad Drag to Use Metadata Centers Like Storybook",
+  "status": "closed",
+  "summary": "Two bugs fixed in onNodeDragStop. (1) dragPiecesInDesign was called with the raw design whose pieces may have no center or relative centers — now builds a flatDesign with metadata-resolved absolute centers before calling it, matching the storybook Drag story which uses a flattened baseDesign. (2) Connection diff was incorrectly accumulated as (originalConn.u + offset.u) before passing to updateConnections, which double-applies the original offset since applyConnectionDiff already adds diff.u to base.u — now passes cu.diff directly.",
+  "files": ["semio/sketchpad/index.tsx"],
+  "description": "Sketchpad drag does not work correctly because onNodeDragStop passes the raw design to dragPiecesInDesign, but the raw design may have pieces with no center or relative centers. The storybook Drag story uses a flattened design (with absolute centers for all pieces). The fix: build a flat design using the existing metadata map (which has resolved absolute centers) before calling dragPiecesInDesign, so fixed pieces get correct center updates.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1307"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪9a1b931a97814b168523173b108d17c9"
+  ]
+}

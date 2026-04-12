@@ -1,11 +1,13 @@
 {
   "title": "Fix Sketchpad Desktop Dev Startup",
-  "emoji": "🔧",
   "status": "closed",
   "description": "Get sketchpad desktop dev running. Currently failing with TypeScript config errors: \"failed to resolve 'extends':'semio/js/tsconfig.json'\" and missing main.js build output.",
-  "summary": "Bulk close",
+  "summary": "Bound the sketchpad Vite dev server to 0.0.0.0 so the canonical 127.0.0.1:5173 startup path works again, added an in-file regression test for the dev host/port config, verified the dev server served both localhost and 127.0.0.1, and then stopped the live dev server on request.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/286"
   },
-  "goal": "🎯r2602🎯runningsketchpad"
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪9b5ca9f85159415b8c1ce47be54383ac"
+  ]
 }

@@ -80,6 +80,7 @@ export {
   SearchIcon as SearchIcon,
   MousePointer2 as SelectToolIcon,
   Settings as SettingsIcon,
+  RotateCcw as ResetIcon,
   SkipBack as SkipBackIcon,
   SkipForward as SkipForwardIcon,
   Smartphone as SmartphoneIcon,

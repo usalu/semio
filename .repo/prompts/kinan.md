@@ -1,5 +1,106 @@
 
 
+Refine the shared semio/sketchpad tree spacing so that whenever a sibling transition goes from a leaf/property row to an expandable/group row at the same depth, insert one empty-row-sized gap before the group row. Apply this generically based on row kind and sibling transition, not by field names. Keep compact spacing within consecutive property rows, preserve hierarchy, tree lines, property row/value-column layout, and actions, and do not hardcode specific sections.
+
+
+default should illustrate compatable connectors in the entire design in semio colors 
+when selected a single connector all other connectors grey out and it gets highlighted and show the compatible and incompatible connectors in the design in semio red/green
+
+
+
+
+
+----------------------------------------------------
+
+Implement undo/redo in this repo with a minimal, production-safe patch.
+
+First verify whether repo-native undo/redo already exists,integrate this architecture into that existing flow and fill only missing pieces;
+
+Fit it at the real store/command mutation boundary:
+
+- transaction.start(): open current transaction
+- edits are repo-native do/undo diffs added to current transaction
+- transaction.finalize(): squashing multiple transactions until transact
+- undo(): move past -> redo and apply undo
+- redo(): move redo -> past and apply dodddd
+
+Rules:
+- preserve existing transaction merge behavior unless clearly broken
+- never record during undo/redo/abort
+- only track reversible source-of-truth state
+- keep the patch minimal, preserve exports/types/public behavior, avoid unrelated refactors
+
+
+
+
+-------------------------------------------------------------------------------------------------------------
+Implement undo/redo with reversible changes, grouped into Transactions, stored in History. `transaction.start()` opens a Transaction, changes are appended to it, `transaction.finalize()` commits it to History, `transaction.abort()` reverts it in reverse order and discards it. `undo()` reverts the last committed Transaction in reverse order. `redo()` reapplies the last undone Transaction in forward order. New committed Transactions clear redo history. Empty Transactions are ignored.
+
+Implement undo/redo using this architecture only:
+
+- Change = { forward(), backward() }
+- Transaction = ordered list of Change
+- History = stack of committed Transactions with undo/redo navigation
+
+Flow:
+- transaction.start() creates the current Transaction
+- changes are recorded into the current Transaction
+- transaction.finalize() commits the current Transaction into History
+- transaction.abort() rolls back the current Transaction by running backward in reverse order, then discards it
+- undo() moves one committed Transaction backward through History by running its changes backward in reverse order
+- redo() moves one undone Transaction forward through History by running its changes forward in original order
+
+Rules:
+- backward order is always reverse of forward order
+- a new finalized Transaction clears redo history
+- empty Transactions are ignored
+
+---------------------------------------------------------------------------------
+Implement undo/redo in this repo with a minimal, production-safe patch.
+
+Find the real command/store mutation boundary and integrate history there, not in UI handlers. Prefer diff/patch-based edits if the repo already exposes command results, reducer actions, or reversible state deltas.
+
+Model:
+- Change = { do: delta, undo: inverseDelta, label? }
+- Transaction = ordered list of Change
+- History = { past: Transaction[], future: Transaction[], current?: Transaction }
+
+API:
+- transaction.start()
+- transaction.add(change)
+- transaction.finalize()
+- transaction.abort()
+- undo()
+- redo()
+
+Semantics:
+- finalize: commit current transaction to past, clear future, ignore empty tx
+- abort: apply undo in reverse order, then discard current transaction
+- undo: move one transaction from past to future, applying undo in reverse order
+- redo: move one transaction from future to past, applying do in original order
+
+Rules:
+- Integrate with the existing state/update flow; do not build a parallel state/history system
+- Capture inverse deltas at the store/command layer from real applied changes
+- Never record history during undo/redo/abort
+- Only track reversible source-of-truth state, not derived/UI-only state or irreversible side effects
+- Backward order is reverse of forward order
+- New committed changes clear redo history
+- Keep the patch minimal and avoid unrelated refactors
+- Preserve existing public behavior except for added history support
+
+Deliver:
+1. minimal implementation
+2. tests for single change, multi-step transaction, abort rollback, redo invalidation after new commit, and undo/redo boundaries
+3. short note listing touched files and the invariant enforced
+
+
+----------------------------------
+
+get the drag in sketchpad like in storybook algorithms drag
+
+-------------------------------------------------------------------------------------
+
 Fix the overflow-field refactor so it does not change typography or row metrics. The 2-row overflow state must use the same font size, line height, padding, border thickness, and overall field styling as the normal single-line field, and it must keep the existing Details panel tree rhythm aligned with the tree lines. Only add the extra internal row for overflow; do not upscale text, enlarge the visual style, or alter the shared row/label metric system.
 
 -----------------------------------------------------------------------------

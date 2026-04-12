@@ -1,0 +1,12 @@
+{
+  "title": "Fix Toolbar History Command Buttons",
+  "status": "open",
+  "description": "Make undo, redo, and reset in the sketchpad toolbar behave as momentary command buttons. Each click must perform exactly one action and must not latch as toggles. Update existing sketchpad implementation and extend the existing embedded test coverage in semio/sketchpad/index.tsx. Ensure tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1313"
+  },
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪37a8fa06a85545c6b7f8e841757a8433"
+  ]
+}

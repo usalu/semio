@@ -1,15 +1,15 @@
 {
   "title": "Fix Sketchpad Detail Panel Field Alignment",
-  "emoji": "🔧",
   "status": "closed",
   "description": "Analyze and fix the sketchpad detail panel wrong render for selected element piece fields so labels like Attributes, Origin, X Axis, and Y Axis align on the same vertical level as their input fields. Extend existing tests and verify the panel rendering path.",
-  "summary": "Refactored the shared detail-tree gutter spacing so depth now lives in the gutter only: removed the extra content-side negative-margin and tree-label padding offsets, tightened the gutter-to-content gap to a single 6px rhythm, and kept the fixed switcher slot behavior for expandable and leaf siblings. Extended the inline elements/ui tree regressions to assert the new no-compensation layout and sibling gutter alignment. Verification: `npm test --workspace elements/ui` passed (21 tests) and `npm run lint --workspace elements/ui` passed.",
+  "summary": "Refactored the sketchpad piece detail panel fix action onto the shared property-row layout so the button now uses the same 22px control surface, width fill behavior, and label alignment as the standard fields. Extended the existing sketchpad Playwright coverage to assert the fix-piece row structure, width/height parity against a normal input, and visibility for a connected child piece selection. Verification: local runtime probing reached the sketchpad/metabolism fixture flow, but the repo Playwright harness is currently blocked by its local preview-server path and workspace TypeScript currently fails on unrelated pre-existing errors in elements/ui and semio/js.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1144"
   },
   "goal": "🎯sketchpadimprovements",
   "sessions": [
     "⚪d3173a4f10e64f67b21e6e359587a884",
-    "⚪064b2cdf9d3447e8bbee86e8c740e1a8"
+    "⚪064b2cdf9d3447e8bbee86e8c740e1a8",
+    "⚪0793ce5c4caf4cb7bf86efbb4b4279a1"
   ]
 }

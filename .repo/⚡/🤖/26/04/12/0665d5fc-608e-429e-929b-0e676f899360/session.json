@@ -1,0 +1,1281 @@
+{
+  "id": "0665d5fc-608e-429e-929b-0e676f899360",
+  "uri": "repo://session/0665d5fc-608e-429e-929b-0e676f899360",
+  "client": "windsurf-chat",
+  "second": "2026-04-12T17:43:54Z",
+  "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:43:54Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:43:53.7983963+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:44:00Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:43:59.6403054+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-04-12T17:44:23Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:44:23.0657041+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "command_line": "git add elements/ui/index.tsx semio/js/index.ts semio/rs/lib.rs semio/sketchpad/index.tsx semio/ui/index.tsx",
+            "cwd": "c:\\git\\semio"
+          }
+        }
+      },
+      "response": {
+        "blocked": true,
+        "message": "blocked: git add; other developers and agents may be editing the same files concurrently",
+        "reason": "blocked: git add; other developers and agents may be editing the same files concurrently"
+      }
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:44:42Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:44:42.2272951+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "command_line": "netstat -ano | findstr :4000",
+            "cwd": "c:\\git\\semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-04-12T17:44:53Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:44:52.6103905+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "command_line": "npm run dev:sites:play",
+            "cwd": "c:\\git\\semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:45:31Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:45:30.6951674+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:45:32Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:45:31.9609985+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:45:52Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:45:52.2605821+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:45:54Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:45:53.4821542+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:46:14Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:46:13.9773914+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:46:15Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:46:15.1876939+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-04-12T17:46:32Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:46:32.0791952+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "// #endregion 🖋️Constraint registration\n\n// #region 🌧️Validation serialization\n// Validation result serialization and deserialization MUST be defined here.\n\n/**\n * Interface defining SerializableValidationFix structure.\n **/\nexport interface SerializableValidationFix {\n  title: string;\n  diff?: KitDiff;\n}\n\n/**\n * Interface defining SerializableProblem structure.\n **/\nexport interface SerializableProblem {\n  constraintId: string;\n  message: string;\n  entityKind: string;\n  entityGuid: string;\n  fixes: SerializableValidationFix[];\n}\n\n/**\n * Interface defining SerializableValidationResult structure.\n **/\nexport interface SerializableValidationResult {\n  problems: SerializableProblem[];\n}\n\n/**\n * Converts to ValidationResult representation.\n **/\nexport const toValidationResult = (result: ValidationResult): SerializableValidationResult =\u003e ({\n  problems: result.problems.map((problem) =\u003e ({\n    constraintId: problem.constraintId,\n    message: problem.message,\n    entityKind: problem.location?.entityKind ?? (problem as any).entityKind,\n    entityGuid: problem.location?.entityGuid ?? (problem as any).entityGuid ?? \"\",\n    fixes: problem.fixes.map((fix) =\u003e ({ title: fix.title, diff: fix.diff })),\n  })),\n});\n\n/**\n * Serializes ValidationResult for transport.\n **/\nexport const serializeValidationResult = (result: ValidationResult): string =\u003e {\n  const serializable = toValidationResult(result);\n  serializable.problems.sort((a, b) =\u003e {\n    const constraintCompare = a.constraintId.localeCompare(b.constraintId);\n    if (constraintCompare !== 0) return constraintCompare;\n    return a.entityGuid.localeCompare(b.entityGuid);\n  });\n  return JSON.stringify(serializable, null, 2);\n};\n\n/**\n * Parses ValidationResult from serialized input.\n **/\nexport const parseValidationResult = (json: string): SerializableValidationResult =\u003e JSON.parse(json);\n// 💿isGuid holds the data fields for a isGuid record.\nconst isGuid = (s: string): boolean =\u003e /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);\n\n/**\n * Deep equality check for KitDiffs ignoring NewGuids entities.\n **/\nexport const areKitDiffsEqualIgnoringNewGuids = (a: KitDiff, b: KitDiff): boolean =\u003e {\n  const normalize = (obj: unknown): unknown =\u003e {\n    if (obj === null || obj === undefined) return obj;\n    if (typeof obj === \"string\" \u0026\u0026 isGuid(obj)) return \"\u003cGUID\u003e\";\n    if (Array.isArray(obj)) return obj.map(normalize);\n    if (typeof obj === \"object\") {\n      const result: Record\u003cstring, unknown\u003e = {};\n      for (const [k, v] of Object.entries(obj)) result[k] = normalize(v);\n      return result;\n    }\n    return obj;\n  };\n  return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));\n};\n\n/**\n * Deep equality check for ValidationResults entities.\n **/\nexport const areValidationResultsEqual = (a: ValidationResult, b: ValidationResult): boolean =\u003e {\n  const serializableA = toValidationResult(a);\n  const serializableB = toValidationResult(b);\n  if (serializableA.problems.length !== serializableB.problems.length) return false;\n  const sortProblems = (problems: SerializableProblem[]) =\u003e\n    [...problems].sort((x, y) =\u003e {\n      const constraintCompare = x.constraintId.localeCompare(y.constraintId);\n      if (constraintCompare !== 0) return constraintCompare;\n      return x.entityGuid.localeCompare(y.entityGuid);\n    });\n  const sortedA = sortProblems(serializableA.problems);\n  const sortedB = sortProblems(serializableB.problems);\n  return sortedA.every((problemA, i) =\u003e {\n    const problemB = sortedB[i];\n    if (problemA.constraintId !== problemB.constraintId || problemA.message !== problemB.message || problemA.entityKind !== problemB.entityKind || problemA.entityGuid !== problemB.entityGuid) return false;\n    if (problemA.fixes.length !== problemB.fixes.length) return false;\n    return problemA.fixes.every((fixA, j) =\u003e {\n      const fixB = problemB.fixes[j];\n      return fixA.title === fixB.title \u0026\u0026 areKitDiffsEqualIgnoringNewGuids(fixA.diff ?? {}, fixB.diff ?? {});\n    });\n  });\n};\n\n// #endregion 🌧️Validation serialization\n\n// #endregion 🔓Validation",
+                "new_string": "// #endregion 🖋️Constraint registration"
+              }
+            ],
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-04-12T17:46:37Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:46:37.1490208+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "// #endregion 🖋️Constraint registration\n\n// #region 🌧️Validation serialization\n// Validation result serialization and deserialization MUST be defined here.\n\n/**\n * Interface defining SerializableValidationFix structure.\n **/\nexport interface SerializableValidationFix {\n  title: string;\n  diff?: KitDiff;\n}\n\n/**\n * Interface defining SerializableProblem structure.\n **/\nexport interface SerializableProblem {\n  constraintId: string;\n  message: string;\n  entityKind: string;\n  entityGuid: string;\n  fixes: SerializableValidationFix[];\n}\n\n/**\n * Interface defining SerializableValidationResult structure.\n **/\nexport interface SerializableValidationResult {\n  problems: SerializableProblem[];\n}\n\n/**\n * Converts to ValidationResult representation.\n **/\nexport const toValidationResult = (result: ValidationResult): SerializableValidationResult =\u003e ({\n  problems: result.problems.map((problem) =\u003e ({\n    constraintId: problem.constraintId,\n    message: problem.message,\n    entityKind: problem.location?.entityKind ?? (problem as any).entityKind,\n    entityGuid: problem.location?.entityGuid ?? (problem as any).entityGuid ?? \"\",\n    fixes: problem.fixes.map((fix) =\u003e ({ title: fix.title, diff: fix.diff })),\n  })),\n});\n\n/**\n * Serializes ValidationResult for transport.\n **/\nexport const serializeValidationResult = (result: ValidationResult): string =\u003e {\n  const serializable = toValidationResult(result);\n  serializable.problems.sort((a, b) =\u003e {\n    const constraintCompare = a.constraintId.localeCompare(b.constraintId);\n    if (constraintCompare !== 0) return constraintCompare;\n    return a.entityGuid.localeCompare(b.entityGuid);\n  });\n  return JSON.stringify(serializable, null, 2);\n};\n\n/**\n * Parses ValidationResult from serialized input.\n **/\nexport const parseValidationResult = (json: string): SerializableValidationResult =\u003e JSON.parse(json);\n// 💿isGuid holds the data fields for a isGuid record.\nconst isGuid = (s: string): boolean =\u003e /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);\n\n/**\n * Deep equality check for KitDiffs ignoring NewGuids entities.\n **/\nexport const areKitDiffsEqualIgnoringNewGuids = (a: KitDiff, b: KitDiff): boolean =\u003e {\n  const normalize = (obj: unknown): unknown =\u003e {\n    if (obj === null || obj === undefined) return obj;\n    if (typeof obj === \"string\" \u0026\u0026 isGuid(obj)) return \"\u003cGUID\u003e\";\n    if (Array.isArray(obj)) return obj.map(normalize);\n    if (typeof obj === \"object\") {\n      const result: Record\u003cstring, unknown\u003e = {};\n      for (const [k, v] of Object.entries(obj)) result[k] = normalize(v);\n      return result;\n    }\n    return obj;\n  };\n  return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));\n};\n\n/**\n * Deep equality check for ValidationResults entities.\n **/\nexport const areValidationResultsEqual = (a: ValidationResult, b: ValidationResult): boolean =\u003e {\n  const serializableA = toValidationResult(a);\n  const serializableB = toValidationResult(b);\n  if (serializableA.problems.length !== serializableB.problems.length) return false;\n  const sortProblems = (problems: SerializableProblem[]) =\u003e\n    [...problems].sort((x, y) =\u003e {\n      const constraintCompare = x.constraintId.localeCompare(y.constraintId);\n      if (constraintCompare !== 0) return constraintCompare;\n      return x.entityGuid.localeCompare(y.entityGuid);\n    });\n  const sortedA = sortProblems(serializableA.problems);\n  const sortedB = sortProblems(serializableB.problems);\n  return sortedA.every((problemA, i) =\u003e {\n    const problemB = sortedB[i];\n    if (problemA.constraintId !== problemB.constraintId || problemA.message !== problemB.message || problemA.entityKind !== problemB.entityKind || problemA.entityGuid !== problemB.entityGuid) return false;\n    if (problemA.fixes.length !== problemB.fixes.length) return false;\n    return problemA.fixes.every((fixA, j) =\u003e {\n      const fixB = problemB.fixes[j];\n      return fixA.title === fixB.title \u0026\u0026 areKitDiffsEqualIgnoringNewGuids(fixA.diff ?? {}, fixB.diff ?? {});\n    });\n  });\n};\n\n// #endregion 🌧️Validation serialization\n\n// #endregion 🔓Validation",
+                "new_string": "// #endregion 🖋️Constraint registration"
+              }
+            ],
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:47:10Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:47:10.2440865+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:47:12Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:47:11.4418776+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:47:35Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:47:34.7098416+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:47:36Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:47:35.8471024+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:48:01Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:48:01.0479678+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:48:02Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:48:02.3055942+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-04-12T17:48:40Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:48:39.8403732+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "command_line": "$f = 'c:\\git\\semio\\semio\\js\\index.ts'; $lines = [System.IO.File]::ReadAllLines($f); $before = $lines[0..13714]; $after = $lines[14544..($lines.Length-1)]; $result = $before + $after; [System.IO.File]::WriteAllLines($f, $result)",
+            "cwd": "c:\\git\\semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:49:07Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:49:07.4022393+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:49:09Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:49:08.7023046+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:50:14Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_run_command",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:50:14.4715928+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "command_line": "netstat -ano | findstr :4000",
+            "cwd": "c:\\git\\semio"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-04-12T17:50:42Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:50:41.6877483+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {
+              "url": "http://localhost:4000"
+            },
+            "mcp_tool_name": "browser_navigate"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-04-12T17:50:45Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:50:44.7778877+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "mcp_result": "### Ran Playwright code\n```js\nawait page.goto('http://localhost:4000');\n```\n### Page\n- Page URL: http://localhost:4000/\n- Page Title: semio · playground\n### Snapshot\n- [Snapshot](.playwright-mcp\\page-2026-04-12T17-50-44-776Z.yml)\n### Events\n- New console entries: .playwright-mcp\\console-2026-04-12T17-50-43-468Z.log#L1",
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {
+              "url": "http://localhost:4000"
+            },
+            "mcp_tool_name": "browser_navigate"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-04-12T17:50:58Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:50:58.4496946+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {},
+            "mcp_tool_name": "browser_snapshot"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-04-12T17:51:01Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:51:01.1704403+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "mcp_result": "### Page\n- Page URL: http://localhost:4000/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n- Page Title: semio · playground\n### Snapshot\n```yaml\n- generic [ref=e3]:\n  - generic [ref=e10]:\n    - navigation [ref=e12]:\n      - generic [ref=e13]:\n        - generic [ref=e15]:\n          - button [ref=e16]:\n            - img\n          - button [disabled]:\n            - img\n          - button [ref=e17]:\n            - img\n        - navigation \"breadcrumb\" [ref=e19]:\n          - list [ref=e20]:\n            - listitem [ref=e21]:\n              - img [ref=e23]\n            - button [ref=e26]:\n              - img\n            - listitem [ref=e27]:\n              - img [ref=e29]\n            - button [ref=e32]:\n              - img\n            - listitem [ref=e33]:\n              - generic [ref=e34]: Metabolism\n            - button [ref=e35]:\n              - img\n            - listitem [ref=e36]:\n              - generic [ref=e37]: r25.07-1\n            - button [ref=e38]:\n              - img\n            - listitem [ref=e39]:\n              - img [ref=e41]\n            - button [ref=e44]:\n              - img\n            - listitem [ref=e45]:\n              - button \"Tambour\" [ref=e46]\n            - button [ref=e47]:\n              - img\n        - generic [ref=e48]:\n          - group [ref=e49]:\n            - radio [ref=e50]:\n              - generic [ref=e51]:\n                - img\n          - generic [ref=e52]:\n            - heading \"Search\" [level=2] [ref=e53]\n            - paragraph [ref=e54]: Search for kits, designs, types, and more\n        - generic [ref=e55]:\n          - group [ref=e56]:\n            - radio [ref=e57]:\n              - generic [ref=e58]:\n                - img\n          - generic [ref=e59]:\n            - heading \"Focus\" [level=2] [ref=e60]\n            - paragraph [ref=e61]: Focus on an element in the current view\n        - generic [ref=e63]:\n          - generic [ref=e64]:\n            - group [ref=e65]:\n              - radio [checked] [ref=e66]:\n                - generic [ref=e67]:\n                  - img\n            - group [ref=e68]:\n              - radio [checked] [ref=e69]:\n                - generic [ref=e70]:\n                  - img\n          - generic [ref=e71]:\n            - group [ref=e72]:\n              - radio [ref=e73]:\n                - generic [ref=e74]:\n                  - img\n            - group [ref=e75]:\n              - radio [ref=e76]:\n                - generic [ref=e77]:\n                  - img\n        - group [ref=e79]:\n          - radio [ref=e80]:\n            - generic [ref=e81]:\n              - img\n    - generic [ref=e82]:\n      - generic [ref=e84]:\n        - button [ref=e85]:\n          - img [ref=e86]\n        - button [ref=e89]:\n          - img [ref=e90]\n      - generic [ref=e98]:\n        - generic [ref=e102]:\n          - generic [ref=e105]:\n            - generic [ref=e106]:\n              - generic \"scene\" [ref=e108]:\n                - generic [ref=e109]: scene\n              - generic [ref=e112]:\n                - button [ref=e113]:\n                  - img [ref=e114]\n                - button [ref=e118]:\n                  - img [ref=e119]\n                - button [ref=e124]:\n                  - img [ref=e125]\n            - button [ref=e135]:\n              - img [ref=e136]\n          - generic [ref=e144]:\n            - generic [ref=e145]:\n              - generic \"scene\" [ref=e147]:\n                - generic [ref=e148]: scene\n              - generic [ref=e151]:\n                - button [ref=e152]:\n                  - img [ref=e153]\n                - button [ref=e157]:\n                  - img [ref=e158]\n                - button [ref=e163]:\n                  - img [ref=e164]\n            - button [ref=e174]:\n              - img [ref=e175]\n        - generic [ref=e181]:\n          - button [ref=e183]:\n            - img [ref=e184]\n          - generic [ref=e190]:\n            - generic [ref=e192]:\n              - button \"Type Properties\" [expanded] [ref=e193]:\n                - generic [ref=e194]:\n                  - img [ref=e196]\n                  - generic [ref=e201]: Type Properties\n              - generic [ref=e203]:\n                - generic [ref=e208]:\n                  - generic [ref=e211]: Name\n                  - textbox [ref=e214]:\n                    - generic [ref=e216]: Tambour\n                - generic [ref=e221]:\n                  - generic [ref=e224]: Description\n                  - textbox [ref=e227]:\n                    - generic [ref=e229]: An efficient one storey tambour for a\n                    - img [ref=e232]\n                - generic [ref=e238]:\n                  - generic [ref=e241]: Icon\n                  - textbox [ref=e244]:\n                    - generic [ref=e246]: icons/tambour.svg\n                - generic [ref=e251]:\n                  - generic [ref=e254]: Image\n                  - textbox [ref=e257]:\n                    - generic [ref=e259]: images/tambour.svg\n                - generic [ref=e264]:\n                  - generic [ref=e267]: Parent\n                  - textbox [ref=e270]:\n                    - generic [ref=e272]: Select parent type...\n                - generic [ref=e277]:\n                  - generic [ref=e280]: Abstract\n                  - group [ref=e282]:\n                    - radio [ref=e283]:\n                      - generic [ref=e284]:\n                        - img\n                - generic [ref=e289]:\n                  - generic [ref=e292]: Unit\n                  - textbox [ref=e295]:\n                    - generic [ref=e297]: m\n                - treeitem \"Models\" [ref=e298]:\n                  - generic [ref=e299]:\n                    - button [ref=e301]:\n                      - img [ref=e302]\n                    - generic [ref=e305]:\n                      - generic [ref=e307]: Models\n                      - button [ref=e309]:\n                        - img\n                - generic [ref=e310]:\n                  - generic [ref=e311]:\n                    - treeitem \"Model\" [ref=e312]:\n                      - generic [ref=e313]:\n                        - button [ref=e315]:\n                          - img [ref=e316]\n                        - generic [ref=e319]:\n                          - generic [ref=e320]:\n                            - button [ref=e321]:\n                              - img [ref=e322]\n                            - generic [ref=e329]: Model\n                          - button [ref=e331]:\n                            - img\n                    - generic [ref=e332]:\n                      - generic [ref=e337]:\n                        - generic [ref=e340]: URL\n                        - textbox [ref=e343]\n                      - generic [ref=e348]:\n                        - generic [ref=e351]: Description\n                        - textbox [ref=e354]:\n                          - generic [ref=e356]: Describe this model...\n                      - generic [ref=e361]:\n                        - generic [ref=e364]: Tags\n                        - textbox [ref=e367]:\n                          - generic [ref=e369]: \"[object Object]\"\n                  - generic [ref=e370]:\n                    - treeitem \"Model\" [ref=e371]:\n                      - generic [ref=e372]:\n                        - button [ref=e374]:\n                          - img [ref=e375]\n                        - generic [ref=e378]:\n                          - generic [ref=e379]:\n                            - button [ref=e380]:\n                              - img [ref=e381]\n                            - generic [ref=e388]: Model\n                          - button [ref=e390]:\n                            - img\n                    - generic [ref=e391]:\n                      - generic [ref=e396]:\n                        - generic [ref=e399]: URL\n                        - textbox [ref=e402]\n                      - generic [ref=e407]:\n                        - generic [ref=e410]: Description\n                        - textbox [ref=e413]:\n                          - generic [ref=e415]: Describe this model...\n                      - generic [ref=e420]:\n                        - generic [ref=e423]: Tags\n                        - textbox [ref=e426]:\n                          - generic [ref=e428]: \"[object Object]\"\n                  - generic [ref=e429]:\n                    - treeitem \"Model\" [ref=e430]:\n                      - generic [ref=e431]:\n                        - button [ref=e433]:\n                          - img [ref=e434]\n                        - generic [ref=e437]:\n                          - generic [ref=e438]:\n                            - button [ref=e439]:\n                              - img [ref=e440]\n                            - generic [ref=e447]: Model\n                          - button [ref=e449]:\n                            - img\n                    - generic [ref=e450]:\n                      - generic [ref=e455]:\n                        - generic [ref=e458]: URL\n                        - textbox [ref=e461]\n                      - generic [ref=e466]:\n                        - generic [ref=e469]: Description\n                        - textbox [ref=e472]:\n                          - generic [ref=e474]: Describe this model...\n                      - generic [ref=e479]:\n                        - generic [ref=e482]: Tags\n                        - textbox [ref=e485]:\n                          - generic [ref=e487]: \"[object Object], [object Object]\"\n                  - generic [ref=e488]:\n                    - treeitem \"Model\" [ref=e489]:\n                      - generic [ref=e490]:\n                        - button [ref=e492]:\n                          - img [ref=e493]\n                        - generic [ref=e496]:\n                          - generic [ref=e497]:\n                            - button [ref=e498]:\n                              - img [ref=e499]\n                            - generic [ref=e506]: Model\n                          - button [ref=e508]:\n                            - img\n                    - generic [ref=e509]:\n                      - generic [ref=e514]:\n                        - generic [ref=e517]: URL\n                        - textbox [ref=e520]\n                      - generic [ref=e525]:\n                        - generic [ref=e528]: Description\n                        - textbox [ref=e531]:\n                          - generic [ref=e533]: Describe this model...\n                      - generic [ref=e538]:\n                        - generic [ref=e541]: Tags\n                        - textbox [ref=e544]:\n                          - generic [ref=e546]: \"[object Object], [object Object]\"\n                  - generic [ref=e547]:\n                    - treeitem \"Model\" [ref=e548]:\n                      - generic [ref=e549]:\n                        - button [ref=e551]:\n                          - img [ref=e552]\n                        - generic [ref=e555]:\n                          - generic [ref=e556]:\n                            - button [ref=e557]:\n                              - img [ref=e558]\n                            - generic [ref=e565]: Model\n                          - button [ref=e567]:\n                            - img\n                    - generic [ref=e568]:\n                      - generic [ref=e573]:\n                        - generic [ref=e576]: URL\n                        - textbox [ref=e579]\n                      - generic [ref=e584]:\n                        - generic [ref=e587]: Description\n                        - textbox [ref=e590]:\n                          - generic [ref=e592]: Describe this model...\n                      - generic [ref=e597]:\n                        - generic [ref=e600]: Tags\n                        - textbox [ref=e603]:\n                          - generic [ref=e605]: \"[object Object], [object Object],\"\n                          - img [ref=e608]\n                  - generic [ref=e610]:\n                    - treeitem \"Model\" [ref=e611]:\n                      - generic [ref=e612]:\n                        - button [ref=e614]:\n                          - img [ref=e615]\n                        - generic [ref=e618]:\n                          - generic [ref=e619]:\n                            - button [ref=e620]:\n                              - img [ref=e621]\n                            - generic [ref=e628]: Model\n                          - button [ref=e630]:\n                            - img\n                    - generic [ref=e631]:\n                      - generic [ref=e636]:\n                        - generic [ref=e639]: URL\n                        - textbox [ref=e642]\n                      - generic [ref=e647]:\n                        - generic [ref=e650]: Description\n                        - textbox [ref=e653]:\n                          - generic [ref=e655]: Describe this model...\n                      - generic [ref=e660]:\n                        - generic [ref=e663]: Tags\n                        - textbox [ref=e666]:\n                          - generic [ref=e668]: \"[object Object], [object Object]\"\n                  - status [ref=e669]\n                - treeitem \"Connectors\" [ref=e670]:\n                  - generic [ref=e671]:\n                    - button [ref=e673]:\n                      - img [ref=e674]\n                    - generic [ref=e677]:\n                      - generic [ref=e679]: Connectors\n                      - button [ref=e681]:\n                        - img\n                - generic [ref=e682]:\n                  - generic [ref=e688]:\n                    - generic [ref=e689]: Ring\n                    - img [ref=e691]\n                  - generic [ref=e693]:\n                    - treeitem \"019ab243-21f4-73df-8cb4-7a9a1e3c40ea\" [ref=e694]:\n                      - generic [ref=e695]:\n                        - button [ref=e697]:\n                          - img [ref=e698]\n                        - generic [ref=e701]:\n                          - generic [ref=e702]:\n                            - button [ref=e703]:\n                              - img [ref=e704]\n                            - generic [ref=e711]: 019ab243-21f4-73df-8cb4-7a9a1e3c40ea\n                          - button [ref=e713]:\n                            - img\n                    - generic [ref=e714]:\n                      - generic [ref=e719]:\n                        - generic [ref=e722]: Port\n                        - textbox [ref=e725]:\n                          - generic [ref=e727]: 019ab243-21f4-73df-8cb4-7a9a1e3c\n                          - img [ref=e730]\n                      - generic [ref=e736]:\n                        - generic [ref=e739]: Description\n                        - textbox [ref=e742]:\n                          - generic [ref=e744]: The bottom system center of the\n                          - img [ref=e747]\n                      - treeitem \"Point\" [ref=e749]:\n                        - generic [ref=e750]:\n                          - button [ref=e752]:\n                            - img [ref=e753]\n                          - generic [ref=e758]: Point\n                      - generic [ref=e759]:\n                        - generic [ref=e764]:\n                          - generic [ref=e767]: X\n                          - generic [ref=e769]:\n                            - button [ref=e770]:\n                              - img [ref=e771]\n                            - spinbutton \"X\" [ref=e772]: \"0\"\n                            - button [ref=e773]:\n                              - img [ref=e774]\n                        - generic [ref=e779]:\n                          - generic [ref=e782]: \"Y\"\n                          - generic [ref=e784]:\n                            - button [ref=e785]:\n                              - img [ref=e786]\n                            - spinbutton \"Y\" [ref=e787]: \"0\"\n                            - button [ref=e788]:\n                              - img [ref=e789]\n                        - generic [ref=e794]:\n                          - generic [ref=e797]: Z\n                          - generic [ref=e799]:\n                            - button [ref=e800]:\n                              - img [ref=e801]\n                            - spinbutton \"Z\" [ref=e802]: \"0.9166667\"\n                            - button [ref=e803]:\n                              - img [ref=e804]\n                      - treeitem \"Direction\" [ref=e805]:\n                        - generic [ref=e806]:\n                          - button [ref=e808]:\n                            - img [ref=e809]\n                          - generic [ref=e814]: Direction\n                      - generic [ref=e815]:\n                        - generic [ref=e820]:\n                          - generic [ref=e823]: X\n                          - generic [ref=e825]:\n                            - button [ref=e826]:\n                              - img [ref=e827]\n                            - spinbutton \"X\" [ref=e828]: \"0\"\n                            - button [ref=e829]:\n                              - img [ref=e830]\n                        - generic [ref=e835]:\n                          - generic [ref=e838]: \"Y\"\n                          - generic [ref=e840]:\n                            - button [ref=e841]:\n                              - img [ref=e842]\n                            - spinbutton \"Y\" [ref=e843]: \"0\"\n                            - button [ref=e844]:\n                              - img [ref=e845]\n                        - generic [ref=e850]:\n                          - generic [ref=e853]: Z\n                          - generic [ref=e855]:\n                            - button [ref=e856]:\n                              - img [ref=e857]\n                            - spinbutton \"Z\" [ref=e858]: \"-1\"\n                            - button [ref=e859]:\n                              - img [ref=e860]\n                      - generic [ref=e865]:\n                        - generic [ref=e868]: Compatible Ports\n                        - textbox [ref=e871]:\n                          - generic [ref=e873]: port1, port2\n                  - generic [ref=e874]:\n                    - treeitem \"019ab243-21f4-73df-8cb4-7ddf5d3ba702\" [ref=e875]:\n                      - generic [ref=e876]:\n                        - button [ref=e878]:\n                          - img [ref=e879]\n                        - generic [ref=e882]:\n                          - generic [ref=e883]:\n                            - button [ref=e884]:\n                              - img [ref=e885]\n                            - generic [ref=e892]: 019ab243-21f4-73df-8cb4-7ddf5d3ba702\n                          - button [ref=e894]:\n                            - img\n                    - generic [ref=e895]:\n                      - generic [ref=e900]:\n                        - generic [ref=e903]: Port\n                        - textbox [ref=e906]:\n                          - generic [ref=e908]: 019ab243-21f4-73df-8cb4-7ddf5d3ba\n                          - img [ref=e911]\n                      - generic [ref=e917]:\n                        - generic [ref=e920]: Description\n                        - textbox [ref=e923]:\n                          - generic [ref=e925]: The top system center of the elevator.\n                      - treeitem \"Point\" [ref=e926]:\n                        - generic [ref=e927]:\n                          - button [ref=e929]:\n                            - img [ref=e930]\n                          - generic [ref=e935]: Point\n                      - generic [ref=e936]:\n                        - generic [ref=e941]:\n                          - generic [ref=e944]: X\n                          - generic [ref=e946]:\n                            - button [ref=e947]:\n                              - img [ref=e948]\n                            - spinbutton \"X\" [ref=e949]: \"0\"\n                            - button [ref=e950]:\n                              - img [ref=e951]\n                        - generic [ref=e956]:\n                          - generic [ref=e959]: \"Y\"\n                          - generic [ref=e961]:\n                            - button [ref=e962]:\n                              - img [ref=e963]\n                            - spinbutton \"Y\" [ref=e964]: \"0\"\n                            - button [ref=e965]:\n                              - img [ref=e966]\n                        - generic [ref=e971]:\n                          - generic [ref=e974]: Z\n                          - generic [ref=e976]:\n                            - button [ref=e977]:\n                              - img [ref=e978]\n                            - spinbutton \"Z\" [ref=e979]: \"3.6666667\"\n                            - button [ref=e980]:\n                              - img [ref=e981]\n                      - treeitem \"Direction\" [ref=e982]:\n                        - generic [ref=e983]:\n                          - button [ref=e985]:\n                            - img [ref=e986]\n                          - generic [ref=e991]: Direction\n                      - generic [ref=e992]:\n                        - generic [ref=e997]:\n                          - generic [ref=e1000]: X\n                          - generic [ref=e1002]:\n                            - button [ref=e1003]:\n                              - img [ref=e1004]\n                            - spinbutton \"X\" [ref=e1005]: \"0\"\n                            - button [ref=e1006]:\n                              - img [ref=e1007]\n                        - generic [ref=e1012]:\n                          - generic [ref=e1015]: \"Y\"\n                          - generic [ref=e1017]:\n                            - button [ref=e1018]:\n                              - img [ref=e1019]\n                            - spinbutton \"Y\" [ref=e1020]: \"0\"\n                            - button [ref=e1021]:\n                              - img [ref=e1022]\n                        - generic [ref=e1027]:\n                          - generic [ref=e1030]: Z\n                          - generic [ref=e1032]:\n                            - button [ref=e1033]:\n                              - img [ref=e1034]\n                            - spinbutton \"Z\" [ref=e1035]: \"1\"\n                            - button [ref=e1036]:\n                              - img [ref=e1037]\n                      - generic [ref=e1042]:\n                        - generic [ref=e1045]: Compatible Ports\n                        - textbox [ref=e1048]:\n                          - generic [ref=e1050]: port1, port2\n                  - generic [ref=e1051]:\n                    - treeitem \"019ab243-21f4-73df-8cb4-57263e420e70\" [ref=e1052]:\n                      - generic [ref=e1053]:\n                        - button [ref=e1055]:\n                          - img [ref=e1056]\n                        - generic [ref=e1059]:\n                          - generic [ref=e1060]:\n                            - button [ref=e1061]:\n                              - img [ref=e1062]\n                            - generic [ref=e1069]: 019ab243-21f4-73df-8cb4-57263e420e70\n                          - button [ref=e1071]:\n                            - img\n                    - generic [ref=e1072]:\n                      - generic [ref=e1077]:\n                        - generic [ref=e1080]: Port\n                        - textbox [ref=e1083]:\n                          - generic [ref=e1085]: 019ab243-21f4-73df-8cb4-57263e42\n                          - img [ref=e1088]\n                      - generic [ref=e1094]:\n                        - generic [ref=e1097]: Description\n                        - textbox [ref=e1100]:\n                          - generic [ref=e1102]: The first door of the side plattform in\n                          - img [ref=e1105]\n                      - treeitem \"Point\" [ref=e1107]:\n                        - generic [ref=e1108]:\n                          - button [ref=e1110]:\n                            - img [ref=e1111]\n                          - generic [ref=e1116]: Point\n                      - generic [ref=e1117]:\n                        - generic [ref=e1122]:\n                          - generic [ref=e1125]: X\n                          - generic [ref=e1127]:\n                            - button [ref=e1128]:\n                              - img [ref=e1129]\n                            - spinbutton \"X\" [ref=e1130]: \"2.75\"\n                            - button [ref=e1131]:\n                              - img [ref=e1132]\n                        - generic [ref=e1137]:\n                          - generic [ref=e1140]: \"Y\"\n                          - generic [ref=e1142]:\n                            - button [ref=e1143]:\n                              - img [ref=e1144]\n                            - spinbutton \"Y\" [ref=e1145]: \"0.9\"\n                            - button [ref=e1146]:\n                              - img [ref=e1147]\n                        - generic [ref=e1152]:\n                          - generic [ref=e1155]: Z\n                          - generic [ref=e1157]:\n                            - button [ref=e1158]:\n                              - img [ref=e1159]\n                            - spinbutton \"Z\" [ref=e1160]: \"0.2\"\n                            - button [ref=e1161]:\n                              - img [ref=e1162]\n                      - treeitem \"Direction\" [ref=e1163]:\n                        - generic [ref=e1164]:\n                          - button [ref=e1166]:\n                            - img [ref=e1167]\n                          - generic [ref=e1172]: Direction\n                      - generic [ref=e1173]:\n                        - generic [ref=e1178]:\n                          - generic [ref=e1181]: X\n                          - generic [ref=e1183]:\n                            - button [ref=e1184]:\n                              - img [ref=e1185]\n                            - spinbutton \"X\" [ref=e1186]: \"1\"\n                            - button [ref=e1187]:\n                              - img [ref=e1188]\n                        - generic [ref=e1193]:\n                          - generic [ref=e1196]: \"Y\"\n                          - generic [ref=e1198]:\n                            - button [ref=e1199]:\n                              - img [ref=e1200]\n                            - spinbutton \"Y\" [ref=e1201]: \"0\"\n                            - button [ref=e1202]:\n                              - img [ref=e1203]\n                        - generic [ref=e1208]:\n                          - generic [ref=e1211]: Z\n                          - generic [ref=e1213]:\n                            - button [ref=e1214]:\n                              - img [ref=e1215]\n                            - spinbutton \"Z\" [ref=e1216]: \"0\"\n                            - button [ref=e1217]:\n                              - img [ref=e1218]\n                      - generic [ref=e1223]:\n                        - generic [ref=e1226]: Compatible Ports\n                        - textbox [ref=e1229]:\n                          - generic [ref=e1231]: port1, port2\n                  - generic [ref=e1232]:\n                    - treeitem \"019ab243-21f4-73df-8cb4-50266f6860b8\" [ref=e1233]:\n                      - generic [ref=e1234]:\n                        - button [ref=e1236]:\n                          - img [ref=e1237]\n                        - generic [ref=e1240]:\n                          - generic [ref=e1241]:\n                            - button [ref=e1242]:\n                              - img [ref=e1243]\n                            - generic [ref=e1250]: 019ab243-21f4-73df-8cb4-50266f6860b8\n                          - button [ref=e1252]:\n                            - img\n                    - generic [ref=e1253]:\n                      - generic [ref=e1258]:\n                        - generic [ref=e1261]: Port\n                        - textbox [ref=e1264]:\n                          - generic [ref=e1266]: 019ab243-21f4-73df-8cb4-50266f68\n                          - img [ref=e1269]\n                      - generic [ref=e1275]:\n                        - generic [ref=e1278]: Description\n                        - textbox [ref=e1281]:\n                          - generic [ref=e1283]: The second door of the side plattform\n                          - img [ref=e1286]\n                      - treeitem \"Point\" [ref=e1288]:\n                        - generic [ref=e1289]:\n                          - button [ref=e1291]:\n                            - img [ref=e1292]\n                          - generic [ref=e1297]: Point\n                      - generic [ref=e1298]:\n                        - generic [ref=e1303]:\n                          - generic [ref=e1306]: X\n                          - generic [ref=e1308]:\n                            - button [ref=e1309]:\n                              - img [ref=e1310]\n                            - spinbutton \"X\" [ref=e1311]: \"0.9\"\n                            - button [ref=e1312]:\n                              - img [ref=e1313]\n                        - generic [ref=e1318]:\n                          - generic [ref=e1321]: \"Y\"\n                          - generic [ref=e1323]:\n                            - button [ref=e1324]:\n                              - img [ref=e1325]\n                            - spinbutton \"Y\" [ref=e1326]: \"2.75\"\n                            - button [ref=e1327]:\n                              - img [ref=e1328]\n                        - generic [ref=e1333]:\n                          - generic [ref=e1336]: Z\n                          - generic [ref=e1338]:\n                            - button [ref=e1339]:\n                              - img [ref=e1340]\n                            - spinbutton \"Z\" [ref=e1341]: \"0.2\"\n                            - button [ref=e1342]:\n                              - img [ref=e1343]\n                      - treeitem \"Direction\" [ref=e1344]:\n                        - generic [ref=e1345]:\n                          - button [ref=e1347]:\n                            - img [ref=e1348]\n                          - generic [ref=e1353]: Direction\n                      - generic [ref=e1354]:\n                        - generic [ref=e1359]:\n                          - generic [ref=e1362]: X\n                          - generic [ref=e1364]:\n                            - button [ref=e1365]:\n                              - img [ref=e1366]\n                            - spinbutton \"X\" [ref=e1367]: \"0\"\n                            - button [ref=e1368]:\n                              - img [ref=e1369]\n                        - generic [ref=e1374]:\n                          - generic [ref=e1377]: \"Y\"\n                          - generic [ref=e1379]:\n                            - button [ref=e1380]:\n                              - img [ref=e1381]\n                            - spinbutton \"Y\" [ref=e1382]: \"1\"\n                            - button [ref=e1383]:\n                              - img [ref=e1384]\n                        - generic [ref=e1389]:\n                          - generic [ref=e1392]: Z\n                          - generic [ref=e1394]:\n                            - button [ref=e1395]:\n                              - img [ref=e1396]\n                            - spinbutton \"Z\" [ref=e1397]: \"0\"\n                            - button [ref=e1398]:\n                              - img [ref=e1399]\n                      - generic [ref=e1404]:\n                        - generic [ref=e1407]: Compatible Ports\n                        - textbox [ref=e1410]:\n                          - generic [ref=e1412]: port1, port2\n                  - generic [ref=e1413]:\n                    - treeitem \"019ab243-21f4-73df-8cb4-57263e420e70\" [ref=e1414]:\n                      - generic [ref=e1415]:\n                        - button [ref=e1417]:\n                          - img [ref=e1418]\n                        - generic [ref=e1421]:\n                          - generic [ref=e1422]:\n                            - button [ref=e1423]:\n                              - img [ref=e1424]\n                            - generic [ref=e1431]: 019ab243-21f4-73df-8cb4-57263e420e70\n                          - button [ref=e1433]:\n                            - img\n                    - generic [ref=e1434]:\n                      - generic [ref=e1439]:\n                        - generic [ref=e1442]: Port\n                        - textbox [ref=e1445]:\n                          - generic [ref=e1447]: 019ab243-21f4-73df-8cb4-57263e42\n                          - img [ref=e1450]\n                      - generic [ref=e1456]:\n                        - generic [ref=e1459]: Description\n                        - textbox [ref=e1462]:\n                          - generic [ref=e1464]: The third door of the side plattform in\n                          - img [ref=e1467]\n                      - treeitem \"Point\" [ref=e1469]:\n                        - generic [ref=e1470]:\n                          - button [ref=e1472]:\n                            - img [ref=e1473]\n                          - generic [ref=e1478]: Point\n                      - generic [ref=e1479]:\n                        - generic [ref=e1484]:\n                          - generic [ref=e1487]: X\n                          - generic [ref=e1489]:\n                            - button [ref=e1490]:\n                              - img [ref=e1491]\n                            - spinbutton \"X\" [ref=e1492]: \"-0.9\"\n                            - button [ref=e1493]:\n                              - img [ref=e1494]\n                        - generic [ref=e1499]:\n                          - generic [ref=e1502]: \"Y\"\n                          - generic [ref=e1504]:\n                            - button [ref=e1505]:\n                              - img [ref=e1506]\n                            - spinbutton \"Y\" [ref=e1507]: \"2.75\"\n                            - button [ref=e1508]:\n                              - img [ref=e1509]\n                        - generic [ref=e1514]:\n                          - generic [ref=e1517]: Z\n                          - generic [ref=e1519]:\n                            - button [ref=e1520]:\n                              - img [ref=e1521]\n                            - spinbutton \"Z\" [ref=e1522]: \"0.2\"\n                            - button [ref=e1523]:\n                              - img [ref=e1524]\n                      - treeitem \"Direction\" [ref=e1525]:\n                        - generic [ref=e1526]:\n                          - button [ref=e1528]:\n                            - img [ref=e1529]\n                          - generic [ref=e1534]: Direction\n                      - generic [ref=e1535]:\n                        - generic [ref=e1540]:\n                          - generic [ref=e1543]: X\n                          - generic [ref=e1545]:\n                            - button [ref=e1546]:\n                              - img [ref=e1547]\n                            - spinbutton \"X\" [ref=e1548]: \"0\"\n                            - button [ref=e1549]:\n                              - img [ref=e1550]\n                        - generic [ref=e1555]:\n                          - generic [ref=e1558]: \"Y\"\n                          - generic [ref=e1560]:\n                            - button [ref=e1561]:\n                              - img [ref=e1562]\n                            - spinbutton \"Y\" [ref=e1563]: \"1\"\n                            - button [ref=e1564]:\n                              - img [ref=e1565]\n                        - generic [ref=e1570]:\n                          - generic [ref=e1573]: Z\n                          - generic [ref=e1575]:\n                            - button [ref=e1576]:\n                              - img [ref=e1577]\n                            - spinbutton \"Z\" [ref=e1578]: \"0\"\n                            - button [ref=e1579]:\n                              - img [ref=e1580]\n                      - generic [ref=e1585]:\n                        - generic [ref=e1588]: Compatible Ports\n                        - textbox [ref=e1591]:\n                          - generic [ref=e1593]: port1, port2\n                  - generic [ref=e1594]:\n                    - treeitem \"019ab243-21f4-73df-8cb4-50266f6860b8\" [ref=e1595]:\n                      - generic [ref=e1596]:\n                        - button [ref=e1598]:\n                          - img [ref=e1599]\n                        - generic [ref=e1602]:\n                          - generic [ref=e1603]:\n                            - button [ref=e1604]:\n                              - img [ref=e1605]\n                            - generic [ref=e1612]: 019ab243-21f4-73df-8cb4-50266f6860b8\n                          - button [ref=e1614]:\n                            - img\n                    - generic [ref=e1615]:\n                      - generic [ref=e1620]:\n                        - generic [ref=e1623]: Port\n                        - textbox [ref=e1626]:\n                          - generic [ref=e1628]: 019ab243-21f4-73df-8cb4-50266f68\n                          - img [ref=e1631]\n                      - generic [ref=e1637]:\n                        - generic [ref=e1640]: Description\n                        - textbox [ref=e1643]:\n                          - generic [ref=e1645]: The fourth door of the side plattform in\n                          - img [ref=e1648]\n                      - treeitem \"Point\" [ref=e1650]:\n                        - generic [ref=e1651]:\n                          - button [ref=e1653]:\n                            - img [ref=e1654]\n                          - generic [ref=e1659]: Point\n                      - generic [ref=e1660]:\n                        - generic [ref=e1665]:\n                          - generic [ref=e1668]: X\n                          - generic [ref=e1670]:\n                            - button [ref=e1671]:\n                              - img [ref=e1672]\n                            - spinbutton \"X\" [ref=e1673]: \"-2.75\"\n                            - button [ref=e1674]:\n                              - img [ref=e1675]\n                        - generic [ref=e1680]:\n                          - generic [ref=e1683]: \"Y\"\n                          - generic [ref=e1685]:\n                            - button [ref=e1686]:\n                              - img [ref=e1687]\n                            - spinbutton \"Y\" [ref=e1688]: \"0.9\"\n                            - button [ref=e1689]:\n                              - img [ref=e1690]\n                        - generic [ref=e1695]:\n                          - generic [ref=e1698]: Z\n                          - generic [ref=e1700]:\n                            - button [ref=e1701]:\n                              - img [ref=e1702]\n                            - spinbutton \"Z\" [ref=e1703]: \"0.2\"\n                            - button [ref=e1704]:\n                              - img [ref=e1705]\n                      - treeitem \"Direction\" [ref=e1706]:\n                        - generic [ref=e1707]:\n                          - button [ref=e1709]:\n                            - img [ref=e1710]\n                          - generic [ref=e1715]: Direction\n                      - generic [ref=e1716]:\n                        - generic [ref=e1721]:\n                          - generic [ref=e1724]: X\n                          - generic [ref=e1726]:\n                            - button [ref=e1727]:\n                              - img [ref=e1728]\n                            - spinbutton \"X\" [ref=e1729]: \"-1\"\n                            - button [ref=e1730]:\n                              - img [ref=e1731]\n                        - generic [ref=e1736]:\n                          - generic [ref=e1739]: \"Y\"\n                          - generic [ref=e1741]:\n                            - button [ref=e1742]:\n                              - img [ref=e1743]\n                            - spinbutton \"Y\" [ref=e1744]: \"0\"\n                            - button [ref=e1745]:\n                              - img [ref=e1746]\n                        - generic [ref=e1751]:\n                          - generic [ref=e1754]: Z\n                          - generic [ref=e1756]:\n                            - button [ref=e1757]:\n                              - img [ref=e1758]\n                            - spinbutton \"Z\" [ref=e1759]: \"0\"\n                            - button [ref=e1760]:\n                              - img [ref=e1761]\n                      - generic [ref=e1766]:\n                        - generic [ref=e1769]: Compatible Ports\n                        - textbox [ref=e1772]:\n                          - generic [ref=e1774]: port1, port2\n                  - generic [ref=e1775]:\n                    - treeitem \"019ab243-21f4-73df-8cb4-57263e420e70\" [ref=e1776]:\n                      - generic [ref=e1777]:\n                        - button [ref=e1779]:\n                          - img [ref=e1780]\n                        - generic [ref=e1783]:\n                          - generic [ref=e1784]:\n                            - button [ref=e1785]:\n                              - img [ref=e1786]\n                            - generic [ref=e1793]: 019ab243-21f4-73df-8cb4-57263e420e70\n                          - button [ref=e1795]:\n                            - img\n                    - generic [ref=e1796]:\n                      - generic [ref=e1801]:\n                        - generic [ref=e1804]: Port\n                        - textbox [ref=e1807]:\n                          - generic [ref=e1809]: 019ab243-21f4-73df-8cb4-57263e42\n                          - img [ref=e1812]\n                      - generic [ref=e1818]:\n                        - generic [ref=e1821]: Description\n                        - textbox [ref=e1824]:\n                          - generic [ref=e1826]: The first door of the main plattform in\n                          - img [ref=e1829]\n                      - treeitem \"Point\" [ref=e1831]:\n                        - generic [ref=e1832]:\n                          - button [ref=e1834]:\n                            - img [ref=e1835]\n                          - generic [ref=e1840]: Point\n                      - generic [ref=e1841]:\n                        - generic [ref=e1846]:\n                          - generic [ref=e1849]: X\n                          - generic [ref=e1851]:\n                            - button [ref=e1852]:\n                              - img [ref=e1853]\n                            - spinbutton \"X\" [ref=e1854]: \"-2.75\"\n                            - button [ref=e1855]:\n                              - img [ref=e1856]\n                        - generic [ref=e1861]:\n                          - generic [ref=e1864]: \"Y\"\n                          - generic [ref=e1866]:\n                            - button [ref=e1867]:\n                              - img [ref=e1868]\n                            - spinbutton \"Y\" [ref=e1869]: \"-0.9\"\n                            - button [ref=e1870]:\n                              - img [ref=e1871]\n                        - generic [ref=e1876]:\n                          - generic [ref=e1879]: Z\n                          - generic [ref=e1881]:\n                            - button [ref=e1882]:\n                              - img [ref=e1883]\n                            - spinbutton \"Z\" [ref=e1884]: \"1.1166667\"\n                            - button [ref=e1885]:\n                              - img [ref=e1886]\n                      - treeitem \"Direction\" [ref=e1887]:\n                        - generic [ref=e1888]:\n                          - button [ref=e1890]:\n                            - img [ref=e1891]\n                          - generic [ref=e1896]: Direction\n                      - generic [ref=e1897]:\n                        - generic [ref=e1902]:\n                          - generic [ref=e1905]: X\n                          - generic [ref=e1907]:\n                            - button [ref=e1908]:\n                              - img [ref=e1909]\n                            - spinbutton \"X\" [ref=e1910]: \"-1\"\n                            - button [ref=e1911]:\n                              - img [ref=e1912]\n                        - generic [ref=e1917]:\n                          - generic [ref=e1920]: \"Y\"\n                          - generic [ref=e1922]:\n                            - button [ref=e1923]:\n                              - img [ref=e1924]\n                            - spinbutton \"Y\" [ref=e1925]: \"0\"\n                            - button [ref=e1926]:\n                              - img [ref=e1927]\n                        - generic [ref=e1932]:\n                          - generic [ref=e1935]: Z\n                          - generic [ref=e1937]:\n                            - button [ref=e1938]:\n                              - img [ref=e1939]\n                            - spinbutton \"Z\" [ref=e1940]: \"0\"\n                            - button [ref=e1941]:\n                              - img [ref=e1942]\n                      - generic [ref=e1947]:\n                        - generic [ref=e1950]: Compatible Ports\n                        - textbox [ref=e1953]:\n                          - generic [ref=e1955]: port1, port2\n                  - generic [ref=e1956]:\n                    - treeitem \"019ab243-21f4-73df-8cb4-50266f6860b8\" [ref=e1957]:\n                      - generic [ref=e1958]:\n                        - button [ref=e1960]:\n                          - img [ref=e1961]\n                        - generic [ref=e1964]:\n                          - generic [ref=e1965]:\n                            - button [ref=e1966]:\n                              - img [ref=e1967]\n                            - generic [ref=e1974]: 019ab243-21f4-73df-8cb4-50266f6860b8\n                          - button [ref=e1976]:\n                            - img\n                    - generic [ref=e1977]:\n                      - generic [ref=e1982]:\n                        - generic [ref=e1985]: Port\n                        - textbox [ref=e1988]:\n                          - generic [ref=e1990]: 019ab243-21f4-73df-8cb4-50266f68\n                          - img [ref=e1993]\n                      - generic [ref=e1999]:\n                        - generic [ref=e2002]: Description\n                        - textbox [ref=e2005]:\n                          - generic [ref=e2007]: The second door of the main plattform\n                          - img [ref=e2010]\n                      - treeitem \"Point\" [ref=e2012]:\n                        - generic [ref=e2013]:\n                          - button [ref=e2015]:\n                            - img [ref=e2016]\n                          - generic [ref=e2021]: Point\n                      - generic [ref=e2022]:\n                        - generic [ref=e2027]:\n                          - generic [ref=e2030]: X\n                          - generic [ref=e2032]:\n                            - button [ref=e2033]:\n                              - img [ref=e2034]\n                            - spinbutton \"X\" [ref=e2035]: \"-0.9\"\n                            - button [ref=e2036]:\n                              - img [ref=e2037]\n                        - generic [ref=e2042]:\n                          - generic [ref=e2045]: \"Y\"\n                          - generic [ref=e2047]:\n                            - button [ref=e2048]:\n                              - img [ref=e2049]\n                            - spinbutton \"Y\" [ref=e2050]: \"-2.75\"\n                            - button [ref=e2051]:\n                              - img [ref=e2052]\n                        - generic [ref=e2057]:\n                          - generic [ref=e2060]: Z\n                          - generic [ref=e2062]:\n                            - button [ref=e2063]:\n                              - img [ref=e2064]\n                            - spinbutton \"Z\" [ref=e2065]: \"1.1166667\"\n                            - button [ref=e2066]:\n                              - img [ref=e2067]\n                      - treeitem \"Direction\" [ref=e2068]:\n                        - generic [ref=e2069]:\n                          - button [ref=e2071]:\n                            - img [ref=e2072]\n                          - generic [ref=e2077]: Direction\n                      - generic [ref=e2078]:\n                        - generic [ref=e2083]:\n                          - generic [ref=e2086]: X\n                          - generic [ref=e2088]:\n                            - button [ref=e2089]:\n                              - img [ref=e2090]\n                            - spinbutton \"X\" [ref=e2091]: \"0\"\n                            - button [ref=e2092]:\n                              - img [ref=e2093]\n                        - generic [ref=e2098]:\n                          - generic [ref=e2101]: \"Y\"\n                          - generic [ref=e2103]:\n                            - button [ref=e2104]:\n                              - img [ref=e2105]\n                            - spinbutton \"Y\" [ref=e2106]: \"-1\"\n                            - button [ref=e2107]:\n                              - img [ref=e2108]\n                        - generic [ref=e2113]:\n                          - generic [ref=e2116]: Z\n                          - generic [ref=e2118]:\n                            - button [ref=e2119]:\n                              - img [ref=e2120]\n                            - spinbutton \"Z\" [ref=e2121]: \"0\"\n                            - button [ref=e2122]:\n                              - img [ref=e2123]\n                      - generic [ref=e2128]:\n                        - generic [ref=e2131]: Compatible Ports\n                        - textbox [ref=e2134]:\n                          - generic [ref=e2136]: port1, port2\n                  - generic [ref=e2137]:\n                    - treeitem \"019ab243-21f4-73df-8cb4-57263e420e70\" [ref=e2138]:\n                      - generic [ref=e2139]:\n                        - button [ref=e2141]:\n                          - img [ref=e2142]\n                        - generic [ref=e2145]:\n                          - generic [ref=e2146]:\n                            - button [ref=e2147]:\n                              - img [ref=e2148]\n                            - generic [ref=e2155]: 019ab243-21f4-73df-8cb4-57263e420e70\n                          - button [ref=e2157]:\n                            - img\n                    - generic [ref=e2158]:\n                      - generic [ref=e2163]:\n                        - generic [ref=e2166]: Port\n                        - textbox [ref=e2169]:\n                          - generic [ref=e2171]: 019ab243-21f4-73df-8cb4-57263e42\n                          - img [ref=e2174]\n                      - generic [ref=e2180]:\n                        - generic [ref=e2183]: Description\n                        - textbox [ref=e2186]:\n                          - generic [ref=e2188]: The first door of the main plattform in\n                          - img [ref=e2191]\n                      - treeitem \"Point\" [ref=e2193]:\n                        - generic [ref=e2194]:\n                          - button [ref=e2196]:\n                            - img [ref=e2197]\n                          - generic [ref=e2202]: Point\n                      - generic [ref=e2203]:\n                        - generic [ref=e2208]:\n                          - generic [ref=e2211]: X\n                          - generic [ref=e2213]:\n                            - button [ref=e2214]:\n                              - img [ref=e2215]\n                            - spinbutton \"X\" [ref=e2216]: \"0.9\"\n                            - button [ref=e2217]:\n                              - img [ref=e2218]\n                        - generic [ref=e2223]:\n                          - generic [ref=e2226]: \"Y\"\n                          - generic [ref=e2228]:\n                            - button [ref=e2229]:\n                              - img [ref=e2230]\n                            - spinbutton \"Y\" [ref=e2231]: \"-2.75\"\n                            - button [ref=e2232]:\n                              - img [ref=e2233]\n                        - generic [ref=e2238]:\n                          - generic [ref=e2241]: Z\n                          - generic [ref=e2243]:\n                            - button [ref=e2244]:\n                              - img [ref=e2245]\n                            - spinbutton \"Z\" [ref=e2246]: \"2.0333333\"\n                            - button [ref=e2247]:\n                              - img [ref=e2248]\n                      - treeitem \"Direction\" [ref=e2249]:\n                        - generic [ref=e2250]:\n                          - button [ref=e2252]:\n                            - img [ref=e2253]\n                          - generic [ref=e2258]: Direction\n                      - generic [ref=e2259]:\n                        - generic [ref=e2264]:\n                          - generic [ref=e2267]: X\n                          - generic [ref=e2269]:\n                            - button [ref=e2270]:\n                              - img [ref=e2271]\n                            - spinbutton \"X\" [ref=e2272]: \"0\"\n                            - button [ref=e2273]:\n                              - img [ref=e2274]\n                        - generic [ref=e2279]:\n                          - generic [ref=e2282]: \"Y\"\n                          - generic [ref=e2284]:\n                            - button [ref=e2285]:\n                              - img [ref=e2286]\n                            - spinbutton \"Y\" [ref=e2287]: \"-1\"\n                            - button [ref=e2288]:\n                              - img [ref=e2289]\n                        - generic [ref=e2294]:\n                          - generic [ref=e2297]: Z\n                          - generic [ref=e2299]:\n                            - button [ref=e2300]:\n                              - img [ref=e2301]\n                            - spinbutton \"Z\" [ref=e2302]: \"0\"\n                            - button [ref=e2303]:\n                              - img [ref=e2304]\n                      - generic [ref=e2309]:\n                        - generic [ref=e2312]: Compatible Ports\n                        - textbox [ref=e2315]:\n                          - generic [ref=e2317]: port1, port2\n                  - generic [ref=e2318]:\n                    - treeitem \"019ab243-21f4-73df-8cb4-50266f6860b8\" [ref=e2319]:\n                      - generic [ref=e2320]:\n                        - button [ref=e2322]:\n                          - img [ref=e2323]\n                        - generic [ref=e2326]:\n                          - generic [ref=e2327]:\n                            - button [ref=e2328]:\n                              - img [ref=e2329]\n                            - generic [ref=e2336]: 019ab243-21f4-73df-8cb4-50266f6860b8\n                          - button [ref=e2338]:\n                            - img\n                    - generic [ref=e2339]:\n                      - generic [ref=e2344]:\n                        - generic [ref=e2347]: Port\n                        - textbox [ref=e2350]:\n                          - generic [ref=e2352]: 019ab243-21f4-73df-8cb4-50266f68\n                          - img [ref=e2355]\n                      - generic [ref=e2361]:\n                        - generic [ref=e2364]: Description\n                        - textbox [ref=e2367]:\n                          - generic [ref=e2369]: The second door of the main plattform\n                          - img [ref=e2372]\n                      - treeitem \"Point\" [ref=e2374]:\n                        - generic [ref=e2375]:\n                          - button [ref=e2377]:\n                            - img [ref=e2378]\n                          - generic [ref=e2383]: Point\n                      - generic [ref=e2384]:\n                        - generic [ref=e2389]:\n                          - generic [ref=e2392]: X\n                          - generic [ref=e2394]:\n                            - button [ref=e2395]:\n                              - img [ref=e2396]\n                            - spinbutton \"X\" [ref=e2397]: \"2.75\"\n                            - button [ref=e2398]:\n                              - img [ref=e2399]\n                        - generic [ref=e2404]:\n                          - generic [ref=e2407]: \"Y\"\n                          - generic [ref=e2409]:\n                            - button [ref=e2410]:\n                              - img [ref=e2411]\n                            - spinbutton \"Y\" [ref=e2412]: \"-0.9\"\n                            - button [ref=e2413]:\n                              - img [ref=e2414]\n                        - generic [ref=e2419]:\n                          - generic [ref=e2422]: Z\n                          - generic [ref=e2424]:\n                            - button [ref=e2425]:\n                              - img [ref=e2426]\n                            - spinbutton \"Z\" [ref=e2427]: \"2.0333333\"\n                            - button [ref=e2428]:\n                              - img [ref=e2429]\n                      - treeitem \"Direction\" [ref=e2430]:\n                        - generic [ref=e2431]:\n                          - button [ref=e2433]:\n                            - img [ref=e2434]\n                          - generic [ref=e2439]: Direction\n                      - generic [ref=e2440]:\n                        - generic [ref=e2445]:\n                          - generic [ref=e2448]: X\n                          - generic [ref=e2450]:\n                            - button [ref=e2451]:\n                              - img [ref=e2452]\n                            - spinbutton \"X\" [ref=e2453]: \"1\"\n                            - button [ref=e2454]:\n                              - img [ref=e2455]\n                        - generic [ref=e2460]:\n                          - generic [ref=e2463]: \"Y\"\n                          - generic [ref=e2465]:\n                            - button [ref=e2466]:\n                              - img [ref=e2467]\n                            - spinbutton \"Y\" [ref=e2468]: \"0\"\n                            - button [ref=e2469]:\n                              - img [ref=e2470]\n                        - generic [ref=e2475]:\n                          - generic [ref=e2478]: Z\n                          - generic [ref=e2480]:\n                            - button [ref=e2481]:\n                              - img [ref=e2482]\n                            - spinbutton \"Z\" [ref=e2483]: \"0\"\n                            - button [ref=e2484]:\n                              - img [ref=e2485]\n                      - generic [ref=e2490]:\n                        - generic [ref=e2493]: Compatible Ports\n                        - textbox [ref=e2496]:\n                          - generic [ref=e2498]: port1, port2\n                  - generic [ref=e2499]:\n                    - generic [ref=e2504]:\n                      - generic [ref=e2507]: Port\n                      - textbox [ref=e2510]:\n                        - generic [ref=e2512]: e.g., electrical, mechanical\n                    - generic [ref=e2517]:\n                      - generic [ref=e2520]: Description\n                      - textbox [ref=e2523]:\n                        - generic [ref=e2525]: Describe this connector...\n                    - treeitem \"Point\" [ref=e2526]:\n                      - generic [ref=e2527]:\n                        - button [ref=e2529]:\n                          - img [ref=e2530]\n                        - generic [ref=e2535]: Point\n                    - generic [ref=e2536]:\n                      - generic [ref=e2541]:\n                        - generic [ref=e2544]: X\n                        - generic [ref=e2546]:\n                          - button [ref=e2547]:\n                            - img [ref=e2548]\n                          - spinbutton \"X\" [ref=e2549]: \"1.4961533021168272\"\n                          - button [ref=e2550]:\n                            - img [ref=e2551]\n                      - generic [ref=e2556]:\n                        - generic [ref=e2559]: \"Y\"\n                        - generic [ref=e2561]:\n                          - button [ref=e2562]:\n                            - img [ref=e2563]\n                          - spinbutton \"Y\" [ref=e2564]: \"-1.609126311607186\"\n                          - button [ref=e2565]:\n                            - img [ref=e2566]\n                      - generic [ref=e2571]:\n                        - generic [ref=e2574]: Z\n                        - generic [ref=e2576]:\n                          - button [ref=e2577]:\n                            - img [ref=e2578]\n                          - spinbutton \"Z\" [ref=e2579]: \"4.583333492279053\"\n                          - button [ref=e2580]:\n                            - img [ref=e2581]\n                    - treeitem \"Direction\" [ref=e2582]:\n                      - generic [ref=e2583]:\n                        - button [ref=e2585]:\n                          - img [ref=e2586]\n                        - generic [ref=e2591]: Direction\n                    - generic [ref=e2592]:\n                      - generic [ref=e2597]:\n                        - generic [ref=e2600]: X\n                        - generic [ref=e2602]:\n                          - button [ref=e2603]:\n                            - img [ref=e2604]\n                          - spinbutton \"X\" [ref=e2605]: \"0\"\n                          - button [ref=e2606]:\n                            - img [ref=e2607]\n                      - generic [ref=e2612]:\n                        - generic [ref=e2615]: \"Y\"\n                        - generic [ref=e2617]:\n                          - button [ref=e2618]:\n                            - img [ref=e2619]\n                          - spinbutton \"Y\" [ref=e2620]: \"0\"\n                          - button [ref=e2621]:\n                            - img [ref=e2622]\n                      - generic [ref=e2627]:\n                        - generic [ref=e2630]: Z\n                        - generic [ref=e2632]:\n                          - button [ref=e2633]:\n                            - img [ref=e2634]\n                          - spinbutton \"Z\" [ref=e2635]: \"1\"\n                          - button [ref=e2636]:\n                            - img [ref=e2637]\n                    - generic [ref=e2642]:\n                      - generic [ref=e2645]: Compatible Ports\n                      - textbox [ref=e2648]:\n                        - generic [ref=e2650]: port1, port2\n                  - status [ref=e2651]\n                - treeitem \"Authors\" [ref=e2652]:\n                  - generic [ref=e2653]:\n                    - button [ref=e2655]:\n                      - img [ref=e2656]\n                    - generic [ref=e2659]:\n                      - generic [ref=e2661]: Authors\n                      - button [ref=e2663]:\n                        - img\n                - generic [ref=e2664]:\n                  - generic [ref=e2669]:\n                    - generic [ref=e2672]: Name\n                    - textbox [ref=e2675]\n                  - generic [ref=e2680]:\n                    - generic [ref=e2683]: Email\n                    - textbox [ref=e2686]\n                  - status [ref=e2687]\n                - treeitem \"Attributes\" [ref=e2688]:\n                  - generic [ref=e2689]:\n                    - button [ref=e2691]:\n                      - img [ref=e2692]\n                    - generic [ref=e2695]:\n                      - generic [ref=e2697]: Attributes\n                      - button [ref=e2699]:\n                        - img\n                - generic [ref=e2700]:\n                  - treeitem \"width\" [ref=e2701]:\n                    - generic [ref=e2702]:\n                      - button [ref=e2704]:\n                        - img [ref=e2705]\n                      - generic [ref=e2708]:\n                        - generic [ref=e2709]:\n                          - button [ref=e2710]:\n                            - img [ref=e2711]\n                          - generic [ref=e2718]: width\n                        - button [ref=e2720]:\n                          - img\n                  - generic [ref=e2721]:\n                    - generic [ref=e2726]:\n                      - generic [ref=e2729]: Name\n                      - textbox [ref=e2732]:\n                        - generic [ref=e2734]: width\n                    - generic [ref=e2739]:\n                      - generic [ref=e2742]: Value\n                      - textbox [ref=e2745]:\n                        - generic [ref=e2747]: \"5.5\"\n                    - generic [ref=e2752]:\n                      - generic [ref=e2755]: Definition\n                      - textbox [ref=e2758]:\n                        - generic [ref=e2760]: https://identifier.buildingsmart.org/ur\n                        - img [ref=e2763]\n                  - treeitem \"storeys\" [ref=e2765]:\n                    - generic [ref=e2766]:\n                      - button [ref=e2768]:\n                        - img [ref=e2769]\n                      - generic [ref=e2772]:\n                        - generic [ref=e2773]:\n                          - button [ref=e2774]:\n                            - img [ref=e2775]\n                          - generic [ref=e2782]: storeys\n                        - button [ref=e2784]:\n                          - img\n                  - generic [ref=e2785]:\n                    - generic [ref=e2790]:\n                      - generic [ref=e2793]: Name\n                      - textbox [ref=e2796]:\n                        - generic [ref=e2798]: storeys\n                    - generic [ref=e2803]:\n                      - generic [ref=e2806]: Value\n                      - textbox [ref=e2809]:\n                        - generic [ref=e2811]: \"1\"\n                    - generic [ref=e2816]:\n                      - generic [ref=e2819]: Definition\n                      - textbox [ref=e2822]:\n                        - generic [ref=e2824]: https://identifier.buildingsmart.org/ur\n                        - img [ref=e2827]\n                  - treeitem \"floor height\" [ref=e2829]:\n                    - generic [ref=e2830]:\n                      - button [ref=e2832]:\n                        - img [ref=e2833]\n                      - generic [ref=e2836]:\n                        - generic [ref=e2837]:\n                          - button [ref=e2838]:\n                            - img [ref=e2839]\n                          - generic [ref=e2846]: floor height\n                        - button [ref=e2848]:\n                          - img\n                  - generic [ref=e2849]:\n                    - generic [ref=e2854]:\n                      - generic [ref=e2857]: Name\n                      - textbox [ref=e2860]:\n                        - generic [ref=e2862]: floor height\n                    - generic [ref=e2867]:\n                      - generic [ref=e2870]: Value\n                      - textbox [ref=e2873]:\n                        - generic [ref=e2875]: \"2.75\"\n                    - generic [ref=e2880]:\n                      - generic [ref=e2883]: Definition\n                      - textbox [ref=e2886]:\n                        - generic [ref=e2888]: https://identifier.buildingsmart.org/ur\n                        - img [ref=e2891]\n                  - treeitem \"platform\" [ref=e2893]:\n                    - generic [ref=e2894]:\n                      - button [ref=e2896]:\n                        - img [ref=e2897]\n                      - generic [ref=e2900]:\n                        - generic [ref=e2901]:\n                          - button [ref=e2902]:\n                            - img [ref=e2903]\n                          - generic [ref=e2910]: platform\n                        - button [ref=e2912]:\n                          - img\n                  - generic [ref=e2913]:\n                    - generic [ref=e2918]:\n                      - generic [ref=e2921]: Name\n                      - textbox [ref=e2924]:\n                        - generic [ref=e2926]: platform\n                    - generic [ref=e2931]:\n                      - generic [ref=e2934]: Value\n                      - textbox [ref=e2937]:\n                        - generic [ref=e2939]: north\n                    - generic [ref=e2944]:\n                      - generic [ref=e2947]: Definition\n                      - textbox [ref=e2950]:\n                        - generic [ref=e2952]: Definition or URL...\n                  - treeitem \"door width\" [ref=e2953]:\n                    - generic [ref=e2954]:\n                      - button [ref=e2956]:\n                        - img [ref=e2957]\n                      - generic [ref=e2960]:\n                        - generic [ref=e2961]:\n                          - button [ref=e2962]:\n                            - img [ref=e2963]\n                          - generic [ref=e2970]: door width\n                        - button [ref=e2972]:\n                          - img\n                  - generic [ref=e2973]:\n                    - generic [ref=e2978]:\n                      - generic [ref=e2981]: Name\n                      - textbox [ref=e2984]:\n                        - generic [ref=e2986]: door width\n                    - generic [ref=e2991]:\n                      - generic [ref=e2994]: Value\n                      - textbox [ref=e2997]:\n                        - generic [ref=e2999]: \"0.8\"\n                    - generic [ref=e3004]:\n                      - generic [ref=e3007]: Definition\n                      - textbox [ref=e3010]:\n                        - generic [ref=e3012]: Definition or URL...\n                  - treeitem \"door height\" [ref=e3013]:\n                    - generic [ref=e3014]:\n                      - button [ref=e3016]:\n                        - img [ref=e3017]\n                      - generic [ref=e3020]:\n                        - generic [ref=e3021]:\n                          - button [ref=e3022]:\n                            - img [ref=e3023]\n                          - generic [ref=e3030]: door height\n                        - button [ref=e3032]:\n                          - img\n                  - generic [ref=e3033]:\n                    - generic [ref=e3038]:\n                      - generic [ref=e3041]: Name\n                      - textbox [ref=e3044]:\n                        - generic [ref=e3046]: door height\n                    - generic [ref=e3051]:\n                      - generic [ref=e3054]: Value\n                      - textbox [ref=e3057]:\n                        - generic [ref=e3059]: \"2\"\n                    - generic [ref=e3064]:\n                      - generic [ref=e3067]: Definition\n                      - textbox [ref=e3070]:\n                        - generic [ref=e3072]: Definition or URL...\n                  - treeitem \"door offset\" [ref=e3073]:\n                    - generic [ref=e3074]:\n                      - button [ref=e3076]:\n                        - img [ref=e3077]\n                      - generic [ref=e3080]:\n                        - generic [ref=e3081]:\n                          - button [ref=e3082]:\n                            - img [ref=e3083]\n                          - generic [ref=e3090]: door offset\n                        - button [ref=e3092]:\n                          - img\n                  - generic [ref=e3093]:\n                    - generic [ref=e3098]:\n                      - generic [ref=e3101]: Name\n                      - textbox [ref=e3104]:\n                        - generic [ref=e3106]: door offset\n                    - generic [ref=e3111]:\n                      - generic [ref=e3114]: Value\n                      - textbox [ref=e3117]:\n                        - generic [ref=e3119]: \"1.15\"\n                    - generic [ref=e3124]:\n                      - generic [ref=e3127]: Definition\n                      - textbox [ref=e3130]:\n                        - generic [ref=e3132]: Definition or URL...\n                  - treeitem \"effective floor area\" [ref=e3133]:\n                    - generic [ref=e3134]:\n                      - button [ref=e3136]:\n                        - img [ref=e3137]\n                      - generic [ref=e3140]:\n                        - generic [ref=e3141]:\n                          - button [ref=e3142]:\n                            - img [ref=e3143]\n                          - generic [ref=e3150]: effective floor area\n                        - button [ref=e3152]:\n                          - img\n                  - generic [ref=e3153]:\n                    - generic [ref=e3158]:\n                      - generic [ref=e3161]: Name\n                      - textbox [ref=e3164]:\n                        - generic [ref=e3166]: effective floor area\n                    - generic [ref=e3171]:\n                      - generic [ref=e3174]: Value\n                      - textbox [ref=e3177]:\n                        - generic [ref=e3179]: \"24.21\"\n                    - generic [ref=e3184]:\n                      - generic [ref=e3187]: Definition\n                      - textbox [ref=e3190]:\n                        - generic [ref=e3192]: https://identifier.buildingsmart.org/ur\n                        - img [ref=e3195]\n                  - treeitem \"construction cost\" [ref=e3197]:\n                    - generic [ref=e3198]:\n                      - button [ref=e3200]:\n                        - img [ref=e3201]\n                      - generic [ref=e3204]:\n                        - generic [ref=e3205]:\n                          - button [ref=e3206]:\n                            - img [ref=e3207]\n                          - generic [ref=e3214]: construction cost\n                        - button [ref=e3216]:\n                          - img\n                  - generic [ref=e3217]:\n                    - generic [ref=e3222]:\n                      - generic [ref=e3225]: Name\n                      - textbox [ref=e3228]:\n                        - generic [ref=e3230]: construction cost\n                    - generic [ref=e3235]:\n                      - generic [ref=e3238]: Value\n                      - textbox [ref=e3241]:\n                        - generic [ref=e3243]: \"217800\"\n                    - generic [ref=e3248]:\n                      - generic [ref=e3251]: Definition\n                      - textbox [ref=e3254]:\n                        - generic [ref=e3256]: Definition or URL...\n                  - treeitem \"heating energy demand\" [ref=e3257]:\n                    - generic [ref=e3258]:\n                      - button [ref=e3260]:\n                        - img [ref=e3261]\n                      - generic [ref=e3264]:\n                        - generic [ref=e3265]:\n                          - button [ref=e3266]:\n                            - img [ref=e3267]\n                          - generic [ref=e3274]: heating energy demand\n                        - button [ref=e3276]:\n                          - img\n                  - generic [ref=e3277]:\n                    - generic [ref=e3282]:\n                      - generic [ref=e3285]: Name\n                      - textbox [ref=e3288]:\n                        - generic [ref=e3290]: heating energy demand\n                    - generic [ref=e3295]:\n                      - generic [ref=e3298]: Value\n                      - textbox [ref=e3301]:\n                        - generic [ref=e3303]: \"484\"\n                    - generic [ref=e3308]:\n                      - generic [ref=e3311]: Definition\n                      - textbox [ref=e3314]:\n                        - generic [ref=e3316]: https://identifier.buildingsmart.org/ur\n                        - img [ref=e3319]\n                  - treeitem \"cooling energy demand\" [ref=e3321]:\n                    - generic [ref=e3322]:\n                      - button [ref=e3324]:\n                        - img [ref=e3325]\n                      - generic [ref=e3328]:\n                        - generic [ref=e3329]:\n                          - button [ref=e3330]:\n                            - img [ref=e3331]\n                          - generic [ref=e3338]: cooling energy demand\n                        - button [ref=e3340]:\n                          - img\n                  - generic [ref=e3341]:\n                    - generic [ref=e3346]:\n                      - generic [ref=e3349]: Name\n                      - textbox [ref=e3352]:\n                        - generic [ref=e3354]: cooling energy demand\n                    - generic [ref=e3359]:\n                      - generic [ref=e3362]: Value\n                      - textbox [ref=e3365]:\n                        - generic [ref=e3367]: \"242\"\n                    - generic [ref=e3372]:\n                      - generic [ref=e3375]: Definition\n                      - textbox [ref=e3378]:\n                        - generic [ref=e3380]: https://identifier.buildingsmart.org/ur\n                        - img [ref=e3383]\n                  - treeitem \"technical equipment energy demand\" [ref=e3385]:\n                    - generic [ref=e3386]:\n                      - button [ref=e3388]:\n                        - img [ref=e3389]\n                      - generic [ref=e3392]:\n                        - generic [ref=e3393]:\n                          - button [ref=e3394]:\n                            - img [ref=e3395]\n                          - generic [ref=e3402]: technical equipment energy demand\n                        - button [ref=e3404]:\n                          - img\n                  - generic [ref=e3405]:\n                    - generic [ref=e3410]:\n                      - generic [ref=e3413]: Name\n                      - textbox [ref=e3416]:\n                        - generic [ref=e3418]: technical equipment energy demand\n                    - generic [ref=e3423]:\n                      - generic [ref=e3426]: Value\n                      - textbox [ref=e3429]:\n                        - generic [ref=e3431]: \"484\"\n                    - generic [ref=e3436]:\n                      - generic [ref=e3439]: Definition\n                      - textbox [ref=e3442]:\n                        - generic [ref=e3444]: https://identifier.buildingsmart.org/ur\n                        - img [ref=e3447]\n                  - treeitem \"maintenance expenses\" [ref=e3449]:\n                    - generic [ref=e3450]:\n                      - button [ref=e3452]:\n                        - img [ref=e3453]\n                      - generic [ref=e3456]:\n                        - generic [ref=e3457]:\n                          - button [ref=e3458]:\n                            - img [ref=e3459]\n                          - generic [ref=e3466]: maintenance expenses\n                        - button [ref=e3468]:\n                          - img\n                  - generic [ref=e3469]:\n                    - generic [ref=e3474]:\n                      - generic [ref=e3477]: Name\n                      - textbox [ref=e3480]:\n                        - generic [ref=e3482]: maintenance expenses\n                    - generic [ref=e3487]:\n                      - generic [ref=e3490]: Value\n                      - textbox [ref=e3493]:\n                        - generic [ref=e3495]: \"1016\"\n                    - generic [ref=e3500]:\n                      - generic [ref=e3503]: Definition\n                      - textbox [ref=e3506]:\n                        - generic [ref=e3508]: Definition or URL...\n                  - treeitem \"construction global warming potential\" [ref=e3509]:\n                    - generic [ref=e3510]:\n                      - button [ref=e3512]:\n                        - img [ref=e3513]\n                      - generic [ref=e3516]:\n                        - generic [ref=e3517]:\n                          - button [ref=e3518]:\n                            - img [ref=e3519]\n                          - generic [ref=e3526]: construction global warming potential\n                        - button [ref=e3528]:\n                          - img\n                  - generic [ref=e3529]:\n                    - generic [ref=e3534]:\n                      - generic [ref=e3537]: Name\n                      - textbox [ref=e3540]:\n                        - generic [ref=e3542]: construction global warming potential\n                    - generic [ref=e3547]:\n                      - generic [ref=e3550]: Value\n                      - textbox [ref=e3553]:\n                        - generic [ref=e3555]: \"1500\"\n                    - generic [ref=e3560]:\n                      - generic [ref=e3563]: Definition\n                      - textbox [ref=e3566]:\n                        - generic [ref=e3568]: https://identifier.buildingsmart.org/ur\n                        - img [ref=e3571]\n                  - status [ref=e3573]\n            - button \"Kit Properties\" [ref=e3576]:\n              - generic [ref=e3577]:\n                - img [ref=e3579]\n                - generic [ref=e3584]: Kit Properties\n    - generic [ref=e3586]:\n      - generic:\n        - toolbar:\n          - generic [ref=e3588]:\n            - group [ref=e3590]:\n              - button \"Undo\" [ref=e3592]:\n                - img\n                - generic [ref=e3593]: Undo\n              - button \"Redo\" [ref=e3595]:\n                - img\n                - generic [ref=e3596]: Redo\n            - group [ref=e3597]:\n              - radio \"Hand\" [ref=e3598]:\n                - generic [ref=e3599]:\n                  - img\n                - generic [ref=e3600]: Hand\n            - group [ref=e3601]:\n              - radio \"Selection\" [ref=e3602]:\n                - generic [ref=e3603]:\n                  - img\n                - generic [ref=e3604]: Selection\n            - group [ref=e3605]:\n              - radio \"Filter\" [ref=e3606]:\n                - generic [ref=e3607]:\n                  - img\n                - generic [ref=e3608]: Filter\n            - group [ref=e3609]:\n              - radio \"Create\" [checked] [ref=e3610]:\n                - generic [ref=e3611]:\n                  - img\n                - generic [ref=e3612]: Create\n          - group [ref=e3617]:\n            - group [ref=e3618]:\n              - radio \"Connector\" [checked] [ref=e3619]:\n                - generic [ref=e3620]:\n                  - img\n                - generic [ref=e3621]: Connector\n      - contentinfo [ref=e3622]:\n        - generic [ref=e3624]:\n          - button \"model/gltf-binary\" [ref=e3625]:\n            - generic [ref=e3626]: model/gltf-binary\n          - button \"model/vnd.3dm\" [ref=e3627]:\n            - generic [ref=e3628]: model/vnd.3dm\n          - button \"1to200\" [ref=e3629]:\n            - generic [ref=e3630]: 1to200\n          - button \"model/vnd.speckle+json\" [ref=e3631]:\n            - generic [ref=e3632]: model/vnd.speckle+json\n          - button \"collider\" [ref=e3633]:\n            - generic [ref=e3634]: collider\n          - button [ref=e3635]:\n            - img\n  - status [ref=e3636]\n```",
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {},
+            "mcp_tool_name": "browser_snapshot"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-04-12T17:51:16Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:51:15.8518456+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {
+              "level": "error"
+            },
+            "mcp_tool_name": "browser_console_messages"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-04-12T17:51:18Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:51:17.4620922+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "mcp_result": "### Result\nTotal messages: 191 (Errors: 0, Warnings: 0)\nReturning 0 messages for level \"error\"\n\n### Page\n- Page URL: http://localhost:4000/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/9a890dd4-0a9c-48ac-920a-9e62666465ef\n- Page Title: semio · playground\n### Events\n- New console entries: .playwright-mcp\\console-2026-04-12T17-50-43-468Z.log#L2-L8304",
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {
+              "level": "error"
+            },
+            "mcp_tool_name": "browser_console_messages"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-12T17:51:44Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_cascade_response",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:51:44.3545458+02:00",
+          "execution_id": "bf97e92e-5b98-41a4-b6e0-dc3c2179e41b",
+          "tool_info": {
+            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n\n*User accepted the command `git diff --check`*\n\n*User accepted the command `git status --short`*\n\n### Planner Response\n\n`git diff --check` is clean (no conflict markers in content), but git still shows `UU` (unmerged) status for 5 files. I also need to check `elements/ui/index.tsx` which I missed. Let me handle all of this and find the \"play\" dev site.\n\n*Updated todo list*\n\n*Grep searched codebase*\n\n*Found code context*\n\n### Planner Response\n\nNo conflict markers in `elements/ui/index.tsx`. The `UU` status means git still considers files unmerged. Let me also verify no `=======` or `\u003e\u003e\u003e\u003e\u003e\u003e\u003e` markers remain anywhere, then mark them resolved and start the play dev site.\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n### Planner Response\n\nAll 5 UU files are clean — no conflict markers. Git just needs them marked as resolved. Let me `git add` them and start the play dev site.\n\n*User accepted the command `git add elements/ui/index.tsx semio/js/index.ts semio/rs/lib.rs semio/sketchpad/index.tsx semio/ui/index.tsx`*\n\n*Updated todo list*\n\n### Planner Response\n\nLet me check if anything is already running on port 4000, then start the play dev site.\n\n*User accepted the command `netstat -ano | findstr :4000`*\n\n### Planner Response\n\nPort 4000 is free. Let me start the play dev site.\n\n*User accepted the command `npm run dev:sites:play`*\n\n*Checked command status*\n\n### Planner Response\n\nDuplicate symbols from the merge resolution. The conflict kept both HEAD and incoming validation serialization functions. I need to find and remove the duplicates.\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n### Planner Response\n\nLet me find the original (HEAD) copies of these duplicate functions.\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n### Planner Response\n\nThe originals are around line 10496, the duplicates around line 14546. Let me see the full original block to determine what to remove.\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n### Planner Response\n\nI see the issue — both HEAD and incoming had the same validation serialization functions. The duplicate block at lines 14546-14654 needs to be removed. Let me also check the interfaces are also duplicated:\n\n*Grep searched codebase*\n\n### Planner Response\n\nRemoving the duplicate validation serialization block (lines 14544-14654). The original at lines 10465-10575 stays.\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n*Edited relevant file*\n\n### Planner Response\n\nNow let me check if the dev server recovered or needs a restart after the fix.\n\n*Checked command status*\n\n### Planner Response\n\nMore duplicates — the merge also duplicated constraint definitions. Let me find the full extent of the duplicate region.\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n### Planner Response\n\nLet me find the boundary between the original and duplicate constraint regions.\n\n*Grep searched codebase*\n\n### Planner Response\n\nI need to find the full extent of the duplicate validation region that starts around line 13700. Let me trace its beginning.\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n### Planner Response\n\nLet me verify the duplicate interfaces are truly duplicated with the originals.\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n### Planner Response\n\nThe entire block from line 13716 to 14544 is a duplicate of the original validation code at lines 9744-10575. Removing it.\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n*Updated todo list*\n\n### Planner Response\n\nThe duplicate block is ~830 lines (13716-14544). I'll use PowerShell to remove it efficiently.\n\n*User accepted the command `$f = 'c:\\git\\semio\\semio\\js\\index.ts'; $lines = [System.IO.File]::ReadAllLines($f); $before = $lines[0..13714]; $after = $lines[14544..($lines.Length-1)]; $result = $before + $after; [System.IO.File]::WriteAllLines($f, $result)`*\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n*Checked command status*\n\n### Planner Response\n\nThe error output might be from a cached build. Let me verify the current file state for remaining duplicates.\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n### Planner Response\n\nAll duplicates are now gone — each symbol appears only once. The dev server errors were from a previous build cycle. Let me check the current server status:\n\n*Checked command status*\n\n*User accepted the command `netstat -ano | findstr :4000`*\n\n### Planner Response\n\nThe dev server is listening on port 4000. Let me verify it's actually serving content properly.\n\n*Ran preview*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n### Planner Response\n\nThe play site loaded successfully with title \"semio · playground\" and a full UI (navigation, scene views, property panels, toolbar). Let me check for console errors:\n\n*Running MCP tool*\n\n### Planner Response\n\nZero console errors. The play dev site is fully functional.\n\n*Updated todo list*\n\n### Planner Response\n\n## Summary\n\nAll merge conflicts resolved and play dev site verified working:\n\n1. **Git conflicts resolved** — All 5 `UU` files (`elements/ui/index.tsx`, [semio/js/index.ts](file:///c:/git/semio/semio/js/index.ts:0:0-0:0), [semio/rs/lib.rs](file:///c:/git/semio/semio/rs/lib.rs:0:0-0:0), [semio/sketchpad/index.tsx](file:///c:/git/semio/semio/sketchpad/index.tsx:0:0-0:0), [semio/ui/index.tsx](file:///c:/git/semio/semio/ui/index.tsx:0:0-0:0)) had conflict markers removed and were `git add`ed\n2. **Duplicate symbols removed** — The merge left a ~830-line duplicate validation region (types, constraints, serialization functions) in [semio/js/index.ts](file:///c:/git/semio/semio/js/index.ts:0:0-0:0) causing build failures — removed the duplicate block\n3. **Play dev site running** — `http://localhost:4000` is serving correctly with page title \"semio · playground\", full UI rendering, and **0 console errors**"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-12T17:55:27Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_user_prompt",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:55:27.2960909+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "user_prompt": "sketchpad design app stopped working correctly. All pieces are now stacked on top of each other and have not the right computed plane and center."
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:55:56Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:55:55.7033353+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\sketchpad"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:56:01Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:56:00.6389163+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\sketchpad"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:56:23Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:56:23.0861212+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\sketchpad"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:56:28Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:56:28.1277432+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\sketchpad"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:56:58Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:56:58.2831186+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:56:59Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:56:59.4070986+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:57:30Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:57:30.2621913+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:57:32Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:57:31.4953571+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:58:03Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:58:03.1075242+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:58:04Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:58:04.370305+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T17:58:20Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:58:20.1502427+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\sketchpad\\index.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T17:58:21Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:58:21.3354339+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\sketchpad\\index.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-04-12T17:58:40Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_write_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:58:40.2968923+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "    try {\n      const metadata = piecesMetadata(kit, designScope.guid);\n      if (typeof window !== \"undefined\") {\n        (window as any).__SEMIO_PIECES_METADATA__ = Object.fromEntries(metadata);\n      }\n      return metadata;\n    } catch (error) {",
+                "new_string": "    try {\n      const result = piecesMetadata(kit, designScope.guid);\n      if (!result.ok) {\n        console.error(\"[PiecesMetadata] piecesMetadata failed:\", result.errors);\n        return new Map\u003cstring, PieceMetadata\u003e();\n      }\n      const metadata = result.change;\n      if (typeof window !== \"undefined\") {\n        (window as any).__SEMIO_PIECES_METADATA__ = Object.fromEntries(metadata);\n      }\n      return metadata;\n    } catch (error) {"
+              }
+            ],
+            "file_path": "c:\\git\\semio\\semio\\sketchpad\\index.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.ended",
+        "second": "2026-04-12T17:58:44Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_write_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T19:58:43.9696256+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "edits": [
+              {
+                "old_string": "    try {\n      const metadata = piecesMetadata(kit, designScope.guid);\n      if (typeof window !== \"undefined\") {\n        (window as any).__SEMIO_PIECES_METADATA__ = Object.fromEntries(metadata);\n      }\n      return metadata;\n    } catch (error) {",
+                "new_string": "    try {\n      const result = piecesMetadata(kit, designScope.guid);\n      if (!result.ok) {\n        console.error(\"[PiecesMetadata] piecesMetadata failed:\", result.errors);\n        return new Map\u003cstring, PieceMetadata\u003e();\n      }\n      const metadata = result.change;\n      if (typeof window !== \"undefined\") {\n        (window as any).__SEMIO_PIECES_METADATA__ = Object.fromEntries(metadata);\n      }\n      return metadata;\n    } catch (error) {"
+              }
+            ],
+            "file_path": "c:\\git\\semio\\semio\\sketchpad\\index.tsx"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-12T18:00:18Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T20:00:17.5245839+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-12T18:00:19Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_read_code",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T20:00:18.8472163+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "file_path": "c:\\git\\semio\\semio\\js\\index.ts"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-04-12T18:01:03Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T20:01:03.1980543+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {
+              "url": "http://localhost:4000"
+            },
+            "mcp_tool_name": "browser_navigate"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-04-12T18:01:13Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T20:01:13.0777248+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "mcp_result": "### Ran Playwright code\n```js\nawait page.goto('http://localhost:4000');\n```\n### Page\n- Page URL: http://localhost:4000/\n- Page Title: semio · playground\n### Snapshot\n- [Snapshot](.playwright-mcp\\page-2026-04-12T18-01-13-075Z.yml)\n### Events\n- New console entries: .playwright-mcp\\console-2026-04-12T18-01-04-281Z.log#L1-L359",
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {
+              "url": "http://localhost:4000"
+            },
+            "mcp_tool_name": "browser_navigate"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-04-12T18:01:31Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T20:01:30.9540337+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {
+              "level": "error"
+            },
+            "mcp_tool_name": "browser_console_messages"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-04-12T18:01:35Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T20:01:34.8027024+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "mcp_result": "### Result\nTotal messages: 3 (Errors: 0, Warnings: 0)\nReturning 0 messages for level \"error\"\n\n### Page\n- Page URL: http://localhost:4000/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/9a890dd4-0a9c-48ac-920a-9e62666465ef\n- Page Title: semio · playground",
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {
+              "level": "error"
+            },
+            "mcp_tool_name": "browser_console_messages"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-04-12T18:01:52Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T20:01:52.2491042+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {
+              "type": "png"
+            },
+            "mcp_tool_name": "browser_take_screenshot"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-04-12T18:01:57Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_mcp_tool_use",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T20:01:56.7371102+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "mcp_result": "### Result\n- [Screenshot of viewport](.playwright-mcp\\page-2026-04-12T18-01-56-222Z.png)\n### Ran Playwright code\n```js\n// Screenshot viewport and save it as .playwright-mcp\\page-2026-04-12T18-01-56-222Z.png\nawait page.screenshot({\n  path: '.playwright-mcp\\\\page-2026-04-12T18-01-56-222Z.png',\n  scale: 'css',\n  type: 'png'\n});\n```\n### Page\n- Page URL: http://localhost:4000/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/9a890dd4-0a9c-48ac-920a-9e62666465ef\n- Page Title: semio · playground\n### Events\n- New console entries: .playwright-mcp\\console-2026-04-12T18-01-04-281Z.log#L360-L717",
+            "mcp_server_name": "mcp-playwright",
+            "mcp_tool_arguments": {
+              "type": "png"
+            },
+            "mcp_tool_name": "browser_take_screenshot"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "429742077f9fc4717853fa76f2a9d0680e539859",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-12T18:02:33Z",
+        "session": "0665d5fc-608e-429e-929b-0e676f899360"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_cascade_response",
+          "trajectory_id": "0665d5fc-608e-429e-929b-0e676f899360",
+          "timestamp": "2026-04-12T20:02:33.1877547+02:00",
+          "execution_id": "086fb2bd-5683-43c5-a752-e8660bdd872d",
+          "tool_info": {
+            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md\n\n*Updated todo list*\n\n*Found code context*\n\n*Found code context*\n\n### Planner Response\n\nThe key function is [piecesMetadata](file:///c:/git/semio/semio/js/index.ts:14156:0-14193:2) from `@semio/js`. Let me find its definition to understand the computation.\n\n*Grep searched codebase*\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n*Grep searched codebase*\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n### Planner Response\n\nI see a potential type mismatch. [piecesMetadata](file:///c:/git/semio/semio/js/index.ts:14156:0-14193:2) returns `OperationResult\u003cMap\u003c...\u003e\u003e` but [usePiecesMetadataMap](file:///c:/git/semio/semio/sketchpad/index.tsx:7398:0-7414:1) treats the return as a plain `Map`. Let me verify.\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n### Planner Response\n\n**Found the bug.** [piecesMetadata](file:///c:/git/semio/semio/js/index.ts:14156:0-14193:2) returns `OperationResult\u003cMap\u003c...\u003e\u003e` (with `.ok`, [.change](file:///c:/git/semio/semio/sketchpad/index.tsx:5864:2-5885:3) properties), but [usePiecesMetadataMap](file:///c:/git/semio/semio/sketchpad/index.tsx:7398:0-7414:1) treats the result as a plain `Map`. So [metadata.get(pieceGuid)](file:///c:/git/semio/semio/sketchpad/index.tsx:2125:2-2127:3) always returns `undefined`, causing all pieces to fall back to origin `{u:0, v:0}` — stacking them on top of each other.\n\nLet me read the exact hook code to fix it:\n\n*Viewed file:///c:/git/semio/semio/sketchpad/index.tsx*\n\n*Edited relevant file*\n\n*Updated todo list*\n\n### Planner Response\n\nLet me verify the fix by checking the play dev site. First, let me wait for HMR to pick up the change:\n\n*Checked command status*\n\n### Planner Response\n\nStill seeing duplicate symbols. Let me verify the current file state:\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Grep searched codebase*\n\n*Viewed file:///c:/git/semio/semio/js/index.ts*\n\n### Planner Response\n\nEach symbol appears only once in the file — the Vite errors were from a stale build. The sketchpad edit triggered a page reload. Let me check if the server recovered:\n\n*Checked command status*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n*Running MCP tool*\n\n### Planner Response\n\nThe fix works. The screenshot shows:\n- **Diagram view** (left): Pieces properly spread out in a tree layout with connections\n- **3D scene** (right): Building model with pieces correctly positioned in 3D space — no stacking\n\nZero console errors.\n\n*Updated todo list*\n\n### Planner Response\n\n## Summary\n\n**Root cause:** [usePiecesMetadataMap](file:///c:/git/semio/semio/sketchpad/index.tsx:7398:0-7414:1) in [c:\\git\\semio\\semio\\sketchpad\\index.tsx](file:///c:/git/semio/semio/sketchpad/index.tsx:0:0-0:0) was treating the return value of [piecesMetadata()](file:///c:/git/semio/semio/js/index.ts:14156:0-14193:2) as a plain `Map`, but [piecesMetadata()](file:///c:/git/semio/semio/js/index.ts:14156:0-14193:2) returns an `OperationResult\u003cMap\u003c...\u003e\u003e` wrapper with `{ ok, change, warnings, infos }` structure. Calling [.get(pieceGuid)](file:///c:/git/semio/semio/sketchpad/index.tsx:2125:2-2127:3) on the [OperationResult](file:///c:/git/semio/semio/js/index.ts:9314:0-9314:73) object always returned `undefined`, so all pieces fell back to the default plane/center at origin — stacking them all on top of each other.\n\n**Fix:** Unwrap [result.change](file:///c:/git/semio/semio/sketchpad/index.tsx:5864:2-5885:3) from the [OperationResult](file:///c:/git/semio/semio/js/index.ts:9314:0-9314:73) before returning it as the metadata map:\n\n```@c:\\git\\semio\\semio\\sketchpad\\index.tsx:7405-7414\n      const result = piecesMetadata(kit, designScope.guid);\n      if (!result.ok) {\n        console.error(\"[PiecesMetadata] piecesMetadata failed:\", result.errors);\n        return new Map\u003cstring, PieceMetadata\u003e();\n      }\n      const metadata = result.change;\n      if (typeof window !== \"undefined\") {\n        (window as any).__SEMIO_PIECES_METADATA__ = Object.fromEntries(metadata);\n      }\n      return metadata;\n```\n\n**Verified:** Play dev site at `http://localhost:4000` — pieces positioned correctly in both diagram and 3D scene, 0 console errors."
+          }
+        }
+      },
+      "response": {}
+    }
+  ]
+}

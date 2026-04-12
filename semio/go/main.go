@@ -9526,39 +9526,44 @@ func DesignWithDiff(base Design, diff DesignDiff) Design {
 	}
 
 	removedPieceGuids := make(map[string]bool)
-	updatedPieceGuids := make(map[string]bool)
+	updatedPieceMap := make(map[string]PieceDiff)
 	if diff.Pieces != nil {
 		for _, r := range diff.Pieces.Removed {
 			removedPieceGuids[r.Guid] = true
 		}
 		for _, u := range diff.Pieces.Updated {
-			updatedPieceGuids[u.Piece.Guid] = true
+			updatedPieceMap[u.Piece.Guid] = u.Diff
 		}
 	}
 
 	removedConnGuids := make(map[string]bool)
-	updatedConnGuids := make(map[string]bool)
+	updatedConnMap := make(map[string]ConnectionDiff)
 	if diff.Connections != nil {
 		for _, r := range diff.Connections.Removed {
 			removedConnGuids[r.Guid] = true
 		}
 		for _, u := range diff.Connections.Updated {
-			updatedConnGuids[u.Connection.Guid] = true
+			updatedConnMap[u.Connection.Guid] = u.Diff
 		}
 	}
 
 	resultPieces := make([]Piece, 0, len(base.Pieces))
 	for _, p := range base.Pieces {
 		pc := p
-		attrs := append([]Attribute{}, pc.Attributes...)
 		if removedPieceGuids[pc.Guid] {
+			attrs := append([]Attribute{}, pc.Attributes...)
 			attrs = append(attrs, statusAttr("removed"))
-		} else if updatedPieceGuids[pc.Guid] {
+			pc.Attributes = attrs
+		} else if pDiff, ok := updatedPieceMap[pc.Guid]; ok {
+			pc = applyPieceDiff(pc, pDiff)
+			attrs := append([]Attribute{}, pc.Attributes...)
 			attrs = append(attrs, statusAttr("modified"))
+			pc.Attributes = attrs
 		} else {
+			attrs := append([]Attribute{}, pc.Attributes...)
 			attrs = append(attrs, statusAttr("unchanged"))
+			pc.Attributes = attrs
 		}
-		pc.Attributes = attrs
 		resultPieces = append(resultPieces, pc)
 	}
 	if diff.Pieces != nil {
@@ -9574,15 +9579,20 @@ func DesignWithDiff(base Design, diff DesignDiff) Design {
 	resultConns := make([]Connection, 0, len(base.Connections))
 	for _, c := range base.Connections {
 		cc := c
-		attrs := append([]Attribute{}, cc.Attributes...)
 		if removedConnGuids[cc.Guid] {
+			attrs := append([]Attribute{}, cc.Attributes...)
 			attrs = append(attrs, statusAttr("removed"))
-		} else if updatedConnGuids[cc.Guid] {
+			cc.Attributes = attrs
+		} else if cDiff, ok := updatedConnMap[cc.Guid]; ok {
+			cc = applyConnectionDiff(cc, cDiff)
+			attrs := append([]Attribute{}, cc.Attributes...)
 			attrs = append(attrs, statusAttr("modified"))
+			cc.Attributes = attrs
 		} else {
+			attrs := append([]Attribute{}, cc.Attributes...)
 			attrs = append(attrs, statusAttr("unchanged"))
+			cc.Attributes = attrs
 		}
-		cc.Attributes = attrs
 		resultConns = append(resultConns, cc)
 	}
 	if diff.Connections != nil {
