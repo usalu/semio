@@ -1,4 +1,4 @@
-# #region 📊Header
+# #region 🧲Header
 
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -13,9 +13,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# #endregion 📊Header
+# #endregion 🧲Header
 
-# #region ⭐Imports
+
+
+# #region ⛩️Imports
 # Standard library, third-party and framework imports.
 from __future__ import annotations
 
@@ -66,24 +68,28 @@ import pydantic
 import pytest
 import pytransform3d.rotations
 
-# #endregion ⭐Imports
+# #endregion ⛩️Imports
 
-# #region 🌩️Type Hints
+
+
+# #region 📝Type Hints
 # Custom type hint aliases used throughout the module.
 
 RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 """🔁 A recursive any list is either any or a list where the items are recursive any list."""
 
-# #endregion 🌩️Type Hints
+# #endregion 📝Type Hints
 
-# #region 👓Constants
+
+
+# #region 🎞️Constants
 # Global constants for limits, paths, encodings and configuration.
 
 NAME = "semio"
 EMAIL = "mail@semio-tech.com"
 RELEASE = "r25.07-1"
 VERSION = "4.3.0-beta"
-HOST = "0.0.0.0"
+HOST = "0.0.0.0" if os.environ.get("DEVCONTAINER") == "true" else "127.0.0.1"
 PORT = 2507
 ADDRESS = "http://127.0.0.1:2507"
 NAME_LENGTH_LIMIT = 64
@@ -138,9 +144,11 @@ MAX_REQUEST_BODY_SIZE = 50 * 1024 * 1024
 dotenv.load_dotenv()
 ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO_")}
 
-# #endregion 👓Constants
+# #endregion 🎞️Constants
 
-# #region 🎗️Utility
+
+
+# #region 📦Utilities
 # General-purpose utility functions for encoding, formatting and transformation.
 
 
@@ -219,7 +227,9 @@ def normalizeAngle(angle: float) -> float:
     return (angle % 360 + 360) % 360
 
 
-# #endregion 🎗️Utility
+# #endregion 📦Utilities
+
+
 
 # #region 📰Logging
 # Module-level logger configuration.
@@ -228,7 +238,9 @@ logger = loguru.logger
 
 # #endregion 📰Logging
 
-# #region 🎬Exceptions
+
+
+# #region ⚠️Exceptions
 # Custom exception hierarchy for server, client and specification errors.
 
 
@@ -359,7 +371,9 @@ class Semio(pydantic.BaseModel):
     """⌚ The time when the database was created."""
 
 
-# #endregion 🎬Exceptions
+# #endregion ⚠️Exceptions
+
+
 
 # #region 🎲Modeling
 
@@ -573,9 +587,313 @@ class TableEntityNode(TableNode):
 
 # #endregion 🎲Modeling
 
-# #region 🧩Domain
 
-# #region 🪨Attribute
+
+# #region 🖥️Weak Entities
+
+# #region 📺Coord
+# Coordinate primitive for three-dimensional values.
+
+
+class Coord(SModel):
+    """🔵Three-dimensional coordinate with x, y and z values."""
+
+    u: float = pydantic.Field()
+    v: float = pydantic.Field()
+
+    def __str__(self) -> str:
+        return f"[{pretty(self.u)}, {pretty(self.v)}]"
+
+    def __repr__(self) -> str:
+        return f"[{pretty(self.u)}, {pretty(self.v)}]"
+
+
+class CoordInput(Coord, Input):
+    """🔴Input fields for creating or updating a coord."""
+
+    pass
+
+
+class CoordContext(Coord, Context):
+    """🟠Context fields for understanding a coord by an LLM."""
+
+    pass
+
+
+class CoordOutput(Coord, Output):
+    """🟡Output fields returned when fetching a coord."""
+
+    pass
+
+
+class CoordPrediction(Coord, Prediction):
+    """🟢Prediction fields for LLM-based coord inference."""
+
+    pass
+
+
+class CoordNode(Node):
+    """🟣GraphQL node exposing coord data."""
+
+    class Meta:
+        model = Coord
+
+
+class CoordInputNode(InputNode):
+    """🟤GraphQL input node for coord mutations."""
+
+    class Meta:
+        model = CoordInput
+
+
+# #endregion 📺Coord
+
+
+# #region ✖️Point
+# Point primitive representing a position in 3D space.
+
+
+class Point(SModel):
+    """⚫Point in 3D space with x, y and z coordinates."""
+
+    x: float = pydantic.Field()
+    y: float = pydantic.Field()
+    z: float = pydantic.Field()
+
+    def __str__(self) -> str:
+        return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
+
+    def __repr__(self) -> str:
+        return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
+
+
+class PointInput(Point, Input):
+    """🩵Input fields for creating or updating a point."""
+
+    pass
+
+
+class PointContext(Point, Context):
+    """🩶Context fields for understanding a point by an LLM."""
+
+    pass
+
+
+class PointOutput(Point, Output):
+    """🩷Output fields returned when fetching a point."""
+
+    pass
+
+
+class PointPrediction(Point, Prediction):
+    """💜Prediction fields for LLM-based point inference."""
+
+    pass
+
+
+class PointNode(Node):
+    """💙GraphQL node exposing point data."""
+
+    class Meta:
+        model = Point
+
+
+class PointInputNode(InputNode):
+    """💚GraphQL input node for point mutations."""
+
+    class Meta:
+        model = PointInput
+
+
+# #endregion ✖️Point
+
+
+# #region ↗️Vector
+# Vector primitive representing a direction in 3D space.
+
+
+class Vector(SModel):
+    """💛Direction vector in 3D space with x, y and z components."""
+
+    x: float = pydantic.Field()
+    y: float = pydantic.Field()
+    z: float = pydantic.Field()
+
+    def __str__(self) -> str:
+        return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
+
+    def __repr__(self) -> str:
+        return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
+
+
+class VectorInput(Vector, Input):
+    """🧡Input fields for creating or updating a vector."""
+
+    pass
+
+
+class VectorContext(Vector, Context):
+    """❤️Context fields for understanding a vector by an LLM."""
+
+    pass
+
+
+class VectorOutput(Vector, Output):
+    """🤍Output fields returned when fetching a vector."""
+
+    pass
+
+
+class VectorPrediction(Vector, Prediction):
+    """🖤Prediction fields for LLM-based vector inference."""
+
+    pass
+
+
+class VectorNode(Node):
+    """🤎GraphQL node exposing vector data."""
+
+    class Meta:
+        model = Vector
+
+
+class VectorInputNode(InputNode):
+    """💗GraphQL input node for vector mutations."""
+
+    class Meta:
+        model = VectorInput
+
+
+# #endregion ↗️Vector
+
+
+# #region ◻️Plane
+# Plane primitive representing an oriented coordinate frame in 3D space.
+
+
+class PlaneOriginField(MaskedField, abc.ABC):
+    """💖Field mixin for the origin of a plane."""
+
+    origin: Point = pydantic.Field()
+
+
+class PlaneXAxisField(MaskedField, abc.ABC):
+    """💝Field mixin for the x axis of a plane."""
+
+    xAxis: Vector = pydantic.Field()
+
+
+class PlaneYAxisField(MaskedField, abc.ABC):
+    """💘Field mixin for the y axis of a plane."""
+
+    yAxis: Vector = pydantic.Field()
+
+
+class PlaneInput(Input):
+    """💕Input fields for creating or updating a plane."""
+
+    origin: PointInput = pydantic.Field()
+    xAxis: VectorInput = pydantic.Field()
+    yAxis: VectorInput = pydantic.Field()
+
+
+class PlaneContext(Context):
+    """🔖Context fields for understanding a plane by an LLM."""
+
+    origin: PointContext = pydantic.Field()
+    xAxis: VectorContext = pydantic.Field()
+    yAxis: VectorContext = pydantic.Field()
+
+
+class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
+    """🔖Output fields returned when fetching a plane."""
+
+    pass
+
+
+class Plane(Table):
+    """🔖Oriented coordinate frame in 3D space with origin and axes."""
+
+    @property
+    def origin(self) -> Point:
+        return Point(
+            x=self.originX,
+            y=self.originY,
+            z=self.originZ,
+        )
+
+    @origin.setter
+    def origin(self, origin: Point):
+        self.originX = origin.x
+        self.originY = origin.y
+        self.originZ = origin.z
+
+    @property
+    def xAxis(self) -> Vector:
+        return Vector(
+            x=self.xAxisX,
+            y=self.xAxisY,
+            z=self.xAxisZ,
+        )
+
+    @xAxis.setter
+    def xAxis(self, xAxis: Vector):
+        self.xAxisX = xAxis.x
+        self.xAxisY = xAxis.y
+        self.xAxisZ = xAxis.z
+
+    @property
+    def yAxis(self) -> Vector:
+        return Vector(
+            x=self.yAxisX,
+            y=self.yAxisY,
+            z=self.yAxisZ,
+        )
+
+    @yAxis.setter
+    def yAxis(self, yAxis: Vector):
+        self.yAxisX = yAxis.x
+        self.yAxisY = yAxis.y
+        self.yAxisZ = yAxis.z
+
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    @classmethod
+    def parse(cls, input: str | dict | PlaneInput | typing.Any | None) -> "Plane":
+        if input is None:
+            return cls()
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
+        origin = Point.model_validate(obj["origin"])
+        xAxis = Vector.model_validate(obj["xAxis"])
+        yAxis = Vector.model_validate(obj["yAxis"])
+        entity = Plane()
+        entity.origin = origin
+        entity.xAxis = xAxis
+        entity.yAxis = yAxis
+
+        return entity
+
+    def dump(self) -> PlaneOutput:
+        entity = {**PlaneOriginField.model_validate(self).model_dump()}
+        entity["xAxis"] = self.xAxis
+        entity["yAxis"] = self.yAxis
+        return PlaneOutput(**entity)
+
+
+class PlaneInputNode(InputNode):
+    """🔖GraphQL input node for plane mutations."""
+
+    class Meta:
+        model = PlaneInput
+
+
+# #endregion ◻️Plane
+
+
+# #endregion 🖥️Weak Entities
+
+
+
+# #region 💎Attribute
 # Attribute entity with key-value pairs and definitions.
 
 
@@ -705,409 +1023,10 @@ class AttributeInputNode(InputNode):
         model = AttributeInput
 
 
-# #endregion 🪨Attribute
+# #endregion 💎Attribute
 
-# #region 📎Tag
-# Tag entity for categorizing and labeling kit elements.
 
-
-class TagGuidField(RealField, abc.ABC):
-    """🏷️Field mixin for the guid of a tag."""
-
-    guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
-
-
-class TagNameField(RealField, abc.ABC):
-    """🟫Field mixin for the name of a tag."""
-
-    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
-
-
-class TagDescriptionField(RealField, abc.ABC):
-    """💠Field mixin for the description of a tag."""
-
-    description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
-
-
-class TagIconField(RealField, abc.ABC):
-    """🖼️Field mixin for the icon of a tag."""
-
-    icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
-
-
-class TagOrderField(RealField, abc.ABC):
-    """🔳Field mixin for the order of a tag."""
-
-    order: int = pydantic.Field(default=0)
-
-
-class TagId(TagGuidField, Id):
-    """🔲Identity fields for uniquely identifying a tag."""
-
-    pass
-
-
-class Tag(
-    TagIconField,
-    TagDescriptionField,
-    TagOrderField,
-    TagNameField,
-    TagGuidField,
-    Table,
-):
-    """Tag entity for labeling kit elements with name, icon and order."""
-
-
-# #endregion 📎Tag
-
-# #region 🗝️Concept
-# Concept entity for semantic grouping of design elements.
-
-
-class ConceptGuidField(RealField, abc.ABC):
-    """▪️Field mixin for the guid of a concept."""
-
-    guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
-
-
-class ConceptNameField(RealField, abc.ABC):
-    """▫️Field mixin for the name of a concept."""
-
-    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
-
-
-class ConceptDescriptionField(RealField, abc.ABC):
-    """◾Field mixin for the description of a concept."""
-
-    description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
-
-
-class ConceptIconField(RealField, abc.ABC):
-    """◽Field mixin for the icon of a concept."""
-
-    icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
-
-
-class ConceptOrderField(RealField, abc.ABC):
-    """◻️Field mixin for the order of a concept."""
-
-    order: int = pydantic.Field(default=0)
-
-
-class ConceptId(ConceptGuidField, Id):
-    """◼️Identity fields for uniquely identifying a concept."""
-
-    pass
-
-
-class Concept(
-    ConceptIconField,
-    ConceptDescriptionField,
-    ConceptOrderField,
-    ConceptNameField,
-    ConceptGuidField,
-    Table,
-):
-    """Concept entity for semantic grouping with name, icon and order."""
-
-
-# #endregion 🗝️Concept
-
-# #region 🐹Coord
-# Coordinate primitive for three-dimensional values.
-
-
-class Coord(SModel):
-    """🔵Three-dimensional coordinate with x, y and z values."""
-
-    u: float = pydantic.Field()
-    v: float = pydantic.Field()
-
-    def __str__(self) -> str:
-        return f"[{pretty(self.u)}, {pretty(self.v)}]"
-
-    def __repr__(self) -> str:
-        return f"[{pretty(self.u)}, {pretty(self.v)}]"
-
-
-class CoordInput(Coord, Input):
-    """🔴Input fields for creating or updating a coord."""
-
-    pass
-
-
-class CoordContext(Coord, Context):
-    """🟠Context fields for understanding a coord by an LLM."""
-
-    pass
-
-
-class CoordOutput(Coord, Output):
-    """🟡Output fields returned when fetching a coord."""
-
-    pass
-
-
-class CoordPrediction(Coord, Prediction):
-    """🟢Prediction fields for LLM-based coord inference."""
-
-    pass
-
-
-class CoordNode(Node):
-    """🟣GraphQL node exposing coord data."""
-
-    class Meta:
-        model = Coord
-
-
-class CoordInputNode(InputNode):
-    """🟤GraphQL input node for coord mutations."""
-
-    class Meta:
-        model = CoordInput
-
-
-# #endregion 🐹Coord
-
-# #region 🎋Point
-# Point primitive representing a position in 3D space.
-
-
-class Point(SModel):
-    """⚫Point in 3D space with x, y and z coordinates."""
-
-    x: float = pydantic.Field()
-    y: float = pydantic.Field()
-    z: float = pydantic.Field()
-
-    def __str__(self) -> str:
-        return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
-
-    def __repr__(self) -> str:
-        return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
-
-
-class PointInput(Point, Input):
-    """🩵Input fields for creating or updating a point."""
-
-    pass
-
-
-class PointContext(Point, Context):
-    """🩶Context fields for understanding a point by an LLM."""
-
-    pass
-
-
-class PointOutput(Point, Output):
-    """🩷Output fields returned when fetching a point."""
-
-    pass
-
-
-class PointPrediction(Point, Prediction):
-    """💜Prediction fields for LLM-based point inference."""
-
-    pass
-
-
-class PointNode(Node):
-    """💙GraphQL node exposing point data."""
-
-    class Meta:
-        model = Point
-
-
-class PointInputNode(InputNode):
-    """💚GraphQL input node for point mutations."""
-
-    class Meta:
-        model = PointInput
-
-
-# #endregion 🎋Point
-
-# #region 🌊Vector
-# Vector primitive representing a direction in 3D space.
-
-
-class Vector(SModel):
-    """💛Direction vector in 3D space with x, y and z components."""
-
-    x: float = pydantic.Field()
-    y: float = pydantic.Field()
-    z: float = pydantic.Field()
-
-    def __str__(self) -> str:
-        return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
-
-    def __repr__(self) -> str:
-        return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
-
-
-class VectorInput(Vector, Input):
-    """🧡Input fields for creating or updating a vector."""
-
-    pass
-
-
-class VectorContext(Vector, Context):
-    """❤️Context fields for understanding a vector by an LLM."""
-
-    pass
-
-
-class VectorOutput(Vector, Output):
-    """🤍Output fields returned when fetching a vector."""
-
-    pass
-
-
-class VectorPrediction(Vector, Prediction):
-    """🖤Prediction fields for LLM-based vector inference."""
-
-    pass
-
-
-class VectorNode(Node):
-    """🤎GraphQL node exposing vector data."""
-
-    class Meta:
-        model = Vector
-
-
-class VectorInputNode(InputNode):
-    """💗GraphQL input node for vector mutations."""
-
-    class Meta:
-        model = VectorInput
-
-
-# #endregion 🌊Vector
-
-# #region 🦁Plane
-# Plane primitive representing an oriented coordinate frame in 3D space.
-
-
-class PlaneOriginField(MaskedField, abc.ABC):
-    """💖Field mixin for the origin of a plane."""
-
-    origin: Point = pydantic.Field()
-
-
-class PlaneXAxisField(MaskedField, abc.ABC):
-    """💝Field mixin for the x axis of a plane."""
-
-    xAxis: Vector = pydantic.Field()
-
-
-class PlaneYAxisField(MaskedField, abc.ABC):
-    """💘Field mixin for the y axis of a plane."""
-
-    yAxis: Vector = pydantic.Field()
-
-
-class PlaneInput(Input):
-    """💕Input fields for creating or updating a plane."""
-
-    origin: PointInput = pydantic.Field()
-    xAxis: VectorInput = pydantic.Field()
-    yAxis: VectorInput = pydantic.Field()
-
-
-class PlaneContext(Context):
-    """🔖Context fields for understanding a plane by an LLM."""
-
-    origin: PointContext = pydantic.Field()
-    xAxis: VectorContext = pydantic.Field()
-    yAxis: VectorContext = pydantic.Field()
-
-
-class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
-    """🔖Output fields returned when fetching a plane."""
-
-    pass
-
-
-class Plane(Table):
-    """🔖Oriented coordinate frame in 3D space with origin and axes."""
-
-    @property
-    def origin(self) -> Point:
-        return Point(
-            x=self.originX,
-            y=self.originY,
-            z=self.originZ,
-        )
-
-    @origin.setter
-    def origin(self, origin: Point):
-        self.originX = origin.x
-        self.originY = origin.y
-        self.originZ = origin.z
-
-    @property
-    def xAxis(self) -> Vector:
-        return Vector(
-            x=self.xAxisX,
-            y=self.xAxisY,
-            z=self.xAxisZ,
-        )
-
-    @xAxis.setter
-    def xAxis(self, xAxis: Vector):
-        self.xAxisX = xAxis.x
-        self.xAxisY = xAxis.y
-        self.xAxisZ = xAxis.z
-
-    @property
-    def yAxis(self) -> Vector:
-        return Vector(
-            x=self.yAxisX,
-            y=self.yAxisY,
-            z=self.yAxisZ,
-        )
-
-    @yAxis.setter
-    def yAxis(self, yAxis: Vector):
-        self.yAxisX = yAxis.x
-        self.yAxisY = yAxis.y
-        self.yAxisZ = yAxis.z
-
-    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
-    @classmethod
-    def parse(cls, input: str | dict | PlaneInput | typing.Any | None) -> "Plane":
-        if input is None:
-            return cls()
-        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        origin = Point.model_validate(obj["origin"])
-        xAxis = Vector.model_validate(obj["xAxis"])
-        yAxis = Vector.model_validate(obj["yAxis"])
-        entity = Plane()
-        entity.origin = origin
-        entity.xAxis = xAxis
-        entity.yAxis = yAxis
-
-        return entity
-
-    def dump(self) -> PlaneOutput:
-        entity = {**PlaneOriginField.model_validate(self).model_dump()}
-        entity["xAxis"] = self.xAxis
-        entity["yAxis"] = self.yAxis
-        return PlaneOutput(**entity)
-
-
-class PlaneInputNode(InputNode):
-    """🔖GraphQL input node for plane mutations."""
-
-    class Meta:
-        model = PlaneInput
-
-
-# #endregion 🦁Plane
-
-# #region 💧Location
+# #region 📍Location
 # Location entity for geographic coordinates with longitude, latitude and altitude.
 
 
@@ -1192,9 +1111,11 @@ class LocationInputNode(InputNode):
         model = LocationInput
 
 
-# #endregion 💧Location
+# #endregion 📍Location
 
-# #region 🎏Author
+
+
+# #region ✍️Author
 # Author entity for tracking contributor identity and rank.
 
 
@@ -1267,7 +1188,9 @@ class AuthorInputNode(InputNode):
         model = AuthorInput
 
 
-# #endregion 🎏Author
+# #endregion ✍️Author
+
+
 
 # #region 🔥ArtifactAuthor
 # Artifact-author association entity linking artifacts to authors by email.
@@ -1300,7 +1223,9 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity):
 
 # #endregion 🔥ArtifactAuthor
 
-# #region 💾File
+
+
+# #region 📄File
 # File entity for managing binary assets with metadata and hashing.
 
 
@@ -1473,9 +1398,11 @@ class FileInputNode(InputNode):
         model = FileInput
 
 
-# #endregion 💾File
+# #endregion 📄File
 
-# #region 📊Folder
+
+
+# #region 📁Folder
 # Folder entity for hierarchical organization of kit content.
 
 
@@ -1652,9 +1579,11 @@ class FolderInputNode(InputNode):
         model = FolderInput
 
 
-# #endregion 📊Folder
+# #endregion 📁Folder
 
-# #region 🎎Benchmark
+
+
+# #region 📏Benchmark
 # Benchmark entity for defining performance metrics with min-max bounds.
 
 
@@ -1757,9 +1686,98 @@ class Benchmark(
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 
-# #endregion 🎎Benchmark
+BENCHMARK_ITERATIONS = 3
 
-# #region 🖇️Quality
+
+def _bench(name: str, func):
+    start = time.perf_counter()
+    for _ in range(BENCHMARK_ITERATIONS):
+        func()
+    end = time.perf_counter()
+    duration = (end - start) / BENCHMARK_ITERATIONS
+    print(f"{name},{duration:.6f}")
+
+
+def benchmark_main():
+    kit_metabolism = _test_load_kit("metabolism.kit.semio.json")
+    kit_invalid = _test_load_kit("invalid.kit.semio.json")
+
+    kit_obj = Kit.parse(kit_metabolism)
+
+    kit_invalid_obj = Kit.parse(kit_invalid)
+
+    def test_roundtrip():
+        kit, files = import_kit(os.path.join(TEST_ASSETS_DIR, "metabolism.zip"))
+
+        export_kit(kit, files, "temp_benchmark_metabolism.zip")
+        if os.path.exists("temp_benchmark_metabolism.zip"):
+            os.remove("temp_benchmark_metabolism.zip")
+
+    _bench("Roundtrip/Metabolism", test_roundtrip)
+
+    diff_forward = _test_load_json("metabolism.kit.diff.semio.json")
+    diff_inverse = _test_load_json("metabolism.kit.diff.inverted.semio.json")
+
+    def test_diff_metabolism():
+        k2 = applyKitDiffDict(kit_metabolism, diff_forward)
+        applyKitDiffDict(k2, diff_inverse)
+
+    _bench("Diff/Metabolism", test_diff_metabolism)
+
+    d1 = _test_find_design(kit_metabolism, "Nakagin Capsule Tower")
+
+    def test_flatten_nakagin():
+        flattenDesignDict(kit_metabolism, d1["guid"])
+
+    _bench("Flatten Design/Nakagin Capsule Tower", test_flatten_nakagin)
+
+    d2 = _test_find_design(kit_metabolism, "Slanted", "Nakagin Capsule Tower")
+
+    def test_flatten_nakagin_slanted():
+        flattenDesignDict(kit_metabolism, d2["guid"])
+
+    _bench("Flatten Design/Nakagin Capsule Tower/Slanted", test_flatten_nakagin_slanted)
+
+    d3 = _test_find_design(kit_metabolism, "Twisted", "Nakagin Capsule Tower")
+
+    def test_flatten_nakagin_twisted():
+        flattenDesignDict(kit_metabolism, d3["guid"])
+
+    _bench("Flatten Design/Nakagin Capsule Tower/Twisted", test_flatten_nakagin_twisted)
+
+    d4 = _test_find_design(kit_metabolism, "Dancing", "Nakagin Capsule Tower")
+
+    def test_flatten_nakagin_dancing():
+        flattenDesignDict(kit_metabolism, d4["guid"])
+
+    _bench("Flatten Design/Nakagin Capsule Tower/Dancing", test_flatten_nakagin_dancing)
+
+    d5 = _test_find_design(kit_metabolism, "Capsule Dream")
+
+    def test_flatten_capsule_dream():
+        flattenDesignDict(kit_metabolism, d5["guid"])
+
+    _bench("Flatten Design/Capsule Dream", test_flatten_capsule_dream)
+
+    def test_validate_invalid():
+        validateKit(kit_invalid_obj)
+
+    _bench("Validation/Invalid Kit", test_validate_invalid)
+
+    def test_validate_metabolism():
+        validateKit(kit_obj)
+
+    _bench("Validation/Metabolism", test_validate_metabolism)
+
+
+if __name__ == "__main__":
+    benchmark_main()
+
+# #endregion 📏Benchmark
+
+
+
+# #region 🔬Quality
 # Quality entity for defining measurable properties with units and constraints.
 
 
@@ -2007,9 +2025,90 @@ class Quality(
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 
-# #endregion 🖇️Quality
+# #endregion 🔬Quality
 
-# #region 🏷️Prop
+
+
+# #region ⚓Port
+# Port entity for defining connection interfaces on types.
+
+
+class PortNameField(RealField, abc.ABC):
+    """🔖Field mixin for the name of a port."""
+
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class PortDescriptionField(RealField, abc.ABC):
+    """🔖Field mixin for the description of a port."""
+
+    description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class PortIconField(RealField, abc.ABC):
+    """🔖Field mixin for the icon of a port."""
+
+    icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
+
+
+class PortMaxChildrenField(RealField, abc.ABC):
+    """🔖Field mixin for the max children of a port."""
+
+    maxChildren: int = pydantic.Field(default=1, ge=0)
+
+
+class PortCompatiblePortsField(MaskedField, abc.ABC):
+    """🔖Field mixin for the compatible ports of a port."""
+
+    compatiblePorts: list[str] = pydantic.Field(default_factory=list)
+
+
+class PortId(PortNameField, Id):
+    """🔖Identity fields for uniquely identifying a port."""
+
+    pass
+
+
+class PortProps(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Props):
+    """🔖Property fields for a port."""
+
+    pass
+
+
+class PortInput(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Input):
+    """🔖Input fields for creating or updating a port."""
+
+    attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
+
+
+class PortOutput(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Output):
+    """🔖Output fields returned when fetching a port."""
+
+    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
+
+
+class Port(PortMaxChildrenField, PortIconField, PortDescriptionField, PortNameField, TableEntity):
+    """🔖Port entity defining a named connection interface on a type."""
+
+    PLURAL = "ports"
+    attributes: list[Attribute] = pydantic.Field(default_factory=list)
+
+
+# TODO: Fix PortNode - was incorrectly changed to TableEntityNode in latest commit
+
+
+class PortInputNode(InputNode):
+    """🔖GraphQL input node for port mutations."""
+
+    class Meta:
+        model = PortInput
+
+
+# #endregion ⚓Port
+
+
+
+# #region 📊Prop
 # Prop entity for key-value property pairs with units.
 
 
@@ -2133,9 +2232,121 @@ class PropInputNode(InputNode):
         model = PropInput
 
 
-# #endregion 🏷️Prop
+# #endregion 📊Prop
 
-# #region 🧫Model
+
+
+# #region 🏷️Tag
+# Tag entity for categorizing and labeling kit elements.
+
+
+class TagGuidField(RealField, abc.ABC):
+    """🏷️Field mixin for the guid of a tag."""
+
+    guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
+
+
+class TagNameField(RealField, abc.ABC):
+    """🟫Field mixin for the name of a tag."""
+
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class TagDescriptionField(RealField, abc.ABC):
+    """💠Field mixin for the description of a tag."""
+
+    description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class TagIconField(RealField, abc.ABC):
+    """🖼️Field mixin for the icon of a tag."""
+
+    icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
+
+
+class TagOrderField(RealField, abc.ABC):
+    """🔳Field mixin for the order of a tag."""
+
+    order: int = pydantic.Field(default=0)
+
+
+class TagId(TagGuidField, Id):
+    """🔲Identity fields for uniquely identifying a tag."""
+
+    pass
+
+
+class Tag(
+    TagIconField,
+    TagDescriptionField,
+    TagOrderField,
+    TagNameField,
+    TagGuidField,
+    Table,
+):
+    """Tag entity for labeling kit elements with name, icon and order."""
+
+
+# #endregion 🏷️Tag
+
+
+
+# #region 💡Concept
+# Concept entity for semantic grouping of design elements.
+
+
+class ConceptGuidField(RealField, abc.ABC):
+    """▪️Field mixin for the guid of a concept."""
+
+    guid: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
+
+
+class ConceptNameField(RealField, abc.ABC):
+    """▫️Field mixin for the name of a concept."""
+
+    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class ConceptDescriptionField(RealField, abc.ABC):
+    """◾Field mixin for the description of a concept."""
+
+    description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class ConceptIconField(RealField, abc.ABC):
+    """◽Field mixin for the icon of a concept."""
+
+    icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
+
+
+class ConceptOrderField(RealField, abc.ABC):
+    """◻️Field mixin for the order of a concept."""
+
+    order: int = pydantic.Field(default=0)
+
+
+class ConceptId(ConceptGuidField, Id):
+    """◼️Identity fields for uniquely identifying a concept."""
+
+    pass
+
+
+class Concept(
+    ConceptIconField,
+    ConceptDescriptionField,
+    ConceptOrderField,
+    ConceptNameField,
+    ConceptGuidField,
+    Table,
+):
+    """Concept entity for semantic grouping with name, icon and order."""
+
+
+# #endregion 💡Concept
+
+
+
+# #region 🗿Model
 # Model entity for 3D geometry representations linked to files.
 
 
@@ -2256,7 +2467,7 @@ class Model(
         entity = cls(**props.model_dump())
         try:
             entity.tags = obj["tags"]
-        except KeyError, AttributeError, Exception:
+        except KeyError:
             pass
         try:
             entity.attributes = [typing.cast(Attribute, Attribute.parse(attribute)) for attribute in obj["attributes"]]
@@ -2289,86 +2500,11 @@ class ModelInputNode(InputNode):
         model = ModelInput
 
 
-# #endregion 🧫Model
-
-# #region 🎆Port
-# Port entity for defining connection interfaces on types.
+# #endregion 🗿Model
 
 
-class PortNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a port."""
 
-    name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
-
-
-class PortDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a port."""
-
-    description: typing.Optional[str] = pydantic.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
-
-
-class PortIconField(RealField, abc.ABC):
-    """🔖Field mixin for the icon of a port."""
-
-    icon: typing.Optional[str] = pydantic.Field(default=None, max_length=URL_LENGTH_LIMIT)
-
-
-class PortMaxChildrenField(RealField, abc.ABC):
-    """🔖Field mixin for the max children of a port."""
-
-    maxChildren: int = pydantic.Field(default=1, ge=0)
-
-
-class PortCompatiblePortsField(MaskedField, abc.ABC):
-    """🔖Field mixin for the compatible ports of a port."""
-
-    compatiblePorts: list[str] = pydantic.Field(default_factory=list)
-
-
-class PortId(PortNameField, Id):
-    """🔖Identity fields for uniquely identifying a port."""
-
-    pass
-
-
-class PortProps(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Props):
-    """🔖Property fields for a port."""
-
-    pass
-
-
-class PortInput(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Input):
-    """🔖Input fields for creating or updating a port."""
-
-    attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
-
-
-class PortOutput(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Output):
-    """🔖Output fields returned when fetching a port."""
-
-    attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
-
-
-class Port(PortMaxChildrenField, PortIconField, PortDescriptionField, PortNameField, TableEntity):
-    """🔖Port entity defining a named connection interface on a type."""
-
-    PLURAL = "ports"
-    attributes: list[Attribute] = pydantic.Field(default_factory=list)
-
-
-# TODO: Fix PortNode - was incorrectly changed to TableEntityNode in latest commit
-
-
-class PortInputNode(InputNode):
-    """🔖GraphQL input node for port mutations."""
-
-    class Meta:
-        model = PortInput
-
-
-# #endregion 🎆Port
-
-# #region 🦀Connector
+# #region 🔌Connector
 
 # #region 🪙CompatiblePort
 # Compatible port entity for specifying allowed port pairings on connectors.
@@ -2644,9 +2780,11 @@ class ConnectorIdInputNode(InputNode):
         model = ConnectorId
 
 
-# #endregion 🦀Connector
+# #endregion 🔌Connector
 
-# #region 💡Type
+
+
+# #region 🧱Type
 # Type entity for defining reusable parametric building blocks.
 
 
@@ -2944,36 +3082,36 @@ class Type(
             location_obj = obj.get("location")
             if location_obj:
                 entity.location = Location.parse(location_obj) if isinstance(location_obj, dict) else location_obj
-        except KeyError, AttributeError:
+        except (KeyError, AttributeError):
             pass
         try:
             models = [Model.parse(r) for r in obj["models"]]
             entity.models = models
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             connectors = [Connector.parse(p) for p in obj["connectors"]]
             entity.connectors = connectors
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
 
         return entity
@@ -3052,9 +3190,11 @@ class TypeIdInputNode(InputNode):
         model = TypeId
 
 
-# #endregion 💡Type
+# #endregion 🧱Type
 
-# #region 🎃Layer
+
+
+# #region 🎨Layer
 # Layer entity for organizing design elements into visibility groups.
 
 
@@ -3147,9 +3287,11 @@ class Layer(
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 
-# #endregion 🎃Layer
+# #endregion 🎨Layer
 
-# #region 🔔Piece
+
+
+# #region 🧩Piece
 # Piece entity for placed instances of types within a design.
 
 
@@ -3404,9 +3546,11 @@ class PieceIdInputNode(InputNode):
         model = PieceId
 
 
-# #endregion 🔔Piece
+# #endregion 🧩Piece
 
-# #region ⏱️Group
+
+
+# #region 👥Group
 # Group entity for named collections of pieces in a design.
 
 
@@ -3459,9 +3603,11 @@ class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity)
     PLURAL = "groups"
 
 
-# #endregion ⏱️Group
+# #endregion 👥Group
 
-# #region 🎑Side
+
+
+# #region ↔️Side
 # Side primitive for identifying a specific connector on a specific piece.
 
 
@@ -3482,12 +3628,12 @@ class Side(BaseModel):
         try:
             connectorObj = obj.get("connector")
             connector = ConnectorId.parse(connectorObj) if connectorObj is not None else None
-        except KeyError, TypeError:
+        except (KeyError, TypeError):
             connector = None
         try:
             designPieceObj = obj.get("designPiece")
             designPiece = PieceId.parse(designPieceObj) if designPieceObj is not None else None
-        except KeyError, TypeError:
+        except (KeyError, TypeError):
             designPiece = None
         return cls(piece=piece, designPiece=designPiece, connector=connector)
 
@@ -3551,9 +3697,11 @@ class SideInputNode(InputNode):
     connector = ConnectorIdInputNode()
 
 
-# #endregion 🎑Side
+# #endregion ↔️Side
 
-# #region 👓Connection
+
+
+# #region 🔗Connection
 # Connection entity for linking two pieces through their connectors.
 
 
@@ -3908,9 +4056,11 @@ class ConnectionInputNode(InputNode):
         model = ConnectionInput
 
 
-# #endregion 👓Connection
+# #endregion 🔗Connection
 
-# #region 🩺Stat
+
+
+# #region 📈Stat
 # Stat entity for recording computed statistics with bounds.
 
 
@@ -4030,9 +4180,11 @@ class Stat(
     PLURAL = "stats"
 
 
-# #endregion 🩺Stat
+# #endregion 📈Stat
 
-# #region 🌍Design
+
+
+# #region 📐Design
 # Design entity for composing pieces and connections into assemblies.
 
 
@@ -4303,7 +4455,7 @@ class Design(
         entity = cls(**props.model_dump())
         try:
             entity.location = props.location
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         typesDict = {}
         for type in types:
@@ -4315,32 +4467,32 @@ class Design(
         try:
             pieces = [Piece.parse(p, typesDict, designsById) for p in obj["pieces"]]
             entity.pieces = pieces
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             connections = [Connection.parse(c, pieces, designsById) for c in obj["connections"]]
             entity.connections = connections
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             attributes = [Attribute.parse(q) for q in obj["attributes"]]
             entity.attributes = attributes
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         return entity
 
@@ -4397,13 +4549,15 @@ class DesignIdInputNode(InputNode):
         model = DesignId
 
 
-# #endregion 🌍Design
+# #endregion 📐Design
 
-# #region 🎈Kit
+
+
+# #region ⏱️Kit
 # Kit entity for packaging types, designs, qualities and metadata.
 
 
-# #region 🤸KitKind
+# #region 🧬KitKind
 # KitKind discriminates the five persistence/transport forms of a Kit.
 
 
@@ -4427,7 +4581,7 @@ class KitKind(str, enum.Enum):
 
 ALL_KIT_KINDS: list[KitKind] = list(KitKind)
 
-# #endregion 🤸KitKind
+# #endregion 🧬KitKind
 
 
 class KitUriField(RealField, abc.ABC):
@@ -4654,22 +4808,22 @@ class Kit(
         try:
             types = [Type.parse(t) for t in obj["types"]]
             entity.types = types
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             designs = [Design.parse(d, types) for d in obj["designs"]]
             entity.designs = designs
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             folders = [Folder.parse(f) for f in obj["folders"]]
             entity.folders = folders
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         return entity
 
@@ -4908,7 +5062,7 @@ class Kit(
 
     # #endregion 🧊Type Family Helpers
 
-    # #region 🗻Kit Query Helpers
+    # #region 🔍Kit Finders
     # Helper functions for querying entities in kits.
 
     def find_port_in_kit(self, port_guid: str) -> "Port":
@@ -5001,7 +5155,7 @@ class Kit(
                     continue
                 other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
                 required_connectors.append(other_connector)
-            except ValueError, AttributeError:
+            except (ValueError, AttributeError):
                 continue
         result = []
         for replacement_type in self.types or []:
@@ -5044,7 +5198,7 @@ class Kit(
                             continue
                         other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
                         external_connectors.append(other_connector)
-                    except ValueError, AttributeError:
+                    except (ValueError, AttributeError):
                         continue
         result = []
         for replacement_type in self.types or []:
@@ -5061,7 +5215,7 @@ class Kit(
                 result.append(replacement_type)
         return result
 
-    # #endregion 🗻Kit Query Helpers
+    # #endregion 🔍Kit Finders
 
     # #region 🎠Filter
     # Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
@@ -5296,1621 +5450,2204 @@ class Kit(
     # #endregion 🎠Filter
 
 
-# #endregion 🎈Kit
-
-# #region 🧭Moved Graphene Nodes
-# Graphene node definitions moved here due to forward-reference resolution order.
-
-
-class AttributeNode(TableEntityNode):
-    """🔖GraphQL node exposing attribute data."""
-
-    class Meta:
-        model = Attribute
-
-
-class PlaneNode(TableNode):
-    """🔖GraphQL node exposing plane data."""
-
-    class Meta:
-        model = Plane
-
-
-class AuthorNode(TableEntityNode):
-    """🔖GraphQL node exposing author data."""
-
-    class Meta:
-        model = Author
-
-
-class ModelNode(TableEntityNode):
-    """🔖GraphQL node exposing model data."""
-
-    class Meta:
-        model = Model
-        excludedFields = ("tags_",)
-
-
-class ConnectorNode(TableEntityNode):
-    """🔖GraphQL node exposing connector data."""
-
-    class Meta:
-        model = Connector
-        exclude_fields = ("connecteds", "connectings")
-
-    localId = graphene.String()
-
-    def resolve_localId(self, info):
-        return getattr(self, "id_", "")
-
-
-class TypeNode(TableEntityNode):
-    """🔖GraphQL node exposing type data."""
-
-    class Meta:
-        model = Type
-
-
-class PieceNode(TableEntityNode):
-    """🔖GraphQL node exposing piece data."""
-
-    class Meta:
-        model = Piece
-        exclude_fields = ("connecteds", "connectings")
-
-    localId = graphene.String()
-
-    def resolve_localId(self, info):
-        return getattr(self, "id_", "")
-
-
-class ConnectionNode(TableEntityNode):
-    """🔖GraphQL node exposing connection data."""
-
-    class Meta:
-        model = Connection
-        exclude_fields = (
-            "connectedPiece",
-            "connectedConnector",
-            "connectingPiece",
-            "connectingConnector",
-        )
-
-    connected = graphene.NonNull(lambda: SideNode)
-    connecting = graphene.NonNull(lambda: SideNode)
-
-    def resolve_connected(self, info):
-        return self.connected
-
-    def resolve_connecting(self, info):
-        return self.connecting
-
-
-class DesignNode(TableEntityNode):
-    """🔖GraphQL node exposing design data."""
-
-    class Meta:
-        model = Design
-
-
-class KitNotFound(NotFound):
-    """🚚endregion 🧭Moved Graphene Nodes"""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"🔍 Couldn't find an local or remote kit under uri:\n {self.uri}."
-
-
-class NoKitToDelete(KitNotFound):
-    """🗑️No Kit To Delete definition."""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"🔍 Couldn't delete the kit because no local or remote kit was found under uri:\n {self.uri}."
-
-
-class KitZipDoesNotContainSemioFolder(KitNotFound):
-    """🔖Kit Zip Does Not Contain Semio Folder definition."""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"🔍 The remote zip kit ({self.uri}) is not a valid kit."
-
-
-class OnlyRemoteKitsCanBeCached(ClientError):
-    """💾Only Remote Kits Can Be Cached definition."""
-
-    def __init__(self, nonRemoteUri: str) -> None:
-        self.nonRemoteUri = nonRemoteUri
-
-    def __str__(self):
-        return f"🔍 Only remote kits can be cached. The uri ({self.nonRemoteUri}) doesn't start with http and ends with .zip"
-
-
-class KitUriNotValid(ClientError, abc.ABC):
-    """🆔 The base for all kit uri not valid errors."""
-
-
-class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
-    """📂 The base for all local kit uri not valid errors."""
-
-
-class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
-    """🔖Local Kit Uri Is Not Absolute definition."""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"📂 The local kit uri ({self.uri}) is relative. It needs to be absolute (include the parent folders, drives, ...)."
-
-
-class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
-    """🔖Local Kit Uri Is Not Directory definition."""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self):
-        return f"📂 The local kit uri ({self.uri}) is not a directory."
-
-
-class NoKitAssigned(NoParentAssigned):
-    """🔖No Kit Assigned definition."""
-
-    def __str__(self):
-        return "👪 The entity has no parent kit assigned."
-
-
-class KitAlreadyExists(AlreadyExists, abc.ABC):
-    """🔖Exception for attempting to create a kit that already exists."""
-
-    def __init__(self, uri: str) -> None:
-        self.uri = uri
-
-    def __str__(self) -> str:
-        return f"♊ A kit under uri ({self.uri}) already exists."
-
-
-class KitInputNode(InputNode):
-    """🔖GraphQL input node for kit mutations."""
-
-    class Meta:
-        model = KitInput
-
-
-class KitNode(TableEntityNode):
-    """🔖GraphQL node exposing kit data."""
-
-    class Meta:
-        model = Kit
-
-
-# #endregion 🧩Moved Graphene Nodes
-
-# #region 💧Validation
-# Validation logic for checking kit constraints and uniqueness rules.
-
-
-@dataclasses.dataclass
-class ValidationFix:
-    """🔧A proposed fix for a validation problem with a title and diff."""
-
-    title: str
-    diff: dict
-
-    def toDict(self) -> dict:
-        return {"title": self.title, "diff": self.diff}
-
-
-@dataclasses.dataclass
-class Problem:
-    """🔒A validation problem with a constraint identifier and message."""
-
-    constraintId: str
-    message: str
-    entityKind: str
-    entityGuid: str
-    fixes: list[ValidationFix] = dataclasses.field(default_factory=list)
-
-    def toDict(self) -> dict:
-        return {
-            "constraintId": self.constraintId,
-            "message": self.message,
-            "entityKind": self.entityKind,
-            "entityGuid": self.entityGuid,
-            "fixes": [f.toDict() for f in self.fixes],
-        }
-
-
-@dataclasses.dataclass
-class ValidationResult:
-    """🔖A validation result aggregating problems and fixes for an entity."""
-
-    problems: list[Problem]
-
-    def hasErrors(self) -> bool:
-        return len(self.problems) > 0
-
-    def toDict(self) -> dict:
-        sortedProblems = sorted(self.problems, key=lambda i: (i.constraintId, i.entityGuid))
-        return {"problems": [i.toDict() for i in sortedProblems]}
-
-    def serialize(self) -> str:
-        return json.dumps(self.toDict(), indent=2)
-
-
-def _isGuid(s: str) -> bool:
-    """🔖_isGuid performs the _isGuid operation."""
-    import re
-
-    return bool(
-        re.match(
-            r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-            s,
-            re.IGNORECASE,
-        )
-    )
-
-
-def _normalizeGuids(obj: typing.Any) -> typing.Any:
-    """🔖_normalizeGuids performs the _normalizeGuids operation."""
-    if obj is None:
-        return obj
-    if isinstance(obj, str) and _isGuid(obj):
-        return "<GUID>"
-    if isinstance(obj, list):
-        return [_normalizeGuids(x) for x in obj]
-    if isinstance(obj, dict):
-        return {k: _normalizeGuids(v) for k, v in obj.items()}
-    return obj
-
-
-def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
-    """✔️Check whether two validation results are semantically equal."""
-    if len(a.problems) != len(b.problems):
-        return False
-    sortedA = sorted(a.problems, key=lambda i: (i.constraintId, i.entityGuid))
-    sortedB = sorted(b.problems, key=lambda i: (i.constraintId, i.entityGuid))
-    for ia, ib in zip(sortedA, sortedB):
-        if ia.constraintId != ib.constraintId or ia.message != ib.message or ia.entityKind != ib.entityKind or ia.entityGuid != ib.entityGuid:
-            return False
-        if len(ia.fixes) != len(ib.fixes):
-            return False
-        for fa, fb in zip(ia.fixes, ib.fixes):
-            if fa.title != fb.title:
-                return False
-
-            if ia.constraintId == "guid-unique":
-                continue
-            if json.dumps(_normalizeGuids(fa.diff), sort_keys=True) != json.dumps(_normalizeGuids(fb.diff), sort_keys=True):
-                return False
-    return True
-
-
-def parseValidationResult(jsonStr: str) -> ValidationResult:
-    """🔬Parse a validation result from a dictionary representation."""
-    data = json.loads(jsonStr)
-    problems = []
-    for i in data["problems"]:
-        fixes = [ValidationFix(title=f["title"], diff=f["diff"]) for f in i.get("fixes", [])]
-        problems.append(
-            Problem(
-                constraintId=i["constraintId"],
-                message=i["message"],
-                entityKind=i["entityKind"],
-                entityGuid=i["entityGuid"],
-                fixes=fixes,
-            )
-        )
-    return ValidationResult(problems=problems)
-
-
-def validateGuidUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all GUIDs within a collection are unique."""
-    problems: list[Problem] = []
-    seen: dict[str, str] = {}
-
-    def check(entityKind: str, entityGuid: str) -> None:
-        if entityGuid in seen:
-            problems.append(
-                Problem(
-                    constraintId="guid-unique",
-                    message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
-                    entityKind=entityKind,
-                    entityGuid=entityGuid,
-                )
-            )
-        else:
-            seen[entityGuid] = entityKind
-
-    check("Kit", kit.guid)
-    for t in kit.types or []:
-        check("Type", t.guid)
-    for d in kit.designs or []:
-        check("Design", d.guid)
-        for p in d.pieces or []:
-            check("Piece", p.guid)
-        for c in d.connections or []:
-            check("Connection", c.guid)
-        for s in d.stats or []:
-            check("Stat", s.guid)
-    for q in kit.qualities or []:
-        check("Quality", q.guid)
-    for f in kit.files_ or []:
-        check("File", f.guid)
-    for fo in kit.folders_ or []:
-        check("Folder", fo.guid)
-    return problems
-
-
-def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all type names within a kit are unique."""
-    problems: list[Problem] = []
-    byParent: dict[str | None, list[Type]] = {}
-    for t in kit.types or []:
-        parentGuid = t.parent.guid if t.parent else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(t)
-    for parentGuid, siblings in byParent.items():
-        names: dict[str, list[Type]] = {}
-        for t in siblings:
-            if t.name not in names:
-                names[t.name] = []
-            names[t.name].append(t)
-        for name, group in names.items():
-            if len(group) > 1:
-                for t in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="type-name-unique",
-                            message=f'Duplicate type name "{name}" among siblings.',
-                            entityKind="Type",
-                            entityGuid=t.guid,
-                        )
-                    )
-    return problems
-
-
-def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all design names within a kit are unique."""
-    problems: list[Problem] = []
-    byParent: dict[str | None, list[Design]] = {}
-    for d in kit.designs or []:
-        parentGuid = d.parent.guid if d.parent else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(d)
-    for parentGuid, siblings in byParent.items():
-        names: dict[str, list[Design]] = {}
-        for d in siblings:
-            if d.name not in names:
-                names[d.name] = []
-            names[d.name].append(d)
-        for name, group in names.items():
-            if len(group) > 1:
-                for d in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="design-name-unique",
-                            message=f'Duplicate design name "{name}" among siblings.',
-                            entityKind="Design",
-                            entityGuid=d.guid,
-                        )
-                    )
-    return problems
-
-
-def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all piece names within a design are unique."""
-    problems: list[Problem] = []
-    for design in kit.designs or []:
-        names: dict[str, list[Piece]] = {}
-        for p in design.pieces or []:
-            if p.name_ and p.name_ not in names:
-                names[p.name_] = []
-            if p.name_:
-                names[p.name_].append(p)
-        for name, group in names.items():
-            if len(group) > 1:
-                for p in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="piece-name-unique",
-                            message=f'Duplicate piece name "{name}" in design.',
-                            entityKind="Piece",
-                            entityGuid=p.guid,
-                        )
-                    )
-    return problems
-
-
-def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all port names within a type are unique."""
-    problems: list[Problem] = []
-    for t in kit.types or []:
-        names: dict[str, list[Connector]] = {}
-        for connector in t.connectors or []:
-            if connector.name_ and connector.name_ not in names:
-                names[connector.name_] = []
-            if connector.name_:
-                names[connector.name_].append(connector)
-        for name, group in names.items():
-            if len(group) > 1:
-                for connector in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="connector-name-unique",
-                            message=f'Duplicate connector name "{name}" in type.',
-                            entityKind="Connector",
-                            entityGuid=connector.guid,
-                        )
-                    )
-    return problems
-
-
-def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all model names within a type are unique."""
-    problems: list[Problem] = []
-    for t in kit.types or []:
-        names: dict[str, list[Model]] = {}
-        for model in t.models or []:
-            if model.name and model.name not in names:
-                names[model.name] = []
-            if model.name:
-                names[model.name].append(model)
-        for name, group in names.items():
-            if len(group) > 1:
-                for model in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="model-name-unique",
-                            message=f'Duplicate model name "{name}" in type.',
-                            entityKind="Model",
-                            entityGuid=model.guid,
-                        )
-                    )
-    return problems
-
-
-def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all quality names within a kit are unique."""
-    problems: list[Problem] = []
-    names: dict[str, list[Quality]] = {}
-    for q in kit.qualities or []:
-        if q.name not in names:
-            names[q.name] = []
-        names[q.name].append(q)
-    for name, group in names.items():
-        if len(group) > 1:
-            for q in group[1:]:
-                problems.append(
-                    Problem(
-                        constraintId="quality-name-unique",
-                        message=f'Duplicate quality name "{name}".',
-                        entityKind="Quality",
-                        entityGuid=q.guid,
-                    )
-                )
-    return problems
-
-
-def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all file names within a kit are unique."""
-    problems: list[Problem] = []
-    names: dict[str, list[File]] = {}
-    for f in kit.files_ or []:
-        if f.name not in names:
-            names[f.name] = []
-        names[f.name].append(f)
-    for name, group in names.items():
-        if len(group) > 1:
-            for f in group[1:]:
-                problems.append(
-                    Problem(
-                        constraintId="file-name-unique",
-                        message=f'Duplicate file name "{name}".',
-                        entityKind="File",
-                        entityGuid=f.guid,
-                    )
-                )
-    return problems
-
-
-def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all folder names within a kit are unique."""
-    problems: list[Problem] = []
-    byParent: dict[str | None, list[Folder]] = {}
-    for fo in kit.folders_ or []:
-        parentGuid = fo.parent if fo.parent else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(fo)
-    for parentGuid, siblings in byParent.items():
-        names: dict[str, list[Folder]] = {}
-        for fo in siblings:
-            if fo.name not in names:
-                names[fo.name] = []
-            names[fo.name].append(fo)
-        for name, group in names.items():
-            if len(group) > 1:
-                for fo in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="folder-name-unique",
-                            message=f'Duplicate folder name "{name}" among siblings.',
-                            entityKind="Folder",
-                            entityGuid=fo.guid,
-                        )
-                    )
-    return problems
-
-
-def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all layer paths within a design are unique."""
-    problems: list[Problem] = []
-    for design in kit.designs or []:
-        paths: dict[str, list[Layer]] = {}
-        for layer in design.layers or []:
-            if layer.path not in paths:
-                paths[layer.path] = []
-            paths[layer.path].append(layer)
-        for path, group in paths.items():
-            if len(group) > 1:
-                for layer in group[1:]:
-                    problems.append(
-                        Problem(
-                            constraintId="layer-path-unique",
-                            message=f'Duplicate layer path "{path}" in design.',
-                            entityKind="Layer",
-                            entityGuid=layer.guid,
-                        )
-                    )
-    return problems
-
-
-def extractFirstEmoji(text: str | None) -> str | None:
-    """🔣 Extract the first emoji grapheme from a string, or None if none."""
-    import re as _re
-
-    if not text:
+# #endregion ⏱️Kit
+
+
+
+# #region 🔑Meta And Shallow
+# Meta And Shallow Types MUST provide lightweight entity representations.
+
+# #region 🎼Sub-entity Meta
+
+AttributeMeta = typing.TypedDict(
+    "AttributeMeta",
+    {"guid": str, "name": str, "value": str, "definition": typing.NotRequired[str]},
+)
+"""AttributeMeta is identical to Attribute (no list fields to omit)."""
+
+TagMeta = typing.TypedDict(
+    "TagMeta",
+    {
+        "guid": str,
+        "name": str,
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "order": typing.NotRequired[int],
+    },
+)
+"""TagMeta is identical to Tag (no list fields to omit)."""
+
+ConceptMeta = typing.TypedDict(
+    "ConceptMeta",
+    {
+        "guid": str,
+        "name": str,
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "order": typing.NotRequired[int],
+    },
+)
+"""ConceptMeta is identical to Concept (no list fields to omit)."""
+
+StatMeta = typing.TypedDict(
+    "StatMeta",
+    {
+        "guid": str,
+        "key": str,
+        "unit": typing.NotRequired[str],
+        "min": typing.NotRequired[float],
+        "minExcluded": typing.NotRequired[bool],
+        "max": typing.NotRequired[float],
+        "maxExcluded": typing.NotRequired[bool],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""StatMeta is identical to Stat (no list fields to omit)."""
+
+PropMeta = typing.TypedDict(
+    "PropMeta",
+    {"guid": str, "key": str, "value": str, "unit": typing.NotRequired[str]},
+)
+"""PropMeta is Prop without attributes."""
+
+AuthorMeta = typing.TypedDict(
+    "AuthorMeta",
+    {"guid": str, "name": str, "email": typing.NotRequired[str]},
+)
+"""AuthorMeta is Author without attributes."""
+
+FileMeta = typing.TypedDict(
+    "FileMeta",
+    {
+        "guid": str,
+        "name": str,
+        "remote": typing.NotRequired[str],
+        "folder": typing.NotRequired[dict],
+        "size": typing.NotRequired[int],
+        "hash": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""FileMeta is File without blob."""
+
+FolderMeta = typing.TypedDict(
+    "FolderMeta",
+    {
+        "guid": str,
+        "name": str,
+        "parent": typing.NotRequired[dict],
+        "description": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""FolderMeta is Folder without attributes."""
+
+QualityMeta = typing.TypedDict(
+    "QualityMeta",
+    {
+        "guid": str,
+        "key": str,
+        "name": str,
+        "kind": typing.NotRequired[int],
+        "defaultValue": typing.NotRequired[float],
+        "formula": typing.NotRequired[str],
+        "defaultSiUnit": typing.NotRequired[str],
+        "defaultImperialUnit": typing.NotRequired[str],
+        "min": typing.NotRequired[float],
+        "minExcluded": typing.NotRequired[bool],
+        "max": typing.NotRequired[float],
+        "maxExcluded": typing.NotRequired[bool],
+        "canScale": typing.NotRequired[bool],
+        "uri": typing.NotRequired[str],
+    },
+)
+"""QualityMeta is Quality without benchmarks and attributes."""
+
+PortMeta = typing.TypedDict(
+    "PortMeta",
+    {
+        "guid": str,
+        "name": str,
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+    },
+)
+"""PortMeta is Port without attributes."""
+
+ModelMeta = typing.TypedDict(
+    "ModelMeta",
+    {
+        "guid": str,
+        "file": typing.NotRequired[dict],
+        "name": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+    },
+)
+"""ModelMeta is Model without tags and attributes."""
+
+ConnectorMeta = typing.TypedDict(
+    "ConnectorMeta",
+    {
+        "guid": str,
+        "point": dict,
+        "direction": dict,
+        "t": float,
+        "name": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+        "mandatory": typing.NotRequired[bool],
+        "port": typing.NotRequired[dict],
+    },
+)
+"""ConnectorMeta is Connector without props and attributes."""
+
+LayerMeta = typing.TypedDict(
+    "LayerMeta",
+    {
+        "guid": str,
+        "name": str,
+        "isHidden": typing.NotRequired[bool],
+        "isLocked": typing.NotRequired[bool],
+        "color": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+    },
+)
+"""LayerMeta is Layer without attributes."""
+
+PieceMeta = typing.TypedDict(
+    "PieceMeta",
+    {
+        "guid": str,
+        "name": typing.NotRequired[str],
+        "type": typing.NotRequired[dict],
+        "designPiece": typing.NotRequired[dict],
+        "plane": typing.NotRequired[dict],
+        "center": typing.NotRequired[dict],
+        "scale": typing.NotRequired[float],
+        "mirrorPlane": typing.NotRequired[dict],
+        "isHidden": typing.NotRequired[bool],
+        "isLocked": typing.NotRequired[bool],
+        "color": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+    },
+)
+"""PieceMeta is Piece without props and attributes."""
+
+GroupMeta = typing.TypedDict(
+    "GroupMeta",
+    {
+        "guid": str,
+        "name": typing.NotRequired[str],
+        "color": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+    },
+)
+"""GroupMeta is Group without pieces and attributes."""
+
+ConnectionMeta = typing.TypedDict(
+    "ConnectionMeta",
+    {
+        "guid": str,
+        "connected": dict,
+        "connecting": dict,
+        "gap": typing.NotRequired[float],
+        "shift": typing.NotRequired[float],
+        "rise": typing.NotRequired[float],
+        "rotation": typing.NotRequired[float],
+        "turn": typing.NotRequired[float],
+        "tilt": typing.NotRequired[float],
+        "u": typing.NotRequired[float],
+        "v": typing.NotRequired[float],
+        "description": typing.NotRequired[str],
+    },
+)
+"""ConnectionMeta is Connection without attributes."""
+
+# #endregion 🎼Sub-entity Meta
+
+# #region 🕰️Main Entity Meta
+
+TypeMeta = typing.TypedDict(
+    "TypeMeta",
+    {
+        "guid": str,
+        "name": str,
+        "parent": typing.NotRequired[dict],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "folder": typing.NotRequired[str],
+        "unit": typing.NotRequired[str],
+        "stock": typing.NotRequired[int],
+        "isAbstract": typing.NotRequired[bool],
+        "virtual": typing.NotRequired[bool],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""TypeMeta is Type with only scalar fields."""
+
+DesignMeta = typing.TypedDict(
+    "DesignMeta",
+    {
+        "guid": str,
+        "name": str,
+        "parent": typing.NotRequired[dict],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "variant": typing.NotRequired[str],
+        "view": typing.NotRequired[str],
+        "unit": typing.NotRequired[str],
+        "folder": typing.NotRequired[str],
+        "isAbstract": typing.NotRequired[bool],
+        "activeLayer": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""DesignMeta is Design with only scalar fields."""
+
+KitMeta = typing.TypedDict(
+    "KitMeta",
+    {
+        "guid": str,
+        "name": str,
+        "version": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "preview": typing.NotRequired[str],
+        "remote": typing.NotRequired[str],
+        "homepage": typing.NotRequired[str],
+        "license": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+    },
+)
+"""KitMeta is Kit with only scalar fields."""
+
+# #endregion 🕰️Main Entity Meta
+
+# #region 🐻Shallow
+
+TypeShallow = typing.TypedDict(
+    "TypeShallow",
+    {
+        "guid": str,
+        "name": str,
+        "parent": typing.NotRequired[dict],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "folder": typing.NotRequired[str],
+        "unit": typing.NotRequired[str],
+        "stock": typing.NotRequired[int],
+        "isAbstract": typing.NotRequired[bool],
+        "virtual": typing.NotRequired[bool],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+        "concepts": typing.NotRequired[list[ConceptMeta]],
+        "authors": typing.NotRequired[list[AuthorMeta]],
+        "props": typing.NotRequired[list[PropMeta]],
+        "models": typing.NotRequired[list[ModelMeta]],
+        "connectors": typing.NotRequired[list[ConnectorMeta]],
+        "attributes": typing.NotRequired[list[AttributeMeta]],
+    },
+)
+"""TypeShallow is Type with list fields replaced by Meta item lists."""
+
+DesignShallow = typing.TypedDict(
+    "DesignShallow",
+    {
+        "guid": str,
+        "name": str,
+        "parent": typing.NotRequired[dict],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "variant": typing.NotRequired[str],
+        "view": typing.NotRequired[str],
+        "unit": typing.NotRequired[str],
+        "folder": typing.NotRequired[str],
+        "isAbstract": typing.NotRequired[bool],
+        "activeLayer": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+        "concepts": typing.NotRequired[list[ConceptMeta]],
+        "authors": typing.NotRequired[list[AuthorMeta]],
+        "props": typing.NotRequired[list[PropMeta]],
+        "pieces": typing.NotRequired[list[PieceMeta]],
+        "connections": typing.NotRequired[list[ConnectionMeta]],
+        "layers": typing.NotRequired[list[LayerMeta]],
+        "groups": typing.NotRequired[list[GroupMeta]],
+        "stats": typing.NotRequired[list[StatMeta]],
+        "attributes": typing.NotRequired[list[AttributeMeta]],
+    },
+)
+"""DesignShallow is Design with list fields replaced by Meta item lists."""
+
+KitShallow = typing.TypedDict(
+    "KitShallow",
+    {
+        "guid": str,
+        "name": str,
+        "version": typing.NotRequired[str],
+        "description": typing.NotRequired[str],
+        "icon": typing.NotRequired[str],
+        "image": typing.NotRequired[str],
+        "preview": typing.NotRequired[str],
+        "remote": typing.NotRequired[str],
+        "homepage": typing.NotRequired[str],
+        "license": typing.NotRequired[str],
+        "createdAt": typing.NotRequired[str],
+        "updatedAt": typing.NotRequired[str],
+        "concepts": typing.NotRequired[list[ConceptMeta]],
+        "tags": typing.NotRequired[list[TagMeta]],
+        "types": typing.NotRequired[list[TypeMeta]],
+        "designs": typing.NotRequired[list[DesignMeta]],
+        "ports": typing.NotRequired[list[PortMeta]],
+        "qualities": typing.NotRequired[list[QualityMeta]],
+        "files": typing.NotRequired[list[FileMeta]],
+        "folders": typing.NotRequired[list[FolderMeta]],
+        "authors": typing.NotRequired[list[AuthorMeta]],
+        "attributes": typing.NotRequired[list[AttributeMeta]],
+    },
+)
+"""KitShallow is Kit with list fields replaced by Meta item lists."""
+
+# #endregion 🐻Shallow
+
+# #region 📎Meta And Shallow Conversions
+
+
+def _strip_none(d: dict) -> dict:
+    """➖Remove keys with None values from a dict."""
+    return {k: v for k, v in d.items() if v is not None}
+
+
+def _extract_scalar_fields(d: dict, keys: list[str]) -> dict:
+    """🔖Extract only specified keys from a dict, skipping missing keys."""
+    return {k: d[k] for k in keys if k in d}
+
+
+_ATTRIBUTE_META_KEYS = ["guid", "name", "value", "definition"]
+_TAG_META_KEYS = ["guid", "name", "description", "icon", "order"]
+_CONCEPT_META_KEYS = ["guid", "name", "description", "icon", "order"]
+_STAT_META_KEYS = [
+    "guid",
+    "key",
+    "unit",
+    "min",
+    "minExcluded",
+    "max",
+    "maxExcluded",
+    "createdAt",
+    "updatedAt",
+]
+_PROP_META_KEYS = ["guid", "key", "value", "unit"]
+_AUTHOR_META_KEYS = ["guid", "name", "email"]
+_FILE_META_KEYS = [
+    "guid",
+    "name",
+    "remote",
+    "folder",
+    "size",
+    "hash",
+    "createdAt",
+    "updatedAt",
+]
+_FOLDER_META_KEYS = ["guid", "name", "parent", "description", "createdAt", "updatedAt"]
+_QUALITY_META_KEYS = [
+    "guid",
+    "key",
+    "name",
+    "kind",
+    "defaultValue",
+    "formula",
+    "defaultSiUnit",
+    "defaultImperialUnit",
+    "min",
+    "minExcluded",
+    "max",
+    "maxExcluded",
+    "canScale",
+    "uri",
+]
+_PORT_META_KEYS = ["guid", "name", "description", "icon"]
+_MODEL_META_KEYS = ["guid", "file", "name", "description"]
+_CONNECTOR_META_KEYS = [
+    "guid",
+    "point",
+    "direction",
+    "t",
+    "name",
+    "description",
+    "mandatory",
+    "port",
+]
+_LAYER_META_KEYS = ["guid", "name", "isHidden", "isLocked", "color", "description"]
+_PIECE_META_KEYS = [
+    "guid",
+    "name",
+    "type",
+    "designPiece",
+    "plane",
+    "center",
+    "scale",
+    "mirrorPlane",
+    "isHidden",
+    "isLocked",
+    "color",
+    "description",
+]
+_GROUP_META_KEYS = ["guid", "name", "color", "description"]
+_CONNECTION_META_KEYS = [
+    "guid",
+    "connected",
+    "connecting",
+    "gap",
+    "shift",
+    "rise",
+    "rotation",
+    "turn",
+    "tilt",
+    "u",
+    "v",
+    "description",
+]
+
+_TYPE_META_KEYS = [
+    "guid",
+    "name",
+    "parent",
+    "description",
+    "icon",
+    "image",
+    "folder",
+    "unit",
+    "stock",
+    "isAbstract",
+    "virtual",
+    "createdAt",
+    "updatedAt",
+]
+_DESIGN_META_KEYS = [
+    "guid",
+    "name",
+    "parent",
+    "description",
+    "icon",
+    "image",
+    "variant",
+    "view",
+    "unit",
+    "folder",
+    "isAbstract",
+    "activeLayer",
+    "createdAt",
+    "updatedAt",
+]
+_KIT_META_KEYS = [
+    "guid",
+    "name",
+    "version",
+    "description",
+    "icon",
+    "image",
+    "preview",
+    "remote",
+    "homepage",
+    "license",
+    "createdAt",
+    "updatedAt",
+]
+
+
+def attributeToMeta(d: dict) -> AttributeMeta:
+    """🔖Convert an attribute dict to AttributeMeta."""
+    return _extract_scalar_fields(d, _ATTRIBUTE_META_KEYS)
+
+
+def tagToMeta(d: dict) -> TagMeta:
+    """🔖Convert a tag dict to TagMeta."""
+    return _extract_scalar_fields(d, _TAG_META_KEYS)
+
+
+def conceptToMeta(d: dict) -> ConceptMeta:
+    """🔖Convert a concept dict to ConceptMeta."""
+    return _extract_scalar_fields(d, _CONCEPT_META_KEYS)
+
+
+def statToMeta(d: dict) -> StatMeta:
+    """🔖Convert a stat dict to StatMeta."""
+    return _extract_scalar_fields(d, _STAT_META_KEYS)
+
+
+def propToMeta(d: dict) -> PropMeta:
+    """🔖Convert a prop dict to PropMeta (without attributes)."""
+    return _extract_scalar_fields(d, _PROP_META_KEYS)
+
+
+def authorToMeta(d: dict) -> AuthorMeta:
+    """🔖Convert an author dict to AuthorMeta (without attributes)."""
+    return _extract_scalar_fields(d, _AUTHOR_META_KEYS)
+
+
+def fileToMeta(d: dict) -> FileMeta:
+    """🔖Convert a file dict to FileMeta (without blob)."""
+    return _extract_scalar_fields(d, _FILE_META_KEYS)
+
+
+def folderToMeta(d: dict) -> FolderMeta:
+    """🔖Convert a folder dict to FolderMeta (without attributes)."""
+    return _extract_scalar_fields(d, _FOLDER_META_KEYS)
+
+
+def qualityToMeta(d: dict) -> QualityMeta:
+    """🔖Convert a quality dict to QualityMeta (without benchmarks and attributes)."""
+    return _extract_scalar_fields(d, _QUALITY_META_KEYS)
+
+
+def portToMeta(d: dict) -> PortMeta:
+    """🔖Convert a port dict to PortMeta (without attributes)."""
+    return _extract_scalar_fields(d, _PORT_META_KEYS)
+
+
+def modelToMeta(d: dict) -> ModelMeta:
+    """🔖Convert a model dict to ModelMeta (without tags and attributes)."""
+    return _extract_scalar_fields(d, _MODEL_META_KEYS)
+
+
+def connectorToMeta(d: dict) -> ConnectorMeta:
+    """🔖Convert a connector dict to ConnectorMeta (without props and attributes)."""
+    return _extract_scalar_fields(d, _CONNECTOR_META_KEYS)
+
+
+def layerToMeta(d: dict) -> LayerMeta:
+    """🔖Convert a layer dict to LayerMeta (without attributes)."""
+    return _extract_scalar_fields(d, _LAYER_META_KEYS)
+
+
+def pieceToMeta(d: dict) -> PieceMeta:
+    """🔖Convert a piece dict to PieceMeta (without props and attributes)."""
+    return _extract_scalar_fields(d, _PIECE_META_KEYS)
+
+
+def groupToMeta(d: dict) -> GroupMeta:
+    """🔖Convert a group dict to GroupMeta (without pieces and attributes)."""
+    return _extract_scalar_fields(d, _GROUP_META_KEYS)
+
+
+def connectionToMeta(d: dict) -> ConnectionMeta:
+    """🔖Convert a connection dict to ConnectionMeta (without attributes)."""
+    return _extract_scalar_fields(d, _CONNECTION_META_KEYS)
+
+
+def typeToMeta(d: dict) -> TypeMeta:
+    """🔖Convert a type dict to TypeMeta (scalar fields only)."""
+    return _extract_scalar_fields(d, _TYPE_META_KEYS)
+
+
+def designToMeta(d: dict) -> DesignMeta:
+    """🔖Convert a design dict to DesignMeta (scalar fields only)."""
+    return _extract_scalar_fields(d, _DESIGN_META_KEYS)
+
+
+def kitToMeta(d: dict) -> KitMeta:
+    """🔖Convert a kit dict to KitMeta (scalar fields only)."""
+    return _extract_scalar_fields(d, _KIT_META_KEYS)
+
+
+def _convert_list(items: list | None, converter: typing.Callable) -> list | None:
+    """⚡Convert a list of dicts using a converter function, returning None for empty/missing lists."""
+    if not items:
         return None
-    match = _re.match(r"(\p{Extended_Pictographic}[\u200D\uFE0F\uFE0E\U0001F3FB-\U0001F3FF]*(?:\u200D\p{Extended_Pictographic}[\u200D\uFE0F\uFE0E\U0001F3FB-\U0001F3FF]*)*)", text)
-    if not match:
-        match = _re.match(
-            r"([\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F900-\U0001F9FF\U0001FA00-\U0001FA6F\U0001FA70-\U0001FAFF\U00002600-\U000026FF\U00002700-\U000027BF\U0000231A-\U0000231B\U00002328\U000023CF\U000023E9-\U000023F3\U000023F8-\U000023FA\U000025AA-\U000025AB\U000025B6\U000025C0\U000025FB-\U000025FE\U00002614-\U00002615\U00002648-\U00002653\U0000267F\U00002702\U0000203C\U00002049\U00002122\U00002139\U00002194-\U00002199\U000021A9-\U000021AA\U000000A9\U000000AE]+[\uFE0F\uFE0E\u200D]*)",
-            text,
-        )
-    if match:
-        return match.group(1)
-    return None
+    return [converter(item) for item in items]
 
 
-def validateDescriptionMissingEmoji(kit: Kit) -> list[Problem]:
-    """🚫 Validate that every entity description starts with an emoji."""
-    problems: list[Problem] = []
-
-    def check(entity_kind: str, entity_guid: str, description: str | None) -> None:
-        if not description:
-            return
-        emoji = extractFirstEmoji(description)
-        if not emoji:
-            problems.append(
-                Problem(
-                    constraintId="description-missing-emoji",
-                    message=f'Description of {entity_kind} "{entity_guid}" must start with an emoji.',
-                    entityKind=entity_kind,
-                    entityGuid=entity_guid,
-                )
-            )
-
-    check("Kit", kit.guid, kit.description)
-    for t in kit.types or []:
-        check("Type", t.guid, t.description)
-        for c in t.connectors or []:
-            check("Connector", c.guid, c.description)
-        for m in t.models or []:
-            check("Model", m.guid, m.description)
-    for d in kit.designs or []:
-        check("Design", d.guid, d.description)
-        for p in d.pieces or []:
-            check("Piece", p.guid, p.description)
-        for c in d.connections or []:
-            check("Connection", c.guid, c.description)
-    for q in kit.qualities or []:
-        check("Quality", q.guid, q.description)
-    for p in kit.ports or []:
-        check("Port", p.guid, p.description)
-    for f in kit.files or []:
-        check("File", f.guid, f.description)
-    for f in kit.folders or []:
-        check("Folder", f.guid, f.description)
-    return problems
-
-
-def validateDescriptionEmojiUnique(kit: Kit) -> list[Problem]:
-    """🔤 Validate that sibling entity descriptions have unique leading emojis."""
-    problems: list[Problem] = []
-
-    def check_siblings(entity_kind: str, siblings: list[tuple[str, str | None]]) -> None:
-        emoji_map: dict[str, list[str]] = {}
-        for guid, description in siblings:
-            emoji = extractFirstEmoji(description)
-            if not emoji:
-                continue
-            if emoji not in emoji_map:
-                emoji_map[emoji] = []
-            emoji_map[emoji].append(guid)
-        for emoji, guids in emoji_map.items():
-            if len(guids) <= 1:
-                continue
-            for guid in guids[1:]:
-                problems.append(
-                    Problem(
-                        constraintId="description-emoji-unique",
-                        message=f'Duplicate leading emoji "{emoji}" in {entity_kind} descriptions among siblings.',
-                        entityKind=entity_kind,
-                        entityGuid=guid,
-                    )
-                )
-
-    types_by_parent: dict[str, list[tuple[str, str | None]]] = {}
-    for t in kit.types or []:
-        pid = t.parent.guid if t.parent else ""
-        if pid not in types_by_parent:
-            types_by_parent[pid] = []
-        types_by_parent[pid].append((t.guid, t.description))
-    for siblings in types_by_parent.values():
-        check_siblings("Type", siblings)
-    designs_by_parent: dict[str, list[tuple[str, str | None]]] = {}
-    for d in kit.designs or []:
-        pid = d.parent.guid if d.parent else ""
-        if pid not in designs_by_parent:
-            designs_by_parent[pid] = []
-        designs_by_parent[pid].append((d.guid, d.description))
-    for siblings in designs_by_parent.values():
-        check_siblings("Design", siblings)
-    for d in kit.designs or []:
-        check_siblings("Piece", [(p.guid, p.description) for p in d.pieces or []])
-        check_siblings("Connection", [(c.guid, c.description) for c in d.connections or []])
-    check_siblings("Quality", [(q.guid, q.description) for q in kit.qualities or []])
-    check_siblings("Port", [(p.guid, p.description) for p in kit.ports or []])
-    check_siblings("File", [(f.guid, f.description) for f in kit.files or []])
-    folders_by_parent: dict[str, list[tuple[str, str | None]]] = {}
-    for f in kit.folders or []:
-        pid = f.parent.guid if f.parent else ""
-        if pid not in folders_by_parent:
-            folders_by_parent[pid] = []
-        folders_by_parent[pid].append((f.guid, f.description))
-    for siblings in folders_by_parent.values():
-        check_siblings("Folder", siblings)
-    for t in kit.types or []:
-        check_siblings("Connector", [(c.guid, c.description) for c in t.connectors or []])
-        check_siblings("Model", [(m.guid, m.description) for m in t.models or []])
-    return problems
-
-
-def validateKit(kit: Kit) -> ValidationResult:
-    """🔖Validate a kit entity against all constraint rules."""
-    problems: list[Problem] = []
-    problems.extend(validateGuidUniqueness(kit))
-    problems.extend(validateTypeNameUniqueness(kit))
-    problems.extend(validateDesignNameUniqueness(kit))
-    problems.extend(validatePieceNameUniqueness(kit))
-    problems.extend(validatePortNameUniqueness(kit))
-    problems.extend(validateModelNameUniqueness(kit))
-    problems.extend(validateQualityNameUniqueness(kit))
-    problems.extend(validateFolderNameUniqueness(kit))
-    problems.extend(validateLayerPathUniqueness(kit))
-    problems.extend(validateDescriptionMissingEmoji(kit))
-    problems.extend(validateDescriptionEmojiUnique(kit))
-    return ValidationResult(problems=problems)
-
-
-# #region 📧Dict-based Validation
-# Dictionary-based validation functions for kit data integrity.
-
-
-def _makeFix(title: str, diff: dict) -> ValidationFix:
-    """🔖_makeFix performs the _makeFix operation."""
-    return ValidationFix(title=title, diff=diff)
-
-
-def _deepCopy(obj: typing.Any) -> typing.Any:
-    """🔖_deepCopy performs the _deepCopy operation."""
-    return json.loads(json.dumps(obj))
-
-
-def _newGuid() -> str:
-    """🔖_newGuid performs the _newGuid operation."""
-    import uuid
-
-    return str(uuid.uuid4())
-
-
-def validateKitDict(kit: dict) -> ValidationResult:
-    """🔖Validate a kit dictionary against all constraint rules."""
-    problems: list[Problem] = []
-    seen: dict[str, str] = {}
-    seenEntities: dict[str, dict] = {}
-
-    def checkGuid(entityKind: str, entityGuid: str, entity: dict) -> None:
-        if entityGuid in seen:
-            newGuid = _newGuid()
-            entityCopy = _deepCopy(entity)
-            entityCopy["guid"] = newGuid
-            collectionKey = {
-                "Type": "types",
-                "Design": "designs",
-                "Piece": "pieces",
-                "Connection": "connections",
-                "Connector": "connectors",
-                "Model": "models",
-                "Quality": "qualities",
-                "Port": "ports",
-                "File": "files",
-                "Folder": "folders",
-                "Stat": "stats",
-                "Layer": "layers",
-            }.get(entityKind, "")
-            if collectionKey:
-                diff = {
-                    collectionKey: {
-                        "removed": [{"guid": entityGuid}],
-                        "added": [entityCopy],
-                    }
-                }
-                fix = _makeFix("Regenerate GUID", diff)
-                problems.append(
-                    Problem(
-                        constraintId="guid-unique",
-                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
-                        entityKind=entityKind,
-                        entityGuid=entityGuid,
-                        fixes=[fix],
-                    )
-                )
-            else:
-                problems.append(
-                    Problem(
-                        constraintId="guid-unique",
-                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
-                        entityKind=entityKind,
-                        entityGuid=entityGuid,
-                        fixes=[],
-                    )
-                )
-        else:
-            seen[entityGuid] = entityKind
-            seenEntities[entityGuid] = entity
-
-    checkGuid("Kit", kit.get("guid", ""), kit)
-    for t in kit.get("types", []):
-        checkGuid("Type", t.get("guid", ""), t)
-        for connector in t.get("connectors", []):
-            checkGuid("Connector", connector.get("guid", ""), connector)
-        for model in t.get("models", []):
-            checkGuid("Model", model.get("guid", ""), model)
-    for d in kit.get("designs", []):
-        checkGuid("Design", d.get("guid", ""), d)
-        for p in d.get("pieces", []):
-            checkGuid("Piece", p.get("guid", ""), p)
-        for c in d.get("connections", []):
-            checkGuid("Connection", c.get("guid", ""), c)
-        for s in d.get("stats", []):
-            checkGuid("Stat", s.get("guid", ""), s)
-    for q in kit.get("qualities", []):
-        checkGuid("Quality", q.get("guid", ""), q)
-    for i in kit.get("ports", []):
-        checkGuid("Port", i.get("guid", ""), i)
-    for f in kit.get("files", []):
-        checkGuid("File", f.get("guid", ""), f)
-    for fo in kit.get("folders", []):
-        checkGuid("Folder", fo.get("guid", ""), fo)
-    byParent: dict[str | None, list[dict]] = {}
-    for t in kit.get("types", []):
-        parent = t.get("parent")
-        parentGuid = parent.get("guid") if isinstance(parent, dict) else parent if parent else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(t)
-    for parentGuid, siblings in byParent.items():
-        names: dict[str, list[dict]] = {}
-        for t in siblings:
-            name = t.get("name", "")
-            if name not in names:
-                names[name] = []
-            names[name].append(t)
-        for name, group in names.items():
-            if len(group) > 1:
-                for t in group[1:]:
-                    fix = _makeFix(
-                        f'Rename "{name}"',
-                        {
-                            "types": {
-                                "updated": [
-                                    {
-                                        "type": {"guid": t.get("guid", "")},
-                                        "diff": {"name": f"{name} 2"},
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="type-name-unique",
-                            message=f'Duplicate type name "{name}" among siblings.',
-                            entityKind="Type",
-                            entityGuid=t.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    byParent = {}
-    for d in kit.get("designs", []):
-        parent = d.get("parent")
-        parentGuid = parent.get("guid") if isinstance(parent, dict) else parent if parent else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(d)
-    for parentGuid, siblings in byParent.items():
-        names: dict[str, list[dict]] = {}
-        for d in siblings:
-            name = d.get("name", "")
-            if name not in names:
-                names[name] = []
-            names[name].append(d)
-        for name, group in names.items():
-            if len(group) > 1:
-                for d in group[1:]:
-                    fix = _makeFix(
-                        f'Rename "{name}"',
-                        {
-                            "designs": {
-                                "updated": [
-                                    {
-                                        "design": {"guid": d.get("guid", "")},
-                                        "diff": {"name": f"{name} 2"},
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="design-name-unique",
-                            message=f'Duplicate design name "{name}" among siblings.',
-                            entityKind="Design",
-                            entityGuid=d.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    for design in kit.get("designs", []):
-        designName = design.get("name", "")
-        designGuid = design.get("guid", "")
-        names = {}
-        for p in design.get("pieces", []):
-            name = p.get("name", "")
-            if name and name not in names:
-                names[name] = []
-            if name:
-                names[name].append(p)
-        for name, group in names.items():
-            if len(group) > 1:
-                for p in group[1:]:
-                    fix = _makeFix(
-                        f'Rename piece "{name}"',
-                        {
-                            "designs": {
-                                "updated": [
-                                    {
-                                        "design": {"guid": designGuid},
-                                        "diff": {
-                                            "pieces": {
-                                                "updated": [
-                                                    {
-                                                        "piece": {"guid": p.get("guid", "")},
-                                                        "diff": {"name": f"{name} 2"},
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="piece-name-unique",
-                            message=f'Duplicate piece name "{name}" inside design "{designName}".',
-                            entityKind="Piece",
-                            entityGuid=p.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    for t in kit.get("types", []):
-        typeName = t.get("name", "")
-        typeGuid = t.get("guid", "")
-        names = {}
-        for connector in t.get("connectors", []):
-            name = connector.get("name", "")
-            if name and name not in names:
-                names[name] = []
-            if name:
-                names[name].append(connector)
-        for name, group in names.items():
-            if len(group) > 1:
-                for connector in group[1:]:
-                    fix = _makeFix(
-                        f'Rename connector "{name}"',
-                        {
-                            "types": {
-                                "updated": [
-                                    {
-                                        "type": {"guid": typeGuid},
-                                        "diff": {
-                                            "connectors": {
-                                                "updated": [
-                                                    {
-                                                        "connector": {"guid": connector.get("guid", "")},
-                                                        "diff": {"name": f"{name} 2"},
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="connector-name-unique",
-                            message=f'Duplicate connector name "{name}" inside type "{typeName}".',
-                            entityKind="Connector",
-                            entityGuid=connector.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    for t in kit.get("types", []):
-        typeName = t.get("name", "")
-        typeGuid = t.get("guid", "")
-        names = {}
-        for model in t.get("models", []):
-            name = model.get("name", "")
-            if name and name not in names:
-                names[name] = []
-            if name:
-                names[name].append(model)
-        for name, group in names.items():
-            if len(group) > 1:
-                for model in group[1:]:
-                    fix = _makeFix(
-                        f'Rename model "{name}"',
-                        {
-                            "types": {
-                                "updated": [
-                                    {
-                                        "type": {"guid": typeGuid},
-                                        "diff": {
-                                            "models": {
-                                                "updated": [
-                                                    {
-                                                        "model": {"guid": model.get("guid", "")},
-                                                        "diff": {"name": f"{name} 2"},
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="model-name-unique",
-                            message=f'Duplicate model name "{name}" inside type "{typeName}".',
-                            entityKind="Model",
-                            entityGuid=model.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    names = {}
-    for q in kit.get("qualities", []):
-        name = q.get("name", "")
-        if name not in names:
-            names[name] = []
-        names[name].append(q)
-    for name, group in names.items():
-        if len(group) > 1:
-            for q in group[1:]:
-                fix = _makeFix(
-                    f'Rename quality "{name}"',
-                    {
-                        "qualities": {
-                            "updated": [
-                                {
-                                    "quality": {"guid": q.get("guid", "")},
-                                    "diff": {"name": f"{name} 2"},
-                                }
-                            ]
-                        }
-                    },
-                )
-                problems.append(
-                    Problem(
-                        constraintId="quality-name-unique",
-                        message=f'Duplicate quality name "{name}".',
-                        entityKind="Quality",
-                        entityGuid=q.get("guid", ""),
-                        fixes=[fix],
-                    )
-                )
-    names = {}
-    for i in kit.get("ports", []):
-        name = i.get("name", "")
-        if name not in names:
-            names[name] = []
-        names[name].append(i)
-    for name, group in names.items():
-        if len(group) > 1:
-            for iface in group[1:]:
-                fix = _makeFix(
-                    f'Rename port "{name}"',
-                    {
-                        "ports": {
-                            "updated": [
-                                {
-                                    "port": {"guid": iface.get("guid", "")},
-                                    "diff": {"name": f"{name} 2"},
-                                }
-                            ]
-                        }
-                    },
-                )
-                problems.append(
-                    Problem(
-                        constraintId="port-name-unique",
-                        message=f'Duplicate port name "{name}".',
-                        entityKind="Port",
-                        entityGuid=iface.get("guid", ""),
-                        fixes=[fix],
-                    )
-                )
-    names = {}
-    for f in kit.get("files", []):
-        name = f.get("name", "")
-        if name not in names:
-            names[name] = []
-        names[name].append(f)
-    for name, group in names.items():
-        if len(group) > 1:
-            for f in group[1:]:
-                fix = _makeFix(
-                    f'Rename file "{name}"',
-                    {
-                        "files": {
-                            "updated": [
-                                {
-                                    "file": {"guid": f.get("guid", "")},
-                                    "diff": {"name": f"{name} 2"},
-                                }
-                            ]
-                        }
-                    },
-                )
-                problems.append(
-                    Problem(
-                        constraintId="file-name-unique",
-                        message=f'Duplicate file name "{name}".',
-                        entityKind="File",
-                        entityGuid=f.get("guid", ""),
-                        fixes=[fix],
-                    )
-                )
-    byParent = {}
-    for fo in kit.get("folders", []):
-        parentGuid = fo.get("parent", {}).get("guid") if fo.get("parent") else None
-        if parentGuid not in byParent:
-            byParent[parentGuid] = []
-        byParent[parentGuid].append(fo)
-    for parentGuid, siblings in byParent.items():
-        names = {}
-        for fo in siblings:
-            name = fo.get("name", "")
-            if name not in names:
-                names[name] = []
-            names[name].append(fo)
-        for name, group in names.items():
-            if len(group) > 1:
-                for fo in group[1:]:
-                    fix = _makeFix(
-                        f'Rename folder "{name}"',
-                        {
-                            "folders": {
-                                "updated": [
-                                    {
-                                        "folder": {"guid": fo.get("guid", "")},
-                                        "diff": {"name": f"{name} 2"},
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="folder-name-unique",
-                            message=f'Duplicate folder name "{name}" among siblings.',
-                            entityKind="Folder",
-                            entityGuid=fo.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    for design in kit.get("designs", []):
-        designName = design.get("name", "")
-        designGuid = design.get("guid", "")
-        paths: dict[str, list[dict]] = {}
-        for layer in design.get("layers", []):
-            path = layer.get("path", "")
-            if path not in paths:
-                paths[path] = []
-            paths[path].append(layer)
-        for path, group in paths.items():
-            if len(group) > 1:
-                for layer in group[1:]:
-                    fix = _makeFix(
-                        f'Rename layer "{path}"',
-                        {
-                            "designs": {
-                                "updated": [
-                                    {
-                                        "design": {"guid": designGuid},
-                                        "diff": {
-                                            "layers": {
-                                                "updated": [
-                                                    {
-                                                        "layer": {"guid": layer.get("guid", "")},
-                                                        "diff": {"path": f"{path} 2"},
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                    }
-                                ]
-                            }
-                        },
-                    )
-                    problems.append(
-                        Problem(
-                            constraintId="layer-path-unique",
-                            message=f'Duplicate layer path "{path}" inside design "{designName}".',
-                            entityKind="Layer",
-                            entityGuid=layer.get("guid", ""),
-                            fixes=[fix],
-                        )
-                    )
-    return ValidationResult(problems=problems)
-
-
-# #endregion 📧Dict-based Validation
-
-# #region 🕌Graph Operations
-# Graph construction and traversal for piece connectivity analysis.
-
-
-def buildPieceGraph(design: Design | dict) -> networkx.Graph:
-    """🏗️Build a networkx graph from pieces and connections."""
-    G = networkx.Graph()
-    pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
-    connections = design.get("connections", []) if isinstance(design, dict) else design.connections
-    for piece in pieces:
-        pieceGuid = piece["guid"] if isinstance(piece, dict) else piece.guid
-        G.add_node(pieceGuid, piece=piece)
-    for connection in connections:
-        if isinstance(connection, dict):
-            sourceId = connection["connected"]["piece"]["guid"]
-            targetId = connection["connecting"]["piece"]["guid"]
-        else:
-            sourceId = connection.connectedPiece.guid
-            targetId = connection.connectingPiece.guid
-        if G.has_node(sourceId) and G.has_node(targetId):
-            G.add_edge(sourceId, targetId, connection=connection)
-    return G
-
-
-def findFixedPieces(design: Design | dict) -> list[str]:
-    """🔖Find all pieces that are fixed in the design hierarchy."""
-    pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
-    result = []
-    for p in pieces:
-        if isinstance(p, dict):
-            hasPlane = p.get("plane") is not None
-            hasCenter = p.get("center") is not None
-            if hasPlane != hasCenter:
-                raise ValueError(f"Piece {p.get('guid')} has inconsistent plane and center")
-            if hasPlane:
-                result.append(p["guid"])
-        else:
-            hasPlane = p.plane is not None
-            hasCenter = p.center is not None
-            if hasPlane != hasCenter:
-                raise ValueError(f"Piece {p.guid} has inconsistent plane and center")
-            if hasPlane:
-                result.append(p.guid)
+def typeToShallow(d: dict) -> TypeShallow:
+    """🔖Convert a type dict to TypeShallow (list fields replaced by Meta items)."""
+    result = _extract_scalar_fields(d, _TYPE_META_KEYS)
+    concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
+    if concepts is not None:
+        result["concepts"] = concepts
+    authors = _convert_list(d.get("authors"), lambda a: a if isinstance(a, str) else authorToMeta(a))
+    if authors is not None:
+        result["authors"] = authors
+    props = _convert_list(d.get("props"), propToMeta)
+    if props is not None:
+        result["props"] = props
+    models = _convert_list(d.get("models"), modelToMeta)
+    if models is not None:
+        result["models"] = models
+    connectors = _convert_list(d.get("connectors"), connectorToMeta)
+    if connectors is not None:
+        result["connectors"] = connectors
+    attributes = _convert_list(d.get("attributes"), attributeToMeta)
+    if attributes is not None:
+        result["attributes"] = attributes
     return result
 
 
-def getConnectedComponents(design: Design | dict) -> list[set[str]]:
-    """🔖Get connected components of the piece graph."""
-    G = buildPieceGraph(design)
+def designToShallow(d: dict) -> DesignShallow:
+    """🔖Convert a design dict to DesignShallow (list fields replaced by Meta items)."""
+    result = _extract_scalar_fields(d, _DESIGN_META_KEYS)
+    concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
+    if concepts is not None:
+        result["concepts"] = concepts
+    authors = _convert_list(d.get("authors"), lambda a: a if isinstance(a, str) else authorToMeta(a))
+    if authors is not None:
+        result["authors"] = authors
+    props = _convert_list(d.get("props"), propToMeta)
+    if props is not None:
+        result["props"] = props
+    pieces = _convert_list(d.get("pieces"), pieceToMeta)
+    if pieces is not None:
+        result["pieces"] = pieces
+    connections = _convert_list(d.get("connections"), connectionToMeta)
+    if connections is not None:
+        result["connections"] = connections
+    layers = _convert_list(d.get("layers"), layerToMeta)
+    if layers is not None:
+        result["layers"] = layers
+    groups = _convert_list(d.get("groups"), groupToMeta)
+    if groups is not None:
+        result["groups"] = groups
+    stats = _convert_list(d.get("stats"), statToMeta)
+    if stats is not None:
+        result["stats"] = stats
+    attributes = _convert_list(d.get("attributes"), attributeToMeta)
+    if attributes is not None:
+        result["attributes"] = attributes
+    return result
 
 
-def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
-    """🍃Get the hierarchical ordering of pieces from root to leaf."""
-    G = buildPieceGraph(design)
-    if rootGuid not in G:
-        return {}
+def kitToShallow(d: dict) -> KitShallow:
+    """🔖Convert a kit dict to KitShallow (list fields replaced by Meta items)."""
+    result = _extract_scalar_fields(d, _KIT_META_KEYS)
+    concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
+    if concepts is not None:
+        result["concepts"] = concepts
+    tags = _convert_list(d.get("tags"), tagToMeta)
+    if tags is not None:
+        result["tags"] = tags
+    types = _convert_list(d.get("types"), typeToMeta)
+    if types is not None:
+        result["types"] = types
+    designs = _convert_list(d.get("designs"), designToMeta)
+    if designs is not None:
+        result["designs"] = designs
+    ports = _convert_list(d.get("ports"), portToMeta)
+    if ports is not None:
+        result["ports"] = ports
+    qualities = _convert_list(d.get("qualities"), qualityToMeta)
+    if qualities is not None:
+        result["qualities"] = qualities
+    files = _convert_list(d.get("files"), fileToMeta)
+    if files is not None:
+        result["files"] = files
+    folders = _convert_list(d.get("folders"), folderToMeta)
+    if folders is not None:
+        result["folders"] = folders
+    authors = _convert_list(d.get("authors"), lambda a: a if isinstance(a, str) else authorToMeta(a))
+    if authors is not None:
+        result["authors"] = authors
+    attributes = _convert_list(d.get("attributes"), attributeToMeta)
+    if attributes is not None:
+        result["attributes"] = attributes
+    return result
 
 
-# #endregion 🕌Graph Operations
+# #endregion 📎Meta And Shallow Conversions
 
-# #region 🎖️FlattenDesign
-# Design flattening to resolve nested sub-designs into a single coordinate space.
-
-
-def getTypeByGuid(kit: dict, guid: str) -> dict | None:
-    """🔖Look up a type by its GUID within a kit dictionary."""
-    for t in kit.get("types", []):
-        if t.get("guid") == guid:
-            return t
-    return None
+# #endregion 🔑Meta And Shallow
 
 
-def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | None) -> dict | None:
-    """🔖Look up a connector by name from a type dictionary."""
-    if typeData is None:
-        return None
-    if connectorGuid is None:
-        connectors = typeData.get("connectors", [])
-        if connectors:
-            return connectors[0]
-        parent = typeData.get("parent")
-        if parent:
-            parentType = getTypeByGuid(kit, parent.get("guid", ""))
-            return getConnectorFromType(kit, parentType, connectorGuid)
-        return None
-    for connector in typeData.get("connectors", []):
-        if connector.get("guid") == connectorGuid:
-            return connector
-    parent = typeData.get("parent")
-    if parent:
-        parentType = getTypeByGuid(kit, parent.get("guid", ""))
-        return getConnectorFromType(kit, parentType, connectorGuid)
-    connectors = typeData.get("connectors", [])
-    if connectors:
-        return connectors[0]
-    return None
+
+# #region 🖥️Hash
+# Merkle hash functions for all semio entities.
 
 
-def planeToMatrixDict(plane: dict) -> numpy.ndarray:
-    """🔖Convert a plane dictionary to a 4x4 transformation matrix."""
-    origin = numpy.array([plane["origin"]["x"], plane["origin"]["y"], plane["origin"]["z"]])
-    xAxis = numpy.array([plane["xAxis"]["x"], plane["xAxis"]["y"], plane["xAxis"]["z"]])
-    yAxis = numpy.array([plane["yAxis"]["x"], plane["yAxis"]["y"], plane["yAxis"]["z"]])
-    zAxis = numpy.cross(xAxis, yAxis)
-    zAxis = normalizeVector(zAxis)
-    matrix = numpy.eye(4)
-    matrix[:3, 0] = xAxis
-    matrix[:3, 1] = yAxis
-    matrix[:3, 2] = zAxis
-    matrix[:3, 3] = origin
-    return matrix
+# #region 🌩️HashWriter
+def _format_number_for_hash(n) -> str:
+    """🔢Format number to match JavaScript Number.toString() behavior.
+    Integers (including floats with no fractional part) are formatted without decimal point.
+    """
+    if isinstance(n, int):
+        return str(n)
+    if isinstance(n, float) and n.is_integer():
+        return str(int(n))
+    return str(n)
 
 
-def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
-    """🔖Convert a 4x4 transformation matrix to a plane dictionary."""
-    origin = matrix[:3, 3]
-    xAxis = matrix[:3, 0]
-    yAxis = matrix[:3, 1]
-    return {
-        "origin": {"x": float(origin[0]), "y": float(origin[1]), "z": float(origin[2])},
-        "xAxis": {"x": float(xAxis[0]), "y": float(xAxis[1]), "z": float(xAxis[2])},
-        "yAxis": {"x": float(yAxis[0]), "y": float(yAxis[1]), "z": float(yAxis[2])},
-    }
+def _ref_guid(ref) -> str:
+    """🔖Extract guid from a reference (dict with 'guid' key or plain string)."""
+    if isinstance(ref, dict):
+        return ref["guid"]
+    return ref
 
 
-def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> numpy.ndarray:
-    """🔖Compute a quaternion rotating one unit vector onto another."""
-    r = numpy.dot(vFrom, vTo) + 1
-    if r < 0.000001:
-        if abs(vFrom[0]) > abs(vFrom[2]):
-            q = numpy.array([-vFrom[1], vFrom[0], 0, 0])
+class HashWriter:
+    """🔖Feeds structured data into a SHA-256 hasher for deterministic hashing.
+    Uses length-prefixed strings and type tags for unambiguous encoding.
+    """
+
+    def __init__(self):
+        self._parts = bytearray()
+
+    def writeString(self, s: str):
+        b = s.encode("utf-8")
+        self._parts.extend(struct.pack(">I", len(b)))
+        self._parts.extend(b)
+
+    def writeNumber(self, n):
+        self.writeString(_format_number_for_hash(n))
+
+    def writeBool(self, b: bool):
+        self._parts.append(1 if b else 0)
+
+    def writeHash(self, h: str):
+        self.writeString(h)
+
+    def writeHashList(self, hashes: list[str]):
+        sorted_hashes = sorted(hashes)
+        self._parts.extend(struct.pack(">I", len(sorted_hashes)))
+        for h in sorted_hashes:
+            self.writeString(h)
+
+    def writeGuidList(self, guids: list[str]):
+        sorted_guids = sorted(guids)
+        self._parts.extend(struct.pack(">I", len(sorted_guids)))
+        for g in sorted_guids:
+            self.writeString(g)
+
+    def digest(self) -> str:
+        return hashlib.sha256(bytes(self._parts)).hexdigest()
+
+
+# #endregion 🌩️HashWriter
+
+
+# #region 🎵Hash Value Types
+def hash_coord(c: dict) -> str:
+    """🔖Computes SHA-256 hash of a Coord value."""
+    w = HashWriter()
+    w.writeString("Coord")
+    w.writeString("u")
+    w.writeNumber(c["u"])
+    w.writeString("v")
+    w.writeNumber(c["v"])
+    return w.digest()
+
+
+def hash_vec(v: dict) -> str:
+    """🔖Computes SHA-256 hash of a Vec value."""
+    w = HashWriter()
+    w.writeString("Vec")
+    w.writeString("u")
+    w.writeNumber(v["u"])
+    w.writeString("v")
+    w.writeNumber(v["v"])
+    return w.digest()
+
+
+def hash_point(p: dict) -> str:
+    """🔖Computes SHA-256 hash of a Point value."""
+    w = HashWriter()
+    w.writeString("Point")
+    w.writeString("x")
+    w.writeNumber(p["x"])
+    w.writeString("y")
+    w.writeNumber(p["y"])
+    w.writeString("z")
+    w.writeNumber(p["z"])
+    return w.digest()
+
+
+def hash_vector(v: dict) -> str:
+    """🔖Computes SHA-256 hash of a Vector value."""
+    w = HashWriter()
+    w.writeString("Vector")
+    w.writeString("x")
+    w.writeNumber(v["x"])
+    w.writeString("y")
+    w.writeNumber(v["y"])
+    w.writeString("z")
+    w.writeNumber(v["z"])
+    return w.digest()
+
+
+def hash_plane(p: dict) -> str:
+    """🔖Computes SHA-256 hash of a Plane value."""
+    w = HashWriter()
+    w.writeString("Plane")
+    w.writeString("origin")
+    w.writeHash(hash_point(p["origin"]))
+    w.writeString("xAxis")
+    w.writeHash(hash_vector(p["xAxis"]))
+    w.writeString("yAxis")
+    w.writeHash(hash_vector(p["yAxis"]))
+    return w.digest()
+
+
+def hash_camera(c: dict) -> str:
+    """🔖Computes SHA-256 hash of a Camera value."""
+    w = HashWriter()
+    w.writeString("Camera")
+    w.writeString("forward")
+    w.writeHash(hash_vector(c["forward"]))
+    w.writeString("position")
+    w.writeHash(hash_point(c["position"]))
+    w.writeString("up")
+    w.writeHash(hash_vector(c["up"]))
+    return w.digest()
+
+
+# #endregion 🎵Hash Value Types
+
+
+# #region 🎩Hash Entities
+def hash_attribute(a: dict) -> str:
+    """🔖Computes SHA-256 hash of an Attribute entity."""
+    w = HashWriter()
+    w.writeString("Attribute")
+    if a.get("definition") is not None:
+        w.writeString("definition")
+        w.writeString(a["definition"])
+    w.writeString("guid")
+    w.writeString(a["guid"])
+    w.writeString("key")
+    w.writeString(a["key"])
+    if a.get("value") is not None:
+        w.writeString("value")
+        w.writeString(a["value"])
+    return w.digest()
+
+
+def hash_location(l: dict) -> str:
+    """🔖Computes SHA-256 hash of a Location entity."""
+    w = HashWriter()
+    w.writeString("Location")
+    if l.get("altitude") is not None:
+        w.writeString("altitude")
+        w.writeNumber(l["altitude"])
+    attrs = l.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    w.writeString("guid")
+    w.writeString(l["guid"])
+    w.writeString("latitude")
+    w.writeNumber(l["latitude"])
+    w.writeString("longitude")
+    w.writeNumber(l["longitude"])
+    return w.digest()
+
+
+def hash_author(a: dict) -> str:
+    """🔖Computes SHA-256 hash of an Author entity."""
+    w = HashWriter()
+    w.writeString("Author")
+    attrs = a.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(at) for at in attrs])
+    email = a.get("email")
+    if email is not None and email != "":
+        w.writeString("email")
+        w.writeString(email)
+    w.writeString("guid")
+    w.writeString(a["guid"])
+    w.writeString("name")
+    w.writeString(a["name"])
+    return w.digest()
+
+
+def hash_file(f: dict) -> str:
+    """🔖Computes SHA-256 hash of a File entity."""
+    w = HashWriter()
+    w.writeString("File")
+    if f.get("blob") is not None:
+        w.writeString("blob")
+        w.writeString(f["blob"])
+    if f.get("folder") is not None:
+        w.writeString("folder")
+        w.writeString(_ref_guid(f["folder"]))
+    w.writeString("guid")
+    w.writeString(f["guid"])
+    if f.get("hash") is not None:
+        w.writeString("hash")
+        w.writeString(f["hash"])
+    w.writeString("name")
+    w.writeString(f["name"])
+    if f.get("remote") is not None:
+        w.writeString("remote")
+        w.writeString(f["remote"])
+    if f.get("size") is not None:
+        w.writeString("size")
+        w.writeNumber(f["size"])
+    return w.digest()
+
+
+def hash_folder(f: dict) -> str:
+    """🔖Computes SHA-256 hash of a Folder entity."""
+    w = HashWriter()
+    w.writeString("Folder")
+    attrs = f.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if f.get("description") is not None:
+        w.writeString("description")
+        w.writeString(f["description"])
+    w.writeString("guid")
+    w.writeString(f["guid"])
+    w.writeString("name")
+    w.writeString(f["name"])
+    if f.get("parent") is not None:
+        w.writeString("parent")
+        w.writeString(_ref_guid(f["parent"]))
+    return w.digest()
+
+
+def hash_benchmark(b: dict) -> str:
+    """🔖Computes SHA-256 hash of a Benchmark entity."""
+    w = HashWriter()
+    w.writeString("Benchmark")
+    attrs = b.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    w.writeString("guid")
+    w.writeString(b["guid"])
+    if b.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(b["icon"])
+    if b.get("max") is not None:
+        w.writeString("max")
+        w.writeNumber(b["max"])
+    if b.get("maxExcluded") is not None:
+        w.writeString("maxExcluded")
+        w.writeBool(b["maxExcluded"])
+    if b.get("min") is not None:
+        w.writeString("min")
+        w.writeNumber(b["min"])
+    if b.get("minExcluded") is not None:
+        w.writeString("minExcluded")
+        w.writeBool(b["minExcluded"])
+    w.writeString("name")
+    w.writeString(b["name"])
+    return w.digest()
+
+
+def hash_quality(q: dict) -> str:
+    """🔖Computes SHA-256 hash of a Quality entity."""
+    w = HashWriter()
+    w.writeString("Quality")
+    benchmarks = q.get("benchmarks")
+    if benchmarks and len(benchmarks) > 0:
+        w.writeString("benchmarks")
+        w.writeHashList([hash_benchmark(b) for b in benchmarks])
+    if q.get("canScale") is not None:
+        w.writeString("canScale")
+        w.writeBool(q["canScale"])
+    if q.get("defaultImperialUnit") is not None:
+        w.writeString("defaultImperialUnit")
+        w.writeString(q["defaultImperialUnit"])
+    if q.get("defaultSiUnit") is not None:
+        w.writeString("defaultSiUnit")
+        w.writeString(q["defaultSiUnit"])
+    if q.get("defaultValue") is not None:
+        w.writeString("defaultValue")
+        w.writeNumber(q["defaultValue"])
+    if q.get("description") is not None:
+        w.writeString("description")
+        w.writeString(q["description"])
+    if q.get("formula") is not None:
+        w.writeString("formula")
+        w.writeString(q["formula"])
+    w.writeString("guid")
+    w.writeString(q["guid"])
+    if q.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(q["icon"])
+    if q.get("image") is not None:
+        w.writeString("image")
+        w.writeString(q["image"])
+    if q.get("isMaxExcluded") is not None:
+        w.writeString("isMaxExcluded")
+        w.writeBool(q["isMaxExcluded"])
+    if q.get("isMinExcluded") is not None:
+        w.writeString("isMinExcluded")
+        w.writeBool(q["isMinExcluded"])
+    w.writeString("key")
+    w.writeString(q["key"])
+    if q.get("kind") is not None:
+        w.writeString("kind")
+        w.writeNumber(q["kind"])
+    if q.get("max") is not None:
+        w.writeString("max")
+        w.writeNumber(q["max"])
+    if q.get("min") is not None:
+        w.writeString("min")
+        w.writeNumber(q["min"])
+    w.writeString("name")
+    w.writeString(q["name"])
+    if q.get("unit") is not None:
+        w.writeString("unit")
+        w.writeString(q["unit"])
+    if q.get("uri") is not None:
+        w.writeString("uri")
+        w.writeString(q["uri"])
+    return w.digest()
+
+
+def hash_port(p: dict) -> str:
+    """🔖Computes SHA-256 hash of a Port entity."""
+    w = HashWriter()
+    w.writeString("Port")
+    attrs = p.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    compat = p.get("compatiblePorts")
+    if compat and len(compat) > 0:
+        w.writeString("compatiblePorts")
+        w.writeGuidList([_ref_guid(cp) for cp in compat])
+    if p.get("description") is not None:
+        w.writeString("description")
+        w.writeString(p["description"])
+    w.writeString("guid")
+    w.writeString(p["guid"])
+    if p.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(p["icon"])
+    w.writeString("name")
+    w.writeString(p["name"])
+    return w.digest()
+
+
+def hash_prop(p: dict) -> str:
+    """🔖Computes SHA-256 hash of a Prop entity."""
+    w = HashWriter()
+    w.writeString("Prop")
+    attrs = p.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    w.writeString("guid")
+    w.writeString(p["guid"])
+    w.writeString("quality")
+    w.writeString(_ref_guid(p["quality"]))
+    if p.get("unit") is not None:
+        w.writeString("unit")
+        w.writeString(p["unit"])
+    w.writeString("value")
+    w.writeString(p["value"])
+    return w.digest()
+
+
+def hash_tag(t: dict) -> str:
+    """🔖Computes SHA-256 hash of a Tag entity."""
+    w = HashWriter()
+    w.writeString("Tag")
+    attrs = t.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if t.get("description") is not None:
+        w.writeString("description")
+        w.writeString(t["description"])
+    w.writeString("guid")
+    w.writeString(t["guid"])
+    if t.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(t["icon"])
+    w.writeString("name")
+    w.writeString(t["name"])
+    return w.digest()
+
+
+def hash_concept(c: dict) -> str:
+    """🔖Computes SHA-256 hash of a Concept entity."""
+    w = HashWriter()
+    w.writeString("Concept")
+    attrs = c.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if c.get("description") is not None:
+        w.writeString("description")
+        w.writeString(c["description"])
+    w.writeString("guid")
+    w.writeString(c["guid"])
+    if c.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(c["icon"])
+    w.writeString("name")
+    w.writeString(c["name"])
+    return w.digest()
+
+
+def hash_model(m: dict) -> str:
+    """🔖Computes SHA-256 hash of a Model entity."""
+    w = HashWriter()
+    w.writeString("Model")
+    attrs = m.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if m.get("description") is not None:
+        w.writeString("description")
+        w.writeString(m["description"])
+    w.writeString("file")
+    w.writeString(_ref_guid(m["file"]))
+    w.writeString("guid")
+    w.writeString(m["guid"])
+    if m.get("name") is not None:
+        w.writeString("name")
+        w.writeString(m["name"])
+    tags = m.get("tags")
+    if tags and len(tags) > 0:
+        w.writeString("tags")
+        w.writeGuidList([_ref_guid(t) for t in tags])
+    return w.digest()
+
+
+def hash_connector(c: dict) -> str:
+    """🔖Computes SHA-256 hash of a Connector entity."""
+    w = HashWriter()
+    w.writeString("Connector")
+    attrs = c.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if c.get("description") is not None:
+        w.writeString("description")
+        w.writeString(c["description"])
+    w.writeString("direction")
+    w.writeHash(hash_vector(c["direction"]))
+    w.writeString("guid")
+    w.writeString(c["guid"])
+    if c.get("mandatory") is not None:
+        w.writeString("mandatory")
+        w.writeBool(c["mandatory"])
+    if c.get("name") is not None:
+        w.writeString("name")
+        w.writeString(c["name"])
+    w.writeString("point")
+    w.writeHash(hash_point(c["point"]))
+    if c.get("port") is not None:
+        w.writeString("port")
+        w.writeString(_ref_guid(c["port"]))
+    props = c.get("props")
+    if props and len(props) > 0:
+        w.writeString("props")
+        w.writeHashList([hash_prop(p) for p in props])
+    w.writeString("t")
+    w.writeNumber(c["t"])
+    return w.digest()
+
+
+def hash_type(t: dict) -> str:
+    """🔖Computes SHA-256 hash of a Type entity."""
+    w = HashWriter()
+    w.writeString("Type")
+    attrs = t.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    authors = t.get("authors")
+    if authors and len(authors) > 0:
+        w.writeString("authors")
+        w.writeGuidList([_ref_guid(a) for a in authors])
+    concepts = t.get("concepts")
+    if concepts and len(concepts) > 0:
+        w.writeString("concepts")
+        w.writeGuidList([_ref_guid(c) for c in concepts])
+    connectors = t.get("connectors")
+    if connectors and len(connectors) > 0:
+        w.writeString("connectors")
+        w.writeHashList([hash_connector(c) for c in connectors])
+    if t.get("description") is not None:
+        w.writeString("description")
+        w.writeString(t["description"])
+    if t.get("folder") is not None:
+        w.writeString("folder")
+        w.writeString(t["folder"])
+    w.writeString("guid")
+    w.writeString(t["guid"])
+    if t.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(t["icon"])
+    if t.get("image") is not None:
+        w.writeString("image")
+        w.writeString(t["image"])
+    if t.get("isAbstract") is not None:
+        w.writeString("isAbstract")
+        w.writeBool(t["isAbstract"])
+    if t.get("location") is not None:
+        w.writeString("location")
+        w.writeString(_ref_guid(t["location"]))
+    models = t.get("models")
+    if models and len(models) > 0:
+        w.writeString("models")
+        w.writeHashList([hash_model(m) for m in models])
+    w.writeString("name")
+    w.writeString(t["name"])
+    if t.get("parent") is not None:
+        w.writeString("parent")
+        w.writeString(_ref_guid(t["parent"]))
+    props = t.get("props")
+    if props and len(props) > 0:
+        w.writeString("props")
+        w.writeHashList([hash_prop(p) for p in props])
+    if t.get("stock") is not None:
+        w.writeString("stock")
+        w.writeNumber(t["stock"])
+    if t.get("unit") is not None:
+        w.writeString("unit")
+        w.writeString(t["unit"])
+    if t.get("virtual") is not None:
+        w.writeString("virtual")
+        w.writeBool(t["virtual"])
+    return w.digest()
+
+
+def hash_layer(l: dict) -> str:
+    """🔖Computes SHA-256 hash of a Layer entity."""
+    w = HashWriter()
+    w.writeString("Layer")
+    attrs = l.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if l.get("color") is not None:
+        w.writeString("color")
+        w.writeString(l["color"])
+    if l.get("description") is not None:
+        w.writeString("description")
+        w.writeString(l["description"])
+    w.writeString("guid")
+    w.writeString(l["guid"])
+    if l.get("isHidden") is not None:
+        w.writeString("isHidden")
+        w.writeBool(l["isHidden"])
+    if l.get("isLocked") is not None:
+        w.writeString("isLocked")
+        w.writeBool(l["isLocked"])
+    w.writeString("path")
+    w.writeString(l["path"])
+    return w.digest()
+
+
+def hash_stat(s: dict) -> str:
+    """🔖Computes SHA-256 hash of a Stat entity."""
+    w = HashWriter()
+    w.writeString("Stat")
+    w.writeString("guid")
+    w.writeString(s["guid"])
+    if s.get("max") is not None:
+        w.writeString("max")
+        w.writeNumber(s["max"])
+    if s.get("maxExcluded") is not None:
+        w.writeString("maxExcluded")
+        w.writeBool(s["maxExcluded"])
+    if s.get("min") is not None:
+        w.writeString("min")
+        w.writeNumber(s["min"])
+    if s.get("minExcluded") is not None:
+        w.writeString("minExcluded")
+        w.writeBool(s["minExcluded"])
+    w.writeString("quality")
+    w.writeString(_ref_guid(s["quality"]))
+    if s.get("unit") is not None:
+        w.writeString("unit")
+        w.writeString(s["unit"])
+    return w.digest()
+
+
+def hash_group(g: dict) -> str:
+    """🔖Computes SHA-256 hash of a Group entity."""
+    w = HashWriter()
+    w.writeString("Group")
+    attrs = g.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if g.get("color") is not None:
+        w.writeString("color")
+        w.writeString(g["color"])
+    if g.get("description") is not None:
+        w.writeString("description")
+        w.writeString(g["description"])
+    w.writeString("guid")
+    w.writeString(g["guid"])
+    if g.get("name") is not None:
+        w.writeString("name")
+        w.writeString(g["name"])
+    w.writeString("pieces")
+    w.writeGuidList([_ref_guid(p) for p in g["pieces"]])
+    return w.digest()
+
+
+def hash_side(s: dict) -> str:
+    """🔖Computes SHA-256 hash of a Side value."""
+    w = HashWriter()
+    w.writeString("Side")
+    if s.get("connector") is not None:
+        w.writeString("connector")
+        w.writeString(_ref_guid(s["connector"]))
+    if s.get("designPiece") is not None:
+        w.writeString("designPiece")
+        w.writeString(_ref_guid(s["designPiece"]))
+    w.writeString("piece")
+    w.writeString(_ref_guid(s["piece"]))
+    return w.digest()
+
+
+def hash_connection(c: dict) -> str:
+    """🔖Computes SHA-256 hash of a Connection entity."""
+    w = HashWriter()
+    w.writeString("Connection")
+    attrs = c.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    w.writeString("connected")
+    w.writeHash(hash_side(c["connected"]))
+    w.writeString("connecting")
+    w.writeHash(hash_side(c["connecting"]))
+    if c.get("description") is not None:
+        w.writeString("description")
+        w.writeString(c["description"])
+    if c.get("gap") is not None:
+        w.writeString("gap")
+        w.writeNumber(c["gap"])
+    w.writeString("guid")
+    w.writeString(c["guid"])
+    if c.get("rise") is not None:
+        w.writeString("rise")
+        w.writeNumber(c["rise"])
+    if c.get("rotation") is not None:
+        w.writeString("rotation")
+        w.writeNumber(c["rotation"])
+    if c.get("shift") is not None:
+        w.writeString("shift")
+        w.writeNumber(c["shift"])
+    if c.get("tilt") is not None:
+        w.writeString("tilt")
+        w.writeNumber(c["tilt"])
+    if c.get("turn") is not None:
+        w.writeString("turn")
+        w.writeNumber(c["turn"])
+    if c.get("u") is not None:
+        w.writeString("u")
+        w.writeNumber(c["u"])
+    if c.get("v") is not None:
+        w.writeString("v")
+        w.writeNumber(c["v"])
+    return w.digest()
+
+
+def hash_piece(p: dict) -> str:
+    """🔖Computes SHA-256 hash of a Piece entity."""
+    w = HashWriter()
+    w.writeString("Piece")
+    attrs = p.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    if p.get("center") is not None:
+        w.writeString("center")
+        w.writeHash(hash_coord(p["center"]))
+    if p.get("color") is not None:
+        w.writeString("color")
+        w.writeString(p["color"])
+    if p.get("description") is not None:
+        w.writeString("description")
+        w.writeString(p["description"])
+    if p.get("design") is not None:
+        w.writeString("design")
+        w.writeString(_ref_guid(p["design"]))
+    w.writeString("guid")
+    w.writeString(p["guid"])
+    if p.get("isHidden") is not None:
+        w.writeString("isHidden")
+        w.writeBool(p["isHidden"])
+    if p.get("isLocked") is not None:
+        w.writeString("isLocked")
+        w.writeBool(p["isLocked"])
+    if p.get("mirrorPlane") is not None:
+        w.writeString("mirrorPlane")
+        w.writeHash(hash_plane(p["mirrorPlane"]))
+    if p.get("name") is not None:
+        w.writeString("name")
+        w.writeString(p["name"])
+    if p.get("plane") is not None:
+        w.writeString("plane")
+        w.writeHash(hash_plane(p["plane"]))
+    if p.get("props") is not None and len(p["props"]) > 0:
+        w.writeString("props")
+        w.writeHashList([hash_prop(pr) for pr in p["props"]])
+    if p.get("scale") is not None:
+        w.writeString("scale")
+        w.writeNumber(p["scale"])
+    if p.get("type") is not None:
+        w.writeString("type")
+        w.writeString(_ref_guid(p["type"]))
+    return w.digest()
+
+
+def hash_design(d: dict) -> str:
+    """🔖Computes SHA-256 hash of a Design entity (Merkle tree)."""
+    w = HashWriter()
+    w.writeString("Design")
+    if d.get("activeLayer") is not None:
+        w.writeString("activeLayer")
+        w.writeString(_ref_guid(d["activeLayer"]))
+    attrs = d.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    authors = d.get("authors")
+    if authors and len(authors) > 0:
+        w.writeString("authors")
+        w.writeGuidList([_ref_guid(a) for a in authors])
+    if d.get("canMirror") is not None:
+        w.writeString("canMirror")
+        w.writeBool(d["canMirror"])
+    if d.get("canScale") is not None:
+        w.writeString("canScale")
+        w.writeBool(d["canScale"])
+    concepts = d.get("concepts")
+    if concepts and len(concepts) > 0:
+        w.writeString("concepts")
+        w.writeGuidList([_ref_guid(c) for c in concepts])
+    connections = d.get("connections")
+    if connections and len(connections) > 0:
+        w.writeString("connections")
+        w.writeHashList([hash_connection(c) for c in connections])
+    if d.get("description") is not None:
+        w.writeString("description")
+        w.writeString(d["description"])
+    if d.get("folder") is not None:
+        w.writeString("folder")
+        w.writeString(d["folder"])
+    groups = d.get("groups")
+    if groups and len(groups) > 0:
+        w.writeString("groups")
+        w.writeHashList([hash_group(g) for g in groups])
+    w.writeString("guid")
+    w.writeString(d["guid"])
+    if d.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(d["icon"])
+    if d.get("image") is not None:
+        w.writeString("image")
+        w.writeString(d["image"])
+    if d.get("isAbstract") is not None:
+        w.writeString("isAbstract")
+        w.writeBool(d["isAbstract"])
+    layers = d.get("layers")
+    if layers and len(layers) > 0:
+        w.writeString("layers")
+        w.writeHashList([hash_layer(la) for la in layers])
+    if d.get("location") is not None:
+        w.writeString("location")
+        w.writeString(_ref_guid(d["location"]))
+    w.writeString("name")
+    w.writeString(d["name"])
+    if d.get("parent") is not None:
+        w.writeString("parent")
+        w.writeString(_ref_guid(d["parent"]))
+    pieces = d.get("pieces")
+    if pieces and len(pieces) > 0:
+        w.writeString("pieces")
+        w.writeHashList([hash_piece(p) for p in pieces])
+    props = d.get("props")
+    if props and len(props) > 0:
+        w.writeString("props")
+        w.writeHashList([hash_prop(p) for p in props])
+    stats = d.get("stats")
+    if stats and len(stats) > 0:
+        w.writeString("stats")
+        w.writeHashList([hash_stat(s) for s in stats])
+    if d.get("unit") is not None:
+        w.writeString("unit")
+        w.writeString(d["unit"])
+    return w.digest()
+
+
+def hash_kit(k: dict) -> str:
+    """🔖Computes SHA-256 Merkle hash of a Kit entity."""
+    w = HashWriter()
+    w.writeString("Kit")
+    attrs = k.get("attributes")
+    if attrs and len(attrs) > 0:
+        w.writeString("attributes")
+        w.writeHashList([hash_attribute(a) for a in attrs])
+    authors = k.get("authors")
+    if authors and len(authors) > 0:
+        w.writeString("authors")
+        w.writeHashList([hash_author(a) for a in authors])
+    concepts = k.get("concepts")
+    if concepts and len(concepts) > 0:
+        w.writeString("concepts")
+        w.writeHashList([hash_concept(c) for c in concepts])
+    if k.get("description") is not None:
+        w.writeString("description")
+        w.writeString(k["description"])
+    designs = k.get("designs")
+    if designs and len(designs) > 0:
+        w.writeString("designs")
+        w.writeHashList([hash_design(d) for d in designs])
+    files = k.get("files")
+    if files and len(files) > 0:
+        w.writeString("files")
+        w.writeHashList([hash_file(f) for f in files])
+    folders = k.get("folders")
+    if folders and len(folders) > 0:
+        w.writeString("folders")
+        w.writeHashList([hash_folder(f) for f in folders])
+    w.writeString("guid")
+    w.writeString(k["guid"])
+    if k.get("homepage") is not None:
+        w.writeString("homepage")
+        w.writeString(k["homepage"])
+    if k.get("icon") is not None:
+        w.writeString("icon")
+        w.writeString(k["icon"])
+    if k.get("image") is not None:
+        w.writeString("image")
+        w.writeString(k["image"])
+    if k.get("license") is not None:
+        w.writeString("license")
+        w.writeString(k["license"])
+    w.writeString("name")
+    w.writeString(k["name"])
+    if k.get("ports") is not None and len(k["ports"]) > 0:
+        w.writeString("ports")
+        w.writeHashList([hash_port(p) for p in k["ports"]])
+    if k.get("preview") is not None:
+        w.writeString("preview")
+        w.writeString(k["preview"])
+    qualities = k.get("qualities")
+    if qualities and len(qualities) > 0:
+        w.writeString("qualities")
+        w.writeHashList([hash_quality(q) for q in qualities])
+    if k.get("remote") is not None:
+        w.writeString("remote")
+        w.writeString(k["remote"])
+    tags = k.get("tags")
+    if tags and len(tags) > 0:
+        w.writeString("tags")
+        w.writeHashList([hash_tag(t) for t in tags])
+    types = k.get("types")
+    if types and len(types) > 0:
+        w.writeString("types")
+        w.writeHashList([hash_type(t) for t in types])
+    if k.get("version") is not None:
+        w.writeString("version")
+        w.writeString(k["version"])
+    return w.digest()
+
+
+# #endregion 🎩Hash Entities
+
+# #region 🔗Hash Diffs
+# Deterministic SHA-256 Merkle hash functions for all diff types.
+# Diffs are plain dicts; field presence in dict = field was changed.
+# If a field is present with None value → write field name + writeBool(false) as null marker.
+# If a field is absent from dict → skip it entirely.
+
+
+def _write_diff_string(w: HashWriter, key: str, d: dict):
+    if key in d:
+        w.writeString(key)
+        if d[key] is not None:
+            w.writeString(d[key])
         else:
-            q = numpy.array([0, -vFrom[2], vFrom[1], 0])
-    else:
-        cross = numpy.cross(vFrom, vTo)
-        q = numpy.array([cross[0], cross[1], cross[2], r])
-    return q / numpy.linalg.norm(q)
+            w.writeBool(False)
 
 
-def quaternionFromAxisAngleDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
-    """🔖Compute a quaternion from an axis-angle representation."""
-    halfAngle = angle / 2
-    s = numpy.sin(halfAngle)
-    return numpy.array([axis[0] * s, axis[1] * s, axis[2] * s, numpy.cos(halfAngle)])
-
-
-def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
-    """🔖Convert a quaternion to a 3x3 rotation matrix."""
-    x, y, z, w = q
-    x2, y2, z2 = x + x, y + y, z + z
-    xx, xy, xz = x * x2, x * y2, x * z2
-    yy, yz, zz = y * y2, y * z2, z * z2
-    wx, wy, wz = w * x2, w * y2, w * z2
-    m = numpy.eye(4)
-    m[0, 0] = 1 - (yy + zz)
-    m[0, 1] = xy - wz
-    m[0, 2] = xz + wy
-    m[1, 0] = xy + wz
-    m[1, 1] = 1 - (xx + zz)
-    m[1, 2] = yz - wx
-    m[2, 0] = xz - wy
-    m[2, 1] = yz + wx
-    m[2, 2] = 1 - (xx + yy)
-    return m
-
-
-def makeRotationAxisDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
-    """🔖Create a 4x4 rotation matrix around an arbitrary axis."""
-    return quaternionToMatrixDict(quaternionFromAxisAngleDict(axis, angle))
-
-
-def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
-    """🔖Create a 4x4 translation matrix from a displacement vector."""
-    m = numpy.eye(4)
-    m[0, 3] = x
-    m[1, 3] = y
-    m[2, 3] = z
-    return m
-
-
-def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
-    """🔖Apply a 4x4 matrix to a 3D vector dictionary."""
-    return numpy.array(
-        [
-            m[0, 0] * v[0] + m[0, 1] * v[1] + m[0, 2] * v[2],
-            m[1, 0] * v[0] + m[1, 1] * v[1] + m[1, 2] * v[2],
-            m[2, 0] * v[0] + m[2, 1] * v[1] + m[2, 2] * v[2],
-        ]
-    )
-
-
-def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict) -> dict:
-    """🔖Compute the world-space plane of a child piece from parent and local planes."""
-    parentMatrix = planeToMatrixDict(parentPlane)
-    parentPoint = numpy.array(
-        [
-            parentConnector["point"]["x"],
-            parentConnector["point"]["y"],
-            parentConnector["point"]["z"],
-        ]
-    )
-    parentDirection = normalizeVector(
-        numpy.array(
-            [
-                parentConnector["direction"]["x"],
-                parentConnector["direction"]["y"],
-                parentConnector["direction"]["z"],
-            ]
-        )
-    )
-    childPoint = numpy.array(
-        [
-            childConnector["point"]["x"],
-            childConnector["point"]["y"],
-            childConnector["point"]["z"],
-        ]
-    )
-    childDirection = normalizeVector(
-        numpy.array(
-            [
-                childConnector["direction"]["x"],
-                childConnector["direction"]["y"],
-                childConnector["direction"]["z"],
-            ]
-        )
-    )
-    gap = connection.get("gap", 0) or 0
-    shift = connection.get("shift", 0) or 0
-    rise = connection.get("rise", 0) or 0
-    rotation = connection.get("rotation", 0) or 0
-    turn = connection.get("turn", 0) or 0
-    tilt = connection.get("tilt", 0) or 0
-    rotationRad = numpy.deg2rad(rotation)
-    turnRad = numpy.deg2rad(turn)
-    tiltRad = numpy.deg2rad(tilt)
-    reverseChildDirection = -childDirection
-    crossVec = numpy.cross(parentDirection, reverseChildDirection)
-    crossLen = numpy.linalg.norm(crossVec)
-    if crossLen < 0.01:
-        if abs(parentDirection[2]) < TOLERANCE:
-            alignQuat = quaternionFromAxisAngleDict(numpy.array([0.0, 0.0, 1.0]), numpy.pi)
+def _write_diff_number(w: HashWriter, key: str, d: dict):
+    if key in d:
+        w.writeString(key)
+        if d[key] is not None:
+            w.writeNumber(d[key])
         else:
-            axis = normalizeVector(numpy.cross(numpy.array([0.0, 0.0, 1.0]), parentDirection))
-            alignQuat = quaternionFromAxisAngleDict(axis, numpy.pi)
-    else:
-        alignQuat = quaternionFromUnitVectorsDict(reverseChildDirection, parentDirection)
-    directionT = quaternionToMatrixDict(alignQuat)
-    yAxis = numpy.array([0.0, 1.0, 0.0])
-    parentConnectorQuat = quaternionFromUnitVectorsDict(yAxis, parentDirection)
-    parentRotationT = quaternionToMatrixDict(parentConnectorQuat)
-    gapDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 1.0, 0.0]))
-    shiftDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([1.0, 0.0, 0.0]))
-    raiseDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 0.0, 1.0]))
-    turnAxis = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 0.0, 1.0]))
-    tiltAxis = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([1.0, 0.0, 0.0]))
-    orientationT = directionT.copy()
-    rotateT = makeRotationAxisDict(parentDirection, -rotationRad)
-    orientationT = rotateT @ orientationT
-    turnAxis = applyMatrix4ToVec3Dict(rotateT, turnAxis)
-    tiltAxis = applyMatrix4ToVec3Dict(rotateT, tiltAxis)
-    turnT = makeRotationAxisDict(turnAxis, turnRad)
-    orientationT = turnT @ orientationT
-    tiltT = makeRotationAxisDict(tiltAxis, tiltRad)
-    orientationT = tiltT @ orientationT
-    centerChildT = makeTranslationDict(-childPoint[0], -childPoint[1], -childPoint[2])
-    transform = orientationT @ centerChildT
-    gapTransform = makeTranslationDict(gapDirection[0] * gap, gapDirection[1] * gap, gapDirection[2] * gap)
-    shiftTransform = makeTranslationDict(shiftDirection[0] * shift, shiftDirection[1] * shift, shiftDirection[2] * shift)
-    raiseTransform = makeTranslationDict(raiseDirection[0] * rise, raiseDirection[1] * rise, raiseDirection[2] * rise)
-    translationT = raiseTransform @ shiftTransform @ gapTransform
-    transform = translationT @ transform
-    moveToParentT = makeTranslationDict(parentPoint[0], parentPoint[1], parentPoint[2])
-    transform = moveToParentT @ transform
-    finalMatrix = parentMatrix @ transform
-    result = matrixToPlaneDict(finalMatrix)
-    return {
-        "origin": {
-            "x": round(result["origin"]["x"] / TOLERANCE) * TOLERANCE,
-            "y": round(result["origin"]["y"] / TOLERANCE) * TOLERANCE,
-            "z": round(result["origin"]["z"] / TOLERANCE) * TOLERANCE,
-        },
-        "xAxis": {
-            "x": round(result["xAxis"]["x"] / TOLERANCE) * TOLERANCE,
-            "y": round(result["xAxis"]["y"] / TOLERANCE) * TOLERANCE,
-            "z": round(result["xAxis"]["z"] / TOLERANCE) * TOLERANCE,
-        },
-        "yAxis": {
-            "x": round(result["yAxis"]["x"] / TOLERANCE) * TOLERANCE,
-            "y": round(result["yAxis"]["y"] / TOLERANCE) * TOLERANCE,
-            "z": round(result["yAxis"]["z"] / TOLERANCE) * TOLERANCE,
-        },
-    }
+            w.writeBool(False)
 
 
-def flattenDesignDict(kit: dict, designGuid: str) -> dict:
-    """🔖Flatten a nested design hierarchy into a single flat coordinate space."""
-    design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
-    if design is None:
-        raise ValueError(f"Design {designGuid} not found")
-    pieces = design.get("pieces", [])
-    if not pieces:
-        return {}
-    pieceMap = {p["guid"]: dict(p) for p in pieces}
-    piecePlanes: dict[str, dict] = {}
-    piecePaths: dict[str, str] = {}
-    G = buildPieceGraph(design)
-    components = list(networkx.connected_components(G))
-    for component in components:
-        rootNode = None
-        for nodeId in component:
-            piece = pieceMap.get(nodeId)
-            if piece and piece.get("plane") is not None and piece.get("center") is not None:
-                rootNode = nodeId
-                break
-        if rootNode is None and component:
-            rootNode = next(iter(component))
-        if rootNode is None:
-            continue
-        rootPiece = pieceMap[rootNode]
-        piecePaths[rootNode] = rootNode
-        if rootPiece.get("plane") and rootPiece.get("center") is not None:
-            piecePlanes[rootNode] = rootPiece["plane"]
+def _write_diff_bool(w: HashWriter, key: str, d: dict):
+    if key in d:
+        w.writeString(key)
+        if d[key] is not None:
+            w.writeBool(d[key])
         else:
-            piecePlanes[rootNode] = {
-                "origin": {"x": 0, "y": 0, "z": 0},
-                "xAxis": {"x": 1, "y": 0, "z": 0},
-                "yAxis": {"x": 0, "y": 1, "z": 0},
-            }
-        for source, target in networkx.bfs_edges(G, rootNode):
-            if target in piecePlanes:
-                continue
-            parentId = source
-            childId = target
-            parentPlane = piecePlanes.get(parentId)
-            if parentPlane is None:
-                continue
-            edgeData = G.get_edge_data(parentId, childId)
-            connection = edgeData.get("connection") if edgeData else None
-            if connection is None:
-                continue
-            parentPiece = pieceMap[parentId]
-            childPiece = pieceMap[childId]
-            parentType = getTypeByGuid(kit, parentPiece.get("type", {}).get("guid", ""))
-            childType = getTypeByGuid(kit, childPiece.get("type", {}).get("guid", ""))
-            parentSide = connection["connected"] if connection["connected"]["piece"]["guid"] == parentId else connection["connecting"]
-            childSide = connection["connecting"] if connection["connecting"]["piece"]["guid"] == childId else connection["connected"]
-            parentConnectorGuid = parentSide.get("connector", {}).get("guid") if parentSide.get("connector") else None
-            childConnectorGuid = childSide.get("connector", {}).get("guid") if childSide.get("connector") else None
-            parentConnector = getConnectorFromType(kit, parentType, parentConnectorGuid)
-            childConnector = getConnectorFromType(kit, childType, childConnectorGuid)
-            if parentConnector is None or childConnector is None:
-                continue
-            childPlane = computeChildPlaneDict(parentPlane, parentConnector, childConnector, connection)
-            piecePlanes[childId] = childPlane
-            radius = 2.697
-            verticalVExtra = 1.0
-            horizontalScale = 3.0633
-            parentCenter = parentPiece.get("center") or {"u": 0, "v": 0}
-            connectionU = connection.get("u", 0) or 0
-            connectionV = connection.get("v", 0) or 0
-            if parentCenter["u"] == 0 and parentCenter["v"] == 0:
-                t = parentConnector.get("t", 0) or 0
-                angle = 2 * numpy.pi * t
-                childU = radius * numpy.sin(angle)
-                childV = radius * numpy.cos(angle)
-            else:
-                parentDirZ = (parentConnector.get("direction") or {}).get("z", 0) or 0
-                isVerticalConnection = abs(parentDirZ) > 0.5
-                if isVerticalConnection:
-                    childU = parentCenter["u"] + connectionU
-                    childV = parentCenter["v"] + connectionV + verticalVExtra
+            w.writeBool(False)
+
+
+def _write_diff_id(w: HashWriter, key: str, d: dict):
+    if key in d:
+        w.writeString(key)
+        if d[key] is not None:
+            w.writeString(_ref_guid(d[key]))
+        else:
+            w.writeBool(False)
+
+
+def _write_diff_id_array(w: HashWriter, key: str, d: dict):
+    if key in d:
+        val = d[key]
+        if val is not None and len(val) > 0:
+            w.writeString(key)
+            w.writeGuidList([_ref_guid(e) for e in val])
+        elif val is not None:
+            pass  # empty array = skip
+        else:
+            w.writeString(key)
+            w.writeBool(False)
+
+
+def _write_diff_hash(w: HashWriter, key: str, d: dict, hash_fn):
+    if key in d:
+        w.writeString(key)
+        if d[key] is not None:
+            w.writeHash(hash_fn(d[key]))
+        else:
+            w.writeBool(False)
+
+
+def _hash_collection_diff_generic(
+    tag: str,
+    update_tag: str,
+    entity_key_name: str,
+    hash_entity_fn,
+    hash_diff_fn,
+    d: dict,
+) -> str:
+    w = HashWriter()
+    w.writeString(tag)
+    added = d.get("added")
+    if added and len(added) > 0:
+        w.writeString("added")
+        w.writeHashList([hash_entity_fn(e) for e in added])
+    removed = d.get("removed")
+    if removed and len(removed) > 0:
+        w.writeString("removed")
+        w.writeGuidList([_ref_guid(r) for r in removed])
+    updated = d.get("updated")
+    if updated and len(updated) > 0:
+        w.writeString("updated")
+        keys = sorted([entity_key_name, "diff"])
+        update_hashes = []
+        for u in updated:
+            uw = HashWriter()
+            uw.writeString(update_tag)
+            for k in keys:
+                if k == "diff":
+                    uw.writeString("diff")
+                    uw.writeHash(hash_diff_fn(u["diff"]))
                 else:
-                    childU = parentCenter["u"] + connectionU * horizontalScale
-                    childV = parentCenter["v"] + connectionV * horizontalScale
-            childCenter = {
-                "u": round(childU / TOLERANCE) * TOLERANCE,
-                "v": round(childV / TOLERANCE) * TOLERANCE,
-            }
-            pieceMap[childId]["center"] = childCenter
-            piecePaths[childId] = piecePaths.get(parentId, parentId) + "," + childId
-    updatedPieces = []
-    for piece in pieces:
-        newPiece = dict(piece)
-        if piece["guid"] in piecePlanes:
-            newPiece["plane"] = piecePlanes[piece["guid"]]
-        if piece["guid"] in pieceMap and pieceMap[piece["guid"]].get("center"):
-            newPiece["center"] = pieceMap[piece["guid"]]["center"]
-        elif newPiece.get("center") is None:
-            newPiece["center"] = {"u": 0, "v": 0}
-        updatedPieces.append(newPiece)
-    return {
-        "pieces": {
-            "updated": [
-                {
-                    "id": p["guid"],
-                    "diff": {"plane": p.get("plane"), "center": p.get("center")},
-                }
-                for p in updatedPieces
-                if p["guid"] in piecePlanes
-            ]
-        },
-        "_piecePaths": piecePaths,
-    }
+                    uw.writeString(k)
+                    uw.writeString(_ref_guid(u[entity_key_name]))
+            update_hashes.append(uw.digest())
+        w.writeHashList(update_hashes)
+    return w.digest()
 
 
-# #endregion 🎖️FlattenDesign
+def hash_coord_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("CoordDiff")
+    _write_diff_number(w, "u", d)
+    _write_diff_number(w, "v", d)
+    return w.digest()
 
-# #region 🗡️Kit Operations
+
+def hash_point_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("PointDiff")
+    _write_diff_number(w, "x", d)
+    _write_diff_number(w, "y", d)
+    _write_diff_number(w, "z", d)
+    return w.digest()
+
+
+def hash_vector_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("VectorDiff")
+    _write_diff_number(w, "x", d)
+    _write_diff_number(w, "y", d)
+    _write_diff_number(w, "z", d)
+    return w.digest()
+
+
+def hash_plane_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("PlaneDiff")
+    _write_diff_hash(w, "origin", d, hash_point_diff)
+    _write_diff_hash(w, "xAxis", d, hash_vector_diff)
+    _write_diff_hash(w, "yAxis", d, hash_vector_diff)
+    return w.digest()
+
+
+def hash_camera_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("CameraDiff")
+    _write_diff_hash(w, "forward", d, hash_vector_diff)
+    _write_diff_hash(w, "position", d, hash_point_diff)
+    _write_diff_hash(w, "up", d, hash_vector_diff)
+    return w.digest()
+
+
+def hash_attribute_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("AttributeDiff")
+    _write_diff_string(w, "definition", d)
+    _write_diff_string(w, "key", d)
+    _write_diff_string(w, "value", d)
+    return w.digest()
+
+
+def hash_attributes_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "AttributesDiff",
+        "AttributeDiffUpdate",
+        "attribute",
+        hash_attribute,
+        hash_attribute_diff,
+        d,
+    )
+
+
+def hash_location_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("LocationDiff")
+    _write_diff_number(w, "altitude", d)
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_number(w, "latitude", d)
+    _write_diff_number(w, "longitude", d)
+    return w.digest()
+
+
+def hash_author_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("AuthorDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "email", d)
+    _write_diff_string(w, "name", d)
+    return w.digest()
+
+
+def hash_authors_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("AuthorsDiff", "AuthorDiffUpdate", "author", hash_author, hash_author_diff, d)
+
+
+def hash_file_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("FileDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "blob", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_id(w, "folder", d)
+    _write_diff_string(w, "hash", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_string(w, "remote", d)
+    if "size" in d:
+        w.writeString("size")
+        if d["size"] is not None:
+            w.writeNumber(d["size"])
+        else:
+            w.writeBool(False)
+    return w.digest()
+
+
+def hash_files_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("FilesDiff", "FileDiffUpdate", "file", hash_file, hash_file_diff, d)
+
+
+def hash_folder_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("FolderDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_id(w, "parent", d)
+    return w.digest()
+
+
+def hash_folders_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("FoldersDiff", "FolderDiffUpdate", "folder", hash_folder, hash_folder_diff, d)
+
+
+def hash_benchmark_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("BenchmarkDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "definition", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_number(w, "max", d)
+    _write_diff_bool(w, "maxExcluded", d)
+    _write_diff_number(w, "min", d)
+    _write_diff_bool(w, "minExcluded", d)
+    _write_diff_string(w, "name", d)
+    return w.digest()
+
+
+def hash_benchmarks_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "BenchmarksDiff",
+        "BenchmarkDiffUpdate",
+        "benchmark",
+        hash_benchmark,
+        hash_benchmark_diff,
+        d,
+    )
+
+
+def hash_quality_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("QualityDiff")
+    _write_diff_hash(w, "benchmarks", d, hash_benchmarks_diff)
+    _write_diff_bool(w, "canScale", d)
+    _write_diff_string(w, "defaultImperialUnit", d)
+    _write_diff_string(w, "defaultSiUnit", d)
+    _write_diff_number(w, "defaultValue", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "folder", d)
+    _write_diff_string(w, "formula", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "image", d)
+    _write_diff_bool(w, "isMaxExcluded", d)
+    _write_diff_bool(w, "isMinExcluded", d)
+    _write_diff_string(w, "key", d)
+    _write_diff_number(w, "kind", d)
+    _write_diff_number(w, "max", d)
+    _write_diff_number(w, "min", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_string(w, "unit", d)
+    _write_diff_string(w, "uri", d)
+    return w.digest()
+
+
+def hash_qualities_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "QualitiesDiff",
+        "QualityDiffUpdate",
+        "quality",
+        hash_quality,
+        hash_quality_diff,
+        d,
+    )
+
+
+def hash_port_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("PortDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_id_array(w, "compatiblePorts", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "name", d)
+    return w.digest()
+
+
+def hash_ports_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("PortsDiff", "PortDiffUpdate", "port", hash_port, hash_port_diff, d)
+
+
+def hash_prop_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("PropDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_id(w, "quality", d)
+    _write_diff_string(w, "unit", d)
+    _write_diff_string(w, "value", d)
+    return w.digest()
+
+
+def hash_props_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("PropsDiff", "PropDiffUpdate", "prop", hash_prop, hash_prop_diff, d)
+
+
+def hash_tag_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("TagDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "name", d)
+    return w.digest()
+
+
+def hash_tags_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("TagsDiff", "TagDiffUpdate", "tag", hash_tag, hash_tag_diff, d)
+
+
+def hash_concept_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("ConceptDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "name", d)
+    return w.digest()
+
+
+def hash_concepts_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "ConceptsDiff",
+        "ConceptDiffUpdate",
+        "concept",
+        hash_concept,
+        hash_concept_diff,
+        d,
+    )
+
+
+def hash_model_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("ModelDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_id(w, "file", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_id_array(w, "tags", d)
+    return w.digest()
+
+
+def hash_models_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("ModelsDiff", "ModelDiffUpdate", "model", hash_model, hash_model_diff, d)
+
+
+def hash_connector_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("ConnectorDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_hash(w, "direction", d, hash_vector_diff)
+    _write_diff_bool(w, "mandatory", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_hash(w, "point", d, hash_point_diff)
+    _write_diff_id(w, "port", d)
+    _write_diff_hash(w, "props", d, hash_props_diff)
+    _write_diff_number(w, "t", d)
+    return w.digest()
+
+
+def hash_connectors_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "ConnectorsDiff",
+        "ConnectorDiffUpdate",
+        "connector",
+        hash_connector,
+        hash_connector_diff,
+        d,
+    )
+
+
+def hash_type_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("TypeDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_id_array(w, "authors", d)
+    _write_diff_id_array(w, "concepts", d)
+    _write_diff_hash(w, "connectors", d, hash_connectors_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "folder", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "image", d)
+    _write_diff_bool(w, "isAbstract", d)
+    _write_diff_id(w, "location", d)
+    _write_diff_hash(w, "models", d, hash_models_diff)
+    _write_diff_string(w, "name", d)
+    _write_diff_id(w, "parent", d)
+    _write_diff_hash(w, "props", d, hash_props_diff)
+    _write_diff_number(w, "stock", d)
+    _write_diff_string(w, "unit", d)
+    _write_diff_bool(w, "virtual", d)
+    return w.digest()
+
+
+def hash_types_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("TypesDiff", "TypeDiffUpdate", "type", hash_type, hash_type_diff, d)
+
+
+def hash_side_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("SideDiff")
+    _write_diff_id(w, "connector", d)
+    _write_diff_id(w, "designPiece", d)
+    _write_diff_id(w, "piece", d)
+    return w.digest()
+
+
+def hash_layer_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("LayerDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "color", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_bool(w, "isHidden", d)
+    _write_diff_bool(w, "isLocked", d)
+    _write_diff_string(w, "path", d)
+    return w.digest()
+
+
+def hash_layers_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("LayersDiff", "LayerDiffUpdate", "layer", hash_layer, hash_layer_diff, d)
+
+
+def hash_group_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("GroupDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_string(w, "color", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_id_array(w, "pieces", d)
+    return w.digest()
+
+
+def hash_groups_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("GroupsDiff", "GroupDiffUpdate", "group", hash_group, hash_group_diff, d)
+
+
+def hash_stat_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("StatDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_number(w, "max", d)
+    _write_diff_number(w, "min", d)
+    _write_diff_id(w, "quality", d)
+    _write_diff_string(w, "unit", d)
+    return w.digest()
+
+
+def hash_stats_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("StatsDiff", "StatDiffUpdate", "stat", hash_stat, hash_stat_diff, d)
+
+
+def hash_connection_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("ConnectionDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_hash(w, "connected", d, hash_side_diff)
+    _write_diff_hash(w, "connecting", d, hash_side_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_number(w, "gap", d)
+    _write_diff_number(w, "rise", d)
+    _write_diff_number(w, "rotation", d)
+    _write_diff_number(w, "shift", d)
+    _write_diff_number(w, "tilt", d)
+    _write_diff_number(w, "turn", d)
+    _write_diff_number(w, "u", d)
+    _write_diff_number(w, "v", d)
+    return w.digest()
+
+
+def hash_connections_diff(d: dict) -> str:
+    return _hash_collection_diff_generic(
+        "ConnectionsDiff",
+        "ConnectionDiffUpdate",
+        "connection",
+        hash_connection,
+        hash_connection_diff,
+        d,
+    )
+
+
+def hash_piece_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("PieceDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_hash(w, "center", d, hash_coord)
+    _write_diff_string(w, "color", d)
+    _write_diff_string(w, "description", d)
+    _write_diff_id(w, "design", d)
+    _write_diff_bool(w, "isHidden", d)
+    _write_diff_bool(w, "isLocked", d)
+    _write_diff_hash(w, "mirrorPlane", d, hash_plane)
+    _write_diff_string(w, "name", d)
+    _write_diff_hash(w, "plane", d, hash_plane_diff)
+    _write_diff_hash(w, "props", d, hash_props_diff)
+    _write_diff_number(w, "scale", d)
+    _write_diff_id(w, "type", d)
+    return w.digest()
+
+
+def hash_pieces_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("PiecesDiff", "PieceDiffUpdate", "piece", hash_piece, hash_piece_diff, d)
+
+
+def hash_design_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("DesignDiff")
+    _write_diff_id(w, "activeLayer", d)
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_hash(w, "authors", d, hash_authors_diff)
+    _write_diff_bool(w, "canMirror", d)
+    _write_diff_bool(w, "canScale", d)
+    _write_diff_id_array(w, "concepts", d)
+    _write_diff_hash(w, "connections", d, hash_connections_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_string(w, "folder", d)
+    _write_diff_hash(w, "groups", d, hash_groups_diff)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "image", d)
+    _write_diff_bool(w, "isAbstract", d)
+    _write_diff_hash(w, "layers", d, hash_layers_diff)
+    _write_diff_id(w, "location", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_id(w, "parent", d)
+    _write_diff_hash(w, "pieces", d, hash_pieces_diff)
+    _write_diff_hash(w, "props", d, hash_props_diff)
+    _write_diff_hash(w, "stats", d, hash_stats_diff)
+    _write_diff_string(w, "unit", d)
+    return w.digest()
+
+
+def hash_designs_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("DesignsDiff", "DesignDiffUpdate", "design", hash_design, hash_design_diff, d)
+
+
+def hash_kit_diff(d: dict) -> str:
+    w = HashWriter()
+    w.writeString("KitDiff")
+    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
+    _write_diff_hash(w, "authors", d, hash_authors_diff)
+    _write_diff_hash(w, "concepts", d, hash_concepts_diff)
+    _write_diff_string(w, "description", d)
+    _write_diff_hash(w, "designs", d, hash_designs_diff)
+    _write_diff_hash(w, "files", d, hash_files_diff)
+    _write_diff_hash(w, "folders", d, hash_folders_diff)
+    _write_diff_string(w, "homepage", d)
+    _write_diff_string(w, "icon", d)
+    _write_diff_string(w, "image", d)
+    _write_diff_string(w, "license", d)
+    _write_diff_string(w, "name", d)
+    _write_diff_hash(w, "ports", d, hash_ports_diff)
+    _write_diff_string(w, "preview", d)
+    _write_diff_hash(w, "qualities", d, hash_qualities_diff)
+    _write_diff_string(w, "remote", d)
+    _write_diff_hash(w, "tags", d, hash_tags_diff)
+    _write_diff_hash(w, "types", d, hash_types_diff)
+    _write_diff_string(w, "version", d)
+    return w.digest()
+
+
+# #endregion 🔗Hash Diffs
+
+# #endregion 🖥️Hash
+
+
+
+# #region 🎪Kit Operations
 # Dict-based pure functions for kit operations exposed via MCP.
 
 
@@ -7364,7 +8101,7 @@ def findReplaceableTypesForPieceInDesignDict(
                 continue
             other_connector = _findConnectorInTypeDict(other_type, other_connector_guid)
             required_connectors.append(other_connector)
-        except ValueError, AttributeError, KeyError:
+        except (ValueError, AttributeError, KeyError):
             continue
     result = []
     for replacement_type in kit.get("types", []):
@@ -7415,7 +8152,7 @@ def findReplaceableTypesForPiecesInDesignDict(
                         continue
                     other_connector = _findConnectorInTypeDict(other_type, other_connector_guid)
                     external_connectors.append(other_connector)
-                except ValueError, AttributeError, KeyError:
+                except (ValueError, AttributeError, KeyError):
                     continue
     result = []
     for replacement_type in kit.get("types", []):
@@ -7466,7 +8203,9 @@ def sumQualityInDesignDict(kit: dict, design_guid: str, quality_guid: str) -> fl
 
 # #endregion 📍Kit Query Helpers Dict
 
-# #endregion 🗡️Kit Operations
+# #endregion 🎪Kit Operations
+
+
 
 # #region 🎗️Kit Diff Operations
 # Diffing and patching operations for comparing and merging kit versions.
@@ -9084,6 +9823,252 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
     return diff
 
 
+def _kitdiff_deep_equal(a: typing.Any, b: typing.Any) -> bool:
+    """��Structural equality for noop remove/add detection in kit diff validation."""
+    if a is b:
+        return True
+    if type(a) != type(b):
+        return False
+    if isinstance(a, dict):
+        if set(a.keys()) != set(b.keys()):
+            return False
+        return all(_kitdiff_deep_equal(a[k], b[k]) for k in a)
+    if isinstance(a, list):
+        if len(a) != len(b):
+            return False
+        if len(a) != len(b):
+            return False
+        return all(_kitdiff_deep_equal(x, y) for x, y in zip(a, b))
+    return a == b
+
+
+def _kitdiff_push(ctx: dict, kind: str, code: str, message: str) -> None:
+    ctx[kind].append({"code": code, "message": message})
+
+
+def _validate_guid_collection_diff(
+    ctx: dict,
+    path: str,
+    id_key: str,
+    base: list,
+    raw: dict | None,
+    on_updated: typing.Callable[[dict, dict, str], None] | None = None,
+) -> dict | None:
+    """Validate removed/updated/added guids for one collection diff; heal trims invalid ops when ctx["heal"]."""
+    if not raw:
+        return None
+    heal: bool = ctx["heal"]
+    base_by = {i.get("guid"): i for i in base if isinstance(i, dict) and i.get("guid")}
+    removed_guids = {r.get("guid") for r in raw.get("removed") or [] if isinstance(r, dict)}
+    after_remove = {g for g in base_by if g not in removed_guids}
+    h_rem = list(raw.get("removed") or []) if heal else None
+    h_upd = list(raw.get("updated") or []) if heal else None
+    h_add = list(raw.get("added") or []) if heal else None
+
+    for r in raw.get("removed") or []:
+        if not isinstance(r, dict):
+            continue
+        rg = r.get("guid")
+        if rg not in base_by:
+            _kitdiff_push(ctx, "warnings", "kitdiff.remove.missing-target", f"{path}: remove references missing {id_key} {rg}")
+            if heal and h_rem is not None:
+                h_rem = [x for x in h_rem if x.get("guid") != rg]
+
+    add_by_guid = {a.get("guid"): a for a in raw.get("added") or [] if isinstance(a, dict) and a.get("guid")}
+    for r in raw.get("removed") or []:
+        if not isinstance(r, dict):
+            continue
+        rg = r.get("guid")
+        orig = base_by.get(rg)
+        add = add_by_guid.get(rg)
+        if orig is not None and add is not None and _kitdiff_deep_equal(orig, add):
+            _kitdiff_push(
+                ctx,
+                "warnings",
+                "kitdiff.cycle.noop-restore",
+                f"{path}: removed and re-added {id_key} {rg} are deeply equal (no effective change)",
+            )
+            if heal:
+                if h_rem is not None:
+                    h_rem = [x for x in h_rem if x.get("guid") != rg]
+                if h_add is not None:
+                    h_add = [x for x in h_add if x.get("guid") != rg]
+
+    seen_add: set[str] = set()
+    for a in raw.get("added") or []:
+        if not isinstance(a, dict):
+            continue
+        ag = a.get("guid")
+        if ag in seen_add:
+            _kitdiff_push(ctx, "errors", "kitdiff.add.duplicate-in-diff", f"{path}: duplicate added {id_key} guid {ag}")
+            if heal and h_add is not None:
+                na = []
+                first_kept = False
+                for x in h_add:
+                    if x.get("guid") == ag:
+                        if not first_kept:
+                            na.append(x)
+                            first_kept = True
+                        continue
+                    na.append(x)
+                h_add = na
+        seen_add.add(ag)
+        if ag in after_remove:
+            _kitdiff_push(ctx, "errors", "kitdiff.add.duplicate-guid", f"{path}: cannot add {id_key} {ag} that still exists after removes")
+            if heal and h_add is not None:
+                h_add = [x for x in h_add if x.get("guid") != ag]
+
+    for u in raw.get("updated") or []:
+        if not isinstance(u, dict) or id_key not in u:
+            continue
+        gid = (u.get(id_key) or {}).get("guid")
+        p = f"{path}.{id_key}[{gid}]"
+        if not gid:
+            _kitdiff_push(ctx, "errors", "kitdiff.update.bad-id", f"{p}: missing {id_key} id")
+            if heal and h_upd is not None:
+                h_upd = [x for x in h_upd if (x.get(id_key) or {}).get("guid") != gid]
+            continue
+        if gid not in after_remove:
+            _kitdiff_push(ctx, "errors", "kitdiff.update.missing-target", f"{p}: update targets {id_key} not present after removes")
+            if heal and h_upd is not None:
+                h_upd = [x for x in h_upd if (x.get(id_key) or {}).get("guid") != gid]
+            continue
+        item = base_by.get(gid)
+        if item is None:
+            _kitdiff_push(ctx, "errors", "kitdiff.update.missing-base", f"{p}: {id_key} not found in base kit")
+            if heal and h_upd is not None:
+                h_upd = [x for x in h_upd if (x.get(id_key) or {}).get("guid") != gid]
+            continue
+        if on_updated:
+            on_updated(item, u.get("diff") or {}, p)
+
+    if not heal:
+        return raw
+    out: dict = {}
+    if h_rem:
+        out["removed"] = h_rem
+    if h_upd:
+        out["updated"] = h_upd
+    if h_add:
+        out["added"] = h_add
+    return out or None
+
+
+def _validate_design_diff_nested_py(ctx: dict, kit: dict, path: str, design: dict, diff: dict, refs: dict) -> None:
+    """��Validate nested design diff: piece type refs, authors diff or list."""
+    type_guids: set[str] = refs["typeGuids"]
+    design_guids: set[str] = refs["designGuids"]
+    author_guids: set[str] = refs["authorGuids"]
+
+    if diff.get("parent") and isinstance(diff["parent"], dict):
+        pg = diff["parent"].get("guid")
+        if pg and pg not in design_guids:
+            _kitdiff_push(ctx, "errors", "kitdiff.ref.design-parent-missing", f"{path}: parent design {pg} not in kit")
+        if pg == design.get("guid"):
+            _kitdiff_push(ctx, "errors", "kitdiff.ref.design-parent-self", f"{path}: design cannot be its own parent")
+
+    da = diff.get("authors")
+    if da is not None:
+        if isinstance(da, list):
+            for a in da:
+                if isinstance(a, dict) and a.get("guid") and a["guid"] not in author_guids:
+                    _kitdiff_push(ctx, "errors", "kitdiff.ref.author-missing", f"{path}: author {a['guid']} not in kit")
+        elif isinstance(da, dict):
+            _validate_guid_collection_diff(
+                ctx,
+                f"{path}.authors",
+                "author",
+                kit.get("authors") or [],
+                da,
+                None,
+            )
+
+    pd = diff.get("pieces")
+    if isinstance(pd, dict):
+        _validate_guid_collection_diff(
+            ctx,
+            f"{path}.pieces",
+            "piece",
+            design.get("pieces") or [],
+            pd,
+            None,
+        )
+        for a in pd.get("added") or []:
+            if not isinstance(a, dict):
+                continue
+            tg = (a.get("type") or {}).get("guid")
+            if tg and tg not in type_guids:
+                _kitdiff_push(ctx, "errors", "kitdiff.ref.piece-type-missing", f"{path}.pieces.added: type {tg} not in kit")
+            dg = (a.get("design") or {}).get("guid") if isinstance(a.get("design"), dict) else None
+            if dg and dg not in design_guids:
+                _kitdiff_push(ctx, "errors", "kitdiff.ref.piece-design-missing", f"{path}.pieces.added: subdesign {dg} not in kit")
+
+
+def validate_kit_diff_dict(kit: dict, diff: dict, heal: bool) -> dict:
+    """��Validate a kit diff dict against a base kit dict; optional heal returns a scrubbed diff copy.
+
+    Returns a dict: ok (bool), errors, warnings (list of {code, message}), diff (optional when heal).
+    """
+    import copy
+
+    working = copy.deepcopy(diff) if heal else diff
+    ctx = {"errors": [], "warnings": [], "heal": heal}
+    type_guids = {t.get("guid") for t in kit.get("types") or [] if t.get("guid")}
+    design_guids = {d.get("guid") for d in kit.get("designs") or [] if d.get("guid")}
+    quality_guids = {q.get("guid") for q in kit.get("qualities") or [] if q.get("guid")}
+    file_guids = {f.get("guid") for f in kit.get("files") or [] if f.get("guid")}
+    port_guids = {p.get("guid") for p in kit.get("ports") or [] if p.get("guid")}
+    concept_guids = {c.get("guid") for c in kit.get("concepts") or [] if c.get("guid")}
+    author_guids = {a.get("guid") for a in kit.get("authors") or [] if a.get("guid")}
+    refs = {
+        "typeGuids": type_guids,
+        "designGuids": design_guids,
+        "qualityGuids": quality_guids,
+        "fileGuids": file_guids,
+        "portGuids": port_guids,
+        "conceptGuids": concept_guids,
+        "authorGuids": author_guids,
+    }
+
+    out_diff = copy.deepcopy(diff) if heal else None
+
+    def run_coll(key: str, id_key: str, arr_key: str, on_upd=None):
+        nonlocal out_diff
+        part = working.get(key) if isinstance(working, dict) else None
+        if not part:
+            return
+        fixed = _validate_guid_collection_diff(ctx, key, id_key, kit.get(arr_key) or [], part, on_upd)
+        if heal and out_diff is not None:
+            if fixed:
+                out_diff[key] = fixed
+            elif key in out_diff:
+                del out_diff[key]
+
+    run_coll("types", "type", "types")
+    run_coll(
+        "designs",
+        "design",
+        "designs",
+        lambda item, ddf, p: _validate_design_diff_nested_py(ctx, kit, p, item, ddf, refs),
+    )
+    run_coll("tags", "tag", "tags")
+    run_coll("concepts", "concept", "concepts")
+    run_coll("ports", "port", "ports")
+    run_coll("qualities", "quality", "qualities")
+    run_coll("files", "file", "files")
+    run_coll("folders", "folder", "folders")
+    run_coll("authors", "author", "authors")
+
+    if working.get("attributes"):
+        _validate_guid_collection_diff(ctx, "kit.attributes", "attribute", kit.get("attributes") or [], working["attributes"], None)
+
+    ok = len(ctx["errors"]) == 0
+    result: dict = {"ok": ok, "errors": ctx["errors"], "warnings": ctx["warnings"]}
+    if heal:
+        result["diff"] = out_diff
+    return result
+
+
 def applyKitDiffDict(base: dict, diff: dict) -> dict:
     """🔖Apply a diff to a kit dict."""
     result = dict(base)
@@ -9868,7 +10853,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                 if attr.get("key") == "semio.center" and attr.get("value"):
                     try:
                         center = json.loads(attr["value"])
-                    except json.JSONDecodeError, TypeError:
+                    except (json.JSONDecodeError, TypeError):
                         pass
         if center is not None:
             centerCoords.append(center)
@@ -10004,9 +10989,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                     connecting_guid = parentConn.get("connecting", {}).get("piece", {}).get("guid", "")
                                     connected_stub = connected_guid in externalOriginGuids
                                     connecting_stub = connecting_guid in externalOriginGuids
-                                    conn_matches_parentage = (
-                                        connecting_guid == piece["guid"] and connected_guid == parentGuid
-                                    ) or (connected_guid == piece["guid"] and connecting_guid == parentGuid)
+                                    conn_matches_parentage = (connecting_guid == piece["guid"] and connected_guid == parentGuid) or (connected_guid == piece["guid"] and connecting_guid == parentGuid)
                                     # Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
                                     # internal–internal source edges (neither side a stub) must keep cloned u/v.
                                     if conn_matches_parentage and connected_stub != connecting_stub:
@@ -10038,17 +11021,13 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                 try:
                                                     flatChildCenter = json.loads(attr["value"])
                                                     break
-                                                except json.JSONDecodeError, TypeError:
+                                                except (json.JSONDecodeError, TypeError):
                                                     pass
                                         if flatChildCenter is None and piece.get("center"):
                                             flatChildCenter = piece["center"]
                                         if flatParentCenter is not None and flatChildCenter is not None:
-                                            copiedConn["u"] = flatParentCenter.get("u", 0) - (
-                                                coord.get("u", 0) + (anchor["u"] - flatChildCenter.get("u", 0))
-                                            )
-                                            copiedConn["v"] = flatParentCenter.get("v", 0) - (
-                                                coord.get("v", 0) + (anchor["v"] - flatChildCenter.get("v", 0))
-                                            )
+                                            copiedConn["u"] = flatParentCenter.get("u", 0) - (coord.get("u", 0) + (anchor["u"] - flatChildCenter.get("u", 0)))
+                                            copiedConn["v"] = flatParentCenter.get("v", 0) - (coord.get("v", 0) + (anchor["v"] - flatChildCenter.get("v", 0)))
 
                                 addedConnections.append(copiedConn)
                                 break
@@ -10060,12 +11039,12 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                         if attr.get("key") == "semio.center" and attr.get("value"):
                             try:
                                 copied["center"] = json.loads(attr["value"])
-                            except json.JSONDecodeError, TypeError:
+                            except (json.JSONDecodeError, TypeError):
                                 pass
                         if attr.get("key") == "semio.plane" and attr.get("value"):
                             try:
                                 copied["plane"] = json.loads(attr["value"])
-                            except json.JSONDecodeError, TypeError:
+                            except (json.JSONDecodeError, TypeError):
                                 pass
                     center = copied.get("center") or {"u": 0, "v": 0}
                     newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
@@ -10239,6 +11218,41 @@ def _extractUpdateGuid(update: dict, entityKeys: list[str]) -> str:
 
 FLOAT_EPSILON = 1e-10
 
+_VECTOR3_KEYS = frozenset({"x", "y", "z"})
+_UV_KEYS = frozenset({"u", "v"})
+_CONNECTION_OPTIONAL_NUMERIC_KEYS = frozenset({"gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"})
+
+
+def _expandConnectionEntityDict(d: dict) -> dict:
+    """🔖Full connection snapshots may omit numeric fields when zero; golden fixtures often spell them out."""
+    if not isinstance(d, dict):
+        return d
+    if "connected" not in d or "connecting" not in d:
+        return d
+    out = dict(d)
+    for k in _CONNECTION_OPTIONAL_NUMERIC_KEYS:
+        if k not in out:
+            out[k] = 0
+    return out
+
+
+def _expandSparseNumericDict(d: dict) -> dict:
+    """🔖Make sparse xyz / uv dicts comparable to fully populated ones (missing axis ≡ 0)."""
+    keys = set(d.keys())
+    if keys and keys <= _VECTOR3_KEYS:
+        if not all(isinstance(d.get(k), (int, float)) for k in keys):
+            return d
+        return {
+            "x": float(d.get("x", 0)),
+            "y": float(d.get("y", 0)),
+            "z": float(d.get("z", 0)),
+        }
+    if keys and keys <= _UV_KEYS:
+        if not all(isinstance(d.get(k), (int, float)) for k in keys):
+            return d
+        return {"u": float(d.get("u", 0)), "v": float(d.get("v", 0))}
+    return d
+
 
 def _areDiffDictsEqual(a: dict, b: dict) -> bool:
     """🔖Deep equality check for diff dicts with float epsilon tolerance."""
@@ -10249,6 +11263,9 @@ def _areDiffDictsEqual(a: dict, b: dict) -> bool:
             return abs(float(a) - float(b)) < FLOAT_EPSILON
         return _normalizeValue(a) == _normalizeValue(b)
     if isinstance(a, dict):
+        if isinstance(b, dict):
+            a = _expandConnectionEntityDict(_expandSparseNumericDict(a))
+            b = _expandConnectionEntityDict(_expandSparseNumericDict(b))
         keysA = {k for k, v in a.items() if _normalizeValue(v) is not None}
         keysB = {k for k, v in b.items() if _normalizeValue(v) is not None}
         if keysA != keysB:
@@ -10327,7 +11344,1506 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
 
 # #endregion 🎗️Kit Diff Operations
 
-# #region 🌎Kit Import/Export
+
+
+# #region 🧭Moved Graphene Nodes
+# Graphene node definitions moved here due to forward-reference resolution order.
+
+
+class AttributeNode(TableEntityNode):
+    """🔖GraphQL node exposing attribute data."""
+
+    class Meta:
+        model = Attribute
+
+
+class PlaneNode(TableNode):
+    """🔖GraphQL node exposing plane data."""
+
+    class Meta:
+        model = Plane
+
+
+class AuthorNode(TableEntityNode):
+    """🔖GraphQL node exposing author data."""
+
+    class Meta:
+        model = Author
+
+
+class ModelNode(TableEntityNode):
+    """🔖GraphQL node exposing model data."""
+
+    class Meta:
+        model = Model
+        excludedFields = ("tags_",)
+
+
+class ConnectorNode(TableEntityNode):
+    """🔖GraphQL node exposing connector data."""
+
+    class Meta:
+        model = Connector
+        exclude_fields = ("connecteds", "connectings")
+
+    localId = graphene.String()
+
+    def resolve_localId(self, info):
+        return getattr(self, "id_", "")
+
+
+class TypeNode(TableEntityNode):
+    """🔖GraphQL node exposing type data."""
+
+    class Meta:
+        model = Type
+
+
+class PieceNode(TableEntityNode):
+    """🔖GraphQL node exposing piece data."""
+
+    class Meta:
+        model = Piece
+        exclude_fields = ("connecteds", "connectings")
+
+    localId = graphene.String()
+
+    def resolve_localId(self, info):
+        return getattr(self, "id_", "")
+
+
+class ConnectionNode(TableEntityNode):
+    """🔖GraphQL node exposing connection data."""
+
+    class Meta:
+        model = Connection
+        exclude_fields = (
+            "connectedPiece",
+            "connectedConnector",
+            "connectingPiece",
+            "connectingConnector",
+        )
+
+    connected = graphene.NonNull(lambda: SideNode)
+    connecting = graphene.NonNull(lambda: SideNode)
+
+    def resolve_connected(self, info):
+        return self.connected
+
+    def resolve_connecting(self, info):
+        return self.connecting
+
+
+class DesignNode(TableEntityNode):
+    """🔖GraphQL node exposing design data."""
+
+    class Meta:
+        model = Design
+
+
+class KitNotFound(NotFound):
+    """🚚endregion 🧭Moved Graphene Nodes"""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"🔍 Couldn't find an local or remote kit under uri:\n {self.uri}."
+
+
+class NoKitToDelete(KitNotFound):
+    """🗑️No Kit To Delete definition."""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"🔍 Couldn't delete the kit because no local or remote kit was found under uri:\n {self.uri}."
+
+
+class KitZipDoesNotContainSemioFolder(KitNotFound):
+    """🔖Kit Zip Does Not Contain Semio Folder definition."""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"🔍 The remote zip kit ({self.uri}) is not a valid kit."
+
+
+class OnlyRemoteKitsCanBeCached(ClientError):
+    """💾Only Remote Kits Can Be Cached definition."""
+
+    def __init__(self, nonRemoteUri: str) -> None:
+        self.nonRemoteUri = nonRemoteUri
+
+    def __str__(self):
+        return f"🔍 Only remote kits can be cached. The uri ({self.nonRemoteUri}) doesn't start with http and ends with .zip"
+
+
+class KitUriNotValid(ClientError, abc.ABC):
+    """🆔 The base for all kit uri not valid errors."""
+
+
+class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
+    """📂 The base for all local kit uri not valid errors."""
+
+
+class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
+    """🔖Local Kit Uri Is Not Absolute definition."""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"📂 The local kit uri ({self.uri}) is relative. It needs to be absolute (include the parent folders, drives, ...)."
+
+
+class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
+    """🔖Local Kit Uri Is Not Directory definition."""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self):
+        return f"📂 The local kit uri ({self.uri}) is not a directory."
+
+
+class NoKitAssigned(NoParentAssigned):
+    """🔖No Kit Assigned definition."""
+
+    def __str__(self):
+        return "👪 The entity has no parent kit assigned."
+
+
+class KitAlreadyExists(AlreadyExists, abc.ABC):
+    """🔖Exception for attempting to create a kit that already exists."""
+
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    def __str__(self) -> str:
+        return f"♊ A kit under uri ({self.uri}) already exists."
+
+
+class KitInputNode(InputNode):
+    """🔖GraphQL input node for kit mutations."""
+
+    class Meta:
+        model = KitInput
+
+
+class KitNode(TableEntityNode):
+    """🔖GraphQL node exposing kit data."""
+
+    class Meta:
+        model = Kit
+
+
+# #endregion 🧭Moved Graphene Nodes
+
+
+
+# #region 🛡️Validation
+# Validation logic for checking kit constraints and uniqueness rules.
+
+
+@dataclasses.dataclass
+class ValidationFix:
+    """🔧A proposed fix for a validation problem with a title and diff."""
+
+    title: str
+    diff: dict
+
+    def toDict(self) -> dict:
+        return {"title": self.title, "diff": self.diff}
+
+
+@dataclasses.dataclass
+class Problem:
+    """🔒A validation problem with a constraint identifier and message."""
+
+    constraintId: str
+    message: str
+    entityKind: str
+    entityGuid: str
+    fixes: list[ValidationFix] = dataclasses.field(default_factory=list)
+
+    def toDict(self) -> dict:
+        return {
+            "constraintId": self.constraintId,
+            "message": self.message,
+            "entityKind": self.entityKind,
+            "entityGuid": self.entityGuid,
+            "fixes": [f.toDict() for f in self.fixes],
+        }
+
+
+@dataclasses.dataclass
+class ValidationResult:
+    """🔖A validation result aggregating problems and fixes for an entity."""
+
+    problems: list[Problem]
+
+    def hasErrors(self) -> bool:
+        return len(self.problems) > 0
+
+    def toDict(self) -> dict:
+        sortedProblems = sorted(self.problems, key=lambda i: (i.constraintId, i.entityGuid))
+        return {"problems": [i.toDict() for i in sortedProblems]}
+
+    def serialize(self) -> str:
+        return json.dumps(self.toDict(), indent=2)
+
+
+def _isGuid(s: str) -> bool:
+    """🔖_isGuid performs the _isGuid operation."""
+    import re
+
+    return bool(
+        re.match(
+            r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            s,
+            re.IGNORECASE,
+        )
+    )
+
+
+def _normalizeGuids(obj: typing.Any) -> typing.Any:
+    """🔖_normalizeGuids performs the _normalizeGuids operation."""
+    if obj is None:
+        return obj
+    if isinstance(obj, str) and _isGuid(obj):
+        return "<GUID>"
+    if isinstance(obj, list):
+        return [_normalizeGuids(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _normalizeGuids(v) for k, v in obj.items()}
+    return obj
+
+
+def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
+    """✔️Check whether two validation results are semantically equal."""
+    if len(a.problems) != len(b.problems):
+        return False
+    sortedA = sorted(a.problems, key=lambda i: (i.constraintId, i.entityGuid))
+    sortedB = sorted(b.problems, key=lambda i: (i.constraintId, i.entityGuid))
+    for ia, ib in zip(sortedA, sortedB):
+        if ia.constraintId != ib.constraintId or ia.message != ib.message or ia.entityKind != ib.entityKind or ia.entityGuid != ib.entityGuid:
+            return False
+        if len(ia.fixes) != len(ib.fixes):
+            return False
+        for fa, fb in zip(ia.fixes, ib.fixes):
+            if fa.title != fb.title:
+                return False
+
+            if ia.constraintId == "guid-unique":
+                continue
+            if json.dumps(_normalizeGuids(fa.diff), sort_keys=True) != json.dumps(_normalizeGuids(fb.diff), sort_keys=True):
+                return False
+    return True
+
+
+def parseValidationResult(jsonStr: str) -> ValidationResult:
+    """🔬Parse a validation result from a dictionary representation."""
+    data = json.loads(jsonStr)
+    problems = []
+    for i in data["problems"]:
+        fixes = [ValidationFix(title=f["title"], diff=f["diff"]) for f in i.get("fixes", [])]
+        problems.append(
+            Problem(
+                constraintId=i["constraintId"],
+                message=i["message"],
+                entityKind=i["entityKind"],
+                entityGuid=i["entityGuid"],
+                fixes=fixes,
+            )
+        )
+    return ValidationResult(problems=problems)
+
+
+def validateGuidUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all GUIDs within a collection are unique."""
+    problems: list[Problem] = []
+    seen: dict[str, str] = {}
+
+    def check(entityKind: str, entityGuid: str) -> None:
+        if entityGuid in seen:
+            problems.append(
+                Problem(
+                    constraintId="guid-unique",
+                    message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
+                    entityKind=entityKind,
+                    entityGuid=entityGuid,
+                )
+            )
+        else:
+            seen[entityGuid] = entityKind
+
+    check("Kit", kit.guid)
+    for t in kit.types or []:
+        check("Type", t.guid)
+    for d in kit.designs or []:
+        check("Design", d.guid)
+        for p in d.pieces or []:
+            check("Piece", p.guid)
+        for c in d.connections or []:
+            check("Connection", c.guid)
+        for s in d.stats or []:
+            check("Stat", s.guid)
+    for q in kit.qualities or []:
+        check("Quality", q.guid)
+    for f in kit.files_ or []:
+        check("File", f.guid)
+    for fo in kit.folders_ or []:
+        check("Folder", fo.guid)
+    return problems
+
+
+def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all type names within a kit are unique."""
+    problems: list[Problem] = []
+    byParent: dict[str | None, list[Type]] = {}
+    for t in kit.types or []:
+        parentGuid = t.parent.guid if t.parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(t)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[Type]] = {}
+        for t in siblings:
+            if t.name not in names:
+                names[t.name] = []
+            names[t.name].append(t)
+        for name, group in names.items():
+            if len(group) > 1:
+                for t in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="type-name-unique",
+                            message=f'Duplicate type name "{name}" among siblings.',
+                            entityKind="Type",
+                            entityGuid=t.guid,
+                        )
+                    )
+    return problems
+
+
+def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all design names within a kit are unique."""
+    problems: list[Problem] = []
+    byParent: dict[str | None, list[Design]] = {}
+    for d in kit.designs or []:
+        parentGuid = d.parent.guid if d.parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(d)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[Design]] = {}
+        for d in siblings:
+            if d.name not in names:
+                names[d.name] = []
+            names[d.name].append(d)
+        for name, group in names.items():
+            if len(group) > 1:
+                for d in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="design-name-unique",
+                            message=f'Duplicate design name "{name}" among siblings.',
+                            entityKind="Design",
+                            entityGuid=d.guid,
+                        )
+                    )
+    return problems
+
+
+def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all piece names within a design are unique."""
+    problems: list[Problem] = []
+    for design in kit.designs or []:
+        names: dict[str, list[Piece]] = {}
+        for p in design.pieces or []:
+            if p.name_ and p.name_ not in names:
+                names[p.name_] = []
+            if p.name_:
+                names[p.name_].append(p)
+        for name, group in names.items():
+            if len(group) > 1:
+                for p in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="piece-name-unique",
+                            message=f'Duplicate piece name "{name}" in design.',
+                            entityKind="Piece",
+                            entityGuid=p.guid,
+                        )
+                    )
+    return problems
+
+
+def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all port names within a type are unique."""
+    problems: list[Problem] = []
+    for t in kit.types or []:
+        names: dict[str, list[Connector]] = {}
+        for connector in t.connectors or []:
+            if connector.name_ and connector.name_ not in names:
+                names[connector.name_] = []
+            if connector.name_:
+                names[connector.name_].append(connector)
+        for name, group in names.items():
+            if len(group) > 1:
+                for connector in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="connector-name-unique",
+                            message=f'Duplicate connector name "{name}" in type.',
+                            entityKind="Connector",
+                            entityGuid=connector.guid,
+                        )
+                    )
+    return problems
+
+
+def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all model names within a type are unique."""
+    problems: list[Problem] = []
+    for t in kit.types or []:
+        names: dict[str, list[Model]] = {}
+        for model in t.models or []:
+            if model.name and model.name not in names:
+                names[model.name] = []
+            if model.name:
+                names[model.name].append(model)
+        for name, group in names.items():
+            if len(group) > 1:
+                for model in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="model-name-unique",
+                            message=f'Duplicate model name "{name}" in type.',
+                            entityKind="Model",
+                            entityGuid=model.guid,
+                        )
+                    )
+    return problems
+
+
+def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all quality names within a kit are unique."""
+    problems: list[Problem] = []
+    names: dict[str, list[Quality]] = {}
+    for q in kit.qualities or []:
+        if q.name not in names:
+            names[q.name] = []
+        names[q.name].append(q)
+    for name, group in names.items():
+        if len(group) > 1:
+            for q in group[1:]:
+                problems.append(
+                    Problem(
+                        constraintId="quality-name-unique",
+                        message=f'Duplicate quality name "{name}".',
+                        entityKind="Quality",
+                        entityGuid=q.guid,
+                    )
+                )
+    return problems
+
+
+def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all file names within a kit are unique."""
+    problems: list[Problem] = []
+    names: dict[str, list[File]] = {}
+    for f in kit.files_ or []:
+        if f.name not in names:
+            names[f.name] = []
+        names[f.name].append(f)
+    for name, group in names.items():
+        if len(group) > 1:
+            for f in group[1:]:
+                problems.append(
+                    Problem(
+                        constraintId="file-name-unique",
+                        message=f'Duplicate file name "{name}".',
+                        entityKind="File",
+                        entityGuid=f.guid,
+                    )
+                )
+    return problems
+
+
+def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all folder names within a kit are unique."""
+    problems: list[Problem] = []
+    byParent: dict[str | None, list[Folder]] = {}
+    for fo in kit.folders_ or []:
+        parentGuid = fo.parent if fo.parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(fo)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[Folder]] = {}
+        for fo in siblings:
+            if fo.name not in names:
+                names[fo.name] = []
+            names[fo.name].append(fo)
+        for name, group in names.items():
+            if len(group) > 1:
+                for fo in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="folder-name-unique",
+                            message=f'Duplicate folder name "{name}" among siblings.',
+                            entityKind="Folder",
+                            entityGuid=fo.guid,
+                        )
+                    )
+    return problems
+
+
+def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all layer paths within a design are unique."""
+    problems: list[Problem] = []
+    for design in kit.designs or []:
+        paths: dict[str, list[Layer]] = {}
+        for layer in design.layers or []:
+            if layer.path not in paths:
+                paths[layer.path] = []
+            paths[layer.path].append(layer)
+        for path, group in paths.items():
+            if len(group) > 1:
+                for layer in group[1:]:
+                    problems.append(
+                        Problem(
+                            constraintId="layer-path-unique",
+                            message=f'Duplicate layer path "{path}" in design.',
+                            entityKind="Layer",
+                            entityGuid=layer.guid,
+                        )
+                    )
+    return problems
+
+
+def validateKit(kit: Kit) -> ValidationResult:
+    """🔖Validate a kit entity against all constraint rules."""
+    problems: list[Problem] = []
+    problems.extend(validateGuidUniqueness(kit))
+    problems.extend(validateTypeNameUniqueness(kit))
+    problems.extend(validateDesignNameUniqueness(kit))
+    problems.extend(validatePieceNameUniqueness(kit))
+    problems.extend(validatePortNameUniqueness(kit))
+    problems.extend(validateModelNameUniqueness(kit))
+    problems.extend(validateQualityNameUniqueness(kit))
+    problems.extend(validateFolderNameUniqueness(kit))
+    problems.extend(validateLayerPathUniqueness(kit))
+    return ValidationResult(problems=problems)
+
+
+# #region 📧Dict-based Validation
+# Dictionary-based validation functions for kit data integrity.
+
+
+def _makeFix(title: str, diff: dict) -> ValidationFix:
+    """🔖_makeFix performs the _makeFix operation."""
+    return ValidationFix(title=title, diff=diff)
+
+
+def _deepCopy(obj: typing.Any) -> typing.Any:
+    """🔖_deepCopy performs the _deepCopy operation."""
+    return json.loads(json.dumps(obj))
+
+
+def _newGuid() -> str:
+    """🔖_newGuid performs the _newGuid operation."""
+    import uuid
+
+    return str(uuid.uuid4())
+
+
+def validateKitDict(kit: dict) -> ValidationResult:
+    """🔖Validate a kit dictionary against all constraint rules."""
+    problems: list[Problem] = []
+    seen: dict[str, str] = {}
+    seenEntities: dict[str, dict] = {}
+
+    def checkGuid(entityKind: str, entityGuid: str, entity: dict) -> None:
+        if entityGuid in seen:
+            newGuid = _newGuid()
+            entityCopy = _deepCopy(entity)
+            entityCopy["guid"] = newGuid
+            collectionKey = {
+                "Type": "types",
+                "Design": "designs",
+                "Piece": "pieces",
+                "Connection": "connections",
+                "Connector": "connectors",
+                "Model": "models",
+                "Quality": "qualities",
+                "Port": "ports",
+                "File": "files",
+                "Folder": "folders",
+                "Stat": "stats",
+                "Layer": "layers",
+            }.get(entityKind, "")
+            if collectionKey:
+                diff = {
+                    collectionKey: {
+                        "removed": [{"guid": entityGuid}],
+                        "added": [entityCopy],
+                    }
+                }
+                fix = _makeFix("Regenerate GUID", diff)
+                problems.append(
+                    Problem(
+                        constraintId="guid-unique",
+                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
+                        entityKind=entityKind,
+                        entityGuid=entityGuid,
+                        fixes=[fix],
+                    )
+                )
+            else:
+                problems.append(
+                    Problem(
+                        constraintId="guid-unique",
+                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
+                        entityKind=entityKind,
+                        entityGuid=entityGuid,
+                        fixes=[],
+                    )
+                )
+        else:
+            seen[entityGuid] = entityKind
+            seenEntities[entityGuid] = entity
+
+    checkGuid("Kit", kit.get("guid", ""), kit)
+    for t in kit.get("types", []):
+        checkGuid("Type", t.get("guid", ""), t)
+        for connector in t.get("connectors", []):
+            checkGuid("Connector", connector.get("guid", ""), connector)
+        for model in t.get("models", []):
+            checkGuid("Model", model.get("guid", ""), model)
+    for d in kit.get("designs", []):
+        checkGuid("Design", d.get("guid", ""), d)
+        for p in d.get("pieces", []):
+            checkGuid("Piece", p.get("guid", ""), p)
+        for c in d.get("connections", []):
+            checkGuid("Connection", c.get("guid", ""), c)
+        for s in d.get("stats", []):
+            checkGuid("Stat", s.get("guid", ""), s)
+    for q in kit.get("qualities", []):
+        checkGuid("Quality", q.get("guid", ""), q)
+    for i in kit.get("ports", []):
+        checkGuid("Port", i.get("guid", ""), i)
+    for f in kit.get("files", []):
+        checkGuid("File", f.get("guid", ""), f)
+    for fo in kit.get("folders", []):
+        checkGuid("Folder", fo.get("guid", ""), fo)
+    byParent: dict[str | None, list[dict]] = {}
+    for t in kit.get("types", []):
+        parent = t.get("parent")
+        parentGuid = parent.get("guid") if isinstance(parent, dict) else parent if parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(t)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[dict]] = {}
+        for t in siblings:
+            name = t.get("name", "")
+            if name not in names:
+                names[name] = []
+            names[name].append(t)
+        for name, group in names.items():
+            if len(group) > 1:
+                for t in group[1:]:
+                    fix = _makeFix(
+                        f'Rename "{name}"',
+                        {
+                            "types": {
+                                "updated": [
+                                    {
+                                        "type": {"guid": t.get("guid", "")},
+                                        "diff": {"name": f"{name} 2"},
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="type-name-unique",
+                            message=f'Duplicate type name "{name}" among siblings.',
+                            entityKind="Type",
+                            entityGuid=t.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    byParent = {}
+    for d in kit.get("designs", []):
+        parent = d.get("parent")
+        parentGuid = parent.get("guid") if isinstance(parent, dict) else parent if parent else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(d)
+    for parentGuid, siblings in byParent.items():
+        names: dict[str, list[dict]] = {}
+        for d in siblings:
+            name = d.get("name", "")
+            if name not in names:
+                names[name] = []
+            names[name].append(d)
+        for name, group in names.items():
+            if len(group) > 1:
+                for d in group[1:]:
+                    fix = _makeFix(
+                        f'Rename "{name}"',
+                        {
+                            "designs": {
+                                "updated": [
+                                    {
+                                        "design": {"guid": d.get("guid", "")},
+                                        "diff": {"name": f"{name} 2"},
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="design-name-unique",
+                            message=f'Duplicate design name "{name}" among siblings.',
+                            entityKind="Design",
+                            entityGuid=d.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    for design in kit.get("designs", []):
+        designName = design.get("name", "")
+        designGuid = design.get("guid", "")
+        names = {}
+        for p in design.get("pieces", []):
+            name = p.get("name", "")
+            if name and name not in names:
+                names[name] = []
+            if name:
+                names[name].append(p)
+        for name, group in names.items():
+            if len(group) > 1:
+                for p in group[1:]:
+                    fix = _makeFix(
+                        f'Rename piece "{name}"',
+                        {
+                            "designs": {
+                                "updated": [
+                                    {
+                                        "design": {"guid": designGuid},
+                                        "diff": {
+                                            "pieces": {
+                                                "updated": [
+                                                    {
+                                                        "piece": {"guid": p.get("guid", "")},
+                                                        "diff": {"name": f"{name} 2"},
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="piece-name-unique",
+                            message=f'Duplicate piece name "{name}" inside design "{designName}".',
+                            entityKind="Piece",
+                            entityGuid=p.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    for t in kit.get("types", []):
+        typeName = t.get("name", "")
+        typeGuid = t.get("guid", "")
+        names = {}
+        for connector in t.get("connectors", []):
+            name = connector.get("name", "")
+            if name and name not in names:
+                names[name] = []
+            if name:
+                names[name].append(connector)
+        for name, group in names.items():
+            if len(group) > 1:
+                for connector in group[1:]:
+                    fix = _makeFix(
+                        f'Rename connector "{name}"',
+                        {
+                            "types": {
+                                "updated": [
+                                    {
+                                        "type": {"guid": typeGuid},
+                                        "diff": {
+                                            "connectors": {
+                                                "updated": [
+                                                    {
+                                                        "connector": {"guid": connector.get("guid", "")},
+                                                        "diff": {"name": f"{name} 2"},
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="connector-name-unique",
+                            message=f'Duplicate connector name "{name}" inside type "{typeName}".',
+                            entityKind="Connector",
+                            entityGuid=connector.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    for t in kit.get("types", []):
+        typeName = t.get("name", "")
+        typeGuid = t.get("guid", "")
+        names = {}
+        for model in t.get("models", []):
+            name = model.get("name", "")
+            if name and name not in names:
+                names[name] = []
+            if name:
+                names[name].append(model)
+        for name, group in names.items():
+            if len(group) > 1:
+                for model in group[1:]:
+                    fix = _makeFix(
+                        f'Rename model "{name}"',
+                        {
+                            "types": {
+                                "updated": [
+                                    {
+                                        "type": {"guid": typeGuid},
+                                        "diff": {
+                                            "models": {
+                                                "updated": [
+                                                    {
+                                                        "model": {"guid": model.get("guid", "")},
+                                                        "diff": {"name": f"{name} 2"},
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="model-name-unique",
+                            message=f'Duplicate model name "{name}" inside type "{typeName}".',
+                            entityKind="Model",
+                            entityGuid=model.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    names = {}
+    for q in kit.get("qualities", []):
+        name = q.get("name", "")
+        if name not in names:
+            names[name] = []
+        names[name].append(q)
+    for name, group in names.items():
+        if len(group) > 1:
+            for q in group[1:]:
+                fix = _makeFix(
+                    f'Rename quality "{name}"',
+                    {
+                        "qualities": {
+                            "updated": [
+                                {
+                                    "quality": {"guid": q.get("guid", "")},
+                                    "diff": {"name": f"{name} 2"},
+                                }
+                            ]
+                        }
+                    },
+                )
+                problems.append(
+                    Problem(
+                        constraintId="quality-name-unique",
+                        message=f'Duplicate quality name "{name}".',
+                        entityKind="Quality",
+                        entityGuid=q.get("guid", ""),
+                        fixes=[fix],
+                    )
+                )
+    names = {}
+    for i in kit.get("ports", []):
+        name = i.get("name", "")
+        if name not in names:
+            names[name] = []
+        names[name].append(i)
+    for name, group in names.items():
+        if len(group) > 1:
+            for iface in group[1:]:
+                fix = _makeFix(
+                    f'Rename port "{name}"',
+                    {
+                        "ports": {
+                            "updated": [
+                                {
+                                    "port": {"guid": iface.get("guid", "")},
+                                    "diff": {"name": f"{name} 2"},
+                                }
+                            ]
+                        }
+                    },
+                )
+                problems.append(
+                    Problem(
+                        constraintId="port-name-unique",
+                        message=f'Duplicate port name "{name}".',
+                        entityKind="Port",
+                        entityGuid=iface.get("guid", ""),
+                        fixes=[fix],
+                    )
+                )
+    names = {}
+    for f in kit.get("files", []):
+        name = f.get("name", "")
+        if name not in names:
+            names[name] = []
+        names[name].append(f)
+    for name, group in names.items():
+        if len(group) > 1:
+            for f in group[1:]:
+                fix = _makeFix(
+                    f'Rename file "{name}"',
+                    {
+                        "files": {
+                            "updated": [
+                                {
+                                    "file": {"guid": f.get("guid", "")},
+                                    "diff": {"name": f"{name} 2"},
+                                }
+                            ]
+                        }
+                    },
+                )
+                problems.append(
+                    Problem(
+                        constraintId="file-name-unique",
+                        message=f'Duplicate file name "{name}".',
+                        entityKind="File",
+                        entityGuid=f.get("guid", ""),
+                        fixes=[fix],
+                    )
+                )
+    byParent = {}
+    for fo in kit.get("folders", []):
+        parentGuid = fo.get("parent", {}).get("guid") if fo.get("parent") else None
+        if parentGuid not in byParent:
+            byParent[parentGuid] = []
+        byParent[parentGuid].append(fo)
+    for parentGuid, siblings in byParent.items():
+        names = {}
+        for fo in siblings:
+            name = fo.get("name", "")
+            if name not in names:
+                names[name] = []
+            names[name].append(fo)
+        for name, group in names.items():
+            if len(group) > 1:
+                for fo in group[1:]:
+                    fix = _makeFix(
+                        f'Rename folder "{name}"',
+                        {
+                            "folders": {
+                                "updated": [
+                                    {
+                                        "folder": {"guid": fo.get("guid", "")},
+                                        "diff": {"name": f"{name} 2"},
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="folder-name-unique",
+                            message=f'Duplicate folder name "{name}" among siblings.',
+                            entityKind="Folder",
+                            entityGuid=fo.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    for design in kit.get("designs", []):
+        designName = design.get("name", "")
+        designGuid = design.get("guid", "")
+        paths: dict[str, list[dict]] = {}
+        for layer in design.get("layers", []):
+            path = layer.get("path", "")
+            if path not in paths:
+                paths[path] = []
+            paths[path].append(layer)
+        for path, group in paths.items():
+            if len(group) > 1:
+                for layer in group[1:]:
+                    fix = _makeFix(
+                        f'Rename layer "{path}"',
+                        {
+                            "designs": {
+                                "updated": [
+                                    {
+                                        "design": {"guid": designGuid},
+                                        "diff": {
+                                            "layers": {
+                                                "updated": [
+                                                    {
+                                                        "layer": {"guid": layer.get("guid", "")},
+                                                        "diff": {"path": f"{path} 2"},
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                    }
+                                ]
+                            }
+                        },
+                    )
+                    problems.append(
+                        Problem(
+                            constraintId="layer-path-unique",
+                            message=f'Duplicate layer path "{path}" inside design "{designName}".',
+                            entityKind="Layer",
+                            entityGuid=layer.get("guid", ""),
+                            fixes=[fix],
+                        )
+                    )
+    return ValidationResult(problems=problems)
+
+
+# #endregion 📧Dict-based Validation
+
+# #region 🕌Graph Operations
+# Graph construction and traversal for piece connectivity analysis.
+
+
+def buildPieceGraph(design: Design | dict) -> networkx.Graph:
+    """🏗️Build a networkx graph from pieces and connections."""
+    G = networkx.Graph()
+    pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
+    connections = design.get("connections", []) if isinstance(design, dict) else design.connections
+    for piece in pieces:
+        pieceGuid = piece["guid"] if isinstance(piece, dict) else piece.guid
+        G.add_node(pieceGuid, piece=piece)
+    for connection in connections:
+        if isinstance(connection, dict):
+            sourceId = connection["connected"]["piece"]["guid"]
+            targetId = connection["connecting"]["piece"]["guid"]
+        else:
+            sourceId = connection.connectedPiece.guid
+            targetId = connection.connectingPiece.guid
+        if G.has_node(sourceId) and G.has_node(targetId):
+            G.add_edge(sourceId, targetId, connection=connection)
+    return G
+
+
+def findFixedPieces(design: Design | dict) -> list[str]:
+    """🔖Find all pieces that are fixed in the design hierarchy."""
+    pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
+    result = []
+    for p in pieces:
+        if isinstance(p, dict):
+            hasPlane = p.get("plane") is not None
+            hasCenter = p.get("center") is not None
+            if hasPlane != hasCenter:
+                raise ValueError(f"Piece {p.get('guid')} has inconsistent plane and center")
+            if hasPlane:
+                result.append(p["guid"])
+        else:
+            hasPlane = p.plane is not None
+            hasCenter = p.center is not None
+            if hasPlane != hasCenter:
+                raise ValueError(f"Piece {p.guid} has inconsistent plane and center")
+            if hasPlane:
+                result.append(p.guid)
+    return result
+
+
+def getConnectedComponents(design: Design | dict) -> list[set[str]]:
+    """🔖Get connected components of the piece graph."""
+    G = buildPieceGraph(design)
+
+
+def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
+    """🍃Get the hierarchical ordering of pieces from root to leaf."""
+    G = buildPieceGraph(design)
+    if rootGuid not in G:
+        return {}
+
+
+# #endregion 🕌Graph Operations
+
+# #endregion 🛡️Validation
+
+
+
+# #region 🌤️Flatten Design
+# Design flattening to resolve nested sub-designs into a single coordinate space.
+
+
+def getTypeByGuid(kit: dict, guid: str) -> dict | None:
+    """🔖Look up a type by its GUID within a kit dictionary."""
+    for t in kit.get("types", []):
+        if t.get("guid") == guid:
+            return t
+    return None
+
+
+def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | None) -> dict | None:
+    """🔖Look up a connector by name from a type dictionary."""
+    if typeData is None:
+        return None
+    if connectorGuid is None:
+        connectors = typeData.get("connectors", [])
+        if connectors:
+            return connectors[0]
+        parent = typeData.get("parent")
+        if parent:
+            parentType = getTypeByGuid(kit, parent.get("guid", ""))
+            return getConnectorFromType(kit, parentType, connectorGuid)
+        return None
+    for connector in typeData.get("connectors", []):
+        if connector.get("guid") == connectorGuid:
+            return connector
+    parent = typeData.get("parent")
+    if parent:
+        parentType = getTypeByGuid(kit, parent.get("guid", ""))
+        return getConnectorFromType(kit, parentType, connectorGuid)
+    connectors = typeData.get("connectors", [])
+    if connectors:
+        return connectors[0]
+    return None
+
+
+def planeToMatrixDict(plane: dict) -> numpy.ndarray:
+    """🔖Convert a plane dictionary to a 4x4 transformation matrix."""
+    origin = numpy.array([plane["origin"]["x"], plane["origin"]["y"], plane["origin"]["z"]])
+    xAxis = numpy.array([plane["xAxis"]["x"], plane["xAxis"]["y"], plane["xAxis"]["z"]])
+    yAxis = numpy.array([plane["yAxis"]["x"], plane["yAxis"]["y"], plane["yAxis"]["z"]])
+    zAxis = numpy.cross(xAxis, yAxis)
+    zAxis = normalizeVector(zAxis)
+    matrix = numpy.eye(4)
+    matrix[:3, 0] = xAxis
+    matrix[:3, 1] = yAxis
+    matrix[:3, 2] = zAxis
+    matrix[:3, 3] = origin
+    return matrix
+
+
+def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
+    """🔖Convert a 4x4 transformation matrix to a plane dictionary."""
+    origin = matrix[:3, 3]
+    xAxis = matrix[:3, 0]
+    yAxis = matrix[:3, 1]
+    return {
+        "origin": {"x": float(origin[0]), "y": float(origin[1]), "z": float(origin[2])},
+        "xAxis": {"x": float(xAxis[0]), "y": float(xAxis[1]), "z": float(xAxis[2])},
+        "yAxis": {"x": float(yAxis[0]), "y": float(yAxis[1]), "z": float(yAxis[2])},
+    }
+
+
+def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> numpy.ndarray:
+    """🔖Compute a quaternion rotating one unit vector onto another."""
+    r = numpy.dot(vFrom, vTo) + 1
+    if r < 0.000001:
+        if abs(vFrom[0]) > abs(vFrom[2]):
+            q = numpy.array([-vFrom[1], vFrom[0], 0, 0])
+        else:
+            q = numpy.array([0, -vFrom[2], vFrom[1], 0])
+    else:
+        cross = numpy.cross(vFrom, vTo)
+        q = numpy.array([cross[0], cross[1], cross[2], r])
+    return q / numpy.linalg.norm(q)
+
+
+def quaternionFromAxisAngleDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
+    """🔖Compute a quaternion from an axis-angle representation."""
+    halfAngle = angle / 2
+    s = numpy.sin(halfAngle)
+    return numpy.array([axis[0] * s, axis[1] * s, axis[2] * s, numpy.cos(halfAngle)])
+
+
+def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
+    """🔖Convert a quaternion to a 3x3 rotation matrix."""
+    x, y, z, w = q
+    x2, y2, z2 = x + x, y + y, z + z
+    xx, xy, xz = x * x2, x * y2, x * z2
+    yy, yz, zz = y * y2, y * z2, z * z2
+    wx, wy, wz = w * x2, w * y2, w * z2
+    m = numpy.eye(4)
+    m[0, 0] = 1 - (yy + zz)
+    m[0, 1] = xy - wz
+    m[0, 2] = xz + wy
+    m[1, 0] = xy + wz
+    m[1, 1] = 1 - (xx + zz)
+    m[1, 2] = yz - wx
+    m[2, 0] = xz - wy
+    m[2, 1] = yz + wx
+    m[2, 2] = 1 - (xx + yy)
+    return m
+
+
+def makeRotationAxisDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
+    """🔖Create a 4x4 rotation matrix around an arbitrary axis."""
+    return quaternionToMatrixDict(quaternionFromAxisAngleDict(axis, angle))
+
+
+def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
+    """🔖Create a 4x4 translation matrix from a displacement vector."""
+    m = numpy.eye(4)
+    m[0, 3] = x
+    m[1, 3] = y
+    m[2, 3] = z
+    return m
+
+
+def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
+    """🔖Apply a 4x4 matrix to a 3D vector dictionary."""
+    return numpy.array(
+        [
+            m[0, 0] * v[0] + m[0, 1] * v[1] + m[0, 2] * v[2],
+            m[1, 0] * v[0] + m[1, 1] * v[1] + m[1, 2] * v[2],
+            m[2, 0] * v[0] + m[2, 1] * v[1] + m[2, 2] * v[2],
+        ]
+    )
+
+
+def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict) -> dict:
+    """🔖Compute the world-space plane of a child piece from parent and local planes."""
+    parentMatrix = planeToMatrixDict(parentPlane)
+    parentPoint = numpy.array(
+        [
+            parentConnector["point"]["x"],
+            parentConnector["point"]["y"],
+            parentConnector["point"]["z"],
+        ]
+    )
+    parentDirection = normalizeVector(
+        numpy.array(
+            [
+                parentConnector["direction"]["x"],
+                parentConnector["direction"]["y"],
+                parentConnector["direction"]["z"],
+            ]
+        )
+    )
+    childPoint = numpy.array(
+        [
+            childConnector["point"]["x"],
+            childConnector["point"]["y"],
+            childConnector["point"]["z"],
+        ]
+    )
+    childDirection = normalizeVector(
+        numpy.array(
+            [
+                childConnector["direction"]["x"],
+                childConnector["direction"]["y"],
+                childConnector["direction"]["z"],
+            ]
+        )
+    )
+    gap = connection.get("gap", 0) or 0
+    shift = connection.get("shift", 0) or 0
+    rise = connection.get("rise", 0) or 0
+    rotation = connection.get("rotation", 0) or 0
+    turn = connection.get("turn", 0) or 0
+    tilt = connection.get("tilt", 0) or 0
+    rotationRad = numpy.deg2rad(rotation)
+    turnRad = numpy.deg2rad(turn)
+    tiltRad = numpy.deg2rad(tilt)
+    reverseChildDirection = -childDirection
+    crossVec = numpy.cross(parentDirection, reverseChildDirection)
+    crossLen = numpy.linalg.norm(crossVec)
+    if crossLen < 0.01:
+        if abs(parentDirection[2]) < TOLERANCE:
+            alignQuat = quaternionFromAxisAngleDict(numpy.array([0.0, 0.0, 1.0]), numpy.pi)
+        else:
+            axis = normalizeVector(numpy.cross(numpy.array([0.0, 0.0, 1.0]), parentDirection))
+            alignQuat = quaternionFromAxisAngleDict(axis, numpy.pi)
+    else:
+        alignQuat = quaternionFromUnitVectorsDict(reverseChildDirection, parentDirection)
+    directionT = quaternionToMatrixDict(alignQuat)
+    yAxis = numpy.array([0.0, 1.0, 0.0])
+    parentConnectorQuat = quaternionFromUnitVectorsDict(yAxis, parentDirection)
+    parentRotationT = quaternionToMatrixDict(parentConnectorQuat)
+    gapDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 1.0, 0.0]))
+    shiftDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([1.0, 0.0, 0.0]))
+    raiseDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 0.0, 1.0]))
+    turnAxis = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 0.0, 1.0]))
+    tiltAxis = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([1.0, 0.0, 0.0]))
+    orientationT = directionT.copy()
+    rotateT = makeRotationAxisDict(parentDirection, -rotationRad)
+    orientationT = rotateT @ orientationT
+    turnAxis = applyMatrix4ToVec3Dict(rotateT, turnAxis)
+    tiltAxis = applyMatrix4ToVec3Dict(rotateT, tiltAxis)
+    turnT = makeRotationAxisDict(turnAxis, turnRad)
+    orientationT = turnT @ orientationT
+    tiltT = makeRotationAxisDict(tiltAxis, tiltRad)
+    orientationT = tiltT @ orientationT
+    centerChildT = makeTranslationDict(-childPoint[0], -childPoint[1], -childPoint[2])
+    transform = orientationT @ centerChildT
+    gapTransform = makeTranslationDict(gapDirection[0] * gap, gapDirection[1] * gap, gapDirection[2] * gap)
+    shiftTransform = makeTranslationDict(shiftDirection[0] * shift, shiftDirection[1] * shift, shiftDirection[2] * shift)
+    raiseTransform = makeTranslationDict(raiseDirection[0] * rise, raiseDirection[1] * rise, raiseDirection[2] * rise)
+    translationT = raiseTransform @ shiftTransform @ gapTransform
+    transform = translationT @ transform
+    moveToParentT = makeTranslationDict(parentPoint[0], parentPoint[1], parentPoint[2])
+    transform = moveToParentT @ transform
+    finalMatrix = parentMatrix @ transform
+    result = matrixToPlaneDict(finalMatrix)
+    return {
+        "origin": {
+            "x": round(result["origin"]["x"] / TOLERANCE) * TOLERANCE,
+            "y": round(result["origin"]["y"] / TOLERANCE) * TOLERANCE,
+            "z": round(result["origin"]["z"] / TOLERANCE) * TOLERANCE,
+        },
+        "xAxis": {
+            "x": round(result["xAxis"]["x"] / TOLERANCE) * TOLERANCE,
+            "y": round(result["xAxis"]["y"] / TOLERANCE) * TOLERANCE,
+            "z": round(result["xAxis"]["z"] / TOLERANCE) * TOLERANCE,
+        },
+        "yAxis": {
+            "x": round(result["yAxis"]["x"] / TOLERANCE) * TOLERANCE,
+            "y": round(result["yAxis"]["y"] / TOLERANCE) * TOLERANCE,
+            "z": round(result["yAxis"]["z"] / TOLERANCE) * TOLERANCE,
+        },
+    }
+
+
+def flattenDesignDict(kit: dict, designGuid: str) -> dict:
+    """🔖Flatten a nested design hierarchy into a single flat coordinate space."""
+    design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
+    if design is None:
+        raise ValueError(f"Design {designGuid} not found")
+    pieces = design.get("pieces", [])
+    if not pieces:
+        return {}
+    pieceMap = {p["guid"]: dict(p) for p in pieces}
+    piecePlanes: dict[str, dict] = {}
+    piecePaths: dict[str, str] = {}
+    G = buildPieceGraph(design)
+    components = list(networkx.connected_components(G))
+    for component in components:
+        rootNode = None
+        for nodeId in component:
+            piece = pieceMap.get(nodeId)
+            if piece and piece.get("plane") is not None and piece.get("center") is not None:
+                rootNode = nodeId
+                break
+        if rootNode is None and component:
+            rootNode = next(iter(component))
+        if rootNode is None:
+            continue
+        rootPiece = pieceMap[rootNode]
+        piecePaths[rootNode] = rootNode
+        if rootPiece.get("plane") and rootPiece.get("center") is not None:
+            piecePlanes[rootNode] = rootPiece["plane"]
+        else:
+            piecePlanes[rootNode] = {
+                "origin": {"x": 0, "y": 0, "z": 0},
+                "xAxis": {"x": 1, "y": 0, "z": 0},
+                "yAxis": {"x": 0, "y": 1, "z": 0},
+            }
+        for source, target in networkx.bfs_edges(G, rootNode):
+            if target in piecePlanes:
+                continue
+            parentId = source
+            childId = target
+            parentPlane = piecePlanes.get(parentId)
+            if parentPlane is None:
+                continue
+            edgeData = G.get_edge_data(parentId, childId)
+            connection = edgeData.get("connection") if edgeData else None
+            if connection is None:
+                continue
+            parentPiece = pieceMap[parentId]
+            childPiece = pieceMap[childId]
+            parentType = getTypeByGuid(kit, parentPiece.get("type", {}).get("guid", ""))
+            childType = getTypeByGuid(kit, childPiece.get("type", {}).get("guid", ""))
+            parentSide = connection["connected"] if connection["connected"]["piece"]["guid"] == parentId else connection["connecting"]
+            childSide = connection["connecting"] if connection["connecting"]["piece"]["guid"] == childId else connection["connected"]
+            parentConnectorGuid = parentSide.get("connector", {}).get("guid") if parentSide.get("connector") else None
+            childConnectorGuid = childSide.get("connector", {}).get("guid") if childSide.get("connector") else None
+            parentConnector = getConnectorFromType(kit, parentType, parentConnectorGuid)
+            childConnector = getConnectorFromType(kit, childType, childConnectorGuid)
+            if parentConnector is None or childConnector is None:
+                continue
+            childPlane = computeChildPlaneDict(parentPlane, parentConnector, childConnector, connection)
+            piecePlanes[childId] = childPlane
+            radius = 2.697
+            verticalVExtra = 1.0
+            horizontalScale = 3.0633
+            parentCenter = parentPiece.get("center") or {"u": 0, "v": 0}
+            connectionU = connection.get("u", 0) or 0
+            connectionV = connection.get("v", 0) or 0
+            if parentCenter["u"] == 0 and parentCenter["v"] == 0:
+                t = parentConnector.get("t", 0) or 0
+                angle = 2 * numpy.pi * t
+                childU = radius * numpy.sin(angle)
+                childV = radius * numpy.cos(angle)
+            else:
+                parentDirZ = (parentConnector.get("direction") or {}).get("z", 0) or 0
+                isVerticalConnection = abs(parentDirZ) > 0.5
+                if isVerticalConnection:
+                    childU = parentCenter["u"] + connectionU
+                    childV = parentCenter["v"] + connectionV + verticalVExtra
+                else:
+                    childU = parentCenter["u"] + connectionU * horizontalScale
+                    childV = parentCenter["v"] + connectionV * horizontalScale
+            childCenter = {
+                "u": round(childU / TOLERANCE) * TOLERANCE,
+                "v": round(childV / TOLERANCE) * TOLERANCE,
+            }
+            pieceMap[childId]["center"] = childCenter
+            piecePaths[childId] = piecePaths.get(parentId, parentId) + "," + childId
+    updatedPieces = []
+    for piece in pieces:
+        newPiece = dict(piece)
+        if piece["guid"] in piecePlanes:
+            newPiece["plane"] = piecePlanes[piece["guid"]]
+        if piece["guid"] in pieceMap and pieceMap[piece["guid"]].get("center"):
+            newPiece["center"] = pieceMap[piece["guid"]]["center"]
+        elif newPiece.get("center") is None:
+            newPiece["center"] = {"u": 0, "v": 0}
+        updatedPieces.append(newPiece)
+    return {
+        "pieces": {
+            "updated": [
+                {
+                    "id": p["guid"],
+                    "diff": {"plane": p.get("plane"), "center": p.get("center")},
+                }
+                for p in updatedPieces
+                if p["guid"] in piecePlanes
+            ]
+        },
+        "_piecePaths": piecePaths,
+    }
+
+
+# #endregion 🌤️Flatten Design
+
+
+
+# #region 🧿Kit Import/Export
 # Import and export utilities for kit serialization and deserialization.
 
 
@@ -10762,7 +13278,7 @@ def _build_file_path(kit_dict: dict, file_dict: dict) -> str:
     return file_dict.get("name", "")
 
 
-# #region 📍Kit Workflow Helpers
+# #region 🔄Kit Workflow Helpers
 
 
 def _kit_to_dict(kit: KitData | dict) -> dict:
@@ -11139,7 +13655,7 @@ def edit_remote_kit(uri: str, diff: dict) -> KitData:
     return updated
 
 
-# #endregion 📍Kit Workflow Helpers
+# #endregion 🔄Kit Workflow Helpers
 
 
 def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
@@ -11651,9 +14167,11 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
             zip_ref.writestr(filename, content)
 
 
-# #endregion 🌎Kit Import/Export
+# #endregion 🧿Kit Import/Export
 
-# #region 🌦️Kit Model Export
+
+
+# #region 🔩Kit Model Export
 # 3D model export utilities for designs. Exports design scene graphs as GLB, GLTF, OBJ, STL, PLY, OFF, IFC.
 
 EXPORT_MODEL_FORMATS: dict[str, str] = {
@@ -12312,7 +14830,7 @@ def export_design_model(
 
     scene = _trimesh.Scene()
 
-    # #region 🎁Load or create meshes per type
+    # #region 🎁Load Or Create Meshes Per Type
     type_meshes: dict[str, str] = {}
     for piece in pieces:
         if piece.type is None:
@@ -12334,9 +14852,9 @@ def export_design_model(
             geometry_name = tk
         type_meshes[tk] = geometry_name
         scene.geometry[geometry_name] = mesh
-    # #endregion 🎁Load or create meshes per type
+    # #endregion 🎁Load Or Create Meshes Per Type
 
-    # #region 🧭Build scene graph with connection hierarchy
+    # #region 🧭Build Scene Graph With Connection Hierarchy
     def _build_node(piece_id: str) -> None:
         piece = pieces_dict[piece_id]
         world_plane = piece_planes[piece_id]
@@ -12372,7 +14890,7 @@ def export_design_model(
 
     for root_id in roots:
         _build_node(root_id)
-    # #endregion 🧭Build scene graph with connection hierarchy
+    # #endregion 🧭Build Scene Graph With Connection Hierarchy
 
     return _export_trimesh_scene(scene, format)
 
@@ -12593,7 +15111,7 @@ def _export_ifc_from_dict(
     import ifcopenshell.api as _ifc_api
     import ifcopenshell.guid as _ifc_guid
 
-    # #region 🖨️Step 1: IFC file, project, units, context, spatial tree from layers
+    # #region 🖨️Step 1: IFC File Project Units Context Spatial Tree From Layers
     ifc = _ifc_api.run("project.create_file", version="IFC4")
     kit_name = kit.get("name", "semio Kit")
     project = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcProject", name=kit_name)
@@ -12690,7 +15208,7 @@ def _export_ifc_from_dict(
         )
     # #endregion 🖨️Step 1
 
-    # #region 📋Step 2: Piece-to-storey mapping from piece names
+    # #region 📋Step 2: Piece-to-storey Mapping From Piece Names
     import re as _re
 
     def _piece_storey(piece_name: str) -> typing.Any:
@@ -12710,7 +15228,7 @@ def _export_ifc_from_dict(
     piece_by_guid = {p.get("guid"): p for p in pieces if p.get("guid")}
     tag_lookup = {tag.get("guid"): tag for tag in (kit.get("tags", []) or []) if tag.get("guid")}
 
-    # #region 🛕Step 3: Types with geometry
+    # #region 🛕Step 3: Types With Geometry
     ifc_types: dict[str, typing.Any] = {}
     for piece in pieces:
         type_ref = piece.get("type")
@@ -12805,7 +15323,7 @@ def _export_ifc_from_dict(
         ifc_types[type_guid] = ifc_type
     # #endregion 🛕Step 3
 
-    # #region 🎈Step 4: Pieces as occurrences
+    # #region 🎈Step 4: Pieces As Occurrences
     ifc_occurrences: dict[str, typing.Any] = {}
     ifc_connector_ports: dict[str, dict[str, typing.Any]] = {}
     for piece in pieces:
@@ -12970,7 +15488,7 @@ def _export_ifc_from_dict(
                 ifc_connector_ports[piece_guid][conn_id] = port
     # #endregion 🎈Step 4
 
-    # #region 🌪️Step 5: Connections as port relationships
+    # #region 🌪️Step 5: Connections As Port Relationships
     for connection in connections:
         connected = connection.get("connected", {})
         connecting = connection.get("connecting", {})
@@ -13024,7 +15542,7 @@ def _export_ifc_from_dict(
             _ifc_api.run("pset.edit_pset", ifc, pset=conn_pset, properties=conn_solver_props)
     # #endregion 🌪️Step 5
 
-    # #region 🏆Step 6: Kit-level metadata
+    # #region 🏆Step 6: Kit-level Metadata
     kit_meta: dict[str, typing.Any] = {}
     if kit.get("name"):
         kit_meta["name"] = kit.get("name")
@@ -13062,7 +15580,7 @@ def _export_ifc_from_entities(
     import ifcopenshell.api as _ifc_api
     import ifcopenshell.guid as _ifc_guid
 
-    # #region 🖲️Step 1: IFC file, project, units, context, spatial tree from layers
+    # #region 🖨️Step 1: IFC File Project Units Context Spatial Tree From Layers
     ifc = _ifc_api.run("project.create_file", version="IFC4")
     kit_name = kit.name if hasattr(kit, "name") and kit.name else "semio Kit"
     project = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcProject", name=kit_name)
@@ -13152,9 +15670,9 @@ def _export_ifc_from_entities(
             relating_object=default_building,
             products=[default_storey],
         )
-    # #endregion 🖲️Step 1
+    # #endregion 🖨️Step 1
 
-    # #region 🪅Step 2: Piece-to-storey mapping
+    # #region 📋Step 2: Piece-to-storey Mapping
     import re as _re
 
     def _piece_storey_entity(piece_name: str) -> typing.Any:
@@ -13165,12 +15683,12 @@ def _export_ifc_from_entities(
                 return storey_by_number[floor]
         return default_storey
 
-    # #endregion 🪅Step 2
+    # #endregion 📋Step 2
 
     pieces = design.pieces or []
     connections = design.connections or []
 
-    # #region 🌎Step 3: Types with geometry
+    # #region 🛕Step 3: Types With Geometry
     ifc_types: dict[str, typing.Any] = {}
     for piece in pieces:
         if piece.type is None:
@@ -13216,9 +15734,9 @@ def _export_ifc_from_entities(
                     )
 
         ifc_types[tk] = ifc_type
-    # #endregion 🌎Step 3
+    # #endregion 🛕Step 3
 
-    # #region 🎉Step 4: Pieces as occurrences
+    # #region 🎈Step 4: Pieces As Occurrences
     ifc_occurrences: dict[str, typing.Any] = {}
     ifc_connector_ports: dict[str, dict[str, typing.Any]] = {}
     for piece in pieces:
@@ -13296,9 +15814,9 @@ def _export_ifc_from_entities(
                 _ifc_api.run("geometry.edit_object_placement", ifc, product=port, matrix=port_mat)
 
                 ifc_connector_ports[piece.id_][conn_id] = port
-    # #endregion 🎉Step 4
+    # #endregion 🎈Step 4
 
-    # #region 🌤️Step 5: Connections as port relationships
+    # #region 🌪️Step 5: Connections As Port Relationships
     for conn in connections:
         connected_id = conn.connected.piece.id_
         connecting_id = conn.connecting.piece.id_
@@ -13345,16 +15863,18 @@ def _export_ifc_from_entities(
                 name="SemioConnectionParams",
             )
             _ifc_api.run("pset.edit_pset", ifc, pset=conn_pset, properties=conn_solver_props)
-    # #endregion 🌤️Step 5
+    # #endregion 🌪️Step 5
 
     return ifc.to_string().encode("utf-8")
 
 
 # #endregion 📻IFC Export
 
-# #endregion 🌦️Kit Model Export
+# #endregion 🔩Kit Model Export
 
-# #region 🎩Geometric Insights
+
+
+# #region ❄️Geometric Insights
 # Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
 
@@ -13616,7 +16136,9 @@ def geometric_insights_to_report_dict(insights: GeometricInsights, round_digits:
     return out
 
 
-# #endregion 🎩Geometric Insights
+# #endregion ❄️Geometric Insights
+
+
 
 # #region 🔍Spatial Math
 # Spatial math utilities for vector normalization and plane computation.
@@ -13735,2198 +16257,8 @@ def computeChildPlane(
 # #endregion 🔍Spatial Math
 
 
-# #region 🔑Meta And Shallow Types
-# Meta And Shallow Types MUST provide lightweight entity representations.
 
-# #region 🎼Sub-entity Meta Types
-
-AttributeMeta = typing.TypedDict(
-    "AttributeMeta",
-    {"guid": str, "name": str, "value": str, "definition": typing.NotRequired[str]},
-)
-"""AttributeMeta is identical to Attribute (no list fields to omit)."""
-
-TagMeta = typing.TypedDict(
-    "TagMeta",
-    {
-        "guid": str,
-        "name": str,
-        "description": typing.NotRequired[str],
-        "icon": typing.NotRequired[str],
-        "order": typing.NotRequired[int],
-    },
-)
-"""TagMeta is identical to Tag (no list fields to omit)."""
-
-ConceptMeta = typing.TypedDict(
-    "ConceptMeta",
-    {
-        "guid": str,
-        "name": str,
-        "description": typing.NotRequired[str],
-        "icon": typing.NotRequired[str],
-        "order": typing.NotRequired[int],
-    },
-)
-"""ConceptMeta is identical to Concept (no list fields to omit)."""
-
-StatMeta = typing.TypedDict(
-    "StatMeta",
-    {
-        "guid": str,
-        "key": str,
-        "unit": typing.NotRequired[str],
-        "min": typing.NotRequired[float],
-        "minExcluded": typing.NotRequired[bool],
-        "max": typing.NotRequired[float],
-        "maxExcluded": typing.NotRequired[bool],
-        "createdAt": typing.NotRequired[str],
-        "updatedAt": typing.NotRequired[str],
-    },
-)
-"""StatMeta is identical to Stat (no list fields to omit)."""
-
-PropMeta = typing.TypedDict(
-    "PropMeta",
-    {"guid": str, "key": str, "value": str, "unit": typing.NotRequired[str]},
-)
-"""PropMeta is Prop without attributes."""
-
-AuthorMeta = typing.TypedDict(
-    "AuthorMeta",
-    {"guid": str, "name": str, "email": typing.NotRequired[str]},
-)
-"""AuthorMeta is Author without attributes."""
-
-FileMeta = typing.TypedDict(
-    "FileMeta",
-    {
-        "guid": str,
-        "name": str,
-        "remote": typing.NotRequired[str],
-        "folder": typing.NotRequired[dict],
-        "size": typing.NotRequired[int],
-        "hash": typing.NotRequired[str],
-        "createdAt": typing.NotRequired[str],
-        "updatedAt": typing.NotRequired[str],
-    },
-)
-"""FileMeta is File without blob."""
-
-FolderMeta = typing.TypedDict(
-    "FolderMeta",
-    {
-        "guid": str,
-        "name": str,
-        "parent": typing.NotRequired[dict],
-        "description": typing.NotRequired[str],
-        "createdAt": typing.NotRequired[str],
-        "updatedAt": typing.NotRequired[str],
-    },
-)
-"""FolderMeta is Folder without attributes."""
-
-QualityMeta = typing.TypedDict(
-    "QualityMeta",
-    {
-        "guid": str,
-        "key": str,
-        "name": str,
-        "kind": typing.NotRequired[int],
-        "defaultValue": typing.NotRequired[float],
-        "formula": typing.NotRequired[str],
-        "defaultSiUnit": typing.NotRequired[str],
-        "defaultImperialUnit": typing.NotRequired[str],
-        "min": typing.NotRequired[float],
-        "minExcluded": typing.NotRequired[bool],
-        "max": typing.NotRequired[float],
-        "maxExcluded": typing.NotRequired[bool],
-        "canScale": typing.NotRequired[bool],
-        "uri": typing.NotRequired[str],
-    },
-)
-"""QualityMeta is Quality without benchmarks and attributes."""
-
-PortMeta = typing.TypedDict(
-    "PortMeta",
-    {
-        "guid": str,
-        "name": str,
-        "description": typing.NotRequired[str],
-        "icon": typing.NotRequired[str],
-    },
-)
-"""PortMeta is Port without attributes."""
-
-ModelMeta = typing.TypedDict(
-    "ModelMeta",
-    {
-        "guid": str,
-        "file": typing.NotRequired[dict],
-        "name": typing.NotRequired[str],
-        "description": typing.NotRequired[str],
-    },
-)
-"""ModelMeta is Model without tags and attributes."""
-
-ConnectorMeta = typing.TypedDict(
-    "ConnectorMeta",
-    {
-        "guid": str,
-        "point": dict,
-        "direction": dict,
-        "t": float,
-        "name": typing.NotRequired[str],
-        "description": typing.NotRequired[str],
-        "mandatory": typing.NotRequired[bool],
-        "port": typing.NotRequired[dict],
-    },
-)
-"""ConnectorMeta is Connector without props and attributes."""
-
-LayerMeta = typing.TypedDict(
-    "LayerMeta",
-    {
-        "guid": str,
-        "name": str,
-        "isHidden": typing.NotRequired[bool],
-        "isLocked": typing.NotRequired[bool],
-        "color": typing.NotRequired[str],
-        "description": typing.NotRequired[str],
-    },
-)
-"""LayerMeta is Layer without attributes."""
-
-PieceMeta = typing.TypedDict(
-    "PieceMeta",
-    {
-        "guid": str,
-        "name": typing.NotRequired[str],
-        "type": typing.NotRequired[dict],
-        "designPiece": typing.NotRequired[dict],
-        "plane": typing.NotRequired[dict],
-        "center": typing.NotRequired[dict],
-        "scale": typing.NotRequired[float],
-        "mirrorPlane": typing.NotRequired[dict],
-        "isHidden": typing.NotRequired[bool],
-        "isLocked": typing.NotRequired[bool],
-        "color": typing.NotRequired[str],
-        "description": typing.NotRequired[str],
-    },
-)
-"""PieceMeta is Piece without props and attributes."""
-
-GroupMeta = typing.TypedDict(
-    "GroupMeta",
-    {
-        "guid": str,
-        "name": typing.NotRequired[str],
-        "color": typing.NotRequired[str],
-        "description": typing.NotRequired[str],
-    },
-)
-"""GroupMeta is Group without pieces and attributes."""
-
-ConnectionMeta = typing.TypedDict(
-    "ConnectionMeta",
-    {
-        "guid": str,
-        "connected": dict,
-        "connecting": dict,
-        "gap": typing.NotRequired[float],
-        "shift": typing.NotRequired[float],
-        "rise": typing.NotRequired[float],
-        "rotation": typing.NotRequired[float],
-        "turn": typing.NotRequired[float],
-        "tilt": typing.NotRequired[float],
-        "u": typing.NotRequired[float],
-        "v": typing.NotRequired[float],
-        "description": typing.NotRequired[str],
-    },
-)
-"""ConnectionMeta is Connection without attributes."""
-
-# #endregion 🎼Sub-entity Meta Types
-
-# #region 🕰️Main Entity Meta Types
-
-TypeMeta = typing.TypedDict(
-    "TypeMeta",
-    {
-        "guid": str,
-        "name": str,
-        "parent": typing.NotRequired[dict],
-        "description": typing.NotRequired[str],
-        "icon": typing.NotRequired[str],
-        "image": typing.NotRequired[str],
-        "folder": typing.NotRequired[str],
-        "unit": typing.NotRequired[str],
-        "stock": typing.NotRequired[int],
-        "isAbstract": typing.NotRequired[bool],
-        "virtual": typing.NotRequired[bool],
-        "createdAt": typing.NotRequired[str],
-        "updatedAt": typing.NotRequired[str],
-    },
-)
-"""TypeMeta is Type with only scalar fields."""
-
-DesignMeta = typing.TypedDict(
-    "DesignMeta",
-    {
-        "guid": str,
-        "name": str,
-        "parent": typing.NotRequired[dict],
-        "description": typing.NotRequired[str],
-        "icon": typing.NotRequired[str],
-        "image": typing.NotRequired[str],
-        "variant": typing.NotRequired[str],
-        "view": typing.NotRequired[str],
-        "unit": typing.NotRequired[str],
-        "folder": typing.NotRequired[str],
-        "isAbstract": typing.NotRequired[bool],
-        "activeLayer": typing.NotRequired[str],
-        "createdAt": typing.NotRequired[str],
-        "updatedAt": typing.NotRequired[str],
-    },
-)
-"""DesignMeta is Design with only scalar fields."""
-
-KitMeta = typing.TypedDict(
-    "KitMeta",
-    {
-        "guid": str,
-        "name": str,
-        "version": typing.NotRequired[str],
-        "description": typing.NotRequired[str],
-        "icon": typing.NotRequired[str],
-        "image": typing.NotRequired[str],
-        "preview": typing.NotRequired[str],
-        "remote": typing.NotRequired[str],
-        "homepage": typing.NotRequired[str],
-        "license": typing.NotRequired[str],
-        "createdAt": typing.NotRequired[str],
-        "updatedAt": typing.NotRequired[str],
-    },
-)
-"""KitMeta is Kit with only scalar fields."""
-
-# #endregion 🕰️Main Entity Meta Types
-
-# #region 🐻Shallow Types
-
-TypeShallow = typing.TypedDict(
-    "TypeShallow",
-    {
-        "guid": str,
-        "name": str,
-        "parent": typing.NotRequired[dict],
-        "description": typing.NotRequired[str],
-        "icon": typing.NotRequired[str],
-        "image": typing.NotRequired[str],
-        "folder": typing.NotRequired[str],
-        "unit": typing.NotRequired[str],
-        "stock": typing.NotRequired[int],
-        "isAbstract": typing.NotRequired[bool],
-        "virtual": typing.NotRequired[bool],
-        "createdAt": typing.NotRequired[str],
-        "updatedAt": typing.NotRequired[str],
-        "concepts": typing.NotRequired[list[ConceptMeta]],
-        "authors": typing.NotRequired[list[AuthorMeta]],
-        "props": typing.NotRequired[list[PropMeta]],
-        "models": typing.NotRequired[list[ModelMeta]],
-        "connectors": typing.NotRequired[list[ConnectorMeta]],
-        "attributes": typing.NotRequired[list[AttributeMeta]],
-    },
-)
-"""TypeShallow is Type with list fields replaced by Meta item lists."""
-
-DesignShallow = typing.TypedDict(
-    "DesignShallow",
-    {
-        "guid": str,
-        "name": str,
-        "parent": typing.NotRequired[dict],
-        "description": typing.NotRequired[str],
-        "icon": typing.NotRequired[str],
-        "image": typing.NotRequired[str],
-        "variant": typing.NotRequired[str],
-        "view": typing.NotRequired[str],
-        "unit": typing.NotRequired[str],
-        "folder": typing.NotRequired[str],
-        "isAbstract": typing.NotRequired[bool],
-        "activeLayer": typing.NotRequired[str],
-        "createdAt": typing.NotRequired[str],
-        "updatedAt": typing.NotRequired[str],
-        "concepts": typing.NotRequired[list[ConceptMeta]],
-        "authors": typing.NotRequired[list[AuthorMeta]],
-        "props": typing.NotRequired[list[PropMeta]],
-        "pieces": typing.NotRequired[list[PieceMeta]],
-        "connections": typing.NotRequired[list[ConnectionMeta]],
-        "layers": typing.NotRequired[list[LayerMeta]],
-        "groups": typing.NotRequired[list[GroupMeta]],
-        "stats": typing.NotRequired[list[StatMeta]],
-        "attributes": typing.NotRequired[list[AttributeMeta]],
-    },
-)
-"""DesignShallow is Design with list fields replaced by Meta item lists."""
-
-KitShallow = typing.TypedDict(
-    "KitShallow",
-    {
-        "guid": str,
-        "name": str,
-        "version": typing.NotRequired[str],
-        "description": typing.NotRequired[str],
-        "icon": typing.NotRequired[str],
-        "image": typing.NotRequired[str],
-        "preview": typing.NotRequired[str],
-        "remote": typing.NotRequired[str],
-        "homepage": typing.NotRequired[str],
-        "license": typing.NotRequired[str],
-        "createdAt": typing.NotRequired[str],
-        "updatedAt": typing.NotRequired[str],
-        "concepts": typing.NotRequired[list[ConceptMeta]],
-        "tags": typing.NotRequired[list[TagMeta]],
-        "types": typing.NotRequired[list[TypeMeta]],
-        "designs": typing.NotRequired[list[DesignMeta]],
-        "ports": typing.NotRequired[list[PortMeta]],
-        "qualities": typing.NotRequired[list[QualityMeta]],
-        "files": typing.NotRequired[list[FileMeta]],
-        "folders": typing.NotRequired[list[FolderMeta]],
-        "authors": typing.NotRequired[list[AuthorMeta]],
-        "attributes": typing.NotRequired[list[AttributeMeta]],
-    },
-)
-"""KitShallow is Kit with list fields replaced by Meta item lists."""
-
-# #endregion 🐻Shallow Types
-
-# #region 📎Meta And Shallow Conversion Functions
-
-
-def _strip_none(d: dict) -> dict:
-    """➖Remove keys with None values from a dict."""
-    return {k: v for k, v in d.items() if v is not None}
-
-
-def _extract_scalar_fields(d: dict, keys: list[str]) -> dict:
-    """🔖Extract only specified keys from a dict, skipping missing keys."""
-    return {k: d[k] for k in keys if k in d}
-
-
-_ATTRIBUTE_META_KEYS = ["guid", "name", "value", "definition"]
-_TAG_META_KEYS = ["guid", "name", "description", "icon", "order"]
-_CONCEPT_META_KEYS = ["guid", "name", "description", "icon", "order"]
-_STAT_META_KEYS = [
-    "guid",
-    "key",
-    "unit",
-    "min",
-    "minExcluded",
-    "max",
-    "maxExcluded",
-    "createdAt",
-    "updatedAt",
-]
-_PROP_META_KEYS = ["guid", "key", "value", "unit"]
-_AUTHOR_META_KEYS = ["guid", "name", "email"]
-_FILE_META_KEYS = [
-    "guid",
-    "name",
-    "remote",
-    "folder",
-    "size",
-    "hash",
-    "createdAt",
-    "updatedAt",
-]
-_FOLDER_META_KEYS = ["guid", "name", "parent", "description", "createdAt", "updatedAt"]
-_QUALITY_META_KEYS = [
-    "guid",
-    "key",
-    "name",
-    "kind",
-    "defaultValue",
-    "formula",
-    "defaultSiUnit",
-    "defaultImperialUnit",
-    "min",
-    "minExcluded",
-    "max",
-    "maxExcluded",
-    "canScale",
-    "uri",
-]
-_PORT_META_KEYS = ["guid", "name", "description", "icon"]
-_MODEL_META_KEYS = ["guid", "file", "name", "description"]
-_CONNECTOR_META_KEYS = [
-    "guid",
-    "point",
-    "direction",
-    "t",
-    "name",
-    "description",
-    "mandatory",
-    "port",
-]
-_LAYER_META_KEYS = ["guid", "name", "isHidden", "isLocked", "color", "description"]
-_PIECE_META_KEYS = [
-    "guid",
-    "name",
-    "type",
-    "designPiece",
-    "plane",
-    "center",
-    "scale",
-    "mirrorPlane",
-    "isHidden",
-    "isLocked",
-    "color",
-    "description",
-]
-_GROUP_META_KEYS = ["guid", "name", "color", "description"]
-_CONNECTION_META_KEYS = [
-    "guid",
-    "connected",
-    "connecting",
-    "gap",
-    "shift",
-    "rise",
-    "rotation",
-    "turn",
-    "tilt",
-    "u",
-    "v",
-    "description",
-]
-
-_TYPE_META_KEYS = [
-    "guid",
-    "name",
-    "parent",
-    "description",
-    "icon",
-    "image",
-    "folder",
-    "unit",
-    "stock",
-    "isAbstract",
-    "virtual",
-    "createdAt",
-    "updatedAt",
-]
-_DESIGN_META_KEYS = [
-    "guid",
-    "name",
-    "parent",
-    "description",
-    "icon",
-    "image",
-    "variant",
-    "view",
-    "unit",
-    "folder",
-    "isAbstract",
-    "activeLayer",
-    "createdAt",
-    "updatedAt",
-]
-_KIT_META_KEYS = [
-    "guid",
-    "name",
-    "version",
-    "description",
-    "icon",
-    "image",
-    "preview",
-    "remote",
-    "homepage",
-    "license",
-    "createdAt",
-    "updatedAt",
-]
-
-
-def attributeToMeta(d: dict) -> AttributeMeta:
-    """🔖Convert an attribute dict to AttributeMeta."""
-    return _extract_scalar_fields(d, _ATTRIBUTE_META_KEYS)
-
-
-def tagToMeta(d: dict) -> TagMeta:
-    """🔖Convert a tag dict to TagMeta."""
-    return _extract_scalar_fields(d, _TAG_META_KEYS)
-
-
-def conceptToMeta(d: dict) -> ConceptMeta:
-    """🔖Convert a concept dict to ConceptMeta."""
-    return _extract_scalar_fields(d, _CONCEPT_META_KEYS)
-
-
-def statToMeta(d: dict) -> StatMeta:
-    """🔖Convert a stat dict to StatMeta."""
-    return _extract_scalar_fields(d, _STAT_META_KEYS)
-
-
-def propToMeta(d: dict) -> PropMeta:
-    """🔖Convert a prop dict to PropMeta (without attributes)."""
-    return _extract_scalar_fields(d, _PROP_META_KEYS)
-
-
-def authorToMeta(d: dict) -> AuthorMeta:
-    """🔖Convert an author dict to AuthorMeta (without attributes)."""
-    return _extract_scalar_fields(d, _AUTHOR_META_KEYS)
-
-
-def fileToMeta(d: dict) -> FileMeta:
-    """🔖Convert a file dict to FileMeta (without blob)."""
-    return _extract_scalar_fields(d, _FILE_META_KEYS)
-
-
-def folderToMeta(d: dict) -> FolderMeta:
-    """🔖Convert a folder dict to FolderMeta (without attributes)."""
-    return _extract_scalar_fields(d, _FOLDER_META_KEYS)
-
-
-def qualityToMeta(d: dict) -> QualityMeta:
-    """🔖Convert a quality dict to QualityMeta (without benchmarks and attributes)."""
-    return _extract_scalar_fields(d, _QUALITY_META_KEYS)
-
-
-def portToMeta(d: dict) -> PortMeta:
-    """🔖Convert a port dict to PortMeta (without attributes)."""
-    return _extract_scalar_fields(d, _PORT_META_KEYS)
-
-
-def modelToMeta(d: dict) -> ModelMeta:
-    """🔖Convert a model dict to ModelMeta (without tags and attributes)."""
-    return _extract_scalar_fields(d, _MODEL_META_KEYS)
-
-
-def connectorToMeta(d: dict) -> ConnectorMeta:
-    """🔖Convert a connector dict to ConnectorMeta (without props and attributes)."""
-    return _extract_scalar_fields(d, _CONNECTOR_META_KEYS)
-
-
-def layerToMeta(d: dict) -> LayerMeta:
-    """🔖Convert a layer dict to LayerMeta (without attributes)."""
-    return _extract_scalar_fields(d, _LAYER_META_KEYS)
-
-
-def pieceToMeta(d: dict) -> PieceMeta:
-    """🔖Convert a piece dict to PieceMeta (without props and attributes)."""
-    return _extract_scalar_fields(d, _PIECE_META_KEYS)
-
-
-def groupToMeta(d: dict) -> GroupMeta:
-    """🔖Convert a group dict to GroupMeta (without pieces and attributes)."""
-    return _extract_scalar_fields(d, _GROUP_META_KEYS)
-
-
-def connectionToMeta(d: dict) -> ConnectionMeta:
-    """🔖Convert a connection dict to ConnectionMeta (without attributes)."""
-    return _extract_scalar_fields(d, _CONNECTION_META_KEYS)
-
-
-def typeToMeta(d: dict) -> TypeMeta:
-    """🔖Convert a type dict to TypeMeta (scalar fields only)."""
-    return _extract_scalar_fields(d, _TYPE_META_KEYS)
-
-
-def designToMeta(d: dict) -> DesignMeta:
-    """🔖Convert a design dict to DesignMeta (scalar fields only)."""
-    return _extract_scalar_fields(d, _DESIGN_META_KEYS)
-
-
-def kitToMeta(d: dict) -> KitMeta:
-    """🔖Convert a kit dict to KitMeta (scalar fields only)."""
-    return _extract_scalar_fields(d, _KIT_META_KEYS)
-
-
-def _convert_list(items: list | None, converter: typing.Callable) -> list | None:
-    """⚡Convert a list of dicts using a converter function, returning None for empty/missing lists."""
-    if not items:
-        return None
-    return [converter(item) for item in items]
-
-
-def typeToShallow(d: dict) -> TypeShallow:
-    """🔖Convert a type dict to TypeShallow (list fields replaced by Meta items)."""
-    result = _extract_scalar_fields(d, _TYPE_META_KEYS)
-    concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
-    if concepts is not None:
-        result["concepts"] = concepts
-    authors = _convert_list(d.get("authors"), lambda a: a if isinstance(a, str) else authorToMeta(a))
-    if authors is not None:
-        result["authors"] = authors
-    props = _convert_list(d.get("props"), propToMeta)
-    if props is not None:
-        result["props"] = props
-    models = _convert_list(d.get("models"), modelToMeta)
-    if models is not None:
-        result["models"] = models
-    connectors = _convert_list(d.get("connectors"), connectorToMeta)
-    if connectors is not None:
-        result["connectors"] = connectors
-    attributes = _convert_list(d.get("attributes"), attributeToMeta)
-    if attributes is not None:
-        result["attributes"] = attributes
-    return result
-
-
-def designToShallow(d: dict) -> DesignShallow:
-    """🔖Convert a design dict to DesignShallow (list fields replaced by Meta items)."""
-    result = _extract_scalar_fields(d, _DESIGN_META_KEYS)
-    concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
-    if concepts is not None:
-        result["concepts"] = concepts
-    authors = _convert_list(d.get("authors"), lambda a: a if isinstance(a, str) else authorToMeta(a))
-    if authors is not None:
-        result["authors"] = authors
-    props = _convert_list(d.get("props"), propToMeta)
-    if props is not None:
-        result["props"] = props
-    pieces = _convert_list(d.get("pieces"), pieceToMeta)
-    if pieces is not None:
-        result["pieces"] = pieces
-    connections = _convert_list(d.get("connections"), connectionToMeta)
-    if connections is not None:
-        result["connections"] = connections
-    layers = _convert_list(d.get("layers"), layerToMeta)
-    if layers is not None:
-        result["layers"] = layers
-    groups = _convert_list(d.get("groups"), groupToMeta)
-    if groups is not None:
-        result["groups"] = groups
-    stats = _convert_list(d.get("stats"), statToMeta)
-    if stats is not None:
-        result["stats"] = stats
-    attributes = _convert_list(d.get("attributes"), attributeToMeta)
-    if attributes is not None:
-        result["attributes"] = attributes
-    return result
-
-
-def kitToShallow(d: dict) -> KitShallow:
-    """🔖Convert a kit dict to KitShallow (list fields replaced by Meta items)."""
-    result = _extract_scalar_fields(d, _KIT_META_KEYS)
-    concepts = _convert_list(d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c))
-    if concepts is not None:
-        result["concepts"] = concepts
-    tags = _convert_list(d.get("tags"), tagToMeta)
-    if tags is not None:
-        result["tags"] = tags
-    types = _convert_list(d.get("types"), typeToMeta)
-    if types is not None:
-        result["types"] = types
-    designs = _convert_list(d.get("designs"), designToMeta)
-    if designs is not None:
-        result["designs"] = designs
-    ports = _convert_list(d.get("ports"), portToMeta)
-    if ports is not None:
-        result["ports"] = ports
-    qualities = _convert_list(d.get("qualities"), qualityToMeta)
-    if qualities is not None:
-        result["qualities"] = qualities
-    files = _convert_list(d.get("files"), fileToMeta)
-    if files is not None:
-        result["files"] = files
-    folders = _convert_list(d.get("folders"), folderToMeta)
-    if folders is not None:
-        result["folders"] = folders
-    authors = _convert_list(d.get("authors"), lambda a: a if isinstance(a, str) else authorToMeta(a))
-    if authors is not None:
-        result["authors"] = authors
-    attributes = _convert_list(d.get("attributes"), attributeToMeta)
-    if attributes is not None:
-        result["attributes"] = attributes
-    return result
-
-
-# #endregion 📎Meta And Shallow Conversion Functions
-
-# #endregion 🔑Meta And Shallow Types
-
-
-# #region 🎮Hash
-# Merkle hash functions for all semio entities.
-
-
-# #region 📻HashWriter
-def _format_number_for_hash(n) -> str:
-    """🔢Format number to match JavaScript Number.toString() behavior.
-    Integers (including floats with no fractional part) are formatted without decimal point.
-    """
-    if isinstance(n, int):
-        return str(n)
-    if isinstance(n, float) and n.is_integer():
-        return str(int(n))
-    return str(n)
-
-
-def _ref_guid(ref) -> str:
-    """🔖Extract guid from a reference (dict with 'guid' key or plain string)."""
-    if isinstance(ref, dict):
-        return ref["guid"]
-    return ref
-
-
-class HashWriter:
-    """🔖Feeds structured data into a SHA-256 hasher for deterministic hashing.
-    Uses length-prefixed strings and type tags for unambiguous encoding.
-    """
-
-    def __init__(self):
-        self._parts = bytearray()
-
-    def writeString(self, s: str):
-        b = s.encode("utf-8")
-        self._parts.extend(struct.pack(">I", len(b)))
-        self._parts.extend(b)
-
-    def writeNumber(self, n):
-        self.writeString(_format_number_for_hash(n))
-
-    def writeBool(self, b: bool):
-        self._parts.append(1 if b else 0)
-
-    def writeHash(self, h: str):
-        self.writeString(h)
-
-    def writeHashList(self, hashes: list[str]):
-        sorted_hashes = sorted(hashes)
-        self._parts.extend(struct.pack(">I", len(sorted_hashes)))
-        for h in sorted_hashes:
-            self.writeString(h)
-
-    def writeGuidList(self, guids: list[str]):
-        sorted_guids = sorted(guids)
-        self._parts.extend(struct.pack(">I", len(sorted_guids)))
-        for g in sorted_guids:
-            self.writeString(g)
-
-    def digest(self) -> str:
-        return hashlib.sha256(bytes(self._parts)).hexdigest()
-
-
-# #endregion 📻HashWriter
-
-
-# #region 🧮Hash Value Types
-def hash_coord(c: dict) -> str:
-    """🔖Computes SHA-256 hash of a Coord value."""
-    w = HashWriter()
-    w.writeString("Coord")
-    w.writeString("u")
-    w.writeNumber(c["u"])
-    w.writeString("v")
-    w.writeNumber(c["v"])
-    return w.digest()
-
-
-def hash_vec(v: dict) -> str:
-    """🔖Computes SHA-256 hash of a Vec value."""
-    w = HashWriter()
-    w.writeString("Vec")
-    w.writeString("u")
-    w.writeNumber(v["u"])
-    w.writeString("v")
-    w.writeNumber(v["v"])
-    return w.digest()
-
-
-def hash_point(p: dict) -> str:
-    """🔖Computes SHA-256 hash of a Point value."""
-    w = HashWriter()
-    w.writeString("Point")
-    w.writeString("x")
-    w.writeNumber(p["x"])
-    w.writeString("y")
-    w.writeNumber(p["y"])
-    w.writeString("z")
-    w.writeNumber(p["z"])
-    return w.digest()
-
-
-def hash_vector(v: dict) -> str:
-    """🔖Computes SHA-256 hash of a Vector value."""
-    w = HashWriter()
-    w.writeString("Vector")
-    w.writeString("x")
-    w.writeNumber(v["x"])
-    w.writeString("y")
-    w.writeNumber(v["y"])
-    w.writeString("z")
-    w.writeNumber(v["z"])
-    return w.digest()
-
-
-def hash_plane(p: dict) -> str:
-    """🔖Computes SHA-256 hash of a Plane value."""
-    w = HashWriter()
-    w.writeString("Plane")
-    w.writeString("origin")
-    w.writeHash(hash_point(p["origin"]))
-    w.writeString("xAxis")
-    w.writeHash(hash_vector(p["xAxis"]))
-    w.writeString("yAxis")
-    w.writeHash(hash_vector(p["yAxis"]))
-    return w.digest()
-
-
-def hash_camera(c: dict) -> str:
-    """🔖Computes SHA-256 hash of a Camera value."""
-    w = HashWriter()
-    w.writeString("Camera")
-    w.writeString("forward")
-    w.writeHash(hash_vector(c["forward"]))
-    w.writeString("position")
-    w.writeHash(hash_point(c["position"]))
-    w.writeString("up")
-    w.writeHash(hash_vector(c["up"]))
-    return w.digest()
-
-
-# #endregion 🧮Hash Value Types
-
-
-# #region 🌪️Hash Entities
-def hash_attribute(a: dict) -> str:
-    """🔖Computes SHA-256 hash of an Attribute entity."""
-    w = HashWriter()
-    w.writeString("Attribute")
-    if a.get("definition") is not None:
-        w.writeString("definition")
-        w.writeString(a["definition"])
-    w.writeString("guid")
-    w.writeString(a["guid"])
-    w.writeString("key")
-    w.writeString(a["key"])
-    if a.get("value") is not None:
-        w.writeString("value")
-        w.writeString(a["value"])
-    return w.digest()
-
-
-def hash_location(l: dict) -> str:
-    """🔖Computes SHA-256 hash of a Location entity."""
-    w = HashWriter()
-    w.writeString("Location")
-    if l.get("altitude") is not None:
-        w.writeString("altitude")
-        w.writeNumber(l["altitude"])
-    attrs = l.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    w.writeString("guid")
-    w.writeString(l["guid"])
-    w.writeString("latitude")
-    w.writeNumber(l["latitude"])
-    w.writeString("longitude")
-    w.writeNumber(l["longitude"])
-    return w.digest()
-
-
-def hash_author(a: dict) -> str:
-    """🔖Computes SHA-256 hash of an Author entity."""
-    w = HashWriter()
-    w.writeString("Author")
-    attrs = a.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(at) for at in attrs])
-    email = a.get("email")
-    if email is not None and email != "":
-        w.writeString("email")
-        w.writeString(email)
-    w.writeString("guid")
-    w.writeString(a["guid"])
-    w.writeString("name")
-    w.writeString(a["name"])
-    return w.digest()
-
-
-def hash_file(f: dict) -> str:
-    """🔖Computes SHA-256 hash of a File entity."""
-    w = HashWriter()
-    w.writeString("File")
-    if f.get("blob") is not None:
-        w.writeString("blob")
-        w.writeString(f["blob"])
-    if f.get("folder") is not None:
-        w.writeString("folder")
-        w.writeString(_ref_guid(f["folder"]))
-    w.writeString("guid")
-    w.writeString(f["guid"])
-    if f.get("hash") is not None:
-        w.writeString("hash")
-        w.writeString(f["hash"])
-    w.writeString("name")
-    w.writeString(f["name"])
-    if f.get("remote") is not None:
-        w.writeString("remote")
-        w.writeString(f["remote"])
-    if f.get("size") is not None:
-        w.writeString("size")
-        w.writeNumber(f["size"])
-    return w.digest()
-
-
-def hash_folder(f: dict) -> str:
-    """🔖Computes SHA-256 hash of a Folder entity."""
-    w = HashWriter()
-    w.writeString("Folder")
-    attrs = f.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    if f.get("description") is not None:
-        w.writeString("description")
-        w.writeString(f["description"])
-    w.writeString("guid")
-    w.writeString(f["guid"])
-    w.writeString("name")
-    w.writeString(f["name"])
-    if f.get("parent") is not None:
-        w.writeString("parent")
-        w.writeString(_ref_guid(f["parent"]))
-    return w.digest()
-
-
-def hash_benchmark(b: dict) -> str:
-    """🔖Computes SHA-256 hash of a Benchmark entity."""
-    w = HashWriter()
-    w.writeString("Benchmark")
-    attrs = b.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    w.writeString("guid")
-    w.writeString(b["guid"])
-    if b.get("icon") is not None:
-        w.writeString("icon")
-        w.writeString(b["icon"])
-    if b.get("max") is not None:
-        w.writeString("max")
-        w.writeNumber(b["max"])
-    if b.get("maxExcluded") is not None:
-        w.writeString("maxExcluded")
-        w.writeBool(b["maxExcluded"])
-    if b.get("min") is not None:
-        w.writeString("min")
-        w.writeNumber(b["min"])
-    if b.get("minExcluded") is not None:
-        w.writeString("minExcluded")
-        w.writeBool(b["minExcluded"])
-    w.writeString("name")
-    w.writeString(b["name"])
-    return w.digest()
-
-
-def hash_quality(q: dict) -> str:
-    """🔖Computes SHA-256 hash of a Quality entity."""
-    w = HashWriter()
-    w.writeString("Quality")
-    benchmarks = q.get("benchmarks")
-    if benchmarks and len(benchmarks) > 0:
-        w.writeString("benchmarks")
-        w.writeHashList([hash_benchmark(b) for b in benchmarks])
-    if q.get("canScale") is not None:
-        w.writeString("canScale")
-        w.writeBool(q["canScale"])
-    if q.get("defaultImperialUnit") is not None:
-        w.writeString("defaultImperialUnit")
-        w.writeString(q["defaultImperialUnit"])
-    if q.get("defaultSiUnit") is not None:
-        w.writeString("defaultSiUnit")
-        w.writeString(q["defaultSiUnit"])
-    if q.get("defaultValue") is not None:
-        w.writeString("defaultValue")
-        w.writeNumber(q["defaultValue"])
-    if q.get("description") is not None:
-        w.writeString("description")
-        w.writeString(q["description"])
-    if q.get("formula") is not None:
-        w.writeString("formula")
-        w.writeString(q["formula"])
-    w.writeString("guid")
-    w.writeString(q["guid"])
-    if q.get("icon") is not None:
-        w.writeString("icon")
-        w.writeString(q["icon"])
-    if q.get("image") is not None:
-        w.writeString("image")
-        w.writeString(q["image"])
-    if q.get("isMaxExcluded") is not None:
-        w.writeString("isMaxExcluded")
-        w.writeBool(q["isMaxExcluded"])
-    if q.get("isMinExcluded") is not None:
-        w.writeString("isMinExcluded")
-        w.writeBool(q["isMinExcluded"])
-    w.writeString("key")
-    w.writeString(q["key"])
-    if q.get("kind") is not None:
-        w.writeString("kind")
-        w.writeNumber(q["kind"])
-    if q.get("max") is not None:
-        w.writeString("max")
-        w.writeNumber(q["max"])
-    if q.get("min") is not None:
-        w.writeString("min")
-        w.writeNumber(q["min"])
-    w.writeString("name")
-    w.writeString(q["name"])
-    if q.get("unit") is not None:
-        w.writeString("unit")
-        w.writeString(q["unit"])
-    if q.get("uri") is not None:
-        w.writeString("uri")
-        w.writeString(q["uri"])
-    return w.digest()
-
-
-def hash_port(p: dict) -> str:
-    """🔖Computes SHA-256 hash of a Port entity."""
-    w = HashWriter()
-    w.writeString("Port")
-    attrs = p.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    compat = p.get("compatiblePorts")
-    if compat and len(compat) > 0:
-        w.writeString("compatiblePorts")
-        w.writeGuidList([_ref_guid(cp) for cp in compat])
-    if p.get("description") is not None:
-        w.writeString("description")
-        w.writeString(p["description"])
-    w.writeString("guid")
-    w.writeString(p["guid"])
-    if p.get("icon") is not None:
-        w.writeString("icon")
-        w.writeString(p["icon"])
-    w.writeString("name")
-    w.writeString(p["name"])
-    return w.digest()
-
-
-def hash_prop(p: dict) -> str:
-    """🔖Computes SHA-256 hash of a Prop entity."""
-    w = HashWriter()
-    w.writeString("Prop")
-    attrs = p.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    w.writeString("guid")
-    w.writeString(p["guid"])
-    w.writeString("quality")
-    w.writeString(_ref_guid(p["quality"]))
-    if p.get("unit") is not None:
-        w.writeString("unit")
-        w.writeString(p["unit"])
-    w.writeString("value")
-    w.writeString(p["value"])
-    return w.digest()
-
-
-def hash_tag(t: dict) -> str:
-    """🔖Computes SHA-256 hash of a Tag entity."""
-    w = HashWriter()
-    w.writeString("Tag")
-    attrs = t.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    if t.get("description") is not None:
-        w.writeString("description")
-        w.writeString(t["description"])
-    w.writeString("guid")
-    w.writeString(t["guid"])
-    if t.get("icon") is not None:
-        w.writeString("icon")
-        w.writeString(t["icon"])
-    w.writeString("name")
-    w.writeString(t["name"])
-    return w.digest()
-
-
-def hash_concept(c: dict) -> str:
-    """🔖Computes SHA-256 hash of a Concept entity."""
-    w = HashWriter()
-    w.writeString("Concept")
-    attrs = c.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    if c.get("description") is not None:
-        w.writeString("description")
-        w.writeString(c["description"])
-    w.writeString("guid")
-    w.writeString(c["guid"])
-    if c.get("icon") is not None:
-        w.writeString("icon")
-        w.writeString(c["icon"])
-    w.writeString("name")
-    w.writeString(c["name"])
-    return w.digest()
-
-
-def hash_model(m: dict) -> str:
-    """🔖Computes SHA-256 hash of a Model entity."""
-    w = HashWriter()
-    w.writeString("Model")
-    attrs = m.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    if m.get("description") is not None:
-        w.writeString("description")
-        w.writeString(m["description"])
-    w.writeString("file")
-    w.writeString(_ref_guid(m["file"]))
-    w.writeString("guid")
-    w.writeString(m["guid"])
-    if m.get("name") is not None:
-        w.writeString("name")
-        w.writeString(m["name"])
-    tags = m.get("tags")
-    if tags and len(tags) > 0:
-        w.writeString("tags")
-        w.writeGuidList([_ref_guid(t) for t in tags])
-    return w.digest()
-
-
-def hash_connector(c: dict) -> str:
-    """🔖Computes SHA-256 hash of a Connector entity."""
-    w = HashWriter()
-    w.writeString("Connector")
-    attrs = c.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    if c.get("description") is not None:
-        w.writeString("description")
-        w.writeString(c["description"])
-    w.writeString("direction")
-    w.writeHash(hash_vector(c["direction"]))
-    w.writeString("guid")
-    w.writeString(c["guid"])
-    if c.get("mandatory") is not None:
-        w.writeString("mandatory")
-        w.writeBool(c["mandatory"])
-    if c.get("name") is not None:
-        w.writeString("name")
-        w.writeString(c["name"])
-    w.writeString("point")
-    w.writeHash(hash_point(c["point"]))
-    if c.get("port") is not None:
-        w.writeString("port")
-        w.writeString(_ref_guid(c["port"]))
-    props = c.get("props")
-    if props and len(props) > 0:
-        w.writeString("props")
-        w.writeHashList([hash_prop(p) for p in props])
-    w.writeString("t")
-    w.writeNumber(c["t"])
-    return w.digest()
-
-
-def hash_type(t: dict) -> str:
-    """🔖Computes SHA-256 hash of a Type entity."""
-    w = HashWriter()
-    w.writeString("Type")
-    attrs = t.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    authors = t.get("authors")
-    if authors and len(authors) > 0:
-        w.writeString("authors")
-        w.writeGuidList([_ref_guid(a) for a in authors])
-    concepts = t.get("concepts")
-    if concepts and len(concepts) > 0:
-        w.writeString("concepts")
-        w.writeGuidList([_ref_guid(c) for c in concepts])
-    connectors = t.get("connectors")
-    if connectors and len(connectors) > 0:
-        w.writeString("connectors")
-        w.writeHashList([hash_connector(c) for c in connectors])
-    if t.get("description") is not None:
-        w.writeString("description")
-        w.writeString(t["description"])
-    if t.get("folder") is not None:
-        w.writeString("folder")
-        w.writeString(t["folder"])
-    w.writeString("guid")
-    w.writeString(t["guid"])
-    if t.get("icon") is not None:
-        w.writeString("icon")
-        w.writeString(t["icon"])
-    if t.get("image") is not None:
-        w.writeString("image")
-        w.writeString(t["image"])
-    if t.get("isAbstract") is not None:
-        w.writeString("isAbstract")
-        w.writeBool(t["isAbstract"])
-    if t.get("location") is not None:
-        w.writeString("location")
-        w.writeString(_ref_guid(t["location"]))
-    models = t.get("models")
-    if models and len(models) > 0:
-        w.writeString("models")
-        w.writeHashList([hash_model(m) for m in models])
-    w.writeString("name")
-    w.writeString(t["name"])
-    if t.get("parent") is not None:
-        w.writeString("parent")
-        w.writeString(_ref_guid(t["parent"]))
-    props = t.get("props")
-    if props and len(props) > 0:
-        w.writeString("props")
-        w.writeHashList([hash_prop(p) for p in props])
-    if t.get("stock") is not None:
-        w.writeString("stock")
-        w.writeNumber(t["stock"])
-    if t.get("unit") is not None:
-        w.writeString("unit")
-        w.writeString(t["unit"])
-    if t.get("virtual") is not None:
-        w.writeString("virtual")
-        w.writeBool(t["virtual"])
-    return w.digest()
-
-
-def hash_layer(l: dict) -> str:
-    """🔖Computes SHA-256 hash of a Layer entity."""
-    w = HashWriter()
-    w.writeString("Layer")
-    attrs = l.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    if l.get("color") is not None:
-        w.writeString("color")
-        w.writeString(l["color"])
-    if l.get("description") is not None:
-        w.writeString("description")
-        w.writeString(l["description"])
-    w.writeString("guid")
-    w.writeString(l["guid"])
-    if l.get("isHidden") is not None:
-        w.writeString("isHidden")
-        w.writeBool(l["isHidden"])
-    if l.get("isLocked") is not None:
-        w.writeString("isLocked")
-        w.writeBool(l["isLocked"])
-    w.writeString("path")
-    w.writeString(l["path"])
-    return w.digest()
-
-
-def hash_stat(s: dict) -> str:
-    """🔖Computes SHA-256 hash of a Stat entity."""
-    w = HashWriter()
-    w.writeString("Stat")
-    w.writeString("guid")
-    w.writeString(s["guid"])
-    if s.get("max") is not None:
-        w.writeString("max")
-        w.writeNumber(s["max"])
-    if s.get("maxExcluded") is not None:
-        w.writeString("maxExcluded")
-        w.writeBool(s["maxExcluded"])
-    if s.get("min") is not None:
-        w.writeString("min")
-        w.writeNumber(s["min"])
-    if s.get("minExcluded") is not None:
-        w.writeString("minExcluded")
-        w.writeBool(s["minExcluded"])
-    w.writeString("quality")
-    w.writeString(_ref_guid(s["quality"]))
-    if s.get("unit") is not None:
-        w.writeString("unit")
-        w.writeString(s["unit"])
-    return w.digest()
-
-
-def hash_group(g: dict) -> str:
-    """🔖Computes SHA-256 hash of a Group entity."""
-    w = HashWriter()
-    w.writeString("Group")
-    attrs = g.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    if g.get("color") is not None:
-        w.writeString("color")
-        w.writeString(g["color"])
-    if g.get("description") is not None:
-        w.writeString("description")
-        w.writeString(g["description"])
-    w.writeString("guid")
-    w.writeString(g["guid"])
-    if g.get("name") is not None:
-        w.writeString("name")
-        w.writeString(g["name"])
-    w.writeString("pieces")
-    w.writeGuidList([_ref_guid(p) for p in g["pieces"]])
-    return w.digest()
-
-
-def hash_side(s: dict) -> str:
-    """🔖Computes SHA-256 hash of a Side value."""
-    w = HashWriter()
-    w.writeString("Side")
-    if s.get("connector") is not None:
-        w.writeString("connector")
-        w.writeString(_ref_guid(s["connector"]))
-    if s.get("designPiece") is not None:
-        w.writeString("designPiece")
-        w.writeString(_ref_guid(s["designPiece"]))
-    w.writeString("piece")
-    w.writeString(_ref_guid(s["piece"]))
-    return w.digest()
-
-
-def hash_connection(c: dict) -> str:
-    """🔖Computes SHA-256 hash of a Connection entity."""
-    w = HashWriter()
-    w.writeString("Connection")
-    attrs = c.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    w.writeString("connected")
-    w.writeHash(hash_side(c["connected"]))
-    w.writeString("connecting")
-    w.writeHash(hash_side(c["connecting"]))
-    if c.get("description") is not None:
-        w.writeString("description")
-        w.writeString(c["description"])
-    if c.get("gap") is not None:
-        w.writeString("gap")
-        w.writeNumber(c["gap"])
-    w.writeString("guid")
-    w.writeString(c["guid"])
-    if c.get("rise") is not None:
-        w.writeString("rise")
-        w.writeNumber(c["rise"])
-    if c.get("rotation") is not None:
-        w.writeString("rotation")
-        w.writeNumber(c["rotation"])
-    if c.get("shift") is not None:
-        w.writeString("shift")
-        w.writeNumber(c["shift"])
-    if c.get("tilt") is not None:
-        w.writeString("tilt")
-        w.writeNumber(c["tilt"])
-    if c.get("turn") is not None:
-        w.writeString("turn")
-        w.writeNumber(c["turn"])
-    if c.get("u") is not None:
-        w.writeString("u")
-        w.writeNumber(c["u"])
-    if c.get("v") is not None:
-        w.writeString("v")
-        w.writeNumber(c["v"])
-    return w.digest()
-
-
-def hash_piece(p: dict) -> str:
-    """🔖Computes SHA-256 hash of a Piece entity."""
-    w = HashWriter()
-    w.writeString("Piece")
-    attrs = p.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    if p.get("center") is not None:
-        w.writeString("center")
-        w.writeHash(hash_coord(p["center"]))
-    if p.get("color") is not None:
-        w.writeString("color")
-        w.writeString(p["color"])
-    if p.get("description") is not None:
-        w.writeString("description")
-        w.writeString(p["description"])
-    if p.get("design") is not None:
-        w.writeString("design")
-        w.writeString(_ref_guid(p["design"]))
-    w.writeString("guid")
-    w.writeString(p["guid"])
-    if p.get("isHidden") is not None:
-        w.writeString("isHidden")
-        w.writeBool(p["isHidden"])
-    if p.get("isLocked") is not None:
-        w.writeString("isLocked")
-        w.writeBool(p["isLocked"])
-    if p.get("mirrorPlane") is not None:
-        w.writeString("mirrorPlane")
-        w.writeHash(hash_plane(p["mirrorPlane"]))
-    if p.get("name") is not None:
-        w.writeString("name")
-        w.writeString(p["name"])
-    if p.get("plane") is not None:
-        w.writeString("plane")
-        w.writeHash(hash_plane(p["plane"]))
-    if p.get("props") is not None and len(p["props"]) > 0:
-        w.writeString("props")
-        w.writeHashList([hash_prop(pr) for pr in p["props"]])
-    if p.get("scale") is not None:
-        w.writeString("scale")
-        w.writeNumber(p["scale"])
-    if p.get("type") is not None:
-        w.writeString("type")
-        w.writeString(_ref_guid(p["type"]))
-    return w.digest()
-
-
-def hash_design(d: dict) -> str:
-    """🔖Computes SHA-256 hash of a Design entity (Merkle tree)."""
-    w = HashWriter()
-    w.writeString("Design")
-    if d.get("activeLayer") is not None:
-        w.writeString("activeLayer")
-        w.writeString(_ref_guid(d["activeLayer"]))
-    attrs = d.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    authors = d.get("authors")
-    if authors and len(authors) > 0:
-        w.writeString("authors")
-        w.writeGuidList([_ref_guid(a) for a in authors])
-    if d.get("canMirror") is not None:
-        w.writeString("canMirror")
-        w.writeBool(d["canMirror"])
-    if d.get("canScale") is not None:
-        w.writeString("canScale")
-        w.writeBool(d["canScale"])
-    concepts = d.get("concepts")
-    if concepts and len(concepts) > 0:
-        w.writeString("concepts")
-        w.writeGuidList([_ref_guid(c) for c in concepts])
-    connections = d.get("connections")
-    if connections and len(connections) > 0:
-        w.writeString("connections")
-        w.writeHashList([hash_connection(c) for c in connections])
-    if d.get("description") is not None:
-        w.writeString("description")
-        w.writeString(d["description"])
-    if d.get("folder") is not None:
-        w.writeString("folder")
-        w.writeString(d["folder"])
-    groups = d.get("groups")
-    if groups and len(groups) > 0:
-        w.writeString("groups")
-        w.writeHashList([hash_group(g) for g in groups])
-    w.writeString("guid")
-    w.writeString(d["guid"])
-    if d.get("icon") is not None:
-        w.writeString("icon")
-        w.writeString(d["icon"])
-    if d.get("image") is not None:
-        w.writeString("image")
-        w.writeString(d["image"])
-    if d.get("isAbstract") is not None:
-        w.writeString("isAbstract")
-        w.writeBool(d["isAbstract"])
-    layers = d.get("layers")
-    if layers and len(layers) > 0:
-        w.writeString("layers")
-        w.writeHashList([hash_layer(la) for la in layers])
-    if d.get("location") is not None:
-        w.writeString("location")
-        w.writeString(_ref_guid(d["location"]))
-    w.writeString("name")
-    w.writeString(d["name"])
-    if d.get("parent") is not None:
-        w.writeString("parent")
-        w.writeString(_ref_guid(d["parent"]))
-    pieces = d.get("pieces")
-    if pieces and len(pieces) > 0:
-        w.writeString("pieces")
-        w.writeHashList([hash_piece(p) for p in pieces])
-    props = d.get("props")
-    if props and len(props) > 0:
-        w.writeString("props")
-        w.writeHashList([hash_prop(p) for p in props])
-    stats = d.get("stats")
-    if stats and len(stats) > 0:
-        w.writeString("stats")
-        w.writeHashList([hash_stat(s) for s in stats])
-    if d.get("unit") is not None:
-        w.writeString("unit")
-        w.writeString(d["unit"])
-    return w.digest()
-
-
-def hash_kit(k: dict) -> str:
-    """🔖Computes SHA-256 Merkle hash of a Kit entity."""
-    w = HashWriter()
-    w.writeString("Kit")
-    attrs = k.get("attributes")
-    if attrs and len(attrs) > 0:
-        w.writeString("attributes")
-        w.writeHashList([hash_attribute(a) for a in attrs])
-    authors = k.get("authors")
-    if authors and len(authors) > 0:
-        w.writeString("authors")
-        w.writeHashList([hash_author(a) for a in authors])
-    concepts = k.get("concepts")
-    if concepts and len(concepts) > 0:
-        w.writeString("concepts")
-        w.writeHashList([hash_concept(c) for c in concepts])
-    if k.get("description") is not None:
-        w.writeString("description")
-        w.writeString(k["description"])
-    designs = k.get("designs")
-    if designs and len(designs) > 0:
-        w.writeString("designs")
-        w.writeHashList([hash_design(d) for d in designs])
-    files = k.get("files")
-    if files and len(files) > 0:
-        w.writeString("files")
-        w.writeHashList([hash_file(f) for f in files])
-    folders = k.get("folders")
-    if folders and len(folders) > 0:
-        w.writeString("folders")
-        w.writeHashList([hash_folder(f) for f in folders])
-    w.writeString("guid")
-    w.writeString(k["guid"])
-    if k.get("homepage") is not None:
-        w.writeString("homepage")
-        w.writeString(k["homepage"])
-    if k.get("icon") is not None:
-        w.writeString("icon")
-        w.writeString(k["icon"])
-    if k.get("image") is not None:
-        w.writeString("image")
-        w.writeString(k["image"])
-    if k.get("license") is not None:
-        w.writeString("license")
-        w.writeString(k["license"])
-    w.writeString("name")
-    w.writeString(k["name"])
-    if k.get("ports") is not None and len(k["ports"]) > 0:
-        w.writeString("ports")
-        w.writeHashList([hash_port(p) for p in k["ports"]])
-    if k.get("preview") is not None:
-        w.writeString("preview")
-        w.writeString(k["preview"])
-    qualities = k.get("qualities")
-    if qualities and len(qualities) > 0:
-        w.writeString("qualities")
-        w.writeHashList([hash_quality(q) for q in qualities])
-    if k.get("remote") is not None:
-        w.writeString("remote")
-        w.writeString(k["remote"])
-    tags = k.get("tags")
-    if tags and len(tags) > 0:
-        w.writeString("tags")
-        w.writeHashList([hash_tag(t) for t in tags])
-    types = k.get("types")
-    if types and len(types) > 0:
-        w.writeString("types")
-        w.writeHashList([hash_type(t) for t in types])
-    if k.get("version") is not None:
-        w.writeString("version")
-        w.writeString(k["version"])
-    return w.digest()
-
-
-# #endregion 🌪️Hash Entities
-
-# #region 🎥Hash Diffs
-# Deterministic SHA-256 Merkle hash functions for all diff types.
-# Diffs are plain dicts; field presence in dict = field was changed.
-# If a field is present with None value → write field name + writeBool(false) as null marker.
-# If a field is absent from dict → skip it entirely.
-
-
-def _write_diff_string(w: HashWriter, key: str, d: dict):
-    if key in d:
-        w.writeString(key)
-        if d[key] is not None:
-            w.writeString(d[key])
-        else:
-            w.writeBool(False)
-
-
-def _write_diff_number(w: HashWriter, key: str, d: dict):
-    if key in d:
-        w.writeString(key)
-        if d[key] is not None:
-            w.writeNumber(d[key])
-        else:
-            w.writeBool(False)
-
-
-def _write_diff_bool(w: HashWriter, key: str, d: dict):
-    if key in d:
-        w.writeString(key)
-        if d[key] is not None:
-            w.writeBool(d[key])
-        else:
-            w.writeBool(False)
-
-
-def _write_diff_id(w: HashWriter, key: str, d: dict):
-    if key in d:
-        w.writeString(key)
-        if d[key] is not None:
-            w.writeString(_ref_guid(d[key]))
-        else:
-            w.writeBool(False)
-
-
-def _write_diff_id_array(w: HashWriter, key: str, d: dict):
-    if key in d:
-        val = d[key]
-        if val is not None and len(val) > 0:
-            w.writeString(key)
-            w.writeGuidList([_ref_guid(e) for e in val])
-        elif val is not None:
-            pass  # empty array = skip
-        else:
-            w.writeString(key)
-            w.writeBool(False)
-
-
-def _write_diff_hash(w: HashWriter, key: str, d: dict, hash_fn):
-    if key in d:
-        w.writeString(key)
-        if d[key] is not None:
-            w.writeHash(hash_fn(d[key]))
-        else:
-            w.writeBool(False)
-
-
-def _hash_collection_diff_generic(
-    tag: str,
-    update_tag: str,
-    entity_key_name: str,
-    hash_entity_fn,
-    hash_diff_fn,
-    d: dict,
-) -> str:
-    w = HashWriter()
-    w.writeString(tag)
-    added = d.get("added")
-    if added and len(added) > 0:
-        w.writeString("added")
-        w.writeHashList([hash_entity_fn(e) for e in added])
-    removed = d.get("removed")
-    if removed and len(removed) > 0:
-        w.writeString("removed")
-        w.writeGuidList([_ref_guid(r) for r in removed])
-    updated = d.get("updated")
-    if updated and len(updated) > 0:
-        w.writeString("updated")
-        keys = sorted([entity_key_name, "diff"])
-        update_hashes = []
-        for u in updated:
-            uw = HashWriter()
-            uw.writeString(update_tag)
-            for k in keys:
-                if k == "diff":
-                    uw.writeString("diff")
-                    uw.writeHash(hash_diff_fn(u["diff"]))
-                else:
-                    uw.writeString(k)
-                    uw.writeString(_ref_guid(u[entity_key_name]))
-            update_hashes.append(uw.digest())
-        w.writeHashList(update_hashes)
-    return w.digest()
-
-
-def hash_coord_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("CoordDiff")
-    _write_diff_number(w, "u", d)
-    _write_diff_number(w, "v", d)
-    return w.digest()
-
-
-def hash_point_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("PointDiff")
-    _write_diff_number(w, "x", d)
-    _write_diff_number(w, "y", d)
-    _write_diff_number(w, "z", d)
-    return w.digest()
-
-
-def hash_vector_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("VectorDiff")
-    _write_diff_number(w, "x", d)
-    _write_diff_number(w, "y", d)
-    _write_diff_number(w, "z", d)
-    return w.digest()
-
-
-def hash_plane_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("PlaneDiff")
-    _write_diff_hash(w, "origin", d, hash_point_diff)
-    _write_diff_hash(w, "xAxis", d, hash_vector_diff)
-    _write_diff_hash(w, "yAxis", d, hash_vector_diff)
-    return w.digest()
-
-
-def hash_camera_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("CameraDiff")
-    _write_diff_hash(w, "forward", d, hash_vector_diff)
-    _write_diff_hash(w, "position", d, hash_point_diff)
-    _write_diff_hash(w, "up", d, hash_vector_diff)
-    return w.digest()
-
-
-def hash_attribute_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("AttributeDiff")
-    _write_diff_string(w, "definition", d)
-    _write_diff_string(w, "key", d)
-    _write_diff_string(w, "value", d)
-    return w.digest()
-
-
-def hash_attributes_diff(d: dict) -> str:
-    return _hash_collection_diff_generic(
-        "AttributesDiff",
-        "AttributeDiffUpdate",
-        "attribute",
-        hash_attribute,
-        hash_attribute_diff,
-        d,
-    )
-
-
-def hash_location_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("LocationDiff")
-    _write_diff_number(w, "altitude", d)
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_number(w, "latitude", d)
-    _write_diff_number(w, "longitude", d)
-    return w.digest()
-
-
-def hash_author_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("AuthorDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_string(w, "email", d)
-    _write_diff_string(w, "name", d)
-    return w.digest()
-
-
-def hash_authors_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("AuthorsDiff", "AuthorDiffUpdate", "author", hash_author, hash_author_diff, d)
-
-
-def hash_file_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("FileDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_string(w, "blob", d)
-    _write_diff_string(w, "description", d)
-    _write_diff_id(w, "folder", d)
-    _write_diff_string(w, "hash", d)
-    _write_diff_string(w, "name", d)
-    _write_diff_string(w, "remote", d)
-    if "size" in d:
-        w.writeString("size")
-        if d["size"] is not None:
-            w.writeNumber(d["size"])
-        else:
-            w.writeBool(False)
-    return w.digest()
-
-
-def hash_files_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("FilesDiff", "FileDiffUpdate", "file", hash_file, hash_file_diff, d)
-
-
-def hash_folder_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("FolderDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_string(w, "description", d)
-    _write_diff_string(w, "name", d)
-    _write_diff_id(w, "parent", d)
-    return w.digest()
-
-
-def hash_folders_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("FoldersDiff", "FolderDiffUpdate", "folder", hash_folder, hash_folder_diff, d)
-
-
-def hash_benchmark_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("BenchmarkDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_string(w, "definition", d)
-    _write_diff_string(w, "icon", d)
-    _write_diff_number(w, "max", d)
-    _write_diff_bool(w, "maxExcluded", d)
-    _write_diff_number(w, "min", d)
-    _write_diff_bool(w, "minExcluded", d)
-    _write_diff_string(w, "name", d)
-    return w.digest()
-
-
-def hash_benchmarks_diff(d: dict) -> str:
-    return _hash_collection_diff_generic(
-        "BenchmarksDiff",
-        "BenchmarkDiffUpdate",
-        "benchmark",
-        hash_benchmark,
-        hash_benchmark_diff,
-        d,
-    )
-
-
-def hash_quality_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("QualityDiff")
-    _write_diff_hash(w, "benchmarks", d, hash_benchmarks_diff)
-    _write_diff_bool(w, "canScale", d)
-    _write_diff_string(w, "defaultImperialUnit", d)
-    _write_diff_string(w, "defaultSiUnit", d)
-    _write_diff_number(w, "defaultValue", d)
-    _write_diff_string(w, "description", d)
-    _write_diff_string(w, "folder", d)
-    _write_diff_string(w, "formula", d)
-    _write_diff_string(w, "icon", d)
-    _write_diff_string(w, "image", d)
-    _write_diff_bool(w, "isMaxExcluded", d)
-    _write_diff_bool(w, "isMinExcluded", d)
-    _write_diff_string(w, "key", d)
-    _write_diff_number(w, "kind", d)
-    _write_diff_number(w, "max", d)
-    _write_diff_number(w, "min", d)
-    _write_diff_string(w, "name", d)
-    _write_diff_string(w, "unit", d)
-    _write_diff_string(w, "uri", d)
-    return w.digest()
-
-
-def hash_qualities_diff(d: dict) -> str:
-    return _hash_collection_diff_generic(
-        "QualitiesDiff",
-        "QualityDiffUpdate",
-        "quality",
-        hash_quality,
-        hash_quality_diff,
-        d,
-    )
-
-
-def hash_port_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("PortDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_id_array(w, "compatiblePorts", d)
-    _write_diff_string(w, "description", d)
-    _write_diff_string(w, "icon", d)
-    _write_diff_string(w, "name", d)
-    return w.digest()
-
-
-def hash_ports_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("PortsDiff", "PortDiffUpdate", "port", hash_port, hash_port_diff, d)
-
-
-def hash_prop_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("PropDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_id(w, "quality", d)
-    _write_diff_string(w, "unit", d)
-    _write_diff_string(w, "value", d)
-    return w.digest()
-
-
-def hash_props_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("PropsDiff", "PropDiffUpdate", "prop", hash_prop, hash_prop_diff, d)
-
-
-def hash_tag_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("TagDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_string(w, "description", d)
-    _write_diff_string(w, "icon", d)
-    _write_diff_string(w, "name", d)
-    return w.digest()
-
-
-def hash_tags_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("TagsDiff", "TagDiffUpdate", "tag", hash_tag, hash_tag_diff, d)
-
-
-def hash_concept_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("ConceptDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_string(w, "description", d)
-    _write_diff_string(w, "icon", d)
-    _write_diff_string(w, "name", d)
-    return w.digest()
-
-
-def hash_concepts_diff(d: dict) -> str:
-    return _hash_collection_diff_generic(
-        "ConceptsDiff",
-        "ConceptDiffUpdate",
-        "concept",
-        hash_concept,
-        hash_concept_diff,
-        d,
-    )
-
-
-def hash_model_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("ModelDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_string(w, "description", d)
-    _write_diff_id(w, "file", d)
-    _write_diff_string(w, "name", d)
-    _write_diff_id_array(w, "tags", d)
-    return w.digest()
-
-
-def hash_models_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("ModelsDiff", "ModelDiffUpdate", "model", hash_model, hash_model_diff, d)
-
-
-def hash_connector_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("ConnectorDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_string(w, "description", d)
-    _write_diff_hash(w, "direction", d, hash_vector_diff)
-    _write_diff_bool(w, "mandatory", d)
-    _write_diff_string(w, "name", d)
-    _write_diff_hash(w, "point", d, hash_point_diff)
-    _write_diff_id(w, "port", d)
-    _write_diff_hash(w, "props", d, hash_props_diff)
-    _write_diff_number(w, "t", d)
-    return w.digest()
-
-
-def hash_connectors_diff(d: dict) -> str:
-    return _hash_collection_diff_generic(
-        "ConnectorsDiff",
-        "ConnectorDiffUpdate",
-        "connector",
-        hash_connector,
-        hash_connector_diff,
-        d,
-    )
-
-
-def hash_type_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("TypeDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_id_array(w, "authors", d)
-    _write_diff_id_array(w, "concepts", d)
-    _write_diff_hash(w, "connectors", d, hash_connectors_diff)
-    _write_diff_string(w, "description", d)
-    _write_diff_string(w, "folder", d)
-    _write_diff_string(w, "icon", d)
-    _write_diff_string(w, "image", d)
-    _write_diff_bool(w, "isAbstract", d)
-    _write_diff_id(w, "location", d)
-    _write_diff_hash(w, "models", d, hash_models_diff)
-    _write_diff_string(w, "name", d)
-    _write_diff_id(w, "parent", d)
-    _write_diff_hash(w, "props", d, hash_props_diff)
-    _write_diff_number(w, "stock", d)
-    _write_diff_string(w, "unit", d)
-    _write_diff_bool(w, "virtual", d)
-    return w.digest()
-
-
-def hash_types_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("TypesDiff", "TypeDiffUpdate", "type", hash_type, hash_type_diff, d)
-
-
-def hash_side_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("SideDiff")
-    _write_diff_id(w, "connector", d)
-    _write_diff_id(w, "designPiece", d)
-    _write_diff_id(w, "piece", d)
-    return w.digest()
-
-
-def hash_layer_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("LayerDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_string(w, "color", d)
-    _write_diff_string(w, "description", d)
-    _write_diff_bool(w, "isHidden", d)
-    _write_diff_bool(w, "isLocked", d)
-    _write_diff_string(w, "path", d)
-    return w.digest()
-
-
-def hash_layers_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("LayersDiff", "LayerDiffUpdate", "layer", hash_layer, hash_layer_diff, d)
-
-
-def hash_group_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("GroupDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_string(w, "color", d)
-    _write_diff_string(w, "description", d)
-    _write_diff_string(w, "name", d)
-    _write_diff_id_array(w, "pieces", d)
-    return w.digest()
-
-
-def hash_groups_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("GroupsDiff", "GroupDiffUpdate", "group", hash_group, hash_group_diff, d)
-
-
-def hash_stat_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("StatDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_number(w, "max", d)
-    _write_diff_number(w, "min", d)
-    _write_diff_id(w, "quality", d)
-    _write_diff_string(w, "unit", d)
-    return w.digest()
-
-
-def hash_stats_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("StatsDiff", "StatDiffUpdate", "stat", hash_stat, hash_stat_diff, d)
-
-
-def hash_connection_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("ConnectionDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_hash(w, "connected", d, hash_side_diff)
-    _write_diff_hash(w, "connecting", d, hash_side_diff)
-    _write_diff_string(w, "description", d)
-    _write_diff_number(w, "gap", d)
-    _write_diff_number(w, "rise", d)
-    _write_diff_number(w, "rotation", d)
-    _write_diff_number(w, "shift", d)
-    _write_diff_number(w, "tilt", d)
-    _write_diff_number(w, "turn", d)
-    _write_diff_number(w, "u", d)
-    _write_diff_number(w, "v", d)
-    return w.digest()
-
-
-def hash_connections_diff(d: dict) -> str:
-    return _hash_collection_diff_generic(
-        "ConnectionsDiff",
-        "ConnectionDiffUpdate",
-        "connection",
-        hash_connection,
-        hash_connection_diff,
-        d,
-    )
-
-
-def hash_piece_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("PieceDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_hash(w, "center", d, hash_coord)
-    _write_diff_string(w, "color", d)
-    _write_diff_string(w, "description", d)
-    _write_diff_id(w, "design", d)
-    _write_diff_bool(w, "isHidden", d)
-    _write_diff_bool(w, "isLocked", d)
-    _write_diff_hash(w, "mirrorPlane", d, hash_plane)
-    _write_diff_string(w, "name", d)
-    _write_diff_hash(w, "plane", d, hash_plane_diff)
-    _write_diff_hash(w, "props", d, hash_props_diff)
-    _write_diff_number(w, "scale", d)
-    _write_diff_id(w, "type", d)
-    return w.digest()
-
-
-def hash_pieces_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("PiecesDiff", "PieceDiffUpdate", "piece", hash_piece, hash_piece_diff, d)
-
-
-def hash_design_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("DesignDiff")
-    _write_diff_id(w, "activeLayer", d)
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_hash(w, "authors", d, hash_authors_diff)
-    _write_diff_bool(w, "canMirror", d)
-    _write_diff_bool(w, "canScale", d)
-    _write_diff_id_array(w, "concepts", d)
-    _write_diff_hash(w, "connections", d, hash_connections_diff)
-    _write_diff_string(w, "description", d)
-    _write_diff_string(w, "folder", d)
-    _write_diff_hash(w, "groups", d, hash_groups_diff)
-    _write_diff_string(w, "icon", d)
-    _write_diff_string(w, "image", d)
-    _write_diff_bool(w, "isAbstract", d)
-    _write_diff_hash(w, "layers", d, hash_layers_diff)
-    _write_diff_id(w, "location", d)
-    _write_diff_string(w, "name", d)
-    _write_diff_id(w, "parent", d)
-    _write_diff_hash(w, "pieces", d, hash_pieces_diff)
-    _write_diff_hash(w, "props", d, hash_props_diff)
-    _write_diff_hash(w, "stats", d, hash_stats_diff)
-    _write_diff_string(w, "unit", d)
-    return w.digest()
-
-
-def hash_designs_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("DesignsDiff", "DesignDiffUpdate", "design", hash_design, hash_design_diff, d)
-
-
-def hash_kit_diff(d: dict) -> str:
-    w = HashWriter()
-    w.writeString("KitDiff")
-    _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_hash(w, "authors", d, hash_authors_diff)
-    _write_diff_hash(w, "concepts", d, hash_concepts_diff)
-    _write_diff_string(w, "description", d)
-    _write_diff_hash(w, "designs", d, hash_designs_diff)
-    _write_diff_hash(w, "files", d, hash_files_diff)
-    _write_diff_hash(w, "folders", d, hash_folders_diff)
-    _write_diff_string(w, "homepage", d)
-    _write_diff_string(w, "icon", d)
-    _write_diff_string(w, "image", d)
-    _write_diff_string(w, "license", d)
-    _write_diff_string(w, "name", d)
-    _write_diff_hash(w, "ports", d, hash_ports_diff)
-    _write_diff_string(w, "preview", d)
-    _write_diff_hash(w, "qualities", d, hash_qualities_diff)
-    _write_diff_string(w, "remote", d)
-    _write_diff_hash(w, "tags", d, hash_tags_diff)
-    _write_diff_hash(w, "types", d, hash_types_diff)
-    _write_diff_string(w, "version", d)
-    return w.digest()
-
-
-# #endregion 🎥Hash Diffs
-
-# #endregion 🎮Hash
-
-
-# #region 🎪Test
+# #region 🧪Tests
 # Tests for the semio py module.
 
 TEST_TOLERANCE = 0.001
@@ -16686,6 +17018,17 @@ class TestValidation:
             expected = parseValidationResult(json.dumps(_test_load_json("validation.semio.json")))
             assert areValidationResultsEqual(result, expected)
 
+        def test_plain_descriptions_do_not_create_emoji_validation_problems(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            kit["description"] = "Plain kit summary"
+            for index, entry in enumerate(kit.get("types", [])):
+                entry["description"] = f"Repeated plain description {index % 2}"
+
+            result = validateKitDict(kit)
+            emoji_constraint_ids = {problem.constraintId for problem in result.problems if problem.constraintId in {"description-missing-emoji", "description-emoji-unique"}}
+
+            assert not emoji_constraint_ids
+
 
 class TestDesignModel:
     def test_model_selection_from_shared_semio_assets(self):
@@ -17221,6 +17564,29 @@ class TestKitKind:
         assert kit.uri.startswith("memory://")
 
 
+class TestValidateKitDiffDict:
+    """Tests for validate_kit_diff_dict using validate-kit-diff.cases.semio.json."""
+
+    def test_validate_kit_diff_asset_cases(self):
+        payload = _test_load_json("validate-kit-diff.cases.semio.json")
+        tiny = payload["tinyKit"]
+        for case in payload["cases"]:
+            r = validate_kit_diff_dict(tiny, case["diff"], False)
+            assert r["ok"] == case["expectOk"], case["id"]
+            err_codes = [e.get("code") for e in r["errors"] if e.get("code")]
+            warn_codes = [w.get("code") for w in r["warnings"] if w.get("code")]
+            for c in case["errorCodes"]:
+                assert c in err_codes, (case["id"], err_codes)
+            for c in case["warningCodes"]:
+                assert c in warn_codes, (case["id"], warn_codes)
+
+    def test_validate_kit_diff_heal_drops_bad_design_update(self):
+        tiny = _test_load_json("validate-kit-diff.cases.semio.json")["tinyKit"]
+        bad = {"designs": {"updated": [{"design": {"guid": "99999999-9999-9999-9999-999999999999"}, "diff": {"name": "X"}}]}}
+        r = validate_kit_diff_dict(tiny, bad, True)
+        assert r.get("diff", {}).get("designs", {}).get("updated", []) == []
+
+
 class TestHash:
     """🔖Tests for the Merkle hash functions."""
 
@@ -17355,96 +17721,4 @@ class TestMaxChildren:
         assert restored["types"][0]["connectors"][0]["maxChildren"] == 5
 
 
-# #endregion 🎪Test
-
-# #region 🎎Benchmark
-# Benchmarks for the semio py module.
-
-BENCHMARK_ITERATIONS = 3
-
-
-def _bench(name: str, func):
-    start = time.perf_counter()
-    for _ in range(BENCHMARK_ITERATIONS):
-        func()
-    end = time.perf_counter()
-    duration = (end - start) / BENCHMARK_ITERATIONS
-    print(f"{name},{duration:.6f}")
-
-
-def benchmark_main():
-    kit_metabolism = _test_load_kit("metabolism.kit.semio.json")
-    kit_invalid = _test_load_kit("invalid.kit.semio.json")
-
-    kit_obj = Kit.parse(kit_metabolism)
-
-    kit_invalid_obj = Kit.parse(kit_invalid)
-
-    def test_roundtrip():
-        kit, files = import_kit(os.path.join(TEST_ASSETS_DIR, "metabolism.zip"))
-
-        export_kit(kit, files, "temp_benchmark_metabolism.zip")
-        if os.path.exists("temp_benchmark_metabolism.zip"):
-            os.remove("temp_benchmark_metabolism.zip")
-
-    _bench("Roundtrip/Metabolism", test_roundtrip)
-
-    diff_forward = _test_load_json("metabolism.kit.diff.semio.json")
-    diff_inverse = _test_load_json("metabolism.kit.diff.inverted.semio.json")
-
-    def test_diff_metabolism():
-        k2 = applyKitDiffDict(kit_metabolism, diff_forward)
-        applyKitDiffDict(k2, diff_inverse)
-
-    _bench("Diff/Metabolism", test_diff_metabolism)
-
-    d1 = _test_find_design(kit_metabolism, "Nakagin Capsule Tower")
-
-    def test_flatten_nakagin():
-        flattenDesignDict(kit_metabolism, d1["guid"])
-
-    _bench("Flatten Design/Nakagin Capsule Tower", test_flatten_nakagin)
-
-    d2 = _test_find_design(kit_metabolism, "Slanted", "Nakagin Capsule Tower")
-
-    def test_flatten_nakagin_slanted():
-        flattenDesignDict(kit_metabolism, d2["guid"])
-
-    _bench("Flatten Design/Nakagin Capsule Tower/Slanted", test_flatten_nakagin_slanted)
-
-    d3 = _test_find_design(kit_metabolism, "Twisted", "Nakagin Capsule Tower")
-
-    def test_flatten_nakagin_twisted():
-        flattenDesignDict(kit_metabolism, d3["guid"])
-
-    _bench("Flatten Design/Nakagin Capsule Tower/Twisted", test_flatten_nakagin_twisted)
-
-    d4 = _test_find_design(kit_metabolism, "Dancing", "Nakagin Capsule Tower")
-
-    def test_flatten_nakagin_dancing():
-        flattenDesignDict(kit_metabolism, d4["guid"])
-
-    _bench("Flatten Design/Nakagin Capsule Tower/Dancing", test_flatten_nakagin_dancing)
-
-    d5 = _test_find_design(kit_metabolism, "Capsule Dream")
-
-    def test_flatten_capsule_dream():
-        flattenDesignDict(kit_metabolism, d5["guid"])
-
-    _bench("Flatten Design/Capsule Dream", test_flatten_capsule_dream)
-
-    def test_validate_invalid():
-        validateKit(kit_invalid_obj)
-
-    _bench("Validation/Invalid Kit", test_validate_invalid)
-
-    def test_validate_metabolism():
-        validateKit(kit_obj)
-
-    _bench("Validation/Metabolism", test_validate_metabolism)
-
-
-if __name__ == "__main__":
-    benchmark_main()
-
-# #endregion 🎎Benchmark
+# #endregion 🧪Tests

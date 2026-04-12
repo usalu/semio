@@ -8,6 +8,7 @@
 
 // #endregion 🧲Header
 
+
 // #region ⛩️Imports
 
 package semio
@@ -28,19 +29,19 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"archive/zip"
 	"database/sql"
 	"io"
 	"net/http"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 
 	"gonum.org/v1/gonum/mat"
 )
 
 // #endregion ⛩️Imports
+
 
 // #region 🎞️Constants
 
@@ -53,10 +54,11 @@ const AssetsPath = "../assets/semio"
 
 // #endregion 🎞️Constants
 
-// #region 📦Utils
 
-// 🔤Guid generates a new random 128-bit hex-encoded unique identifier.
-// 🔤ptrString returns a pointer to the given string value.
+// #region 📦Utilities
+
+// 🎲Guid generates a new random 128-bit hex-encoded unique identifier.
+// 📎ptrString returns a pointer to the given string value.
 func ptrString(s string) *string { return &s }
 
 func ptrFloat64(f float64) *float64 { return &f }
@@ -240,7 +242,7 @@ func Guid() string {
 	return hex.EncodeToString(bytes)
 }
 
-// 📋Normalize converts a string to lowercase trimmed form.
+// 🔡Normalize converts a string to lowercase trimmed form.
 func Normalize(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
 }
@@ -254,24 +256,25 @@ func Round(value float64, decimals int) float64 {
 	return float64(int64(value*shift+0.5)) / shift
 }
 
-// 🔷DeepEqual compares two values for deep equality via JSON serialization.
+// ⚖️DeepEqual compares two values for deep equality via JSON serialization.
 func DeepEqual(a, b interface{}) bool {
 	aJSON, _ := json.Marshal(a)
 	bJSON, _ := json.Marshal(b)
 	return string(aJSON) == string(bJSON)
 }
 
-// #endregion 📦Utils
+// #endregion 📦Utilities
+
 
 // #region 🐍Entity IDs
 // Entity IDs MUST define identifier types for all semio domain entities.
 
-// 💻AttributeId identifies an attribute entity by GUID.
+// 💎AttributeId identifies an attribute entity by GUID.
 type AttributeId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔷LocationId identifies a location entity by GUID.
+// 📍LocationId identifies a location entity by GUID.
 type LocationId struct {
 	Guid string `json:"guid"`
 }
@@ -291,22 +294,22 @@ type FolderId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔶BenchmarkId identifies a benchmark entity by GUID.
+// 📏BenchmarkId identifies a benchmark entity by GUID.
 type BenchmarkId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔹QualityId identifies a quality entity by GUID.
+// 🔬QualityId identifies a quality entity by GUID.
 type QualityId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔸PortId identifies a port entity by GUID.
+// ⚓PortId identifies a port entity by GUID.
 type PortId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔺PropId identifies a prop entity by GUID.
+// 📊PropId identifies a prop entity by GUID.
 type PropId struct {
 	Guid string `json:"guid"`
 }
@@ -316,107 +319,108 @@ type TagId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔻ConceptId identifies a concept entity by GUID.
+// 💡ConceptId identifies a concept entity by GUID.
 type ConceptId struct {
 	Guid string `json:"guid"`
 }
 
-// ⬛ModelId identifies a model entity by GUID.
+// 🗿ModelId identifies a model entity by GUID.
 type ModelId struct {
 	Guid string `json:"guid"`
 }
 
-// ⬜ConnectorId identifies a connector entity by GUID.
+// 🔌ConnectorId identifies a connector entity by GUID.
 type ConnectorId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟥TypeId identifies a type entity by GUID.
+// 🧱TypeId identifies a type entity by GUID.
 type TypeId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟧LayerId identifies a layer entity by GUID.
+// 🎨LayerId identifies a layer entity by GUID.
 type LayerId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟨PieceId identifies a piece entity by GUID.
+// 🧩PieceId identifies a piece entity by GUID.
 type PieceId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟩GroupId identifies a group entity by GUID.
+// 👥GroupId identifies a group entity by GUID.
 type GroupId struct {
 	Guid string `json:"guid"`
 }
 
-// 🔌SideId identifies a connection side by piece, design piece and connector references.
+// ↔️SideId identifies a connection side by piece, design piece and connector references.
 type SideId struct {
 	Piece       PieceId      `json:"piece"`
 	DesignPiece *PieceId     `json:"designPiece,omitempty"`
 	Connector   *ConnectorId `json:"connector,omitempty"`
 }
 
-// 🟦ConnectionId identifies a connection entity by GUID.
+// 🔗ConnectionId identifies a connection entity by GUID.
 type ConnectionId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟪StatId identifies a stat entity by GUID.
+// 📈StatId identifies a stat entity by GUID.
 type StatId struct {
 	Guid string `json:"guid"`
 }
 
-// 🟫DesignId identifies a design entity by GUID.
+// 📐DesignId identifies a design entity by GUID.
 type DesignId struct {
 	Guid string `json:"guid"`
 }
 
-// 💠KitId identifies a kit entity by GUID.
+// 📦KitId identifies a kit entity by GUID.
 type KitId struct {
 	Guid string `json:"guid"`
 }
 
 // #endregion 🐍Entity IDs
 
+
 // #region 🖥️Weak Entities
 // Weak Entities MUST define value types that exist only as part of parent entities.
 
-// 🔷Coord represents a 2D coordinate with U and V components.
+// 📺Coord represents a 2D coordinate with U and V components.
 type Coord struct {
 	U float64 `json:"u"`
 	V float64 `json:"v"`
 }
 
-// 🔶Vec represents a 2D vector with U and V components.
+// ➡️Vec represents a 2D vector with U and V components.
 type Vec struct {
 	U float64 `json:"u"`
 	V float64 `json:"v"`
 }
 
-// 🔹Point represents a 3D point with X, Y and Z components.
+// ✖️Point represents a 3D point with X, Y and Z components.
 type Point struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 	Z float64 `json:"z"`
 }
 
-// 🔸Vector represents a 3D vector with X, Y and Z components.
+// ↗️Vector represents a 3D vector with X, Y and Z components.
 type Vector struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 	Z float64 `json:"z"`
 }
 
-// 🔺Plane represents a 3D plane defined by origin, X-axis and Y-axis.
+// ◻️Plane represents a 3D plane defined by origin, X-axis and Y-axis.
 type Plane struct {
 	Origin Point  `json:"origin"`
 	XAxis  Vector `json:"xAxis"`
 	YAxis  Vector `json:"yAxis"`
 }
 
-// 🔻Camera represents a 3D camera with position, forward and up vectors.
+// 🎥Camera represents a 3D camera with position, forward and up vectors.
 type Camera struct {
 	Position Point  `json:"position"`
 	Forward  Vector `json:"forward"`
@@ -425,9 +429,10 @@ type Camera struct {
 
 // #endregion 🖥️Weak Entities
 
-// #region 📊Attribute
 
-// 📖Attribute represents a key-value metadata entry with optional definition.
+// #region 💎Attribute
+
+// 💎Attribute represents a key-value metadata entry with optional definition.
 type Attribute struct {
 	Guid       string  `json:"guid"`
 	Key        string  `json:"key"`
@@ -435,14 +440,14 @@ type Attribute struct {
 	Definition *string `json:"definition,omitempty"`
 }
 
-// ♻️AttributeDiff represents changes to an attribute entity.
+// ✏️AttributeDiff represents a partial update to an attribute's key, value or definition.
 type AttributeDiff struct {
 	Key        *string `json:"key,omitempty"`
 	Value      *string `json:"value,omitempty"`
 	Definition *string `json:"definition,omitempty"`
 }
 
-// 🔁AttributesDiff represents a collection of attribute additions, removals and updates.
+// 🗂️AttributesDiff represents batched attribute additions, removals and per-attribute updates.
 type AttributesDiff struct {
 	Removed []AttributeId `json:"removed,omitempty"`
 	Updated []struct {
@@ -452,7 +457,7 @@ type AttributesDiff struct {
 	Added []Attribute `json:"added,omitempty"`
 }
 
-// 📚AttributeMeta represents the scalar-only projection of an Attribute (no arrays).
+// 📇AttributeMeta represents the scalar-only view of an attribute excluding nested arrays.
 type AttributeMeta struct {
 	Guid       string  `json:"guid"`
 	Key        string  `json:"key"`
@@ -460,11 +465,12 @@ type AttributeMeta struct {
 	Definition *string `json:"definition,omitempty"`
 }
 
-// #endregion 📊Attribute
+// #endregion 💎Attribute
 
-// #region 🔷Location
 
-// 🐙Location represents a geographic location with longitude, latitude and optional altitude.
+// #region 📍Location
+
+// 📍Location represents a geographic point with longitude, latitude and optional altitude.
 type Location struct {
 	Guid       string      `json:"guid"`
 	Longitude  float64     `json:"longitude"`
@@ -473,7 +479,7 @@ type Location struct {
 	Attributes []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️LocationDiff represents changes to a location entity.
+// 🗺️LocationDiff represents a partial update to a location's coordinates, altitude or attributes.
 type LocationDiff struct {
 	Longitude  *float64        `json:"longitude,omitempty"`
 	Latitude   *float64        `json:"latitude,omitempty"`
@@ -481,11 +487,12 @@ type LocationDiff struct {
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// #endregion 🔷Location
+// #endregion 📍Location
 
-// #region 🩺Author
 
-// ✍️Author represents a named authorship entity with optional email.
+// #region ✍️Author
+
+// ✍️Author represents a named contributor with optional email and timestamps.
 type Author struct {
 	Guid       string      `json:"guid"`
 	Name       string      `json:"name"`
@@ -495,14 +502,14 @@ type Author struct {
 	UpdatedAt  string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️AuthorDiff represents changes to an author entity.
+// 🖊️AuthorDiff represents a partial update to an author's name, email or attributes.
 type AuthorDiff struct {
 	Name       *string         `json:"name,omitempty"`
 	Email      *string         `json:"email,omitempty"`
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁AuthorsDiff represents a collection of author additions, removals and updates.
+// 👪AuthorsDiff represents batched author additions, removals and per-author updates.
 type AuthorsDiff struct {
 	Removed []AuthorId `json:"removed,omitempty"`
 	Updated []struct {
@@ -512,7 +519,7 @@ type AuthorsDiff struct {
 	Added []Author `json:"added,omitempty"`
 }
 
-// 📚AuthorMeta represents the scalar-only projection of an Author (no Attributes array).
+// 👤AuthorMeta represents the scalar-only view of an author excluding the attributes array.
 type AuthorMeta struct {
 	Guid      string  `json:"guid"`
 	Name      string  `json:"name"`
@@ -521,9 +528,10 @@ type AuthorMeta struct {
 	UpdatedAt string  `json:"updatedAt,omitempty"`
 }
 
-// #endregion 🩺Author
+// #endregion ✍️Author
 
-// #region ✏️File
+
+// #region 📄File
 
 // 📄File represents a file reference entity with name, remote URL and metadata.
 type File struct {
@@ -540,7 +548,7 @@ type File struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️FileDiff represents changes to a file entity.
+// 📝FileDiff represents a partial update to a file's name, URL, hash, blob or description.
 type FileDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Remote      *string         `json:"remote,omitempty"`
@@ -552,7 +560,7 @@ type FileDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁FilesDiff represents a collection of file additions, removals and updates.
+// 📑FilesDiff represents batched file additions, removals and per-file updates.
 type FilesDiff struct {
 	Removed []FileId `json:"removed,omitempty"`
 	Updated []struct {
@@ -562,7 +570,7 @@ type FilesDiff struct {
 	Added []File `json:"added,omitempty"`
 }
 
-// 🔷FileMeta represents the scalar-only projection of a File (no Blob, no Attributes).
+// 🗒️FileMeta represents the scalar-only view of a file excluding blob data and attributes.
 type FileMeta struct {
 	Guid        string    `json:"guid"`
 	Name        string    `json:"name"`
@@ -575,9 +583,10 @@ type FileMeta struct {
 	UpdatedAt   string    `json:"updatedAt,omitempty"`
 }
 
-// #endregion ✏️File
+// #endregion 📄File
 
-// #region 🌨️Folder
+
+// #region 📁Folder
 
 // 📁Folder represents a folder hierarchy entity with name and parent reference.
 type Folder struct {
@@ -590,7 +599,7 @@ type Folder struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️FolderDiff represents changes to a folder entity.
+// 📂FolderDiff represents a partial update to a folder's name, parent or description.
 type FolderDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Parent      *FolderId       `json:"parent,omitempty"`
@@ -598,7 +607,7 @@ type FolderDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁FoldersDiff represents a collection of folder additions, removals and updates.
+// 🗄️FoldersDiff represents batched folder additions, removals and per-folder updates.
 type FoldersDiff struct {
 	Removed []FolderId `json:"removed,omitempty"`
 	Updated []struct {
@@ -608,7 +617,7 @@ type FoldersDiff struct {
 	Added []Folder `json:"added,omitempty"`
 }
 
-// 🔷FolderMeta represents the scalar-only projection of a Folder (no Attributes).
+// 🏠FolderMeta represents the scalar-only view of a folder excluding attributes.
 type FolderMeta struct {
 	Guid        string    `json:"guid"`
 	Name        string    `json:"name"`
@@ -618,11 +627,12 @@ type FolderMeta struct {
 	UpdatedAt   string    `json:"updatedAt,omitempty"`
 }
 
-// #endregion 🌨️Folder
+// #endregion 📁Folder
 
-// #region 🔬Benchmark
 
-// 🔷Benchmark represents a named metric threshold with min and max bounds.
+// #region 📏Benchmark
+
+// 📏Benchmark represents a named metric range with min/max bounds and optional icon.
 type Benchmark struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -635,7 +645,7 @@ type Benchmark struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️BenchmarkDiff represents changes to a benchmark entity.
+// ↕️BenchmarkDiff represents a partial update to a benchmark's name, bounds, icon or definition.
 type BenchmarkDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Icon        *string         `json:"icon,omitempty"`
@@ -647,7 +657,7 @@ type BenchmarkDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁BenchmarksDiff represents a collection of benchmark additions, removals and updates.
+// 🧮BenchmarksDiff represents batched benchmark additions, removals and per-benchmark updates.
 type BenchmarksDiff struct {
 	Removed []BenchmarkId `json:"removed,omitempty"`
 	Updated []struct {
@@ -657,9 +667,10 @@ type BenchmarksDiff struct {
 	Added []Benchmark `json:"added,omitempty"`
 }
 
-// #endregion 🔬Benchmark
+// #endregion 📏Benchmark
 
-// #region 📷Quality
+
+// #region 🔬Quality
 
 // 🔭QualityKind is a bitfield enum for quality scope classification.
 type QualityKind int
@@ -673,7 +684,7 @@ const (
 	QualityKindConnector
 )
 
-// 📋Quality represents a measurable property with formula, units and benchmarks.
+// 🔬Quality represents a measurable property with formula, units and benchmarks.
 type Quality struct {
 	Guid                string      `json:"guid"`
 	Key                 string      `json:"key"`
@@ -699,7 +710,7 @@ type Quality struct {
 	UpdatedAt           string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️QualityDiff represents changes to a quality entity.
+// 🧪QualityDiff represents a partial update to a quality's formula, bounds, units or benchmarks.
 type QualityDiff struct {
 	Key                 *string         `json:"key,omitempty"`
 	Name                *string         `json:"name,omitempty"`
@@ -722,7 +733,7 @@ type QualityDiff struct {
 	Attributes          *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁QualitiesDiff represents a collection of quality additions, removals and updates.
+// ⚗️QualitiesDiff represents batched quality additions, removals and per-quality updates.
 type QualitiesDiff struct {
 	Removed []QualityId `json:"removed,omitempty"`
 	Updated []struct {
@@ -732,7 +743,7 @@ type QualitiesDiff struct {
 	Added []Quality `json:"added,omitempty"`
 }
 
-// 🔷QualityMeta represents the scalar-only projection of a Quality (no Benchmarks, no Attributes).
+// 🔎QualityMeta represents the scalar-only view of a quality excluding benchmarks and attributes.
 type QualityMeta struct {
 	Guid                string      `json:"guid"`
 	Key                 string      `json:"key"`
@@ -756,11 +767,12 @@ type QualityMeta struct {
 	UpdatedAt           string      `json:"updatedAt,omitempty"`
 }
 
-// #endregion 📷Quality
+// #endregion 🔬Quality
 
-// #region 🌈Port
 
-// 🔷Port represents a named connector port with compatible port references.
+// #region ⚓Port
+
+// ⚓Port represents a named connector port category with compatible port references.
 type Port struct {
 	Guid            string      `json:"guid"`
 	Name            string      `json:"name"`
@@ -773,7 +785,7 @@ type Port struct {
 	UpdatedAt       string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️PortDiff represents changes to a port entity.
+// ⚙️PortDiff represents a partial update to a port's name, icon or compatible ports.
 type PortDiff struct {
 	Name            *string         `json:"name,omitempty"`
 	Description     *string         `json:"description,omitempty"`
@@ -784,7 +796,7 @@ type PortDiff struct {
 	setFields       map[string]bool `json:"-"`
 }
 
-// 📋UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
+// 📥UnmarshalJSON deserializes PortDiff JSON while tracking which fields are explicitly set.
 func (d *PortDiff) UnmarshalJSON(data []byte) error {
 	type Alias PortDiff
 	aux := &struct {
@@ -803,7 +815,7 @@ func (d *PortDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
-// 🔶HasField returns whether a JSON field was present in the unmarshaled data.
+// 🔍HasField checks whether a specific JSON field was present during PortDiff deserialization.
 func (d *PortDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -811,7 +823,7 @@ func (d *PortDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
-// 🔁PortsDiff represents a collection of port additions, removals and updates.
+// ⛵PortsDiff represents batched port additions, removals and per-port updates.
 type PortsDiff struct {
 	Removed []PortId `json:"removed,omitempty"`
 	Updated []struct {
@@ -821,7 +833,7 @@ type PortsDiff struct {
 	Added []Port `json:"added,omitempty"`
 }
 
-// 🔹PortMeta represents the scalar-only projection of a Port (no CompatiblePorts, no Attributes).
+// 🪝PortMeta represents the scalar-only view of a port excluding compatible ports and attributes.
 type PortMeta struct {
 	Guid        string  `json:"guid"`
 	Name        string  `json:"name"`
@@ -832,11 +844,12 @@ type PortMeta struct {
 	UpdatedAt   string  `json:"updatedAt,omitempty"`
 }
 
-// #endregion 🌈Port
+// #endregion ⚓Port
 
-// #region 📋Prop
 
-// 🔷Prop represents a quality property value with optional unit.
+// #region 📊Prop
+
+// 📊Prop represents a quality measurement value with optional unit.
 type Prop struct {
 	Guid       string      `json:"guid"`
 	Quality    QualityId   `json:"quality"`
@@ -845,7 +858,7 @@ type Prop struct {
 	Attributes []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️PropDiff represents changes to a prop entity.
+// 🔧PropDiff represents a partial update to a prop's quality reference, value or unit.
 type PropDiff struct {
 	Quality    *QualityId      `json:"quality,omitempty"`
 	Value      *string         `json:"value,omitempty"`
@@ -853,7 +866,7 @@ type PropDiff struct {
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁PropsDiff represents a collection of prop additions, removals and updates.
+// 📜PropsDiff represents batched prop additions, removals and per-prop updates.
 type PropsDiff struct {
 	Removed []PropId `json:"removed,omitempty"`
 	Updated []struct {
@@ -863,7 +876,7 @@ type PropsDiff struct {
 	Added []Prop `json:"added,omitempty"`
 }
 
-// 🔶PropMeta represents the scalar-only projection of a Prop (no Attributes).
+// 🏺PropMeta represents the scalar-only view of a prop excluding attributes.
 type PropMeta struct {
 	Guid    string    `json:"guid"`
 	Quality QualityId `json:"quality"`
@@ -871,11 +884,12 @@ type PropMeta struct {
 	Unit    *string   `json:"unit,omitempty"`
 }
 
-// #endregion 📋Prop
+// #endregion 📊Prop
 
-// #region 🛎️Tag
 
-// 📝Tag represents a named classification tag with optional description and icon.
+// #region 🏷️Tag
+
+// 🏷️Tag represents a named classification label with optional description and icon.
 type Tag struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -886,7 +900,7 @@ type Tag struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️TagDiff represents changes to a tag entity.
+// 🏳️TagDiff represents a partial update to a tag's name, description or icon.
 type TagDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Description *string         `json:"description,omitempty"`
@@ -895,7 +909,7 @@ type TagDiff struct {
 	setFields   map[string]bool `json:"-"`
 }
 
-// 📋UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
+// 📩UnmarshalJSON deserializes TagDiff JSON while tracking which fields are explicitly set.
 func (d *TagDiff) UnmarshalJSON(data []byte) error {
 	type Alias TagDiff
 	aux := &struct {
@@ -914,7 +928,7 @@ func (d *TagDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
-// 🔷HasField returns whether a JSON field was present in the unmarshaled data.
+// 🕵️HasField checks whether a specific JSON field was present during TagDiff deserialization.
 func (d *TagDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -922,7 +936,7 @@ func (d *TagDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
-// 🔁TagsDiff represents a collection of tag additions, removals and updates.
+// 🏴TagsDiff represents batched tag additions, removals and per-tag updates.
 type TagsDiff struct {
 	Removed []TagId `json:"removed,omitempty"`
 	Updated []struct {
@@ -932,7 +946,7 @@ type TagsDiff struct {
 	Added []Tag `json:"added,omitempty"`
 }
 
-// 🏷️TagMeta represents the scalar-only projection of a Tag (no Attributes).
+// 🎗️TagMeta represents the scalar-only view of a tag excluding attributes.
 type TagMeta struct {
 	Guid        string  `json:"guid"`
 	Name        string  `json:"name"`
@@ -942,11 +956,12 @@ type TagMeta struct {
 	UpdatedAt   string  `json:"updatedAt,omitempty"`
 }
 
-// #endregion 🛎️Tag
+// #endregion 🏷️Tag
 
-// #region 🎯Concept
 
-// 📝Concept represents a named categorization concept with optional description.
+// #region 💡Concept
+
+// 💡Concept represents a named categorization concept with optional description and icon.
 type Concept struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -957,7 +972,7 @@ type Concept struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️ConceptDiff represents changes to a concept entity.
+// 🔮ConceptDiff represents a partial update to a concept's name, description or icon.
 type ConceptDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Description *string         `json:"description,omitempty"`
@@ -966,7 +981,7 @@ type ConceptDiff struct {
 	setFields   map[string]bool `json:"-"`
 }
 
-// 📋UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
+// 📨UnmarshalJSON deserializes ConceptDiff JSON while tracking which fields are explicitly set.
 func (d *ConceptDiff) UnmarshalJSON(data []byte) error {
 	type Alias ConceptDiff
 	aux := &struct {
@@ -985,7 +1000,7 @@ func (d *ConceptDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
-// 🔷HasField returns whether a JSON field was present in the unmarshaled data.
+// 👁️HasField checks whether a specific JSON field was present during ConceptDiff deserialization.
 func (d *ConceptDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -993,7 +1008,7 @@ func (d *ConceptDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
-// 🔁ConceptsDiff represents a collection of concept additions, removals and updates.
+// 💭ConceptsDiff represents batched concept additions, removals and per-concept updates.
 type ConceptsDiff struct {
 	Removed []ConceptId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1003,7 +1018,7 @@ type ConceptsDiff struct {
 	Added []Concept `json:"added,omitempty"`
 }
 
-// 🔶ConceptMeta represents the scalar-only projection of a Concept (no Attributes).
+// 🧠ConceptMeta represents the scalar-only view of a concept excluding attributes.
 type ConceptMeta struct {
 	Guid        string  `json:"guid"`
 	Name        string  `json:"name"`
@@ -1013,11 +1028,12 @@ type ConceptMeta struct {
 	UpdatedAt   string  `json:"updatedAt,omitempty"`
 }
 
-// #endregion 🎯Concept
+// #endregion 💡Concept
 
-// #region 🖋️Model
 
-// 📄Model represents a 3D model reference associated with a file and tags.
+// #region 🗿Model
+
+// 🗿Model represents a 3D model reference linking a file with tags and description.
 type Model struct {
 	Guid        string      `json:"guid"`
 	File        FileId      `json:"file"`
@@ -1027,7 +1043,7 @@ type Model struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️ModelDiff represents changes to a model entity.
+// 🖼️ModelDiff represents a partial update to a model's file, name, tags or description.
 type ModelDiff struct {
 	File        *FileId         `json:"file,omitempty"`
 	Name        *string         `json:"name,omitempty"`
@@ -1036,7 +1052,7 @@ type ModelDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁ModelsDiff represents a collection of model additions, removals and updates.
+// 🎴ModelsDiff represents batched model additions, removals and per-model updates.
 type ModelsDiff struct {
 	Removed []ModelId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1046,7 +1062,7 @@ type ModelsDiff struct {
 	Added []Model `json:"added,omitempty"`
 }
 
-// 🏷️ModelMeta represents the scalar-only projection of a Model (no Tags, no Attributes).
+// 🎭ModelMeta represents the scalar-only view of a model excluding tags and attributes.
 type ModelMeta struct {
 	Guid        string  `json:"guid"`
 	File        FileId  `json:"file"`
@@ -1054,9 +1070,10 @@ type ModelMeta struct {
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 🖋️Model
+// #endregion 🗿Model
 
-// #region 💧Connector
+
+// #region 🔌Connector
 
 // 🔌Connector represents a spatial connection point on a type with position and direction.
 type Connector struct {
@@ -1073,21 +1090,21 @@ type Connector struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️PointDiff represents changes to a 3D point.
+// 📌PointDiff represents a partial update to a 3D point's X, Y or Z coordinate.
 type PointDiff struct {
 	X *float64 `json:"x,omitempty"`
 	Y *float64 `json:"y,omitempty"`
 	Z *float64 `json:"z,omitempty"`
 }
 
-// 🔷VectorDiff represents changes to a 3D vector.
+// 🧭VectorDiff represents a partial update to a 3D vector's X, Y or Z component.
 type VectorDiff struct {
 	X *float64 `json:"x,omitempty"`
 	Y *float64 `json:"y,omitempty"`
 	Z *float64 `json:"z,omitempty"`
 }
 
-// 🔶ConnectorDiff represents changes to a connector entity.
+// 🛠️ConnectorDiff represents a partial update to a connector's position, direction, port or props.
 type ConnectorDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Point       *PointDiff      `json:"point,omitempty"`
@@ -1101,7 +1118,7 @@ type ConnectorDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁ConnectorsDiff represents a collection of connector additions, removals and updates.
+// 🔋ConnectorsDiff represents batched connector additions, removals and per-connector updates.
 type ConnectorsDiff struct {
 	Removed []ConnectorId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1111,7 +1128,7 @@ type ConnectorsDiff struct {
 	Added []Connector `json:"added,omitempty"`
 }
 
-// 🔹ConnectorMeta represents the scalar-only projection of a Connector (no Props, no Attributes).
+// 📎ConnectorMeta represents the scalar-only view of a connector excluding props and attributes.
 type ConnectorMeta struct {
 	Guid        string  `json:"guid"`
 	Name        *string `json:"name,omitempty"`
@@ -1124,11 +1141,12 @@ type ConnectorMeta struct {
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 💧Connector
+// #endregion 🔌Connector
 
-// #region ⚡Type
 
-// 🏷️Type represents a component type with models, connectors and hierarchical inheritance.
+// #region 🧱Type
+
+// 🧱Type represents a component blueprint with models, connectors and hierarchical inheritance.
 type Type struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -1152,7 +1170,7 @@ type Type struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️TypeDiff represents changes to a type entity.
+// ⚒️TypeDiff represents a partial update to a type's name, parent, models, connectors or props.
 type TypeDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Parent      *TypeId         `json:"parent,omitempty"`
@@ -1174,7 +1192,7 @@ type TypeDiff struct {
 	setFields   map[string]bool `json:"-"`
 }
 
-// 📋UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
+// 📬UnmarshalJSON deserializes TypeDiff JSON while tracking which fields are explicitly set.
 func (d *TypeDiff) UnmarshalJSON(data []byte) error {
 	type Alias TypeDiff
 	aux := &struct {
@@ -1193,7 +1211,7 @@ func (d *TypeDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
-// 🔷HasField returns whether a JSON field was present in the unmarshaled data.
+// 🔦HasField checks whether a specific JSON field was present during TypeDiff deserialization.
 func (d *TypeDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -1201,7 +1219,7 @@ func (d *TypeDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
-// 🔁TypesDiff represents a collection of type additions, removals and updates.
+// 🏗️TypesDiff represents batched type additions, removals and per-type updates.
 type TypesDiff struct {
 	Removed []TypeId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1211,7 +1229,7 @@ type TypesDiff struct {
 	Added []Type `json:"added,omitempty"`
 }
 
-// 🔶TypeMeta represents the scalar-only projection of a Type (no slices).
+// 🧊TypeMeta represents the scalar-only view of a type excluding models, connectors, props and attributes.
 type TypeMeta struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -1253,9 +1271,10 @@ type TypeShallow struct {
 	UpdatedAt   string          `json:"updatedAt,omitempty"`
 }
 
-// #endregion ⚡Type
+// #endregion 🧱Type
 
-// #region 🎈Layer
+
+// #region 🎨Layer
 
 // 🎨Layer represents a named layer with visibility, lock and color properties.
 type Layer struct {
@@ -1268,7 +1287,7 @@ type Layer struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️LayerDiff represents changes to a layer entity.
+// 🖌️LayerDiff represents a partial update to a layer's path, visibility, lock state or color.
 type LayerDiff struct {
 	Path        *string         `json:"path,omitempty"`
 	IsHidden    *bool           `json:"isHidden,omitempty"`
@@ -1278,7 +1297,7 @@ type LayerDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁LayersDiff represents a collection of layer additions, removals and updates.
+// 🖍️LayersDiff represents batched layer additions, removals and per-layer updates.
 type LayersDiff struct {
 	Removed []LayerId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1288,7 +1307,7 @@ type LayersDiff struct {
 	Added []Layer `json:"added,omitempty"`
 }
 
-// 🔷LayerMeta represents the scalar-only projection of a Layer (no Attributes).
+// 🪟LayerMeta represents the scalar-only view of a layer excluding attributes.
 type LayerMeta struct {
 	Guid        string  `json:"guid"`
 	Path        string  `json:"path"`
@@ -1298,11 +1317,12 @@ type LayerMeta struct {
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 🎈Layer
+// #endregion 🎨Layer
 
-// #region 🔊Piece
 
-// 🔷Piece represents a placed component instance within a design.
+// #region 🧩Piece
+
+// 🧩Piece represents a positioned component instance within a design with optional transform.
 type Piece struct {
 	Guid        string      `json:"guid"`
 	Name        *string     `json:"name,omitempty"`
@@ -1320,20 +1340,20 @@ type Piece struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️CoordDiff represents changes to a 2D coordinate.
+// 🎯CoordDiff represents a partial update to a 2D coordinate's U or V value.
 type CoordDiff struct {
 	U *float64 `json:"u,omitempty"`
 	V *float64 `json:"v,omitempty"`
 }
 
-// 🔶PlaneDiff represents changes to a 3D plane.
+// 🔲PlaneDiff represents a partial update to a plane's origin, X-axis or Y-axis.
 type PlaneDiff struct {
 	Origin *PointDiff  `json:"origin,omitempty"`
 	XAxis  *VectorDiff `json:"xAxis,omitempty"`
 	YAxis  *VectorDiff `json:"yAxis,omitempty"`
 }
 
-// 🔹PieceDiff represents changes to a piece entity.
+// 🔩PieceDiff represents a partial update to a piece's type, plane, scale, center or props.
 type PieceDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Type        *TypeId         `json:"type,omitempty"`
@@ -1350,7 +1370,7 @@ type PieceDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁PiecesDiff represents a collection of piece additions, removals and updates.
+// 🎪PiecesDiff represents batched piece additions, removals and per-piece updates.
 type PiecesDiff struct {
 	Removed []PieceId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1360,7 +1380,7 @@ type PiecesDiff struct {
 	Added []Piece `json:"added,omitempty"`
 }
 
-// 🔸PieceMeta represents the scalar-only projection of a Piece (no Props, no Attributes).
+// 🧲PieceMeta represents the scalar-only view of a piece excluding props and attributes.
 type PieceMeta struct {
 	Guid        string    `json:"guid"`
 	Name        *string   `json:"name,omitempty"`
@@ -1376,11 +1396,12 @@ type PieceMeta struct {
 	Description *string   `json:"description,omitempty"`
 }
 
-// #endregion 🔊Piece
+// #endregion 🧩Piece
 
-// #region 🗺️Group
 
-// 🔷Group represents a named collection of pieces within a design.
+// #region 👥Group
+
+// 👥Group represents a named collection of pieces within a design.
 type Group struct {
 	Guid        string      `json:"guid"`
 	Pieces      []PieceId   `json:"pieces,omitempty"`
@@ -1390,7 +1411,7 @@ type Group struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️GroupDiff represents changes to a group entity.
+// 🤝GroupDiff represents a partial update to a group's pieces, name or color.
 type GroupDiff struct {
 	Pieces      []PieceId       `json:"pieces,omitempty"`
 	Name        *string         `json:"name,omitempty"`
@@ -1399,7 +1420,7 @@ type GroupDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁GroupsDiff represents a collection of group additions, removals and updates.
+// 🏘️GroupsDiff represents batched group additions, removals and per-group updates.
 type GroupsDiff struct {
 	Removed []GroupId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1409,7 +1430,7 @@ type GroupsDiff struct {
 	Added []Group `json:"added,omitempty"`
 }
 
-// 🔶GroupMeta represents the scalar-only projection of a Group (no Pieces, no Attributes).
+// 🗃️GroupMeta represents the scalar-only view of a group excluding pieces and attributes.
 type GroupMeta struct {
 	Guid        string  `json:"guid"`
 	Name        *string `json:"name,omitempty"`
@@ -1417,29 +1438,31 @@ type GroupMeta struct {
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 🗺️Group
+// #endregion 👥Group
 
-// #region 🎶Side
 
-// 🔌Side represents one end of a connection referencing a piece and optional connector.
+// #region ↔️Side
+
+// ↔️Side represents one end of a connection referencing a piece and optional connector.
 type Side struct {
 	Piece       PieceId      `json:"piece"`
 	DesignPiece *PieceId     `json:"designPiece,omitempty"`
 	Connector   *ConnectorId `json:"connector,omitempty"`
 }
 
-// ♻️SideDiff represents changes to a connection side.
+// ↩️SideDiff represents a partial update to a side's piece or connector reference.
 type SideDiff struct {
 	Piece       *PieceId     `json:"piece,omitempty"`
 	DesignPiece *PieceId     `json:"designPiece,omitempty"`
 	Connector   *ConnectorId `json:"connector,omitempty"`
 }
 
-// #endregion 🎶Side
+// #endregion ↔️Side
 
-// #region 🦀Connection
 
-// 🔌Connection represents a spatial relationship between two pieces with transform parameters.
+// #region 🔗Connection
+
+// 🔗Connection represents a spatial relationship between two pieces with gap, shift and rotation.
 type Connection struct {
 	Guid        string      `json:"guid"`
 	Connected   Side        `json:"connected"`
@@ -1456,7 +1479,7 @@ type Connection struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️ConnectionDiff represents changes to a connection entity.
+// ⛓️ConnectionDiff represents a partial update to a connection's sides, gap, shift, rotation or tilt.
 type ConnectionDiff struct {
 	Connected   *SideDiff       `json:"connected,omitempty"`
 	Connecting  *SideDiff       `json:"connecting,omitempty"`
@@ -1472,7 +1495,7 @@ type ConnectionDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁ConnectionsDiff represents a collection of connection additions, removals and updates.
+// 🔀ConnectionsDiff represents batched connection additions, removals and per-connection updates.
 type ConnectionsDiff struct {
 	Removed []ConnectionId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1482,7 +1505,7 @@ type ConnectionsDiff struct {
 	Added []Connection `json:"added,omitempty"`
 }
 
-// 🔷ConnectionMeta represents the scalar-only projection of a Connection (no Attributes).
+// 🧷ConnectionMeta represents the scalar-only view of a connection excluding attributes.
 type ConnectionMeta struct {
 	Guid        string  `json:"guid"`
 	Connected   Side    `json:"connected"`
@@ -1498,11 +1521,12 @@ type ConnectionMeta struct {
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 🦀Connection
+// #endregion 🔗Connection
 
-// #region 🎻Stat
 
-// 🔷Stat represents a statistical quality measurement with min and max bounds.
+// #region 📈Stat
+
+// 📈Stat represents a statistical quality measurement with min/max bounds and unit.
 type Stat struct {
 	Guid        string      `json:"guid"`
 	Quality     QualityId   `json:"quality"`
@@ -1514,7 +1538,7 @@ type Stat struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// ♻️StatDiff represents changes to a stat entity.
+// 📉StatDiff represents a partial update to a stat's quality reference, bounds or unit.
 type StatDiff struct {
 	Quality    *QualityId      `json:"quality,omitempty"`
 	Min        *float64        `json:"min,omitempty"`
@@ -1523,7 +1547,7 @@ type StatDiff struct {
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🔁StatsDiff represents a collection of stat additions, removals and updates.
+// 📋StatsDiff represents batched stat additions, removals and per-stat updates.
 type StatsDiff struct {
 	Removed []StatId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1533,7 +1557,7 @@ type StatsDiff struct {
 	Added []Stat `json:"added,omitempty"`
 }
 
-// 🔶StatMeta represents the scalar-only projection of a Stat (no Attributes).
+// 🪙StatMeta represents the scalar-only view of a stat excluding attributes.
 type StatMeta struct {
 	Guid    string    `json:"guid"`
 	Quality QualityId `json:"quality"`
@@ -1542,11 +1566,12 @@ type StatMeta struct {
 	Unit    *string   `json:"unit,omitempty"`
 }
 
-// #endregion 🎻Stat
+// #endregion 📈Stat
 
-// #region 📌Design
 
-// 🔌Design represents an assembly of pieces, connections, layers and groups.
+// #region 📐Design
+
+// 📐Design represents an assembly of pieces, connections, layers and groups.
 type Design struct {
 	Guid        string       `json:"guid"`
 	Name        string       `json:"name"`
@@ -1575,14 +1600,14 @@ type Design struct {
 	UpdatedAt   string       `json:"updatedAt,omitempty"`
 }
 
-// ♻️CameraDiff represents changes to a camera view.
+// 🎬CameraDiff represents a partial update to a camera's position, forward or up vector.
 type CameraDiff struct {
 	Position *PointDiff  `json:"position,omitempty"`
 	Forward  *VectorDiff `json:"forward,omitempty"`
 	Up       *VectorDiff `json:"up,omitempty"`
 }
 
-// 🔷DesignDiff represents changes to a design entity.
+// ✒️DesignDiff represents a partial update to a design's name, pieces, connections or layers.
 type DesignDiff struct {
 	Name        *string          `json:"name,omitempty"`
 	Parent      *DesignId        `json:"parent,omitempty"`
@@ -1608,7 +1633,7 @@ type DesignDiff struct {
 	Attributes  *AttributesDiff  `json:"attributes,omitempty"`
 }
 
-// 🔁DesignsDiff represents a collection of design additions, removals and updates.
+// 🏛️DesignsDiff represents batched design additions, removals and per-design updates.
 type DesignsDiff struct {
 	Removed []DesignId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1618,7 +1643,7 @@ type DesignsDiff struct {
 	Added []Design `json:"added,omitempty"`
 }
 
-// 🔶DesignMeta represents the scalar-only projection of a Design (no slices).
+// 🏙️DesignMeta represents the scalar-only view of a design excluding pieces, connections and layers.
 type DesignMeta struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -1638,7 +1663,7 @@ type DesignMeta struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// 🔖DesignShallow represents a Design with slice fields replaced by Meta item slices.
+// 📔DesignShallow represents a design overview with nested arrays replaced by scalar-only items.
 type DesignShallow struct {
 	Guid        string           `json:"guid"`
 	Name        string           `json:"name"`
@@ -1667,14 +1692,15 @@ type DesignShallow struct {
 	UpdatedAt   string           `json:"updatedAt,omitempty"`
 }
 
-// #endregion 📌Design
+// #endregion 📐Design
+
 
 // #region ⏱️Kit
 
-// #region 🎆KitKind
+// #region 🧬KitKind
 // KitKind discriminates the five persistence/transport forms of a Kit.
 
-// 🏷️KitKind represents the persistence/transport form of a Kit.
+// 🧬KitKind represents the five persistence/transport forms of a kit.
 // Specs: Exactly five kit kinds exist:
 //   - KitKindFile: Self-contained JSON file (.kit.json)
 //   - KitKindFolder: Local folder with .semio/kit.db SQLite file and asset files
@@ -1696,7 +1722,7 @@ const (
 	KitKindTemporary KitKind = "temporary"
 )
 
-// 🔷AllKitKinds contains all valid KitKind values.
+// 📜AllKitKinds contains the complete list of valid KitKind values.
 var AllKitKinds = []KitKind{KitKindFile, KitKindFolder, KitKindArchive, KitKindRemote, KitKindTemporary}
 
 // ✔️IsValidKitKind checks if a KitKind value is one of the five valid kinds.
@@ -1709,7 +1735,7 @@ func IsValidKitKind(kind KitKind) bool {
 	return false
 }
 
-// #endregion 🎆KitKind
+// #endregion 🧬KitKind
 
 // 📦Kit represents the root container for all domain entities.
 type Kit struct {
@@ -1737,7 +1763,7 @@ type Kit struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ♻️KitDiff represents changes to a kit entity.
+// 🔏KitDiff represents a partial update to a kit's name, version, entities or metadata.
 type KitDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Version     *string         `json:"version,omitempty"`
@@ -1762,7 +1788,7 @@ type KitDiff struct {
 	setFields   map[string]bool `json:"-"`
 }
 
-// 📋UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
+// 📮UnmarshalJSON deserializes KitDiff JSON while tracking which fields are explicitly set.
 func (d *KitDiff) UnmarshalJSON(data []byte) error {
 	type Alias KitDiff
 	aux := &struct{ *Alias }{Alias: (*Alias)(d)}
@@ -1777,7 +1803,7 @@ func (d *KitDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
-// 🔷HasField returns whether a JSON field was present in the unmarshaled data.
+// 👀HasField checks whether a specific JSON field was present during KitDiff deserialization.
 func (d *KitDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -1785,7 +1811,7 @@ func (d *KitDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
-// 🔁KitsDiff represents a collection of kit additions, removals and updates.
+// 🎁KitsDiff represents batched kit additions, removals and per-kit updates.
 type KitsDiff struct {
 	Removed []KitId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1795,7 +1821,7 @@ type KitsDiff struct {
 	Added []Kit `json:"added,omitempty"`
 }
 
-// 🔶KitMeta represents the scalar-only projection of a Kit (no slices).
+// 🎀KitMeta represents the scalar-only view of a kit excluding types, designs and entity arrays.
 type KitMeta struct {
 	Guid        string  `json:"guid"`
 	Name        string  `json:"name"`
@@ -1811,7 +1837,7 @@ type KitMeta struct {
 	UpdatedAt   string  `json:"updatedAt,omitempty"`
 }
 
-// 🔖KitShallow represents a Kit with slice fields replaced by Meta item slices.
+// 📓KitShallow represents a kit overview with nested arrays replaced by scalar-only items.
 type KitShallow struct {
 	Guid        string          `json:"guid"`
 	Name        string          `json:"name"`
@@ -1837,205 +1863,10 @@ type KitShallow struct {
 	UpdatedAt   string          `json:"updatedAt,omitempty"`
 }
 
-// #region 🔭Meta/Shallow Conversions
+// #endregion ⏱️Kit
 
-// 🔷ToAttributeMeta converts an Attribute to its Meta projection.
-func ToAttributeMeta(a Attribute) AttributeMeta {
-	return AttributeMeta{Guid: a.Guid, Key: a.Key, Value: a.Value, Definition: a.Definition}
-}
 
-// ✍️ToAuthorMeta converts an Author to its Meta projection.
-func ToAuthorMeta(a Author) AuthorMeta {
-	return AuthorMeta{Guid: a.Guid, Name: a.Name, Email: a.Email, CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt}
-}
-
-// 📄ToFileMeta converts a File to its Meta projection.
-func ToFileMeta(f File) FileMeta {
-	return FileMeta{Guid: f.Guid, Name: f.Name, Remote: f.Remote, Folder: f.Folder, Size: f.Size, Hash: f.Hash, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
-}
-
-// 📁ToFolderMeta converts a Folder to its Meta projection.
-func ToFolderMeta(f Folder) FolderMeta {
-	return FolderMeta{Guid: f.Guid, Name: f.Name, Parent: f.Parent, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
-}
-
-// 🔶ToQualityMeta converts a Quality to its Meta projection.
-func ToQualityMeta(q Quality) QualityMeta {
-	return QualityMeta{Guid: q.Guid, Key: q.Key, Name: q.Name, Description: q.Description, Uri: q.Uri, Kind: q.Kind, CanScale: q.CanScale, DefaultSiUnit: q.DefaultSiUnit, DefaultImperialUnit: q.DefaultImperialUnit, Min: q.Min, IsMinExcluded: q.IsMinExcluded, Max: q.Max, IsMaxExcluded: q.IsMaxExcluded, DefaultValue: q.DefaultValue, Formula: q.Formula, Icon: q.Icon, Image: q.Image, Unit: q.Unit, CreatedAt: q.CreatedAt, UpdatedAt: q.UpdatedAt}
-}
-
-// 🔹ToPortMeta converts a Port to its Meta projection.
-func ToPortMeta(p Port) PortMeta {
-	return PortMeta{Guid: p.Guid, Name: p.Name, Description: p.Description, Icon: p.Icon, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
-}
-
-// 🔸ToPropMeta converts a Prop to its Meta projection.
-func ToPropMeta(p Prop) PropMeta {
-	return PropMeta{Guid: p.Guid, Quality: p.Quality, Value: p.Value, Unit: p.Unit}
-}
-
-// 🏷️ToTagMeta converts a Tag to its Meta projection.
-func ToTagMeta(t Tag) TagMeta {
-	return TagMeta{Guid: t.Guid, Name: t.Name, Description: t.Description, Icon: t.Icon, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
-}
-
-// 🔺ToConceptMeta converts a Concept to its Meta projection.
-func ToConceptMeta(c Concept) ConceptMeta {
-	return ConceptMeta{Guid: c.Guid, Name: c.Name, Description: c.Description, Icon: c.Icon, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
-}
-
-// 🔻ToModelMeta converts a Model to its Meta projection.
-func ToModelMeta(m Model) ModelMeta {
-	return ModelMeta{Guid: m.Guid, File: m.File, Name: m.Name, Description: m.Description}
-}
-
-// ⬛ToConnectorMeta converts a Connector to its Meta projection.
-func ToConnectorMeta(c Connector) ConnectorMeta {
-	return ConnectorMeta{Guid: c.Guid, Name: c.Name, Point: c.Point, Direction: c.Direction, T: c.T, Mandatory: c.Mandatory, Port: c.Port, Description: c.Description}
-}
-
-// ⬜ToLayerMeta converts a Layer to its Meta projection.
-func ToLayerMeta(l Layer) LayerMeta {
-	return LayerMeta{Guid: l.Guid, Path: l.Path, IsHidden: l.IsHidden, IsLocked: l.IsLocked, Color: l.Color, Description: l.Description}
-}
-
-// 🟥ToPieceMeta converts a Piece to its Meta projection.
-func ToPieceMeta(p Piece) PieceMeta {
-	return PieceMeta{Guid: p.Guid, Name: p.Name, Type: p.Type, Design: p.Design, Plane: p.Plane, Center: p.Center, Scale: p.Scale, MirrorPlane: p.MirrorPlane, IsHidden: p.IsHidden, IsLocked: p.IsLocked, Color: p.Color, Description: p.Description}
-}
-
-// 🟧ToGroupMeta converts a Group to its Meta projection.
-func ToGroupMeta(g Group) GroupMeta {
-	return GroupMeta{Guid: g.Guid, Name: g.Name, Color: g.Color, Description: g.Description}
-}
-
-// 🔌ToConnectionMeta converts a Connection to its Meta projection.
-func ToConnectionMeta(c Connection) ConnectionMeta {
-	return ConnectionMeta{Guid: c.Guid, Connected: c.Connected, Connecting: c.Connecting, Gap: c.Gap, Shift: c.Shift, Rise: c.Rise, Rotation: c.Rotation, Turn: c.Turn, Tilt: c.Tilt, U: c.U, V: c.V, Description: c.Description}
-}
-
-// 🟨ToStatMeta converts a Stat to its Meta projection.
-func ToStatMeta(s Stat) StatMeta {
-	return StatMeta{Guid: s.Guid, Quality: s.Quality, Min: s.Min, Max: s.Max, Unit: s.Unit}
-}
-
-// 🟩ToTypeMeta converts a Type to its Meta projection.
-func ToTypeMeta(t Type) TypeMeta {
-	return TypeMeta{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
-}
-
-// 🟦ToTypeShallow converts a Type to its Shallow projection.
-func ToTypeShallow(t Type) TypeShallow {
-	models := make([]ModelMeta, len(t.Models))
-	for i, m := range t.Models {
-		models[i] = ToModelMeta(m)
-	}
-	connectors := make([]ConnectorMeta, len(t.Connectors))
-	for i, c := range t.Connectors {
-		connectors[i] = ToConnectorMeta(c)
-	}
-	props := make([]PropMeta, len(t.Props))
-	for i, p := range t.Props {
-		props[i] = ToPropMeta(p)
-	}
-	attributes := make([]AttributeMeta, len(t.Attributes))
-	for i, a := range t.Attributes {
-		attributes[i] = ToAttributeMeta(a)
-	}
-	return TypeShallow{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
-}
-
-// 🟪ToDesignMeta converts a Design to its Meta projection.
-func ToDesignMeta(d Design) DesignMeta {
-	return DesignMeta{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
-}
-
-// 🟫ToDesignShallow converts a Design to its Shallow projection.
-func ToDesignShallow(d Design) DesignShallow {
-	pieces := make([]PieceMeta, len(d.Pieces))
-	for i, p := range d.Pieces {
-		pieces[i] = ToPieceMeta(p)
-	}
-	connections := make([]ConnectionMeta, len(d.Connections))
-	for i, c := range d.Connections {
-		connections[i] = ToConnectionMeta(c)
-	}
-	stats := make([]StatMeta, len(d.Stats))
-	for i, s := range d.Stats {
-		stats[i] = ToStatMeta(s)
-	}
-	props := make([]PropMeta, len(d.Props))
-	for i, p := range d.Props {
-		props[i] = ToPropMeta(p)
-	}
-	layers := make([]LayerMeta, len(d.Layers))
-	for i, l := range d.Layers {
-		layers[i] = ToLayerMeta(l)
-	}
-	groups := make([]GroupMeta, len(d.Groups))
-	for i, g := range d.Groups {
-		groups[i] = ToGroupMeta(g)
-	}
-	attributes := make([]AttributeMeta, len(d.Attributes))
-	for i, a := range d.Attributes {
-		attributes[i] = ToAttributeMeta(a)
-	}
-	return DesignShallow{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
-}
-
-// 💠ToKitMeta converts a Kit to its Meta projection.
-func ToKitMeta(k Kit) KitMeta {
-	return KitMeta{Guid: k.Guid, Name: k.Name, Version: k.Version, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
-}
-
-// 🔳ToKitShallow converts a Kit to its Shallow projection.
-func ToKitShallow(k Kit) KitShallow {
-	types := make([]TypeMeta, len(k.Types))
-	for i, t := range k.Types {
-		types[i] = ToTypeMeta(t)
-	}
-	designs := make([]DesignMeta, len(k.Designs))
-	for i, d := range k.Designs {
-		designs[i] = ToDesignMeta(d)
-	}
-	tags := make([]TagMeta, len(k.Tags))
-	for i, t := range k.Tags {
-		tags[i] = ToTagMeta(t)
-	}
-	concepts := make([]ConceptMeta, len(k.Concepts))
-	for i, c := range k.Concepts {
-		concepts[i] = ToConceptMeta(c)
-	}
-	ports := make([]PortMeta, len(k.Ports))
-	for i, p := range k.Ports {
-		ports[i] = ToPortMeta(p)
-	}
-	qualities := make([]QualityMeta, len(k.Qualities))
-	for i, q := range k.Qualities {
-		qualities[i] = ToQualityMeta(q)
-	}
-	files := make([]FileMeta, len(k.Files))
-	for i, f := range k.Files {
-		files[i] = ToFileMeta(f)
-	}
-	folders := make([]FolderMeta, len(k.Folders))
-	for i, f := range k.Folders {
-		folders[i] = ToFolderMeta(f)
-	}
-	authors := make([]AuthorMeta, len(k.Authors))
-	for i, a := range k.Authors {
-		authors[i] = ToAuthorMeta(a)
-	}
-	attributes := make([]AttributeMeta, len(k.Attributes))
-	for i, a := range k.Attributes {
-		attributes[i] = ToAttributeMeta(a)
-	}
-	return KitShallow{Guid: k.Guid, Name: k.Name, Version: k.Version, Types: types, Designs: designs, Tags: tags, Concepts: concepts, Ports: ports, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
-}
-
-// #endregion 🔭Meta/Shallow Conversions
-
-// 🔹Change represents a reversible entity change with forward and backward diffs.
+// ⚖️Change represents a reversible entity change with forward and backward diffs.
 type Change[TEntity any, TDiff any] struct {
 	Forward  TDiff    `json:"forward"`
 	Backward TDiff    `json:"backward"`
@@ -2246,15 +2077,241 @@ func GetKitChange(before, after Kit, author *string, time *string) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Author: author, Time: time, Before: &before, After: &after}
 }
 
-// #endregion ⏱️Kit
+// #region ⏰Serialization
 
-// #region 🎬Hash
+// 📤SerializeKit marshals a Kit to indented JSON bytes.
+func SerializeKit(kit Kit) ([]byte, error) {
+	return json.MarshalIndent(kit, "", "  ")
+}
+
+// 📥DeserializeKit unmarshals JSON bytes into a Kit.
+func DeserializeKit(data []byte) (Kit, error) {
+	var kit Kit
+	err := json.Unmarshal(data, &kit)
+	return kit, err
+}
+
+// ✉️SerializeKitDiff marshals a KitDiff to indented JSON bytes.
+func SerializeKitDiff(diff KitDiff) ([]byte, error) {
+	return json.MarshalIndent(diff, "", "  ")
+}
+
+// 📩DeserializeKitDiff unmarshals JSON bytes into a KitDiff.
+func DeserializeKitDiff(data []byte) (KitDiff, error) {
+	var diff KitDiff
+	err := json.Unmarshal(data, &diff)
+	return diff, err
+}
+
+// #endregion ⏰Serialization
+
+
+// #region 🔑Meta And Shallow
+
+// 💎ToAttributeMeta converts an Attribute to its scalar-only Meta view.
+func ToAttributeMeta(a Attribute) AttributeMeta {
+	return AttributeMeta{Guid: a.Guid, Key: a.Key, Value: a.Value, Definition: a.Definition}
+}
+
+// ✍️ToAuthorMeta converts an Author to its scalar-only Meta view.
+func ToAuthorMeta(a Author) AuthorMeta {
+	return AuthorMeta{Guid: a.Guid, Name: a.Name, Email: a.Email, CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt}
+}
+
+// 📄ToFileMeta converts a File to its scalar-only Meta view.
+func ToFileMeta(f File) FileMeta {
+	return FileMeta{Guid: f.Guid, Name: f.Name, Remote: f.Remote, Folder: f.Folder, Size: f.Size, Hash: f.Hash, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
+}
+
+// 📁ToFolderMeta converts a Folder to its scalar-only Meta view.
+func ToFolderMeta(f Folder) FolderMeta {
+	return FolderMeta{Guid: f.Guid, Name: f.Name, Parent: f.Parent, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
+}
+
+// 🔬ToQualityMeta converts a Quality to its scalar-only Meta view.
+func ToQualityMeta(q Quality) QualityMeta {
+	return QualityMeta{Guid: q.Guid, Key: q.Key, Name: q.Name, Description: q.Description, Uri: q.Uri, Kind: q.Kind, CanScale: q.CanScale, DefaultSiUnit: q.DefaultSiUnit, DefaultImperialUnit: q.DefaultImperialUnit, Min: q.Min, IsMinExcluded: q.IsMinExcluded, Max: q.Max, IsMaxExcluded: q.IsMaxExcluded, DefaultValue: q.DefaultValue, Formula: q.Formula, Icon: q.Icon, Image: q.Image, Unit: q.Unit, CreatedAt: q.CreatedAt, UpdatedAt: q.UpdatedAt}
+}
+
+// ⚓ToPortMeta converts a Port to its scalar-only Meta view.
+func ToPortMeta(p Port) PortMeta {
+	return PortMeta{Guid: p.Guid, Name: p.Name, Description: p.Description, Icon: p.Icon, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
+}
+
+// 📊ToPropMeta converts a Prop to its scalar-only Meta view.
+func ToPropMeta(p Prop) PropMeta {
+	return PropMeta{Guid: p.Guid, Quality: p.Quality, Value: p.Value, Unit: p.Unit}
+}
+
+// 🏷️ToTagMeta converts a Tag to its scalar-only Meta view.
+func ToTagMeta(t Tag) TagMeta {
+	return TagMeta{Guid: t.Guid, Name: t.Name, Description: t.Description, Icon: t.Icon, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+}
+
+// 💡ToConceptMeta converts a Concept to its scalar-only Meta view.
+func ToConceptMeta(c Concept) ConceptMeta {
+	return ConceptMeta{Guid: c.Guid, Name: c.Name, Description: c.Description, Icon: c.Icon, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
+}
+
+// 🗿ToModelMeta converts a Model to its scalar-only Meta view.
+func ToModelMeta(m Model) ModelMeta {
+	return ModelMeta{Guid: m.Guid, File: m.File, Name: m.Name, Description: m.Description}
+}
+
+// 🔌ToConnectorMeta converts a Connector to its scalar-only Meta view.
+func ToConnectorMeta(c Connector) ConnectorMeta {
+	return ConnectorMeta{Guid: c.Guid, Name: c.Name, Point: c.Point, Direction: c.Direction, T: c.T, Mandatory: c.Mandatory, Port: c.Port, Description: c.Description}
+}
+
+// 🎨ToLayerMeta converts a Layer to its scalar-only Meta view.
+func ToLayerMeta(l Layer) LayerMeta {
+	return LayerMeta{Guid: l.Guid, Path: l.Path, IsHidden: l.IsHidden, IsLocked: l.IsLocked, Color: l.Color, Description: l.Description}
+}
+
+// 🧩ToPieceMeta converts a Piece to its scalar-only Meta view.
+func ToPieceMeta(p Piece) PieceMeta {
+	return PieceMeta{Guid: p.Guid, Name: p.Name, Type: p.Type, Design: p.Design, Plane: p.Plane, Center: p.Center, Scale: p.Scale, MirrorPlane: p.MirrorPlane, IsHidden: p.IsHidden, IsLocked: p.IsLocked, Color: p.Color, Description: p.Description}
+}
+
+// 👥ToGroupMeta converts a Group to its scalar-only Meta view.
+func ToGroupMeta(g Group) GroupMeta {
+	return GroupMeta{Guid: g.Guid, Name: g.Name, Color: g.Color, Description: g.Description}
+}
+
+// 🔗ToConnectionMeta converts a Connection to its scalar-only Meta view.
+func ToConnectionMeta(c Connection) ConnectionMeta {
+	return ConnectionMeta{Guid: c.Guid, Connected: c.Connected, Connecting: c.Connecting, Gap: c.Gap, Shift: c.Shift, Rise: c.Rise, Rotation: c.Rotation, Turn: c.Turn, Tilt: c.Tilt, U: c.U, V: c.V, Description: c.Description}
+}
+
+// 📈ToStatMeta converts a Stat to its scalar-only Meta view.
+func ToStatMeta(s Stat) StatMeta {
+	return StatMeta{Guid: s.Guid, Quality: s.Quality, Min: s.Min, Max: s.Max, Unit: s.Unit}
+}
+
+// 🧱ToTypeMeta converts a Type to its scalar-only Meta view.
+func ToTypeMeta(t Type) TypeMeta {
+	return TypeMeta{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+}
+
+// 🏗️ToTypeShallow converts a Type to its Shallow overview with scalar-only nested items.
+func ToTypeShallow(t Type) TypeShallow {
+	models := make([]ModelMeta, len(t.Models))
+	for i, m := range t.Models {
+		models[i] = ToModelMeta(m)
+	}
+	connectors := make([]ConnectorMeta, len(t.Connectors))
+	for i, c := range t.Connectors {
+		connectors[i] = ToConnectorMeta(c)
+	}
+	props := make([]PropMeta, len(t.Props))
+	for i, p := range t.Props {
+		props[i] = ToPropMeta(p)
+	}
+	attributes := make([]AttributeMeta, len(t.Attributes))
+	for i, a := range t.Attributes {
+		attributes[i] = ToAttributeMeta(a)
+	}
+	return TypeShallow{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+}
+
+// 📐ToDesignMeta converts a Design to its scalar-only Meta view.
+func ToDesignMeta(d Design) DesignMeta {
+	return DesignMeta{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+}
+
+// 🏕️ToDesignShallow converts a Design to its Shallow overview with scalar-only nested items.
+func ToDesignShallow(d Design) DesignShallow {
+	pieces := make([]PieceMeta, len(d.Pieces))
+	for i, p := range d.Pieces {
+		pieces[i] = ToPieceMeta(p)
+	}
+	connections := make([]ConnectionMeta, len(d.Connections))
+	for i, c := range d.Connections {
+		connections[i] = ToConnectionMeta(c)
+	}
+	stats := make([]StatMeta, len(d.Stats))
+	for i, s := range d.Stats {
+		stats[i] = ToStatMeta(s)
+	}
+	props := make([]PropMeta, len(d.Props))
+	for i, p := range d.Props {
+		props[i] = ToPropMeta(p)
+	}
+	layers := make([]LayerMeta, len(d.Layers))
+	for i, l := range d.Layers {
+		layers[i] = ToLayerMeta(l)
+	}
+	groups := make([]GroupMeta, len(d.Groups))
+	for i, g := range d.Groups {
+		groups[i] = ToGroupMeta(g)
+	}
+	attributes := make([]AttributeMeta, len(d.Attributes))
+	for i, a := range d.Attributes {
+		attributes[i] = ToAttributeMeta(a)
+	}
+	return DesignShallow{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+}
+
+// 📦ToKitMeta converts a Kit to its scalar-only Meta view.
+func ToKitMeta(k Kit) KitMeta {
+	return KitMeta{Guid: k.Guid, Name: k.Name, Version: k.Version, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
+}
+
+// 📦ToKitShallow converts a Kit to its Shallow overview with scalar-only nested items.
+func ToKitShallow(k Kit) KitShallow {
+	types := make([]TypeMeta, len(k.Types))
+	for i, t := range k.Types {
+		types[i] = ToTypeMeta(t)
+	}
+	designs := make([]DesignMeta, len(k.Designs))
+	for i, d := range k.Designs {
+		designs[i] = ToDesignMeta(d)
+	}
+	tags := make([]TagMeta, len(k.Tags))
+	for i, t := range k.Tags {
+		tags[i] = ToTagMeta(t)
+	}
+	concepts := make([]ConceptMeta, len(k.Concepts))
+	for i, c := range k.Concepts {
+		concepts[i] = ToConceptMeta(c)
+	}
+	ports := make([]PortMeta, len(k.Ports))
+	for i, p := range k.Ports {
+		ports[i] = ToPortMeta(p)
+	}
+	qualities := make([]QualityMeta, len(k.Qualities))
+	for i, q := range k.Qualities {
+		qualities[i] = ToQualityMeta(q)
+	}
+	files := make([]FileMeta, len(k.Files))
+	for i, f := range k.Files {
+		files[i] = ToFileMeta(f)
+	}
+	folders := make([]FolderMeta, len(k.Folders))
+	for i, f := range k.Folders {
+		folders[i] = ToFolderMeta(f)
+	}
+	authors := make([]AuthorMeta, len(k.Authors))
+	for i, a := range k.Authors {
+		authors[i] = ToAuthorMeta(a)
+	}
+	attributes := make([]AttributeMeta, len(k.Attributes))
+	for i, a := range k.Attributes {
+		attributes[i] = ToAttributeMeta(a)
+	}
+	return KitShallow{Guid: k.Guid, Name: k.Name, Version: k.Version, Types: types, Designs: designs, Tags: tags, Concepts: concepts, Ports: ports, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
+}
+
+// #endregion 🔑Meta And Shallow
+
+
+// #region 🖥️Hash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
 // SHA-256 hex digest. Collections are hashed by sorting child hashes alphabetically.
 // Field order is alphabetical by JSON field name. Missing/null fields are skipped.
 // Number format: integer if no fractional part, else shortest decimal representation.
 
-// ✏️#region 🌩️HashWriter
+// #region 🌩️HashWriter
 // 💾hashWriter accumulates binary data for deterministic SHA-256 hashing.
 type hashWriter struct {
 	buf bytes.Buffer
@@ -2347,7 +2404,7 @@ func FormatNumberForHash(n float64) string {
 
 // #region 🎵Hash Value Types
 
-// 🔷HashCoord computes SHA-256 hash of a Coord value.
+// 📺HashCoord computes SHA-256 hash of a Coord value.
 func HashCoord(c Coord) string {
 	w := &hashWriter{}
 	w.writeString("Coord")
@@ -2358,7 +2415,7 @@ func HashCoord(c Coord) string {
 	return w.digest()
 }
 
-// 🔶HashVec computes SHA-256 hash of a Vec value.
+// ➡️HashVec computes SHA-256 hash of a Vec value.
 func HashVec(v Vec) string {
 	w := &hashWriter{}
 	w.writeString("Vec")
@@ -2369,7 +2426,7 @@ func HashVec(v Vec) string {
 	return w.digest()
 }
 
-// 🔹HashPoint computes SHA-256 hash of a Point value.
+// ✖️HashPoint computes SHA-256 hash of a Point value.
 func HashPoint(p Point) string {
 	w := &hashWriter{}
 	w.writeString("Point")
@@ -2382,7 +2439,7 @@ func HashPoint(p Point) string {
 	return w.digest()
 }
 
-// 🔸HashVector computes SHA-256 hash of a Vector value.
+// ↗️HashVector computes SHA-256 hash of a Vector value.
 func HashVector(v Vector) string {
 	w := &hashWriter{}
 	w.writeString("Vector")
@@ -2395,7 +2452,7 @@ func HashVector(v Vector) string {
 	return w.digest()
 }
 
-// 🔺HashPlane computes SHA-256 hash of a Plane value.
+// ◻️HashPlane computes SHA-256 hash of a Plane value.
 func HashPlane(p Plane) string {
 	w := &hashWriter{}
 	w.writeString("Plane")
@@ -2408,7 +2465,7 @@ func HashPlane(p Plane) string {
 	return w.digest()
 }
 
-// 🔻HashCamera computes SHA-256 hash of a Camera value.
+// 🎥HashCamera computes SHA-256 hash of a Camera value.
 func HashCamera(c Camera) string {
 	w := &hashWriter{}
 	w.writeString("Camera")
@@ -2425,7 +2482,7 @@ func HashCamera(c Camera) string {
 
 // #region 🎩Hash Entities
 
-// 🔷HashAttribute computes SHA-256 hash of an Attribute entity.
+// 💎HashAttribute computes SHA-256 hash of an Attribute entity.
 func HashAttribute(a Attribute) string {
 	w := &hashWriter{}
 	w.writeString("Attribute")
@@ -2444,7 +2501,7 @@ func HashAttribute(a Attribute) string {
 	return w.digest()
 }
 
-// 🔶HashLocation computes SHA-256 hash of a Location entity.
+// 📍HashLocation computes SHA-256 hash of a Location entity.
 func HashLocation(l Location) string {
 	w := &hashWriter{}
 	w.writeString("Location")
@@ -2550,7 +2607,7 @@ func HashFolder(f Folder) string {
 	return w.digest()
 }
 
-// 🔹HashBenchmark computes SHA-256 hash of a Benchmark entity.
+// 📏HashBenchmark computes SHA-256 hash of a Benchmark entity.
 func HashBenchmark(b Benchmark) string {
 	w := &hashWriter{}
 	w.writeString("Benchmark")
@@ -2589,7 +2646,7 @@ func HashBenchmark(b Benchmark) string {
 	return w.digest()
 }
 
-// 🔸HashQuality computes SHA-256 hash of a Quality entity.
+// 🔬HashQuality computes SHA-256 hash of a Quality entity.
 func HashQuality(q Quality) string {
 	w := &hashWriter{}
 	w.writeString("Quality")
@@ -2670,7 +2727,7 @@ func HashQuality(q Quality) string {
 	return w.digest()
 }
 
-// 🔺HashPort computes SHA-256 hash of a Port entity.
+// ⚓HashPort computes SHA-256 hash of a Port entity.
 func HashPort(p Port) string {
 	w := &hashWriter{}
 	w.writeString("Port")
@@ -2705,7 +2762,7 @@ func HashPort(p Port) string {
 	return w.digest()
 }
 
-// 🔻HashProp computes SHA-256 hash of a Prop entity.
+// 📊HashProp computes SHA-256 hash of a Prop entity.
 func HashProp(p Prop) string {
 	w := &hashWriter{}
 	w.writeString("Prop")
@@ -2757,7 +2814,7 @@ func HashTag(t Tag) string {
 	return w.digest()
 }
 
-// ⬛HashConcept computes SHA-256 hash of a Concept entity.
+// 💡HashConcept computes SHA-256 hash of a Concept entity.
 func HashConcept(c Concept) string {
 	w := &hashWriter{}
 	w.writeString("Concept")
@@ -2784,7 +2841,7 @@ func HashConcept(c Concept) string {
 	return w.digest()
 }
 
-// ⬜HashModel computes SHA-256 hash of a Model entity.
+// 🗿HashModel computes SHA-256 hash of a Model entity.
 func HashModel(m Model) string {
 	w := &hashWriter{}
 	w.writeString("Model")
@@ -2819,7 +2876,7 @@ func HashModel(m Model) string {
 	return w.digest()
 }
 
-// 🟥HashConnector computes SHA-256 hash of a Connector entity.
+// 🔌HashConnector computes SHA-256 hash of a Connector entity.
 func HashConnector(c Connector) string {
 	w := &hashWriter{}
 	w.writeString("Connector")
@@ -2866,7 +2923,7 @@ func HashConnector(c Connector) string {
 	return w.digest()
 }
 
-// 🟧HashType computes SHA-256 hash of a Type entity.
+// 🧱HashType computes SHA-256 hash of a Type entity.
 func HashType(t Type) string {
 	w := &hashWriter{}
 	w.writeString("Type")
@@ -2965,7 +3022,7 @@ func HashType(t Type) string {
 	return w.digest()
 }
 
-// 🟨HashLayer computes SHA-256 hash of a Layer entity.
+// 🎨HashLayer computes SHA-256 hash of a Layer entity.
 func HashLayer(l Layer) string {
 	w := &hashWriter{}
 	w.writeString("Layer")
@@ -3000,7 +3057,7 @@ func HashLayer(l Layer) string {
 	return w.digest()
 }
 
-// 🟩HashStat computes SHA-256 hash of a Stat entity.
+// 📈HashStat computes SHA-256 hash of a Stat entity.
 func HashStat(s Stat) string {
 	w := &hashWriter{}
 	w.writeString("Stat")
@@ -3031,7 +3088,7 @@ func HashStat(s Stat) string {
 	return w.digest()
 }
 
-// 🟦HashGroup computes SHA-256 hash of a Group entity.
+// 👥HashGroup computes SHA-256 hash of a Group entity.
 func HashGroup(g Group) string {
 	w := &hashWriter{}
 	w.writeString("Group")
@@ -3066,7 +3123,7 @@ func HashGroup(g Group) string {
 	return w.digest()
 }
 
-// 💻HashSide computes SHA-256 hash of a Side value.
+// ↔️HashSide computes SHA-256 hash of a Side value.
 func HashSide(s Side) string {
 	w := &hashWriter{}
 	w.writeString("Side")
@@ -3126,7 +3183,7 @@ func HashConnection(c Connection) string {
 	return w.digest()
 }
 
-// 🟪HashPiece computes SHA-256 hash of a Piece entity.
+// 🧩HashPiece computes SHA-256 hash of a Piece entity.
 func HashPiece(p Piece) string {
 	w := &hashWriter{}
 	w.writeString("Piece")
@@ -3195,7 +3252,7 @@ func HashPiece(p Piece) string {
 	return w.digest()
 }
 
-// 🟫HashDesign computes SHA-256 Merkle hash of a Design entity.
+// 📐HashDesign computes SHA-256 Merkle hash of a Design entity.
 func HashDesign(d Design) string {
 	w := &hashWriter{}
 	w.writeString("Design")
@@ -3322,7 +3379,7 @@ func HashDesign(d Design) string {
 	return w.digest()
 }
 
-// 💠HashKit computes SHA-256 Merkle hash of a Kit entity.
+// 📦HashKit computes SHA-256 Merkle hash of a Kit entity.
 func HashKit(k Kit) string {
 	w := &hashWriter{}
 	w.writeString("Kit")
@@ -3450,6 +3507,9 @@ func HashKit(k Kit) string {
 // #region 🔗Hash Diffs
 // Deterministic SHA-256 Merkle hash functions for all diff types.
 
+// #region 🐹Hash Diff Value Types
+// Helper functions for writing diff fields.
+
 func writeNullableStringDiff(w *hashWriter, key string, val *string, isSet bool) {
 	if val != nil {
 		w.writeString(key)
@@ -3536,6 +3596,11 @@ func hashCollectionDiffGeneric(
 	}
 	return w.digest()
 }
+
+// #endregion 🐹Hash Diff Value Types
+
+// #region ⚗️Hash Diff Entities
+// Hash functions for all diff entity types.
 
 func HashCoordDiff(d CoordDiff) string {
 	w := &hashWriter{}
@@ -4646,43 +4711,16 @@ func HashKitDiff(d KitDiff) string {
 	return w.digest()
 }
 
-// #endregion 🔗Hash Diff Entities
+// #endregion ⚗️Hash Diff Entities
 
-// #endregion 🎬Hash Diffs
+// #endregion 🔗Hash Diffs
 
-//#endregion 🎬Hash
+// #endregion 🖥️Hash
 
-// #region ⏰Serialization
 
-// 📋SerializeKit marshals a kit to indented JSON bytes.
-func SerializeKit(kit Kit) ([]byte, error) {
-	return json.MarshalIndent(kit, "", "  ")
-}
+// #region 🔍Helpers
 
-// 🔷DeserializeKit unmarshals JSON bytes into a kit.
-func DeserializeKit(data []byte) (Kit, error) {
-	var kit Kit
-	err := json.Unmarshal(data, &kit)
-	return kit, err
-}
-
-// 🔶SerializeKitDiff marshals a kit diff to indented JSON bytes.
-func SerializeKitDiff(diff KitDiff) ([]byte, error) {
-	return json.MarshalIndent(diff, "", "  ")
-}
-
-// 🔹DeserializeKitDiff unmarshals JSON bytes into a kit diff.
-func DeserializeKitDiff(data []byte) (KitDiff, error) {
-	var diff KitDiff
-	err := json.Unmarshal(data, &diff)
-	return diff, err
-}
-
-// #endregion ⏰Serialization
-
-// #region 🎼Helpers
-
-// 🏷️FindTypeInKit returns a pointer to the type with the given GUID or nil.
+// 🧱FindTypeInKit returns a pointer to the type with the given GUID or nil.
 func FindTypeInKit(kit *Kit, typeGuid string) *Type {
 	for i := range kit.Types {
 		if kit.Types[i].Guid == typeGuid {
@@ -4692,7 +4730,7 @@ func FindTypeInKit(kit *Kit, typeGuid string) *Type {
 	return nil
 }
 
-// 🔷FindDesignInKit returns a pointer to the design with the given GUID or nil.
+// 📐FindDesignInKit returns a pointer to the design with the given GUID or nil.
 func FindDesignInKit(kit *Kit, designGuid string) *Design {
 	for i := range kit.Designs {
 		if kit.Designs[i].Guid == designGuid {
@@ -4702,7 +4740,7 @@ func FindDesignInKit(kit *Kit, designGuid string) *Design {
 	return nil
 }
 
-// 🔶FindPieceInDesign returns a pointer to the piece with the given GUID or nil.
+// 🧩FindPieceInDesign returns a pointer to the piece with the given GUID or nil.
 func FindPieceInDesign(design *Design, pieceGuid string) *Piece {
 	for i := range design.Pieces {
 		if design.Pieces[i].Guid == pieceGuid {
@@ -4712,7 +4750,7 @@ func FindPieceInDesign(design *Design, pieceGuid string) *Piece {
 	return nil
 }
 
-// 🔌FindConnectionInDesign returns a pointer to the connection with the given GUID or nil.
+// 🔗FindConnectionInDesign returns a pointer to the connection with the given GUID or nil.
 func FindConnectionInDesign(design *Design, connectionGuid string) *Connection {
 	for i := range design.Connections {
 		if design.Connections[i].Guid == connectionGuid {
@@ -4722,7 +4760,7 @@ func FindConnectionInDesign(design *Design, connectionGuid string) *Connection {
 	return nil
 }
 
-// 🔹FindConnectorInType returns a pointer to the connector with the given GUID or nil.
+// 🔌FindConnectorInType returns a pointer to the connector with the given GUID or nil.
 func FindConnectorInType(typ *Type, connectorGuid string) *Connector {
 	for i := range typ.Connectors {
 		if typ.Connectors[i].Guid == connectorGuid {
@@ -4752,7 +4790,7 @@ func FindFolderInKit(kit *Kit, folderGuid string) *Folder {
 	return nil
 }
 
-// 🔸FindQualityInKit returns a pointer to the quality with the given GUID or nil.
+// 🔬FindQualityInKit returns a pointer to the quality with the given GUID or nil.
 func FindQualityInKit(kit *Kit, qualityGuid string) *Quality {
 	for i := range kit.Qualities {
 		if kit.Qualities[i].Guid == qualityGuid {
@@ -4762,7 +4800,7 @@ func FindQualityInKit(kit *Kit, qualityGuid string) *Quality {
 	return nil
 }
 
-// 🔺FindPortInKit returns a pointer to the port with the given GUID or nil.
+// ⚓FindPortInKit returns a pointer to the port with the given GUID or nil.
 func FindPortInKit(kit *Kit, interfaceGuid string) *Port {
 	for i := range kit.Ports {
 		if kit.Ports[i].Guid == interfaceGuid {
@@ -4772,7 +4810,7 @@ func FindPortInKit(kit *Kit, interfaceGuid string) *Port {
 	return nil
 }
 
-// 🔻FindTagInKit returns a pointer to the tag with the given GUID or nil.
+// 🏷️FindTagInKit returns a pointer to the tag with the given GUID or nil.
 func FindTagInKit(kit *Kit, tagGuid string) *Tag {
 	for i := range kit.Tags {
 		if kit.Tags[i].Guid == tagGuid {
@@ -4782,7 +4820,7 @@ func FindTagInKit(kit *Kit, tagGuid string) *Tag {
 	return nil
 }
 
-// ⬛FindConceptInKit returns a pointer to the concept with the given GUID or nil.
+// 💡FindConceptInKit returns a pointer to the concept with the given GUID or nil.
 func FindConceptInKit(kit *Kit, conceptGuid string) *Concept {
 	for i := range kit.Concepts {
 		if kit.Concepts[i].Guid == conceptGuid {
@@ -4802,7 +4840,7 @@ func FindAuthorInKit(kit *Kit, authorGuid string) *Author {
 	return nil
 }
 
-// ⬜For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
+// 🔬For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
 func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64 {
 	design := FindDesignInKit(kit, designGuid)
 	if design == nil {
@@ -4844,7 +4882,8 @@ func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64
 	return total
 }
 
-// #endregion 🎼Helpers
+// #endregion 🔍Helpers
+
 
 // #region 🗡️Factories
 
@@ -4860,7 +4899,7 @@ func NewKit(name string) Kit {
 	}
 }
 
-// 🏷️NewType creates a new type with the given name and a generated GUID.
+// 🧱NewType creates a new type with the given name and a generated GUID.
 func NewType(name string) Type {
 	now := ""
 	return Type{
@@ -4871,7 +4910,7 @@ func NewType(name string) Type {
 	}
 }
 
-// 🔷NewDesign creates a new design with the given name and a generated GUID.
+// 📐NewDesign creates a new design with the given name and a generated GUID.
 func NewDesign(name string) Design {
 	now := ""
 	return Design{
@@ -4882,14 +4921,14 @@ func NewDesign(name string) Design {
 	}
 }
 
-// 🔶NewPiece creates a new piece with a generated GUID.
+// 🧩NewPiece creates a new piece with a generated GUID.
 func NewPiece() Piece {
 	return Piece{
 		Guid: Guid(),
 	}
 }
 
-// 🔌NewConnection creates a new connection between two pieces by their GUIDs.
+// 🔗NewConnection creates a new connection between two pieces by their GUIDs.
 func NewConnection(connectedPieceGuid, connectingPieceGuid string) Connection {
 	return Connection{
 		Guid:       Guid(),
@@ -4930,7 +4969,7 @@ func NewFolder(name string) Folder {
 	}
 }
 
-// 🔹NewQuality creates a new quality with the given key, name and a generated GUID.
+// 🔬NewQuality creates a new quality with the given key, name and a generated GUID.
 func NewQuality(key, name string) Quality {
 	now := ""
 	return Quality{
@@ -4942,7 +4981,7 @@ func NewQuality(key, name string) Quality {
 	}
 }
 
-// 🔸NewPort creates a new port with the given name and a generated GUID.
+// ⚓NewPort creates a new port with the given name and a generated GUID.
 func NewPort(name string) Port {
 	now := ""
 	return Port{
@@ -4953,7 +4992,7 @@ func NewPort(name string) Port {
 	}
 }
 
-// 🔺NewTag creates a new tag with the given name and a generated GUID.
+// 🏷️NewTag creates a new tag with the given name and a generated GUID.
 func NewTag(name string) Tag {
 	now := ""
 	return Tag{
@@ -4964,7 +5003,7 @@ func NewTag(name string) Tag {
 	}
 }
 
-// 🔻NewConcept creates a new concept with the given name and a generated GUID.
+// 💡NewConcept creates a new concept with the given name and a generated GUID.
 func NewConcept(name string) Concept {
 	now := ""
 	return Concept{
@@ -4988,7 +5027,8 @@ func NewAuthor(name string) Author {
 
 // #endregion 🗡️Factories
 
-// #region 📍Kit Operations
+
+// #region 🎪Kit Operations
 // Kit Operations MUST provide comparison, diffing, and application of kit changes.
 
 // 🧱AreKitsEqual compares two kits for structural equality.
@@ -5164,7 +5204,7 @@ func AreKitsEqual(a, b Kit) bool {
 	return true
 }
 
-// 🔷AreKitDiffsEqual compares two kit diffs for structural equality.
+// 📦AreKitDiffsEqual compares two kit diffs for structural equality.
 func AreKitDiffsEqual(a, b KitDiff) bool {
 	if (a.Name == nil) != (b.Name == nil) {
 		return false
@@ -5483,7 +5523,7 @@ func areAuthorsDiffsEqual(a, b *AuthorsDiff) bool {
 	return true
 }
 
-// 🔶GetKitDiff computes the diff between a before and after kit state.
+// 📦GetKitDiff computes the differential between a before and after kit state.
 func GetKitDiff(before, after Kit) KitDiff {
 	diff := KitDiff{}
 	if before.Name != after.Name {
@@ -6100,7 +6140,7 @@ func isAuthorDiffEmpty(diff AuthorDiff) bool {
 	return diff.Name == nil && diff.Email == nil && diff.Attributes == nil
 }
 
-// 🔹InverseKitDiff computes the reverse diff that undoes an applied diff.
+// 📦InverseKitDiff computes the reverse diff that undoes a previously applied diff.
 func InverseKitDiff(original Kit, appliedDiff KitDiff) KitDiff {
 	inverse := KitDiff{}
 	if appliedDiff.Name != nil {
@@ -8699,7 +8739,7 @@ func areGroupsEqual(a, b []Group) bool {
 	return true
 }
 
-// 🔁ApplyKitDiff applies a diff to a base kit producing the updated kit.
+// ▶️ApplyKitDiff applies a forward diff to a base kit producing the updated kit.
 func ApplyKitDiff(base Kit, diff KitDiff) Kit {
 	result := base
 	if diff.Name != nil {
@@ -8757,6 +8797,432 @@ func ApplyKitDiff(base Kit, diff KitDiff) Kit {
 		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
 	}
 	return result
+}
+
+// KitDiffValidationNote is one machine-addressable validation message.
+type KitDiffValidationNote struct {
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message"`
+}
+
+// KitDiffValidationResult is returned by ValidateKitDiff.
+type KitDiffValidationResult struct {
+	Ok       bool                    `json:"ok"`
+	Errors   []KitDiffValidationNote `json:"errors"`
+	Warnings []KitDiffValidationNote `json:"warnings"`
+	Diff     *KitDiff                `json:"diff,omitempty"`
+}
+
+type kitDiffValidateCtx struct {
+	errors   []KitDiffValidationNote
+	warnings []KitDiffValidationNote
+	heal     bool
+}
+
+func kitdiffPush(ctx *kitDiffValidateCtx, kind string, code, msg string) {
+	n := KitDiffValidationNote{Code: code, Message: msg}
+	if kind == "errors" {
+		ctx.errors = append(ctx.errors, n)
+	} else {
+		ctx.warnings = append(ctx.warnings, n)
+	}
+}
+
+func kitdiffDeepEqualJSON(a, b any) bool {
+	ja, e1 := json.Marshal(a)
+	jb, e2 := json.Marshal(b)
+	return e1 == nil && e2 == nil && string(ja) == string(jb)
+}
+
+func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, base []map[string]any, raw map[string]any, onUpdated func(item map[string]any, diff map[string]any, p string)) map[string]any {
+	if raw == nil {
+		return nil
+	}
+	baseBy := map[string]map[string]any{}
+	for _, it := range base {
+		if g, ok := it["guid"].(string); ok {
+			baseBy[g] = it
+		}
+	}
+	removedSet := map[string]bool{}
+	if arr, ok := raw["removed"].([]any); ok {
+		for _, r := range arr {
+			if rm, ok := r.(map[string]any); ok {
+				if g, ok := rm["guid"].(string); ok {
+					removedSet[g] = true
+				}
+			}
+		}
+	}
+	afterRemove := map[string]bool{}
+	for g := range baseBy {
+		if !removedSet[g] {
+			afterRemove[g] = true
+		}
+	}
+	var hRem, hUpd, hAdd []any
+	if ctx.heal {
+		if x, ok := raw["removed"].([]any); ok {
+			hRem = append([]any(nil), x...)
+		}
+		if x, ok := raw["updated"].([]any); ok {
+			hUpd = append([]any(nil), x...)
+		}
+		if x, ok := raw["added"].([]any); ok {
+			hAdd = append([]any(nil), x...)
+		}
+	}
+	if arr, ok := raw["removed"].([]any); ok {
+		for _, r := range arr {
+			rm, ok := r.(map[string]any)
+			if !ok {
+				continue
+			}
+			rg, _ := rm["guid"].(string)
+			if _, ok := baseBy[rg]; !ok {
+				kitdiffPush(ctx, "warnings", "kitdiff.remove.missing-target", path+": remove references missing "+idKey+" "+rg)
+				if ctx.heal && hRem != nil {
+					nr := hRem[:0]
+					for _, x := range hRem {
+						if m, ok := x.(map[string]any); ok && m["guid"] == rg {
+							continue
+						}
+						nr = append(nr, x)
+					}
+					hRem = nr
+				}
+			}
+		}
+	}
+	addBy := map[string]map[string]any{}
+	if arr, ok := raw["added"].([]any); ok {
+		for _, a := range arr {
+			if am, ok := a.(map[string]any); ok {
+				if g, ok := am["guid"].(string); ok {
+					addBy[g] = am
+				}
+			}
+		}
+	}
+	if arr, ok := raw["removed"].([]any); ok {
+		for _, r := range arr {
+			rm, ok := r.(map[string]any)
+			if !ok {
+				continue
+			}
+			rg, _ := rm["guid"].(string)
+			orig := baseBy[rg]
+			add := addBy[rg]
+			if orig != nil && add != nil && kitdiffDeepEqualJSON(orig, add) {
+				kitdiffPush(ctx, "warnings", "kitdiff.cycle.noop-restore", path+": removed and re-added "+idKey+" "+rg+" are deeply equal (no effective change)")
+				if ctx.heal {
+					if hRem != nil {
+						nr := hRem[:0]
+						for _, x := range hRem {
+							if m, ok := x.(map[string]any); ok && m["guid"] == rg {
+								continue
+							}
+							nr = append(nr, x)
+						}
+						hRem = nr
+					}
+					if hAdd != nil {
+						na := hAdd[:0]
+						for _, x := range hAdd {
+							if m, ok := x.(map[string]any); ok && m["guid"] == rg {
+								continue
+							}
+							na = append(na, x)
+						}
+						hAdd = na
+					}
+				}
+			}
+		}
+	}
+	seenAdd := map[string]bool{}
+	if arr, ok := raw["added"].([]any); ok {
+		for _, a := range arr {
+			am, ok := a.(map[string]any)
+			if !ok {
+				continue
+			}
+			ag, _ := am["guid"].(string)
+			if seenAdd[ag] {
+				kitdiffPush(ctx, "errors", "kitdiff.add.duplicate-in-diff", path+": duplicate added "+idKey+" guid "+ag)
+				if ctx.heal && hAdd != nil {
+					first := true
+					na := hAdd[:0]
+					for _, x := range hAdd {
+						m, ok := x.(map[string]any)
+						if !ok {
+							na = append(na, x)
+							continue
+						}
+						if g, _ := m["guid"].(string); g == ag {
+							if first {
+								na = append(na, x)
+								first = false
+							}
+							continue
+						}
+						na = append(na, x)
+					}
+					hAdd = na
+				}
+			}
+			seenAdd[ag] = true
+			if afterRemove[ag] {
+				kitdiffPush(ctx, "errors", "kitdiff.add.duplicate-guid", path+": cannot add "+idKey+" "+ag+" that still exists after removes")
+				if ctx.heal && hAdd != nil {
+					na := hAdd[:0]
+					for _, x := range hAdd {
+						if m, ok := x.(map[string]any); ok && m["guid"] == ag {
+							continue
+						}
+						na = append(na, x)
+					}
+					hAdd = na
+				}
+			}
+		}
+	}
+	if arr, ok := raw["updated"].([]any); ok {
+		for _, u := range arr {
+			um, ok := u.(map[string]any)
+			if !ok {
+				continue
+			}
+			idObj, ok := um[idKey].(map[string]any)
+			if !ok {
+				continue
+			}
+			gid, _ := idObj["guid"].(string)
+			p := path + "." + idKey + "[" + gid + "]"
+			if gid == "" {
+				kitdiffPush(ctx, "errors", "kitdiff.update.bad-id", p+": missing "+idKey+" id")
+				if ctx.heal && hUpd != nil {
+					hUpd = filterUpdatesByGuid(hUpd, idKey, gid)
+				}
+				continue
+			}
+			if !afterRemove[gid] {
+				kitdiffPush(ctx, "errors", "kitdiff.update.missing-target", p+": update targets "+idKey+" not present after removes")
+				if ctx.heal && hUpd != nil {
+					hUpd = filterUpdatesByGuid(hUpd, idKey, gid)
+				}
+				continue
+			}
+			item := baseBy[gid]
+			if item == nil {
+				kitdiffPush(ctx, "errors", "kitdiff.update.missing-base", p+": "+idKey+" not found in base kit")
+				if ctx.heal && hUpd != nil {
+					hUpd = filterUpdatesByGuid(hUpd, idKey, gid)
+				}
+				continue
+			}
+			dm, _ := um["diff"].(map[string]any)
+			if onUpdated != nil {
+				onUpdated(item, dm, p)
+			}
+		}
+	}
+	if !ctx.heal {
+		return raw
+	}
+	out := map[string]any{}
+	if len(hRem) > 0 {
+		out["removed"] = hRem
+	}
+	if len(hUpd) > 0 {
+		out["updated"] = hUpd
+	}
+	if len(hAdd) > 0 {
+		out["added"] = hAdd
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
+func filterUpdatesByGuid(updates []any, idKey, gid string) []any {
+	n := updates[:0]
+	for _, u := range updates {
+		um, ok := u.(map[string]any)
+		if !ok {
+			n = append(n, u)
+			continue
+		}
+		idObj, ok := um[idKey].(map[string]any)
+		if !ok {
+			n = append(n, u)
+			continue
+		}
+		if g, _ := idObj["guid"].(string); g == gid {
+			continue
+		}
+		n = append(n, u)
+	}
+	return n
+}
+
+func kitToMap(k Kit) map[string]any {
+	b, _ := json.Marshal(k)
+	var m map[string]any
+	_ = json.Unmarshal(b, &m)
+	return m
+}
+
+func kitDiffToMap(d KitDiff) map[string]any {
+	b, _ := json.Marshal(d)
+	var m map[string]any
+	_ = json.Unmarshal(b, &m)
+	return m
+}
+
+func mapToKitDiff(m map[string]any) KitDiff {
+	b, _ := json.Marshal(m)
+	var d KitDiff
+	_ = json.Unmarshal(b, &d)
+	return d
+}
+
+func validateDesignDiffNestedGo(ctx *kitDiffValidateCtx, kitMap map[string]any, path string, design map[string]any, diff map[string]any, refs map[string]map[string]bool) {
+	typeGuids := refs["typeGuids"]
+	designGuids := refs["designGuids"]
+	authorGuids := refs["authorGuids"]
+	if p, ok := diff["parent"].(map[string]any); ok {
+		if pg, ok := p["guid"].(string); ok {
+			if pg != "" && !designGuids[pg] {
+				kitdiffPush(ctx, "errors", "kitdiff.ref.design-parent-missing", path+": parent design "+pg+" not in kit")
+			}
+			if dg, ok := design["guid"].(string); ok && pg == dg {
+				kitdiffPush(ctx, "errors", "kitdiff.ref.design-parent-self", path+": design cannot be its own parent")
+			}
+		}
+	}
+	if da, ok := diff["authors"]; ok {
+		if arr, ok := da.([]any); ok {
+			for _, a := range arr {
+				am, ok := a.(map[string]any)
+				if !ok {
+					continue
+				}
+				if g, ok := am["guid"].(string); ok && g != "" && !authorGuids[g] {
+					kitdiffPush(ctx, "errors", "kitdiff.ref.author-missing", path+": author "+g+" not in kit")
+				}
+			}
+		} else if dm, ok := da.(map[string]any); ok {
+			authArr := toMapSlice(kitMap["authors"])
+			validateGuidCollectionDiffGo(ctx, path+".authors", "author", authArr, dm, nil)
+		}
+	}
+	if pd, ok := diff["pieces"].(map[string]any); ok {
+		pieces := toMapSlice(design["pieces"])
+		validateGuidCollectionDiffGo(ctx, path+".pieces", "piece", pieces, pd, nil)
+		if arr, ok := pd["added"].([]any); ok {
+			for _, a := range arr {
+				am, ok := a.(map[string]any)
+				if !ok {
+					continue
+				}
+				var tg string
+				if t, ok := am["type"].(map[string]any); ok {
+					tg, _ = t["guid"].(string)
+				}
+				if tg != "" && !typeGuids[tg] {
+					kitdiffPush(ctx, "errors", "kitdiff.ref.piece-type-missing", path+".pieces.added: type "+tg+" not in kit")
+				}
+				var dg string
+				if d, ok := am["design"].(map[string]any); ok {
+					dg, _ = d["guid"].(string)
+				}
+				if dg != "" && !designGuids[dg] {
+					kitdiffPush(ctx, "errors", "kitdiff.ref.piece-design-missing", path+".pieces.added: subdesign "+dg+" not in kit")
+				}
+			}
+		}
+	}
+}
+
+func toMapSlice(v any) []map[string]any {
+	arr, ok := v.([]any)
+	if !ok {
+		return nil
+	}
+	out := make([]map[string]any, 0, len(arr))
+	for _, x := range arr {
+		if m, ok := x.(map[string]any); ok {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
+func guidSetFromKitEntities(v any) map[string]bool {
+	s := map[string]bool{}
+	for _, m := range toMapSlice(v) {
+		if g, ok := m["guid"].(string); ok {
+			s[g] = true
+		}
+	}
+	return s
+}
+
+// ValidateKitDiff checks whether a KitDiff can be applied faithfully to kit; heal returns a JSON-scrubbed diff.
+func ValidateKitDiff(kit Kit, diff KitDiff, heal bool) KitDiffValidationResult {
+	ctx := &kitDiffValidateCtx{heal: heal}
+	km := kitToMap(kit)
+	dm := kitDiffToMap(diff)
+	var outDiff map[string]any
+	if heal {
+		b, _ := json.Marshal(dm)
+		_ = json.Unmarshal(b, &outDiff)
+	}
+	refs := map[string]map[string]bool{
+		"typeGuids":    guidSetFromKitEntities(km["types"]),
+		"designGuids":  guidSetFromKitEntities(km["designs"]),
+		"qualityGuids": guidSetFromKitEntities(km["qualities"]),
+		"fileGuids":    guidSetFromKitEntities(km["files"]),
+		"portGuids":    guidSetFromKitEntities(km["ports"]),
+		"conceptGuids": guidSetFromKitEntities(km["concepts"]),
+		"authorGuids":  guidSetFromKitEntities(km["authors"]),
+	}
+	runColl := func(key, idKey, arrKey string, onUpd func(item map[string]any, ddf map[string]any, p string)) {
+		part, ok := dm[key].(map[string]any)
+		if !ok || part == nil {
+			return
+		}
+		fixed := validateGuidCollectionDiffGo(ctx, key, idKey, toMapSlice(km[arrKey]), part, onUpd)
+		if heal && outDiff != nil {
+			if fixed != nil && len(fixed) > 0 {
+				outDiff[key] = fixed
+			} else {
+				delete(outDiff, key)
+			}
+		}
+	}
+	runColl("types", "type", "types", nil)
+	runColl("designs", "design", "designs", func(item map[string]any, ddf map[string]any, p string) {
+		validateDesignDiffNestedGo(ctx, km, p, item, ddf, refs)
+	})
+	runColl("tags", "tag", "tags", nil)
+	runColl("concepts", "concept", "concepts", nil)
+	runColl("ports", "port", "ports", nil)
+	runColl("qualities", "quality", "qualities", nil)
+	runColl("files", "file", "files", nil)
+	runColl("folders", "folder", "folders", nil)
+	runColl("authors", "author", "authors", nil)
+	if a, ok := dm["attributes"].(map[string]any); ok {
+		validateGuidCollectionDiffGo(ctx, "kit.attributes", "attribute", toMapSlice(km["attributes"]), a, nil)
+	}
+	res := KitDiffValidationResult{Ok: len(ctx.errors) == 0, Errors: ctx.errors, Warnings: ctx.warnings}
+	if heal && outDiff != nil {
+		d := mapToKitDiff(outDiff)
+		res.Diff = &d
+	}
+	return res
 }
 
 func applyTypesDiff(base []Type, diff TypesDiff) []Type {
@@ -9701,7 +10167,7 @@ func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model 
 	return &filtered[bestIndex]
 }
 
-// #region 🪵Filter
+// #region 🎠Filter
 
 // 🧩GlobFilter provides include/exclude glob patterns for name-based entity filtering.
 // If Include is non-empty, only names matching at least one include pattern are kept.
@@ -9763,7 +10229,7 @@ func MatchesGlobFilter(name string, filter *GlobFilter) bool {
 	return true
 }
 
-// 🔷filterKitByDesign filters a kit to only include entities related to a specific design.
+// 📦filterKitByDesign filters a kit to only include entities transitively related to a design.
 // Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
 // 📄files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
 func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
@@ -10109,7 +10575,7 @@ func selectBestModelLike(models []Model, selectedTagGuids []string) *Model {
 	return &best
 }
 
-// 🔶jaccardTagGuidsGo computes Jaccard similarity between model tags and selected tags.
+// 🏷️jaccardTagGuidsGo computes Jaccard similarity coefficient between model tags and selected tags.
 // 🔑Helper for filterKitByDesign.
 func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
 	modelTagSet := make(map[string]bool)
@@ -10141,9 +10607,10 @@ func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
 	return float64(intersection) / float64(union)
 }
 
-// #endregion 🪵Filter
+// #endregion 🎠Filter
 
-// #endregion 📍Kit Operations
+// #endregion 🎪Kit Operations
+
 
 // #region 🌊Kit Change Helpers
 // Kit Change Helpers MUST provide convenience functions for single-entity kit changes.
@@ -10172,7 +10639,7 @@ func RemoveTypeFromKit(kit Kit, typeGuid string) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// ♻️AddDesignToKit creates a change that adds a single design to a kit.
+// ➕AddDesignToKit creates a change that adds a single design to a kit.
 func AddDesignToKit(kit Kit, design Design) KitChange {
 	forward := KitDiff{
 		Designs: &DesignsDiff{
@@ -10208,7 +10675,7 @@ func AddFileToKit(kit Kit, file File) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// 🔷RemoveFileFromKit creates a change that removes a file by GUID.
+// ❌RemoveFileFromKit creates a change that removes a file by GUID.
 func RemoveFileFromKit(kit Kit, fileGuid string) KitChange {
 	forward := KitDiff{
 		Files: &FilesDiff{
@@ -10232,7 +10699,7 @@ func AddPortToKit(kit Kit, iface Port) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// 🔶RemovePortFromKit creates a change that removes a port by GUID.
+// ⚓RemovePortFromKit creates a change that removes a port by GUID.
 func RemovePortFromKit(kit Kit, interfaceGuid string) KitChange {
 	forward := KitDiff{
 		Ports: &PortsDiff{
@@ -10256,7 +10723,7 @@ func AddTagToKit(kit Kit, tag Tag) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// 🔹RemoveTagFromKit creates a change that removes a tag by GUID.
+// 🪹RemoveTagFromKit creates a change that removes a tag by GUID.
 func RemoveTagFromKit(kit Kit, tagGuid string) KitChange {
 	forward := KitDiff{
 		Tags: &TagsDiff{
@@ -10268,7 +10735,7 @@ func RemoveTagFromKit(kit Kit, tagGuid string) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// 🔸AddConceptToKit creates a change that adds a single concept to a kit.
+// 💡AddConceptToKit creates a change that adds a single concept to a kit.
 func AddConceptToKit(kit Kit, concept Concept) KitChange {
 	forward := KitDiff{
 		Concepts: &ConceptsDiff{
@@ -10280,7 +10747,7 @@ func AddConceptToKit(kit Kit, concept Concept) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// 🔺RemoveConceptFromKit creates a change that removes a concept by GUID.
+// 💡RemoveConceptFromKit creates a change that removes a concept by GUID.
 func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
 	forward := KitDiff{
 		Concepts: &ConceptsDiff{
@@ -10294,1738 +10761,6 @@ func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
 
 // #endregion 🌊Kit Change Helpers
 
-// #region 🔓Validation
-
-// 🏷️SemioEntityKind enumerates the kinds of semio domain entities.
-type SemioEntityKind string
-
-const (
-	EntityKindKit        SemioEntityKind = "Kit"
-	EntityKindType       SemioEntityKind = "Type"
-	EntityKindDesign     SemioEntityKind = "Design"
-	EntityKindPiece      SemioEntityKind = "Piece"
-	EntityKindConnection SemioEntityKind = "Connection"
-	EntityKindConnector  SemioEntityKind = "Connector"
-	EntityKindAttribute  SemioEntityKind = "Attribute"
-	EntityKindFile       SemioEntityKind = "File"
-	EntityKindFolder     SemioEntityKind = "Folder"
-	EntityKindQuality    SemioEntityKind = "Quality"
-	EntityKindPort       SemioEntityKind = "Port"
-	EntityKindProp       SemioEntityKind = "Prop"
-	EntityKindModel      SemioEntityKind = "Model"
-	EntityKindLayer      SemioEntityKind = "Layer"
-	EntityKindGroup      SemioEntityKind = "Group"
-	EntityKindStat       SemioEntityKind = "Stat"
-	EntityKindTag        SemioEntityKind = "Tag"
-	EntityKindConcept    SemioEntityKind = "Concept"
-	EntityKindAuthor     SemioEntityKind = "Author"
-)
-
-// 📇Severity enumerates validation problem severity levels.
-type Severity string
-
-const (
-	SeverityError   Severity = "error"
-	SeverityWarning Severity = "warning"
-)
-
-// 💻DomainLocation identifies the entity and field where a validation problem occurs.
-type DomainLocation struct {
-	EntityKind SemioEntityKind `json:"entityKind"`
-	EntityGuid string          `json:"entityGuid,omitempty"`
-	Field      string          `json:"field,omitempty"`
-}
-
-// 🔧Fix represents a suggested correction for a validation problem.
-type Fix struct {
-	Title string  `json:"title"`
-	Diff  KitDiff `json:"diff"`
-}
-
-// 🔒Problem represents a single validation constraint breach.
-type Problem struct {
-	ConstraintId string         `json:"constraintId"`
-	Severity     Severity       `json:"severity,omitempty"`
-	Message      string         `json:"message"`
-	Location     DomainLocation `json:"entityKind,omitempty"`
-	RelatedGuids []string       `json:"relatedGuids,omitempty"`
-	Fixes        []Fix          `json:"fixes"`
-}
-
-// 🔗ValidationResult contains all problems found during kit validation.
-type ValidationResult struct {
-	Problems []Problem `json:"problems"`
-}
-
-// 📝ValidationContext provides indexed access to kit entities for constraint evaluation.
-type ValidationContext struct {
-	Kit           Kit
-	TypesByGuid   map[string]*Type
-	DesignsByGuid map[string]*Design
-	PiecesByGuid  map[string]struct {
-		DesignGuid string
-		Piece      *Piece
-	}
-	ConnectorsByTypeGuid map[string][]Connector
-	ModelsByTypeGuid     map[string][]Model
-}
-
-// ⚡Constraint is a function that evaluates a validation rule against a kit context.
-type Constraint func(ctx *ValidationContext) []Problem
-
-func buildValidationContext(kit Kit) *ValidationContext {
-	ctx := &ValidationContext{
-		Kit:           kit,
-		TypesByGuid:   make(map[string]*Type),
-		DesignsByGuid: make(map[string]*Design),
-		PiecesByGuid: make(map[string]struct {
-			DesignGuid string
-			Piece      *Piece
-		}),
-		ConnectorsByTypeGuid: make(map[string][]Connector),
-		ModelsByTypeGuid:     make(map[string][]Model),
-	}
-	for i := range kit.Types {
-		t := &kit.Types[i]
-		ctx.TypesByGuid[t.Guid] = t
-		ctx.ConnectorsByTypeGuid[t.Guid] = t.Connectors
-		ctx.ModelsByTypeGuid[t.Guid] = t.Models
-	}
-	for i := range kit.Designs {
-		d := &kit.Designs[i]
-		ctx.DesignsByGuid[d.Guid] = d
-		for j := range d.Pieces {
-			p := &d.Pieces[j]
-			ctx.PiecesByGuid[p.Guid] = struct {
-				DesignGuid string
-				Piece      *Piece
-			}{DesignGuid: d.Guid, Piece: p}
-		}
-	}
-	return ctx
-}
-
-func generateUniqueName(baseName string, existingNames []string) string {
-	nameSet := make(map[string]bool)
-	for _, n := range existingNames {
-		nameSet[n] = true
-	}
-	for i := 2; ; i++ {
-		candidate := fmt.Sprintf("%s %d", baseName, i)
-		if !nameSet[candidate] {
-			return candidate
-		}
-	}
-}
-
-func makeFix(ctx *ValidationContext, title string, mutate func(clone *Kit)) Fix {
-	cloneData, _ := SerializeKit(ctx.Kit)
-	var clone Kit
-	json.Unmarshal(cloneData, &clone)
-	mutate(&clone)
-	diff := GetKitDiff(ctx.Kit, clone)
-	return Fix{Title: title, Diff: diff}
-}
-
-// ✔️GuidUniquenessConstraint checks that all entity GUIDs are unique within a kit.
-func GuidUniquenessConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	seen := make(map[string]SemioEntityKind)
-	check := func(entityKind SemioEntityKind, entityGuid string) {
-		if _, exists := seen[entityGuid]; exists {
-			problem := Problem{
-				ConstraintId: "guid-unique",
-				Severity:     SeverityError,
-				Message:      fmt.Sprintf("Duplicate GUID \"%s\". First occurrence kept.", entityGuid),
-				Location:     DomainLocation{EntityKind: entityKind, EntityGuid: entityGuid, Field: "guid"},
-				RelatedGuids: []string{entityGuid},
-				Fixes: []Fix{
-					makeFix(ctx, "Regenerate GUID", func(clone *Kit) {
-						newGuid := Guid()
-						updateGuidEverywhere(clone, entityGuid, newGuid)
-					}),
-				},
-			}
-			problems = append(problems, problem)
-		} else {
-			seen[entityGuid] = entityKind
-		}
-	}
-	check(EntityKindKit, ctx.Kit.Guid)
-	for _, t := range ctx.Kit.Types {
-		check(EntityKindType, t.Guid)
-	}
-	for _, d := range ctx.Kit.Designs {
-		check(EntityKindDesign, d.Guid)
-		for _, p := range d.Pieces {
-			check(EntityKindPiece, p.Guid)
-		}
-		for _, c := range d.Connections {
-			check(EntityKindConnection, c.Guid)
-		}
-		for _, s := range d.Stats {
-			check(EntityKindStat, s.Guid)
-		}
-	}
-	for _, q := range ctx.Kit.Qualities {
-		check(EntityKindQuality, q.Guid)
-	}
-	for _, i := range ctx.Kit.Ports {
-		check(EntityKindPort, i.Guid)
-	}
-	for _, f := range ctx.Kit.Files {
-		check(EntityKindFile, f.Guid)
-	}
-	for _, f := range ctx.Kit.Folders {
-		check(EntityKindFolder, f.Guid)
-	}
-	return problems
-}
-
-func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
-	if kit.Guid == oldGuid {
-		kit.Guid = newGuid
-	}
-	for i := range kit.Types {
-		t := &kit.Types[i]
-		if t.Guid == oldGuid {
-			t.Guid = newGuid
-		}
-		if t.Parent != nil && t.Parent.Guid == oldGuid {
-			t.Parent.Guid = newGuid
-		}
-		for j := range t.Connectors {
-			if t.Connectors[j].Guid == oldGuid {
-				t.Connectors[j].Guid = newGuid
-			}
-		}
-		for j := range t.Models {
-			if t.Models[j].Guid == oldGuid {
-				t.Models[j].Guid = newGuid
-			}
-		}
-	}
-	for i := range kit.Designs {
-		d := &kit.Designs[i]
-		if d.Guid == oldGuid {
-			d.Guid = newGuid
-		}
-		if d.Parent != nil && d.Parent.Guid == oldGuid {
-			d.Parent.Guid = newGuid
-		}
-		for j := range d.Pieces {
-			p := &d.Pieces[j]
-			if p.Guid == oldGuid {
-				p.Guid = newGuid
-			}
-			if p.Type != nil && p.Type.Guid == oldGuid {
-				p.Type.Guid = newGuid
-			}
-			if p.Design != nil && p.Design.Guid == oldGuid {
-				p.Design.Guid = newGuid
-			}
-		}
-		for j := range d.Connections {
-			c := &d.Connections[j]
-			if c.Guid == oldGuid {
-				c.Guid = newGuid
-			}
-			if c.Connected.Piece.Guid == oldGuid {
-				c.Connected.Piece.Guid = newGuid
-			}
-			if c.Connecting.Piece.Guid == oldGuid {
-				c.Connecting.Piece.Guid = newGuid
-			}
-			if c.Connected.Connector != nil && c.Connected.Connector.Guid == oldGuid {
-				c.Connected.Connector.Guid = newGuid
-			}
-			if c.Connecting.Connector != nil && c.Connecting.Connector.Guid == oldGuid {
-				c.Connecting.Connector.Guid = newGuid
-			}
-		}
-	}
-	for i := range kit.Ports {
-		if kit.Ports[i].Guid == oldGuid {
-			kit.Ports[i].Guid = newGuid
-		}
-		for j := range kit.Ports[i].CompatiblePorts {
-			if kit.Ports[i].CompatiblePorts[j].Guid == oldGuid {
-				kit.Ports[i].CompatiblePorts[j].Guid = newGuid
-			}
-		}
-	}
-	for i := range kit.Qualities {
-		if kit.Qualities[i].Guid == oldGuid {
-			kit.Qualities[i].Guid = newGuid
-		}
-	}
-	for i := range kit.Files {
-		if kit.Files[i].Guid == oldGuid {
-			kit.Files[i].Guid = newGuid
-		}
-	}
-	for i := range kit.Folders {
-		if kit.Folders[i].Guid == oldGuid {
-			kit.Folders[i].Guid = newGuid
-		}
-		if kit.Folders[i].Parent != nil && kit.Folders[i].Parent.Guid == oldGuid {
-			kit.Folders[i].Parent.Guid = newGuid
-		}
-	}
-}
-
-// 🔷TypeNameUniquenessConstraint checks that sibling type names are unique.
-func TypeNameUniquenessConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	byParent := make(map[string][]Type)
-	for _, t := range ctx.Kit.Types {
-		parentGuid := ""
-		if t.Parent != nil {
-			parentGuid = t.Parent.Guid
-		}
-		byParent[parentGuid] = append(byParent[parentGuid], t)
-	}
-	for _, siblings := range byParent {
-		names := make(map[string][]Type)
-		for _, t := range siblings {
-			name := t.Name
-			names[name] = append(names[name], t)
-		}
-		for name, group := range names {
-			if len(group) <= 1 {
-				continue
-			}
-			siblingNames := make([]string, len(siblings))
-			for i, s := range siblings {
-				siblingNames[i] = s.Name
-			}
-			for i := 1; i < len(group); i++ {
-				typ := group[i]
-				relatedGuids := make([]string, len(group))
-				for j, g := range group {
-					relatedGuids[j] = g.Guid
-				}
-				problem := Problem{
-					ConstraintId: "type-name-unique",
-					Severity:     SeverityError,
-					Message:      fmt.Sprintf("Duplicate type name \"%s\" among siblings.", name),
-					Location:     DomainLocation{EntityKind: EntityKindType, EntityGuid: typ.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
-					Fixes: []Fix{
-						makeFix(ctx, fmt.Sprintf("Rename \"%s\"", name), func(clone *Kit) {
-							for j := range clone.Types {
-								if clone.Types[j].Guid == typ.Guid {
-									clone.Types[j].Name = generateUniqueName(name, siblingNames)
-									break
-								}
-							}
-						}),
-					},
-				}
-				problems = append(problems, problem)
-			}
-		}
-	}
-	return problems
-}
-
-// 🔶DesignNameUniquenessConstraint checks that sibling design names are unique.
-func DesignNameUniquenessConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	byParent := make(map[string][]Design)
-	for _, d := range ctx.Kit.Designs {
-		parentGuid := ""
-		if d.Parent != nil {
-			parentGuid = d.Parent.Guid
-		}
-		byParent[parentGuid] = append(byParent[parentGuid], d)
-	}
-	for _, siblings := range byParent {
-		names := make(map[string][]Design)
-		for _, d := range siblings {
-			name := d.Name
-			names[name] = append(names[name], d)
-		}
-		for name, group := range names {
-			if len(group) <= 1 {
-				continue
-			}
-			siblingNames := make([]string, len(siblings))
-			for i, s := range siblings {
-				siblingNames[i] = s.Name
-			}
-			for i := 1; i < len(group); i++ {
-				design := group[i]
-				relatedGuids := make([]string, len(group))
-				for j, g := range group {
-					relatedGuids[j] = g.Guid
-				}
-				problem := Problem{
-					ConstraintId: "design-name-unique",
-					Severity:     SeverityError,
-					Message:      fmt.Sprintf("Duplicate design name \"%s\" among siblings.", name),
-					Location:     DomainLocation{EntityKind: EntityKindDesign, EntityGuid: design.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
-					Fixes: []Fix{
-						makeFix(ctx, fmt.Sprintf("Rename \"%s\"", name), func(clone *Kit) {
-							for j := range clone.Designs {
-								if clone.Designs[j].Guid == design.Guid {
-									clone.Designs[j].Name = generateUniqueName(name, siblingNames)
-									break
-								}
-							}
-						}),
-					},
-				}
-				problems = append(problems, problem)
-			}
-		}
-	}
-	return problems
-}
-
-// 🔹PieceNameUniquenessConstraint checks that piece names are unique within each design.
-func PieceNameUniquenessConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	for _, design := range ctx.Kit.Designs {
-		if len(design.Pieces) == 0 {
-			continue
-		}
-		names := make(map[string][]Piece)
-		for _, p := range design.Pieces {
-			name := ""
-			if p.Name != nil {
-				name = *p.Name
-			}
-			names[name] = append(names[name], p)
-		}
-		allNames := make([]string, len(design.Pieces))
-		for i, p := range design.Pieces {
-			if p.Name != nil {
-				allNames[i] = *p.Name
-			}
-		}
-		for name, group := range names {
-			if len(group) <= 1 {
-				continue
-			}
-			for i := 1; i < len(group); i++ {
-				piece := group[i]
-				relatedGuids := make([]string, len(group))
-				for j, g := range group {
-					relatedGuids[j] = g.Guid
-				}
-				designGuid := design.Guid
-				problem := Problem{
-					ConstraintId: "piece-name-unique",
-					Severity:     SeverityError,
-					Message:      fmt.Sprintf("Duplicate piece name \"%s\" inside design \"%s\".", name, design.Name),
-					Location:     DomainLocation{EntityKind: EntityKindPiece, EntityGuid: piece.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
-					Fixes: []Fix{
-						makeFix(ctx, fmt.Sprintf("Rename piece \"%s\"", name), func(clone *Kit) {
-							for j := range clone.Designs {
-								if clone.Designs[j].Guid == designGuid {
-									for k := range clone.Designs[j].Pieces {
-										if clone.Designs[j].Pieces[k].Guid == piece.Guid {
-											newName := generateUniqueName(name, allNames)
-											clone.Designs[j].Pieces[k].Name = &newName
-											break
-										}
-									}
-									break
-								}
-							}
-						}),
-					},
-				}
-				problems = append(problems, problem)
-			}
-		}
-	}
-	return problems
-}
-
-// 🔸QualityNameUniquenessConstraint checks that quality names are unique within a kit.
-func QualityNameUniquenessConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	names := make(map[string][]Quality)
-	for _, q := range ctx.Kit.Qualities {
-		name := q.Name
-		names[name] = append(names[name], q)
-	}
-	allNames := make([]string, len(ctx.Kit.Qualities))
-	for i, q := range ctx.Kit.Qualities {
-		allNames[i] = q.Name
-	}
-	for name, group := range names {
-		if len(group) <= 1 {
-			continue
-		}
-		for i := 1; i < len(group); i++ {
-			quality := group[i]
-			relatedGuids := make([]string, len(group))
-			for j, g := range group {
-				relatedGuids[j] = g.Guid
-			}
-			problem := Problem{
-				ConstraintId: "quality-name-unique",
-				Severity:     SeverityError,
-				Message:      fmt.Sprintf("Duplicate quality name \"%s\".", name),
-				Location:     DomainLocation{EntityKind: EntityKindQuality, EntityGuid: quality.Guid, Field: "name"},
-				RelatedGuids: relatedGuids,
-				Fixes: []Fix{
-					makeFix(ctx, fmt.Sprintf("Rename quality \"%s\"", name), func(clone *Kit) {
-						for j := range clone.Qualities {
-							if clone.Qualities[j].Guid == quality.Guid {
-								clone.Qualities[j].Name = generateUniqueName(name, allNames)
-								break
-							}
-						}
-					}),
-				},
-			}
-			problems = append(problems, problem)
-		}
-	}
-	return problems
-}
-
-// 🔺PortNameUniquenessConstraint checks that port names are unique within a kit.
-func PortNameUniquenessConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	names := make(map[string][]Port)
-	for _, p := range ctx.Kit.Ports {
-		name := p.Name
-		names[name] = append(names[name], p)
-	}
-	allNames := make([]string, len(ctx.Kit.Ports))
-	for i, p := range ctx.Kit.Ports {
-		allNames[i] = p.Name
-	}
-	for name, group := range names {
-		if len(group) <= 1 {
-			continue
-		}
-		for i := 1; i < len(group); i++ {
-			iface := group[i]
-			relatedGuids := make([]string, len(group))
-			for j, g := range group {
-				relatedGuids[j] = g.Guid
-			}
-			problem := Problem{
-				ConstraintId: "port-name-unique",
-				Severity:     SeverityError,
-				Message:      fmt.Sprintf("Duplicate port name \"%s\".", name),
-				Location:     DomainLocation{EntityKind: EntityKindPort, EntityGuid: iface.Guid, Field: "name"},
-				RelatedGuids: relatedGuids,
-				Fixes: []Fix{
-					makeFix(ctx, fmt.Sprintf("Rename port \"%s\"", name), func(clone *Kit) {
-						for j := range clone.Ports {
-							if clone.Ports[j].Guid == iface.Guid {
-								clone.Ports[j].Name = generateUniqueName(name, allNames)
-								break
-							}
-						}
-					}),
-				},
-			}
-			problems = append(problems, problem)
-		}
-	}
-	return problems
-}
-
-// 📄FileNameUniquenessConstraint checks that file names are unique within a kit.
-func FileNameUniquenessConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	names := make(map[string][]File)
-	for _, f := range ctx.Kit.Files {
-		name := f.Name
-		names[name] = append(names[name], f)
-	}
-	allNames := make([]string, len(ctx.Kit.Files))
-	for i, f := range ctx.Kit.Files {
-		allNames[i] = f.Name
-	}
-	for name, group := range names {
-		if len(group) <= 1 {
-			continue
-		}
-		for i := 1; i < len(group); i++ {
-			file := group[i]
-			relatedGuids := make([]string, len(group))
-			for j, g := range group {
-				relatedGuids[j] = g.Guid
-			}
-			problem := Problem{
-				ConstraintId: "file-name-unique",
-				Severity:     SeverityError,
-				Message:      fmt.Sprintf("Duplicate file name \"%s\".", name),
-				Location:     DomainLocation{EntityKind: EntityKindFile, EntityGuid: file.Guid, Field: "name"},
-				RelatedGuids: relatedGuids,
-				Fixes: []Fix{
-					makeFix(ctx, fmt.Sprintf("Rename file \"%s\"", name), func(clone *Kit) {
-						for j := range clone.Files {
-							if clone.Files[j].Guid == file.Guid {
-								clone.Files[j].Name = generateUniqueName(name, allNames)
-								break
-							}
-						}
-					}),
-				},
-			}
-			problems = append(problems, problem)
-		}
-	}
-	return problems
-}
-
-// 📁FolderNameUniquenessConstraint checks that sibling folder names are unique.
-func FolderNameUniquenessConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	byParent := make(map[string][]Folder)
-	for _, f := range ctx.Kit.Folders {
-		parentGuid := ""
-		if f.Parent != nil {
-			parentGuid = f.Parent.Guid
-		}
-		byParent[parentGuid] = append(byParent[parentGuid], f)
-	}
-	for _, siblings := range byParent {
-		names := make(map[string][]Folder)
-		for _, f := range siblings {
-			name := f.Name
-			names[name] = append(names[name], f)
-		}
-		siblingNames := make([]string, len(siblings))
-		for i, s := range siblings {
-			siblingNames[i] = s.Name
-		}
-		for name, group := range names {
-			if len(group) <= 1 {
-				continue
-			}
-			for i := 1; i < len(group); i++ {
-				folder := group[i]
-				relatedGuids := make([]string, len(group))
-				for j, g := range group {
-					relatedGuids[j] = g.Guid
-				}
-				problem := Problem{
-					ConstraintId: "folder-name-unique",
-					Severity:     SeverityError,
-					Message:      fmt.Sprintf("Duplicate folder name \"%s\" among siblings.", name),
-					Location:     DomainLocation{EntityKind: EntityKindFolder, EntityGuid: folder.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
-					Fixes: []Fix{
-						makeFix(ctx, fmt.Sprintf("Rename folder \"%s\"", name), func(clone *Kit) {
-							for j := range clone.Folders {
-								if clone.Folders[j].Guid == folder.Guid {
-									clone.Folders[j].Name = generateUniqueName(name, siblingNames)
-									break
-								}
-							}
-						}),
-					},
-				}
-				problems = append(problems, problem)
-			}
-		}
-	}
-	return problems
-}
-
-// 🔻ConnectorNameUniquenessConstraint checks that connector names are unique within each type.
-func ConnectorNameUniquenessConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	for typeGuid, connectors := range ctx.ConnectorsByTypeGuid {
-		if len(connectors) == 0 {
-			continue
-		}
-		names := make(map[string][]Connector)
-		for _, c := range connectors {
-			name := ""
-			if c.Name != nil {
-				name = *c.Name
-			}
-			names[name] = append(names[name], c)
-		}
-		allNames := make([]string, len(connectors))
-		for i, c := range connectors {
-			if c.Name != nil {
-				allNames[i] = *c.Name
-			}
-		}
-		typ := ctx.TypesByGuid[typeGuid]
-		typeName := ""
-		if typ != nil {
-			typeName = typ.Name
-		}
-		for name, group := range names {
-			if len(group) <= 1 {
-				continue
-			}
-			for i := 1; i < len(group); i++ {
-				connector := group[i]
-				relatedGuids := make([]string, len(group))
-				for j, g := range group {
-					relatedGuids[j] = g.Guid
-				}
-				tGuid := typeGuid
-				problem := Problem{
-					ConstraintId: "connector-name-unique",
-					Severity:     SeverityError,
-					Message:      fmt.Sprintf("Duplicate connector name \"%s\" inside type \"%s\".", name, typeName),
-					Location:     DomainLocation{EntityKind: EntityKindConnector, EntityGuid: connector.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
-					Fixes: []Fix{
-						makeFix(ctx, fmt.Sprintf("Rename connector \"%s\"", name), func(clone *Kit) {
-							for j := range clone.Types {
-								if clone.Types[j].Guid == tGuid {
-									for k := range clone.Types[j].Connectors {
-										if clone.Types[j].Connectors[k].Guid == connector.Guid {
-											clone.Types[j].Connectors[k].Name = ptrString(generateUniqueName(name, allNames))
-											break
-										}
-									}
-									break
-								}
-							}
-						}),
-					},
-				}
-				problems = append(problems, problem)
-			}
-		}
-	}
-	return problems
-}
-
-// ⬛ModelNameUniquenessConstraint checks that model names are unique within each type.
-func ModelNameUniquenessConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	for typeGuid, models := range ctx.ModelsByTypeGuid {
-		if len(models) == 0 {
-			continue
-		}
-		names := make(map[string][]Model)
-		for _, m := range models {
-			name := ""
-			if m.Name != nil {
-				name = *m.Name
-			}
-			names[name] = append(names[name], m)
-		}
-		allNames := make([]string, len(models))
-		for i, m := range models {
-			if m.Name != nil {
-				allNames[i] = *m.Name
-			}
-		}
-		typ := ctx.TypesByGuid[typeGuid]
-		typeName := ""
-		if typ != nil {
-			typeName = typ.Name
-		}
-		for name, group := range names {
-			if len(group) <= 1 {
-				continue
-			}
-			for i := 1; i < len(group); i++ {
-				model := group[i]
-				relatedGuids := make([]string, len(group))
-				for j, g := range group {
-					relatedGuids[j] = g.Guid
-				}
-				tGuid := typeGuid
-				problem := Problem{
-					ConstraintId: "model-name-unique",
-					Severity:     SeverityError,
-					Message:      fmt.Sprintf("Duplicate model name \"%s\" inside type \"%s\".", name, typeName),
-					Location:     DomainLocation{EntityKind: EntityKindModel, EntityGuid: model.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
-					Fixes: []Fix{
-						makeFix(ctx, fmt.Sprintf("Rename model \"%s\"", name), func(clone *Kit) {
-							for j := range clone.Types {
-								if clone.Types[j].Guid == tGuid {
-									for k := range clone.Types[j].Models {
-										if clone.Types[j].Models[k].Guid == model.Guid {
-											newName := generateUniqueName(name, allNames)
-											clone.Types[j].Models[k].Name = &newName
-											break
-										}
-									}
-									break
-								}
-							}
-						}),
-					},
-				}
-				problems = append(problems, problem)
-			}
-		}
-	}
-	return problems
-}
-
-// 🛤️LayerPathUniquenessConstraint checks that layer paths are unique within each design.
-func LayerPathUniquenessConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	for _, design := range ctx.Kit.Designs {
-		if len(design.Layers) == 0 {
-			continue
-		}
-		paths := make(map[string][]Layer)
-		for _, l := range design.Layers {
-			path := l.Path
-			paths[path] = append(paths[path], l)
-		}
-		allPaths := make([]string, len(design.Layers))
-		for i, l := range design.Layers {
-			allPaths[i] = l.Path
-		}
-		for path, group := range paths {
-			if len(group) <= 1 {
-				continue
-			}
-			for i := 1; i < len(group); i++ {
-				layer := group[i]
-				designGuid := design.Guid
-				problem := Problem{
-					ConstraintId: "layer-path-unique",
-					Severity:     SeverityError,
-					Message:      fmt.Sprintf("Duplicate layer path \"%s\" inside design \"%s\".", path, design.Name),
-					Location:     DomainLocation{EntityKind: EntityKindLayer, EntityGuid: layer.Guid, Field: "path"},
-					Fixes: []Fix{
-						makeFix(ctx, fmt.Sprintf("Rename layer \"%s\"", path), func(clone *Kit) {
-							for j := range clone.Designs {
-								if clone.Designs[j].Guid == designGuid {
-									for k := range clone.Designs[j].Layers {
-										if clone.Designs[j].Layers[k].Guid == layer.Guid {
-											clone.Designs[j].Layers[k].Path = generateUniqueName(path, allPaths)
-											break
-										}
-									}
-									break
-								}
-							}
-						}),
-					},
-				}
-				problems = append(problems, problem)
-			}
-		}
-	}
-	return problems
-}
-
-// 🧲ExtractFirstEmoji returns the first emoji grapheme from a string, or empty string if none.
-func ExtractFirstEmoji(text string) string {
-	if text == "" {
-		return ""
-	}
-	runes := []rune(text)
-	if len(runes) == 0 {
-		return ""
-	}
-	var cluster []rune
-	cluster = append(cluster, runes[0])
-	for i := 1; i < len(runes); i++ {
-		r := runes[i]
-		if r == 0xFE0F || r == 0xFE0E || r == 0x200D ||
-			(r >= 0x1F3FB && r <= 0x1F3FF) ||
-			(r >= 0xE0020 && r <= 0xE007F) ||
-			(r >= 0x20E3 && r <= 0x20E3) {
-			cluster = append(cluster, r)
-			continue
-		}
-		if len(cluster) > 1 && (unicode.Is(unicode.So, r) || unicode.Is(unicode.Mn, r) || unicode.Is(unicode.Mc, r) || (r >= 0x1F1E0 && r <= 0x1F1FF)) {
-			cluster = append(cluster, r)
-			continue
-		}
-		break
-	}
-	first := cluster[0]
-	if unicode.Is(unicode.So, first) || unicode.Is(unicode.Sk, first) ||
-		(first >= 0x1F600 && first <= 0x1F64F) ||
-		(first >= 0x1F300 && first <= 0x1F5FF) ||
-		(first >= 0x1F680 && first <= 0x1F6FF) ||
-		(first >= 0x1F900 && first <= 0x1F9FF) ||
-		(first >= 0x1FA00 && first <= 0x1FA6F) ||
-		(first >= 0x1FA70 && first <= 0x1FAFF) ||
-		(first >= 0x2600 && first <= 0x26FF) ||
-		(first >= 0x2700 && first <= 0x27BF) ||
-		(first >= 0x231A && first <= 0x231B) ||
-		first == 0x2328 || first == 0x23CF ||
-		(first >= 0x23E9 && first <= 0x23F3) ||
-		(first >= 0x23F8 && first <= 0x23FA) ||
-		(first >= 0x200D && first <= 0x200D) ||
-		(first >= 0x2934 && first <= 0x2935) ||
-		(first >= 0x25AA && first <= 0x25AB) ||
-		(first >= 0x25B6 && first <= 0x25C0) ||
-		(first >= 0x25FB && first <= 0x25FE) ||
-		(first >= 0x2614 && first <= 0x2615) ||
-		(first >= 0x2648 && first <= 0x2653) ||
-		(first >= 0x267F && first <= 0x267F) ||
-		(first >= 0x2702 && first <= 0x2702) ||
-		(first >= 0x1F1E0 && first <= 0x1F1FF) ||
-		first == 0x203C || first == 0x2049 || first == 0x2122 || first == 0x2139 ||
-		(first >= 0x2194 && first <= 0x2199) ||
-		(first >= 0x21A9 && first <= 0x21AA) ||
-		first == 0x00A9 || first == 0x00AE {
-		return string(cluster)
-	}
-	return ""
-}
-
-// ▶️DescriptionMissingEmojiConstraint checks that every entity description starts with an emoji.
-func DescriptionMissingEmojiConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	check := func(entityKind SemioEntityKind, entityGuid string, description *string) {
-		if description == nil || *description == "" {
-			return
-		}
-		emoji := ExtractFirstEmoji(*description)
-		if emoji == "" {
-			problems = append(problems, Problem{
-				ConstraintId: "description-missing-emoji",
-				Severity:     SeverityError,
-				Message:      fmt.Sprintf("Description of %s \"%s\" must start with an emoji.", entityKind, entityGuid),
-				Location:     DomainLocation{EntityKind: entityKind, EntityGuid: entityGuid, Field: "description"},
-			})
-		}
-	}
-	check(EntityKindKit, ctx.Kit.Guid, ctx.Kit.Description)
-	for _, t := range ctx.Kit.Types {
-		check(EntityKindType, t.Guid, t.Description)
-		for _, c := range t.Connectors {
-			check(EntityKindConnector, c.Guid, c.Description)
-		}
-		for _, m := range t.Models {
-			check(EntityKindModel, m.Guid, m.Description)
-		}
-	}
-	for _, d := range ctx.Kit.Designs {
-		check(EntityKindDesign, d.Guid, d.Description)
-		for _, p := range d.Pieces {
-			check(EntityKindPiece, p.Guid, p.Description)
-		}
-		for _, c := range d.Connections {
-			check(EntityKindConnection, c.Guid, c.Description)
-		}
-	}
-	for _, q := range ctx.Kit.Qualities {
-		check(EntityKindQuality, q.Guid, q.Description)
-	}
-	for _, p := range ctx.Kit.Ports {
-		check(EntityKindPort, p.Guid, p.Description)
-	}
-	for _, f := range ctx.Kit.Files {
-		check(EntityKindFile, f.Guid, f.Description)
-	}
-	for _, f := range ctx.Kit.Folders {
-		check(EntityKindFolder, f.Guid, f.Description)
-	}
-	return problems
-}
-
-// 😀DescriptionEmojiUniqueConstraint checks that sibling entities have unique leading emojis.
-func DescriptionEmojiUniqueConstraint(ctx *ValidationContext) []Problem {
-	var problems []Problem
-	type entity struct {
-		guid        string
-		description *string
-	}
-	checkSiblings := func(entityKind SemioEntityKind, siblings []entity) {
-		emojiMap := make(map[string][]entity)
-		for _, e := range siblings {
-			if e.description == nil || *e.description == "" {
-				continue
-			}
-			emoji := ExtractFirstEmoji(*e.description)
-			if emoji == "" {
-				continue
-			}
-			emojiMap[emoji] = append(emojiMap[emoji], e)
-		}
-		for emoji, group := range emojiMap {
-			if len(group) <= 1 {
-				continue
-			}
-			guids := make([]string, len(group))
-			for i, e := range group {
-				guids[i] = e.guid
-			}
-			for i := 1; i < len(group); i++ {
-				problems = append(problems, Problem{
-					ConstraintId: "description-emoji-unique",
-					Severity:     SeverityError,
-					Message:      fmt.Sprintf("Duplicate leading emoji \"%s\" in %s descriptions among siblings.", emoji, entityKind),
-					Location:     DomainLocation{EntityKind: entityKind, EntityGuid: group[i].guid, Field: "description"},
-					RelatedGuids: guids,
-				})
-			}
-		}
-	}
-	typesByParent := make(map[string][]entity)
-	for _, t := range ctx.Kit.Types {
-		var pid string
-		if t.Parent != nil {
-			pid = t.Parent.Guid
-		}
-		typesByParent[pid] = append(typesByParent[pid], entity{guid: t.Guid, description: t.Description})
-	}
-	for _, siblings := range typesByParent {
-		checkSiblings(EntityKindType, siblings)
-	}
-	designsByParent := make(map[string][]entity)
-	for _, d := range ctx.Kit.Designs {
-		var pid string
-		if d.Parent != nil {
-			pid = d.Parent.Guid
-		}
-		designsByParent[pid] = append(designsByParent[pid], entity{guid: d.Guid, description: d.Description})
-	}
-	for _, siblings := range designsByParent {
-		checkSiblings(EntityKindDesign, siblings)
-	}
-	for _, d := range ctx.Kit.Designs {
-		var pieceSiblings []entity
-		for _, p := range d.Pieces {
-			pieceSiblings = append(pieceSiblings, entity{guid: p.Guid, description: p.Description})
-		}
-		checkSiblings(EntityKindPiece, pieceSiblings)
-		var connSiblings []entity
-		for _, c := range d.Connections {
-			connSiblings = append(connSiblings, entity{guid: c.Guid, description: c.Description})
-		}
-		checkSiblings(EntityKindConnection, connSiblings)
-	}
-	var qualitySiblings []entity
-	for _, q := range ctx.Kit.Qualities {
-		qualitySiblings = append(qualitySiblings, entity{guid: q.Guid, description: q.Description})
-	}
-	checkSiblings(EntityKindQuality, qualitySiblings)
-	var portSiblings []entity
-	for _, p := range ctx.Kit.Ports {
-		portSiblings = append(portSiblings, entity{guid: p.Guid, description: p.Description})
-	}
-	checkSiblings(EntityKindPort, portSiblings)
-	var fileSiblings []entity
-	for _, f := range ctx.Kit.Files {
-		fileSiblings = append(fileSiblings, entity{guid: f.Guid, description: f.Description})
-	}
-	checkSiblings(EntityKindFile, fileSiblings)
-	foldersByParent := make(map[string][]entity)
-	for _, f := range ctx.Kit.Folders {
-		var pid string
-		if f.Parent != nil {
-			pid = f.Parent.Guid
-		}
-		foldersByParent[pid] = append(foldersByParent[pid], entity{guid: f.Guid, description: f.Description})
-	}
-	for _, siblings := range foldersByParent {
-		checkSiblings(EntityKindFolder, siblings)
-	}
-	for _, t := range ctx.Kit.Types {
-		var connectorSiblings []entity
-		for _, c := range t.Connectors {
-			connectorSiblings = append(connectorSiblings, entity{guid: c.Guid, description: c.Description})
-		}
-		checkSiblings(EntityKindConnector, connectorSiblings)
-		var modelSiblings []entity
-		for _, m := range t.Models {
-			modelSiblings = append(modelSiblings, entity{guid: m.Guid, description: m.Description})
-		}
-		checkSiblings(EntityKindModel, modelSiblings)
-	}
-	return problems
-}
-
-// 📋DefaultConstraints lists all built-in validation constraints.
-var DefaultConstraints = []Constraint{
-	GuidUniquenessConstraint,
-	TypeNameUniquenessConstraint,
-	DesignNameUniquenessConstraint,
-	PieceNameUniquenessConstraint,
-	QualityNameUniquenessConstraint,
-	PortNameUniquenessConstraint,
-	FileNameUniquenessConstraint,
-	FolderNameUniquenessConstraint,
-	ConnectorNameUniquenessConstraint,
-	ModelNameUniquenessConstraint,
-	LayerPathUniquenessConstraint,
-	DescriptionMissingEmojiConstraint,
-	DescriptionEmojiUniqueConstraint,
-}
-
-// 🗃️ValidateKit validates a kit using the default set of constraints.
-func ValidateKit(kit Kit) ValidationResult {
-	return ValidateKitWithConstraints(kit, DefaultConstraints)
-}
-
-// ⬜ValidateKitWithConstraints validates a kit using the provided constraints.
-func ValidateKitWithConstraints(kit Kit, constraints []Constraint) ValidationResult {
-	ctx := buildValidationContext(kit)
-	var problems []Problem
-	for _, constraint := range constraints {
-		problems = append(problems, constraint(ctx)...)
-	}
-	return ValidationResult{Problems: problems}
-}
-
-// ❌HasErrors returns true if the validation result contains any error-severity problems.
-func HasErrors(result ValidationResult) bool {
-	for _, p := range result.Problems {
-		if p.Severity == SeverityError || p.Severity == "" {
-			return true
-		}
-	}
-	return false
-}
-
-// #region 🌡️Validation Serialization
-// Validation Serialization MUST provide serializable representations of validation results.
-
-// 📋ProblemSerialized is the JSON-serializable representation of a validation problem.
-type ProblemSerialized struct {
-	ConstraintId string `json:"constraintId"`
-	Severity     string `json:"severity,omitempty"`
-	Message      string `json:"message"`
-	EntityKind   string `json:"entityKind"`
-	EntityGuid   string `json:"entityGuid"`
-	Fixes        []Fix  `json:"fixes"`
-}
-
-// 🔷ValidationResultSerialized is the JSON-serializable representation of a validation result.
-type ValidationResultSerialized struct {
-	Problems []ProblemSerialized `json:"problems"`
-}
-
-// 🔶ToValidationResult converts a validation result to its serializable form.
-func ToValidationResult(result ValidationResult) ValidationResultSerialized {
-	problems := make([]ProblemSerialized, len(result.Problems))
-	for i, p := range result.Problems {
-		severity := string(p.Severity)
-		if severity == "" {
-			severity = "error"
-		}
-		problems[i] = ProblemSerialized{
-			ConstraintId: p.ConstraintId,
-			Severity:     severity,
-			Message:      p.Message,
-			EntityKind:   string(p.Location.EntityKind),
-			EntityGuid:   p.Location.EntityGuid,
-			Fixes:        p.Fixes,
-		}
-	}
-	return ValidationResultSerialized{Problems: problems}
-}
-
-// 🔹AreValidationResultsEqual compares two serialized validation results for equality.
-func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
-	if len(a.Problems) != len(b.Problems) {
-		return false
-	}
-	sortProblems := func(problems []ProblemSerialized) {
-		sort.Slice(problems, func(i, j int) bool {
-			if problems[i].ConstraintId != problems[j].ConstraintId {
-				return problems[i].ConstraintId < problems[j].ConstraintId
-			}
-			return problems[i].EntityGuid < problems[j].EntityGuid
-		})
-	}
-	sortedA := make([]ProblemSerialized, len(a.Problems))
-	copy(sortedA, a.Problems)
-	sortProblems(sortedA)
-	sortedB := make([]ProblemSerialized, len(b.Problems))
-	copy(sortedB, b.Problems)
-	sortProblems(sortedB)
-	for i := range sortedA {
-		if sortedA[i].ConstraintId != sortedB[i].ConstraintId ||
-			sortedA[i].Message != sortedB[i].Message ||
-			sortedA[i].EntityKind != sortedB[i].EntityKind ||
-			sortedA[i].EntityGuid != sortedB[i].EntityGuid {
-			return false
-		}
-	}
-	return true
-}
-
-// #endregion 🌡️Validation Serialization
-
-// #endregion 🔓Validation
-
-// 🔷#region 🌤️Flatten Design
-// 💾Flatten Design MUST compute absolute piece planes from relative connections.
-func planeToMatrix(p Plane) *mat.Dense {
-	xAxis := []float64{p.XAxis.X, p.XAxis.Y, p.XAxis.Z}
-	yAxis := []float64{p.YAxis.X, p.YAxis.Y, p.YAxis.Z}
-	zAxis := cross(xAxis, yAxis)
-	normalize(zAxis)
-	m := mat.NewDense(4, 4, []float64{
-		xAxis[0], yAxis[0], zAxis[0], p.Origin.X,
-		xAxis[1], yAxis[1], zAxis[1], p.Origin.Y,
-		xAxis[2], yAxis[2], zAxis[2], p.Origin.Z,
-		0, 0, 0, 1,
-	})
-	return m
-}
-
-func matrixToPlane(m *mat.Dense) Plane {
-	return Plane{
-		Origin: Point{X: m.At(0, 3), Y: m.At(1, 3), Z: m.At(2, 3)},
-		XAxis:  Vector{X: m.At(0, 0), Y: m.At(1, 0), Z: m.At(2, 0)},
-		YAxis:  Vector{X: m.At(0, 1), Y: m.At(1, 1), Z: m.At(2, 1)},
-	}
-}
-
-func cross(a, b []float64) []float64 {
-	return []float64{
-		a[1]*b[2] - a[2]*b[1],
-		a[2]*b[0] - a[0]*b[2],
-		a[0]*b[1] - a[1]*b[0],
-	}
-}
-
-func normalize(v []float64) {
-	length := math.Sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
-	if length > 0 {
-		v[0] /= length
-		v[1] /= length
-		v[2] /= length
-	}
-}
-
-func dot(a, b []float64) float64 {
-	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
-}
-
-func vecLength(v []float64) float64 {
-	return math.Sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
-}
-
-func degToRad(deg float64) float64 {
-	return deg * math.Pi / 180.0
-}
-
-func roundFloat(val float64, precision int) float64 {
-	ratio := math.Pow(10, float64(precision))
-	return math.Round(val*ratio) / ratio
-}
-
-func roundPlane(p Plane) Plane {
-	const prec = 6
-	return Plane{
-		Origin: Point{X: roundFloat(p.Origin.X, prec), Y: roundFloat(p.Origin.Y, prec), Z: roundFloat(p.Origin.Z, prec)},
-		XAxis:  Vector{X: roundFloat(p.XAxis.X, prec), Y: roundFloat(p.XAxis.Y, prec), Z: roundFloat(p.XAxis.Z, prec)},
-		YAxis:  Vector{X: roundFloat(p.YAxis.X, prec), Y: roundFloat(p.YAxis.Y, prec), Z: roundFloat(p.YAxis.Z, prec)},
-	}
-}
-
-func makeRotationAxis(axis []float64, angle float64) *mat.Dense {
-	c := math.Cos(angle)
-	s := math.Sin(angle)
-	t := 1 - c
-	x, y, z := axis[0], axis[1], axis[2]
-	return mat.NewDense(4, 4, []float64{
-		t*x*x + c, t*x*y - s*z, t*x*z + s*y, 0,
-		t*x*y + s*z, t*y*y + c, t*y*z - s*x, 0,
-		t*x*z - s*y, t*y*z + s*x, t*z*z + c, 0,
-		0, 0, 0, 1,
-	})
-}
-
-func makeTranslation(x, y, z float64) *mat.Dense {
-	return mat.NewDense(4, 4, []float64{
-		1, 0, 0, x,
-		0, 1, 0, y,
-		0, 0, 1, z,
-		0, 0, 0, 1,
-	})
-}
-
-func quaternionFromAxisAngle(axis []float64, angle float64) []float64 {
-	halfAngle := angle / 2
-	s := math.Sin(halfAngle)
-	return []float64{axis[0] * s, axis[1] * s, axis[2] * s, math.Cos(halfAngle)}
-}
-
-func quaternionFromUnitVectors(vFrom, vTo []float64) []float64 {
-	r := dot(vFrom, vTo) + 1
-	var quat []float64
-	if r < 0.000001 {
-		if math.Abs(vFrom[0]) > math.Abs(vFrom[2]) {
-			quat = []float64{-vFrom[1], vFrom[0], 0, 0}
-		} else {
-			quat = []float64{0, -vFrom[2], vFrom[1], 0}
-		}
-	} else {
-		crossV := cross(vFrom, vTo)
-		quat = []float64{crossV[0], crossV[1], crossV[2], r}
-	}
-	length := math.Sqrt(quat[0]*quat[0] + quat[1]*quat[1] + quat[2]*quat[2] + quat[3]*quat[3])
-	return []float64{quat[0] / length, quat[1] / length, quat[2] / length, quat[3] / length}
-}
-
-func quaternionToMatrix(q []float64) *mat.Dense {
-	x, y, z, w := q[0], q[1], q[2], q[3]
-	x2, y2, z2 := x+x, y+y, z+z
-	xx, xy, xz := x*x2, x*y2, x*z2
-	yy, yz, zz := y*y2, y*z2, z*z2
-	wx, wy, wz := w*x2, w*y2, w*z2
-	return mat.NewDense(4, 4, []float64{
-		1 - (yy + zz), xy - wz, xz + wy, 0,
-		xy + wz, 1 - (xx + zz), yz - wx, 0,
-		xz - wy, yz + wx, 1 - (xx + yy), 0,
-		0, 0, 0, 1,
-	})
-}
-
-func multiplyMatrices(a, b *mat.Dense) *mat.Dense {
-	result := mat.NewDense(4, 4, nil)
-	result.Mul(a, b)
-	return result
-}
-
-func applyMatrix4ToVec3(m *mat.Dense, v []float64) []float64 {
-	return []float64{
-		m.At(0, 0)*v[0] + m.At(0, 1)*v[1] + m.At(0, 2)*v[2],
-		m.At(1, 0)*v[0] + m.At(1, 1)*v[1] + m.At(1, 2)*v[2],
-		m.At(2, 0)*v[0] + m.At(2, 1)*v[1] + m.At(2, 2)*v[2],
-	}
-}
-
-func computeChildPlane(parentPlane Plane, parentConnector, childConnector Connector, connection Connection) Plane {
-	parentMatrix := planeToMatrix(parentPlane)
-	parentPoint := []float64{parentConnector.Point.X, parentConnector.Point.Y, parentConnector.Point.Z}
-	parentDirection := []float64{parentConnector.Direction.X, parentConnector.Direction.Y, parentConnector.Direction.Z}
-	normalize(parentDirection)
-	childPoint := []float64{childConnector.Point.X, childConnector.Point.Y, childConnector.Point.Z}
-	childDirection := []float64{childConnector.Direction.X, childConnector.Direction.Y, childConnector.Direction.Z}
-	normalize(childDirection)
-
-	gap := connection.Gap
-	shift := connection.Shift
-	rise := connection.Rise
-	rotationRad := degToRad(connection.Rotation)
-	turnRad := degToRad(connection.Turn)
-	tiltRad := degToRad(connection.Tilt)
-
-	reverseChildDirection := []float64{-childDirection[0], -childDirection[1], -childDirection[2]}
-
-	var alignQuat []float64
-	crossVec := cross(parentDirection, reverseChildDirection)
-	crossLen := vecLength(crossVec)
-	if crossLen < 0.01 {
-		if math.Abs(parentDirection[2]) < Tolerance {
-			alignQuat = quaternionFromAxisAngle([]float64{0, 0, 1}, math.Pi)
-		} else {
-			axis := cross([]float64{0, 0, 1}, parentDirection)
-			normalize(axis)
-			alignQuat = quaternionFromAxisAngle(axis, math.Pi)
-		}
-	} else {
-		alignQuat = quaternionFromUnitVectors(reverseChildDirection, parentDirection)
-	}
-
-	directionT := quaternionToMatrix(alignQuat)
-
-	yAxis := []float64{0, 1, 0}
-	parentConnectorQuat := quaternionFromUnitVectors(yAxis, parentDirection)
-	parentRotationT := quaternionToMatrix(parentConnectorQuat)
-
-	gapDirection := applyMatrix4ToVec3(parentRotationT, []float64{0, 1, 0})
-	shiftDirection := applyMatrix4ToVec3(parentRotationT, []float64{1, 0, 0})
-	raiseDirection := applyMatrix4ToVec3(parentRotationT, []float64{0, 0, 1})
-	turnAxis := applyMatrix4ToVec3(parentRotationT, []float64{0, 0, 1})
-	tiltAxis := applyMatrix4ToVec3(parentRotationT, []float64{1, 0, 0})
-
-	orientationT := directionT
-
-	rotateT := makeRotationAxis(parentDirection, -rotationRad)
-	orientationT = multiplyMatrices(rotateT, orientationT)
-
-	turnAxis = applyMatrix4ToVec3(rotateT, turnAxis)
-	tiltAxis = applyMatrix4ToVec3(rotateT, tiltAxis)
-
-	turnT := makeRotationAxis(turnAxis, turnRad)
-	orientationT = multiplyMatrices(turnT, orientationT)
-
-	tiltT := makeRotationAxis(tiltAxis, tiltRad)
-	orientationT = multiplyMatrices(tiltT, orientationT)
-
-	centerChildT := makeTranslation(-childPoint[0], -childPoint[1], -childPoint[2])
-	transform := multiplyMatrices(orientationT, centerChildT)
-
-	gapTransform := makeTranslation(gapDirection[0]*gap, gapDirection[1]*gap, gapDirection[2]*gap)
-	shiftTransform := makeTranslation(shiftDirection[0]*shift, shiftDirection[1]*shift, shiftDirection[2]*shift)
-	raiseTransform := makeTranslation(raiseDirection[0]*rise, raiseDirection[1]*rise, raiseDirection[2]*rise)
-
-	translationT := multiplyMatrices(raiseTransform, multiplyMatrices(shiftTransform, gapTransform))
-	transform = multiplyMatrices(translationT, transform)
-	moveToParentT := makeTranslation(parentPoint[0], parentPoint[1], parentPoint[2])
-	transform = multiplyMatrices(moveToParentT, transform)
-	finalMatrix := multiplyMatrices(parentMatrix, transform)
-
-	return matrixToPlane(finalMatrix)
-}
-
-type pieceNode struct {
-	piece *Piece
-	plane *Plane
-}
-
-func getConnector(typesDict map[string]*Type, typ *Type, connectorGuid *string) *Connector {
-	if typ == nil {
-		return nil
-	}
-	if connectorGuid == nil || *connectorGuid == "" {
-		if len(typ.Connectors) > 0 {
-			return &typ.Connectors[0]
-		}
-		if typ.Parent != nil {
-			parentType := typesDict[typ.Parent.Guid]
-			return getConnector(typesDict, parentType, connectorGuid)
-		}
-		return nil
-	}
-	for i := range typ.Connectors {
-		if typ.Connectors[i].Guid == *connectorGuid {
-			return &typ.Connectors[i]
-		}
-	}
-	if typ.Parent != nil {
-		parentType := typesDict[typ.Parent.Guid]
-		if connector := getConnector(typesDict, parentType, connectorGuid); connector != nil {
-			return connector
-		}
-	}
-	if len(typ.Connectors) > 0 {
-		return &typ.Connectors[0]
-	}
-	return nil
-}
-
-// 🔶FlattenDesign computes absolute planes and centers for all pieces in a design.
-func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
-	design := FindDesignInKit(kit, designGuid)
-	if design == nil || len(design.Pieces) == 0 {
-		return DesignDiff{}
-	}
-
-	typesDict := make(map[string]*Type)
-	for i := range kit.Types {
-		typesDict[kit.Types[i].Guid] = &kit.Types[i]
-	}
-
-	pieceMap := make(map[string]*Piece)
-	for i := range design.Pieces {
-		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
-	}
-
-	piecePlanes := make(map[string]*Plane)
-	adjacency := make(map[string][]struct {
-		neighborGuid string
-		connection   *Connection
-	})
-
-	for i := range design.Connections {
-		conn := &design.Connections[i]
-		srcGuid := conn.Connected.Piece.Guid
-		tgtGuid := conn.Connecting.Piece.Guid
-		if pieceMap[srcGuid] == nil || pieceMap[tgtGuid] == nil {
-			continue
-		}
-		adjacency[srcGuid] = append(adjacency[srcGuid], struct {
-			neighborGuid string
-			connection   *Connection
-		}{tgtGuid, conn})
-		adjacency[tgtGuid] = append(adjacency[tgtGuid], struct {
-			neighborGuid string
-			connection   *Connection
-		}{srcGuid, conn})
-	}
-
-	// Save original centers before BFS modifies pieces in-place.
-	// pieceMap shares pointers with design.Pieces, so after BFS
-	// piece.Center and pieceMap[guid].Center are the same pointer.
-	originalCenters := make(map[string]*Coord)
-	for _, p := range design.Pieces {
-		if p.Center != nil {
-			c := *p.Center
-			originalCenters[p.Guid] = &c
-		}
-	}
-
-	visited := make(map[string]bool)
-	piecePaths := make(map[string]string)
-	var bfs func(rootGuid string)
-	bfs = func(rootGuid string) {
-		queue := []string{rootGuid}
-		visited[rootGuid] = true
-		piecePaths[rootGuid] = rootGuid
-		rootPiece := pieceMap[rootGuid]
-		if rootPiece.Plane != nil && rootPiece.Center != nil {
-			piecePlanes[rootGuid] = rootPiece.Plane
-		} else {
-			identityPlane := Plane{
-				Origin: Point{X: 0, Y: 0, Z: 0},
-				XAxis:  Vector{X: 1, Y: 0, Z: 0},
-				YAxis:  Vector{X: 0, Y: 1, Z: 0},
-			}
-			piecePlanes[rootGuid] = &identityPlane
-		}
-
-		for len(queue) > 0 {
-			currentGuid := queue[0]
-			queue = queue[1:]
-			currentPlane := piecePlanes[currentGuid]
-			currentPiece := pieceMap[currentGuid]
-
-			for _, neighbor := range adjacency[currentGuid] {
-				if visited[neighbor.neighborGuid] {
-					continue
-				}
-				visited[neighbor.neighborGuid] = true
-				neighborPiece := pieceMap[neighbor.neighborGuid]
-				conn := neighbor.connection
-
-				var parentSide, childSide *Side
-				if conn.Connected.Piece.Guid == currentGuid {
-					parentSide = &conn.Connected
-					childSide = &conn.Connecting
-				} else {
-					parentSide = &conn.Connecting
-					childSide = &conn.Connected
-				}
-
-				var parentType, childType *Type
-				if currentPiece.Type != nil {
-					parentType = typesDict[currentPiece.Type.Guid]
-				}
-				if neighborPiece.Type != nil {
-					childType = typesDict[neighborPiece.Type.Guid]
-				}
-
-				var parentConnectorGuid, childConnectorGuid *string
-				if parentSide.Connector != nil {
-					parentConnectorGuid = &parentSide.Connector.Guid
-				}
-				if childSide.Connector != nil {
-					childConnectorGuid = &childSide.Connector.Guid
-				}
-
-				parentConnector := getConnector(typesDict, parentType, parentConnectorGuid)
-				childConnector := getConnector(typesDict, childType, childConnectorGuid)
-
-				if parentConnector == nil || childConnector == nil {
-					continue
-				}
-
-				childPlane := roundPlane(computeChildPlane(*currentPlane, *parentConnector, *childConnector, *conn))
-				piecePlanes[neighbor.neighborGuid] = &childPlane
-
-				radius := 2.697
-				verticalVExtra := 1.0
-				horizontalScale := 3.0633
-				var parentCenter Coord
-				if currentPiece.Center != nil {
-					parentCenter = *currentPiece.Center
-				}
-				connectionU := conn.U
-				connectionV := conn.V
-
-				var childU, childV float64
-				if parentCenter.U == 0 && parentCenter.V == 0 {
-					angle := 2 * math.Pi * parentConnector.T
-					childU = radius * math.Sin(angle)
-					childV = radius * math.Cos(angle)
-				} else {
-					isVerticalConnection := math.Abs(parentConnector.Direction.Z) > 0.5
-					if isVerticalConnection {
-						childU = parentCenter.U + connectionU
-						childV = parentCenter.V + connectionV + verticalVExtra
-					} else {
-						childU = parentCenter.U + connectionU*horizontalScale
-						childV = parentCenter.V + connectionV*horizontalScale
-					}
-				}
-
-				childCenter := &Coord{U: roundFloat(childU, 6), V: roundFloat(childV, 6)}
-				neighborPiece.Center = childCenter
-				piecePaths[neighbor.neighborGuid] = piecePaths[currentGuid] + "," + neighbor.neighborGuid
-
-				queue = append(queue, neighbor.neighborGuid)
-			}
-		}
-	}
-
-	for _, piece := range design.Pieces {
-		if !visited[piece.Guid] {
-			bfs(piece.Guid)
-		}
-	}
-
-	var updatedPieces []struct {
-		Piece PieceId   `json:"piece"`
-		Diff  PieceDiff `json:"diff"`
-	}
-
-	for i := range design.Pieces {
-		piece := &design.Pieces[i]
-		plane := piecePlanes[piece.Guid]
-		if plane == nil {
-			continue
-		}
-		diff := PieceDiff{}
-		hasChanges := false
-
-		if piece.Plane == nil || !planesEqualApprox(*plane, *piece.Plane) {
-			diff.Plane = &PlaneDiff{
-				Origin: &PointDiff{X: &plane.Origin.X, Y: &plane.Origin.Y, Z: &plane.Origin.Z},
-				XAxis:  &VectorDiff{X: &plane.XAxis.X, Y: &plane.XAxis.Y, Z: &plane.XAxis.Z},
-				YAxis:  &VectorDiff{X: &plane.YAxis.X, Y: &plane.YAxis.Y, Z: &plane.YAxis.Z},
-			}
-			hasChanges = true
-		}
-
-		pieceFromMap := pieceMap[piece.Guid]
-		if pieceFromMap.Center != nil {
-			origCenter := originalCenters[piece.Guid]
-			if origCenter == nil || pieceFromMap.Center.U != origCenter.U || pieceFromMap.Center.V != origCenter.V {
-				diff.Center = &CoordDiff{U: &pieceFromMap.Center.U, V: &pieceFromMap.Center.V}
-				hasChanges = true
-			}
-		}
-
-		if hasChanges {
-			if path, ok := piecePaths[piece.Guid]; ok {
-				pathValue := path
-				diff.Attributes = &AttributesDiff{
-					Added: []Attribute{{Guid: Guid(), Key: "semio.path", Value: &pathValue}},
-				}
-			}
-			updatedPieces = append(updatedPieces, struct {
-				Piece PieceId   `json:"piece"`
-				Diff  PieceDiff `json:"diff"`
-			}{Piece: PieceId{Guid: piece.Guid}, Diff: diff})
-		}
-	}
-
-	result := DesignDiff{}
-	if len(updatedPieces) > 0 {
-		result.Pieces = &PiecesDiff{Updated: updatedPieces}
-	}
-	return result
-}
-
-func planesEqualApprox(a, b Plane) bool {
-	const tol = 0.0001
-	return math.Abs(a.Origin.X-b.Origin.X) < tol &&
-		math.Abs(a.Origin.Y-b.Origin.Y) < tol &&
-		math.Abs(a.Origin.Z-b.Origin.Z) < tol &&
-		math.Abs(a.XAxis.X-b.XAxis.X) < tol &&
-		math.Abs(a.XAxis.Y-b.XAxis.Y) < tol &&
-		math.Abs(a.XAxis.Z-b.XAxis.Z) < tol &&
-		math.Abs(a.YAxis.X-b.YAxis.X) < tol &&
-		math.Abs(a.YAxis.Y-b.YAxis.Y) < tol &&
-		math.Abs(a.YAxis.Z-b.YAxis.Z) < tol
-}
-
-// 🔹ApplyDesignDiff applies a design diff to a base design.
-func ApplyDesignDiff(base Design, diff DesignDiff) Design {
-	return applyDesignDiff(base, diff)
-}
-
-// 🔌DragPiecesInDesign computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
-// 🔗A piece's parent connection is the connection where it is the Connecting (child) piece.
-func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
-	selectedGuids := make(map[string]bool)
-	for _, p := range pieces.Pieces {
-		selectedGuids[p.Guid] = true
-	}
-	parentMap := make(map[string]struct{ connectionGuid, parentGuid string })
-	for _, c := range design.Connections {
-		parentMap[c.Connecting.Piece.Guid] = struct{ connectionGuid, parentGuid string }{c.Guid, c.Connected.Piece.Guid}
-	}
-	fixedGuids := make(map[string]bool)
-	for guid := range selectedGuids {
-		if _, hasParent := parentMap[guid]; !hasParent {
-			fixedGuids[guid] = true
-		}
-	}
-	var pieceUpdates []struct {
-		Piece PieceId   `json:"piece"`
-		Diff  PieceDiff `json:"diff"`
-	}
-	pieceMap := make(map[string]*Piece)
-	for i := range design.Pieces {
-		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
-	}
-	for guid := range fixedGuids {
-		if p, ok := pieceMap[guid]; ok && p.Center != nil {
-			newU := p.Center.U + offset.U
-			newV := p.Center.V + offset.V
-			pieceUpdates = append(pieceUpdates, struct {
-				Piece PieceId   `json:"piece"`
-				Diff  PieceDiff `json:"diff"`
-			}{
-				Piece: PieceId{Guid: guid},
-				Diff:  PieceDiff{Center: &CoordDiff{U: &newU, V: &newV}},
-			})
-		}
-	}
-	var connectionUpdates []struct {
-		Connection ConnectionId   `json:"connection"`
-		Diff       ConnectionDiff `json:"diff"`
-	}
-	for guid := range selectedGuids {
-		if fixedGuids[guid] {
-			continue
-		}
-		isDescendant := false
-		current := guid
-		for {
-			p, ok := parentMap[current]
-			if !ok {
-				break
-			}
-			if selectedGuids[p.parentGuid] {
-				isDescendant = true
-				break
-			}
-			current = p.parentGuid
-		}
-		if isDescendant {
-			continue
-		}
-		parent, ok := parentMap[guid]
-		if !ok {
-			continue
-		}
-		connU := offset.U
-		connV := offset.V
-		connectionUpdates = append(connectionUpdates, struct {
-			Connection ConnectionId   `json:"connection"`
-			Diff       ConnectionDiff `json:"diff"`
-		}{
-			Connection: ConnectionId{Guid: parent.connectionGuid},
-			Diff:       ConnectionDiff{U: &connU, V: &connV},
-		})
-	}
-	diff := DesignDiff{}
-	if len(pieceUpdates) > 0 {
-		diff.Pieces = &PiecesDiff{Updated: pieceUpdates}
-	}
-	if len(connectionUpdates) > 0 {
-		diff.Connections = &ConnectionsDiff{Updated: connectionUpdates}
-	}
-	return diff
-}
-
-// #endregion 🌤️Flatten Design
 
 // #region 📋Copy Paste Design
 // Copy Paste Design MUST provide copy and paste functionality for designs.
@@ -12618,7 +11353,1638 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 
 // #endregion 📋Copy Paste Design
 
-// #region 🤖ExportDesignModel
+
+// #region 🛡️Validation
+
+// 🏛️SemioEntityKind enumerates the kinds of semio domain entities.
+type SemioEntityKind string
+
+const (
+	EntityKindKit        SemioEntityKind = "Kit"
+	EntityKindType       SemioEntityKind = "Type"
+	EntityKindDesign     SemioEntityKind = "Design"
+	EntityKindPiece      SemioEntityKind = "Piece"
+	EntityKindConnection SemioEntityKind = "Connection"
+	EntityKindConnector  SemioEntityKind = "Connector"
+	EntityKindAttribute  SemioEntityKind = "Attribute"
+	EntityKindFile       SemioEntityKind = "File"
+	EntityKindFolder     SemioEntityKind = "Folder"
+	EntityKindQuality    SemioEntityKind = "Quality"
+	EntityKindPort       SemioEntityKind = "Port"
+	EntityKindProp       SemioEntityKind = "Prop"
+	EntityKindModel      SemioEntityKind = "Model"
+	EntityKindLayer      SemioEntityKind = "Layer"
+	EntityKindGroup      SemioEntityKind = "Group"
+	EntityKindStat       SemioEntityKind = "Stat"
+	EntityKindTag        SemioEntityKind = "Tag"
+	EntityKindConcept    SemioEntityKind = "Concept"
+	EntityKindAuthor     SemioEntityKind = "Author"
+)
+
+// 📇Severity enumerates validation problem severity levels.
+type Severity string
+
+const (
+	SeverityError   Severity = "error"
+	SeverityWarning Severity = "warning"
+)
+
+// 📍DomainLocation identifies the entity and field where a validation problem occurs.
+type DomainLocation struct {
+	EntityKind SemioEntityKind `json:"entityKind"`
+	EntityGuid string          `json:"entityGuid,omitempty"`
+	Field      string          `json:"field,omitempty"`
+}
+
+// 🔧Fix represents a suggested correction for a validation problem.
+type Fix struct {
+	Title string  `json:"title"`
+	Diff  KitDiff `json:"diff"`
+}
+
+// 🔒Problem represents a single validation constraint breach.
+type Problem struct {
+	ConstraintId string         `json:"constraintId"`
+	Severity     Severity       `json:"severity,omitempty"`
+	Message      string         `json:"message"`
+	Location     DomainLocation `json:"entityKind,omitempty"`
+	RelatedGuids []string       `json:"relatedGuids,omitempty"`
+	Fixes        []Fix          `json:"fixes"`
+}
+
+// ✅ValidationResult contains all problems found during kit validation.
+type ValidationResult struct {
+	Problems []Problem `json:"problems"`
+}
+
+// 🗃️ValidationContext provides indexed access to kit entities for constraint evaluation.
+type ValidationContext struct {
+	Kit           Kit
+	TypesByGuid   map[string]*Type
+	DesignsByGuid map[string]*Design
+	PiecesByGuid  map[string]struct {
+		DesignGuid string
+		Piece      *Piece
+	}
+	ConnectorsByTypeGuid map[string][]Connector
+	ModelsByTypeGuid     map[string][]Model
+}
+
+// ⚡Constraint is a function that evaluates a validation rule against a kit context.
+type Constraint func(ctx *ValidationContext) []Problem
+
+func buildValidationContext(kit Kit) *ValidationContext {
+	ctx := &ValidationContext{
+		Kit:           kit,
+		TypesByGuid:   make(map[string]*Type),
+		DesignsByGuid: make(map[string]*Design),
+		PiecesByGuid: make(map[string]struct {
+			DesignGuid string
+			Piece      *Piece
+		}),
+		ConnectorsByTypeGuid: make(map[string][]Connector),
+		ModelsByTypeGuid:     make(map[string][]Model),
+	}
+	for i := range kit.Types {
+		t := &kit.Types[i]
+		ctx.TypesByGuid[t.Guid] = t
+		ctx.ConnectorsByTypeGuid[t.Guid] = t.Connectors
+		ctx.ModelsByTypeGuid[t.Guid] = t.Models
+	}
+	for i := range kit.Designs {
+		d := &kit.Designs[i]
+		ctx.DesignsByGuid[d.Guid] = d
+		for j := range d.Pieces {
+			p := &d.Pieces[j]
+			ctx.PiecesByGuid[p.Guid] = struct {
+				DesignGuid string
+				Piece      *Piece
+			}{DesignGuid: d.Guid, Piece: p}
+		}
+	}
+	return ctx
+}
+
+func generateUniqueName(baseName string, existingNames []string) string {
+	nameSet := make(map[string]bool)
+	for _, n := range existingNames {
+		nameSet[n] = true
+	}
+	for i := 2; ; i++ {
+		candidate := fmt.Sprintf("%s %d", baseName, i)
+		if !nameSet[candidate] {
+			return candidate
+		}
+	}
+}
+
+func makeFix(ctx *ValidationContext, title string, mutate func(clone *Kit)) Fix {
+	cloneData, _ := SerializeKit(ctx.Kit)
+	var clone Kit
+	json.Unmarshal(cloneData, &clone)
+	mutate(&clone)
+	diff := GetKitDiff(ctx.Kit, clone)
+	return Fix{Title: title, Diff: diff}
+}
+
+// ✔️GuidUniquenessConstraint checks that all entity GUIDs are unique within a kit.
+func GuidUniquenessConstraint(ctx *ValidationContext) []Problem {
+	var problems []Problem
+	seen := make(map[string]SemioEntityKind)
+	check := func(entityKind SemioEntityKind, entityGuid string) {
+		if _, exists := seen[entityGuid]; exists {
+			problem := Problem{
+				ConstraintId: "guid-unique",
+				Severity:     SeverityError,
+				Message:      fmt.Sprintf("Duplicate GUID \"%s\". First occurrence kept.", entityGuid),
+				Location:     DomainLocation{EntityKind: entityKind, EntityGuid: entityGuid, Field: "guid"},
+				RelatedGuids: []string{entityGuid},
+				Fixes: []Fix{
+					makeFix(ctx, "Regenerate GUID", func(clone *Kit) {
+						newGuid := Guid()
+						updateGuidEverywhere(clone, entityGuid, newGuid)
+					}),
+				},
+			}
+			problems = append(problems, problem)
+		} else {
+			seen[entityGuid] = entityKind
+		}
+	}
+	check(EntityKindKit, ctx.Kit.Guid)
+	for _, t := range ctx.Kit.Types {
+		check(EntityKindType, t.Guid)
+	}
+	for _, d := range ctx.Kit.Designs {
+		check(EntityKindDesign, d.Guid)
+		for _, p := range d.Pieces {
+			check(EntityKindPiece, p.Guid)
+		}
+		for _, c := range d.Connections {
+			check(EntityKindConnection, c.Guid)
+		}
+		for _, s := range d.Stats {
+			check(EntityKindStat, s.Guid)
+		}
+	}
+	for _, q := range ctx.Kit.Qualities {
+		check(EntityKindQuality, q.Guid)
+	}
+	for _, i := range ctx.Kit.Ports {
+		check(EntityKindPort, i.Guid)
+	}
+	for _, f := range ctx.Kit.Files {
+		check(EntityKindFile, f.Guid)
+	}
+	for _, f := range ctx.Kit.Folders {
+		check(EntityKindFolder, f.Guid)
+	}
+	return problems
+}
+
+func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
+	if kit.Guid == oldGuid {
+		kit.Guid = newGuid
+	}
+	for i := range kit.Types {
+		t := &kit.Types[i]
+		if t.Guid == oldGuid {
+			t.Guid = newGuid
+		}
+		if t.Parent != nil && t.Parent.Guid == oldGuid {
+			t.Parent.Guid = newGuid
+		}
+		for j := range t.Connectors {
+			if t.Connectors[j].Guid == oldGuid {
+				t.Connectors[j].Guid = newGuid
+			}
+		}
+		for j := range t.Models {
+			if t.Models[j].Guid == oldGuid {
+				t.Models[j].Guid = newGuid
+			}
+		}
+	}
+	for i := range kit.Designs {
+		d := &kit.Designs[i]
+		if d.Guid == oldGuid {
+			d.Guid = newGuid
+		}
+		if d.Parent != nil && d.Parent.Guid == oldGuid {
+			d.Parent.Guid = newGuid
+		}
+		for j := range d.Pieces {
+			p := &d.Pieces[j]
+			if p.Guid == oldGuid {
+				p.Guid = newGuid
+			}
+			if p.Type != nil && p.Type.Guid == oldGuid {
+				p.Type.Guid = newGuid
+			}
+			if p.Design != nil && p.Design.Guid == oldGuid {
+				p.Design.Guid = newGuid
+			}
+		}
+		for j := range d.Connections {
+			c := &d.Connections[j]
+			if c.Guid == oldGuid {
+				c.Guid = newGuid
+			}
+			if c.Connected.Piece.Guid == oldGuid {
+				c.Connected.Piece.Guid = newGuid
+			}
+			if c.Connecting.Piece.Guid == oldGuid {
+				c.Connecting.Piece.Guid = newGuid
+			}
+			if c.Connected.Connector != nil && c.Connected.Connector.Guid == oldGuid {
+				c.Connected.Connector.Guid = newGuid
+			}
+			if c.Connecting.Connector != nil && c.Connecting.Connector.Guid == oldGuid {
+				c.Connecting.Connector.Guid = newGuid
+			}
+		}
+	}
+	for i := range kit.Ports {
+		if kit.Ports[i].Guid == oldGuid {
+			kit.Ports[i].Guid = newGuid
+		}
+		for j := range kit.Ports[i].CompatiblePorts {
+			if kit.Ports[i].CompatiblePorts[j].Guid == oldGuid {
+				kit.Ports[i].CompatiblePorts[j].Guid = newGuid
+			}
+		}
+	}
+	for i := range kit.Qualities {
+		if kit.Qualities[i].Guid == oldGuid {
+			kit.Qualities[i].Guid = newGuid
+		}
+	}
+	for i := range kit.Files {
+		if kit.Files[i].Guid == oldGuid {
+			kit.Files[i].Guid = newGuid
+		}
+	}
+	for i := range kit.Folders {
+		if kit.Folders[i].Guid == oldGuid {
+			kit.Folders[i].Guid = newGuid
+		}
+		if kit.Folders[i].Parent != nil && kit.Folders[i].Parent.Guid == oldGuid {
+			kit.Folders[i].Parent.Guid = newGuid
+		}
+	}
+}
+
+// 🧱TypeNameUniquenessConstraint checks that sibling type names are unique within a kit.
+func TypeNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+	var problems []Problem
+	byParent := make(map[string][]Type)
+	for _, t := range ctx.Kit.Types {
+		parentGuid := ""
+		if t.Parent != nil {
+			parentGuid = t.Parent.Guid
+		}
+		byParent[parentGuid] = append(byParent[parentGuid], t)
+	}
+	for _, siblings := range byParent {
+		names := make(map[string][]Type)
+		for _, t := range siblings {
+			name := t.Name
+			names[name] = append(names[name], t)
+		}
+		for name, group := range names {
+			if len(group) <= 1 {
+				continue
+			}
+			siblingNames := make([]string, len(siblings))
+			for i, s := range siblings {
+				siblingNames[i] = s.Name
+			}
+			for i := 1; i < len(group); i++ {
+				typ := group[i]
+				relatedGuids := make([]string, len(group))
+				for j, g := range group {
+					relatedGuids[j] = g.Guid
+				}
+				problem := Problem{
+					ConstraintId: "type-name-unique",
+					Severity:     SeverityError,
+					Message:      fmt.Sprintf("Duplicate type name \"%s\" among siblings.", name),
+					Location:     DomainLocation{EntityKind: EntityKindType, EntityGuid: typ.Guid, Field: "name"},
+					RelatedGuids: relatedGuids,
+					Fixes: []Fix{
+						makeFix(ctx, fmt.Sprintf("Rename \"%s\"", name), func(clone *Kit) {
+							for j := range clone.Types {
+								if clone.Types[j].Guid == typ.Guid {
+									clone.Types[j].Name = generateUniqueName(name, siblingNames)
+									break
+								}
+							}
+						}),
+					},
+				}
+				problems = append(problems, problem)
+			}
+		}
+	}
+	return problems
+}
+
+// 📐DesignNameUniquenessConstraint checks that sibling design names are unique within a kit.
+func DesignNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+	var problems []Problem
+	byParent := make(map[string][]Design)
+	for _, d := range ctx.Kit.Designs {
+		parentGuid := ""
+		if d.Parent != nil {
+			parentGuid = d.Parent.Guid
+		}
+		byParent[parentGuid] = append(byParent[parentGuid], d)
+	}
+	for _, siblings := range byParent {
+		names := make(map[string][]Design)
+		for _, d := range siblings {
+			name := d.Name
+			names[name] = append(names[name], d)
+		}
+		for name, group := range names {
+			if len(group) <= 1 {
+				continue
+			}
+			siblingNames := make([]string, len(siblings))
+			for i, s := range siblings {
+				siblingNames[i] = s.Name
+			}
+			for i := 1; i < len(group); i++ {
+				design := group[i]
+				relatedGuids := make([]string, len(group))
+				for j, g := range group {
+					relatedGuids[j] = g.Guid
+				}
+				problem := Problem{
+					ConstraintId: "design-name-unique",
+					Severity:     SeverityError,
+					Message:      fmt.Sprintf("Duplicate design name \"%s\" among siblings.", name),
+					Location:     DomainLocation{EntityKind: EntityKindDesign, EntityGuid: design.Guid, Field: "name"},
+					RelatedGuids: relatedGuids,
+					Fixes: []Fix{
+						makeFix(ctx, fmt.Sprintf("Rename \"%s\"", name), func(clone *Kit) {
+							for j := range clone.Designs {
+								if clone.Designs[j].Guid == design.Guid {
+									clone.Designs[j].Name = generateUniqueName(name, siblingNames)
+									break
+								}
+							}
+						}),
+					},
+				}
+				problems = append(problems, problem)
+			}
+		}
+	}
+	return problems
+}
+
+// 🧩PieceNameUniquenessConstraint checks that piece names are unique within each design.
+func PieceNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+	var problems []Problem
+	for _, design := range ctx.Kit.Designs {
+		if len(design.Pieces) == 0 {
+			continue
+		}
+		names := make(map[string][]Piece)
+		for _, p := range design.Pieces {
+			name := ""
+			if p.Name != nil {
+				name = *p.Name
+			}
+			names[name] = append(names[name], p)
+		}
+		allNames := make([]string, len(design.Pieces))
+		for i, p := range design.Pieces {
+			if p.Name != nil {
+				allNames[i] = *p.Name
+			}
+		}
+		for name, group := range names {
+			if len(group) <= 1 {
+				continue
+			}
+			for i := 1; i < len(group); i++ {
+				piece := group[i]
+				relatedGuids := make([]string, len(group))
+				for j, g := range group {
+					relatedGuids[j] = g.Guid
+				}
+				designGuid := design.Guid
+				problem := Problem{
+					ConstraintId: "piece-name-unique",
+					Severity:     SeverityError,
+					Message:      fmt.Sprintf("Duplicate piece name \"%s\" inside design \"%s\".", name, design.Name),
+					Location:     DomainLocation{EntityKind: EntityKindPiece, EntityGuid: piece.Guid, Field: "name"},
+					RelatedGuids: relatedGuids,
+					Fixes: []Fix{
+						makeFix(ctx, fmt.Sprintf("Rename piece \"%s\"", name), func(clone *Kit) {
+							for j := range clone.Designs {
+								if clone.Designs[j].Guid == designGuid {
+									for k := range clone.Designs[j].Pieces {
+										if clone.Designs[j].Pieces[k].Guid == piece.Guid {
+											newName := generateUniqueName(name, allNames)
+											clone.Designs[j].Pieces[k].Name = &newName
+											break
+										}
+									}
+									break
+								}
+							}
+						}),
+					},
+				}
+				problems = append(problems, problem)
+			}
+		}
+	}
+	return problems
+}
+
+// 🔬QualityNameUniquenessConstraint checks that quality names are unique within a kit.
+func QualityNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+	var problems []Problem
+	names := make(map[string][]Quality)
+	for _, q := range ctx.Kit.Qualities {
+		name := q.Name
+		names[name] = append(names[name], q)
+	}
+	allNames := make([]string, len(ctx.Kit.Qualities))
+	for i, q := range ctx.Kit.Qualities {
+		allNames[i] = q.Name
+	}
+	for name, group := range names {
+		if len(group) <= 1 {
+			continue
+		}
+		for i := 1; i < len(group); i++ {
+			quality := group[i]
+			relatedGuids := make([]string, len(group))
+			for j, g := range group {
+				relatedGuids[j] = g.Guid
+			}
+			problem := Problem{
+				ConstraintId: "quality-name-unique",
+				Severity:     SeverityError,
+				Message:      fmt.Sprintf("Duplicate quality name \"%s\".", name),
+				Location:     DomainLocation{EntityKind: EntityKindQuality, EntityGuid: quality.Guid, Field: "name"},
+				RelatedGuids: relatedGuids,
+				Fixes: []Fix{
+					makeFix(ctx, fmt.Sprintf("Rename quality \"%s\"", name), func(clone *Kit) {
+						for j := range clone.Qualities {
+							if clone.Qualities[j].Guid == quality.Guid {
+								clone.Qualities[j].Name = generateUniqueName(name, allNames)
+								break
+							}
+						}
+					}),
+				},
+			}
+			problems = append(problems, problem)
+		}
+	}
+	return problems
+}
+
+// ⚓PortNameUniquenessConstraint checks that port names are unique within a kit.
+func PortNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+	var problems []Problem
+	names := make(map[string][]Port)
+	for _, p := range ctx.Kit.Ports {
+		name := p.Name
+		names[name] = append(names[name], p)
+	}
+	allNames := make([]string, len(ctx.Kit.Ports))
+	for i, p := range ctx.Kit.Ports {
+		allNames[i] = p.Name
+	}
+	for name, group := range names {
+		if len(group) <= 1 {
+			continue
+		}
+		for i := 1; i < len(group); i++ {
+			iface := group[i]
+			relatedGuids := make([]string, len(group))
+			for j, g := range group {
+				relatedGuids[j] = g.Guid
+			}
+			problem := Problem{
+				ConstraintId: "port-name-unique",
+				Severity:     SeverityError,
+				Message:      fmt.Sprintf("Duplicate port name \"%s\".", name),
+				Location:     DomainLocation{EntityKind: EntityKindPort, EntityGuid: iface.Guid, Field: "name"},
+				RelatedGuids: relatedGuids,
+				Fixes: []Fix{
+					makeFix(ctx, fmt.Sprintf("Rename port \"%s\"", name), func(clone *Kit) {
+						for j := range clone.Ports {
+							if clone.Ports[j].Guid == iface.Guid {
+								clone.Ports[j].Name = generateUniqueName(name, allNames)
+								break
+							}
+						}
+					}),
+				},
+			}
+			problems = append(problems, problem)
+		}
+	}
+	return problems
+}
+
+// 📄FileNameUniquenessConstraint checks that file names are unique within a kit.
+func FileNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+	var problems []Problem
+	names := make(map[string][]File)
+	for _, f := range ctx.Kit.Files {
+		name := f.Name
+		names[name] = append(names[name], f)
+	}
+	allNames := make([]string, len(ctx.Kit.Files))
+	for i, f := range ctx.Kit.Files {
+		allNames[i] = f.Name
+	}
+	for name, group := range names {
+		if len(group) <= 1 {
+			continue
+		}
+		for i := 1; i < len(group); i++ {
+			file := group[i]
+			relatedGuids := make([]string, len(group))
+			for j, g := range group {
+				relatedGuids[j] = g.Guid
+			}
+			problem := Problem{
+				ConstraintId: "file-name-unique",
+				Severity:     SeverityError,
+				Message:      fmt.Sprintf("Duplicate file name \"%s\".", name),
+				Location:     DomainLocation{EntityKind: EntityKindFile, EntityGuid: file.Guid, Field: "name"},
+				RelatedGuids: relatedGuids,
+				Fixes: []Fix{
+					makeFix(ctx, fmt.Sprintf("Rename file \"%s\"", name), func(clone *Kit) {
+						for j := range clone.Files {
+							if clone.Files[j].Guid == file.Guid {
+								clone.Files[j].Name = generateUniqueName(name, allNames)
+								break
+							}
+						}
+					}),
+				},
+			}
+			problems = append(problems, problem)
+		}
+	}
+	return problems
+}
+
+// 📁FolderNameUniquenessConstraint checks that sibling folder names are unique.
+func FolderNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+	var problems []Problem
+	byParent := make(map[string][]Folder)
+	for _, f := range ctx.Kit.Folders {
+		parentGuid := ""
+		if f.Parent != nil {
+			parentGuid = f.Parent.Guid
+		}
+		byParent[parentGuid] = append(byParent[parentGuid], f)
+	}
+	for _, siblings := range byParent {
+		names := make(map[string][]Folder)
+		for _, f := range siblings {
+			name := f.Name
+			names[name] = append(names[name], f)
+		}
+		siblingNames := make([]string, len(siblings))
+		for i, s := range siblings {
+			siblingNames[i] = s.Name
+		}
+		for name, group := range names {
+			if len(group) <= 1 {
+				continue
+			}
+			for i := 1; i < len(group); i++ {
+				folder := group[i]
+				relatedGuids := make([]string, len(group))
+				for j, g := range group {
+					relatedGuids[j] = g.Guid
+				}
+				problem := Problem{
+					ConstraintId: "folder-name-unique",
+					Severity:     SeverityError,
+					Message:      fmt.Sprintf("Duplicate folder name \"%s\" among siblings.", name),
+					Location:     DomainLocation{EntityKind: EntityKindFolder, EntityGuid: folder.Guid, Field: "name"},
+					RelatedGuids: relatedGuids,
+					Fixes: []Fix{
+						makeFix(ctx, fmt.Sprintf("Rename folder \"%s\"", name), func(clone *Kit) {
+							for j := range clone.Folders {
+								if clone.Folders[j].Guid == folder.Guid {
+									clone.Folders[j].Name = generateUniqueName(name, siblingNames)
+									break
+								}
+							}
+						}),
+					},
+				}
+				problems = append(problems, problem)
+			}
+		}
+	}
+	return problems
+}
+
+// 🔌ConnectorNameUniquenessConstraint checks that connector names are unique within each type.
+func ConnectorNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+	var problems []Problem
+	for typeGuid, connectors := range ctx.ConnectorsByTypeGuid {
+		if len(connectors) == 0 {
+			continue
+		}
+		names := make(map[string][]Connector)
+		for _, c := range connectors {
+			name := ""
+			if c.Name != nil {
+				name = *c.Name
+			}
+			names[name] = append(names[name], c)
+		}
+		allNames := make([]string, len(connectors))
+		for i, c := range connectors {
+			if c.Name != nil {
+				allNames[i] = *c.Name
+			}
+		}
+		typ := ctx.TypesByGuid[typeGuid]
+		typeName := ""
+		if typ != nil {
+			typeName = typ.Name
+		}
+		for name, group := range names {
+			if len(group) <= 1 {
+				continue
+			}
+			for i := 1; i < len(group); i++ {
+				connector := group[i]
+				relatedGuids := make([]string, len(group))
+				for j, g := range group {
+					relatedGuids[j] = g.Guid
+				}
+				tGuid := typeGuid
+				problem := Problem{
+					ConstraintId: "connector-name-unique",
+					Severity:     SeverityError,
+					Message:      fmt.Sprintf("Duplicate connector name \"%s\" inside type \"%s\".", name, typeName),
+					Location:     DomainLocation{EntityKind: EntityKindConnector, EntityGuid: connector.Guid, Field: "name"},
+					RelatedGuids: relatedGuids,
+					Fixes: []Fix{
+						makeFix(ctx, fmt.Sprintf("Rename connector \"%s\"", name), func(clone *Kit) {
+							for j := range clone.Types {
+								if clone.Types[j].Guid == tGuid {
+									for k := range clone.Types[j].Connectors {
+										if clone.Types[j].Connectors[k].Guid == connector.Guid {
+											clone.Types[j].Connectors[k].Name = ptrString(generateUniqueName(name, allNames))
+											break
+										}
+									}
+									break
+								}
+							}
+						}),
+					},
+				}
+				problems = append(problems, problem)
+			}
+		}
+	}
+	return problems
+}
+
+// 🗿ModelNameUniquenessConstraint checks that model names are unique within each type.
+func ModelNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+	var problems []Problem
+	for typeGuid, models := range ctx.ModelsByTypeGuid {
+		if len(models) == 0 {
+			continue
+		}
+		names := make(map[string][]Model)
+		for _, m := range models {
+			name := ""
+			if m.Name != nil {
+				name = *m.Name
+			}
+			names[name] = append(names[name], m)
+		}
+		allNames := make([]string, len(models))
+		for i, m := range models {
+			if m.Name != nil {
+				allNames[i] = *m.Name
+			}
+		}
+		typ := ctx.TypesByGuid[typeGuid]
+		typeName := ""
+		if typ != nil {
+			typeName = typ.Name
+		}
+		for name, group := range names {
+			if len(group) <= 1 {
+				continue
+			}
+			for i := 1; i < len(group); i++ {
+				model := group[i]
+				relatedGuids := make([]string, len(group))
+				for j, g := range group {
+					relatedGuids[j] = g.Guid
+				}
+				tGuid := typeGuid
+				problem := Problem{
+					ConstraintId: "model-name-unique",
+					Severity:     SeverityError,
+					Message:      fmt.Sprintf("Duplicate model name \"%s\" inside type \"%s\".", name, typeName),
+					Location:     DomainLocation{EntityKind: EntityKindModel, EntityGuid: model.Guid, Field: "name"},
+					RelatedGuids: relatedGuids,
+					Fixes: []Fix{
+						makeFix(ctx, fmt.Sprintf("Rename model \"%s\"", name), func(clone *Kit) {
+							for j := range clone.Types {
+								if clone.Types[j].Guid == tGuid {
+									for k := range clone.Types[j].Models {
+										if clone.Types[j].Models[k].Guid == model.Guid {
+											newName := generateUniqueName(name, allNames)
+											clone.Types[j].Models[k].Name = &newName
+											break
+										}
+									}
+									break
+								}
+							}
+						}),
+					},
+				}
+				problems = append(problems, problem)
+			}
+		}
+	}
+	return problems
+}
+
+// 🛤️LayerPathUniquenessConstraint checks that layer paths are unique within each design.
+func LayerPathUniquenessConstraint(ctx *ValidationContext) []Problem {
+	var problems []Problem
+	for _, design := range ctx.Kit.Designs {
+		if len(design.Layers) == 0 {
+			continue
+		}
+		paths := make(map[string][]Layer)
+		for _, l := range design.Layers {
+			path := l.Path
+			paths[path] = append(paths[path], l)
+		}
+		allPaths := make([]string, len(design.Layers))
+		for i, l := range design.Layers {
+			allPaths[i] = l.Path
+		}
+		for path, group := range paths {
+			if len(group) <= 1 {
+				continue
+			}
+			for i := 1; i < len(group); i++ {
+				layer := group[i]
+				designGuid := design.Guid
+				problem := Problem{
+					ConstraintId: "layer-path-unique",
+					Severity:     SeverityError,
+					Message:      fmt.Sprintf("Duplicate layer path \"%s\" inside design \"%s\".", path, design.Name),
+					Location:     DomainLocation{EntityKind: EntityKindLayer, EntityGuid: layer.Guid, Field: "path"},
+					Fixes: []Fix{
+						makeFix(ctx, fmt.Sprintf("Rename layer \"%s\"", path), func(clone *Kit) {
+							for j := range clone.Designs {
+								if clone.Designs[j].Guid == designGuid {
+									for k := range clone.Designs[j].Layers {
+										if clone.Designs[j].Layers[k].Guid == layer.Guid {
+											clone.Designs[j].Layers[k].Path = generateUniqueName(path, allPaths)
+											break
+										}
+									}
+									break
+								}
+							}
+						}),
+					},
+				}
+				problems = append(problems, problem)
+			}
+		}
+	}
+	return problems
+}
+
+// 📜DefaultConstraints lists all built-in validation constraints.
+var DefaultConstraints = []Constraint{
+	GuidUniquenessConstraint,
+	TypeNameUniquenessConstraint,
+	DesignNameUniquenessConstraint,
+	PieceNameUniquenessConstraint,
+	QualityNameUniquenessConstraint,
+	PortNameUniquenessConstraint,
+	FileNameUniquenessConstraint,
+	FolderNameUniquenessConstraint,
+	ConnectorNameUniquenessConstraint,
+	ModelNameUniquenessConstraint,
+	LayerPathUniquenessConstraint,
+}
+
+// 🗃️ValidateKit validates a kit using the default set of constraints.
+func ValidateKit(kit Kit) ValidationResult {
+	return ValidateKitWithConstraints(kit, DefaultConstraints)
+}
+
+// 🔍ValidateKitWithConstraints validates a kit using the provided set of constraints.
+func ValidateKitWithConstraints(kit Kit, constraints []Constraint) ValidationResult {
+	ctx := buildValidationContext(kit)
+	var problems []Problem
+	for _, constraint := range constraints {
+		problems = append(problems, constraint(ctx)...)
+	}
+	return ValidationResult{Problems: problems}
+}
+
+// ❌HasErrors returns true if the validation result contains any error-severity problems.
+func HasErrors(result ValidationResult) bool {
+	for _, p := range result.Problems {
+		if p.Severity == SeverityError || p.Severity == "" {
+			return true
+		}
+	}
+	return false
+}
+
+// #region 🌧️Validation Serialization
+// Validation Serialization MUST provide serializable representations of validation results.
+
+// ⚠️ProblemSerialized is the JSON-serializable representation of a validation problem.
+type ProblemSerialized struct {
+	ConstraintId string `json:"constraintId"`
+	Severity     string `json:"severity,omitempty"`
+	Message      string `json:"message"`
+	EntityKind   string `json:"entityKind"`
+	EntityGuid   string `json:"entityGuid"`
+	Fixes        []Fix  `json:"fixes"`
+}
+
+// ✅ValidationResultSerialized is the JSON-serializable representation of a validation result.
+type ValidationResultSerialized struct {
+	Problems []ProblemSerialized `json:"problems"`
+}
+
+// ✅ToValidationResult converts a validation result to its JSON-serializable form.
+func ToValidationResult(result ValidationResult) ValidationResultSerialized {
+	problems := make([]ProblemSerialized, len(result.Problems))
+	for i, p := range result.Problems {
+		severity := string(p.Severity)
+		if severity == "" {
+			severity = "error"
+		}
+		problems[i] = ProblemSerialized{
+			ConstraintId: p.ConstraintId,
+			Severity:     severity,
+			Message:      p.Message,
+			EntityKind:   string(p.Location.EntityKind),
+			EntityGuid:   p.Location.EntityGuid,
+			Fixes:        p.Fixes,
+		}
+	}
+	return ValidationResultSerialized{Problems: problems}
+}
+
+// ⚖️AreValidationResultsEqual compares two serialized validation results for structural equality.
+func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
+	if len(a.Problems) != len(b.Problems) {
+		return false
+	}
+	sortProblems := func(problems []ProblemSerialized) {
+		sort.Slice(problems, func(i, j int) bool {
+			if problems[i].ConstraintId != problems[j].ConstraintId {
+				return problems[i].ConstraintId < problems[j].ConstraintId
+			}
+			return problems[i].EntityGuid < problems[j].EntityGuid
+		})
+	}
+	sortedA := make([]ProblemSerialized, len(a.Problems))
+	copy(sortedA, a.Problems)
+	sortProblems(sortedA)
+	sortedB := make([]ProblemSerialized, len(b.Problems))
+	copy(sortedB, b.Problems)
+	sortProblems(sortedB)
+	for i := range sortedA {
+		if sortedA[i].ConstraintId != sortedB[i].ConstraintId ||
+			sortedA[i].Message != sortedB[i].Message ||
+			sortedA[i].EntityKind != sortedB[i].EntityKind ||
+			sortedA[i].EntityGuid != sortedB[i].EntityGuid {
+			return false
+		}
+	}
+	return true
+}
+
+// #endregion 🌧️Validation Serialization
+
+// #endregion 🛡️Validation
+
+
+// #region 🌤️Flatten Design
+// 💾Flatten Design MUST compute absolute piece planes from relative connections.
+func planeToMatrix(p Plane) *mat.Dense {
+	xAxis := []float64{p.XAxis.X, p.XAxis.Y, p.XAxis.Z}
+	yAxis := []float64{p.YAxis.X, p.YAxis.Y, p.YAxis.Z}
+	zAxis := cross(xAxis, yAxis)
+	normalize(zAxis)
+	m := mat.NewDense(4, 4, []float64{
+		xAxis[0], yAxis[0], zAxis[0], p.Origin.X,
+		xAxis[1], yAxis[1], zAxis[1], p.Origin.Y,
+		xAxis[2], yAxis[2], zAxis[2], p.Origin.Z,
+		0, 0, 0, 1,
+	})
+	return m
+}
+
+func matrixToPlane(m *mat.Dense) Plane {
+	return Plane{
+		Origin: Point{X: m.At(0, 3), Y: m.At(1, 3), Z: m.At(2, 3)},
+		XAxis:  Vector{X: m.At(0, 0), Y: m.At(1, 0), Z: m.At(2, 0)},
+		YAxis:  Vector{X: m.At(0, 1), Y: m.At(1, 1), Z: m.At(2, 1)},
+	}
+}
+
+func cross(a, b []float64) []float64 {
+	return []float64{
+		a[1]*b[2] - a[2]*b[1],
+		a[2]*b[0] - a[0]*b[2],
+		a[0]*b[1] - a[1]*b[0],
+	}
+}
+
+func normalize(v []float64) {
+	length := math.Sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
+	if length > 0 {
+		v[0] /= length
+		v[1] /= length
+		v[2] /= length
+	}
+}
+
+func dot(a, b []float64) float64 {
+	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
+}
+
+func vecLength(v []float64) float64 {
+	return math.Sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
+}
+
+func degToRad(deg float64) float64 {
+	return deg * math.Pi / 180.0
+}
+
+func roundFloat(val float64, precision int) float64 {
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(val*ratio) / ratio
+}
+
+func roundPlane(p Plane) Plane {
+	const prec = 6
+	return Plane{
+		Origin: Point{X: roundFloat(p.Origin.X, prec), Y: roundFloat(p.Origin.Y, prec), Z: roundFloat(p.Origin.Z, prec)},
+		XAxis:  Vector{X: roundFloat(p.XAxis.X, prec), Y: roundFloat(p.XAxis.Y, prec), Z: roundFloat(p.XAxis.Z, prec)},
+		YAxis:  Vector{X: roundFloat(p.YAxis.X, prec), Y: roundFloat(p.YAxis.Y, prec), Z: roundFloat(p.YAxis.Z, prec)},
+	}
+}
+
+func makeRotationAxis(axis []float64, angle float64) *mat.Dense {
+	c := math.Cos(angle)
+	s := math.Sin(angle)
+	t := 1 - c
+	x, y, z := axis[0], axis[1], axis[2]
+	return mat.NewDense(4, 4, []float64{
+		t*x*x + c, t*x*y - s*z, t*x*z + s*y, 0,
+		t*x*y + s*z, t*y*y + c, t*y*z - s*x, 0,
+		t*x*z - s*y, t*y*z + s*x, t*z*z + c, 0,
+		0, 0, 0, 1,
+	})
+}
+
+func makeTranslation(x, y, z float64) *mat.Dense {
+	return mat.NewDense(4, 4, []float64{
+		1, 0, 0, x,
+		0, 1, 0, y,
+		0, 0, 1, z,
+		0, 0, 0, 1,
+	})
+}
+
+func quaternionFromAxisAngle(axis []float64, angle float64) []float64 {
+	halfAngle := angle / 2
+	s := math.Sin(halfAngle)
+	return []float64{axis[0] * s, axis[1] * s, axis[2] * s, math.Cos(halfAngle)}
+}
+
+func quaternionFromUnitVectors(vFrom, vTo []float64) []float64 {
+	r := dot(vFrom, vTo) + 1
+	var quat []float64
+	if r < 0.000001 {
+		if math.Abs(vFrom[0]) > math.Abs(vFrom[2]) {
+			quat = []float64{-vFrom[1], vFrom[0], 0, 0}
+		} else {
+			quat = []float64{0, -vFrom[2], vFrom[1], 0}
+		}
+	} else {
+		crossV := cross(vFrom, vTo)
+		quat = []float64{crossV[0], crossV[1], crossV[2], r}
+	}
+	length := math.Sqrt(quat[0]*quat[0] + quat[1]*quat[1] + quat[2]*quat[2] + quat[3]*quat[3])
+	return []float64{quat[0] / length, quat[1] / length, quat[2] / length, quat[3] / length}
+}
+
+func quaternionToMatrix(q []float64) *mat.Dense {
+	x, y, z, w := q[0], q[1], q[2], q[3]
+	x2, y2, z2 := x+x, y+y, z+z
+	xx, xy, xz := x*x2, x*y2, x*z2
+	yy, yz, zz := y*y2, y*z2, z*z2
+	wx, wy, wz := w*x2, w*y2, w*z2
+	return mat.NewDense(4, 4, []float64{
+		1 - (yy + zz), xy - wz, xz + wy, 0,
+		xy + wz, 1 - (xx + zz), yz - wx, 0,
+		xz - wy, yz + wx, 1 - (xx + yy), 0,
+		0, 0, 0, 1,
+	})
+}
+
+func multiplyMatrices(a, b *mat.Dense) *mat.Dense {
+	result := mat.NewDense(4, 4, nil)
+	result.Mul(a, b)
+	return result
+}
+
+func applyMatrix4ToVec3(m *mat.Dense, v []float64) []float64 {
+	return []float64{
+		m.At(0, 0)*v[0] + m.At(0, 1)*v[1] + m.At(0, 2)*v[2],
+		m.At(1, 0)*v[0] + m.At(1, 1)*v[1] + m.At(1, 2)*v[2],
+		m.At(2, 0)*v[0] + m.At(2, 1)*v[1] + m.At(2, 2)*v[2],
+	}
+}
+
+func computeChildPlane(parentPlane Plane, parentConnector, childConnector Connector, connection Connection) Plane {
+	parentMatrix := planeToMatrix(parentPlane)
+	parentPoint := []float64{parentConnector.Point.X, parentConnector.Point.Y, parentConnector.Point.Z}
+	parentDirection := []float64{parentConnector.Direction.X, parentConnector.Direction.Y, parentConnector.Direction.Z}
+	normalize(parentDirection)
+	childPoint := []float64{childConnector.Point.X, childConnector.Point.Y, childConnector.Point.Z}
+	childDirection := []float64{childConnector.Direction.X, childConnector.Direction.Y, childConnector.Direction.Z}
+	normalize(childDirection)
+
+	gap := connection.Gap
+	shift := connection.Shift
+	rise := connection.Rise
+	rotationRad := degToRad(connection.Rotation)
+	turnRad := degToRad(connection.Turn)
+	tiltRad := degToRad(connection.Tilt)
+
+	reverseChildDirection := []float64{-childDirection[0], -childDirection[1], -childDirection[2]}
+
+	var alignQuat []float64
+	crossVec := cross(parentDirection, reverseChildDirection)
+	crossLen := vecLength(crossVec)
+	if crossLen < 0.01 {
+		if math.Abs(parentDirection[2]) < Tolerance {
+			alignQuat = quaternionFromAxisAngle([]float64{0, 0, 1}, math.Pi)
+		} else {
+			axis := cross([]float64{0, 0, 1}, parentDirection)
+			normalize(axis)
+			alignQuat = quaternionFromAxisAngle(axis, math.Pi)
+		}
+	} else {
+		alignQuat = quaternionFromUnitVectors(reverseChildDirection, parentDirection)
+	}
+
+	directionT := quaternionToMatrix(alignQuat)
+
+	yAxis := []float64{0, 1, 0}
+	parentConnectorQuat := quaternionFromUnitVectors(yAxis, parentDirection)
+	parentRotationT := quaternionToMatrix(parentConnectorQuat)
+
+	gapDirection := applyMatrix4ToVec3(parentRotationT, []float64{0, 1, 0})
+	shiftDirection := applyMatrix4ToVec3(parentRotationT, []float64{1, 0, 0})
+	raiseDirection := applyMatrix4ToVec3(parentRotationT, []float64{0, 0, 1})
+	turnAxis := applyMatrix4ToVec3(parentRotationT, []float64{0, 0, 1})
+	tiltAxis := applyMatrix4ToVec3(parentRotationT, []float64{1, 0, 0})
+
+	orientationT := directionT
+
+	rotateT := makeRotationAxis(parentDirection, -rotationRad)
+	orientationT = multiplyMatrices(rotateT, orientationT)
+
+	turnAxis = applyMatrix4ToVec3(rotateT, turnAxis)
+	tiltAxis = applyMatrix4ToVec3(rotateT, tiltAxis)
+
+	turnT := makeRotationAxis(turnAxis, turnRad)
+	orientationT = multiplyMatrices(turnT, orientationT)
+
+	tiltT := makeRotationAxis(tiltAxis, tiltRad)
+	orientationT = multiplyMatrices(tiltT, orientationT)
+
+	centerChildT := makeTranslation(-childPoint[0], -childPoint[1], -childPoint[2])
+	transform := multiplyMatrices(orientationT, centerChildT)
+
+	gapTransform := makeTranslation(gapDirection[0]*gap, gapDirection[1]*gap, gapDirection[2]*gap)
+	shiftTransform := makeTranslation(shiftDirection[0]*shift, shiftDirection[1]*shift, shiftDirection[2]*shift)
+	raiseTransform := makeTranslation(raiseDirection[0]*rise, raiseDirection[1]*rise, raiseDirection[2]*rise)
+
+	translationT := multiplyMatrices(raiseTransform, multiplyMatrices(shiftTransform, gapTransform))
+	transform = multiplyMatrices(translationT, transform)
+	moveToParentT := makeTranslation(parentPoint[0], parentPoint[1], parentPoint[2])
+	transform = multiplyMatrices(moveToParentT, transform)
+	finalMatrix := multiplyMatrices(parentMatrix, transform)
+
+	return matrixToPlane(finalMatrix)
+}
+
+type pieceNode struct {
+	piece *Piece
+	plane *Plane
+}
+
+func getConnector(typesDict map[string]*Type, typ *Type, connectorGuid *string) *Connector {
+	if typ == nil {
+		return nil
+	}
+	if connectorGuid == nil || *connectorGuid == "" {
+		if len(typ.Connectors) > 0 {
+			return &typ.Connectors[0]
+		}
+		if typ.Parent != nil {
+			parentType := typesDict[typ.Parent.Guid]
+			return getConnector(typesDict, parentType, connectorGuid)
+		}
+		return nil
+	}
+	for i := range typ.Connectors {
+		if typ.Connectors[i].Guid == *connectorGuid {
+			return &typ.Connectors[i]
+		}
+	}
+	if typ.Parent != nil {
+		parentType := typesDict[typ.Parent.Guid]
+		if connector := getConnector(typesDict, parentType, connectorGuid); connector != nil {
+			return connector
+		}
+	}
+	if len(typ.Connectors) > 0 {
+		return &typ.Connectors[0]
+	}
+	return nil
+}
+
+// 🌤️FlattenDesign computes absolute planes and centers for all pieces in a design.
+func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
+	design := FindDesignInKit(kit, designGuid)
+	if design == nil || len(design.Pieces) == 0 {
+		return DesignDiff{}
+	}
+
+	removedConnList := make([]ConnectionId, 0, len(design.Connections))
+	for i := range design.Connections {
+		removedConnList = append(removedConnList, ConnectionId{Guid: design.Connections[i].Guid})
+	}
+
+	typesDict := make(map[string]*Type)
+	for i := range kit.Types {
+		typesDict[kit.Types[i].Guid] = &kit.Types[i]
+	}
+
+	pieceMap := make(map[string]*Piece)
+	for i := range design.Pieces {
+		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
+	}
+
+	piecePlanes := make(map[string]*Plane)
+	adjacency := make(map[string][]struct {
+		neighborGuid string
+		connection   *Connection
+	})
+
+	for i := range design.Connections {
+		conn := &design.Connections[i]
+		srcGuid := conn.Connected.Piece.Guid
+		tgtGuid := conn.Connecting.Piece.Guid
+		if pieceMap[srcGuid] == nil || pieceMap[tgtGuid] == nil {
+			continue
+		}
+		adjacency[srcGuid] = append(adjacency[srcGuid], struct {
+			neighborGuid string
+			connection   *Connection
+		}{tgtGuid, conn})
+		adjacency[tgtGuid] = append(adjacency[tgtGuid], struct {
+			neighborGuid string
+			connection   *Connection
+		}{srcGuid, conn})
+	}
+
+	// Save original centers before BFS modifies pieces in-place.
+	// pieceMap shares pointers with design.Pieces, so after BFS
+	// piece.Center and pieceMap[guid].Center are the same pointer.
+	originalCenters := make(map[string]*Coord)
+	for _, p := range design.Pieces {
+		if p.Center != nil {
+			c := *p.Center
+			originalCenters[p.Guid] = &c
+		}
+	}
+
+	visited := make(map[string]bool)
+	piecePaths := make(map[string]string)
+	var bfs func(rootGuid string)
+	bfs = func(rootGuid string) {
+		queue := []string{rootGuid}
+		visited[rootGuid] = true
+		piecePaths[rootGuid] = rootGuid
+		rootPiece := pieceMap[rootGuid]
+		if rootPiece.Plane != nil && rootPiece.Center != nil {
+			piecePlanes[rootGuid] = rootPiece.Plane
+		} else {
+			identityPlane := Plane{
+				Origin: Point{X: 0, Y: 0, Z: 0},
+				XAxis:  Vector{X: 1, Y: 0, Z: 0},
+				YAxis:  Vector{X: 0, Y: 1, Z: 0},
+			}
+			piecePlanes[rootGuid] = &identityPlane
+		}
+
+		for len(queue) > 0 {
+			currentGuid := queue[0]
+			queue = queue[1:]
+			currentPlane := piecePlanes[currentGuid]
+			currentPiece := pieceMap[currentGuid]
+
+			for _, neighbor := range adjacency[currentGuid] {
+				if visited[neighbor.neighborGuid] {
+					continue
+				}
+				visited[neighbor.neighborGuid] = true
+				neighborPiece := pieceMap[neighbor.neighborGuid]
+				conn := neighbor.connection
+
+				var parentSide, childSide *Side
+				if conn.Connected.Piece.Guid == currentGuid {
+					parentSide = &conn.Connected
+					childSide = &conn.Connecting
+				} else {
+					parentSide = &conn.Connecting
+					childSide = &conn.Connected
+				}
+
+				var parentType, childType *Type
+				if currentPiece.Type != nil {
+					parentType = typesDict[currentPiece.Type.Guid]
+				}
+				if neighborPiece.Type != nil {
+					childType = typesDict[neighborPiece.Type.Guid]
+				}
+
+				var parentConnectorGuid, childConnectorGuid *string
+				if parentSide.Connector != nil {
+					parentConnectorGuid = &parentSide.Connector.Guid
+				}
+				if childSide.Connector != nil {
+					childConnectorGuid = &childSide.Connector.Guid
+				}
+
+				parentConnector := getConnector(typesDict, parentType, parentConnectorGuid)
+				childConnector := getConnector(typesDict, childType, childConnectorGuid)
+
+				if parentConnector == nil || childConnector == nil {
+					continue
+				}
+
+				childPlane := roundPlane(computeChildPlane(*currentPlane, *parentConnector, *childConnector, *conn))
+				piecePlanes[neighbor.neighborGuid] = &childPlane
+
+				radius := 2.697
+				verticalVExtra := 1.0
+				horizontalScale := 3.0633
+				var parentCenter Coord
+				if currentPiece.Center != nil {
+					parentCenter = *currentPiece.Center
+				}
+				connectionU := conn.U
+				connectionV := conn.V
+
+				var childU, childV float64
+				if parentCenter.U == 0 && parentCenter.V == 0 {
+					angle := 2 * math.Pi * parentConnector.T
+					childU = radius * math.Sin(angle)
+					childV = radius * math.Cos(angle)
+				} else {
+					isVerticalConnection := math.Abs(parentConnector.Direction.Z) > 0.5
+					if isVerticalConnection {
+						childU = parentCenter.U + connectionU
+						childV = parentCenter.V + connectionV + verticalVExtra
+					} else {
+						childU = parentCenter.U + connectionU*horizontalScale
+						childV = parentCenter.V + connectionV*horizontalScale
+					}
+				}
+
+				childCenter := &Coord{U: roundFloat(childU, 6), V: roundFloat(childV, 6)}
+				neighborPiece.Center = childCenter
+				piecePaths[neighbor.neighborGuid] = piecePaths[currentGuid] + "," + neighbor.neighborGuid
+
+				queue = append(queue, neighbor.neighborGuid)
+			}
+		}
+	}
+
+	for _, piece := range design.Pieces {
+		if !visited[piece.Guid] {
+			bfs(piece.Guid)
+		}
+	}
+
+	var updatedPieces []struct {
+		Piece PieceId   `json:"piece"`
+		Diff  PieceDiff `json:"diff"`
+	}
+
+	for i := range design.Pieces {
+		piece := &design.Pieces[i]
+		plane := piecePlanes[piece.Guid]
+		if plane == nil {
+			continue
+		}
+		diff := PieceDiff{}
+		hasChanges := false
+
+		if piece.Plane == nil || !planesEqualApprox(*plane, *piece.Plane) {
+			diff.Plane = &PlaneDiff{
+				Origin: &PointDiff{X: &plane.Origin.X, Y: &plane.Origin.Y, Z: &plane.Origin.Z},
+				XAxis:  &VectorDiff{X: &plane.XAxis.X, Y: &plane.XAxis.Y, Z: &plane.XAxis.Z},
+				YAxis:  &VectorDiff{X: &plane.YAxis.X, Y: &plane.YAxis.Y, Z: &plane.YAxis.Z},
+			}
+			hasChanges = true
+		}
+
+		pieceFromMap := pieceMap[piece.Guid]
+		if pieceFromMap.Center != nil {
+			origCenter := originalCenters[piece.Guid]
+			if origCenter == nil || pieceFromMap.Center.U != origCenter.U || pieceFromMap.Center.V != origCenter.V {
+				diff.Center = &CoordDiff{U: &pieceFromMap.Center.U, V: &pieceFromMap.Center.V}
+				hasChanges = true
+			}
+		}
+
+		if hasChanges {
+			if path, ok := piecePaths[piece.Guid]; ok {
+				pathValue := path
+				diff.Attributes = &AttributesDiff{
+					Added: []Attribute{{Guid: Guid(), Key: "semio.path", Value: &pathValue}},
+				}
+			}
+			updatedPieces = append(updatedPieces, struct {
+				Piece PieceId   `json:"piece"`
+				Diff  PieceDiff `json:"diff"`
+			}{Piece: PieceId{Guid: piece.Guid}, Diff: diff})
+		}
+	}
+
+	result := DesignDiff{}
+	if len(updatedPieces) > 0 {
+		result.Pieces = &PiecesDiff{Updated: updatedPieces}
+	}
+	if len(removedConnList) > 0 {
+		result.Connections = &ConnectionsDiff{Removed: removedConnList}
+	}
+	return result
+}
+
+func planesEqualApprox(a, b Plane) bool {
+	const tol = 0.0001
+	return math.Abs(a.Origin.X-b.Origin.X) < tol &&
+		math.Abs(a.Origin.Y-b.Origin.Y) < tol &&
+		math.Abs(a.Origin.Z-b.Origin.Z) < tol &&
+		math.Abs(a.XAxis.X-b.XAxis.X) < tol &&
+		math.Abs(a.XAxis.Y-b.XAxis.Y) < tol &&
+		math.Abs(a.XAxis.Z-b.XAxis.Z) < tol &&
+		math.Abs(a.YAxis.X-b.YAxis.X) < tol &&
+		math.Abs(a.YAxis.Y-b.YAxis.Y) < tol &&
+		math.Abs(a.YAxis.Z-b.YAxis.Z) < tol
+}
+
+// ✒️ApplyDesignDiff applies a design diff to a base design.
+func ApplyDesignDiff(base Design, diff DesignDiff) Design {
+	return applyDesignDiff(base, diff)
+}
+
+// MoveVector carries gap/shift/rise deltas in the piece plane frame (gap along yAxis, shift along xAxis, rise along normal).
+type MoveVector struct {
+	Gap   float64 `json:"gap"`
+	Shift float64 `json:"shift"`
+	Rise  float64 `json:"rise"`
+}
+
+func movePlaneOriginDelta(plane *Plane, mv MoveVector) PointDiff {
+	if plane == nil {
+		return PointDiff{}
+	}
+	xAxis := []float64{plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z}
+	yAxis := []float64{plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z}
+	normalize(xAxis)
+	normalize(yAxis)
+	zAxis := cross(xAxis, yAxis)
+	normalize(zAxis)
+	tx := mv.Shift*xAxis[0] + mv.Gap*yAxis[0] + mv.Rise*zAxis[0]
+	ty := mv.Shift*xAxis[1] + mv.Gap*yAxis[1] + mv.Rise*zAxis[1]
+	tz := mv.Shift*xAxis[2] + mv.Gap*yAxis[2] + mv.Rise*zAxis[2]
+	nx := plane.Origin.X + tx
+	ny := plane.Origin.Y + ty
+	nz := plane.Origin.Z + tz
+	return PointDiff{X: &nx, Y: &ny, Z: &nz}
+}
+
+// MovePiecesInDesign computes a DesignDiff that translates root piece planes and adjusts gap/shift/rise on parent connections for selected child movers.
+// A piece's parent connection is the connection where it is the Connecting (child) piece.
+func MovePiecesInDesign(design Design, pieces Design, vector MoveVector) DesignDiff {
+	selectedGuids := make(map[string]bool)
+	for _, p := range pieces.Pieces {
+		selectedGuids[p.Guid] = true
+	}
+	parentMap := make(map[string]struct{ connectionGuid, parentGuid string })
+	for _, c := range design.Connections {
+		parentMap[c.Connecting.Piece.Guid] = struct{ connectionGuid, parentGuid string }{c.Guid, c.Connected.Piece.Guid}
+	}
+	fixedGuids := make(map[string]bool)
+	for guid := range selectedGuids {
+		if _, hasParent := parentMap[guid]; !hasParent {
+			fixedGuids[guid] = true
+		}
+	}
+	var pieceUpdates []struct {
+		Piece PieceId   `json:"piece"`
+		Diff  PieceDiff `json:"diff"`
+	}
+	pieceMap := make(map[string]*Piece)
+	for i := range design.Pieces {
+		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
+	}
+	for guid := range fixedGuids {
+		p, ok := pieceMap[guid]
+		if !ok || p.Plane == nil {
+			continue
+		}
+		orig := movePlaneOriginDelta(p.Plane, vector)
+		pieceUpdates = append(pieceUpdates, struct {
+			Piece PieceId   `json:"piece"`
+			Diff  PieceDiff `json:"diff"`
+		}{
+			Piece: PieceId{Guid: guid},
+			Diff:  PieceDiff{Plane: &PlaneDiff{Origin: &orig}},
+		})
+	}
+	var connectionUpdates []struct {
+		Connection ConnectionId   `json:"connection"`
+		Diff       ConnectionDiff `json:"diff"`
+	}
+	for guid := range selectedGuids {
+		if fixedGuids[guid] {
+			continue
+		}
+		isDescendant := false
+		current := guid
+		for {
+			p, ok := parentMap[current]
+			if !ok {
+				break
+			}
+			if selectedGuids[p.parentGuid] {
+				isDescendant = true
+				break
+			}
+			current = p.parentGuid
+		}
+		if isDescendant {
+			continue
+		}
+		parent, ok := parentMap[guid]
+		if !ok {
+			continue
+		}
+		g, s, r := vector.Gap, vector.Shift, vector.Rise
+		connectionUpdates = append(connectionUpdates, struct {
+			Connection ConnectionId   `json:"connection"`
+			Diff       ConnectionDiff `json:"diff"`
+		}{
+			Connection: ConnectionId{Guid: parent.connectionGuid},
+			Diff:       ConnectionDiff{Gap: &g, Shift: &s, Rise: &r},
+		})
+	}
+	diff := DesignDiff{}
+	if len(pieceUpdates) > 0 {
+		diff.Pieces = &PiecesDiff{Updated: pieceUpdates}
+	}
+	if len(connectionUpdates) > 0 {
+		diff.Connections = &ConnectionsDiff{Updated: connectionUpdates}
+	}
+	return diff
+}
+
+// 🔌DragPiecesInDesign computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
+// 🔗A piece's parent connection is the connection where it is the Connecting (child) piece.
+func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
+	selectedGuids := make(map[string]bool)
+	for _, p := range pieces.Pieces {
+		selectedGuids[p.Guid] = true
+	}
+	parentMap := make(map[string]struct{ connectionGuid, parentGuid string })
+	for _, c := range design.Connections {
+		parentMap[c.Connecting.Piece.Guid] = struct{ connectionGuid, parentGuid string }{c.Guid, c.Connected.Piece.Guid}
+	}
+	fixedGuids := make(map[string]bool)
+	for guid := range selectedGuids {
+		if _, hasParent := parentMap[guid]; !hasParent {
+			fixedGuids[guid] = true
+		}
+	}
+	var pieceUpdates []struct {
+		Piece PieceId   `json:"piece"`
+		Diff  PieceDiff `json:"diff"`
+	}
+	pieceMap := make(map[string]*Piece)
+	for i := range design.Pieces {
+		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
+	}
+	for guid := range fixedGuids {
+		if p, ok := pieceMap[guid]; ok && p.Center != nil {
+			newU := p.Center.U + offset.U
+			newV := p.Center.V + offset.V
+			pieceUpdates = append(pieceUpdates, struct {
+				Piece PieceId   `json:"piece"`
+				Diff  PieceDiff `json:"diff"`
+			}{
+				Piece: PieceId{Guid: guid},
+				Diff:  PieceDiff{Center: &CoordDiff{U: &newU, V: &newV}},
+			})
+		}
+	}
+	var connectionUpdates []struct {
+		Connection ConnectionId   `json:"connection"`
+		Diff       ConnectionDiff `json:"diff"`
+	}
+	for guid := range selectedGuids {
+		if fixedGuids[guid] {
+			continue
+		}
+		isDescendant := false
+		current := guid
+		for {
+			p, ok := parentMap[current]
+			if !ok {
+				break
+			}
+			if selectedGuids[p.parentGuid] {
+				isDescendant = true
+				break
+			}
+			current = p.parentGuid
+		}
+		if isDescendant {
+			continue
+		}
+		parent, ok := parentMap[guid]
+		if !ok {
+			continue
+		}
+		connU := offset.U
+		connV := offset.V
+		connectionUpdates = append(connectionUpdates, struct {
+			Connection ConnectionId   `json:"connection"`
+			Diff       ConnectionDiff `json:"diff"`
+		}{
+			Connection: ConnectionId{Guid: parent.connectionGuid},
+			Diff:       ConnectionDiff{U: &connU, V: &connV},
+		})
+	}
+	diff := DesignDiff{}
+	if len(pieceUpdates) > 0 {
+		diff.Pieces = &PiecesDiff{Updated: pieceUpdates}
+	}
+	if len(connectionUpdates) > 0 {
+		diff.Connections = &ConnectionsDiff{Updated: connectionUpdates}
+	}
+	return diff
+}
+
+// #endregion 🌤️Flatten Design
+
+
+// #region 🔩Kit Model Export
 
 // 📤ExportModelFormats maps supported export format extensions.
 var ExportModelFormats = map[string]string{
@@ -12626,7 +12992,7 @@ var ExportModelFormats = map[string]string{
 	".gltf": ".gltf",
 }
 
-// #region 🎶ExportDesignModel/Helpers
+// #region 🔧Kit Model Export Helpers
 
 // 📤exportMeshData holds extracted or generated mesh geometry for a single type.
 type exportMeshData struct {
@@ -12639,7 +13005,7 @@ type exportMeshData struct {
 	indexCompKind int
 }
 
-// 🔷exportPlaneToGltfMatrix converts a Plane to a column-major 4x4 matrix for glTF.
+// 🔲exportPlaneToGltfMatrix converts a Plane to a column-major 4x4 matrix for glTF.
 func exportPlaneToGltfMatrix(plane Plane) [16]float64 {
 	ox, oy, oz := plane.Origin.X, plane.Origin.Y, plane.Origin.Z
 	xx, xy, xz := plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z
@@ -13072,9 +13438,9 @@ func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) 
 	return &typ.Models[0]
 }
 
-// #endregion 🎶ExportDesignModel/Helpers
+// #endregion 🔧Kit Model Export Helpers
 
-// 📋ExportDesignModel exports the 3D model of a design to GLB or glTF format.
+// 📐ExportDesignModel exports the 3D model of a design to GLB or glTF format.
 func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string, options map[string]interface{}) ([]byte, error) {
 	if _, ok := ExportModelFormats[format]; !ok {
 		return nil, fmt.Errorf("unsupported format: %s", format)
@@ -13105,7 +13471,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
 	}
 
-	// #region 🌦️ExportDesignModel/BFS
+	// #region 🌦️Kit Model Export BFS
 	piecePlanes := make(map[string]*Plane)
 	parentOf := make(map[string]string)
 	childrenOf := make(map[string][]string)
@@ -13208,9 +13574,9 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 			bfsExport(piece.Guid)
 		}
 	}
-	// #endregion 🌦️ExportDesignModel/BFS
+	// #endregion 🌦️Kit Model Export BFS
 
-	// #region ⚙️ExportDesignModel/MeshData
+	// #region ⚙️Kit Model Export MeshData
 	usedTypes := make(map[string]bool)
 	for _, piece := range design.Pieces {
 		if piece.Type != nil {
@@ -13246,9 +13612,9 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		}
 		typeMeshData[typeGuid] = meshData
 	}
-	// #endregion ⚙️ExportDesignModel/MeshData
+	// #endregion ⚙️Kit Model Export MeshData
 
-	// #region 💻ExportDesignModel/BuildGLTF
+	// #region 💻Kit Model Export BuildGLTF
 	typeOrder := make([]string, 0, len(usedTypes))
 	for typeGuid := range typeMeshData {
 		typeOrder = append(typeOrder, typeGuid)
@@ -13527,15 +13893,16 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 	out.Write(binBytes)
 
 	return out.Bytes(), nil
-	// #endregion 💻ExportDesignModel/BuildGLTF
+	// #endregion 💻Kit Model Export BuildGLTF
 }
 
-// #endregion 🤖ExportDesignModel
+// #endregion 🔩Kit Model Export
+
 
 // #region ❄️Geometric Insights
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
-// 🔷GeometricInsights holds computed geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
+// 📏GeometricInsights holds computed geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
 type GeometricInsights struct {
 	BoundingBoxMin      Point
 	BoundingBoxMax      Point
@@ -13670,7 +14037,7 @@ func geometricInsightsFromMeshData(md *exportMeshData) GeometricInsights {
 	return out
 }
 
-// 📋GetGeometricInsightsForModel computes key performance indicators for the geometry of a GLB/GLTF model.
+// 📏GetGeometricInsightsForModel computes key performance indicators for the geometry of a GLB/GLTF model.
 func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) {
 	var md *exportMeshData
 	var err error
@@ -13755,12 +14122,13 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 
 // #endregion ❄️Geometric Insights
 
-// #region 🎹SQLite Kit Operations
+
+// #region 📡SQLite
 // SQLite kit operations. MUST provide serialization and deserialization of Kit to and from SQLite and zip formats.
 
 // 🗄️KitFromSqlite reads a Kit from a SQLite database file
 func KitFromSqlite(dbPath string) (*Kit, error) {
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -13938,7 +14306,7 @@ func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
 	return designs, nil
 }
 
-// 🔷loadPieces loads all pieces belonging to a design from the database
+// 🧩loadPieces loads all pieces belonging to a design from the database
 func loadPieces(db *sql.DB, designGuid string) ([]Piece, error) {
 	rows, err := db.Query(`SELECT guid, name, type_guid, design_guid_ref,
         plane_origin_x, plane_origin_y, plane_origin_z,
@@ -14047,7 +14415,7 @@ func loadConnections(db *sql.DB, designGuid string) ([]Connection, error) {
 	return connections, nil
 }
 
-// 🔶loadConnectors loads all connectors belonging to a type from the database
+// 🔌loadConnectors loads all connectors belonging to a type from the database
 func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
 	rows, err := db.Query(`SELECT guid, name, point_x, point_y, point_z,
         direction_x, direction_y, direction_z, t, mandatory, port_guid, description
@@ -14087,7 +14455,7 @@ func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
 
 // ✏️KitToSqlite writes a Kit to a SQLite database file
 func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return err
 	}
@@ -14323,7 +14691,7 @@ func blobDecode(s string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(s)
 }
 
-// 🔹KitToZip packages a Kit and its files into a zip archive
+// 📦KitToZip packages a Kit and its files into a zip archive
 func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL string) error {
 
 	kitForZip := *kit
@@ -14368,7 +14736,7 @@ func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL strin
 	return nil
 }
 
-// #region 🔑Kit Workflow Operations
+// #region 🔄Kit Workflow
 // Kit workflow operations MUST provide direct import, export, and edit flows for file, folder, archive, remote, and temporary kit kinds.
 
 // 📥ImportFileKit reads a JSON file kit from disk.
@@ -14465,7 +14833,7 @@ func ExportFolderKit(kit *Kit, files map[string][]byte, folderPath string) error
 	return nil
 }
 
-// 📋ImportRemoteKit reads a remote kit from HTTP(S), supporting both JSON and ZIP sources.
+// 📦ImportRemoteKit reads a remote kit from HTTP(S), supporting both JSON and ZIP sources.
 func ImportRemoteKit(rawURL string) (*Kit, map[string][]byte, error) {
 	response, err := http.Get(rawURL)
 	if err != nil {
@@ -14506,12 +14874,12 @@ func ImportRemoteKit(rawURL string) (*Kit, map[string][]byte, error) {
 	return nil, nil, fmt.Errorf("remote kit %s is neither JSON nor ZIP", rawURL)
 }
 
-// 🔷EditTemporaryKit applies a diff to an in-memory kit value and returns the edited kit.
+// 📦EditTemporaryKit applies a diff to an in-memory kit value and returns the edited kit.
 func EditTemporaryKit(kit Kit, diff KitDiff) Kit {
 	return ApplyKitDiff(kit, diff)
 }
 
-// 🔶EditFileKit edits a file kit in place and returns the edited kit.
+// 📦EditFileKit edits a file kit in place and returns the edited kit.
 func EditFileKit(path string, diff KitDiff) (*Kit, error) {
 	kit, err := ImportFileKit(path)
 	if err != nil {
@@ -14524,7 +14892,7 @@ func EditFileKit(path string, diff KitDiff) (*Kit, error) {
 	return &edited, nil
 }
 
-// 🔹EditFolderKit edits a folder kit in place and returns the edited kit.
+// 📦EditFolderKit edits a folder kit in place and returns the edited kit.
 func EditFolderKit(folderPath string, diff KitDiff) (*Kit, error) {
 	kit, files, err := ImportFolderKit(folderPath)
 	if err != nil {
@@ -14537,7 +14905,7 @@ func EditFolderKit(folderPath string, diff KitDiff) (*Kit, error) {
 	return &edited, nil
 }
 
-// 🔸EditArchiveKit edits an archive kit in place and returns the edited kit.
+// 📦EditArchiveKit edits an archive kit in place and returns the edited kit.
 func EditArchiveKit(path string, diff KitDiff) (*Kit, error) {
 	kit, files, err := ImportArchiveKit(path)
 	if err != nil {
@@ -14550,7 +14918,7 @@ func EditArchiveKit(path string, diff KitDiff) (*Kit, error) {
 	return &edited, nil
 }
 
-// 🔺EditRemoteKit imports a remote kit and applies a diff in memory.
+// 📦EditRemoteKit imports a remote kit and applies a diff in memory.
 func EditRemoteKit(rawURL string, diff KitDiff) (*Kit, error) {
 	kit, _, err := ImportRemoteKit(rawURL)
 	if err != nil {
@@ -14602,6 +14970,6 @@ func mustReadKitSchemaSQL() string {
 	panic("failed to locate sqlite/schema.sql for kit workflow operations")
 }
 
-// #endregion 🔑Kit Workflow Operations
+// #endregion 🔄Kit Workflow
 
-// #endregion 🎹SQLite Kit Operations
+// #endregion 📡SQLite

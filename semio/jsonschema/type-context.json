@@ -1,249 +1,242 @@
 {
-  "$defs": {
-    "Location": {
-      "description": "\ud83d\udccd The context of a location.",
-      "properties": {
-        "longitude": {
-          "description": "\u2194\ufe0f The longitude of the location in degrees.",
-          "title": "Longitude",
-          "type": "number"
+    "$defs": {
+        "Attribute": {
+            "description": "\ud83d\udfe9Context fields for understanding a attribute by an LLM.",
+            "properties": {
+                "name": {
+                    "maxLength": 64,
+                    "title": "Name",
+                    "type": "string"
+                },
+                "value": {
+                    "default": "",
+                    "maxLength": 64,
+                    "title": "Value",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "Attribute",
+            "type": "object"
         },
-        "latitude": {
-          "description": "\u2195\ufe0f The latitude of the location in degrees.",
-          "title": "Latitude",
-          "type": "number"
+        "Connector": {
+            "description": "Context fields for understanding a connector by an LLM.",
+            "properties": {
+                "id_": {
+                    "default": "",
+                    "maxLength": 128,
+                    "title": "Id",
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "maxLength": 512,
+                    "title": "Description",
+                    "type": "string"
+                },
+                "is_mandatory": {
+                    "default": false,
+                    "title": "Is Mandatory",
+                    "type": "boolean"
+                },
+                "maxChildren": {
+                    "default": 1,
+                    "minimum": 0,
+                    "title": "Maxchildren",
+                    "type": "integer"
+                },
+                "port": {
+                    "default": "",
+                    "maxLength": 64,
+                    "title": "Port",
+                    "type": "string"
+                },
+                "compatiblePorts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Compatibleports",
+                    "type": "array"
+                },
+                "point": {
+                    "$ref": "#/$defs/Point"
+                },
+                "direction": {
+                    "$ref": "#/$defs/Vector"
+                },
+                "t": {
+                    "default": 0.0,
+                    "title": "T",
+                    "type": "number"
+                },
+                "attributes": {
+                    "items": {
+                        "$ref": "#/$defs/Attribute"
+                    },
+                    "title": "Attributes",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "point",
+                "direction"
+            ],
+            "title": "Connector",
+            "type": "object"
+        },
+        "Location": {
+            "description": "\ud83d\udd16Context fields for understanding a location by an LLM.",
+            "properties": {
+                "longitude": {
+                    "title": "Longitude",
+                    "type": "number"
+                },
+                "latitude": {
+                    "title": "Latitude",
+                    "type": "number"
+                },
+                "altitude": {
+                    "anyOf": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Altitude"
+                }
+            },
+            "required": [
+                "longitude",
+                "latitude"
+            ],
+            "title": "Location",
+            "type": "object"
+        },
+        "Point": {
+            "description": "\u26abPoint in 3D space with x, y and z coordinates.",
+            "properties": {
+                "x": {
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "title": "Y",
+                    "type": "number"
+                },
+                "z": {
+                    "title": "Z",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
+            "title": "Point",
+            "type": "object"
+        },
+        "Vector": {
+            "description": "\ud83d\udc9bDirection vector in 3D space with x, y and z components.",
+            "properties": {
+                "x": {
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "title": "Y",
+                    "type": "number"
+                },
+                "z": {
+                    "title": "Z",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
+            "title": "Vector",
+            "type": "object"
         }
-      },
-      "required": [
-        "longitude",
-        "latitude"
-      ],
-      "title": "Location",
-      "type": "object"
     },
-    "Point": {
-      "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers.",
-      "properties": {
-        "x": {
-          "description": "\ud83c\udf9a\ufe0f The x-coordinate of the point.",
-          "title": "X",
-          "type": "number"
-        },
-        "y": {
-          "description": "\ud83c\udf9a\ufe0f The y-coordinate of the point.",
-          "title": "Y",
-          "type": "number"
-        },
-        "z": {
-          "description": "\ud83c\udf9a\ufe0f The z-coordinate of the point.",
-          "title": "Z",
-          "type": "number"
-        }
-      },
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
-      "title": "Point",
-      "type": "object"
-    },
-    "Connector": {
-      "description": "\ud83d\udd0c A connector is a connection point (with a direction) of a type.",
-      "properties": {
-        "id_": {
-          "default": "",
-          "description": "\ud83c\udd94 The id of the connector.",
-          "maxLength": 128,
-          "title": "Id",
-          "type": "string"
+    "description": "Context fields for understanding a type by an LLM.",
+    "properties": {
+        "name": {
+            "maxLength": 64,
+            "title": "Name",
+            "type": "string"
         },
         "description": {
-          "default": "",
-          "description": "\ud83d\udcac The optional human-readable description of the connector.",
-          "maxLength": 512,
-          "title": "Description",
-          "type": "string"
-        },
-        "mandatory": {
-          "default": false,
-          "description": "\ud83d\udcaf Whether the connector is mandatory. A mandatory connector must be connected in a design.",
-          "title": "Mandatory",
-          "type": "boolean"
-        },
-        "port": {
-          "default": "",
-          "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional port of the connector. This allows to define explicit compatibility with other connectors.",
-          "maxLength": 64,
-          "title": "Port",
-          "type": "string"
-        },
-        "compatiblePorts": {
-          "description": "\u2705 The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.",
-          "items": {
+            "default": "",
+            "maxLength": 512,
+            "title": "Description",
             "type": "string"
-          },
-          "title": "Compatibleports",
-          "type": "array"
         },
-        "point": {
-          "$ref": "#/$defs/Point",
-          "description": "\u2716\ufe0f The connection point of the connector that is attracted to another connection point."
+        "variant": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Variant",
+            "type": "string"
         },
-        "direction": {
-          "$ref": "#/$defs/Vector",
-          "description": "\u27a1\ufe0f The direction of the connector. When another piece connects the direction of the other connector is flipped and then the pieces are aligned."
+        "stock": {
+            "default": 2147483647,
+            "title": "Stock",
+            "type": "integer"
         },
-        "t": {
-          "default": 0.0,
-          "description": "\ud83d\udc8d The parameter t [0,1[ where the connector will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
-          "title": "T",
-          "type": "number"
-        },
-        "attributes": {
-          "description": "\ud83d\udccf The attributes of the connector.",
-          "items": {
-            "$ref": "#/$defs/Attribute"
-          },
-          "title": "Attributes",
-          "type": "array"
-        }
-      },
-      "required": [
-        "point",
-        "direction"
-      ],
-      "title": "Connector",
-      "type": "object"
-    },
-    "Attribute": {
-      "description": "\ud83d\udccf A attribute is a key value pair with an an optional definition.",
-      "properties": {
-        "name": {
-          "description": "\ud83d\udccf The name of the attribute.",
-          "maxLength": 64,
-          "title": "Name",
-          "type": "string"
-        },
-        "value": {
-          "default": "",
-          "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true.",
-          "maxLength": 64,
-          "title": "Value",
-          "type": "string"
+        "is_virtual": {
+            "default": false,
+            "title": "Is Virtual",
+            "type": "boolean"
         },
         "unit": {
-          "default": "",
-          "description": "\ud83d\udccf The optional unit of the value of the attribute.",
-          "maxLength": 64,
-          "title": "Unit",
-          "type": "string"
+            "default": "",
+            "maxLength": 64,
+            "title": "Unit",
+            "type": "string"
+        },
+        "location": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Location"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
+        },
+        "connectors": {
+            "items": {
+                "$ref": "#/$defs/Connector"
+            },
+            "title": "Connectors",
+            "type": "array"
+        },
+        "attributes": {
+            "items": {
+                "$ref": "#/$defs/Attribute"
+            },
+            "title": "Attributes",
+            "type": "array"
+        },
+        "concepts": {
+            "items": {
+                "type": "string"
+            },
+            "title": "Concepts",
+            "type": "array"
         }
-      },
-      "required": [
+    },
+    "required": [
         "name"
-      ],
-      "title": "Attribute",
-      "type": "object"
-    },
-    "Vector": {
-      "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers.",
-      "properties": {
-        "x": {
-          "description": "\ud83c\udf9a\ufe0f The x-coordinate of the vector.",
-          "title": "X",
-          "type": "number"
-        },
-        "y": {
-          "description": "\ud83c\udf9a\ufe0f The y-coordinate of the vector.",
-          "title": "Y",
-          "type": "number"
-        },
-        "z": {
-          "description": "\ud83c\udf9a\ufe0f The z-coordinate of the vector.",
-          "title": "Z",
-          "type": "number"
-        }
-      },
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
-      "title": "Vector",
-      "type": "object"
-    }
-  },
-  "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over connectors.",
-  "properties": {
-    "name": {
-      "description": "\ud83d\udcdb The name of the type.",
-      "maxLength": 64,
-      "title": "Name",
-      "type": "string"
-    },
-    "description": {
-      "default": "",
-      "description": "\ud83d\udcac The optional human-readable description of the type.",
-      "maxLength": 512,
-      "title": "Description",
-      "type": "string"
-    },
-    "variant": {
-      "default": "",
-      "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
-      "maxLength": 64,
-      "title": "Variant",
-      "type": "string"
-    },
-    "stock": {
-      "default": 2147483647,
-      "description": "\ud83d\udce6 The number of items in stock. 2147483647 (=2^31-1) means infinite stock.",
-      "title": "Stock",
-      "type": "integer"
-    },
-    "virtual": {
-      "default": false,
-      "description": "\ud83d\udc7b Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.",
-      "title": "Virtual",
-      "type": "boolean"
-    },
-    "unit": {
-      "default": "",
-      "description": "\u24c2\ufe0f The length unit of the point and the direction of the connectors of the type.",
-      "maxLength": 64,
-      "title": "Unit",
-      "type": "string"
-    },
-    "location": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/Location"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
-    "connectors": {
-      "items": {
-        "$ref": "#/$defs/Connector"
-      },
-      "title": "Connectors",
-      "type": "array"
-    },
-    "attributes": {
-      "items": {
-        "$ref": "#/$defs/Attribute"
-      },
-      "title": "Attributes",
-      "type": "array"
-    }
-  },
-  "required": [
-    "name"
-  ],
-  "title": "Type",
-  "type": "object"
+    ],
+    "title": "Type",
+    "type": "object"
 }

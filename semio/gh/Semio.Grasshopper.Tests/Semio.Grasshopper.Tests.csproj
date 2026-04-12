@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Semio.Grasshopper\Semio.Grasshopper.csproj" />
+    <ProjectReference Include="..\Semio.Grasshopper\Semio.Grasshopper.csproj" AdditionalProperties="Configuration=UnitTest" />
     <ProjectReference Include="..\..\net\Semio\Semio.csproj" />
   </ItemGroup>
 

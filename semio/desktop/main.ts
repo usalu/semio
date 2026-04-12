@@ -17,6 +17,7 @@ import started from "electron-squirrel-startup";
 import path from "node:path";
 import fs from "node:fs";
 import os from "os";
+import { pathToFileURL } from "node:url";
 
 if (started) {
   app.quit();
@@ -53,12 +54,11 @@ const createWindow = () => {
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
 };
-
-app.on("ready", createWindow);
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -72,7 +72,7 @@ app.on("activate", () => {
   }
 });
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   app.setAppUserModelId("com.electron");
 
   ipcMain.handle("minimize-window", (event) => {
@@ -198,6 +198,42 @@ app.whenReady().then(() => {
     fs.writeFileSync(configPath, JSON.stringify(recent), "utf-8");
   });
   // #endregion 🗂️FolderIPC
+
+  createWindow();
+
+  // #region DesktopIntegrationTests
+  // VS Code-style integration tests: SEMIO_EXTENSION_TESTS_PATH points at an ESM file that exports run(ctx).
+  // Specs: Mirrors extensionTestsPath; launcher is node semio/desktop/test/runDesktopTests.mjs (see .semio-test.mjs).
+  const extensionTestsPath = process.env.SEMIO_EXTENSION_TESTS_PATH?.trim();
+  if (extensionTestsPath) {
+    try {
+      const suiteUrl = pathToFileURL(path.resolve(extensionTestsPath)).href;
+      const mod = await import(suiteUrl);
+      if (typeof mod.run !== "function") {
+        throw new Error("Integration suite must export async function run(ctx)");
+      }
+      const whenFirstWindowLoaded = async (): Promise<void> => {
+        const w = BrowserWindow.getAllWindows()[0];
+        if (!w) {
+          throw new Error("No BrowserWindow available");
+        }
+        await new Promise<void>((resolve, reject) => {
+          if (w.webContents.isLoading()) {
+            w.webContents.once("did-finish-load", () => resolve());
+            w.webContents.once("did-fail-load", (_e, code, desc) => reject(new Error(`did-fail-load: ${code} ${desc}`)));
+          } else {
+            resolve();
+          }
+        });
+      };
+      await mod.run({ app, BrowserWindow, path, whenFirstWindowLoaded });
+      app.exit(0);
+    } catch (err) {
+      console.error("[semio desktop integration tests]", err);
+      app.exit(1);
+    }
+  }
+  // #endregion DesktopIntegrationTests
 });
 
 // #endregion 🐙Main Process

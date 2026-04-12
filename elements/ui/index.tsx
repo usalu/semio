@@ -41,7 +41,7 @@ import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, u
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Slot } from "@radix-ui/react-slot";
-import { Edges, Grid, OrbitControls, useGLTF } from "@react-three/drei";
+import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import {
   applyNodeChanges,
@@ -19239,7 +19239,7 @@ const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
         font="16px Inter var, Arial, sans-serif"
         onClick={
           onAxisClick
-            ? (e) => {
+            ? (e: ThreeEvent<MouseEvent>) => {
                 onAxisClick(e.object.position.clone());
                 return null;
               }
@@ -20110,6 +20110,8 @@ export enum WindowKind {
   CHAT = "chat",
   WORKBENCH = "workbench",
   VEC_INPUT = "vec-input",
+  /**3D placement deltas (gap, shift, rise) for move algorithms; not the 2D vec pad. */
+  VECTOR_INPUT = "vector-input",
   PIECES_SELECTION_INPUT = "pieces-selection-input",
   SELECTION_INPUT = "selection-input",
   DESIGN_INPUT = "design-input",

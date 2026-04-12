@@ -14,6 +14,12 @@
 
 import { contextBridge, ipcRenderer } from "electron";
 
+// E2E / automation: when set, desktop renderer opens this folder as the kit root without a native dialog.
+const e2eKitFolder = process.env.SEMIO_E2E_KIT_FOLDER?.trim() ?? "";
+if (e2eKitFolder.length > 0) {
+  contextBridge.exposeInMainWorld("__SEMIO_E2E_KIT_FOLDER__", e2eKitFolder);
+}
+
 contextBridge.exposeInMainWorld("windowControls", {
   minimize: () => ipcRenderer.invoke("minimize-window"),
   maximize: () => ipcRenderer.invoke("maximize-window"),

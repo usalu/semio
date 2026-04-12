@@ -15,9 +15,25 @@
 
 # #endregion 📊Header
 
+import functools
 import importlib.util
+import inspect
 import pathlib
 import sys
+import typing
+
+# Patch typing._eval_type for Pydantic compatibility with Python 3.14 betas.
+# Pydantic passes `prefer_fwd_module` which was removed from the CPython API.
+_original_eval_type = typing._eval_type
+_eval_type_params = inspect.signature(_original_eval_type).parameters
+if "prefer_fwd_module" not in _eval_type_params:
+
+    @functools.wraps(_original_eval_type)
+    def _patched_eval_type(*args, **kwargs):
+        kwargs.pop("prefer_fwd_module", None)
+        return _original_eval_type(*args, **kwargs)
+
+    typing._eval_type = _patched_eval_type
 
 root = pathlib.Path(__file__).parent
 

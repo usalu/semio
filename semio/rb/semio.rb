@@ -12,28 +12,28 @@ module Semio
   # 📺 A 2D point (uv) in the diagram coordinate system.
   Coord = Struct.new(:u, :v, keyword_init: true)
 
-  # 🗺️ The optional location of the type
+  # � A geographic point with longitude, latitude and optional altitude.
   Location = Struct.new(:longitude, :latitude, keyword_init: true)
 
-  # 🪪 Identifier for a type, potentially including a variant.
+  # � Identifier for a type by name and optional variant.
   TypeId = Struct.new(:name, :variant, keyword_init: true)
 
-  # 🪪 Identifier for a piece within a design.
+  # � Identifier for a piece within a design.
   PieceId = Struct.new(:id_, keyword_init: true)
 
-  # 🪪 Identifier for a connector within a type.
+  # 🔌 Identifier for a connector within a type.
   ConnectorId = Struct.new(:id_, keyword_init: true)
 
-  # 🏷️️Represents a attribute, a named property with an optional value, unit, and definition.
+  # 💎 A key-value metadata entry with optional definition.
   Attribute = Struct.new(:name, :value, :unit, :definition, keyword_init: true)
 
-  # 📑 Represents an author.
+  # ✍️ A named contributor with optional email and rank.
   Author = Struct.new(:name, :email, :rank, keyword_init: true)
 
-  # 💾A model links to a resource (e.g., file) describing a type.
+  # � A 3D model reference linking a file with tags and description.
   Model = Struct.new(:url, :description, :tags, :attributes, keyword_init: true)
 
-  # ◳ A plane defined by an origin point and two axes vectors.
+  # ◻️ A plane defined by an origin point and two axis vectors.
   Plane = Struct.new(:origin, :x_axis, :y_axis, keyword_init: true)
 
   # 🔌 A connector is a connection point on a type, defined by a point and direction.
@@ -51,13 +51,13 @@ module Semio
     keyword_init: true
   )
 
-  # ⭕ A piece is a 3D instance of a type within a design.
+  # 🧩 A positioned instance of a type within a design.
   Piece = Struct.new(:id_, :description, :type, :plane, :center, :attributes, keyword_init: true)
 
-  # 🧱 A side of a piece in a connection, identifying a specific connector on a specific piece.
+  # ↔️ A side of a connection identifying a specific connector on a piece.
   Side = Struct.new(:piece, :connector, keyword_init: true)
 
-  # 🖇️ A bidirectional connection between two pieces of a design.
+  # � A spatial relationship between two pieces with gap, shift and rotation.
   Connection = Struct.new(
     :connected,
     :connecting,
@@ -74,7 +74,7 @@ module Semio
     keyword_init: true
   )
 
-  # 🧩A type is a reusable element blueprint with connectors for connection.
+  # � A reusable element blueprint with connectors for connection.
   Type = Struct.new(
     :name,
     :description,
@@ -94,7 +94,7 @@ module Semio
     keyword_init: true
   )
 
-  # 🏙️ A design is a collection of connected pieces.
+  # 📐 An assembly of pieces, connections, layers and groups.
   Design = Struct.new(
     :name,
     :description,
@@ -113,7 +113,7 @@ module Semio
     keyword_init: true
   )
 
-  # ↗️ Represents a Kit, the top-level container for types and designs.
+  # 📦 The root container for all domain entities.
   Kit = Struct.new(
     :name,
     :description,

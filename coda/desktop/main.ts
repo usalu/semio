@@ -34,9 +34,9 @@ if (started) {
 // Sidecar configuration
 // In dev, __dirname is desktop/.vite/build. The engine dir is a sibling of desktop/.
 // 🛤️app.getAppPath() returns the desktop/ dir in dev.
-const SIDECAR_PY_DIR = path.resolve(app.isPackaged ? path.join(process.resourcesPath, "engine") : path.join(app.getAppPath(), "..", "engine"));
+const SIDECAR_PY_DIR = path.resolve(app.isPackaged ? path.join(process.resourcesPath, "assistant") : path.join(app.getAppPath(), "..", "assistant"));
 const SIDECAR_CMD = process.env.CODA_SIDECAR_CMD ?? "uv";
-const SIDECAR_BASE_ARGS = process.env.CODA_SIDECAR_CMD ? ["--sidecar"] : ["run", "--active", "coda.py", "--sidecar"];
+const SIDECAR_BASE_ARGS = process.env.CODA_SIDECAR_CMD ? ["--sidecar"] : ["run", "--active", "main.py", "--sidecar"];
 const HEARTBEAT_INTERVAL_MS = 10_000;
 const HEARTBEAT_TIMEOUT_MS = 5_000;
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -53,6 +53,8 @@ let sidecar: ChildProcess | null = null;
 let sidecarRL: ReadlineInterface | null = null;
 let pendingRequests = new Map<string, PendingRequest>();
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+let projectWatch: fs.FSWatcher | null = null;
+let projectWatchDebounce: ReturnType<typeof setTimeout> | null = null;
 let restartCount = 0;
 let shuttingDown = false;
 let sidecarConnected = false;
@@ -233,7 +235,43 @@ function startHeartbeat(): void {
   }, HEARTBEAT_INTERVAL_MS);
 }
 
+function emitProjectFilesChanged(reason: string): void {
+  broadcastToRenderers("coda-event", {
+    event: "project_files_changed",
+    data: { reason },
+    timestamp: Date.now() / 1000,
+  });
+}
+
+function watchProjectTree(projectRoot: string): void {
+  if (projectWatch) {
+    projectWatch.close();
+    projectWatch = null;
+  }
+  const codaDir = path.join(projectRoot, ".coda");
+  try {
+    if (!fs.existsSync(codaDir)) return;
+    projectWatch = fs.watch(codaDir, { recursive: true }, () => {
+      if (projectWatchDebounce) clearTimeout(projectWatchDebounce);
+      projectWatchDebounce = setTimeout(() => {
+        projectWatchDebounce = null;
+        emitProjectFilesChanged("fs");
+      }, 400);
+    });
+  } catch (e) {
+    console.error("[coda desktop] project fs.watch error:", e);
+  }
+}
+
 function switchProject(newPath: string): void {
+  if (projectWatch) {
+    projectWatch.close();
+    projectWatch = null;
+  }
+  if (projectWatchDebounce) {
+    clearTimeout(projectWatchDebounce);
+    projectWatchDebounce = null;
+  }
   if (heartbeatTimer) {
     clearInterval(heartbeatTimer);
     heartbeatTimer = null;
@@ -257,6 +295,7 @@ function switchProject(newPath: string): void {
   currentProjectPath = newPath;
   shuttingDown = false;
   restartCount = 0;
+  watchProjectTree(newPath);
   startSidecar();
 }
 

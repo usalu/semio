@@ -3,7 +3,13 @@ name = "coda"
 version = "1.0.0"
 description = "ACC design assistant MCP server"
 requires-python = ">=3.12"
-dependencies = ["mcp[cli]>=1.25.0", "rdflib>=7.0.0", "owlready2>=0.46"]
+dependencies = [
+    "mcp[cli]>=1.25.0",
+    "rdflib>=7.0.0",
+    "owlready2>=0.46",
+    "starlette>=0.45.0",
+    "uvicorn>=0.34.0",
+]
 
 [project.scripts]
 coda = "coda:main"

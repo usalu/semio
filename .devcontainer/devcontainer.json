@@ -112,6 +112,7 @@
   ],
   "remoteUser": "vscode",
   "containerEnv": {
+    "DEVCONTAINER": "true",
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
     "SEMIO_GITKRAKEN_WORKSPACE_NAME": "semio",
@@ -134,67 +135,39 @@
         "VSCODE_AGENT_FOLDER": "/home/vscode/.antigravity-server"
       },
       "extensions": [
-        // #region 🔖Extensions Repo
         "nrwl.angular-console",
-        // #endregion 🔖Extensions Repo
-        // #region 🔖Extensions GitHub
         "github.vscode-pull-request-github",
         "github.vscode-github-actions",
-        // #endregion 🔖Extensions GitHub
-        // #region 🔖Extensions Toml
         "tamasfe.even-better-toml",
-        // #endregion 🔖Extensions Toml
-        // #region 🔖Extensions Yaml
         "redhat.vscode-yaml",
-        // #endregion 🔖Extensions Yaml
-        // #region 🔖Extensions Data
         "ms-toolsai.datawrangler",
         "mechatroner.rainbow-csv",
-        // #endregion 🔖Extensions Data
-        // #region 🔖Extensions Graphql
         "graphql.vscode-graphql",
         "graphql.vscode-graphql-syntax",
-        // #endregion 🔖Extensions Graphql
-        // #region 🔖Extensions Formatter
         "esbenp.prettier-vscode",
-        // #endregion 🔖Extensions Formatter
-        // #region 🔖Extensions JavaScript
         "dbaeumer.vscode-eslint",
         "bradlc.vscode-tailwindcss",
         "unifiedjs.vscode-mdx",
         "statelyai.stately-vscode",
         "vitest.explorer",
         "ms-playwright.playwright",
-        // #endregion 🔖Extensions JavaScript
-        // #region 🔖Extensions Dotnet
         "ms-dotnettools.vscode-dotnet-pack",
         "ms-dotnettools.vscode-dotnet-runtime",
         "ms-dotnettools.csharp",
         "ms-dotnettools.csdevkit",
-        // #endregion 🔖Extensions Dotnet
-        // #region 🔖Extensions Python
         "ms-python.python",
         "ms-python.vscode-pylance",
         "charliermarsh.ruff",
         "ms-toolsai.jupyter",
-        // #endregion 🔖Extensions Python
-        // #region 🔖Extensions Rust
         "rust-lang.rust-analyzer",
-        // #endregion 🔖Extensions Rust
-        // #region 🔖Extensions Go
         "golang.go",
-        // #endregion 🔖Extensions Go
-        // #region 🔖Extensions Ai
         "github.copilot-chat",
         "anthropic.claude-code",
         "openai.chatgpt",
-        // #endregion 🔖Extensions Ai
-        // #region 🔖Extensions Utility
         "mermaidchart.vscode-mermaid-chart",
         "gruntfuggly.todo-tree",
         "jebbs.plantuml",
         "jock.svg"
-        // #endregion 🔖Extensions Utility
       ],
       "settings": {
         "editor.formatOnSave": true,

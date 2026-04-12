@@ -120,7 +120,7 @@ Devcontainer provisioning MUST install the workspace VS Code extension automatic
 
 Devcontainer post-attach MUST uninstall any existing repo extension via IDE IPC hook CLIs and extensions directory cleanup, clear stale VS Code and Cursor extension caches, install the workspace extension for VS Code, Cursor, Windsurf, and Antigravity, validate installs with list-extensions, and fall back to direct extensions directory installs with extensions.json updates that include mid location keys when CLIs report WSL-only usage.
 
-Devcontainer post-attach MUST generate Windsurf MCP config and merge Codex MCP server entries from the monorepo `.mcp.json` into the clients' home config folders without removing unrelated Codex user settings.
+Devcontainer post-attach MUST generate Windsurf MCP config, write `.cursor/mcp.json` with repo-root-absolute MCP commands (so Cursor discovers stdio servers even when the spawn cwd is not the repo root), and merge Codex MCP server entries from the monorepo `.mcp.json` into the clients' home config folders without removing unrelated Codex user settings.
 
 Semio VS Code extension engine compatibility MUST include Cursor's supported VS Code version range.
 

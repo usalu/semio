@@ -6,7 +6,7 @@
   "version": "0.1.0",
   "description": "semio \u22c5 docs",
   "scripts": {
-    "dev": "vite --port 4321 --host 0.0.0.0",
+    "dev": "node -e \"const h=process.env.DEVCONTAINER==='true'?'0.0.0.0':'127.0.0.1';require('child_process').spawn('npx',['vite','--port','4321','--host',h],{stdio:'inherit',shell:true}).on('exit',c=>process.exit(c||0))\"",
     "build": "vite build",
     "publish": "vite build && npm publish"
   },

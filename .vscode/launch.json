@@ -21,14 +21,14 @@
       "name": "🖱️f3d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "if [ -z \"$DISPLAY\" ]; then echo '⚠️ F3D requires a display. Please run in a GUI environment or use X11 forwarding.'; else /usr/bin/f3d; fi",
+      "command": "f3d",
       "cwd": "${workspaceFolder}"
     },
     {
       "name": "🖱️gitkraken",
       "type": "node-terminal",
       "request": "launch",
-      "command": "/usr/bin/gitkraken --path \"${workspaceFolder}\"",
+      "command": "gitkraken --path \"${workspaceFolder}\"",
       "cwd": "${workspaceFolder}"
     },
     {
@@ -41,7 +41,6 @@
         "mcp:inspector"
       ],
       "env": {
-        "HOST": "0.0.0.0",
         "CLIENT_PORT": "6274",
         "SERVER_PORT": "6277"
       },
@@ -63,7 +62,6 @@
       "env": {
         "DATABASE_URL": "postgres://semio:semio@localhost:5432/semio",
         "RUST_LOG": "info",
-        "HOST": "0.0.0.0",
         "PORT": "8080"
       },
       "cwd": "${workspaceFolder}",
@@ -306,9 +304,9 @@
       "runtimeExecutable": "uv",
       "runtimeArgs": [
         "--directory",
-        "coda/engine",
+        "coda/assistant",
         "run",
-        "coda.py",
+        "main.py",
         "--mcp-stdio"
       ],
       "env": {
@@ -320,7 +318,7 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=uv&serverArgs=--directory&serverArgs=coda/engine&serverArgs=run&serverArgs=coda.py&serverArgs=--mcp-stdio&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=uv&serverArgs=--directory&serverArgs=coda/assistant&serverArgs=run&serverArgs=main.py&serverArgs=--mcp-stdio&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {
@@ -356,7 +354,7 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=uv&serverArgs=--directory&serverArgs=coda/engine&serverArgs=run&serverArgs=coda.py&serverArgs=--mcp-stdio&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=uv&serverArgs=--directory&serverArgs=coda/assistant&serverArgs=run&serverArgs=main.py&serverArgs=--mcp-stdio&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {
@@ -377,7 +375,7 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=./repo/cli/cli&serverArgs=mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/cli&serverArgs=mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {

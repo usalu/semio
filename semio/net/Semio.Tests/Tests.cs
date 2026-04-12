@@ -219,6 +219,7 @@ public class Tests
             }
             finally
             {
+                Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
                 if (Directory.Exists(folderPath)) Directory.Delete(folderPath, true);
             }
         }
@@ -398,6 +399,9 @@ public class Tests
                 }
                 finally
                 {
+                    // On Windows, SQLite connection pooling may hold file handles open.
+                    // Clear the pool before trying to delete the directory.
+                    Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
                     Directory.Delete(tempDir, true);
                 }
             }
@@ -504,6 +508,62 @@ public class Tests
         }
     }
 
+    public class ValidateKitDiffFacts
+    {
+        private sealed class ValidateKitDiffAsset
+        {
+            [JsonProperty("tinyKit")]
+            public Kit TinyKit { get; set; } = null!;
+            public List<ValidateKitDiffCase> Cases { get; set; } = new();
+        }
+
+        private sealed class ValidateKitDiffCase
+        {
+            public string Id { get; set; } = "";
+            public KitDiff Diff { get; set; } = null!;
+            [JsonProperty("expectOk")]
+            public bool ExpectOk { get; set; }
+            [JsonProperty("errorCodes")]
+            public List<string> ErrorCodes { get; set; } = new();
+            [JsonProperty("warningCodes")]
+            public List<string> WarningCodes { get; set; } = new();
+        }
+
+        private static List<string> Codes(IReadOnlyList<KitDiffValidationNote> notes) =>
+            notes.Where(n => !string.IsNullOrEmpty(n.Code)).Select(n => n.Code!).ToList();
+
+        [Fact]
+        public void Shared_Asset_Cases()
+        {
+            var asset = Tests.LoadAsset<ValidateKitDiffAsset>("validate-kit-diff.cases.semio.json");
+            foreach (var c in asset.Cases)
+            {
+                var r = SemioDiff.ValidateKitDiff(asset.TinyKit, c.Diff, false);
+                Assert.Equal(c.ExpectOk, r.Ok);
+                var errCodes = Codes(r.Errors);
+                foreach (var code in c.ErrorCodes)
+                    Assert.Contains(code, errCodes);
+                var warnCodes = Codes(r.Warnings);
+                foreach (var code in c.WarningCodes)
+                    Assert.Contains(code, warnCodes);
+            }
+        }
+
+        [Fact]
+        public void Heal_Drops_Invalid_Design_Update()
+        {
+            var asset = Tests.LoadAsset<ValidateKitDiffAsset>("validate-kit-diff.cases.semio.json");
+            var badJson = """{"designs":{"updated":[{"design":{"guid":"99999999-9999-9999-9999-999999999999"},"diff":{"name":"X"}}]}}""";
+            var bad = Utility.Deserialize<KitDiff>(badJson);
+            Assert.NotNull(bad);
+            var r = SemioDiff.ValidateKitDiff(asset.TinyKit, bad!, true);
+            Assert.NotNull(r.Diff);
+            var d = r.Diff!;
+            Assert.True(d.Designs == null || d.Designs.Updated == null || d.Designs.Updated.Count == 0,
+                "heal should drop invalid design update");
+        }
+    }
+
     public class Validation
     {
         [Fact]
@@ -524,6 +584,19 @@ public class Tests
             var expected = ValidationResult.Parse(expectedJson);
 
             Assert.True(ValidationResult.AreEqual(expected, result), $"Expected {expected.Issues.Count} issues, got {result.Issues.Count}. Expected:\n{expected.Serialize()}\nActual:\n{result.Serialize()}");
+        }
+
+        [Fact]
+        public void Plain_Descriptions_Do_Not_Create_Emoji_Validation_Issues()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            kit.Description = "Plain kit summary";
+            for (var i = 0; i < kit.Types.Count; i++)
+                kit.Types[i].Description = $"Repeated plain description {i % 2}";
+
+            var result = SemioValidator.ValidateKit(kit);
+
+            Assert.DoesNotContain(result.Issues, issue => issue.ConstraintId == "description-missing-emoji" || issue.ConstraintId == "description-emoji-unique");
         }
     }
 
@@ -558,6 +631,43 @@ public class Tests
                 var expected = expectedConnMap[u.Connection.Guid];
                 Assert.Equal(expected!.U!.Value, u.Diff!.U!.Value, 3);
                 Assert.Equal(expected.V!.Value, u.Diff.V!.Value, 3);
+            }
+        }
+    }
+
+    public class Move
+    {
+        [Fact]
+        public void Design_Pieces_MoveVector_DiffDesign()
+        {
+            var design = Tests.LoadAsset<Design>("drag/design.semio.json");
+            var pieces = Tests.LoadAsset<Design>("drag/pieces.semio.json");
+            var vector = Tests.LoadAsset<MoveVector>("move/vector.semio.json");
+            var expectedDiff = Tests.LoadAsset<DesignDiff>("move/diff.design.semio.json");
+            var computedDiff = Design.MovePiecesInDesign(design, pieces, vector);
+            Assert.NotNull(computedDiff.Pieces);
+            Assert.Equal(expectedDiff.Pieces!.Updated.Count, computedDiff.Pieces!.Updated.Count);
+            var expectedPieceMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Guid, u => u.Diff);
+            foreach (var u in computedDiff.Pieces.Updated)
+            {
+                Assert.True(expectedPieceMap.ContainsKey(u.Piece.Guid), $"Unexpected piece update for {u.Piece.Guid}");
+                var expected = expectedPieceMap[u.Piece.Guid];
+                Assert.NotNull(u.Diff!.Plane);
+                Assert.NotNull(expected!.Plane);
+                Assert.Equal(expected.Plane!.Origin.X, u.Diff.Plane!.Origin.X, 3);
+                Assert.Equal(expected.Plane.Origin.Y, u.Diff.Plane!.Origin.Y, 3);
+                Assert.Equal(expected.Plane.Origin.Z, u.Diff.Plane!.Origin.Z, 3);
+            }
+            Assert.NotNull(computedDiff.Connections);
+            Assert.Equal(expectedDiff.Connections!.Updated.Count, computedDiff.Connections!.Updated.Count);
+            var expectedConnMap = expectedDiff.Connections.Updated.ToDictionary(u => u.Connection.Guid, u => u.Diff);
+            foreach (var u in computedDiff.Connections.Updated)
+            {
+                Assert.True(expectedConnMap.ContainsKey(u.Connection.Guid), $"Unexpected connection update for {u.Connection.Guid}");
+                var expected = expectedConnMap[u.Connection.Guid];
+                Assert.Equal(expected!.Gap!.Value, u.Diff!.Gap!.Value, 3);
+                Assert.Equal(expected.Shift!.Value, u.Diff.Shift!.Value, 3);
+                Assert.Equal(expected.Rise!.Value, u.Diff.Rise!.Value, 3);
             }
         }
     }

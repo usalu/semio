@@ -1,4 +1,4 @@
-#region 📱Header
+#region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,9 +6,14 @@
 
 // Core .NET library implementing the semio domain model and serialization.
 
-#endregion 📱Header
+#endregion 🧲Header
 
-#region ⌛Imports
+
+
+
+
+
+#region ⛩️Imports
 // Callers MUST import all required namespaces listed here.
 using System.Collections;
 using System.Collections.Immutable;
@@ -44,14 +49,24 @@ using SharpGLTF.Scenes;
 using GltfModel = SharpGLTF.Schema2.ModelRoot;
 using GltfNode = SharpGLTF.Schema2.Node;
 
-#endregion ⌛Imports
+#endregion ⛩️Imports
 
-#region ✨Namespace
+
+
+
+
+
+#region 🏠Namespace
 // Implementations MUST reside in this namespace.
 namespace Semio;
-#endregion ✨Namespace
+#endregion 🏠Namespace
 
-#region 🎠Constants
+
+
+
+
+
+#region 🎞️Constants
 // Consumers MUST use these shared constants for configuration.
 
 public static class Constants
@@ -110,9 +125,14 @@ public enum DiffStatus
     Modified
 }
 
-#endregion 🎠Constants
+#endregion 🎞️Constants
 
-#region 🎇Utility
+
+
+
+
+
+#region 📦Utilities
 // Callers MUST use these utility functions for encoding and serialization.
 
 public static class Utility
@@ -1463,7 +1483,12 @@ public class Expression
 
 #endregion ❄️Expressions
 
-#endregion 🎇Utility
+#endregion 📦Utilities
+
+
+
+
+
 
 #region 🔓Entitying
 // Implementations MUST extend Entity for equality, validation, and diff support.
@@ -1523,6 +1548,13 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
     {
     }
 }
+
+#endregion 🔓Entitying
+
+
+
+
+
 
 #region ✨SemioValidation
 // Callers MUST use ValidationResult to report kit-level validation issues.
@@ -1798,107 +1830,151 @@ public static class SemioValidator
             }
         }
 
-        issues.AddRange(CheckDescriptionMissingEmoji(kit));
-        issues.AddRange(CheckDescriptionEmojiUnique(kit));
-
         return new ValidationResult { Issues = issues };
-    }
-
-    public static string? ExtractFirstEmoji(string? text)
-    {
-        if (string.IsNullOrEmpty(text)) return null;
-        var enumerator = StringInfo.GetTextElementEnumerator(text);
-        if (!enumerator.MoveNext()) return null;
-        var grapheme = enumerator.GetTextElement();
-        foreach (var rune in grapheme.EnumerateRunes())
-        {
-            if (Rune.GetUnicodeCategory(rune) == UnicodeCategory.OtherSymbol ||
-                (rune.Value >= 0x1F600 && rune.Value <= 0x1F64F) ||
-                (rune.Value >= 0x1F300 && rune.Value <= 0x1F5FF) ||
-                (rune.Value >= 0x1F680 && rune.Value <= 0x1F6FF) ||
-                (rune.Value >= 0x1F900 && rune.Value <= 0x1F9FF) ||
-                (rune.Value >= 0x1FA00 && rune.Value <= 0x1FA6F) ||
-                (rune.Value >= 0x1FA70 && rune.Value <= 0x1FAFF) ||
-                (rune.Value >= 0x2600 && rune.Value <= 0x26FF) ||
-                (rune.Value >= 0x2700 && rune.Value <= 0x27BF) ||
-                (rune.Value >= 0x1F1E0 && rune.Value <= 0x1F1FF))
-                return grapheme;
-        }
-        return null;
-    }
-
-    public static List<Issue> CheckDescriptionMissingEmoji(Kit kit)
-    {
-        var issues = new List<Issue>();
-        void Check(string entityKind, string entityGuid, string? description)
-        {
-            if (string.IsNullOrEmpty(description)) return;
-            var emoji = ExtractFirstEmoji(description);
-            if (emoji == null)
-                issues.Add(new Issue { ConstraintId = "description-missing-emoji", Message = $"Description of {entityKind} \"{entityGuid}\" must start with an emoji.", EntityKind = entityKind, EntityGuid = entityGuid });
-        }
-        Check("Kit", kit.Guid, kit.Description);
-        foreach (var t in kit.Types)
-        {
-            Check("Type", t.Guid, t.Description);
-            foreach (var c in t.Connectors) Check("Connector", c.Guid, c.Description);
-            foreach (var m in t.Models) Check("Model", m.Guid, m.Description);
-        }
-        foreach (var d in kit.Designs)
-        {
-            Check("Design", d.Guid, d.Description);
-            foreach (var p in d.Pieces) Check("Piece", p.Guid, p.Description);
-            foreach (var c in d.Connections) Check("Connection", c.Guid, c.Description);
-        }
-        foreach (var q in kit.Qualities) Check("Quality", q.Guid, q.Description);
-        foreach (var p in kit.Ports) Check("Port", p.Guid, p.Description);
-        foreach (var fo in kit.Folders) Check("Folder", fo.Guid, fo.Description);
-        return issues;
-    }
-
-    public static List<Issue> CheckDescriptionEmojiUnique(Kit kit)
-    {
-        var issues = new List<Issue>();
-        void CheckSiblings(string entityKind, IEnumerable<(string guid, string? description)> siblings)
-        {
-            var emojiMap = new Dictionary<string, List<string>>();
-            foreach (var (guid, description) in siblings)
-            {
-                var emoji = ExtractFirstEmoji(description);
-                if (emoji == null) continue;
-                if (!emojiMap.ContainsKey(emoji)) emojiMap[emoji] = new List<string>();
-                emojiMap[emoji].Add(guid);
-            }
-            foreach (var kvp in emojiMap)
-            {
-                if (kvp.Value.Count <= 1) continue;
-                foreach (var guid in kvp.Value.Skip(1))
-                    issues.Add(new Issue { ConstraintId = "description-emoji-unique", Message = $"Duplicate leading emoji \"{kvp.Key}\" in {entityKind} descriptions among siblings.", EntityKind = entityKind, EntityGuid = guid });
-            }
-        }
-        foreach (var group in kit.Types.GroupBy(t => t.Parent?.Guid))
-            CheckSiblings("Type", group.Select(t => (t.Guid, t.Description)));
-        foreach (var group in kit.Designs.GroupBy(d => d.Parent?.Guid))
-            CheckSiblings("Design", group.Select(d => (d.Guid, d.Description)));
-        foreach (var d in kit.Designs)
-        {
-            CheckSiblings("Piece", d.Pieces.Select(p => (p.Guid, p.Description)));
-            CheckSiblings("Connection", d.Connections.Select(c => (c.Guid, c.Description)));
-        }
-        CheckSiblings("Quality", kit.Qualities.Select(q => (q.Guid, q.Description)));
-        CheckSiblings("Port", kit.Ports.Select(p => (p.Guid, p.Description)));
-        foreach (var group in kit.Folders.GroupBy(f => f.Parent))
-            CheckSiblings("Folder", group.Select(f => (f.Guid, f.Description)));
-        foreach (var t in kit.Types)
-        {
-            CheckSiblings("Connector", t.Connectors.Select(c => (c.Guid, c.Description)));
-            CheckSiblings("Model", t.Models.Select(m => (m.Guid, m.Description)));
-        }
-        return issues;
     }
 }
 
 #endregion ✨SemioValidation
+
+
+
+
+
+
+#region 🖥️Weak Entities
+
+#region 📺Coord
+// Implementations MUST share X, Y, Z coordinate fields for spatial types.
+
+public class Coord : Entity<Coord>
+{
+    public double U { get; set; }
+    public double V { get; set; }
+
+    public Coord Normalize()
+    {
+        var length = (double)Math.Sqrt(U * U + V * V);
+        return new Coord { U = U / length, V = V / length };
+    }
+}
+
+#endregion 📺Coord
+
+
+#region 📦MoveVector
+// Implementations MUST carry gap/shift/rise deltas in the piece plane frame for move operations.
+
+public class MoveVector
+{
+    public double Gap { get; set; }
+    public double Shift { get; set; }
+    public double Rise { get; set; }
+}
+
+#endregion 📦MoveVector
+
+
+
+
+
+
+#region ✖️Point
+// Implementations MUST represent a 3D point with X, Y, Z coordinates.
+
+public class Point : Entity<Point>
+{
+    public double X { get; set; } = 0;
+    public double Y { get; set; } = 0;
+    public double Z { get; set; } = 0;
+}
+
+#endregion ✖️Point
+
+
+
+
+
+#region ↗️Vector
+// Implementations MUST represent a 3D vector with X, Y, Z components.
+
+public class Vector : Entity<Vector>
+{
+    public double X { get; set; } = 1;
+    public double Y { get; set; }
+    public double Z { get; set; } = 0;
+
+    public static double DotProduct(Vector a, Vector b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+
+    public static bool IsOrthogonal(Vector a, Vector b) => Math.Abs(DotProduct(a, b)) < Constants.Tolerance;
+
+    public override (bool, List<string>) Validate()
+    {
+        var (isValid, errors) = base.Validate();
+        if (Math.Abs(X) < Constants.Tolerance && Math.Abs(Y) < Constants.Tolerance && Math.Abs(Z) < Constants.Tolerance)
+        {
+            isValid = false;
+            errors.Add("The vector must not be the zero vector.");
+        }
+
+        if (Math.Abs(Math.Sqrt(X * X + Y * Y + Z * Z) - 1) > Constants.Tolerance)
+        {
+            isValid = false;
+            errors.Add("The vector must be a unit vector.");
+        }
+
+        return (isValid, errors);
+    }
+}
+
+#endregion ↗️Vector
+
+
+
+
+
+#region ◻️Plane
+// Implementations MUST define a 3D plane by origin and X/Y direction vectors.
+
+public class Plane : Entity<Plane>
+{
+    public Point Origin { get; set; } = new();
+    public Vector XAxis { get; set; } = new() { X = 1 };
+    public Vector YAxis { get; set; } = new() { Y = 1 };
+
+    public override (bool, List<string>) Validate()
+    {
+        var (isValid, errors) = base.Validate();
+        var (isValidOrigin, errorsOrigin) = Origin.Validate();
+        isValid = isValid && isValidOrigin;
+        errors.AddRange(errorsOrigin.Select(e => "The origin is invalid: " + e));
+        var (isValidXAxis, errorsXAxis) = XAxis.Validate();
+        isValid = isValid && isValidXAxis;
+        errors.AddRange(errorsXAxis.Select(e => "The x-axis is invalid: " + e));
+        var (isValidYAxis, errorsYAxis) = YAxis.Validate();
+        isValid = isValid && isValidYAxis;
+        errors.AddRange(errorsYAxis.Select(e => "The y-axis is invalid: " + e));
+        if (!Vector.IsOrthogonal(XAxis, YAxis))
+        {
+            isValid = false;
+            errors.Add("The x-axis and y-axis must be orthogonal.");
+        }
+
+        return (isValid, errors);
+    }
+}
+
+#endregion ◻️Plane
+
+
+
+
+
+#endregion 🖥️Weak Entities
+
+
+
+
+
 
 public class AttributeDiffUpdate
 {
@@ -2072,7 +2148,7 @@ public class StatChange : Change<Stat, StatDiff> { }
 public class DesignChange : Change<Design, DesignDiff> { }
 public class KitChange : Change<Kit, KitDiff> { }
 
-#region 🧲Attribute
+#region 💎Attribute
 // Implementations MUST provide key-value metadata for annotating entities.
 
 public class AttributeId : Entity<AttributeId>
@@ -2198,105 +2274,10 @@ public class Attribute : Entity<Attribute>
     public override string ToString() => $"Atr({ToHumanIdString()})";
 }
 
-#endregion 🧲Attribute
+#endregion 💎Attribute
 
-#region 🌥️Coord
-// Implementations MUST share X, Y, Z coordinate fields for spatial types.
 
-public class Coord : Entity<Coord>
-{
-    public double U { get; set; }
-    public double V { get; set; }
-
-    public Coord Normalize()
-    {
-        var length = (double)Math.Sqrt(U * U + V * V);
-        return new Coord { U = U / length, V = V / length };
-    }
-}
-
-#endregion 🌥️Coord
-
-#region 🧩Point
-// Implementations MUST represent a 3D point with X, Y, Z coordinates.
-
-public class Point : Entity<Point>
-{
-    public double X { get; set; } = 0;
-    public double Y { get; set; } = 0;
-    public double Z { get; set; } = 0;
-}
-
-#endregion 🧩Point
-
-#region 🤖Vector
-// Implementations MUST represent a 3D vector with X, Y, Z components.
-
-public class Vector : Entity<Vector>
-{
-    public double X { get; set; } = 1;
-    public double Y { get; set; }
-    public double Z { get; set; } = 0;
-
-    public static double DotProduct(Vector a, Vector b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
-
-    public static bool IsOrthogonal(Vector a, Vector b) => Math.Abs(DotProduct(a, b)) < Constants.Tolerance;
-
-    public override (bool, List<string>) Validate()
-    {
-        var (isValid, errors) = base.Validate();
-        if (Math.Abs(X) < Constants.Tolerance && Math.Abs(Y) < Constants.Tolerance && Math.Abs(Z) < Constants.Tolerance)
-        {
-            isValid = false;
-            errors.Add("The vector must not be the zero vector.");
-        }
-
-        if (Math.Abs(Math.Sqrt(X * X + Y * Y + Z * Z) - 1) > Constants.Tolerance)
-        {
-            isValid = false;
-            errors.Add("The vector must be a unit vector.");
-        }
-
-        return (isValid, errors);
-    }
-}
-
-#endregion 🤖Vector
-
-#region 🌡️Plane
-// Implementations MUST define a 3D plane by origin and X/Y direction vectors.
-
-public class Plane : Entity<Plane>
-{
-    public Point Origin { get; set; } = new();
-    public Vector XAxis { get; set; } = new() { X = 1 };
-    public Vector YAxis { get; set; } = new() { Y = 1 };
-
-    public override (bool, List<string>) Validate()
-    {
-        var (isValid, errors) = base.Validate();
-        var (isValidOrigin, errorsOrigin) = Origin.Validate();
-        isValid = isValid && isValidOrigin;
-        errors.AddRange(errorsOrigin.Select(e => "The origin is invalid: " + e));
-        var (isValidXAxis, errorsXAxis) = XAxis.Validate();
-        isValid = isValid && isValidXAxis;
-        errors.AddRange(errorsXAxis.Select(e => "The x-axis is invalid: " + e));
-        var (isValidYAxis, errorsYAxis) = YAxis.Validate();
-        isValid = isValid && isValidYAxis;
-        errors.AddRange(errorsYAxis.Select(e => "The y-axis is invalid: " + e));
-        if (!Vector.IsOrthogonal(XAxis, YAxis))
-        {
-            isValid = false;
-            errors.Add("The x-axis and y-axis must be orthogonal.");
-        }
-
-        return (isValid, errors);
-    }
-}
-
-#endregion 🌡️Plane
-
-#region ⏲️Location
+#region 📍Location
 // Implementations MUST combine a plane with rotation and elevation for placement.
 
 public class LocationId : Entity<LocationId>
@@ -2320,9 +2301,14 @@ public class Location : Entity<Location>
     public override string ToString() => $"Loc({ToHumanIdString()})";
 }
 
-#endregion ⏲️Location
+#endregion 📍Location
 
-#region 🤸Author
+
+
+
+
+
+#region ✍️Author
 // Implementations MUST provide author identity with name and contact.
 
 public class AuthorId : Entity<AuthorId>
@@ -2440,9 +2426,14 @@ public class AuthorsDiff : Entity<AuthorsDiff>
     public static implicit operator AuthorsDiff(List<Author> authors) => new() { Updated = authors.Select(a => new AuthorDiffUpdate { Author = a, Diff = (AuthorDiff)a }).ToList() };
 }
 
-#endregion 🤸Author
+#endregion ✍️Author
 
-#region 🪨File
+
+
+
+
+
+#region 📄File
 // Implementations MUST reference a file with URI, MIME type, and optional content.
 
 public class FileId : Entity<FileId>
@@ -2549,9 +2540,14 @@ public class File : Entity<File>
     public static implicit operator File(FileDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Remote = diff.Remote, Folder = diff.Folder, Size = diff.Size, Hash = diff.Hash, Blob = diff.Blob, CreatedAt = diff.CreatedAt ?? default, CreatedBy = diff.CreatedBy, UpdatedAt = diff.UpdatedAt ?? default, UpdatedBy = diff.UpdatedBy };
     public static implicit operator FileDiff(File file) => new() { Guid = file.Guid, Name = file.Name, Remote = file.Remote, Folder = file.Folder, Size = file.Size, Hash = file.Hash, Blob = file.Blob, CreatedAt = file.CreatedAt, CreatedBy = file.CreatedBy, UpdatedAt = file.UpdatedAt, UpdatedBy = file.UpdatedBy };
 }
-#endregion 🪨File
+#endregion 📄File
 
-#region 🪩Folder
+
+
+
+
+
+#region 📁Folder
 // Implementations MUST reference a folder with name and optional parent.
 
 public class FolderId : Entity<FolderId>
@@ -2661,9 +2657,14 @@ public class Folder : Entity<Folder>
     }
 }
 
-#endregion 🪩Folder
+#endregion 📁Folder
 
-#region 💾Benchmark
+
+
+
+
+
+#region 📏Benchmark
 // Implementations MUST capture benchmark metadata for performance measurement.
 
 public class BenchmarkId : Entity<BenchmarkId>
@@ -2721,7 +2722,12 @@ public class BenchmarkDiff : Entity<BenchmarkDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 💾Benchmark
+#endregion 📏Benchmark
+
+
+
+
+
 
 #region 🖨️QualityKind
 // Implementations MUST categorize quality metrics by kind.
@@ -2739,7 +2745,12 @@ public enum QualityKind
 
 #endregion 🖨️QualityKind
 
-#region 🎊Quality
+
+
+
+
+
+#region 🔬Quality
 // Implementations MUST combine kind, name, value, and unit for quality metrics.
 
 public class QualityId : Entity<QualityId>
@@ -2823,137 +2834,14 @@ public class Quality : Entity<Quality>
 
 }
 
-#endregion 🎊Quality
+#endregion 🔬Quality
 
-#region 🪄Tag
-// Implementations MUST provide lightweight labels for categorizing entities.
 
-public class TagId : Entity<TagId>
-{
-    public string Guid { get; set; } = "";
 
-    public static implicit operator TagId(Tag tag) => new() { Guid = tag.Guid };
-}
 
-public class Tag : Entity<Tag>
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public List<Attribute> Attributes { get; set; } = new();
 
-    public static implicit operator Tag(TagId id) => new() { Guid = id.Guid };
 
-    public static Tag Find(List<Tag> tags, string guid)
-    {
-        var tag = tags.FirstOrDefault(t => t.Guid == guid);
-        if (tag == null) throw new Exception($"Tag {guid} not found in tags");
-        return tag;
-    }
-}
-
-public class TagDiff : Entity<TagDiff>
-{
-    private readonly HashSet<string> _setProperties = new();
-    private string? _guid;
-    private string? _name;
-    private string? _description;
-    private string? _icon;
-    private AttributesDiff? _attributes;
-
-    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
-    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
-    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
-    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
-    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
-
-    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
-    public bool ShouldSerializeName() => _setProperties.Contains("Name");
-    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
-    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
-    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
-}
-
-public class TagsDiff : Entity<TagsDiff>
-{
-    public List<TagId> Removed { get; set; } = new();
-    public List<Tag> Added { get; set; } = new();
-    public List<TagDiffUpdate> Updated { get; set; } = new();
-}
-
-#endregion 🪄Tag
-
-#region 🎑Concept
-// Implementations MUST link a semantic concept name to description and icon.
-
-public class ConceptId : Entity<ConceptId>
-{
-    public string Guid { get; set; } = "";
-
-    public static implicit operator ConceptId(Concept concept) => new() { Guid = concept.Guid };
-}
-
-public class Concept : Entity<Concept>
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public List<Attribute> Attributes { get; set; } = new();
-
-    public static implicit operator Concept(ConceptId id) => new() { Guid = id.Guid };
-
-    public static Concept Find(List<Concept> concepts, string guid)
-    {
-        var concept = concepts.FirstOrDefault(c => c.Guid == guid);
-        if (concept == null) throw new Exception($"Concept {guid} not found in concepts");
-        return concept;
-    }
-}
-
-public class ConceptDiff : Entity<ConceptDiff>
-{
-    private readonly HashSet<string> _setProperties = new();
-    private string? _guid;
-    private string? _name;
-    private string? _description;
-    private string? _icon;
-    private AttributesDiff? _attributes;
-
-    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
-    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
-    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
-    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
-    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
-
-    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
-    public bool ShouldSerializeName() => _setProperties.Contains("Name");
-    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
-    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
-    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
-}
-
-public class ConceptsDiff : Entity<ConceptsDiff>
-{
-    public List<ConceptId> Removed { get; set; } = new();
-    public List<Concept> Added { get; set; } = new();
-    public List<ConceptDiffUpdate> Updated { get; set; } = new();
-
-    public ConceptsDiff MergeDiff(ConceptsDiff other)
-    {
-        return new ConceptsDiff
-        {
-            Removed = Removed.Concat(other.Removed).Distinct().ToList(),
-            Added = Added.Concat(other.Added).ToList(),
-            Updated = Updated.Concat(other.Updated).ToList()
-        };
-    }
-}
-
-#endregion 🎑Concept
-
-#region 🎀Port
+#region ⚓Port
 // Implementations MUST define connection ports as typed interfaces on a type.
 
 public class PortId : Entity<PortId>
@@ -3069,9 +2957,14 @@ public class Port : Entity<Port>
     }
 }
 
-#endregion 🎀Port
+#endregion ⚓Port
 
-#region 🎆Prop
+
+
+
+
+
+#region 📊Prop
 // Implementations MUST bind a property name to an expression value.
 
 public class PropId : Entity<PropId>
@@ -3118,9 +3011,152 @@ public class PropDiff : Entity<PropDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 🎆Prop
+#endregion 📊Prop
 
-#region 🧊Model
+
+
+
+
+
+#region 🏷️Tag
+// Implementations MUST provide lightweight labels for categorizing entities.
+
+public class TagId : Entity<TagId>
+{
+    public string Guid { get; set; } = "";
+
+    public static implicit operator TagId(Tag tag) => new() { Guid = tag.Guid };
+}
+
+public class Tag : Entity<Tag>
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator Tag(TagId id) => new() { Guid = id.Guid };
+
+    public static Tag Find(List<Tag> tags, string guid)
+    {
+        var tag = tags.FirstOrDefault(t => t.Guid == guid);
+        if (tag == null) throw new Exception($"Tag {guid} not found in tags");
+        return tag;
+    }
+}
+
+public class TagDiff : Entity<TagDiff>
+{
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private string? _icon;
+    private AttributesDiff? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
+}
+
+public class TagsDiff : Entity<TagsDiff>
+{
+    public List<TagId> Removed { get; set; } = new();
+    public List<Tag> Added { get; set; } = new();
+    public List<TagDiffUpdate> Updated { get; set; } = new();
+}
+
+#endregion 🏷️Tag
+
+
+
+
+
+
+#region 💡Concept
+// Implementations MUST link a semantic concept name to description and icon.
+
+public class ConceptId : Entity<ConceptId>
+{
+    public string Guid { get; set; } = "";
+
+    public static implicit operator ConceptId(Concept concept) => new() { Guid = concept.Guid };
+}
+
+public class Concept : Entity<Concept>
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator Concept(ConceptId id) => new() { Guid = id.Guid };
+
+    public static Concept Find(List<Concept> concepts, string guid)
+    {
+        var concept = concepts.FirstOrDefault(c => c.Guid == guid);
+        if (concept == null) throw new Exception($"Concept {guid} not found in concepts");
+        return concept;
+    }
+}
+
+public class ConceptDiff : Entity<ConceptDiff>
+{
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private string? _icon;
+    private AttributesDiff? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
+}
+
+public class ConceptsDiff : Entity<ConceptsDiff>
+{
+    public List<ConceptId> Removed { get; set; } = new();
+    public List<Concept> Added { get; set; } = new();
+    public List<ConceptDiffUpdate> Updated { get; set; } = new();
+
+    public ConceptsDiff MergeDiff(ConceptsDiff other)
+    {
+        return new ConceptsDiff
+        {
+            Removed = Removed.Concat(other.Removed).Distinct().ToList(),
+            Added = Added.Concat(other.Added).ToList(),
+            Updated = Updated.Concat(other.Updated).ToList()
+        };
+    }
+}
+
+#endregion 💡Concept
+
+
+
+
+
+
+#region 🗿Model
 // Implementations MUST reference a 3D model with URI, MIME type, and local plane.
 
 public class ModelId : Entity<ModelId>
@@ -3274,9 +3310,14 @@ public class Model : Entity<Model>
     }
 }
 
-#endregion 🧊Model
+#endregion 🗿Model
 
-#region 🦀Connector
+
+
+
+
+
+#region 🔌Connector
 // Implementations MUST define located interface points on a type.
 
 public class ConnectorId : Entity<ConnectorId>
@@ -3561,9 +3602,14 @@ public class Connector : Entity<Connector>
     }
 }
 
-#endregion 🦀Connector
+#endregion 🔌Connector
 
-#region 🐘Type
+
+
+
+
+
+#region 🧱Type
 // Implementations MUST compose ports, connectors, and models into a parametric type.
 
 public class TypeId : Entity<TypeId>
@@ -3940,9 +3986,14 @@ public class Type : Entity<Type>
     }
 }
 
-#endregion 🐘Type
+#endregion 🧱Type
 
-#region ⏳Layer
+
+
+
+
+
+#region 🎨Layer
 // Implementations MUST organize pieces into named layers within a design.
 
 public class LayerId : Entity<LayerId>
@@ -3997,62 +4048,14 @@ public class LayerDiff : Entity<LayerDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion ⏳Layer
+#endregion 🎨Layer
 
-#region 🔍Group
-// Implementations MUST group pieces by name within a design.
 
-public class GroupId : Entity<GroupId>
-{
-    public string Guid { get; set; } = "";
-    public static implicit operator GroupId(Group group) => new() { Guid = group.Guid };
-    public string ToIdString() => $"{Guid}";
-    public string ToHumanIdString() => $"{ToIdString()}";
-    public override string ToString() => $"GrpI({ToHumanIdString()})";
-}
 
-public class Group : Entity<Group>
-{
-    public string Guid { get; set; } = "";
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public List<PieceId> Pieces { get; set; } = new();
-    public string? Color { get; set; }
-    public List<Attribute> Attributes { get; set; } = new();
 
-    public string ToIdString() => $"{Guid}";
-    public string ToHumanIdString() => $"{Name ?? Guid}";
-    public override string ToString() => $"Grp({ToHumanIdString()})";
-}
 
-public class GroupDiff : Entity<GroupDiff>
-{
-    private readonly HashSet<string> _setProperties = new();
-    private string? _guid;
-    private string? _name;
-    private string? _description;
-    private List<PieceId>? _pieces;
-    private string? _color;
-    private AttributesDiff? _attributes;
 
-    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
-    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
-    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
-    public List<PieceId>? Pieces { get => _pieces; set { _pieces = value; _setProperties.Add("Pieces"); } }
-    public string? Color { get => _color; set { _color = value; _setProperties.Add("Color"); } }
-    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
-
-    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
-    public bool ShouldSerializeName() => _setProperties.Contains("Name");
-    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
-    public bool ShouldSerializePieces() => _setProperties.Contains("Pieces");
-    public bool ShouldSerializeColor() => _setProperties.Contains("Color");
-    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
-}
-
-#endregion 🔍Group
-
-#region 🎈Piece
+#region 🧩Piece
 // Implementations MUST place an instantiated type within a design hierarchy.
 
 public class PieceId : Entity<PieceId>
@@ -4216,8 +4219,71 @@ public class Piece : Entity<Piece>
     }
 }
 
-#endregion 🎈Piece
-#region 🎺Side
+#endregion 🧩Piece
+
+
+
+
+
+
+#region 👥Group
+// Implementations MUST group pieces by name within a design.
+
+public class GroupId : Entity<GroupId>
+{
+    public string Guid { get; set; } = "";
+    public static implicit operator GroupId(Group group) => new() { Guid = group.Guid };
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"GrpI({ToHumanIdString()})";
+}
+
+public class Group : Entity<Group>
+{
+    public string Guid { get; set; } = "";
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public List<PieceId> Pieces { get; set; } = new();
+    public string? Color { get; set; }
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public string ToIdString() => $"{Guid}";
+    public string ToHumanIdString() => $"{Name ?? Guid}";
+    public override string ToString() => $"Grp({ToHumanIdString()})";
+}
+
+public class GroupDiff : Entity<GroupDiff>
+{
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private List<PieceId>? _pieces;
+    private string? _color;
+    private AttributesDiff? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public List<PieceId>? Pieces { get => _pieces; set { _pieces = value; _setProperties.Add("Pieces"); } }
+    public string? Color { get => _color; set { _color = value; _setProperties.Add("Color"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializePieces() => _setProperties.Contains("Pieces");
+    public bool ShouldSerializeColor() => _setProperties.Contains("Color");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
+}
+
+#endregion 👥Group
+
+
+
+
+
+#region ↔️Side
 // Implementations MUST reference a piece and connector as a connection endpoint.
 
 public class SideDiff : Entity<SideDiff>
@@ -4311,9 +4377,14 @@ public class Side : Entity<Side>
     public override string ToString() => $"Sde({Piece.Guid}" + (Connector.Guid != "" ? ":" + Connector.Guid : "") + ")";
 }
 
-#endregion 🎺Side
+#endregion ↔️Side
 
-#region 💡Connection
+
+
+
+
+
+#region 🔗Connection
 // Implementations MUST link two sides to connect pieces in a design.
 
 public class ConnectionId : Entity<ConnectionId>
@@ -4588,9 +4659,14 @@ public class Connection : Entity<Connection>
     }
 }
 
-#endregion 💡Connection
+#endregion 🔗Connection
 
-#region 🪵Stat
+
+
+
+
+
+#region 📈Stat
 // Implementations MUST associate statistical metrics with a design.
 
 public class StatId : Entity<StatId>
@@ -4645,9 +4721,14 @@ public class StatDiff : Entity<StatDiff>
     public bool ShouldSerializeMaxExcluded() => _setProperties.Contains("MaxExcluded");
 }
 
-#endregion 🪵Stat
+#endregion 📈Stat
 
-#region 🧬Design
+
+
+
+
+
+#region 📐Design
 // Implementations MUST compose pieces, connections, and metadata into a layout.
 
 public class DesignsDiff : Entity<DesignsDiff>
@@ -6105,6 +6186,97 @@ text {
         return diff;
     }
 
+    private static Point MoveTranslationWorldFromPiecePlane(Plane plane, MoveVector vector)
+    {
+        var xRaw = new System.Numerics.Vector3((float)plane.XAxis.X, (float)plane.XAxis.Y, (float)plane.XAxis.Z);
+        if (xRaw.LengthSquared() < 1e-12f) return new Point();
+        var x = System.Numerics.Vector3.Normalize(xRaw);
+        var yRaw = new System.Numerics.Vector3((float)plane.YAxis.X, (float)plane.YAxis.Y, (float)plane.YAxis.Z);
+        if (yRaw.LengthSquared() < 1e-12f) return new Point();
+        var y = System.Numerics.Vector3.Normalize(yRaw);
+        var z = System.Numerics.Vector3.Cross(x, y);
+        if (z.LengthSquared() < 1e-12f) return new Point();
+        z = System.Numerics.Vector3.Normalize(z);
+        var t = x * (float)vector.Shift + y * (float)vector.Gap + z * (float)vector.Rise;
+        return new Point { X = t.X, Y = t.Y, Z = t.Z };
+    }
+
+    public static DesignDiff MovePiecesInDesign(Design design, Design pieces, MoveVector vector)
+    {
+        var designConnections = design.Connections;
+        var selectedPieces = pieces.Pieces;
+        var selectedGuids = new HashSet<string>(selectedPieces.Select(p => p.Guid));
+        var connectionByChild = new Dictionary<string, Connection>();
+        foreach (var conn in designConnections)
+        {
+            connectionByChild[conn.Connecting.Piece.Guid] = conn;
+        }
+        var fixedGuids = new HashSet<string>();
+        foreach (var guid in selectedGuids)
+        {
+            if (!connectionByChild.ContainsKey(guid))
+                fixedGuids.Add(guid);
+        }
+        var pieceMap = design.Pieces.ToDictionary(p => p.Guid);
+        var pieceUpdates = new List<PieceDiffUpdate>();
+        foreach (var guid in fixedGuids)
+        {
+            if (!pieceMap.TryGetValue(guid, out var piece) || piece.Plane == null) continue;
+            var basePlane = piece.Plane;
+            var t = MoveTranslationWorldFromPiecePlane(basePlane, vector);
+            pieceUpdates.Add(new PieceDiffUpdate
+            {
+                Piece = new PieceId { Guid = guid },
+                Diff = new PieceDiff
+                {
+                    Plane = new Plane
+                    {
+                        Origin = new Point
+                        {
+                            X = basePlane.Origin.X + t.X,
+                            Y = basePlane.Origin.Y + t.Y,
+                            Z = basePlane.Origin.Z + t.Z,
+                        },
+                        XAxis = new Vector { X = basePlane.XAxis.X, Y = basePlane.XAxis.Y, Z = basePlane.XAxis.Z },
+                        YAxis = new Vector { X = basePlane.YAxis.X, Y = basePlane.YAxis.Y, Z = basePlane.YAxis.Z },
+                    },
+                },
+            });
+        }
+        var connectionUpdates = new List<ConnectionDiffUpdate>();
+        foreach (var guid in selectedGuids)
+        {
+            if (fixedGuids.Contains(guid)) continue;
+            var isDescendant = false;
+            var current = guid;
+            while (connectionByChild.TryGetValue(current, out var conn))
+            {
+                var parentGuid = conn.Connected.Piece.Guid;
+                if (selectedGuids.Contains(parentGuid))
+                {
+                    isDescendant = true;
+                    break;
+                }
+                current = parentGuid;
+            }
+            if (isDescendant) continue;
+            if (connectionByChild.TryGetValue(guid, out var parentConn))
+            {
+                connectionUpdates.Add(new ConnectionDiffUpdate
+                {
+                    Connection = new ConnectionId { Guid = parentConn.Guid },
+                    Diff = new ConnectionDiff { Gap = vector.Gap, Shift = vector.Shift, Rise = vector.Rise },
+                });
+            }
+        }
+        var diff = new DesignDiff();
+        if (pieceUpdates.Count > 0)
+            diff.Pieces = new PiecesDiff { Updated = pieceUpdates };
+        if (connectionUpdates.Count > 0)
+            diff.Connections = new ConnectionsDiff { Updated = connectionUpdates };
+        return diff;
+    }
+
     /// <summary>
     /// Deletes pieces and connections from a design, returning a DesignDiff.
     /// Removes stale connections referencing deleted pieces.
@@ -6694,12 +6866,17 @@ text {
     }
 }
 
-#endregion 🧬Design
+#endregion 📐Design
 
-#region 🧳Kit
+
+
+
+
+
+#region ⏱️Kit
 // Implementations MUST collect types and designs into a reusable library.
 
-#region 💧KitKind
+#region 🧬KitKind
 // KitKind discriminates the five persistence/transport forms of a Kit.
 
 /// <summary>
@@ -6735,7 +6912,7 @@ public static class KitKinds
     public static readonly KitKind[] All = (KitKind[])Enum.GetValues(typeof(KitKind));
 }
 
-#endregion 💧KitKind
+#endregion 🧬KitKind
 
 public class KitDiff : Entity<KitDiff>
 {
@@ -6871,7 +7048,7 @@ public class KitsDiff : Entity<KitsDiff>
     public static implicit operator KitsDiff(List<Kit> kits) => new() { Updated = kits.Select(k => new KitDiffUpdate { Kit = k, Diff = (KitDiff)k }).ToList() };
 }
 
-public class Kit : Entity<Kit>
+public partial class Kit : Entity<Kit>
 {
     public string Guid { get; set; } = "";
     public string Name { get; set; } = "";
@@ -7336,7 +7513,7 @@ public class Kit : Entity<Kit>
 
     #endregion 📻Design Family Helpers
 
-    #region ⛅Type Family Helpers
+    #region 🧊Type Family Helpers
     // Callers MUST use these helpers to traverse type parent-child hierarchies.
 
     public static Type FindTypeByGuid(Kit kit, string typeGuid)
@@ -7382,9 +7559,9 @@ public class Kit : Entity<Kit>
         return primitiveA.Guid == primitiveB.Guid;
     }
 
-    #endregion ⛅Type Family Helpers
+    #endregion 🧊Type Family Helpers
 
-    #region 📯Kit Finders
+    #region 🔍Kit Finders
     // Callers MUST use these methods to locate entities within a kit by GUID.
 
     public static File FindFile(Kit kit, string fileGuid)
@@ -7587,7 +7764,7 @@ public class Kit : Entity<Kit>
         return sum;
     }
 
-    #endregion 📯Kit Finders
+    #endregion 🔍Kit Finders
 
     #region 🎠Filter
     // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
@@ -7812,1050 +7989,674 @@ public class Kit : Entity<Kit>
     }
 
     #endregion 🎠Filter
-
-    #region 🕸️Flatten Design
-    // Callers MUST use FlattenDesign to compute a DesignDiff that assigns world-space planes to all pieces.
-
-    public static DesignDiff FlattenDesign(Kit kit, string designId)
-    {
-        var design = FindDesign(kit, designId);
-        if (design.Pieces == null || design.Pieces.Count == 0) return new DesignDiff();
-
-        var typesDict = (kit.Types ?? new List<Type>()).ToDictionary(t => t.Guid);
-
-        Type? GetConnectorType(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
-
-        Connector? GetConnector(Type? type, string? connectorGuid)
-        {
-            if (type == null) return null;
-
-            if (string.IsNullOrEmpty(connectorGuid))
-            {
-                if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
-                if (!string.IsNullOrEmpty(type.Parent?.Guid))
-                {
-                    var parentType = GetConnectorType(type.Parent.Guid);
-                    return GetConnector(parentType, connectorGuid);
-                }
-                return null;
-            }
-
-            if (type.Connectors != null && type.Connectors.Count > 0)
-            {
-                var connector = type.Connectors.FirstOrDefault(p => p.Guid == connectorGuid);
-                if (connector != null) return connector;
-            }
-
-            if (!string.IsNullOrEmpty(type.Parent?.Guid))
-            {
-                var parentType = GetConnectorType(type.Parent.Guid);
-                var connector = GetConnector(parentType, connectorGuid);
-                if (connector != null) return connector;
-            }
-
-            if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
-
-            return null;
-        }
-
-        var flatDesignJson = Utility.Serialize(design);
-        var flatDesign = Utility.Deserialize<Design>(flatDesignJson);
-        if (flatDesign == null) return new DesignDiff();
-
-        if (flatDesign.Pieces == null) flatDesign.Pieces = new List<Piece>();
-
-        var piecePlanes = new Dictionary<string, Plane>();
-        var pieceMap = new Dictionary<string, Piece>();
-        foreach (var p in flatDesign.Pieces)
-        {
-            if (!string.IsNullOrEmpty(p.Guid)) pieceMap[p.Guid] = p;
-        }
-
-        var filteredConnections = (flatDesign.Connections ?? new List<Connection>()).Where(connection =>
-        {
-            var sourceId = connection.Connected.Piece.Guid;
-            var targetId = connection.Connecting.Piece.Guid;
-            return pieceMap.ContainsKey(sourceId) && pieceMap.ContainsKey(targetId);
-        }).ToList();
-
-        var graph = new UndirectedGraph<string, Edge<string>>();
-        foreach (var p in flatDesign.Pieces) graph.AddVertex(p.Guid);
-        foreach (var c in filteredConnections) graph.AddEdge(new Edge<string>(c.Connected.Piece.Guid, c.Connecting.Piece.Guid));
-
-        var algorithm = new ConnectedComponentsAlgorithm<string, Edge<string>>(graph);
-        algorithm.Compute();
-
-        var components = algorithm.Components;
-        var componentDict = new Dictionary<int, List<string>>();
-        foreach (var kvp in components)
-        {
-            if (!componentDict.ContainsKey(kvp.Value)) componentDict[kvp.Value] = new List<string>();
-            componentDict[kvp.Value].Add(kvp.Key);
-        }
-
-        Piece SetAttributes(Piece piece, IEnumerable<(string key, string value)> newAttrs)
-        {
-            var updatedAttrs = piece.Attributes?.ToList() ?? new List<Attribute>();
-            foreach (var newAttr in newAttrs)
-            {
-                var existingIndex = updatedAttrs.FindIndex(a => a.Key == newAttr.key);
-                if (existingIndex >= 0)
-                    updatedAttrs[existingIndex].Value = newAttr.value;
-                else
-                    updatedAttrs.Add(new Attribute { Guid = System.Guid.NewGuid().ToString(), Key = newAttr.key, Value = newAttr.value });
-            }
-            piece.Attributes = updatedAttrs;
-            return piece;
-        }
-
-        foreach (var component in componentDict.Values)
-        {
-            var roots = component.Where(nodeId =>
-            {
-                var piece = pieceMap.TryGetValue(nodeId, out var p) ? p : null;
-                return piece?.Plane != null && piece?.Center != null;
-            }).ToList();
-
-            var rootNode = roots.Count > 0 ? roots[0] : (component.Count > 0 ? component[0] : null);
-            if (string.IsNullOrEmpty(rootNode)) continue;
-
-            var rootPiece = pieceMap[rootNode];
-            if (string.IsNullOrEmpty(rootPiece.Guid)) continue;
-
-            var updatedRootPiece = SetAttributes(rootPiece, new[]
-            {
-                ("semio.fixedPieceId", rootPiece.Guid),
-                ("semio.depth", "0"),
-                ("semio.path", rootPiece.Guid)
-            });
-            pieceMap[rootNode] = updatedRootPiece;
-
-            Plane rootPlane = rootPiece.Plane ?? new Plane { XAxis = new Vector { X = 1, Y = 0, Z = 0 }, YAxis = new Vector { X = 0, Y = 1, Z = 0 }, Origin = new Point { X = 0, Y = 0, Z = 0 } };
-            piecePlanes[rootPiece.Guid] = rootPlane;
-
-            var rootPieceIndex = flatDesign.Pieces.FindIndex(p => p.Guid == rootPiece.Guid);
-            if (rootPieceIndex != -1)
-            {
-                flatDesign.Pieces[rootPieceIndex].Plane = rootPlane;
-                flatDesign.Pieces[rootPieceIndex].Center ??= new Coord { U = 0, V = 0 };
-            }
-
-            var bfs = new UndirectedBreadthFirstSearchAlgorithm<string, Edge<string>>(graph);
-            var depths = new Dictionary<string, int>();
-            depths[rootNode] = 0;
-
-            bfs.TreeEdge += (sender, e) =>
-            {
-                var parentId = depths.ContainsKey(e.Source) ? e.Source : e.Target;
-                var childId = parentId == e.Source ? e.Target : e.Source;
-                depths[childId] = depths[parentId] + 1;
-
-                var parentPiece = pieceMap.TryGetValue(parentId, out var pp) ? pp : null;
-                var childPiece = pieceMap.TryGetValue(childId, out var cp) ? cp : null;
-                if (parentPiece == null || childPiece == null || string.IsNullOrEmpty(parentPiece.Guid) || string.IsNullOrEmpty(childPiece.Guid)) return;
-                if (piecePlanes.ContainsKey(childPiece.Guid)) return;
-                if (!piecePlanes.TryGetValue(parentPiece.Guid, out var parentPlane)) return;
-
-                var connection = filteredConnections.FirstOrDefault(c =>
-                    (c.Connected.Piece.Guid == parentId && c.Connecting.Piece.Guid == childId) ||
-                    (c.Connecting.Piece.Guid == parentId && c.Connected.Piece.Guid == childId));
-                if (connection == null) return;
-
-                var parentSide = connection.Connected.Piece.Guid == parentId ? connection.Connected : connection.Connecting;
-                var childSide = connection.Connecting.Piece.Guid == childId ? connection.Connecting : connection.Connected;
-
-                var parentType = parentPiece.Type != null ? GetConnectorType(parentPiece.Type.Guid) : null;
-                var childType = childPiece.Type != null ? GetConnectorType(childPiece.Type.Guid) : null;
-
-                var parentConnector = GetConnector(parentType, parentSide.Connector?.Guid);
-                var childConnector = GetConnector(childType, childSide.Connector?.Guid);
-
-                if (parentConnector == null || childConnector == null) return;
-                if (parentConnector.Point == null || parentConnector.Direction == null || childConnector.Point == null || childConnector.Direction == null) return;
-
-                var childPlane = Design.DefaultComputeChildPlane(
-                    parentPlane, parentConnector.Point, parentConnector.Direction,
-                    childConnector.Point, childConnector.Direction,
-                    connection.Gap, connection.Shift, connection.Rise,
-                    connection.Rotation, connection.Turn, connection.Tilt);
-                piecePlanes[childPiece.Guid] = childPlane;
-
-                var radius = 2.697;
-                var verticalVExtra = 1.0;
-                var horizontalScale = 3.0633;
-                var parentCenter = parentPiece.Center ?? new Coord { U = 0, V = 0 };
-
-                double childU, childV;
-                if (parentCenter.U == 0 && parentCenter.V == 0)
-                {
-                    var angle = 2 * Math.PI * parentConnector.T;
-                    childU = radius * Math.Sin(angle);
-                    childV = radius * Math.Cos(angle);
-                }
-                else
-                {
-                    var isVerticalConnection = Math.Abs(parentConnector.Direction?.Z ?? 0) > 0.5;
-                    if (isVerticalConnection)
-                    {
-                        childU = parentCenter.U + (connection.U ?? 0);
-                        childV = parentCenter.V + (connection.V ?? 0) + verticalVExtra;
-                    }
-                    else
-                    {
-                        childU = parentCenter.U + (connection.U ?? 0) * horizontalScale;
-                        childV = parentCenter.V + (connection.V ?? 0) * horizontalScale;
-                    }
-                }
-
-                var childCenter = new Coord { U = Math.Round(childU, 6), V = Math.Round(childV, 6) };
-                var fixedPieceId = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.fixedPieceId")?.Value ?? "";
-                var parentPath = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.path")?.Value ?? "";
-
-                childPiece.Plane = childPlane;
-                childPiece.Center = childCenter;
-
-                var flatChildPiece = SetAttributes(childPiece, new[]
-                {
-                    ("semio.fixedPieceId", fixedPieceId),
-                    ("semio.parentPieceId", parentPiece.Guid),
-                    ("semio.depth", depths[childId].ToString()),
-                    ("semio.path", parentPath + "," + childPiece.Guid)
-                });
-                pieceMap[childId] = flatChildPiece;
-            };
-
-            bfs.Compute(rootNode);
-        }
-
-        flatDesign.Pieces = flatDesign.Pieces.Select(p => pieceMap.TryGetValue(p.Guid ?? "", out var mapped) ? mapped : p).ToList();
-        flatDesign.Connections = new List<Connection>();
-
-        var updatedPieces = flatDesign.Pieces.Select(flatPiece =>
-        {
-            var originalPiece = design.Pieces?.FirstOrDefault(p => p.Guid == flatPiece.Guid);
-            if (originalPiece == null) return null;
-
-            var pieceDiff = new PieceDiff();
-            bool hasChanges = false;
-
-            if (flatPiece.Plane != null && Utility.Serialize(flatPiece.Plane) != Utility.Serialize(originalPiece.Plane))
-            {
-                pieceDiff.Plane = flatPiece.Plane;
-                hasChanges = true;
-            }
-
-            if (flatPiece.Center != null && Utility.Serialize(flatPiece.Center) != Utility.Serialize(originalPiece.Center))
-            {
-                pieceDiff.Center = flatPiece.Center;
-                hasChanges = true;
-            }
-
-            if (Utility.Serialize(flatPiece.Attributes) != Utility.Serialize(originalPiece.Attributes))
-            {
-                pieceDiff.Attributes = flatPiece.Attributes.ToList();
-                hasChanges = true;
-            }
-
-            if (!hasChanges) return null;
-
-            return new PieceDiffUpdate
-            {
-                Piece = new PieceId { Guid = flatPiece.Guid },
-                Diff = pieceDiff
-            };
-        }).Where(u => u != null).Cast<PieceDiffUpdate>().ToList();
-
-        var removedConnections = (design.Connections ?? new List<Connection>())
-            .Select(c => new ConnectionId
-            {
-                Connected = new Side { Piece = new PieceId { Guid = c.Connected.Piece.Guid } },
-                Connecting = new Side { Piece = new PieceId { Guid = c.Connecting.Piece.Guid } }
-            }).ToList();
-
-        var designDiff = new DesignDiff();
-        if (updatedPieces.Count > 0) designDiff.Pieces = new PiecesDiff { Updated = updatedPieces };
-        if (removedConnections.Count > 0) designDiff.Connections = new ConnectionsDiff { Removed = removedConnections };
-
-        return designDiff;
-    }
-
-    public static DesignDiff ReplaceClusterWithDesign(Design originalDesign, List<string> clusterPieceIds, Design clusteredDesign, List<Connection> externalConnections)
-    {
-        var addedPieces = clusteredDesign.Pieces ?? new List<Piece>();
-        var addedConnections = clusteredDesign.Connections ?? new List<Connection>();
-
-        var addedClusteredConnections = externalConnections.Select(c =>
-        {
-            var newConnection = Utility.Deserialize<Connection>(Utility.Serialize(c));
-            if (newConnection != null) newConnection.Guid = System.Guid.NewGuid().ToString();
-            return newConnection;
-        }).Where(c => c != null).Cast<Connection>().ToList();
-
-        addedConnections.AddRange(addedClusteredConnections);
-
-        return new DesignDiff
-        {
-            Pieces = new PiecesDiff
-            {
-                Removed = clusterPieceIds.Select(id => new PieceId { Guid = id }).ToList(),
-                Added = addedPieces
-            },
-            Connections = new ConnectionsDiff
-            {
-                Removed = (originalDesign.Connections ?? new List<Connection>())
-                    .Where(c => clusterPieceIds.Contains(c.Connected.Piece.Guid) || clusterPieceIds.Contains(c.Connecting.Piece.Guid))
-                    .Select(c => new ConnectionId
-                    {
-                        Connected = new Side { Piece = new PieceId { Guid = c.Connected.Piece.Guid } },
-                        Connecting = new Side { Piece = new PieceId { Guid = c.Connecting.Piece.Guid } }
-                    }).ToList(),
-                Added = addedConnections
-            }
-        };
-    }
-
-    #endregion 🕸️Flatten Design
-
-    #region 📡Kit Model Export
-    // Callers MUST use ExportDesignModel to produce a valid 3D file from a design.
-    // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
-    // Uses SharpGLTF.Toolkit (SceneBuilder/MeshBuilder/NodeBuilder) for GLB/glTF construction.
-
-    /// <summary>📺Supported export formats keyed by file extension.</summary>
-    public static Dictionary<string, string> ExportModelFormats => new()
-    {
-        { ".glb", "GL Transmission Format Binary" },
-        { ".gltf", "GL Transmission Format" },
-        { ".obj", "Wavefront OBJ" },
-        { ".stl", "Stereolithography" },
-    };
-
-    /// <summary>
-    /// Exports the 3D model of a design to the specified format.
-    /// Uses block definitions for types and instances for pieces.
-    /// Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
-    /// </summary>
-    public static byte[] ExportDesignModel(Kit kit, string designId, string format = ".glb", string[] tags = null, Dictionary<string, object> options = null)
-    {
-        if (tags == null) tags = Array.Empty<string>();
-        if (options == null) options = new Dictionary<string, object>();
-        if (!ExportModelFormats.ContainsKey(format))
-            throw new ArgumentException($"Unsupported export format: {format}. Supported: {string.Join(", ", ExportModelFormats.Keys)}", nameof(format));
-
-        var design = FindDesign(kit, designId);
-        var pieces = design.Pieces ?? new List<Piece>();
-        var connections = design.Connections ?? new List<Connection>();
-        var types = kit.Types ?? new List<Type>();
-
-        if (pieces.Count == 0)
-            return ExportSceneBuilderToFormat(new SceneBuilder("empty"), format);
-
-        var typesDict = new Dictionary<string, Type>();
-        foreach (var t in types) typesDict[t.Guid] = t;
-        var piecesDict = new Dictionary<string, Piece>();
-        foreach (var p in pieces) piecesDict[p.Guid] = p;
-
-        var adjacency = new Dictionary<string, List<(Connection connection, string neighborGuid)>>();
-        foreach (var p in pieces) adjacency[p.Guid] = new List<(Connection, string)>();
-        foreach (var conn in connections)
-        {
-            var connectedGuid = conn.Connected.Piece.Guid;
-            var connectingGuid = conn.Connecting.Piece.Guid;
-            if (adjacency.ContainsKey(connectedGuid))
-                adjacency[connectedGuid].Add((conn, connectingGuid));
-            if (adjacency.ContainsKey(connectingGuid))
-                adjacency[connectingGuid].Add((conn, connectedGuid));
-        }
-
-        var piecePlanes = new Dictionary<string, Plane>();
-        var parentOf = new Dictionary<string, string>();
-        var childrenOf = new Dictionary<string, List<string>>();
-        foreach (var p in pieces) childrenOf[p.Guid] = new List<string>();
-
-        var visited = new HashSet<string>();
-        var roots = new List<string>();
-        var queue = new Queue<string>();
-
-        Type GetType(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
-        Connector GetConnector(Type type, string connectorGuid)
-        {
-            if (type == null) return null;
-            if (string.IsNullOrEmpty(connectorGuid))
-                return type.Connectors?.Count > 0 ? type.Connectors[0] : null;
-            return type.Connectors?.FirstOrDefault(c => c.Guid == connectorGuid);
-        }
-
-        foreach (var p in pieces)
-        {
-            if (p.Plane != null && p.Center != null)
-            {
-                piecePlanes[p.Guid] = p.Plane;
-                visited.Add(p.Guid);
-                queue.Enqueue(p.Guid);
-                roots.Add(p.Guid);
-            }
-        }
-
-        if (queue.Count == 0 && pieces.Count > 0)
-        {
-            var identityPlane = new Plane
-            {
-                Origin = new Point { X = 0, Y = 0, Z = 0 },
-                XAxis = new Vector { X = 1, Y = 0, Z = 0 },
-                YAxis = new Vector { X = 0, Y = 1, Z = 0 }
-            };
-            piecePlanes[pieces[0].Guid] = identityPlane;
-            visited.Add(pieces[0].Guid);
-            queue.Enqueue(pieces[0].Guid);
-            roots.Add(pieces[0].Guid);
-        }
-
-        while (queue.Count > 0)
-        {
-            var currentGuid = queue.Dequeue();
-            var currentPlane = piecePlanes[currentGuid];
-            if (!adjacency.TryGetValue(currentGuid, out var edges)) continue;
-            foreach (var edge in edges)
-            {
-                if (visited.Contains(edge.neighborGuid)) continue;
-                var conn = edge.connection;
-                var isParent = conn.Connected.Piece.Guid == currentGuid;
-                if (!isParent) continue;
-
-                var childGuid = edge.neighborGuid;
-                var parentPiece = piecesDict[currentGuid];
-                var childPiece = piecesDict[childGuid];
-                var parentType = parentPiece.Type != null ? GetType(parentPiece.Type.Guid) : null;
-                var childType = childPiece.Type != null ? GetType(childPiece.Type.Guid) : null;
-                var parentConnector = GetConnector(parentType, conn.Connected.Connector?.Guid);
-                var childConnector = GetConnector(childType, conn.Connecting.Connector?.Guid);
-
-                if (parentConnector != null && childConnector != null &&
-                    parentConnector.Point != null && parentConnector.Direction != null &&
-                    childConnector.Point != null && childConnector.Direction != null)
-                {
-                    piecePlanes[childGuid] = Design.DefaultComputeChildPlane(
-                        currentPlane, parentConnector.Point, parentConnector.Direction,
-                        childConnector.Point, childConnector.Direction,
-                        conn.Gap, conn.Shift, conn.Rise,
-                        conn.Rotation, conn.Turn, conn.Tilt);
-                }
-                else
-                {
-                    piecePlanes[childGuid] = currentPlane;
-                }
-
-                parentOf[childGuid] = currentGuid;
-                childrenOf[currentGuid].Add(childGuid);
-                visited.Add(childGuid);
-                queue.Enqueue(childGuid);
-            }
-        }
-
-        foreach (var p in pieces)
-        {
-            if (!visited.Contains(p.Guid))
-            {
-                piecePlanes[p.Guid] = new Plane
-                {
-                    Origin = new Point { X = 0, Y = 0, Z = 0 },
-                    XAxis = new Vector { X = 1, Y = 0, Z = 0 },
-                    YAxis = new Vector { X = 0, Y = 1, Z = 0 }
-                };
-                roots.Add(p.Guid);
-            }
-        }
-
-        var typeMeshBuilders = new Dictionary<string, IMeshBuilder<MaterialBuilder>>();
-        foreach (var piece in pieces)
-        {
-            var typeGuid = piece.Type?.Guid;
-            if (string.IsNullOrEmpty(typeGuid) || typeMeshBuilders.ContainsKey(typeGuid)) continue;
-            if (!typesDict.TryGetValue(typeGuid, out var type)) continue;
-
-            var model = ExportFindMatchingModel(kit, type, tags);
-            if (model != null)
-            {
-                var file = kit.Files?.FirstOrDefault(f => f.Guid == model.File.Guid);
-                if (file?.Blob != null)
-                {
-                    var fileBytes = ExportBlobToBytes(file.Blob);
-                    var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
-                    if (ext == ".glb")
-                    {
-                        var mb = ExportGlbToMeshBuilder(fileBytes, file.Name);
-                        if (mb != null) { typeMeshBuilders[typeGuid] = mb; continue; }
-                    }
-                }
-            }
-            typeMeshBuilders[typeGuid] = ExportCreateBoxMeshBuilder(type.Name);
-        }
-
-        var sceneBuilder = new SceneBuilder(design.Name ?? "design");
-
-        void BuildNodeHierarchy(string pieceGuid, NodeBuilder parent)
-        {
-            var piece = piecesDict[pieceGuid];
-            var worldPlane = piecePlanes[pieceGuid];
-
-            NodeBuilder node;
-            if (parent != null)
-            {
-                node = parent.CreateNode(piece.Name ?? piece.Guid);
-                var parentWorld = ExportPlaneToMatrix4x4(piecePlanes[parentOf[pieceGuid]]);
-                var childWorld = ExportPlaneToMatrix4x4(worldPlane);
-                System.Numerics.Matrix4x4.Invert(parentWorld, out var parentInv);
-                node.LocalMatrix = childWorld * parentInv;
-            }
-            else
-            {
-                node = new NodeBuilder(piece.Name ?? piece.Guid);
-                node.LocalMatrix = ExportPlaneToMatrix4x4(worldPlane);
-            }
-
-            var meshTypeGuid = piece.Type?.Guid;
-            if (!string.IsNullOrEmpty(meshTypeGuid) && typeMeshBuilders.TryGetValue(meshTypeGuid, out var meshBuilder))
-                sceneBuilder.AddRigidMesh(meshBuilder, node);
-            else
-                sceneBuilder.AddNode(node);
-
-            if (childrenOf.TryGetValue(pieceGuid, out var children))
-            {
-                foreach (var childGuid in children)
-                    BuildNodeHierarchy(childGuid, node);
-            }
-        }
-
-        foreach (var rootGuid in roots)
-            BuildNodeHierarchy(rootGuid, null);
-
-        return ExportSceneBuilderToFormat(sceneBuilder, format);
-    }
-
-    #region 🔩Kit Model Export Helpers
-
-    private static System.Numerics.Matrix4x4 ExportPlaneToMatrix4x4(Plane p)
-    {
-        var origin = new System.Numerics.Vector3((float)p.Origin.X, (float)p.Origin.Y, (float)p.Origin.Z);
-        var x = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)p.XAxis.X, (float)p.XAxis.Y, (float)p.XAxis.Z));
-        var yRaw = new System.Numerics.Vector3((float)p.YAxis.X, (float)p.YAxis.Y, (float)p.YAxis.Z);
-        var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
-        var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
-        return ExportApplySemioToGltfBasis(new System.Numerics.Matrix4x4(
-            x.X, x.Y, x.Z, 0,
-            y.X, y.Y, y.Z, 0,
-            z.X, z.Y, z.Z, 0,
-            origin.X, origin.Y, origin.Z, 1));
-    }
-
-    private static System.Numerics.Matrix4x4 ExportApplySemioToGltfBasis(System.Numerics.Matrix4x4 matrix)
-    {
-        var basis = new System.Numerics.Matrix4x4(
-            1, 0, 0, 0,
-            0, 0, -1, 0,
-            0, 1, 0, 0,
-            0, 0, 0, 1);
-        var inverse = new System.Numerics.Matrix4x4(
-            1, 0, 0, 0,
-            0, 0, 1, 0,
-            0, -1, 0, 0,
-            0, 0, 0, 1);
-        return System.Numerics.Matrix4x4.Multiply(System.Numerics.Matrix4x4.Multiply(inverse, matrix), basis);
-    }
-
-    private static byte[] ExportBlobToBytes(string blob)
-    {
-        var base64 = blob;
-        if (blob.StartsWith("data:"))
-        {
-            var commaIdx = blob.IndexOf(',');
-            if (commaIdx >= 0) base64 = blob.Substring(commaIdx + 1);
-        }
-        return Convert.FromBase64String(base64);
-    }
-
-    public static Model ExportFindMatchingModel(Kit kit, Type type, string[] tags)
-    {
-        if (type.Models == null || type.Models.Count == 0) return null;
-        if (tags == null || tags.Length == 0)
-        {
-            var defaultModel = type.Models.FirstOrDefault(m => m.Tags == null || m.Tags.Count == 0);
-            return defaultModel ?? type.Models[0];
-        }
-        var kitTags = kit.Tags ?? new List<Tag>();
-        var selectedTagGuids = new HashSet<string>();
-        foreach (var tagValue in tags)
-        {
-            var byGuid = kitTags.FirstOrDefault(t => t.Guid == tagValue);
-            if (byGuid != null)
-            {
-                selectedTagGuids.Add(byGuid.Guid);
-                continue;
-            }
-            foreach (var tag in kitTags.Where(t => t.Name == tagValue))
-                selectedTagGuids.Add(tag.Guid);
-        }
-        Model bestModel = null;
-        double bestScore = -1;
-        foreach (var model in type.Models)
-        {
-            var modelTagGuids = new HashSet<string>((model.Tags ?? new List<TagId>()).Select(t => t.Guid));
-            if (!selectedTagGuids.All(modelTagGuids.Contains)) continue;
-            var intersection = modelTagGuids.Intersect(selectedTagGuids).Count();
-            var union = modelTagGuids.Union(selectedTagGuids).Count();
-            var score = union > 0 ? (double)intersection / union : 0;
-            if (score > bestScore)
-            {
-                bestScore = score;
-                bestModel = model;
-            }
-        }
-        if (bestModel != null) return bestModel;
-        return type.Models[0];
-    }
-
-    private static IMeshBuilder<MaterialBuilder> ExportGlbToMeshBuilder(byte[] glbBytes, string name)
-    {
-        var srcModel = GltfModel.ReadGLB(new MemoryStream(glbBytes));
-        var meshBuilder = new MeshBuilder<VertexPositionNormal>(name);
-
-        foreach (var srcMesh in srcModel.LogicalMeshes)
-        {
-            foreach (var srcPrim in srcMesh.Primitives)
-            {
-                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
-                if (posAccessor == null) continue;
-                var positions = posAccessor.AsVector3Array();
-
-                var normAccessor = srcPrim.GetVertexAccessor("NORMAL");
-                var normals = normAccessor?.AsVector3Array();
-
-                var matBuilder = new MaterialBuilder(srcPrim.Material?.Name ?? "default")
-                    .WithMetallicRoughnessShader();
-
-                if (srcPrim.Material != null)
-                {
-                    var baseColor = srcPrim.Material.FindChannel("BaseColor");
-                    if (baseColor.HasValue)
-                        matBuilder.UseChannel(KnownChannel.BaseColor).Parameter = baseColor.Value.Color;
-                }
-
-                var prim = meshBuilder.UsePrimitive(matBuilder);
-
-                var idxAccessor = srcPrim.IndexAccessor;
-                if (idxAccessor != null)
-                {
-                    var indices = idxAccessor.AsIndicesArray();
-                    for (int i = 0; i + 2 < indices.Count; i += 3)
-                    {
-                        var i0 = (int)indices[i];
-                        var i1 = (int)indices[i + 1];
-                        var i2 = (int)indices[i + 2];
-                        prim.AddTriangle(
-                            new VertexPositionNormal(positions[i0], normals != null ? normals[i0] : System.Numerics.Vector3.UnitZ),
-                            new VertexPositionNormal(positions[i1], normals != null ? normals[i1] : System.Numerics.Vector3.UnitZ),
-                            new VertexPositionNormal(positions[i2], normals != null ? normals[i2] : System.Numerics.Vector3.UnitZ));
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i + 2 < positions.Count; i += 3)
-                    {
-                        prim.AddTriangle(
-                            new VertexPositionNormal(positions[i], normals != null ? normals[i] : System.Numerics.Vector3.UnitZ),
-                            new VertexPositionNormal(positions[i + 1], normals != null ? normals[i + 1] : System.Numerics.Vector3.UnitZ),
-                            new VertexPositionNormal(positions[i + 2], normals != null ? normals[i + 2] : System.Numerics.Vector3.UnitZ));
-                    }
-                }
-            }
-        }
-
-        return meshBuilder;
-    }
-
-    private static IMeshBuilder<MaterialBuilder> ExportCreateBoxMeshBuilder(string name)
-    {
-        var meshBuilder = new MeshBuilder<VertexPositionNormal>(name);
-        var material = new MaterialBuilder("default").WithUnlitShader();
-        var prim = meshBuilder.UsePrimitive(material);
-
-        const float h = 0.5f;
-        var v = new System.Numerics.Vector3[]
-        {
-            new(-h, -h, -h), new(h, -h, -h), new(h, h, -h), new(-h, h, -h),
-            new(-h, -h, h), new(h, -h, h), new(h, h, h), new(-h, h, h)
-        };
-        var uz = System.Numerics.Vector3.UnitZ;
-        var ux = System.Numerics.Vector3.UnitX;
-        var uy = System.Numerics.Vector3.UnitY;
-        VertexPositionNormal V(System.Numerics.Vector3 pos, System.Numerics.Vector3 nrm) => new(pos, nrm);
-        prim.AddTriangle(V(v[4], uz), V(v[5], uz), V(v[6], uz));
-        prim.AddTriangle(V(v[4], uz), V(v[6], uz), V(v[7], uz));
-        prim.AddTriangle(V(v[1], -uz), V(v[0], -uz), V(v[3], -uz));
-        prim.AddTriangle(V(v[1], -uz), V(v[3], -uz), V(v[2], -uz));
-        prim.AddTriangle(V(v[3], uy), V(v[7], uy), V(v[6], uy));
-        prim.AddTriangle(V(v[3], uy), V(v[6], uy), V(v[2], uy));
-        prim.AddTriangle(V(v[0], -uy), V(v[1], -uy), V(v[5], -uy));
-        prim.AddTriangle(V(v[0], -uy), V(v[5], -uy), V(v[4], -uy));
-        prim.AddTriangle(V(v[1], ux), V(v[2], ux), V(v[6], ux));
-        prim.AddTriangle(V(v[1], ux), V(v[6], ux), V(v[5], ux));
-        prim.AddTriangle(V(v[0], -ux), V(v[4], -ux), V(v[7], -ux));
-        prim.AddTriangle(V(v[0], -ux), V(v[7], -ux), V(v[3], -ux));
-
-        return meshBuilder;
-    }
-
-    private static byte[] ExportSceneBuilderToFormat(SceneBuilder sceneBuilder, string format)
-    {
-        var modelRoot = sceneBuilder.ToGltf2();
-        modelRoot.Asset.Generator = "semio";
-
-        switch (format)
-        {
-            case ".glb":
-                {
-                    using var ms = new MemoryStream();
-                    modelRoot.WriteGLB(ms);
-                    return ms.ToArray();
-                }
-            case ".gltf":
-                {
-                    var tmpDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid());
-                    System.IO.Directory.CreateDirectory(tmpDir);
-                    try
-                    {
-                        var gltfPath = System.IO.Path.Combine(tmpDir, "model.gltf");
-                        modelRoot.SaveGLTF(gltfPath);
-                        var gltfJson = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(gltfPath));
-                        foreach (var buffer in gltfJson["buffers"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
-                        {
-                            var uri = buffer["uri"]?.Value<string>();
-                            if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
-                            var path = System.IO.Path.Combine(tmpDir, uri);
-                            if (!System.IO.File.Exists(path)) continue;
-                            var bytes = System.IO.File.ReadAllBytes(path);
-                            buffer["uri"] = "data:application/octet-stream;base64," + Convert.ToBase64String(bytes);
-                        }
-                        foreach (var image in gltfJson["images"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
-                        {
-                            var uri = image["uri"]?.Value<string>();
-                            if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
-                            var path = System.IO.Path.Combine(tmpDir, uri);
-                            if (!System.IO.File.Exists(path)) continue;
-                            var mime = image["mimeType"]?.Value<string>() ?? "application/octet-stream";
-                            var bytes = System.IO.File.ReadAllBytes(path);
-                            image["uri"] = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
-                        }
-                        return Encoding.UTF8.GetBytes(gltfJson.ToString(Formatting.None));
-                    }
-                    finally
-                    {
-                        System.IO.Directory.Delete(tmpDir, true);
-                    }
-                }
-            case ".obj":
-                return ExportModelRootToObj(modelRoot);
-            case ".stl":
-                return ExportModelRootToStl(modelRoot);
-            default:
-                throw new ArgumentException($"Unsupported export format: {format}");
-        }
-    }
-
-    #region ⏱️Geometric Insights
-    // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
-
-    /// <summary>🔷Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).</summary>
-    public class GeometricInsights
-    {
-        public Point? BoundingBoxMin { get; set; }
-        public Point? BoundingBoxMax { get; set; }
-        public double DimensionX { get; set; }
-        public double DimensionY { get; set; }
-        public double DimensionZ { get; set; }
-        public double CharacteristicLength { get; set; }
-        public double FootprintArea { get; set; }
-        public double TotalSurfaceArea { get; set; }
-        public double EnclosedVolume { get; set; }
-        public double SurfaceToVolumeRatio { get; set; }
-        public double AspectRatioXy { get; set; }
-        public double AspectRatioXz { get; set; }
-        public double AspectRatioYz { get; set; }
-        public bool IsWatertight { get; set; }
-        public Point? Centroid { get; set; }
-        public double Slenderness { get; set; }
-        public int VertexCount { get; set; }
-        public int FaceCount { get; set; }
-        public int EulerCharacteristic { get; set; }
-    }
-
-    public static GeometricInsights GetGeometricInsightsForModel(object model)
-    {
-        GltfModel root;
-        if (model is string path)
-        {
-            if (!System.IO.File.Exists(path))
-                throw new FileNotFoundException("Model file not found", path);
-            var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
-            if (ext != ".glb" && ext != ".gltf")
-                throw new ArgumentException("Model MUST be .glb or .gltf", nameof(model));
-            root = GltfModel.Load(path);
-        }
-        else if (model is byte[] bytes)
-        {
-            using var ms = new MemoryStream(bytes);
-            if (bytes.Length >= 4 && Encoding.ASCII.GetString(bytes, 0, 4) == "glTF")
-                root = GltfModel.ReadGLB(ms);
-            else
-            {
-                var tmp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid().ToString("N") + ".gltf");
-                try
-                {
-                    System.IO.File.WriteAllBytes(tmp, bytes);
-                    root = GltfModel.Load(tmp);
-                }
-                finally { try { System.IO.File.Delete(tmp); } catch { } }
-            }
-        }
-        else
-            throw new ArgumentException("Model must be string path or byte[]", nameof(model));
-
-        var out_ = new GeometricInsights();
-        double sxMin = double.MaxValue, syMin = double.MaxValue, szMin = double.MaxValue;
-        double sxMax = double.MinValue, syMax = double.MinValue, szMax = double.MinValue;
-        double sumSx = 0, sumSy = 0, sumSz = 0;
-        double totalArea = 0, totalVolume = 0;
-        int vertexCount = 0, faceCount = 0;
-
-        foreach (var mesh in root.LogicalMeshes)
-        {
-            foreach (var prim in mesh.Primitives)
-            {
-                var posAcc = prim.GetVertexAccessor("POSITION");
-                if (posAcc == null) continue;
-                var positions = posAcc.AsVector3Array();
-                var idxAcc = prim.IndexAccessor;
-                int n = positions.Count;
-                for (int i = 0; i < n; i++)
-                {
-                    var p = positions[i];
-                    double xg = p.X, yg = p.Y, _zg = p.Z;
-                    double sx = xg, sy = -xg, sz = yg;
-                    if (sx < sxMin) sxMin = sx; if (sx > sxMax) sxMax = sx;
-                    if (sy < syMin) syMin = sy; if (sy > syMax) syMax = sy;
-                    if (sz < szMin) szMin = sz; if (sz > szMax) szMax = sz;
-                    sumSx += sx; sumSy += sy; sumSz += sz;
-                }
-                vertexCount += n;
-                if (idxAcc != null)
-                {
-                    var indices = idxAcc.AsIndicesArray();
-                    for (int i = 0; i + 2 < indices.Count; i += 3)
-                    {
-                        int i0 = (int)indices[i], i1 = (int)indices[i + 1], i2 = (int)indices[i + 2];
-                        var a = positions[i0]; var b = positions[i1]; var c = positions[i2];
-                        var ab = b - a; var ac = c - a;
-                        var cross = Vector3.Cross(ab, ac);
-                        totalArea += 0.5 * cross.Length();
-                        totalVolume += (1.0 / 6.0) * Vector3.Dot(a, Vector3.Cross(b, c));
-                        faceCount++;
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i + 2 < n; i += 3)
-                    {
-                        var a = positions[i]; var b = positions[i + 1]; var c = positions[i + 2];
-                        var ab = b - a; var ac = c - a;
-                        totalArea += 0.5 * Vector3.Cross(ab, ac).Length();
-                        totalVolume += (1.0 / 6.0) * Vector3.Dot(a, Vector3.Cross(b, c));
-                        faceCount++;
-                    }
-                }
-            }
-        }
-
-        if (vertexCount == 0) return out_;
-
-        out_.BoundingBoxMin = new Point { X = (float)sxMin, Y = (float)syMin, Z = (float)szMin };
-        out_.BoundingBoxMax = new Point { X = (float)sxMax, Y = (float)syMax, Z = (float)szMax };
-        out_.DimensionX = sxMax - sxMin;
-        out_.DimensionY = syMax - syMin;
-        out_.DimensionZ = szMax - szMin;
-        out_.CharacteristicLength = Math.Pow(out_.DimensionX * out_.DimensionY * out_.DimensionZ, 1.0 / 3.0);
-        out_.FootprintArea = out_.DimensionX * out_.DimensionZ;
-        out_.TotalSurfaceArea = totalArea;
-        out_.VertexCount = vertexCount;
-        out_.FaceCount = faceCount;
-        double nV = vertexCount;
-        out_.Centroid = new Point { X = (float)(sumSx / nV), Y = (float)(sumSy / nV), Z = (float)(sumSz / nV) };
-        totalVolume = Math.Abs(totalVolume);
-        out_.EnclosedVolume = totalVolume;
-        if (totalVolume > 1e-20 && totalArea > 0)
-            out_.SurfaceToVolumeRatio = totalArea / totalVolume;
-        if (out_.DimensionY > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXy = out_.DimensionX / out_.DimensionY;
-        if (out_.DimensionZ > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXz = out_.DimensionX / out_.DimensionZ;
-        if (out_.DimensionZ > 1e-10 && out_.DimensionY > 1e-10) out_.AspectRatioYz = out_.DimensionY / out_.DimensionZ;
-        double maxExt = Math.Max(out_.DimensionX, Math.Max(out_.DimensionY, out_.DimensionZ));
-        if (maxExt > 1e-10 && totalArea > 0)
-            out_.Slenderness = maxExt / Math.Pow(totalArea * maxExt, 1.0 / 3.0);
-        out_.EulerCharacteristic = vertexCount - (3 * faceCount) / 2 + faceCount;
-        return out_;
-    }
-
-    #endregion ⏱️Geometric Insights
-
-    private static byte[] ExportModelRootToObj(GltfModel model)
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine("# Generated by semio");
-        int vertexOffset = 1;
-        int normalOffset = 1;
-
-        foreach (var node in model.DefaultScene.VisualChildren)
-            ExportNodeToObj(node, System.Numerics.Matrix4x4.Identity, sb, ref vertexOffset, ref normalOffset);
-
-        return Encoding.UTF8.GetBytes(sb.ToString());
-    }
-
-    private static void ExportNodeToObj(GltfNode node, System.Numerics.Matrix4x4 parentWorld,
-        StringBuilder sb, ref int vertexOffset, ref int normalOffset)
-    {
-        var worldMatrix = node.LocalMatrix * parentWorld;
-
-        if (node.Mesh != null)
-        {
-            sb.AppendLine($"g {node.Name ?? "mesh"}");
-            foreach (var srcPrim in node.Mesh.Primitives)
-            {
-                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
-                if (posAccessor == null) continue;
-                var positions = posAccessor.AsVector3Array();
-                var normAccessor = srcPrim.GetVertexAccessor("NORMAL");
-                var normals = normAccessor?.AsVector3Array();
-
-                int startVert = vertexOffset;
-                int startNorm = normalOffset;
-
-                foreach (var pos in positions)
-                {
-                    var wp = System.Numerics.Vector3.Transform(pos, worldMatrix);
-                    sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "v {0:G9} {1:G9} {2:G9}", wp.X, wp.Y, wp.Z));
-                    vertexOffset++;
-                }
-
-                if (normals != null)
-                {
-                    foreach (var norm in normals)
-                    {
-                        var wn = System.Numerics.Vector3.Normalize(
-                            System.Numerics.Vector3.TransformNormal(norm, worldMatrix));
-                        sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "vn {0:G9} {1:G9} {2:G9}", wn.X, wn.Y, wn.Z));
-                        normalOffset++;
-                    }
-                }
-
-                var idxAccessor = srcPrim.IndexAccessor;
-                if (idxAccessor != null)
-                {
-                    var indices = idxAccessor.AsIndicesArray();
-                    for (int i = 0; i + 2 < indices.Count; i += 3)
-                    {
-                        var i0 = (int)indices[i] + startVert;
-                        var i1 = (int)indices[i + 1] + startVert;
-                        var i2 = (int)indices[i + 2] + startVert;
-                        if (normals != null)
-                        {
-                            var n0 = (int)indices[i] + startNorm;
-                            var n1 = (int)indices[i + 1] + startNorm;
-                            var n2 = (int)indices[i + 2] + startNorm;
-                            sb.AppendLine($"f {i0}//{n0} {i1}//{n1} {i2}//{n2}");
-                        }
-                        else
-                        {
-                            sb.AppendLine($"f {i0} {i1} {i2}");
-                        }
-                    }
-                }
-            }
-        }
-
-        foreach (var child in node.VisualChildren)
-            ExportNodeToObj(child, worldMatrix, sb, ref vertexOffset, ref normalOffset);
-    }
-
-    private static byte[] ExportModelRootToStl(GltfModel model)
-    {
-        var triangles = new List<(System.Numerics.Vector3 normal, System.Numerics.Vector3 v0, System.Numerics.Vector3 v1, System.Numerics.Vector3 v2)>();
-
-        foreach (var node in model.DefaultScene.VisualChildren)
-            ExportNodeToStlTriangles(node, System.Numerics.Matrix4x4.Identity, triangles);
-
-        using var ms = new MemoryStream();
-        using var writer = new BinaryWriter(ms);
-
-        var header = new byte[80];
-        Encoding.ASCII.GetBytes("semio STL", 0, 9, header, 0);
-        writer.Write(header);
-        writer.Write((uint)triangles.Count);
-
-        foreach (var (normal, v0, v1, v2) in triangles)
-        {
-            writer.Write(normal.X); writer.Write(normal.Y); writer.Write(normal.Z);
-            writer.Write(v0.X); writer.Write(v0.Y); writer.Write(v0.Z);
-            writer.Write(v1.X); writer.Write(v1.Y); writer.Write(v1.Z);
-            writer.Write(v2.X); writer.Write(v2.Y); writer.Write(v2.Z);
-            writer.Write((ushort)0);
-        }
-
-        return ms.ToArray();
-    }
-
-    private static void ExportNodeToStlTriangles(GltfNode node, System.Numerics.Matrix4x4 parentWorld,
-        List<(System.Numerics.Vector3, System.Numerics.Vector3, System.Numerics.Vector3, System.Numerics.Vector3)> triangles)
-    {
-        var worldMatrix = node.LocalMatrix * parentWorld;
-
-        if (node.Mesh != null)
-        {
-            foreach (var srcPrim in node.Mesh.Primitives)
-            {
-                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
-                if (posAccessor == null) continue;
-                var positions = posAccessor.AsVector3Array();
-
-                var idxAccessor = srcPrim.IndexAccessor;
-                if (idxAccessor != null)
-                {
-                    var indices = idxAccessor.AsIndicesArray();
-                    for (int i = 0; i + 2 < indices.Count; i += 3)
-                    {
-                        var p0 = System.Numerics.Vector3.Transform(positions[(int)indices[i]], worldMatrix);
-                        var p1 = System.Numerics.Vector3.Transform(positions[(int)indices[i + 1]], worldMatrix);
-                        var p2 = System.Numerics.Vector3.Transform(positions[(int)indices[i + 2]], worldMatrix);
-                        var normal = System.Numerics.Vector3.Normalize(
-                            System.Numerics.Vector3.Cross(p1 - p0, p2 - p0));
-                        if (float.IsNaN(normal.X)) normal = System.Numerics.Vector3.UnitZ;
-                        triangles.Add((normal, p0, p1, p2));
-                    }
-                }
-            }
-        }
-
-        foreach (var child in node.VisualChildren)
-            ExportNodeToStlTriangles(child, worldMatrix, triangles);
-    }
-
-    #endregion 🔩Kit Model Export Helpers
-
-    #endregion 📡Kit Model Export
 }
 
-#endregion 🧳Kit
+#endregion ⏱️Kit
 
-#region 🎬Hash
+
+public partial class Kit
+{
+
+
+
+
+
+#region 🔑Meta And Shallow
+// Meta classes strip List<> and heavy blob properties. Shallow classes replace List<> properties with Meta item lists.
+
+#region 🎼Sub-entity Meta
+
+public class AttributeMeta
+{
+    public string Guid { get; set; } = "";
+    public string Key { get; set; } = "";
+    public string Value { get; set; } = "";
+    public string Definition { get; set; } = "";
+}
+
+public class PropMeta
+{
+    public string Guid { get; set; } = "";
+    public QualityId Quality { get; set; } = new();
+    public string Value { get; set; } = "";
+    public string? Unit { get; set; }
+}
+
+public class TagMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+}
+
+public class ConceptMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+}
+
+public class AuthorMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Email { get; set; } = "";
+}
+
+public class FileMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Remote { get; set; }
+    public FolderId? Folder { get; set; }
+    public int? Size { get; set; }
+    public string? Hash { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public string? UpdatedBy { get; set; }
+}
+
+public class FolderMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public FolderId? Parent { get; set; }
+    public string? Description { get; set; }
+    public string CreatedAt { get; set; } = "";
+    public string? CreatedBy { get; set; }
+    public string UpdatedAt { get; set; } = "";
+    public string? UpdatedBy { get; set; }
+}
+
+public class QualityMeta
+{
+    public string Guid { get; set; } = "";
+    public string Key { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Uri { get; set; }
+    public string? Folder { get; set; }
+    public bool? Scalable { get; set; }
+    public QualityKind Kind { get; set; } = QualityKind.General;
+    public string? SI { get; set; }
+    public string? Imperial { get; set; }
+    public double? Min { get; set; }
+    public bool? MinExcluded { get; set; }
+    public double? Max { get; set; }
+    public bool? MaxExcluded { get; set; }
+    public double? Default { get; set; }
+    public string? Formula { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public string? Unit { get; set; }
+}
+
+public class PortMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public int? MaxChildren { get; set; }
+}
+
+public class ModelMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public FileId File { get; set; } = new();
+    public string? Description { get; set; }
+}
+
+public class ConnectorMeta
+{
+    public string Guid { get; set; } = "";
+    public string? Name { get; set; }
+    public double T { get; set; } = 0;
+    public Point? Point { get; set; }
+    public Vector? Direction { get; set; }
+    public string? Description { get; set; }
+    public PortId? Port { get; set; }
+    public bool? Mandatory { get; set; }
+    public int? MaxChildren { get; set; }
+}
+
+public class LayerMeta
+{
+    public string Guid { get; set; } = "";
+    public string Path { get; set; } = "";
+    public bool IsHidden { get; set; } = false;
+    public bool IsLocked { get; set; } = false;
+    public string Color { get; set; } = "";
+    public string? Description { get; set; }
+}
+
+public class PieceMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public TypeId? Type { get; set; }
+    public DesignId? Design { get; set; }
+    public Plane? Plane { get; set; }
+    public Coord? Center { get; set; }
+    public double? Scale { get; set; }
+    public Plane? MirrorPlane { get; set; }
+    public bool? IsHidden { get; set; }
+    public bool? IsLocked { get; set; }
+    public string? Color { get; set; }
+}
+
+public class GroupMeta
+{
+    public string Guid { get; set; } = "";
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public string? Color { get; set; }
+}
+
+public class ConnectionMeta
+{
+    public string Guid { get; set; } = "";
+    public Side Connected { get; set; } = new();
+    public Side Connecting { get; set; } = new();
+    public string? Description { get; set; }
+    public double Gap { get; set; } = 0;
+    public double Shift { get; set; } = 0;
+    public double Rise { get; set; } = 0;
+    public double Rotation { get; set; } = 0;
+    public double Turn { get; set; } = 0;
+    public double Tilt { get; set; } = 0;
+    public double? U { get; set; }
+    public double? V { get; set; }
+}
+
+public class StatMeta
+{
+    public string Guid { get; set; } = "";
+    public QualityId Quality { get; set; } = new();
+    public string? Unit { get; set; }
+    public double? Min { get; set; }
+    public bool? MinExcluded { get; set; }
+    public double? Max { get; set; }
+    public bool? MaxExcluded { get; set; }
+}
+
+#endregion 🎼Sub-entity Meta
+
+#region 🪁TypeMetaShallow
+
+public class TypeMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public TypeId? Parent { get; set; }
+    public bool? IsAbstract { get; set; }
+    public string? Folder { get; set; }
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public int? Stock { get; set; }
+    public bool? Virtual { get; set; }
+    public string? Uri { get; set; }
+    public Location? Location { get; set; }
+    public string? Unit { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class TypeShallow
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public TypeId? Parent { get; set; }
+    public bool? IsAbstract { get; set; }
+    public string? Folder { get; set; }
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public int? Stock { get; set; }
+    public bool? Virtual { get; set; }
+    public string? Uri { get; set; }
+    public Location? Location { get; set; }
+    public string? Unit { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public List<ModelMeta> Models { get; set; } = new();
+    public List<ConnectorMeta> Connectors { get; set; } = new();
+    public List<PropMeta> Props { get; set; } = new();
+    public List<AuthorId> Authors { get; set; } = new();
+    public List<ConceptId> Concepts { get; set; } = new();
+    public List<AttributeMeta> Attributes { get; set; } = new();
+}
+
+#endregion 🪁TypeMetaShallow
+
+#region ✨DesignMetaShallow
+
+public class DesignMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public DesignId? Parent { get; set; }
+    public bool? IsAbstract { get; set; }
+    public string? Folder { get; set; }
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public Location? Location { get; set; }
+    public string Unit { get; set; } = "";
+    public bool? CanScale { get; set; }
+    public bool? CanMirror { get; set; }
+    public LayerId? ActiveLayer { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class DesignShallow
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public DesignId? Parent { get; set; }
+    public bool? IsAbstract { get; set; }
+    public string? Folder { get; set; }
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public Location? Location { get; set; }
+    public string Unit { get; set; } = "";
+    public bool? CanScale { get; set; }
+    public bool? CanMirror { get; set; }
+    public LayerId? ActiveLayer { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public List<PieceMeta> Pieces { get; set; } = new();
+    public List<ConnectionMeta> Connections { get; set; } = new();
+    public List<StatMeta> Stats { get; set; } = new();
+    public List<PropMeta> Props { get; set; } = new();
+    public List<LayerMeta> Layers { get; set; } = new();
+    public List<GroupMeta> Groups { get; set; } = new();
+    public List<AttributeMeta> Attributes { get; set; } = new();
+    public List<AuthorId> Authors { get; set; } = new();
+    public List<ConceptId> Concepts { get; set; } = new();
+}
+
+#endregion ✨DesignMetaShallow
+
+#region 🏗️KitMetaShallow
+
+public class KitMeta
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Version { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public string Remote { get; set; } = "";
+    public string Homepage { get; set; } = "";
+    public string License { get; set; } = "";
+    public string Preview { get; set; } = "";
+    public string CreatedAt { get; set; } = "";
+    public string UpdatedAt { get; set; } = "";
+}
+
+public class KitShallow
+{
+    public string Guid { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Version { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Image { get; set; }
+    public string Remote { get; set; } = "";
+    public string Homepage { get; set; } = "";
+    public string License { get; set; } = "";
+    public string Preview { get; set; } = "";
+    public string CreatedAt { get; set; } = "";
+    public string UpdatedAt { get; set; } = "";
+    public List<TypeMeta> Types { get; set; } = new();
+    public List<DesignMeta> Designs { get; set; } = new();
+    public List<TagMeta> Tags { get; set; } = new();
+    public List<ConceptMeta> Concepts { get; set; } = new();
+    public List<PortMeta> Ports { get; set; } = new();
+    public List<QualityMeta> Qualities { get; set; } = new();
+    public List<FileMeta> Files { get; set; } = new();
+    public List<FolderMeta> Folders { get; set; } = new();
+    public List<AuthorMeta> Authors { get; set; } = new();
+    public List<AttributeMeta> Attributes { get; set; } = new();
+}
+
+#endregion 🏗️KitMetaShallow
+
+#region 📎Meta And Shallow Conversions
+
+public static class MetaShallowConversions
+{
+    public static AttributeMeta ToMeta(this Attribute a) => new()
+    {
+        Guid = a.Guid,
+        Key = a.Key,
+        Value = a.Value,
+        Definition = a.Definition
+    };
+
+    public static PropMeta ToMeta(this Prop p) => new()
+    {
+        Guid = p.Guid,
+        Quality = p.Quality,
+        Value = p.Value,
+        Unit = p.Unit
+    };
+
+    public static TagMeta ToMeta(this Tag t) => new()
+    {
+        Guid = t.Guid,
+        Name = t.Name,
+        Description = t.Description,
+        Icon = t.Icon
+    };
+
+    public static ConceptMeta ToMeta(this Concept c) => new()
+    {
+        Guid = c.Guid,
+        Name = c.Name,
+        Description = c.Description,
+        Icon = c.Icon
+    };
+
+    public static AuthorMeta ToMeta(this Author a) => new()
+    {
+        Guid = a.Guid,
+        Name = a.Name,
+        Email = a.Email
+    };
+
+    public static FileMeta ToMeta(this File f) => new()
+    {
+        Guid = f.Guid,
+        Name = f.Name,
+        Remote = f.Remote,
+        Folder = f.Folder,
+        Size = f.Size,
+        Hash = f.Hash,
+        CreatedAt = f.CreatedAt,
+        CreatedBy = f.CreatedBy,
+        UpdatedAt = f.UpdatedAt,
+        UpdatedBy = f.UpdatedBy
+    };
+
+    public static FolderMeta ToMeta(this Folder f) => new()
+    {
+        Guid = f.Guid,
+        Name = f.Name,
+        Parent = f.Parent,
+        Description = f.Description,
+        CreatedAt = f.CreatedAt,
+        CreatedBy = f.CreatedBy,
+        UpdatedAt = f.UpdatedAt,
+        UpdatedBy = f.UpdatedBy
+    };
+
+    public static QualityMeta ToMeta(this Quality q) => new()
+    {
+        Guid = q.Guid,
+        Key = q.Key,
+        Name = q.Name,
+        Description = q.Description,
+        Uri = q.Uri,
+        Folder = q.Folder,
+        Scalable = q.Scalable,
+        Kind = q.Kind,
+        SI = q.SI,
+        Imperial = q.Imperial,
+        Min = q.Min,
+        MinExcluded = q.MinExcluded,
+        Max = q.Max,
+        MaxExcluded = q.MaxExcluded,
+        Default = q.Default,
+        Formula = q.Formula,
+        Icon = q.Icon,
+        Image = q.Image,
+        Unit = q.Unit
+    };
+
+    public static PortMeta ToMeta(this Port p) => new()
+    {
+        Guid = p.Guid,
+        Name = p.Name,
+        Description = p.Description,
+        Icon = p.Icon
+    };
+
+    public static ModelMeta ToMeta(this Model m) => new()
+    {
+        Guid = m.Guid,
+        Name = m.Name,
+        File = m.File,
+        Description = m.Description
+    };
+
+    public static ConnectorMeta ToMeta(this Connector c) => new()
+    {
+        Guid = c.Guid,
+        Name = c.Name,
+        T = c.T,
+        Point = c.Point,
+        Direction = c.Direction,
+        Description = c.Description,
+        Port = c.Port,
+        Mandatory = c.Mandatory
+    };
+
+    public static LayerMeta ToMeta(this Layer l) => new()
+    {
+        Guid = l.Guid,
+        Path = l.Path,
+        IsHidden = l.IsHidden ?? false,
+        IsLocked = l.IsLocked ?? false,
+        Color = l.Color ?? "",
+        Description = l.Description
+    };
+
+    public static PieceMeta ToMeta(this Piece p) => new()
+    {
+        Guid = p.Guid,
+        Name = p.Name,
+        Description = p.Description,
+        Type = p.Type,
+        Design = p.Design,
+        Plane = p.Plane,
+        Center = p.Center,
+        Scale = p.Scale,
+        MirrorPlane = p.MirrorPlane,
+        IsHidden = p.IsHidden,
+        IsLocked = p.IsLocked,
+        Color = p.Color
+    };
+
+    public static GroupMeta ToMeta(this Group g) => new()
+    {
+        Guid = g.Guid,
+        Name = g.Name,
+        Description = g.Description,
+        Color = g.Color
+    };
+
+    public static ConnectionMeta ToMeta(this Connection c) => new()
+    {
+        Guid = c.Guid,
+        Connected = c.Connected,
+        Connecting = c.Connecting,
+        Description = c.Description,
+        Gap = c.Gap,
+        Shift = c.Shift,
+        Rise = c.Rise,
+        Rotation = c.Rotation,
+        Turn = c.Turn,
+        Tilt = c.Tilt,
+        U = c.U,
+        V = c.V
+    };
+
+    public static StatMeta ToMeta(this Stat s) => new()
+    {
+        Guid = s.Guid,
+        Quality = s.Quality,
+        Unit = s.Unit,
+        Min = s.Min,
+        MinExcluded = s.MinExcluded,
+        Max = s.Max,
+        MaxExcluded = s.MaxExcluded
+    };
+
+    public static TypeMeta ToMeta(this Type t) => new()
+    {
+        Guid = t.Guid,
+        Name = t.Name,
+        Parent = t.Parent,
+        IsAbstract = t.IsAbstract,
+        Folder = t.Folder,
+        Description = t.Description,
+        Icon = t.Icon,
+        Image = t.Image,
+        Stock = t.Stock,
+        Virtual = t.Virtual,
+        Uri = t.Uri,
+        Location = t.Location,
+        Unit = t.Unit,
+        CreatedAt = t.CreatedAt,
+        UpdatedAt = t.UpdatedAt
+    };
+
+    public static TypeShallow ToShallow(this Type t) => new()
+    {
+        Guid = t.Guid,
+        Name = t.Name,
+        Parent = t.Parent,
+        IsAbstract = t.IsAbstract,
+        Folder = t.Folder,
+        Description = t.Description,
+        Icon = t.Icon,
+        Image = t.Image,
+        Stock = t.Stock,
+        Virtual = t.Virtual,
+        Uri = t.Uri,
+        Location = t.Location,
+        Unit = t.Unit,
+        CreatedAt = t.CreatedAt,
+        UpdatedAt = t.UpdatedAt,
+        Models = t.Models.Select(m => m.ToMeta()).ToList(),
+        Connectors = t.Connectors.Select(c => c.ToMeta()).ToList(),
+        Props = t.Props.Select(p => p.ToMeta()).ToList(),
+        Authors = t.Authors,
+        Concepts = t.Concepts,
+        Attributes = t.Attributes.Select(a => a.ToMeta()).ToList()
+    };
+
+    public static DesignMeta ToMeta(this Design d) => new()
+    {
+        Guid = d.Guid,
+        Name = d.Name,
+        Parent = d.Parent,
+        IsAbstract = d.IsAbstract,
+        Folder = d.Folder,
+        Description = d.Description,
+        Icon = d.Icon,
+        Image = d.Image,
+        Location = d.Location,
+        Unit = d.Unit,
+        CanScale = d.CanScale,
+        CanMirror = d.CanMirror,
+        ActiveLayer = d.ActiveLayer,
+        CreatedAt = d.CreatedAt,
+        UpdatedAt = d.UpdatedAt
+    };
+
+    public static DesignShallow ToShallow(this Design d) => new()
+    {
+        Guid = d.Guid,
+        Name = d.Name,
+        Parent = d.Parent,
+        IsAbstract = d.IsAbstract,
+        Folder = d.Folder,
+        Description = d.Description,
+        Icon = d.Icon,
+        Image = d.Image,
+        Location = d.Location,
+        Unit = d.Unit,
+        CanScale = d.CanScale,
+        CanMirror = d.CanMirror,
+        ActiveLayer = d.ActiveLayer,
+        CreatedAt = d.CreatedAt,
+        UpdatedAt = d.UpdatedAt,
+        Pieces = d.Pieces.Select(p => p.ToMeta()).ToList(),
+        Connections = d.Connections.Select(c => c.ToMeta()).ToList(),
+        Stats = d.Stats.Select(s => s.ToMeta()).ToList(),
+        Props = d.Props.Select(p => p.ToMeta()).ToList(),
+        Layers = d.Layers.Select(l => l.ToMeta()).ToList(),
+        Groups = d.Groups.Select(g => g.ToMeta()).ToList(),
+        Attributes = d.Attributes.Select(a => a.ToMeta()).ToList(),
+        Authors = d.Authors,
+        Concepts = d.Concepts
+    };
+
+    public static KitMeta ToMeta(this Kit k) => new()
+    {
+        Guid = k.Guid,
+        Name = k.Name,
+        Version = k.Version,
+        Description = k.Description,
+        Icon = k.Icon,
+        Image = k.Image,
+        Remote = k.Remote,
+        Homepage = k.Homepage,
+        License = k.License,
+        Preview = k.Preview,
+        CreatedAt = k.CreatedAt,
+        UpdatedAt = k.UpdatedAt
+    };
+
+    public static KitShallow ToShallow(this Kit k) => new()
+    {
+        Guid = k.Guid,
+        Name = k.Name,
+        Version = k.Version,
+        Description = k.Description,
+        Icon = k.Icon,
+        Image = k.Image,
+        Remote = k.Remote,
+        Homepage = k.Homepage,
+        License = k.License,
+        Preview = k.Preview,
+        CreatedAt = k.CreatedAt,
+        UpdatedAt = k.UpdatedAt,
+        Types = k.Types.Select(t => t.ToMeta()).ToList(),
+        Designs = k.Designs.Select(d => d.ToMeta()).ToList(),
+        Tags = k.Tags.Select(t => t.ToMeta()).ToList(),
+        Concepts = k.Concepts.Select(c => c.ToMeta()).ToList(),
+        Ports = k.Ports.Select(p => p.ToMeta()).ToList(),
+        Qualities = k.Qualities.Select(q => q.ToMeta()).ToList(),
+        Files = k.Files.Select(f => f.ToMeta()).ToList(),
+        Folders = k.Folders.Select(f => f.ToMeta()).ToList(),
+        Authors = k.Authors.Select(a => a.ToMeta()).ToList(),
+        Attributes = k.Attributes.Select(a => a.ToMeta()).ToList()
+    };
+}
+
+#endregion 📎Meta And Shallow Conversions
+
+#endregion 🔑Meta And Shallow
+
+
+
+
+
+
+#region 🖥️Hash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
 // SHA-256 hex digest. Collections are hashed by sorting child hashes alphabetically.
 // Field order is alphabetical by JSON field name. Missing/null/empty fields are skipped.
@@ -8971,7 +8772,7 @@ public static class Hashing
 
         var exponent = int.Parse(value[(exponentIndex + 1)..], CultureInfo.InvariantCulture);
         var decimalIndex = mantissa.IndexOf('.');
-        var digits = mantissa.Replace(".", "", StringComparison.Ordinal);
+        var digits = mantissa.Replace(".", "");
         if (decimalIndex < 0)
             decimalIndex = digits.Length;
 
@@ -10983,657 +10784,11 @@ public static class Hashing
     // #endregion 🔗Hash Diffs
 }
 
-#endregion 🎬Hash
+#endregion 🖥️Hash
 
-#region 🔑MetaShallow
-// Meta classes strip List<> and heavy blob properties. Shallow classes replace List<> properties with Meta item lists.
 
-#region 🔷SubEntityMeta
 
-public class AttributeMeta
-{
-    public string Guid { get; set; } = "";
-    public string Key { get; set; } = "";
-    public string Value { get; set; } = "";
-    public string Definition { get; set; } = "";
-}
 
-public class PropMeta
-{
-    public string Guid { get; set; } = "";
-    public QualityId Quality { get; set; } = new();
-    public string Value { get; set; } = "";
-    public string? Unit { get; set; }
-}
-
-public class TagMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-}
-
-public class ConceptMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-}
-
-public class AuthorMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Email { get; set; } = "";
-}
-
-public class FileMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Remote { get; set; }
-    public FolderId? Folder { get; set; }
-    public int? Size { get; set; }
-    public string? Hash { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public string? CreatedBy { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public string? UpdatedBy { get; set; }
-}
-
-public class FolderMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public FolderId? Parent { get; set; }
-    public string? Description { get; set; }
-    public string CreatedAt { get; set; } = "";
-    public string? CreatedBy { get; set; }
-    public string UpdatedAt { get; set; } = "";
-    public string? UpdatedBy { get; set; }
-}
-
-public class QualityMeta
-{
-    public string Guid { get; set; } = "";
-    public string Key { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Uri { get; set; }
-    public string? Folder { get; set; }
-    public bool? Scalable { get; set; }
-    public QualityKind Kind { get; set; } = QualityKind.General;
-    public string? SI { get; set; }
-    public string? Imperial { get; set; }
-    public double? Min { get; set; }
-    public bool? MinExcluded { get; set; }
-    public double? Max { get; set; }
-    public bool? MaxExcluded { get; set; }
-    public double? Default { get; set; }
-    public string? Formula { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public string? Unit { get; set; }
-}
-
-public class PortMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public int? MaxChildren { get; set; }
-}
-
-public class ModelMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public FileId File { get; set; } = new();
-    public string? Description { get; set; }
-}
-
-public class ConnectorMeta
-{
-    public string Guid { get; set; } = "";
-    public string? Name { get; set; }
-    public double T { get; set; } = 0;
-    public Point? Point { get; set; }
-    public Vector? Direction { get; set; }
-    public string? Description { get; set; }
-    public PortId? Port { get; set; }
-    public bool? Mandatory { get; set; }
-    public int? MaxChildren { get; set; }
-}
-
-public class LayerMeta
-{
-    public string Guid { get; set; } = "";
-    public string Path { get; set; } = "";
-    public bool IsHidden { get; set; } = false;
-    public bool IsLocked { get; set; } = false;
-    public string Color { get; set; } = "";
-    public string? Description { get; set; }
-}
-
-public class PieceMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string? Description { get; set; }
-    public TypeId? Type { get; set; }
-    public DesignId? Design { get; set; }
-    public Plane? Plane { get; set; }
-    public Coord? Center { get; set; }
-    public double? Scale { get; set; }
-    public Plane? MirrorPlane { get; set; }
-    public bool? IsHidden { get; set; }
-    public bool? IsLocked { get; set; }
-    public string? Color { get; set; }
-}
-
-public class GroupMeta
-{
-    public string Guid { get; set; } = "";
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? Color { get; set; }
-}
-
-public class ConnectionMeta
-{
-    public string Guid { get; set; } = "";
-    public Side Connected { get; set; } = new();
-    public Side Connecting { get; set; } = new();
-    public string? Description { get; set; }
-    public double Gap { get; set; } = 0;
-    public double Shift { get; set; } = 0;
-    public double Rise { get; set; } = 0;
-    public double Rotation { get; set; } = 0;
-    public double Turn { get; set; } = 0;
-    public double Tilt { get; set; } = 0;
-    public double? U { get; set; }
-    public double? V { get; set; }
-}
-
-public class StatMeta
-{
-    public string Guid { get; set; } = "";
-    public QualityId Quality { get; set; } = new();
-    public string? Unit { get; set; }
-    public double? Min { get; set; }
-    public bool? MinExcluded { get; set; }
-    public double? Max { get; set; }
-    public bool? MaxExcluded { get; set; }
-}
-
-#endregion 🔷SubEntityMeta
-
-#region 🪁TypeMetaShallow
-
-public class TypeMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public TypeId? Parent { get; set; }
-    public bool? IsAbstract { get; set; }
-    public string? Folder { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public int? Stock { get; set; }
-    public bool? Virtual { get; set; }
-    public string? Uri { get; set; }
-    public Location? Location { get; set; }
-    public string? Unit { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-}
-
-public class TypeShallow
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public TypeId? Parent { get; set; }
-    public bool? IsAbstract { get; set; }
-    public string? Folder { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public int? Stock { get; set; }
-    public bool? Virtual { get; set; }
-    public string? Uri { get; set; }
-    public Location? Location { get; set; }
-    public string? Unit { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public List<ModelMeta> Models { get; set; } = new();
-    public List<ConnectorMeta> Connectors { get; set; } = new();
-    public List<PropMeta> Props { get; set; } = new();
-    public List<AuthorId> Authors { get; set; } = new();
-    public List<ConceptId> Concepts { get; set; } = new();
-    public List<AttributeMeta> Attributes { get; set; } = new();
-}
-
-#endregion 🪁TypeMetaShallow
-
-#region ✨DesignMetaShallow
-
-public class DesignMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public DesignId? Parent { get; set; }
-    public bool? IsAbstract { get; set; }
-    public string? Folder { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public Location? Location { get; set; }
-    public string Unit { get; set; } = "";
-    public bool? CanScale { get; set; }
-    public bool? CanMirror { get; set; }
-    public LayerId? ActiveLayer { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-}
-
-public class DesignShallow
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public DesignId? Parent { get; set; }
-    public bool? IsAbstract { get; set; }
-    public string? Folder { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public Location? Location { get; set; }
-    public string Unit { get; set; } = "";
-    public bool? CanScale { get; set; }
-    public bool? CanMirror { get; set; }
-    public LayerId? ActiveLayer { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public List<PieceMeta> Pieces { get; set; } = new();
-    public List<ConnectionMeta> Connections { get; set; } = new();
-    public List<StatMeta> Stats { get; set; } = new();
-    public List<PropMeta> Props { get; set; } = new();
-    public List<LayerMeta> Layers { get; set; } = new();
-    public List<GroupMeta> Groups { get; set; } = new();
-    public List<AttributeMeta> Attributes { get; set; } = new();
-    public List<AuthorId> Authors { get; set; } = new();
-    public List<ConceptId> Concepts { get; set; } = new();
-}
-
-#endregion ✨DesignMetaShallow
-
-#region 🏗️KitMetaShallow
-
-public class KitMeta
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Version { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public string Remote { get; set; } = "";
-    public string Homepage { get; set; } = "";
-    public string License { get; set; } = "";
-    public string Preview { get; set; } = "";
-    public string CreatedAt { get; set; } = "";
-    public string UpdatedAt { get; set; } = "";
-}
-
-public class KitShallow
-{
-    public string Guid { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Version { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public string Remote { get; set; } = "";
-    public string Homepage { get; set; } = "";
-    public string License { get; set; } = "";
-    public string Preview { get; set; } = "";
-    public string CreatedAt { get; set; } = "";
-    public string UpdatedAt { get; set; } = "";
-    public List<TypeMeta> Types { get; set; } = new();
-    public List<DesignMeta> Designs { get; set; } = new();
-    public List<TagMeta> Tags { get; set; } = new();
-    public List<ConceptMeta> Concepts { get; set; } = new();
-    public List<PortMeta> Ports { get; set; } = new();
-    public List<QualityMeta> Qualities { get; set; } = new();
-    public List<FileMeta> Files { get; set; } = new();
-    public List<FolderMeta> Folders { get; set; } = new();
-    public List<AuthorMeta> Authors { get; set; } = new();
-    public List<AttributeMeta> Attributes { get; set; } = new();
-}
-
-#endregion 🏗️KitMetaShallow
-
-#region 🎠MetaShallowConversions
-
-public static class MetaShallowConversions
-{
-    public static AttributeMeta ToMeta(this Attribute a) => new()
-    {
-        Guid = a.Guid,
-        Key = a.Key,
-        Value = a.Value,
-        Definition = a.Definition
-    };
-
-    public static PropMeta ToMeta(this Prop p) => new()
-    {
-        Guid = p.Guid,
-        Quality = p.Quality,
-        Value = p.Value,
-        Unit = p.Unit
-    };
-
-    public static TagMeta ToMeta(this Tag t) => new()
-    {
-        Guid = t.Guid,
-        Name = t.Name,
-        Description = t.Description,
-        Icon = t.Icon
-    };
-
-    public static ConceptMeta ToMeta(this Concept c) => new()
-    {
-        Guid = c.Guid,
-        Name = c.Name,
-        Description = c.Description,
-        Icon = c.Icon
-    };
-
-    public static AuthorMeta ToMeta(this Author a) => new()
-    {
-        Guid = a.Guid,
-        Name = a.Name,
-        Email = a.Email
-    };
-
-    public static FileMeta ToMeta(this File f) => new()
-    {
-        Guid = f.Guid,
-        Name = f.Name,
-        Remote = f.Remote,
-        Folder = f.Folder,
-        Size = f.Size,
-        Hash = f.Hash,
-        CreatedAt = f.CreatedAt,
-        CreatedBy = f.CreatedBy,
-        UpdatedAt = f.UpdatedAt,
-        UpdatedBy = f.UpdatedBy
-    };
-
-    public static FolderMeta ToMeta(this Folder f) => new()
-    {
-        Guid = f.Guid,
-        Name = f.Name,
-        Parent = f.Parent,
-        Description = f.Description,
-        CreatedAt = f.CreatedAt,
-        CreatedBy = f.CreatedBy,
-        UpdatedAt = f.UpdatedAt,
-        UpdatedBy = f.UpdatedBy
-    };
-
-    public static QualityMeta ToMeta(this Quality q) => new()
-    {
-        Guid = q.Guid,
-        Key = q.Key,
-        Name = q.Name,
-        Description = q.Description,
-        Uri = q.Uri,
-        Folder = q.Folder,
-        Scalable = q.Scalable,
-        Kind = q.Kind,
-        SI = q.SI,
-        Imperial = q.Imperial,
-        Min = q.Min,
-        MinExcluded = q.MinExcluded,
-        Max = q.Max,
-        MaxExcluded = q.MaxExcluded,
-        Default = q.Default,
-        Formula = q.Formula,
-        Icon = q.Icon,
-        Image = q.Image,
-        Unit = q.Unit
-    };
-
-    public static PortMeta ToMeta(this Port p) => new()
-    {
-        Guid = p.Guid,
-        Name = p.Name,
-        Description = p.Description,
-        Icon = p.Icon
-    };
-
-    public static ModelMeta ToMeta(this Model m) => new()
-    {
-        Guid = m.Guid,
-        Name = m.Name,
-        File = m.File,
-        Description = m.Description
-    };
-
-    public static ConnectorMeta ToMeta(this Connector c) => new()
-    {
-        Guid = c.Guid,
-        Name = c.Name,
-        T = c.T,
-        Point = c.Point,
-        Direction = c.Direction,
-        Description = c.Description,
-        Port = c.Port,
-        Mandatory = c.Mandatory
-    };
-
-    public static LayerMeta ToMeta(this Layer l) => new()
-    {
-        Guid = l.Guid,
-        Path = l.Path,
-        IsHidden = l.IsHidden ?? false,
-        IsLocked = l.IsLocked ?? false,
-        Color = l.Color ?? "",
-        Description = l.Description
-    };
-
-    public static PieceMeta ToMeta(this Piece p) => new()
-    {
-        Guid = p.Guid,
-        Name = p.Name,
-        Description = p.Description,
-        Type = p.Type,
-        Design = p.Design,
-        Plane = p.Plane,
-        Center = p.Center,
-        Scale = p.Scale,
-        MirrorPlane = p.MirrorPlane,
-        IsHidden = p.IsHidden,
-        IsLocked = p.IsLocked,
-        Color = p.Color
-    };
-
-    public static GroupMeta ToMeta(this Group g) => new()
-    {
-        Guid = g.Guid,
-        Name = g.Name,
-        Description = g.Description,
-        Color = g.Color
-    };
-
-    public static ConnectionMeta ToMeta(this Connection c) => new()
-    {
-        Guid = c.Guid,
-        Connected = c.Connected,
-        Connecting = c.Connecting,
-        Description = c.Description,
-        Gap = c.Gap,
-        Shift = c.Shift,
-        Rise = c.Rise,
-        Rotation = c.Rotation,
-        Turn = c.Turn,
-        Tilt = c.Tilt,
-        U = c.U,
-        V = c.V
-    };
-
-    public static StatMeta ToMeta(this Stat s) => new()
-    {
-        Guid = s.Guid,
-        Quality = s.Quality,
-        Unit = s.Unit,
-        Min = s.Min,
-        MinExcluded = s.MinExcluded,
-        Max = s.Max,
-        MaxExcluded = s.MaxExcluded
-    };
-
-    public static TypeMeta ToMeta(this Type t) => new()
-    {
-        Guid = t.Guid,
-        Name = t.Name,
-        Parent = t.Parent,
-        IsAbstract = t.IsAbstract,
-        Folder = t.Folder,
-        Description = t.Description,
-        Icon = t.Icon,
-        Image = t.Image,
-        Stock = t.Stock,
-        Virtual = t.Virtual,
-        Uri = t.Uri,
-        Location = t.Location,
-        Unit = t.Unit,
-        CreatedAt = t.CreatedAt,
-        UpdatedAt = t.UpdatedAt
-    };
-
-    public static TypeShallow ToShallow(this Type t) => new()
-    {
-        Guid = t.Guid,
-        Name = t.Name,
-        Parent = t.Parent,
-        IsAbstract = t.IsAbstract,
-        Folder = t.Folder,
-        Description = t.Description,
-        Icon = t.Icon,
-        Image = t.Image,
-        Stock = t.Stock,
-        Virtual = t.Virtual,
-        Uri = t.Uri,
-        Location = t.Location,
-        Unit = t.Unit,
-        CreatedAt = t.CreatedAt,
-        UpdatedAt = t.UpdatedAt,
-        Models = t.Models.Select(m => m.ToMeta()).ToList(),
-        Connectors = t.Connectors.Select(c => c.ToMeta()).ToList(),
-        Props = t.Props.Select(p => p.ToMeta()).ToList(),
-        Authors = t.Authors,
-        Concepts = t.Concepts,
-        Attributes = t.Attributes.Select(a => a.ToMeta()).ToList()
-    };
-
-    public static DesignMeta ToMeta(this Design d) => new()
-    {
-        Guid = d.Guid,
-        Name = d.Name,
-        Parent = d.Parent,
-        IsAbstract = d.IsAbstract,
-        Folder = d.Folder,
-        Description = d.Description,
-        Icon = d.Icon,
-        Image = d.Image,
-        Location = d.Location,
-        Unit = d.Unit,
-        CanScale = d.CanScale,
-        CanMirror = d.CanMirror,
-        ActiveLayer = d.ActiveLayer,
-        CreatedAt = d.CreatedAt,
-        UpdatedAt = d.UpdatedAt
-    };
-
-    public static DesignShallow ToShallow(this Design d) => new()
-    {
-        Guid = d.Guid,
-        Name = d.Name,
-        Parent = d.Parent,
-        IsAbstract = d.IsAbstract,
-        Folder = d.Folder,
-        Description = d.Description,
-        Icon = d.Icon,
-        Image = d.Image,
-        Location = d.Location,
-        Unit = d.Unit,
-        CanScale = d.CanScale,
-        CanMirror = d.CanMirror,
-        ActiveLayer = d.ActiveLayer,
-        CreatedAt = d.CreatedAt,
-        UpdatedAt = d.UpdatedAt,
-        Pieces = d.Pieces.Select(p => p.ToMeta()).ToList(),
-        Connections = d.Connections.Select(c => c.ToMeta()).ToList(),
-        Stats = d.Stats.Select(s => s.ToMeta()).ToList(),
-        Props = d.Props.Select(p => p.ToMeta()).ToList(),
-        Layers = d.Layers.Select(l => l.ToMeta()).ToList(),
-        Groups = d.Groups.Select(g => g.ToMeta()).ToList(),
-        Attributes = d.Attributes.Select(a => a.ToMeta()).ToList(),
-        Authors = d.Authors,
-        Concepts = d.Concepts
-    };
-
-    public static KitMeta ToMeta(this Kit k) => new()
-    {
-        Guid = k.Guid,
-        Name = k.Name,
-        Version = k.Version,
-        Description = k.Description,
-        Icon = k.Icon,
-        Image = k.Image,
-        Remote = k.Remote,
-        Homepage = k.Homepage,
-        License = k.License,
-        Preview = k.Preview,
-        CreatedAt = k.CreatedAt,
-        UpdatedAt = k.UpdatedAt
-    };
-
-    public static KitShallow ToShallow(this Kit k) => new()
-    {
-        Guid = k.Guid,
-        Name = k.Name,
-        Version = k.Version,
-        Description = k.Description,
-        Icon = k.Icon,
-        Image = k.Image,
-        Remote = k.Remote,
-        Homepage = k.Homepage,
-        License = k.License,
-        Preview = k.Preview,
-        CreatedAt = k.CreatedAt,
-        UpdatedAt = k.UpdatedAt,
-        Types = k.Types.Select(t => t.ToMeta()).ToList(),
-        Designs = k.Designs.Select(d => d.ToMeta()).ToList(),
-        Tags = k.Tags.Select(t => t.ToMeta()).ToList(),
-        Concepts = k.Concepts.Select(c => c.ToMeta()).ToList(),
-        Ports = k.Ports.Select(p => p.ToMeta()).ToList(),
-        Qualities = k.Qualities.Select(q => q.ToMeta()).ToList(),
-        Files = k.Files.Select(f => f.ToMeta()).ToList(),
-        Folders = k.Folders.Select(f => f.ToMeta()).ToList(),
-        Authors = k.Authors.Select(a => a.ToMeta()).ToList(),
-        Attributes = k.Attributes.Select(a => a.ToMeta()).ToList()
-    };
-}
-
-#endregion 🎠MetaShallowConversions
-
-#endregion 🔑MetaShallow
 
 #region 🎪Api
 // Callers MUST use these methods to communicate with the semio engine.
@@ -11761,6 +10916,1434 @@ public class ServerException : Exception
 }
 
 #endregion 🎪Api
+
+
+
+
+
+
+#region 📦Kit Diff Validation
+
+public sealed class KitDiffValidationNote
+{
+    [JsonProperty("code", NullValueHandling = NullValueHandling.Ignore)]
+    public string? Code { get; set; }
+    [JsonProperty("message")]
+    public string Message { get; set; } = "";
+}
+
+public sealed class KitDiffValidationResult
+{
+    [JsonProperty("ok")]
+    public bool Ok { get; set; }
+    public List<KitDiffValidationNote> Errors { get; set; } = new();
+    public List<KitDiffValidationNote> Warnings { get; set; } = new();
+    [JsonProperty("diff", NullValueHandling = NullValueHandling.Ignore)]
+    public KitDiff? Diff { get; set; }
+}
+
+#endregion 📦Kit Diff Validation
+
+
+#region 🌤️Flatten Design
+// Callers MUST use FlattenDesign to compute a DesignDiff that assigns world-space planes to all pieces.
+
+public partial class Kit
+{
+
+    public static DesignDiff FlattenDesign(Kit kit, string designId)
+    {
+        var design = FindDesign(kit, designId);
+        if (design.Pieces == null || design.Pieces.Count == 0) return new DesignDiff();
+
+        var typesDict = (kit.Types ?? new List<Type>()).ToDictionary(t => t.Guid);
+
+        Type? GetConnectorType(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
+
+        Connector? GetConnector(Type? type, string? connectorGuid)
+        {
+            if (type == null) return null;
+
+            if (string.IsNullOrEmpty(connectorGuid))
+            {
+                if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
+                if (!string.IsNullOrEmpty(type.Parent?.Guid))
+                {
+                    var parentType = GetConnectorType(type.Parent.Guid);
+                    return GetConnector(parentType, connectorGuid);
+                }
+                return null;
+            }
+
+            if (type.Connectors != null && type.Connectors.Count > 0)
+            {
+                var connector = type.Connectors.FirstOrDefault(p => p.Guid == connectorGuid);
+                if (connector != null) return connector;
+            }
+
+            if (!string.IsNullOrEmpty(type.Parent?.Guid))
+            {
+                var parentType = GetConnectorType(type.Parent.Guid);
+                var connector = GetConnector(parentType, connectorGuid);
+                if (connector != null) return connector;
+            }
+
+            if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
+
+            return null;
+        }
+
+        var flatDesignJson = Utility.Serialize(design);
+        var flatDesign = Utility.Deserialize<Design>(flatDesignJson);
+        if (flatDesign == null) return new DesignDiff();
+
+        if (flatDesign.Pieces == null) flatDesign.Pieces = new List<Piece>();
+
+        var piecePlanes = new Dictionary<string, Plane>();
+        var pieceMap = new Dictionary<string, Piece>();
+        foreach (var p in flatDesign.Pieces)
+        {
+            if (!string.IsNullOrEmpty(p.Guid)) pieceMap[p.Guid] = p;
+        }
+
+        var filteredConnections = (flatDesign.Connections ?? new List<Connection>()).Where(connection =>
+        {
+            var sourceId = connection.Connected.Piece.Guid;
+            var targetId = connection.Connecting.Piece.Guid;
+            return pieceMap.ContainsKey(sourceId) && pieceMap.ContainsKey(targetId);
+        }).ToList();
+
+        var graph = new UndirectedGraph<string, Edge<string>>();
+        foreach (var p in flatDesign.Pieces) graph.AddVertex(p.Guid);
+        foreach (var c in filteredConnections) graph.AddEdge(new Edge<string>(c.Connected.Piece.Guid, c.Connecting.Piece.Guid));
+
+        var algorithm = new ConnectedComponentsAlgorithm<string, Edge<string>>(graph);
+        algorithm.Compute();
+
+        var components = algorithm.Components;
+        var componentDict = new Dictionary<int, List<string>>();
+        foreach (var kvp in components)
+        {
+            if (!componentDict.ContainsKey(kvp.Value)) componentDict[kvp.Value] = new List<string>();
+            componentDict[kvp.Value].Add(kvp.Key);
+        }
+
+        Piece SetAttributes(Piece piece, IEnumerable<(string key, string value)> newAttrs)
+        {
+            var updatedAttrs = piece.Attributes?.ToList() ?? new List<Attribute>();
+            foreach (var newAttr in newAttrs)
+            {
+                var existingIndex = updatedAttrs.FindIndex(a => a.Key == newAttr.key);
+                if (existingIndex >= 0)
+                    updatedAttrs[existingIndex].Value = newAttr.value;
+                else
+                    updatedAttrs.Add(new Attribute { Guid = System.Guid.NewGuid().ToString(), Key = newAttr.key, Value = newAttr.value });
+            }
+            piece.Attributes = updatedAttrs;
+            return piece;
+        }
+
+        foreach (var component in componentDict.Values)
+        {
+            var roots = component.Where(nodeId =>
+            {
+                var piece = pieceMap.TryGetValue(nodeId, out var p) ? p : null;
+                return piece?.Plane != null && piece?.Center != null;
+            }).ToList();
+
+            var rootNode = roots.Count > 0 ? roots[0] : (component.Count > 0 ? component[0] : null);
+            if (string.IsNullOrEmpty(rootNode)) continue;
+
+            var rootPiece = pieceMap[rootNode];
+            if (string.IsNullOrEmpty(rootPiece.Guid)) continue;
+
+            var updatedRootPiece = SetAttributes(rootPiece, new[]
+            {
+                ("semio.fixedPieceId", rootPiece.Guid),
+                ("semio.depth", "0"),
+                ("semio.path", rootPiece.Guid)
+            });
+            pieceMap[rootNode] = updatedRootPiece;
+
+            Plane rootPlane = rootPiece.Plane ?? new Plane { XAxis = new Vector { X = 1, Y = 0, Z = 0 }, YAxis = new Vector { X = 0, Y = 1, Z = 0 }, Origin = new Point { X = 0, Y = 0, Z = 0 } };
+            piecePlanes[rootPiece.Guid] = rootPlane;
+
+            var rootPieceIndex = flatDesign.Pieces.FindIndex(p => p.Guid == rootPiece.Guid);
+            if (rootPieceIndex != -1)
+            {
+                flatDesign.Pieces[rootPieceIndex].Plane = rootPlane;
+                flatDesign.Pieces[rootPieceIndex].Center ??= new Coord { U = 0, V = 0 };
+            }
+
+            var bfs = new UndirectedBreadthFirstSearchAlgorithm<string, Edge<string>>(graph);
+            var depths = new Dictionary<string, int>();
+            depths[rootNode] = 0;
+
+            bfs.TreeEdge += (sender, e) =>
+            {
+                var parentId = depths.ContainsKey(e.Source) ? e.Source : e.Target;
+                var childId = parentId == e.Source ? e.Target : e.Source;
+                depths[childId] = depths[parentId] + 1;
+
+                var parentPiece = pieceMap.TryGetValue(parentId, out var pp) ? pp : null;
+                var childPiece = pieceMap.TryGetValue(childId, out var cp) ? cp : null;
+                if (parentPiece == null || childPiece == null || string.IsNullOrEmpty(parentPiece.Guid) || string.IsNullOrEmpty(childPiece.Guid)) return;
+                if (piecePlanes.ContainsKey(childPiece.Guid)) return;
+                if (!piecePlanes.TryGetValue(parentPiece.Guid, out var parentPlane)) return;
+
+                var connection = filteredConnections.FirstOrDefault(c =>
+                    (c.Connected.Piece.Guid == parentId && c.Connecting.Piece.Guid == childId) ||
+                    (c.Connecting.Piece.Guid == parentId && c.Connected.Piece.Guid == childId));
+                if (connection == null) return;
+
+                var parentSide = connection.Connected.Piece.Guid == parentId ? connection.Connected : connection.Connecting;
+                var childSide = connection.Connecting.Piece.Guid == childId ? connection.Connecting : connection.Connected;
+
+                var parentType = parentPiece.Type != null ? GetConnectorType(parentPiece.Type.Guid) : null;
+                var childType = childPiece.Type != null ? GetConnectorType(childPiece.Type.Guid) : null;
+
+                var parentConnector = GetConnector(parentType, parentSide.Connector?.Guid);
+                var childConnector = GetConnector(childType, childSide.Connector?.Guid);
+
+                if (parentConnector == null || childConnector == null) return;
+                if (parentConnector.Point == null || parentConnector.Direction == null || childConnector.Point == null || childConnector.Direction == null) return;
+
+                var childPlane = Design.DefaultComputeChildPlane(
+                    parentPlane, parentConnector.Point, parentConnector.Direction,
+                    childConnector.Point, childConnector.Direction,
+                    connection.Gap, connection.Shift, connection.Rise,
+                    connection.Rotation, connection.Turn, connection.Tilt);
+                piecePlanes[childPiece.Guid] = childPlane;
+
+                var radius = 2.697;
+                var verticalVExtra = 1.0;
+                var horizontalScale = 3.0633;
+                var parentCenter = parentPiece.Center ?? new Coord { U = 0, V = 0 };
+
+                double childU, childV;
+                if (parentCenter.U == 0 && parentCenter.V == 0)
+                {
+                    var angle = 2 * Math.PI * parentConnector.T;
+                    childU = radius * Math.Sin(angle);
+                    childV = radius * Math.Cos(angle);
+                }
+                else
+                {
+                    var isVerticalConnection = Math.Abs(parentConnector.Direction?.Z ?? 0) > 0.5;
+                    if (isVerticalConnection)
+                    {
+                        childU = parentCenter.U + (connection.U ?? 0);
+                        childV = parentCenter.V + (connection.V ?? 0) + verticalVExtra;
+                    }
+                    else
+                    {
+                        childU = parentCenter.U + (connection.U ?? 0) * horizontalScale;
+                        childV = parentCenter.V + (connection.V ?? 0) * horizontalScale;
+                    }
+                }
+
+                var childCenter = new Coord { U = Math.Round(childU, 6), V = Math.Round(childV, 6) };
+                var fixedPieceId = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.fixedPieceId")?.Value ?? "";
+                var parentPath = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.path")?.Value ?? "";
+
+                childPiece.Plane = childPlane;
+                childPiece.Center = childCenter;
+
+                var flatChildPiece = SetAttributes(childPiece, new[]
+                {
+                    ("semio.fixedPieceId", fixedPieceId),
+                    ("semio.parentPieceId", parentPiece.Guid),
+                    ("semio.depth", depths[childId].ToString()),
+                    ("semio.path", parentPath + "," + childPiece.Guid)
+                });
+                pieceMap[childId] = flatChildPiece;
+            };
+
+            bfs.Compute(rootNode);
+        }
+
+        flatDesign.Pieces = flatDesign.Pieces.Select(p => pieceMap.TryGetValue(p.Guid ?? "", out var mapped) ? mapped : p).ToList();
+        flatDesign.Connections = new List<Connection>();
+
+        var updatedPieces = flatDesign.Pieces.Select(flatPiece =>
+        {
+            var originalPiece = design.Pieces?.FirstOrDefault(p => p.Guid == flatPiece.Guid);
+            if (originalPiece == null) return null;
+
+            var pieceDiff = new PieceDiff();
+            bool hasChanges = false;
+
+            if (flatPiece.Plane != null && Utility.Serialize(flatPiece.Plane) != Utility.Serialize(originalPiece.Plane))
+            {
+                pieceDiff.Plane = flatPiece.Plane;
+                hasChanges = true;
+            }
+
+            if (flatPiece.Center != null && Utility.Serialize(flatPiece.Center) != Utility.Serialize(originalPiece.Center))
+            {
+                pieceDiff.Center = flatPiece.Center;
+                hasChanges = true;
+            }
+
+            if (Utility.Serialize(flatPiece.Attributes) != Utility.Serialize(originalPiece.Attributes))
+            {
+                pieceDiff.Attributes = flatPiece.Attributes.ToList();
+                hasChanges = true;
+            }
+
+            if (!hasChanges) return null;
+
+            return new PieceDiffUpdate
+            {
+                Piece = new PieceId { Guid = flatPiece.Guid },
+                Diff = pieceDiff
+            };
+        }).Where(u => u != null).Cast<PieceDiffUpdate>().ToList();
+
+        var removedConnections = (design.Connections ?? new List<Connection>())
+            .Select(c => new ConnectionId { Guid = c.Guid })
+            .ToList();
+
+        var designDiff = new DesignDiff();
+        if (updatedPieces.Count > 0) designDiff.Pieces = new PiecesDiff { Updated = updatedPieces };
+        if (removedConnections.Count > 0) designDiff.Connections = new ConnectionsDiff { Removed = removedConnections };
+
+        return designDiff;
+    }
+
+    public static DesignDiff ReplaceClusterWithDesign(Design originalDesign, List<string> clusterPieceIds, Design clusteredDesign, List<Connection> externalConnections)
+    {
+        var addedPieces = clusteredDesign.Pieces ?? new List<Piece>();
+        var addedConnections = clusteredDesign.Connections ?? new List<Connection>();
+
+        var addedClusteredConnections = externalConnections.Select(c =>
+        {
+            var newConnection = Utility.Deserialize<Connection>(Utility.Serialize(c));
+            if (newConnection != null) newConnection.Guid = System.Guid.NewGuid().ToString();
+            return newConnection;
+        }).Where(c => c != null).Cast<Connection>().ToList();
+
+        addedConnections.AddRange(addedClusteredConnections);
+
+        return new DesignDiff
+        {
+            Pieces = new PiecesDiff
+            {
+                Removed = clusterPieceIds.Select(id => new PieceId { Guid = id }).ToList(),
+                Added = addedPieces
+            },
+            Connections = new ConnectionsDiff
+            {
+                Removed = (originalDesign.Connections ?? new List<Connection>())
+                    .Where(c => clusterPieceIds.Contains(c.Connected.Piece.Guid) || clusterPieceIds.Contains(c.Connecting.Piece.Guid))
+                    .Select(c => new ConnectionId
+                    {
+                        Connected = new Side { Piece = new PieceId { Guid = c.Connected.Piece.Guid } },
+                        Connecting = new Side { Piece = new PieceId { Guid = c.Connecting.Piece.Guid } }
+                    }).ToList(),
+                Added = addedConnections
+            }
+        };
+    }
+
+    #endregion 🌤️Flatten Design
+}
+
+#endregion 🌤️Flatten Design
+
+
+#region 🔩Kit Model Export
+// Callers MUST use ExportDesignModel to produce a valid 3D file from a design.
+
+public partial class Kit
+{
+
+    /// <summary>📺Supported export formats keyed by file extension.</summary>
+    public static Dictionary<string, string> ExportModelFormats => new()
+    {
+        { ".glb", "GL Transmission Format Binary" },
+        { ".gltf", "GL Transmission Format" },
+        { ".obj", "Wavefront OBJ" },
+        { ".stl", "Stereolithography" },
+    };
+
+    /// <summary>
+    /// Exports the 3D model of a design to the specified format.
+    /// Uses block definitions for types and instances for pieces.
+    /// Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
+    /// </summary>
+    public static byte[] ExportDesignModel(Kit kit, string designId, string format = ".glb", string[] tags = null, Dictionary<string, object> options = null)
+    {
+        if (tags == null) tags = Array.Empty<string>();
+        if (options == null) options = new Dictionary<string, object>();
+        if (!ExportModelFormats.ContainsKey(format))
+            throw new ArgumentException($"Unsupported export format: {format}. Supported: {string.Join(", ", ExportModelFormats.Keys)}", nameof(format));
+
+        var design = FindDesign(kit, designId);
+        var pieces = design.Pieces ?? new List<Piece>();
+        var connections = design.Connections ?? new List<Connection>();
+        var types = kit.Types ?? new List<Type>();
+
+        if (pieces.Count == 0)
+            return ExportSceneBuilderToFormat(new SceneBuilder("empty"), format);
+
+        var typesDict = new Dictionary<string, Type>();
+        foreach (var t in types) typesDict[t.Guid] = t;
+        var piecesDict = new Dictionary<string, Piece>();
+        foreach (var p in pieces) piecesDict[p.Guid] = p;
+
+        var adjacency = new Dictionary<string, List<(Connection connection, string neighborGuid)>>();
+        foreach (var p in pieces) adjacency[p.Guid] = new List<(Connection, string)>();
+        foreach (var conn in connections)
+        {
+            var connectedGuid = conn.Connected.Piece.Guid;
+            var connectingGuid = conn.Connecting.Piece.Guid;
+            if (adjacency.ContainsKey(connectedGuid))
+                adjacency[connectedGuid].Add((conn, connectingGuid));
+            if (adjacency.ContainsKey(connectingGuid))
+                adjacency[connectingGuid].Add((conn, connectedGuid));
+        }
+
+        var piecePlanes = new Dictionary<string, Plane>();
+        var parentOf = new Dictionary<string, string>();
+        var childrenOf = new Dictionary<string, List<string>>();
+        foreach (var p in pieces) childrenOf[p.Guid] = new List<string>();
+
+        var visited = new HashSet<string>();
+        var roots = new List<string>();
+        var queue = new Queue<string>();
+
+        Type GetType(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
+        Connector GetConnector(Type type, string connectorGuid)
+        {
+            if (type == null) return null;
+            if (string.IsNullOrEmpty(connectorGuid))
+                return type.Connectors?.Count > 0 ? type.Connectors[0] : null;
+            return type.Connectors?.FirstOrDefault(c => c.Guid == connectorGuid);
+        }
+
+        foreach (var p in pieces)
+        {
+            if (p.Plane != null && p.Center != null)
+            {
+                piecePlanes[p.Guid] = p.Plane;
+                visited.Add(p.Guid);
+                queue.Enqueue(p.Guid);
+                roots.Add(p.Guid);
+            }
+        }
+
+        if (queue.Count == 0 && pieces.Count > 0)
+        {
+            var identityPlane = new Plane
+            {
+                Origin = new Point { X = 0, Y = 0, Z = 0 },
+                XAxis = new Vector { X = 1, Y = 0, Z = 0 },
+                YAxis = new Vector { X = 0, Y = 1, Z = 0 }
+            };
+            piecePlanes[pieces[0].Guid] = identityPlane;
+            visited.Add(pieces[0].Guid);
+            queue.Enqueue(pieces[0].Guid);
+            roots.Add(pieces[0].Guid);
+        }
+
+        while (queue.Count > 0)
+        {
+            var currentGuid = queue.Dequeue();
+            var currentPlane = piecePlanes[currentGuid];
+            if (!adjacency.TryGetValue(currentGuid, out var edges)) continue;
+            foreach (var edge in edges)
+            {
+                if (visited.Contains(edge.neighborGuid)) continue;
+                var conn = edge.connection;
+                var isParent = conn.Connected.Piece.Guid == currentGuid;
+                if (!isParent) continue;
+
+                var childGuid = edge.neighborGuid;
+                var parentPiece = piecesDict[currentGuid];
+                var childPiece = piecesDict[childGuid];
+                var parentType = parentPiece.Type != null ? GetType(parentPiece.Type.Guid) : null;
+                var childType = childPiece.Type != null ? GetType(childPiece.Type.Guid) : null;
+                var parentConnector = GetConnector(parentType, conn.Connected.Connector?.Guid);
+                var childConnector = GetConnector(childType, conn.Connecting.Connector?.Guid);
+
+                if (parentConnector != null && childConnector != null &&
+                    parentConnector.Point != null && parentConnector.Direction != null &&
+                    childConnector.Point != null && childConnector.Direction != null)
+                {
+                    piecePlanes[childGuid] = Design.DefaultComputeChildPlane(
+                        currentPlane, parentConnector.Point, parentConnector.Direction,
+                        childConnector.Point, childConnector.Direction,
+                        conn.Gap, conn.Shift, conn.Rise,
+                        conn.Rotation, conn.Turn, conn.Tilt);
+                }
+                else
+                {
+                    piecePlanes[childGuid] = currentPlane;
+                }
+
+                parentOf[childGuid] = currentGuid;
+                childrenOf[currentGuid].Add(childGuid);
+                visited.Add(childGuid);
+                queue.Enqueue(childGuid);
+            }
+        }
+
+        foreach (var p in pieces)
+        {
+            if (!visited.Contains(p.Guid))
+            {
+                piecePlanes[p.Guid] = new Plane
+                {
+                    Origin = new Point { X = 0, Y = 0, Z = 0 },
+                    XAxis = new Vector { X = 1, Y = 0, Z = 0 },
+                    YAxis = new Vector { X = 0, Y = 1, Z = 0 }
+                };
+                roots.Add(p.Guid);
+            }
+        }
+
+        var typeMeshBuilders = new Dictionary<string, IMeshBuilder<MaterialBuilder>>();
+        foreach (var piece in pieces)
+        {
+            var typeGuid = piece.Type?.Guid;
+            if (string.IsNullOrEmpty(typeGuid) || typeMeshBuilders.ContainsKey(typeGuid)) continue;
+            if (!typesDict.TryGetValue(typeGuid, out var type)) continue;
+
+            var model = ExportFindMatchingModel(kit, type, tags);
+            if (model != null)
+            {
+                var file = kit.Files?.FirstOrDefault(f => f.Guid == model.File.Guid);
+                if (file?.Blob != null)
+                {
+                    var fileBytes = ExportBlobToBytes(file.Blob);
+                    var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
+                    if (ext == ".glb")
+                    {
+                        var mb = ExportGlbToMeshBuilder(fileBytes, file.Name);
+                        if (mb != null) { typeMeshBuilders[typeGuid] = mb; continue; }
+                    }
+                }
+            }
+            typeMeshBuilders[typeGuid] = ExportCreateBoxMeshBuilder(type.Name);
+        }
+
+        var sceneBuilder = new SceneBuilder(design.Name ?? "design");
+
+        void BuildNodeHierarchy(string pieceGuid, NodeBuilder parent)
+        {
+            var piece = piecesDict[pieceGuid];
+            var worldPlane = piecePlanes[pieceGuid];
+
+            NodeBuilder node;
+            if (parent != null)
+            {
+                node = parent.CreateNode(piece.Name ?? piece.Guid);
+                var parentWorld = ExportPlaneToMatrix4x4(piecePlanes[parentOf[pieceGuid]]);
+                var childWorld = ExportPlaneToMatrix4x4(worldPlane);
+                System.Numerics.Matrix4x4.Invert(parentWorld, out var parentInv);
+                node.LocalMatrix = childWorld * parentInv;
+            }
+            else
+            {
+                node = new NodeBuilder(piece.Name ?? piece.Guid);
+                node.LocalMatrix = ExportPlaneToMatrix4x4(worldPlane);
+            }
+
+            var meshTypeGuid = piece.Type?.Guid;
+            if (!string.IsNullOrEmpty(meshTypeGuid) && typeMeshBuilders.TryGetValue(meshTypeGuid, out var meshBuilder))
+                sceneBuilder.AddRigidMesh(meshBuilder, node);
+            else
+                sceneBuilder.AddNode(node);
+
+            if (childrenOf.TryGetValue(pieceGuid, out var children))
+            {
+                foreach (var childGuid in children)
+                    BuildNodeHierarchy(childGuid, node);
+            }
+        }
+
+        foreach (var rootGuid in roots)
+            BuildNodeHierarchy(rootGuid, null);
+
+        return ExportSceneBuilderToFormat(sceneBuilder, format);
+    }
+
+    #region 🔧Kit Model Export Helpers
+
+    private static System.Numerics.Matrix4x4 ExportPlaneToMatrix4x4(Plane p)
+    {
+        var origin = new System.Numerics.Vector3((float)p.Origin.X, (float)p.Origin.Y, (float)p.Origin.Z);
+        var x = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)p.XAxis.X, (float)p.XAxis.Y, (float)p.XAxis.Z));
+        var yRaw = new System.Numerics.Vector3((float)p.YAxis.X, (float)p.YAxis.Y, (float)p.YAxis.Z);
+        var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
+        var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
+        return ExportApplySemioToGltfBasis(new System.Numerics.Matrix4x4(
+            x.X, x.Y, x.Z, 0,
+            y.X, y.Y, y.Z, 0,
+            z.X, z.Y, z.Z, 0,
+            origin.X, origin.Y, origin.Z, 1));
+    }
+
+    private static System.Numerics.Matrix4x4 ExportApplySemioToGltfBasis(System.Numerics.Matrix4x4 matrix)
+    {
+        var basis = new System.Numerics.Matrix4x4(
+            1, 0, 0, 0,
+            0, 0, -1, 0,
+            0, 1, 0, 0,
+            0, 0, 0, 1);
+        var inverse = new System.Numerics.Matrix4x4(
+            1, 0, 0, 0,
+            0, 0, 1, 0,
+            0, -1, 0, 0,
+            0, 0, 0, 1);
+        return System.Numerics.Matrix4x4.Multiply(System.Numerics.Matrix4x4.Multiply(inverse, matrix), basis);
+    }
+
+    private static byte[] ExportBlobToBytes(string blob)
+    {
+        var base64 = blob;
+        if (blob.StartsWith("data:"))
+        {
+            var commaIdx = blob.IndexOf(',');
+            if (commaIdx >= 0) base64 = blob.Substring(commaIdx + 1);
+        }
+        return Convert.FromBase64String(base64);
+    }
+
+    public static Model ExportFindMatchingModel(Kit kit, Type type, string[] tags)
+    {
+        if (type.Models == null || type.Models.Count == 0) return null;
+        if (tags == null || tags.Length == 0)
+        {
+            var defaultModel = type.Models.FirstOrDefault(m => m.Tags == null || m.Tags.Count == 0);
+            return defaultModel ?? type.Models[0];
+        }
+        var kitTags = kit.Tags ?? new List<Tag>();
+        var selectedTagGuids = new HashSet<string>();
+        foreach (var tagValue in tags)
+        {
+            var byGuid = kitTags.FirstOrDefault(t => t.Guid == tagValue);
+            if (byGuid != null)
+            {
+                selectedTagGuids.Add(byGuid.Guid);
+                continue;
+            }
+            foreach (var tag in kitTags.Where(t => t.Name == tagValue))
+                selectedTagGuids.Add(tag.Guid);
+        }
+        Model bestModel = null;
+        double bestScore = -1;
+        foreach (var model in type.Models)
+        {
+            var modelTagGuids = new HashSet<string>((model.Tags ?? new List<TagId>()).Select(t => t.Guid));
+            if (!selectedTagGuids.All(modelTagGuids.Contains)) continue;
+            var intersection = modelTagGuids.Intersect(selectedTagGuids).Count();
+            var union = modelTagGuids.Union(selectedTagGuids).Count();
+            var score = union > 0 ? (double)intersection / union : 0;
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestModel = model;
+            }
+        }
+        if (bestModel != null) return bestModel;
+        return type.Models[0];
+    }
+
+    private static IMeshBuilder<MaterialBuilder> ExportGlbToMeshBuilder(byte[] glbBytes, string name)
+    {
+        var srcModel = GltfModel.ReadGLB(new MemoryStream(glbBytes));
+        var meshBuilder = new MeshBuilder<VertexPositionNormal>(name);
+
+        foreach (var srcMesh in srcModel.LogicalMeshes)
+        {
+            foreach (var srcPrim in srcMesh.Primitives)
+            {
+                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
+                if (posAccessor == null) continue;
+                var positions = posAccessor.AsVector3Array();
+
+                var normAccessor = srcPrim.GetVertexAccessor("NORMAL");
+                var normals = normAccessor?.AsVector3Array();
+
+                var matBuilder = new MaterialBuilder(srcPrim.Material?.Name ?? "default")
+                    .WithMetallicRoughnessShader();
+
+                if (srcPrim.Material != null)
+                {
+                    var baseColor = srcPrim.Material.FindChannel("BaseColor");
+                    if (baseColor.HasValue)
+                        matBuilder.UseChannel(KnownChannel.BaseColor).Parameter = baseColor.Value.Color;
+                }
+
+                var prim = meshBuilder.UsePrimitive(matBuilder);
+
+                var idxAccessor = srcPrim.IndexAccessor;
+                if (idxAccessor != null)
+                {
+                    var indices = idxAccessor.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        var i0 = (int)indices[i];
+                        var i1 = (int)indices[i + 1];
+                        var i2 = (int)indices[i + 2];
+                        prim.AddTriangle(
+                            new VertexPositionNormal(positions[i0], normals != null ? normals[i0] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i1], normals != null ? normals[i1] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i2], normals != null ? normals[i2] : System.Numerics.Vector3.UnitZ));
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i + 2 < positions.Count; i += 3)
+                    {
+                        prim.AddTriangle(
+                            new VertexPositionNormal(positions[i], normals != null ? normals[i] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i + 1], normals != null ? normals[i + 1] : System.Numerics.Vector3.UnitZ),
+                            new VertexPositionNormal(positions[i + 2], normals != null ? normals[i + 2] : System.Numerics.Vector3.UnitZ));
+                    }
+                }
+            }
+        }
+
+        return meshBuilder;
+    }
+
+    private static IMeshBuilder<MaterialBuilder> ExportCreateBoxMeshBuilder(string name)
+    {
+        var meshBuilder = new MeshBuilder<VertexPositionNormal>(name);
+        var material = new MaterialBuilder("default").WithUnlitShader();
+        var prim = meshBuilder.UsePrimitive(material);
+
+        const float h = 0.5f;
+        var v = new System.Numerics.Vector3[]
+        {
+            new(-h, -h, -h), new(h, -h, -h), new(h, h, -h), new(-h, h, -h),
+            new(-h, -h, h), new(h, -h, h), new(h, h, h), new(-h, h, h)
+        };
+        var uz = System.Numerics.Vector3.UnitZ;
+        var ux = System.Numerics.Vector3.UnitX;
+        var uy = System.Numerics.Vector3.UnitY;
+        VertexPositionNormal V(System.Numerics.Vector3 pos, System.Numerics.Vector3 nrm) => new(pos, nrm);
+        prim.AddTriangle(V(v[4], uz), V(v[5], uz), V(v[6], uz));
+        prim.AddTriangle(V(v[4], uz), V(v[6], uz), V(v[7], uz));
+        prim.AddTriangle(V(v[1], -uz), V(v[0], -uz), V(v[3], -uz));
+        prim.AddTriangle(V(v[1], -uz), V(v[3], -uz), V(v[2], -uz));
+        prim.AddTriangle(V(v[3], uy), V(v[7], uy), V(v[6], uy));
+        prim.AddTriangle(V(v[3], uy), V(v[6], uy), V(v[2], uy));
+        prim.AddTriangle(V(v[0], -uy), V(v[1], -uy), V(v[5], -uy));
+        prim.AddTriangle(V(v[0], -uy), V(v[5], -uy), V(v[4], -uy));
+        prim.AddTriangle(V(v[1], ux), V(v[2], ux), V(v[6], ux));
+        prim.AddTriangle(V(v[1], ux), V(v[6], ux), V(v[5], ux));
+        prim.AddTriangle(V(v[0], -ux), V(v[4], -ux), V(v[7], -ux));
+        prim.AddTriangle(V(v[0], -ux), V(v[7], -ux), V(v[3], -ux));
+
+        return meshBuilder;
+    }
+
+    private static byte[] ExportSceneBuilderToFormat(SceneBuilder sceneBuilder, string format)
+    {
+        var modelRoot = sceneBuilder.ToGltf2();
+        modelRoot.Asset.Generator = "semio";
+
+        switch (format)
+        {
+            case ".glb":
+                {
+                    using var ms = new MemoryStream();
+                    modelRoot.WriteGLB(ms);
+                    return ms.ToArray();
+                }
+            case ".gltf":
+                {
+                    var tmpDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid());
+                    System.IO.Directory.CreateDirectory(tmpDir);
+                    try
+                    {
+                        var gltfPath = System.IO.Path.Combine(tmpDir, "model.gltf");
+                        modelRoot.SaveGLTF(gltfPath);
+                        var gltfJson = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(gltfPath));
+                        foreach (var buffer in gltfJson["buffers"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
+                        {
+                            var uri = buffer["uri"]?.Value<string>();
+                            if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
+                            var path = System.IO.Path.Combine(tmpDir, uri);
+                            if (!System.IO.File.Exists(path)) continue;
+                            var bytes = System.IO.File.ReadAllBytes(path);
+                            buffer["uri"] = "data:application/octet-stream;base64," + Convert.ToBase64String(bytes);
+                        }
+                        foreach (var image in gltfJson["images"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
+                        {
+                            var uri = image["uri"]?.Value<string>();
+                            if (string.IsNullOrWhiteSpace(uri) || uri.StartsWith("data:")) continue;
+                            var path = System.IO.Path.Combine(tmpDir, uri);
+                            if (!System.IO.File.Exists(path)) continue;
+                            var mime = image["mimeType"]?.Value<string>() ?? "application/octet-stream";
+                            var bytes = System.IO.File.ReadAllBytes(path);
+                            image["uri"] = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+                        }
+                        return Encoding.UTF8.GetBytes(gltfJson.ToString(Formatting.None));
+                    }
+                    finally
+                    {
+                        System.IO.Directory.Delete(tmpDir, true);
+                    }
+                }
+            case ".obj":
+                return ExportModelRootToObj(modelRoot);
+            case ".stl":
+                return ExportModelRootToStl(modelRoot);
+            default:
+                throw new ArgumentException($"Unsupported export format: {format}");
+        }
+    }
+
+    #region ❄️Geometric Insights
+    // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+
+    /// <summary>🔷Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).</summary>
+    public class GeometricInsights
+    {
+        public Point? BoundingBoxMin { get; set; }
+        public Point? BoundingBoxMax { get; set; }
+        public double DimensionX { get; set; }
+        public double DimensionY { get; set; }
+        public double DimensionZ { get; set; }
+        public double CharacteristicLength { get; set; }
+        public double FootprintArea { get; set; }
+        public double TotalSurfaceArea { get; set; }
+        public double EnclosedVolume { get; set; }
+        public double SurfaceToVolumeRatio { get; set; }
+        public double AspectRatioXy { get; set; }
+        public double AspectRatioXz { get; set; }
+        public double AspectRatioYz { get; set; }
+        public bool IsWatertight { get; set; }
+        public Point? Centroid { get; set; }
+        public double Slenderness { get; set; }
+        public int VertexCount { get; set; }
+        public int FaceCount { get; set; }
+        public int EulerCharacteristic { get; set; }
+    }
+
+    public static GeometricInsights GetGeometricInsightsForModel(object model)
+    {
+        GltfModel root;
+        if (model is string path)
+        {
+            if (!System.IO.File.Exists(path))
+                throw new FileNotFoundException("Model file not found", path);
+            var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+            if (ext != ".glb" && ext != ".gltf")
+                throw new ArgumentException("Model MUST be .glb or .gltf", nameof(model));
+            root = GltfModel.Load(path);
+        }
+        else if (model is byte[] bytes)
+        {
+            using var ms = new MemoryStream(bytes);
+            if (bytes.Length >= 4 && Encoding.ASCII.GetString(bytes, 0, 4) == "glTF")
+                root = GltfModel.ReadGLB(ms);
+            else
+            {
+                var tmp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid().ToString("N") + ".gltf");
+                try
+                {
+                    System.IO.File.WriteAllBytes(tmp, bytes);
+                    root = GltfModel.Load(tmp);
+                }
+                finally { try { System.IO.File.Delete(tmp); } catch { } }
+            }
+        }
+        else
+            throw new ArgumentException("Model must be string path or byte[]", nameof(model));
+
+        var out_ = new GeometricInsights();
+        double sxMin = double.MaxValue, syMin = double.MaxValue, szMin = double.MaxValue;
+        double sxMax = double.MinValue, syMax = double.MinValue, szMax = double.MinValue;
+        double sumSx = 0, sumSy = 0, sumSz = 0;
+        double totalArea = 0, totalVolume = 0;
+        int vertexCount = 0, faceCount = 0;
+
+        foreach (var mesh in root.LogicalMeshes)
+        {
+            foreach (var prim in mesh.Primitives)
+            {
+                var posAcc = prim.GetVertexAccessor("POSITION");
+                if (posAcc == null) continue;
+                var positions = posAcc.AsVector3Array();
+                var idxAcc = prim.IndexAccessor;
+                int n = positions.Count;
+                for (int i = 0; i < n; i++)
+                {
+                    var p = positions[i];
+                    double xg = p.X, yg = p.Y, _zg = p.Z;
+                    double sx = xg, sy = -xg, sz = yg;
+                    if (sx < sxMin) sxMin = sx; if (sx > sxMax) sxMax = sx;
+                    if (sy < syMin) syMin = sy; if (sy > syMax) syMax = sy;
+                    if (sz < szMin) szMin = sz; if (sz > szMax) szMax = sz;
+                    sumSx += sx; sumSy += sy; sumSz += sz;
+                }
+                vertexCount += n;
+                if (idxAcc != null)
+                {
+                    var indices = idxAcc.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        int i0 = (int)indices[i], i1 = (int)indices[i + 1], i2 = (int)indices[i + 2];
+                        var a = positions[i0]; var b = positions[i1]; var c = positions[i2];
+                        var ab = b - a; var ac = c - a;
+                        var cross = Vector3.Cross(ab, ac);
+                        totalArea += 0.5 * cross.Length();
+                        totalVolume += (1.0 / 6.0) * Vector3.Dot(a, Vector3.Cross(b, c));
+                        faceCount++;
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i + 2 < n; i += 3)
+                    {
+                        var a = positions[i]; var b = positions[i + 1]; var c = positions[i + 2];
+                        var ab = b - a; var ac = c - a;
+                        totalArea += 0.5 * Vector3.Cross(ab, ac).Length();
+                        totalVolume += (1.0 / 6.0) * Vector3.Dot(a, Vector3.Cross(b, c));
+                        faceCount++;
+                    }
+                }
+            }
+        }
+
+        if (vertexCount == 0) return out_;
+
+        out_.BoundingBoxMin = new Point { X = (float)sxMin, Y = (float)syMin, Z = (float)szMin };
+        out_.BoundingBoxMax = new Point { X = (float)sxMax, Y = (float)syMax, Z = (float)szMax };
+        out_.DimensionX = sxMax - sxMin;
+        out_.DimensionY = syMax - syMin;
+        out_.DimensionZ = szMax - szMin;
+        out_.CharacteristicLength = Math.Pow(out_.DimensionX * out_.DimensionY * out_.DimensionZ, 1.0 / 3.0);
+        out_.FootprintArea = out_.DimensionX * out_.DimensionZ;
+        out_.TotalSurfaceArea = totalArea;
+        out_.VertexCount = vertexCount;
+        out_.FaceCount = faceCount;
+        double nV = vertexCount;
+        out_.Centroid = new Point { X = (float)(sumSx / nV), Y = (float)(sumSy / nV), Z = (float)(sumSz / nV) };
+        totalVolume = Math.Abs(totalVolume);
+        out_.EnclosedVolume = totalVolume;
+        if (totalVolume > 1e-20 && totalArea > 0)
+            out_.SurfaceToVolumeRatio = totalArea / totalVolume;
+        if (out_.DimensionY > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXy = out_.DimensionX / out_.DimensionY;
+        if (out_.DimensionZ > 1e-10 && out_.DimensionX > 1e-10) out_.AspectRatioXz = out_.DimensionX / out_.DimensionZ;
+        if (out_.DimensionZ > 1e-10 && out_.DimensionY > 1e-10) out_.AspectRatioYz = out_.DimensionY / out_.DimensionZ;
+        double maxExt = Math.Max(out_.DimensionX, Math.Max(out_.DimensionY, out_.DimensionZ));
+        if (maxExt > 1e-10 && totalArea > 0)
+            out_.Slenderness = maxExt / Math.Pow(totalArea * maxExt, 1.0 / 3.0);
+        out_.EulerCharacteristic = vertexCount - (3 * faceCount) / 2 + faceCount;
+        return out_;
+    }
+
+    #endregion ❄️Geometric Insights
+
+    private static byte[] ExportModelRootToObj(GltfModel model)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("# Generated by semio");
+        int vertexOffset = 1;
+        int normalOffset = 1;
+
+        foreach (var node in model.DefaultScene.VisualChildren)
+            ExportNodeToObj(node, System.Numerics.Matrix4x4.Identity, sb, ref vertexOffset, ref normalOffset);
+
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    private static void ExportNodeToObj(GltfNode node, System.Numerics.Matrix4x4 parentWorld,
+        StringBuilder sb, ref int vertexOffset, ref int normalOffset)
+    {
+        var worldMatrix = node.LocalMatrix * parentWorld;
+
+        if (node.Mesh != null)
+        {
+            sb.AppendLine($"g {node.Name ?? "mesh"}");
+            foreach (var srcPrim in node.Mesh.Primitives)
+            {
+                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
+                if (posAccessor == null) continue;
+                var positions = posAccessor.AsVector3Array();
+                var normAccessor = srcPrim.GetVertexAccessor("NORMAL");
+                var normals = normAccessor?.AsVector3Array();
+
+                int startVert = vertexOffset;
+                int startNorm = normalOffset;
+
+                foreach (var pos in positions)
+                {
+                    var wp = System.Numerics.Vector3.Transform(pos, worldMatrix);
+                    sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "v {0:G9} {1:G9} {2:G9}", wp.X, wp.Y, wp.Z));
+                    vertexOffset++;
+                }
+
+                if (normals != null)
+                {
+                    foreach (var norm in normals)
+                    {
+                        var wn = System.Numerics.Vector3.Normalize(
+                            System.Numerics.Vector3.TransformNormal(norm, worldMatrix));
+                        sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                            "vn {0:G9} {1:G9} {2:G9}", wn.X, wn.Y, wn.Z));
+                        normalOffset++;
+                    }
+                }
+
+                var idxAccessor = srcPrim.IndexAccessor;
+                if (idxAccessor != null)
+                {
+                    var indices = idxAccessor.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        var i0 = (int)indices[i] + startVert;
+                        var i1 = (int)indices[i + 1] + startVert;
+                        var i2 = (int)indices[i + 2] + startVert;
+                        if (normals != null)
+                        {
+                            var n0 = (int)indices[i] + startNorm;
+                            var n1 = (int)indices[i + 1] + startNorm;
+                            var n2 = (int)indices[i + 2] + startNorm;
+                            sb.AppendLine($"f {i0}//{n0} {i1}//{n1} {i2}//{n2}");
+                        }
+                        else
+                        {
+                            sb.AppendLine($"f {i0} {i1} {i2}");
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach (var child in node.VisualChildren)
+            ExportNodeToObj(child, worldMatrix, sb, ref vertexOffset, ref normalOffset);
+    }
+
+    private static byte[] ExportModelRootToStl(GltfModel model)
+    {
+        var triangles = new List<(System.Numerics.Vector3 normal, System.Numerics.Vector3 v0, System.Numerics.Vector3 v1, System.Numerics.Vector3 v2)>();
+
+        foreach (var node in model.DefaultScene.VisualChildren)
+            ExportNodeToStlTriangles(node, System.Numerics.Matrix4x4.Identity, triangles);
+
+        using var ms = new MemoryStream();
+        using var writer = new BinaryWriter(ms);
+
+        var header = new byte[80];
+        Encoding.ASCII.GetBytes("semio STL", 0, 9, header, 0);
+        writer.Write(header);
+        writer.Write((uint)triangles.Count);
+
+        foreach (var (normal, v0, v1, v2) in triangles)
+        {
+            writer.Write(normal.X); writer.Write(normal.Y); writer.Write(normal.Z);
+            writer.Write(v0.X); writer.Write(v0.Y); writer.Write(v0.Z);
+            writer.Write(v1.X); writer.Write(v1.Y); writer.Write(v1.Z);
+            writer.Write(v2.X); writer.Write(v2.Y); writer.Write(v2.Z);
+            writer.Write((ushort)0);
+        }
+
+        return ms.ToArray();
+    }
+
+    private static void ExportNodeToStlTriangles(GltfNode node, System.Numerics.Matrix4x4 parentWorld,
+        List<(System.Numerics.Vector3, System.Numerics.Vector3, System.Numerics.Vector3, System.Numerics.Vector3)> triangles)
+    {
+        var worldMatrix = node.LocalMatrix * parentWorld;
+
+        if (node.Mesh != null)
+        {
+            foreach (var srcPrim in node.Mesh.Primitives)
+            {
+                var posAccessor = srcPrim.GetVertexAccessor("POSITION");
+                if (posAccessor == null) continue;
+                var positions = posAccessor.AsVector3Array();
+
+                var idxAccessor = srcPrim.IndexAccessor;
+                if (idxAccessor != null)
+                {
+                    var indices = idxAccessor.AsIndicesArray();
+                    for (int i = 0; i + 2 < indices.Count; i += 3)
+                    {
+                        var p0 = System.Numerics.Vector3.Transform(positions[(int)indices[i]], worldMatrix);
+                        var p1 = System.Numerics.Vector3.Transform(positions[(int)indices[i + 1]], worldMatrix);
+                        var p2 = System.Numerics.Vector3.Transform(positions[(int)indices[i + 2]], worldMatrix);
+                        var normal = System.Numerics.Vector3.Normalize(
+                            System.Numerics.Vector3.Cross(p1 - p0, p2 - p0));
+                        if (float.IsNaN(normal.X)) normal = System.Numerics.Vector3.UnitZ;
+                        triangles.Add((normal, p0, p1, p2));
+                    }
+                }
+            }
+        }
+
+        foreach (var child in node.VisualChildren)
+            ExportNodeToStlTriangles(child, worldMatrix, triangles);
+    }
+
+    #endregion 🔧Kit Model Export Helpers
+}
+
+#endregion 🔩Kit Model Export
+
+
+
+
+
+
+#region 🎪ZipRoundtrip
+// Callers MUST use these methods to import and export kits as ZIP archives.
+
+public class KitImportResult
+{
+    public Kit Kit { get; set; } = new();
+    public Dictionary<string, byte[]> Files { get; set; } = new();
+}
+
+public static class ZipRoundtrip
+{
+    private static string BuildFolderPath(Kit kit, string folderGuid)
+    {
+        if (kit.Folders == null) return "";
+        foreach (var f in kit.Folders)
+        {
+            if (f.Guid == folderGuid)
+            {
+                if (f.Parent != null)
+                {
+                    var parentPath = BuildFolderPath(kit, f.Parent?.Guid);
+                    if (!string.IsNullOrEmpty(parentPath))
+                        return $"{parentPath}/{f.Name}";
+                }
+                return f.Name;
+            }
+        }
+        return "";
+    }
+
+    private static string BuildFilePath(Kit kit, File file)
+    {
+        if (file.Folder != null && !string.IsNullOrEmpty(file.Folder.Guid))
+        {
+            var folderPath = BuildFolderPath(kit, file.Folder.Guid);
+            if (!string.IsNullOrEmpty(folderPath))
+                return $"{folderPath}/{file.Name}";
+        }
+        return file.Name;
+    }
+
+    public static KitImportResult ImportKit(string zipPath)
+    {
+        var result = new KitImportResult();
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            ZipFile.ExtractToDirectory(zipPath, tempDir);
+
+            var kitDbPath = Path.Combine(tempDir, ".semio", "kit.db");
+            var kitJsonPath = Path.Combine(tempDir, "kit.json");
+
+            if (System.IO.File.Exists(kitDbPath))
+            {
+                result.Kit = KitSqlite.LoadKit(tempDir);
+            }
+            else if (System.IO.File.Exists(kitJsonPath))
+            {
+                var kitJson = System.IO.File.ReadAllText(kitJsonPath);
+                result.Kit = Utility.Deserialize<Kit>(kitJson)!;
+            }
+            else
+            {
+                throw new FileNotFoundException("No kit data found in zip (expected .semio/kit.db or kit.json)");
+            }
+
+            foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
+            {
+                var relativePath = file.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
+                if (relativePath != "kit.json" && !relativePath.StartsWith(".semio/"))
+                    result.Files[relativePath] = System.IO.File.ReadAllBytes(file);
+            }
+
+            if (result.Kit.Files != null)
+            {
+                foreach (var kitFile in result.Kit.Files)
+                {
+                    var filePath = BuildFilePath(result.Kit, kitFile);
+                    if (result.Files.TryGetValue(filePath, out var bytes))
+                    {
+                        kitFile.Blob = $"data:application/octet-stream;base64,{Convert.ToBase64String(bytes)}";
+                    }
+                }
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+
+        return result;
+    }
+
+    public static void ExportKit(Kit kit, string zipPath)
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+
+            var kitForZip = kitJson_StripBlobs(kit);
+            var kitJsonStr = Utility.Serialize(kitForZip);
+            System.IO.File.WriteAllText(Path.Combine(tempDir, "kit.json"), kitJsonStr);
+
+            if (kit.Files != null)
+            {
+                foreach (var file in kit.Files)
+                {
+                    if (!string.IsNullOrEmpty(file.Blob))
+                    {
+                        var filePath = BuildFilePath(kit, file);
+                        var fullPath = Path.Combine(tempDir, filePath);
+                        var dir = Path.GetDirectoryName(fullPath);
+                        if (!string.IsNullOrEmpty(dir))
+                            Directory.CreateDirectory(dir);
+                        var blobData = file.Blob.StartsWith("data:") && file.Blob.Contains(",")
+                            ? file.Blob.Substring(file.Blob.IndexOf(',') + 1)
+                            : file.Blob;
+                        System.IO.File.WriteAllBytes(fullPath, Convert.FromBase64String(blobData));
+                    }
+                }
+            }
+
+            if (System.IO.File.Exists(zipPath))
+                System.IO.File.Delete(zipPath);
+            ZipFile.CreateFromDirectory(tempDir, zipPath);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+    }
+
+    private static Kit kitJson_StripBlobs(Kit kit)
+    {
+        var json = Utility.Serialize(kit);
+        var clone = Utility.Deserialize<Kit>(json)!;
+        if (clone.Files != null)
+        {
+            foreach (var file in clone.Files)
+            {
+                file.Blob = null;
+            }
+        }
+        return clone;
+    }
+
+    private static Kit LoadKitFromSqlite(string dbPath)
+    {
+        using var connection = new SqliteConnection($"Data Source={dbPath}");
+        connection.Open();
+
+        var kit = new Kit();
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = "SELECT guid, name, version, description, icon, image, preview, remote, homepage, license FROM kit LIMIT 1";
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                kit.Guid = reader.GetString(0);
+                kit.Name = reader.GetString(1);
+                kit.Version = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                kit.Description = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                kit.Icon = reader.IsDBNull(4) ? "" : reader.GetString(4);
+                kit.Image = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                kit.Preview = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                kit.Remote = reader.IsDBNull(7) ? "" : reader.GetString(7);
+                kit.Homepage = reader.IsDBNull(8) ? "" : reader.GetString(8);
+                kit.License = reader.IsDBNull(9) ? "" : reader.GetString(9);
+            }
+        }
+
+        kit.Types = LoadTypes(connection, kit.Guid);
+        kit.Designs = LoadDesigns(connection, kit.Guid);
+
+        return kit;
+    }
+
+    private static List<Type> LoadTypes(SqliteConnection connection, string kitGuid)
+    {
+        var types = new List<Type>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var t = new Type
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Parent = reader.IsDBNull(2) ? null : new TypeId { Guid = reader.GetString(2) },
+                IsAbstract = !reader.IsDBNull(3) && reader.GetBoolean(3),
+                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                Stock = reader.IsDBNull(5) ? 2147483647 : reader.GetInt32(5),
+                Virtual = !reader.IsDBNull(6) && reader.GetBoolean(6),
+                Unit = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
+            };
+            types.Add(t);
+        }
+        return types;
+    }
+
+    private static List<Design> LoadDesigns(SqliteConnection connection, string kitGuid)
+    {
+        var designs = new List<Design>();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image FROM design WHERE kit_guid = @kitGuid";
+        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var d = new Design
+            {
+                Guid = reader.GetString(0),
+                Name = reader.GetString(1),
+                Parent = reader.IsDBNull(2) ? null : new DesignId { Guid = reader.GetString(2) },
+                Unit = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                IsAbstract = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                CanScale = reader.IsDBNull(6) || reader.GetBoolean(6),
+                CanMirror = reader.IsDBNull(7) || reader.GetBoolean(7),
+                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
+            };
+            designs.Add(d);
+        }
+        return designs;
+    }
+
+    private static List<T> TopologicalSort<T>(IEnumerable<T> items, Func<T, string> getGuid, Func<T, string?> getParentGuid) where T : class
+    {
+        var itemsByGuid = items.ToDictionary(getGuid);
+        var visited = new HashSet<string>();
+        var result = new List<T>();
+
+        void Visit(T item)
+        {
+            var guid = getGuid(item);
+            if (visited.Contains(guid)) return;
+            visited.Add(guid);
+
+            var parentGuid = getParentGuid(item);
+            if (parentGuid != null && itemsByGuid.TryGetValue(parentGuid, out var parent))
+            {
+                Visit(parent);
+            }
+            result.Add(item);
+        }
+
+        foreach (var item in items)
+        {
+            Visit(item);
+        }
+
+        return result;
+    }
+
+    private static void SaveKitToSqlite(Kit kit, string dbPath, string schemaSQL)
+    {
+        using var connection = new SqliteConnection($"Data Source={dbPath}");
+        connection.Open();
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = schemaSQL;
+            cmd.ExecuteNonQuery();
+        }
+
+        using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = @"INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
+                VALUES (@guid, @name, @version, @description, @icon, @image, @preview, @remote, @homepage, @license, datetime('now'), datetime('now'))";
+            cmd.Parameters.AddWithValue("@guid", kit.Guid);
+            cmd.Parameters.AddWithValue("@name", kit.Name);
+            cmd.Parameters.AddWithValue("@version", kit.Version);
+            cmd.Parameters.AddWithValue("@description", kit.Description);
+            cmd.Parameters.AddWithValue("@icon", kit.Icon);
+            cmd.Parameters.AddWithValue("@image", kit.Image);
+            cmd.Parameters.AddWithValue("@preview", kit.Preview);
+            cmd.Parameters.AddWithValue("@remote", kit.Remote);
+            cmd.Parameters.AddWithValue("@homepage", kit.Homepage);
+            cmd.Parameters.AddWithValue("@license", kit.License);
+            cmd.ExecuteNonQuery();
+        }
+
+        var sortedTypes = TopologicalSort(kit.Types, t => t.Guid, t => t.Parent?.Guid);
+        foreach (var t in sortedTypes)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
+                VALUES (@guid, @name, @parent, @isAbstract, @folder, @stock, @virtual, @unit, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
+            cmd.Parameters.AddWithValue("@guid", t.Guid);
+            cmd.Parameters.AddWithValue("@name", t.Name);
+            cmd.Parameters.AddWithValue("@parent", (object?)t.Parent?.Guid ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract);
+            cmd.Parameters.AddWithValue("@folder", t.Folder);
+            cmd.Parameters.AddWithValue("@stock", t.Stock);
+            cmd.Parameters.AddWithValue("@virtual", t.Virtual);
+            cmd.Parameters.AddWithValue("@unit", t.Unit);
+            cmd.Parameters.AddWithValue("@description", t.Description);
+            cmd.Parameters.AddWithValue("@icon", t.Icon);
+            cmd.Parameters.AddWithValue("@image", t.Image);
+            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
+            cmd.ExecuteNonQuery();
+        }
+
+        var sortedDesigns = TopologicalSort(kit.Designs, d => d.Guid, d => d.Parent?.Guid);
+        foreach (var d in sortedDesigns)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"INSERT INTO design (guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
+                VALUES (@guid, @name, @parent, @unit, @folder, @isAbstract, @canScale, @canMirror, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
+            cmd.Parameters.AddWithValue("@guid", d.Guid);
+            cmd.Parameters.AddWithValue("@name", d.Name);
+            cmd.Parameters.AddWithValue("@parent", (object?)d.Parent?.Guid ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@unit", d.Unit);
+            cmd.Parameters.AddWithValue("@folder", d.Folder);
+            cmd.Parameters.AddWithValue("@isAbstract", d.IsAbstract);
+            cmd.Parameters.AddWithValue("@canScale", d.CanScale);
+            cmd.Parameters.AddWithValue("@canMirror", d.CanMirror);
+            cmd.Parameters.AddWithValue("@description", d.Description);
+            cmd.Parameters.AddWithValue("@icon", d.Icon);
+            cmd.Parameters.AddWithValue("@image", d.Image);
+            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
+            cmd.ExecuteNonQuery();
+        }
+    }
+}
+
+#endregion 🎪ZipRoundtrip
+
+
+
+
+
+#region 🔓KitSqlite
 // Callers MUST use KitSqlite for direct CRUD operations on local static SQLite kit databases.
 
 /// <summary>🗄️Direct CRUD operations on local SQLite kit databases (.semio/kit.db).</summary>
@@ -13295,349 +13878,10 @@ public static class KitSqlite
 
 #endregion 🔓KitSqlite
 
-#region 🎪ZipRoundtrip
-// Callers MUST use these methods to import and export kits as ZIP archives.
 
-public class KitImportResult
-{
-    public Kit Kit { get; set; } = new();
-    public Dictionary<string, byte[]> Files { get; set; } = new();
-}
 
-public static class ZipRoundtrip
-{
-    private static string BuildFolderPath(Kit kit, string folderGuid)
-    {
-        if (kit.Folders == null) return "";
-        foreach (var f in kit.Folders)
-        {
-            if (f.Guid == folderGuid)
-            {
-                if (f.Parent != null)
-                {
-                    var parentPath = BuildFolderPath(kit, f.Parent?.Guid);
-                    if (!string.IsNullOrEmpty(parentPath))
-                        return $"{parentPath}/{f.Name}";
-                }
-                return f.Name;
-            }
-        }
-        return "";
-    }
 
-    private static string BuildFilePath(Kit kit, File file)
-    {
-        if (file.Folder != null && !string.IsNullOrEmpty(file.Folder.Guid))
-        {
-            var folderPath = BuildFolderPath(kit, file.Folder.Guid);
-            if (!string.IsNullOrEmpty(folderPath))
-                return $"{folderPath}/{file.Name}";
-        }
-        return file.Name;
-    }
 
-    public static KitImportResult ImportKit(string zipPath)
-    {
-        var result = new KitImportResult();
-        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
-        Directory.CreateDirectory(tempDir);
-
-        try
-        {
-            ZipFile.ExtractToDirectory(zipPath, tempDir);
-
-            var kitDbPath = Path.Combine(tempDir, ".semio", "kit.db");
-            var kitJsonPath = Path.Combine(tempDir, "kit.json");
-
-            if (System.IO.File.Exists(kitDbPath))
-            {
-                result.Kit = KitSqlite.LoadKit(tempDir);
-            }
-            else if (System.IO.File.Exists(kitJsonPath))
-            {
-                var kitJson = System.IO.File.ReadAllText(kitJsonPath);
-                result.Kit = Utility.Deserialize<Kit>(kitJson)!;
-            }
-            else
-            {
-                throw new FileNotFoundException("No kit data found in zip (expected .semio/kit.db or kit.json)");
-            }
-
-            foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
-            {
-                var relativePath = file.Substring(tempDir.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace("\\", "/");
-                if (relativePath != "kit.json" && !relativePath.StartsWith(".semio/"))
-                    result.Files[relativePath] = System.IO.File.ReadAllBytes(file);
-            }
-
-            if (result.Kit.Files != null)
-            {
-                foreach (var kitFile in result.Kit.Files)
-                {
-                    var filePath = BuildFilePath(result.Kit, kitFile);
-                    if (result.Files.TryGetValue(filePath, out var bytes))
-                    {
-                        kitFile.Blob = $"data:application/octet-stream;base64,{Convert.ToBase64String(bytes)}";
-                    }
-                }
-            }
-        }
-        finally
-        {
-            if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, true);
-        }
-
-        return result;
-    }
-
-    public static void ExportKit(Kit kit, string zipPath)
-    {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"semio-kit-{System.Guid.NewGuid()}");
-        Directory.CreateDirectory(tempDir);
-
-        try
-        {
-
-            var kitForZip = kitJson_StripBlobs(kit);
-            var kitJsonStr = Utility.Serialize(kitForZip);
-            System.IO.File.WriteAllText(Path.Combine(tempDir, "kit.json"), kitJsonStr);
-
-            if (kit.Files != null)
-            {
-                foreach (var file in kit.Files)
-                {
-                    if (!string.IsNullOrEmpty(file.Blob))
-                    {
-                        var filePath = BuildFilePath(kit, file);
-                        var fullPath = Path.Combine(tempDir, filePath);
-                        var dir = Path.GetDirectoryName(fullPath);
-                        if (!string.IsNullOrEmpty(dir))
-                            Directory.CreateDirectory(dir);
-                        var blobData = file.Blob.StartsWith("data:") && file.Blob.Contains(",")
-                            ? file.Blob.Substring(file.Blob.IndexOf(',') + 1)
-                            : file.Blob;
-                        System.IO.File.WriteAllBytes(fullPath, Convert.FromBase64String(blobData));
-                    }
-                }
-            }
-
-            if (System.IO.File.Exists(zipPath))
-                System.IO.File.Delete(zipPath);
-            ZipFile.CreateFromDirectory(tempDir, zipPath);
-        }
-        finally
-        {
-            if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, true);
-        }
-    }
-
-    private static Kit kitJson_StripBlobs(Kit kit)
-    {
-        var json = Utility.Serialize(kit);
-        var clone = Utility.Deserialize<Kit>(json)!;
-        if (clone.Files != null)
-        {
-            foreach (var file in clone.Files)
-            {
-                file.Blob = null;
-            }
-        }
-        return clone;
-    }
-
-    private static Kit LoadKitFromSqlite(string dbPath)
-    {
-        using var connection = new SqliteConnection($"Data Source={dbPath}");
-        connection.Open();
-
-        var kit = new Kit();
-
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = "SELECT guid, name, version, description, icon, image, preview, remote, homepage, license FROM kit LIMIT 1";
-            using var reader = cmd.ExecuteReader();
-            if (reader.Read())
-            {
-                kit.Guid = reader.GetString(0);
-                kit.Name = reader.GetString(1);
-                kit.Version = reader.IsDBNull(2) ? "" : reader.GetString(2);
-                kit.Description = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                kit.Icon = reader.IsDBNull(4) ? "" : reader.GetString(4);
-                kit.Image = reader.IsDBNull(5) ? "" : reader.GetString(5);
-                kit.Preview = reader.IsDBNull(6) ? "" : reader.GetString(6);
-                kit.Remote = reader.IsDBNull(7) ? "" : reader.GetString(7);
-                kit.Homepage = reader.IsDBNull(8) ? "" : reader.GetString(8);
-                kit.License = reader.IsDBNull(9) ? "" : reader.GetString(9);
-            }
-        }
-
-        kit.Types = LoadTypes(connection, kit.Guid);
-        kit.Designs = LoadDesigns(connection, kit.Guid);
-
-        return kit;
-    }
-
-    private static List<Type> LoadTypes(SqliteConnection connection, string kitGuid)
-    {
-        var types = new List<Type>();
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = @kitGuid";
-        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
-
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
-        {
-            var t = new Type
-            {
-                Guid = reader.GetString(0),
-                Name = reader.GetString(1),
-                Parent = reader.IsDBNull(2) ? null : new TypeId { Guid = reader.GetString(2) },
-                IsAbstract = !reader.IsDBNull(3) && reader.GetBoolean(3),
-                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                Stock = reader.IsDBNull(5) ? 2147483647 : reader.GetInt32(5),
-                Virtual = !reader.IsDBNull(6) && reader.GetBoolean(6),
-                Unit = reader.IsDBNull(7) ? "" : reader.GetString(7),
-                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
-                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
-                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
-            };
-            types.Add(t);
-        }
-        return types;
-    }
-
-    private static List<Design> LoadDesigns(SqliteConnection connection, string kitGuid)
-    {
-        var designs = new List<Design>();
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image FROM design WHERE kit_guid = @kitGuid";
-        cmd.Parameters.AddWithValue("@kitGuid", kitGuid);
-
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
-        {
-            var d = new Design
-            {
-                Guid = reader.GetString(0),
-                Name = reader.GetString(1),
-                Parent = reader.IsDBNull(2) ? null : new DesignId { Guid = reader.GetString(2) },
-                Unit = reader.IsDBNull(3) ? "" : reader.GetString(3),
-                Folder = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                IsAbstract = !reader.IsDBNull(5) && reader.GetBoolean(5),
-                CanScale = reader.IsDBNull(6) || reader.GetBoolean(6),
-                CanMirror = reader.IsDBNull(7) || reader.GetBoolean(7),
-                Description = reader.IsDBNull(8) ? "" : reader.GetString(8),
-                Icon = reader.IsDBNull(9) ? "" : reader.GetString(9),
-                Image = reader.IsDBNull(10) ? "" : reader.GetString(10)
-            };
-            designs.Add(d);
-        }
-        return designs;
-    }
-
-    private static List<T> TopologicalSort<T>(IEnumerable<T> items, Func<T, string> getGuid, Func<T, string?> getParentGuid) where T : class
-    {
-        var itemsByGuid = items.ToDictionary(getGuid);
-        var visited = new HashSet<string>();
-        var result = new List<T>();
-
-        void Visit(T item)
-        {
-            var guid = getGuid(item);
-            if (visited.Contains(guid)) return;
-            visited.Add(guid);
-
-            var parentGuid = getParentGuid(item);
-            if (parentGuid != null && itemsByGuid.TryGetValue(parentGuid, out var parent))
-            {
-                Visit(parent);
-            }
-            result.Add(item);
-        }
-
-        foreach (var item in items)
-        {
-            Visit(item);
-        }
-
-        return result;
-    }
-
-    private static void SaveKitToSqlite(Kit kit, string dbPath, string schemaSQL)
-    {
-        using var connection = new SqliteConnection($"Data Source={dbPath}");
-        connection.Open();
-
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = schemaSQL;
-            cmd.ExecuteNonQuery();
-        }
-
-        using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = @"INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
-                VALUES (@guid, @name, @version, @description, @icon, @image, @preview, @remote, @homepage, @license, datetime('now'), datetime('now'))";
-            cmd.Parameters.AddWithValue("@guid", kit.Guid);
-            cmd.Parameters.AddWithValue("@name", kit.Name);
-            cmd.Parameters.AddWithValue("@version", kit.Version);
-            cmd.Parameters.AddWithValue("@description", kit.Description);
-            cmd.Parameters.AddWithValue("@icon", kit.Icon);
-            cmd.Parameters.AddWithValue("@image", kit.Image);
-            cmd.Parameters.AddWithValue("@preview", kit.Preview);
-            cmd.Parameters.AddWithValue("@remote", kit.Remote);
-            cmd.Parameters.AddWithValue("@homepage", kit.Homepage);
-            cmd.Parameters.AddWithValue("@license", kit.License);
-            cmd.ExecuteNonQuery();
-        }
-
-        var sortedTypes = TopologicalSort(kit.Types, t => t.Guid, t => t.Parent?.Guid);
-        foreach (var t in sortedTypes)
-        {
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = @"INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
-                VALUES (@guid, @name, @parent, @isAbstract, @folder, @stock, @virtual, @unit, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
-            cmd.Parameters.AddWithValue("@guid", t.Guid);
-            cmd.Parameters.AddWithValue("@name", t.Name);
-            cmd.Parameters.AddWithValue("@parent", (object?)t.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@isAbstract", t.IsAbstract);
-            cmd.Parameters.AddWithValue("@folder", t.Folder);
-            cmd.Parameters.AddWithValue("@stock", t.Stock);
-            cmd.Parameters.AddWithValue("@virtual", t.Virtual);
-            cmd.Parameters.AddWithValue("@unit", t.Unit);
-            cmd.Parameters.AddWithValue("@description", t.Description);
-            cmd.Parameters.AddWithValue("@icon", t.Icon);
-            cmd.Parameters.AddWithValue("@image", t.Image);
-            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
-            cmd.ExecuteNonQuery();
-        }
-
-        var sortedDesigns = TopologicalSort(kit.Designs, d => d.Guid, d => d.Parent?.Guid);
-        foreach (var d in sortedDesigns)
-        {
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = @"INSERT INTO design (guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
-                VALUES (@guid, @name, @parent, @unit, @folder, @isAbstract, @canScale, @canMirror, @description, @icon, @image, datetime('now'), datetime('now'), @kitGuid)";
-            cmd.Parameters.AddWithValue("@guid", d.Guid);
-            cmd.Parameters.AddWithValue("@name", d.Name);
-            cmd.Parameters.AddWithValue("@parent", (object?)d.Parent?.Guid ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@unit", d.Unit);
-            cmd.Parameters.AddWithValue("@folder", d.Folder);
-            cmd.Parameters.AddWithValue("@isAbstract", d.IsAbstract);
-            cmd.Parameters.AddWithValue("@canScale", d.CanScale);
-            cmd.Parameters.AddWithValue("@canMirror", d.CanMirror);
-            cmd.Parameters.AddWithValue("@description", d.Description);
-            cmd.Parameters.AddWithValue("@icon", d.Icon);
-            cmd.Parameters.AddWithValue("@image", d.Image);
-            cmd.Parameters.AddWithValue("@kitGuid", kit.Guid);
-            cmd.ExecuteNonQuery();
-        }
-    }
-}
-
-#endregion 🎪ZipRoundtrip
 
 #region 📷FileKit
 // Callers MUST use FileKit for JSON file kit import, export, and edit operations.
@@ -13664,6 +13908,11 @@ public static class FileKit
 }
 
 #endregion 📷FileKit
+
+
+
+
+
 
 #region 🏰FolderKit
 // Callers MUST use FolderKit for local folder kit import, export, and edit operations.
@@ -13762,6 +14011,11 @@ public static class FolderKit
 
 #endregion 🏰FolderKit
 
+
+
+
+
+
 #region 📐ArchiveKit
 // Callers MUST use ArchiveKit for ZIP archive import, export, and edit operations.
 
@@ -13781,6 +14035,11 @@ public static class ArchiveKit
 }
 
 #endregion 📐ArchiveKit
+
+
+
+
+
 
 #region 🎆RemoteKit
 // Callers MUST use RemoteKit for HTTP-based JSON and ZIP kit import and in-memory edits.
@@ -13822,6 +14081,11 @@ public static class RemoteKit
 
 #endregion 🎆RemoteKit
 
+
+
+
+
+
 #region 🔤TemporaryKit
 // Callers MUST use TemporaryKit for in-memory kit edits without persistence.
 
@@ -13836,6 +14100,11 @@ public static class TemporaryKit
 
 #endregion 🔤TemporaryKit
 
+
+
+
+
+
 #region 📦KitImporter
 // Callers MUST use ImportFromZip for high-level kit import.
 
@@ -13849,6 +14118,11 @@ public static class KitImporter
 
 #endregion 📦KitImporter
 
+
+
+
+
+
 #region 🪁KitExporter
 // Callers MUST use ExportToZip for high-level kit export.
 
@@ -13861,6 +14135,11 @@ public static class KitExporter
 }
 
 #endregion 🪁KitExporter
+
+
+
+
+
 
 #region ❄️SemioDiff
 // Callers MUST use these methods for diff computation and application on kits.
@@ -15004,6 +15283,320 @@ public static class SemioDiff
 
         return inverse;
     }
+
+    public static KitDiffValidationResult ValidateKitDiff(Kit kit, KitDiff diff, bool heal = false)
+    {
+        var ctx = new KitDiffValidationContext { Heal = heal };
+        var json = KitDiffValidationJson;
+        var kitObj = JObject.Parse(JsonConvert.SerializeObject(kit, json));
+        var diffObj = JObject.Parse(JsonConvert.SerializeObject(diff, json));
+        JObject? outDiff = heal ? (JObject)diffObj.DeepClone() : null;
+        var refs = RefSets.FromKit(kitObj);
+        RunTopLevelGuidCollection(ctx, kitObj, diffObj, outDiff, heal, "types", "type", "types", null, refs);
+        RunTopLevelGuidCollection(ctx, kitObj, diffObj, outDiff, heal, "designs", "design", "designs",
+            (c, km, item, dm, p, r) => ValidateDesignDiffNested(c, km, item, dm, p, r), refs);
+        RunTopLevelGuidCollection(ctx, kitObj, diffObj, outDiff, heal, "tags", "tag", "tags", null, refs);
+        RunTopLevelGuidCollection(ctx, kitObj, diffObj, outDiff, heal, "concepts", "concept", "concepts", null, refs);
+        RunTopLevelGuidCollection(ctx, kitObj, diffObj, outDiff, heal, "ports", "port", "ports", null, refs);
+        RunTopLevelGuidCollection(ctx, kitObj, diffObj, outDiff, heal, "qualities", "quality", "qualities", null, refs);
+        RunTopLevelGuidCollection(ctx, kitObj, diffObj, outDiff, heal, "files", "file", "files", null, refs);
+        RunTopLevelGuidCollection(ctx, kitObj, diffObj, outDiff, heal, "folders", "folder", "folders", null, refs);
+        RunTopLevelGuidCollection(ctx, kitObj, diffObj, outDiff, heal, "authors", "author", "authors", null, refs);
+        if (diffObj["attributes"] is JObject attrPart)
+        {
+            var baseAttrs = kitObj["attributes"] as JArray;
+            _ = ValidateGuidCollectionDiff(ctx, "kit.attributes", "attribute", baseAttrs, attrPart, null);
+        }
+        var ok = ctx.Errors.Count == 0;
+        KitDiff? diffOut = null;
+        if (heal && outDiff != null)
+        {
+            if (outDiff.Properties().Any())
+                diffOut = JsonConvert.DeserializeObject<KitDiff>(outDiff.ToString(Formatting.None), json);
+            else
+                diffOut = new KitDiff();
+        }
+        return new KitDiffValidationResult
+        {
+            Ok = ok,
+            Errors = ctx.Errors,
+            Warnings = ctx.Warnings,
+            Diff = diffOut
+        };
+    }
+
+    private static readonly JsonSerializerSettings KitDiffValidationJson = new()
+    {
+        ContractResolver = new CamelCasePropertyNamesContractResolver(),
+        NullValueHandling = NullValueHandling.Include
+    };
+
+    private sealed class KitDiffValidationContext
+    {
+        public bool Heal { get; init; }
+        public List<KitDiffValidationNote> Errors { get; } = new();
+        public List<KitDiffValidationNote> Warnings { get; } = new();
+        public void Push(string kind, string code, string message)
+        {
+            var n = new KitDiffValidationNote { Code = string.IsNullOrEmpty(code) ? null : code, Message = message };
+            if (kind == "errors") Errors.Add(n); else Warnings.Add(n);
+        }
+    }
+
+    private readonly struct RefSets
+    {
+        public HashSet<string> TypeGuids { get; }
+        public HashSet<string> DesignGuids { get; }
+        public HashSet<string> AuthorGuids { get; }
+
+        private RefSets(HashSet<string> t, HashSet<string> d, HashSet<string> a)
+        {
+            TypeGuids = t; DesignGuids = d; AuthorGuids = a;
+        }
+
+        public static RefSets FromKit(JObject kitObj) => new(
+            GuidSetFromEntities(kitObj["types"]),
+            GuidSetFromEntities(kitObj["designs"]),
+            GuidSetFromEntities(kitObj["authors"]));
+    }
+
+    private static HashSet<string> GuidSetFromEntities(JToken? v)
+    {
+        var s = new HashSet<string>();
+        if (v is not JArray arr) return s;
+        foreach (var x in arr)
+            if (x is JObject o && o["guid"]?.Value<string>() is { } g && !string.IsNullOrEmpty(g))
+                s.Add(g);
+        return s;
+    }
+
+    private static List<JObject> ToJObjectList(JArray? arr)
+    {
+        var list = new List<JObject>();
+        if (arr == null) return list;
+        foreach (var x in arr)
+            if (x is JObject o) list.Add(o);
+        return list;
+    }
+
+    private static bool KitDiffDeepEqual(JToken a, JToken b) => JToken.DeepEquals(a, b);
+
+    private delegate void DesignNestedHandler(KitDiffValidationContext ctx, JObject kitMap, JObject designItem, JObject? diffMap, string path, RefSets refs);
+
+    private static void RunTopLevelGuidCollection(KitDiffValidationContext ctx, JObject kitObj, JObject diffObj, JObject? outDiff, bool heal,
+        string key, string idKey, string kitArrayKey, DesignNestedHandler? onDesign, RefSets refs)
+    {
+        if (diffObj[key] is not JObject part) return;
+        var baseArr = kitObj[kitArrayKey] as JArray;
+        var fixedObj = ValidateGuidCollectionDiff(ctx, key, idKey, baseArr, part,
+            onDesign != null ? (c, item, dm, p) => onDesign(c, kitObj, item, dm, p, refs) : null);
+        if (!heal || outDiff == null) return;
+        if (fixedObj != null && fixedObj.Properties().Any()) outDiff[key] = fixedObj;
+        else outDiff.Remove(key);
+    }
+
+    private static JArray? FilterUpdatesByGuid(JArray updates, string idKey, string gid)
+    {
+        var na = new JArray();
+        foreach (var u in updates)
+        {
+            if (u is not JObject um) { na.Add(u); continue; }
+            if (um[idKey] is JObject idObj && idObj["guid"]?.Value<string>() == gid) continue;
+            na.Add(u);
+        }
+        return na;
+    }
+
+    private static JObject? ValidateGuidCollectionDiff(KitDiffValidationContext ctx, string path, string idKey, JArray? baseEntities, JObject? raw,
+        Action<KitDiffValidationContext, JObject, JObject?, string>? onUpdated)
+    {
+        if (raw == null) return null;
+        var baseBy = new Dictionary<string, JObject>();
+        foreach (var ent in ToJObjectList(baseEntities))
+            if (ent["guid"]?.Value<string>() is { } bg && !string.IsNullOrEmpty(bg))
+                baseBy[bg] = ent;
+        var removedSet = new HashSet<string>();
+        if (raw["removed"] is JArray remArr)
+            foreach (var r in remArr)
+                if (r is JObject rm && rm["guid"]?.Value<string>() is { } rg)
+                    removedSet.Add(rg);
+        var afterRemove = new HashSet<string>();
+        foreach (var g in baseBy.Keys)
+            if (!removedSet.Contains(g)) afterRemove.Add(g);
+        JArray? hRem = null, hUpd = null, hAdd = null;
+        if (ctx.Heal)
+        {
+            if (raw["removed"] is JArray r0) hRem = (JArray)r0.DeepClone();
+            if (raw["updated"] is JArray u0) hUpd = (JArray)u0.DeepClone();
+            if (raw["added"] is JArray a0) hAdd = (JArray)a0.DeepClone();
+        }
+        if (raw["removed"] is JArray removedTok)
+            foreach (var r in removedTok)
+                if (r is JObject rm)
+                {
+                    var rg = rm["guid"]?.Value<string>() ?? "";
+                    if (!baseBy.ContainsKey(rg))
+                    {
+                        ctx.Push("warnings", "kitdiff.remove.missing-target", $"{path}: remove references missing {idKey} {rg}");
+                        if (hRem != null)
+                        {
+                            var nr = new JArray();
+                            foreach (var x in hRem)
+                                if (x is JObject xm && xm["guid"]?.Value<string>() == rg) continue;
+                                else nr.Add(x);
+                            hRem = nr;
+                        }
+                    }
+                }
+        var addBy = new Dictionary<string, JObject>();
+        if (raw["added"] is JArray addArr)
+            foreach (var a in addArr)
+                if (a is JObject am && am["guid"]?.Value<string>() is { } ag)
+                    addBy[ag] = am;
+        if (raw["removed"] is JArray removedTok2)
+            foreach (var r in removedTok2)
+                if (r is JObject rm)
+                {
+                    var rg = rm["guid"]?.Value<string>() ?? "";
+                    if (baseBy.TryGetValue(rg, out var orig) && addBy.TryGetValue(rg, out var add) && KitDiffDeepEqual(orig, add))
+                    {
+                        ctx.Push("warnings", "kitdiff.cycle.noop-restore", $"{path}: removed and re-added {idKey} {rg} are deeply equal (no effective change)");
+                        if (ctx.Heal)
+                        {
+                            if (hRem != null)
+                            {
+                                var nr = new JArray();
+                                foreach (var x in hRem)
+                                    if (x is JObject xm && xm["guid"]?.Value<string>() == rg) continue;
+                                    else nr.Add(x);
+                                hRem = nr;
+                            }
+                            if (hAdd != null)
+                            {
+                                var na = new JArray();
+                                foreach (var x in hAdd)
+                                    if (x is JObject xm && xm["guid"]?.Value<string>() == rg) continue;
+                                    else na.Add(x);
+                                hAdd = na;
+                            }
+                        }
+                    }
+                }
+        var seenAdd = new HashSet<string>();
+        if (raw["added"] is JArray addedTok)
+            foreach (var a in addedTok)
+                if (a is JObject am)
+                {
+                    var ag = am["guid"]?.Value<string>() ?? "";
+                    if (seenAdd.Contains(ag))
+                    {
+                        ctx.Push("errors", "kitdiff.add.duplicate-in-diff", $"{path}: duplicate added {idKey} guid {ag}");
+                        if (hAdd != null)
+                        {
+                            var first = true;
+                            var na = new JArray();
+                            foreach (var x in hAdd)
+                            {
+                                if (x is JObject xm && xm["guid"]?.Value<string>() == ag)
+                                {
+                                    if (first) { na.Add(x); first = false; }
+                                    continue;
+                                }
+                                na.Add(x);
+                            }
+                            hAdd = na;
+                        }
+                    }
+                    seenAdd.Add(ag);
+                    if (afterRemove.Contains(ag))
+                    {
+                        ctx.Push("errors", "kitdiff.add.duplicate-guid", $"{path}: cannot add {idKey} {ag} that still exists after removes");
+                        if (hAdd != null)
+                        {
+                            var na = new JArray();
+                            foreach (var x in hAdd)
+                                if (x is JObject xm && xm["guid"]?.Value<string>() == ag) continue;
+                                else na.Add(x);
+                            hAdd = na;
+                        }
+                    }
+                }
+        if (raw["updated"] is JArray updTok)
+            foreach (var u in updTok)
+                if (u is JObject um && um[idKey] is JObject idObj)
+                {
+                    var gid = idObj["guid"]?.Value<string>() ?? "";
+                    var p = $"{path}.{idKey}[{gid}]";
+                    if (string.IsNullOrEmpty(gid))
+                    {
+                        ctx.Push("errors", "kitdiff.update.bad-id", $"{p}: missing {idKey} id");
+                        if (hUpd != null) hUpd = FilterUpdatesByGuid(hUpd, idKey, gid);
+                        continue;
+                    }
+                    if (!afterRemove.Contains(gid))
+                    {
+                        ctx.Push("errors", "kitdiff.update.missing-target", $"{p}: update targets {idKey} not present after removes");
+                        if (hUpd != null) hUpd = FilterUpdatesByGuid(hUpd, idKey, gid);
+                        continue;
+                    }
+                    if (!baseBy.TryGetValue(gid, out var item))
+                    {
+                        ctx.Push("errors", "kitdiff.update.missing-base", $"{p}: {idKey} not found in base kit");
+                        if (hUpd != null) hUpd = FilterUpdatesByGuid(hUpd, idKey, gid);
+                        continue;
+                    }
+                    var dm = um["diff"] as JObject;
+                    onUpdated?.Invoke(ctx, item, dm, p);
+                }
+        if (!ctx.Heal) return null;
+        var o = new JObject();
+        if (hRem is { Count: > 0 }) o["removed"] = hRem;
+        if (hUpd is { Count: > 0 }) o["updated"] = hUpd;
+        if (hAdd is { Count: > 0 }) o["added"] = hAdd;
+        return o.Properties().Any() ? o : null;
+    }
+
+    private static void ValidateDesignDiffNested(KitDiffValidationContext ctx, JObject kitMap, JObject design, JObject? diff, string path, RefSets refs)
+    {
+        if (diff == null) return;
+        if (diff["parent"] is JObject pObj && pObj["guid"]?.Value<string>() is { } pg)
+        {
+            if (!string.IsNullOrEmpty(pg) && !refs.DesignGuids.Contains(pg))
+                ctx.Push("errors", "kitdiff.ref.design-parent-missing", $"{path}: parent design {pg} not in kit");
+            if (design["guid"]?.Value<string>() is { } dg && pg == dg)
+                ctx.Push("errors", "kitdiff.ref.design-parent-self", $"{path}: design cannot be its own parent");
+        }
+        if (diff["authors"] != null)
+        {
+            var da = diff["authors"]!;
+            if (da is JArray authArr)
+                foreach (var a in authArr)
+                    if (a is JObject am && am["guid"]?.Value<string>() is { } g && !string.IsNullOrEmpty(g) && !refs.AuthorGuids.Contains(g))
+                        ctx.Push("errors", "kitdiff.ref.author-missing", $"{path}: author {g} not in kit");
+            else if (da is JObject authObj)
+            {
+                var authBase = kitMap["authors"] as JArray;
+                _ = ValidateGuidCollectionDiff(ctx, $"{path}.authors", "author", authBase, authObj, null);
+            }
+        }
+        if (diff["pieces"] is JObject pd)
+        {
+            var piecesBase = design["pieces"] as JArray;
+            _ = ValidateGuidCollectionDiff(ctx, $"{path}.pieces", "piece", piecesBase, pd, null);
+            if (pd["added"] is JArray pAdd)
+                foreach (var a in pAdd)
+                    if (a is JObject am)
+                    {
+                        var tg = (am["type"] as JObject)?["guid"]?.Value<string>() ?? "";
+                        if (!string.IsNullOrEmpty(tg) && !refs.TypeGuids.Contains(tg))
+                            ctx.Push("errors", "kitdiff.ref.piece-type-missing", $"{path}.pieces.added: type {tg} not in kit");
+                        var dsg = (am["design"] as JObject)?["guid"]?.Value<string>() ?? "";
+                        if (!string.IsNullOrEmpty(dsg) && !refs.DesignGuids.Contains(dsg))
+                            ctx.Push("errors", "kitdiff.ref.piece-design-missing", $"{path}.pieces.added: subdesign {dsg} not in kit");
+                    }
+        }
+    }
+
 
     public static Kit ApplyKitDiff(Kit baseKit, KitDiff diff)
     {

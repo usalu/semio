@@ -16,7 +16,7 @@ import { createRoot } from "react-dom/client";
 import type { Kit, Type as SemioType, Design, Model } from "@semio/js";
 import { importKit } from "@semio/js";
 import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio/assets";
-import "../globals.css";
+import "./globals.css";
 
 // #endregion ⛩️Imports
 

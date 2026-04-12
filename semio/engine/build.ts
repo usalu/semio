@@ -21,12 +21,9 @@ import { join } from "path";
  * MUST resolve to the engine folder.
  **/
 const cwd = __dirname;
+const env = { ...process.env, UV_PROJECT_ENVIRONMENT: join(cwd, ".venv") };
 
-if (!existsSync(join(cwd, "../../.venv"))) {
-  execSync("uv sync", { cwd: join(cwd, "../.."), stdio: "inherit" });
-}
-
-execSync("npx tsx ./generate-schemas.ts", { cwd, stdio: "inherit" });
+execSync("uv sync --python 3.13", { cwd: join(cwd, "../.."), env, stdio: "inherit" });
 
 if (existsSync(join(cwd, "build"))) {
   rmSync(join(cwd, "build"), { recursive: true });
@@ -34,6 +31,12 @@ if (existsSync(join(cwd, "build"))) {
 if (existsSync(join(cwd, "dist"))) {
   rmSync(join(cwd, "dist"), { recursive: true });
 }
+
+/**
+ * Platform-specific path separator for PyInstaller --add-data.
+ * Windows uses ';', Linux/macOS use ':'.
+ **/
+const addDataSep = process.platform === "win32" ? ";" : ":";
 
 /**
  * PyInstaller CLI arguments for bundling the engine binary.
@@ -46,20 +49,26 @@ const args = [
   "--clean",
   "--noconfirm",
   "--copy-metadata",
-  "graphene",
+  "ariadne",
+  "--copy-metadata",
+  "graphql",
   "--copy-metadata",
   "sqlalchemy",
   "--copy-metadata",
   "loguru",
   "--hidden-import=loguru",
   "--add-data",
-  "../assets/icons/semio_512x512.png;icons/",
+  `schema.graphql${addDataSep}.`,
+  "--add-data",
+  `../openapi/schema.json${addDataSep}openapi/`,
+  "--add-data",
+  `../assets/icons/semio_512x512.png${addDataSep}icons/`,
   "--icon",
   "../assets/icons/semio.ico",
   "main.py",
 ];
 
-execSync(`uv run pyinstaller ${args.join(" ")}`, { cwd, stdio: "inherit" });
+execSync(`uv run pyinstaller ${args.join(" ")}`, { cwd, env, stdio: "inherit" });
 
 if (!process.argv.includes("--skip-post-build")) {
   execSync("tsx ./post-build.ts", { cwd, stdio: "inherit" });

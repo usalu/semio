@@ -1185,11 +1185,11 @@ pub async fn get_change_logs_in_range(pool: &PgPool, session_id: Uuid, from_vers
 }
 
 pub async fn get_version_at_time(pool: &PgPool, session_id: Uuid, seconds_ago: i64) -> Result<Option<DomainVersion>, SessionError> {
-    let row = sqlx_core::query_as::query_as::<_, (i64,)>(
+    let row = sqlx_core::query_as::query_as::<_, (Option<i64>,)>(
         "SELECT MAX(domain_version) FROM history.domain_commit
          WHERE session_id = $1 AND committed_at <= now() - make_interval(secs => $2::double precision)"
     ).bind(session_id).bind(seconds_ago as f64).fetch_optional(pool).await?;
-    Ok(row.map(|(v,)| v))
+    Ok(row.and_then(|(v,)| v))
 }
 
 pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
@@ -1701,23 +1701,35 @@ impl SessionDirectory {
     }
 
     pub async fn get_or_activate(&self, session_id: SessionId) -> Option<SessionHandle> {
+        // Fast path: session already active
         if let Some(handle) = self.sessions.get(&session_id.0) {
             return Some(handle.clone());
         }
+        // Slow path: load from DB and activate
         let state = load_session_state(&self.pool, session_id.0).await.ok()?;
-        let (command_tx, command_rx) = mpsc::channel(256);
-        let (event_tx, _) = broadcast::channel(256);
-        let handle = SessionHandle { command_tx, event_tx: event_tx.clone() };
-        self.sessions.insert(session_id.0, handle.clone());
-        let pool = self.pool.clone();
-        let sessions = self.sessions.clone();
-        let sid = session_id.0;
-        tokio::spawn(async move {
-            let mut actor = SessionActor::new(state, pool, event_tx);
-            actor.run(command_rx).await;
-            sessions.remove(&sid);
-            tracing::info!("session actor {} passivated", sid);
-        });
+        // Use entry API to avoid TOCTOU race: only insert if still absent
+        let handle = {
+            let entry = self.sessions.entry(session_id.0);
+            match entry {
+                dashmap::mapref::entry::Entry::Occupied(o) => o.get().clone(),
+                dashmap::mapref::entry::Entry::Vacant(v) => {
+                    let (command_tx, command_rx) = mpsc::channel(256);
+                    let (event_tx, _) = broadcast::channel(256);
+                    let handle = SessionHandle { command_tx, event_tx: event_tx.clone() };
+                    v.insert(handle.clone());
+                    let pool = self.pool.clone();
+                    let sessions = self.sessions.clone();
+                    let sid = session_id.0;
+                    tokio::spawn(async move {
+                        let mut actor = SessionActor::new(state, pool, event_tx);
+                        actor.run(command_rx).await;
+                        sessions.remove(&sid);
+                        tracing::info!("session actor {} passivated", sid);
+                    });
+                    handle
+                }
+            }
+        };
         Some(handle)
     }
 
@@ -1879,6 +1891,8 @@ async fn handle_socket(socket: WebSocket, state: AppState, session_id: Uuid) {
     };
     let mut event_rx = handle.event_tx.subscribe();
     let (mut ws_tx, mut ws_rx) = socket.split();
+    // Send connection acknowledgment so clients know the subscription is active
+    let _ = ws_tx.send(Message::Text(r#"{"kind":"connected"}"#.into())).await;
     let send_task = tokio::spawn(async move {
         while let Ok(event) = event_rx.recv().await {
             let json = match serde_json::to_string(&event) { Ok(j) => j, Err(e) => { tracing::error!("ws serialize error: {}", e); continue; } };
@@ -1914,8 +1928,9 @@ async fn main() {
     run_migrations(&pool).await;
     let app_state = AppState::new(pool);
     let app_router = router(app_state);
+    let default_host = if std::env::var("DEVCONTAINER").as_deref() == Ok("true") { "0.0.0.0" } else { "127.0.0.1" };
     let addr: std::net::SocketAddr = std::env::var("LISTEN_ADDR")
-        .unwrap_or_else(|_| "0.0.0.0:8080".to_string())
+        .unwrap_or_else(|_| format!("{}:8080", default_host))
         .parse().expect("invalid LISTEN_ADDR");
     tracing::info!("semio-session listening on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
@@ -3321,7 +3336,7 @@ use super::*;
         drop(cmd_tx);
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn e2e_multi_frontend_websocket() {
         if !docker_available() {
             eprintln!("[SKIP] Docker not available, skipping E2E test");
@@ -3357,6 +3372,12 @@ use super::*;
         let (ws2, _) = tokio_tungstenite::connect_async(&ws_url).await.expect("ws2 connect");
         let (mut _ws1_write, mut ws1_read) = ws1.split();
         let (mut _ws2_write, mut ws2_read) = ws2.split();
+
+        // Wait for connection acknowledgment from both WebSocket handlers
+        let ack1 = tokio::time::timeout(std::time::Duration::from_secs(5), ws1_read.next()).await;
+        assert!(ack1.is_ok(), "ws1 should receive connection ack");
+        let ack2 = tokio::time::timeout(std::time::Duration::from_secs(5), ws2_read.next()).await;
+        assert!(ack2.is_ok(), "ws2 should receive connection ack");
 
         // Send domain command via HTTP
         let cmd_id = Uuid::now_v7();

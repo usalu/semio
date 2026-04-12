@@ -6,7 +6,7 @@
   "version": "0.1.0",
   "description": "semio ⋅ playground",
   "scripts": {
-    "dev": "CHOKIDAR_USEPOLLING=1 vite --strictPort --port 4000 --host 0.0.0.0",
+    "dev": "node -e \"const h=process.env.DEVCONTAINER==='true'?'0.0.0.0':'127.0.0.1';require('child_process').spawn('npx',['vite','--strictPort','--port','4000','--host',h],{stdio:'inherit',shell:true,env:Object.assign({},process.env,{CHOKIDAR_USEPOLLING:'1'})}).on('exit',c=>process.exit(c||0))\"",
     "build": "vite build",
     "publish": "vite build && npm publish"
   },

@@ -41,7 +41,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"text/template"
 	"time"
 	"unicode/utf8"
@@ -7173,18 +7172,26 @@ func loadTreeCache() (*TreeNode, *cacheMeta, error) {
 func BuildMonorepoTreeCached(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
 	repoRoot := GetRootDir()
 
-	// Acquire a file lock so only one CLI process builds the tree at a time.
+	// Acquire a directory-based lock so only one CLI process builds the tree at a time.
 	// Other concurrent processes will block here and then use the cache.
 	lockPath := filepath.Join(getCacheDir(), "tree.lock")
 	os.MkdirAll(filepath.Dir(lockPath), 0755)
-	lockFile, lockErr := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0644)
-	if lockErr == nil {
-		syscall.Flock(int(lockFile.Fd()), syscall.LOCK_EX)
-		defer func() {
-			syscall.Flock(int(lockFile.Fd()), syscall.LOCK_UN)
-			lockFile.Close()
-		}()
+	for {
+		err := os.Mkdir(lockPath, 0755)
+		if err == nil {
+			break
+		}
+		// If the lock directory exists, another process holds the lock.
+		// Check if it's stale (older than 60 seconds) and remove it.
+		if info, statErr := os.Stat(lockPath); statErr == nil {
+			if time.Since(info.ModTime()) > 60*time.Second {
+				os.RemoveAll(lockPath)
+				continue
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
+	defer os.RemoveAll(lockPath)
 
 	fp, newMeta := computeCompositeFingerprint(repoRoot)
 	cached, cachedMeta, err := loadTreeCache()
@@ -36785,14 +36792,26 @@ exit 1
 		return err
 	}
 	postCheckpointPath := filepath.Join(hooksDir, "post-commit")
-	postCheckpointScript := `#!/usr/bin/env sh
+postCheckpointScript := `#!/usr/bin/env sh
 set -eu
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [ -z "$repo_root" ] || [ ! -f "$repo_root/repo/cli/cli" ]; then
+if [ -z "$repo_root" ]; then
   exit 0
 fi
 cd "$repo_root"
-./repo/cli/cli hook version.checkpoint.ended
+if command -v go >/dev/null 2>&1; then
+  go run ./repo/cli hook version.checkpoint.ended
+  exit $?
+fi
+if [ -f "$repo_root/repo/cli/cli" ]; then
+  ./repo/cli/cli hook version.checkpoint.ended
+  exit $?
+fi
+if [ -f "$repo_root/repo/cli/cli.exe" ]; then
+  "$repo_root/repo/cli/cli.exe" hook version.checkpoint.ended
+  exit $?
+fi
+exit 0
 `
 	if err := os.WriteFile(postCheckpointPath, []byte(postCheckpointScript), 0755); err != nil {
 		return err
@@ -36833,9 +36852,14 @@ func getClientHookMappings() []ClientHookMapping {
 	return mappings
 }
 
+// ⌨️repoCliHookCommand returns a cross-platform repo CLI invocation for hook configs.
+func repoCliHookCommand() string {
+	return "go run ./repo/cli"
+}
+
 // 🔷generateCopilotConfig holds the data fields for a generateCopilotConfig record.
 func generateCopilotConfig(repoRoot string) (string, error) {
-	c := "./repo/cli/cli"
+	c := repoCliHookCommand()
 	entry := func(cmd string) map[string]interface{} {
 		return map[string]interface{}{"type": "command", "command": cmd, "timeout": 30}
 	}
@@ -36876,7 +36900,7 @@ func generateCopilotConfig(repoRoot string) (string, error) {
 
 // 🔶generateCursorConfig holds the data fields for a generateCursorConfig record.
 func generateCursorConfig(repoRoot string) (string, error) {
-	c := "./repo/cli/cli"
+	c := repoCliHookCommand()
 	config := map[string]interface{}{
 		"version": 1,
 		"hooks": map[string]interface{}{
@@ -36950,7 +36974,7 @@ func generateCursorConfig(repoRoot string) (string, error) {
 }
 
 func generateWindsurfConfig(repoRoot string) (string, error) {
-	c := "./repo/cli/cli"
+	c := repoCliHookCommand()
 	config := map[string]interface{}{
 		"hooks": map[string]interface{}{
 			"pre_user_prompt": []map[string]interface{}{
@@ -36994,7 +37018,7 @@ func generateWindsurfConfig(repoRoot string) (string, error) {
 
 // 🔹generateClaudeCodeConfig holds the data fields for a generateClaudeCodeConfig record.
 func generateClaudeCodeConfig(repoRoot string) (string, error) {
-	c := "./repo/cli/cli"
+	c := repoCliHookCommand()
 	existing := make(map[string]interface{})
 	settingsPath := filepath.Join(repoRoot, ".claude", "settings.json")
 	if data, err := os.ReadFile(settingsPath); err == nil {
@@ -37054,7 +37078,7 @@ func generateClaudeCodeConfig(repoRoot string) (string, error) {
 
 // 🔸generateDroidConfig holds the data fields for a generateDroidConfig record.
 func generateDroidConfig(repoRoot string) (string, error) {
-	c := "./repo/cli/cli"
+	c := repoCliHookCommand()
 	config := map[string]interface{}{
 		"hooks": map[string]string{
 			"SessionStart":     fmt.Sprintf("%s hook SessionStart droid", c),
@@ -37077,7 +37101,7 @@ func generateDroidConfig(repoRoot string) (string, error) {
 
 // 🔺generateKiroConfig holds the data fields for a generateKiroConfig record.
 func generateKiroConfig(repoRoot string) (string, error) {
-	c := "./repo/cli/cli"
+	c := repoCliHookCommand()
 	hook := func(cmd string) map[string]interface{} {
 		return map[string]interface{}{"command": cmd}
 	}
@@ -42933,9 +42957,25 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 	cliIndex := -1
 	for i, field := range fields {
 		base := filepath.Base(field)
-		if base == "cli" {
+		if base == "cli" || base == "cli.exe" {
 			cliIndex = i
 			break
+		}
+	}
+	if cliIndex == -1 {
+		for i := 0; i < len(fields)-1; i++ {
+			if fields[i] == "go" && fields[i+1] == "run" {
+				for j := i + 2; j < len(fields); j++ {
+					base := filepath.Base(fields[j])
+					if base == "cli" || base == "cli.exe" || fields[j] == "./repo/cli" || fields[j] == "repo/cli" {
+						cliIndex = j
+						break
+					}
+				}
+			}
+			if cliIndex != -1 {
+				break
+			}
 		}
 	}
 	if cliIndex == -1 || cliIndex+1 >= len(fields) {

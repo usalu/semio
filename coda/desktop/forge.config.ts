@@ -20,6 +20,11 @@ import { MakerRpm } from "@electron-forge/maker-rpm";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const assistantBundleRoot = path.resolve(__dirname, "..", "assistant");
 
 /**
  * Electron Forge configuration with Vite plugin and security fuses.
@@ -28,9 +33,21 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    executableName: "coda-desktop",
+    name: "coda-desktop",
+    extraResource: [assistantBundleRoot],
   },
   rebuildConfig: {},
-  makers: [new MakerSquirrel({}), new MakerZIP({}, ["darwin"]), new MakerRpm({}), new MakerDeb({})],
+  makers: [
+    new MakerSquirrel({
+      authors: "Ueli Saluz",
+      name: "coda_desktop",
+      setupExe: "coda-desktop-installer.exe",
+    }),
+    new MakerZIP({}, ["darwin"]),
+    new MakerRpm({}),
+    new MakerDeb({}),
+  ],
   plugins: [
     new VitePlugin({
       build: [

@@ -1,0 +1,10 @@
+{
+  "title": "Multi Platform Support",
+  "status": "closed",
+  "description": "Extend the monorepo to work zero-touch on Linux, Windows, Mac. Fix all configs, build commands, dev commands for all programming languages and all projects.",
+  "summary": "Extended the monorepo to be multi-platform (Windows/Linux/Mac). Key changes: (1) Migrated semio/go from mattn/go-sqlite3 (CGO required) to modernc.org/sqlite (pure Go) for cross-platform builds. (2) Added platform-aware .exe suffix to Go build scripts in repo/cli and repo/server. (3) Fixed Electron desktop dev scripts using cross-env ELECTRON_DISABLE_SANDBOX=1 and added NODE_OPTIONS=--max-old-space-size=8192 for build OOM. (4) Fixed hardcoded /tmp/ path in Rust tests to use std::env::temp_dir(). (5) Fixed Rust session server: get_version_at_time NULL handling for SQL MAX(), get_or_activate TOCTOU race condition with DashMap entry API, WebSocket connection ack for reliable subscription timing, multi_thread runtime for WS E2E test. (6) Installed MSVC C++ Build Tools for Rust cdylib MSVC linker on Windows. All tests pass: vitest 155/155, pytest 246/246, cargo test 75/75, Go all pass.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪f01a9139add44b40bdade6379729290a"
+  ]
+}

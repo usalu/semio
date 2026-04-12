@@ -1,0 +1,3 @@
+[DEBUG] semio engine MCP: uv --directory semio/engine run main.py --mcp-stdio
+[DEBUG] After fixes: process logs "Starting engine" and waits on stdio (timeout 12s OK).
+[DEBUG] pytest semio/py semio/engine: 246 passed.

@@ -3,15 +3,13 @@ name = "semio-engine"
 version = "4.4.0"
 description = "⚙️️️Shared fat client for all desktop apps in semio 🏘️"
 authors = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
-requires-python = ">=3.14"
+requires-python = ">=3.13,<3.14"
 license = "AGPL-3.0-or-later"
 maintainers = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
 dependencies = [
     "semio",
+    "ariadne>=0.26.0",
     "fastapi[standard]>=0.115.12",
-    "graphene>=3.4.3",
-    "graphene-pydantic>=0.6.1",
-    "graphene-sqlalchemy>=3.0.0rc2",
     "jinja2>=3.1.6",
     "lark>=1.2.2",
     "loguru>=0.7.3",
@@ -27,7 +25,6 @@ dependencies = [
     "sqlalchemy>=2.0.41",
     "sqlmodel>=0.0.24",
     "starlette>=0.46.2",
-    "starlette-graphene3>=0.6.0",
     "uvicorn[standard]>=0.34.3",
     "mcp[cli]>=1.25.0",
 ]

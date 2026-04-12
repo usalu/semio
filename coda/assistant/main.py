@@ -23,17 +23,28 @@
 from __future__ import annotations
 
 import argparse
+import collections
+import contextlib
 import json
+import logging
 import os
 import re
 import subprocess
 import sys
 import time
+import typing
+import uuid
+import weakref
 from pathlib import Path
 
 import rdflib
+import uvicorn
 from mcp.server.fastmcp import Context, FastMCP
+from mcp.types import CallToolResult, EmbeddedResource, TextContent, TextResourceContents
 from owlready2 import get_ontology, sync_reasoner_pellet
+from starlette.applications import Starlette
+from starlette.responses import HTMLResponse, JSONResponse
+from starlette.routing import Route
 
 mcp = FastMCP("coda", json_response=True)
 
@@ -48,7 +59,108 @@ _PROPERTY_KIND_MEASURE_KINDS = {
     "category": ["include", "exclude"],
 }
 
-# #endregion ⭐Imports
+# #endregion Imports
+
+# #region CodaMcpAppRuntime
+# MCP App HTTP helpers share the streamable-http port; stdio mode omits fetchUrl on tool payloads.
+
+CODA_HTTP_PORT = int(os.environ.get("CODA_HTTP_PORT", "8080"))
+_HTTP_PAYLOADS_ENABLED = False
+_SIDECAR_MODE = False
+
+_mcp_app_payloads: collections.OrderedDict[str, dict[str, typing.Any]] = collections.OrderedDict()
+_MCP_APP_PAYLOADS_MAX_SIZE = 100
+
+_WORKSPACE_APP_URI = "ui://coda/workspace"
+_WORKSPACE_APP_META: dict[str, typing.Any] = {
+    "ui": {"resourceUri": _WORKSPACE_APP_URI},
+    "ui/resourceUri": _WORKSPACE_APP_URI,
+}
+
+
+def _emit_event(event: str, data: dict[str, typing.Any]) -> None:
+    """Emit a sidecar event line when running under Electron stdio (ignored in MCP-only processes)."""
+    if not _SIDECAR_MODE:
+        return
+    _write_stdout(
+        {"id": None, "event": event, "data": data, "timestamp": time.time()}
+    )
+
+
+def _mcp_app_html_resource_meta() -> dict[str, typing.Any]:
+    """Resource _meta for MCP App HTML: hosts apply _meta.ui.csp to the sandbox."""
+    origins = [
+        f"http://127.0.0.1:{CODA_HTTP_PORT}",
+        f"http://localhost:{CODA_HTTP_PORT}",
+        f"http://[::1]:{CODA_HTTP_PORT}",
+        f"ws://127.0.0.1:{CODA_HTTP_PORT}",
+        f"ws://localhost:{CODA_HTTP_PORT}",
+    ]
+    csp = {"connectDomains": origins, "resourceDomains": origins}
+    return {"ui": {"csp": csp}, "ui/csp": csp}
+
+
+def _build_mcp_app_html(*, panel: str = "dashboard") -> str:
+    """Load the single-file MCP App HTML bundle; swap initial panel for the workspace shell."""
+    app_html_path = Path(__file__).resolve().parent / "dist" / "mcp-app.html"
+    if app_html_path.is_file():
+        html = app_html_path.read_text(encoding="utf-8")
+    else:
+        return """<!doctype html><html><body><p>MCP App not built. Run: npm run build:mcp-app in coda/assistant</p></body></html>"""
+    if "data-coda-panel=" in html:
+        html = re.sub(
+            r'data-coda-panel="[^"]*"',
+            f'data-coda-panel="{panel}"',
+            html,
+            count=1,
+        )
+    return html
+
+
+def _mcp_app_csp_value() -> str:
+    """CSP header matching semio engine MCP apps (iframe-friendly, allows wasm for elements/ui)."""
+    return (
+        "default-src 'self' 'unsafe-inline'; "
+        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; "
+        "frame-ancestors *; connect-src * data: blob:; img-src * data: blob:; worker-src blob:;"
+    )
+
+
+def _as_mcp_app_tool_result(
+    payload: dict[str, typing.Any], *, is_error: bool = False
+) -> CallToolResult:
+    """Return tools/call payload with optional fetchUrl when HTTP server is up."""
+    token = uuid.uuid4().hex
+    _mcp_app_payloads[token] = payload
+    while len(_mcp_app_payloads) > _MCP_APP_PAYLOADS_MAX_SIZE:
+        _mcp_app_payloads.popitem(last=False)
+    fetch_url: str | None = None
+    if _HTTP_PAYLOADS_ENABLED:
+        fetch_url = f"http://127.0.0.1:{CODA_HTTP_PORT}/app/payload/{token}"
+        payload = {**payload, "fetchUrl": fetch_url}
+    text = json.dumps(payload)
+    hint: dict[str, typing.Any] = {"panel": payload.get("panel"), "kind": payload.get("kind")}
+    if fetch_url:
+        hint["fetchUrl"] = fetch_url
+    return CallToolResult(
+        content=[
+            TextContent(type="text", text=json.dumps(hint)),
+            TextContent(type="text", text=text),
+            EmbeddedResource(
+                type="resource",
+                resource=TextResourceContents(
+                    uri="coda://mcp-app/tool-payload",
+                    mimeType="application/json",
+                    text=text,
+                ),
+            ),
+        ],
+        structuredContent=payload,
+        isError=is_error,
+    )
+
+
+# #endregion CodaMcpAppRuntime
 
 # #region 🎢Helpers
 # Helpers MUST provide private functions for config loading and project root resolution.
@@ -499,7 +611,6 @@ class Session:
 _sidecar_session = Session()
 
 # MCP session-scoped state (keyed by session id).
-import weakref
 _mcp_sessions: weakref.WeakKeyDictionary[typing.Any, Session] = weakref.WeakKeyDictionary()
 
 
@@ -518,10 +629,122 @@ def _get_mcp_session(ctx) -> Session:
     return _mcp_sessions[sid]
 
 
+
+
+def _gather_workspace_payload(sess: Session, panel: str) -> dict[str, typing.Any]:
+    """Shallow snapshot of coda workspace for MCP Apps (mirrors desktop views, not full on-disk dumps)."""
+    config = _get_coda_config()
+    project = _get_project_config()
+    status = sess.get_status()
+    root = sess.project_root or _get_project_root()
+    measures = config.get("measures", [])
+    property_kinds = config.get("property_kinds", {})
+    correlation = config.get("correlation", {})
+    properties = [
+        _normalize_property_definition(p) if isinstance(p, dict) else p
+        for p in config.get("properties", [])
+    ]
+    frameworks = [_normalize_target_definition(t) for t in config.get("targets", [])]
+    platforms: list[typing.Any] = []
+    if root:
+        platforms_dir = root / ".coda" / "platforms"
+        if platforms_dir.is_dir():
+            for pf in platforms_dir.iterdir():
+                if pf.is_file() and pf.suffix == ".json":
+                    try:
+                        platforms.append(json.loads(pf.read_text(encoding="utf-8")))
+                    except Exception:
+                        continue
+    if not platforms:
+        platforms = list(config.get("platforms", []) or [])
+
+    run_summary: dict[str, typing.Any] | None = None
+    iteration_summary: dict[str, typing.Any] | None = None
+    report_summary: dict[str, typing.Any] | None = None
+    breachs_shallow: list[typing.Any] = []
+    translations: dict[str, typing.Any] = {}
+
+    if root:
+        run_dir = sess.run_dir or _get_latest_run(root)
+        if run_dir and run_dir.is_dir():
+            run_json = run_dir / "run.json"
+            run_summary = (
+                json.loads(run_json.read_text(encoding="utf-8"))
+                if run_json.is_file()
+                else {"id": run_dir.name}
+            )
+        iter_dir = sess.iteration_dir or (
+            _get_latest_iteration(run_dir) if run_dir else None
+        )
+        if iter_dir and iter_dir.is_dir():
+            iter_json = iter_dir / "iteration.json"
+            iteration_summary = (
+                json.loads(iter_json.read_text(encoding="utf-8"))
+                if iter_json.is_file()
+                else {"index": iter_dir.name}
+            )
+            agg = iter_dir / "targets" / "report.json"
+            if agg.is_file():
+                report_full = json.loads(agg.read_text(encoding="utf-8"))
+                breachs = report_full.get("breachs") or []
+                validations = report_full.get("validations")
+                report_summary = {
+                    "summary_keys": list(report_full.keys())[:24],
+                    "breachs_count": len(breachs) if isinstance(breachs, list) else 0,
+                    "validations_count": len(validations)
+                    if isinstance(validations, list)
+                    else 0,
+                }
+                if isinstance(breachs, list):
+                    breachs_shallow = breachs[:80]
+            targets_dir = iter_dir / "targets"
+            if targets_dir.is_dir():
+                for tdir in targets_dir.iterdir():
+                    if not tdir.is_dir():
+                        continue
+                    tr = tdir / "translation.json"
+                    translations[tdir.name] = {
+                        "has_translation": tr.is_file(),
+                        "path": str(tr) if tr.is_file() else None,
+                    }
+
+    return {
+        "kind": "coda-workspace",
+        "panel": panel,
+        "session": status,
+        "project": project,
+        "measures": measures,
+        "property_kinds": property_kinds,
+        "correlation": correlation,
+        "properties": properties,
+        "frameworks": frameworks,
+        "platforms": platforms,
+        "run": run_summary,
+        "iteration": iteration_summary,
+        "report": report_summary,
+        "breachs_shallow": breachs_shallow,
+        "translations": translations,
+    }
+
+
 # #endregion 🔗Session
 
 # #region 🕸️Resources
 # Resources MUST expose MCP resource handlers for measures, targets, properties, rules, and project data.
+
+
+
+
+@mcp.resource(
+    _WORKSPACE_APP_URI,
+    name="coda workspace",
+    description="Interactive coda ACC workspace using elements/ui primitives (dashboard, config, runs, report).",
+    mime_type="text/html;profile=mcp-app",
+    meta=_mcp_app_html_resource_meta(),
+)
+def coda_workspace_viewer_resource() -> str:
+    """Serve the MCP App HTML shell built from coda/assistant mcp-app (elements/ui)."""
+    return _build_mcp_app_html(panel="dashboard")
 
 
 @mcp.resource("coda://measures")
@@ -1124,6 +1347,31 @@ def fix(prompt: str) -> dict:
     }
 
 
+
+
+@mcp.tool(meta=_WORKSPACE_APP_META)
+def show_coda_workspace(ctx: Context, panel: str = "dashboard") -> CallToolResult:
+    """Show the coda workspace in an MCP App. Panels: dashboard, config, runs, report, translations, actions, events."""
+    p = (panel or "dashboard").strip().lower()
+    allowed = {
+        "dashboard",
+        "config",
+        "runs",
+        "report",
+        "translations",
+        "actions",
+        "events",
+    }
+    if p not in allowed:
+        p = "dashboard"
+    try:
+        return _as_mcp_app_tool_result(
+            _gather_workspace_payload(_get_mcp_session(ctx), p)
+        )
+    except Exception as e:
+        return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
+
+
 # #endregion 🥁Tools
 # #region 📋Prompts
 # Prompts MUST expose MCP prompt handlers for design change instructions.
@@ -1168,17 +1416,33 @@ def _sidecar_start_working_on_project(params: dict) -> dict:
     path = params.get("path", "")
     if not path:
         return {"error": "Missing 'path' parameter"}
-    return _sidecar_session.start_working_on_project(path)
+    r = _sidecar_session.start_working_on_project(path)
+    if r.get("ok"):
+        _emit_event("project_ready", {"project_root": str(path)})
+    return r
 
 
 @_register_sidecar("start_run")
 def _sidecar_start_run(params: dict) -> dict:
-    return _sidecar_session.start_run()
+    r = _sidecar_session.start_run()
+    if "error" not in r:
+        _emit_event("run_started", {"run_id": r.get("run_id"), "path": r.get("path")})
+    return r
 
 
 @_register_sidecar("start_iteration")
 def _sidecar_start_iteration(params: dict) -> dict:
-    return _sidecar_session.start_iteration(params.get("run_id"))
+    r = _sidecar_session.start_iteration(params.get("run_id"))
+    if "error" not in r:
+        _emit_event(
+            "iteration_started",
+            {
+                "iteration_index": r.get("iteration_index"),
+                "run_id": r.get("run_id"),
+                "path": r.get("path"),
+            },
+        )
+    return r
 
 
 @_register_sidecar("start_translation")
@@ -1442,7 +1706,9 @@ def _sidecar_save_translation(params: dict) -> dict:
     target_dir.mkdir(parents=True, exist_ok=True)
     translation_path = target_dir / "translation.json"
     translation_path.write_text(data, encoding="utf-8")
-    return {"saved": True, "path": str(translation_path)}
+    result = {"saved": True, "path": str(translation_path)}
+    _emit_event("translation_saved", {"target_id": target_id, "path": result["path"]})
+    return result
 
 
 @_register_sidecar("save_report")
@@ -1459,7 +1725,9 @@ def _sidecar_save_report(params: dict) -> dict:
         return {"error": "No iterations found"}
     report_path = iter_dir / "targets" / "report.json"
     report_path.write_text(data, encoding="utf-8")
-    return {"saved": True, "path": str(report_path)}
+    result = {"saved": True, "path": str(report_path)}
+    _emit_event("report_saved", {"path": result["path"]})
+    return result
 
 
 @_register_sidecar("validate")
@@ -1499,12 +1767,17 @@ def _sidecar_validate(params: dict) -> dict:
             }
         report_path = iter_dir / "targets" / target_id / "report.json"
         report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-        return {
+        out = {
             "validated": True,
             "target_id": target_id,
             "report_path": str(report_path),
             "report": report,
         }
+        _emit_event(
+            "validation_completed",
+            {"target_id": target_id, "path": str(report_path)},
+        )
+        return out
 
     validators_dir = root / ".coda" / "validators"
     validator_bin = None
@@ -1530,12 +1803,17 @@ def _sidecar_validate(params: dict) -> dict:
             report_data = result.stdout.strip() if result.stdout else "{}"
             report_path = iter_dir / "targets" / target_id / "report.json"
             report_path.write_text(report_data, encoding="utf-8")
-            return {
+            out = {
                 "validated": True,
                 "target_id": target_id,
                 "report_path": str(report_path),
                 "report": json.loads(report_data) if report_data else {},
             }
+            _emit_event(
+                "validation_completed",
+                {"target_id": target_id, "path": str(report_path)},
+            )
+            return out
         except subprocess.TimeoutExpired:
             return {"error": f"Validator timed out for target: {target_id}"}
         except Exception as e:
@@ -1607,6 +1885,8 @@ def _handle_sidecar_request(request: dict) -> dict:
 def _run_sidecar() -> None:
     """📡Run the sidecar stdio event loop. Reads JSON lines from stdin, writes responses to stdout.
     """
+    global _SIDECAR_MODE
+    _SIDECAR_MODE = True
     # Write a ready message so Electron knows we've started
     _write_stdout({"id": None, "result": {"status": "ready", "pid": os.getpid()}})
 
@@ -1642,7 +1922,7 @@ def main() -> None:
     """🔬Parses CLI arguments and starts in the selected mode.
     --sidecar: Electron sidecar (JSON-over-stdio).
     --mcp-stdio: MCP server over stdio.
-    Default: MCP server over streamable-http on 127.0.0.1:8080.
+    Default: HTTP server on 127.0.0.1:8080 with MCP at /mcp and MCP App routes under /app/*.
     """
     parser = argparse.ArgumentParser(description="coda - ACC design assistant")
     group = parser.add_mutually_exclusive_group()
@@ -1671,7 +1951,17 @@ def main() -> None:
     elif args.mcp_stdio:
         mcp.run(transport="stdio")
     else:
-        mcp.run(transport="streamable-http", host="127.0.0.1", port=8080)
+        global _HTTP_PAYLOADS_ENABLED
+        _HTTP_PAYLOADS_ENABLED = True
+        logging.basicConfig(level=logging.INFO)
+        uvicorn.run(
+            _coda_http_app,
+            host="127.0.0.1",
+            port=CODA_HTTP_PORT,
+            log_level="info",
+            access_log=False,
+            log_config=None,
+        )
 
 
 if __name__ == "__main__":

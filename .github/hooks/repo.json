@@ -2,56 +2,56 @@
   "hooks": {
     "PostToolUse": [
       {
-        "command": "./repo/cli/cli hook PostToolUse copilot-chat",
+        "command": "go run ./repo/cli hook PostToolUse copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "PreCompact": [
       {
-        "command": "./repo/cli/cli hook PreCompact copilot-chat",
+        "command": "go run ./repo/cli hook PreCompact copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "PreToolUse": [
       {
-        "command": "./repo/cli/cli hook PreToolUse copilot-chat",
+        "command": "go run ./repo/cli hook PreToolUse copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "SessionStart": [
       {
-        "command": "./repo/cli/cli hook SessionStart copilot-chat",
+        "command": "go run ./repo/cli hook SessionStart copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "Stop": [
       {
-        "command": "./repo/cli/cli hook Stop copilot-chat",
+        "command": "go run ./repo/cli hook Stop copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "SubagentStart": [
       {
-        "command": "./repo/cli/cli hook SubagentStart copilot-chat",
+        "command": "go run ./repo/cli hook SubagentStart copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "SubagentStop": [
       {
-        "command": "./repo/cli/cli hook SubagentStop copilot-chat",
+        "command": "go run ./repo/cli hook SubagentStop copilot-chat",
         "timeout": 30,
         "type": "command"
       }
     ],
     "UserPromptSubmit": [
       {
-        "command": "./repo/cli/cli hook UserPromptSubmit copilot-chat",
+        "command": "go run ./repo/cli hook UserPromptSubmit copilot-chat",
         "timeout": 30,
         "type": "command"
       }
