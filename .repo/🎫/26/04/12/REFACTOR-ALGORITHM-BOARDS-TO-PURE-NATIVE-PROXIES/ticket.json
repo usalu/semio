@@ -1,7 +1,8 @@
 {
   "title": "Refactor Algorithm Boards to Pure Native Proxies",
-  "status": "open",
+  "status": "closed",
   "description": "All algorithm boards (drag, diff, copy/paste, delete, etc.) must be pure UI proxies to native implementations. No additional domain logic in any board. Specifically: drag is showing correct piece centers but connections are missing, and diff is showing wrong information. Refactor all boards to be 100% clean UI that just calls native functions.",
+  "summary": "Refactored all 6 algorithm boards to be pure UI proxies with no domain logic. Added `nativeFlatDesign()` helper that returns flat designs WITH connections preserved (only applies piece position updates from flatten, not connection removals). Updated `nativeDragPieces()` and `nativeMovePieces()` to use this pattern internally, returning `inputDesign` (flat with connections), `output` (flat with connections), and diff. All boards now use flat designs directly as `design` and `diffDesign`, eliminating the `diagramLayoutDiff` hack. Fixed root cause: `flattenDesign()` sets `flatDesign.connections = []` and its forward diff includes `connections.removed` — all boards were applying the full forward diff, losing connections.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪68776bbc27294dfebad3b9070eb1f717"

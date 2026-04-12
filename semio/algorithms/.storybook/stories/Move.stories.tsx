@@ -1,16 +1,16 @@
 // #region Header
 // semio/algorithms/.storybook/stories/Move.stories.tsx
-// Specs: Uses the AlgorithmApp shell with VECTOR_INPUT, PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, SCENE windows.
-// Summary: Drag fixture design + pieces; nativeFlattenDesign for diagram layout; nativeMovePieces returns flattened output for SemioScene.
+// Specs: Pure UI proxy to nativeFlatDesign + nativeMovePieces. No domain logic. All designs include connections.
+// Summary: Flat input design via nativeFlatDesign; nativeMovePieces returns flat input, output with connections, and move diff.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion Header
 
-import type { DesignChange, Design, DesignDiff } from "@semio/js";
+import type { Design, DesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
-import { nativeFlattenDesign, nativeMovePieces, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
+import { nativeFlatDesign, nativeMovePieces, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
 import { useAlgorithmLanguage } from "../withLanguage";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
@@ -36,7 +36,7 @@ function MoveFrame() {
     [],
   ) as any;
 
-  const [flattenChange, setFlattenChange] = React.useState<DesignChange | null>(null);
+  const [flatInputDesign, setFlatInputDesign] = React.useState<Design | null>(null);
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>((DragPieces as any).pieces?.map((p: any) => p.guid) ?? []);
   const [vector, setVector] = React.useState(MoveVector as { gap: number; shift: number; rise: number });
   const [outputDesign, setOutputDesign] = React.useState<Design | undefined>(undefined);
@@ -45,18 +45,14 @@ function MoveFrame() {
 
   React.useEffect(() => {
     let cancelled = false;
-    setFlattenChange(null);
+    setFlatInputDesign(null);
     setOutputDesign(undefined);
     setDesignDiff(undefined);
     setMoveError(undefined);
     void (async () => {
-      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
+      const flat = await nativeFlatDesign(kit, rawDesign.guid, language);
       if (cancelled) return;
-      if (!fc.ok) {
-        setFlattenChange(null);
-        return;
-      }
-      setFlattenChange(fc.change);
+      setFlatInputDesign(flat);
       setSelectedPieceGuids((prev) => {
         const pieceGuids = new Set<string>((rawDesign?.pieces ?? []).map((p: any) => p.guid));
         const filtered = prev.filter((g) => pieceGuids.has(g));
@@ -70,7 +66,7 @@ function MoveFrame() {
   }, [kit, language]);
 
   React.useEffect(() => {
-    if (!flattenChange) return;
+    if (!flatInputDesign) return;
     let cancelled = false;
     void (async () => {
       if (selectedPieceGuids.length === 0) {
@@ -100,12 +96,12 @@ function MoveFrame() {
     return () => {
       cancelled = true;
     };
-  }, [flattenChange, kit, selectedPieceGuids, vector, language]);
+  }, [flatInputDesign, kit, selectedPieceGuids, vector, language]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: rawDesign,
+      design: (flatInputDesign ?? rawDesign) as Design,
       moveVector: vector,
       onMoveVectorChange: setVector,
       moveVectorMin: { gap: -10, shift: -10, rise: -10 },
@@ -113,18 +109,11 @@ function MoveFrame() {
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
       designDiff,
-      diffDesign: rawDesign,
-      diagramLayoutDiff: flattenChange?.forward,
-      outputDesign: outputDesign ?? rawDesign,
-      error: moveError
-        ? moveError
-        : !flattenChange
-          ? `Loading move preview (${language})…`
-          : selectedPieceGuids.length === 0
-            ? "Select at least one piece to move."
-            : undefined,
+      diffDesign: (flatInputDesign ?? rawDesign) as Design,
+      outputDesign: (outputDesign ?? flatInputDesign ?? rawDesign) as Design,
+      error: moveError ? moveError : !flatInputDesign ? `Loading move preview (${language})…` : selectedPieceGuids.length === 0 ? "Select at least one piece to move." : undefined,
     }),
-    [kit, selectedPieceGuids, vector, designDiff, outputDesign, flattenChange, moveError, language],
+    [kit, flatInputDesign, selectedPieceGuids, vector, designDiff, outputDesign, moveError, language],
   );
 
   return <AlgorithmApp id="move" label="Move" windows={WINDOWS} context={context} className="h-full w-full" />;

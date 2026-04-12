@@ -180,8 +180,6 @@ export async function nativeMovePieces(kit: Kit, rawDesign: Design, pieceGuids: 
   const output = apply(updatedRaw, { pieces: flatChange.change.forward.pieces });
   return { inputDesign: flatDesign, output, moveDiff };
 }
-  return { output, moveDiff };
-}
 
 /**
  * Runs copy-design in the chosen language: TypeScript in-process or native backends via REST.

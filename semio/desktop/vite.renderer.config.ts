@@ -25,6 +25,9 @@ import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
 
 type CjsFacadeResolveOpts = {
+  htmlParseStringifyEntry: string;
+  reactRouterEntry: string;
+  reactI18nextEntry: string;
   shimMain: string;
   shimWithSelector: string;
   schedulerEntry: string;
@@ -32,11 +35,20 @@ type CjsFacadeResolveOpts = {
 };
 
 function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
+  const cookieFacadeId = "\0semio-cjs-facade:cookie";
+  const voidElementsFacadeId = "\0semio-cjs-facade:void-elements";
+
   return {
     name: "semio-react-cjs-facades",
     enforce: "pre",
     resolveId(id) {
       const n = id.replace(/\\/g, "/");
+      if (n === "cookie") {
+        return cookieFacadeId;
+      }
+      if (n === "void-elements") {
+        return voidElementsFacadeId;
+      }
       if (n.includes("use-sync-external-store/shim/with-selector")) {
         return opts.shimWithSelector;
       }
@@ -51,6 +63,119 @@ function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
       // Force the ESM-compatible implementation from `three/examples` so drei `Stats` can load in Electron dev.
       if (n === "stats.js" || n.endsWith("/stats.js")) {
         return opts.statsEntry;
+      }
+      if (n === "html-parse-stringify" || n.endsWith("/html-parse-stringify")) {
+        return opts.htmlParseStringifyEntry;
+      }
+      if (n === "react-i18next" || n.endsWith("/react-i18next")) {
+        return opts.reactI18nextEntry;
+      }
+      if (n === "react-router" || n.endsWith("/react-router")) {
+        return opts.reactRouterEntry;
+      }
+      return undefined;
+    },
+    load(id) {
+      if (id === cookieFacadeId) {
+        return `
+const cookieModule = {
+  parse(input = "") {
+    const result = Object.create(null);
+    for (const chunk of String(input).split(";")) {
+      const index = chunk.indexOf("=");
+      if (index < 0) {
+        continue;
+      }
+      const key = chunk.slice(0, index).trim();
+      if (!key || key in result) {
+        continue;
+      }
+      const value = chunk.slice(index + 1).trim();
+      try {
+        result[key] = decodeURIComponent(value);
+      } catch {
+        result[key] = value;
+      }
+    }
+    return result;
+  },
+  serialize(name, value, options = {}) {
+    const encodedValue = options.encode ? options.encode(String(value)) : encodeURIComponent(String(value));
+    const segments = [\`\${name}=\${encodedValue}\`];
+    if (options.maxAge !== undefined) {
+      segments.push(\`Max-Age=\${Math.floor(options.maxAge)}\`);
+    }
+    if (options.domain) {
+      segments.push(\`Domain=\${options.domain}\`);
+    }
+    if (options.path) {
+      segments.push(\`Path=\${options.path}\`);
+    }
+    if (options.expires instanceof Date) {
+      segments.push(\`Expires=\${options.expires.toUTCString()}\`);
+    }
+    if (options.httpOnly) {
+      segments.push("HttpOnly");
+    }
+    if (options.secure) {
+      segments.push("Secure");
+    }
+    if (options.partitioned) {
+      segments.push("Partitioned");
+    }
+    if (options.priority) {
+      segments.push(\`Priority=\${options.priority}\`);
+    }
+    if (options.sameSite) {
+      const sameSite = typeof options.sameSite === "string" ? options.sameSite : options.sameSite === true ? "Strict" : "";
+      if (sameSite) {
+        segments.push(\`SameSite=\${sameSite}\`);
+      }
+    }
+    return segments.join("; ");
+  },
+  parseCookie(input, options) {
+    return cookieModule.parse(input, options);
+  },
+  stringifyCookie(record, options = {}) {
+    return Object.entries(record).map(([name, value]) => cookieModule.serialize(name, value, options)).join("; ");
+  },
+  stringifySetCookie(record, options = {}) {
+    return cookieModule.stringifyCookie(record, options);
+  },
+  parseSetCookie(input) {
+    return cookieModule.parse(input);
+  },
+};
+export const parse = cookieModule.parse;
+export const serialize = cookieModule.serialize;
+export const parseCookie = cookieModule.parseCookie;
+export const stringifyCookie = cookieModule.stringifyCookie;
+export const stringifySetCookie = cookieModule.stringifySetCookie;
+export const parseSetCookie = cookieModule.parseSetCookie;
+export default cookieModule;
+`;
+      }
+      if (id === voidElementsFacadeId) {
+        return `
+const voidElementsModule = {
+  area: true,
+  base: true,
+  br: true,
+  col: true,
+  embed: true,
+  hr: true,
+  img: true,
+  input: true,
+  link: true,
+  meta: true,
+  param: true,
+  source: true,
+  track: true,
+  wbr: true,
+};
+export default voidElementsModule;
+`;
       }
       return undefined;
     },
@@ -72,6 +197,9 @@ export default defineConfig(async ({ mode }) => {
   const schedulerRoot = path.resolve(__dirname, "../../node_modules/scheduler/cjs");
   const schedulerEntry = path.join(schedulerRoot, prod ? "scheduler.production.js" : "scheduler.development.js");
   const statsEntry = path.resolve(__dirname, "../../node_modules/three/examples/jsm/libs/stats.module.js");
+  const htmlParseStringifyEntry = path.resolve(__dirname, "../../node_modules/html-parse-stringify/dist/html-parse-stringify.js");
+  const reactI18nextEntry = path.resolve(__dirname, "../../node_modules/react-i18next/dist/commonjs/index.js");
+  const reactRouterEntry = path.resolve(__dirname, "../../node_modules/react-router/dist/development/index.js");
   return {
     server: {
       watch: {
@@ -80,13 +208,16 @@ export default defineConfig(async ({ mode }) => {
       },
     },
     resolve: {
-      dedupe: ["react", "react-dom", "scheduler", "stats.js", "use-sync-external-store"],
+      dedupe: ["cookie", "dagre", "graphlib", "html-parse-stringify", "lodash", "react", "react-dom", "react-i18next", "react-router", "scheduler", "stats.js", "use-sync-external-store", "void-elements"],
       // `shim/index.js` is CJS (`module.exports`); Vite would serve it as ESM and break `import { useSyncExternalStore }`.
       // Point bare specifiers at the CJS builds under `cjs/` so Rollup/commonjs rewrites exports (VS Code / zustand compatible).
       alias: [
         { find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/, replacement: shimWithSelector },
         { find: /^use-sync-external-store\/shim(\/index\.js)?$/, replacement: shimMain },
         { find: /^scheduler$/, replacement: schedulerEntry },
+        { find: /^html-parse-stringify$/, replacement: htmlParseStringifyEntry },
+        { find: /^react-i18next$/, replacement: reactI18nextEntry },
+        { find: /^react-router$/, replacement: reactRouterEntry },
         { find: /^stats\.js$/, replacement: statsEntry },
         { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
@@ -95,7 +226,7 @@ export default defineConfig(async ({ mode }) => {
       ],
     },
     plugins: [
-      reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry, statsEntry }),
+      reactCjsFacadeResolvePlugin({ htmlParseStringifyEntry, reactI18nextEntry, reactRouterEntry, shimMain, shimWithSelector, schedulerEntry, statsEntry }),
       tailwind.default(),
       {
         ...mdx({
@@ -114,11 +245,19 @@ export default defineConfig(async ({ mode }) => {
       include: [
         "golden-layout",
         "@mdx-js/react",
+        "cookie",
+        "dagre",
+        "graphlib",
+        "html-parse-stringify",
+        "lodash",
+        "react-i18next",
+        "react-router",
         "scheduler",
         "stats.js",
         "use-sync-external-store/shim",
         "use-sync-external-store/shim/with-selector",
         "use-sync-external-store/with-selector",
+        "void-elements",
       ],
       exclude: ["@semio/js", "@semio/sketchpad", "@semio/studio", "@playwright/test", "playwright", "playwright-core"],
     },

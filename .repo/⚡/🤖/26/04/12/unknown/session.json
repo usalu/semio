@@ -15,6 +15,17 @@
         "session": "unknown"
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "06dec2e079d8d43d51e400c54f3b739c1da2d07f",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-12T00:53:00Z",
+        "session": "unknown"
+      },
+      "response": {}
     }
   ]
 }

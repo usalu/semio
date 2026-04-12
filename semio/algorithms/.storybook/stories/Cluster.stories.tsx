@@ -1,16 +1,16 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Cluster.stories.tsx
-// Specs: Uses the AlgorithmApp shell with PIECES_SELECTION_INPUT, DESIGN_DIFF_OUTPUT, DESIGN_OUTPUT windows.
-// Summary: Selection on raw design; flatten forward diff only for diagramLayoutDiff; diff/output are local story fixtures.
+// Specs: Pure UI proxy to nativeFlatDesign. No domain logic. All designs include connections.
+// Summary: Flat input design via nativeFlatDesign; diff/output are local story fixtures.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { DesignChange, DesignDiff } from "@semio/js";
+import type { Design, DesignDiff } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
-import { nativeFlattenDesign, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
+import { nativeFlatDesign, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
 import { useAlgorithmLanguage } from "../withLanguage";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
@@ -27,22 +27,15 @@ const WINDOWS: AlgorithmWindowDef[] = [
 function ClusterFrame() {
   const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
-  const [flattenChange, setFlattenChange] = React.useState<DesignChange | null>(null);
-  const [diagramLayoutDiff, setDiagramLayoutDiff] = React.useState<DesignDiff | undefined>(undefined);
+  const [flatInputDesign, setFlatInputDesign] = React.useState<Design | null>(null);
   const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const fc = await nativeFlattenDesign(kit, rawDesign.guid, language);
+      const flat = await nativeFlatDesign(kit, rawDesign.guid, language);
       if (cancelled) return;
-      if (!fc.ok) {
-        setFlattenChange(null);
-        setDiagramLayoutDiff(undefined);
-        return;
-      }
-      setFlattenChange(fc.change);
-      setDiagramLayoutDiff(fc.change.forward);
+      setFlatInputDesign(flat);
       setSelectedPieceGuids((rawDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
     })();
     return () => {
@@ -66,16 +59,15 @@ function ClusterFrame() {
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: rawDesign,
+      design: (flatInputDesign ?? rawDesign) as Design,
       selectedPieceGuids,
       onSelectedPieceGuidsChange: setSelectedPieceGuids,
       designDiff,
-      diffDesign: rawDesign,
-      diagramLayoutDiff,
-      outputDesign: rawDesign,
-      error: !flattenChange ? `Loading cluster preview (${language})…` : selectedPieceGuids.length < 2 ? "Select at least 2 pieces to cluster." : undefined,
+      diffDesign: (flatInputDesign ?? rawDesign) as Design,
+      outputDesign: (flatInputDesign ?? rawDesign) as Design,
+      error: !flatInputDesign ? `Loading cluster preview (${language})…` : selectedPieceGuids.length < 2 ? "Select at least 2 pieces to cluster." : undefined,
     }),
-    [kit, selectedPieceGuids, designDiff, flattenChange, diagramLayoutDiff, language],
+    [kit, flatInputDesign, selectedPieceGuids, designDiff, language],
   );
 
   return <AlgorithmApp id="cluster" label="Cluster" windows={WINDOWS} context={context} className="h-full w-full" />;
