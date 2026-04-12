@@ -28,6 +28,7 @@ type CjsFacadeResolveOpts = {
   shimMain: string;
   shimWithSelector: string;
   schedulerEntry: string;
+  statsEntry: string;
 };
 
 function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
@@ -45,6 +46,11 @@ function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
       // `scheduler/index.js` is a CJS re-export (`module.exports = require('./cjs/...')`); Vite `/@fs/...` breaks default import.
       if (n === "scheduler" || (n.includes("scheduler/index.js") && !n.includes("/cjs/scheduler."))) {
         return opts.schedulerEntry;
+      }
+      // `stats.js` ships as legacy UMD/CJS; Vite may serve `/@fs/.../build/stats.min.js` directly and break default import.
+      // Force the ESM-compatible implementation from `three/examples` so drei `Stats` can load in Electron dev.
+      if (n === "stats.js" || n.endsWith("/stats.js")) {
+        return opts.statsEntry;
       }
       return undefined;
     },
@@ -65,6 +71,7 @@ export default defineConfig(async ({ mode }) => {
   );
   const schedulerRoot = path.resolve(__dirname, "../../node_modules/scheduler/cjs");
   const schedulerEntry = path.join(schedulerRoot, prod ? "scheduler.production.js" : "scheduler.development.js");
+  const statsEntry = path.resolve(__dirname, "../../node_modules/three/examples/jsm/libs/stats.module.js");
   return {
     server: {
       watch: {
@@ -73,13 +80,14 @@ export default defineConfig(async ({ mode }) => {
       },
     },
     resolve: {
-      dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
+      dedupe: ["react", "react-dom", "scheduler", "stats.js", "use-sync-external-store"],
       // `shim/index.js` is CJS (`module.exports`); Vite would serve it as ESM and break `import { useSyncExternalStore }`.
       // Point bare specifiers at the CJS builds under `cjs/` so Rollup/commonjs rewrites exports (VS Code / zustand compatible).
       alias: [
         { find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/, replacement: shimWithSelector },
         { find: /^use-sync-external-store\/shim(\/index\.js)?$/, replacement: shimMain },
         { find: /^scheduler$/, replacement: schedulerEntry },
+        { find: /^stats\.js$/, replacement: statsEntry },
         { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../studio") },
@@ -87,7 +95,7 @@ export default defineConfig(async ({ mode }) => {
       ],
     },
     plugins: [
-      reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),
+      reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry, statsEntry }),
       tailwind.default(),
       {
         ...mdx({
@@ -107,6 +115,7 @@ export default defineConfig(async ({ mode }) => {
         "golden-layout",
         "@mdx-js/react",
         "scheduler",
+        "stats.js",
         "use-sync-external-store/shim",
         "use-sync-external-store/shim/with-selector",
         "use-sync-external-store/with-selector",

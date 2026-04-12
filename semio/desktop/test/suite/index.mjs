@@ -18,7 +18,12 @@ export async function run(ctx) {
   assert.strictEqual(typeof ctx.whenFirstWindowLoaded, "function");
   await ctx.whenFirstWindowLoaded();
   const win = ctx.BrowserWindow.getAllWindows()[0];
-   assert.ok(win, "BrowserWindow");
+  assert.ok(win, "BrowserWindow");
+
+  const consoleMessages = [];
+  win.webContents.on("console-message", (_event, level, message) => {
+    consoleMessages.push({ level, message });
+  });
 
   const deadline = Date.now() + 120_000;
   let hasRoot = false;
@@ -35,6 +40,19 @@ export async function run(ctx) {
   assert.ok(
     hasRoot,
     "renderer #root still empty after 120s (white screen). Check devtools for ESM/CJS shim errors (e.g. use-sync-external-store).",
+  );
+  const unexpectedRendererMessages = consoleMessages.filter(({ level, message }) => {
+    if (level < 2) return false;
+    return (
+      message.includes("does not provide an export named 'default'") ||
+      message.includes("ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before") ||
+      message.includes("Failed to execute 'removeChild' on 'Node'")
+    );
+  });
+  assert.deepStrictEqual(
+    unexpectedRendererMessages,
+    [],
+    `renderer emitted fatal console messages: ${unexpectedRendererMessages.map(({ message }) => message).join(" | ")}`,
   );
   console.log("[semio desktop integration] suite passed");
 }

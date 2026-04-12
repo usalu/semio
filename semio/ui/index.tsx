@@ -6,7 +6,14 @@
 // #endregion 🧲Header
 
 import { Breadcrumb, Button, Section } from "@elements/ui/elements";
-import { Bounds, Clone, Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useBounds, useGLTF } from "@react-three/drei";
+import { Bounds, useBounds } from "@react-three/drei/core/Bounds.js";
+import { Clone } from "@react-three/drei/core/Clone.js";
+import { Edges } from "@react-three/drei/core/Edges.js";
+import { GizmoHelper } from "@react-three/drei/core/GizmoHelper.js";
+import { GizmoViewport } from "@react-three/drei/core/GizmoViewport.js";
+import { Grid } from "@react-three/drei/core/Grid.js";
+import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
+import { useGLTF } from "@react-three/drei/core/Gltf.js";
 import { Canvas as ThreeCanvas, useFrame, useThree } from "@react-three/fiber";
 import {
   applyDesignDiff,

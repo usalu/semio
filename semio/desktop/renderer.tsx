@@ -13,7 +13,7 @@
 // MUST resolve the user identity before rendering the sketchpad.
 
 import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import { createFolderKitStore } from "@semio/studio";
 import type { KitFolderAdapter } from "@semio/studio";
 import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
@@ -36,6 +36,7 @@ const LazySketchpad = lazy(() =>
 
 declare global {
   interface Window {
+    __SEMIO_DESKTOP_REACT_ROOT__?: Root;
     /** Set by preload when `SEMIO_E2E_KIT_FOLDER` is defined (desktop E2E / automation). */
     __SEMIO_E2E_KIT_FOLDER__?: string;
     windowControls: {
@@ -172,7 +173,13 @@ function App() {
 
 export default App;
 
-createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error("Renderer root element '#root' is missing.");
+}
+const reactRoot = window.__SEMIO_DESKTOP_REACT_ROOT__ ?? createRoot(rootElement);
+window.__SEMIO_DESKTOP_REACT_ROOT__ = reactRoot;
+reactRoot.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,

@@ -1,0 +1,20 @@
+{
+  "id": "unknown",
+  "uri": "repo://session/unknown",
+  "second": "2026-04-12T00:00:48Z",
+  "checkpoint": "b86fe270b3e1542238daed48600e48f4a6799e27",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "b86fe270b3e1542238daed48600e48f4a6799e27",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-12T00:00:48Z",
+        "session": "unknown"
+      },
+      "response": {}
+    }
+  ]
+}

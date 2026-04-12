@@ -237,6 +237,9 @@ TODO: Introduce Design/Interpolate algorithm.
 
 semio:
 
+The copy and paste function is not correct (adjust typescript for now and once we are done, I'll tell you to implement it for the remaining languages).
+- e.g. When selecting only one connected piece (t_f0_b_c0) in the source design, the diff doesnt show it anywhere. See algorithm board.
+
 move algorithm:
 - It is not vec but vector
 - The scene camera is not visible.
@@ -578,6 +581,8 @@ Create a new bundle semio/ui that holds reusable ui components. Make sure that a
 ## 👤semio🖱️algorithms
 
 semio algorithms:
+All boards are pure proxies to the native implemenations. There MUST be no additional domain logic. E.g. drag is showing the correct piece centers but somehow the connections are missing and the diff is showing the wrong information. You MUST refactor all boards to be 100% clean and just ui for calling the native functions.
+
 The drag algorithm is not working correctly.
 It MUST be:
 Fixed selected pieces get center offset If a selected piece is a descendent of another selected piece then it is ignored. Othwerwise add the drag offset to the the parent connection. Due to the flatten algorithm all children will update automatically.

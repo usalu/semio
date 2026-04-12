@@ -1,0 +1,9 @@
+{
+  "title": "Refactor Algorithm Boards to Pure Native Proxies",
+  "status": "open",
+  "description": "All algorithm boards (drag, diff, copy/paste, delete, etc.) must be pure UI proxies to native implementations. No additional domain logic in any board. Specifically: drag is showing correct piece centers but connections are missing, and diff is showing wrong information. Refactor all boards to be 100% clean UI that just calls native functions.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪68776bbc27294dfebad3b9070eb1f717"
+  ]
+}

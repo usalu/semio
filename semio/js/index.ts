@@ -1,4 +1,4 @@
-// #region 🧲Header
+﻿// #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6076,8 +6076,57 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
  **/
 /**
  * Placement deltas in the piece plane frame: gap along yAxis, shift along xAxis, rise along the plane normal.
+ * On parent connections, shift and gap apply as u and v deltas (same as {@link dragPiecesInDesign} with offset { u: shift, v: gap }); rise adds the connection rise delta when non-zero.
  **/
 export type MoveVector = { gap: number; shift: number; rise: number };
+
+// #region 🔖DragMoveStructuralSelection
+/**
+ * Shared parent graph and fixed/selection sets for {@link dragPiecesInDesign} and {@link movePiecesInDesign}.
+ * Specs: "Fixed" pieces are selected pieces that never appear as the connecting (child) side of a connection.
+ **/
+const buildDragMoveStructuralContext = (
+  design: Design,
+  pieces: Design,
+): {
+  selectedGuids: Set<string>;
+  parentMap: Map<string, { connectionGuid: string; parentGuid: string }>;
+  pieceMap: Map<string, Piece>;
+  fixedGuids: Set<string>;
+} => {
+  const selectedGuids = new Set((pieces.pieces ?? []).map((p) => p.guid));
+  const parentMap = new Map<string, { connectionGuid: string; parentGuid: string }>();
+  for (const c of design.connections ?? []) {
+    parentMap.set(c.connecting.piece.guid, { connectionGuid: c.guid, parentGuid: c.connected.piece.guid });
+  }
+  const pieceMap = new Map<string, Piece>();
+  for (const p of design.pieces ?? []) {
+    pieceMap.set(p.guid, p);
+  }
+  const fixedGuids = new Set<string>();
+  for (const guid of selectedGuids) {
+    if (!parentMap.has(guid)) fixedGuids.add(guid);
+  }
+  return { selectedGuids, parentMap, pieceMap, fixedGuids };
+};
+
+/**
+ * True when walking parent links finds a selected ancestor (same descendant suppression as drag).
+ **/
+const pieceHasSelectedAncestorInDragMoveTree = (
+  pieceGuid: string,
+  selectedGuids: Set<string>,
+  parentMap: Map<string, { connectionGuid: string; parentGuid: string }>,
+): boolean => {
+  let current = pieceGuid;
+  while (parentMap.has(current)) {
+    const ancestor = parentMap.get(current)!.parentGuid;
+    if (selectedGuids.has(ancestor)) return true;
+    current = ancestor;
+  }
+  return false;
+};
+// #endregion
 
 /**
  * World-space translation from a piece plane and placement vector (matches connection gap/shift/rise axes).
@@ -6095,25 +6144,11 @@ export const moveTranslationWorldFromPiecePlane = (plane: Plane, vector: MoveVec
 };
 
 /**
- * Like {@link dragPiecesInDesign} but moves in 3D placement space: updates piece planes (origin) for roots and gap/shift/rise on parent connections for non-root movers.
+ * Like {@link dragPiecesInDesign}: same fixed vs connected selection and descendant suppression.
+ * Root movers get plane origin translation from {@link moveTranslationWorldFromPiecePlane}; connected movers get parent-connection diffs using the same fields as drag (u ← shift, v ← gap) plus optional rise on the connection.
  **/
 export const movePiecesInDesign = (design: Design, pieces: Design, vector: MoveVector): DesignDiff => {
-  const selectedGuids = new Set((pieces.pieces ?? []).map((p) => p.guid));
-  const connections = design.connections ?? [];
-  const parentMap = new Map<string, { connectionGuid: string; parentGuid: string }>();
-  for (const c of connections) {
-    parentMap.set(c.connecting.piece.guid, { connectionGuid: c.guid, parentGuid: c.connected.piece.guid });
-  }
-  const pieceMap = new Map<string, Piece>();
-  for (const p of design.pieces ?? []) {
-    pieceMap.set(p.guid, p);
-  }
-  const fixedGuids = new Set<string>();
-  for (const guid of selectedGuids) {
-    if (!parentMap.has(guid)) {
-      fixedGuids.add(guid);
-    }
-  }
+  const { selectedGuids, parentMap, pieceMap, fixedGuids } = buildDragMoveStructuralContext(design, pieces);
   const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
   for (const guid of fixedGuids) {
     const base = pieceMap.get(guid)?.plane;
@@ -6129,23 +6164,12 @@ export const movePiecesInDesign = (design: Design, pieces: Design, vector: MoveV
   const connectionUpdates: { connection: { guid: string }; diff: ConnectionDiff }[] = [];
   for (const guid of selectedGuids) {
     if (fixedGuids.has(guid)) continue;
-    let isDescendant = false;
-    let current = guid;
-    while (parentMap.has(current)) {
-      const ancestor = parentMap.get(current)!.parentGuid;
-      if (selectedGuids.has(ancestor)) {
-        isDescendant = true;
-        break;
-      }
-      current = ancestor;
-    }
-    if (isDescendant) continue;
+    if (pieceHasSelectedAncestorInDragMoveTree(guid, selectedGuids, parentMap)) continue;
     const parent = parentMap.get(guid);
     if (!parent) continue;
-    connectionUpdates.push({
-      connection: { guid: parent.connectionGuid },
-      diff: { gap: vector.gap, shift: vector.shift, rise: vector.rise },
-    });
+    const connDiff: ConnectionDiff = { u: vector.shift, v: vector.gap };
+    if (vector.rise !== 0) connDiff.rise = vector.rise;
+    connectionUpdates.push({ connection: { guid: parent.connectionGuid }, diff: connDiff });
   }
   const diff: DesignDiff = {};
   if (pieceUpdates.length > 0) diff.pieces = { updated: pieceUpdates };
@@ -6154,22 +6178,7 @@ export const movePiecesInDesign = (design: Design, pieces: Design, vector: MoveV
 };
 
 export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coord): DesignDiff => {
-  const selectedGuids = new Set((pieces.pieces ?? []).map((p) => p.guid));
-  const connections = design.connections ?? [];
-  const parentMap = new Map<string, { connectionGuid: string; parentGuid: string }>();
-  for (const c of connections) {
-    parentMap.set(c.connecting.piece.guid, { connectionGuid: c.guid, parentGuid: c.connected.piece.guid });
-  }
-  const pieceMap = new Map<string, Piece>();
-  for (const p of design.pieces ?? []) {
-    pieceMap.set(p.guid, p);
-  }
-  const fixedGuids = new Set<string>();
-  for (const guid of selectedGuids) {
-    if (!parentMap.has(guid)) {
-      fixedGuids.add(guid);
-    }
-  }
+  const { selectedGuids, parentMap, pieceMap, fixedGuids } = buildDragMoveStructuralContext(design, pieces);
   const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
   for (const guid of fixedGuids) {
     const currentCenter = pieceMap.get(guid)?.center;
@@ -6180,17 +6189,7 @@ export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coord
   const connectionUpdates: { connection: { guid: string }; diff: ConnectionDiff }[] = [];
   for (const guid of selectedGuids) {
     if (fixedGuids.has(guid)) continue;
-    let isDescendant = false;
-    let current = guid;
-    while (parentMap.has(current)) {
-      const ancestor = parentMap.get(current)!.parentGuid;
-      if (selectedGuids.has(ancestor)) {
-        isDescendant = true;
-        break;
-      }
-      current = ancestor;
-    }
-    if (isDescendant) continue;
+    if (pieceHasSelectedAncestorInDragMoveTree(guid, selectedGuids, parentMap)) continue;
     const parent = parentMap.get(guid);
     if (!parent) continue;
     connectionUpdates.push({ connection: { guid: parent.connectionGuid }, diff: { u: offset.u, v: offset.v } });
@@ -6217,8 +6216,13 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
 
   // Build parent map: child guid -> { parentGuid, connection }
   const parentMap = new Map<string, { parentGuid: string; connection: Connection }>();
+  // Build child map: parent guid -> [{ childGuid, connection }, ...]
+  const childMap = new Map<string, Array<{ childGuid: string; connection: Connection }>>();
   for (const conn of connections) {
     parentMap.set(conn.connecting.piece.guid, { parentGuid: conn.connected.piece.guid, connection: conn });
+    const parentGuid = conn.connected.piece.guid;
+    if (!childMap.has(parentGuid)) childMap.set(parentGuid, []);
+    childMap.get(parentGuid)!.push({ childGuid: conn.connecting.piece.guid, connection: conn });
   }
 
   // Flatten the design to get absolute planes/centers
@@ -6270,6 +6274,45 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
       }
       copyPieces.push(copied);
       addedPieceGuids.add(pieceGuid);
+    } else {
+      // Specs: Selected piece without an internal parent edge (parent piece or parent connection unselected, and not pp-excl-pc-incl)
+      // becomes a free fixed root in the clipboard at its flat absolute position. Its source descendant subtree (children
+      // and their parent connections, recursively) is auto-pulled in unchanged so the subtree appears exactly as in the source.
+      const copied: Piece = JSON.parse(JSON.stringify(piece));
+      const flatPiece = flatPieceMap.get(pieceGuid);
+      if (flatPiece) {
+        if (flatPiece.center) copied.center = { u: flatPiece.center.u, v: flatPiece.center.v };
+        if (flatPiece.plane) copied.plane = JSON.parse(JSON.stringify(flatPiece.plane));
+        const centerValue = flatPiece.center ? JSON.stringify(flatPiece.center) : JSON.stringify({ u: 0, v: 0 });
+        const planeValue = flatPiece.plane ? JSON.stringify(flatPiece.plane) : JSON.stringify({ origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } });
+        copied.attributes = [...(copied.attributes ?? []), { guid: "", key: "semio.center", value: centerValue }, { guid: "", key: "semio.plane", value: planeValue }];
+      }
+      copyPieces.push(copied);
+      addedPieceGuids.add(pieceGuid);
+
+      const subtreeQueue: string[] = [pieceGuid];
+      const subtreeVisited = new Set<string>([pieceGuid]);
+      const addedConnGuids = new Set<string>(copyConnections.map((c) => c.guid));
+      while (subtreeQueue.length > 0) {
+        const cur = subtreeQueue.shift()!;
+        const children = childMap.get(cur) ?? [];
+        for (const { childGuid, connection } of children) {
+          if (subtreeVisited.has(childGuid)) continue;
+          subtreeVisited.add(childGuid);
+          if (!addedPieceGuids.has(childGuid)) {
+            const childPiece = pieces.find((p) => p.guid === childGuid);
+            if (childPiece) {
+              copyPieces.push(JSON.parse(JSON.stringify(childPiece)));
+              addedPieceGuids.add(childGuid);
+            }
+          }
+          if (!addedConnGuids.has(connection.guid)) {
+            copyConnections.push(JSON.parse(JSON.stringify(connection)));
+            addedConnGuids.add(connection.guid);
+          }
+          subtreeQueue.push(childGuid);
+        }
+      }
     }
   }
 
@@ -15319,7 +15362,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   });
 
   describe("Move", () => {
-    it("same drag fixture: Design + Pieces + MoveVector = plane and gap/shift/rise diff", () => {
+    it("same drag fixture: plane origins for roots; parent connection u v match drag (shift, gap)", () => {
       const design = DragDesign as unknown as Design;
       const pieces = DragPieces as unknown as Design;
       const vector = MoveVector as { gap: number; shift: number; rise: number };
@@ -15341,9 +15384,34 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(computedConnUpdates.length).toBe(expectedConnUpdates.length);
       for (let i = 0; i < computedConnUpdates.length; i++) {
         expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);
-        expect(computedConnUpdates[i].diff.gap).toBe(expectedConnUpdates[i].diff.gap);
-        expect(computedConnUpdates[i].diff.shift).toBe(expectedConnUpdates[i].diff.shift);
-        expect(computedConnUpdates[i].diff.rise).toBe(expectedConnUpdates[i].diff.rise);
+        expect(computedConnUpdates[i].diff.u).toBe(expectedConnUpdates[i].diff.u);
+        expect(computedConnUpdates[i].diff.v).toBe(expectedConnUpdates[i].diff.v);
+      }
+      const dragParity = dragPiecesInDesign(design, pieces, { u: vector.shift, v: vector.gap });
+      const dragConn = (dragParity.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
+      expect(computedConnUpdates.map((c) => c.connection.guid)).toEqual(dragConn.map((c) => c.connection.guid));
+      for (let i = 0; i < computedConnUpdates.length; i++) {
+        expect(computedConnUpdates[i].diff.u).toBe(dragConn[i].diff.u);
+        expect(computedConnUpdates[i].diff.v).toBe(dragConn[i].diff.v);
+      }
+      const dragPiecesUp = (dragParity.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
+      expect(computedPieceUpdates.map((p) => p.piece.guid)).toEqual(dragPiecesUp.map((p) => p.piece.guid));
+    });
+
+    it("non-zero rise adds connection rise delta; u v still match drag offset (shift, gap)", () => {
+      const design = DragDesign as unknown as Design;
+      const pieces = DragPieces as unknown as Design;
+      const vector = { gap: 2, shift: -1, rise: 0.5 };
+      const diff = movePiecesInDesign(design, pieces, vector);
+      const dragParity = dragPiecesInDesign(design, pieces, { u: vector.shift, v: vector.gap });
+      const moveConn = (diff.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
+      const dragConn = (dragParity.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
+      expect(moveConn.length).toBe(dragConn.length);
+      for (let i = 0; i < moveConn.length; i++) {
+        expect(moveConn[i].connection.guid).toBe(dragConn[i].connection.guid);
+        expect(moveConn[i].diff.u).toBe(dragConn[i].diff.u);
+        expect(moveConn[i].diff.v).toBe(dragConn[i].diff.v);
+        expect(moveConn[i].diff.rise).toBe(0.5);
       }
     });
   });
@@ -15587,6 +15655,84 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(internalAfter).toBeDefined();
       expect(internalAfter!.u).toBeCloseTo(srcInternal!.u ?? 0, 6);
       expect(internalAfter!.v).toBeCloseTo(srcInternal!.v ?? 0, 6);
+    });
+
+    it("copyDesign single connected piece selected alone becomes free fixed root and auto-pulls source descendants", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const tF0BC0 = "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952";
+
+      const sourceConns = design.connections ?? [];
+      const sourcePieces = design.pieces ?? [];
+      const childMap = new Map<string, Array<{ childGuid: string; connectionGuid: string }>>();
+      for (const c of sourceConns) {
+        const p = c.connected.piece.guid;
+        if (!childMap.has(p)) childMap.set(p, []);
+        childMap.get(p)!.push({ childGuid: c.connecting.piece.guid, connectionGuid: c.guid });
+      }
+      const expectedDescPieces = new Set<string>();
+      const expectedDescConns = new Set<string>();
+      const queue = [tF0BC0];
+      while (queue.length > 0) {
+        const cur = queue.shift()!;
+        for (const { childGuid, connectionGuid } of childMap.get(cur) ?? []) {
+          if (expectedDescPieces.has(childGuid)) continue;
+          expectedDescPieces.add(childGuid);
+          expectedDescConns.add(connectionGuid);
+          queue.push(childGuid);
+        }
+      }
+      expect(expectedDescPieces.size).toBeGreaterThan(0);
+
+      const copyOp = copyDesign(kit, design, [tF0BC0], []);
+      expect(copyOp.ok).toBe(true);
+      if (!copyOp.ok) return;
+      const copied = copyOp.change;
+      expect((copied.pieces ?? []).length).toBe(1 + expectedDescPieces.size);
+      expect((copied.connections ?? []).length).toBe(expectedDescConns.size);
+
+      const root = copied.pieces!.find((p) => p.guid === tF0BC0)!;
+      expect(root.plane).toBeDefined();
+      expect(root.center).toBeDefined();
+      expect((root.attributes ?? []).some((a) => a.key === "semio.center")).toBe(true);
+      expect((root.attributes ?? []).some((a) => a.key === "semio.plane")).toBe(true);
+      expect((root.attributes ?? []).some((a) => a.key === "semio.piece.origin" && a.value === "external")).toBe(false);
+
+      for (const guid of expectedDescPieces) {
+        const desc = copied.pieces!.find((p) => p.guid === guid);
+        expect(desc).toBeDefined();
+        const sourceDesc = sourcePieces.find((p) => p.guid === guid)!;
+        expect(JSON.stringify(desc!.center ?? null)).toBe(JSON.stringify(sourceDesc.center ?? null));
+        expect(JSON.stringify(desc!.plane ?? null)).toBe(JSON.stringify(sourceDesc.plane ?? null));
+        expect((desc!.attributes ?? []).some((a) => a.key === "semio.piece.origin" && a.value === "external")).toBe(false);
+      }
+      for (const guid of expectedDescConns) {
+        const conn = copied.connections!.find((c) => c.guid === guid);
+        expect(conn).toBeDefined();
+      }
+
+      const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
+      const diff = pasteDesign(kit, copied, pasteTarget, "original");
+      const added = diff.pieces?.added ?? [];
+      expect(added.length).toBe(1 + expectedDescPieces.size);
+      const addedRoot = added.find((p) => p.guid === tF0BC0)!;
+      expect(addedRoot.plane).toBeDefined();
+      expect(addedRoot.center).toBeDefined();
+      expect((diff.connections?.added ?? []).length).toBe(expectedDescConns.size);
+
+      const diffCoord = pasteDesign(kit, copied, pasteTarget, "original", { u: 7, v: -3 });
+      const addedCoord = diffCoord.pieces?.added ?? [];
+      const addedRootCoord = addedCoord.find((p) => p.guid === tF0BC0)!;
+      expect(addedRootCoord.center!.u).toBeCloseTo(root.center!.u + 7, 6);
+      expect(addedRootCoord.center!.v).toBeCloseTo(root.center!.v - 3, 6);
+      const addedConnsCoord = diffCoord.connections?.added ?? [];
+      for (const expConnGuid of expectedDescConns) {
+        const sourceConn = copied.connections!.find((c) => c.guid === expConnGuid)!;
+        const targetConn = addedConnsCoord.find((c) => c.guid === expConnGuid)!;
+        expect(targetConn).toBeDefined();
+        expect(targetConn.u ?? 0).toBeCloseTo(sourceConn.u ?? 0, 6);
+        expect(targetConn.v ?? 0).toBeCloseTo(sourceConn.v ?? 0, 6);
+      }
     });
   });
   // #endregion 📋Copy And Paste Tests

@@ -1,7 +1,7 @@
 {
   "title": "Fix Copy Paste Design Algorithm And Stories",
   "status": "closed",
-  "summary": "Added `select-text` to all `data-slot=\"tree-label\"` spans in elements/ui/index.tsx. The `select-none` class on parent row divs (TreeSection, TreeItem, SortableTreeItem) was preventing text selection in labels. Fixed by adding `select-text` to the label spans so piece/connection names in the diff tree are now highlightable and copyable.",
+  "summary": "Extended copyDesign in TypeScript so a free-fixed root piece (selected without parent piece or parent connection) auto-pulls its source descendant subtree. Built a childMap alongside parentMap in [semio/js/index.ts](semio/js/index.ts#L6217-L6228), then in the new free-fixed branch [semio/js/index.ts](semio/js/index.ts#L6286-L6313) BFS through the source children, cloning each descendant piece as-is and adding the parent connection unchanged so paste places the subtree exactly as in the source — relative u/v preserved, root offset by anchor/coord. Test [semio/js/index.ts](semio/js/index.ts#L15616-L15694) selects t_f0_b_c0 alone and asserts the full descendant set + connections appear in clipboard, paste diff includes 1+N pieces and N connections, and coord only shifts the root center while descendant connection u/v stay equal to the source. All 7 CopyAndPaste tests pass; only the pre-existing unrelated ExportDesignModel dotnet shell-out failure remains. Other languages still pending follow-up.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪433ba041e2d449dd983f41a0b3e83961",
@@ -28,6 +28,7 @@
     "⚪54665f87810446a4a55c9f0987c38ad8",
     "⚪835515ded46e409f9ac384d66a789d58",
     "⚪48828ed06adf42ed87fe3c214f349b01",
-    "⚪6954ff0baf324ed7bf5e15686f6bb1ae"
+    "⚪6954ff0baf324ed7bf5e15686f6bb1ae",
+    "⚪65bdced0ca7e43f58465981802360310"
   ]
 }

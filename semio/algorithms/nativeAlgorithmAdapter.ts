@@ -6,7 +6,7 @@
 // #endregion Header
 
 import type { Coord, Design, DesignDiff, DesignDiffOperationResult, DesignOperationResult, Kit, MoveVector, OperationResult } from "@semio/js";
-import { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js";
+import { applyDesignDiff, normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js";
 
 /** Language toolbar values; MUST stay aligned with `.storybook/withLanguage` AlgorithmLanguage. */
 export type NativeAlgorithmLanguage = "ts" | "python" | "rust" | "go" | "csharp";
@@ -103,13 +103,7 @@ export async function nativeFlattenDesign(kit: Kit, designGuid: string, language
 /**
  * Runs delete-pieces in the chosen language: TypeScript in-process or native backends via REST.
  */
-export async function nativeDeletePieces(
-  kit: Kit,
-  design: Design,
-  pieceGuids: readonly string[],
-  connectionGuids: readonly string[],
-  language: NativeAlgorithmLanguage,
-): Promise<DesignDiffOperationResult> {
+export async function nativeDeletePieces(kit: Kit, design: Design, pieceGuids: readonly string[], connectionGuids: readonly string[], language: NativeAlgorithmLanguage): Promise<DesignDiffOperationResult> {
   if (language === "ts") {
     const { deletePiecesAndConnectionsInDesign } = await import("@semio/js");
     return deletePiecesAndConnectionsInDesign(kit, design, [...pieceGuids], [...connectionGuids]);
@@ -128,72 +122,71 @@ export async function nativeDeletePieces(
 
 /**
  * Runs drag in-process: flattens internally, applies {@link dragPiecesInDesign} on the flat view,
- * applies that diff to the raw design, re-flattens, and returns the final flat design plus the drag diff for UI preview.
+ * Returns a flat design with connections preserved (for display).
+ * Flatten only applies piece position updates; connections are kept from the raw design.
  */
-export async function nativeDragPieces(
-  kit: Kit,
-  rawDesign: Design,
-  pieceGuids: readonly string[],
-  offset: Coord,
-  _language: NativeAlgorithmLanguage,
-): Promise<{ output: Design; dragDiff: DesignDiff }> {
-  const { dragPiecesInDesign, applyDesignDiff, flattenDesign } = await import("@semio/js");
-  const fc = flattenDesign(kit, rawDesign.guid);
-  if (!fc.ok) {
-    throw new Error(fc.errors.map((e) => e.message).join("; "));
-  }
-  const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(rawDesign)), fc.change.forward);
-  const piecesDesign: Design = { guid: flatDesign.guid, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
-  const dragDiff = dragPiecesInDesign(flatDesign, piecesDesign, offset);
-  const updatedRaw = applyDesignDiff(rawDesign, dragDiff);
-  const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === rawDesign.guid ? updatedRaw : d)) };
-  const flatChange = flattenDesign(updatedKit, rawDesign.guid);
-  if (!flatChange.ok) {
-    throw new Error(flatChange.errors.map((e) => e.message).join("; "));
-  }
-  const output = applyDesignDiff(updatedRaw, flatChange.change.forward);
-  return { output, dragDiff };
+export async function nativeFlatDesign(kit: Kit, designGuid: string, language: NativeAlgorithmLanguage): Promise<Design | null> {
+  const result = await nativeFlattenDesign(kit, designGuid, language);
+  if (!result.ok) return null;
+  const design = (kit.designs ?? []).find((d) => d.guid === designGuid);
+  if (!design) return null;
+  return applyDesignDiff(JSON.parse(JSON.stringify(design)), { pieces: result.change.forward.pieces });
 }
 
 /**
- * Runs move in-process: flattens internally, applies {@link movePiecesInDesign} on the flat view,
- * applies that diff to the raw design, re-flattens, and returns the final flat design plus the move diff for UI preview.
+ * Runs drag in-process: flattens (preserving connections), applies {@link dragPiecesInDesign},
+ * re-flattens, and returns the flat input (pre-drag), flat output (post-drag), and the drag diff.
+ * All returned designs preserve connections for display.
  */
-export async function nativeMovePieces(
-  kit: Kit,
-  rawDesign: Design,
-  pieceGuids: readonly string[],
-  vector: MoveVector,
-  _language: NativeAlgorithmLanguage,
-): Promise<{ output: Design; moveDiff: DesignDiff }> {
-  const { movePiecesInDesign, applyDesignDiff, flattenDesign } = await import("@semio/js");
+export async function nativeDragPieces(kit: Kit, rawDesign: Design, pieceGuids: readonly string[], offset: Coord, _language: NativeAlgorithmLanguage): Promise<{ inputDesign: Design; output: Design; dragDiff: DesignDiff }> {
+  const { dragPiecesInDesign, applyDesignDiff: apply, flattenDesign } = await import("@semio/js");
   const fc = flattenDesign(kit, rawDesign.guid);
   if (!fc.ok) {
     throw new Error(fc.errors.map((e) => e.message).join("; "));
   }
-  const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(rawDesign)), fc.change.forward);
+  const flatDesign = apply(JSON.parse(JSON.stringify(rawDesign)), { pieces: fc.change.forward.pieces });
   const piecesDesign: Design = { guid: flatDesign.guid, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
-  const moveDiff = movePiecesInDesign(flatDesign, piecesDesign, vector);
-  const updatedRaw = applyDesignDiff(rawDesign, moveDiff);
+  const dragDiff = dragPiecesInDesign(flatDesign, piecesDesign, offset);
+  const updatedRaw = apply(rawDesign, dragDiff);
   const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === rawDesign.guid ? updatedRaw : d)) };
   const flatChange = flattenDesign(updatedKit, rawDesign.guid);
   if (!flatChange.ok) {
     throw new Error(flatChange.errors.map((e) => e.message).join("; "));
   }
-  const output = applyDesignDiff(updatedRaw, flatChange.change.forward);
+  const output = apply(updatedRaw, { pieces: flatChange.change.forward.pieces });
+  return { inputDesign: flatDesign, output, dragDiff };
+}
+
+/**
+ * Runs move in-process: flattens (preserving connections), applies {@link movePiecesInDesign},
+ * re-flattens, and returns the flat input (pre-move), flat output (post-move), and the move diff.
+ * All returned designs preserve connections for display.
+ */
+export async function nativeMovePieces(kit: Kit, rawDesign: Design, pieceGuids: readonly string[], vector: MoveVector, _language: NativeAlgorithmLanguage): Promise<{ inputDesign: Design; output: Design; moveDiff: DesignDiff }> {
+  const { movePiecesInDesign, applyDesignDiff: apply, flattenDesign } = await import("@semio/js");
+  const fc = flattenDesign(kit, rawDesign.guid);
+  if (!fc.ok) {
+    throw new Error(fc.errors.map((e) => e.message).join("; "));
+  }
+  const flatDesign = apply(JSON.parse(JSON.stringify(rawDesign)), { pieces: fc.change.forward.pieces });
+  const piecesDesign: Design = { guid: flatDesign.guid, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
+  const moveDiff = movePiecesInDesign(flatDesign, piecesDesign, vector);
+  const updatedRaw = apply(rawDesign, moveDiff);
+  const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === rawDesign.guid ? updatedRaw : d)) };
+  const flatChange = flattenDesign(updatedKit, rawDesign.guid);
+  if (!flatChange.ok) {
+    throw new Error(flatChange.errors.map((e) => e.message).join("; "));
+  }
+  const output = apply(updatedRaw, { pieces: flatChange.change.forward.pieces });
+  return { inputDesign: flatDesign, output, moveDiff };
+}
   return { output, moveDiff };
 }
 
 /**
  * Runs copy-design in the chosen language: TypeScript in-process or native backends via REST.
  */
-export async function nativeCopyDesign(
-  kit: Kit,
-  design: Design,
-  pieceGuids: readonly string[],
-  connectionGuids: readonly string[],
-  language: NativeAlgorithmLanguage,
-): Promise<OperationResult<Design>> {
+export async function nativeCopyDesign(kit: Kit, design: Design, pieceGuids: readonly string[], connectionGuids: readonly string[], language: NativeAlgorithmLanguage): Promise<OperationResult<Design>> {
   if (language === "ts") {
     const { copyDesign } = await import("@semio/js");
     return copyDesign(kit, design, [...pieceGuids], [...connectionGuids]);
