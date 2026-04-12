@@ -81,6 +81,17 @@
         "session": "unknown"
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "20cfca7d5e8d541f05d5b4b2402d11425ec2b8e1",
+        "client": "",
+        "contributor": "unknown",
+        "kind": "version.checkpoint.ended",
+        "second": "2026-04-11T21:08:15Z",
+        "session": "unknown"
+      },
+      "response": {}
     }
   ]
 }

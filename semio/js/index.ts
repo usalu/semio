@@ -619,9 +619,9 @@ export const getConceptGuid = (id: ConceptId): Guid => id.guid;
 // #endregion 🐍Entity IDs
 
 
-// #region �️Weak Entities
+// #region 🖥️Weak Entities
 
-// #region �📺Coord
+// #region 📺Coord
 // Coord weak entity types and schemas MUST be defined here.
 
 /**
@@ -9230,6 +9230,116 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
 // #endregion 🧊Type Family Helpers
 
 
+// #region 🎯OperationResult
+/**
+ * Human-readable note attached to an algorithm {@link OperationResult} (warning, info, or error).
+ **/
+export interface OperationNote {
+  /** Stable machine id e.g. flatten.no-fixed-piece-in-clump */
+  code?: string;
+  message: string;
+}
+
+/**
+ * Successful operation: produced change plus non-fatal warnings and informational notes.
+ **/
+export interface OperationOk<Change> {
+  ok: true;
+  change: Change;
+  warnings: OperationNote[];
+  infos: OperationNote[];
+}
+
+/**
+ * Failed operation: no change; carries one or more errors.
+ **/
+export interface OperationErr {
+  ok: false;
+  errors: OperationNote[];
+}
+
+/**
+ * Discriminated union returned by semio algorithms: either ok with change or failed with errors.
+ **/
+export type OperationResult<Change> = OperationOk<Change> | OperationErr;
+
+/** {@link OperationResult} specialized for {@link DesignChange} (flatten, etc.). */
+export type DesignOperationResult = OperationResult<DesignChange>;
+
+/** {@link OperationResult} specialized for {@link DesignDiff}. */
+export type DesignDiffOperationResult = OperationResult<DesignDiff>;
+
+/**
+ * Builds a successful {@link OperationResult}.
+ **/
+export const operationOk = <Change>(change: Change, warnings: OperationNote[] = [], infos: OperationNote[] = []): OperationOk<Change> => ({
+  ok: true,
+  change,
+  warnings,
+  infos,
+});
+
+/**
+ * Builds a failed {@link OperationResult}.
+ **/
+export const operationErr = (errors: OperationNote[]): OperationErr => ({ ok: false, errors });
+
+/**
+ * Wraps a native/REST payload that may still be a bare change object into {@link DesignOperationResult}.
+ **/
+export const normalizeDesignFlattenResult = (raw: unknown): DesignOperationResult => {
+  if (raw !== null && typeof raw === "object" && "ok" in raw) {
+    return raw as DesignOperationResult;
+  }
+  return operationOk(raw as DesignChange, [], []);
+};
+
+/**
+ * Wraps a native/REST payload that may still be a bare {@link DesignDiff} into {@link DesignDiffOperationResult}.
+ **/
+export const normalizeDesignDiffResult = (raw: unknown): DesignDiffOperationResult => {
+  if (raw !== null && typeof raw === "object" && "ok" in raw) {
+    return raw as DesignDiffOperationResult;
+  }
+  return operationOk(raw as DesignDiff, [], []);
+};
+
+/**
+ * Wraps a native/REST payload that may still be a bare {@link Design} into {@link OperationResult}<{@link Design}>.
+ **/
+export const normalizeDesignCopyResult = (raw: unknown): OperationResult<Design> => {
+  if (raw !== null && typeof raw === "object" && "ok" in raw) {
+    return raw as OperationResult<Design>;
+  }
+  return operationOk(raw as Design, [], []);
+};
+// #endregion 🎯OperationResult
+
+
+/**
+ * Represents a bidirectional change between two Kit states.
+ **/
+export interface KitChange {
+  forward: KitDiff;
+  backward: KitDiff;
+}
+/**
+ * Computes the forward and backward diffs between two kit states.
+ **/
+export const getKitChange = (before: Kit, after: Kit): KitChange => {
+  const forward = getKitDiff(before, after);
+  const backward = inverseKitDiff(before, forward);
+  return { forward, backward };
+};
+
+/**
+ * Represents a reversible design change with forward and backward diffs.
+ **/
+export interface DesignChange {
+  forward: DesignDiff;
+  backward: DesignDiff;
+}
+
 // #region 📦Kit Diff Validation
 // Validates kit diffs before apply; optional heal trims ineffective operations.
 
@@ -9579,116 +9689,6 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
 
 // #endregion 📦Kit Diff Validation
 
-
-// #region 🎯OperationResult
-/**
- * Human-readable note attached to an algorithm {@link OperationResult} (warning, info, or error).
- **/
-export interface OperationNote {
-  /** Stable machine id e.g. flatten.no-fixed-piece-in-clump */
-  code?: string;
-  message: string;
-}
-
-/**
- * Successful operation: produced change plus non-fatal warnings and informational notes.
- **/
-export interface OperationOk<Change> {
-  ok: true;
-  change: Change;
-  warnings: OperationNote[];
-  infos: OperationNote[];
-}
-
-/**
- * Failed operation: no change; carries one or more errors.
- **/
-export interface OperationErr {
-  ok: false;
-  errors: OperationNote[];
-}
-
-/**
- * Discriminated union returned by semio algorithms: either ok with change or failed with errors.
- **/
-export type OperationResult<Change> = OperationOk<Change> | OperationErr;
-
-/** {@link OperationResult} specialized for {@link DesignChange} (flatten, etc.). */
-export type DesignOperationResult = OperationResult<DesignChange>;
-
-/** {@link OperationResult} specialized for {@link DesignDiff}. */
-export type DesignDiffOperationResult = OperationResult<DesignDiff>;
-
-/**
- * Builds a successful {@link OperationResult}.
- **/
-export const operationOk = <Change>(change: Change, warnings: OperationNote[] = [], infos: OperationNote[] = []): OperationOk<Change> => ({
-  ok: true,
-  change,
-  warnings,
-  infos,
-});
-
-/**
- * Builds a failed {@link OperationResult}.
- **/
-export const operationErr = (errors: OperationNote[]): OperationErr => ({ ok: false, errors });
-
-/**
- * Wraps a native/REST payload that may still be a bare change object into {@link DesignOperationResult}.
- **/
-export const normalizeDesignFlattenResult = (raw: unknown): DesignOperationResult => {
-  if (raw !== null && typeof raw === "object" && "ok" in raw) {
-    return raw as DesignOperationResult;
-  }
-  return operationOk(raw as DesignChange, [], []);
-};
-
-/**
- * Wraps a native/REST payload that may still be a bare {@link DesignDiff} into {@link DesignDiffOperationResult}.
- **/
-export const normalizeDesignDiffResult = (raw: unknown): DesignDiffOperationResult => {
-  if (raw !== null && typeof raw === "object" && "ok" in raw) {
-    return raw as DesignDiffOperationResult;
-  }
-  return operationOk(raw as DesignDiff, [], []);
-};
-
-/**
- * Wraps a native/REST payload that may still be a bare {@link Design} into {@link OperationResult}<{@link Design}>.
- **/
-export const normalizeDesignCopyResult = (raw: unknown): OperationResult<Design> => {
-  if (raw !== null && typeof raw === "object" && "ok" in raw) {
-    return raw as OperationResult<Design>;
-  }
-  return operationOk(raw as Design, [], []);
-};
-// #endregion 🎯OperationResult
-
-
-/**
- * Represents a bidirectional change between two Kit states.
- **/
-export interface KitChange {
-  forward: KitDiff;
-  backward: KitDiff;
-}
-/**
- * Computes the forward and backward diffs between two kit states.
- **/
-export const getKitChange = (before: Kit, after: Kit): KitChange => {
-  const forward = getKitDiff(before, after);
-  const backward = inverseKitDiff(before, forward);
-  return { forward, backward };
-};
-
-/**
- * Represents a reversible design change with forward and backward diffs.
- **/
-export interface DesignChange {
-  forward: DesignDiff;
-  backward: DesignDiff;
-}
 
 // #region 🛡️Validation
 

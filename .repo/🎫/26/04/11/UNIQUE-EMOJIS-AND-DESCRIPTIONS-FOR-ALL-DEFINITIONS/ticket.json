@@ -1,8 +1,8 @@
 {
   "title": "Unique Emojis and Descriptions for All Definitions",
-  "status": "open",
+  "status": "closed",
   "description": "Unique Emojis and Descriptions for All Definitions",
-  "summary": "Root cause: stray `c:\\git\\semio\\go.exe` (a 3MB \"programming validator\" binary that prints `[DEBUG] programming validator error: decode translation: EOF` and exits) shadowed the real `C:\\Program Files\\Go\\bin\\go.exe` because Windows CreateProcess searches CWD before PATH. When VS Code spawned `go run ./repo/cli mcp` from the workspace folder, it invoked the bogus binary which exited immediately, causing the connection state to flip Starting → Running → Stopped within ~14ms. Two additional stray binaries (`cli.exe`, `server.exe`) sat at the repo root for the same reason. Fix: deleted all three stray binaries from the repo root. `*.exe` is already in `.gitignore`, so they would not have been committed. Verified after the fix: `where go` resolves to `C:\\Program Files\\Go\\bin\\go.exe`; piping an `initialize` JSON-RPC request to `go run ./repo/cli mcp` returns a valid `protocolVersion 2024-11-05` handshake response with the `repo` server name. All four MCP client configurations (`.vscode/mcp.json`, `.cursor/mcp.json`, `.windsurf/mcp.json`, `.kiro/settings/mcp.json`) now resolve correctly: the three using `go run ./repo/cli mcp` find the real Go toolchain via PATH, and Windsurf's `./repo/cli/cli` resolves to the prebuilt `cli.exe` via Windows automatic extension appending.",
+  "summary": "Completed semantic section parity across semio implementations by applying canonical top-level ordering, fixing malformed nested region markers (Weak Entities and Coord) in TS/Python/C#, and validating balanced region nesting plus cross-language test/build passes.",
   "goal": "🎯aioptimizedrepo🎯consistentrepohistory",
   "sessions": [
     "⚪3b52957a673f486eb701d52314eb3858",
