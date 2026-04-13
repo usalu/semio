@@ -1,8 +1,8 @@
 {
   "title": "Fix Windows native dev and build flows, repo MCP and agent hooks, sketchpad/desktop, coda/desktop, and Semio.Grasshopper; remove Unix-only command assumptions and validate monorepo commands on Windows.",
-  "status": "open",
+  "status": "closed",
   "description": "codex",
-  "summary": "Added a zero-touch native Windows bootstrap at .devcontainer/install-native.ps1, aligned devcontainer/native Python to 3.13, fixed native-facing MCP templates to use repo-relative semio and coda assistant entry points, and documented the new native setup path in README. Verified the PowerShell bootstrap parses and runs in skip mode, repo configure still succeeds, and the new repo/cli regression test passes.",
+  "summary": "Completed the native bootstrap to converge with the devcontainer baseline: the PowerShell installer now upgrades machine dependencies, installs workspace/test Python dependencies across all UV packages, handles repo-local Python locks, installs the repo VSIX into supported editors, removes .NET 7 from the declared baseline, fixes the devcontainer restore path, and validates the Windows-native bootstrap plus Python test suite. Residual non-bootstrap failures remain in semio/rs and semio/net.",
   "goal": "🎯multiplatform",
   "sessions": [
     "⚪8dbd87e6070e4644b7283df65fa12cd4",

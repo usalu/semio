@@ -57,6 +57,7 @@ function Refresh-CurrentProcessPath {
     $extraPaths = @(
         (Join-HomePath @(".cargo", "bin")),
         (Join-HomePath @(".local", "bin")),
+        (Join-Path $env:LOCALAPPDATA "GitKrakenCLI"),
         (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links")
     ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
     $segments = @($machinePath, $userPath) + $extraPaths + @($env:Path)
@@ -157,12 +158,13 @@ function Get-FirstCommandPath {
     param([string[]]$Candidates)
 
     foreach ($candidate in $Candidates) {
+        if (Test-Path -LiteralPath $candidate) {
+            return (Resolve-Path $candidate).Path
+        }
+
         $command = Get-Command $candidate -ErrorAction SilentlyContinue
         if ($null -ne $command) {
             return $command.Source
-        }
-        if (Test-Path -LiteralPath $candidate) {
-            return (Resolve-Path $candidate).Path
         }
     }
 
@@ -245,7 +247,7 @@ function Configure-GitSafeDirectories {
 function Configure-GitKrakenWorkspace {
     param([string]$RepoRoot)
 
-    $gkPath = Get-FirstCommandPath @("gk")
+    $gkPath = Get-FirstCommandPath @((Join-Path $env:LOCALAPPDATA "GitKrakenCLI\gk.exe"), "gk.exe", "gk")
     if (-not $gkPath) {
         Write-Step "GitKraken CLI not on PATH yet; skipping workspace bootstrap."
         return
@@ -275,7 +277,7 @@ function Configure-GitKrakenWorkspace {
     $repoCsv = ($repos | Select-Object -Unique) -join ","
     $infoOutput = & $gkPath ws info $workspaceName 2>$null | Out-String
     if ($LASTEXITCODE -eq 0 -and $infoOutput -and -not ($infoOutput -match "no workspace with name")) {
-        $missing = $repos | Where-Object { $infoOutput -notmatch [Regex]::Escape($_) }
+        $missing = @($repos | Where-Object { $infoOutput -notmatch [Regex]::Escape($_) })
         if ($missing.Count -gt 0) {
             & $gkPath ws update $workspaceName --add-repos (($missing | Select-Object -Unique) -join ",") | Out-Null
             & $gkPath ws refresh $workspaceName | Out-Null
@@ -286,6 +288,35 @@ function Configure-GitKrakenWorkspace {
     }
     & $gkPath ws set $workspaceName | Out-Null
     Write-Step "GitKraken workspace ready: $workspaceName."
+}
+
+function Stop-RepoPythonProcesses {
+    param([string]$RepoRoot)
+
+    $repoVenvRoots = @(
+        (Join-Path $RepoRoot ".venv"),
+        (Join-Path $RepoRoot "coda\assistant\.venv")
+    ) | Where-Object { Test-Path -LiteralPath $_ } | ForEach-Object { (Resolve-Path $_).Path }
+
+    if ($repoVenvRoots.Count -eq 0) {
+        return
+    }
+
+    $pythonProcesses = Get-CimInstance Win32_Process -Filter "Name = 'python.exe' OR Name = 'pythonw.exe'" -ErrorAction SilentlyContinue
+    foreach ($process in $pythonProcesses) {
+        $executablePath = $process.ExecutablePath
+        if (-not $executablePath) {
+            continue
+        }
+
+        foreach ($venvRoot in $repoVenvRoots) {
+            if ($executablePath.StartsWith($venvRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+                Write-Step "Stopping repo-local Python process $($process.ProcessId) from $executablePath to refresh the virtual environment."
+                Stop-Process -Id $process.ProcessId -Force -ErrorAction Stop
+                break
+            }
+        }
+    }
 }
 #endregion 🔧Helpers
 
@@ -319,6 +350,7 @@ if (-not $SkipMachineInstall) {
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314\Scripts"),
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314"),
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Launcher"),
+        (Join-Path $env:LOCALAPPDATA "GitKrakenCLI"),
         (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links"),
         (Join-HomePath @(".local", "bin")),
         (Join-HomePath @(".cargo", "bin"))
@@ -383,8 +415,9 @@ if (-not $SkipRepoBootstrap) {
     $dotnetPath = Get-CommandPathOrThrow -Label "dotnet" -Candidates @("dotnet.exe")
 
     Configure-GitSafeDirectories -RepoRoot $repoRoot
+    Stop-RepoPythonProcesses -RepoRoot $repoRoot
     Invoke-RepoCommand -FilePath $npmPath -ArgumentList @("install") -WorkingDirectory $repoRoot
-    Invoke-RepoCommand -FilePath $uvPath -ArgumentList @("sync", "--python", $script:PythonKind) -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $uvPath -ArgumentList @("sync", "--all-packages", "--all-groups", "--python", $script:PythonKind) -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $uvPath -ArgumentList @("sync", "--python", $script:PythonKind) -WorkingDirectory (Join-Path $repoRoot "coda\assistant")
     Invoke-RepoCommand -FilePath $goPath -ArgumentList @("build", "-o", (Join-Path $repoRoot "repo\cli\cli.exe"), "./repo/cli") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $dotnetPath -ArgumentList @("restore", "Monorepo.sln") -WorkingDirectory $repoRoot
@@ -398,9 +431,10 @@ if (-not $SkipRepoBootstrap) {
 if (-not $SkipEditorInstall) {
     Refresh-CurrentProcessPath
     $editorCliPaths = @(
-        (Get-FirstCommandPath @("code", (Join-Path $env:LOCALAPPDATA "Programs\Microsoft VS Code\bin\code.cmd"))),
-        (Get-FirstCommandPath @("cursor")),
-        (Get-FirstCommandPath @("windsurf"))
+        (Get-FirstCommandPath @((Join-Path $env:LOCALAPPDATA "Programs\Microsoft VS Code\bin\code.cmd"), "code.cmd", "code")),
+        (Get-FirstCommandPath @((Join-Path $env:LOCALAPPDATA "Programs\cursor\resources\app\bin\cursor.cmd"), "cursor.cmd", "cursor")),
+        (Get-FirstCommandPath @((Join-Path $env:LOCALAPPDATA "Programs\Windsurf\bin\windsurf.cmd"), "windsurf.cmd", "windsurf")),
+        (Get-FirstCommandPath @((Join-Path $env:LOCALAPPDATA "Programs\Antigravity\bin\antigravity.cmd"), "antigravity.cmd", "antigravity"))
     ) | Where-Object { $_ } | Select-Object -Unique
     Install-EditorExtensions -RepoRoot $repoRoot -EditorCliPaths $editorCliPaths
 }

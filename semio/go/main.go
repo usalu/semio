@@ -9555,7 +9555,12 @@ func DesignWithDiff(base Design, diff DesignDiff) Design {
 			attrs = append(attrs, statusAttr("removed"))
 			pc.Attributes = attrs
 		} else if pDiff, ok := updatedPieceMap[pc.Guid]; ok {
+			basePlane := pc.Plane
+			baseCenter := pc.Center
 			pc = applyPieceDiff(pc, pDiff)
+			// 📌Preserve base geometry so modified pieces stay in place and only get recolored.
+			pc.Plane = basePlane
+			pc.Center = baseCenter
 			attrs := append([]Attribute{}, pc.Attributes...)
 			attrs = append(attrs, statusAttr("modified"))
 			pc.Attributes = attrs

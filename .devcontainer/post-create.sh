@@ -212,7 +212,7 @@ install_gitkraken_cli
 #endregion 🔖GitKrakenCli
 #region 🔖Python
 echo "Setting up Python environment..."
-if uv sync; then
+if uv sync --all-packages --all-groups; then
   echo "✅ Python environment setup completed."
 else
   echo "⚠️  uv sync failed, but continuing..."

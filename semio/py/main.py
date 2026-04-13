@@ -9281,7 +9281,18 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
             attrs.append(status_attr("removed"))
             pc["attributes"] = attrs
         elif pc["guid"] in updated_piece_map:
+            base_plane = pc.get("plane")
+            base_center = pc.get("center")
             pc = _applyPieceDiff(pc, updated_piece_map[pc["guid"]])
+            # 📌Preserve base geometry so modified pieces stay in place and only get recolored.
+            if base_plane is not None:
+                pc["plane"] = base_plane
+            elif "plane" in pc:
+                del pc["plane"]
+            if base_center is not None:
+                pc["center"] = base_center
+            elif "center" in pc:
+                del pc["center"]
             attrs = pc.get("attributes", []) or []
             attrs.append(status_attr("modified"))
             pc["attributes"] = attrs
@@ -11015,7 +11026,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except json.JSONDecodeError, TypeError:
+                                                    except (json.JSONDecodeError, TypeError):
                                                         pass
                                         if flatParentCenter is None:
                                             for attr in externalParent.get("attributes", []):
@@ -11023,7 +11034,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except json.JSONDecodeError, TypeError:
+                                                    except (json.JSONDecodeError, TypeError):
                                                         pass
                                         if flatParentCenter is None and externalParent.get("center"):
                                             flatParentCenter = externalParent["center"]

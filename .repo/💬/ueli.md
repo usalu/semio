@@ -92,12 +92,13 @@ Extend the monorepo to be multi-platform.
 All projects are mainly developed inside the devcontainer but still sometimes need native development.
 Everything MUST work zero-touch on Linux, Windows, Mac.
 You currently have a fresh Windows repo that you can test. All dev and build commands need to run. In particular are native:
+
 - sketchpad/desktop
 - coda/desktop
 - Semio.Grasshopper
-You MUST adjust all configs and test everything for the complete monorepo (all programming languages etc).
-You MUST fix all bugs. 
-You MUST extend the host machine if something is missing.
+  You MUST adjust all configs and test everything for the complete monorepo (all programming languages etc).
+  You MUST fix all bugs.
+  You MUST extend the host machine if something is missing.
 
 ---
 
@@ -243,11 +244,13 @@ TODO: Introduce Design/Interpolate algorithm.
 semio:
 
 The copy and paste function is not correct (adjust typescript for now and once we are done, I'll tell you to implement it for the remaining languages).
+
 - e.g. When selecting only one connected piece (t_f0_b_c0) in the source design, the diff doesnt show it anywhere. See algorithm board.
 
 Move in 3d is signicficantly more complicated than drag because the planes (hence frame of references are different). You need to convert a global vector into the connection local connection paramters which depends on the parent plane and the ports, etc. A simple x ->gap, y->shift, z->rise mapping is not working.
 
 move algorithm:
+
 - It is not vec but vector
 - The scene camera is not visible.
 - The movePiecesInDesign function MUST be the same as dragPiecesInDesign but instead of vec use vector and instead of updating center update plane and instead of updating u, v update gap, shift, rise (due to rotation, turn, tilt it is not so easy as in the diagram)
@@ -255,9 +258,10 @@ move algorithm:
 - You MUST implement it for every programming languages (code, tests, benchmark, etc)
 
 The implementations are structurally not consistent.
+
 - All sections MUST be identical (same nesting, same order)
 - All functions MUST have same naming and same order in the source code.
-Refactor everything.
+  Refactor everything.
 
 All semio functions are Operations which return a Result [(change and warnings and infos) or errors]. E.g. flatten design when no piece is a fixed piece, it selects the first piece but this is not recommended and a there should be warning that every clump (connected pieces) should have a fixed piece, etc. Same for other functions. Info is just information about decisions that were taken during the algorithms.
 
@@ -272,7 +276,6 @@ e.g. a warning: something that doesnt exist cant be removed. If something is add
 
 Do this for all every single diff feature.
 You MUST implement a test asset, a test and for all programming languages (ts, py, rs, c#, go).
-
 
 ---
 
@@ -678,7 +681,7 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 ## 👤semio🗃️sketchpad
 
 semio sketchpad:
-Add Open functionality to open synchronized kits. 
+Add Open functionality to open synchronized kits.
 Check the different folder kinds. Some are only available in native environments such as semio/desktop.
 E.g.
 file kit opens a file picker

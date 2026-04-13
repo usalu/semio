@@ -261,8 +261,6 @@ func TestDevcontainerPostAttachGitKrakenWorkspaceBootstrap(t *testing.T) {
 		t.Fatal("failed to resolve current test file path")
 	}
 	repoRoot := filepath.Dir(filepath.Dir(filepath.Dir(currentFile)))
-	scriptPath := filepath.Join(repoRoot, ".devcontainer", "post-attach.sh")
-
 	t.Run("creates workspace from root and submodules", func(t *testing.T) {
 		workspaceDir := t.TempDir()
 		homeDir := t.TempDir()
@@ -319,7 +317,7 @@ exit 0
 			t.Fatalf("failed to seed Codex config: %v", err)
 		}
 
-		cmd := exec.Command("bash", scriptPath)
+		cmd := exec.Command("bash", ".devcontainer/post-attach.sh")
 		cmd.Dir = repoRoot
 		cmd.Env = append(os.Environ(),
 			"PATH="+binDir+":"+os.Getenv("PATH"),
@@ -437,7 +435,7 @@ fi
 exit 0
 `, logPath, workspaceDir))
 
-		cmd := exec.Command("bash", scriptPath)
+		cmd := exec.Command("bash", ".devcontainer/post-attach.sh")
 		cmd.Dir = repoRoot
 		cmd.Env = append(os.Environ(),
 			"PATH="+binDir+":"+os.Getenv("PATH"),
@@ -624,6 +622,8 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 				`Sync-WingetPackage -Id "Microsoft.DotNet.SDK.10" -Label ".NET SDK 10.0"`,
 				`Sync-WingetPackage -Id "Microsoft.VisualStudio.2022.BuildTools" -Label "Visual Studio Build Tools"`,
 				`Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"`,
+				`Stop-RepoPythonProcesses -RepoRoot $repoRoot`,
+				`@("sync", "--all-packages", "--all-groups", "--python", $script:PythonKind)`,
 				`@("run", "./repo/cli", "configure", "--repo", $repoRoot)`,
 				`@("playwright", "install", "chromium")`,
 				`@("run", "git:setup")`,
@@ -648,6 +648,7 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 			name: "devcontainer post-create restores monorepo solution",
 			path: filepath.Join(repoRoot, ".devcontainer", "post-create.sh"),
 			requiredFragments: []string{
+				"uv sync --all-packages --all-groups",
 				"dotnet restore Monorepo.sln",
 			},
 			forbiddenFragments: []string{

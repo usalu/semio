@@ -5154,10 +5154,11 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
 };
 
 /**
- * Creates a mixed design applying diff changes and annotating with diff status.
+ * Creates a mixed design for visualization, annotating entities with diff status.
  * Annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added).
- * Updated entities are applied (new positions/values) and marked as modified.
- * Removed entities are kept in place marked as removed.
+ * Updated pieces apply non-geometric diff fields but KEEP base plane and center so
+ * they render in their original location and only change color. Updated connections
+ * apply the full diff. Removed entities are kept in place marked as removed.
  * Added entities are appended marked as added.
  **/
 export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
@@ -5177,7 +5178,13 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
     if (removedPieceGuids.has(p.guid)) return { ...p, attributes: setStatus(p.attributes, DiffStatus.Removed) };
     if (updatedPieceMap.has(p.guid)) {
       const applied = applyPieceDiff(p, updatedPieceMap.get(p.guid)!);
-      return { ...applied, attributes: setStatus(applied.attributes, DiffStatus.Modified) };
+      // 📌Preserve base geometry so modified pieces stay in place and only get recolored.
+      const preserved: Piece = { ...applied };
+      if (p.plane !== undefined) preserved.plane = p.plane;
+      else delete preserved.plane;
+      if (p.center !== undefined) preserved.center = p.center;
+      else delete preserved.center;
+      return { ...preserved, attributes: setStatus(preserved.attributes, DiffStatus.Modified) };
     }
     return { ...p, attributes: setStatus(p.attributes, DiffStatus.Unchanged) };
   });
@@ -6104,7 +6111,7 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
  **/
 /**
  * Placement deltas in the **selected piece plane** frame: gap along yAxis, shift along xAxis, rise along the plane normal.
- * For connected pieces, {@link movePiecesInDesign} turns that into world translation, projects onto the parent-connector gap/shift/rise frame (same as {@link computeChildPlane}), then puts the residual on the parent piece plane as u/v.
+ * For connected pieces, {@link movePiecesInDesign} maps that translation into connection deltas for gap, shift, rise, rotation, turn, tilt (see {@link computeChildPlane} Jacobian step), then any leftover translation into u/v on the parent plane.
  **/
 export type MoveVector = { gap: number; shift: number; rise: number };
 
@@ -6177,19 +6184,60 @@ const identityPlaneForStructuralMove = (): Plane => ({
   yAxis: { x: 0, y: 1, z: 0 },
 });
 
+type ConnectionPlacementNumericKey = "gap" | "shift" | "rise" | "rotation" | "turn" | "tilt";
+
+const CONNECTION_MOVE_JACOBIAN_KEYS: readonly ConnectionPlacementNumericKey[] = ["gap", "shift", "rise", "rotation", "turn", "tilt"];
+
+const CONNECTION_MOVE_JACOBIAN_EPS: Record<ConnectionPlacementNumericKey, number> = {
+  gap: 1e-6,
+  shift: 1e-6,
+  rise: 1e-6,
+  rotation: 1e-4,
+  turn: 1e-4,
+  tilt: 1e-4,
+};
+
+const childConnectorOriginWorld = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector, connection: Connection): THREE.Vector3 => {
+  const plane = computeChildPlane(parentPlane, parentConnector, childConnector, connection);
+  return vectorToThree(plane.origin);
+};
+
 /**
- * Converts a move vector (in the connecting piece plane) into connection parameter deltas using the parent connector translation basis and parent plane for residual u/v.
- * Specs: Aligns with {@link computeChildPlane} gap/shift/rise axes; u/v absorb the in-plane residual on the parent's xAxis/yAxis.
+ * Minimum-norm δ such that Jδ �� t for 3×n Jacobian with columns cols[i] = ∂origin/��param_i:�(JJ��)⁻¹t.
  **/
-const connectionDiffFromStructuralMoveVector = (
-  parentPlane: Plane,
-  parentConnector: Connector,
-  childPlane: Plane | undefined,
-  vector: MoveVector,
-): ConnectionDiff => {
-  const child = childPlane ?? identityPlaneForStructuralMove();
-  const tw = moveTranslationWorldFromPiecePlane(child, vector);
-  const t = vectorToThree(tw);
+const solveConnectionOriginMinNorm = (cols: THREE.Vector3[], t: THREE.Vector3): number[] | undefined => {
+  if (cols.length === 0) return undefined;
+  const jjt = new THREE.Matrix3();
+  for (let c = 0; c < 3; c++) {
+    for (let r = 0; r < 3; r++) {
+      let s = 0;
+      for (const col of cols) s += col.getComponent(r) * col.getComponent(c);
+      jjt.elements[r + c * 3] = s;
+    }
+  }
+  jjt.elements[0] += 1e-14;
+  jjt.elements[4] += 1e-14;
+  jjt.elements[8] += 1e-14;
+  if (Math.abs(jjt.determinant()) < 1e-22) return undefined;
+  const inv = new THREE.Matrix3().copy(jjt).invert();
+  if (!Number.isFinite(inv.elements[0])) return undefined;
+  const u = t.clone().applyMatrix3(inv);
+  return cols.map((col) => col.dot(u));
+};
+
+const connectionNumericAt = (connection: Connection, key: ConnectionPlacementNumericKey): number => {
+  const v = connection[key];
+  return v !== undefined && v !== null ? v : 0;
+};
+
+const connectionWithNumericDelta = (connection: Connection, key: ConnectionPlacementNumericKey, delta: number): Connection => {
+  return { ...connection, [key]: connectionNumericAt(connection, key) + delta };
+};
+
+/**
+ * Fallback when Jacobian is unavailable: project translation onto connector gap/shift/rise only, then u/v on parent plane.
+ **/
+const connectionDiffTranslationFallback = (parentPlane: Plane, parentConnector: Connector, t: THREE.Vector3): ConnectionDiff => {
   const { gap: g, shift: s, raise: r } = connectionPlacementTranslationBasis(parentConnector);
   const dgap = t.dot(g);
   const dshift = t.dot(s);
@@ -6214,9 +6262,66 @@ const connectionDiffFromStructuralMoveVector = (
 };
 
 /**
+ * Converts a move vector (connecting piece plane) into connection diffs using a numerical Jacobian of {@link computeChildPlane}
+ * w.r.t. gap, shift, rise, rotation, turn, tilt (degrees for angles), then puts the remaining translation into u/v on the parent plane.
+ * Specs: One Gauss–Newton step; matches flatten placement when child connector exists. Falls back to translation-only basis if singular.
+ **/
+const connectionDiffFromStructuralMoveVector = (
+  parentPlane: Plane,
+  parentConnector: Connector,
+  childConnector: Connector | undefined,
+  connection: Connection,
+  childPlane: Plane | undefined,
+  vector: MoveVector,
+): ConnectionDiff => {
+  const child = childPlane ?? identityPlaneForStructuralMove();
+  const tw = moveTranslationWorldFromPiecePlane(child, vector);
+  const t = vectorToThree(tw);
+  if (t.lengthSq() < 1e-24) return {};
+
+  if (!childConnector) {
+    return connectionDiffTranslationFallback(parentPlane, parentConnector, t);
+  }
+
+  const o0 = childConnectorOriginWorld(parentPlane, parentConnector, childConnector, connection);
+  const cols: THREE.Vector3[] = [];
+  for (const key of CONNECTION_MOVE_JACOBIAN_KEYS) {
+    const eps = CONNECTION_MOVE_JACOBIAN_EPS[key];
+    const perturbed = connectionWithNumericDelta(connection, key, eps);
+    const o1 = childConnectorOriginWorld(parentPlane, parentConnector, childConnector, perturbed);
+    cols.push(o1.clone().sub(o0).divideScalar(eps));
+  }
+
+  const deltas = solveConnectionOriginMinNorm(cols, t);
+  const diff: ConnectionDiff = {};
+  const epsOut = 1e-9;
+  if (deltas) {
+    CONNECTION_MOVE_JACOBIAN_KEYS.forEach((key, i) => {
+      if (Math.abs(deltas[i]) > epsOut) diff[key] = deltas[i];
+    });
+    const pred = new THREE.Vector3();
+    cols.forEach((col, i) => pred.addScaledVector(col, deltas[i]));
+    const res = t.clone().sub(pred);
+    const px = vectorToThree(parentPlane.xAxis);
+    const py = vectorToThree(parentPlane.yAxis);
+    if (px.lengthSq() > 1e-24 && py.lengthSq() > 1e-24) {
+      const pxN = px.clone().normalize();
+      const pyN = py.clone().normalize();
+      const du = res.dot(pxN);
+      const dv = res.dot(pyN);
+      if (Math.abs(du) > epsOut) diff.u = du;
+      if (Math.abs(dv) > epsOut) diff.v = dv;
+    }
+    return diff;
+  }
+
+  return connectionDiffTranslationFallback(parentPlane, parentConnector, t);
+};
+
+/**
  * Like {@link dragPiecesInDesign}: same fixed vs connected selection and descendant suppression.
  * Root movers get plane origin translation from {@link moveTranslationWorldFromPiecePlane}.
- * Connected movers need {@link buildConnectorResolverFromKit}: world delta from the child plane is split across parent-connector gap/shift/rise and residual u/v on the parent plane.
+ * Connected movers need {@link buildConnectorResolverFromKit}: world delta from the child plane is split across * gap, shift, rise, rotation, turn, tilt (via Jacobian of {@link computeChildPlane}) and residual u/v on the parent plane.
  **/
 export const movePiecesInDesign = (kit: Kit, design: Design, pieces: Design, vector: MoveVector): DesignDiff => {
   const { getType, getConnector } = buildConnectorResolverFromKit(kit);
@@ -6245,10 +6350,12 @@ export const movePiecesInDesign = (kit: Kit, design: Design, pieces: Design, vec
     const childPiece = pieceMap.get(guid);
     if (!parentPiece?.type?.guid || !childPiece?.type?.guid) continue;
     const parentType = getType(parentPiece.type.guid);
+    const childType = getType(childPiece.type.guid);
     const parentConnector = getConnector(parentType, connection.connected.connector?.guid);
+    const childConnector = getConnector(childType, connection.connecting.connector?.guid);
     if (!parentConnector) continue;
     const parentPlane = parentPiece.plane ?? identityPlaneForStructuralMove();
-    const connDiff = connectionDiffFromStructuralMoveVector(parentPlane, parentConnector, childPiece.plane, vector);
+    const connDiff = connectionDiffFromStructuralMoveVector(parentPlane, parentConnector, childConnector, connection, childPiece.plane, vector);
     if (Object.keys(connDiff).length === 0) continue;
     connectionUpdates.push({ connection: { guid: parent.connectionGuid }, diff: connDiff });
   }
@@ -15468,7 +15575,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
         expect(computedConnUpdates[i].connection.guid).toBe(expectedConnUpdates[i].connection.guid);
         const ed = expectedConnUpdates[i].diff;
         const cd = computedConnUpdates[i].diff;
-        for (const key of ["gap", "shift", "rise", "u", "v"] as const) {
+        for (const key of ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"] as const) {
           if (ed[key] !== undefined) expect(cd[key]).toBeCloseTo(ed[key] as number, 8);
         }
       }
@@ -15491,9 +15598,13 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(moveConn.length).toBe(dragConn.length);
       for (let i = 0; i < moveConn.length; i++) {
         expect(moveConn[i].connection.guid).toBe(dragConn[i].connection.guid);
-        expect(moveConn[i].diff.gap).toBeCloseTo(0.5, 8);
-        expect(moveConn[i].diff.shift).toBeCloseTo(-1, 8);
-        expect(moveConn[i].diff.rise).toBeCloseTo(-2, 8);
+        expect(moveConn[i].diff.gap).toBeCloseTo(0.5, 5);
+        expect(moveConn[i].diff.shift).toBeCloseTo(-1, 5);
+        expect(moveConn[i].diff.rise).toBeCloseTo(-2, 5);
+        for (const ang of ["rotation", "turn", "tilt"] as const) {
+          const av = moveConn[i].diff[ang];
+          if (av !== undefined) expect(av).toBeCloseTo(0, 3);
+        }
       }
     });
   });
@@ -15856,7 +15967,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
         }
       }
 
-      // 🔧Verify modified pieces have their diff applied
+      // 🔧Verify modified pieces have non-geometric diff applied but keep base plane/center
       const updatedPieceMap = new Map((diff.pieces?.updated ?? []).map((u) => [(u as any).piece.guid, u.diff]));
       for (const piece of computed.pieces!) {
         if (getStatus(piece.attributes) === "modified") {
@@ -15867,8 +15978,35 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
           else expect(piece.name).toBe(originalPiece!.name);
           if (pieceDiff?.description !== undefined) expect(piece.description).toBe(pieceDiff.description);
           else expect(piece.description).toBe(originalPiece!.description);
+          // 📌Modified pieces MUST keep base geometry so they only get recolored, not moved.
+          expect(piece.plane).toEqual(originalPiece!.plane);
+          expect(piece.center).toEqual(originalPiece!.center);
         }
       }
+    });
+
+    it("modified pieces keep base plane and center even when diff specifies new geometry", () => {
+      const basePiece: Piece = {
+        guid: "p1",
+        name: "Base",
+        type: { name: "K" },
+        plane: { origin: { x: 1, y: 2, z: 3 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
+        center: { u: 4, v: 5 },
+      };
+      const base: Design = { guid: "d1", name: "D", pieces: [basePiece] };
+      const newPlane: Plane = { origin: { x: 9, y: 9, z: 9 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+      const diff: DesignDiff = {
+        pieces: {
+          updated: [{ piece: { guid: "p1" }, diff: { name: "Renamed", plane: newPlane, center: { u: 99, v: 99 } } }],
+        },
+      };
+      const computed = designWithDiff(base, diff);
+      const piece = computed.pieces!.find((p) => p.guid === "p1")!;
+      const status = (piece.attributes ?? []).find((a) => a.key === "semio.diffStatus")?.value;
+      expect(status).toBe("modified");
+      expect(piece.name).toBe("Renamed");
+      expect(piece.plane).toEqual(basePiece.plane);
+      expect(piece.center).toEqual(basePiece.center);
     });
   });
 

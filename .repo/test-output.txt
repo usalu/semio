@@ -1,0 +1,33 @@
+
+Running 1 test using 1 worker
+
+[Home] Legacy window tabs: settings=0, chat=0
+  Ô£ÿ  1 [chromium] ÔÇ║ index.tsx:36648:5 ÔÇ║ sketchpad ÔÇ║ Home (35.3s)
+
+
+  1) [chromium] ÔÇ║ index.tsx:36648:5 ÔÇ║ sketchpad ÔÇ║ Home ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[id="semio.sketchpad.navbar"]')
+    Expected: visible
+    Timeout: 30000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 30000ms[22m
+    [2m  - waiting for locator('[id="semio.sketchpad.navbar"]')[22m
+
+
+      36419 |               connectionLineComponent={ConnectionConnectionLine}
+      36420 |               elementsSelectable={true}
+    > 36421 |               nodesFocusable={true}
+            |                          ^
+      36422 |               edgesFocusable={true}
+      36423 |               nodesDraggable={true}
+      36424 |               autoPanOnNodeDrag={false}
+        at expectClassicNavbarChrome (C:\git\semio\semio\sketchpad\index.tsx:36421:26)
+        at C:\git\semio\semio\sketchpad\index.tsx:36658:13
+
+  1 failed
+    [chromium] ÔÇ║ index.tsx:36648:5 ÔÇ║ sketchpad ÔÇ║ Home ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ

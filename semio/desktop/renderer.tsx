@@ -14,9 +14,11 @@
 
 import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { createFolderKitStore } from "@semio/studio";
-import type { KitFolderAdapter } from "@semio/studio";
+import { createFolderKitStore, createSessionKitStore } from "@semio/studio";
+import type { KitFolderAdapter, KitJsonFileAdapter } from "@semio/studio";
 import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
+import { createJsonFileKitStore } from "@semio/sketchpad";
+import { InMemoryKitStore } from "@semio/js";
 
 import "./globals.css";
 
@@ -157,6 +159,41 @@ function App() {
     return createFolderKitStore(adapter);
   }, []);
 
+  // 🏭Temporary kit store factory for in-memory kits.
+  const temporaryKitStoreFactory: SketchpadKitStoreFactory = useCallback((kit) => new InMemoryKitStore(kit), []);
+
+  // 🏭File kit store factory for opening JSON kit files via native file dialog.
+  // Specs: In Electron, uses dialog.showOpenDialog via IPC for native file picker.
+  // Falls back to File System Access API if available.
+  const fileKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (_kit) => {
+    if (typeof window !== "undefined" && "showOpenFilePicker" in window) {
+      const [fileHandle] = await (window as any).showOpenFilePicker({
+        types: [{ description: "Semio Kit JSON", accept: { "application/json": [".json"] } }],
+      });
+      const adapter: KitJsonFileAdapter = {
+        read: async () => {
+          const file = await fileHandle.getFile();
+          return file.text();
+        },
+        write: async (json: string) => {
+          const writable = await fileHandle.createWritable();
+          await writable.write(json);
+          await writable.close();
+        },
+      };
+      return createJsonFileKitStore(adapter);
+    }
+    throw new Error("File picker not available in this environment");
+  }, []);
+
+  // 🏭Remote kit store factory for connecting to semio/server.
+  // Specs: The server URL is passed in kit.name by the openKit command.
+  const remoteKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (kit) => {
+    const serverUrl = kit.name;
+    if (!serverUrl) throw new Error("No server URL provided for remote kit");
+    return createSessionKitStore({ serverUrl });
+  }, []);
+
   if (!userId) {
     return <div className="flex h-full w-full items-center justify-center bg-neutral-950 text-white">Loading...</div>;
   }
@@ -164,7 +201,14 @@ function App() {
   return (
     <div className="h-screen w-screen">
       <Suspense fallback={<div className="flex h-full w-full items-center justify-center bg-neutral-950 text-white">Loading sketchpad...</div>}>
-        <LazySketchpad onWindowEvents={windowEvents} id={userId} folderKitStoreFactory={folderKitStoreFactory} />
+        <LazySketchpad
+          onWindowEvents={windowEvents}
+          id={userId}
+          folderKitStoreFactory={folderKitStoreFactory}
+          fileKitStoreFactory={fileKitStoreFactory}
+          temporaryKitStoreFactory={temporaryKitStoreFactory}
+          remoteKitStoreFactory={remoteKitStoreFactory}
+        />
       </Suspense>
     </div>
   );

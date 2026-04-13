@@ -6732,6 +6732,8 @@ interface AlgorithmDiffTreeEntry {
   id: string;
   label: string;
   checked: boolean;
+  /** Optional parameter rows (e.g. connection gap/shift/rise/rotation/turn/tilt/u/v) under the diff entry. */
+  detail?: React.ReactNode;
 }
 
 interface AlgorithmDiffTreeGroup {
@@ -6803,6 +6805,83 @@ const resolveAlgorithmPieceDiffLabel = (design: Design | undefined, pieceLike: u
   return sourcePiece && sourcePiece.length > 0 ? sourcePiece : pieceGuid;
 };
 
+const ALGORITHM_CONNECTION_UPDATE_DIFF_KEYS = ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"] as const;
+
+/**
+ * Renders TreeRows listing numeric connection diff fields for the algorithm details panel.
+ **/
+const buildAlgorithmConnectionUpdateDiffDetail = (item: unknown, entryId: string): React.ReactNode | undefined => {
+  if (!item || typeof item !== "object" || !("diff" in item)) return undefined;
+  const diff = (item as { diff?: unknown }).diff;
+  if (!diff || typeof diff !== "object") return undefined;
+  const d = diff as Record<string, unknown>;
+  const rows: React.ReactNode[] = [];
+  for (const key of ALGORITHM_CONNECTION_UPDATE_DIFF_KEYS) {
+    const v = d[key];
+    if (typeof v === "number" && Number.isFinite(v)) {
+      rows.push(
+        <TreeRow key={`${entryId}.conn.${key}`} id={`${entryId}.conn.${key}`} label={null}>
+          <div className="flex w-full items-center justify-between gap-2 px-4 py-0.5 text-xs font-mono">
+            <span className="text-muted-foreground">{key}</span>
+            <span className="select-text text-foreground">{v}</span>
+          </div>
+        </TreeRow>,
+      );
+    }
+  }
+  return rows.length > 0 ? <>{rows}</> : undefined;
+};
+
+/**
+ * Renders TreeRows for piece updated diff (center, plane origin, axes) when present.
+ **/
+const buildAlgorithmPieceUpdateDiffDetail = (item: unknown, entryId: string): React.ReactNode | undefined => {
+  if (!item || typeof item !== "object" || !("diff" in item)) return undefined;
+  const diff = (item as { diff?: unknown }).diff;
+  if (!diff || typeof diff !== "object") return undefined;
+  const d = diff as Record<string, unknown>;
+  const rows: React.ReactNode[] = [];
+  const pushNum = (key: string, v: unknown) => {
+    if (typeof v === "number" && Number.isFinite(v)) {
+      rows.push(
+        <TreeRow key={`${entryId}.piece.${key}`} id={`${entryId}.piece.${key}`} label={null}>
+          <div className="flex w-full items-center justify-between gap-2 px-4 py-0.5 text-xs font-mono">
+            <span className="text-muted-foreground">{key}</span>
+            <span className="select-text text-foreground">{v}</span>
+          </div>
+        </TreeRow>,
+      );
+    }
+  };
+  if (d.center && typeof d.center === "object") {
+    const c = d.center as Record<string, unknown>;
+    pushNum("center.u", c.u);
+    pushNum("center.v", c.v);
+  }
+  if (d.plane && typeof d.plane === "object") {
+    const pl = d.plane as Record<string, unknown>;
+    if (pl.origin && typeof pl.origin === "object") {
+      const o = pl.origin as Record<string, unknown>;
+      pushNum("plane.origin.x", o.x);
+      pushNum("plane.origin.y", o.y);
+      pushNum("plane.origin.z", o.z);
+    }
+    if (pl.xAxis && typeof pl.xAxis === "object") {
+      const ax = pl.xAxis as Record<string, unknown>;
+      pushNum("plane.xAxis.x", ax.x);
+      pushNum("plane.xAxis.y", ax.y);
+      pushNum("plane.xAxis.z", ax.z);
+    }
+    if (pl.yAxis && typeof pl.yAxis === "object") {
+      const ay = pl.yAxis as Record<string, unknown>;
+      pushNum("plane.yAxis.x", ay.x);
+      pushNum("plane.yAxis.y", ay.y);
+      pushNum("plane.yAxis.z", ay.z);
+    }
+  }
+  return rows.length > 0 ? <>{rows}</> : undefined;
+};
+
 const resolveAlgorithmConnectionDiffLabel = (design: Design | undefined, connectionLike: unknown, fallbackIndex: number): string => {
   const connectionGuid = resolveAlgorithmConnectionDiffGuid(connectionLike, fallbackIndex);
   const sourceConnection = design?.connections?.find((connection) => {
@@ -6857,7 +6936,13 @@ const buildAlgorithmDiffEntries = (design: Design | undefined, groupKind: Algori
         ? resolveAlgorithmPieceDiffLabel(design, changeKind === "updated" && item && typeof item === "object" && "piece" in item ? (item as { piece?: unknown }).piece : item, index)
         : resolveAlgorithmConnectionDiffLabel(design, changeKind === "updated" && item && typeof item === "object" && "connection" in item ? (item as { connection?: unknown }).connection : item, index);
     const id = buildAlgorithmDiffEntryId(groupKind, changeKind, guid);
-    return { id, label, checked: !uncheckedEntryIds.has(id) };
+    const detail =
+      changeKind === "updated" && groupKind === "connections"
+        ? buildAlgorithmConnectionUpdateDiffDetail(item, id)
+        : changeKind === "updated" && groupKind === "pieces"
+          ? buildAlgorithmPieceUpdateDiffDetail(item, id)
+          : undefined;
+    return { id, label, checked: !uncheckedEntryIds.has(id), detail };
   });
   const checkedCount = entries.filter((entry) => entry.checked).length;
   return {
@@ -7489,7 +7574,11 @@ const AlgorithmDetailsPanel: React.FC = () => {
                               onCheckedChange: (checked) => ctx.setDiffEntriesChecked([entry.id], checked),
                             },
                           ];
-                          return <TreeItem key={entry.id} id={`algorithm.details.output.diff.entry.${entry.id}`} label={entry.label} actions={entryActions} />;
+                          return (
+                            <TreeItem key={entry.id} id={`algorithm.details.output.diff.entry.${entry.id}`} label={entry.label} actions={entryActions}>
+                              {entry.detail}
+                            </TreeItem>
+                          );
                         })}
                       </TreeItem>
                     );

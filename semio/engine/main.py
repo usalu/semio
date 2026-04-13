@@ -3252,7 +3252,14 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
             center = p.get("center") or {"u": 0, "v": 0}
             piece_map[guid] = {"guid": guid, "id": p.get("id", ""), "center": center}
         for p in design_diff.get("pieces", {}).get("updated", []):
-            modified_piece_guids.add(p.get("piece", {}).get("guid", ""))
+            guid = p.get("piece", {}).get("guid", "")
+            modified_piece_guids.add(guid)
+            center = p.get("diff", {}).get("center")
+            if guid and center:
+                if guid in piece_map:
+                    piece_map[guid]["center"] = center
+                else:
+                    piece_map[guid] = {"guid": guid, "id": p.get("piece", {}).get("id", ""), "center": center}
         for c in design_diff.get("connections", {}).get("removed", []):
             removed_conn_guids.add(c.get("guid", ""))
         for c in design_diff.get("connections", {}).get("added", []):
@@ -3353,6 +3360,17 @@ def _enrich_design(kit: dict, design: dict, design_diff: dict | None = None) -> 
                 enriched_pieces.append(ep)
             else:
                 enriched_pieces.append(p)
+        if design_diff:
+            updated_centers_by_guid = {
+                update.get("piece", {}).get("guid"): update.get("diff", {}).get("center")
+                for update in design_diff.get("pieces", {}).get("updated", [])
+                if update.get("piece", {}).get("guid") and update.get("diff", {}).get("center")
+            }
+            if updated_centers_by_guid:
+                enriched_pieces = [
+                    ({**piece, "center": updated_centers_by_guid[piece.get("guid")]} if piece.get("guid") in updated_centers_by_guid else piece)
+                    for piece in enriched_pieces
+                ]
         enriched_design = dict(design_for_enrichment)
         enriched_design["pieces"] = enriched_pieces
         return enriched_design
@@ -4930,10 +4948,10 @@ class TestMcp:
         kit = {
             "name": "Diff Diagram Kit",
             "types": [],
-            "designs": [{"guid": "dg-1", "name": "D", "pieces": [{"guid": "p-1"}], "connections": []}],
+            "designs": [{"guid": "dg-1", "name": "D", "pieces": [{"guid": "p-1", "id": "p-1"}], "connections": []}],
         }
         engine._mcp_session_kits[sid] = kit
-        engine._mcp_selected_designs[sid] = kit["designs"][0]
+        engine._mcp_session_designs[sid] = kit["designs"][0]
 
         diff = {"pieces": {"updated": [{"piece": {"guid": "p-1"}, "diff": {"center": {"u": 12, "v": -4}}}]}}
         result = engine.show_diagram_diff(mock_ctx, design_diff=diff)

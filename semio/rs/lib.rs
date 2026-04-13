@@ -4430,7 +4430,12 @@ mod apply_diff {
                     attrs.push(status_attr("removed"));
                     pc.attributes = Some(attrs);
                 } else if let Some(piece_diff) = updated_piece_map.get(pc.guid.as_str()) {
+                    let base_plane = pc.plane.clone();
+                    let base_center = pc.center.clone();
                     apply_piece_diff(&mut pc, piece_diff);
+                    // 📌Preserve base geometry so modified pieces stay in place and only get recolored.
+                    pc.plane = base_plane;
+                    pc.center = base_center;
                     let mut attrs = pc.attributes.clone().unwrap_or_default();
                     attrs.push(status_attr("modified"));
                     pc.attributes = Some(attrs);

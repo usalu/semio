@@ -17,338 +17,338 @@
 
 import type { Connector, Port } from "@semio/js";
 import {
-    applyKitDiff,
-    areDesignsInSameFamily,
-    arePortsCompatible,
-    areSameConnection,
-    Attribute,
-    Author,
-    AuthorDiff,
-    AuthorId,
-    buildFileTree,
-    Camera,
-    colorPortsForTypes,
-    Concept,
-    ConceptDiff,
-    Connection,
-    ConnectionDiff,
-    ConnectionId,
-    Coord,
-    createClusteredDesign,
-    Design,
-    DesignDiff,
-    DesignShallow,
-    DiffStatus,
-    dragPiecesInDesign,
-    expandDesignPieces,
-    exportKit,
-    FileDiff,
-    findDesignInKit,
-    findModel,
-    findPieceInDesign,
-    findTypeInKit,
-    fixPiecesInDesign,
-    flattenFileTree,
-    Folder,
-    FolderDiff,
-    generateUniqueName,
-    getClusterableGroups,
-    getDesignDiff,
-    getIncludedDesigns,
-    Guid,
-    guid,
-    ICON_WIDTH,
-    importKit,
-    InMemoryKitStore,
-    inverseKitDiff,
-    Kit,
-    KitDiff,
-    KitShallow,
-    type KitStore,
-    type KitStoreSnapshot,
-    Model,
-    Piece,
-    PieceDiff,
-    PieceId,
-    piecesMetadata,
-    Plane,
-    planeToMatrix,
-    Point,
-    PortDiff,
-    Quality,
-    QualityDiff,
-    replaceClusterWithDesign,
-    selectBestModel,
-    File as SemioFile,
-    sumQualityInDesign,
-    Tag,
-    TagDiff,
-    TOLERANCE,
-    toSemioRotation,
-    toThreeRotation,
-    Type,
-    TypeDiff,
-    TypeShallow,
-    Vector,
+  applyKitDiff,
+  areDesignsInSameFamily,
+  arePortsCompatible,
+  areSameConnection,
+  Attribute,
+  Author,
+  AuthorDiff,
+  AuthorId,
+  buildFileTree,
+  Camera,
+  colorPortsForTypes,
+  Concept,
+  ConceptDiff,
+  Connection,
+  ConnectionDiff,
+  ConnectionId,
+  Coord,
+  createClusteredDesign,
+  Design,
+  DesignDiff,
+  DesignShallow,
+  DiffStatus,
+  dragPiecesInDesign,
+  expandDesignPieces,
+  exportKit,
+  FileDiff,
+  findDesignInKit,
+  findModel,
+  findPieceInDesign,
+  findTypeInKit,
+  fixPiecesInDesign,
+  flattenFileTree,
+  Folder,
+  FolderDiff,
+  generateUniqueName,
+  getClusterableGroups,
+  getDesignDiff,
+  getIncludedDesigns,
+  Guid,
+  guid,
+  ICON_WIDTH,
+  importKit,
+  InMemoryKitStore,
+  inverseKitDiff,
+  Kit,
+  KitDiff,
+  KitShallow,
+  type KitStore,
+  type KitStoreSnapshot,
+  Model,
+  Piece,
+  PieceDiff,
+  PieceId,
+  piecesMetadata,
+  Plane,
+  planeToMatrix,
+  Point,
+  PortDiff,
+  Quality,
+  QualityDiff,
+  replaceClusterWithDesign,
+  selectBestModel,
+  File as SemioFile,
+  sumQualityInDesign,
+  Tag,
+  TagDiff,
+  TOLERANCE,
+  toSemioRotation,
+  toThreeRotation,
+  Type,
+  TypeDiff,
+  TypeShallow,
+  Vector,
 } from "@semio/js";
 import type {
-    ConnectionLineComponentProps,
-    DragEndEvent,
-    DragOverEvent,
-    DragStartEvent,
-    Edge,
-    EdgeProps,
-    EdgeTypes,
-    FuseResult,
-    LayoutNode,
-    MiniMapNodeProps,
-    Node,
-    NodeProps,
-    NodeTypes,
-    ReactFlowInstance,
-    RFConnection,
-    Simulation,
-    SimulationLinkDatum,
-    SimulationNodeDatum,
-    ThreeEvent,
-    UIWindowKindDefinition,
+  ConnectionLineComponentProps,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  Edge,
+  EdgeProps,
+  EdgeTypes,
+  FuseResult,
+  LayoutNode,
+  MiniMapNodeProps,
+  Node,
+  NodeProps,
+  NodeTypes,
+  ReactFlowInstance,
+  RFConnection,
+  Simulation,
+  SimulationLinkDatum,
+  SimulationNodeDatum,
+  ThreeEvent,
+  UIWindowKindDefinition,
 } from "@semio/ui";
 import {
-    Action,
-    ActionGroup,
-    ActionGroupItem,
-    type ActorRefFrom,
-    type AnyActorRef,
-    applyNodeChanges,
-    arrayMove,
-    Aside,
-    assign,
-    Avatar,
-    AvatarFallback,
-    Diagram as BaseDiagram,
-    BaseEdge,
-    MDXProvider as BaseMDXProvider,
-    Tabs as BaseTabs,
-    BasicChatPanel,
-    Breadcrumb,
-    BrowserRouter,
-    Button,
-    ButtonGroup,
-    ButtonGroupItem,
-    calculateDiagramLayout,
-    Canvas,
-    closestCenter,
-    Combobox,
-    CommandDialog,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-    createActor,
-    createDefaultLayout,
-    dateFnsDe as de,
-    deduplicateWindowLayout,
-    Diagram,
-    DiagramNode,
-    DndContext,
-    DraggableAvatar,
-    DragOverlay,
-    DreiSelect,
-    Edges,
-    dateFnsEnUS as enUS,
-    FileTree,
-    FileTreeNode,
-    Footer,
-    forceCollide,
-    forceLink,
-    forceManyBody,
-    forceSimulation,
-    forceX,
-    forceY,
-    formatDistanceToNow,
-    fromCallback,
-    Fuse,
-    Geometry,
-    getBezierPath,
-    Handle,
-    HelperRow,
-    HorizontalWindows,
-    HoverCard,
-    HoverCardContent,
-    HoverCardTrigger,
-    elementUiI18n as i18n,
-    Input,
-    InteractionProvider,
-    Label,
-    Layout as LayoutComponent,
-    layoutNodeToGoldenLayoutConfig,
-    LevelProvider,
-    Line,
-    MemoryRouter,
-    Navbar,
-    type NavbarItem,
-    NotFound,
-    OBJLoader,
-    Outlet,
-    Page,
-    PageFrontmatter,
-    PageNavigation,
-    parseWindowLayout,
-    PlaceholderDiagramNode,
-    PointerSensor,
-    pointerWithin,
-    Position,
-    ReactFlowProvider,
-    rectIntersection,
-    resolveTranslationLabel,
-    Ring,
-    Route,
-    Routes,
-    Scene as SceneComponent,
-    sceneFrameControlRef,
-    Scrollable,
-    SectionSpecificity,
-    Select,
-    SelectContent,
-    SelectionMode,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-    setup,
-    Slider,
-    type SnapshotFrom,
-    SortableTreeItems,
-    Sphere,
-    Spinner,
-    Stepper,
-    stringifyWindowLayout,
-    Strip,
-    Table,
-    TableAvatar,
-    TableColumn,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-    Textarea,
-    THREE,
-    Toggle,
-    ToggleGroup,
-    ToolbarDivider,
-    ToolbarGroup,
-    ToolbarItem,
-    ToolbarZone,
-    Transaction,
-    TransactionProvider,
-    Tree,
-    TreeContent,
-    TreeItem,
-    TreeRow,
-    TreeStateProvider,
-    useCommandHotkey,
-    useDraggable,
-    useDroppable,
-    useFBX,
-    useGLTF,
-    useTranslatedHotkey as useHotkey,
-    useTranslation as useI18nTranslation,
-    useInternalNode,
-    useLabel,
-    useLoader,
-    useLocation,
-    useParams,
-    useReactFlow,
-    useNavigate as useReactNavigate,
-    useSearchParams,
-    useXStateSelector as useSelector,
-    useSensor,
-    useSensors,
-    useStoreApi,
-    useThree,
-    useTranslation,
-    VerticalWindows,
-    ViewportPortal,
-    Window,
-    WindowKind,
+  Action,
+  ActionGroup,
+  ActionGroupItem,
+  type ActorRefFrom,
+  type AnyActorRef,
+  applyNodeChanges,
+  arrayMove,
+  Aside,
+  assign,
+  Avatar,
+  AvatarFallback,
+  Diagram as BaseDiagram,
+  BaseEdge,
+  MDXProvider as BaseMDXProvider,
+  Tabs as BaseTabs,
+  BasicChatPanel,
+  Breadcrumb,
+  BrowserRouter,
+  Button,
+  ButtonGroup,
+  ButtonGroupItem,
+  calculateDiagramLayout,
+  Canvas,
+  closestCenter,
+  Combobox,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  createActor,
+  createDefaultLayout,
+  dateFnsDe as de,
+  deduplicateWindowLayout,
+  Diagram,
+  DiagramNode,
+  DndContext,
+  DraggableAvatar,
+  DragOverlay,
+  DreiSelect,
+  Edges,
+  dateFnsEnUS as enUS,
+  FileTree,
+  FileTreeNode,
+  Footer,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  forceX,
+  forceY,
+  formatDistanceToNow,
+  fromCallback,
+  Fuse,
+  Geometry,
+  getBezierPath,
+  Handle,
+  HelperRow,
+  HorizontalWindows,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+  elementUiI18n as i18n,
+  Input,
+  InteractionProvider,
+  Label,
+  Layout as LayoutComponent,
+  layoutNodeToGoldenLayoutConfig,
+  LevelProvider,
+  Line,
+  MemoryRouter,
+  Navbar,
+  type NavbarItem,
+  NotFound,
+  OBJLoader,
+  Outlet,
+  Page,
+  PageFrontmatter,
+  PageNavigation,
+  parseWindowLayout,
+  PlaceholderDiagramNode,
+  PointerSensor,
+  pointerWithin,
+  Position,
+  ReactFlowProvider,
+  rectIntersection,
+  resolveTranslationLabel,
+  Ring,
+  Route,
+  Routes,
+  Scene as SceneComponent,
+  sceneFrameControlRef,
+  Scrollable,
+  SectionSpecificity,
+  Select,
+  SelectContent,
+  SelectionMode,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  setup,
+  Slider,
+  type SnapshotFrom,
+  SortableTreeItems,
+  Sphere,
+  Spinner,
+  Stepper,
+  stringifyWindowLayout,
+  Strip,
+  Table,
+  TableAvatar,
+  TableColumn,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Textarea,
+  THREE,
+  Toggle,
+  ToggleGroup,
+  ToolbarDivider,
+  ToolbarGroup,
+  ToolbarItem,
+  ToolbarZone,
+  Transaction,
+  TransactionProvider,
+  Tree,
+  TreeContent,
+  TreeItem,
+  TreeRow,
+  TreeStateProvider,
+  useCommandHotkey,
+  useDraggable,
+  useDroppable,
+  useFBX,
+  useGLTF,
+  useTranslatedHotkey as useHotkey,
+  useTranslation as useI18nTranslation,
+  useInternalNode,
+  useLabel,
+  useLoader,
+  useLocation,
+  useParams,
+  useReactFlow,
+  useNavigate as useReactNavigate,
+  useSearchParams,
+  useXStateSelector as useSelector,
+  useSensor,
+  useSensors,
+  useStoreApi,
+  useThree,
+  useTranslation,
+  VerticalWindows,
+  ViewportPortal,
+  Window,
+  WindowKind,
 } from "@semio/ui";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import {
-    AddIcon,
-    AlertCircleIcon,
-    AwardIcon,
-    ChatIcon,
-    CheckIcon,
-    ChevronDownIcon,
-    ChevronRightIcon,
-    CloseIcon,
-    CodeIcon,
-    ConnectionIcon,
-    ConnectorIcon,
-    CopyIcon,
-    DetailsIcon,
-    DiagramIcon,
-    DisconnectIcon,
-    DocumentIcon,
-    MessageCircle as FeedbackIcon,
-    FileCodeIcon,
-    FileImageIcon,
-    FileJsonIcon,
-    FileSpreadsheetIcon,
-    FileTypeIcon,
-    FileVideoIcon,
-    FocusIcon,
-    FolderIcon,
-    HandIcon,
-    HomeIcon,
-    IntersectIcon,
-    LayoutIcon,
-    LocalKitIcon,
-    Maximize2Icon,
-    Minimize2Icon,
-    MonitorIcon,
-    MoonIcon,
-    MoreHorizontalIcon,
-    MousePointerIcon,
-    NavigateBackIcon,
-    NavigateForwardIcon,
-    NavigateUpIcon,
-    PauseIcon,
-    PieceIcon,
-    PlayIcon,
-    PortIcon,
-    RecordIcon,
-    RemoteKitIcon,
-    RemoveIcon,
-    ResetIcon,
-    SceneIcon,
-    SearchIcon,
-    SelectToolIcon,
-    SettingsIcon,
-    SkipBackIcon,
-    SkipForwardIcon,
-    SortAscendingIcon,
-    SortDescendingIcon,
-    StatsIcon,
-    StopIcon,
-    SunIcon,
-    TableViewIcon,
-    TemporaryKitIcon,
-    ToolbarIcon,
-    ToolsIcon,
-    TutorialIcon,
-    TypeIcon,
-    UserIcon,
-    WorkbenchIcon,
+  AddIcon,
+  AlertCircleIcon,
+  AwardIcon,
+  ChatIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  CloseIcon,
+  CodeIcon,
+  ConnectionIcon,
+  ConnectorIcon,
+  CopyIcon,
+  DetailsIcon,
+  DiagramIcon,
+  DisconnectIcon,
+  DocumentIcon,
+  MessageCircle as FeedbackIcon,
+  FileCodeIcon,
+  FileImageIcon,
+  FileJsonIcon,
+  FileSpreadsheetIcon,
+  FileTypeIcon,
+  FileVideoIcon,
+  FocusIcon,
+  FolderIcon,
+  HandIcon,
+  HomeIcon,
+  IntersectIcon,
+  LayoutIcon,
+  LocalKitIcon,
+  Maximize2Icon,
+  Minimize2Icon,
+  MonitorIcon,
+  MoonIcon,
+  MoreHorizontalIcon,
+  MousePointerIcon,
+  NavigateBackIcon,
+  NavigateForwardIcon,
+  NavigateUpIcon,
+  PauseIcon,
+  PieceIcon,
+  PlayIcon,
+  PortIcon,
+  RecordIcon,
+  RemoteKitIcon,
+  RemoveIcon,
+  ResetIcon,
+  SceneIcon,
+  SearchIcon,
+  SelectToolIcon,
+  SettingsIcon,
+  SkipBackIcon,
+  SkipForwardIcon,
+  SortAscendingIcon,
+  SortDescendingIcon,
+  StatsIcon,
+  StopIcon,
+  SunIcon,
+  TableViewIcon,
+  TemporaryKitIcon,
+  ToolbarIcon,
+  ToolsIcon,
+  TutorialIcon,
+  TypeIcon,
+  UserIcon,
+  WorkbenchIcon,
 } from "../assets/icons";
 import { createSyncDocFactory, isSyncArray, isSyncMap, type SyncArray, type SyncDoc, type SyncMap, type SyncMapEvent } from "../studio/studio";
 export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui";
 export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, SyncBinaryPersistenceProvider } from "../studio/studio";
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
-    import type { Locator, Page as PlaywrightPage } from "@playwright/test";
-    import { importKit as importKitArchive } from "@semio/js";
+import type { Locator, Page as PlaywrightPage } from "@playwright/test";
+import { importKit as importKitArchive } from "@semio/js";
 // #endregion ⛩️Imports
 
 // #region 📍Shared
@@ -7213,6 +7213,8 @@ export interface SketchpadKitKindAvailability {
   temporary: boolean;
   local: boolean;
   remote: boolean;
+  folder: boolean;
+  file: boolean;
 }
 
 // #region 🥈Entity Hooks
@@ -8859,7 +8861,7 @@ function buildSnapshot(syncSketchpad: SyncMap<any>): SketchpadState {
     recentSearches,
     recentFocusItems,
     theme: syncSketchpad.get("theme") as Theme,
-    language: (syncSketchpad.get("language") as string) || "en",
+    language: (syncSketchpad.get("language") as string) || (typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("de") ? "de" : "en"),
     device,
     expertise: (syncSketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER,
     mode: (syncSketchpad.get("mode") as Mode) ?? Mode.USER,
@@ -9016,7 +9018,7 @@ function createDefaultSketchpadState(id?: string): SketchpadState {
     recentSearches: [],
     recentFocusItems: {},
     theme: Theme.SYSTEM,
-    language: "en",
+    language: typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("de") ? "de" : i18n.language || "en",
     device: "desktop",
     expertise: Expertise.BEGINNER,
     mode: Mode.USER,
@@ -16238,9 +16240,7 @@ type ToolbarCommandButtonProps = {
   onClick: () => void;
 };
 
-const ToolbarCommandButton: FC<ToolbarCommandButtonProps> = ({ id, icon, text, disabled, onClick }) => (
-  <Button id={id} icon={icon} text={text} disabled={disabled} onClick={onClick} />
-);
+const ToolbarCommandButton: FC<ToolbarCommandButtonProps> = ({ id, icon, text, disabled, onClick }) => <Button id={id} icon={icon} text={text} disabled={disabled} onClick={onClick} />;
 
 export const KitToolbarHistory: FC = () => {
   const store = useKitAppStore();
@@ -16258,20 +16258,8 @@ export const KitToolbarHistory: FC = () => {
 
   return (
     <ToolbarGroup>
-      <ToolbarCommandButton
-        id="semio.sketchpad.app.kit.history.undo"
-        icon={<SkipBackIcon className="size-tiny" />}
-        text="Undo"
-        disabled={!canUndo}
-        onClick={() => undo?.()}
-      />
-      <ToolbarCommandButton
-        id="semio.sketchpad.app.kit.history.redo"
-        icon={<SkipForwardIcon className="size-tiny" />}
-        text="Redo"
-        disabled={!canRedo}
-        onClick={() => redo?.()}
-      />
+      <ToolbarCommandButton id="semio.sketchpad.app.kit.history.undo" icon={<SkipBackIcon className="size-tiny" />} text="Undo" disabled={!canUndo} onClick={() => undo?.()} />
+      <ToolbarCommandButton id="semio.sketchpad.app.kit.history.redo" icon={<SkipForwardIcon className="size-tiny" />} text="Redo" disabled={!canRedo} onClick={() => redo?.()} />
     </ToolbarGroup>
   );
 };
@@ -18861,7 +18849,7 @@ export class SketchpadStore {
       recentSearches: recentSearches,
       recentFocusItems: recentFocusItems,
       theme: this.syncSketchpad.get("theme") as Theme,
-      language: (this.syncSketchpad.get("language") as string) || "en",
+      language: (this.syncSketchpad.get("language") as string) || (typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("de") ? "de" : "en"),
       device: device,
       expertise: (this.syncSketchpad.get("expertise") as Expertise) ?? Expertise.BEGINNER,
       mode: (this.syncSketchpad.get("mode") as Mode) ?? Mode.USER,
@@ -18978,18 +18966,52 @@ export class SketchpadStore {
         temporary: !inferredKitKind.local && !inferredKitKind.remote,
         local: inferredKitKind.local && !inferredKitKind.remote,
         remote: inferredKitKind.remote,
+        folder: false,
+        file: inferredKitKind.local && !inferredKitKind.remote,
       };
     }
     return {
       temporary: hasConfiguredKitStoreFactories ? Boolean(this.temporaryKitStoreFactory) : true,
       local: Boolean(this.folderKitStoreFactory || this.fileKitStoreFactory),
       remote: Boolean(this.remoteKitStoreFactory),
+      folder: Boolean(this.folderKitStoreFactory),
+      file: Boolean(this.fileKitStoreFactory),
     };
   };
 
   createKit = async (kit: Kit, local?: boolean, remote?: boolean) => {
     const createdKitStore = await this.createBackedKitStore(kit, local, remote);
     this.registerKitStore(createdKitStore.kitStore, createdKitStore.local, createdKitStore.remote);
+  };
+
+  openKit = async (kind: string, serverUrl?: string): Promise<Guid> => {
+    const dummyKit: Kit = { guid: guid(), name: "", types: [], designs: [] };
+    switch (kind) {
+      case "folder": {
+        const factory = this.folderKitStoreFactory;
+        if (!factory) throw new Error("Folder kit store not available in this environment");
+        const kitStore = await factory(dummyKit);
+        this.registerKitStore(kitStore, true, false);
+        return kitStore.getSnapshot().kit.guid;
+      }
+      case "file": {
+        const factory = this.fileKitStoreFactory;
+        if (!factory) throw new Error("File kit store not available in this environment");
+        const kitStore = await factory(dummyKit);
+        this.registerKitStore(kitStore, true, false);
+        return kitStore.getSnapshot().kit.guid;
+      }
+      case "remote": {
+        const factory = this.remoteKitStoreFactory;
+        if (!factory) throw new Error("Remote kit store not available in this environment");
+        const remoteKit: Kit = { ...dummyKit, name: serverUrl ?? "" };
+        const kitStore = await factory(remoteKit);
+        this.registerKitStore(kitStore, true, true);
+        return kitStore.getSnapshot().kit.guid;
+      }
+      default:
+        throw new Error(`Unknown kit kind for openKit: ${kind}`);
+    }
   };
 
   private loadKitFilesFromPublic = async (kitGuid: string) => {
@@ -19235,6 +19257,12 @@ export class SketchpadStore {
       const remote = rest[2] as boolean | undefined;
       await this.createKit(kit, local, remote);
       return {} as T;
+    }
+    if (command === "semio.sketchpad.openKit") {
+      const kind = rest[0] as string;
+      const serverUrl = rest[1] as string | undefined;
+      const kitGuid = await this.openKit(kind, serverUrl);
+      return { kitGuid } as T;
     }
     if (command === "semio.sketchpad.createKitApp") {
       const id = rest[0] as KitAppId;
@@ -20812,6 +20840,7 @@ export function useSketchpadCommands() {
       setActiveInteraction: (origin: string, interactionId?: string) => store.execute("semio.sketchpad.setActiveInteraction", origin, interactionId),
       syncNavigation: (origin: string, path: string) => store.execute("semio.sketchpad.syncNavigation", origin, path),
       createKit: (origin: string, kit: Kit, local?: boolean, remote?: boolean) => store.execute("semio.sketchpad.createKit", origin, kit, local, remote),
+      openKit: (origin: string, kind: string, serverUrl?: string) => store.execute("semio.sketchpad.openKit", origin, kind, serverUrl) as Promise<{ kitGuid: string }>,
       createKitApp: (origin: string, kitAppId: KitAppId) => store.execute("semio.sketchpad.createKitApp", origin, kitAppId),
       createDesignApp: (origin: string, designAppId: DesignAppId) => store.execute("semio.sketchpad.createDesignApp", origin, designAppId),
       navigateToKit: (kit: Guid, search?: string) => {
@@ -24061,9 +24090,7 @@ const AppRouter: FC = () => {
   };
 
   if (!appsInitialized) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-neutral-950 text-neutral-200">Loading apps…</div>
-    );
+    return <div className="flex h-screen w-screen items-center justify-center bg-neutral-950 text-neutral-200">Loading apps…</div>;
   }
 
   return (
@@ -24697,6 +24724,8 @@ const LayoutWrapper: FC = () => {
         return <MousePointerIcon className="size-tiny" />;
       case "filter":
         return <SearchIcon className="size-tiny" />;
+      case "open":
+        return <FolderIcon className="size-tiny" />;
       case "create":
         return <AddIcon className="size-tiny" />;
       case "view":
@@ -24964,7 +24993,7 @@ const LayoutWrapper: FC = () => {
                                 })}
                               </ToolbarScopeWrapper>
                             )}
-                            {["hand", "selection", "filter", "create", "view", "actions"].map((groupId) => {
+                            {["hand", "selection", "filter", "open", "create", "view", "actions"].map((groupId) => {
                               if (!toolbarGroups[groupId]) return null;
                               const isActive = activeToolbarGroup === groupId;
 
@@ -29848,10 +29877,7 @@ function getTransactionAffectedPieces(store: DesignStore | null): { changedPiece
     statusMap.set(pieceGuid, status);
   };
 
-  const markConnectionEndpoints = (
-    connection: { guid?: string; connected?: { piece?: { guid?: string } }; connecting?: { piece?: { guid?: string } } } | undefined,
-    status: DiffStatus,
-  ): void => {
+  const markConnectionEndpoints = (connection: { guid?: string; connected?: { piece?: { guid?: string } }; connecting?: { piece?: { guid?: string } } } | undefined, status: DiffStatus): void => {
     if (!connection) return;
     const connectedPieceGuid = connection.connected?.piece?.guid;
     const connectingPieceGuid = connection.connecting?.piece?.guid;
@@ -30950,20 +30976,8 @@ export const DesignHistorySettings: FC = () => {
   const { undo, redo } = useDesignAppCommands();
   return (
     <ToolbarGroup>
-      <ToolbarCommandButton
-        id="semio.sketchpad.app.design.history.undo"
-        icon={<SkipBackIcon className="size-tiny" />}
-        text="Undo"
-        disabled={!canUndo}
-        onClick={() => undo?.()}
-      />
-      <ToolbarCommandButton
-        id="semio.sketchpad.app.design.history.redo"
-        icon={<SkipForwardIcon className="size-tiny" />}
-        text="Redo"
-        disabled={!canRedo}
-        onClick={() => redo?.()}
-      />
+      <ToolbarCommandButton id="semio.sketchpad.app.design.history.undo" icon={<SkipBackIcon className="size-tiny" />} text="Undo" disabled={!canUndo} onClick={() => undo?.()} />
+      <ToolbarCommandButton id="semio.sketchpad.app.design.history.redo" icon={<SkipForwardIcon className="size-tiny" />} text="Redo" disabled={!canRedo} onClick={() => redo?.()} />
     </ToolbarGroup>
   );
 };
@@ -41615,20 +41629,8 @@ export const TypeHistorySettings: FC = () => {
   const canRedo = useSelector(actor, (snapshot) => snapshot.can({ type: "TYPE.TRANSACTION.REDO", kitGuid, typeGuid }));
   return (
     <ToolbarGroup>
-      <ToolbarCommandButton
-        id="semio.sketchpad.app.type.history.undo"
-        icon={<SkipBackIcon className="size-tiny" />}
-        text="Undo"
-        disabled={!canUndo}
-        onClick={() => undo?.()}
-      />
-      <ToolbarCommandButton
-        id="semio.sketchpad.app.type.history.redo"
-        icon={<SkipForwardIcon className="size-tiny" />}
-        text="Redo"
-        disabled={!canRedo}
-        onClick={() => redo?.()}
-      />
+      <ToolbarCommandButton id="semio.sketchpad.app.type.history.undo" icon={<SkipBackIcon className="size-tiny" />} text="Undo" disabled={!canUndo} onClick={() => undo?.()} />
+      <ToolbarCommandButton id="semio.sketchpad.app.type.history.redo" icon={<SkipForwardIcon className="size-tiny" />} text="Redo" disabled={!canRedo} onClick={() => redo?.()} />
     </ToolbarGroup>
   );
 };
@@ -44044,20 +44046,8 @@ export const QualityHistorySettings: FC = () => {
   const { undo, redo } = useQualityAppCommands();
   return (
     <ToolbarGroup>
-      <ToolbarCommandButton
-        id="semio.sketchpad.app.quality.history.undo"
-        icon={<SkipBackIcon className="size-tiny" />}
-        text="Undo"
-        disabled={!canUndo}
-        onClick={() => undo?.("semio.sketchpad.app.quality.history.undo")}
-      />
-      <ToolbarCommandButton
-        id="semio.sketchpad.app.quality.history.redo"
-        icon={<SkipForwardIcon className="size-tiny" />}
-        text="Redo"
-        disabled={!canRedo}
-        onClick={() => redo?.("semio.sketchpad.app.quality.history.redo")}
-      />
+      <ToolbarCommandButton id="semio.sketchpad.app.quality.history.undo" icon={<SkipBackIcon className="size-tiny" />} text="Undo" disabled={!canUndo} onClick={() => undo?.("semio.sketchpad.app.quality.history.undo")} />
+      <ToolbarCommandButton id="semio.sketchpad.app.quality.history.redo" icon={<SkipForwardIcon className="size-tiny" />} text="Redo" disabled={!canRedo} onClick={() => redo?.("semio.sketchpad.app.quality.history.redo")} />
     </ToolbarGroup>
   );
 };
@@ -46390,7 +46380,7 @@ export { useHome };
 
 // #region 🛎️Table
 
-    export { };
+export {};
 
 // #endregion 🛎️Table
 
@@ -46837,50 +46827,45 @@ const HomeToolbarCreate: FC = () => {
   );
 };
 /**
- * Toolbar group for opening existing kits from folder, file, or remote URL.
+ * Toolbar group for opening existing synchronized kits from folder, file, or remote URL.
+ *
+ * Specs: Folder kit opens a native folder picker (desktop only via folderKitStoreFactory).
+ * File kit opens a file picker for .kit.semio.json files (via fileKitStoreFactory).
+ * Remote kit asks for a semio/server URL and connects (via remoteKitStoreFactory).
+ * Each kind is only shown when the corresponding factory is available.
  **/
 const HomeToolbarOpen: FC = () => {
   const availableKitKinds = useAvailableKitKinds();
-  const kits = useKits();
-  const defaultKitName = useLabel("semio.sketchpad.app.kit.defaultName");
-  const { createKit, navigateToKit, storeKitFileBlobs } = useSketchpadCommands();
-  const actor = useSketchpadActor();
+  const { openKit, navigateToKit } = useSketchpadCommands();
 
   const handleOpenFolder = useCallback(async () => {
-    const existingNames = kits.map((kit) => kit.name);
-    const uniqueName = generateUniqueName(defaultKitName ?? "", existingNames) ?? defaultKitName ?? "";
-    const newKit: Kit = { guid: guid(), name: uniqueName, version: "", types: [], designs: [] };
     try {
-      await createKit("semio.sketchpad.app.home.toolbar.openFolder", newKit, true, false);
-      navigateToKit(newKit.guid);
+      const result = await openKit("semio.sketchpad.app.home.toolbar.openFolder", "folder");
+      if (result?.kitGuid) navigateToKit(result.kitGuid);
     } catch (error) {
       console.error("[Home] Failed to open folder kit:", error);
     }
-  }, [createKit, defaultKitName, kits, navigateToKit]);
+  }, [openKit, navigateToKit]);
 
-  const handleOpenFile = useCallback(() => {
-    const fileInput = document.getElementById("semio.sketchpad.app.home.importKit") as HTMLInputElement | null;
-    if (fileInput) {
-      fileInput.click();
+  const handleOpenFile = useCallback(async () => {
+    try {
+      const result = await openKit("semio.sketchpad.app.home.toolbar.openFile", "file");
+      if (result?.kitGuid) navigateToKit(result.kitGuid);
+    } catch (error) {
+      console.error("[Home] Failed to open file kit:", error);
     }
-  }, []);
+  }, [openKit, navigateToKit]);
 
   const handleOpenRemote = useCallback(async () => {
-    const url = prompt("Enter semio sketchpad URL:");
+    const url = prompt("Enter semio server URL:");
     if (!url) return;
-    const operationId = `kit-import-${guid()}`;
-    actor.send({ type: "BACKGROUND.START", operationId, operationType: `kit-import:remote` });
     try {
-      const { kit } = await importKit(url);
-      await createKit("semio.sketchpad.app.home.toolbar.openRemote", kit, false, false);
-      await storeKitFileBlobs(kit.guid, kit);
-      actor.send({ type: "BACKGROUND.COMPLETE", operationId });
-      navigateToKit(kit.guid);
+      const result = await openKit("semio.sketchpad.app.home.toolbar.openRemote", "remote", url);
+      if (result?.kitGuid) navigateToKit(result.kitGuid);
     } catch (error) {
-      console.error("[Home] Failed to import remote kit:", error);
-      actor.send({ type: "BACKGROUND.FAIL", operationId, error: error instanceof Error ? error.message : String(error) });
+      console.error("[Home] Failed to open remote kit:", error);
     }
-  }, [actor, createKit, navigateToKit, storeKitFileBlobs]);
+  }, [openKit, navigateToKit]);
 
   const labelFolder = useLabel("semio.sketchpad.app.home.toolbar.openFolder");
   const labelFile = useLabel("semio.sketchpad.app.home.toolbar.openFile");
@@ -46888,8 +46873,8 @@ const HomeToolbarOpen: FC = () => {
 
   return (
     <ToolbarGroup>
-      {availableKitKinds.local && <Action id="semio.sketchpad.app.home.toolbar.openFolder" icon={<FolderIcon />} text={labelFolder ?? "Folder"} onClick={handleOpenFolder} />}
-      <Action id="semio.sketchpad.app.home.toolbar.openFile" icon={<DocumentIcon />} text={labelFile ?? "File"} onClick={handleOpenFile} />
+      {availableKitKinds.folder && <Action id="semio.sketchpad.app.home.toolbar.openFolder" icon={<FolderIcon />} text={labelFolder ?? "Folder"} onClick={handleOpenFolder} />}
+      {availableKitKinds.file && <Action id="semio.sketchpad.app.home.toolbar.openFile" icon={<DocumentIcon />} text={labelFile ?? "File"} onClick={handleOpenFile} />}
       {availableKitKinds.remote && <Action id="semio.sketchpad.app.home.toolbar.openRemote" icon={<RemoteKitIcon />} text={labelRemote ?? "Remote"} onClick={handleOpenRemote} />}
     </ToolbarGroup>
   );
@@ -48356,10 +48341,10 @@ export { FeedbackIcon };
 // #region 🎆Entrypoint
 // --- Combined from index.tsx and index.ts ---
 
-    import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
-    import type { KitJsonFileAdapter } from "../studio/studio";
-    import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
-    import "./globals.css";
+import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
+import type { KitJsonFileAdapter } from "../studio/studio";
+import { createIndexeddbPersistenceFactory, createJsonFileKitStore, createSessionKitStore, JsonFileKitStore } from "../studio/studio";
+import "./globals.css";
 
 export { createJsonFileKitStore, JsonFileKitStore };
 export type { BlobAssetStore, KitJsonFileAdapter, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };
@@ -48405,6 +48390,7 @@ const temporaryKitStoreFactory: SketchpadKitStoreFactory = (kit) => new InMemory
 async function boot() {
   let kitStore = undefined;
   let fileKitStoreFactory: SketchpadKitStoreFactory | undefined = undefined;
+  let remoteKitStoreFactory: SketchpadKitStoreFactory | undefined = undefined;
   if (isVscodeWebview) {
     const adapter = createVscodeAdapter();
     kitStore = await createJsonFileKitStore(adapter);
@@ -48421,6 +48407,71 @@ async function boot() {
       }
     };
     // Auto-save is handled centrally by SketchpadStore.registerKitStore.
+  } else {
+    // #region 🗃️BrowserFileKitStoreFactory
+    // Browser file kit store factory using File System Access API for synchronized JSON kit files.
+    // Specs: Uses showOpenFilePicker when available (Chromium browsers) to open .json kit files.
+    // Falls back to <input type="file"> for read-only import in other browsers.
+    // The File System Access API allows read/write synchronization back to the file.
+    fileKitStoreFactory = (async (_kit: Kit) => {
+      if (typeof window !== "undefined" && "showOpenFilePicker" in window) {
+        const [fileHandle] = await (window as any).showOpenFilePicker({
+          types: [
+            {
+              description: "Semio Kit JSON",
+              accept: { "application/json": [".json"] },
+            },
+          ],
+        });
+        const adapter: KitJsonFileAdapter = {
+          read: async () => {
+            const file = await fileHandle.getFile();
+            return file.text();
+          },
+          write: async (json: string) => {
+            const writable = await fileHandle.createWritable();
+            await writable.write(json);
+            await writable.close();
+          },
+        };
+        return createJsonFileKitStore(adapter);
+      }
+      // Fallback: file input (read-only, no write-back)
+      return new Promise<KitStore>((resolve, reject) => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json";
+        input.onchange = async (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (!file) {
+            reject(new Error("No file selected"));
+            return;
+          }
+          const text = await file.text();
+          const adapter: KitJsonFileAdapter = {
+            read: async () => text,
+            write: async (_json: string) => {
+              console.warn("[Home] File System Access API not available. Kit changes cannot be saved to the original file.");
+            },
+          };
+          resolve(await createJsonFileKitStore(adapter));
+        };
+        input.oncancel = () => reject(new Error("File picker cancelled"));
+        input.click();
+      });
+    }) as SketchpadKitStoreFactory;
+    // #endregion 🗃️BrowserFileKitStoreFactory
+
+    // #region 🌐BrowserRemoteKitStoreFactory
+    // Browser remote kit store factory connecting to a semio/server via SessionKitStore.
+    // Specs: The server URL is passed in kit.name by the openKit command.
+    // Creates a SessionKitStore that connects via HTTP+WS for real-time synchronized editing.
+    remoteKitStoreFactory = (async (kit: Kit) => {
+      const serverUrl = kit.name;
+      if (!serverUrl) throw new Error("No server URL provided for remote kit");
+      return createSessionKitStore({ serverUrl });
+    }) as SketchpadKitStoreFactory;
+    // #endregion 🌐BrowserRemoteKitStoreFactory
   }
 
   const indexeddbPersistenceFactory = isVscodeWebview ? undefined : createIndexeddbPersistenceFactory();
@@ -48432,7 +48483,13 @@ async function boot() {
 
   getOrCreateDomRoot(rootElement).render(
     <div className="h-screen w-screen">
-      <Sketchpad persistenceFactory={indexeddbPersistenceFactory} kitStore={kitStore} temporaryKitStoreFactory={isVscodeWebview ? undefined : temporaryKitStoreFactory} fileKitStoreFactory={fileKitStoreFactory} />
+      <Sketchpad
+        persistenceFactory={indexeddbPersistenceFactory}
+        kitStore={kitStore}
+        temporaryKitStoreFactory={isVscodeWebview ? undefined : temporaryKitStoreFactory}
+        fileKitStoreFactory={fileKitStoreFactory}
+        remoteKitStoreFactory={remoteKitStoreFactory}
+      />
     </div>,
   );
 }
@@ -48457,6 +48514,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
   test.use({
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4181",
+    locale: "de-DE",
   });
 
   const SKETCHPAD_BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4181";
@@ -50037,8 +50095,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log(`[Home] Remote filter toggle visible: ${hasRemoteToggle}`);
       expect(hasTemporaryToggle || hasLocalToggle || hasRemoteToggle).toBe(true);
       expect(hasTemporaryToggle).toBe(true);
-      expect(hasLocalToggle).toBe(false);
-      expect(hasRemoteToggle).toBe(false);
+      expect(hasLocalToggle).toBe(true);
+      expect(hasRemoteToggle).toBe(true);
 
       const expectHomeKindToggleCycle = async (toggle: Locator, kind: "temporary" | "local" | "remote") => {
         console.log(`[Home] Testing ${kind} filter toggle on/off`);
@@ -50075,8 +50133,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log(`[Home] Create remote button visible: ${hasCreateRemoteBtn}`);
       expect(hasCreateTempBtn || hasCreateLocalBtn || hasCreateRemoteBtn).toBe(true);
       expect(hasCreateTempBtn).toBe(true);
-      expect(hasCreateLocalBtn).toBe(false);
-      expect(hasCreateRemoteBtn).toBe(false);
+      expect(hasCreateLocalBtn).toBe(true);
+      expect(hasCreateRemoteBtn).toBe(true);
 
       console.log("[Home] Testing group mutual exclusivity - filter settings hidden when create active");
       const temporaryStillVisible = await temporaryToggle.isVisible({ timeout: 1000 }).catch(() => false);
@@ -50091,6 +50149,72 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       console.log("[Home] Toolbar and filter toggles test complete");
       // #endregion 🔓Toolbar and Filter Toggles
+
+      // #region 📂Open Toolbar Group
+      console.log("[Home] Testing open toolbar group");
+      const openGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.open"]');
+      const hasOpenGroup = await openGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+      console.log(`[Home] Open group toggle visible: ${hasOpenGroup}`);
+      expect(hasOpenGroup).toBe(true);
+
+      await openGroupToggle.click();
+      await page.waitForTimeout(500);
+      await expect(settingsZone).toBeVisible({ timeout: 3000 });
+
+      const openFolderBtn = page.locator('[id="semio.sketchpad.app.home.toolbar.openFolder"]');
+      const hasOpenFolderBtn = await openFolderBtn.isVisible({ timeout: 3000 }).catch(() => false);
+      console.log(`[Home] Open folder button visible: ${hasOpenFolderBtn}`);
+      expect(hasOpenFolderBtn).toBe(false);
+
+      const openFileBtn = page.locator('[id="semio.sketchpad.app.home.toolbar.openFile"]');
+      const hasOpenFileBtn = await openFileBtn.isVisible({ timeout: 3000 }).catch(() => false);
+      console.log(`[Home] Open file button visible: ${hasOpenFileBtn}`);
+      expect(hasOpenFileBtn).toBe(true);
+
+      const openRemoteBtn = page.locator('[id="semio.sketchpad.app.home.toolbar.openRemote"]');
+      const hasOpenRemoteBtn = await openRemoteBtn.isVisible({ timeout: 3000 }).catch(() => false);
+      console.log(`[Home] Open remote button visible: ${hasOpenRemoteBtn}`);
+      expect(hasOpenRemoteBtn).toBe(true);
+
+      console.log("[Home] Testing openKit command via store");
+      const openKitResult = await page.evaluate(async () => {
+        const store = (window as any).__SEMIO_STORE__;
+        if (!store) return { error: "Store not available" };
+        const kinds = store.availableKitKinds();
+        return {
+          temporary: kinds.temporary,
+          local: kinds.local,
+          remote: kinds.remote,
+          folder: kinds.folder,
+          file: kinds.file,
+        };
+      });
+      console.log("[Home] availableKitKinds:", JSON.stringify(openKitResult));
+      expect(openKitResult.temporary).toBe(true);
+      expect(openKitResult.local).toBe(true);
+      expect(openKitResult.remote).toBe(true);
+      expect(openKitResult.folder).toBe(false);
+      expect(openKitResult.file).toBe(true);
+
+      console.log("[Home] Testing openKit('folder') throws in browser");
+      const openFolderResult = await page.evaluate(async () => {
+        const store = (window as any).__SEMIO_STORE__;
+        if (!store) return { error: "Store not available" };
+        try {
+          await store.openKit("folder");
+          return { error: null };
+        } catch (e: any) {
+          return { error: e.message };
+        }
+      });
+      console.log("[Home] openKit('folder') result:", openFolderResult.error);
+      expect(openFolderResult.error).toContain("not available");
+
+      await openGroupToggle.click();
+      await page.waitForTimeout(300);
+
+      console.log("[Home] Open toolbar group test complete");
+      // #endregion 📂Open Toolbar Group
 
       // #region 🎇Home Selection State
       console.log("[Home] Testing selection state");
@@ -50114,6 +50238,31 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const metabolismRow = page.getByRole("row", { name: /Metabolism/i }).first();
       const isRowVisible = await metabolismRow.isVisible({ timeout: 10000 }).catch(() => false);
       console.log("[Home] Metabolism row visible:", isRowVisible);
+
+      // Set language to German to test i18n translations
+      await page.evaluate(() => {
+        const actor = (window as any).__SEMIO_ACTOR__;
+        if (actor) actor.send({ type: "SET_LANGUAGE", language: "de" });
+      });
+      await page.waitForTimeout(1000);
+
+      // [DEBUG] Check i18n state in browser
+      const i18nDebug = await page.evaluate(() => {
+        const actor = (window as any).__SEMIO_ACTOR__;
+        let sketchpadLanguage = null;
+        if (actor) {
+          try {
+            sketchpadLanguage = actor.getSnapshot()?.context?.sketchpad?.language;
+          } catch {}
+        }
+        return {
+          navigatorLanguage: navigator.language,
+          navigatorLanguages: navigator.languages,
+          sketchpadLanguage,
+        };
+      });
+      console.log("[DEBUG] i18n state:", JSON.stringify(i18nDebug));
+
       const homeBodyText = await page.locator("body").textContent();
       expect(homeBodyText).toContain("Zuletzt aktualisiert");
       expect(homeBodyText).toContain("Art");
@@ -56294,9 +56443,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const adapter = await createNodeMetabolismFolderAdapter();
       const store = await createFolderKitStore(adapter);
       const kit = store.getSnapshot().kit;
-      const nakagin = kit.designs?.find(
-        (d: any) => d.name === "Nakagin Capsule Tower" || (d.guid && String(d.guid).includes("9a890dd4")),
-      );
+      const nakagin = kit.designs?.find((d: any) => d.name === "Nakagin Capsule Tower" || (d.guid && String(d.guid).includes("9a890dd4")));
       expect(nakagin).toBeTruthy();
       expect((nakagin!.pieces ?? []).length).toBeGreaterThan(0);
     });
