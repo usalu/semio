@@ -30,6 +30,10 @@ dependencies = [
     "starlette-graphene3>=0.6.0",
     "uvicorn[standard]>=0.34.3",
     "mcp[cli]>=1.25.0",
+    "honeybee-core",
+    "honeybee-energy",
+    "ladybug-core",
+    "ladybug-geometry",
 ]
 
 [project.urls]

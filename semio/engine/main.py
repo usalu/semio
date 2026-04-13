@@ -56,6 +56,11 @@ import starlette_graphene3
 import uvicorn
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.types import CallToolResult, EmbeddedResource, TextContent, TextResourceContents
+from honeybee.room import Room
+from honeybee.model import Model
+from honeybee_energy.hvac.idealair import IdealAirSystem
+from honeybee_energy.simulation.parameter import SimulationParameter
+import honeybee_energy.lib.programtypes as prog_lib
 
 try:
     import openai  # type: ignore
@@ -3104,6 +3109,710 @@ def clear_current_selection(ctx: Context) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
+# #region 👓MCP App Tools Honeybee
+@mcp.tool()
+def generate_energy_model(
+    model_name: str,
+    width: float,
+    length: float,
+    height: float,
+    program_type: str = "Generic Office Program",
+    output_dir: str = "./simulations"
+) -> str:
+    """🏗️Create a Honeybee box model with energy properties and exports .hbjson.
+
+    Args:
+        model_name: Project name (no spaces).
+        width: Room width in meters.
+        length: Room length in meters.
+        height: Room height in meters.
+        program_type: Building type (e.g. 'MediumOffice') or program ID (e.g. 'Generic Office Program').
+        output_dir: Directory to save the file.
+    """
+    try:
+        os.makedirs(output_dir, exist_ok=True)
+        room = Room.from_box(f"{model_name}_Zone", width, length, height)
+
+        # Resolve program type with fallback
+        try:
+            program = prog_lib.program_type_by_identifier(program_type)
+        except ValueError:
+            try:
+                program = prog_lib.building_program_type_by_identifier(program_type)
+            except ValueError:
+                program = prog_lib.office_program
+
+        room.properties.energy.program_type = program
+        room.properties.energy.hvac = IdealAirSystem(f"{model_name}_HVAC")
+
+        model = Model(model_name, rooms=[room])
+        hbjson_path = os.path.join(output_dir, f"{model_name}.hbjson")
+        model.to_hbjson(f"{model_name}.hbjson", folder=output_dir, indent=4)
+
+        return (f"✅ Model '{model_name}' generated!\n"
+                f"- Dimensions: {width}x{length}x{height}m\n"
+                f"- Floor Area: {room.floor_area:.2f} m2 | Volume: {room.volume:.2f} m3\n"
+                f"- Program: {program.identifier}\n"
+                f"- Saved to: {os.path.abspath(hbjson_path)}")
+    except Exception as e:
+        return f"❌ Failed: {str(e)}"
+
+
+@mcp.tool()
+def add_windows_by_ratio(
+    model_name: str,
+    ratio: float = 0.4,
+    cardinal_direction: str = None,
+    output_dir: str = "./simulations"
+) -> str:
+    """🪟Add windows to walls of an existing model.
+
+    Args:
+        model_name: Name of the model to modify.
+        ratio: Window-to-Wall ratio (0.0 to 1.0). Default 0.4 (40%).
+        cardinal_direction: Optional. "North", "South", "East", or "West" to only add windows to specific facing walls.
+        output_dir: Directory where the model is located.
+    """
+    file_path = os.path.join(output_dir, f"{model_name}.hbjson")
+    if not os.path.exists(file_path):
+        return f"❌ Model '{model_name}' not found at {file_path}."
+    try:
+        from honeybee.facetype import Wall
+        model = Model.from_hbjson(file_path)
+        for room in model.rooms:
+            if cardinal_direction is None:
+                room.wall_apertures_by_ratio(ratio)
+            else:
+                for face in room.faces:
+                    if isinstance(face.type, Wall):
+                        try:
+                            # Use cardinal direction if it matches
+                            if cardinal_direction.lower() in face.cardinal_direction().lower():
+                                face.apertures_by_ratio(ratio)
+                        except Exception:
+                            # Fallback if cardinal_direction fails geometry bounds
+                            pass
+                        
+        model.to_hbjson(f"{model_name}.hbjson", folder=output_dir, indent=4)
+
+        win_count = sum(len(f.apertures) for r in model.rooms for f in r.faces)
+        return f"✅ Added {ratio*100:.0f}% WWR to '{model_name}' (Direction: {cardinal_direction or 'All'}). Total windows: {win_count}."
+    except Exception as e:
+        return f"❌ Failed: {str(e)}"
+
+
+@mcp.tool()
+def add_shading_overhangs(
+    model_name: str,
+    depth: float = 0.5,
+    output_dir: str = "./simulations"
+) -> str:
+    """⛱️Add horizontal shading overhangs above all windows.
+
+    Args:
+        model_name: Name of the model to modify.
+        depth: Overhang depth in meters. Default 0.5m.
+        output_dir: Directory where the model is located.
+    """
+    file_path = os.path.join(output_dir, f"{model_name}.hbjson")
+    if not os.path.exists(file_path):
+        return f"❌ Model '{model_name}' not found."
+    try:
+        model = Model.from_hbjson(file_path)
+        count = 0
+        for room in model.rooms:
+            for face in room.faces:
+                for ap in face.apertures:
+                    ap.overhang(depth)
+                    count += 1
+        model.to_hbjson(f"{model_name}.hbjson", folder=output_dir, indent=4)
+        return f"✅ Added {depth}m overhangs to {count} windows in '{model_name}'."
+    except Exception as e:
+        return f"❌ Failed: {str(e)}"
+
+
+@mcp.tool()
+def get_model_summary(model_name: str, output_dir: str = "./simulations") -> str:
+    """📊Return a structured summary of the model (rooms, area, volume, windows, program, HVAC).
+
+    Args:
+        model_name: Name of the model.
+        output_dir: Directory where the model is located.
+    """
+    file_path = os.path.join(output_dir, f"{model_name}.hbjson")
+    if not os.path.exists(file_path):
+        return f"❌ Model '{model_name}' not found."
+    try:
+        model = Model.from_hbjson(file_path)
+
+        floor_area = sum(r.floor_area for r in model.rooms)
+        volume = sum(r.volume for r in model.rooms)
+        win_count = sum(len(f.apertures) for r in model.rooms for f in r.faces)
+        shade_count = sum(len(ap.outdoor_shades) for r in model.rooms
+                          for f in r.faces for ap in f.apertures)
+
+        rooms_info = []
+        for r in model.rooms:
+            prog = "None"
+            hvac = "None"
+            try:
+                prog = r.properties.energy.program_type.identifier
+            except Exception:
+                pass
+            try:
+                hvac = r.properties.energy.hvac.identifier
+            except Exception:
+                pass
+            rooms_info.append(f"  - {r.display_name} (Program: {prog}, HVAC: {hvac})")
+
+        return (
+            f"📊 Model: {model.display_name}\n"
+            f"Units: {model.units}\n"
+            f"Rooms: {len(model.rooms)}\n"
+            + "\n".join(rooms_info) + "\n"
+            f"Total Floor Area: {floor_area:.2f} m2\n"
+            f"Total Volume: {volume:.2f} m3\n"
+            f"Windows: {win_count}\n"
+            f"Shading Devices: {shade_count}"
+        )
+    except Exception as e:
+        return f"❌ Failed: {str(e)}"
+
+
+# ──────────────────────────────────────────────
+#  2. WEATHER DATA TOOLS
+# ──────────────────────────────────────────────
+
+@mcp.tool()
+def download_weather_data(location_name: str, output_dir: str = "./simulations") -> str:
+    """🌍Find and download EPW weather data for a given city/location.
+    Supports international names (e.g. 'Munich' finds 'Muenchen').
+
+    Args:
+        location_name: Name of the city or location (e.g. 'Munich', 'Berlin', 'Dubai').
+        output_dir: Directory to save the EPW file.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    BASE_URL = "https://climate.onebuilding.org"
+    
+    # Common city name aliases (English -> Local name in OneBuilding)
+    ALIASES = {
+        'munich': ['muenchen', 'munich'],
+        'cologne': ['koeln', 'cologne'],
+        'vienna': ['wien', 'vienna'],
+        'rome': ['roma', 'rome'],
+        'nuremberg': ['nuernberg'],
+        'vancouver': ['vancouver'],
+        'frankfurt': ['frankfurt']
+    }
+    
+    search_terms = ALIASES.get(location_name.lower(), [location_name.lower()])
+    
+    try:
+        # 1. Get the Regions page
+        resp = requests.get(BASE_URL, timeout=10)
+        resp.raise_for_status()
+        
+        import re
+        regions = re.findall(r'href="(WMO_Region_\d+_[^/"]+)/?index\.html"', resp.text)
+        
+        # Heuristic sort: If station name sounds European, check Region 6 first
+        if any(x in location_name.lower() for x in ['munich', 'bergen', 'berlin', 'london', 'paris', 'hannover', 'vienna', 'rome']):
+            regions.sort(key=lambda x: "Region_6" in x, reverse=True)
+
+        found_zip_url = None
+        match_station_name = None
+
+        for region in regions:
+            region_url = f"{BASE_URL}/{region}/index.html"
+            reg_resp = requests.get(region_url, timeout=10)
+            if reg_resp.status_code != 200: continue
+            
+            # 2. Find Countries (e.g. DEU_Germany)
+            countries = re.findall(r'href="([^/"]+)/?index\.html"', reg_resp.text)
+            
+            for country in countries:
+                country_index_url = f"{BASE_URL}/{region}/{country}/index.html"
+                try:
+                    cty_resp = requests.get(country_index_url, timeout=10)
+                    if cty_resp.status_code != 200: continue
+                    
+                    # 3. Find ZIP links (might be in subfolders like BY_Bayern/)
+                    # Pattern catches "href=..." and we'll look for our search_terms in the path
+                    zip_links = re.findall(r'href="([^"]+\.zip)"', cty_resp.text)
+                    for zip_link in zip_links:
+                        if any(term in zip_link.lower() for term in search_terms):
+                            found_zip_url = f"{BASE_URL}/{region}/{country}/{zip_link}"
+                            match_station_name = zip_link
+                            break
+                    
+                    # 4. If not found in country root, check state subfolders (common for Germany)
+                    if not found_zip_url:
+                        subfolders = re.findall(r'href="([^/"]+)/?index\.html"', cty_resp.text)
+                        for sub in subfolders:
+                            # Skip common non-state links
+                            if sub.lower() in ['..', 'index']: continue
+                            sub_url = f"{BASE_URL}/{region}/{country}/{sub}/index.html"
+                            sub_resp = requests.get(sub_url, timeout=5)
+                            if sub_resp.status_code == 200:
+                                sub_zip_links = re.findall(r'href="([^"]+\.zip)"', sub_resp.text)
+                                for szip in sub_zip_links:
+                                    if any(term in szip.lower() for term in search_terms):
+                                        found_zip_url = f"{BASE_URL}/{region}/{country}/{sub}/{szip}"
+                                        match_station_name = szip
+                                        break
+                            if found_zip_url: break
+
+                except: continue
+                if found_zip_url: break
+            if found_zip_url: break
+
+        if not found_zip_url:
+            return f"❌ Could not find weather data for '{location_name}'. Try using the local name (e.g. 'Muenchen' for Munich) or check spelling."
+
+        # 5. Download and Extract
+        zip_resp = requests.get(found_zip_url, timeout=30)
+        zip_resp.raise_for_status()
+        
+        with zipfile.ZipFile(io.BytesIO(zip_resp.content)) as z:
+            epw_files = [f for f in z.namelist() if f.lower().endswith('.epw')]
+            if not epw_files:
+                return "❌ No EPW file found in the archive."
+            
+            epw_filename = epw_files[0]
+            z.extract(epw_filename, path=output_dir)
+            
+            final_path = os.path.abspath(os.path.join(output_dir, epw_filename))
+            return (f"✅ Weather data for '{location_name}' found at '{match_station_name}'!\n"
+                    f"- Saved to: {final_path}\n"
+                    f"Use this path in the simulation tool.")
+
+    except Exception as e:
+        return f"❌ Failed to reach weather database: {str(e)}"
+
+
+@mcp.tool()
+def get_weather_summary(epw_path: str) -> str:
+    """🌤️Parse an EPW weather file and return a climate summary.
+
+    Args:
+        epw_path: Full path to an EPW weather file.
+    """
+    if not os.path.exists(epw_path):
+        return f"❌ EPW file not found at: {epw_path}"
+    try:
+        from ladybug.epw import EPW
+        epw = EPW(epw_path)
+        loc = epw.location
+
+        db = epw.dry_bulb_temperature
+        rh = epw.relative_humidity
+        ghr = epw.global_horizontal_radiation
+
+        return (
+            f"🌤️ Weather Summary: {loc.city}, {loc.country}\n"
+            f"- Latitude: {loc.latitude:.2f}° | Longitude: {loc.longitude:.2f}°\n"
+            f"- Timezone: UTC{loc.time_zone:+.0f} | Elevation: {loc.elevation:.0f}m\n"
+            f"- Dry Bulb Temp: min {min(db.values):.1f}°C / max {max(db.values):.1f}°C / avg {sum(db.values)/len(db.values):.1f}°C\n"
+            f"- Relative Humidity: avg {sum(rh.values)/len(rh.values):.0f}%\n"
+            f"- Global Horizontal Radiation: total {sum(ghr.values)/1000:.0f} kWh/m2/yr\n"
+            f"- EPW Source: {epw_path}"
+        )
+    except Exception as e:
+        return f"❌ Failed to parse EPW: {str(e)}"
+
+
+# ──────────────────────────────────────────────
+#  3. SIMULATION TOOL
+# ──────────────────────────────────────────────
+
+@mcp.tool()
+def run_energy_simulation(
+    model_name: str,
+    epw_path: str,
+    output_dir: str = "./simulations"
+) -> str:
+    """🚀Run a full EnergyPlus simulation for a Honeybee model.
+    Pipeline: HBJSON → OpenStudio/IDF → EnergyPlus → Results (SQL, HTML, ERR).
+
+    Args:
+        model_name: Name of the model to simulate.
+        epw_path: Full path to an EPW weather file.
+        output_dir: Directory where the model is located and results will be saved.
+    """
+    hbjson_path = os.path.join(output_dir, f"{model_name}.hbjson")
+    if not os.path.exists(hbjson_path):
+        return f"❌ Model '{model_name}' not found at {hbjson_path}."
+    if not os.path.exists(epw_path):
+        return f"❌ EPW file not found at: {epw_path}"
+
+    try:
+        from honeybee_energy.run import to_openstudio_sim_folder, run_osw, run_idf
+
+        # Load model
+        model = Model.from_hbjson(hbjson_path)
+
+        # Setup simulation parameters
+        sim_par = SimulationParameter()
+        sim_par.output.add_zone_energy_use()
+        sim_par.output.add_hvac_energy_use()
+        sim_par.output.add_electricity_generation()
+
+        # Add design days from EPW
+        from ladybug.epw import EPW as LadybugEPW
+        epw_obj = LadybugEPW(epw_path)
+        des_days = [
+            epw_obj.approximate_design_day('WinterDesignDay'),
+            epw_obj.approximate_design_day('SummerDesignDay')
+        ]
+        sim_par.sizing_parameter.design_days = des_days
+
+        # Create simulation folder
+        sim_folder = os.path.join(output_dir, f"{model_name}_sim")
+        os.makedirs(sim_folder, exist_ok=True)
+
+        # Translate to OpenStudio and get IDF
+        osm, osw, idf = to_openstudio_sim_folder(
+            model, sim_folder, epw_file=os.path.abspath(epw_path), sim_par=sim_par
+        )
+
+        # Run EnergyPlus
+        if osw is not None:
+            # Run via OpenStudio workflow
+            osm_out, idf_out = run_osw(osw, measures_only=False, silent=True)
+            if idf_out is None:
+                return "❌ OpenStudio workflow failed. Check that OpenStudio CLI is installed."
+            # Get results from the run directory
+            run_dir = os.path.join(sim_folder, 'run')
+        elif idf is not None:
+            # Run IDF directly
+            from honeybee_energy.run import run_idf as _run_idf
+            sql, zsz, rdd, html, err = _run_idf(
+                idf, os.path.abspath(epw_path), silent=True
+            )
+            run_dir = os.path.dirname(idf)
+        else:
+            return "❌ Failed to create simulation files."
+
+        # Collect result files
+        result_files = {}
+        for fname, label in [('eplusout.sql', 'SQL'), ('eplustbl.htm', 'HTML'),
+                              ('eplusout.err', 'ERR'), ('epluszsz.csv', 'ZSZ')]:
+            fpath = os.path.join(run_dir, fname)
+            if os.path.exists(fpath):
+                result_files[label] = os.path.abspath(fpath)
+
+        if not result_files:
+            # Check for errors
+            err_path = os.path.join(run_dir, 'eplusout.err')
+            if os.path.exists(err_path):
+                with open(err_path, 'r') as f:
+                    err_content = f.read()[-2000:]
+                return f"❌ Simulation may have failed. Error log:\n{err_content}"
+            return "❌ No simulation output files found."
+
+        results_str = "\n".join([f"  - {k}: {v}" for k, v in result_files.items()])
+        return (
+            f"✅ Simulation complete for '{model_name}'!\n"
+            f"Result files:\n{results_str}"
+        )
+    except Exception as e:
+        return f"❌ Simulation failed: {str(e)}"
+
+
+# ──────────────────────────────────────────────
+#  4. RESULTS EXTRACTION TOOLS
+# ──────────────────────────────────────────────
+
+@mcp.tool()
+def extract_eui(
+    model_name: str,
+    output_dir: str = "./simulations"
+) -> str:
+    """📊Extract End Use Intensity (EUI) from an EnergyPlus SQL results file.
+    Returns a breakdown of energy use by category (heating, cooling, lighting, etc.) in kWh/m2.
+
+    Args:
+        model_name: Name of the model whose results to extract.
+        output_dir: Directory where the simulation was run.
+    """
+    sql_path = os.path.join(output_dir, f"{model_name}_sim", "run", "eplusout.sql")
+    if not os.path.exists(sql_path):
+        return f"❌ SQL results not found at {sql_path}. Run the simulation first."
+
+    try:
+        from honeybee_energy.result.eui import eui_from_sql
+        result = eui_from_sql(sql_path)
+
+        lines = [
+            f"📊 Energy Use Intensity (EUI) for '{model_name}':",
+            f"  Total EUI: {result['eui']:.2f} kWh/m2",
+            f"  Total Energy: {result['total_energy']:.2f} kWh",
+            f"  Total Floor Area: {result['total_floor_area']:.2f} m2",
+            f"  Conditioned Floor Area: {result['conditioned_floor_area']:.2f} m2",
+            f"  End Uses Breakdown:"
+        ]
+        for use, val in result['end_uses'].items():
+            lines.append(f"    - {use}: {val:.2f} kWh/m2")
+
+        return "\n".join(lines)
+    except Exception as e:
+        return f"❌ Failed to extract EUI: {str(e)}"
+
+
+@mcp.tool()
+def extract_simulation_errors(
+    model_name: str,
+    output_dir: str = "./simulations"
+) -> str:
+    """📋Read the EnergyPlus .err file and return all warnings and errors.
+
+    Args:
+        model_name: Name of the model.
+        output_dir: Directory where the simulation was run.
+    """
+    err_path = os.path.join(output_dir, f"{model_name}_sim", "run", "eplusout.err")
+    if not os.path.exists(err_path):
+        return f"❌ Error file not found at {err_path}. Run the simulation first."
+
+    try:
+        with open(err_path, 'r') as f:
+            content = f.read()
+
+        # Extract summary lines
+        warnings = content.count("** Warning **")
+        severe = content.count("** Severe  **")
+        fatal = content.count("**  Fatal  **")
+
+        # Get last portion of relevant lines
+        lines = content.strip().split('\n')
+        summary_lines = [l for l in lines if 'Warning' in l or 'Severe' in l
+                         or 'Fatal' in l or 'Successfully' in l or 'Finished' in l]
+        last_lines = summary_lines[-20:] if len(summary_lines) > 20 else summary_lines
+
+        return (
+            f"📋 Simulation Error Report for '{model_name}':\n"
+            f"  Warnings: {warnings} | Severe: {severe} | Fatal: {fatal}\n"
+            f"Key Messages:\n" + "\n".join(f"  {l.strip()}" for l in last_lines)
+        )
+    except Exception as e:
+        return f"❌ Failed to read error file: {str(e)}"
+
+
+@mcp.tool()
+def extract_html_summary(
+    model_name: str,
+    output_dir: str = "./simulations"
+) -> str:
+    """📑Read the EnergyPlus HTML summary report and return a text version.
+    Contains building performance data, envelope summary, and energy end uses.
+
+    Args:
+        model_name: Name of the model.
+        output_dir: Directory where the simulation was run.
+    """
+    html_path = os.path.join(output_dir, f"{model_name}_sim", "run", "eplustbl.htm")
+    if not os.path.exists(html_path):
+        return f"❌ HTML report not found at {html_path}. Run the simulation first."
+
+    try:
+        # Parse HTML tables into text
+        from html.parser import HTMLParser
+
+        class TableParser(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.tables = []
+                self.current_table = []
+                self.current_row = []
+                self.current_cell = ""
+                self.in_table = False
+                self.in_td = False
+
+            def handle_starttag(self, tag, attrs):
+                if tag == 'table':
+                    self.in_table = True
+                    self.current_table = []
+                elif tag in ('td', 'th'):
+                    self.in_td = True
+                    self.current_cell = ""
+                elif tag == 'tr':
+                    self.current_row = []
+
+            def handle_endtag(self, tag):
+                if tag == 'table':
+                    self.in_table = False
+                    if self.current_table:
+                        self.tables.append(self.current_table)
+                elif tag in ('td', 'th'):
+                    self.in_td = False
+                    self.current_row.append(self.current_cell.strip())
+                elif tag == 'tr':
+                    if self.current_row:
+                        self.current_table.append(self.current_row)
+
+            def handle_data(self, data):
+                if self.in_td:
+                    self.current_cell += data
+
+        with open(html_path, 'r', encoding='utf-8', errors='ignore') as f:
+            html_content = f.read()
+
+        parser = TableParser()
+        parser.feed(html_content)
+
+        # Format first few tables (Site/Source Energy, Building Area, End Uses)
+        output_lines = [f"📄 HTML Summary Report for '{model_name}':\n"]
+        for i, table in enumerate(parser.tables[:8]):
+            for row in table:
+                output_lines.append("  | ".join(row))
+            output_lines.append("")  # blank line between tables
+
+        result = "\n".join(output_lines)
+        # Cap at reasonable length
+        if len(result) > 4000:
+            result = result[:4000] + "\n[... truncated ...]"
+        return result
+    except Exception as e:
+        return f"❌ Failed to parse HTML report: {str(e)}"
+
+
+# ──────────────────────────────────────────────
+#  5. DISCOVERY TOOLS
+# ──────────────────────────────────────────────
+
+@mcp.tool()
+def list_building_types() -> str:
+    """🔍List all valid building types available for use in models."""
+    return "Valid Building Types:\n- " + "\n- ".join(prog_lib.BUILDING_TYPES)
+
+
+@mcp.tool()
+def list_program_types(search_term: str = "") -> str:
+    """🔍List program types from the library. Optionally filter by a search term.
+
+    Args:
+        search_term: Optional string to filter results (e.g., 'Office').
+    """
+    progs = [p for p in prog_lib.PROGRAM_TYPES if search_term.lower() in p.lower()]
+    display = progs[:30]
+    result = "Program Types:\n- " + "\n- ".join(display)
+    if len(progs) > 30:
+        result += f"\n... and {len(progs) - 30} more. Use a search term to narrow down."
+    return result
+
+
+# ──────────────────────────────────────────────
+#  6. MCP RESOURCES (data retrieval)
+# ──────────────────────────────────────────────
+
+@mcp.resource("model://{name}")
+def get_model_resource(name: str) -> str:
+    """📦Provide access to a Honeybee model's HBJSON data by its name."""
+    file_path = os.path.join("./simulations", f"{name}.hbjson")
+    if not os.path.exists(file_path):
+        if os.path.exists(name):
+            file_path = name
+        else:
+            return f"❌ Model '{name}' not found."
+    try:
+        with open(file_path, 'r') as f:
+            return f.read()
+    except Exception as e:
+        return f"❌ Failed to read model: {str(e)}"
+
+
+@mcp.resource("results://{name}")
+def get_results_resource(name: str) -> str:
+    """📦Provide access to EnergyPlus HTML summary report for a simulated model."""
+    html_path = os.path.join("./simulations", f"{name}_sim", "run", "eplustbl.htm")
+    if not os.path.exists(html_path):
+        return f"❌ Results for '{name}' not found. Run the simulation first."
+    try:
+        with open(html_path, 'r', encoding='utf-8', errors='ignore') as f:
+            return f.read()
+    except Exception as e:
+        return f"❌ Failed to read results: {str(e)}"
+
+# ──────────────────────────────────────────────
+#  7. ATOMIC ENGINEERING CALCULATIONS (EXCEL MATCH)
+# ──────────────────────────────────────────────
+
+@mcp.tool()
+def calculate_transmission_losses(
+    area_walls: float, u_walls: float,
+    area_windows: float, u_windows: float,
+    delta_u_wb: float = 0.05
+) -> str:
+    """
+    Calculates Total Transmission Heat Loss (H_T) [W/K].
+    Matches the 'Transmission' sheet logic.
+    """
+    ht_walls = area_walls * (u_walls + delta_u_wb)
+    ht_windows = area_windows * (u_windows + delta_u_wb)
+    ht_total = ht_walls + ht_windows
+    return f"🔹 Transmissionsverlust (H_T): {ht_total:.4f} W/K"
+
+@mcp.tool()
+def calculate_ventilation_losses(volume: float, air_exchange_rate: float = 1.0) -> str:
+    """
+    Calculates Ventilation Heat Loss (H_V) [W/K].
+    Matches the 'Jahresheizwärmebedarf' row 12.
+    """
+    rho_c_air = 0.34
+    hv_total = volume * air_exchange_rate * rho_c_air
+    return f"🔹 Lüftungsverlust (H_V): {hv_total:.4f} W/K"
+
+@mcp.tool()
+def calculate_annual_heating_demand(
+    h_t: float, h_v: float, 
+    q_s: float, q_i: float,
+    net_area: float,
+    klimafaktor: float = 89.736,
+    utilization_factor: float = 0.95
+) -> str:
+    """
+    Calculates Annual Heating Demand (Q_h) [kWh/a] per the summary sheet.
+    Exact formula: (H_T + H_V) * Gt - eta * (Q_s + Q_i)
+    """
+    q_losses = (h_t + h_v) * klimafaktor
+    q_h = q_losses - utilization_factor * (q_s + q_i)
+    q_h_specific = q_h / net_area
+    return (f"📊 Jahresheizwärmebedarf Results:\n"
+            f"- Wärmeverluste (Q_l): {q_losses:.2f} kWh/a\n"
+            f"- Heizwärmebedarf (Q_h): {q_h:.2f} kWh/a\n"
+            f"- Spez. Bedarf (q_h): {q_h_specific:.2f} kWh/m²a")
+
+@mcp.tool()
+def calculate_heating_costs(
+    q_h: float, 
+    jaz: float = 3.0, 
+    electricity_price_ct: float = 39.0
+) -> str:
+    """
+    Calculates Energy Demand and Costs.
+    Matches the 'Heizsystem' section.
+    """
+    q_end_energy = q_h / jaz
+    cost = q_end_energy * (electricity_price_ct / 100.0)
+    return (f"� Heizsystem & Kosten:\n"
+            f"- Endenergiebedarf: {q_end_energy:.2f} kWh/a\n"
+            f"- Energiekosten: {cost:.2f} €/a")
+
+@mcp.tool()
+def calculate_cooling_load_and_ventilation(
+    area: float, g_tot: float = 0.45, i_s: float = 475.0, delta_t: float = 7.0
+) -> str:
+    """
+    Calculates Cooling Load (Kühllast) and Summer Ventilation (Lüftung).
+    Matches the 'Kühllast+Lüftung' sheet.
+    """
+    cooling_load_kw = (area * g_tot * i_s) / 1000.0
+    rho_cp = 1.29 
+    vent_m3s = cooling_load_kw / (rho_cp * delta_t)
+    return (f"❄️ Kühllast: {cooling_load_kw:.2f} kW\n"
+            f"🌬️ Sommer-Lüftung: {vent_m3s:.2f} m³/s")
+
 
 # #endregion 🔬MCP Selection Tools
 
@@ -4151,6 +4860,25 @@ class TestMcp:
             "sum_quality_in_design",
             "transaction_abort",
             "transaction_finalize",
+            "generate_energy_model",
+            "add_windows_by_ratio",
+            "add_shading_overhangs",
+            "get_model_summary",
+            "download_weather_data",
+            "get_weather_summary",
+            "run_energy_simulation",
+            "extract_eui",
+            "extract_simulation_errors",
+            "extract_html_summary",
+            "calculate_transmission_losses",
+            "calculate_ventilation_losses",
+            "calculate_annual_heating_demand",
+            "calculate_heating_costs",
+            "calculate_cooling_load_and_ventilation",
+            "list_building_types",
+            "list_program_types",
+            "get_model_resource",
+            "get_results_resource",
         ]
 
     def test_flatten_design_tool(self, minimalKitJson: dict):
@@ -5136,6 +5864,85 @@ class TestMcp:
         assert engine.read_current_selection(ctx_a)["pieceGuids"] == ["p1"]
         assert engine.read_current_selection(ctx_b)["pieceGuids"] == ["p2"]
 
+    def test_calculate_transmission_losses_tool(self):
+        result = calculate_transmission_losses(100.0, 0.2, 20.0, 1.0)
+        assert isinstance(result, str)
+
+    def test_calculate_ventilation_losses_tool(self):
+        result = calculate_ventilation_losses(500.0, 1.5)
+        assert isinstance(result, str)
+
+    def test_calculate_annual_heating_demand_tool(self):
+        result = calculate_annual_heating_demand(50.0, 30.0, 1000.0, 500.0, 150.0)
+        assert isinstance(result, str)
+
+    def test_calculate_heating_costs_tool(self):
+        result = calculate_heating_costs(5000.0, 3.0, 39.0)
+        assert isinstance(result, str)
+
+    def test_calculate_cooling_load_and_ventilation_tool(self):
+        result = calculate_cooling_load_and_ventilation(100.0)
+        assert isinstance(result, str)
+
+    def test_list_building_types_tool(self):
+        result = list_building_types()
+        assert isinstance(result, str)
+
+    def test_list_program_types_tool(self):
+        result = list_program_types("Office")
+        assert isinstance(result, str)
+
+    def test_generate_energy_model_tool(self, tmp_path):
+        result = generate_energy_model("test_box", 10.0, 10.0, 3.0, "Generic Office Program", str(tmp_path))
+        assert isinstance(result, str)
+
+    def test_add_windows_by_ratio_tool(self, tmp_path):
+        generate_energy_model("test_win", 10.0, 10.0, 3.0, "Generic Office Program", str(tmp_path))
+        result = add_windows_by_ratio("test_win", 0.3, None, str(tmp_path))
+        assert isinstance(result, str)
+
+    def test_add_shading_overhangs_tool(self, tmp_path):
+        generate_energy_model("test_shade", 10.0, 10.0, 3.0, "Generic Office Program", str(tmp_path))
+        add_windows_by_ratio("test_shade", 0.4, None, str(tmp_path))
+        result = add_shading_overhangs("test_shade", 0.5, str(tmp_path))
+        assert isinstance(result, str)
+
+    def test_get_model_summary_tool(self, tmp_path):
+        generate_energy_model("test_summary", 10.0, 10.0, 3.0, "Generic Office Program", str(tmp_path))
+        result = get_model_summary("test_summary", str(tmp_path))
+        assert isinstance(result, str)
+
+    def test_download_weather_data_tool(self, tmp_path):
+        result = download_weather_data("Munich", str(tmp_path))
+        assert isinstance(result, str)
+
+    def test_get_weather_summary_tool(self):
+        result = get_weather_summary("missing.epw")
+        assert isinstance(result, str)
+
+    def test_run_energy_simulation_tool(self, tmp_path):
+        result = run_energy_simulation("nonexistent", "fake.epw", str(tmp_path))
+        assert isinstance(result, str)
+
+    def test_extract_eui_tool(self, tmp_path):
+        result = extract_eui("fake_model", str(tmp_path))
+        assert isinstance(result, str)
+
+    def test_extract_simulation_errors_tool(self, tmp_path):
+        result = extract_simulation_errors("fake_model", str(tmp_path))
+        assert isinstance(result, str)
+
+    def test_extract_html_summary_tool(self, tmp_path):
+        result = extract_html_summary("fake_model", str(tmp_path))
+        assert isinstance(result, str)
+
+    def test_get_model_resource_tool(self):
+        result = get_model_resource("fake_model")
+        assert isinstance(result, str)
+
+    def test_get_results_resource_tool(self):
+        result = get_results_resource("fake_model")
+        assert isinstance(result, str)
 
 class TestAppEndpoint:
     def test_app_design_viewer_returns_html(self):
