@@ -701,6 +701,13 @@ Abstract the Kit Store completly. Create a new semio bundle called studio that h
 Create two more store: File store that synchronizes a kit to a json file and Folder store that synchronizes a kit to a folder with a .semio folder with sqlite database (same as python engine).
 Create a semio vscode bundle that is sketchpad and opens when a json kit file is opened and edits the file.
 
+## semio desktop
+
+semio desktop:
+
+The sketchpad is not rendering the window controls.
+All desktop functionality MUST be implemented in sketchpad and is passed over a desktop prop. If desktop prop is not passed, then sketchpad knows it is not running in desktop mode.
+
 ## 👤semio📚js🗃️sketchpad💻designtsx
 
 ## 👤semio🖱️3dm

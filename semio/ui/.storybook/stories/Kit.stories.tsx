@@ -23,14 +23,16 @@ const meta: Meta<typeof Kit> = {
   title: "semio/Kit",
   component: Kit,
   tags: ["autodocs"],
-  parameters: { layout: "centered" },
+  parameters: { layout: "padded" },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof Kit>;
 
-const frame = (node: React.ReactNode) => <div className="w-96 rounded-md border border-border bg-card p-3 text-foreground shadow-sm">{node}</div>;
+const frame = (node: React.ReactNode) => (
+  <div className="min-h-[420px] w-full max-w-5xl min-w-[20rem] rounded-md border border-border bg-card p-3 text-foreground shadow-sm">{node}</div>
+);
 
 export const Default: Story = {
   args: { kit },

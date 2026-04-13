@@ -76,10 +76,10 @@ const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
 };
 
 /**
- * Window event handlers for minimize, maximize and close actions.
+ * Desktop integration surface. Presence of this object is how sketchpad detects desktop mode.
  *MUST delegate to invokeWindowControl for each action.
  **/
-const windowEvents = {
+const desktop = {
   minimize: () => invokeWindowControl("minimize"),
   maximize: () => invokeWindowControl("maximize"),
   close: () => invokeWindowControl("close"),
@@ -202,7 +202,7 @@ function App() {
     <div className="h-screen w-screen">
       <Suspense fallback={<div className="flex h-full w-full items-center justify-center bg-neutral-950 text-white">Loading sketchpad...</div>}>
         <LazySketchpad
-          onWindowEvents={windowEvents}
+          desktop={desktop}
           id={userId}
           folderKitStoreFactory={folderKitStoreFactory}
           fileKitStoreFactory={fileKitStoreFactory}
