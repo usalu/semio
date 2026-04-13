@@ -9122,6 +9122,14 @@ function readSketchpadKitsFromLocalStorage(id: string): InitialStateKit[] | unde
 }
 
 /**
+ * Desktop must not keep kit reopen state in localStorage/IndexedDB; kits are opened explicitly each session.
+ */
+function clearSketchpadKitSnapshotsInBrowserStorage(id: string): void {
+  writeSketchpadKitsToLocalStorage(id, []);
+  void writeSketchpadKitsToIndexedDb(id, []);
+}
+
+/**
  * Persists kit snapshots for the current sketchpad scope into local storage.
  **/
 function writeSketchpadKitsToLocalStorage(id: string, kits: InitialStateKit[]): void {
@@ -18592,6 +18600,8 @@ export class SketchpadStore {
   private readonly folderKitStoreFactory?: SketchpadKitStoreFactory;
   private readonly fileKitStoreFactory?: SketchpadKitStoreFactory;
   private readonly remoteKitStoreFactory?: SketchpadKitStoreFactory;
+  /** When true (Electron desktop), no kit snapshots are written to localStorage/IndexedDB (kits reopen via Open only). */
+  private readonly skipBrowserKitSnapshotPersistence: boolean;
   actor?: SketchpadActorRef;
   private actorUnsubscribe?: () => void;
 
@@ -18605,6 +18615,7 @@ export class SketchpadStore {
     folderKitStoreFactory?: SketchpadKitStoreFactory,
     fileKitStoreFactory?: SketchpadKitStoreFactory,
     remoteKitStoreFactory?: SketchpadKitStoreFactory,
+    skipBrowserKitSnapshotPersistence?: boolean,
   ) {
     this.id = id;
     this.remote = remote;
@@ -18614,6 +18625,7 @@ export class SketchpadStore {
     this.folderKitStoreFactory = folderKitStoreFactory;
     this.fileKitStoreFactory = fileKitStoreFactory;
     this.remoteKitStoreFactory = remoteKitStoreFactory;
+    this.skipBrowserKitSnapshotPersistence = Boolean(skipBrowserKitSnapshotPersistence);
     this.syncDoc = createSyncDocFactory()();
     this.kits = new Map();
     this.kitApps = new Map();
@@ -18785,6 +18797,10 @@ export class SketchpadStore {
 
   private persistKitsToStorage = () => {
     if (!this.id) return;
+    if (this.skipBrowserKitSnapshotPersistence) {
+      clearSketchpadKitSnapshotsInBrowserStorage(this.id);
+      return;
+    }
     const persistedKits: InitialStateKit[] = Array.from(this.kits.values()).map((kitStore) => {
       const kit = kitStore.getSnapshot().kit;
       const persistenceKind = (kitStore as any).__semioKitPersistenceKind as { local?: boolean; remote?: boolean } | undefined;
@@ -19957,7 +19973,13 @@ export const SketchpadScopeProvider = (props: {
     let cancelled = false;
     const hydrateInitialState = async () => {
       try {
-        const persistedKits = props.kitStore ? undefined : ((await readSketchpadKitsFromIndexedDb(id)) ?? readSketchpadKitsFromLocalStorage(id));
+        let persistedKits: InitialStateKit[] | undefined;
+        if (props.desktop && !props.kitStore) {
+          clearSketchpadKitSnapshotsInBrowserStorage(id);
+          persistedKits = undefined;
+        } else if (!props.kitStore) {
+          persistedKits = (await readSketchpadKitsFromIndexedDb(id)) ?? readSketchpadKitsFromLocalStorage(id);
+        }
         if (cancelled) return;
         setInitialState(mergeExtendedInitialStateWithPersistedKits(props.initialState, persistedKits));
       } catch (err) {
@@ -19975,10 +19997,23 @@ export const SketchpadScopeProvider = (props: {
     return () => {
       cancelled = true;
     };
-  }, [id, props.initialState, props.kitStore]);
+  }, [id, props.initialState, props.kitStore, props.desktop]);
 
   if (persistedKitsReady && !stores.has(id)) {
-    const store = props.store ?? new SketchpadStore(id, props?.remote, initialState, props?.persistenceFactory, props?.kitStore, props?.temporaryKitStoreFactory, props?.folderKitStoreFactory, props?.fileKitStoreFactory, props?.remoteKitStoreFactory);
+    const store =
+      props.store ??
+      new SketchpadStore(
+        id,
+        props?.remote,
+        initialState,
+        props?.persistenceFactory,
+        props?.kitStore,
+        props?.temporaryKitStoreFactory,
+        props?.folderKitStoreFactory,
+        props?.fileKitStoreFactory,
+        props?.remoteKitStoreFactory,
+        Boolean(props.desktop),
+      );
     stores.set(id, store);
 
     const actor = createSketchpadActor({ id, initialState: mergeSketchpadState(mergeSketchpadState(store.snapshot(), readSketchpadStateFromLocalStorage(id)), toSketchpadInitialState(initialState)) });
@@ -56591,6 +56626,59 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       expect(folderFactoryCallCount).toBe(0);
       expect(store.kit(kitGuid).snapshot().name).toBe("Legacy Local Snapshot");
+    });
+
+    test("skipBrowserKitSnapshotPersistence keeps localStorage kit snapshots empty (desktop)", async () => {
+      if (typeof localStorage === "undefined") {
+        return;
+      }
+      const storageKeyPrefix = `semio.sketchpad.kits.`;
+      const scopeId = `desktop-no-kit-snapshots-${guid()}`;
+      const storageKey = `${storageKeyPrefix}${scopeId}`;
+      const prev = localStorage.getItem(storageKey);
+      localStorage.removeItem(storageKey);
+      try {
+        const remoteGuid = guid();
+        const localGuid = guid();
+        const remoteFactory: SketchpadKitStoreFactory = async (kit) => new InMemoryKitStore(kit);
+        const folderFactory: SketchpadKitStoreFactory = async (kit) => new InMemoryKitStore(kit);
+        const store = new SketchpadStore(
+          scopeId,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          folderFactory,
+          undefined,
+          remoteFactory,
+          true,
+        );
+        await store.createKit(
+          { guid: remoteGuid, name: "Session Kit", types: [], designs: [] },
+          false,
+          true,
+          { kind: "remote", url: "http://127.0.0.1:9" },
+        );
+        await store.createKit(
+          { guid: localGuid, name: "Folder Kit", types: [], designs: [] },
+          true,
+          false,
+          { kind: "folder", path: "/tmp/metabolism" },
+        );
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        const raw = localStorage.getItem(storageKey);
+        expect(raw).toBeTruthy();
+        const parsed = JSON.parse(raw!) as InitialStateKit[];
+        expect(Array.isArray(parsed)).toBe(true);
+        expect(parsed.length).toBe(0);
+      } finally {
+        if (prev !== null) {
+          localStorage.setItem(storageKey, prev);
+        } else {
+          localStorage.removeItem(storageKey);
+        }
+      }
     });
 
     test("Settings Panel In All Apps", async ({ page }) => {

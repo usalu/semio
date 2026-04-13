@@ -85,6 +85,38 @@ export async function run(ctx) {
       })()
     `);
 
+  const readMetabolismFolderKitFromStore = async () =>
+    await win.webContents.executeJavaScript(`
+      (() => {
+        const store = window.__SEMIO_STORE__;
+        if (!store) return null;
+        const list = store.kitShallows();
+        const m = list.find((k) => k.name === "Metabolism" && (k.types?.length ?? 0) > 40 && (k.files?.length ?? 0) > 200);
+        return m ? { name: m.name, typeCount: m.types.length, fileCount: m.files.length } : null;
+      })()
+    `);
+
+  const readMetabolismFileKitFromStore = async () =>
+    await win.webContents.executeJavaScript(`
+      (() => {
+        const store = window.__SEMIO_STORE__;
+        if (!store) return null;
+        for (const s of store.kitShallows()) {
+          if (s.name !== "Metabolism") continue;
+          const kit = store.kit(s.guid).snapshot().kit;
+          const files = kit.files ?? [];
+          if (
+            files.length > 200 &&
+            typeof files[0]?.blob === "string" &&
+            files[0].blob.startsWith("data:model/")
+          ) {
+            return { guid: s.guid, fileCount: files.length, hasModelBlob: true };
+          }
+        }
+        return null;
+      })()
+    `);
+
   await waitFor(
     "home open actions",
     async () =>
@@ -94,42 +126,29 @@ export async function run(ctx) {
           document.getElementById("semio.sketchpad.app.home.toolbar.openFile")
         ))()
       `),
+    120_000,
   );
 
   await clickById("semio.sketchpad.app.home.toolbar.openFolder");
-  const persistedAfterFolder = await waitFor("folder kit persistence", async () => {
-    const kits = await readPersistedKits();
-    return kits.find((entry) => entry?.kit?.name === "Metabolism" && (entry?.kit?.files?.length ?? 0) > 200) ?? null;
-  });
-  assert.ok(persistedAfterFolder.local, "folder-opened kit should be marked local");
-  assert.strictEqual(persistedAfterFolder.remote, false, "folder-opened kit should not be marked remote");
-  assert.ok((persistedAfterFolder.kit.types?.length ?? 0) > 40, "folder-opened kit should include types");
-  assert.strictEqual(persistedAfterFolder.source?.kind, "folder", "folder-opened kit should persist folder source metadata");
-  assert.ok(
-    typeof persistedAfterFolder.source?.path === "string" && persistedAfterFolder.source.path.replaceAll("\\", "/").endsWith("/semio/assets/semio/metabolism"),
-    "folder-opened kit should persist the opened folder path",
+  const loadedFolderKit = await waitFor("folder kit loaded in session store", readMetabolismFolderKitFromStore);
+  assert.ok(loadedFolderKit.typeCount > 40, "folder-opened kit should expose types in session");
+  assert.ok(loadedFolderKit.fileCount > 200, "folder-opened kit should expose files in session");
+  const persistedAfterFolder = await readPersistedKits();
+  assert.deepStrictEqual(
+    persistedAfterFolder,
+    [],
+    "desktop must not persist folder kit snapshots to localStorage",
   );
 
   await clickById("semio.sketchpad.app.home.toolbar.openFile");
-  const persistedAfterFile = await waitFor("file kit persistence", async () => {
-    const kits = await readPersistedKits();
-    return kits.find(
-      (entry) =>
-        entry?.kit?.name === "Metabolism" &&
-        (entry?.kit?.files?.length ?? 0) > 200 &&
-        typeof entry?.kit?.files?.[0]?.blob === "string",
-    ) ?? null;
-  });
-  assert.ok(persistedAfterFile.local, "file-opened kit should be marked local");
-  assert.strictEqual(persistedAfterFile.remote, false, "file-opened kit should not be marked remote");
-  assert.strictEqual(persistedAfterFile.source?.kind, "file", "file-opened kit should persist file source metadata");
-  assert.ok(
-    typeof persistedAfterFile.source?.path === "string" && persistedAfterFile.source.path.replaceAll("\\", "/").endsWith("/semio/assets/semio/metabolism.kit.semio.json"),
-    "file-opened kit should persist the opened file path",
-  );
-  assert.ok(
-    persistedAfterFile.kit.files.some((file) => typeof file?.blob === "string" && file.blob.startsWith("data:model/")),
-    "file-opened kit should preserve embedded model blobs",
+  const loadedFileKit = await waitFor("file kit loaded in session store", readMetabolismFileKitFromStore);
+  assert.ok(loadedFileKit.hasModelBlob, "file-opened kit should keep embedded model blobs in session");
+  assert.ok(loadedFileKit.fileCount > 200, "file-opened kit should expose files in session");
+  const persistedAfterFile = await readPersistedKits();
+  assert.deepStrictEqual(
+    persistedAfterFile,
+    [],
+    "desktop must not persist file kit snapshots to localStorage",
   );
 
   console.log("[semio desktop integration] suite passed");

@@ -38,7 +38,6 @@ const LazySketchpad = lazy(() =>
 
 declare global {
   interface Window {
-    __SEMIO_DESKTOP_REACT_ROOT__?: Root;
     /** Set by preload when `SEMIO_E2E_KIT_FOLDER` is defined (desktop E2E / automation). */
     __SEMIO_E2E_KIT_FOLDER__?: string;
     /** Set by preload when `SEMIO_E2E_KIT_FILE` is defined (desktop E2E / automation). */
@@ -61,6 +60,7 @@ declare global {
       listFiles(folderPath: string): Promise<string[]>;
       getRecentFolders(): Promise<string[]>;
       addRecentFolder(folderPath: string): Promise<void>;
+      watchFolder(folderPath: string, onChanged: () => void): () => void;
     };
     kitFile: {
       selectFile(): Promise<string | null>;
@@ -124,6 +124,7 @@ function createElectronFolderAdapter(folderPath: string): KitFolderAdapter {
     },
     deleteFile: (path: string) => window.kitFolder.deleteFile(folderPath, path),
     listFiles: () => window.kitFolder.listFiles(folderPath),
+    watch: (callback: () => void) => window.kitFolder.watchFolder(folderPath, callback),
   };
 }
 // #endregion 🗄️FolderAdapter
@@ -225,6 +226,7 @@ function App() {
   return (
     <div className="h-screen w-screen">
       <Suspense fallback={<div className="flex h-full w-full items-center justify-center bg-neutral-950 text-white">Loading sketchpad...</div>}>
+        {/* Specs: desktop skips browser kit snapshot persistence (folder/file/remote); reopen kits via Open each session. */}
         <LazySketchpad
           desktop={desktop}
           id={userId}
@@ -245,8 +247,11 @@ const rootElement = document.getElementById("root");
 if (!rootElement) {
   throw new Error("Renderer root element '#root' is missing.");
 }
-const reactRoot = window.__SEMIO_DESKTOP_REACT_ROOT__ ?? createRoot(rootElement);
-window.__SEMIO_DESKTOP_REACT_ROOT__ = reactRoot;
+const SEMIO_REACT_ROOT = Symbol.for("semio.desktop.reactRoot");
+type RootHost = HTMLElement & { [SEMIO_REACT_ROOT]?: Root };
+const host = rootElement as RootHost;
+const reactRoot = host[SEMIO_REACT_ROOT] ?? createRoot(rootElement);
+host[SEMIO_REACT_ROOT] = reactRoot;
 reactRoot.render(
   <React.StrictMode>
     <App />

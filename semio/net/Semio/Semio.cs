@@ -5324,47 +5324,49 @@ public class Design : Entity<Design>
         double turn,
         double tilt)
     {
+        // All math uses double[] arrays for 64-bit precision:
+        // Vec3 = double[3] {x,y,z}, Quat = double[4] {x,y,z,w}, Mat4 = double[16] row-major
         var pMatrix = PlaneToMatrix(parentPlane);
 
-        var pPoint = new System.Numerics.Vector3((float)parentPoint.X, (float)parentPoint.Y, (float)parentPoint.Z);
-        var pDir = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)parentDirection.X, (float)parentDirection.Y, (float)parentDirection.Z));
-        var cPoint = new System.Numerics.Vector3((float)childPoint.X, (float)childPoint.Y, (float)childPoint.Z);
-        var cDir = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)childDirection.X, (float)childDirection.Y, (float)childDirection.Z));
+        var pPoint = new double[] { parentPoint.X, parentPoint.Y, parentPoint.Z };
+        var pDir = Vec3Normalize(new double[] { parentDirection.X, parentDirection.Y, parentDirection.Z });
+        var cPoint = new double[] { childPoint.X, childPoint.Y, childPoint.Z };
+        var cDir = Vec3Normalize(new double[] { childDirection.X, childDirection.Y, childDirection.Z });
 
         var rotationRad = DegreesToRadians(rotation);
         var turnRad = DegreesToRadians(turn);
         var tiltRad = DegreesToRadians(tilt);
 
-        var reverseChildDirection = -cDir;
+        var reverseChildDirection = new double[] { -cDir[0], -cDir[1], -cDir[2] };
 
-        System.Numerics.Quaternion alignQuat;
-        var cross = System.Numerics.Vector3.Cross(pDir, reverseChildDirection);
-        if (cross.LengthSquared() < 0.0001f)
+        double[] alignQuat; // Quat {x,y,z,w}
+        var cross = Vec3Cross(pDir, reverseChildDirection);
+        if (Vec3LengthSquared(cross) < 0.0001)
         {
-            var dotProduct = System.Numerics.Vector3.Dot(pDir, reverseChildDirection);
+            var dotProduct = Vec3Dot(pDir, reverseChildDirection);
             if (dotProduct > 0)
             {
-                alignQuat = System.Numerics.Quaternion.Identity;
+                alignQuat = QuatIdentity();
             }
             else
             {
-                if (Math.Abs(pDir.Z) < 1e-5f)
+                if (Math.Abs(pDir[2]) < 1e-5)
                 {
-                    alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(System.Numerics.Vector3.UnitZ, (float)Math.PI);
+                    alignQuat = QuatFromAxisAngle(UnitZ, Math.PI);
                 }
                 else
                 {
-                    var crossAxis = System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitZ, pDir);
-                    System.Numerics.Vector3 axis;
-                    if (crossAxis.LengthSquared() < 0.0001f)
+                    var crossAxis = Vec3Cross(UnitZ, pDir);
+                    double[] axis;
+                    if (Vec3LengthSquared(crossAxis) < 0.0001)
                     {
-                        axis = System.Numerics.Vector3.UnitX;
+                        axis = UnitX;
                     }
                     else
                     {
-                        axis = System.Numerics.Vector3.Normalize(crossAxis);
+                        axis = Vec3Normalize(crossAxis);
                     }
-                    alignQuat = System.Numerics.Quaternion.CreateFromAxisAngle(axis, (float)Math.PI);
+                    alignQuat = QuatFromAxisAngle(axis, Math.PI);
                 }
             }
         }
@@ -5375,15 +5377,14 @@ public class Design : Entity<Design>
 
         var directionT = QuaternionToMatrix(alignQuat);
 
-        var yAxis = System.Numerics.Vector3.UnitY;
-        var parentConnectorQuat = CreateFromTwoVectors(yAxis, pDir);
+        var parentConnectorQuat = CreateFromTwoVectors(UnitY, pDir);
         var parentRotationT = QuaternionToMatrix(parentConnectorQuat);
 
-        var gapDirection = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitY);
-        var shiftDirection = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitX);
-        var raiseDirection = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitZ);
-        var turnAxis = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitZ);
-        var tiltAxis = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitX);
+        var gapDirection = ApplyMatrix4ToVec3(parentRotationT, UnitY);
+        var shiftDirection = ApplyMatrix4ToVec3(parentRotationT, UnitX);
+        var raiseDirection = ApplyMatrix4ToVec3(parentRotationT, UnitZ);
+        var turnAxis = ApplyMatrix4ToVec3(parentRotationT, UnitZ);
+        var tiltAxis = ApplyMatrix4ToVec3(parentRotationT, UnitX);
 
         var orientationT = directionT;
         var rotateT = MakeRotationAxis(pDir, -rotationRad);
@@ -5398,18 +5399,18 @@ public class Design : Entity<Design>
         var tiltT = MakeRotationAxis(tiltAxis, tiltRad);
         orientationT = MultiplyMatrices(tiltT, orientationT);
 
-        var centerChildT = MakeTranslation(-cPoint.X, -cPoint.Y, -cPoint.Z);
+        var centerChildT = MakeTranslation(-cPoint[0], -cPoint[1], -cPoint[2]);
 
         var transform = MultiplyMatrices(orientationT, centerChildT);
 
-        var gapT = MakeTranslation(gapDirection.X * (float)gap, gapDirection.Y * (float)gap, gapDirection.Z * (float)gap);
-        var shiftT = MakeTranslation(shiftDirection.X * (float)shift, shiftDirection.Y * (float)shift, shiftDirection.Z * (float)shift);
-        var raiseT = MakeTranslation(raiseDirection.X * (float)rise, raiseDirection.Y * (float)rise, raiseDirection.Z * (float)rise);
+        var gapT = MakeTranslation(gapDirection[0] * gap, gapDirection[1] * gap, gapDirection[2] * gap);
+        var shiftT = MakeTranslation(shiftDirection[0] * shift, shiftDirection[1] * shift, shiftDirection[2] * shift);
+        var raiseT = MakeTranslation(raiseDirection[0] * rise, raiseDirection[1] * rise, raiseDirection[2] * rise);
 
         var translationT = MultiplyMatrices(raiseT, MultiplyMatrices(shiftT, gapT));
         transform = MultiplyMatrices(translationT, transform);
 
-        var moveToParentT = MakeTranslation(pPoint.X, pPoint.Y, pPoint.Z);
+        var moveToParentT = MakeTranslation(pPoint[0], pPoint[1], pPoint[2]);
         transform = MultiplyMatrices(moveToParentT, transform);
 
         var finalMatrix = MultiplyMatrices(pMatrix, transform);
@@ -5417,128 +5418,165 @@ public class Design : Entity<Design>
         return MatrixToPlane(finalMatrix);
     }
 
-    private static float DegreesToRadians(double deg) => (float)(deg * Math.PI / 180.0);
+    // double-precision unit vectors
+    private static readonly double[] UnitX = new double[] { 1, 0, 0 };
+    private static readonly double[] UnitY = new double[] { 0, 1, 0 };
+    private static readonly double[] UnitZ = new double[] { 0, 0, 1 };
 
-    private static System.Numerics.Quaternion CreateFromTwoVectors(System.Numerics.Vector3 u, System.Numerics.Vector3 v)
+    private static double Vec3Dot(double[] a, double[] b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    private static double Vec3LengthSquared(double[] v) => v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+    private static double[] Vec3Cross(double[] a, double[] b) => new double[] {
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+    };
+    private static double[] Vec3Normalize(double[] v)
     {
-        float dot = System.Numerics.Vector3.Dot(u, v);
-        if (dot > 0.999999f) return System.Numerics.Quaternion.Identity;
-        if (dot < -0.999999f)
+        var len = Math.Sqrt(Vec3LengthSquared(v));
+        if (len < 1e-15) return new double[] { 0, 0, 0 };
+        return new double[] { v[0] / len, v[1] / len, v[2] / len };
+    }
+
+    private static double[] QuatIdentity() => new double[] { 0, 0, 0, 1 }; // {x,y,z,w}
+    private static double[] QuatFromAxisAngle(double[] axis, double angle)
+    {
+        var halfAngle = angle * 0.5;
+        var s = Math.Sin(halfAngle);
+        return new double[] { axis[0] * s, axis[1] * s, axis[2] * s, Math.Cos(halfAngle) };
+    }
+    private static double[] QuatNormalize(double[] q)
+    {
+        var len = Math.Sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+        if (len < 1e-15) return QuatIdentity();
+        return new double[] { q[0] / len, q[1] / len, q[2] / len, q[3] / len };
+    }
+
+    private static double DegreesToRadians(double deg) => deg * Math.PI / 180.0;
+
+    private static double[] CreateFromTwoVectors(double[] u, double[] v)
+    {
+        // Returns quaternion {x,y,z,w} that rotates u to v
+        double dot = Vec3Dot(u, v);
+        if (dot > 0.999999) return QuatIdentity();
+        if (dot < -0.999999)
         {
-            var axis = System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitX, u);
-            if (axis.LengthSquared() < 0.001f)
-                axis = System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitY, u);
-            axis = System.Numerics.Vector3.Normalize(axis);
-            return System.Numerics.Quaternion.CreateFromAxisAngle(axis, (float)Math.PI);
+            var axis = Vec3Cross(UnitX, u);
+            if (Vec3LengthSquared(axis) < 0.001)
+                axis = Vec3Cross(UnitY, u);
+            axis = Vec3Normalize(axis);
+            return QuatFromAxisAngle(axis, Math.PI);
         }
 
-        var axisNorm = System.Numerics.Vector3.Cross(u, v);
-        var q = new System.Numerics.Quaternion(axisNorm.X, axisNorm.Y, axisNorm.Z, 1 + dot);
-        return System.Numerics.Quaternion.Normalize(q);
+        var axisNorm = Vec3Cross(u, v);
+        var q = new double[] { axisNorm[0], axisNorm[1], axisNorm[2], 1 + dot };
+        return QuatNormalize(q);
     }
 
-    private static System.Numerics.Matrix4x4 PlaneToMatrix(Plane p)
+    private static double[] PlaneToMatrix(Plane p)
     {
-        var origin = new System.Numerics.Vector3((float)p.Origin.X, (float)p.Origin.Y, (float)p.Origin.Z);
-        var x = System.Numerics.Vector3.Normalize(new System.Numerics.Vector3((float)p.XAxis.X, (float)p.XAxis.Y, (float)p.XAxis.Z));
-        var yRaw = new System.Numerics.Vector3((float)p.YAxis.X, (float)p.YAxis.Y, (float)p.YAxis.Z);
+        // Returns double[16] row-major 4x4 matrix
+        var origin = new double[] { p.Origin.X, p.Origin.Y, p.Origin.Z };
+        var x = Vec3Normalize(new double[] { p.XAxis.X, p.XAxis.Y, p.XAxis.Z });
+        var yRaw = new double[] { p.YAxis.X, p.YAxis.Y, p.YAxis.Z };
 
-        var z = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(x, yRaw));
-        var y = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(z, x));
+        var z = Vec3Normalize(Vec3Cross(x, yRaw));
+        var y = Vec3Normalize(Vec3Cross(z, x));
 
-        return new System.Numerics.Matrix4x4(
-            x.X, y.X, z.X, origin.X,
-            x.Y, y.Y, z.Y, origin.Y,
-            x.Z, y.Z, z.Z, origin.Z,
-            0, 0, 0, 1
-        );
+        return new double[] {
+            x[0], y[0], z[0], origin[0],
+            x[1], y[1], z[1], origin[1],
+            x[2], y[2], z[2], origin[2],
+            0,     0,     0,     1
+        };
     }
 
-    private static System.Numerics.Vector3 ApplyMatrix4ToVec3(System.Numerics.Matrix4x4 m, System.Numerics.Vector3 v)
+    private static double[] ApplyMatrix4ToVec3(double[] m, double[] v)
     {
-        return new System.Numerics.Vector3(
-            m.M11 * v.X + m.M12 * v.Y + m.M13 * v.Z,
-            m.M21 * v.X + m.M22 * v.Y + m.M23 * v.Z,
-            m.M31 * v.X + m.M32 * v.Y + m.M33 * v.Z
-        );
+        // m = double[16] row-major, v = double[3]
+        return new double[] {
+            m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
+            m[4] * v[0] + m[5] * v[1] + m[6] * v[2],
+            m[8] * v[0] + m[9] * v[1] + m[10] * v[2]
+        };
     }
 
-    private static System.Numerics.Matrix4x4 QuaternionToMatrix(System.Numerics.Quaternion q)
+    private static double[] QuaternionToMatrix(double[] q)
     {
-        float x = q.X, y = q.Y, z = q.Z, w = q.W;
-        float xx = x * x, yy = y * y, zz = z * z;
-        float xy = x * y, xz = x * z, yz = y * z;
-        float wx = w * x, wy = w * y, wz = w * z;
+        // q = double[4] {x,y,z,w}, returns double[16] row-major
+        double x = q[0], y = q[1], z = q[2], w = q[3];
+        double xx = x * x, yy = y * y, zz = z * z;
+        double xy = x * y, xz = x * z, yz = y * z;
+        double wx = w * x, wy = w * y, wz = w * z;
 
-        return new System.Numerics.Matrix4x4(
-            1 - 2 * (yy + zz), 2 * (xy - wz), 2 * (xz + wy), 0,
-            2 * (xy + wz), 1 - 2 * (xx + zz), 2 * (yz - wx), 0,
-            2 * (xz - wy), 2 * (yz + wx), 1 - 2 * (xx + yy), 0,
-            0, 0, 0, 1
-        );
+        return new double[] {
+            1 - 2 * (yy + zz), 2 * (xy - wz),     2 * (xz + wy),     0,
+            2 * (xy + wz),     1 - 2 * (xx + zz), 2 * (yz - wx),     0,
+            2 * (xz - wy),     2 * (yz + wx),     1 - 2 * (xx + yy), 0,
+            0,                 0,                 0,                 1
+        };
     }
 
-    private static System.Numerics.Matrix4x4 MakeTranslation(float x, float y, float z)
+    private static double[] MakeTranslation(double x, double y, double z)
     {
-        return new System.Numerics.Matrix4x4(
+        // Returns double[16] row-major translation matrix
+        return new double[] {
             1, 0, 0, x,
             0, 1, 0, y,
             0, 0, 1, z,
             0, 0, 0, 1
-        );
+        };
     }
 
-    private static System.Numerics.Matrix4x4 MakeRotationAxis(System.Numerics.Vector3 axis, float angle)
+    private static double[] MakeRotationAxis(double[] axis, double angle)
     {
-        float c = (float)Math.Cos(angle);
-        float s = (float)Math.Sin(angle);
-        float t = 1 - c;
-        float x = axis.X, y = axis.Y, z = axis.Z;
+        // axis = double[3], angle = radians, returns double[16] row-major
+        double c = Math.Cos(angle);
+        double s = Math.Sin(angle);
+        double t = 1 - c;
+        double ax = axis[0], ay = axis[1], az = axis[2];
 
-        return new System.Numerics.Matrix4x4(
-            t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0,
-            t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0,
-            t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0,
-            0, 0, 0, 1
-        );
+        return new double[] {
+            t * ax * ax + c,      t * ax * ay - s * az, t * ax * az + s * ay, 0,
+            t * ax * ay + s * az, t * ay * ay + c,      t * ay * az - s * ax, 0,
+            t * ax * az - s * ay, t * ay * az + s * ax, t * az * az + c,      0,
+            0,                    0,                    0,                    1
+        };
     }
 
-    private static System.Numerics.Matrix4x4 MultiplyMatrices(System.Numerics.Matrix4x4 a, System.Numerics.Matrix4x4 b)
+    private static double[] MultiplyMatrices(double[] a, double[] b)
     {
-        return new System.Numerics.Matrix4x4(
-            a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31 + a.M14 * b.M41,
-            a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32 + a.M14 * b.M42,
-            a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33 + a.M14 * b.M43,
-            a.M11 * b.M14 + a.M12 * b.M24 + a.M13 * b.M34 + a.M14 * b.M44,
+        // a,b = double[16] row-major, returns double[16] row-major
+        return new double[] {
+            a[0]*b[0] + a[1]*b[4] + a[2]*b[8]  + a[3]*b[12],
+            a[0]*b[1] + a[1]*b[5] + a[2]*b[9]  + a[3]*b[13],
+            a[0]*b[2] + a[1]*b[6] + a[2]*b[10] + a[3]*b[14],
+            a[0]*b[3] + a[1]*b[7] + a[2]*b[11] + a[3]*b[15],
 
-            a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31 + a.M24 * b.M41,
-            a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32 + a.M24 * b.M42,
-            a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33 + a.M24 * b.M43,
-            a.M21 * b.M14 + a.M22 * b.M24 + a.M23 * b.M34 + a.M24 * b.M44,
+            a[4]*b[0] + a[5]*b[4] + a[6]*b[8]  + a[7]*b[12],
+            a[4]*b[1] + a[5]*b[5] + a[6]*b[9]  + a[7]*b[13],
+            a[4]*b[2] + a[5]*b[6] + a[6]*b[10] + a[7]*b[14],
+            a[4]*b[3] + a[5]*b[7] + a[6]*b[11] + a[7]*b[15],
 
-            a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31 + a.M34 * b.M41,
-            a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32 + a.M34 * b.M42,
-            a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33 + a.M34 * b.M43,
-            a.M31 * b.M14 + a.M32 * b.M24 + a.M33 * b.M34 + a.M34 * b.M44,
+            a[8]*b[0]  + a[9]*b[4]  + a[10]*b[8]  + a[11]*b[12],
+            a[8]*b[1]  + a[9]*b[5]  + a[10]*b[9]  + a[11]*b[13],
+            a[8]*b[2]  + a[9]*b[6]  + a[10]*b[10] + a[11]*b[14],
+            a[8]*b[3]  + a[9]*b[7]  + a[10]*b[11] + a[11]*b[15],
 
-            a.M41 * b.M11 + a.M42 * b.M21 + a.M43 * b.M31 + a.M44 * b.M41,
-            a.M41 * b.M12 + a.M42 * b.M22 + a.M43 * b.M32 + a.M44 * b.M42,
-            a.M41 * b.M13 + a.M42 * b.M23 + a.M43 * b.M33 + a.M44 * b.M43,
-            a.M41 * b.M14 + a.M42 * b.M24 + a.M43 * b.M34 + a.M44 * b.M44
-        );
+            a[12]*b[0] + a[13]*b[4] + a[14]*b[8]  + a[15]*b[12],
+            a[12]*b[1] + a[13]*b[5] + a[14]*b[9]  + a[15]*b[13],
+            a[12]*b[2] + a[13]*b[6] + a[14]*b[10] + a[15]*b[14],
+            a[12]*b[3] + a[13]*b[7] + a[14]*b[11] + a[15]*b[15]
+        };
     }
 
-    private static Plane MatrixToPlane(System.Numerics.Matrix4x4 m)
+    private static Plane MatrixToPlane(double[] m)
     {
-        var x = new System.Numerics.Vector3(m.M11, m.M21, m.M31);
-        var y = new System.Numerics.Vector3(m.M12, m.M22, m.M32);
-        var origin = new System.Numerics.Vector3(m.M14, m.M24, m.M34);
-
+        // m = double[16] row-major
         return new Plane
         {
-            Origin = new Point { X = origin.X, Y = origin.Y, Z = origin.Z },
-            XAxis = new Vector { X = x.X, Y = x.Y, Z = x.Z },
-            YAxis = new Vector { X = y.X, Y = y.Y, Z = y.Z }
+            Origin = new Point { X = m[3], Y = m[7], Z = m[11] },
+            XAxis = new Vector { X = m[0], Y = m[4], Z = m[8] },
+            YAxis = new Vector { X = m[1], Y = m[5], Z = m[9] }
         };
     }
 
@@ -6188,17 +6226,21 @@ text {
 
     private static Point MoveTranslationWorldFromPiecePlane(Plane plane, MoveVector vector)
     {
-        var xRaw = new System.Numerics.Vector3((float)plane.XAxis.X, (float)plane.XAxis.Y, (float)plane.XAxis.Z);
-        if (xRaw.LengthSquared() < 1e-12f) return new Point();
-        var x = System.Numerics.Vector3.Normalize(xRaw);
-        var yRaw = new System.Numerics.Vector3((float)plane.YAxis.X, (float)plane.YAxis.Y, (float)plane.YAxis.Z);
-        if (yRaw.LengthSquared() < 1e-12f) return new Point();
-        var y = System.Numerics.Vector3.Normalize(yRaw);
-        var z = System.Numerics.Vector3.Cross(x, y);
-        if (z.LengthSquared() < 1e-12f) return new Point();
-        z = System.Numerics.Vector3.Normalize(z);
-        var t = x * (float)vector.Shift + y * (float)vector.Gap + z * (float)vector.Rise;
-        return new Point { X = t.X, Y = t.Y, Z = t.Z };
+        var xAxis = new double[] { plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z };
+        var yAxis = new double[] { plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z };
+        if (xAxis[0] * xAxis[0] + xAxis[1] * xAxis[1] + xAxis[2] * xAxis[2] < 1e-12) return new Point();
+        NormalizeD(xAxis);
+        if (yAxis[0] * yAxis[0] + yAxis[1] * yAxis[1] + yAxis[2] * yAxis[2] < 1e-12) return new Point();
+        NormalizeD(yAxis);
+        var zAxis = CrossD(xAxis, yAxis);
+        if (zAxis[0] * zAxis[0] + zAxis[1] * zAxis[1] + zAxis[2] * zAxis[2] < 1e-12) return new Point();
+        NormalizeD(zAxis);
+        return new Point
+        {
+            X = vector.Shift * xAxis[0] + vector.Gap * yAxis[0] + vector.Rise * zAxis[0],
+            Y = vector.Shift * xAxis[1] + vector.Gap * yAxis[1] + vector.Rise * zAxis[1],
+            Z = vector.Shift * xAxis[2] + vector.Gap * yAxis[2] + vector.Rise * zAxis[2],
+        };
     }
 
     private static double[] MoveTranslationWorld(Plane plane, MoveVector mv)
@@ -6264,19 +6306,11 @@ text {
     {
         var parentDirection = new double[] { parentConnector.Direction?.X ?? 0, parentConnector.Direction?.Y ?? 1, parentConnector.Direction?.Z ?? 0 };
         NormalizeD(parentDirection);
-        var yAxis = new System.Numerics.Vector3(0, 1, 0);
-        var pDir = new System.Numerics.Vector3((float)parentDirection[0], (float)parentDirection[1], (float)parentDirection[2]);
-        var parentConnectorQuat = CreateFromTwoVectors(yAxis, pDir);
+        var parentConnectorQuat = CreateFromTwoVectors(UnitY, parentDirection);
         var parentRotationT = QuaternionToMatrix(parentConnectorQuat);
-        var gapV = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitY);
-        gapDir = new double[] { gapV.X, gapV.Y, gapV.Z };
-        NormalizeD(gapDir);
-        var shiftV = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitX);
-        shiftDir = new double[] { shiftV.X, shiftV.Y, shiftV.Z };
-        NormalizeD(shiftDir);
-        var raiseV = ApplyMatrix4ToVec3(parentRotationT, System.Numerics.Vector3.UnitZ);
-        raiseDir = new double[] { raiseV.X, raiseV.Y, raiseV.Z };
-        NormalizeD(raiseDir);
+        gapDir = Vec3Normalize(ApplyMatrix4ToVec3(parentRotationT, UnitY));
+        shiftDir = Vec3Normalize(ApplyMatrix4ToVec3(parentRotationT, UnitX));
+        raiseDir = Vec3Normalize(ApplyMatrix4ToVec3(parentRotationT, UnitZ));
     }
 
     private static double[] ChildConnectorOriginWorld(Plane parentPlane, Connector parentConnector, Connector childConnector, Connection connection)

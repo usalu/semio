@@ -1,0 +1,10 @@
+{
+  "title": "Desktop Folder Kit Sync And Sqljs Wasm",
+  "status": "closed",
+  "description": "Fix Electron desktop folder kit: load .semio/kit.db via sql.js (correct wasm URL under Vite), watch filesystem and reload store, fix duplicate createRoot on renderer hot reload.",
+  "summary": "Fixed sql.js WASM loading in Vite/Electron via bundled sql.js dist URL; added main-process fs.watch IPC for folder kit sync; suppressed auto-reload after save; stable React root on DOM host; extended desktop integration wait.",
+  "goal": "🎯���r2602���runningsketchpad",
+  "sessions": [
+    "⚪46d9bdd4f8a34b34ac0d2982e9a34a35"
+  ]
+}

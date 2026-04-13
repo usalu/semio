@@ -445,12 +445,22 @@ public class Tests
                 {
                     var actual = p.Plane!;
                     var expected = expectedPiece.Plane!;
+                    Console.WriteLine($"[DEBUG] Plane mismatch for piece {p.Name}");
+                    Console.WriteLine($"  Expected Origin: ({expected.Origin.X:F6}, {expected.Origin.Y:F6}, {expected.Origin.Z:F6})");
+                    Console.WriteLine($"  Actual   Origin: ({actual.Origin.X:F6}, {actual.Origin.Y:F6}, {actual.Origin.Z:F6})");
+                    Console.WriteLine($"  Expected XAxis: ({expected.XAxis.X:F6}, {expected.XAxis.Y:F6}, {expected.XAxis.Z:F6})");
+                    Console.WriteLine($"  Actual   XAxis: ({actual.XAxis.X:F6}, {actual.XAxis.Y:F6}, {actual.XAxis.Z:F6})");
+                    Console.WriteLine($"  Expected YAxis: ({expected.YAxis.X:F6}, {expected.YAxis.Y:F6}, {expected.YAxis.Z:F6})");
+                    Console.WriteLine($"  Actual   YAxis: ({actual.YAxis.X:F6}, {actual.YAxis.Y:F6}, {actual.YAxis.Z:F6})");
                     Assert.Fail($"Plane mismatch for piece {p.Name}");
                 }
                 if (p.Center != null && expectedPiece.Center != null)
                 {
                     if (!Tests.CentersEqual(p.Center, expectedPiece.Center))
                     {
+                        Console.WriteLine($"[DEBUG] Center mismatch for piece {p.Name}");
+                        Console.WriteLine($"  Expected: ({expectedPiece.Center.U:F6}, {expectedPiece.Center.V:F6})");
+                        Console.WriteLine($"  Actual:   ({p.Center.U:F6}, {p.Center.V:F6})");
                         Assert.Fail($"Center mismatch for piece {p.Name}");
                     }
                 }
@@ -486,9 +496,16 @@ public class Tests
             var kitDiffed = Tests.LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
 
             var change = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
-            
+            var forwardJson = Utility.Serialize(change.Forward);
+            var expectedForwardJson = Utility.Serialize(kitDiff);
+            Console.WriteLine($"[DEBUG] Forward: {forwardJson}");
+            Console.WriteLine($"[DEBUG] Expected: {expectedForwardJson}");
             Assert.True(SemioDiff.AreKitDiffsEqual(change.Forward, kitDiff), "GetKitChange: forward diff doesn't match expected diff");
 
+            var backwardJson = Utility.Serialize(change.Backward);
+            var expectedBackwardJson = Utility.Serialize(kitDiffInverted);
+            Console.WriteLine($"[DEBUG] Backward: {backwardJson}");
+            Console.WriteLine($"[DEBUG] Expected Inverted: {expectedBackwardJson}");
             Assert.True(SemioDiff.AreKitDiffsEqual(change.Backward, kitDiffInverted), "GetKitChange: backward diff doesn't match expected inverse diff");
 
             var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, change.Forward);
@@ -1237,7 +1254,7 @@ public class Tests
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var hash1 = Hashing.HashKit(kit);
             var hash2 = Hashing.HashKit(kit);
-           
+            System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "_debug_hash.txt"), hash1);
             Assert.Equal(hash1, hash2);
         }
 

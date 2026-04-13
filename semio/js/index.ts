@@ -6863,7 +6863,7 @@ export type Kit = z.infer<typeof KitSchema>;
 export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
 /**
  **/
-export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
+export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json, (_key, value) => (value === null ? undefined : value)));
 
 /**
  * Definition of KitMetaSchema.
@@ -10766,8 +10766,10 @@ export const getSqlJs = async () => {
           locateFile: () => wasmPath,
         });
       } else {
+        // Specs: Vite/Electron dev server serves `/sql-wasm.wasm` as HTML (SPA fallback) unless the asset is bundled.
+        // Resolve the wasm from the hoisted `sql.js` package so `fetch` returns real WASM bytes and MIME checks pass.
         cachedSqlJs = await initSqlJs({
-          locateFile: (file: string) => `/${file}`,
+          locateFile: (file: string) => new URL(`../../node_modules/sql.js/dist/${file}`, import.meta.url).href,
         });
       }
     } catch (error) {
@@ -10799,6 +10801,7 @@ const buildFilePath = (kit: Kit, file: File): string => {
   return file.name;
 };
 const bytesToUtf8 = (bytes: Uint8Array): string => new TextDecoder().decode(bytes);
+const hasZipSignature = (bytes: Uint8Array): boolean => bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04;
 const collectKitFiles = (kit: Kit): Record<string, Uint8Array> => {
   const files: Record<string, Uint8Array> = {};
   for (const file of kit.files || []) {
@@ -10826,7 +10829,7 @@ export const importFileKit = async (source: string | ArrayBuffer | Buffer | Blob
       }
       json = await response.text();
     }
-  } else if (source instanceof Buffer) {
+  } else if (typeof Buffer !== "undefined" && source instanceof Buffer) {
     json = bytesToUtf8(new Uint8Array(source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength)));
   } else {
     json = bytesToUtf8(new Uint8Array(source));
@@ -10846,7 +10849,7 @@ export const importArchiveKit = async (source: string | ArrayBuffer | Buffer | B
       throw new Error(`Failed to fetch archive kit from ${source}: ${response.statusText}`);
     }
     arrayBuffer = await response.arrayBuffer();
-  } else if (source instanceof Buffer) {
+  } else if (typeof Buffer !== "undefined" && source instanceof Buffer) {
     arrayBuffer = source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength) as ArrayBuffer;
   } else {
     arrayBuffer = source as ArrayBuffer;
@@ -10947,9 +10950,30 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
       return importFileKit(source);
     }
   }
+  if (source instanceof Blob) {
+    const header = new Uint8Array(await source.slice(0, 4).arrayBuffer());
+    if (hasZipSignature(header)) {
+      return importArchiveKit(source);
+    }
+    return importFileKit(source);
+  }
+  if (typeof Buffer !== "undefined" && source instanceof Buffer) {
+    const header = new Uint8Array(source.buffer.slice(source.byteOffset, source.byteOffset + Math.min(source.byteLength, 4)));
+    if (hasZipSignature(header)) {
+      return importArchiveKit(source);
+    }
+  } else if (source instanceof ArrayBuffer) {
+    const header = new Uint8Array(source.slice(0, 4));
+    if (hasZipSignature(header)) {
+      return importArchiveKit(source);
+    }
+  }
   try {
     return await importArchiveKit(source);
-  } catch {
+  } catch (archiveError) {
+    if (typeof source !== "string") {
+      throw archiveError;
+    }
     return importFileKit(source);
   }
 };
@@ -16976,6 +17000,406 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     });
   });
   // #endregion 🔊FolderKitStore Tests
+
+  // #region 🚪Open Synchronized Kit E2E Tests
+  // End-to-end tests for opening synchronized kits across all three supported source kinds:
+  // file (*.kit.semio.json with embedded base64 blobs), folder (.semio/kit.db + binary files on disk),
+  // and remote (SessionKitStore over HTTP + WebSocket against semio/server).
+  // Specs: These tests MUST verify the full open → mutate → save/sync → reload cycle using real file
+  // system access or mocked server transport to guarantee the desktop/vscode/web entry points work.
+
+  describe("Open Synchronized Kit E2E", () => {
+    const { createJsonFileKitStore: makeJsonFileKitStore, createFolderKitStore: makeFolderKitStore, createSessionKitStore: makeSessionKitStore } = (async () => await import("@semio/studio"))() as any;
+
+    const loadStudio = async () => {
+      const studio = await import("@semio/studio");
+      return studio;
+    };
+
+    const getMetabolismKitJsonPath = async (): Promise<string> => {
+      const { resolve, dirname } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const here = dirname(fileURLToPath(import.meta.url));
+      return resolve(here, "../assets/semio/metabolism.kit.semio.json");
+    };
+
+    const getMetabolismFolderPath = async (): Promise<string> => {
+      const { resolve, dirname } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const here = dirname(fileURLToPath(import.meta.url));
+      return resolve(here, "../assets/semio/metabolism");
+    };
+
+    const makeNodeJsonFileAdapter = async (filePath: string) => {
+      const fs = await import("node:fs/promises");
+      return {
+        async read(): Promise<string | null> {
+          try {
+            return await fs.readFile(filePath, "utf-8");
+          } catch {
+            return null;
+          }
+        },
+        async write(json: string): Promise<void> {
+          await fs.writeFile(filePath, json, "utf-8");
+        },
+      };
+    };
+
+    const makeNodeFolderAdapter = async (folderPath: string) => {
+      const fs = await import("node:fs/promises");
+      const nodePath = await import("node:path");
+      return {
+        async readKit(): Promise<Uint8Array | null> {
+          try {
+            const buf = await fs.readFile(nodePath.join(folderPath, ".semio", "kit.db"));
+            return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+          } catch {
+            return null;
+          }
+        },
+        async writeKit(data: Uint8Array): Promise<void> {
+          const dir = nodePath.join(folderPath, ".semio");
+          await fs.mkdir(dir, { recursive: true });
+          await fs.writeFile(nodePath.join(dir, "kit.db"), Buffer.from(data));
+        },
+        async readFile(rel: string): Promise<Blob | null> {
+          try {
+            const buf = await fs.readFile(nodePath.join(folderPath, rel));
+            return new Blob([new Uint8Array(buf)]);
+          } catch {
+            return null;
+          }
+        },
+        async writeFile(rel: string, blob: Blob): Promise<void> {
+          const abs = nodePath.join(folderPath, rel);
+          await fs.mkdir(nodePath.dirname(abs), { recursive: true });
+          const ab = await blob.arrayBuffer();
+          await fs.writeFile(abs, Buffer.from(ab));
+        },
+        async deleteFile(rel: string): Promise<void> {
+          try {
+            await fs.unlink(nodePath.join(folderPath, rel));
+          } catch {
+            /* ignore */
+          }
+        },
+        async listFiles(): Promise<string[]> {
+          const out: string[] = [];
+          const walk = async (dir: string, base: string) => {
+            const entries = await fs.readdir(dir, { withFileTypes: true });
+            for (const entry of entries) {
+              if (entry.name === ".semio" || entry.name === "node_modules") continue;
+              const rel = base ? `${base}/${entry.name}` : entry.name;
+              if (entry.isDirectory()) await walk(nodePath.join(dir, entry.name), rel);
+              else out.push(rel);
+            }
+          };
+          try {
+            await walk(folderPath, "");
+          } catch {
+            /* ignore */
+          }
+          return out;
+        },
+      };
+    };
+
+    describe("File Kit (JsonFileKitStore)", () => {
+      it("opens metabolism.kit.semio.json with embedded blob files preserved", async () => {
+        const studio = await loadStudio();
+        const filePath = await getMetabolismKitJsonPath();
+        const adapter = await makeNodeJsonFileAdapter(filePath);
+        const store = await studio.createJsonFileKitStore(adapter);
+
+        const snap = store.getSnapshot();
+        expect(snap.sync.status).toBe("ready");
+        expect(snap.kit.name).toBe("Metabolism");
+        expect((snap.kit.types ?? []).length).toBeGreaterThan(0);
+        expect((snap.kit.designs ?? []).length).toBeGreaterThan(0);
+        expect((snap.kit.files ?? []).length).toBeGreaterThan(0);
+
+        const filesWithBlob = (snap.kit.files ?? []).filter((f) => typeof f.blob === "string" && f.blob.length > 0);
+        expect(filesWithBlob.length).toBeGreaterThan(0);
+        const glb = filesWithBlob.find((f) => f.name.endsWith(".glb"));
+        expect(glb).toBeDefined();
+        expect(glb!.blob!.startsWith("data:")).toBe(true);
+      });
+
+      it("synchronizes apply() → save() back to the JSON file on disk", async () => {
+        const fs = await import("node:fs/promises");
+        const os = await import("node:os");
+        const nodePath = await import("node:path");
+        const srcPath = await getMetabolismKitJsonPath();
+        const tmpDir = await fs.mkdtemp(nodePath.join(os.tmpdir(), "semio-file-kit-"));
+        const tmpPath = nodePath.join(tmpDir, "metabolism.kit.semio.json");
+        await fs.copyFile(srcPath, tmpPath);
+
+        try {
+          const studio = await loadStudio();
+          const adapter = await makeNodeJsonFileAdapter(tmpPath);
+          const store = await studio.createJsonFileKitStore(adapter);
+
+          store.apply({ description: "Edited via JsonFileKitStore E2E" });
+          expect(store.getSnapshot().sync.dirty).toBe(true);
+          await store.save();
+          expect(store.getSnapshot().sync.dirty).toBe(false);
+
+          const rawAfter = JSON.parse(await fs.readFile(tmpPath, "utf-8"));
+          expect(rawAfter.description).toBe("Edited via JsonFileKitStore E2E");
+          expect(rawAfter.name).toBe("Metabolism");
+          expect(Array.isArray(rawAfter.files)).toBe(true);
+          expect(rawAfter.files.length).toBeGreaterThan(0);
+        } finally {
+          await fs.rm(tmpDir, { recursive: true, force: true });
+        }
+      });
+
+      it("synchronizes type and piece edits round-trip through the JSON file", async () => {
+        const fs = await import("node:fs/promises");
+        const os = await import("node:os");
+        const nodePath = await import("node:path");
+        const tmpDir = await fs.mkdtemp(nodePath.join(os.tmpdir(), "semio-file-kit-edit-"));
+        const tmpPath = nodePath.join(tmpDir, "mini.kit.semio.json");
+        const initial: Kit = {
+          guid: "mini-kit-guid",
+          name: "Mini Kit",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          types: [],
+        };
+        await fs.writeFile(tmpPath, JSON.stringify(initial, null, 2));
+
+        try {
+          const studio = await loadStudio();
+          const adapter = await makeNodeJsonFileAdapter(tmpPath);
+          const store = await studio.createJsonFileKitStore(adapter);
+
+          store.apply({
+            types: {
+              added: [{ guid: "t1", name: "Column", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
+            },
+          });
+          await store.save();
+
+          const onDisk = JSON.parse(await fs.readFile(tmpPath, "utf-8"));
+          expect(onDisk.types).toHaveLength(1);
+          expect(onDisk.types[0].name).toBe("Column");
+
+          const reopened = await studio.createJsonFileKitStore(await makeNodeJsonFileAdapter(tmpPath));
+          expect(reopened.getSnapshot().kit.types?.[0]?.name).toBe("Column");
+        } finally {
+          await fs.rm(tmpDir, { recursive: true, force: true });
+        }
+      });
+    });
+
+    describe("Folder Kit (FolderKitStore)", () => {
+      it("opens existing metabolism folder via .semio/kit.db without creating a new kit", async () => {
+        const studio = await loadStudio();
+        const folderPath = await getMetabolismFolderPath();
+        const adapter = await makeNodeFolderAdapter(folderPath);
+        const store = await studio.createFolderKitStore(adapter);
+
+        const snap = store.getSnapshot();
+        expect(snap.sync.status).toBe("ready");
+        expect(snap.kit.guid).not.toBe("");
+        expect(snap.kit.name).toBe("Metabolism");
+        expect((snap.kit.types ?? []).length).toBeGreaterThan(0);
+      });
+
+      it("reads real binary files (e.g. representations/base.glb) via the folder adapter", async () => {
+        const studio = await loadStudio();
+        const folderPath = await getMetabolismFolderPath();
+        const adapter = await makeNodeFolderAdapter(folderPath);
+        const store = await studio.createFolderKitStore(adapter);
+
+        const blob = await store.readFile("representations/base.glb");
+        expect(blob).not.toBeNull();
+        expect(blob!.size).toBeGreaterThan(0);
+
+        const files = await store.listFiles();
+        expect(files.some((p) => p === "representations/base.glb")).toBe(true);
+      });
+
+      it("loads types with models pointing at kit files so 3D meshes resolve", async () => {
+        const studio = await loadStudio();
+        const folderPath = await getMetabolismFolderPath();
+        const adapter = await makeNodeFolderAdapter(folderPath);
+        const store = await studio.createFolderKitStore(adapter);
+        const kit = store.getSnapshot().kit;
+
+        const typesWithModels = (kit.types ?? []).filter((t: any) => (t.models ?? []).length > 0);
+        expect(typesWithModels.length).toBeGreaterThan(0);
+
+        const fileGuidSet = new Set((kit.files ?? []).map((f: any) => f.guid));
+        for (const type of typesWithModels) {
+          for (const model of (type as any).models ?? []) {
+            expect(model.file?.guid).toBeDefined();
+            expect(fileGuidSet.has(model.file.guid)).toBe(true);
+          }
+        }
+
+        const firstModel = typesWithModels[0].models?.[0];
+        const firstFile = (kit.files ?? []).find((f: any) => f.guid === firstModel?.file?.guid);
+        expect(firstFile).toBeDefined();
+        const storagePath = (() => {
+          const foldersByGuid = new Map((kit.folders ?? []).map((f: any) => [f.guid, f]));
+          const segments: string[] = [firstFile!.name];
+          let current = firstFile!.folder?.guid;
+          while (current) {
+            const folder: any = foldersByGuid.get(current);
+            if (!folder) break;
+            segments.unshift(folder.name);
+            current = folder.parent?.guid;
+          }
+          return segments.join("/");
+        })();
+        const blob = await store.readFile(storagePath);
+        expect(blob).not.toBeNull();
+        expect(blob!.size).toBeGreaterThan(0);
+      });
+
+      it("synchronizes apply() → save() back to .semio/kit.db on disk", async () => {
+        const fs = await import("node:fs/promises");
+        const os = await import("node:os");
+        const nodePath = await import("node:path");
+        const tmpDir = await fs.mkdtemp(nodePath.join(os.tmpdir(), "semio-folder-kit-"));
+
+        try {
+          const studio = await loadStudio();
+          const adapter = await makeNodeFolderAdapter(tmpDir);
+          const initial = await studio.createFolderKitStore(adapter);
+          initial.replace({
+            guid: "seeded-folder-kit",
+            name: "Seeded Folder Kit",
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+            types: [{ guid: "seed-type", name: "Seed", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
+          });
+          await initial.save();
+
+          const kitDbPath = nodePath.join(tmpDir, ".semio", "kit.db");
+          const stat = await fs.stat(kitDbPath);
+          expect(stat.size).toBeGreaterThan(0);
+
+          initial.apply({
+            types: {
+              added: [{ guid: "added-type", name: "Added", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
+            },
+          });
+          await initial.save();
+
+          const reopened = await studio.createFolderKitStore(await makeNodeFolderAdapter(tmpDir));
+          const snap = reopened.getSnapshot();
+          expect(snap.kit.name).toBe("Seeded Folder Kit");
+          expect((snap.kit.types ?? []).map((t: any) => t.name).sort()).toEqual(["Added", "Seed"]);
+        } finally {
+          await fs.rm(tmpDir, { recursive: true, force: true });
+        }
+      });
+    });
+
+    describe("Remote Kit (SessionKitStore)", () => {
+      const makeMockWebSocket = () => {
+        const instances: any[] = [];
+        class MockWebSocket {
+          onopen: any = null;
+          onmessage: any = null;
+          onclose: any = null;
+          onerror: any = null;
+          readyState = 1;
+          sent: string[] = [];
+          url: string;
+          constructor(url: string) {
+            this.url = url;
+            instances.push(this);
+            setTimeout(() => this.onopen?.(), 0);
+          }
+          send(data: string) {
+            this.sent.push(data);
+          }
+          close() {
+            this.readyState = 3;
+            this.onclose?.();
+          }
+          emit(event: any) {
+            this.onmessage?.({ data: JSON.stringify(event) });
+          }
+        }
+        return { MockWebSocket, instances };
+      };
+
+      it("creates a remote session, loads snapshot, and handles server events", async () => {
+        const studio = await loadStudio();
+        const { MockWebSocket, instances } = makeMockWebSocket();
+        const originalFetch = globalThis.fetch;
+        const originalWebSocket = (globalThis as any).WebSocket;
+        (globalThis as any).WebSocket = MockWebSocket;
+
+        const snapshotKit = {
+          guid: "remote-session-kit",
+          name: "Remote Session Kit",
+          types: [],
+          designs: [],
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        };
+        globalThis.fetch = (async (input: any, init?: any) => {
+          const url = String(input);
+          if (url.endsWith("/sessions") && init?.method === "POST") {
+            return new Response(JSON.stringify({ session_id: "session-42" }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          if (url.endsWith("/sessions/session-42/snapshot")) {
+            return new Response(JSON.stringify({ kit: snapshotKit, domain_version: 1, semio_version: 0 }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          if (url.endsWith("/sessions/session-42/commands") && init?.method === "POST") {
+            return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
+          }
+          return new Response("{}", { status: 200 });
+        }) as typeof fetch;
+
+        try {
+          const store = await studio.createSessionKitStore({ serverUrl: "http://localhost:12345", kitName: "Remote Session Kit" });
+          expect(store.sessionId).toBe("session-42");
+          expect(store.getSnapshot().kit.name).toBe("Remote Session Kit");
+          expect(store.getSnapshot().sync.status).toBe("ready");
+
+          // Wait for mock ws to fire onopen
+          await new Promise((r) => setTimeout(r, 5));
+          const ws = instances[0];
+          expect(ws).toBeDefined();
+
+          // Server pushes a type creation event
+          ws.emit({
+            event: "DomainCommandAccepted",
+            domain_version: 2,
+            changes: [
+              {
+                op: "Created",
+                entity_kind: "type",
+                entity_id: "remote-type-1",
+                snapshot: { name: "Remote Type", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" },
+              },
+            ],
+          });
+          const types = store.getSnapshot().kit.types ?? [];
+          expect(types.some((t: any) => t.guid === "remote-type-1" && t.name === "Remote Type")).toBe(true);
+          store.dispose?.();
+        } finally {
+          globalThis.fetch = originalFetch;
+          (globalThis as any).WebSocket = originalWebSocket;
+        }
+      });
+    });
+  });
+  // #endregion 🚪Open Synchronized Kit E2E Tests
 
   // #region 🎀Meta And Shallow Tests
   // Tests for Meta and Shallow schema parsing, conversion functions, and roundtrips.

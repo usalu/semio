@@ -1,5 +1,4 @@
 // #region 🧲Header
-
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -12,7 +11,7 @@
 // Electron main process that creates the browser window and registers IPC handlers.
 // MUST quit on all windows closed except on macOS.
 
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, type WebContents } from "electron";
 import started from "electron-squirrel-startup";
 import path from "node:path";
 import fs from "node:fs";
@@ -222,6 +221,53 @@ app.whenReady().then(async () => {
     }
     recent = [folderPath, ...recent.filter((f: string) => f !== folderPath)].slice(0, 10);
     fs.writeFileSync(configPath, JSON.stringify(recent), "utf-8");
+  });
+
+  // Specs: One recursive watcher per kit folder; debounced IPC notifies renderer to reload `.semio/kit.db` and asset files.
+  type KitFolderWatchEntry = { watcher: fs.FSWatcher; subscribers: Set<WebContents>; debounce?: NodeJS.Timeout };
+  const kitFolderWatches = new Map<string, KitFolderWatchEntry>();
+
+  const notifyKitFolderSubscribers = (folderPath: string) => {
+    const entry = kitFolderWatches.get(folderPath);
+    if (!entry) return;
+    if (entry.debounce) clearTimeout(entry.debounce);
+    entry.debounce = setTimeout(() => {
+      entry!.debounce = undefined;
+      for (const wc of entry!.subscribers) {
+        if (!wc.isDestroyed()) wc.send("kit-folder-changed", folderPath);
+      }
+    }, 120);
+  };
+
+  ipcMain.on("kit-folder-watch-subscribe", (event, folderPath: string) => {
+    const wc = event.sender;
+    let entry = kitFolderWatches.get(folderPath);
+    if (!entry) {
+      try {
+        const watcher = fs.watch(folderPath, { recursive: true }, () => notifyKitFolderSubscribers(folderPath));
+        entry = { watcher, subscribers: new Set() };
+        kitFolderWatches.set(folderPath, entry);
+      } catch {
+        return;
+      }
+    }
+    entry.subscribers.add(wc);
+  });
+
+  ipcMain.on("kit-folder-watch-unsubscribe", (event, folderPath: string) => {
+    const wc = event.sender;
+    const entry = kitFolderWatches.get(folderPath);
+    if (!entry) return;
+    entry.subscribers.delete(wc);
+    if (entry.subscribers.size === 0) {
+      if (entry.debounce) clearTimeout(entry.debounce);
+      try {
+        entry.watcher.close();
+      } catch {
+        /* ignore */
+      }
+      kitFolderWatches.delete(folderPath);
+    }
   });
   // #endregion 🗂️FolderIPC
 

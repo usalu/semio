@@ -653,6 +653,8 @@ export class FolderKitStore implements UndoableKitStore {
   private lastSyncedAt?: string;
   private readonly adapter: KitFolderAdapter;
   private unwatchFn?: () => void;
+  /** Specs: Ignore filesystem notifications for a short window after we persist kit.db to avoid reload wiping the undo stack. */
+  private suppressAutoReloadUntil = 0;
 
   private constructor(kit: Kit, adapter: KitFolderAdapter, status: KitStoreStatus) {
     this.kit = kit;
@@ -660,6 +662,8 @@ export class FolderKitStore implements UndoableKitStore {
     this.status = status;
     if (adapter.watch) {
       this.unwatchFn = adapter.watch(() => {
+        if (this.disposed) return;
+        if (Date.now() < this.suppressAutoReloadUntil) return;
         this.reload().catch(console.error);
       });
     }
@@ -772,6 +776,7 @@ export class FolderKitStore implements UndoableKitStore {
       const data = db.export();
       db.close();
       await this.adapter.writeKit(data);
+      this.suppressAutoReloadUntil = Date.now() + 500;
       this.dirty = false;
       this.lastSyncedAt = new Date().toISOString();
       this.error = undefined;

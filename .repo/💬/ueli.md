@@ -693,7 +693,7 @@ File kit (based on semio\assets\semio\metabolism.kit.semio.json):
 - Doesnt open the kit (e.g. semio\assets\semio\metabolism) and instead creates a new one.
 - Needs to also synchronize changes.
   Remote kit:
-- Needs to work in conjunction with semio/server
+- Needs to work in conjunction with semio/servery
   Make sure that everything is tests end-to-end. Extend semio if necessary.
 
 Add Open functionality to open synchronized kits.

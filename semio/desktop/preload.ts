@@ -47,6 +47,17 @@ contextBridge.exposeInMainWorld("kitFolder", {
   listFiles: (folderPath: string) => ipcRenderer.invoke("list-files", folderPath),
   getRecentFolders: () => ipcRenderer.invoke("get-recent-folders"),
   addRecentFolder: (folderPath: string) => ipcRenderer.invoke("add-recent-folder", folderPath),
+  watchFolder: (folderPath: string, onChanged: () => void) => {
+    ipcRenderer.send("kit-folder-watch-subscribe", folderPath);
+    const handler = (_e: unknown, changedPath: string) => {
+      if (changedPath === folderPath) onChanged();
+    };
+    ipcRenderer.on("kit-folder-changed", handler);
+    return () => {
+      ipcRenderer.removeListener("kit-folder-changed", handler);
+      ipcRenderer.send("kit-folder-watch-unsubscribe", folderPath);
+    };
+  },
 });
 // #endregion 🎗️FolderBridge
 
