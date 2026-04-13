@@ -1327,6 +1327,11 @@ export interface InitialStateKit {
   kit: Kit;
   local?: boolean;
   remote?: boolean;
+  source?: {
+    kind: "folder" | "file" | "remote";
+    path?: string;
+    url?: string;
+  };
 }
 
 /**
@@ -18742,8 +18747,8 @@ export class SketchpadStore {
       });
 
       if (initialState.kits) {
-        initialState.kits.forEach(({ kit, local, remote }) => {
-          void this.createKit(kit, local, remote);
+        initialState.kits.forEach(({ kit, local, remote, source }) => {
+          void this.createKit(kit, local, remote, source, false);
         });
       }
     }
@@ -18787,6 +18792,7 @@ export class SketchpadStore {
         kit,
         local: Boolean(persistenceKind?.local),
         remote: Boolean(persistenceKind?.remote),
+        source: this.getKitPersistenceSource(kitStore),
       };
     });
     writeSketchpadKitsToLocalStorage(this.id, persistedKits);
@@ -18882,6 +18888,15 @@ export class SketchpadStore {
     return { local: false, remote: false };
   };
 
+  private getKitPersistenceSource = (kitStore: KitStore): InitialStateKit["source"] | undefined => {
+    const source = (kitStore as any).__semioKitPersistenceSource as InitialStateKit["source"] | undefined;
+    if (!source || typeof source !== "object") return undefined;
+    if (source.kind === "folder" || source.kind === "file" || source.kind === "remote") {
+      return source;
+    }
+    return undefined;
+  };
+
   private resolveKitFileProviderFactory = (local: boolean, remote: boolean): FileProviderFactory => {
     if (remote && this.remote?.fileProvider) {
       return this.remote.fileProvider;
@@ -18892,12 +18907,15 @@ export class SketchpadStore {
     return createMemoryFileProvider();
   };
 
-  private registerKitStore = (kitStore: KitStore, local: boolean, remote: boolean) => {
+  private registerKitStore = (kitStore: KitStore, local: boolean, remote: boolean, source?: InitialStateKit["source"]) => {
     const registeredKit = kitStore.getSnapshot().kit;
     if (this.kits.has(registeredKit.guid)) {
       return;
     }
     (kitStore as any).__semioKitPersistenceKind = { local, remote };
+    if (source) {
+      (kitStore as any).__semioKitPersistenceSource = source;
+    }
     getOrCreateKitFileState(kitStore).providerFactory = this.resolveKitFileProviderFactory(local, remote);
     this.kits.set(registeredKit.guid, kitStore);
 
@@ -18922,20 +18940,37 @@ export class SketchpadStore {
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
   };
 
-  private createBackedKitStore = async (kit: Kit, local?: boolean, remote?: boolean): Promise<{ kitStore: KitStore; local: boolean; remote: boolean }> => {
+  private createBackedKitStore = async (
+    kit: Kit,
+    local?: boolean,
+    remote?: boolean,
+    source?: InitialStateKit["source"],
+    interactive: boolean = true,
+  ): Promise<{ kitStore: KitStore; local: boolean; remote: boolean; source?: InitialStateKit["source"] }> => {
     const localKitStoreFactory = this.folderKitStoreFactory ?? this.fileKitStoreFactory;
     if (remote && this.remoteKitStoreFactory) {
+      const remoteKit = source?.kind === "remote" && source.url ? ({ ...kit, name: source.url } as Kit) : kit;
       return {
-        kitStore: await this.remoteKitStoreFactory(kit),
+        kitStore: await this.remoteKitStoreFactory(remoteKit),
         local: true,
         remote: true,
+        source: source?.kind === "remote" ? source : undefined,
       };
     }
-    if (local && localKitStoreFactory) {
+    if (local && source?.kind === "folder" && this.folderKitStoreFactory) {
       return {
-        kitStore: await localKitStoreFactory(kit),
+        kitStore: await this.folderKitStoreFactory(Object.assign({}, kit, { __semioKitPersistenceSource: source }) as Kit),
         local: true,
         remote: false,
+        source,
+      };
+    }
+    if (local && source?.kind === "file" && this.fileKitStoreFactory) {
+      return {
+        kitStore: await this.fileKitStoreFactory(Object.assign({}, kit, { __semioKitPersistenceSource: source }) as Kit),
+        local: true,
+        remote: false,
+        source,
       };
     }
     if (!local && !remote && this.temporaryKitStoreFactory) {
@@ -18945,7 +18980,7 @@ export class SketchpadStore {
         remote: false,
       };
     }
-    if (localKitStoreFactory) {
+    if (interactive && localKitStoreFactory) {
       return {
         kitStore: await localKitStoreFactory(kit),
         local: true,
@@ -18980,9 +19015,9 @@ export class SketchpadStore {
     };
   };
 
-  createKit = async (kit: Kit, local?: boolean, remote?: boolean) => {
-    const createdKitStore = await this.createBackedKitStore(kit, local, remote);
-    this.registerKitStore(createdKitStore.kitStore, createdKitStore.local, createdKitStore.remote);
+  createKit = async (kit: Kit, local?: boolean, remote?: boolean, source?: InitialStateKit["source"], interactive: boolean = true) => {
+    const createdKitStore = await this.createBackedKitStore(kit, local, remote, source, interactive);
+    this.registerKitStore(createdKitStore.kitStore, createdKitStore.local, createdKitStore.remote, createdKitStore.source);
   };
 
   openKit = async (kind: string, serverUrl?: string): Promise<Guid> => {
@@ -18992,14 +19027,14 @@ export class SketchpadStore {
         const factory = this.folderKitStoreFactory;
         if (!factory) throw new Error("Folder kit store not available in this environment");
         const kitStore = await factory(dummyKit);
-        this.registerKitStore(kitStore, true, false);
+        this.registerKitStore(kitStore, true, false, this.getKitPersistenceSource(kitStore));
         return kitStore.getSnapshot().kit.guid;
       }
       case "file": {
         const factory = this.fileKitStoreFactory;
         if (!factory) throw new Error("File kit store not available in this environment");
         const kitStore = await factory(dummyKit);
-        this.registerKitStore(kitStore, true, false);
+        this.registerKitStore(kitStore, true, false, this.getKitPersistenceSource(kitStore));
         return kitStore.getSnapshot().kit.guid;
       }
       case "remote": {
@@ -19007,7 +19042,7 @@ export class SketchpadStore {
         if (!factory) throw new Error("Remote kit store not available in this environment");
         const remoteKit: Kit = { ...dummyKit, name: serverUrl ?? "" };
         const kitStore = await factory(remoteKit);
-        this.registerKitStore(kitStore, true, true);
+        this.registerKitStore(kitStore, true, true, this.getKitPersistenceSource(kitStore) ?? { kind: "remote", url: serverUrl ?? "" });
         return kitStore.getSnapshot().kit.guid;
       }
       default:
@@ -56451,6 +56486,111 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const nakagin = kit.designs?.find((d: any) => d.name === "Nakagin Capsule Tower" || (d.guid && String(d.guid).includes("9a890dd4")));
       expect(nakagin).toBeTruthy();
       expect((nakagin!.pieces ?? []).length).toBeGreaterThan(0);
+    });
+
+    test("persisted folder kits restore from their stored source without invoking other local factories", async () => {
+      const restoredKit: Kit = { guid: guid(), name: "Restored Folder Kit", types: [], designs: [] };
+      const folderFactoryCalls: string[] = [];
+      let fileFactoryCallCount = 0;
+      const createFakeKitStore = (kit: Kit) =>
+        ({
+          getSnapshot: () => ({ kit, sync: { status: "ready", dirty: false, readonly: false } }),
+          subscribe: () => () => {},
+          save: async () => {},
+          reload: async () => {},
+          dispose: () => {},
+          canUndo: () => false,
+          canRedo: () => false,
+          undo: () => {},
+          redo: () => {},
+          apply: () => {},
+          replace: () => {},
+          transact: (_label: string, run: () => unknown) => run(),
+        }) as unknown as KitStore;
+      const folderFactory: SketchpadKitStoreFactory = async (kit) => {
+        const source = (kit as any).__semioKitPersistenceSource as InitialStateKit["source"] | undefined;
+        folderFactoryCalls.push(source?.path ?? "");
+        const store = createFakeKitStore(restoredKit);
+        (store as any).__semioKitPersistenceSource = source;
+        return store;
+      };
+      const fileFactory: SketchpadKitStoreFactory = async () => {
+        fileFactoryCallCount += 1;
+        return createFakeKitStore({ guid: guid(), name: "Unexpected File Restore", types: [], designs: [] });
+      };
+
+      const store = new SketchpadStore(
+        undefined,
+        undefined,
+        {
+          kits: [
+            {
+              kit: { guid: restoredKit.guid, name: "Persisted Snapshot", types: [], designs: [] },
+              local: true,
+              remote: false,
+              source: { kind: "folder", path: "C:/kits/metabolism" },
+            },
+          ],
+        },
+        undefined,
+        undefined,
+        undefined,
+        folderFactory,
+        fileFactory,
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(folderFactoryCalls).toEqual(["C:/kits/metabolism"]);
+      expect(fileFactoryCallCount).toBe(0);
+      expect(store.kit(restoredKit.guid).snapshot().name).toBe("Restored Folder Kit");
+    });
+
+    test("persisted local kits without a stored source do not trigger startup pickers", async () => {
+      let folderFactoryCallCount = 0;
+      const createFakeKitStore = (kit: Kit) =>
+        ({
+          getSnapshot: () => ({ kit, sync: { status: "ready", dirty: false, readonly: false } }),
+          subscribe: () => () => {},
+          save: async () => {},
+          reload: async () => {},
+          dispose: () => {},
+          canUndo: () => false,
+          canRedo: () => false,
+          undo: () => {},
+          redo: () => {},
+          apply: () => {},
+          replace: () => {},
+          transact: (_label: string, run: () => unknown) => run(),
+        }) as unknown as KitStore;
+      const folderFactory: SketchpadKitStoreFactory = async () => {
+        folderFactoryCallCount += 1;
+        return createFakeKitStore({ guid: guid(), name: "Unexpected Prompted Folder Kit", types: [], designs: [] });
+      };
+
+      const kitGuid = guid();
+      const store = new SketchpadStore(
+        undefined,
+        undefined,
+        {
+          kits: [
+            {
+              kit: { guid: kitGuid, name: "Legacy Local Snapshot", types: [], designs: [] },
+              local: true,
+              remote: false,
+            },
+          ],
+        },
+        undefined,
+        undefined,
+        undefined,
+        folderFactory,
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(folderFactoryCallCount).toBe(0);
+      expect(store.kit(kitGuid).snapshot().name).toBe("Legacy Local Snapshot");
     });
 
     test("Settings Panel In All Apps", async ({ page }) => {

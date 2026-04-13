@@ -1,0 +1,9 @@
+{
+  "title": "Fix Cross Language Test Compliance",
+  "status": "open",
+  "description": "Resolve duplicate logic drift across semio language implementations and restore test compliance. Immediate blocker is C# compile/test failure in semio/net due to recent cross-language refactor drift; fix with minimal parity-preserving changes and re-verify language test suites.",
+  "goal": "🎯r2603🎯runningnet",
+  "sessions": [
+    "⚪87b2da9edd5b44a5ab773c1c46045ae1"
+  ]
+}

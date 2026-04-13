@@ -8,7 +8,6 @@
 
 // #endregion 🧲Header
 
-
 // #region ⛩️Imports
 // External dependency imports MUST be declared here.
 import { Accessor as GltfAccessor, Buffer as GltfBuffer, Document as GltfDocument, Material as GltfMaterial, Mesh as GltfMesh, Node as GltfNode, Texture as GltfTexture, NodeIO } from "@gltf-transform/core";
@@ -23,7 +22,6 @@ import { z } from "zod";
 
 // #endregion ⛩️Imports
 
-
 // #region 🎞️Constants
 // Global constants MUST define shared numeric parameters.
 
@@ -36,7 +34,6 @@ export const ICON_WIDTH = 50;
 export const TOLERANCE = 1e-5;
 
 // #endregion 🎞️Constants
-
 
 // #region 📦Utilities
 // General-purpose utility functions MUST be defined here.
@@ -186,7 +183,6 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 export type Guid = string;
 
 // #endregion 📦Utilities
-
 
 // #region 🐍Entity IDs
 // Entity identifier types and comparison functions MUST be defined here.
@@ -617,7 +613,6 @@ export const getTagGuid = (id: TagId): Guid => id.guid;
 export const getConceptGuid = (id: ConceptId): Guid => id.guid;
 
 // #endregion 🐍Entity IDs
-
 
 // #region 🖥️Weak Entities
 
@@ -1157,7 +1152,6 @@ export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
 
 // #endregion 🖥️Weak Entities
 
-
 // #region 💎Attribute
 // Attribute entity types, schemas, and helper functions MUST be defined here.
 // 📅DateProperty represents a date-time value as ISO string.
@@ -1343,7 +1337,6 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
 
 // #endregion 💎Attribute
 
-
 // #region 📍Location
 // Location entity types, schemas, and helpers MUST be defined here.
 
@@ -1424,7 +1417,6 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
 };
 
 // #endregion 📍Location
-
 
 // #region ✍️Author
 // Author entity types, schemas, and helpers MUST be defined here.
@@ -1543,7 +1535,6 @@ export const AuthorsDiffSchema = z.object({
 export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
 // #endregion ✍️Author
-
 
 // #region 📄File
 // File entity types, schemas, and helpers MUST be defined here.
@@ -1691,7 +1682,6 @@ export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 
 // #endregion 📄File
 
-
 // #region 📁Folder
 // Folder entity types, schemas, and helpers MUST be defined here.
 
@@ -1834,7 +1824,6 @@ export const FoldersDiffSchema = z.object({
 export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
 
 // #endregion 📁Folder
-
 
 // #region 📏Benchmark
 // Benchmark entity types, schemas, and helpers MUST be defined here.
@@ -2005,7 +1994,6 @@ const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark
 };
 
 // #endregion 📏Benchmark
-
 
 // #region 🔬Quality
 // Quality entity types, schemas, and helpers MUST be defined here.
@@ -2198,7 +2186,6 @@ export const QualitiesDiffSchema = z.object({
 export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>;
 
 // #endregion 🔬Quality
-
 
 // #region ⚓Port
 // Port entity types, schemas, and helpers MUST be defined here.
@@ -2440,7 +2427,6 @@ export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | unde
 
 // #endregion ⚓Port
 
-
 // #region 📊Prop
 // Prop entity types, schemas, and helpers MUST be defined here.
 
@@ -2626,7 +2612,6 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
 };
 
 // #endregion 📊Prop
-
 
 // #region 🏷️Tag
 // Tag entity types, schemas, and helpers MUST be defined here.
@@ -2855,7 +2840,6 @@ export const findTag = (tags: Tag[], guid: string): Tag => {
 
 // #endregion 🏷️Tag
 
-
 // #region 💡Concept
 // Concept entity types, schemas, and helpers MUST be defined here.
 
@@ -3082,7 +3066,6 @@ export const findConcept = (concepts: Concept[], guid: string): Concept => {
 };
 
 // #endregion 💡Concept
-
 
 // #region 🗿Model
 // Model entity types, schemas, and helpers MUST be defined here.
@@ -3378,7 +3361,6 @@ export const validateModelFile = (filename: string): ModelFileValidation => {
 
 // #endregion 🗿Model
 
-
 // #region 🔌Connector
 // Connector entity types, schemas, and helpers MUST be defined here.
 
@@ -3586,7 +3568,6 @@ export const findConnector = (connectors: Connector[], connectorGuid: string): C
 };
 
 // #endregion 🔌Connector
-
 
 // #region 🧱Type
 // Type entity types, schemas, and helpers MUST be defined here.
@@ -3807,7 +3788,6 @@ export const findConnectorInType = (type: Type, connectorGuid: string): Connecto
 
 // #endregion 🧱Type
 
-
 // #region 🎨Layer
 // Layer entity types, schemas, and helpers MUST be defined here.
 
@@ -3943,7 +3923,6 @@ export const LayersDiffSchema = z.object({
 export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
 // #endregion 🎨Layer
-
 
 // #region 🧩Piece
 // Piece entity types, schemas, and helpers MUST be defined here.
@@ -4200,7 +4179,6 @@ export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
 
 // #endregion 🧩Piece
 
-
 // #region 👥Group
 // Group entity types, schemas, and helpers MUST be defined here.
 
@@ -4332,7 +4310,6 @@ export const deserializeGroupShallow = (json: string): GroupShallow => GroupShal
 
 // #endregion 👥Group
 
-
 // #region ↔️Side
 // Side entity types, schemas, and helpers MUST be defined here.
 
@@ -4428,7 +4405,6 @@ export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.par
 export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.connector?.guid === b.connector?.guid;
 
 // #endregion ↔️Side
-
 
 // #region 🔗Connection
 // Connection entity types, schemas, and helpers MUST be defined here.
@@ -4642,7 +4618,6 @@ export const findConnectorForPieceInConnection = (type: Type, connection: Connec
 
 // #endregion 🔗Connection
 
-
 // #region 📈Stat
 // Stat entity types, schemas, and helpers MUST be defined here.
 
@@ -4768,7 +4743,6 @@ export const serializeStatShallow = (stat: StatShallow): string => JSON.stringif
 export const deserializeStatShallow = (json: string): StatShallow => StatShallowSchema.parse(JSON.parse(json));
 
 // #endregion 📈Stat
-
 
 // #region 📐Design
 // Design entity types, schemas, and helpers MUST be defined here.
@@ -5336,14 +5310,11 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string,
   return operationOk({ forward: delRes.change, backward }, delRes.warnings, delRes.infos);
 };
 
-
 /**
  * Resolves {@link Type} and {@link Connector} from a kit the same way {@link flattenDesign} does.
  * Specs: Used when move needs parent connector frames from kit types.
  **/
-const buildConnectorResolverFromKit = (
-  kit: Kit,
-): { getType: (typeGuid: string) => Type | undefined; getConnector: (type: Type | undefined, connectorGuid: string | undefined) => Connector | undefined } => {
+const buildConnectorResolverFromKit = (kit: Kit): { getType: (typeGuid: string) => Type | undefined; getConnector: (type: Type | undefined, connectorGuid: string | undefined) => Connector | undefined } => {
   const typesDict: { [key: string]: Type } = {};
   (kit.types ?? []).forEach((t) => {
     typesDict[t.guid] = t;
@@ -5387,9 +5358,7 @@ const buildConnectorResolverFromKit = (
 /**
  * Parent-connector rotation and unit world axes for gap (local +Y), shift (+X), rise (+Z) before child orientation, matching {@link computeChildPlane}.
  **/
-const connectionPlacementTranslationBasis = (
-  parentConnector: Connector,
-): { gap: THREE.Vector3; shift: THREE.Vector3; raise: THREE.Vector3; parentRotationT: THREE.Matrix4 } => {
+const connectionPlacementTranslationBasis = (parentConnector: Connector): { gap: THREE.Vector3; shift: THREE.Vector3; raise: THREE.Vector3; parentRotationT: THREE.Matrix4 } => {
   const parentDirection = vectorToThree(parentConnector.direction).normalize();
   const yAxis = new THREE.Vector3(0, 1, 0);
   const parentConnectorQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection);
@@ -6148,11 +6117,7 @@ const buildDragMoveStructuralContext = (
 /**
  * True when walking parent links finds a selected ancestor (same descendant suppression as drag).
  **/
-const pieceHasSelectedAncestorInDragMoveTree = (
-  pieceGuid: string,
-  selectedGuids: Set<string>,
-  parentMap: Map<string, { connectionGuid: string; parentGuid: string }>,
-): boolean => {
+const pieceHasSelectedAncestorInDragMoveTree = (pieceGuid: string, selectedGuids: Set<string>, parentMap: Map<string, { connectionGuid: string; parentGuid: string }>): boolean => {
   let current = pieceGuid;
   while (parentMap.has(current)) {
     const ancestor = parentMap.get(current)!.parentGuid;
@@ -6266,14 +6231,7 @@ const connectionDiffTranslationFallback = (parentPlane: Plane, parentConnector: 
  * w.r.t. gap, shift, rise, rotation, turn, tilt (degrees for angles), then puts the remaining translation into u/v on the parent plane.
  * Specs: One Gauss–Newton step; matches flatten placement when child connector exists. Falls back to translation-only basis if singular.
  **/
-const connectionDiffFromStructuralMoveVector = (
-  parentPlane: Plane,
-  parentConnector: Connector,
-  childConnector: Connector | undefined,
-  connection: Connection,
-  childPlane: Plane | undefined,
-  vector: MoveVector,
-): ConnectionDiff => {
+const connectionDiffFromStructuralMoveVector = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector | undefined, connection: Connection, childPlane: Plane | undefined, vector: MoveVector): ConnectionDiff => {
   const child = childPlane ?? identityPlaneForStructuralMove();
   const tw = moveTranslationWorldFromPiecePlane(child, vector);
   const t = vectorToThree(tw);
@@ -6841,7 +6799,6 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
 
 // #endregion 📐Design
 
-
 // #region ⏱️Kit
 // Kit entity types, schemas, and helpers MUST be defined here.
 
@@ -7268,7 +7225,6 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
 };
 
 // #endregion ⏱️Kit
-
 
 // #region 🖥️Hash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
@@ -8882,7 +8838,6 @@ export const hashKitDiff = (d: KitDiff): string => {
 
 // #endregion 🖥️Hash
 
-
 /**
  * Computes the forward and backward diffs between two design states.
  **/
@@ -9402,7 +9357,6 @@ export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[
 
 // #endregion 📻Design Family Helpers
 
-
 // #region 🧊Type Family Helpers
 // Type family traversal helpers MUST be defined here.
 
@@ -9459,7 +9413,6 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
 };
 
 // #endregion 🧊Type Family Helpers
-
 
 // #region 🎯OperationResult
 /**
@@ -9545,7 +9498,6 @@ export const normalizeDesignCopyResult = (raw: unknown): OperationResult<Design>
   return operationOk(raw as Design, [], []);
 };
 // #endregion 🎯OperationResult
-
 
 /**
  * Represents a bidirectional change between two Kit states.
@@ -9692,7 +9644,7 @@ const validateGuidCollectionDiff = <TItem extends { guid: string }>(
 };
 
 const validateAttributesDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Attribute[], d: AttributesDiff | undefined): void => {
-  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => { });
+  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => {});
 };
 
 const validatePropsDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Prop[], qualities: Set<string>, d: PropsDiff | undefined): void => {
@@ -9897,13 +9849,13 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
   if (ctx.diff.designs) {
     ctx.diff.designs = validateGuidCollectionDiff(ctx, "designs", "design", kit.designs ?? [], ctx.diff.designs, (item, ddiff, p) => validateDesignDiffNested(ctx, kit, p, item, ddiff as DesignDiff, refs));
   }
-  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => { });
-  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => { });
-  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => { });
+  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => {});
+  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => {});
+  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => {});
   if (ctx.diff.qualities) {
     ctx.diff.qualities = validateGuidCollectionDiff(ctx, "qualities", "quality", kit.qualities ?? [], ctx.diff.qualities, (item, qdiff, p) => validateQualityDiffNested(ctx, p, item, qdiff as QualityDiff));
   }
-  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => { });
+  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => {});
   if (ctx.diff.folders) {
     ctx.diff.folders = validateGuidCollectionDiff(ctx, "folders", "folder", kit.folders ?? [], ctx.diff.folders, (item, fdiff, p) => {
       const par = (fdiff as FolderDiff).parent?.guid ?? item.parent?.guid;
@@ -9911,7 +9863,7 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
       if ((fdiff as FolderDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (fdiff as FolderDiff).attributes);
     });
   }
-  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => { });
+  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => {});
   if (ctx.diff.attributes) validateAttributesDiffNested(ctx, "kit.attributes", kit.attributes ?? [], ctx.diff.attributes);
 
   const ok = ctx.errors.length === 0;
@@ -9919,7 +9871,6 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
 };
 
 // #endregion 📦Kit Diff Validation
-
 
 // #region 🛡️Validation
 
@@ -10603,7 +10554,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
             fixes: [fix],
           });
         }
-      } catch { }
+      } catch {}
     });
   });
   return problems;
@@ -10753,7 +10704,6 @@ export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResu
 // #endregion 🌧️Validation Serialization
 
 // #endregion 🛡️Validation
-
 
 /**
  **/
@@ -12196,20 +12146,20 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-              }
+                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+                }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-              }
+                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+                }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -12324,54 +12274,54 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-        return {
-          guid: row.guid,
-          key: row.key,
-          name: row.name,
-          kind: row.kind || undefined,
-          defaultValue: row.default_value ?? undefined,
-          formula: toUndefined(row.formula),
-          defaultSiUnit: toUndefined(row.default_si_unit),
-          defaultImperialUnit: toUndefined(row.default_imperial_unit),
-          min: row.min_value ?? undefined,
-          minExcluded: row.min_excluded ? true : undefined,
-          max: row.max_value ?? undefined,
-          maxExcluded: row.max_excluded ? true : undefined,
-          canScale: row.can_scale ? true : undefined,
-          uri: toUndefined(row.definition),
-          benchmarks: benchmarks.map((b: any) => {
-            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-            return {
-              guid: b.guid,
-              name: b.name,
-              icon: toUndefined(b.icon),
-              min: b.min_value ?? undefined,
-              minExcluded: b.min_excluded ? true : undefined,
-              max: b.max_value ?? undefined,
-              maxExcluded: b.max_excluded ? true : undefined,
-              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-            };
-          }),
-          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-        };
-      })
+          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+          return {
+            guid: row.guid,
+            key: row.key,
+            name: row.name,
+            kind: row.kind || undefined,
+            defaultValue: row.default_value ?? undefined,
+            formula: toUndefined(row.formula),
+            defaultSiUnit: toUndefined(row.default_si_unit),
+            defaultImperialUnit: toUndefined(row.default_imperial_unit),
+            min: row.min_value ?? undefined,
+            minExcluded: row.min_excluded ? true : undefined,
+            max: row.max_value ?? undefined,
+            maxExcluded: row.max_excluded ? true : undefined,
+            canScale: row.can_scale ? true : undefined,
+            uri: toUndefined(row.definition),
+            benchmarks: benchmarks.map((b: any) => {
+              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+              return {
+                guid: b.guid,
+                name: b.name,
+                icon: toUndefined(b.icon),
+                min: b.min_value ?? undefined,
+                minExcluded: b.min_excluded ? true : undefined,
+                max: b.max_value ?? undefined,
+                maxExcluded: b.max_excluded ? true : undefined,
+                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+              };
+            }),
+            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+          };
+        })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        remote: toUndefined(row.remote_url),
-        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-        size: row.size ?? undefined,
-        hash: toUndefined(row.hash),
-        createdAt: row.created,
-        updatedAt: row.updated,
-      }))
+          guid: row.guid,
+          name: row.name,
+          remote: toUndefined(row.remote_url),
+          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+          size: row.size ?? undefined,
+          hash: toUndefined(row.hash),
+          createdAt: row.created,
+          updatedAt: row.updated,
+        }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -12387,10 +12337,10 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        email: toUndefined(row.email),
-      }))
+          guid: row.guid,
+          name: row.name,
+          email: toUndefined(row.email),
+        }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
@@ -13225,7 +13175,6 @@ export const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 
 // #endregion 🧿Kit Import/Export
 
-
 // #region 🔩Kit Model Export
 // Design model export to 3D formats (GLB, glTF, OBJ, STL, PLY, USDZ) MUST be defined here.
 
@@ -13632,7 +13581,7 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
         if (copiedMeshes.length > 0) {
           typeMeshMap[typeGuid] = copiedMeshes[0];
         }
-      } catch { }
+      } catch {}
     }
   }
 
@@ -13688,7 +13637,6 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
 };
 
 // #endregion 🔩Kit Model Export
-
 
 // #region ❄️Geometric Insights
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
@@ -13892,7 +13840,6 @@ export const getGeometricInsightsForModel = async (model: string | ArrayBuffer |
 };
 
 // #endregion ❄️Geometric Insights
-
 
 // #region 🏰KitStore
 // Storage-agnostic kit store contracts MUST be defined here.
@@ -14153,7 +14100,6 @@ export class InMemoryKitStore implements UndoableKitStore {
 // #endregion 🖥️InMemoryKitStore
 
 // #endregion 🏰KitStore
-
 
 /**
  * Searches for matching PortInKit entry.
@@ -14579,7 +14525,6 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
 };
 
 // #endregion 🕌File Tree Utilities
-
 
 // #region 🧪Tests
 // Vitest test suites for domain logic. MUST NOT export any symbols.
@@ -15428,7 +15373,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
         const zipPath = path.join(__dirname, "../assets/semio/metabolism.zip");
         const zipBuffer = fs.readFileSync(zipPath);
-        const { kit: zipKit } = await importKit(zipBuffer.buffer);
+        const { kit: zipKit } = await importKit(zipBuffer);
         expect(areKitsEqual(kit, zipKit)).toBe(true);
 
         const exportedZip = await exportKit(kit);
@@ -16023,9 +15968,9 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   describe("Sketchpad ControlTree", () => {
     it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
       const controls: ControlDef[] = [
-        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
-        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
-        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
+        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
+        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
+        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
       ];
       const folderSettings = {
         Transform: { path: "Transform", order: 2 },
@@ -17912,7 +17857,6 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   // #endregion 🔄Transaction Undo/Redo Tests
 } // end vitest guard
 // #endregion 🧪Tests
-
 
 // #region 🏋️Benchmarks
 // Performance benchmarks for kit roundtrip, diff, flatten and validation operations.

@@ -2,9 +2,10 @@
   "title": "Add Open Functionality to Sketchpad for Synchronized Kits",
   "status": "closed",
   "description": "Add Open functionality to the sketchpad to open synchronized kits. Implement different folder kinds: file kit opens a file picker, folder kit opens a folder picker, remote kit asks for a URL that connects to semio/server. Some folder kinds are only available in native environments such as semio/desktop. Make sure everything is tested end-to-end. Extend semio if necessary.",
-  "summary": "Fixed synchronized-kit open flows across desktop and sketchpad for JSON-file, folder, and remote session kits. Added Electron file JSON bridge, corrected binary file reads for embedded models, hydrated full remote snapshots, translated nested piece/connection diffs to server commands, extended server snapshot/patch handling, hardened the JS export harness against transient tool-process failures, and added end-to-end coverage for desktop open flows plus server snapshot/piece roundtrip.",
+  "summary": "Fixed folder-backed synchronized kit restore semantics. Sketchpad now persists local source metadata for folder/file/remote kits, restores source-backed kits on startup without invoking pickers, falls back to in-memory restore for legacy local snapshots without source metadata, and desktop folder/file factories reopen the exact stored source path instead of prompting again. Added desktop integration assertions for persisted source metadata and sketchpad regression tests covering source-based restore and no-picker legacy startup behavior.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
-    "⚪e599dc4a7b31481fa2e66c8349993d79"
+    "⚪e599dc4a7b31481fa2e66c8349993d79",
+    "⚪58f59109c79b463f823ed2f3f28b4de4"
   ]
 }

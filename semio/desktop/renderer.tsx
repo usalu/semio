@@ -152,18 +152,17 @@ function App() {
   // 🏭Folder kit store factory for creating/opening local kits via Electron IPC.
   const folderKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (kit) => {
     const e2eFolder = typeof window !== "undefined" ? window.__SEMIO_E2E_KIT_FOLDER__ : undefined;
-    if (e2eFolder && e2eFolder.length > 0) {
-      await window.kitFolder.addRecentFolder(e2eFolder);
-      const adapter = createElectronFolderAdapter(e2eFolder);
-      return createFolderKitStore(adapter);
-    }
-    const selectedFolder = await window.kitFolder.selectFolder();
+    const source = (kit as any)?.__semioKitPersistenceSource as { kind?: string; path?: string } | undefined;
+    const requestedFolder = source?.kind === "folder" && source.path ? source.path : undefined;
+    const selectedFolder = requestedFolder ?? (e2eFolder && e2eFolder.length > 0 ? e2eFolder : await window.kitFolder.selectFolder());
     if (!selectedFolder) {
       throw new Error("No folder selected for kit storage");
     }
     await window.kitFolder.addRecentFolder(selectedFolder);
     const adapter = createElectronFolderAdapter(selectedFolder);
-    return createFolderKitStore(adapter);
+    const store = await createFolderKitStore(adapter);
+    (store as any).__semioKitPersistenceSource = { kind: "folder", path: selectedFolder };
+    return store;
   }, []);
 
   // 🏭Temporary kit store factory for in-memory kits.
@@ -174,8 +173,9 @@ function App() {
   // Falls back to File System Access API only when the preload bridge is unavailable.
   const fileKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (_kit) => {
     const e2eFile = typeof window !== "undefined" ? window.__SEMIO_E2E_KIT_FILE__ : undefined;
+    const source = (_kit as any)?.__semioKitPersistenceSource as { kind?: string; path?: string } | undefined;
     if (window.kitFile) {
-      const selectedFile = e2eFile && e2eFile.length > 0 ? e2eFile : await window.kitFile.selectFile();
+      const selectedFile = source?.kind === "file" && source.path ? source.path : e2eFile && e2eFile.length > 0 ? e2eFile : await window.kitFile.selectFile();
       if (!selectedFile) {
         throw new Error("No file selected for kit storage");
       }
@@ -183,7 +183,9 @@ function App() {
         read: async () => await window.kitFile.readJson(selectedFile),
         write: async (json: string) => await window.kitFile.writeJson(selectedFile, json),
       };
-      return createJsonFileKitStore(adapter);
+      const store = await createJsonFileKitStore(adapter);
+      (store as any).__semioKitPersistenceSource = { kind: "file", path: selectedFile };
+      return store;
     }
     if (typeof window !== "undefined" && "showOpenFilePicker" in window) {
       const [fileHandle] = await (window as any).showOpenFilePicker({
@@ -208,9 +210,12 @@ function App() {
   // 🏭Remote kit store factory for connecting to semio/server.
   // Specs: The server URL is passed in kit.name by the openKit command.
   const remoteKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (kit) => {
-    const serverUrl = kit.name;
+    const source = (kit as any)?.__semioKitPersistenceSource as { kind?: string; url?: string } | undefined;
+    const serverUrl = source?.kind === "remote" && source.url ? source.url : kit.name;
     if (!serverUrl) throw new Error("No server URL provided for remote kit");
-    return createSessionKitStore({ serverUrl });
+    const store = await createSessionKitStore({ serverUrl });
+    (store as any).__semioKitPersistenceSource = { kind: "remote", url: serverUrl };
+    return store;
   }, []);
 
   if (!userId) {

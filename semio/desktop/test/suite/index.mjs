@@ -104,6 +104,11 @@ export async function run(ctx) {
   assert.ok(persistedAfterFolder.local, "folder-opened kit should be marked local");
   assert.strictEqual(persistedAfterFolder.remote, false, "folder-opened kit should not be marked remote");
   assert.ok((persistedAfterFolder.kit.types?.length ?? 0) > 40, "folder-opened kit should include types");
+  assert.strictEqual(persistedAfterFolder.source?.kind, "folder", "folder-opened kit should persist folder source metadata");
+  assert.ok(
+    typeof persistedAfterFolder.source?.path === "string" && persistedAfterFolder.source.path.replaceAll("\\", "/").endsWith("/semio/assets/semio/metabolism"),
+    "folder-opened kit should persist the opened folder path",
+  );
 
   await clickById("semio.sketchpad.app.home.toolbar.openFile");
   const persistedAfterFile = await waitFor("file kit persistence", async () => {
@@ -117,6 +122,11 @@ export async function run(ctx) {
   });
   assert.ok(persistedAfterFile.local, "file-opened kit should be marked local");
   assert.strictEqual(persistedAfterFile.remote, false, "file-opened kit should not be marked remote");
+  assert.strictEqual(persistedAfterFile.source?.kind, "file", "file-opened kit should persist file source metadata");
+  assert.ok(
+    typeof persistedAfterFile.source?.path === "string" && persistedAfterFile.source.path.replaceAll("\\", "/").endsWith("/semio/assets/semio/metabolism.kit.semio.json"),
+    "file-opened kit should persist the opened file path",
+  );
   assert.ok(
     persistedAfterFile.kit.files.some((file) => typeof file?.blob === "string" && file.blob.startsWith("data:model/")),
     "file-opened kit should preserve embedded model blobs",
