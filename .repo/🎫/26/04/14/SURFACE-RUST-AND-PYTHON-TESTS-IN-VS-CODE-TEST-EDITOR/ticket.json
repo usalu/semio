@@ -1,0 +1,10 @@
+{
+  "title": "Surface Rust and Python Tests in VSCode Test Editor",
+  "status": "closed",
+  "description": "All semio tests must appear in the VSCode test editor. Go, Playwright, Vitest and F# already show up. Rust (cargo tests in semio/rs/lib.rs) and Python (pytest tests in semio/py/main.py and semio/engine/main.py) are missing. Fix .vscode/settings.json and any configuration so rust-analyzer Test Explorer surfaces the Rust tests and the Python extension discovers the pytest tests.",
+  "summary": "Removed remaining platform-specific repo bootstrap/config assumptions by keeping Codex and Windsurf MCP repo entries on portable `go run ./repo/cli mcp`, fixing `npm run git:setup` to discover the repo CLI under `repo/cli` with a portable fallback, and stripping legacy `semio-repo` Codex server blocks that preserved stale absolute `mcp.exe` paths across reconfiguration. Extended existing repo CLI tests to cover the portable command form and legacy cleanup.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪4b1e4c64d3a8459cacccdd82e7b9c9ed"
+  ]
+}

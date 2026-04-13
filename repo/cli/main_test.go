@@ -358,8 +358,11 @@ exit 0
 		if !strings.Contains(configText, "\"repo\"") {
 			t.Fatalf("expected Windsurf MCP config to include repo server, got:\n%s", configData)
 		}
-		if !strings.Contains(configText, filepath.Join(repoRoot, "repo", "cli", "cli")) {
-			t.Fatalf("expected Windsurf MCP config to normalize repo command to an absolute path, got:\n%s", configData)
+		if !strings.Contains(configText, "\"command\": \"go\"") {
+			t.Fatalf("expected Windsurf MCP config to keep the portable go command, got:\n%s", configData)
+		}
+		if !strings.Contains(configText, "\"args\": [\n        \"run\",\n        \"./repo/cli\",\n        \"mcp\"\n      ]") {
+			t.Fatalf("expected Windsurf MCP config to keep portable repo args, got:\n%s", configData)
 		}
 
 		codexPath := filepath.Join(homeDir, ".codex", "config.toml")
@@ -374,8 +377,11 @@ exit 0
 		if !strings.Contains(codexText, "personality = \"pragmatic\"") || !strings.Contains(codexText, "model = \"gpt-5.4\"") {
 			t.Fatalf("expected Codex MCP sync to preserve existing user settings, got:\n%s", codexData)
 		}
-		if !strings.Contains(codexText, fmt.Sprintf("command = %q", filepath.Join(repoRoot, "repo", "cli", "cli"))) {
-			t.Fatalf("expected Codex MCP config to normalize repo command to an absolute path, got:\n%s", codexData)
+		if !strings.Contains(codexText, `command = "go"`) {
+			t.Fatalf("expected Codex MCP config to keep the portable go command, got:\n%s", codexData)
+		}
+		if !strings.Contains(codexText, `args = ["run", "./repo/cli", "mcp"]`) {
+			t.Fatalf("expected Codex MCP config to keep portable repo args, got:\n%s", codexData)
 		}
 		if !strings.Contains(codexText, fmt.Sprintf("cwd = %q", repoRoot)) {
 			t.Fatalf("expected Codex MCP config to set cwd to repo root, got:\n%s", codexData)
@@ -490,15 +496,6 @@ func TestCodexEditorProviderConfigureMergesMcpServers(t *testing.T) {
 		t.Fatalf("failed to create semio engine dir: %v", err)
 	}
 
-	repoBinaryName := "cli"
-	if runtime.GOOS == "windows" {
-		repoBinaryName += ".exe"
-	}
-	repoBinaryPath := filepath.Join(repoCliDir, repoBinaryName)
-	if err := os.WriteFile(repoBinaryPath, []byte("stub"), 0755); err != nil {
-		t.Fatalf("failed to create repo cli binary: %v", err)
-	}
-
 	template := `# Codex MCP Server Configuration
 personality = "ignored-template-value"
 
@@ -520,7 +517,7 @@ enabled = true
 	if err := os.MkdirAll(userCodexDir, 0755); err != nil {
 		t.Fatalf("failed to create user codex dir: %v", err)
 	}
-	existing := "personality = \"pragmatic\"\nmodel = \"gpt-5.4\"\n\n[mcp_servers.repo]\ncommand = \"broken\"\nargs = [\"old\"]\n"
+	existing := "personality = \"pragmatic\"\nmodel = \"gpt-5.4\"\n\n[mcp_servers.semio-repo]\ncommand = \"C:\\\\legacy\\\\mcp.exe\"\n\n[mcp_servers.repo]\ncommand = \"broken\"\nargs = [\"old\"]\n"
 	if err := os.WriteFile(filepath.Join(userCodexDir, "config.toml"), []byte(existing), 0644); err != nil {
 		t.Fatalf("failed to seed user codex config: %v", err)
 	}
@@ -541,8 +538,14 @@ enabled = true
 	if strings.Contains(text, "command = \"broken\"") {
 		t.Fatalf("expected repo server block to be replaced, got:\n%s", text)
 	}
-	if !strings.Contains(text, fmt.Sprintf("command = %q", repoBinaryPath)) {
-		t.Fatalf("expected repo command to use compiled cli binary, got:\n%s", text)
+	if strings.Contains(text, "[mcp_servers.semio-repo]") || strings.Contains(text, `C:\\legacy\\mcp.exe`) {
+		t.Fatalf("expected legacy semio-repo server block to be removed, got:\n%s", text)
+	}
+	if !strings.Contains(text, `command = "go"`) {
+		t.Fatalf("expected repo command to stay portable, got:\n%s", text)
+	}
+	if !strings.Contains(text, `args = ["run", "./repo/cli", "mcp"]`) {
+		t.Fatalf("expected repo args to stay portable, got:\n%s", text)
 	}
 	if !strings.Contains(text, fmt.Sprintf("cwd = %q", repoRoot)) {
 		t.Fatalf("expected codex config to set repo root cwd, got:\n%s", text)

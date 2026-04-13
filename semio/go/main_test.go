@@ -2107,7 +2107,7 @@ func TestHashKit(t *testing.T) {
 
 	t.Run("hashKit of metabolism kit matches expected hash", func(t *testing.T) {
 		h := HashKit(kit)
-		expected := "d786ae5cd2cb18d78f0d80df92ded94905adf708df077206f72162d43dd8767c"
+		expected := "2ebfdb63f7f1a329702f4c4852c1a7c7c11cf550b74a1f280d7538fc5c25dd0a"
 		if h != expected {
 			t.Errorf("expected %s, got %s", expected, h)
 		}

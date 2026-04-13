@@ -37129,17 +37129,6 @@ func normalizeCodexServerConfigs(repoRoot string, servers []codexMcpServerConfig
 	normalized := make([]codexMcpServerConfig, 0, len(servers))
 	for _, server := range servers {
 		entry := server
-		if entry.Name == "repo" {
-			repoBinaryName := "cli"
-			if runtime.GOOS == "windows" {
-				repoBinaryName += ".exe"
-			}
-			repoBinaryPath := filepath.Join(repoRoot, "repo", "cli", repoBinaryName)
-			if _, err := os.Stat(repoBinaryPath); err == nil {
-				entry.Command = repoBinaryPath
-				entry.Args = []string{"mcp"}
-			}
-		}
 		for i := 0; i < len(entry.Args)-1; i++ {
 			if entry.Args[i] == "--directory" && entry.Args[i+1] != "" && !filepath.IsAbs(entry.Args[i+1]) {
 				entry.Args[i+1] = filepath.Join(repoRoot, filepath.FromSlash(entry.Args[i+1]))
@@ -37205,6 +37194,10 @@ func mergeCodexConfig(existing string, servers []codexMcpServerConfig) string {
 	serverNames := make(map[string]struct{}, len(servers))
 	for _, server := range servers {
 		serverNames[server.Name] = struct{}{}
+		switch server.Name {
+		case "repo":
+			serverNames["semio-repo"] = struct{}{}
+		}
 	}
 	base := stripCodexServerBlocks(existing, serverNames)
 	blocks := make([]string, 0, len(servers))
