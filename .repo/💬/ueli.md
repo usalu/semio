@@ -680,7 +680,22 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 ## 👤semio🗃️sketchpad
 
-semio sketchpad:
+semio/sketchpad:
+The Open functionality to open synchronized kits doesnt work correctly.  
+In semio/desktop e.g.
+File kit (based on semio\assets\semio\metabolism.kit.semio.json):
+
+- Opens the the kit
+- Doesnt show 3d models (e.g. type app just shows connectors without mesh)
+
+- Doesnt synchronize changes to the json file (e.g. adding a type, dragging a piece, etc)
+  Folder kit:
+- Doesnt open the kit (e.g. semio\assets\semio\metabolism) and instead creates a new one.
+- Needs to also synchronize changes.
+  Remote kit:
+- Needs to work in conjunction with semio/server
+  Make sure that everything is tests end-to-end. Extend semio if necessary.
+
 Add Open functionality to open synchronized kits.
 Check the different folder kinds. Some are only available in native environments such as semio/desktop.
 E.g.

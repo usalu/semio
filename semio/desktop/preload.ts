@@ -20,6 +20,11 @@ if (e2eKitFolder.length > 0) {
   contextBridge.exposeInMainWorld("__SEMIO_E2E_KIT_FOLDER__", e2eKitFolder);
 }
 
+const e2eKitFile = process.env.SEMIO_E2E_KIT_FILE?.trim() ?? "";
+if (e2eKitFile.length > 0) {
+  contextBridge.exposeInMainWorld("__SEMIO_E2E_KIT_FILE__", e2eKitFile);
+}
+
 contextBridge.exposeInMainWorld("windowControls", {
   minimize: () => ipcRenderer.invoke("minimize-window"),
   maximize: () => ipcRenderer.invoke("maximize-window"),
@@ -44,4 +49,13 @@ contextBridge.exposeInMainWorld("kitFolder", {
   addRecentFolder: (folderPath: string) => ipcRenderer.invoke("add-recent-folder", folderPath),
 });
 // #endregion 🎗️FolderBridge
+
+// #region 📄FileBridge
+// Exposes JSON-file-based kit storage operations to the renderer process.
+contextBridge.exposeInMainWorld("kitFile", {
+  selectFile: () => ipcRenderer.invoke("select-file"),
+  readJson: (filePath: string) => ipcRenderer.invoke("read-kit-json-file", filePath),
+  writeJson: (filePath: string, json: string) => ipcRenderer.invoke("write-kit-json-file", filePath, json),
+});
+// #endregion 📄FileBridge
 // #endregion 🎋Preload

@@ -54,6 +54,74 @@ export async function run(ctx) {
     [],
     `renderer emitted fatal console messages: ${unexpectedRendererMessages.map(({ message }) => message).join(" | ")}`,
   );
+
+  const waitFor = async (label, predicate, timeoutMs = 30_000) => {
+    const deadlineMs = Date.now() + timeoutMs;
+    while (Date.now() < deadlineMs) {
+      const result = await predicate();
+      if (result) return result;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    throw new Error(`Timed out waiting for ${label}`);
+  };
+
+  const clickById = async (id) => {
+    await win.webContents.executeJavaScript(`
+      (() => {
+        const el = document.getElementById(${JSON.stringify(id)});
+        if (!el) return false;
+        el.click();
+        return true;
+      })()
+    `);
+  };
+
+  const readPersistedKits = async () =>
+    await win.webContents.executeJavaScript(`
+      (async () => {
+        const userId = await window.os.getUserId();
+        const raw = window.localStorage.getItem('semio.sketchpad.kits.' + userId);
+        return raw ? JSON.parse(raw) : [];
+      })()
+    `);
+
+  await waitFor(
+    "home open actions",
+    async () =>
+      await win.webContents.executeJavaScript(`
+        (() => Boolean(
+          document.getElementById("semio.sketchpad.app.home.toolbar.openFolder") &&
+          document.getElementById("semio.sketchpad.app.home.toolbar.openFile")
+        ))()
+      `),
+  );
+
+  await clickById("semio.sketchpad.app.home.toolbar.openFolder");
+  const persistedAfterFolder = await waitFor("folder kit persistence", async () => {
+    const kits = await readPersistedKits();
+    return kits.find((entry) => entry?.kit?.name === "Metabolism" && (entry?.kit?.files?.length ?? 0) > 200) ?? null;
+  });
+  assert.ok(persistedAfterFolder.local, "folder-opened kit should be marked local");
+  assert.strictEqual(persistedAfterFolder.remote, false, "folder-opened kit should not be marked remote");
+  assert.ok((persistedAfterFolder.kit.types?.length ?? 0) > 40, "folder-opened kit should include types");
+
+  await clickById("semio.sketchpad.app.home.toolbar.openFile");
+  const persistedAfterFile = await waitFor("file kit persistence", async () => {
+    const kits = await readPersistedKits();
+    return kits.find(
+      (entry) =>
+        entry?.kit?.name === "Metabolism" &&
+        (entry?.kit?.files?.length ?? 0) > 200 &&
+        typeof entry?.kit?.files?.[0]?.blob === "string",
+    ) ?? null;
+  });
+  assert.ok(persistedAfterFile.local, "file-opened kit should be marked local");
+  assert.strictEqual(persistedAfterFile.remote, false, "file-opened kit should not be marked remote");
+  assert.ok(
+    persistedAfterFile.kit.files.some((file) => typeof file?.blob === "string" && file.blob.startsWith("data:model/")),
+    "file-opened kit should preserve embedded model blobs",
+  );
+
   console.log("[semio desktop integration] suite passed");
 }
 

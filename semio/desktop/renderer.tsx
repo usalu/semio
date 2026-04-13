@@ -41,6 +41,8 @@ declare global {
     __SEMIO_DESKTOP_REACT_ROOT__?: Root;
     /** Set by preload when `SEMIO_E2E_KIT_FOLDER` is defined (desktop E2E / automation). */
     __SEMIO_E2E_KIT_FOLDER__?: string;
+    /** Set by preload when `SEMIO_E2E_KIT_FILE` is defined (desktop E2E / automation). */
+    __SEMIO_E2E_KIT_FILE__?: string;
     windowControls: {
       minimize(): Promise<any>;
       maximize(): Promise<any>;
@@ -59,6 +61,11 @@ declare global {
       listFiles(folderPath: string): Promise<string[]>;
       getRecentFolders(): Promise<string[]>;
       addRecentFolder(folderPath: string): Promise<void>;
+    };
+    kitFile: {
+      selectFile(): Promise<string | null>;
+      readJson(filePath: string): Promise<string | null>;
+      writeJson(filePath: string, json: string): Promise<void>;
     };
   }
 }
@@ -164,8 +171,20 @@ function App() {
 
   // 🏭File kit store factory for opening JSON kit files via native file dialog.
   // Specs: In Electron, uses dialog.showOpenDialog via IPC for native file picker.
-  // Falls back to File System Access API if available.
+  // Falls back to File System Access API only when the preload bridge is unavailable.
   const fileKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (_kit) => {
+    const e2eFile = typeof window !== "undefined" ? window.__SEMIO_E2E_KIT_FILE__ : undefined;
+    if (window.kitFile) {
+      const selectedFile = e2eFile && e2eFile.length > 0 ? e2eFile : await window.kitFile.selectFile();
+      if (!selectedFile) {
+        throw new Error("No file selected for kit storage");
+      }
+      const adapter: KitJsonFileAdapter = {
+        read: async () => await window.kitFile.readJson(selectedFile),
+        write: async (json: string) => await window.kitFile.writeJson(selectedFile, json),
+      };
+      return createJsonFileKitStore(adapter);
+    }
     if (typeof window !== "undefined" && "showOpenFilePicker" in window) {
       const [fileHandle] = await (window as any).showOpenFilePicker({
         types: [{ description: "Semio Kit JSON", accept: { "application/json": [".json"] } }],
@@ -183,7 +202,7 @@ function App() {
       };
       return createJsonFileKitStore(adapter);
     }
-    throw new Error("File picker not available in this environment");
+    throw new Error("File kit store not available in this environment");
   }, []);
 
   // 🏭Remote kit store factory for connecting to semio/server.

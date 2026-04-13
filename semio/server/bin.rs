@@ -1199,7 +1199,25 @@ pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
             "description": t.description, "icon": t.icon, "image": t.image,
             "folder": t.folder, "unit": t.unit, "stock": t.stock,
             "isAbstract": t.is_abstract, "virtual": t.virtual_type,
-            "parentType": t.parent_type_id, "location": t.location_id,
+            "parent": t.parent_type_id.map(|guid| serde_json::json!({ "guid": guid })),
+            "location": t.location_id.map(|guid| serde_json::json!({ "guid": guid })),
+            "connectors": t.connectors.values().filter(|c| c.lifecycle.is_active()).map(|c| serde_json::json!({
+                "guid": c.connector_id,
+                "name": c.name,
+                "t": c.t,
+                "point": { "x": c.point[0], "y": c.point[1], "z": c.point[2] },
+                "direction": { "x": c.direction[0], "y": c.direction[1], "z": c.direction[2] },
+                "description": c.description,
+                "port": c.port_id.map(|guid| serde_json::json!({ "guid": guid })),
+                "mandatory": c.mandatory,
+                "maxChildren": c.max_children,
+            })).collect::<Vec<_>>(),
+            "models": t.models.values().filter(|m| m.lifecycle.is_active()).map(|m| serde_json::json!({
+                "guid": m.model_id,
+                "file": { "guid": m.file_id },
+                "name": m.name,
+                "description": m.description,
+            })).collect::<Vec<_>>(),
         })
     }).collect();
     let designs: Vec<serde_json::Value> = state.designs.values().filter(|d| d.lifecycle.is_active()).map(|d| {
@@ -1209,13 +1227,22 @@ pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
                 "center": p.center.map(|c| serde_json::json!({"u": c[0], "v": c[1]})),
                 "isHidden": p.is_hidden, "isLocked": p.is_locked,
                 "color": p.color, "description": p.description,
+                "design": { "guid": d.design_id },
             })
         }).collect();
         let connections: Vec<serde_json::Value> = d.connections.values().filter(|c| c.lifecycle.is_active()).map(|c| {
             serde_json::json!({
                 "guid": c.connection_id,
-                "connected": {"piece": c.connected_piece_id},
-                "connecting": {"piece": c.connecting_piece_id},
+                "connected": {
+                    "piece": { "guid": c.connected_piece_id },
+                    "designPiece": c.connected_design_piece_id.map(|guid| serde_json::json!({ "guid": guid })),
+                    "connector": c.connected_connector_id.map(|guid| serde_json::json!({ "guid": guid })),
+                },
+                "connecting": {
+                    "piece": { "guid": c.connecting_piece_id },
+                    "designPiece": c.connecting_design_piece_id.map(|guid| serde_json::json!({ "guid": guid })),
+                    "connector": c.connecting_connector_id.map(|guid| serde_json::json!({ "guid": guid })),
+                },
                 "gap": c.gap, "shift": c.shift, "rise": c.rise,
                 "rotation": c.rotation, "turn": c.turn, "tilt": c.tilt,
                 "u": c.u, "v": c.v, "description": c.description,
@@ -1224,7 +1251,11 @@ pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
         serde_json::json!({
             "guid": d.design_id, "name": d.name,
             "description": d.description, "icon": d.icon, "image": d.image,
-            "unit": d.unit, "isAbstract": d.is_abstract,
+            "folder": d.folder, "unit": d.unit, "isAbstract": d.is_abstract,
+            "canScale": d.can_scale, "canMirror": d.can_mirror,
+            "parent": d.parent_design_id.map(|guid| serde_json::json!({ "guid": guid })),
+            "activeLayer": d.active_layer_id.map(|guid| serde_json::json!({ "guid": guid })),
+            "location": d.location_id.map(|guid| serde_json::json!({ "guid": guid })),
             "pieces": pieces, "connections": connections,
         })
     }).collect();
@@ -1234,6 +1265,48 @@ pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
     let tags: Vec<serde_json::Value> = state.tags.values().filter(|t| t.lifecycle.is_active()).map(|t| {
         serde_json::json!({"guid": t.tag_id, "name": t.name, "description": t.description, "icon": t.icon})
     }).collect();
+    let concepts: Vec<serde_json::Value> = state.concepts.values().filter(|c| c.lifecycle.is_active()).map(|c| {
+        serde_json::json!({"guid": c.concept_id, "name": c.name, "description": c.description, "icon": c.icon})
+    }).collect();
+    let ports: Vec<serde_json::Value> = state.ports.values().filter(|p| p.lifecycle.is_active()).map(|p| {
+        serde_json::json!({
+            "guid": p.port_id,
+            "name": p.name,
+            "description": p.description,
+            "icon": p.icon,
+            "maxChildren": p.max_children,
+            "compatiblePorts": p.compatible_port_ids.iter().map(|guid| serde_json::json!({ "guid": guid })).collect::<Vec<_>>(),
+        })
+    }).collect();
+    let qualities: Vec<serde_json::Value> = state.qualities.values().filter(|q| q.lifecycle.is_active()).map(|q| {
+        serde_json::json!({
+            "guid": q.quality_id,
+            "key": q.key,
+            "name": q.name,
+            "description": q.description,
+            "icon": q.icon,
+            "unit": q.unit,
+        })
+    }).collect();
+    let folders: Vec<serde_json::Value> = state.folders.values().filter(|f| f.lifecycle.is_active()).map(|f| {
+        serde_json::json!({
+            "guid": f.folder_id,
+            "name": f.name,
+            "parent": f.parent_folder_id.map(|guid| serde_json::json!({ "guid": guid })),
+            "description": f.description,
+        })
+    }).collect();
+    let files: Vec<serde_json::Value> = state.files.values().filter(|f| f.lifecycle.is_active()).map(|f| {
+        serde_json::json!({
+            "guid": f.file_id,
+            "name": f.name,
+            "remote": f.remote,
+            "folder": f.folder_id.map(|guid| serde_json::json!({ "guid": guid })),
+            "size": f.size,
+            "hash": f.hash,
+            "blob": f.blob,
+        })
+    }).collect();
     serde_json::json!({
         "guid": state.kit.kit_id, "name": state.kit.name,
         "version": state.kit.version, "description": state.kit.description,
@@ -1241,6 +1314,7 @@ pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
         "preview": state.kit.preview, "remote": state.kit.remote,
         "homepage": state.kit.homepage, "license": state.kit.license,
         "types": types, "designs": designs, "authors": authors, "tags": tags,
+        "concepts": concepts, "ports": ports, "qualities": qualities, "folders": folders, "files": files,
         "createdAt": chrono_now_iso(), "updatedAt": chrono_now_iso(),
     })
 }
@@ -1303,6 +1377,16 @@ pub fn apply_change_log_to_kit(kit: &mut serde_json::Value, changes: &serde_json
                         let collection_key = match entity_kind { "type" => "types", "design" => "designs", "author" => "authors", "tag" => "tags", _ => "" };
                         update_in_array(kit, collection_key, entity_id, &changed_fields);
                     }
+                    "piece" => {
+                        if let Some(design_id) = changed_fields.get("design_id").and_then(|v| v.as_str()) {
+                            update_in_design_array(kit, design_id, "pieces", entity_id, &changed_fields);
+                        }
+                    }
+                    "connection" => {
+                        if let Some(design_id) = changed_fields.get("design_id").and_then(|v| v.as_str()) {
+                            update_in_design_array(kit, design_id, "connections", entity_id, &changed_fields);
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -1312,6 +1396,8 @@ pub fn apply_change_log_to_kit(kit: &mut serde_json::Value, changes: &serde_json
                     "design" => remove_from_array(kit, "designs", entity_id),
                     "author" => remove_from_array(kit, "authors", entity_id),
                     "tag" => remove_from_array(kit, "tags", entity_id),
+                    "piece" => remove_from_design_arrays(kit, "pieces", entity_id),
+                    "connection" => remove_from_design_arrays(kit, "connections", entity_id),
                     _ => {}
                 }
             }
@@ -1360,9 +1446,43 @@ pub fn update_in_array(kit: &mut serde_json::Value, key: &str, entity_id: &str, 
     }
 }
 
+pub fn update_in_design_array(kit: &mut serde_json::Value, design_id: &str, key: &str, entity_id: &str, fields: &serde_json::Value) {
+    if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
+        for design in designs.iter_mut() {
+            if design.get("guid").and_then(|g| g.as_str()) != Some(design_id) {
+                continue;
+            }
+            if let Some(items) = design.get_mut(key).and_then(|v| v.as_array_mut()) {
+                for item in items.iter_mut() {
+                    if item.get("guid").and_then(|g| g.as_str()) == Some(entity_id) {
+                        if let Some(obj) = item.as_object_mut() {
+                            if let Some(f) = fields.as_object() {
+                                for (k, v) in f {
+                                    obj.insert(k.clone(), v.clone());
+                                }
+                            }
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub fn remove_from_array(kit: &mut serde_json::Value, key: &str, entity_id: &str) {
     if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
         arr.retain(|item| item.get("guid").and_then(|g| g.as_str()) != Some(entity_id));
+    }
+}
+
+pub fn remove_from_design_arrays(kit: &mut serde_json::Value, key: &str, entity_id: &str) {
+    if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
+        for design in designs.iter_mut() {
+            if let Some(items) = design.get_mut(key).and_then(|v| v.as_array_mut()) {
+                items.retain(|item| item.get("guid").and_then(|g| g.as_str()) != Some(entity_id));
+            }
+        }
     }
 }
 
@@ -1558,6 +1678,21 @@ impl SessionActor {
                 }
                 changes.push(EntityChange::Deleted { entity_kind: EntityKind::Type, entity_id: del.entity_id });
             }
+            DomainCommand::PatchType(patch) => {
+                if let Some(type_state) = self.state.types.get_mut(&patch.entity_id) {
+                    if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
+                        type_state.name = name.to_string();
+                        sqlx_core::query::query("UPDATE core.type_entity SET name = $3 WHERE session_id = $1 AND type_id = $2")
+                            .bind(sid).bind(patch.entity_id).bind(name).execute(&self.pool).await?;
+                    }
+                    if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
+                        type_state.description = Some(description.to_string());
+                        sqlx_core::query::query("UPDATE core.type_entity SET description = $3 WHERE session_id = $1 AND type_id = $2")
+                            .bind(sid).bind(patch.entity_id).bind(description).execute(&self.pool).await?;
+                    }
+                }
+                changes.push(EntityChange::Updated { entity_kind: EntityKind::Type, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
+            }
             DomainCommand::CreateDesign(create) => {
                 let name = create.fields.get("name").and_then(|v| v.as_str()).unwrap_or("Untitled");
                 sqlx_core::query::query("INSERT INTO core.design (session_id, design_id, name) VALUES ($1, $2, $3)")
@@ -1579,6 +1714,21 @@ impl SessionActor {
                 }
                 changes.push(EntityChange::Deleted { entity_kind: EntityKind::Design, entity_id: del.entity_id });
             }
+            DomainCommand::PatchDesign(patch) => {
+                if let Some(design_state) = self.state.designs.get_mut(&patch.entity_id) {
+                    if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
+                        design_state.name = name.to_string();
+                        sqlx_core::query::query("UPDATE core.design SET name = $3 WHERE session_id = $1 AND design_id = $2")
+                            .bind(sid).bind(patch.entity_id).bind(name).execute(&self.pool).await?;
+                    }
+                    if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
+                        design_state.description = Some(description.to_string());
+                        sqlx_core::query::query("UPDATE core.design SET description = $3 WHERE session_id = $1 AND design_id = $2")
+                            .bind(sid).bind(patch.entity_id).bind(description).execute(&self.pool).await?;
+                    }
+                }
+                changes.push(EntityChange::Updated { entity_kind: EntityKind::Design, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
+            }
             DomainCommand::CreatePiece(create) => {
                 let name = create.fields.get("name").and_then(|v| v.as_str());
                 sqlx_core::query::query("INSERT INTO core.piece (session_id, piece_id, design_id, name) VALUES ($1, $2, $3, $4)")
@@ -1591,6 +1741,53 @@ impl SessionActor {
                     });
                 }
                 changes.push(EntityChange::Created { entity_kind: EntityKind::Piece, entity_id: create.piece_id, snapshot: create.fields.clone() });
+            }
+            DomainCommand::PatchPiece(patch) => {
+                let center_u = patch.fields.get("center").and_then(|center| center.get("u")).and_then(|v| v.as_f64());
+                let center_v = patch.fields.get("center").and_then(|center| center.get("v")).and_then(|v| v.as_f64());
+                if center_u.is_some() || center_v.is_some() {
+                    sqlx_core::query::query("UPDATE core.piece SET center_u = COALESCE($3, center_u), center_v = COALESCE($4, center_v) WHERE session_id = $1 AND piece_id = $2")
+                        .bind(sid).bind(patch.entity_id).bind(center_u).bind(center_v).execute(&self.pool).await?;
+                }
+                if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
+                    sqlx_core::query::query("UPDATE core.piece SET name = $3 WHERE session_id = $1 AND piece_id = $2")
+                        .bind(sid).bind(patch.entity_id).bind(name).execute(&self.pool).await?;
+                }
+                for design in self.state.designs.values_mut() {
+                    if let Some(piece) = design.pieces.get_mut(&patch.entity_id) {
+                        if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
+                            piece.name = Some(name.to_string());
+                        }
+                        if let (Some(u), Some(v)) = (center_u, center_v) {
+                            piece.center = Some([u, v]);
+                        }
+                        if let Some(is_hidden) = patch.fields.get("isHidden").and_then(|v| v.as_bool()) {
+                            piece.is_hidden = Some(is_hidden);
+                        }
+                        if let Some(is_locked) = patch.fields.get("isLocked").and_then(|v| v.as_bool()) {
+                            piece.is_locked = Some(is_locked);
+                        }
+                        if let Some(color) = patch.fields.get("color").and_then(|v| v.as_str()) {
+                            piece.color = Some(color.to_string());
+                        }
+                        if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
+                            piece.description = Some(description.to_string());
+                        }
+                        break;
+                    }
+                }
+                changes.push(EntityChange::Updated { entity_kind: EntityKind::Piece, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
+            }
+            DomainCommand::DeletePiece(del) => {
+                sqlx_core::query::query("UPDATE core.piece SET lifecycle = 'tombstoned' WHERE session_id = $1 AND piece_id = $2")
+                    .bind(sid).bind(del.entity_id).execute(&self.pool).await?;
+                for design in self.state.designs.values_mut() {
+                    if let Some(piece) = design.pieces.get_mut(&del.entity_id) {
+                        piece.lifecycle = Lifecycle::Tombstoned { at: version, by: CommandId(cmd_id) };
+                        break;
+                    }
+                }
+                changes.push(EntityChange::Deleted { entity_kind: EntityKind::Piece, entity_id: del.entity_id });
             }
             DomainCommand::CreateConnection(create) => {
                 let connected_piece = create.fields.get("connected_piece_id").and_then(|v| v.as_str()).and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
@@ -1607,6 +1804,46 @@ impl SessionActor {
                     });
                 }
                 changes.push(EntityChange::Created { entity_kind: EntityKind::Connection, entity_id: create.connection_id, snapshot: create.fields.clone() });
+            }
+            DomainCommand::PatchConnection(patch) => {
+                if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
+                    sqlx_core::query::query("UPDATE core.connection SET description = $3 WHERE session_id = $1 AND connection_id = $2")
+                        .bind(sid).bind(patch.entity_id).bind(description).execute(&self.pool).await?;
+                }
+                if let Some(u) = patch.fields.get("u").and_then(|v| v.as_f64()) {
+                    sqlx_core::query::query("UPDATE core.connection SET u = $3 WHERE session_id = $1 AND connection_id = $2")
+                        .bind(sid).bind(patch.entity_id).bind(u).execute(&self.pool).await?;
+                }
+                if let Some(v) = patch.fields.get("v").and_then(|v| v.as_f64()) {
+                    sqlx_core::query::query("UPDATE core.connection SET v = $3 WHERE session_id = $1 AND connection_id = $2")
+                        .bind(sid).bind(patch.entity_id).bind(v).execute(&self.pool).await?;
+                }
+                for design in self.state.designs.values_mut() {
+                    if let Some(connection) = design.connections.get_mut(&patch.entity_id) {
+                        if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
+                            connection.description = Some(description.to_string());
+                        }
+                        if let Some(u) = patch.fields.get("u").and_then(|v| v.as_f64()) {
+                            connection.u = Some(u);
+                        }
+                        if let Some(v) = patch.fields.get("v").and_then(|v| v.as_f64()) {
+                            connection.v = Some(v);
+                        }
+                        break;
+                    }
+                }
+                changes.push(EntityChange::Updated { entity_kind: EntityKind::Connection, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
+            }
+            DomainCommand::DeleteConnection(del) => {
+                sqlx_core::query::query("UPDATE core.connection SET lifecycle = 'tombstoned' WHERE session_id = $1 AND connection_id = $2")
+                    .bind(sid).bind(del.entity_id).execute(&self.pool).await?;
+                for design in self.state.designs.values_mut() {
+                    if let Some(connection) = design.connections.get_mut(&del.entity_id) {
+                        connection.lifecycle = Lifecycle::Tombstoned { at: version, by: CommandId(cmd_id) };
+                        break;
+                    }
+                }
+                changes.push(EntityChange::Deleted { entity_kind: EntityKind::Connection, entity_id: del.entity_id });
             }
             DomainCommand::Batch(batch) => {
                 for sub in &batch.commands {
@@ -1664,12 +1901,7 @@ impl SessionActor {
     }
 
     pub fn build_snapshot(&self) -> SessionSnapshot {
-        let kit_json = serde_json::json!({
-            "kit_id": self.state.kit.kit_id, "name": self.state.kit.name,
-            "version": self.state.kit.version, "description": self.state.kit.description,
-            "types": self.state.types.keys().collect::<Vec<_>>(),
-            "designs": self.state.designs.keys().collect::<Vec<_>>(),
-        });
+        let kit_json = serialize_session_kit(&self.state);
         SessionSnapshot { session_id: self.state.session_id.0, domain_version: self.state.domain_version, semio_version: self.state.semio_version, kit: kit_json }
     }
 }
@@ -3398,6 +3630,97 @@ use super::*;
         let msg2 = tokio::time::timeout(std::time::Duration::from_secs(5), ws2_read.next()).await;
         assert!(msg1.is_ok(), "ws1 should receive event");
         assert!(msg2.is_ok(), "ws2 should receive event");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn e2e_snapshot_and_piece_patch_roundtrip() {
+        if !docker_available() {
+            eprintln!("[SKIP] Docker not available, skipping E2E test");
+            return;
+        }
+
+        let pg = Postgres::default().start().await.expect("start postgres container");
+        let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
+        let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
+
+        let pool = create_pool(&db_url).await;
+        run_migrations(&pool).await;
+
+        let app_state = AppState::new(pool.clone());
+        let app = router(app_state);
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move { axum::serve(listener, app).await.unwrap(); });
+
+        let client = reqwest::Client::new();
+        let base = format!("http://{}", addr);
+
+        let create_resp = client
+            .post(format!("{}/sessions", base))
+            .json(&serde_json::json!({"kit_name": "Roundtrip Kit"}))
+            .send()
+            .await
+            .unwrap();
+        let create_body: serde_json::Value = create_resp.json().await.unwrap();
+        let session_id = create_body["session_id"].as_str().unwrap();
+
+        let design_id = Uuid::now_v7();
+        let piece_id = Uuid::now_v7();
+
+        let create_design = client
+            .post(format!("{}/sessions/{}/commands/domain", base, session_id))
+            .json(&serde_json::json!({
+                "command_id": Uuid::now_v7(),
+                "client_id": Uuid::now_v7(),
+                "request_id": Uuid::now_v7(),
+                "actor_person_id": Uuid::now_v7(),
+                "base_domain_version": 0,
+                "kind": "CreateDesign",
+                "payload": {"entity_id": design_id, "fields": {"guid": design_id, "name": "Remote Design"}}
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(create_design.status(), 200);
+
+        let create_piece = client
+            .post(format!("{}/sessions/{}/commands/domain", base, session_id))
+            .json(&serde_json::json!({
+                "command_id": Uuid::now_v7(),
+                "client_id": Uuid::now_v7(),
+                "request_id": Uuid::now_v7(),
+                "actor_person_id": Uuid::now_v7(),
+                "base_domain_version": 1,
+                "kind": "CreatePiece",
+                "payload": {"piece_id": piece_id, "design_id": design_id, "fields": {"guid": piece_id, "design_id": design_id, "name": "Remote Piece"}}
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(create_piece.status(), 200);
+
+        let patch_piece = client
+            .post(format!("{}/sessions/{}/commands/domain", base, session_id))
+            .json(&serde_json::json!({
+                "command_id": Uuid::now_v7(),
+                "client_id": Uuid::now_v7(),
+                "request_id": Uuid::now_v7(),
+                "actor_person_id": Uuid::now_v7(),
+                "base_domain_version": 2,
+                "kind": "PatchPiece",
+                "payload": {"entity_id": piece_id, "fields": {"design_id": design_id, "center": {"u": 12.5, "v": -4.25}}}
+            }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(patch_piece.status(), 200);
+
+        let snapshot_resp = client.get(format!("{}/sessions/{}/snapshot", base, session_id)).send().await.unwrap();
+        assert_eq!(snapshot_resp.status(), 200);
+        let snapshot: serde_json::Value = snapshot_resp.json().await.unwrap();
+        assert_eq!(snapshot["kit"]["designs"][0]["name"].as_str().unwrap(), "Remote Design");
+        assert_eq!(snapshot["kit"]["designs"][0]["pieces"][0]["center"]["u"].as_f64().unwrap(), 12.5);
+        assert_eq!(snapshot["kit"]["designs"][0]["pieces"][0]["center"]["v"].as_f64().unwrap(), -4.25);
     }
 
     } // 🌊E2E Testcontainer Tests

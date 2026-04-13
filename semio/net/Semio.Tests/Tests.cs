@@ -640,11 +640,12 @@ public class Tests
         [Fact]
         public void Design_Pieces_MoveVector_DiffDesign()
         {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = Tests.LoadAsset<Design>("drag/design.semio.json");
             var pieces = Tests.LoadAsset<Design>("drag/pieces.semio.json");
             var vector = Tests.LoadAsset<MoveVector>("move/vector.semio.json");
             var expectedDiff = Tests.LoadAsset<DesignDiff>("move/diff.design.semio.json");
-            var computedDiff = Design.MovePiecesInDesign(design, pieces, vector);
+            var computedDiff = Design.MovePiecesInDesign(kit, design, pieces, vector);
             Assert.NotNull(computedDiff.Pieces);
             Assert.Equal(expectedDiff.Pieces!.Updated.Count, computedDiff.Pieces!.Updated.Count);
             var expectedPieceMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Guid, u => u.Diff);
@@ -665,9 +666,9 @@ public class Tests
             {
                 Assert.True(expectedConnMap.ContainsKey(u.Connection.Guid), $"Unexpected connection update for {u.Connection.Guid}");
                 var expected = expectedConnMap[u.Connection.Guid];
-                Assert.Equal(expected!.Gap!.Value, u.Diff!.Gap!.Value, 3);
-                Assert.Equal(expected.Shift!.Value, u.Diff.Shift!.Value, 3);
-                Assert.Equal(expected.Rise!.Value, u.Diff.Rise!.Value, 3);
+                Assert.Equal(expected!.Gap ?? 0, u.Diff!.Gap ?? 0, 3);
+                Assert.Equal(expected.Shift ?? 0, u.Diff.Shift ?? 0, 3);
+                Assert.Equal(expected.Rise ?? 0, u.Diff.Rise ?? 0, 3);
             }
         }
     }

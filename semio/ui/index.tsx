@@ -991,7 +991,8 @@ export const SemioKit: React.FC<KitProps> = ({
         {artifactDesign && designDataEnabled ? (
           <div
             style={{
-              minHeight: 280,
+              height: 480,
+              minHeight: 360,
               width: "100%",
               borderRadius: 8,
               overflow: "hidden",
@@ -1003,6 +1004,7 @@ export const SemioKit: React.FC<KitProps> = ({
               kit={kit}
               title={artifactDesign.name ?? focusedNode.label}
               selectionEnabled={false}
+              splitLayout="always"
               onPieceDoubleClick={onKitPieceDoubleClick}
             />
           </div>
@@ -1011,7 +1013,8 @@ export const SemioKit: React.FC<KitProps> = ({
         {artifactKind && typeDataEnabled && focusedNode.kind === "kind" ? (
           <div
             style={{
-              minHeight: 280,
+              height: 480,
+              minHeight: 360,
               width: "100%",
               borderRadius: 8,
               overflow: "hidden",
@@ -1025,7 +1028,8 @@ export const SemioKit: React.FC<KitProps> = ({
         {focusedNode.kind === "connector" && connectorHostKind && typeDataEnabled ? (
           <div
             style={{
-              minHeight: 280,
+              height: 480,
+              minHeight: 360,
               width: "100%",
               borderRadius: 8,
               overflow: "hidden",

@@ -127,11 +127,37 @@ app.whenReady().then(async () => {
     fs.writeFileSync(path.join(semioDir, "kit.db"), Buffer.from(data));
   });
 
+  ipcMain.handle("select-file", async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ["openFile"],
+      title: "Select Kit JSON File",
+      filters: [{ name: "Semio Kit JSON", extensions: ["json"] }],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
+  });
+
+  ipcMain.handle("read-kit-json-file", async (_event, filePath: string) => {
+    try {
+      return fs.readFileSync(filePath, "utf-8");
+    } catch {
+      return null;
+    }
+  });
+
+  ipcMain.handle("write-kit-json-file", async (_event, filePath: string, json: string) => {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(filePath, json, "utf-8");
+  });
+
   ipcMain.handle("read-file", async (_event, folderPath: string, filePath: string) => {
     const fullPath = path.join(folderPath, filePath);
     try {
       const buffer = fs.readFileSync(fullPath);
-      return buffer.buffer;
+      return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
     } catch {
       return null;
     }

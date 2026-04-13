@@ -14777,10 +14777,20 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
   const runExportReportCommand = async (command: string, args: string[], cwd: string) => {
     const { execFileSync } = await import("node:child_process");
-    execFileSync(command, args, {
-      cwd,
-      stdio: "pipe",
-    });
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        execFileSync(command, args, {
+          cwd,
+          stdio: "pipe",
+        });
+        return;
+      } catch (error) {
+        lastError = error;
+        if (attempt === 2) break;
+      }
+    }
+    throw lastError;
   };
 
   const parseSelfContainedGltf = async (reportText: string) => {

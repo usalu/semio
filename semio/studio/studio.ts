@@ -966,6 +966,137 @@ export interface PresenceState {
   selectedDesignIds: string[];
 }
 
+const mapServerSnapshotKitToKit = (rawKit: any, fallbackName: string): Kit => {
+  if (rawKit && typeof rawKit === "object" && typeof rawKit.guid === "string") {
+    try {
+      return KitSchema.parse(rawKit);
+    } catch {
+      // Fall through to tolerate partial server payloads.
+    }
+  }
+
+  const kitGuid = typeof rawKit?.guid === "string" ? rawKit.guid : typeof rawKit?.kit_id === "string" ? rawKit.kit_id : guid();
+  const mapGuidRef = (value: any) => (value ? { guid: typeof value === "string" ? value : value.guid } : undefined);
+  const types = Array.isArray(rawKit?.types)
+    ? rawKit.types.map((entry: any) => ({
+        guid: entry.guid,
+        name: entry.name,
+        description: entry.description,
+        icon: entry.icon,
+        image: entry.image,
+        folder: entry.folder,
+        unit: entry.unit,
+        stock: entry.stock,
+        isAbstract: entry.isAbstract,
+        virtual: entry.virtual,
+        parent: mapGuidRef(entry.parent ?? entry.parentType),
+        location: mapGuidRef(entry.location),
+        connectors: entry.connectors ?? [],
+        models: entry.models ?? [],
+        props: entry.props ?? [],
+      }))
+    : [];
+  const designs = Array.isArray(rawKit?.designs)
+    ? rawKit.designs.map((entry: any) => ({
+        guid: entry.guid,
+        name: entry.name,
+        description: entry.description,
+        icon: entry.icon,
+        image: entry.image,
+        folder: entry.folder,
+        unit: entry.unit,
+        isAbstract: entry.isAbstract,
+        canScale: entry.canScale,
+        canMirror: entry.canMirror,
+        parent: mapGuidRef(entry.parent ?? entry.parentDesign),
+        activeLayer: mapGuidRef(entry.activeLayer),
+        location: mapGuidRef(entry.location),
+        pieces: (entry.pieces ?? []).map((piece: any) => ({
+          ...piece,
+          type: mapGuidRef(piece.type),
+          design: mapGuidRef(piece.design),
+        })),
+        connections: (entry.connections ?? []).map((connection: any) => ({
+          ...connection,
+          connected: connection.connected
+            ? {
+                piece: mapGuidRef(connection.connected.piece),
+                designPiece: mapGuidRef(connection.connected.designPiece),
+                connector: mapGuidRef(connection.connected.connector),
+              }
+            : connection.connected,
+          connecting: connection.connecting
+            ? {
+                piece: mapGuidRef(connection.connecting.piece),
+                designPiece: mapGuidRef(connection.connecting.designPiece),
+                connector: mapGuidRef(connection.connecting.connector),
+              }
+            : connection.connecting,
+        })),
+        layers: entry.layers ?? [],
+        groups: entry.groups ?? [],
+        stats: entry.stats ?? [],
+        props: entry.props ?? [],
+      }))
+    : [];
+
+  return {
+    guid: kitGuid,
+    name: rawKit?.name ?? fallbackName,
+    version: rawKit?.version,
+    description: rawKit?.description,
+    icon: rawKit?.icon,
+    image: rawKit?.image,
+    preview: rawKit?.preview,
+    remote: rawKit?.remote,
+    homepage: rawKit?.homepage,
+    license: rawKit?.license,
+    authors: rawKit?.authors ?? [],
+    tags: rawKit?.tags ?? [],
+    concepts: rawKit?.concepts ?? [],
+    ports: rawKit?.ports ?? [],
+    qualities: rawKit?.qualities ?? [],
+    files: rawKit?.files ?? [],
+    folders: rawKit?.folders ?? [],
+    types,
+    designs,
+    createdAt: rawKit?.createdAt ?? new Date().toISOString(),
+    updatedAt: rawKit?.updatedAt ?? new Date().toISOString(),
+  };
+};
+
+const getDiffEntityId = (entry: any, singularKey: string): string | undefined => {
+  if (!entry || typeof entry !== "object") return undefined;
+  if (typeof entry.guid === "string") return entry.guid;
+  const ref = entry[singularKey];
+  if (ref && typeof ref === "object" && typeof ref.guid === "string") return ref.guid;
+  return undefined;
+};
+
+const updateNestedDesignEntity = <T extends { guid: string }>(
+  designs: any[] | undefined,
+  designId: string | undefined,
+  collectionKey: "pieces" | "connections",
+  entityId: string,
+  changedFields: Record<string, any>,
+): any[] => {
+  return (designs ?? []).map((design) => {
+    const isTargetDesign = !designId || design.guid === designId || (design[collectionKey] ?? []).some((entry: T) => entry.guid === entityId);
+    if (!isTargetDesign) return design;
+    return {
+      ...design,
+      [collectionKey]: (design[collectionKey] ?? []).map((entry: T) => (entry.guid === entityId ? { ...entry, ...changedFields } : entry)),
+    };
+  });
+};
+
+const removeNestedDesignEntity = <T extends { guid: string }>(designs: any[] | undefined, collectionKey: "pieces" | "connections", entityId: string): any[] => {
+  return (designs ?? []).map((design) => ({
+    ...design,
+    [collectionKey]: (design[collectionKey] ?? []).filter((entry: T) => entry.guid !== entityId),
+  }));
+};
+
 /**
  * Server-backed kit store with undo/redo and real-time sync.
  *
@@ -1035,14 +1166,7 @@ export class SessionKitStore implements UndoableKitStore {
     const snapResp = await fetch(`${config.serverUrl}/sessions/${sessionId}/snapshot`);
     if (!snapResp.ok) throw new Error(`Failed to load snapshot: ${snapResp.statusText}`);
     const snapshot = await snapResp.json();
-
-    const kit: Kit = {
-      guid: snapshot.kit?.kit_id ?? guid(),
-      name: snapshot.kit?.name ?? kitName,
-      version: snapshot.kit?.version,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const kit = mapServerSnapshotKitToKit(snapshot.kit, kitName);
 
     const store = new SessionKitStore(kit, { ...config, sessionId: sessionId! }, "ready");
     store.domainVersion = snapshot.domain_version ?? 0;
@@ -1197,6 +1321,26 @@ export class SessionKitStore implements UndoableKitStore {
       case "folder":
         this.kit = { ...this.kit, folders: [...(this.kit.folders ?? []), entity as any] };
         break;
+      case "piece": {
+        const designId = typeof snapshot.design_id === "string" ? snapshot.design_id : typeof snapshot.designId === "string" ? snapshot.designId : undefined;
+        this.kit = {
+          ...this.kit,
+          designs: (this.kit.designs ?? []).map((design) =>
+            design.guid === designId ? { ...design, pieces: [...(design.pieces ?? []), entity as any] } : design,
+          ),
+        };
+        break;
+      }
+      case "connection": {
+        const designId = typeof snapshot.design_id === "string" ? snapshot.design_id : typeof snapshot.designId === "string" ? snapshot.designId : undefined;
+        this.kit = {
+          ...this.kit,
+          designs: (this.kit.designs ?? []).map((design) =>
+            design.guid === designId ? { ...design, connections: [...(design.connections ?? []), entity as any] } : design,
+          ),
+        };
+        break;
+      }
     }
   }
 
@@ -1235,6 +1379,16 @@ export class SessionKitStore implements UndoableKitStore {
       case "folder":
         this.kit = { ...this.kit, folders: updateInArray(this.kit.folders, entityId, changedFields) };
         break;
+      case "piece": {
+        const designId = typeof changedFields.design_id === "string" ? changedFields.design_id : typeof changedFields.designId === "string" ? changedFields.designId : undefined;
+        this.kit = { ...this.kit, designs: updateNestedDesignEntity(this.kit.designs, designId, "pieces", entityId, changedFields) };
+        break;
+      }
+      case "connection": {
+        const designId = typeof changedFields.design_id === "string" ? changedFields.design_id : typeof changedFields.designId === "string" ? changedFields.designId : undefined;
+        this.kit = { ...this.kit, designs: updateNestedDesignEntity(this.kit.designs, designId, "connections", entityId, changedFields) };
+        break;
+      }
     }
   }
 
@@ -1269,6 +1423,12 @@ export class SessionKitStore implements UndoableKitStore {
         break;
       case "folder":
         this.kit = { ...this.kit, folders: removeFromArray(this.kit.folders, entityId) };
+        break;
+      case "piece":
+        this.kit = { ...this.kit, designs: removeNestedDesignEntity(this.kit.designs, "pieces", entityId) };
+        break;
+      case "connection":
+        this.kit = { ...this.kit, designs: removeNestedDesignEntity(this.kit.designs, "connections", entityId) };
         break;
     }
   }
@@ -1363,16 +1523,16 @@ export class SessionKitStore implements UndoableKitStore {
       commands.push({ kind: "PatchKit", payload: { fields: kitFields } });
     }
     // 🗺️Collection diffs
-    const collectionMap: Record<string, { create: string; patch: string; delete: string }> = {
-      types: { create: "CreateType", patch: "PatchType", delete: "DeleteType" },
-      designs: { create: "CreateDesign", patch: "PatchDesign", delete: "DeleteDesign" },
-      authors: { create: "CreateAuthor", patch: "PatchAuthor", delete: "DeleteAuthor" },
-      tags: { create: "CreateTag", patch: "PatchTag", delete: "DeleteTag" },
-      concepts: { create: "CreateConcept", patch: "PatchConcept", delete: "DeleteConcept" },
-      ports: { create: "CreatePort", patch: "PatchPort", delete: "DeletePort" },
-      qualities: { create: "CreateQuality", patch: "PatchQuality", delete: "DeleteQuality" },
-      files: { create: "CreateFile", patch: "PatchFile", delete: "DeleteFile" },
-      folders: { create: "CreateFolder", patch: "PatchFolder", delete: "DeleteFolder" },
+    const collectionMap: Record<string, { create: string; patch: string; delete: string; singular: string }> = {
+      types: { create: "CreateType", patch: "PatchType", delete: "DeleteType", singular: "type" },
+      designs: { create: "CreateDesign", patch: "PatchDesign", delete: "DeleteDesign", singular: "design" },
+      authors: { create: "CreateAuthor", patch: "PatchAuthor", delete: "DeleteAuthor", singular: "author" },
+      tags: { create: "CreateTag", patch: "PatchTag", delete: "DeleteTag", singular: "tag" },
+      concepts: { create: "CreateConcept", patch: "PatchConcept", delete: "DeleteConcept", singular: "concept" },
+      ports: { create: "CreatePort", patch: "PatchPort", delete: "DeletePort", singular: "port" },
+      qualities: { create: "CreateQuality", patch: "PatchQuality", delete: "DeleteQuality", singular: "quality" },
+      files: { create: "CreateFile", patch: "PatchFile", delete: "DeleteFile", singular: "file" },
+      folders: { create: "CreateFolder", patch: "PatchFolder", delete: "DeleteFolder", singular: "folder" },
     };
     for (const [key, ops] of Object.entries(collectionMap)) {
       const collDiff = (diff as any)[key];
@@ -1384,15 +1544,107 @@ export class SessionKitStore implements UndoableKitStore {
       }
       if (collDiff.updated) {
         for (const item of collDiff.updated) {
-          commands.push({ kind: ops.patch, payload: { entity_id: item.guid, fields: item } });
+          const entityId = getDiffEntityId(item, ops.singular);
+          if (!entityId) continue;
+          const rawFields = { ...(item.diff ?? item) };
+          if (key === "designs") {
+            delete (rawFields as any).pieces;
+            delete (rawFields as any).connections;
+            delete (rawFields as any).layers;
+            delete (rawFields as any).groups;
+            delete (rawFields as any).stats;
+            delete (rawFields as any).props;
+          }
+          if (key === "types") {
+            delete (rawFields as any).models;
+            delete (rawFields as any).connectors;
+            delete (rawFields as any).props;
+          }
+          if (Object.keys(rawFields).length === 0) continue;
+          commands.push({ kind: ops.patch, payload: { entity_id: entityId, fields: rawFields } });
         }
       }
       if (collDiff.removed) {
         for (const item of collDiff.removed) {
-          commands.push({ kind: ops.delete, payload: { entity_id: item.guid } });
+          const entityId = getDiffEntityId(item, ops.singular);
+          if (!entityId) continue;
+          commands.push({ kind: ops.delete, payload: { entity_id: entityId } });
         }
       }
     }
+
+    const designsDiff = diff.designs;
+    if (designsDiff?.updated) {
+      for (const updatedDesign of designsDiff.updated) {
+        const designId = getDiffEntityId(updatedDesign, "design");
+        const designDiff = updatedDesign?.diff;
+        if (!designId || !designDiff) continue;
+
+        const piecesDiff = designDiff.pieces;
+        if (piecesDiff?.added) {
+          for (const piece of piecesDiff.added) {
+            commands.push({
+              kind: "CreatePiece",
+              payload: { piece_id: piece.guid, design_id: designId, fields: { ...piece, design_id: designId } },
+            });
+          }
+        }
+        if (piecesDiff?.updated) {
+          for (const pieceUpdate of piecesDiff.updated) {
+            const pieceId = getDiffEntityId(pieceUpdate, "piece");
+            if (!pieceId) continue;
+            commands.push({
+              kind: "PatchPiece",
+              payload: { entity_id: pieceId, fields: { ...(pieceUpdate.diff ?? {}), design_id: designId } },
+            });
+          }
+        }
+        if (piecesDiff?.removed) {
+          for (const piece of piecesDiff.removed) {
+            const pieceId = getDiffEntityId(piece, "piece");
+            if (!pieceId) continue;
+            commands.push({ kind: "DeletePiece", payload: { entity_id: pieceId } });
+          }
+        }
+
+        const connectionsDiff = designDiff.connections;
+        if (connectionsDiff?.added) {
+          for (const connection of connectionsDiff.added) {
+            commands.push({
+              kind: "CreateConnection",
+              payload: {
+                connection_id: connection.guid,
+                design_id: designId,
+                fields: {
+                  ...connection,
+                  design_id: designId,
+                  connected_piece_id: connection.connected?.piece?.guid,
+                  connecting_piece_id: connection.connecting?.piece?.guid,
+                },
+              },
+            });
+          }
+        }
+        if (connectionsDiff?.updated) {
+          for (const connectionUpdate of connectionsDiff.updated) {
+            const connectionId = getDiffEntityId(connectionUpdate, "connection");
+            if (!connectionId) continue;
+            commands.push({
+              kind: "PatchConnection",
+              payload: { entity_id: connectionId, fields: { ...(connectionUpdate.diff ?? {}), design_id: designId } },
+            });
+          }
+        }
+        if (connectionsDiff?.removed) {
+          for (const connection of connectionsDiff.removed) {
+            const connectionId = getDiffEntityId(connection, "connection");
+            if (!connectionId) continue;
+            commands.push({ kind: "DeleteConnection", payload: { entity_id: connectionId } });
+          }
+        }
+      }
+    }
+
     if (commands.length === 0) return;
     const batch = commands.length === 1 ? commands[0] : { kind: "Batch", payload: { commands } };
     const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/domain`, {
@@ -1426,13 +1678,8 @@ export class SessionKitStore implements UndoableKitStore {
       const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/snapshot`);
       if (!resp.ok) throw new Error(`Failed to reload: ${resp.statusText}`);
       const snapshot = await resp.json();
-      this.kit = {
-        guid: snapshot.kit?.kit_id ?? this.kit.guid,
-        name: snapshot.kit?.name ?? this.kit.name,
-        version: snapshot.kit?.version,
-        createdAt: this.kit.createdAt,
-        updatedAt: new Date().toISOString(),
-      };
+      const reloadedKit = mapServerSnapshotKitToKit(snapshot.kit, this.kit.name);
+      this.kit = { ...reloadedKit, createdAt: this.kit.createdAt ?? reloadedKit.createdAt, updatedAt: new Date().toISOString() };
       this.domainVersion = snapshot.domain_version ?? 0;
       this.semioVersion = snapshot.semio_version ?? 0;
       this.dirty = false;

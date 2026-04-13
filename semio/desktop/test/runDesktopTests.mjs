@@ -32,6 +32,8 @@ export async function runTests(options = {}) {
   const env = {
     ...process.env,
     SEMIO_EXTENSION_TESTS_PATH: extensionTestsPath,
+    SEMIO_E2E_KIT_FOLDER: process.env.SEMIO_E2E_KIT_FOLDER ?? path.resolve(extensionDevelopmentPath, "../assets/semio/metabolism"),
+    SEMIO_E2E_KIT_FILE: process.env.SEMIO_E2E_KIT_FILE ?? path.resolve(extensionDevelopmentPath, "../assets/semio/metabolism.kit.semio.json"),
   };
   if (options.workspaceFolder) {
     env.SEMIO_DESKTOP_WORKSPACE_FOLDER = path.resolve(extensionDevelopmentPath, options.workspaceFolder);
