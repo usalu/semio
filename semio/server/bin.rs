@@ -2579,10 +2579,10 @@ use super::*;
     }
 
     #[test]
-    pub fn metabolism_kit_parses_49_types() {
+    pub fn metabolism_kit_parses_50_types() {
         let kit = load_metabolism_kit_json();
         let types = kit["types"].as_array().expect("types array");
-        assert_eq!(types.len(), 49, "metabolism kit should have 49 types");
+        assert_eq!(types.len(), 50, "metabolism kit should have 50 types");
     }
 
     #[test]
@@ -2632,7 +2632,7 @@ use super::*;
                 connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
             });
         }
-        assert_eq!(state.types.len(), 49, "state should contain all 49 metabolism types");
+        assert_eq!(state.types.len(), 50, "state should contain all 50 metabolism types");
         let capsule_guid = Uuid::parse_str("71749140-9db9-43f6-bd81-d89011667b80").unwrap();
         assert!(state.types.contains_key(&capsule_guid), "should have Capsule type");
         assert_eq!(state.types[&capsule_guid].name, "Capsule");
@@ -2648,7 +2648,7 @@ use super::*;
             let fields = serde_json::json!({"name": t["name"]});
             commands.push(DomainCommand::CreateType(CreateEntity { entity_id: guid, fields }));
         }
-        assert_eq!(commands.len(), 49);
+        assert_eq!(commands.len(), 50);
         let batch = DomainCommand::Batch(DomainBatch { commands });
         let json = serde_json::to_string(&batch).unwrap();
         assert!(json.contains("Batch"));
@@ -2967,7 +2967,7 @@ use super::*;
             tags: BTreeMap::new(), concepts: BTreeMap::new(), ports: BTreeMap::new(), qualities: BTreeMap::new(),
             types: BTreeMap::new(), designs: BTreeMap::new(), semio_people: BTreeMap::new(),
         };
-        // Add all 49 types
+        // Add all 50 types
         for t in kit_json["types"].as_array().unwrap() {
             let guid = Uuid::parse_str(t["guid"].as_str().unwrap()).unwrap();
             state.types.insert(guid, TypeState {
@@ -2980,8 +2980,8 @@ use super::*;
             });
             state.domain_version += 1;
         }
-        assert_eq!(state.types.len(), 49);
-        assert_eq!(state.domain_version, 49);
+        assert_eq!(state.types.len(), 50);
+        assert_eq!(state.domain_version, 50);
         // Add nakagin design with 180 pieces and 179 connections
         let design_id = Uuid::parse_str(design_json["guid"].as_str().unwrap()).unwrap();
         let mut ds = DesignState {
@@ -3030,15 +3030,15 @@ use super::*;
         state.designs.insert(design_id, ds);
         state.domain_version += 1;
         // Verify final state
-        assert_eq!(state.types.len(), 49, "49 metabolism types");
+        assert_eq!(state.types.len(), 50, "50 metabolism types");
         assert_eq!(state.designs.len(), 1, "1 nakagin design");
         let design = &state.designs[&design_id];
         assert_eq!(design.pieces.len(), 180, "180 nakagin pieces");
         assert_eq!(design.connections.len(), 179, "179 nakagin connections");
         assert_eq!(design.name, "Nakagin Capsule Tower");
         assert_eq!(state.kit.name, "Metabolism");
-        // domain_version = 49 types + 180 pieces + 179 connections + 1 design = 409
-        assert_eq!(state.domain_version, 409);
+        // domain_version = 50 types + 180 pieces + 179 connections + 1 design = 410
+        assert_eq!(state.domain_version, 410);
     }
 
     } // 🌦️Full Metabolism + Nakagin Session Test
@@ -3531,7 +3531,7 @@ use super::*;
             actor.run(cmd_rx).await;
         });
 
-        // Create all 49 types via batch
+        // Create all 50 types via batch
         let types_json = kit_json["types"].as_array().unwrap();
         let mut commands: Vec<DomainCommand> = Vec::new();
         for t in types_json {
@@ -3554,10 +3554,10 @@ use super::*;
         let result = reply_rx.await.unwrap().unwrap();
         assert!(matches!(result, CommandResult::Accepted { domain_version: 1 }));
 
-        // Verify kit at version 1 has all 49 types
+        // Verify kit at version 1 has all 50 types
         let kit_v1 = reconstruct_kit_at_version(&pool, session_id, 1).await.unwrap();
         let reconstructed_types = kit_v1["types"].as_array().unwrap();
-        assert_eq!(reconstructed_types.len(), 49, "reconstructed kit at v1 should have 49 types");
+        assert_eq!(reconstructed_types.len(), 50, "reconstructed kit at v1 should have 50 types");
 
         // Verify baseline at version 0 has 0 types
         let kit_v0 = reconstruct_kit_at_version(&pool, session_id, 0).await.unwrap();

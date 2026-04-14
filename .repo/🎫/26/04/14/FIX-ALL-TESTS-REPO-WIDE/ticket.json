@@ -1,0 +1,9 @@
+{
+  "title": "Fix All Tests Repo Wide",
+  "status": "open",
+  "description": "Get all tests passing across the entire monorepo using the runTests tool. Diagnose and fix any compilation or runtime failures.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪8da3ad6fc53540cb8ad760fa9daabb97"
+  ]
+}
