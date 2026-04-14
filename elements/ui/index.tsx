@@ -21610,7 +21610,6 @@ export type { FuseResult } from "fuse.js";
 // #endregion 🔔Search
 
 // #region 🎍Collaboration
-export { IndexeddbPersistence } from "y-indexeddb";
 export * as Y from "yjs";
 // #endregion 🎍Collaboration
 

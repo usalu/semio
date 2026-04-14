@@ -14593,9 +14593,9 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
     NakaginCapsuleTowerWithDiffDesign,
     ValidateKitDiffCases,
   } = await import("@semio/assets");
-  const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/studio");
-  type KitFolderAdapter = import("@semio/studio").KitFolderAdapter;
-  type KitJsonFileAdapter = import("@semio/studio").KitJsonFileAdapter;
+  const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/sketchpad");
+  type KitFolderAdapter = import("@semio/sketchpad").KitFolderAdapter;
+  type KitJsonFileAdapter = import("@semio/sketchpad").KitJsonFileAdapter;
 
   const TEST_TOLERANCE = 0.001;
 
@@ -17009,10 +17009,10 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   // system access or mocked server transport to guarantee the desktop/vscode/web entry points work.
 
   describe("Open Synchronized Kit E2E", () => {
-    const { createJsonFileKitStore: makeJsonFileKitStore, createFolderKitStore: makeFolderKitStore, createSessionKitStore: makeSessionKitStore } = (async () => await import("@semio/studio"))() as any;
+    const { createJsonFileKitStore: makeJsonFileKitStore, createFolderKitStore: makeFolderKitStore, createSessionKitStore: makeSessionKitStore } = (async () => await import("@semio/sketchpad"))() as any;
 
     const loadStudio = async () => {
-      const studio = await import("@semio/studio");
+      const studio = await import("@semio/sketchpad");
       return studio;
     };
 

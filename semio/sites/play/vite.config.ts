@@ -47,7 +47,6 @@ export default defineConfig(async () => {
       alias: {
         "@semio/js": path.resolve(__dirname, "../../js"),
         "@semio/sketchpad": path.resolve(__dirname, "../../sketchpad"),
-        "@semio/studio": path.resolve(__dirname, "../../studio"),
         "@semio/assets": path.resolve(__dirname, "../../assets"),
       },
     },

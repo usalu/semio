@@ -16,7 +16,6 @@
     "@elements/ui": "*",
     "@semio/js": "^0.1.0",
     "@semio/sketchpad": "^0.1.0",
-    "@semio/studio": "*",
     "electron-squirrel-startup": "^1.0.1"
   },
   "devDependencies": {

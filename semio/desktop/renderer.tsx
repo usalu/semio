@@ -14,8 +14,8 @@
 
 import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { createFolderKitStore, createSessionKitStore } from "@semio/studio";
-import type { KitFolderAdapter, KitJsonFileAdapter } from "@semio/studio";
+import { createFolderKitStore, createSessionKitStore } from "@semio/sketchpad";
+import type { KitFolderAdapter, KitJsonFileAdapter } from "@semio/sketchpad";
 import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
 import { createJsonFileKitStore } from "@semio/sketchpad";
 import { InMemoryKitStore } from "@semio/js";
@@ -84,12 +84,14 @@ const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
 
 /**
  * Desktop integration surface. Presence of this object is how sketchpad detects desktop mode.
- *MUST delegate to invokeWindowControl for each action.
+ *MUST delegate to invokeWindowControl for each action. Includes native kit callbacks.
  **/
 const desktop = {
   minimize: () => invokeWindowControl("minimize"),
   maximize: () => invokeWindowControl("maximize"),
   close: () => invokeWindowControl("close"),
+  kitFolder: window.kitFolder,
+  kitFile: window.kitFile,
 };
 
 /**

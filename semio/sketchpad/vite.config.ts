@@ -103,7 +103,6 @@ export default defineConfig(async ({ mode }) => {
       alias: {
         "@semio/js": path.resolve(__dirname, "../js"),
         "@semio/sketchpad": path.resolve(__dirname),
-        "@semio/studio": path.resolve(__dirname, "../studio"),
         "@semio/assets": path.resolve(__dirname, "../assets"),
         "use-sync-external-store/shim/with-selector.js": shimWithSelector,
         "use-sync-external-store/shim/with-selector": shimWithSelector,

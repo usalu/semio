@@ -15,10 +15,7 @@
   "compilerOptions": {
     "target": "ESNext", // Must be present for MarkDoc, value must be >= es2015
     "module": "ESNext",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "moduleResolution": "bundler", // Don't change. Needed for Vite
     "jsx": "preserve", // Don't change. Needed for Nextjs
     "strict": true, // Must be present for Nextjs, value optional
@@ -32,38 +29,19 @@
     "noEmit": true, // Must be present for Nextjs, value optional
     // "verbatimModuleSyntax": true, // Recommended for astro to avoid bundling issues, value optional
     // "sourceMap": true,
-    "types": [
-      "react",
-      "react-dom"
-    ],
+    "types": ["react", "react-dom"],
     "baseUrl": ".",
     "paths": {
-      "@semio/js": [
-        "."
-      ],
-      "@semio/js/*": [
-        "./*"
-      ],
-      "@elements/ui": [
-        "../../elements/ui"
-      ],
-      "@elements/ui/*": [
-        "../../elements/ui/*"
-      ],
-      "@semio/assets": [
-        "../assets"
-      ],
-      "@semio/assets/*": [
-        "../assets/*"
-      ]
+      "@semio/js": ["."],
+      "@semio/js/*": ["./*"],
+      "@elements/ui": ["../../elements/ui"],
+      "@elements/ui/*": ["../../elements/ui/*"],
+      "@semio/assets": ["../assets"],
+      "@semio/assets/*": ["../assets/*"],
+      "@semio/sketchpad": ["../sketchpad"],
+      "@semio/sketchpad/*": ["../sketchpad/*"]
     }
   },
-  "include": [
-    "index.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "_debug_diff.ts",
-    "debug_design.cjs"
-  ]
+  "include": ["index.ts"],
+  "exclude": ["node_modules", "_debug_diff.ts", "debug_design.cjs"]
 }

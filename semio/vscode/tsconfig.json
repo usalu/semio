@@ -22,12 +22,6 @@
       "@semio/sketchpad/*": [
         "../sketchpad/*"
       ],
-      "@semio/studio": [
-        "../studio"
-      ],
-      "@semio/studio/*": [
-        "../studio/*"
-      ],
       "@semio/js": [
         "../js"
       ],

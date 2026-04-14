@@ -90,6 +90,7 @@
   "rust-analyzer.linkedProjects": [
     "semio/rs/Cargo.toml"
   ],
+  "rust-analyzer.testExplorer": true,
   "terminal.integrated.defaultProfile.linux": "bash",
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
