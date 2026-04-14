@@ -2117,7 +2117,96 @@ export class SessionKitStore implements UndoableKitStore {
 
   // #endregion 📣Presence
 
-  // #region 🔩History
+  // #region �Auth
+
+  /**
+   * Returns the current auth token (owner_token or share token).
+   *
+   * Specs: Useful for passing to child components or persisting across sessions.
+   **/
+  getAuthToken(): string | undefined {
+    return this.authToken;
+  }
+
+  /**
+   * Creates a share token for this session.
+   *
+   * Specs: Requires owner access. Returns the share token string.
+   **/
+  async createShare(opts: { accessMode?: "viewer"; entityKind?: string; entityId?: string; label?: string; expiresInSeconds?: number }): Promise<ShareTokenEntry> {
+    if (this.readOnly) throw new Error("Cannot create share in read-only mode");
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/shares`, {
+      method: "POST",
+      headers: this.authHeaders(),
+      body: JSON.stringify({
+        access_mode: opts.accessMode ?? "viewer",
+        entity_kind: opts.entityKind,
+        entity_id: opts.entityId,
+        label: opts.label,
+        expires_in_seconds: opts.expiresInSeconds,
+      }),
+    });
+    if (!resp.ok) throw new Error(`Failed to create share: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  /**
+   * Lists all share tokens for this session.
+   *
+   * Specs: Requires owner access.
+   **/
+  async listShares(): Promise<ShareTokenEntry[]> {
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/shares`, {
+      headers: this.authHeaders(),
+    });
+    if (!resp.ok) throw new Error(`Failed to list shares: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  /**
+   * Deletes a share token for this session.
+   *
+   * Specs: Requires owner access.
+   **/
+  async deleteShare(token: string): Promise<void> {
+    if (this.readOnly) throw new Error("Cannot delete share in read-only mode");
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/shares/${token}`, {
+      method: "DELETE",
+      headers: this.authHeaders(),
+    });
+    if (!resp.ok) throw new Error(`Failed to delete share: ${resp.statusText}`);
+  }
+
+  /**
+   * Resolves a share token to session info without needing to know the session ID.
+   *
+   * Specs: Static method. Returns session_id, access_mode, optional entity scope.
+   **/
+  static async resolveShare(serverUrl: string, token: string): Promise<ResolvedShareToken> {
+    const resp = await fetch(`${serverUrl}/shares/${token}`);
+    if (!resp.ok) throw new Error(`Failed to resolve share: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  /**
+   * Creates a SessionKitStore from a share token.
+   *
+   * Specs: Resolves the share token, then connects with viewer access.
+   **/
+  static async createFromShareToken(serverUrl: string, token: string, config?: Partial<SessionKitStoreConfig>): Promise<SessionKitStore> {
+    const share = await SessionKitStore.resolveShare(serverUrl, token);
+    return SessionKitStore.create({
+      serverUrl,
+      sessionId: share.session_id,
+      authToken: token,
+      readOnly: share.access_mode === "viewer",
+      ...config,
+    });
+  }
+
+  // #endregion 🔑Auth
+
+  // #region �🔩History
 
   async getKitAtLookback(lookback: string): Promise<Kit> {
     const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/kit/at/${lookback}`, { headers: this.authHeaders() });
@@ -8960,6 +9049,41 @@ export class CollaborativeKitStore {
     if (typeof inner.embedFileBlob === "function") {
       await inner.embedFileBlob(fileGuid, blob);
     }
+  }
+  async readFile(path: string): Promise<Blob | null> {
+    const inner = this._kitStore as KitBinaryStore;
+    if (typeof inner.readFile !== "function") {
+      return null;
+    }
+    return inner.readFile(path);
+  }
+  async writeFile(path: string, blob: Blob): Promise<void> {
+    const inner = this._kitStore as KitBinaryStore;
+    if (typeof inner.writeFile !== "function") {
+      return;
+    }
+    await inner.writeFile(path, blob);
+  }
+  async deleteFile(path: string): Promise<void> {
+    const inner = this._kitStore as KitBinaryStore;
+    if (typeof inner.deleteFile !== "function") {
+      return;
+    }
+    await inner.deleteFile(path);
+  }
+  async createDirectory(path: string): Promise<void> {
+    const inner = this._kitStore as KitBinaryStore;
+    if (typeof inner.createDirectory !== "function") {
+      return;
+    }
+    await inner.createDirectory(path);
+  }
+  async moveEntry(fromPath: string, toPath: string): Promise<void> {
+    const inner = this._kitStore as KitBinaryStore;
+    if (typeof inner.moveEntry !== "function") {
+      return;
+    }
+    await inner.moveEntry(fromPath, toPath);
   }
   getFileUrl(guid: string): string | null {
     const kit = this._kitStore.getSnapshot().kit;
@@ -58522,6 +58646,38 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await executeKitCommand(store, "semio.kit.updateFolder", "test.folderKit.updateFolder", "root-folder", { name: "Renamed Root" });
 
       expect(adapter.operations).toEqual(["mkdir:Root Folder/Child Folder", "move:Root Folder->Renamed Root"]);
+    });
+
+    test("wrapped collaborative folder kits forward dropped-file and create-folder filesystem sync", async () => {
+      const adapter = {
+        operations: [] as string[],
+        readKit: async () => null,
+        writeKit: async (_bytes: Uint8Array) => {},
+        readFile: async (_path: string) => null,
+        writeFile: async (path: string, blob: Blob) => {
+          adapter.operations.push(`write:${path}:${blob.size}`);
+        },
+        deleteFile: async (_path: string) => {},
+        createDirectory: async (path: string) => {
+          adapter.operations.push(`mkdir:${path}`);
+        },
+        moveEntry: async (fromPath: string, toPath: string) => {
+          adapter.operations.push(`move:${fromPath}->${toPath}`);
+        },
+        listFiles: async () => [],
+      } satisfies KitFolderAdapter & { operations: string[] };
+      const rawStore = await createFolderKitStore(adapter, {
+        guid: "wrapped-folder-sync-kit",
+        name: "Wrapped Folder Sync Kit",
+        folders: [{ guid: "existing-folder", name: "Existing Folder" } as Folder],
+      });
+      const store = new CollaborativeKitStore(rawStore);
+      const droppedBlob = new Blob(["hello"], { type: "text/plain" });
+
+      await executeKitCommand(store as unknown as KitStore, "semio.kit.addFile", "test.collaborativeFolder.addFile", { guid: "dropped-file", name: "hello.txt", folder: { guid: "existing-folder" } } as SemioFile, droppedBlob);
+      await executeKitCommand(store as unknown as KitStore, "semio.kit.createFolder", "test.collaborativeFolder.createFolder", { guid: "child-folder", name: "Child Folder", parent: { guid: "existing-folder" } } as Folder);
+
+      expect(adapter.operations).toEqual(["write:Existing Folder/hello.txt:5", "mkdir:Existing Folder/Child Folder"]);
     });
 
     test("persisted folder kits restore from their stored source without invoking other local factories", async () => {

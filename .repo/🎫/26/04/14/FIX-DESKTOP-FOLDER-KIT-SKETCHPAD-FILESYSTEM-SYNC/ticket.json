@@ -2,9 +2,10 @@
   "title": "Fix Desktop Folder Kit Sketchpad Filesystem Sync",
   "status": "closed",
   "description": "Semio desktop sketchpad folder kits must create and move files/folders against the actual filesystem, not just in-memory kit state. Investigate the desktop Electron adapter and sketchpad folder-kit store, implement end-to-end filesystem-backed create/move behavior for sketchpad folder entries, extend existing tests to cover the behavior, validate by running the relevant test suites, and fix any related issues required to get the flow working.",
-  "summary": "Wired folder-kit sketchpad filesystem sync end-to-end so desktop folder kits create real directories and move real files/folders when sketchpad issues createFolder, updateFolder, or moveToFolder commands. Extended the folder-backed adapter contract, connected Electron preload/main/renderer IPC for directory creation and entry moves with root-path validation, updated the Node folder adapter used by tests, and added sketchpad coverage asserting folder-store filesystem operations are triggered for folder creation, folder rename, file moves, and folder moves. Verified via successful @semio/desktop integration run and desktop production build; the full @semio/js Vitest suite still has one pre-existing unrelated export-scene-graph failure in the Python-backed report test.",
+  "summary": "Completed the remaining desktop folder-kit filesystem sync by forwarding binary filesystem operations through CollaborativeKitStore, which is the actual sketchpad UI execution path. Dropped files now write into the selected physical folder-kit directory and created folders now create physical directories. Added wrapped-store coverage for addFile/createFolder filesystem sync and verified with passing @semio/desktop integration tests plus a fully passing @semio/js Vitest run.",
   "goal": "🎯sketchpadimprovements",
   "sessions": [
-    "⚪6f5ebcca471240fc80fd1ca3e743af31"
+    "⚪6f5ebcca471240fc80fd1ca3e743af31",
+    "⚪9bee2eef0c9b4274a962c58f32762596"
   ]
 }
