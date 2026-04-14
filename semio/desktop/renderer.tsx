@@ -163,7 +163,7 @@ function App() {
     }
     await window.kitFolder.addRecentFolder(selectedFolder);
     const adapter = createElectronFolderAdapter(selectedFolder);
-    const store = await createFolderKitStore(adapter);
+    const store = await createFolderKitStore(adapter, kit);
     (store as any).__semioKitPersistenceSource = { kind: "folder", path: selectedFolder };
     return store;
   }, []);

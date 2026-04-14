@@ -681,6 +681,14 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 ## 👤semio🗃️sketchpad
 
 semio/sketchpad:
+
+Home MUST have create, open, filter for exactly these kits:
+File kit (\*.kit.semio.json file)
+Folder kit (folder with .semio/kit.db sqlite file)
+Remote kit (from semio/server)
+Temporary kit (in-memory)
+Add Export - Archive tool which exports the current kit as an archive kit
+
 The Open functionality to open synchronized kits doesnt work correctly.  
 In semio/desktop e.g.
 File kit (based on semio\assets\semio\metabolism.kit.semio.json):

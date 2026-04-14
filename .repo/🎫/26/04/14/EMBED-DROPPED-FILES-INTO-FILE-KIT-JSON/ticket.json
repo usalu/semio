@@ -1,0 +1,10 @@
+{
+  "title": "Embed Dropped Files Into File Kit Json",
+  "status": "closed",
+  "description": "When working in a file kit (JsonFileKitStore backed by *.kit.semio.json), files dropped into the kit or type apps must be embedded in the JSON file as data URLs on file.blob. Everything must stay fully inside the json file so reopening the kit restores blobs without external storage.",
+  "summary": "Embedded dropped files into file-kit JSON. Added JsonFileKitStore.embedFileBlob(fileGuid, blob) which inlines the blob as a data URL via a kit diff so it persists in *.kit.semio.json on save. uploadKitFileToProvider now short-circuits to embedFileBlob when the kit store is a JsonFileKitStore, covering drops from the kit app, the type app, addFiles, updateFile, and import flows. Fixed applyFileDiff which previously dropped diff.blob (and diff.description) — they are now merged into the result. Extended the existing JsonFileKitStore vitest block with two new tests: one verifies the data URL ends up in file.blob, is persisted to the JSON on save, and survives reload; the other verifies embedFileBlob is a no-op when the target file is missing. All 198 js tests pass.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repofilemechanism",
+  "sessions": [
+    "⚪e4fd66f4c38b4426b8225ecdade1d584"
+  ]
+}

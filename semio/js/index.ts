@@ -1613,9 +1613,11 @@ export type FileDiff = z.infer<typeof FileDiffSchema>;
 export const getFileDiff = (before: File, after: File): FileDiff => {
   const diff: FileDiff = {};
   if (before.name !== after.name) diff.name = after.name;
+  if (before.description !== after.description) diff.description = after.description;
   if (before.remote !== after.remote) diff.remote = after.remote;
   if (before.size !== after.size) diff.size = after.size;
   if (before.hash !== after.hash) diff.hash = after.hash;
+  if (before.blob !== after.blob) diff.blob = after.blob;
   if (before.createdAt !== after.createdAt) diff.createdAt = after.createdAt;
   if (before.createdBy !== after.createdBy) diff.createdBy = after.createdBy;
   if (before.updatedAt !== after.updatedAt) diff.updatedAt = after.updatedAt;
@@ -1629,9 +1631,11 @@ export const getFileDiff = (before: File, after: File): FileDiff => {
 export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => {
   const inverse: FileDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
+  if (appliedDiff.description !== undefined) inverse.description = original.description;
   if (appliedDiff.remote !== undefined) inverse.remote = original.remote;
   if (appliedDiff.size !== undefined) inverse.size = original.size;
   if (appliedDiff.hash !== undefined) inverse.hash = original.hash;
+  if (appliedDiff.blob !== undefined) inverse.blob = original.blob;
   if (appliedDiff.createdAt !== undefined) inverse.createdAt = original.createdAt;
   if (appliedDiff.createdBy !== undefined) inverse.createdBy = original.createdBy;
   if (appliedDiff.updatedAt !== undefined) inverse.updatedAt = original.updatedAt;
@@ -1654,6 +1658,7 @@ export const applyFileDiff = (base: File, diff: FileDiff): File => {
     name: diff.name ?? base.name,
   };
 
+  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
   if (diff.remote !== undefined || base.remote !== undefined) result.remote = diff.remote ?? base.remote;
   if (diff.size !== undefined || base.size !== undefined) result.size = diff.size ?? base.size;
   if (diff.hash !== undefined || base.hash !== undefined) result.hash = diff.hash ?? base.hash;
@@ -1662,7 +1667,7 @@ export const applyFileDiff = (base: File, diff: FileDiff): File => {
   if (diff.updatedAt !== undefined || base.updatedAt !== undefined) result.updatedAt = diff.updatedAt ?? base.updatedAt;
   if (diff.updatedBy !== undefined || base.updatedBy !== undefined) result.updatedBy = diff.updatedBy ?? base.updatedBy;
   if (diff.folder !== undefined || base.folder !== undefined) result.folder = diff.folder ?? base.folder;
-  if (base.blob !== undefined) result.blob = base.blob;
+  if (diff.blob !== undefined || base.blob !== undefined) result.blob = diff.blob ?? base.blob;
 
   return result;
 };
@@ -9644,7 +9649,7 @@ const validateGuidCollectionDiff = <TItem extends { guid: string }>(
 };
 
 const validateAttributesDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Attribute[], d: AttributesDiff | undefined): void => {
-  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => {});
+  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => { });
 };
 
 const validatePropsDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Prop[], qualities: Set<string>, d: PropsDiff | undefined): void => {
@@ -9849,13 +9854,13 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
   if (ctx.diff.designs) {
     ctx.diff.designs = validateGuidCollectionDiff(ctx, "designs", "design", kit.designs ?? [], ctx.diff.designs, (item, ddiff, p) => validateDesignDiffNested(ctx, kit, p, item, ddiff as DesignDiff, refs));
   }
-  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => {});
-  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => {});
-  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => {});
+  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => { });
+  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => { });
+  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => { });
   if (ctx.diff.qualities) {
     ctx.diff.qualities = validateGuidCollectionDiff(ctx, "qualities", "quality", kit.qualities ?? [], ctx.diff.qualities, (item, qdiff, p) => validateQualityDiffNested(ctx, p, item, qdiff as QualityDiff));
   }
-  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => {});
+  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => { });
   if (ctx.diff.folders) {
     ctx.diff.folders = validateGuidCollectionDiff(ctx, "folders", "folder", kit.folders ?? [], ctx.diff.folders, (item, fdiff, p) => {
       const par = (fdiff as FolderDiff).parent?.guid ?? item.parent?.guid;
@@ -9863,7 +9868,7 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
       if ((fdiff as FolderDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (fdiff as FolderDiff).attributes);
     });
   }
-  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => {});
+  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => { });
   if (ctx.diff.attributes) validateAttributesDiffNested(ctx, "kit.attributes", kit.attributes ?? [], ctx.diff.attributes);
 
   const ok = ctx.errors.length === 0;
@@ -10554,7 +10559,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
             fixes: [fix],
           });
         }
-      } catch {}
+      } catch { }
     });
   });
   return problems;
@@ -12170,20 +12175,20 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-                }
+                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+              }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-                }
+                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+              }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -12298,54 +12303,54 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-          return {
-            guid: row.guid,
-            key: row.key,
-            name: row.name,
-            kind: row.kind || undefined,
-            defaultValue: row.default_value ?? undefined,
-            formula: toUndefined(row.formula),
-            defaultSiUnit: toUndefined(row.default_si_unit),
-            defaultImperialUnit: toUndefined(row.default_imperial_unit),
-            min: row.min_value ?? undefined,
-            minExcluded: row.min_excluded ? true : undefined,
-            max: row.max_value ?? undefined,
-            maxExcluded: row.max_excluded ? true : undefined,
-            canScale: row.can_scale ? true : undefined,
-            uri: toUndefined(row.definition),
-            benchmarks: benchmarks.map((b: any) => {
-              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-              return {
-                guid: b.guid,
-                name: b.name,
-                icon: toUndefined(b.icon),
-                min: b.min_value ?? undefined,
-                minExcluded: b.min_excluded ? true : undefined,
-                max: b.max_value ?? undefined,
-                maxExcluded: b.max_excluded ? true : undefined,
-                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-              };
-            }),
-            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-          };
-        })
+        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+        return {
+          guid: row.guid,
+          key: row.key,
+          name: row.name,
+          kind: row.kind || undefined,
+          defaultValue: row.default_value ?? undefined,
+          formula: toUndefined(row.formula),
+          defaultSiUnit: toUndefined(row.default_si_unit),
+          defaultImperialUnit: toUndefined(row.default_imperial_unit),
+          min: row.min_value ?? undefined,
+          minExcluded: row.min_excluded ? true : undefined,
+          max: row.max_value ?? undefined,
+          maxExcluded: row.max_excluded ? true : undefined,
+          canScale: row.can_scale ? true : undefined,
+          uri: toUndefined(row.definition),
+          benchmarks: benchmarks.map((b: any) => {
+            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+            return {
+              guid: b.guid,
+              name: b.name,
+              icon: toUndefined(b.icon),
+              min: b.min_value ?? undefined,
+              minExcluded: b.min_excluded ? true : undefined,
+              max: b.max_value ?? undefined,
+              maxExcluded: b.max_excluded ? true : undefined,
+              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+            };
+          }),
+          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+        };
+      })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          remote: toUndefined(row.remote_url),
-          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-          size: row.size ?? undefined,
-          hash: toUndefined(row.hash),
-          createdAt: row.created,
-          updatedAt: row.updated,
-        }))
+        guid: row.guid,
+        name: row.name,
+        remote: toUndefined(row.remote_url),
+        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+        size: row.size ?? undefined,
+        hash: toUndefined(row.hash),
+        createdAt: row.created,
+        updatedAt: row.updated,
+      }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -12361,10 +12366,10 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          email: toUndefined(row.email),
-        }))
+        guid: row.guid,
+        name: row.name,
+        email: toUndefined(row.email),
+      }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
@@ -13605,7 +13610,7 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
         if (copiedMeshes.length > 0) {
           typeMeshMap[typeGuid] = copiedMeshes[0];
         }
-      } catch {}
+      } catch { }
     }
   }
 
@@ -15992,9 +15997,9 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
   describe("Sketchpad ControlTree", () => {
     it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
       const controls: ControlDef[] = [
-        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
-        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
-        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
+        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
+        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
+        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
       ];
       const folderSettings = {
         Transform: { path: "Transform", order: 2 },
@@ -16687,6 +16692,66 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
       expect(statuses).toContain("saving");
       expect(store.getSnapshot().sync.status).toBe("ready");
+    });
+
+    it("embedFileBlob inlines dropped file as data URL persisted in kit JSON", async () => {
+      const fileGuid = "file-1";
+      const kit = makeKit({
+        files: [
+          {
+            guid: fileGuid,
+            name: "cube.txt",
+            size: 5,
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          },
+        ],
+      });
+      const adapter = makeAdapter(kit);
+      const store = await createJsonFileKitStore(adapter);
+
+      const blob = new Blob(["HELLO"], { type: "text/plain" });
+      await store.embedFileBlob(fileGuid, blob);
+
+      const fileAfter = store.getSnapshot().kit.files?.find((f) => f.guid === fileGuid);
+      expect(fileAfter?.blob).toBeDefined();
+      expect(fileAfter!.blob!.startsWith("data:text/plain")).toBe(true);
+      expect(fileAfter!.blob).toContain("base64,");
+
+      await store.save();
+      const saved = JSON.parse(adapter.stored!);
+      const persistedFile = saved.files.find((f: any) => f.guid === fileGuid);
+      expect(persistedFile.blob).toBe(fileAfter!.blob);
+
+      // Round-trip: reloading the JSON preserves the embedded blob.
+      const reloaded = await createJsonFileKitStore(adapter);
+      const reloadedFile = reloaded.getSnapshot().kit.files?.find((f) => f.guid === fileGuid);
+      expect(reloadedFile?.blob).toBe(fileAfter!.blob);
+    });
+
+    it("embedFileBlob is a no-op when the target file is missing from the kit", async () => {
+      const store = await createJsonFileKitStore(makeAdapter(makeKit()));
+      const blob = new Blob(["X"], { type: "application/octet-stream" });
+      await store.embedFileBlob("nonexistent", blob);
+      expect(store.getSnapshot().kit.files ?? []).toHaveLength(0);
+      expect(store.getSnapshot().sync.dirty).toBe(false);
+    });
+
+    it("getFileDiff and inverseFileDiff include blob for kit change metadata", () => {
+      const before: File = {
+        guid: "f1",
+        name: "a.bin",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      };
+      const after: File = {
+        ...before,
+        blob: "data:application/octet-stream;base64,QUI=",
+      };
+      const forward = getFileDiff(before, after);
+      expect(forward.blob).toBe(after.blob);
+      const backward = inverseFileDiff(before, forward);
+      expect(backward.blob).toBeUndefined();
     });
   });
 

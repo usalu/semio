@@ -1,0 +1,89 @@
+{
+  "guid": "019d8b96-9849-72f8-9ccc-c5446aec180b",
+  "name": "New Kit",
+  "createdAt": "2026-04-14T10:43:15.657Z",
+  "updatedAt": "2026-04-14T10:43:15.660Z",
+  "types": [
+    {
+      "guid": "019d8b96-c7e4-765c-a347-8b07d40c14b6",
+      "name": "semio.sketchpad.app.kit.defaultTypeName",
+      "models": [
+        {
+          "guid": "019d8b97-55d5-754a-875a-5233212cfdbf",
+          "file": {
+            "guid": "019d8b97-55d3-736e-85d9-f5427026def5"
+          },
+          "description": "cube.glb"
+        },
+        {
+          "guid": "019d8ba0-5522-719b-afba-952cba0d8333",
+          "file": {
+            "guid": "019d8ba0-551b-7198-8d79-13fb80b43c03"
+          },
+          "description": "cube.glb"
+        }
+      ]
+    }
+  ],
+  "designs": [
+    {
+      "guid": "019d8b99-e1c4-762a-aab0-493e92780c19",
+      "name": "semio.sketchpad.app.kit.defaultDesignName",
+      "pieces": [
+        {
+          "guid": "019d8b9a-11b6-74ec-9531-e2206a1f0182",
+          "type": {
+            "guid": "019d8b96-c7e4-765c-a347-8b07d40c14b6"
+          },
+          "plane": {
+            "origin": {
+              "x": 6.953645833333333,
+              "y": 0,
+              "z": 8.066145833333334
+            },
+            "xAxis": {
+              "x": 1,
+              "y": 0,
+              "z": 0
+            },
+            "yAxis": {
+              "x": 0,
+              "y": 1,
+              "z": 0
+            }
+          },
+          "center": {
+            "u": 8.08609375,
+            "v": -4.58015625
+          }
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "guid": "019d8b97-55d3-736e-85d9-f5427026def5",
+      "name": "cube.glb",
+      "size": 216168,
+      "createdAt": "2026-04-14T10:44:04.181Z",
+      "updatedAt": "2026-04-14T10:44:04.181Z"
+    },
+    {
+      "guid": "019d8ba0-551b-7198-8d79-13fb80b43c03",
+      "name": "cube.glb",
+      "size": 216168,
+      "createdAt": "2026-04-14T10:53:53.826Z",
+      "updatedAt": "2026-04-14T10:53:53.826Z"
+    }
+  ],
+  "folders": [
+    {
+      "guid": "019d8b98-1106-7557-a947-a7bf1cee1fc7",
+      "name": "New Folder"
+    },
+    {
+      "guid": "019d8b98-293b-7658-a14d-c2c2be5fa0ac",
+      "name": "New Folder 2"
+    }
+  ]
+}

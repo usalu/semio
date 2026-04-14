@@ -1,0 +1,10 @@
+{
+  "title": "Fix Folder Kit Create Stuck on Loading Kit",
+  "status": "closed",
+  "description": "semio desktop: creating a folder kit leaves the app frozen on \"Loading kit...\" because the UI generates a fresh guid and calls navigateToKit(newGuid), while the FolderKitStore factory loads/creates a store whose kit has a different guid (from SQLite or an inlined new guid). Fix by (a) having sketchpad createKit return the actually-registered guid, (b) updating the Home toolbar handler to navigate to the returned guid, and (c) letting FolderKitStore.create use the kit passed via the factory when the folder is empty so the newly created kit preserves guid/name.",
+  "summary": "Fixed semio desktop freezing on \"Loading kit...\" when creating a folder kit. Root cause: HomeToolbarCreate generated a fresh guid and navigated to it, while the FolderKitStore factory loaded/created a store whose kit carried a different guid (either from the SQLite DB or a freshly generated empty one), so hasKit(navigatedGuid) was always false. Fixes: (1) SketchpadStore.createKit now returns the actually-registered kit guid; the command returns { kitGuid } and SketchpadCommands.createKit is typed accordingly. (2) HomeToolbarCreate and the table's handleCreateKit/handleCreateVersion await createKit and navigate to the returned guid. (3) FolderKitStore.create and the exported createFolderKitStore accept an optional initialKit; on empty folders the passed kit's guid/name are preserved instead of inventing a new guid. (4) Desktop renderer's folderKitStoreFactory forwards the incoming kit to createFolderKitStore. (5) registerKitStore schedules the auto-save check once at register time so a freshly created dirty folder kit persists without waiting for a user change.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪a9ab504266ae43919f362243d047e874"
+  ]
+}
