@@ -147,6 +147,16 @@ const elementUiTranslationBundles = {
       "normal": "",
       "beginner": ""
     },
+    "file": {
+      "name": "Name",
+      "size": "Groesse",
+      "created": "Erstellt",
+      "updated": "Aktualisiert"
+    },
+    "folder": {
+      "created": "Erstellt",
+      "updated": "Aktualisiert"
+    },
     "sketchpad": {
       "label": {
         "normal": "",
@@ -869,6 +879,13 @@ const elementUiTranslationBundles = {
             "normal": "",
             "beginner": ""
           },
+          "title": "Home",
+          "fileInput": {
+            "label": {
+              "normal": "Kit-Datei waehlen",
+              "beginner": "Eine .zip-Kit-Datei von Ihrem Geraet auswaehlen"
+            }
+          },
           "searchPlaceholder": {
             "label": {
               "normal": "Kits suchen...",
@@ -1068,6 +1085,42 @@ const elementUiTranslationBundles = {
                 "label": {
                   "normal": "Zentrierungsstaerke",
                   "beginner": "Wie stark Knoten zur Mitte des Diagramms gezogen werden."
+                }
+              }
+            }
+          },
+          "canvas": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "table": {
+              "label": {
+                "normal": "",
+                "beginner": ""
+              },
+              "createKit": {
+                "label": {
+                  "normal": "Kit erstellen",
+                  "beginner": "Neues Kit aus der Home-Tabelle anlegen"
+                }
+              },
+              "createVersion": {
+                "label": {
+                  "normal": "Version erstellen",
+                  "beginner": "Neue Kit-Version aus der Home-Tabelle anlegen"
+                }
+              },
+              "hover": {
+                "label": {
+                  "normal": "Kit hervorheben",
+                  "beginner": "Ueber eine Kit-Zeile fahren, um sie im Diagramm hervorzuheben"
+                }
+              },
+              "toggleSort": {
+                "label": {
+                  "normal": "Sortierung umschalten",
+                  "beginner": "Sortierrichtung fuer diese Spalte aendern"
                 }
               }
             }
@@ -1316,6 +1369,60 @@ const elementUiTranslationBundles = {
                 "normal": "Erstellen",
                 "beginner": "Neues Kit erstellen"
               }
+            },
+            "createKit": {
+              "label": {
+                "normal": "Neues Kit",
+                "beginner": "Ein neues leeres Kit erstellen"
+              }
+            },
+            "openFolder": {
+              "label": {
+                "normal": "Ordner oeffnen",
+                "beginner": "Ein Kit aus einem Ordner oeffnen"
+              }
+            },
+            "openFile": {
+              "label": {
+                "normal": "Datei oeffnen",
+                "beginner": "Ein Kit aus einer Zip-Datei oeffnen"
+              }
+            },
+            "openRemote": {
+              "label": {
+                "normal": "Remote oeffnen",
+                "beginner": "Ein Kit von einer Remote-URL oeffnen"
+              }
+            },
+            "createFile": {
+              "label": {
+                "normal": "Neues Datei-Kit",
+                "beginner": "Ein Kit anlegen, das in einer Datei gespeichert wird"
+              }
+            },
+            "createFolder": {
+              "label": {
+                "normal": "Neues Ordner-Kit",
+                "beginner": "Ein Kit anlegen, das in einem Ordner gespeichert wird"
+              }
+            },
+            "showFile": {
+              "label": {
+                "normal": "Datei-Kits anzeigen",
+                "beginner": "Kits anzeigen, die als Datei gespeichert sind"
+              }
+            },
+            "showFolder": {
+              "label": {
+                "normal": "Ordner-Kits anzeigen",
+                "beginner": "Kits anzeigen, die in Ordnern gespeichert sind"
+              }
+            },
+            "exportArchive": {
+              "label": {
+                "normal": "Archiv exportieren",
+                "beginner": "Das ausgewaehlte Kit als Zip-Archiv exportieren"
+              }
             }
           }
         },
@@ -1328,6 +1435,16 @@ const elementUiTranslationBundles = {
             "label": {
               "normal": "Kit-Eigenschaften",
               "beginner": "Kit-Eigenschaften"
+            }
+          },
+          "notFound": {
+            "label": {
+              "normal": "Kit nicht gefunden",
+              "beginner": "Das angeforderte Kit wurde nicht gefunden"
+            },
+            "description": {
+              "normal": "Das Kit wurde moeglicherweise entfernt oder der Link ist ungueltig.",
+              "beginner": "Zurueck zur Startseite und ein anderes Kit oeffnen oder ein neues erstellen."
             }
           },
           "noKitLoaded": {
@@ -1410,6 +1527,18 @@ const elementUiTranslationBundles = {
             "label": {
               "normal": "Neues Kit",
               "beginner": "Neues Kit"
+            }
+          },
+          "defaultDesignName": {
+            "label": {
+              "normal": "Neuer Entwurf",
+              "beginner": "Neuer Entwurf"
+            }
+          },
+          "defaultTypeName": {
+            "label": {
+              "normal": "Neuer Typ",
+              "beginner": "Neuer Typ"
             }
           },
           "newVersion": {
@@ -1921,6 +2050,10 @@ const elementUiTranslationBundles = {
             "label": {
               "normal": "Kit nicht gefunden",
               "beginner": "Das angeforderte Kit wurde nicht gefunden"
+            },
+            "description": {
+              "normal": "Das Kit wurde moeglicherweise entfernt oder der Link ist ungueltig.",
+              "beginner": "Zurueck zur Startseite und ein anderes Kit oeffnen oder ein neues erstellen."
             }
           },
           "settings": {
@@ -2013,6 +2146,12 @@ const elementUiTranslationBundles = {
                 "normal": "Mehrere ausgewählt",
                 "beginner": "Mehrere ausgewählt"
               }
+            },
+            "multipleTitle": {
+              "label": {
+                "normal": "{{count}} Schnittstellen",
+                "beginner": "{{count}} Schnittstellen ausgewaehlt"
+              }
             }
           },
           "qualities": {
@@ -2036,6 +2175,39 @@ const elementUiTranslationBundles = {
               "label": {
                 "normal": "Multiple Title",
                 "beginner": "Multiple Title"
+              }
+            }
+          },
+          "tag": {
+            "descriptionPlaceholder": {
+              "label": {
+                "normal": "Beschreiben Sie diesen Tag...",
+                "beginner": "Beschreiben Sie diesen Tag..."
+              }
+            }
+          },
+          "tags": {
+            "multipleSelected": {
+              "label": {
+                "normal": "Mehrere Tags ausgewaehlt",
+                "beginner": "Mehrere Tags ausgewaehlt"
+              }
+            },
+            "multipleTitle": "{{count}} Tags"
+          },
+          "concept": {
+            "descriptionPlaceholder": {
+              "label": {
+                "normal": "Beschreiben Sie dieses Konzept...",
+                "beginner": "Beschreiben Sie dieses Konzept..."
+              }
+            }
+          },
+          "concepts": {
+            "multipleSelected": {
+              "label": {
+                "normal": "Mehrere Konzepte ausgewaehlt",
+                "beginner": "Mehrere Konzepte ausgewaehlt"
               }
             }
           },
@@ -3204,6 +3376,20 @@ const elementUiTranslationBundles = {
                   }
                 }
               }
+            },
+            "lasso": {
+              "rectangular": {
+                "label": {
+                  "normal": "Rechteck-Lasso",
+                  "beginner": "Rechteck fuer Lasso-Auswahl ziehen"
+                }
+              },
+              "freeform": {
+                "label": {
+                  "normal": "Freiform-Lasso",
+                  "beginner": "Freihand-Lasso-Pfad zeichnen"
+                }
+              }
             }
           },
           "windows": {
@@ -3223,6 +3409,12 @@ const elementUiTranslationBundles = {
               "label": {
                 "normal": "Diagramm",
                 "beginner": "Diagramm"
+              },
+              "pieceNode": {
+                "label": {
+                  "normal": "Bauteil",
+                  "beginner": "Diagramm-Bauteilknoten"
+                }
               }
             },
             "label": {
@@ -5023,6 +5215,16 @@ const elementUiTranslationBundles = {
       "normal": "",
       "beginner": ""
     },
+    "file": {
+      "name": "Name",
+      "size": "Size",
+      "created": "Created",
+      "updated": "Updated"
+    },
+    "folder": {
+      "created": "Created",
+      "updated": "Updated"
+    },
     "sketchpad": {
       "label": {
         "normal": "",
@@ -5921,6 +6123,13 @@ const elementUiTranslationBundles = {
             "normal": "",
             "beginner": ""
           },
+          "title": "Home",
+          "fileInput": {
+            "label": {
+              "normal": "Choose kit file",
+              "beginner": "Select a .zip kit file from your device"
+            }
+          },
           "searchPlaceholder": {
             "label": {
               "normal": "Search kits...",
@@ -6120,6 +6329,42 @@ const elementUiTranslationBundles = {
                 "label": {
                   "normal": "Center Strength",
                   "beginner": "How strongly nodes are pulled toward the center of the diagram."
+                }
+              }
+            }
+          },
+          "canvas": {
+            "label": {
+              "normal": "",
+              "beginner": ""
+            },
+            "table": {
+              "label": {
+                "normal": "",
+                "beginner": ""
+              },
+              "createKit": {
+                "label": {
+                  "normal": "Create kit",
+                  "beginner": "Create a new kit from the home table"
+                }
+              },
+              "createVersion": {
+                "label": {
+                  "normal": "Create version",
+                  "beginner": "Create a new kit version from the home table"
+                }
+              },
+              "hover": {
+                "label": {
+                  "normal": "Highlight kit",
+                  "beginner": "Hover a kit row to highlight it in the diagram"
+                }
+              },
+              "toggleSort": {
+                "label": {
+                  "normal": "Toggle sort",
+                  "beginner": "Change sort direction for this column"
                 }
               }
             }
@@ -6368,6 +6613,60 @@ const elementUiTranslationBundles = {
                 "normal": "Create",
                 "beginner": "Create a new kit"
               }
+            },
+            "createKit": {
+              "label": {
+                "normal": "New kit",
+                "beginner": "Create a new empty kit"
+              }
+            },
+            "openFolder": {
+              "label": {
+                "normal": "Open folder",
+                "beginner": "Open a kit from a folder on disk"
+              }
+            },
+            "openFile": {
+              "label": {
+                "normal": "Open file",
+                "beginner": "Open a kit from a .zip file"
+              }
+            },
+            "openRemote": {
+              "label": {
+                "normal": "Open remote",
+                "beginner": "Open a kit from a remote URL"
+              }
+            },
+            "createFile": {
+              "label": {
+                "normal": "New file kit",
+                "beginner": "Create a kit backed by a file"
+              }
+            },
+            "createFolder": {
+              "label": {
+                "normal": "New folder kit",
+                "beginner": "Create a kit backed by a folder"
+              }
+            },
+            "showFile": {
+              "label": {
+                "normal": "Show file kits",
+                "beginner": "Show kits stored as files"
+              }
+            },
+            "showFolder": {
+              "label": {
+                "normal": "Show folder kits",
+                "beginner": "Show kits stored in folders"
+              }
+            },
+            "exportArchive": {
+              "label": {
+                "normal": "Export archive",
+                "beginner": "Export the selected kit as a .zip archive"
+              }
             }
           }
         },
@@ -6386,6 +6685,10 @@ const elementUiTranslationBundles = {
             "label": {
               "normal": "Kit not found",
               "beginner": "The requested kit could not be found"
+            },
+            "description": {
+              "normal": "The kit may have been removed or the link is invalid.",
+              "beginner": "Return home and open another kit, or create a new one."
             }
           },
           "noKitLoaded": {
@@ -6476,6 +6779,18 @@ const elementUiTranslationBundles = {
             "label": {
               "normal": "New Kit",
               "beginner": "New Kit"
+            }
+          },
+          "defaultDesignName": {
+            "label": {
+              "normal": "New Design",
+              "beginner": "New Design"
+            }
+          },
+          "defaultTypeName": {
+            "label": {
+              "normal": "New Type",
+              "beginner": "New Type"
             }
           },
           "newVersion": {
@@ -7085,6 +7400,12 @@ const elementUiTranslationBundles = {
                 "normal": "Multiple Selected",
                 "beginner": "Multiple Selected"
               }
+            },
+            "multipleTitle": {
+              "label": {
+                "normal": "{{count}} ports",
+                "beginner": "{{count}} ports selected"
+              }
             }
           },
           "qualities": {
@@ -7108,6 +7429,39 @@ const elementUiTranslationBundles = {
               "label": {
                 "normal": "Multiple Title",
                 "beginner": "Multiple Title"
+              }
+            }
+          },
+          "tag": {
+            "descriptionPlaceholder": {
+              "label": {
+                "normal": "Describe this tag...",
+                "beginner": "Describe this tag..."
+              }
+            }
+          },
+          "tags": {
+            "multipleSelected": {
+              "label": {
+                "normal": "Multiple tags selected",
+                "beginner": "Multiple tags selected"
+              }
+            },
+            "multipleTitle": "{{count}} tags"
+          },
+          "concept": {
+            "descriptionPlaceholder": {
+              "label": {
+                "normal": "Describe this concept...",
+                "beginner": "Describe this concept..."
+              }
+            }
+          },
+          "concepts": {
+            "multipleSelected": {
+              "label": {
+                "normal": "Multiple concepts selected",
+                "beginner": "Multiple concepts selected"
               }
             }
           },
@@ -8281,6 +8635,20 @@ const elementUiTranslationBundles = {
                   }
                 }
               }
+            },
+            "lasso": {
+              "rectangular": {
+                "label": {
+                  "normal": "Rectangular lasso",
+                  "beginner": "Drag a rectangle for lasso selection"
+                }
+              },
+              "freeform": {
+                "label": {
+                  "normal": "Freeform lasso",
+                  "beginner": "Draw a freehand lasso path"
+                }
+              }
             }
           },
           "windows": {
@@ -8300,6 +8668,12 @@ const elementUiTranslationBundles = {
               "label": {
                 "normal": "Diagram",
                 "beginner": "Diagram"
+              },
+              "pieceNode": {
+                "label": {
+                  "normal": "Piece",
+                  "beginner": "Diagram piece node"
+                }
               }
             },
             "label": {
@@ -22345,6 +22719,20 @@ if (treeVitest) {
           ],
         },
       });
+    });
+  });
+
+  describe("sketchpad kit i18n", () => {
+    function resourceAt(path: string): unknown {
+      const tr = elementUiTranslationBundles.en.translation as Record<string, unknown>;
+      return path.split(".").reduce<unknown>((acc, k) => (acc && typeof acc === "object" ? (acc as Record<string, unknown>)[k] : undefined), tr);
+    }
+
+    it("defines kit-level tag, tags, concept, and concepts strings used by sketchpad", () => {
+      expect(resourceAt("semio.sketchpad.app.kit.tags.multipleTitle")).toBeDefined();
+      expect(resourceAt("semio.sketchpad.app.kit.tag.descriptionPlaceholder.label")).toBeDefined();
+      expect(resourceAt("semio.sketchpad.app.kit.concept.descriptionPlaceholder.label")).toBeDefined();
+      expect(resourceAt("semio.sketchpad.app.kit.concepts.multipleSelected")).toBeDefined();
     });
   });
 }

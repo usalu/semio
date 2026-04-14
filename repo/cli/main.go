@@ -8979,7 +8979,7 @@ const (
 
 var (
 	EmojiRepo         = ""
-	EmojiCodebase     = "�️"
+	EmojiCodebase     = "🖥️"
 	EmojiTechnologies = "🏗️"
 	EmojiBundles      = "📦"
 	EmojiFolders      = "📁"

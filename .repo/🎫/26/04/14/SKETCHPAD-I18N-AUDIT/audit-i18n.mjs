@@ -11,12 +11,12 @@ if (i < 0) {
   process.exit(1);
 }
 const sub = s.slice(i + startMarker.length);
-const close = sub.match(/\n`\),/);
-if (!close || close.index == null) {
+const endIdx = sub.indexOf("`\n  },");
+if (endIdx < 0) {
   console.error("end not found");
   process.exit(1);
 }
-const jsonStr = sub.slice(0, close.index);
+const jsonStr = sub.slice(0, endIdx);
 const data = JSON.parse(jsonStr);
 
 function get(obj, keyPath) {

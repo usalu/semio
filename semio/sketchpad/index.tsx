@@ -1178,6 +1178,8 @@ export interface SessionKitStoreConfig {
   kitName?: string;
   personId?: string;
   clientId?: string;
+  authToken?: string;
+  readOnly?: boolean;
 }
 
 /**
@@ -1231,6 +1233,33 @@ export interface PresenceState {
   look?: { position: [number, number, number]; forward: [number, number, number]; up: [number, number, number] };
   selectedPieceIds: string[];
   selectedDesignIds: string[];
+}
+
+/**
+ * Share token resolved from the server.
+ *
+ * Specs: Represents a sharable link with access mode and optional entity scope.
+ **/
+export interface ResolvedShareToken {
+  session_id: string;
+  access_mode: "owner" | "viewer";
+  entity_kind?: string;
+  entity_id?: string;
+  label?: string;
+}
+
+/**
+ * Share token entry from the server.
+ *
+ * Specs: Represents a share token with metadata.
+ **/
+export interface ShareTokenEntry {
+  token: string;
+  session_id: string;
+  access_mode: string;
+  entity_kind?: string;
+  entity_id?: string;
+  label?: string;
 }
 
 const mapServerSnapshotKitToKit = (rawKit: any, fallbackName: string): Kit => {
@@ -1391,6 +1420,8 @@ export class SessionKitStore implements UndoableKitStore {
   readonly sessionId: string;
   readonly personId: string;
   readonly clientId: string;
+  private authToken: string | undefined;
+  readonly readOnly: boolean;
 
   private constructor(kit: Kit, config: SessionKitStoreConfig & { sessionId: string }, status: KitStoreStatus) {
     this.kit = kit;
@@ -1398,7 +1429,15 @@ export class SessionKitStore implements UndoableKitStore {
     this.sessionId = config.sessionId;
     this.personId = config.personId ?? guid();
     this.clientId = config.clientId ?? guid();
+    this.authToken = config.authToken;
+    this.readOnly = config.readOnly ?? false;
     this.status = status;
+  }
+
+  private authHeaders(): Record<string, string> {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (this.authToken) headers["Authorization"] = `Bearer ${this.authToken}`;
+    return headers;
   }
 
   /**
@@ -1412,6 +1451,7 @@ export class SessionKitStore implements UndoableKitStore {
   static async create(config: SessionKitStoreConfig): Promise<SessionKitStore> {
     let sessionId = config.sessionId;
     let kitName = config.kitName ?? "New Kit";
+    let authToken = config.authToken;
 
     if (!sessionId) {
       const resp = await fetch(`${config.serverUrl}/sessions`, {
@@ -1422,14 +1462,20 @@ export class SessionKitStore implements UndoableKitStore {
       if (!resp.ok) throw new Error(`Failed to create session: ${resp.statusText}`);
       const body = await resp.json();
       sessionId = body.session_id;
+      // Store the owner_token as authToken for full access
+      if (body.owner_token && !authToken) {
+        authToken = body.owner_token;
+      }
     }
 
-    const snapResp = await fetch(`${config.serverUrl}/sessions/${sessionId}/snapshot`);
+    const snapHeaders: Record<string, string> = {};
+    if (authToken) snapHeaders["Authorization"] = `Bearer ${authToken}`;
+    const snapResp = await fetch(`${config.serverUrl}/sessions/${sessionId}/snapshot`, { headers: snapHeaders });
     if (!snapResp.ok) throw new Error(`Failed to load snapshot: ${snapResp.statusText}`);
     const snapshot = await snapResp.json();
     const kit = mapServerSnapshotKitToKit(snapshot.kit, kitName);
 
-    const store = new SessionKitStore(kit, { ...config, sessionId: sessionId! }, "ready");
+    const store = new SessionKitStore(kit, { ...config, sessionId: sessionId!, authToken }, "ready");
     store.domainVersion = snapshot.domain_version ?? 0;
     store.semioVersion = snapshot.semio_version ?? 0;
     store.lastSyncedAt = new Date().toISOString();
@@ -1695,7 +1741,7 @@ export class SessionKitStore implements UndoableKitStore {
       sync: {
         status: this.status,
         dirty: this.dirty,
-        readonly: false,
+        readonly: this.readOnly,
         lastSyncedAt: this.lastSyncedAt,
         error: this.error,
       },
@@ -1763,6 +1809,7 @@ export class SessionKitStore implements UndoableKitStore {
   }
 
   private async sendKitDiffToServer(diff: KitDiff): Promise<void> {
+    if (this.readOnly) throw new Error("Cannot send changes in read-only mode");
     const commands: any[] = [];
     // Kit-level fields
     const kitFields: Record<string, any> = {};
@@ -1905,7 +1952,7 @@ export class SessionKitStore implements UndoableKitStore {
     const batch = commands.length === 1 ? commands[0] : { kind: "Batch", payload: { commands } };
     const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/domain`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: this.authHeaders(),
       body: JSON.stringify({
         command_id: { "0": guid() },
         client_id: { "0": this.clientId },
@@ -1931,7 +1978,7 @@ export class SessionKitStore implements UndoableKitStore {
     this.status = "loading";
     this.notify();
     try {
-      const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/snapshot`);
+      const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/snapshot`, { headers: this.authHeaders() });
       if (!resp.ok) throw new Error(`Failed to reload: ${resp.statusText}`);
       const snapshot = await resp.json();
       const reloadedKit = mapServerSnapshotKitToKit(snapshot.kit, this.kit.name);
@@ -1974,6 +2021,7 @@ export class SessionKitStore implements UndoableKitStore {
   }
 
   undo(): void {
+    if (this.readOnly) throw new Error("Cannot undo in read-only mode");
     const change = this.undoStack.pop();
     if (!change) return;
     this.kit = applyKitDiff(this.kit, change.backward);
@@ -1984,6 +2032,7 @@ export class SessionKitStore implements UndoableKitStore {
   }
 
   redo(): void {
+    if (this.readOnly) throw new Error("Cannot redo in read-only mode");
     const change = this.redoStack.pop();
     if (!change) return;
     this.kit = applyKitDiff(this.kit, change.forward);
@@ -1998,7 +2047,7 @@ export class SessionKitStore implements UndoableKitStore {
   async sendCursor(u: number, v: number): Promise<void> {
     await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: this.authHeaders(),
       body: JSON.stringify({
         client_id: { "0": this.clientId },
         person_id: { "0": this.personId },
@@ -2013,7 +2062,7 @@ export class SessionKitStore implements UndoableKitStore {
   async sendLook(position: [number, number, number], forward: [number, number, number], up: [number, number, number]): Promise<void> {
     await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: this.authHeaders(),
       body: JSON.stringify({
         client_id: { "0": this.clientId },
         person_id: { "0": this.personId },
@@ -2028,7 +2077,7 @@ export class SessionKitStore implements UndoableKitStore {
   async sendSelection(pieceIds: string[], designIds: string[]): Promise<void> {
     await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: this.authHeaders(),
       body: JSON.stringify({
         client_id: { "0": this.clientId },
         person_id: { "0": this.personId },
@@ -2043,7 +2092,7 @@ export class SessionKitStore implements UndoableKitStore {
   async clearPresence(): Promise<void> {
     await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: this.authHeaders(),
       body: JSON.stringify({
         client_id: { "0": this.clientId },
         person_id: { "0": this.personId },
@@ -2071,25 +2120,26 @@ export class SessionKitStore implements UndoableKitStore {
   // #region 🔩History
 
   async getKitAtLookback(lookback: string): Promise<Kit> {
-    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/kit/at/${lookback}`);
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/kit/at/${lookback}`, { headers: this.authHeaders() });
     if (!resp.ok) throw new Error(`Failed to get kit at lookback ${lookback}: ${resp.statusText}`);
     return resp.json();
   }
 
   async getKitAtVersion(version: number): Promise<Kit> {
-    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/kit/at-version/${version}`);
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/kit/at-version/${version}`, { headers: this.authHeaders() });
     if (!resp.ok) throw new Error(`Failed to get kit at version ${version}: ${resp.statusText}`);
     return resp.json();
   }
 
   async compactHistory(): Promise<{ snapshots_created: number; logs_deleted: number }> {
-    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/history/compact`, { method: "POST" });
+    if (this.readOnly) throw new Error("Cannot compact history in read-only mode");
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/history/compact`, { method: "POST", headers: this.authHeaders() });
     if (!resp.ok) throw new Error(`Failed to compact: ${resp.statusText}`);
     return resp.json();
   }
 
   async getLookbackTokens(): Promise<string[]> {
-    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/history/lookback-tokens`);
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/history/lookback-tokens`, { headers: this.authHeaders() });
     if (!resp.ok) throw new Error(`Failed to get tokens: ${resp.statusText}`);
     return resp.json();
   }
@@ -8675,12 +8725,7 @@ const uploadKitFileToProvider = async (kitStore: KitStore, kit: Kit, file: Semio
   // stays inside the single *.kit.semio.json file on save.
   // Specs: Use embedFileBlob presence, not instanceof JsonFileKitStore — desktop may load two bundle copies of the class so instanceof would skip embedding. kitStore may be a CollaborativeKitStore wrapper, so also check the inner store exposed via `.store`.
   const innerCandidate = (kitStore as { store?: unknown }).store;
-  const embedTarget =
-    typeof (kitStore as any)?.embedFileBlob === "function"
-      ? (kitStore as any)
-      : typeof (innerCandidate as any)?.embedFileBlob === "function"
-        ? (innerCandidate as any)
-        : null;
+  const embedTarget = typeof (kitStore as any)?.embedFileBlob === "function" ? (kitStore as any) : typeof (innerCandidate as any)?.embedFileBlob === "function" ? (innerCandidate as any) : null;
   if (embedTarget) {
     try {
       await embedTarget.embedFileBlob(file.guid, blob);

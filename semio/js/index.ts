@@ -6173,7 +6173,7 @@ const childConnectorOriginWorld = (parentPlane: Plane, parentConnector: Connecto
 };
 
 /**
- * Minimum-norm δ with Jδ = t for 3×n Jacobian J whose columns are cols[i] = ∂origin/��param_i; δ = J��(JJ��)⁻¹t.
+ * Minimum-norm δ with Jδ = t for 3×n Jacobian J whose columns are cols[i] = ∂origin/∂param_i; δ = Jᵀ(JJᵀ)⁻¹t.
  **/
 const solveConnectionOriginMinNorm = (cols: THREE.Vector3[], t: THREE.Vector3): number[] | undefined => {
   if (cols.length === 0) return undefined;

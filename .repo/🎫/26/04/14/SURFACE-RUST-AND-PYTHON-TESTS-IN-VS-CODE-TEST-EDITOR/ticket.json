@@ -2,11 +2,12 @@
   "title": "Surface Rust and Python Tests in VSCode Test Editor",
   "status": "open",
   "description": "All semio tests must appear in the VSCode test editor. Go, Playwright, Vitest and F# already show up. Rust (cargo tests in semio/rs/lib.rs) and Python (pytest tests in semio/py/main.py and semio/engine/main.py) are missing. Fix .vscode/settings.json and any configuration so rust-analyzer Test Explorer surfaces the Rust tests and the Python extension discovers the pytest tests.",
-  "summary": "Accidentally reopened by automated tool, closing immediately. No changes made.",
+  "summary": "Wired folder-kit sketchpad filesystem sync end-to-end so desktop folder kits create real directories and move real files/folders when sketchpad issues createFolder, updateFolder, or moveToFolder commands. Extended the folder-backed adapter contract, connected Electron preload/main/renderer IPC for directory creation and entry moves with root-path validation, updated the Node folder adapter used by tests, and added sketchpad coverage asserting folder-store filesystem operations are triggered for folder creation, folder rename, file moves, and folder moves. Verified via successful @semio/desktop integration run and desktop production build; the full @semio/js Vitest suite still has one pre-existing unrelated export-scene-graph failure in the Python-backed report test.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪4b1e4c64d3a8459cacccdd82e7b9c9ed",
     "⚪d2aad5cdf0a64a04868e232ab611a4f5",
-    "⚪cb92dde878ce4bf8a504608b05997060"
+    "⚪cb92dde878ce4bf8a504608b05997060",
+    "⚪6176ec0bffc345978d3e595974bdba65"
   ]
 }
