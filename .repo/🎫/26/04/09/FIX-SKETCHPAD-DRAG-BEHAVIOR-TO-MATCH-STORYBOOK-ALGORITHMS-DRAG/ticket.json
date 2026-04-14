@@ -1,7 +1,8 @@
 {
   "title": "Fix Sketchpad Drag Behavior to Match Storybook Algorithms Drag",
-  "status": "open",
+  "status": "closed",
   "description": "The sketchpad drag (both live preview and final diff) still behaves differently from the storybook Drag story. Need to deeply compare what the storybook does vs what the sketchpad does and align them completely.",
+  "summary": "Superseded by FIX-SKETCHPAD-DRAG-TO-USE-DRAG-ALGORITHM-WITHOUT-EXTRA-UI-LAYER. Fixed onNodeDragStop: removed connections: [], added updateConnections dispatch, re-flatten via applyDesignDiff + piecesMetadata for correct descendant positions.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1308"
   },

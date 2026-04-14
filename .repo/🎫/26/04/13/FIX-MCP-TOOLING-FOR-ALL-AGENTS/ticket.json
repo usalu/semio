@@ -1,0 +1,10 @@
+{
+  "title": "Fix Mcp Tooling For All Agents",
+  "status": "closed",
+  "description": "Fix MCP tooling so all agents (Claude Code, Codex, Cursor, Windsurf, Kiro CLI, GitHub Copilot) can access all MCP servers. Issues: .mcp.json only has repo; coda path wrong in kiro/codex configs pointing to coda/engine/coda.py instead of coda/assistant/main.py; .github/agents/semio.agent.md has no MCP servers.",
+  "summary": "Fixed MCP tooling for all agents. Added playwright-test, semio, coda servers to .mcp.json. Fixed coda path from coda/engine/coda.py to coda/assistant/main.py in .kiro/settings/mcp.json, .kiro/agents/semio.json, .codex/config.toml. Added all 4 MCP servers to .vscode/mcp.json. Added mcp/* tool entries to .github/agents/semio.agent.md.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪f0a6b94ecfa0482ab76d80735c2edb1e"
+  ]
+}

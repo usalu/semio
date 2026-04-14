@@ -1,6 +1,7 @@
 {
   "mcpServers": {
     "playwright-test": {
+      "type": "stdio",
       "command": "npx",
       "args": [
         "playwright",
@@ -21,7 +22,7 @@
       "command": "uv",
       "args": [
         "--directory",
-        "/workspaces/semio/semio/engine",
+        "semio/engine",
         "run",
         "main.py",
         "--mcp-stdio"
@@ -32,9 +33,9 @@
       "command": "uv",
       "args": [
         "--directory",
-        "/workspaces/semio/coda/engine",
+        "coda/assistant",
         "run",
-        "coda.py",
+        "main.py",
         "--mcp-stdio"
       ]
     }

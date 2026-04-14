@@ -27,6 +27,10 @@ tools:
     "search",
     "web/fetch",
     "todo",
+    "mcp/repo",
+    "mcp/semio",
+    "mcp/coda",
+    "mcp/playwright-test",
   ]
 ---
 

@@ -1,4 +1,87 @@
 
+sketchpad inbetween until mouse release should show the preview of the piece being dragged. the preview should update in real-time as the user moves the mouse, so they can see how the piece will fit with other pieces in the design.currently, it applies to few pieces but not all pieces. make sure to implement it for all pieces and make sure it works for all pieces in the design. also make sure that connections are also previewed in real-time as the user drags the piece. dont break the drag funtionalty or do cheap ui hacks to make it work. make sure to test it thoroughly to ensure that the preview is accurate and responsive, and that it does not cause any performance issues or bugs in the design process
+-------------------------------------
+
+
+
+
+
+
+findReplaceableTypesAndDesignsForPiecesInDesign(design:Design, designs:Design[], types:Type[], ports:Ports[], selection:{pieces:Guid[]}): {types:Guid[], designs:Guid[]}
+
+
+selection-->pieces-->connections--->types-->connectors--->ports--> compatable port
+
+
+this algorithm suggests replacable types based on the current selection. it looks at the pieces in the selection and finds all the connections that are attached to these pieces.
+
+if connections are found,
+then it looks at the types of the connected pieces and finds all the connectors that are whithin types. finally, it looks at the ports of these connectors and finds all the ports that are compatible with these connectors. based on this information, it suggests all the types that have these compatible ports. 
+
+it does only sugegst if it finds a replacable type/design for every connection of the selected pieces. 
+
+if no connections are found,
+it suggests all types that have the same port as well as all compatable ports with this port as the selected pieces. if connections are found, it suggests all types that have compatible ports with the connected pieces.
+
+implement for all programming language and make sure all tests pass and are identical.
+
+-----------
+a replacable piece has a replacable connection 
+
+
+find every selected piece
+find every connection attached to a selected piece
+when one or more attached connections are found:
+find every connected piece
+find the type of every connected piece
+find every connector of those types
+find every port of those connectors
+find every compatible port
+
+
+add only the types that have compatible ports for all connections of all selected pieces
+add only the designs that have compatible ports for all connections of all selected pieces
+
+
+only add a type or design when it is replaceable for every connection of every selected piece
+
+when no attached connections are found:
+find the type of every selected piece
+find every connector of those types
+find every port of those connectors
+add every type that has the same port, or a compatible port, for all selected piece
+add every design that has the same port, or a compatible port, for all selected piece
+
+show in target a single tree for bot htypes and designs as well as the icons/shortcut e.g (first storey, L, G) of the compatable ports and designs together. up: shortcuts and down: tree of both types and designs.
+
+
+
+Add `findReplaceableTypesAndDesignsForPiecesInDesign` test case with selection `nakagin-capsule-tower.copy.design.selection.semio.json` 
+
+
+
+Add `findReplaceableTypesAndDesignsForPiecesInDesign` story to semio/algorithms with source (design with selectable pieces), , and output (target is compatable type tree with parents muted and children heighlighted )
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------
+
+
+implement fix piece :it flattens the selected pieces by removing all connections to children and parents  fix.piece
+
+
+-----------------------------------------------------------------------------------
+
+Implement an adaptive shared property-row layout in the sketchpad Details panel so deep/narrow rows never let the label collide with the value field. Keep the normal inline property row/value-column layout by default, but when the available horizontal space at a given tree depth is too small for label + control to fit cleanly, automatically switch that row into a stacked mode: first line = tree gutter + label, second line = value-side control below it in normal flow. Apply this generically based on measured available width or collision threshold, not by field name. Preserve TreeSection, TreeItem, TreeRow, TreeContent, IndentationLines, hierarchy, tree lines, spacing rhythm, and actions. Do not use absolute positioning or one-off width hacks.
+
+----------------------------------------------------------------------
+
+--------------
 
 Refine the shared semio/sketchpad tree spacing so that whenever a sibling transition goes from a leaf/property row to an expandable/group row at the same depth, insert one empty-row-sized gap before the group row. Apply this generically based on row kind and sibling transition, not by field names. Keep compact spacing within consecutive property rows, preserve hierarchy, tree lines, property row/value-column layout, and actions, and do not hardcode specific sections.
 

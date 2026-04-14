@@ -8,7 +8,6 @@
 
 // #endregion 🧲Header
 
-
 // #region ⛩️Imports
 
 package semio
@@ -42,7 +41,6 @@ import (
 
 // #endregion ⛩️Imports
 
-
 // #region 🎞️Constants
 
 const (
@@ -53,7 +51,6 @@ const (
 const AssetsPath = "../assets/semio"
 
 // #endregion 🎞️Constants
-
 
 // #region 📦Utilities
 
@@ -265,7 +262,6 @@ func DeepEqual(a, b interface{}) bool {
 
 // #endregion 📦Utilities
 
-
 // #region 🐍Entity IDs
 // Entity IDs MUST define identifier types for all semio domain entities.
 
@@ -383,7 +379,6 @@ type KitId struct {
 
 // #endregion 🐍Entity IDs
 
-
 // #region 🖥️Weak Entities
 // Weak Entities MUST define value types that exist only as part of parent entities.
 
@@ -429,7 +424,6 @@ type Camera struct {
 
 // #endregion 🖥️Weak Entities
 
-
 // #region 💎Attribute
 
 // 💎Attribute represents a key-value metadata entry with optional definition.
@@ -467,7 +461,6 @@ type AttributeMeta struct {
 
 // #endregion 💎Attribute
 
-
 // #region 📍Location
 
 // 📍Location represents a geographic point with longitude, latitude and optional altitude.
@@ -488,7 +481,6 @@ type LocationDiff struct {
 }
 
 // #endregion 📍Location
-
 
 // #region ✍️Author
 
@@ -529,7 +521,6 @@ type AuthorMeta struct {
 }
 
 // #endregion ✍️Author
-
 
 // #region 📄File
 
@@ -585,7 +576,6 @@ type FileMeta struct {
 
 // #endregion 📄File
 
-
 // #region 📁Folder
 
 // 📁Folder represents a folder hierarchy entity with name and parent reference.
@@ -629,7 +619,6 @@ type FolderMeta struct {
 
 // #endregion 📁Folder
 
-
 // #region 📏Benchmark
 
 // 📏Benchmark represents a named metric range with min/max bounds and optional icon.
@@ -668,7 +657,6 @@ type BenchmarksDiff struct {
 }
 
 // #endregion 📏Benchmark
-
 
 // #region 🔬Quality
 
@@ -769,7 +757,6 @@ type QualityMeta struct {
 
 // #endregion 🔬Quality
 
-
 // #region ⚓Port
 
 // ⚓Port represents a named connector port category with compatible port references.
@@ -846,7 +833,6 @@ type PortMeta struct {
 
 // #endregion ⚓Port
 
-
 // #region 📊Prop
 
 // 📊Prop represents a quality measurement value with optional unit.
@@ -885,7 +871,6 @@ type PropMeta struct {
 }
 
 // #endregion 📊Prop
-
 
 // #region 🏷️Tag
 
@@ -958,7 +943,6 @@ type TagMeta struct {
 
 // #endregion 🏷️Tag
 
-
 // #region 💡Concept
 
 // 💡Concept represents a named categorization concept with optional description and icon.
@@ -1030,7 +1014,6 @@ type ConceptMeta struct {
 
 // #endregion 💡Concept
 
-
 // #region 🗿Model
 
 // 🗿Model represents a 3D model reference linking a file with tags and description.
@@ -1071,7 +1054,6 @@ type ModelMeta struct {
 }
 
 // #endregion 🗿Model
-
 
 // #region 🔌Connector
 
@@ -1142,7 +1124,6 @@ type ConnectorMeta struct {
 }
 
 // #endregion 🔌Connector
-
 
 // #region 🧱Type
 
@@ -1273,7 +1254,6 @@ type TypeShallow struct {
 
 // #endregion 🧱Type
 
-
 // #region 🎨Layer
 
 // 🎨Layer represents a named layer with visibility, lock and color properties.
@@ -1318,7 +1298,6 @@ type LayerMeta struct {
 }
 
 // #endregion 🎨Layer
-
 
 // #region 🧩Piece
 
@@ -1398,7 +1377,6 @@ type PieceMeta struct {
 
 // #endregion 🧩Piece
 
-
 // #region 👥Group
 
 // 👥Group represents a named collection of pieces within a design.
@@ -1440,7 +1418,6 @@ type GroupMeta struct {
 
 // #endregion 👥Group
 
-
 // #region ↔️Side
 
 // ↔️Side represents one end of a connection referencing a piece and optional connector.
@@ -1458,7 +1435,6 @@ type SideDiff struct {
 }
 
 // #endregion ↔️Side
-
 
 // #region 🔗Connection
 
@@ -1523,7 +1499,6 @@ type ConnectionMeta struct {
 
 // #endregion 🔗Connection
 
-
 // #region 📈Stat
 
 // 📈Stat represents a statistical quality measurement with min/max bounds and unit.
@@ -1567,7 +1542,6 @@ type StatMeta struct {
 }
 
 // #endregion 📈Stat
-
 
 // #region 📐Design
 
@@ -1693,7 +1667,6 @@ type DesignShallow struct {
 }
 
 // #endregion 📐Design
-
 
 // #region ⏱️Kit
 
@@ -1864,7 +1837,6 @@ type KitShallow struct {
 }
 
 // #endregion ⏱️Kit
-
 
 // ⚖️Change represents a reversible entity change with forward and backward diffs.
 type Change[TEntity any, TDiff any] struct {
@@ -2105,7 +2077,6 @@ func DeserializeKitDiff(data []byte) (KitDiff, error) {
 
 // #endregion ⏰Serialization
 
-
 // #region 🔑Meta And Shallow
 
 // 💎ToAttributeMeta converts an Attribute to its scalar-only Meta view.
@@ -2303,7 +2274,6 @@ func ToKitShallow(k Kit) KitShallow {
 }
 
 // #endregion 🔑Meta And Shallow
-
 
 // #region 🖥️Hash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
@@ -4717,7 +4687,6 @@ func HashKitDiff(d KitDiff) string {
 
 // #endregion 🖥️Hash
 
-
 // #region 🔍Helpers
 
 // 🧱FindTypeInKit returns a pointer to the type with the given GUID or nil.
@@ -4884,7 +4853,6 @@ func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64
 
 // #endregion 🔍Helpers
 
-
 // #region 🗡️Factories
 
 // 🆕NewKit creates a new kit with the given name and a generated GUID.
@@ -5026,7 +4994,6 @@ func NewAuthor(name string) Author {
 }
 
 // #endregion 🗡️Factories
-
 
 // #region 🎪Kit Operations
 // Kit Operations MUST provide comparison, diffing, and application of kit changes.
@@ -10621,7 +10588,6 @@ func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
 
 // #endregion 🎪Kit Operations
 
-
 // #region 🌊Kit Change Helpers
 // Kit Change Helpers MUST provide convenience functions for single-entity kit changes.
 
@@ -10771,6 +10737,266 @@ func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
 
 // #endregion 🌊Kit Change Helpers
 
+// #region 🔍Find Replaceable Types In Designs
+// Find Replaceable Types In Designs MUST suggest replaceable types and designs for selected pieces.
+// Specs: Looks at pieces in the selection and finds all connections attached to them.
+// If connections found: looks at the types of the connected (other) pieces and finds all connectors
+// within those types. Gets the ports of these connectors and finds all compatible ports.
+// Suggests types that have connectors with compatible ports.
+// Only suggests if a replaceable type/design exists for every connection.
+// If no connections found: suggests types with same or compatible ports as the selected pieces.
+
+// FindReplaceableTypesInDesignsForPiecesInDesign finds replaceable types and designs for the selected pieces.
+func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Design, types []Type, ports []Port, selectionPieces []string) (typeGuids []string, designGuids []string) {
+	selectedPieceSet := make(map[string]bool)
+	for _, pg := range selectionPieces {
+		selectedPieceSet[pg] = true
+	}
+
+	portMap := make(map[string]Port)
+	for _, p := range ports {
+		portMap[p.Guid] = p
+	}
+
+	typeMap := make(map[string]Type)
+	for _, t := range types {
+		typeMap[t.Guid] = t
+	}
+
+	checkPortCompatibility := func(portGuid1, portGuid2 string) bool {
+		if portGuid1 == "" || portGuid2 == "" {
+			return true
+		}
+		if portGuid1 == portGuid2 {
+			return true
+		}
+		p1, ok1 := portMap[portGuid1]
+		p2, ok2 := portMap[portGuid2]
+		if !ok1 || !ok2 {
+			return true
+		}
+		if len(p1.CompatiblePorts) == 0 && len(p2.CompatiblePorts) == 0 {
+			return true
+		}
+		if len(p1.CompatiblePorts) == 0 {
+			for _, cp := range p2.CompatiblePorts {
+				if cp.Guid == portGuid1 {
+					return true
+				}
+			}
+			return false
+		}
+		if len(p2.CompatiblePorts) == 0 {
+			for _, cp := range p1.CompatiblePorts {
+				if cp.Guid == portGuid2 {
+					return true
+				}
+			}
+			return false
+		}
+		for _, cp := range p1.CompatiblePorts {
+			if cp.Guid == portGuid2 {
+				return true
+			}
+		}
+		for _, cp := range p2.CompatiblePorts {
+			if cp.Guid == portGuid1 {
+				return true
+			}
+		}
+		return false
+	}
+
+	buildCompatiblePortSet := func(t Type) map[string]bool {
+		connectorPorts := make(map[string]bool)
+		for _, c := range t.Connectors {
+			if c.Port != nil && c.Port.Guid != "" {
+				connectorPorts[c.Port.Guid] = true
+			}
+		}
+		compatSet := make(map[string]bool)
+		for cp := range connectorPorts {
+			for _, p := range ports {
+				if checkPortCompatibility(cp, p.Guid) {
+					compatSet[p.Guid] = true
+				}
+			}
+		}
+		return compatSet
+	}
+
+	hasConnectorInSet := func(connectors []Connector, portSet map[string]bool) bool {
+		for _, c := range connectors {
+			if c.Port != nil && c.Port.Guid != "" && portSet[c.Port.Guid] {
+				return true
+			}
+		}
+		return false
+	}
+
+	type externalConnection struct {
+		otherTypeGuid string
+	}
+	var externalConnections []externalConnection
+	hasExternalConnections := false
+
+	for _, pieceGuid := range selectionPieces {
+		for _, conn := range design.Connections {
+			if conn.Connected.Piece.Guid != pieceGuid && conn.Connecting.Piece.Guid != pieceGuid {
+				continue
+			}
+			isConnectedSide := conn.Connected.Piece.Guid == pieceGuid
+			otherPieceGuid := conn.Connecting.Piece.Guid
+			if isConnectedSide {
+				otherPieceGuid = conn.Connecting.Piece.Guid
+			} else {
+				otherPieceGuid = conn.Connected.Piece.Guid
+			}
+			if selectedPieceSet[otherPieceGuid] {
+				continue
+			}
+			hasExternalConnections = true
+			var otherPiece *Piece
+			for i := range design.Pieces {
+				if design.Pieces[i].Guid == otherPieceGuid {
+					otherPiece = &design.Pieces[i]
+					break
+				}
+			}
+			if otherPiece == nil || otherPiece.Type == nil || otherPiece.Type.Guid == "" {
+				continue
+			}
+			externalConnections = append(externalConnections, externalConnection{otherTypeGuid: otherPiece.Type.Guid})
+		}
+	}
+
+	if hasExternalConnections {
+		compatSetsByType := make(map[string]map[string]bool)
+		for _, ec := range externalConnections {
+			if _, exists := compatSetsByType[ec.otherTypeGuid]; !exists {
+				if otherType, ok := typeMap[ec.otherTypeGuid]; ok {
+					compatSetsByType[ec.otherTypeGuid] = buildCompatiblePortSet(otherType)
+				}
+			}
+		}
+
+		perConnectionSets := make([]map[string]bool, len(externalConnections))
+		for i, ec := range externalConnections {
+			if cs, ok := compatSetsByType[ec.otherTypeGuid]; ok {
+				perConnectionSets[i] = cs
+			} else {
+				perConnectionSets[i] = make(map[string]bool)
+			}
+		}
+
+		for _, candidateType := range types {
+			if len(candidateType.Connectors) == 0 {
+				continue
+			}
+			passesAll := true
+			for _, cs := range perConnectionSets {
+				if !hasConnectorInSet(candidateType.Connectors, cs) {
+					passesAll = false
+					break
+				}
+			}
+			if passesAll {
+				typeGuids = append(typeGuids, candidateType.Guid)
+			}
+		}
+
+		for _, candidateDesign := range designs {
+			var designConnectors []Connector
+			for _, p := range candidateDesign.Pieces {
+				if p.Type == nil || p.Type.Guid == "" {
+					continue
+				}
+				if t, ok := typeMap[p.Type.Guid]; ok {
+					designConnectors = append(designConnectors, t.Connectors...)
+				}
+			}
+			if len(designConnectors) == 0 {
+				continue
+			}
+			passesAll := true
+			for _, cs := range perConnectionSets {
+				if !hasConnectorInSet(designConnectors, cs) {
+					passesAll = false
+					break
+				}
+			}
+			if passesAll {
+				designGuids = append(designGuids, candidateDesign.Guid)
+			}
+		}
+	} else {
+		selectedPorts := make(map[string]bool)
+		for _, pieceGuid := range selectionPieces {
+			for i := range design.Pieces {
+				if design.Pieces[i].Guid == pieceGuid {
+					if design.Pieces[i].Type != nil && design.Pieces[i].Type.Guid != "" {
+						if t, ok := typeMap[design.Pieces[i].Type.Guid]; ok {
+							for _, c := range t.Connectors {
+								if c.Port != nil && c.Port.Guid != "" {
+									selectedPorts[c.Port.Guid] = true
+								}
+							}
+						}
+					}
+					break
+				}
+			}
+		}
+
+		compatSet := make(map[string]bool)
+		for sp := range selectedPorts {
+			for _, p := range ports {
+				if checkPortCompatibility(sp, p.Guid) {
+					compatSet[p.Guid] = true
+				}
+			}
+		}
+
+		for _, candidateType := range types {
+			if len(selectedPorts) == 0 && len(candidateType.Connectors) == 0 {
+				typeGuids = append(typeGuids, candidateType.Guid)
+				continue
+			}
+			if hasConnectorInSet(candidateType.Connectors, compatSet) {
+				typeGuids = append(typeGuids, candidateType.Guid)
+			}
+		}
+
+		for _, candidateDesign := range designs {
+			var designConnectors []Connector
+			for _, p := range candidateDesign.Pieces {
+				if p.Type == nil || p.Type.Guid == "" {
+					continue
+				}
+				if t, ok := typeMap[p.Type.Guid]; ok {
+					designConnectors = append(designConnectors, t.Connectors...)
+				}
+			}
+			if len(selectedPorts) == 0 && len(designConnectors) == 0 {
+				designGuids = append(designGuids, candidateDesign.Guid)
+				continue
+			}
+			if hasConnectorInSet(designConnectors, compatSet) {
+				designGuids = append(designGuids, candidateDesign.Guid)
+			}
+		}
+	}
+
+	if typeGuids == nil {
+		typeGuids = []string{}
+	}
+	if designGuids == nil {
+		designGuids = []string{}
+	}
+	return typeGuids, designGuids
+}
+
+// #endregion 🔍Find Replaceable Types In Designs
 
 // #region 📋Copy Paste Design
 // Copy Paste Design MUST provide copy and paste functionality for designs.
@@ -11362,7 +11588,6 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 }
 
 // #endregion 📋Copy Paste Design
-
 
 // #region 🛡️Validation
 
@@ -12302,7 +12527,6 @@ func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 
 // #endregion 🛡️Validation
 
-
 // #region 🌤️Flatten Design
 // 💾Flatten Design MUST compute absolute piece planes from relative connections.
 func planeToMatrix(p Plane) *mat.Dense {
@@ -12992,7 +13216,6 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 }
 
 // #endregion 🌤️Flatten Design
-
 
 // #region 🔩Kit Model Export
 
@@ -13908,7 +14131,6 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 
 // #endregion 🔩Kit Model Export
 
-
 // #region ❄️Geometric Insights
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
@@ -14131,7 +14353,6 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 }
 
 // #endregion ❄️Geometric Insights
-
 
 // #region 📡SQLite
 // SQLite kit operations. MUST provide serialization and deserialization of Kit to and from SQLite and zip formats.

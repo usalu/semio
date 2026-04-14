@@ -1,7 +1,8 @@
 {
   "title": "Add Reset Button to Kit App Toolbar",
-  "status": "open",
+  "status": "closed",
   "description": "Add a reset button to the kit app toolbar (history group) that re-imports the kit from its remote URL, discarding all local changes.",
+  "summary": "Connected the reset button in the kit app toolbar to a new semio.kit.reset command. Added replace?: Kit to KitCommandResult, updated executeKitCommand to await async commands and call kitStore.replace() when result.replace is set, added semio.kit.reset command that fetches the remote URL and returns the kit wholesale via replace, added resetKit to useKitCommands, and updated KitToolbarReset to call resetKit instead of importKit.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1312"
   },

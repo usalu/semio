@@ -1,0 +1,13 @@
+{
+  "title": "Implement Find Replaceable Types And Designs For Pieces In Design",
+  "status": "closed",
+  "description": "Implement findReplaceableTypesAndDesignsForPiecesInDesign algorithm across all languages (TypeScript, Go, Python, Rust, C#). The algorithm suggests replaceable types/designs for selected pieces based on port compatibility of their connections.",
+  "summary": "Split the replaceable-types workflow into a dedicated Storybook story, kept the copy/paste story focused on copy/paste behavior, and updated the algorithms bundle README to describe the separate stories and full Nakagin Capsule Tower source selection.",
+  "goal": "🎯algorithms",
+  "sessions": [
+    "⚪a2713856edfe44c0931c7d0d4932b7a2",
+    "⚪02fb54326b89456c9a6e73b63c2ac0a3",
+    "⚪1dbc639182374ef49b4fa892a9665a97",
+    "⚪4b327a2789a94f22af77e4f5720f5b9f"
+  ]
+}

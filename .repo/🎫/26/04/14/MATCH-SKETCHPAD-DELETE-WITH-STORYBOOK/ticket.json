@@ -1,0 +1,13 @@
+{
+  "title": "Match Sketchpad Delete With Storybook",
+  "status": "closed",
+  "description": "Compare the delete flow in semio/sketchpad with the Storybook sketchpad delete flow, identify the behavioral differences, and refactor the sketchpad delete implementation so it matches Storybook. Update the existing tests in place to cover the parity case, keep everything in the current codebase only, and close the ticket after verification.",
+  "summary": "Normalize selection ids for delete in design app so connection selection removes connections consistently.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1324"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪84d55560c2704f5a89b963ed411f1841"
+  ]
+}

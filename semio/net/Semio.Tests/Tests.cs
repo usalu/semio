@@ -1487,4 +1487,181 @@ public class Tests
 
     #endregion 🐙MaxChildren
 
+    #region 🔍Find Replaceable Types In Designs Tests
+
+    public class FindReplaceableTypesInDesignsTests
+    {
+        private sealed class Selection
+        {
+            public List<PieceId> Pieces { get; set; } = new();
+            public List<ConnectionId> Connections { get; set; } = new();
+        }
+
+        [Fact]
+        public void Selection_Asset_Returns_Compatible_Type_And_Design_Guids()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var selection = Tests.LoadAsset<Selection>("nakagin-capsule-tower.copy.design.selection.semio.json");
+
+            Assert.Equal(10, selection.Pieces.Count);
+            Assert.Equal(9, selection.Connections.Count);
+
+            var pieceGuids = selection.Pieces.Select(p => p.Guid).ToList();
+            var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(kit, design.Guid, pieceGuids);
+
+            var expectedTypeGuids = new List<string>
+            {
+                "cb25017e-5505-4677-a71e-cccbc7a5be7d",
+                "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
+                "e1878572-0fe1-4780-b877-90df9b25d31f",
+                "357b841f-b121-463c-88a6-153d7cbf272f",
+                "818f2a23-569b-47cb-a69c-147694beb815",
+                "6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
+                "214a30f8-adfc-40de-840b-151d9f7e17dd",
+                "cc9a4330-537f-49c2-a70d-5e6383b535f5",
+                "f1779b1f-2324-4bad-86da-773a1e90b57c",
+                "3697e115-c2e7-4279-b09a-03e1d1e9c21e",
+                "7ca051a6-8752-4ff2-9430-71a80114a88e",
+                "6cbd2d9c-5710-452c-af7a-6859cfb0151a",
+                "af980393-c613-47c2-88a4-461298b0b8f9",
+                "8ee84149-4198-4223-ae89-3021ad2950c7",
+                "5aa65d97-778b-4449-be63-7948730d64bc",
+                "bfb4b43c-8e75-4265-b64a-7ebe4f62e099",
+                "c90e216d-d899-4709-995b-5abfcce75bcb",
+                "eefe6d3e-f18d-474e-b82e-04bb406d290f",
+                "ccb67521-5ca1-42cf-bd81-4058c6c5348d",
+                "4b8563c5-37ad-49e8-9b6c-d635378bffce",
+                "5af2d54e-309c-46a6-8454-c91b957a59f9",
+                "a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd",
+                "aa34760a-d543-46c8-afa1-d83a38d42f2b",
+                "f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364",
+                "93b1cab5-ad4b-422b-a0e0-8b0de23a8534",
+                "5ee4ad14-091f-42f4-a357-09fc16c3ae39",
+                "34ddd546-4df3-480c-9aa3-880fb51b8016",
+                "e913ffae-6ae9-44e0-b516-1cc763bfefe7",
+                "7ec14f29-b730-4000-b66d-aa304767e8c1",
+                "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5",
+                "67917609-d54d-4afc-9f9a-6e3abc0d18a4",
+                "94c31826-ae8e-432a-9a27-73346f49c704",
+                "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
+                "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
+                "49233ca9-f005-4d15-b515-2a18a94dd7a8",
+                "1b1fcf80-0acc-4456-bc16-71f69c5df571",
+                "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7",
+                "2951ab00-3891-4d50-b887-26f1d308bfef",
+                "0271dcc8-c961-4ecf-8591-9f8027252174",
+                "277e1960-c3c8-4186-9a83-8f7eb66bcf28",
+            };
+            var expectedDesignGuids = new List<string>
+            {
+                "9a890dd4-0a9c-48ac-920a-9e62666465ef",
+                "b3f11a7f-0660-48c6-84ed-41d3009a6bdf",
+                "38f0f014-ceba-42df-9339-4aab84bfbc1f",
+                "c3ee87b6-7453-49bc-8d7b-9405892f9452",
+                "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8",
+                "d7e12638-9749-471b-937e-a6e5523778ff",
+                "79fa8945-b47d-4896-965f-f921067cbae2",
+                "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+                "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
+                "019ab4e0-cb2a-7613-a16a-ae086e331c95",
+            };
+
+            Assert.Equal(expectedTypeGuids, result.TypeGuids);
+            Assert.Equal(expectedDesignGuids, result.DesignGuids);
+        }
+
+        [Fact]
+        public void Connected_Piece()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var piece = design.Pieces.First(p => p.Name == "t_f1_b_c0");
+
+            var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(
+                kit, design.Guid, new List<string> { piece.Guid });
+            var typeGuids = result.TypeGuids;
+
+            Assert.NotEmpty(typeGuids);
+
+            var tambourType = kit.Types!.First(t => t.Name == "Tambour");
+            Assert.Contains(tambourType.Guid, typeGuids);
+
+            var capsuleType = kit.Types!.First(t => t.Name == "Capsule");
+            Assert.DoesNotContain(capsuleType.Guid, typeGuids);
+        }
+
+        [Fact]
+        public void Isolated_Piece()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var flatDesign = kit.Designs!.First(d =>
+                d.Name == "Flat" && d.Parent?.Guid == "9a890dd4-0a9c-48ac-920a-9e62666465ef");
+            var piece = flatDesign.Pieces.First();
+
+            var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(
+                kit, flatDesign.Guid, new List<string> { piece.Guid });
+            var typeGuids = result.TypeGuids;
+
+            Assert.NotEmpty(typeGuids);
+
+            var pieceTypeGuid = piece.Type!.Guid;
+            Assert.Contains(pieceTypeGuid, typeGuids);
+        }
+
+        [Fact]
+        public void Capital_Piece()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var capitalType = kit.Types!.First(t => t.Name == "Capital");
+            var piece = design.Pieces.First(p => p.Type?.Guid == capitalType.Guid);
+
+            var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(
+                kit, design.Guid, new List<string> { piece.Guid });
+            var typeGuids = result.TypeGuids;
+
+            Assert.NotEmpty(typeGuids);
+
+            Assert.DoesNotContain(capitalType.Guid, typeGuids);
+
+            var capsuleType = kit.Types!.First(t => t.Name == "Capsule");
+            Assert.DoesNotContain(capsuleType.Guid, typeGuids);
+        }
+
+        [Fact]
+        public void Multiple_Selected_Pieces()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var piece1 = design.Pieces.First(p => p.Name == "t_f1_b_c0");
+            var piece2 = design.Pieces.First(p => p.Name == "t_f2_b_c0");
+
+            var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(
+                kit, design.Guid, new List<string> { piece1.Guid, piece2.Guid });
+            var typeGuids = result.TypeGuids;
+
+            Assert.NotEmpty(typeGuids);
+
+            var tambourType = kit.Types!.First(t => t.Name == "Tambour");
+            Assert.Contains(tambourType.Guid, typeGuids);
+        }
+
+        [Fact]
+        public void Empty_Selection()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+
+            var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(
+                kit, design.Guid, new List<string>());
+            var typeGuids = result.TypeGuids;
+
+            var connectorlessCount = kit.Types!.Count(t => t.Connectors.Count == 0);
+            Assert.Equal(connectorlessCount, typeGuids.Count);
+        }
+    }
+
+    #endregion 🔍Find Replaceable Types In Designs Tests
+
 }
