@@ -1,22 +1,7 @@
 # Codex MCP Server Configuration
 # See: https://github.com/openai/codex/blob/main/docs/config.md
 
-[mcp_servers.playwright-test]
-command = "npx"
-args = ["playwright", "run-test-mcp-server"]
-enabled = true
-
 [mcp_servers.repo]
 command = "go"
 args = ["run", "./repo/cli", "mcp"]
-enabled = true
-
-[mcp_servers.semio]
-command = "uv"
-args = ["--directory", "semio/engine", "run", "main.py", "--mcp-stdio"]
-enabled = true
-
-[mcp_servers.coda]
-command = "uv"
-args = ["--directory", "coda/assistant", "run", "main.py", "--mcp-stdio"]
 enabled = true

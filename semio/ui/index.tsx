@@ -1324,12 +1324,18 @@ const centersFromLayoutDiff = (layoutDiff?: DesignDiff): Map<string, { u: number
 
 const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: DesignDiff, layoutDiff?: DesignDiff): DiagramSnapshot => {
   const merged = designDiff ? designWithDiff(design, designDiff) : design;
+  const layoutGeometry = designDiff ? applyDesignDiff(design, designDiff) : design;
   const layoutCenters = centersFromLayoutDiff(layoutDiff);
+  const geometryCentersByGuid = new Map(
+    (layoutGeometry.pieces ?? [])
+      .filter((p): p is Piece & { guid: string } => typeof p.guid === "string" && p.guid.length > 0)
+      .map((p) => [p.guid, p.center] as const),
+  );
 
   const pointMap = new Map<string, DiagramPoint>();
   (merged.pieces ?? []).forEach((piece) => {
     if (!piece.guid) return;
-    const center = piece.center ?? layoutCenters.get(piece.guid);
+    const center = geometryCentersByGuid.get(piece.guid) ?? piece.center ?? layoutCenters.get(piece.guid);
     if (!center) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
     pointMap.set(piece.guid, { guid: piece.guid, piece, u: center.u, v: center.v, status });
@@ -2457,12 +2463,17 @@ interface SceneSnapshot {
   connections: SceneConnectionAsset[];
 }
 
+// Specs: Match sketchpad {@link getReadableKitFileUrl} — kit JSON often carries `remote` (http(s)) or `blob` (data:/blob:) without a separate `url` field.
+// Summary: Resolves a browser-loadable model URL from a kit {@link SemioFile}.
+
+const isBrowserReadableModelUrl = (url: string): boolean => /^(blob:|data:|https?:)/i.test(url.trim());
+
 const getSceneFileSource = (file?: SemioFile): string | undefined => {
   if (!file) return undefined;
-  if (typeof file.blob === "string" && file.blob.length > 0) return file.blob;
-  if (typeof (file as SemioFile & { url?: string }).url === "string" && (file as SemioFile & { url?: string }).url!.length > 0) {
-    return (file as SemioFile & { url?: string }).url;
-  }
+  if (typeof file.blob === "string" && file.blob.length > 0 && isBrowserReadableModelUrl(file.blob)) return file.blob.trim();
+  const legacyUrl = typeof (file as SemioFile & { url?: string }).url === "string" ? (file as SemioFile & { url?: string }).url!.trim() : "";
+  if (legacyUrl.length > 0 && isBrowserReadableModelUrl(legacyUrl)) return legacyUrl;
+  if (typeof file.remote === "string" && file.remote.length > 0 && isBrowserReadableModelUrl(file.remote)) return file.remote.trim();
   return undefined;
 };
 
@@ -2480,7 +2491,10 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
   const withPlaneAndCenter = pieces.filter(({ piece }) => piece.plane && piece.center);
   const result = withPlaneAndCenter.map(({ piece, status }) => {
     const kindGuid = piece.type?.guid;
-    const kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
+    let kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
+    if (!kind && piece.type?.name) {
+      kind = kit.types?.find((t) => t.name === piece.type!.name);
+    }
     let file: SemioFile | undefined;
     let selectedModel = kind?.models?.length ? selectBestModel(kind.models, []) : undefined;
     if (selectedModel?.file?.guid) file = filesByGuid.get(selectedModel.file.guid);
@@ -2784,6 +2798,7 @@ const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, 
   // 🔷drei defaults meshopt to true which calls WebAssembly.instantiate() violating script-src wasm-eval.
   const gltf = useGLTF(modelSource, false, false);
   const { invalidate } = useThree();
+  const bounds = useBounds();
   const clone = React.useMemo(() => {
     return cloneSceneModelWithHomogeneousMaterials(gltf.scene, "#888888", "#888888");
   }, [gltf.scene]);
@@ -2792,6 +2807,12 @@ const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, 
     applySceneModelColorState(clone, getSceneModelColorState(status, isSelected, isHovered));
     invalidate();
   }, [clone, invalidate, status, isHovered, isSelected]);
+
+  React.useLayoutEffect(() => {
+    bounds.refresh();
+    bounds.fit();
+    invalidate();
+  }, [bounds, clone, invalidate]);
 
   return <Clone object={clone} />;
 };
@@ -2816,8 +2837,13 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
 
   const matrix = React.useMemo(() => {
     if (!piece.plane || !piece.center) return null;
-    return toScenePieceMatrix(piece.plane as Plane);
-  }, [piece.plane, piece.center]);
+    const base = toScenePieceMatrix(piece.plane as Plane);
+    const sc = piece.scale;
+    if (sc != null && sc !== 1 && Number.isFinite(sc)) {
+      base.multiply(new THREE.Matrix4().makeScale(sc, sc, sc));
+    }
+    return base;
+  }, [piece.plane, piece.center, piece.scale]);
 
   const boundsRegistry = React.useContext(SceneModelBoundsRegistryContext);
   const pieceBoundsRootRef = React.useRef<THREE.Group>(null);
@@ -3083,6 +3109,14 @@ const buildSceneZoomBox = (snapshot: SceneSnapshot, zoomTarget: ZoomTarget): THR
 const SceneAutoFit: React.FC<{ zoomTarget: ZoomTarget; snapshot: SceneSnapshot }> = ({ zoomTarget, snapshot }) => {
   const bounds = useBounds();
   const fittedRef = React.useRef(false);
+  const snapshotKey = React.useMemo(
+    () =>
+      `${zoomTarget}|${snapshot.pieces.map((a) => `${a.piece.guid}:${a.status}`).join(";")}|c:${snapshot.connections.length}|p:${snapshot.pieces.length}`,
+    [snapshot.connections.length, snapshot.pieces, zoomTarget],
+  );
+  React.useEffect(() => {
+    fittedRef.current = false;
+  }, [snapshotKey]);
   React.useEffect(() => {
     if (fittedRef.current) return;
     const box = buildSceneZoomBox(snapshot, zoomTarget);
@@ -3090,7 +3124,7 @@ const SceneAutoFit: React.FC<{ zoomTarget: ZoomTarget; snapshot: SceneSnapshot }
       bounds.refresh(box).fit();
     }
     fittedRef.current = true;
-  }, [bounds, snapshot, zoomTarget]);
+  }, [bounds, snapshot, snapshotKey, zoomTarget]);
   return null;
 };
 
@@ -4141,6 +4175,22 @@ const mergeRichestDesignFromCandidates = (candidates: Array<McpDiagramPayload | 
       merged = { ...merged, design: bestDesignForGeom };
     }
   }
+  /** Prefer the richest `kitArtifacts` among candidates (hint channel may omit kit while another carries the full artifact tree). */
+  let bestKitArtifacts: KitData | undefined =
+    merged.kitArtifacts && !isEmptyKitArtifactsData(merged.kitArtifacts) ? merged.kitArtifacts : undefined;
+  let bestKitScore =
+    bestKitArtifacts !== undefined ? scoreMcpDiagramPayload({ points: [], lines: [], kitArtifacts: bestKitArtifacts }) : -1;
+  for (const c of candidates) {
+    if (!c?.kitArtifacts || isEmptyKitArtifactsData(c.kitArtifacts)) continue;
+    const sc = scoreMcpDiagramPayload({ points: [], lines: [], kitArtifacts: c.kitArtifacts });
+    if (sc > bestKitScore) {
+      bestKitScore = sc;
+      bestKitArtifacts = c.kitArtifacts;
+    }
+  }
+  if (bestKitArtifacts !== undefined) {
+    merged = { ...merged, kitArtifacts: bestKitArtifacts };
+  }
   /** Keep `surface` consistent with authoritative `mode` after cross-candidate merge (hosts may leave stale `surface: diagram`). */
   const m = merged.mode ?? "show-diagram";
   if (m === "show-design" || m === "show-diff" || m === "show-diagram-diff") {
@@ -4342,7 +4392,7 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
   const kit = p.kit;
   const design = p.design as Design | undefined;
   const isDiff = mode === "show-diff" || mode === "show-diagram-diff";
-  const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface, isDiff ? p.designDiff : undefined) : isDiff && design && p.designDiff ? designWithDiff(design, p.designDiff) : undefined;
+  const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface, isDiff ? p.designDiff : undefined) : isDiff && design && p.designDiff ? applyDesignDiff(design, p.designDiff) : undefined;
   const designGuid = design && typeof design === "object" && "guid" in design && typeof (design as { guid?: unknown }).guid === "string" ? (design as { guid: string }).guid : undefined;
   const hasDiagramPoints = (p.points?.length ?? 0) > 0;
   const fallbackDesign: Design = {
@@ -4382,9 +4432,9 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
  * Exported for unit tests to cover the "MCP kit missing design entry" scenario.
  */
 export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undefined, surface: "design" | "scene" | "diagram", diff?: DesignDiff): Design {
-  if (!kit) return diff ? designWithDiff(design, diff) : design;
+  if (!kit) return diff ? applyDesignDiff(design, diff) : design;
 
-  const merged = diff ? designWithDiff(design, diff) : design;
+  const merged = diff ? applyDesignDiff(design, diff) : design;
   if (!merged?.guid) return merged;
 
   try {
@@ -4680,12 +4730,53 @@ export const McpKitViewer: React.FC = () => {
     return { ...(extracted ?? {}), ...(fromRef ?? {}) };
   }, []);
 
-  const applyKitPayload = React.useCallback((p: McpDiagramPayload) => {
-    if (!isKitViewerPayloadSufficient(p)) return;
-    gotPayloadRef.current = true;
-    setPayload(p);
-    setKitSelection({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
+  const mergeKitViewerPayload = React.useCallback((p: McpDiagramPayload | null | undefined) => {
+    if (!p) return;
+    setPayload((cur) => {
+      if (!cur) {
+        if (isKitViewerPayloadSufficient(p)) gotPayloadRef.current = true;
+        return p;
+      }
+      const best = scoreMcpDiagramPayload(p) > scoreMcpDiagramPayload(cur) ? p : cur;
+      const merged = mergeRichestDesignFromCandidates([cur, p], best) ?? p;
+      if (isKitViewerPayloadSufficient(merged)) gotPayloadRef.current = true;
+      return merged;
+    });
   }, []);
+
+  const fetchedUrlsRef = React.useRef<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    if (!payload?.fetchUrl || fetchedUrlsRef.current.has(payload.fetchUrl)) return;
+    const url = payload.fetchUrl;
+    fetchedUrlsRef.current.add(url);
+    (async () => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const full = (await res.json()) as Record<string, unknown>;
+        const p = normalizeMcpDiagramPayload(full);
+        if (p) mergeKitViewerPayload(p);
+      } catch {
+        /* Engine may not be reachable from iframe. */
+      }
+    })();
+  }, [payload?.fetchUrl, mergeKitViewerPayload]);
+
+  const prevKitResetKeyRef = React.useRef<string>("");
+  React.useEffect(() => {
+    if (!payload?.kitArtifacts || !isKitViewerPayloadSufficient(payload)) return;
+    const key = JSON.stringify({
+      n: payload.kitArtifacts.name,
+      g: payload.kitArtifacts.guid,
+      d: payload.kitArtifacts.designs?.length,
+      t: payload.kitArtifacts.types?.length,
+      u: payload.fetchUrl,
+    });
+    if (key === prevKitResetKeyRef.current) return;
+    prevKitResetKeyRef.current = key;
+    setKitSelection({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
+  }, [payload]);
 
   const tryRefetchKitFromServer = React.useCallback(async () => {
     const client = appRef.current;
@@ -4708,11 +4799,11 @@ export const McpKitViewer: React.FC = () => {
     try {
       const result = await client.callServerTool({ name: toolName, arguments: args });
       const p = parseDiagramPayloadFromToolResult(result);
-      if (p) applyKitPayload(p);
+      if (p) mergeKitViewerPayload(p);
     } catch {
       /* Host may not proxy tools/call to the server for this session. */
     }
-  }, [applyKitPayload, mergeKitToolArguments]);
+  }, [mergeKitViewerPayload, mergeKitToolArguments]);
 
   React.useEffect(() => {
     tryRefetchRef.current = () => {
@@ -4741,7 +4832,7 @@ export const McpKitViewer: React.FC = () => {
       a.ontoolresult = (result) => {
         const parsed = parseDiagramPayloadFromToolResult(result);
         if (parsed) {
-          applyKitPayload(parsed);
+          mergeKitViewerPayload(parsed);
         }
       };
       a.ontoolcancelled = () => {};
@@ -4760,12 +4851,9 @@ export const McpKitViewer: React.FC = () => {
       const v = h[k];
       if (v === undefined) continue;
       const p = parseDiagramPayloadFromToolResult(v);
-      if (p && isKitViewerPayloadSufficient(p)) {
-        applyKitPayload(p);
-        return;
-      }
+      if (p) mergeKitViewerPayload(p);
     }
-  }, [app, applyKitPayload]);
+  }, [app, mergeKitViewerPayload]);
 
   React.useEffect(() => {
     if (!app || !isConnected) return;
@@ -4845,18 +4933,10 @@ export const McpKitViewer: React.FC = () => {
     );
   }
 
-  if (!payload) {
+  if (!payload || !isKitViewerPayloadSufficient(payload)) {
     return (
       <div style={shellStyle}>
         <p style={mutedStyle}>Waiting for kit data…</p>
-      </div>
-    );
-  }
-
-  if (!payload.kitArtifacts) {
-    return (
-      <div style={shellStyle}>
-        <p style={mutedStyle}>No kit artifact data in tool result.</p>
       </div>
     );
   }
@@ -5670,6 +5750,24 @@ if (import.meta.vitest) {
       expect(merged?.mode).toBe("show-scene");
       expect(merged?.surface).toBe("scene");
     });
+
+    it("pulls richer kitArtifacts from another candidate when the scored-best shell omitted kit body", () => {
+      const diagramHeavy: McpDiagramPayload = {
+        mode: "show-diagram",
+        points: [{ guid: "p", id: "p", u: 0, v: 0, status: "default" }],
+        lines: [],
+        capabilities: {},
+      };
+      const withKit: McpDiagramPayload = {
+        points: [],
+        lines: [],
+        capabilities: {},
+        kitArtifacts: { name: "MergedKit", designs: [{ guid: "d1", name: "D", variant: "", view: "" }], types: [], ports: [], connectors: [] },
+      };
+      const merged = mergeRichestDesignFromCandidates([diagramHeavy, withKit], diagramHeavy);
+      expect(merged?.kitArtifacts?.name).toBe("MergedKit");
+      expect(merged?.kitArtifacts?.designs?.[0]?.guid).toBe("d1");
+    });
   });
 
   describe("mcpFlattenDesignForSemioSurface", () => {
@@ -5982,6 +6080,29 @@ if (import.meta.vitest) {
       expect(assets[0]?.modelSource).toBeUndefined();
       expect(assets[0]?.piece.guid).toBe("piece-1");
       expect(assets[0]?.status).toBe("added");
+    });
+
+    it("uses kit file.remote as the model URL when blob is absent (sketchpad-shaped kits)", () => {
+      const kit = {
+        types: [{ guid: "kind-1", models: [{ guid: "model-1", file: { guid: "file-1" } }] }],
+        files: [{ guid: "file-1", name: "remote-mesh.glb", remote: "https://example.com/assets/remote-mesh.glb" }],
+      } as unknown as Kit;
+
+      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "default" }]);
+
+      expect(assets[0]?.modelSource).toBe("https://example.com/assets/remote-mesh.glb");
+      expect(assets[0]?.modelName).toBe("remote-mesh.glb");
+    });
+
+    it("resolves the kind by type name when the piece omits type guid", () => {
+      const kit = {
+        types: [{ guid: "kind-1", name: "Capsule", models: [{ guid: "model-1", file: { guid: "file-1" } }] }],
+        files: [{ guid: "file-1", name: "cap.glb", blob: "data:model/gltf-binary;base64,QUFB" }],
+      } as unknown as Kit;
+
+      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { name: "Capsule" } as { name: string }, plane: testPlane, center: testCenter } as Piece, status: "default" }]);
+
+      expect(assets[0]?.modelSource).toBe("data:model/gltf-binary;base64,QUFB");
     });
   });
 

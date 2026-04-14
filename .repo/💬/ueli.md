@@ -731,6 +731,11 @@ semio desktop:
 The sketchpad is not rendering the window controls.
 All desktop functionality MUST be implemented in sketchpad and is passed over a desktop prop. If desktop prop is not passed, then sketchpad knows it is not running in desktop mode.
 
+## semio/server
+
+Add auth to server and sketchpad (optional for remote kits).
+Add sharable links for kit, design and type. Options should be read-only
+
 ## 👤semio📚js🗃️sketchpad💻designtsx
 
 ## 👤semio🖱️3dm

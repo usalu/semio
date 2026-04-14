@@ -74,6 +74,16 @@ app.on("activate", () => {
 app.whenReady().then(async () => {
   app.setAppUserModelId("com.electron");
 
+  const resolveKitEntryPath = (folderPath: string, entryPath: string) => {
+    const rootPath = path.resolve(folderPath);
+    const targetPath = path.resolve(rootPath, entryPath);
+    const relativePath = path.relative(rootPath, targetPath);
+    if (relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath))) {
+      return targetPath;
+    }
+    throw new Error(`Kit path escapes selected folder: ${entryPath}`);
+  };
+
   ipcMain.handle("minimize-window", (event) => {
     const window = BrowserWindow.getFocusedWindow();
     if (window) window.minimize();
@@ -153,7 +163,7 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle("read-file", async (_event, folderPath: string, filePath: string) => {
-    const fullPath = path.join(folderPath, filePath);
+    const fullPath = resolveKitEntryPath(folderPath, filePath);
     try {
       const buffer = fs.readFileSync(fullPath);
       return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
@@ -163,7 +173,7 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle("write-file", async (_event, folderPath: string, filePath: string, data: ArrayBuffer) => {
-    const fullPath = path.join(folderPath, filePath);
+    const fullPath = resolveKitEntryPath(folderPath, filePath);
     const dir = path.dirname(fullPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -172,12 +182,24 @@ app.whenReady().then(async () => {
   });
 
   ipcMain.handle("delete-file", async (_event, folderPath: string, filePath: string) => {
-    const fullPath = path.join(folderPath, filePath);
+    const fullPath = resolveKitEntryPath(folderPath, filePath);
     try {
       fs.unlinkSync(fullPath);
     } catch {
       /* ignore */
     }
+  });
+
+  ipcMain.handle("create-directory", async (_event, folderPath: string, directoryPath: string) => {
+    const fullPath = resolveKitEntryPath(folderPath, directoryPath);
+    fs.mkdirSync(fullPath, { recursive: true });
+  });
+
+  ipcMain.handle("move-entry", async (_event, folderPath: string, fromPath: string, toPath: string) => {
+    const sourcePath = resolveKitEntryPath(folderPath, fromPath);
+    const targetPath = resolveKitEntryPath(folderPath, toPath);
+    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+    fs.renameSync(sourcePath, targetPath);
   });
 
   ipcMain.handle("list-files", async (_event, folderPath: string) => {

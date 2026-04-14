@@ -1637,7 +1637,7 @@ suite("Entity Emoji Registry Test Suite", () => {
   test("ENTITY_EMOJIS contains all technology kind emojis", () => {
     assert.ok(ENTITY_EMOJIS.has("👤"), "should contain user technology emoji");
     assert.ok(ENTITY_EMOJIS.has("🧰"), "should contain infra technology emoji");
-    assert.ok(ENTITY_EMOJIS.has("�"), "should contain code file emoji");
+    assert.ok(ENTITY_EMOJIS.has("��"), "should contain research technology emoji");
     assert.ok(ENTITY_EMOJIS.has("🔖"), "should contain section emoji");
     assert.ok(ENTITY_EMOJIS.has("🛠️"), "should contain impl definition emoji");
     assert.ok(ENTITY_EMOJIS.has("🎯"), "should contain goal emoji");

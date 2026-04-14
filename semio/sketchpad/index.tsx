@@ -742,12 +742,21 @@ export class JsonFileKitStore implements UndoableKitStore {
   }
 
   async save(): Promise<void> {
+    // Specs: capture the kit reference at save start so we can detect whether
+    // another apply mutated the kit while adapter.write was in flight. Only
+    // clear dirty when the saved kit still matches — otherwise the next
+    // auto-save must re-run to persist the interleaved change. This prevents
+    // losing data when an async apply (e.g. JsonFileKitStore.embedFileBlob's
+    // blob.arrayBuffer() await) interleaves with a pending auto-save.
+    const savedKit = this.kit;
     this.status = "saving";
     this.notify();
     try {
-      const json = JSON.stringify(this.kit, null, 2);
+      const json = JSON.stringify(savedKit, null, 2);
       await this.adapter.write(json);
-      this.dirty = false;
+      if (this.kit === savedKit) {
+        this.dirty = false;
+      }
       this.lastSyncedAt = new Date().toISOString();
       this.error = undefined;
       this.status = "ready";
@@ -873,6 +882,8 @@ export interface KitFolderAdapter {
   readFile(path: string): Promise<Blob | null>;
   writeFile(path: string, blob: Blob): Promise<void>;
   deleteFile(path: string): Promise<void>;
+  createDirectory?(path: string): Promise<void>;
+  moveEntry?(fromPath: string, toPath: string): Promise<void>;
   listFiles(): Promise<string[]>;
   watch?(callback: () => void): () => void;
 }
@@ -1110,6 +1121,20 @@ export class FolderKitStore implements UndoableKitStore {
 
   async deleteFile(path: string): Promise<void> {
     await this.adapter.deleteFile(path);
+  }
+
+  async createDirectory(path: string): Promise<void> {
+    if (!this.adapter.createDirectory) {
+      return;
+    }
+    await this.adapter.createDirectory(path);
+  }
+
+  async moveEntry(fromPath: string, toPath: string): Promise<void> {
+    if (!this.adapter.moveEntry || fromPath === toPath) {
+      return;
+    }
+    await this.adapter.moveEntry(fromPath, toPath);
   }
 
   async listFiles(): Promise<string[]> {
@@ -8499,6 +8524,8 @@ type KitBinaryStore = KitStore & {
   readFile?: (path: string) => Promise<Blob | null>;
   writeFile?: (path: string, blob: Blob) => Promise<void>;
   deleteFile?: (path: string) => Promise<void>;
+  createDirectory?: (path: string) => Promise<void>;
+  moveEntry?: (fromPath: string, toPath: string) => Promise<void>;
 };
 
 const getOrCreateKitFileState = (kitStore: KitStore): KitFileState => {
@@ -8570,6 +8597,25 @@ const getKitFileStoragePath = (kit: Kit, file: SemioFile): string => {
   return pathSegments.join("/");
 };
 
+const getKitFolderStoragePath = (kit: Kit, folderLike: Pick<Folder, "guid" | "name" | "parent"> | { guid: string }): string => {
+  const foldersByGuid = new Map((kit.folders ?? []).map((folder) => [folder.guid, folder]));
+  const visited = new Set<string>();
+  const pathSegments: string[] = [];
+  let currentFolder: Pick<Folder, "guid" | "name" | "parent"> | undefined = "name" in folderLike ? folderLike : foldersByGuid.get(folderLike.guid);
+
+  while (currentFolder) {
+    if (visited.has(currentFolder.guid)) {
+      break;
+    }
+    visited.add(currentFolder.guid);
+    pathSegments.unshift(currentFolder.name);
+    const parentGuid = currentFolder.parent?.guid;
+    currentFolder = parentGuid ? foldersByGuid.get(parentGuid) : undefined;
+  }
+
+  return pathSegments.join("/");
+};
+
 const revokeKitFileObjectUrl = (kitStore: KitStore, fileGuid: string): void => {
   const fileState = getOrCreateKitFileState(kitStore);
   const currentObjectUrl = fileState.objectUrls.get(fileGuid);
@@ -8627,13 +8673,19 @@ const uploadKitFileToProvider = async (kitStore: KitStore, kit: Kit, file: Semio
   // 🔖EmbedInJsonFileKit
   // For file kits, embed the blob as a data URL in file.blob so everything
   // stays inside the single *.kit.semio.json file on save.
-  // Specs: Use embedFileBlob presence, not instanceof JsonFileKitStore — desktop may load two bundle copies of the class so instanceof would skip embedding.
-  const embedFileBlob = (kitStore as { embedFileBlob?: (guid: string, b: Blob) => Promise<void> }).embedFileBlob;
-  if (typeof embedFileBlob === "function") {
+  // Specs: Use embedFileBlob presence, not instanceof JsonFileKitStore — desktop may load two bundle copies of the class so instanceof would skip embedding. kitStore may be a CollaborativeKitStore wrapper, so also check the inner store exposed via `.store`.
+  const innerCandidate = (kitStore as { store?: unknown }).store;
+  const embedTarget =
+    typeof (kitStore as any)?.embedFileBlob === "function"
+      ? (kitStore as any)
+      : typeof (innerCandidate as any)?.embedFileBlob === "function"
+        ? (innerCandidate as any)
+        : null;
+  if (embedTarget) {
     try {
-      await embedFileBlob.call(kitStore, file.guid, blob);
+      await embedTarget.embedFileBlob(file.guid, blob);
     } catch (error) {
-      console.error(`[DEBUG] uploadKitFileToProvider: failed to embed blob for ${file.guid}:`, error);
+      console.error(`uploadKitFileToProvider: failed to embed blob for ${file.guid}:`, error);
     }
     return;
   }
@@ -8680,6 +8732,9 @@ const deleteKitFileFromProvider = async (kitStore: KitStore, kit: Kit, file: Sem
 };
 
 const syncKitFileCommandResult = async (kitStore: KitStore, kit: Kit, command: string, args: any[], result: KitCommandResult): Promise<void> => {
+  const binaryStore = kitStore as KitBinaryStore;
+  const nextKit = result.diff ? applyKitDiff(kit, result.diff) : kit;
+
   if (command === "semio.kit.addFile") {
     const file = args[0] as SemioFile | undefined;
     const blob = args[1] as Blob | undefined;
@@ -8726,6 +8781,33 @@ const syncKitFileCommandResult = async (kitStore: KitStore, kit: Kit, command: s
     return;
   }
 
+  if (command === "semio.kit.createFolder") {
+    const folder = args[0] as Folder | undefined;
+    if (!folder || typeof binaryStore.createDirectory !== "function") {
+      return;
+    }
+    await binaryStore.createDirectory(getKitFolderStoragePath(nextKit, folder));
+    return;
+  }
+
+  if (command === "semio.kit.updateFolder") {
+    const folderGuid = args[0] as string | undefined;
+    if (!folderGuid || typeof binaryStore.moveEntry !== "function") {
+      return;
+    }
+    const currentFolder = kit.folders?.find((folder) => folder.guid === folderGuid);
+    const updatedFolder = nextKit.folders?.find((folder) => folder.guid === folderGuid);
+    if (!currentFolder || !updatedFolder) {
+      return;
+    }
+    const currentPath = getKitFolderStoragePath(kit, currentFolder);
+    const nextPath = getKitFolderStoragePath(nextKit, updatedFolder);
+    if (currentPath && nextPath && currentPath !== nextPath) {
+      await binaryStore.moveEntry(currentPath, nextPath);
+    }
+    return;
+  }
+
   if (command === "semio.kit.import") {
     const importedFiles = result.diff?.files?.added ?? [];
     const importedBlobs = result.files ?? [];
@@ -8737,6 +8819,47 @@ const syncKitFileCommandResult = async (kitStore: KitStore, kit: Kit, command: s
         }
       }),
     );
+    return;
+  }
+
+  if (command !== "semio.kit.moveToFolder") {
+    return;
+  }
+
+  const artifactGuid = args[0] as string | undefined;
+  const artifactKind = args[1] as "type" | "design" | "quality" | "file" | "folder" | undefined;
+  if (!artifactGuid || !artifactKind) {
+    return;
+  }
+
+  if (artifactKind === "file" && typeof binaryStore.moveEntry === "function") {
+    const currentFile = kit.files?.find((file) => file.guid === artifactGuid);
+    const updatedFile = nextKit.files?.find((file) => file.guid === artifactGuid);
+    if (!currentFile || !updatedFile) {
+      return;
+    }
+    const currentPath = getKitFileStoragePath(kit, currentFile);
+    const nextPath = getKitFileStoragePath(nextKit, updatedFile);
+    if (currentPath && nextPath && currentPath !== nextPath) {
+      await binaryStore.moveEntry(currentPath, nextPath);
+    }
+    return;
+  }
+
+  if (artifactKind === "folder") {
+    const currentFolder = kit.folders?.find((folder) => folder.guid === artifactGuid);
+    const updatedFolder = nextKit.folders?.find((folder) => folder.guid === artifactGuid);
+    if (!currentFolder || !updatedFolder) {
+      return;
+    }
+    if (typeof binaryStore.moveEntry !== "function") {
+      return;
+    }
+    const currentPath = getKitFolderStoragePath(kit, currentFolder);
+    const nextPath = getKitFolderStoragePath(nextKit, updatedFolder);
+    if (currentPath && nextPath && currentPath !== nextPath) {
+      await binaryStore.moveEntry(currentPath, nextPath);
+    }
   }
 };
 
@@ -8783,6 +8906,15 @@ export class CollaborativeKitStore {
   }
   apply(diff: any, meta?: any): void {
     this._kitStore.apply(diff, meta);
+  }
+  // Forwards to JsonFileKitStore.embedFileBlob so uploadKitFileToProvider can
+  // embed dropped blobs without unwrapping the wrapper. No-op when the inner
+  // store does not implement embedding (folder/remote/temporary kits).
+  async embedFileBlob(fileGuid: string, blob: Blob): Promise<void> {
+    const inner = this._kitStore as { embedFileBlob?: (g: string, b: Blob) => Promise<void> };
+    if (typeof inner.embedFileBlob === "function") {
+      await inner.embedFileBlob(fileGuid, blob);
+    }
   }
   getFileUrl(guid: string): string | null {
     const kit = this._kitStore.getSnapshot().kit;
@@ -58269,16 +58401,23 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           },
         };
       };
-      const makeFolderAdapter = (kit: Kit): KitFolderAdapter & { stored?: Uint8Array } => {
+      const makeFolderAdapter = (_kit: Kit): KitFolderAdapter & { stored?: Uint8Array; operations: string[] } => {
         const adapter = {
+          operations: [] as string[],
           stored: undefined as Uint8Array | undefined,
           readKit: async () => adapter.stored,
           writeKit: async (bytes: Uint8Array) => {
             adapter.stored = bytes;
           },
           readFile: async (_path: string) => undefined,
-          writeFile: async (_path: string, _data: Uint8Array) => {},
+          writeFile: async (_path: string, _blob: Blob) => {},
           deleteFile: async (_path: string) => {},
+          createDirectory: async (path: string) => {
+            adapter.operations.push(`mkdir:${path}`);
+          },
+          moveEntry: async (fromPath: string, toPath: string) => {
+            adapter.operations.push(`move:${fromPath}->${toPath}`);
+          },
           listFiles: async () => [],
         };
         return adapter;
@@ -58286,7 +58425,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       const temporaryStore = new InMemoryKitStore(makeDragKit());
       const jsonStore = await createJsonFileKitStore(makeJsonAdapter(makeDragKit()));
-      const folderStore = await createFolderKitStore(makeFolderAdapter(), makeDragKit());
+      const folderAdapter = makeFolderAdapter(makeDragKit());
+      const folderStore = await createFolderKitStore(folderAdapter, makeDragKit());
       const stores: Array<{ label: string; store: KitStore }> = [
         { label: "temporary", store: temporaryStore },
         { label: "file", store: jsonStore },
@@ -58307,6 +58447,36 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         expect(movedKit.files?.find((entry) => entry.guid === "file-a")?.folder?.guid).toBe("folder-b");
         expect(movedKit.folders?.find((entry) => entry.guid === "folder-c")?.parent?.guid).toBe("folder-b");
       }
+
+      expect(folderAdapter.operations).toEqual(["move:Folder A/mesh.glb->Folder B/mesh.glb", "move:Folder A/Folder C->Folder B/Folder C"]);
+    });
+
+    test("folder kit filesystem sync creates and renames actual folders from sketchpad commands", async () => {
+      const adapter = {
+        operations: [] as string[],
+        readKit: async () => null,
+        writeKit: async (_bytes: Uint8Array) => {},
+        readFile: async (_path: string) => null,
+        writeFile: async (_path: string, _blob: Blob) => {},
+        deleteFile: async (_path: string) => {},
+        createDirectory: async (path: string) => {
+          adapter.operations.push(`mkdir:${path}`);
+        },
+        moveEntry: async (fromPath: string, toPath: string) => {
+          adapter.operations.push(`move:${fromPath}->${toPath}`);
+        },
+        listFiles: async () => [],
+      } satisfies KitFolderAdapter & { operations: string[] };
+      const store = await createFolderKitStore(adapter, {
+        guid: "folder-sync-kit",
+        name: "Folder Sync Kit",
+        folders: [{ guid: "root-folder", name: "Root Folder" } as Folder],
+      });
+
+      await executeKitCommand(store, "semio.kit.createFolder", "test.folderKit.createFolder", { guid: "child-folder", name: "Child Folder", parent: { guid: "root-folder" } } as Folder);
+      await executeKitCommand(store, "semio.kit.updateFolder", "test.folderKit.updateFolder", "root-folder", { name: "Renamed Root" });
+
+      expect(adapter.operations).toEqual(["mkdir:Root Folder/Child Folder", "move:Root Folder->Renamed Root"]);
     });
 
     test("persisted folder kits restore from their stored source without invoking other local factories", async () => {

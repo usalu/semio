@@ -44,6 +44,8 @@ contextBridge.exposeInMainWorld("kitFolder", {
   readFile: (folderPath: string, filePath: string) => ipcRenderer.invoke("read-file", folderPath, filePath),
   writeFile: (folderPath: string, filePath: string, data: ArrayBuffer) => ipcRenderer.invoke("write-file", folderPath, filePath, data),
   deleteFile: (folderPath: string, filePath: string) => ipcRenderer.invoke("delete-file", folderPath, filePath),
+  createDirectory: (folderPath: string, directoryPath: string) => ipcRenderer.invoke("create-directory", folderPath, directoryPath),
+  moveEntry: (folderPath: string, fromPath: string, toPath: string) => ipcRenderer.invoke("move-entry", folderPath, fromPath, toPath),
   listFiles: (folderPath: string) => ipcRenderer.invoke("list-files", folderPath),
   getRecentFolders: () => ipcRenderer.invoke("get-recent-folders"),
   addRecentFolder: (folderPath: string) => ipcRenderer.invoke("add-recent-folder", folderPath),

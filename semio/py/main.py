@@ -9813,7 +9813,7 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
 
 
 def _kitdiff_deep_equal(a: typing.Any, b: typing.Any) -> bool:
-    """��Structural equality for noop remove/add detection in kit diff validation."""
+    """Deep structural equality for noop remove/add detection in kit diff validation."""
     if a is b:
         return True
     if type(a) != type(b):
@@ -9944,7 +9944,7 @@ def _validate_guid_collection_diff(
 
 
 def _validate_design_diff_nested_py(ctx: dict, kit: dict, path: str, design: dict, diff: dict, refs: dict) -> None:
-    """��Validate nested design diff: piece type refs, authors diff or list."""
+    """Validate nested design diff: piece type refs, authors diff or list."""
     type_guids: set[str] = refs["typeGuids"]
     design_guids: set[str] = refs["designGuids"]
     author_guids: set[str] = refs["authorGuids"]
@@ -9994,7 +9994,7 @@ def _validate_design_diff_nested_py(ctx: dict, kit: dict, path: str, design: dic
 
 
 def validate_kit_diff_dict(kit: dict, diff: dict, heal: bool) -> dict:
-    """��Validate a kit diff dict against a base kit dict; optional heal returns a scrubbed diff copy.
+    """��    """Validate a kit diff dict against a base kit dict; optional heal returns a scrubbed diff copy.
 
     Returns a dict: ok (bool), errors, warnings (list of {code, message}), diff (optional when heal).
     """

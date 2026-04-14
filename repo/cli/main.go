@@ -5692,7 +5692,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}()
 	wg.Wait()
 
-	codebaseNode := &TreeNode{Kind: TreeNodeCategory, ID: "codebase", Label: "�️Codebase", URI: "repo://codebase"}
+	codebaseNode := &TreeNode{Kind: TreeNodeCategory, ID: "codebase", Label: emojiText(EmojiCodebase) + "Codebase", URI: "repo://codebase"}
 	sort.Slice(technologies, func(i, j int) bool { return technologies[i].Name < technologies[j].Name })
 
 	type folderEntry struct {

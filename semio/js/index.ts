@@ -6173,7 +6173,7 @@ const childConnectorOriginWorld = (parentPlane: Plane, parentConnector: Connecto
 };
 
 /**
- * Minimum-norm δ such that Jδ �� t for 3×n Jacobian with columns cols[i] = ∂origin/��param_i:�(JJ��)⁻¹t.
+ * Minimum-norm δ with Jδ = t for 3×n Jacobian J whose columns are cols[i] = ∂origin/��param_i; δ = J��(JJ��)⁻¹t.
  **/
 const solveConnectionOriginMinNorm = (cols: THREE.Vector3[], t: THREE.Vector3): number[] | undefined => {
   if (cols.length === 0) return undefined;
@@ -14558,7 +14558,12 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
 // #region 🧪Tests
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
-if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
+// Specs: Other workspaces (e.g. @semio/ui) import this module while Vitest runs their tests; `SEMIO_JS_RUN_EMBEDDED_TESTS` is set only in @semio/js `npm test` so we do not pull @semio/sketchpad into unrelated Vitest SSR graphs.
+if (
+  typeof (globalThis as any).__vitest_worker__ !== "undefined" &&
+  typeof process !== "undefined" &&
+  process.env.SEMIO_JS_RUN_EMBEDDED_TESTS === "1"
+) {
   const { beforeAll, describe, expect, it, vi } = await import("vitest");
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
@@ -16729,6 +16734,106 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(reloadedFile?.blob).toBe(fileAfter!.blob);
     });
 
+    it("addFile diff followed by embedFileBlob embeds the blob on the newly added file", async () => {
+      // Simulates executeKitCommand("semio.kit.addFile", ...) → syncKitFileCommandResult → embedFileBlob.
+      // Step 1: apply the addFile diff (what kitCommands["semio.kit.addFile"] returns).
+      // Step 2: embedFileBlob reads the file from kit.files and applies a second diff setting blob.
+      const adapter = makeAdapter(makeKit());
+      const store = await createJsonFileKitStore(adapter);
+
+      const newFileGuid = "dropped-file-guid";
+      const newFile = {
+        guid: newFileGuid,
+        name: "drop.txt",
+        size: 3,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      };
+      store.apply({ files: { added: [newFile] } });
+
+      const addedFile = store.getSnapshot().kit.files?.find((f) => f.guid === newFileGuid);
+      expect(addedFile).toBeDefined();
+      expect(addedFile?.blob).toBeUndefined();
+
+      const blob = new Blob(["HEY"], { type: "text/plain" });
+      await store.embedFileBlob(newFileGuid, blob);
+
+      const embeddedFile = store.getSnapshot().kit.files?.find((f) => f.guid === newFileGuid);
+      expect(embeddedFile?.blob).toBeDefined();
+      expect(embeddedFile!.blob!.startsWith("data:text/plain")).toBe(true);
+      expect(embeddedFile?.name).toBe("drop.txt");
+
+      await store.save();
+      const saved = JSON.parse(adapter.stored!);
+      const persistedFile = saved.files.find((f: any) => f.guid === newFileGuid);
+      expect(persistedFile.blob).toBe(embeddedFile!.blob);
+      expect(persistedFile.name).toBe("drop.txt");
+    });
+
+    it("save preserves dirty flag when an apply interleaves with an in-flight adapter.write", async () => {
+      // Regression: JsonFileKitStore.embedFileBlob awaits blob.arrayBuffer()
+      // which yields to the event loop. If a scheduled save() fires during
+      // that await, save() serializes the pre-embed kit and clears dirty
+      // after adapter.write — clobbering the embed apply that ran mid-save.
+      // save() MUST only clear dirty when the kit reference is unchanged, so
+      // the next auto-save still runs with the embedded blob.
+      let resolveFirstWrite: (() => void) | null = null;
+      let writeCount = 0;
+      const adapter = {
+        stored: null as string | null,
+        async read(): Promise<string | null> {
+          return adapter.stored;
+        },
+        async write(json: string): Promise<void> {
+          writeCount++;
+          if (writeCount === 1) {
+            adapter.stored = json;
+            await new Promise<void>((resolve) => {
+              resolveFirstWrite = resolve;
+            });
+          } else {
+            adapter.stored = json;
+          }
+        },
+      };
+      const fileGuid = "file-race";
+      adapter.stored = JSON.stringify({
+        guid: "race-kit",
+        name: "Race",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+        files: [
+          {
+            guid: fileGuid,
+            name: "race.txt",
+            size: 2,
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          },
+        ],
+      });
+      const store = await createJsonFileKitStore(adapter);
+
+      const savePromise = store.save();
+      await Promise.resolve();
+
+      const blob = new Blob(["HI"], { type: "text/plain" });
+      await store.embedFileBlob(fileGuid, blob);
+
+      resolveFirstWrite!();
+      await savePromise;
+
+      expect(store.getSnapshot().sync.dirty).toBe(true);
+      const embeddedFile = store.getSnapshot().kit.files?.find((f) => f.guid === fileGuid);
+      expect(embeddedFile?.blob).toBeDefined();
+      expect(embeddedFile!.blob!.startsWith("data:text/plain")).toBe(true);
+
+      await store.save();
+      const saved = JSON.parse(adapter.stored!);
+      const persistedFile = saved.files.find((f: any) => f.guid === fileGuid);
+      expect(persistedFile.blob).toBe(embeddedFile!.blob);
+    });
+
     it("embedFileBlob is a no-op when the target file is missing from the kit", async () => {
       const store = await createJsonFileKitStore(makeAdapter(makeKit()));
       const blob = new Blob(["X"], { type: "application/octet-stream" });
@@ -17148,6 +17253,15 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
           } catch {
             /* ignore */
           }
+        },
+        async createDirectory(rel: string): Promise<void> {
+          await fs.mkdir(nodePath.join(folderPath, rel), { recursive: true });
+        },
+        async moveEntry(fromRel: string, toRel: string): Promise<void> {
+          const sourcePath = nodePath.join(folderPath, fromRel);
+          const targetPath = nodePath.join(folderPath, toRel);
+          await fs.mkdir(nodePath.dirname(targetPath), { recursive: true });
+          await fs.rename(sourcePath, targetPath);
         },
         async listFiles(): Promise<string[]> {
           const out: string[] = [];

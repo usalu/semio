@@ -57,6 +57,8 @@ declare global {
       readFile(folderPath: string, filePath: string): Promise<ArrayBuffer | null>;
       writeFile(folderPath: string, filePath: string, data: ArrayBuffer): Promise<void>;
       deleteFile(folderPath: string, filePath: string): Promise<void>;
+      createDirectory(folderPath: string, directoryPath: string): Promise<void>;
+      moveEntry(folderPath: string, fromPath: string, toPath: string): Promise<void>;
       listFiles(folderPath: string): Promise<string[]>;
       getRecentFolders(): Promise<string[]>;
       addRecentFolder(folderPath: string): Promise<void>;
@@ -125,6 +127,8 @@ function createElectronFolderAdapter(folderPath: string): KitFolderAdapter {
       await window.kitFolder.writeFile(folderPath, path, buffer);
     },
     deleteFile: (path: string) => window.kitFolder.deleteFile(folderPath, path),
+    createDirectory: (path: string) => window.kitFolder.createDirectory(folderPath, path),
+    moveEntry: (fromPath: string, toPath: string) => window.kitFolder.moveEntry(folderPath, fromPath, toPath),
     listFiles: () => window.kitFolder.listFiles(folderPath),
     watch: (callback: () => void) => window.kitFolder.watchFolder(folderPath, callback),
   };

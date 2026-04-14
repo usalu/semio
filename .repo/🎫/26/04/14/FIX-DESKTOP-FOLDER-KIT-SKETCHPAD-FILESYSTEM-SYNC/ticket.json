@@ -1,0 +1,9 @@
+{
+  "title": "Fix Desktop Folder Kit Sketchpad Filesystem Sync",
+  "status": "open",
+  "description": "Semio desktop sketchpad folder kits must create and move files/folders against the actual filesystem, not just in-memory kit state. Investigate the desktop Electron adapter and sketchpad folder-kit store, implement end-to-end filesystem-backed create/move behavior for sketchpad folder entries, extend existing tests to cover the behavior, validate by running the relevant test suites, and fix any related issues required to get the flow working.",
+  "goal": "🎯sketchpadimprovements",
+  "sessions": [
+    "⚪6f5ebcca471240fc80fd1ca3e743af31"
+  ]
+}
