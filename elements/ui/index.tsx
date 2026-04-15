@@ -3796,6 +3796,14 @@ const elementUiTranslationBundles = {
               }
             }
           },
+          "connectorNamePlaceholder": {
+            "label": {
+              "label": {
+                "normal": "Name hinzufuegen",
+                "beginner": "Name hinzufuegen"
+              }
+            }
+          },
           "connectorDescriptionPlaceholder": {
             "label": {
               "label": {
@@ -8588,6 +8596,14 @@ const elementUiTranslationBundles = {
               "label": {
                 "normal": "e.g., electrical, mechanical",
                 "beginner": "e.g., electrical, mechanical"
+              }
+            }
+          },
+          "connectorNamePlaceholder": {
+            "label": {
+              "label": {
+                "normal": "Add a name",
+                "beginner": "Add a name"
               }
             }
           },

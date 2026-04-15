@@ -349,8 +349,8 @@ export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui
 export { createJsonFilePersistenceFactory, createSqliteFolderPersistenceFactory, SyncBinaryPersistenceProvider } from "../studio/studio";
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
-import type { Locator, Page as PlaywrightPage } from "@playwright/test";
-import { importKit as importKitArchive } from "@semio/js";
+  import type { Locator, Page as PlaywrightPage } from "@playwright/test";
+  import { importKit as importKitArchive } from "@semio/js";
 // #endregion ⛩️Imports
 
 // #region 📍Shared
@@ -6378,16 +6378,12 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
   abstract kit(): KitStore;
 
   abortTransaction(): void {
+    // kitDiffs were never applied during the transaction — only revert selectionDiffs.
     if (this.isTransactionActive) {
       for (let i = this._currentTransactionStack.length - 1; i >= 0; i--) {
         const edit = this._currentTransactionStack[i] as any;
-        if (edit?.undo) {
-          if (edit.undo.kitDiff) {
-            this.kit().apply(edit.undo.kitDiff);
-          }
-          if (edit.undo.selectionDiff) {
-            this.applySelectionDiff(edit.undo.selectionDiff);
-          }
+        if (edit?.undo?.selectionDiff) {
+          this.applySelectionDiff(edit.undo.selectionDiff);
         }
       }
       this._currentTransactionStack = [];
@@ -6398,16 +6394,12 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 
   undo(): void {
     if (this.isTransactionActive) {
+      // kitDiffs were never applied during the transaction — only revert selectionDiff.
       if (this._currentTransactionStack.length > 0) {
         const edit = this._currentTransactionStack.pop() as any;
         this.lastDeletedTransactionEdit = edit;
-        if (edit?.undo) {
-          if (edit.undo.kitDiff) {
-            this.kit().apply(edit.undo.kitDiff);
-          }
-          if (edit.undo.selectionDiff) {
-            this.applySelectionDiff(edit.undo.selectionDiff);
-          }
+        if (edit?.undo?.selectionDiff) {
+          this.applySelectionDiff(edit.undo.selectionDiff);
         }
         this.notify();
       }
@@ -6430,17 +6422,13 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 
   redo(): void {
     if (this.isTransactionActive) {
+      // kitDiffs were never applied during the transaction — only forward selectionDiff.
       if (this.lastDeletedTransactionEdit) {
         this._currentTransactionStack.push(this.lastDeletedTransactionEdit);
         const edit = this.lastDeletedTransactionEdit as any;
         this.lastDeletedTransactionEdit = undefined;
-        if (edit?.do) {
-          if (edit.do.kitDiff) {
-            this.kit().apply(edit.do.kitDiff);
-          }
-          if (edit.do.selectionDiff) {
-            this.applySelectionDiff(edit.do.selectionDiff);
-          }
+        if (edit?.do?.selectionDiff) {
+          this.applySelectionDiff(edit.do.selectionDiff);
         }
         this.notify();
       }
@@ -6461,6 +6449,32 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
     }
   }
 
+  finalizeTransaction(): void {
+    // Squash the transaction stack into one edit, apply its kitDiff to the real kit, push to history.
+    if (this.isTransactionActive) {
+      this.redoStack = [];
+      const edits = this._currentTransactionStack;
+      if (edits.length > 0) {
+        let squashedEdit: TEdit;
+        if (edits.length === 1) {
+          squashedEdit = edits[0];
+        } else {
+          const firstEdit = edits[0] as any;
+          const lastEdit = edits[edits.length - 1] as any;
+          squashedEdit = { do: lastEdit.do, undo: firstEdit.undo } as TEdit;
+        }
+        const squashedKitDiff = (squashedEdit as any)?.do?.kitDiff;
+        if (squashedKitDiff) {
+          this.kit().apply(squashedKitDiff);
+        }
+        this.pastTransactionsStack.push(squashedEdit);
+      }
+      this._currentTransactionStack = [];
+      this.isTransactionActive = false;
+      this.notify();
+    }
+  }
+
   protected recordEdit(result: TCommandResult): void {
     const res = result as any;
     if (this.isTransactionActive && (res.diff || res.kitDiff)) {
@@ -6470,6 +6484,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
       const inversedSelectionDiff = res.diff?.selection ? this.inverseSelectionDiff(selection, res.diff.selection) : undefined;
       const kitStore = this.kit();
       const kitState = kitStore.getSnapshot().kit;
+      // Inverse is computed from the pre-apply kit state (kit not yet modified during transaction).
       const inversedKitDiff = res.kitDiff ? inverseKitDiff(kitState, res.kitDiff) : undefined;
       const doStep = { kitDiff: res.kitDiff, selectionDiff: res.diff?.selection };
       const undoStep = { kitDiff: inversedKitDiff, selectionDiff: inversedSelectionDiff };
@@ -27485,11 +27500,7 @@ const isDesignClipboardPayload = (value: unknown): value is DesignClipboardPaylo
  *
  * MUST remap copied piece GUIDs before recreating copied connections.
  **/
-const buildPastedDesignClipboardPayload = (
-  design: Design,
-  payload: DesignClipboardPayload,
-  offset: Coord = DESIGN_CLIPBOARD_PASTE_OFFSET,
-): { pieces: Piece[]; connections: Connection[] } => {
+const buildPastedDesignClipboardPayload = (design: Design, payload: DesignClipboardPayload, offset: Coord = DESIGN_CLIPBOARD_PASTE_OFFSET): { pieces: Piece[]; connections: Connection[] } => {
   const sourcePieces = payload.pieces ?? [];
   const sourceConnections = payload.connections ?? [];
   const existingPieceGuids = new Set((design.pieces ?? []).map((piece) => piece.guid));
@@ -27524,8 +27535,8 @@ const buildPastedDesignClipboardPayload = (
   const pastedConnections = sourceConnections.flatMap((sourceConnection) => {
     const connectedPieceGuid = sourceConnection.connected?.piece?.guid;
     const connectingPieceGuid = sourceConnection.connecting?.piece?.guid;
-    const mappedConnectedPieceGuid = connectedPieceGuid ? guidMap.get(connectedPieceGuid) ?? (existingPieceGuids.has(connectedPieceGuid) ? connectedPieceGuid : undefined) : undefined;
-    const mappedConnectingPieceGuid = connectingPieceGuid ? guidMap.get(connectingPieceGuid) ?? (existingPieceGuids.has(connectingPieceGuid) ? connectingPieceGuid : undefined) : undefined;
+    const mappedConnectedPieceGuid = connectedPieceGuid ? (guidMap.get(connectedPieceGuid) ?? (existingPieceGuids.has(connectedPieceGuid) ? connectedPieceGuid : undefined)) : undefined;
+    const mappedConnectingPieceGuid = connectingPieceGuid ? (guidMap.get(connectingPieceGuid) ?? (existingPieceGuids.has(connectingPieceGuid) ? connectingPieceGuid : undefined)) : undefined;
     if (!mappedConnectedPieceGuid || !mappedConnectingPieceGuid) return [];
     const clonedConnection = JSON.parse(JSON.stringify(sourceConnection)) as Connection;
     clonedConnection.guid = guid();
@@ -28677,7 +28688,8 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
       this.change(result.diff);
     }
     this.recordEdit(result);
-    if (result.kitDiff) {
+    // kitDiff is deferred during a transaction: finalizeTransaction applies the squashed diff.
+    if (result.kitDiff && !this.isTransactionActive) {
       kitStore.change(result.kitDiff);
     }
     if (actor && result.diff) {
@@ -36610,30 +36622,10 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
               }
               designStore.setDraggingPiecesAndConnections(draggedPieceGuids, draggedConnectionGuids);
             }
-            // Record a diff in the active transaction for every drag tick.
-            // Connection u/v diffs are additive (applyConnectionDiff adds diff.u to base.u),
-            // but dragPiecesInDesign returns the TOTAL offset from start, not an incremental delta.
-            // To avoid double-counting we undo the previous tick's edit first, reverting the kit
-            // back to the pre-drag state, then apply the new total diff from scratch.
-            // The transaction stack always holds exactly ONE entry whose undo stores the inverse
-            // computed from the original state.  On finalize (length=1) no squash is needed and
-            // undo/redo both work correctly for additive AND replacement semantics.
-            if (designStore) {
-              const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
-              const connDiffUpdates = connectionDiffUpdates;
-              if (pieceDiffUpdates.length > 0 || connDiffUpdates.length > 0) {
-                // Revert the previous tick's edit so the kit is back at the original state.
-                if (designStore.currentTransactionStack.length > 0) {
-                  designStore.undo();
-                }
-                designStore.execute(
-                  "semio.designApp.dragUpdate",
-                  "semio.sketchpad.drag.onNodeDrag",
-                  pieceDiffUpdates,
-                  connDiffUpdates.map((cu: any) => ({ connection: { guid: cu.connection.guid }, diff: cu.diff })),
-                );
-              }
-            }
+            // During drag ticks, do NOT execute dragUpdate or modify the real kit.
+            // The transaction stack stays empty; visual positions are driven solely by
+            // applyDragPreviewPositions above. A single dragUpdate is recorded in
+            // onNodeDragStop (with the final positions) before transaction.finalize().
           }
         }
       }
@@ -36689,13 +36681,10 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         if (dragDiff.connections?.updated) {
           dragDiff.connections.updated = connectionDiffUpdates;
         }
-        // Record the final atomic drag diff via the combined command.
-        // Undo any in-flight drag tick edit first so the kit is at the original pre-drag state.
-        // This prevents additive connection u/v diffs from accumulating on top of already-shifted values.
+        // Record the final drag diff as the single transaction entry, then finalize.
+        // The transaction stack was empty during drag ticks (no per-tick dragUpdate),
+        // so the kit is still at the pre-drag state — inverse is computed correctly.
         if (designStore && (pieceDiffUpdates.length > 0 || connectionDiffUpdates.length > 0)) {
-          if (designStore.currentTransactionStack.length > 0) {
-            designStore.undo();
-          }
           designStore.execute(
             "semio.designApp.dragUpdate",
             "semio.sketchpad.drag.onNodeDragStop",
@@ -41219,11 +41208,11 @@ const ConnectorsListSectionForm: FC = () => {
               };
 
               return (
-                <div onPointerEnter={handleHover} onPointerLeave={handleLeave} onClick={handleClick}>
+                <div className={index > 0 ? "mt-single" : undefined} onPointerEnter={handleHover} onPointerLeave={handleLeave} onClick={handleClick}>
                   <TreeItem
                     key={`connector-${index}`}
                     id="semio.sketchpad.app.type.connector"
-                    label={connector.port?.guid || ""}
+                    label={connector.name || ""}
                     sortable={true}
                     sortableId={`connector-${index}`}
                     isDragHandle={true}
@@ -41248,6 +41237,7 @@ const ConnectorsListSectionForm: FC = () => {
                         lazy
                         id="semio.sketchpad.app.type.panel.details.section.connectors.name"
                         value={connector.name || ""}
+                        placeholderId="semio.sketchpad.app.type.connectorNamePlaceholder.label"
                         onLazyChange={(value: string) => {
                           updatePort(connector.guid, { name: value || undefined });
                         }}
@@ -41678,6 +41668,7 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
           lazy
           id="semio.sketchpad.app.type.panel.details.section.connectors.name"
           value={connector.name || ""}
+          placeholderId="semio.sketchpad.app.type.connectorNamePlaceholder.label"
           onLazyChange={(value: string) => {
             updatePort(connector.guid, { name: value || undefined });
           }}
@@ -46936,7 +46927,7 @@ export { useHome };
 
 // #region 🛎️Table
 
-export {};
+  export { };
 
 // #endregion 🛎️Table
 
@@ -48902,10 +48893,10 @@ export { FeedbackIcon };
 // #region 🎆Entrypoint
 // --- Combined from index.tsx and index.ts ---
 
-import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
-import type { KitJsonFileAdapter } from "../studio/studio";
-import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
-import "./globals.css";
+  import type { BlobAssetStore, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore } from "@semio/js";
+  import type { KitJsonFileAdapter } from "../studio/studio";
+  import { createIndexeddbPersistenceFactory, createJsonFileKitStore, JsonFileKitStore } from "../studio/studio";
+  import "./globals.css";
 
 export { createJsonFileKitStore, JsonFileKitStore };
 export type { BlobAssetStore, KitJsonFileAdapter, KitStoreSnapshot, KitStoreStatus, KitSyncState, ObservablePathStore, UndoableKitStore };
