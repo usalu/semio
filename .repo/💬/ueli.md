@@ -8448,6 +8448,7 @@ The (normal: desktop or tablet) layout is
 
 -
 
+```md
 ## | NAVBAR |
 
 | | MIDDLE | |
@@ -8479,6 +8480,7 @@ The mobile layout has just one panel group when the panel is toggeled on:
 ## | BOTTOM |
 
 ## | FOOTER |
+```
 
 Consolidate all imports to be only once on top of the file.
 
