@@ -42677,6 +42677,9 @@ func firstNonEmpty(values ...string) string {
 }
 
 func writeHookArtifacts(ctx HookContext, result HookResult) {
+	if HookEventKind(ctx.Event) == HookKindVersion {
+		return
+	}
 	repoRoot := ctx.RepoRoot
 	if repoRoot == "" {
 		repoRoot = GetRootDir()

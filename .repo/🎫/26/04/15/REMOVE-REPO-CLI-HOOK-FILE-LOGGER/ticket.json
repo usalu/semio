@@ -1,0 +1,9 @@
+{
+  "title": "Remove Repo Cli Hook File Logger",
+  "status": "open",
+  "description": "Remove all file logging from the repo CLI after git and agent hook events so git operations remain seamless. Refactor the repo CLI hook pipeline to stop creating or appending session metadata files for hook events, remove repo-operation file logging tied to hook execution, and extend existing repo/cli tests to cover the no-file-logging behavior. Verify with focused repo/cli tests.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪46d302d2111a4b76be3e8e309259958c"
+  ]
+}

@@ -17365,6 +17365,14 @@ func getLogFiles(t *testing.T, tmpDir string) []string {
 	return logFiles
 }
 
+func assertNoHookLogFiles(t *testing.T, tmpDir string) {
+	t.Helper()
+	logFiles := getLogFiles(t, tmpDir)
+	if len(logFiles) != 0 {
+		t.Fatalf("expected no hook log files under .repo/⚡, got %v", logFiles)
+	}
+}
+
 func TestTrackHookAllEventsLogged(t *testing.T) {
 	tmpDir, ticketJSON := setupTicketDir(t)
 	SetRootDir(tmpDir)
@@ -20822,6 +20830,47 @@ func TestCheckpointInAllVersionEvents(t *testing.T) {
 			if checkpoint != expectedSHA {
 				t.Errorf("expected checkpoint=%s, got %v", expectedSHA, checkpoint)
 			}
+		})
+	}
+}
+
+func TestVersionHooksDoNotWriteSessionLogs(t *testing.T) {
+	tmpDir := initTestGitRepo(t, "main")
+	SetRootDir(tmpDir)
+
+	headCmd := exec.Command("git", "rev-parse", "HEAD")
+	headCmd.Dir = tmpDir
+	headOut, err := headCmd.Output()
+	if err != nil {
+		t.Fatalf("cannot get HEAD: %v", err)
+	}
+	expectedSHA := strings.TrimSpace(string(headOut))
+
+	events := []struct {
+		name  string
+		event HookEvent
+		input json.RawMessage
+	}{
+		{"checkpoint starting", HookVersionCheckpointStarting, nil},
+		{"checkpoint ended", HookVersionCheckpointEnded, json.RawMessage(`{"sha":"` + expectedSHA + `","message":"test commit"}`)},
+		{"checkin starting", HookVersionCheckinStarting, nil},
+		{"checkin ended", HookVersionCheckinEnded, nil},
+		{"checkout starting", HookVersionCheckoutStarting, nil},
+		{"checkout ended", HookVersionCheckoutEnded, nil},
+	}
+
+	for _, tc := range events {
+		t.Run(tc.name, func(t *testing.T) {
+			result := RunHook(HookContext{
+				Event:    tc.event,
+				Second:   "2026-02-25T12:00:00Z",
+				RepoRoot: tmpDir,
+				Input:    tc.input,
+			})
+			if !result.IsAllowed() {
+				t.Fatalf("expected %s to be allowed, got %s", tc.event, result.GetMessage())
+			}
+			assertNoHookLogFiles(t, tmpDir)
 		})
 	}
 }

@@ -83,7 +83,7 @@ TODO: Add roomie to discord for verification
 
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)
 
-## general
+##
 
 The monorepo needs to work both in devcontainer but also native. Currently we are native. Complete the install powershell script that installs and sets up everything that would overthise be available in devcontainer. Both setups need to be 100% zero-touch config and work out-of-the-box. Update every framework to use the latest available stable versions (git, python, node, rust, go, etc). There are some exceptions e.g. net 8 is needed for semio grasshopper, remove net 7
 Make sure everything runs, builds, tests, etc on all platforms.
@@ -229,6 +229,8 @@ Add timeouts, heartbeats, and auto-restart
 Keep the renderer isolated from native details
 
 ## 👤semio
+
+###
 
 TODO: Rename tilt to slope, Add rotation to piece node
 TODO: Rename scene to model
@@ -539,7 +541,7 @@ You MUST implement and test for all programming languages.
 All test MUST pass.
 There MUST be only one schema, no migrations or legacy api support.
 
-## 👤semio📚ui
+### 📚ui
 
 semio ui:
 
@@ -590,7 +592,7 @@ Use small filled circles for pieces and clean lines for connections (circles on 
 
 Create a new bundle semio/ui that holds reusable ui components. Make sure that all general ui dependencies such as react, tailwind, etc are defined there. Create a storybook for it. Refactor sketchpad and algorithms to use the ui package.
 
-## 👤semio🖱️algorithms
+### 🧮algorithms
 
 semio algorithms:
 It is just a clean visualization boad but some things are not right. The output MUST always have the diff applied (not withDiff but just applied). e.g. the output from flattenDesign still has connections in the diagram
@@ -648,13 +650,13 @@ Add a language decorator to the algorithms storybook. Make sure that all native 
 
 Add PieceSelection which is a Diagram component that only works for selecting pieces.
 
-## 👤semio⌨️engine
+### ⌨️engine
 
 semio engine:
 The engine is used to interact with local kits (path) and remote kits (server with accounts and auth). It only runs on clients. All functionality
 MUST work for both kind of kits. Extend the engine with a way to authenticate with servers and refactor everything to work with this two modes. Test everything.
 
-## 👤semio⌨️engine🤖mcp
+#### 🤖mcp
 
 semio engine mcp:
 
@@ -676,9 +678,9 @@ Make sure that all return values from mcp commands never return full entities bu
 Remove all mcp tools but the start*, finish*, sum_qu\* one.
 Introduce a transaction mechanism that is stateful session-scoped. There can be only one active transaction. A transaction is global (e.g. it is no problem to do kit changes, then design, then type, then kit, etc). start_transaction, finalize_transaction, abort_transaction that keeps a stack of kit changes (they have forward and backward diff) and on abort_transaction undo all operations by unwinding all backwards diffs.
 
-## 👤semio📚js
+### 🟨js
 
-## 👤semio🗃️sketchpad
+### ✏️sketchpad
 
 semio/sketchpad:
 
@@ -724,21 +726,19 @@ Abstract the Kit Store completly. Create a new semio bundle called studio that h
 Create two more store: File store that synchronizes a kit to a json file and Folder store that synchronizes a kit to a folder with a .semio folder with sqlite database (same as python engine).
 Create a semio vscode bundle that is sketchpad and opens when a json kit file is opened and edits the file.
 
-## semio desktop
+### 🖥️desktop
 
 semio desktop:
 
 The sketchpad is not rendering the window controls.
 All desktop functionality MUST be implemented in sketchpad and is passed over a desktop prop. If desktop prop is not passed, then sketchpad knows it is not running in desktop mode.
 
-## semio/server
+### 🌐hub
 
 Add auth to server and sketchpad (optional for remote kits).
 Add sharable links for kit, design and type. Options should be read-only
 
-## 👤semio📚js🗃️sketchpad💻designtsx
-
-## 👤semio🖱️3dm
+### 🦏3dm
 
 Create semio/3dm bundle with one npm package `ui` and one .NET package `rhp`.
 The purpose of the ui is display a tree view from sketchpad in the side panel. It should use semio js and on buttons call the native rhino ui.
@@ -762,7 +762,7 @@ Designs
 Design
 Use the react_rhino_connector plan as reference and https://github.com/specklesystems/speckle-sharp-connectors/tree/main
 
-## 👤semio🖱️gh
+### 🦗gh
 
 semio net and gh:
 Add a new component: Design to Blocks
@@ -805,6 +805,8 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 
 ## 🧰repo
 
+###
+
 repo:
 Every single definition MUST have a unique emoji and a non-generic description. Currently there are missing, wrong, random emojis, same for description.
 Check the complete monorepo manually and dont solve the problem with creating new scripts that again randomly automate generic emojis or descriptions. Dont stop until all programming languages are completed.
@@ -822,1963 +824,6 @@ Rename project to technology
 + 🧰repo⌨️cli💻main
 ! 🧰repo⌨️cli💻main
 ```
-
-## 🧰repo⌨️cli💻main
-
-repo cli:
-The .repo folder should be only created once at the monoreporoot. Regardless if for caching, testing, etc
-
-Dont create new event.json files for the session events but add them directly to session.json as event array.
-
-Currently there is a folder and projects tree item in the monorepo tree.
-Unify them to a single tree item called codebase. The codebase has all root files, root folders and projects.
-Previously there were root level project and root level bundle. Remove them.
-
-projects are root level folders with a README with a frontmatter. Currently there are wrong folders being detected.
-Not all projects have a frontmatter.
-
-repo/cli/cli project list
-
-- [👤pycache](repo://p/u/__pycache__)
-- [🔬coda](repo://p/r/coda)
-- [👤semio](repo://p/u/semio)
-- [🧰repo](repo://p/i/repo)
-
-TODO: introduce proper events for repo specific tool calls.
-
-```json
-{
- "native": {
-  "event": null
- },
- "event": {
-  "allowed": true,
-  "checkpoint": "🔀48642121e9491480e54fa0e381a8595ff6e1b6c8",
-  "description": "fix(cli): correct version hook in post-commit",
-  "kind": "version.checkpoint.ended",
-  "message": "fix(cli): correct version hook in post-commit",
-  "second": "🎆26🌙02☀️27⏰13⌚13⏱️08"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-The repo go tests are increadibly slow. Optimize them and make sure to eliminate bottlenecks.
-You MUST NOT call repo hooks manually.
-
-Test events are not correctly identified.
-All languages and all test frameworks MUST be supported.
-
-```yml
-agent
-    test:
-      starting:
-        DATA:
-          tests: ["{{test-id}}"] # e.g. ["","🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand",]
-          timeout: "{{timeout}}" # seconds e.g. 600
-      ended:
-        DATA:
-          succeeded: ["{{successful-test-id}}"] # e.g. ["🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand"]
-          failed: ["{{failed-test-id}}"] # e.g. ["🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand"]
-```
-
-The test mechanism should be extended. Every entity should
-
-Introduce a general `test [{{testable-id-or-uri}}]*` command that runs all tests for all given entities.
-E.g. for a project and a bundle from another project are all tests inside the projects are run, for a bundle all tests inside the bundle are run, etc
-
-```bash
-repo/cli/cli test # run all tests
-repo/cli/cli test 🧰repo # run all tests for the project
-repo/cli/cli test 🧰repo⌨️cli # run all tests for the cli bundle
-repo/cli/cli test 🧰repo⌨️cli💻main # run all tests for the cli bundle main
-repo/cli/cli test 🧰repo⌨️cli🥼maintest # run all tests for the cli bundle main go
-repo/cli/cli test 🧰repo⌨️cli🥼maintest🔖policytests # run all tests for the cli bundle main go policy tests section
-repo/cli/cli test 🧰repo⌨️cli🥼maintest🔖policytests🧪testpolicylistcommand # run one test
-```
-
-Add id and uri to ticket.json, goal.json, event.json, session.json, contributor.json
-e.g.
-
-```json
-{
- "id": "{{ticket-id}}",
- "uri": "{{ticket-uri}}",
- "title": "Remove File Extension from File Ids",
- "status": "open",
- "description": "All file ids should not have the file extension part of the flat name.",
- "github": {
-  "issue": "https://github.com/usalu/semio/issues/732"
- },
- "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
- "sessions": ["⚪17722881541519940541784063889126907940"]
-}
-```
-
-All events must have the contributor id as part of the event.
-
-e.g.
-
-```json
-{
- "native": {
-  "event": {
-   "timestamp": "2026-02-28T14:14:02.511Z",
-   "hookEventName": "SessionStart",
-   "sessionId": "88373e1c-ff1b-4fcd-b80d-d00043bb6567",
-   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/88373e1c-ff1b-4fcd-b80d-d00043bb6567.jsonl",
-   "source": "new",
-   "cwd": "/workspaces/semio"
-  },
-  "response": {
-   "hookSpecificOutput": {
-    "additionalContext": "agent.started acknowledged",
-    "hookEventName": "SessionStart"
-   }
-  }
- },
- "event": {
-  "checkpoint": "🔀48642121e9491480e54fa0e381a8595ff6e1b6c8",
-  "contributor": "🧑‍💻usalu",
-  "client": "copilot-chat",
-  "kind": "agent.started",
-  "parent": "new",
-  "second": "🎆26🌙02☀️28⏰14⌚14⏱️03",
-  "session": "⚪88373e1cff1b4fcdb80dd00043bb6567",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/88373e1c-ff1b-4fcd-b80d-d00043bb6567.jsonl"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-All file ids should not have the file extension part of the flat name.
-
-Add a `delta {{entity-id}}` command that shows the codebase delta between the current state and the latest checkpoint.
-
-plan.updating should be started and ended with correct mapping. Currently the same event is fired twice.
-
-The `session.json`should keep track of the plan with the steps based on the events. Make sure to add new steps, mark them as inprogress, completed or abandoned. Merge and update them smartly based on the new complete structure.
-
-`session.json` is:
-
-```json
-{
- "uuid": "a881a3c5-b51c-42d0-8050-f25a054e9e8d",
- "client": "copilot-chat",
- "started_at": "2026-03-02T01:06:46Z",
- "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/a881a3c5-b51c-42d0-8050-f25a054e9e8d.jsonl",
- "first_event": "010646_agent-started.json"
-}
-```
-
-but should be:
-
-```json
-{
- "id": "{{session-id}}",
- "uri": "{{session-uri}}",
- "contributor": "{{contributor-id}}",
- "client": "{{client-id}}",
- "second": "{{second-id}}",
- "transcript": "{{transcript-path}}"
-}
-```
-
-Create a `session.json` when a new session is started in the session folder that stores general session information such as client, llm, etc. Make sure to not duplicate information that is already stored in the events.
-
-When running (auto)fix it should automatically add the missing ids for definitions ontop. You MUST implement this for all languages.
-e.g. this should not exist after the autofixes
-
-```go
-func isLicenseText(text string) bool {
-```
-
-You MUST execute all searches and then store the definition ids and how many lines read for each definition in the event.
-
-e.g.
-
-```json
-{
- "native": {
-  "event": {
-   "agent_action_name": "pre_run_command",
-   "trajectory_id": "42cbc8d3-6831-4809-916f-378c396b55a4",
-   "timestamp": "2026-02-27T02:14:53.466104322Z",
-   "execution_id": "46d443cd-a2c4-4421-89bc-1b4a96ee1947",
-   "tool_info": {
-    "command_line": "grep -n -C 5 \"Interactions\" repo/cli/main.go | grep -v \"type Goal\" | grep ticket",
-    "cwd": "/workspaces/semio"
-   }
-  }
- },
- "event": {
-  "allowed": true,
-  "checkpoint": "🔀a0ced62dc1a25867a3852c582316851ee77016a0",
-  "client": "windsurf-chat",
-  "kind": "agent.tool.search.starting",
-  "second": "🎆26🌙02☀️27⏰02⌚14⏱️53",
-  "session": "⚪42cbc8d368314809916f378c396b55a4",
-  "definitions": [
-   {
-    "id": "{{definition-id}}",
-    "loc": "{{total-lines-of-code-read}}"
-   }
-  ]
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-```bash
-grep -n -C 5 "Interactions" repo/cli/main.go | grep -v "type Goal" | grep ticket
-2304-                           for _, t := range tickets {
-3461-   for _, t := range tickets {
-13053-  TicketID   string `json:"ticketId,omitempty"`
-13056:// ListInteractions aggregates interactions from all tickets and goals.
-13061-  tickets, err := ListTickets(nil, nil, nil)
-13063-          for _, t := range tickets {
-13068-                                  SourceKind:  "ticket",
-13093:// StreamInteractions streams interactions from all tickets and goals.
-13098-  tickets, _ := ListTickets(nil, nil, nil)
-13099-  for _, t := range tickets {
-13182-// TicketData holds the data fields for a ticket data record.
-13183-// [🧰repo⌨️cli💻maingo🔖types🔖languages✂️ticketdata](repo://definition/repo/cli/main.go/Types/Languages/TicketData)
-19635-          FolderPath:    ticketDir,
-21953-  ticket.Summary = summary
-21954-  ticket.Status = TicketStatusClosed
-21958:  if len(ticket.Interactions) > 0 {
-21959:          closeClient = ticket.Interactions[len(ticket.Interactions)-1].Client
-21984:  ticket.Interactions = append(ticket.Interactions, Interaction{
-22085:  ticket.Interactions = append(ticket.Interactions, interaction)
-22086-  appendTicketSessionID(ticket, currentTicketSessionID())
-22087-  ticket.Status = TicketStatusOpen
-22089-  if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
-22090-          issueURL := ticket.Management.Issue
-23861-                  if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
-23866-                  cpID := fmt.Sprintf("%s/%d", ticketID, i)
-24781-          ticket.Description = *input.Prompt
-24782:          if len(ticket.Interactions) > 0 {
-24783:                  ticket.Interactions[len(ticket.Interactions)-1].Prompt = *input.Prompt
-24788:  if len(ticket.Interactions) > 0 {
-24794:                  ticket.Interactions[len(ticket.Interactions)-1].LLM = llmSlug
-24802:                  ticket.Interactions[len(ticket.Interactions)-1].Client = uiSlug
-24807-          ticket.Goal = *input.Goal
-28656-                                          ticket := p.Source.(*Ticket)
-28657:                                          return ticket.Interactions, nil
-28663-                                          ticket := p.Source.(*Ticket)
-28664:                                          if len(ticket.Interactions) == 0 {
-28667:                                          interaction := ticket.Interactions[len(ticket.Interactions)-1]
-30664-          return tickets, nil
-30669:// Interactions aggregates all interactions from tickets and goals.
-```
-
-```json
-"lines": [
-      "🧰repo⌨️cli💻maingo📌2304",
-      "🧰repo⌨️cli💻maingo📌3461",
-      "🧰repo⌨️cli💻maingo📌13053",
-      "🧰repo⌨️cli💻maingo📌13056",
-      "🧰repo⌨️cli💻maingo📌13061",
-      "🧰repo⌨️cli💻maingo📌13063",
-      "🧰repo⌨️cli💻maingo📌13068",
-      "🧰repo⌨️cli💻maingo📌13093",
-      "🧰repo⌨️cli💻maingo📌19635",
-      "🧰repo⌨️cli💻maingo📌21984",
-      "🧰repo⌨️cli💻maingo📌23861",
-      "🧰repo⌨️cli💻maingo📌23866",
-      "🧰repo⌨️cli💻maingo📌24788",
-      "🧰repo⌨️cli💻maingo📌24794",
-      "🧰repo⌨️cli💻maingo📌24802",
-      "🧰repo⌨️cli💻maingo📌24807",
-      "🧰repo⌨️cli💻maingo📌28667",
-      "🧰repo⌨️cli💻maingo📌30664",
-      "🧰repo⌨️cli💻maingo📌30669"
-    ],
-    "ranges": [
-      "🧰repo⌨️cli💻maingo📌13098📌13099",
-      "🧰repo⌨️cli💻maingo📌13182📌13183",
-      "🧰repo⌨️cli💻maingo📌21953📌21954",
-      "🧰repo⌨️cli💻maingo📌21958📌21959",
-      "🧰repo⌨️cli💻maingo📌22085📌22087",
-      "🧰repo⌨️cli💻maingo📌22089📌22090",
-      "🧰repo⌨️cli💻maingo📌24781📌24783",
-      "🧰repo⌨️cli💻maingo📌28656📌28657",
-      "🧰repo⌨️cli💻maingo📌28663📌28664"
-    ]
-```
-
-Only to lines of code that contain only id and some wrapping but no other content. Optionally it can also include the uri. As soon as the id is used in the text then dont show the
-
-repo vscode:
-Add 2 code lenses `Summarize` and `Open` for every id in source code files. such as e.g.:
-`## 🧰repo⌨️cli💻maingo`
-`// 🧰repo⌨️cli💻maingo`
-`// [🧰repo⌨️cli💻maingo](repo://project/semio/bundle/js/folder/sketchpad/file/Design.tsx)`
-etc.
-Show semio icon gutter on the same line of the id.
-`Summarize` should call the `summarize` command with the id.
-`Open` should navigate to the entity in the editor.
-Make sure that navigation to uris is working.
-
-e.g.
-
-````tpl
-
-# {{definition-kind-emoji}} {{uppercase-definition-kind-name}}
-```{{file-extension}}
-{{definition-code}}
-````
-
-The id system is not consistent. Every single entity should have the corresponng plural entity as parent and the plural collection should have the emoji and code information. The code must be unique among all entities. The uri should be refactored to only have {{repo-id}}{{code}}/{{uri-encoded-identifying-path}}.
-
-Rename `summarize` to `analyze`. Make sure that analyze contains all information about the entity such as code, specs, docs, etc.
-
-Introduce a new command`summarize {{id|uri}}` which creates a summary of the given entity. Use go embedded templates for every entity kind.
-
-repo cli:
-Refactor all outputs to use templates for rendering (markdown and text). Use go embed for templates.
-
-A special kind of files are labs. Labs contain tests. A test is a kind of definition. Around the codebase there is the term tests used for test files which should be labs.
-
-repo cli:
-The logging should change to
-`.repo/⚡/{{event-id}}.json`
-e,g. "`.repo/⚡/🔀/⚪e753ed61e8cc49b788f7dda53b8d5a15/{{event-id}}.json"
-`.repo/⚡/🤖/{{session-id}}/{{event-id}}.json`
-
-```yaml
-checkpoint:
- parent: repo
- id:
-  scheme: "{{repo-id}}🔀"
-  examples:
-   - "🔀"
- uri:
-  scheme: "{{repo-uri}}c"
-  examples:
-   - "repo://c"
-checkpoint: # e.g. for git provider a commit sha
- parent: checkpoints
- id:
-  scheme: "{{repo-id}}🔀{{checkpoint-id}}"
-  examples:
-   - "🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a"
- uri:
-  scheme: "{{checkpoints-uri}}/{{checkpoint-id*}}"
-  examples:
-   - "repo://c/cfb3b6084ff3fe883d5f39b08810a0b90997907a"
-sessions:
-  parent: repo
-  emoji: ⚪
-    kinds:
-    - name: running
-      emoji: 🟡
-    - name: completed
-      emoji: 🟢
-    - name: interrupted
-      emoji: 🔴
- id:
-    scheme: "{{repo-id}}{{session-emoji}}"
-    examples:
-      - "⚪"
-  uri:
-    scheme: "{{repo-uri}}s"
-    examples:
-      - "repo://s"
-session:
-  parent: sessions
-  id:
-    scheme: "{{sessions-id}}{{flat-session-id}}"
-    examples:
-      - "⚪e753ed61e8cc49b788f7dda53b8d5a15"
-  uri:
-    scheme: "{{sessions-uri}}/{{session-id}}"
-    examples:
-      - "repo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"
-
-```
-
-All ids MUST use the repo id system e.g. through `events.json` or `ticket.json`
-
-```yaml
-sessions:
-  parent: repo
-  emoji: ⚪
-    kinds:
-    - name: running
-      emoji: 🟡
-    - name: completed
-      emoji: 🟢
-    - name: interrupted
-      emoji: 🔴
- id:
-    scheme: "{{repo-id}}{{session-emoji}}"
-    examples:
-      - "⚪"
-  uri:
-    scheme: "{{repo-uri}}s"
-    examples:
-      - "repo://s"
-session:
-  parent: sessions
-  id:
-    scheme: "{{sessions-id}}{{flat-session-id}}"
-    examples:
-      - "⚪e753ed61e8cc49b788f7dda53b8d5a15"
-  uri:
-    scheme: "{{sessions-uri}}/{{session-id}}
-    examples:
-      - "repo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"
-```
-
-All timestamps in repo events MUST use the repo id system. You MUST replace the name semantically adequate.
-
-```yaml
-years:
- parent: repo
- id:
-  scheme: "{{repo-id}}🎆"
-  examples: ["🎆"]
- uri:
-  scheme: "{{repo-uri}}y"
-  examples: ["repo://y"]
-year:
- parent: years
- id:
-  scheme: "{{repo-id}}🎆{{YY}}"
-  examples: ["🎆26"]
- uri:
-  scheme: "{{years-uri}}/{{YY}}"
-  examples: ["repo://y/26"]
-months:
- parent: year
- id:
-  scheme: "{{year-id}}🌙"
-  examples: ["🎆26🌙"]
- uri:
-  scheme: "{{year-uri}}/m"
-  examples: ["repo://y/26/m"]
-month:
- parent: months
- id:
-  scheme: "{{year-id}}🌙{{MM}}"
-  examples: ["🎆26🌙02"]
- uri:
-  scheme: "{{months-uri}}/{{MM}}"
-  examples: ["repo://y/26/m/02"]
-days:
- parent: month
- id:
-  scheme: "{{month-id}}☀️"
-  examples: ["🎆26🌙02☀️"]
- uri:
-  scheme: "{{month-uri}}/d"
-  examples: ["repo://y/26/m/02/d"]
-day:
- parent: days
- id:
-  scheme: "{{month-id}}☀️{{DD}}"
-  examples: ["🎆26🌙02☀️15"]
- uri:
-  scheme: "{{days-uri}}/{{DD}}"
-  examples: ["repo://y/26/m/02/d/15"]
-hours:
- parent: day
- id:
-  scheme: "{{day-id}}⏰"
-  examples: ["🎆26🌙02☀️15⏰"]
- uri:
-  scheme: "{{day-uri}}/h"
-  examples: ["repo://y/26/m/02/d/15/h"]
-hour:
- parent: hours
- id:
-  scheme: "{{day-id}}⏰{{HH}}"
-  examples: ["🎆26🌙02☀️15⏰14"]
- uri:
-  scheme: "{{hours-uri}}/{{HH}}"
-  examples: ["repo://y/26/m/02/d/15/h/14"]
-minutes:
- parent: hour
- id:
-  scheme: "{{hour-id}}⌚"
-  examples: ["🎆26🌙02☀️15⏰14⌚"]
- uri:
-  scheme: "{{hour-uri}}/min"
-  examples: ["repo://y/26/m/02/d/15/h/14/min"]
-minute:
- parent: minutes
- id:
-  scheme: "{{hour-id}}⌚{{mm}}"
-  examples: ["🎆26🌙02☀️15⏰14⌚33"]
- uri:
-  scheme: "{{minutes-uri}}/{{mm}}"
-  examples: ["repo://y/26/m/02/d/15/h/14/min/33"]
-seconds:
- parent: minute
- id:
-  scheme: "{{minute-id}}⏱️"
-  examples: ["🎆26🌙02☀️15⏰14⌚33⏱️"]
- uri:
-  scheme: "{{minute-uri}}/s"
-  examples: ["repo://y/26/m/02/d/15/h/14/min/33/s"]
-second:
- parent: seconds
- id:
-  scheme: "{{minute-id}}⏱️{{SS}}"
-  examples: ["🎆26🌙02☀️15⏰14⌚33⏱️38"]
- uri:
-  scheme: "{{seconds-uri}}/{{SS}}"
-  examples: ["repo://y/26/m/02/d/15/h/14/min/33/s/38"]
-```
-
-e.g.
-
-```json
-{
- "native": {
-  "event": {
-   "timestamp": "2026-02-26T08:41:38.377Z",
-   "hookEventName": "PreToolUse",
-   "sessionId": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
-   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl",
-   "tool_name": "run_in_terminal",
-   "tool_input": {
-    "command": "find /workspaces/semio/.repo -name \"*.json\" -not -path \"*/cache/*\" -not -path \"*/⚡/*\" -type f | sort",
-    "explanation": "Find all non-event/non-cache JSON files in .repo",
-    "goal": "Identify key JSON files to refactor",
-    "isBackground": false,
-    "timeout": 10000
-   },
-   "tool_use_id": "toolu_01FkquB6Si6SMeAPb5ctaaad__vscode-1771950833335",
-   "cwd": "/workspaces/semio"
-  },
-  "response": {
-   "hookSpecificOutput": {
-    "hookEventName": "PreToolUse",
-    "permissionDecision": "allow"
-   }
-  }
- },
- "event": {
-  "allowed": true,
-  "checkpoint": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
-  "client": "copilot-chat",
-  "kind": "agent.tool.search.starting",
-  "session": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
-  "timestamp": "2026-02-26T08:41:38Z",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-should be
-
-```json
-{
- "native": {
-  "event": {
-   "timestamp": "2026-02-26T08:41:38.377Z",
-   "hookEventName": "PreToolUse",
-   "sessionId": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
-   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl",
-   "tool_name": "run_in_terminal",
-   "tool_input": {
-    "command": "find /workspaces/semio/.repo -name \"*.json\" -not -path \"*/cache/*\" -not -path \"*/⚡/*\" -type f | sort",
-    "explanation": "Find all non-event/non-cache JSON files in .repo",
-    "goal": "Identify key JSON files to refactor",
-    "isBackground": false,
-    "timeout": 10000
-   },
-   "tool_use_id": "toolu_01FkquB6Si6SMeAPb5ctaaad__vscode-1771950833335",
-   "cwd": "/workspaces/semio"
-  },
-  "response": {
-   "hookSpecificOutput": {
-    "hookEventName": "PreToolUse",
-    "permissionDecision": "allow"
-   }
-  }
- },
- "event": {
-  "checkpoint": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
-  "client": "copilot-chat",
-  "kind": "agent.tool.search.starting",
-  "session": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
-  "second": "🎆26🌙02☀️26⏰08⌚41⏱️38",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-All repo event information should be repo related. Add checkpoint (from git provider it is commit sha) to all events.
-E.g. all ids (file, ranges, lines, …) should be repo ids.
-
-```json
-{
- "raw": {
-  "timestamp": "2026-02-24T14:02:29.550Z",
-  "hookEventName": "SubagentStart",
-  "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
-  "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
-  "agent_type": "default",
-  "cwd": "/workspaces/semio"
- },
- "event": {
-  "allowed": true,
-  "client": "copilot-chat",
-  "kind": "agent.started",
-  "parent": "subagent",
-  "session": "293a5d87-0aa9-4250-9920-ddd573c33379",
-  "timestamp": "2026-02-24T14:02:30Z"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-should be:
-
-```json
-{
- "native": {
-  "event": {
-   // native hook input
-  },
-  "response": {
-   // native hook output
-  }
- },
- "event": {
-  // repo event data
- },
- "response": {
-  // repo response data
- }
-}
-```
-
-sub agents have sometimes no session id but instead agent id. Make sure to map it correctly for all platforms.
-
-```json
-{
- "native": {
-  "input": {
-   "timestamp": "2026-02-24T14:02:29.550Z",
-   "hookEventName": "SubagentStart",
-   "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
-   "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
-   "agent_type": "default",
-   "cwd": "/workspaces/semio"
-  },
-  "output": {
-   // native hook output
-  }
- },
- "event": {
-  "allowed": true,
-  "client": "copilot-chat",
-  "kind": "agent.started",
-  "parent": "subagent",
-  "session": "293a5d87-0aa9-4250-9920-ddd573c33379",
-  "timestamp": "2026-02-24T14:02:30Z"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-should be:
-
-```json
-{
- "native": {
-  "input": {
-   "timestamp": "2026-02-24T14:02:29.550Z",
-   "hookEventName": "SubagentStart",
-   "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
-   "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
-   "agent_type": "default",
-   "cwd": "/workspaces/semio"
-  },
-  "output": {
-   // native hook output
-  }
- },
- "event": {
-  "allowed": true,
-  "client": "copilot-chat",
-  "kind": "agent.started",
-  "parent": "293a5d87-0aa9-4250-9920-ddd573c33379",
-  "session": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
-  "timestamp": "2026-02-24T14:02:30Z"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-Remove tracking of `interactions` and `agents` from `ticket.json` and instead just leave a session ids. Add this automatically after a ticket was opened or reopened or closed over the cli or mcp.
-
-e.g.
-
-```json
-{
-  "title": "Refactor Event Structure",
-  "description": "Refactor the hook event log structure to use native/event/response layout. Replace raw field with native object containing event (native hook input) and response (native hook output). Resolve all file paths and queries to proper repo IDs in event data.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/698"
-  },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
-  "interactions": [
-    {
-      //
-    }
-  ],
-  "agents": [
-    {
-      "session": "24c77e92-3d03-4d02-821d-a1dd45778e43",
-      "contributor": "usalu",
-      "system": "linux",
-      "client": "copilot-chat",
-      "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/24c77e92-3d03-4d02-821d-a1dd45778e43.jsonl",
-      "plan": {
-        "steps": [
-```
-
-should be:
-
-```json
-{
-  "title": "Refactor Event Structure",
-  "description": "Refactor the hook event log structure to use native/event/response layout. Replace raw field with native object containing event (native hook input) and response (native hook output). Resolve all file paths and queries to proper repo IDs in event data.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/698"
-  },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
-  "sessions": ["⚪24c77e923d034d02821da1dd45778e43"]
-    }
-  ]
-```
-
-repo cli:
-The tickets should no longer store agent events and diffs.
-The logging should change to
-`.repo/⚡/🔀/{{YY}}/{{MM}}/{{DD}}/{{checkpoint-id}}/{{HHMMSS}}_{{version-event-kind}}.json`
-`.repo/⚡/🤖/{{YY}}/{{MM}}/{{DD}}/{{session-id}}/{{HHMMSS}}_{{agent-event-kind}}.json`
-When a checkpoint is created a semantic code diff should be stored under:
-`.repo/🔀/{{YY}}/{{MM}}/{{DD}}/{{checkpoint-id}}.json`
-You MUST refactor everything.
-
-Everything inside all `.json` files (e.g. events, goals, tickets, contributors, etc.) in `.repo/*` that relates to resources should use the repo id system. You MUST refactor everything cleanly.
-
-e.g. The goals in `ticket.json` files
-
-```json
-{
-  "title": "Fix ID System and Emoji Prefixes",
-  "description": "The id system is not properly setup. e.g. when copying the id in the vscode extension it is missing the starting emoji which is part of the id. Find all mismatchtes, fix them and extend the tests, so this cant happen in the future.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/445"
-  },
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
-```
-
-should be:
-
-```json
-{
-  "title": "Fix ID System and Emoji Prefixes",
-  "description": "The id system is not properly setup. e.g. when copying the id in the vscode extension it is missing the starting emoji which is part of the id. Find all mismatchtes, fix them and extend the tests, so this cant happen in the future.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/445"
-  },
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
-```
-
-```json
-{
- "raw": {
-  "timestamp": "2026-02-23T23:56:38.536Z",
-  "hookEventName": "PostToolUse",
-  "sessionId": "0667d8ff-9287-40a9-8302-3703ce26153e",
-  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl",
-  "tool_name": "grep_search",
-  "tool_input": {
-   "maxResults": 20,
-   "includePattern": "**/repo/cli/main.go",
-   "isRegexp": true,
-   "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field"
-  },
-  "tool_response": "",
-  "tool_use_id": "toolu_vrtx_016RpgqsJL2G725EBNagUaXa__vscode-1771851203893",
-  "cwd": "/workspaces/semio"
- },
- "event": {
-  "allowed": true,
-  "client": "copilot-chat",
-  "include": ["**/repo/cli/main.go"],
-  "kind": "agent.tool.searching.ended",
-  "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field",
-  "response": "",
-  "session": "0667d8ff-9287-40a9-8302-3703ce26153e",
-  "timestamp": "2026-02-23T23:56:39Z",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-```json
-{
- "raw": {
-  "timestamp": "2026-02-23T23:56:38.536Z",
-  "hookEventName": "PostToolUse",
-  "sessionId": "0667d8ff-9287-40a9-8302-3703ce26153e",
-  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl",
-  "tool_name": "grep_search",
-  "tool_input": {
-   "maxResults": 20,
-   "includePattern": "**/repo/cli/main.go",
-   "isRegexp": true,
-   "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field"
-  },
-  "tool_response": "",
-  "tool_use_id": "toolu_vrtx_016RpgqsJL2G725EBNagUaXa__vscode-1771851203893",
-  "cwd": "/workspaces/semio"
- },
- "event": {
-  "allowed": true,
-  "client": "copilot-chat",
-  "include": ["🧰repo⌨️cli💻maingo"],
-  "kind": "agent.tool.searching.ended",
-  "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field",
-  "response": "",
-  "session": "0667d8ff-9287-40a9-8302-3703ce26153e",
-  "timestamp": "2026-02-23T23:56:39Z",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-```json
-{
- "raw": {
-  "timestamp": "2026-02-23T16:35:17.038Z",
-  "hookEventName": "PreToolUse",
-  "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
-  "tool_name": "replace_string_in_file",
-  "tool_input": {
-   "filePath": "/workspaces/semio/repo/cli/main_test.go",
-   "newString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-   "oldString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}"
-  },
-  "tool_use_id": "toolu_vrtx_01L6kAK9eijwjpaMZ1BNhTZZ__vscode-1771851203222",
-  "cwd": "/workspaces/semio"
- },
- "event": {
-  "allowed": true,
-  "client": "copilot-chat",
-  "kind": "agent.tool.code.editing",
-  "new": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-  "old": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-  "path": "/workspaces/semio/repo/cli/main_test.go",
-  "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-  "timestamp": "2026-02-23T16:35:17Z",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-should be:
-
-```json
-{
- "raw": {
-  "timestamp": "2026-02-23T16:35:17.038Z",
-  "hookEventName": "PreToolUse",
-  "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
-  "tool_name": "replace_string_in_file",
-  "tool_input": {
-   "filePath": "/workspaces/semio/repo/cli/main_test.go",
-   "newString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-   "oldString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}"
-  },
-  "tool_use_id": "toolu_vrtx_01L6kAK9eijwjpaMZ1BNhTZZ__vscode-1771851203222",
-  "cwd": "/workspaces/semio"
- },
- "event": {
-  "kind": "agent.tool.code.editing",
-  "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-  "file": "🧰repo⌨️cli🥼maintestgo",
-  "sections": ["🧰repo⌨️cli🥼maintestgo🔖"],
-  "new": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-  "old": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
-  "timestamp": "2026-02-23T16:35:17Z"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-The data is not cleanly modeled.
-
-```json
-{
-  "kind": "agent.tool.terminal.starting",
-  "timestamp": "2026-02-23T15:41:15Z",
-  "pattern": "sed -n '14860,14880p' repo/cli/main_test.go"
-},
-```
-
-should be:
-
-```json
-{
-  "kind": "agent.tool.search.starting",
-  "timestamp": "2026-02-23T15:41:15Z",
-  "pattern": "repo/cli/main_test.go#L14860-14880"
-},
-```
-
-````json
-{
-  "kind": "agent.tool.terminal.starting",
-  "timestamp": "2026-02-23T15:41:00Z",
-  "pattern": "grep -rn 'HookLogEntry' repo/cli/main_test.go"
-}
-should be:
-{
-  "kind": "agent.tool.terminal.starting",
-  "timestamp": "2026-02-23T15:41:00Z",
-  "pattern": "HookLogEntry",
-  "include": "repo/cli/main_test.go"
-}
-
-"cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5"
-
-should be:
-
-Everything like this:
-```json
-{
-  "raw": {
-    "timestamp": "2026-02-23T16:23:51.780Z",
-    "hookEventName": "PostToolUse",
-    "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
-    "tool_name": "run_in_terminal",
-    "tool_input": {
-      "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5",
-      "explanation": "Find where HookResultAgentStarted is created",
-      "goal": "Check if Kind is set",
-      "isBackground": false,
-      "timeout": 5000
-    },
-    "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5`, and this is the output of running that command instead:\n35392:          return HookResultAgentStarted{HookResultAgentBase: ab}\n",
-    "tool_use_id": "toolu_vrtx_01ExheXDoKS6VANFeLUBZTEj__vscode-1771851203197",
-    "cwd": "/workspaces/semio"
-  },
-  "event": {
-    "allowed": true,
-    "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-    "timestamp": "2026-02-23T16:23:52Z",
-    "client": "copilot-chat",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
-    "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5"
-  },
-  "response": {
-    "allowed": true
-  }
-}
-````
-
-should be this:
-
-```json
-{
- "raw": {
-  "timestamp": "2026-02-23T16:23:51.780Z",
-  "hookEventName": "PostToolUse",
-  "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
-  "tool_name": "run_in_terminal",
-  "tool_input": {
-   "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5",
-   "explanation": "Find where HookResultAgentStarted is created",
-   "goal": "Check if Kind is set",
-   "isBackground": false,
-   "timeout": 5000
-  },
-  "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5`, and this is the output of running that command instead:\n35392:          return HookResultAgentStarted{HookResultAgentBase: ab}\n",
-  "tool_use_id": "toolu_vrtx_01ExheXDoKS6VANFeLUBZTEj__vscode-1771851203197",
-  "cwd": "/workspaces/semio"
- },
- "event": {
-  "kind": "agent.tool.searching",
-  "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
-  "timestamp": "2026-02-23T16:23:52Z",
-  "client": "copilot-chat",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
-  "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5"
- },
- "response": {
-  "allowed": true
- }
-}
-```
-
-```go
-// #region 🔖Header
-
-// [🧰repo⌨️cli💻maingo](repo://file/repo/cli/main.go)
-
-// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
-
-// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// Monorepo CLI tool for repository management, analysis and code generation.
-
-// #endregion 🔖Header
-```
-
-should be
-
-````go
-// #region 🔖Header
-// [🧰repo⌨️cli💻maingo](repo://file/repo/cli/main.go)
-// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
-// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
-// Monorepo CLI tool for repository management, analysis and code generation.
-// #endregion 🔖Header
-
-All searching patterns with line numbers should be displayed like this:
- `semio/js/sketchpad/Design.tsx#L532` for lines
- `semio/js/sketchpad/Design.tsx#L532-L771` for ranges
- here some wrong displays:
- ```json
-{
-  "input": {
-    "timestamp": "2026-02-23T10:53:51.987Z",
-    "hookEventName": "PostToolUse",
-    "sessionId": "7ff6f48c-24ba-41ee-bd06-531829800935",
-    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl",
-    "tool_name": "read_file",
-    "tool_input": {
-      "endLine": 35540,
-      "filePath": "/workspaces/semio/repo/cli/main.go",
-      "startLine": 35490
-    },
-    "tool_response": "",
-    "tool_use_id": "toolu_vrtx_011DzYuTksYPRzS528HKBogs__vscode-1771801077693",
-    "cwd": "/workspaces/semio"
-  },
-  "event": {
-    "kind": "agent.tool.searching.ended",
-    "session": "7ff6f48c-24ba-41ee-bd06-531829800935",
-    "timestamp": "2026-02-23T10:53:51.987Z",
-    "client": "copilot-chat",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl"
-  },
-  "response": {},
-  "data": {
-    "allowed": true,
-    "session": "7ff6f48c-24ba-41ee-bd06-531829800935",
-    "timestamp": "2026-02-23T10:53:52Z",
-    "client": "copilot-chat",
-    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl",
-    "query": "/workspaces/semio/repo/cli/main.go",
-    "response": ""
-  }
-````
-
-```json
-{
-  "kind": "agent.tool.searching",
-  "timestamp": "2026-02-23T11:13:35Z",
-  "pattern": "/workspaces/semio/repo/cli/main_test.go"
-},
-{
-  "kind": "agent.tool.searching.ended",
-  "timestamp": "2026-02-23T11:13:41Z",
-  "pattern": "/workspaces/semio/repo/cli/main_test.go"
-},
-```
-
-Agents MUST NOT actively track plan/progress/changes. Everything is tracked over agent hooks. Remove `ticket.md` in the mechanism and update all docs.
-
-The logging path of agent of hooks should change to
-
-- .repo
-  - 📜
-    - 🪝
-      - 🤖
-        - {{session-id}}
-          - {{timestamp}}\_{{repo-agent-hook-event-kind}}.json
-      - 🔀
-        - {{change-id}}
-          - {{timestamp}}\_{{repo-vcs-hook-event-kind}}.json
-
-The mapping of the native agent hooks to the general hook system MUST be tested for every single native hook event with real data. Use the `./.repo/📜/*.json` files for real data.
-
-Logs MUST be clean and just have input, event and response data.
-e.g.
-
-```json
-{
- "context": {
-  "event": "agent.ended",
-  "client": "copilot-chat",
-  "timestamp": "2026-02-20T09:11:47Z",
-  "repoRoot": "/workspaces/semio",
-  "input": {
-   "timestamp": "2026-02-20T09:11:46.811Z",
-   "hookEventName": "Stop",
-   "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
-   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
-   "stop_hook_active": false,
-   "cwd": "/workspaces/semio"
-  }
- },
- "result": {
-  "allowed": true,
-  "raw": {
-   "timestamp": "2026-02-20T09:11:46.811Z",
-   "hookEventName": "Stop",
-   "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
-   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
-   "stop_hook_active": false,
-   "cwd": "/workspaces/semio"
-  },
-  "session": "372c099f-a49d-4973-983c-4b6d2bf28298",
-  "timestamp": "2026-02-20T09:11:47Z",
-  "client": "copilot-chat",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl"
- }
-}
-```
-
-should be:
-
-```json
-{
- "input": {
-  "timestamp": "2026-02-20T09:11:46.811Z",
-  "hookEventName": "Stop",
-  "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
-  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
-  "stop_hook_active": false,
-  "cwd": "/workspaces/semio"
- },
- "event": {
-  "kind": "agent.ended",
-  "session": "372c099f-a49d-4973-983c-4b6d2bf28298",
-  "timestamp": "2026-02-20T09:11:46.811Z",
-  "client": "copilot-chat",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl"
- },
- "response": {}
-}
-```
-
-Extend the cli by a general project requirements, docs and todo generation system.
-
-```bash
-./repo/cli/cli project <project-name> generate <kind>
-
-./repo/cli/cli project semio generate requirements
-./repo/cli/cli project repo generate docs
-./repo/cli/cli project coda generate todos
-```
-
----
-
-`DOCS.md`
-
-```md
-# 📚 Docs
-
-## [{{ENTITYID}}]({{ENTITYURI}})
-
-{{ENTITYDOCS}}
-```
-
-`SPECS.MD`
-
-```md
-# 💯 Requirements
-
-## [{{ENTITYID}}]({{ENTITYURI}})
-
-{{ENTITYSPECS}}
-```
-
-`TODOS.md`
-
-```md
-# 🔳 TODOs
-
-## [{{ENTITYID}}]({{ENTITYURI}})
-
-### TODO: {{TODOTITLE}}
-
-{{TODODESCRIPTION}}
-```
-
-You MUST implement, test and run it for all projects.
-
-The information is sourced from the code:
-
-Create a `generate <kind> ` command that generates.
-
-```bash
-./repo/cli/cli mermaid <visualization>
-./repo/cli/cli mermaid loc-by-projects-bundles-folders-files
-./repo/cli/cli mermaid loc-by-contributors
-./repo/cli/cli mermaid loc-by-language
-```
-
----
-
-Currently a lot of dependencies are hardcoded. Generalize them, so that everything is composable.
-There are SourceControlProvider (GitHub, GitLab, BitBucket, …), TrackerProvider (Jira, Trello, Linear, GitHub, …), SandboxProvider (Devcontainer, Podman, …), LanguageProviders (Typescript, Go, Python, C#, …), AIProvider (VSCode, Windsurf, Cursor, Antigrvity, Claude Code, Codex, Droid, …), MonorepoProvider (Nx, Turborepo, Bazel, Pant, Buck2, Lage, Rush, …).
-You MUST use for every Provider the native cli.
-All Providers MUST provide a configure method that adjusts config files accordingly.
-All issue/milestone related code usage from GitHub MUST be abstracted to ManagmentProvider.
-All native agent hooks MUST be abstracted to EditorProvider. EditorProvider provide things like adapters for native agent hooks where they can map to common repo agent hooks.
-Dont stop until you have refactored and tested everything.
-
----
-
-## 🧰repo⌨️cli💻maingo🔖versions
-
-Abstract version control system such as git and implement a git provider.
-
-Events:
-
-```yaml
-version:
- checkpoint:
-  starting: # e.g. in git pre-commit
-   timestamp: "{{timestamp}}"
-   description: "{{checkpoint-description}}" # e.g. in git commit message
-  ended: # e.g. in git post-commit
-   timestamp: "{{timestamp}}"
-   id: "{{checkpoint-id}}" # e.g. in git commit sha
-   description: "{{checkpoint-description}}" # e.g. in git commit message
- checkin:
-  starting:
-   checkpoint: "{{checkpoint-id}}" # current checkpoint id
-   timestamp: "{{timestamp}}"
-  ended:
-   checkpoint: "{{checkpoint-id}}" # new checkin checkpoint id
-   timestamp: "{{timestamp}}"
- checkout:
-  starting:
-   description: "{{checkout-description}}"
-   checkpoints: ["{{checkpoint-id-between-checkin-and-checkout}}"] # e.g. in git commit sha of squash checkpoints between checkin and checkout
-   archive: ["{{archive-checkpoint-id}}"] # e.g. in git branch name of the archive branch e.g. "kinan/2026/02/24"
-  ended:
-   id: "{{checkpoint-id}}" # e.g. in new git commit sha of squash checkpoints between checkin and checkout
-   description: "{{checkout-description}}" # e.g. in git commit message
-```
-
-Lifecycle:
-
-```mermaid
-sequenceDiagram
- Contributor->>+repo: checkin
- repo->>+git: fast foward `contributor/latest` to `main`
- git->>-repo: ✅
- repo->>-Contributor: ✅
- Contributor->>+repo: checkpoint
- repo->>+git: commit `contributor/latest`
- git->>-repo: ✅
- repo->>-Contributor: ✅
- Contributor->>+repo: checkout
- repo->>+git: create branch `contributor/backup`
- git->>-repo: ✅
- repo->>+git: squashmerge `contributor/latest` to `main`
- git->>-repo: ✅
- repo->>-Contributor: ✅
-```
-
-## 🧰repo⌨️cli💻maingo🔖metrics
-
-The repo cli MUST generate mermaid diagram strings.
-
-```bash
-./repo/cli/cli mermaid <visualization>
-./repo/cli/cli mermaid loc-by-projects-bundles-folders-files
-./repo/cli/cli mermaid loc-by-contributors
-./repo/cli/cli mermaid loc-by-language
-```
-
-e.g `./repo/cli/cli mermaid loc-by-projects-bundles-folders-files` should be something like this:
-
-```mermaid
-treemap-beta
-"Lines of Code (k)"
-    "👤semio"
-      "📚js"
-        "🗃️skethcpad"
-          "💻designtsx"
-            "🔖statemanagment"
-              "🔖store": 40
-            "🔖designtsx": 80
-        "💻semio.ts": 30
-      "📚sketchpad": 80
-    "🧰repo"
-      "⌨️cli": 30
-    "🔬coda"
-      "⌨️cli": 2
-```
-
-e.g `./repo/cli/cli mermaid loc-by-projects-bundles-folders-files` should be something like this:
-
-```mermaid
-treemap-beta
-"Lines of Code (k)"
-    "🐍Python"
-      "📚js"
-        "🗃️skethcpad"
-          "💻Design.tsx": 80
-        "💻semio.ts": 30
-      "📚sketchpad": 80
-    "🧰repo"
-      "⌨️cli": 30
-    "🔬coda"
-      "⌨️cli": 2
-```
-
-## 🧰repo⌨️cli💻maingo🔖identification
-
-repo:
-The id system has some problems. Recently special root project and root bundle was introduced. There are only meant for orphan folders and files.
-e.g. 👤semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixabletsx🔖missingend should be `👤semio🏪assets🗃️some🗃️folder💻filefixabletsx🔖missingend`
-
----
-
-The id system should be changed. From now on all bundles MUST have a parent project and all folders MUST have a parent bundle and all files MUST have a parent folder.
-For this purpose introduce the virtual `🥇mono` project and virtual `🪆repo` bundle. Files and folders that are on the root level are children of the `🪆repo` bundle.
-Every bundle has a virtual folder called `🌱root` that is the parent of all files that are on the root folder level of the bundle.
-This makes it much easier because the hierarchy PROJECT - BUNDLE - FOLDER - FILE is now strict.
-Adjust the cli and the vscode extension accordingly.
-
----
-
-All ids are designed to be displayed as tree.
-The --text option should not show the full ids but only the tree part of the ids.
-e.g. this:
-
-```bash
- $ ./repo/cli/cli tree --only-goal --text
-[🎯Goals](repo://goals)
-├── 🎯aioptimizedrepo AI-optimized Repo open created 2 weeks ago AI-optimized Repo goal
-│   ├── 🎯aioptimizedrepo🎯consistentrepohistory Consistent Repo History open Goal for Consistent Repo History
-│   ├── 🎯aioptimizedrepo🎯repoclient Repo Client open Goal for Repo Client
-│   │   ├── 🎯aioptimizedrepo🎯repoclient🎯repobinary Repo Binary open Goal for Repo Binary
-│   │   │   ├── 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli Repo CLI open Goal for Repo CLI
-│   │   │   │   └── 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters Repo CLI Filters open Goal for Repo CLI Filters
-```
-
-should be:
-
-```bash
- $ ./repo/cli/cli tree --only-goal --text
-[🎯Goals](repo://goals)
-├── 🎯aioptimizedrepo AI-optimized Repo open created 2 weeks ago AI-optimized Repo goal
-│   ├── 🎯consistentrepohistory Consistent Repo History open Goal for Consistent Repo History
-│   ├── 🎯repoclient Repo Client open Goal for Repo Client
-│   │   ├── 🎯repobinary Repo Binary open Goal for Repo Binary
-│   │   │   ├── 🎯repocli Repo CLI open Goal for Repo CLI
-│   │   │   │   └── 🎯repoclifilters Repo CLI Filters open Goal for Repo CLI Filters
-```
-
----
-
-The repo requirements were majorly updated.
-
-You MUST adapt all implementations and tests. Dont care about backwards compatiblity.
-
-flat strings means slugged (preserve only alphanumeric and emojis) and then lower cased.
-
-Every id is full, globally unique and treelike.
-
-Extract all the ids from below and refactor/extend the existing tests to use them.
-
-entity kinds: root, year, month, day, hour, minute, second, project, bundle, folder, file, line, range, section, definition, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
-
-resource kinds: repo, project, bundle, folder, file, section, definition
-diffable: root, year, month, day, hour, project, bundle, folder, file, section, definition, goal, ticket, contributor, commit, interaction
-interactable:
-
-relations:
-
-- year | month | day | hour | second - project: A project has years
-  related-to-files: root, year, month, day, hour, minute, second, project, bundle, folder, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
-
-Only stop once you have tests every single list and tree command to have exactly this ids:
-
-The uri system (mcp, rest, rdf) is:
-
-repo: `repo://` e.g. `repo://`
-years: `repo://years` e.g. `repo://years`
-year: `repo://year/{{YY}}` e.g. `repo://year/26`
-months: `repo://months/{{YY}}` e.g. `repo://months/26`
-month: `repo://month/{{YY}}/{{MM}}` e.g. `repo://month/26/02`
-days: `repo://days/{{YY}}/{{MM}}` e.g. `repo://days/26/02`
-day: `repo://day/{{YY}}/{{MM}}/{{DD}}` e.g. `repo://day/26/02/15`
-hours: `repo://hours/{{YY}}/{{MM}}/{{DD}}` e.g. `repo://hours/26/02/15`
-hour: `repo://hour/{{YY}}/{{MM}}/{{DD}}/{{HH}}` e.g. `repo://hour/26/02/15/14`
-minutes: `repo://minutes/{{YY}}/{{MM}}/{{DD}}/{{HH}}` e.g. `repo://minutes/26/02/15/14`
-minute: `repo://minute/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}` e.g. `repo://minute/26/02/15/14/33`
-seconds: `repo://seconds/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}` e.g. `repo://seconds/26/02/15/14/33`
-second: `repo://second/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}/{{SS}}` e.g. `repo://second/26/02/15/14/33/38`
-projects: `repo://projects` e.g. `repo://projects`
-project: `repo://project/{{project-id}}` e.g. `repo://project/repo`
-bundles: `repo://bundles/{{project-id}}` e.g. `repo://bundles/repo`
-bundle: `repo://bundle/{{project-id}}/{{bundle-code}}` e.g. `repo://bundle/repo/cli`
-folders: `repo://folders/{{uri-encoded-parent-path?*}}` e.g. `repo://folders/semio/js`
-folder: `repo://folder/{{uri-encoded-path*}}` e.g. `repo://folder/semio/js/sketchpad`
-files: `repo://files/{{uri-encoded-parent-path?*}}` e.g. `repo://files/semio/js/sketchpad`
-file: `repo://file/{{uri-encoded-file-path*}}` e.g. `repo://file/semio/js/sketchpad/design.tsx`
-lines: `repo://lines/{{uri-encoded-file-path*}}` e.g. `repo://lines/semio/js/sketchpad/design.tsx`
-line: `repo://line/{{uri-encoded-file-path*}}/{{linenumber}}` e.g. `repo://line/semio/js/sketchpad/design.tsx/3872`
-ranges: `repo://ranges/{{uri-encoded-file-path*}}` e.g. `repo://ranges/semio/js/sketchpad/design.tsx`
-range: `repo://range/{{uri-encoded-file-path*}}/{{start-linenumber}}/{{end-linenumber}}` e.g. `repo://range/semio/js/sketchpad/design.tsx/3872/3875`
-sections: `repo://sections/{{uri-encoded-file-path*}}` e.g. `repo://sections/semio/js/sketchpad/design.tsx`
-section: `repo://section/{{uri-encoded-section-path*}}` e.g. `repo://section/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
-definitions: `repo://definitions/{{uri-encoded-parent-section-path*}}` e.g. `repo://definitions/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
-definition: `repo://definition/{{uri-encoded-definition-path*}}` e.g. `repo://definition/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store/createSketchpadStore`
-goals: `repo://goals/{{uri-encoded-parent-goal-path?*}}` e.g. `repo://goals/r26.02-1`
-goal: `repo://goal/{{uri-encoded-goal-path*}}` e.g. `repo://goal/r26.02-1/Running%20Sketchpad`
-tickets: `repo://tickets/{{uri-encoded-parent-scope?*}}` e.g. `repo://tickets/r26.02-1/Running%20Sketchpad`
-ticket: `repo://ticket/{{uri-encoded-ticket-path*}}` e.g. `repo://ticket/r26.02-1/Running%20Sketchpad/Introduce%20Key%20Guid%20Uri%20Mechanism`
-drafts: `repo://drafts/{{uri-encoded-parent-resource-uri?*}}` e.g. `repo://drafts/repo%3A%2F%2Fbundle%2Frepo%2Fcli`
-draft: `repo://draft/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-draft-title*}}` e.g. `repo://draft/repo%3A%2F%2Fbundle%2Frepo%2Fcli/New%20Architecture`
-todos: `repo://todos/{{uri-encoded-parent-resource-uri?*}}` e.g. `repo://todos/repo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore`
-todo: `repo://todo/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-todo-title*}}` e.g. `repo://todo/repo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore/Introduce%20Proper%20Sync%20Mechanism`
-policies: `repo://policies/{{uri-encoded-parent-resource-or-kind?*}}` e.g. `repo://policies/code`
-policy: `repo://policy/{{uri-encoded-parent-resource-or-kind?*}}/{{uri-encoded-policy-name*}}` e.g. `repo://policy/code/Godfiles`
-statutes: `repo://statutes/{{uri-encoded-policy-path?*}}` e.g. `repo://statutes/code/Godfiles`
-statute: `repo://statute/{{uri-encoded-policy-path*}}/{{uri-encoded-statute-name*}}` e.g. `repo://statute/code/Godfiles/Max%20Lines%20Per%20File`
-breaches: `repo://breaches/{{uri-encoded-policy-path?*}}` e.g. `repo://breaches/code/Godfiles`
-breach: `repo://breach/{{uri-encoded-policy-path*}}/affects/{{uri-encoded-affected-resource-uri*}}/at/{{uri-encoded-location-uri*}}/when/{{uri-encoded-second-path*}}` e.g. `repo://breach/code/Godfiles/affects/repo%3A%2F%2Ffile%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts/at/repo%3A%2F%2Frange%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts%2F3872-3875/when/repo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12`
-contributors: `repo://contributors` e.g. `repo://contributors`
-contributor: `repo://contributor/{{uri-encoded-contributor-name*}}` e.g. `repo://contributor/usalu`
-commits: `repo://commits` e.g. `repo://commits`
-commit: `repo://commit/{{uri-encoded-commit-sha*}}` e.g. `repo://commit/cfb3b6084ff3fe883d5f39b08810a0b90997907a`
-interactions: `repo://interactions` e.g. `repo://interactions`
-interaction: `repo://interaction/when/{{uri-encoded-second-path*}}/on/{{uri-encoded-entity-uri*}}/{{interaction-kind}}/by/{{uri-encoded-contributor-name*}}` e.g. `repo://interaction/when/repo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12/on/repo%3A%2F%2Fticket%2Fr26.02-1%2FRunning%2520Sketchpad%2FIntroduce%2520Key%2520Guid%2520Uri%2520Mechanism/started/by/usalu`
-
-The query params are
-General query params:
-{?client}
-tickets: at least one interaction with the given client
-goals: at least one interaction with the given client
-{?llm?}
-tickets: at least one interaction with the given llm
-goal: at least one interaction with the given llm
-{?year}
-tickets: at least one interaction with the given year
-goals: at least one interaction with the given year
-{?month}
-tickets: at least one interaction with the given month
-goals: at least one interaction with the given month
-{?day}
-tickets: at least one interaction with the given day
-goals: at least one interaction with the given day
-{?contributor}
-tickets: at least one interaction with the given contributor
-goals: at least one interaction with the given contributor
-{?status}
-tickets: only the given status
-goals: only the given status
-
-The repo folder layout changed.
-
-You must update the implementation and tests to match the new layout.
-
-Dont keep any legacy api.
-
-- .repo
-- ✍️ // drafts
-- 🎫 // tickets
-  - {{YY}}
-    - {{MM}}
-      - {{DD}}
-        - {{UPPERCASESLUG}}
-- 🎯 // goals
-- 👤 // contributors
-  - {{github}}
-- 💡
-- 💬 // prompts
-  - 👤 // contributors
-    - {{contributor-name}}
-  - 📋 // templates
-    - {{template-name}}.
-
----
-
-## 🧰repo⌨️cli💻maingo🔖hooks
-
-Make sure all common terminal commands (grep, ls, sed, …) are semantically correctly identified as searching, editing, etc.
-Add a test for every single command in every single native agent hook format.
-
-Make sure that all `sed` are semantically correctly mapped.
-All modifiying command should be code edits, all reading are searching, etc and not agent.tool
-
----
-
-repo cli:
-All agent terminal events should have command and
-
-```json
-{
- "input": {
-  "timestamp": "2026-02-21T23:09:35.693Z",
-  "hookEventName": "PreToolUse",
-  "sessionId": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
-  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
-  "tool_name": "run_in_terminal",
-  "tool_input": {
-   "command": "cd /workspaces/semio \u0026\u0026 ls repo/cli/",
-   "explanation": "List the repo/cli directory to understand its structure",
-   "goal": "Understand CLI structure",
-   "isBackground": false,
-   "timeout": 5000
-  },
-  "tool_use_id": "toolu_vrtx_01S5hFNgtM7xsNKXZ8cV9rGC__vscode-1771707349366",
-  "cwd": "/workspaces/semio"
- },
- "event": {
-  "kind": "agent.tool.terminal.starting",
-  "session": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
-  "timestamp": "2026-02-21T23:09:35.693Z",
-  "client": "copilot-chat",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl"
- },
- "response": {}
-}
-```
-
-should be
-
-```json
-{
- "input": {
-  "timestamp": "2026-02-21T23:09:35.693Z",
-  "hookEventName": "PreToolUse",
-  "sessionId": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
-  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
-  "tool_name": "run_in_terminal",
-  "tool_input": {
-   "command": "cd /workspaces/semio \u0026\u0026 ls repo/cli/",
-   "explanation": "List the repo/cli directory to understand its structure",
-   "goal": "Understand CLI structure",
-   "isBackground": false,
-   "timeout": 5000
-  },
-  "tool_use_id": "toolu_vrtx_01S5hFNgtM7xsNKXZ8cV9rGC__vscode-1771707349366",
-  "cwd": "/workspaces/semio"
- },
- "event": {
-  "kind": "agent.tool.terminal.starting",
-  "session": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
-  "timestamp": "2026-02-21T23:09:35.693Z",
-  "client": "copilot-chat",
-  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
-  "command": "cd /workspaces/semio && ls repo/cli/",
-  "timeout": 5000 // when timeout is set then it is no background task
- },
- "response": {}
-}
-```
-
----
-
-ticket
-
-```md
-- .repo # folder
-  - 🎫 # folder
-    - {{YY}} # folder
-      - {{MM}} # folder
-        - {{DD}} # folder
-          - ticket.json
-```
-
-Agent hooks are matched with session id to tickets.
-
----
-
-repo cli:
-The hooks from vscode-chat are not working and not calling the hooks from repo. The hooks MUST be only configured by `./repo/cli/cli configure`.
-
----
-
-repo hook:
-In vscode this command was blocked allthough it shouldnt be blocked. Only some git commands should be blocked.
-cd /workspaces/semio && ./repo/cli/cli tree "hooks events inlet adapter cli" 2>&1 | head -200
-
----
-
-vscode
-
-```json
-{
- "input": {
-  "timestamp": "2026-02-18T09:25:46.649Z",
-  "hookEventName": "PostToolUse",
-  "sessionId": "34ec4d3a-862a-4732-82b3-01532df2aca2",
-  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/34ec4d3a-862a-4732-82b3-01532df2aca2.jsonl",
-  "tool_name": "manage_todo_list",
-  "tool_input": {
-   "todoList": [
-    {
-     "id": 1,
-     "status": "completed",
-     "title": "Read test patterns for hooks"
-    },
-    {
-     "id": 2,
-     "status": "completed",
-     "title": "Add formatVSCodeHookOutput function"
-    },
-    {
-     "id": 3,
-     "status": "completed",
-     "title": "Extract tool_name from stdin JSON"
-    },
-    {
-     "id": 4,
-     "status": "completed",
-     "title": "Modify hookCommand for copilot-chat output"
-    },
-    {
-     "id": 5,
-     "status": "completed",
-     "title": "Update generateCopilotConfig"
-    },
-    {
-     "id": 6,
-     "status": "completed",
-     "title": "Update tests for VS Code output"
-    },
-    {
-     "id": 7,
-     "status": "completed",
-     "title": "Run configure and rebuild CLI"
-    },
-    {
-     "id": 8,
-     "status": "completed",
-     "title": "Run all hook tests"
-    },
-    {
-     "id": 9,
-     "status": "completed",
-     "title": "Close ticket"
-    }
-   ]
-  },
-  "tool_response": "Successfully wrote todo list",
-  "tool_use_id": "toolu_vrtx_01YQjTvPuR25jrTCD8mg1baT__vscode-1771370659744",
-  "cwd": "/workspaces/semio"
- }
-}
-```
-
----
-
-All mcp tools that have
-
-All hooks should always include all possible information and have no matchers in the plattform configs. Only the repo cli then can drop information when mapping to the native repo hook events. Make sure configure cli command is correctly setting everything up.
-
-All hooks should log all information to `./repo/📜/{{YY}}{{MM}}{{DD}}{{HH}}{{MM}}{{SS}}_{{client}}_{{hook-kind}}.json` e.g. `./repo/📜/260218230207_vscode-chat_agent-started.json`.
-
-The cli should be extended by hooks.
-A hook is a go function that runs on a certain event on the lifecycle of development. That go function receives one argument a context which has event information and also a handle to interact with the codebase (all CRUDs for all repo entities - projects, bundles, folder, files, sections, definitions, goals, tickets, policies, statutes, breaches, commits, contributors, interactions, etc)
-There are two kind of hooks: 🦑 git hooks and 🤖 agent hooks
-For git hooks use pre-commit.
-For agent hooks the events MUST be mapped to client (vscode-chat, windsurf-chat, cursor-chat, claude-code, droid) native events.
-
-The hook architecture MUST work with a shared common implementation.
-inlet adapter -> neutral hook implementation -> outlet adapter
-The mapping is not a 1-to-1 mapping.
-E.g. vscode PreToolUse and PostToolUse can be agent.plan.updating, code.searching or terminal in the neutral hook impkementation
-
-Platforms:
-VSCode: `.github/hooks/repo.json` with `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PreCompact`, `SubagentStart`, `SubagentStop`, `Stop`
-Windsurf: `.windsurf/hooks.json` with `pre_read_code`, `post_read_code`, `pre_write_code`, `post_write_code`, `pre_run_command`, `pre_mcp_tool_use`, `post_mcp_tool_use`, `pre_user_prompt`, `post_cascade_response`, `post_setup_worktree`
-Cursor: `.cursor/hooks.json` with `sessionStart`, `sessionEnd`, `preToolUse`, `postToolUse`, `postToolUseFailure`, `subagentStart`, `subagentStop`, `beforeShellExecution`, `afterShellExecution`, `beforeMCPExecution`, `afterMCPExecution`, `beforeReadFile`, `afterFileEdit`, `beforeSubmitPrompt`, `preCompact`, `stop`, `afterAgentResponse`, `afterAgentThought`, `beforeTabFileRead`, `afterTabFileEdit`
-Claude Code: `.claude/settings.json` with `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `Notification`, `SubagentStart`, `SubagentStop`, `Stop`, `TeammateIdle`, `TaskCompleted`, `PreCompact`, `SessionEnd`
-Droid: `.factory/hooks.json` with `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Notification`, `Stop`, `SubagentStop`, `PreCompact`, `SessionStart`, `SessionEnd`
-
-The api for hooks maps to native events:
-
-```bash
-./repo/cli/cli hook PreCompact vscode-chat
-./repo/cli/cli hook pre_mcp_tool_use windsurf-chat
-./repo/cli/cli hook SubagentStart droid
-…
-```
-
-You MUST make sure that the hooks return exactly this information (additionally make sure to add raw as a field where you add the raw input json and leave it for logging for now):
-
-Events
-
-Hooks:
-
-```yaml
-git:
-  commit:
-    starting: pre-commit (stage: pre-commit)
-    ended: pre-commit (stage: post-commit)
-agent:
-  started:
-    vscode-chat: SessionStart | SubagentStart (optionally include parent agent info)
-    windsurf-chat: pre_user_prompt (best-effort: first prompt of a session; include parent agent info if known)
-    cursor-chat: sessionStart | subagentStart (optionally include parent agent info)
-    claude-code: SessionStart | SubagentStart (optionally include parent agent info)
-    droid: SessionStart (optionally include parent agent info)
-  ended:
-    vscode-chat: Stop | SubagentStop (optionally include parent agent info)
-    windsurf-chat: post_cascade_response (best-effort: last response in session; include parent agent info if known)
-    cursor-chat: stop | subagentStop | sessionEnd (optionally include parent agent info)
-    claude-code: Stop | SubagentStop | SessionEnd (optionally include parent agent info)
-    droid: Stop | SubagentStop | SessionEnd (optionally include parent agent info)
-  prompt:
-    submit:
-      vscode-chat: UserPromptSubmit
-      windsurf-chat: pre_user_prompt
-      cursor-chat: beforeSubmitPrompt
-      claude-code: UserPromptSubmit
-      droid: UserPromptSubmit
-  compacting:
-    vscode-chat: PreCompact
-    windsurf-chat: pre_user_prompt where prompt triggers/requests compaction (emulated; no native compact event)
-    cursor-chat: preCompact
-    claude-code: PreCompact
-    droid: PreCompact
-  tool:
-    starting: # excluding task, code and terminal
-      vscode-chat: PreToolUse (exclude code.reading/code.edited + terminal.starting/ended)
-      windsurf-chat: pre_mcp_tool_use (MCP tools only; exclude code/terminal hooks)
-      cursor-chat: preToolUse (exclude code.reading/code.edited + terminal.starting/ended) | beforeMCPExecution (MCP)
-      claude-code: PreToolUse (exclude code.reading/code.edited + terminal.starting/ended)
-      droid: PreToolUse (exclude code.reading/code.edited + terminal.starting/ended)
-    ended: # excluding task, code and terminal
-      vscode-chat: PostToolUse (with return info; exclude code/terminal)
-      windsurf-chat: post_mcp_tool_use (with return info; MCP tools only; exclude code/terminal)
-      cursor-chat: postToolUse | postToolUseFailure (with return info; exclude code/terminal) | afterMCPExecution (MCP)
-      claude-code: PostToolUse | PostToolUseFailure (with return info; exclude code/terminal)
-      droid: PostToolUse (with return info; exclude code/terminal)
-    plan: # A list of tasks/steps/todos
-      updating: # Planning involves changing the task list
-        vscode-chat: PreToolUse where tool_name == "manage_todo_list"
-        windsurf-chat: pre_write_code where file_path matches plan.md / planning-mode plan file
-        cursor-chat: preToolUse where tool_name in ["todo_tool","manage_todo_list"]
-        claude-code: PreToolUse matcher == "Task" (or tool_name == "Task")
-        droid: PreToolUse matcher == "Task"
-    search:
-      started:
-      starting:
-        vscode-chat: PreToolUse where tool_name indicates search (file, folder, web, … search tools)
-        windsurf-chat: pre_read_code or pre_run_command or pre_mcp_tool_use
-        cursor-chat: beforeReadFile
-        claude-code: PreToolUse (matcher == "Read" / file-read tool)
-        droid: PreToolUse (matcher == "Read" / file-read tool)
-      ended:
-        vscode-chat: PostToolUse where tool_name indicates search (file, folder, web, … search tools)
-        windsurf-chat: post_read_code or post_run_command or post_mcp_tool_use
-        cursor-chat: afterReadFile
-        claude-code: PostToolUse (matcher == "Read" / file-read tool)
-        droid: PostToolUse (matcher == "Read" / file-read tool)
-    code:
-      editing:
-        vscode-chat: PreToolUse where tool_name indicates edit/write/create (file write tools)
-        windsurf-chat: pre_write_code
-        cursor-chat: beforeFileEdit
-        claude-code: PreToolUse (matcher == "Edit" or "Write") + PostToolUse | PostToolUseFailure
-        droid: PreToolUse (matcher == "Edit" or "Write") + PostToolUse
-      edited:
-        vscode-chat: PostToolUse where tool_name indicates edit/write/create (file write tools)
-        windsurf-chat: post_write_code
-        cursor-chat: afterFileEdit
-        claude-code: PostToolUse (matcher == "Edit" or "Write") + PostToolUse | PostToolUseFailure
-        droid: PostToolUse (matcher == "Edit" or "Write") + PostToolUse
-    terminal:
-      starting:
-        vscode-chat: PreToolUse where tool_name indicates terminal execution e.g. "tool_name": "run_in_terminal"
-        windsurf-chat: pre_run_command
-        cursor-chat: beforeShellExecution
-        claude-code: PreToolUse matcher == "Bash"
-        droid: PreToolUse matcher == "Bash"
-      ended:
-        vscode-chat: PostToolUse for that terminal tool invocation e.g. "tool_name": "run_in_terminal"
-        windsurf-chat: post_run_command
-        cursor-chat: afterShellExecution
-        claude-code: PostToolUse | PostToolUseFailure (matcher "Bash") | Stop (if terminal run ends the turn)
-        droid: PostToolUse (matcher "Bash") | Stop (if terminal run ends the turn)
-```
-
-- git
-  - commit
-    - starting # pre-commit
-    - ended # post-comit
-- agent
-  - starting # session.start or subagent.start with optionally the parent agent information
-  - ended # agent stop or subagent.stop with optionally the parent agent information
-  - prompt
-    - submit droid: UserPromptSubmit
-  - compacting # compact.pre
-  - tool # both for regular tools (except code reading and edited, terminal starting and ended) and also mcp tools
-    - starting # tool.pre
-    - ended # with return information, tool.post cursor: postToolUse or postToolUseFailure
-    - task
-      - plan # vscode-chat: "toolName": "manage_todo_list" with non-completed
-      - starting # vscode-chat: "toolName": "manage_todo_list" and compare
-      - ended # vscode-chat: "toolName": "manage_todo_list" and compare if the, claude-code: TaskCompleted
-    - code
-      - reading # vscode-chat: tool.pre with proper tool, cursor-chat: beforeReadFile, windsurf-chat: pre_read_code, claude-code: PreToolUse"
-      - edited # vscode-chat: tool.pre with proper tool, cursor-chat: afterFileEdit, windsurf-chat: pre_write_code,
-    - terminal
-      - starting # claude-code: "tool_name": "Bash", windsurf: pre_run_command, cursor-chat: beforeShellExecution
-      - ended # terminal.stop
-
-Tool calling should implement a block decision. e.g. `git checkout`, `git stash`, `git reset`, `git commit` should be always denied.
-
-Support:
-
-```bash
-./repo/cli/cli hook <event-kind> <client>
-./repo/cli/cli hook commit.starting vscode-chat
-./repo/cli/cli hook agent.starting vscode-chat
-./repo/cli/cli hook agent.stopped cursor-chat
-./repo/cli/cli hook tool.pre windsurf-chat
-…
-```
-
-Extend the cli with a command `configure` that automatically configures the repo (you MUST always define workspace configs that are checked in with source control) the pre-commit config, all the agent hook config for (copilot-chat, cursor-chat, windsurf-chat, claude-code, droid, etc)
-
-The codebase diff mechanism should change. Instead of adding the diffs on ticket close, require files on ticket create and on ticket close. Dont compute any diffs on ticket interactions. Just require files (accept path, id and uri).
-Introduce a git hook that adds the commit message as a commit under `.repo/commits/YYYY/MM/DD/SLUGGED-MESSAGE` with the codebase diff. That diff should be complete and contain all changes (removed, renamed, modified, added) for all diffable entities (project, bundle, folder, file, section, definition, goal, ticket, draft, todo, policy, breach, contributor)
-
-```
-- 🔀 # commits
-  - {{YY}} # e.g. 26
-    - {{MM}} # e.g. 02
-      - {{DD}} # e.g. 16
-        - {{SLUGGED-MESSAGE}} # e.g. ``
-```
-
----
-
-The cli is increadibly slow. Hence the tests take really long.
-Probably the caching/indexing mechanism is not working properly. Every entity should be cached and only based on git diffs, entities should be reindexed/recached.
-You MUST refactor until `tree` returns after less than 5s the second time (after the cache is built).
-
----
-
-The test mechanism should be centralized to only use
-
-```bash
-./repo/cli/cli test # run all tests
-./repo/cli/cli test <test-id> # run shared tests
-./repo/cli/cli test <entity-id-or-uri> # run tests for a specific entity
-```
-
----
-
-The uri are only uri-escaped but dont contain any modification such as case changing.
-No modifcation, no slugs, nothing - just uri encode. No loss of information.
-Fix implementations and tests.
-
----
-
-repo cli tree is not showing the full project tree.
-Note that TODO, STATUTE, BREACH are not shown because they can be children of most entities.
-
-- FOLDER\*
-  - FILE
-- PROJECT
-  - BUNDLE
-    - FOLDER\*
-      - FILE
-        - SECTION
-          - DEFINITION
-- GOAL\*
-  - TICKET
-- DRAFT\*
-- POLICY
-  - ENTITYKIND
-    - STATUTE
-
-## 🧰repo⌨️cli💻maingo🔖commands
-
-Rename `tree` to command to `search`.
-
-Remove all documentation about `--no-management`. It is a hidden feature. Only leave it for users that know it.
-
-Remove all documentation about `list`. It is a hidden feature. Only leave it for users that know it.
-
-Remove the `format` flag option from any documentation. It is a hidden feature. Only leave it for users that know it.
-
-## 🧰repo⌨️cli💻maingo🔖mcp
-
-The mcp toolnames and descriptions are out of date with the commands.
-
-Remove tools from mcp:
-
-- analyze
-- contributor add
-- contributor delete
-- draft create
-- draft delete
-- export
-- file create
-- file delete
-- file move
-- folder
-- graphql
-- move
-- policy check
-- ticket read
-
-Names and description are not consistent with cli:
-
-- fix
-- tree
-
-##
 
 When repo go is tested there is a cli binary placed at root. Just use the repo/cli/cli,
 
@@ -5236,14 +3281,14 @@ Dont ask in between, just finish the task. Edit files in workspaces/semio worksp
 
 Labels in github
 
-# issue kinds (multiple possible)
+**issue kinds (multiple possible)**
 
 bug
 dependencies
 ducumentation
 enhancement
 
-# programming languages
+**programming languages**
 
 javascript
 go
@@ -7097,6 +5142,1965 @@ Here some policies for js/semio:
 - elements.tsx are pure reusable ui elements library that are indepedent of semio. They should not import anything from sketchpad or any app or contain any semio domain-specific terminology (kit, design, type, connector, connection, docs, feedback). elements.tsx is the only file that can import third party libraries and reexpose them as components. All other files in the js/semio folder should be self-contained and dependency free from any other library outside of the js/semio folder.
 - Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, semio.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, semio.ts, shared.ts.
   If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above policies.
+
+### ⌨️cli
+
+####
+
+repo cli:
+The .repo folder should be only created once at the monoreporoot. Regardless if for caching, testing, etc
+
+Dont create new event.json files for the session events but add them directly to session.json as event array.
+
+Currently there is a folder and projects tree item in the monorepo tree.
+Unify them to a single tree item called codebase. The codebase has all root files, root folders and projects.
+Previously there were root level project and root level bundle. Remove them.
+
+projects are root level folders with a README with a frontmatter. Currently there are wrong folders being detected.
+Not all projects have a frontmatter.
+
+repo/cli/cli project list
+
+- [👤pycache](repo://p/u/__pycache__)
+- [🔬coda](repo://p/r/coda)
+- [👤semio](repo://p/u/semio)
+- [🧰repo](repo://p/i/repo)
+
+TODO: introduce proper events for repo specific tool calls.
+
+```json
+{
+ "native": {
+  "event": null
+ },
+ "event": {
+  "allowed": true,
+  "checkpoint": "🔀48642121e9491480e54fa0e381a8595ff6e1b6c8",
+  "description": "fix(cli): correct version hook in post-commit",
+  "kind": "version.checkpoint.ended",
+  "message": "fix(cli): correct version hook in post-commit",
+  "second": "🎆26🌙02☀️27⏰13⌚13⏱️08"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+The repo go tests are increadibly slow. Optimize them and make sure to eliminate bottlenecks.
+You MUST NOT call repo hooks manually.
+
+Test events are not correctly identified.
+All languages and all test frameworks MUST be supported.
+
+```yml
+agent
+    test:
+      starting:
+        DATA:
+          tests: ["{{test-id}}"] # e.g. ["","🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand",]
+          timeout: "{{timeout}}" # seconds e.g. 600
+      ended:
+        DATA:
+          succeeded: ["{{successful-test-id}}"] # e.g. ["🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand"]
+          failed: ["{{failed-test-id}}"] # e.g. ["🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand"]
+```
+
+The test mechanism should be extended. Every entity should
+
+Introduce a general `test [{{testable-id-or-uri}}]*` command that runs all tests for all given entities.
+E.g. for a project and a bundle from another project are all tests inside the projects are run, for a bundle all tests inside the bundle are run, etc
+
+```bash
+repo/cli/cli test # run all tests
+repo/cli/cli test 🧰repo # run all tests for the project
+repo/cli/cli test 🧰repo⌨️cli # run all tests for the cli bundle
+repo/cli/cli test 🧰repo⌨️cli💻main # run all tests for the cli bundle main
+repo/cli/cli test 🧰repo⌨️cli🥼maintest # run all tests for the cli bundle main go
+repo/cli/cli test 🧰repo⌨️cli🥼maintest🔖policytests # run all tests for the cli bundle main go policy tests section
+repo/cli/cli test 🧰repo⌨️cli🥼maintest🔖policytests🧪testpolicylistcommand # run one test
+```
+
+Add id and uri to ticket.json, goal.json, event.json, session.json, contributor.json
+e.g.
+
+```json
+{
+ "id": "{{ticket-id}}",
+ "uri": "{{ticket-uri}}",
+ "title": "Remove File Extension from File Ids",
+ "status": "open",
+ "description": "All file ids should not have the file extension part of the flat name.",
+ "github": {
+  "issue": "https://github.com/usalu/semio/issues/732"
+ },
+ "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+ "sessions": ["⚪17722881541519940541784063889126907940"]
+}
+```
+
+All events must have the contributor id as part of the event.
+
+e.g.
+
+```json
+{
+ "native": {
+  "event": {
+   "timestamp": "2026-02-28T14:14:02.511Z",
+   "hookEventName": "SessionStart",
+   "sessionId": "88373e1c-ff1b-4fcd-b80d-d00043bb6567",
+   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/88373e1c-ff1b-4fcd-b80d-d00043bb6567.jsonl",
+   "source": "new",
+   "cwd": "/workspaces/semio"
+  },
+  "response": {
+   "hookSpecificOutput": {
+    "additionalContext": "agent.started acknowledged",
+    "hookEventName": "SessionStart"
+   }
+  }
+ },
+ "event": {
+  "checkpoint": "🔀48642121e9491480e54fa0e381a8595ff6e1b6c8",
+  "contributor": "🧑‍💻usalu",
+  "client": "copilot-chat",
+  "kind": "agent.started",
+  "parent": "new",
+  "second": "🎆26🌙02☀️28⏰14⌚14⏱️03",
+  "session": "⚪88373e1cff1b4fcdb80dd00043bb6567",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/88373e1c-ff1b-4fcd-b80d-d00043bb6567.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+All file ids should not have the file extension part of the flat name.
+
+Add a `delta {{entity-id}}` command that shows the codebase delta between the current state and the latest checkpoint.
+
+plan.updating should be started and ended with correct mapping. Currently the same event is fired twice.
+
+The `session.json`should keep track of the plan with the steps based on the events. Make sure to add new steps, mark them as inprogress, completed or abandoned. Merge and update them smartly based on the new complete structure.
+
+`session.json` is:
+
+```json
+{
+ "uuid": "a881a3c5-b51c-42d0-8050-f25a054e9e8d",
+ "client": "copilot-chat",
+ "started_at": "2026-03-02T01:06:46Z",
+ "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700-1/GitHub.copilot-chat/transcripts/a881a3c5-b51c-42d0-8050-f25a054e9e8d.jsonl",
+ "first_event": "010646_agent-started.json"
+}
+```
+
+but should be:
+
+```json
+{
+ "id": "{{session-id}}",
+ "uri": "{{session-uri}}",
+ "contributor": "{{contributor-id}}",
+ "client": "{{client-id}}",
+ "second": "{{second-id}}",
+ "transcript": "{{transcript-path}}"
+}
+```
+
+Create a `session.json` when a new session is started in the session folder that stores general session information such as client, llm, etc. Make sure to not duplicate information that is already stored in the events.
+
+When running (auto)fix it should automatically add the missing ids for definitions ontop. You MUST implement this for all languages.
+e.g. this should not exist after the autofixes
+
+```go
+func isLicenseText(text string) bool {
+```
+
+You MUST execute all searches and then store the definition ids and how many lines read for each definition in the event.
+
+e.g.
+
+```json
+{
+ "native": {
+  "event": {
+   "agent_action_name": "pre_run_command",
+   "trajectory_id": "42cbc8d3-6831-4809-916f-378c396b55a4",
+   "timestamp": "2026-02-27T02:14:53.466104322Z",
+   "execution_id": "46d443cd-a2c4-4421-89bc-1b4a96ee1947",
+   "tool_info": {
+    "command_line": "grep -n -C 5 \"Interactions\" repo/cli/main.go | grep -v \"type Goal\" | grep ticket",
+    "cwd": "/workspaces/semio"
+   }
+  }
+ },
+ "event": {
+  "allowed": true,
+  "checkpoint": "🔀a0ced62dc1a25867a3852c582316851ee77016a0",
+  "client": "windsurf-chat",
+  "kind": "agent.tool.search.starting",
+  "second": "🎆26🌙02☀️27⏰02⌚14⏱️53",
+  "session": "⚪42cbc8d368314809916f378c396b55a4",
+  "definitions": [
+   {
+    "id": "{{definition-id}}",
+    "loc": "{{total-lines-of-code-read}}"
+   }
+  ]
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+```bash
+grep -n -C 5 "Interactions" repo/cli/main.go | grep -v "type Goal" | grep ticket
+2304-                           for _, t := range tickets {
+3461-   for _, t := range tickets {
+13053-  TicketID   string `json:"ticketId,omitempty"`
+13056:// ListInteractions aggregates interactions from all tickets and goals.
+13061-  tickets, err := ListTickets(nil, nil, nil)
+13063-          for _, t := range tickets {
+13068-                                  SourceKind:  "ticket",
+13093:// StreamInteractions streams interactions from all tickets and goals.
+13098-  tickets, _ := ListTickets(nil, nil, nil)
+13099-  for _, t := range tickets {
+13182-// TicketData holds the data fields for a ticket data record.
+13183-// [🧰repo⌨️cli💻maingo🔖types🔖languages✂️ticketdata](repo://definition/repo/cli/main.go/Types/Languages/TicketData)
+19635-          FolderPath:    ticketDir,
+21953-  ticket.Summary = summary
+21954-  ticket.Status = TicketStatusClosed
+21958:  if len(ticket.Interactions) > 0 {
+21959:          closeClient = ticket.Interactions[len(ticket.Interactions)-1].Client
+21984:  ticket.Interactions = append(ticket.Interactions, Interaction{
+22085:  ticket.Interactions = append(ticket.Interactions, interaction)
+22086-  appendTicketSessionID(ticket, currentTicketSessionID())
+22087-  ticket.Status = TicketStatusOpen
+22089-  if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
+22090-          issueURL := ticket.Management.Issue
+23861-                  if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
+23866-                  cpID := fmt.Sprintf("%s/%d", ticketID, i)
+24781-          ticket.Description = *input.Prompt
+24782:          if len(ticket.Interactions) > 0 {
+24783:                  ticket.Interactions[len(ticket.Interactions)-1].Prompt = *input.Prompt
+24788:  if len(ticket.Interactions) > 0 {
+24794:                  ticket.Interactions[len(ticket.Interactions)-1].LLM = llmSlug
+24802:                  ticket.Interactions[len(ticket.Interactions)-1].Client = uiSlug
+24807-          ticket.Goal = *input.Goal
+28656-                                          ticket := p.Source.(*Ticket)
+28657:                                          return ticket.Interactions, nil
+28663-                                          ticket := p.Source.(*Ticket)
+28664:                                          if len(ticket.Interactions) == 0 {
+28667:                                          interaction := ticket.Interactions[len(ticket.Interactions)-1]
+30664-          return tickets, nil
+30669:// Interactions aggregates all interactions from tickets and goals.
+```
+
+```json
+"lines": [
+      "🧰repo⌨️cli💻maingo📌2304",
+      "🧰repo⌨️cli💻maingo📌3461",
+      "🧰repo⌨️cli💻maingo📌13053",
+      "🧰repo⌨️cli💻maingo📌13056",
+      "🧰repo⌨️cli💻maingo📌13061",
+      "🧰repo⌨️cli💻maingo📌13063",
+      "🧰repo⌨️cli💻maingo📌13068",
+      "🧰repo⌨️cli💻maingo📌13093",
+      "🧰repo⌨️cli💻maingo📌19635",
+      "🧰repo⌨️cli💻maingo📌21984",
+      "🧰repo⌨️cli💻maingo📌23861",
+      "🧰repo⌨️cli💻maingo📌23866",
+      "🧰repo⌨️cli💻maingo📌24788",
+      "🧰repo⌨️cli💻maingo📌24794",
+      "🧰repo⌨️cli💻maingo📌24802",
+      "🧰repo⌨️cli💻maingo📌24807",
+      "🧰repo⌨️cli💻maingo📌28667",
+      "🧰repo⌨️cli💻maingo📌30664",
+      "🧰repo⌨️cli💻maingo📌30669"
+    ],
+    "ranges": [
+      "🧰repo⌨️cli💻maingo📌13098📌13099",
+      "🧰repo⌨️cli💻maingo📌13182📌13183",
+      "🧰repo⌨️cli💻maingo📌21953📌21954",
+      "🧰repo⌨️cli💻maingo📌21958📌21959",
+      "🧰repo⌨️cli💻maingo📌22085📌22087",
+      "🧰repo⌨️cli💻maingo📌22089📌22090",
+      "🧰repo⌨️cli💻maingo📌24781📌24783",
+      "🧰repo⌨️cli💻maingo📌28656📌28657",
+      "🧰repo⌨️cli💻maingo📌28663📌28664"
+    ]
+```
+
+Only to lines of code that contain only id and some wrapping but no other content. Optionally it can also include the uri. As soon as the id is used in the text then dont show the
+
+repo vscode:
+Add 2 code lenses `Summarize` and `Open` for every id in source code files. such as e.g.:
+`## 🧰repo⌨️cli💻maingo`
+`// 🧰repo⌨️cli💻maingo`
+`// [🧰repo⌨️cli💻maingo](repo://project/semio/bundle/js/folder/sketchpad/file/Design.tsx)`
+etc.
+Show semio icon gutter on the same line of the id.
+`Summarize` should call the `summarize` command with the id.
+`Open` should navigate to the entity in the editor.
+Make sure that navigation to uris is working.
+
+e.g.
+
+````tpl
+
+# {{definition-kind-emoji}} {{uppercase-definition-kind-name}}
+```{{file-extension}}
+{{definition-code}}
+````
+
+The id system is not consistent. Every single entity should have the corresponng plural entity as parent and the plural collection should have the emoji and code information. The code must be unique among all entities. The uri should be refactored to only have {{repo-id}}{{code}}/{{uri-encoded-identifying-path}}.
+
+Rename `summarize` to `analyze`. Make sure that analyze contains all information about the entity such as code, specs, docs, etc.
+
+Introduce a new command`summarize {{id|uri}}` which creates a summary of the given entity. Use go embedded templates for every entity kind.
+
+repo cli:
+Refactor all outputs to use templates for rendering (markdown and text). Use go embed for templates.
+
+A special kind of files are labs. Labs contain tests. A test is a kind of definition. Around the codebase there is the term tests used for test files which should be labs.
+
+repo cli:
+The logging should change to
+`.repo/⚡/{{event-id}}.json`
+e,g. "`.repo/⚡/🔀/⚪e753ed61e8cc49b788f7dda53b8d5a15/{{event-id}}.json"
+`.repo/⚡/🤖/{{session-id}}/{{event-id}}.json`
+
+```yaml
+checkpoint:
+ parent: repo
+ id:
+  scheme: "{{repo-id}}🔀"
+  examples:
+   - "🔀"
+ uri:
+  scheme: "{{repo-uri}}c"
+  examples:
+   - "repo://c"
+checkpoint: # e.g. for git provider a commit sha
+ parent: checkpoints
+ id:
+  scheme: "{{repo-id}}🔀{{checkpoint-id}}"
+  examples:
+   - "🔀cfb3b6084ff3fe883d5f39b08810a0b90997907a"
+ uri:
+  scheme: "{{checkpoints-uri}}/{{checkpoint-id*}}"
+  examples:
+   - "repo://c/cfb3b6084ff3fe883d5f39b08810a0b90997907a"
+sessions:
+  parent: repo
+  emoji: ⚪
+    kinds:
+    - name: running
+      emoji: 🟡
+    - name: completed
+      emoji: 🟢
+    - name: interrupted
+      emoji: 🔴
+ id:
+    scheme: "{{repo-id}}{{session-emoji}}"
+    examples:
+      - "⚪"
+  uri:
+    scheme: "{{repo-uri}}s"
+    examples:
+      - "repo://s"
+session:
+  parent: sessions
+  id:
+    scheme: "{{sessions-id}}{{flat-session-id}}"
+    examples:
+      - "⚪e753ed61e8cc49b788f7dda53b8d5a15"
+  uri:
+    scheme: "{{sessions-uri}}/{{session-id}}"
+    examples:
+      - "repo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"
+
+```
+
+All ids MUST use the repo id system e.g. through `events.json` or `ticket.json`
+
+```yaml
+sessions:
+  parent: repo
+  emoji: ⚪
+    kinds:
+    - name: running
+      emoji: 🟡
+    - name: completed
+      emoji: 🟢
+    - name: interrupted
+      emoji: 🔴
+ id:
+    scheme: "{{repo-id}}{{session-emoji}}"
+    examples:
+      - "⚪"
+  uri:
+    scheme: "{{repo-uri}}s"
+    examples:
+      - "repo://s"
+session:
+  parent: sessions
+  id:
+    scheme: "{{sessions-id}}{{flat-session-id}}"
+    examples:
+      - "⚪e753ed61e8cc49b788f7dda53b8d5a15"
+  uri:
+    scheme: "{{sessions-uri}}/{{session-id}}
+    examples:
+      - "repo://s/e753ed61-e8cc-49b7-88f7-dda53b8d5a15"
+```
+
+All timestamps in repo events MUST use the repo id system. You MUST replace the name semantically adequate.
+
+```yaml
+years:
+ parent: repo
+ id:
+  scheme: "{{repo-id}}🎆"
+  examples: ["🎆"]
+ uri:
+  scheme: "{{repo-uri}}y"
+  examples: ["repo://y"]
+year:
+ parent: years
+ id:
+  scheme: "{{repo-id}}🎆{{YY}}"
+  examples: ["🎆26"]
+ uri:
+  scheme: "{{years-uri}}/{{YY}}"
+  examples: ["repo://y/26"]
+months:
+ parent: year
+ id:
+  scheme: "{{year-id}}🌙"
+  examples: ["🎆26🌙"]
+ uri:
+  scheme: "{{year-uri}}/m"
+  examples: ["repo://y/26/m"]
+month:
+ parent: months
+ id:
+  scheme: "{{year-id}}🌙{{MM}}"
+  examples: ["🎆26🌙02"]
+ uri:
+  scheme: "{{months-uri}}/{{MM}}"
+  examples: ["repo://y/26/m/02"]
+days:
+ parent: month
+ id:
+  scheme: "{{month-id}}☀️"
+  examples: ["🎆26🌙02☀️"]
+ uri:
+  scheme: "{{month-uri}}/d"
+  examples: ["repo://y/26/m/02/d"]
+day:
+ parent: days
+ id:
+  scheme: "{{month-id}}☀️{{DD}}"
+  examples: ["🎆26🌙02☀️15"]
+ uri:
+  scheme: "{{days-uri}}/{{DD}}"
+  examples: ["repo://y/26/m/02/d/15"]
+hours:
+ parent: day
+ id:
+  scheme: "{{day-id}}⏰"
+  examples: ["🎆26🌙02☀️15⏰"]
+ uri:
+  scheme: "{{day-uri}}/h"
+  examples: ["repo://y/26/m/02/d/15/h"]
+hour:
+ parent: hours
+ id:
+  scheme: "{{day-id}}⏰{{HH}}"
+  examples: ["🎆26🌙02☀️15⏰14"]
+ uri:
+  scheme: "{{hours-uri}}/{{HH}}"
+  examples: ["repo://y/26/m/02/d/15/h/14"]
+minutes:
+ parent: hour
+ id:
+  scheme: "{{hour-id}}⌚"
+  examples: ["🎆26🌙02☀️15⏰14⌚"]
+ uri:
+  scheme: "{{hour-uri}}/min"
+  examples: ["repo://y/26/m/02/d/15/h/14/min"]
+minute:
+ parent: minutes
+ id:
+  scheme: "{{hour-id}}⌚{{mm}}"
+  examples: ["🎆26🌙02☀️15⏰14⌚33"]
+ uri:
+  scheme: "{{minutes-uri}}/{{mm}}"
+  examples: ["repo://y/26/m/02/d/15/h/14/min/33"]
+seconds:
+ parent: minute
+ id:
+  scheme: "{{minute-id}}⏱️"
+  examples: ["🎆26🌙02☀️15⏰14⌚33⏱️"]
+ uri:
+  scheme: "{{minute-uri}}/s"
+  examples: ["repo://y/26/m/02/d/15/h/14/min/33/s"]
+second:
+ parent: seconds
+ id:
+  scheme: "{{minute-id}}⏱️{{SS}}"
+  examples: ["🎆26🌙02☀️15⏰14⌚33⏱️38"]
+ uri:
+  scheme: "{{seconds-uri}}/{{SS}}"
+  examples: ["repo://y/26/m/02/d/15/h/14/min/33/s/38"]
+```
+
+e.g.
+
+```json
+{
+ "native": {
+  "event": {
+   "timestamp": "2026-02-26T08:41:38.377Z",
+   "hookEventName": "PreToolUse",
+   "sessionId": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
+   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl",
+   "tool_name": "run_in_terminal",
+   "tool_input": {
+    "command": "find /workspaces/semio/.repo -name \"*.json\" -not -path \"*/cache/*\" -not -path \"*/⚡/*\" -type f | sort",
+    "explanation": "Find all non-event/non-cache JSON files in .repo",
+    "goal": "Identify key JSON files to refactor",
+    "isBackground": false,
+    "timeout": 10000
+   },
+   "tool_use_id": "toolu_01FkquB6Si6SMeAPb5ctaaad__vscode-1771950833335",
+   "cwd": "/workspaces/semio"
+  },
+  "response": {
+   "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "allow"
+   }
+  }
+ },
+ "event": {
+  "allowed": true,
+  "checkpoint": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
+  "client": "copilot-chat",
+  "kind": "agent.tool.search.starting",
+  "session": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
+  "timestamp": "2026-02-26T08:41:38Z",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+should be
+
+```json
+{
+ "native": {
+  "event": {
+   "timestamp": "2026-02-26T08:41:38.377Z",
+   "hookEventName": "PreToolUse",
+   "sessionId": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
+   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl",
+   "tool_name": "run_in_terminal",
+   "tool_input": {
+    "command": "find /workspaces/semio/.repo -name \"*.json\" -not -path \"*/cache/*\" -not -path \"*/⚡/*\" -type f | sort",
+    "explanation": "Find all non-event/non-cache JSON files in .repo",
+    "goal": "Identify key JSON files to refactor",
+    "isBackground": false,
+    "timeout": 10000
+   },
+   "tool_use_id": "toolu_01FkquB6Si6SMeAPb5ctaaad__vscode-1771950833335",
+   "cwd": "/workspaces/semio"
+  },
+  "response": {
+   "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "allow"
+   }
+  }
+ },
+ "event": {
+  "checkpoint": "a9a8256e4ebafed8ac2051b4b73970ea3f158969",
+  "client": "copilot-chat",
+  "kind": "agent.tool.search.starting",
+  "session": "1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80",
+  "second": "🎆26🌙02☀️26⏰08⌚41⏱️38",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/1735e6d2-8f1d-45d8-8dbc-4badbf6ecc80.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+All repo event information should be repo related. Add checkpoint (from git provider it is commit sha) to all events.
+E.g. all ids (file, ranges, lines, …) should be repo ids.
+
+```json
+{
+ "raw": {
+  "timestamp": "2026-02-24T14:02:29.550Z",
+  "hookEventName": "SubagentStart",
+  "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
+  "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
+  "agent_type": "default",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "kind": "agent.started",
+  "parent": "subagent",
+  "session": "293a5d87-0aa9-4250-9920-ddd573c33379",
+  "timestamp": "2026-02-24T14:02:30Z"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+should be:
+
+```json
+{
+ "native": {
+  "event": {
+   // native hook input
+  },
+  "response": {
+   // native hook output
+  }
+ },
+ "event": {
+  // repo event data
+ },
+ "response": {
+  // repo response data
+ }
+}
+```
+
+sub agents have sometimes no session id but instead agent id. Make sure to map it correctly for all platforms.
+
+```json
+{
+ "native": {
+  "input": {
+   "timestamp": "2026-02-24T14:02:29.550Z",
+   "hookEventName": "SubagentStart",
+   "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
+   "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
+   "agent_type": "default",
+   "cwd": "/workspaces/semio"
+  },
+  "output": {
+   // native hook output
+  }
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "kind": "agent.started",
+  "parent": "subagent",
+  "session": "293a5d87-0aa9-4250-9920-ddd573c33379",
+  "timestamp": "2026-02-24T14:02:30Z"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+should be:
+
+```json
+{
+ "native": {
+  "input": {
+   "timestamp": "2026-02-24T14:02:29.550Z",
+   "hookEventName": "SubagentStart",
+   "sessionId": "293a5d87-0aa9-4250-9920-ddd573c33379",
+   "agent_id": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
+   "agent_type": "default",
+   "cwd": "/workspaces/semio"
+  },
+  "output": {
+   // native hook output
+  }
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "kind": "agent.started",
+  "parent": "293a5d87-0aa9-4250-9920-ddd573c33379",
+  "session": "cfd9b41f-4c83-4a3d-a5cf-02b2d32f79d8",
+  "timestamp": "2026-02-24T14:02:30Z"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+Remove tracking of `interactions` and `agents` from `ticket.json` and instead just leave a session ids. Add this automatically after a ticket was opened or reopened or closed over the cli or mcp.
+
+e.g.
+
+```json
+{
+  "title": "Refactor Event Structure",
+  "description": "Refactor the hook event log structure to use native/event/response layout. Replace raw field with native object containing event (native hook input) and response (native hook output). Resolve all file paths and queries to proper repo IDs in event data.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/698"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "interactions": [
+    {
+      //
+    }
+  ],
+  "agents": [
+    {
+      "session": "24c77e92-3d03-4d02-821d-a1dd45778e43",
+      "contributor": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/24c77e92-3d03-4d02-821d-a1dd45778e43.jsonl",
+      "plan": {
+        "steps": [
+```
+
+should be:
+
+```json
+{
+  "title": "Refactor Event Structure",
+  "description": "Refactor the hook event log structure to use native/event/response layout. Replace raw field with native object containing event (native hook input) and response (native hook output). Resolve all file paths and queries to proper repo IDs in event data.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/698"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "sessions": ["⚪24c77e923d034d02821da1dd45778e43"]
+    }
+  ]
+```
+
+repo cli:
+The tickets should no longer store agent events and diffs.
+The logging should change to
+`.repo/⚡/🔀/{{YY}}/{{MM}}/{{DD}}/{{checkpoint-id}}/{{HHMMSS}}_{{version-event-kind}}.json`
+`.repo/⚡/🤖/{{YY}}/{{MM}}/{{DD}}/{{session-id}}/{{HHMMSS}}_{{agent-event-kind}}.json`
+When a checkpoint is created a semantic code diff should be stored under:
+`.repo/🔀/{{YY}}/{{MM}}/{{DD}}/{{checkpoint-id}}.json`
+You MUST refactor everything.
+
+Everything inside all `.json` files (e.g. events, goals, tickets, contributors, etc.) in `.repo/*` that relates to resources should use the repo id system. You MUST refactor everything cleanly.
+
+e.g. The goals in `ticket.json` files
+
+```json
+{
+  "title": "Fix ID System and Emoji Prefixes",
+  "description": "The id system is not properly setup. e.g. when copying the id in the vscode extension it is missing the starting emoji which is part of the id. Find all mismatchtes, fix them and extend the tests, so this cant happen in the future.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/445"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+```
+
+should be:
+
+```json
+{
+  "title": "Fix ID System and Emoji Prefixes",
+  "description": "The id system is not properly setup. e.g. when copying the id in the vscode extension it is missing the starting emoji which is part of the id. Find all mismatchtes, fix them and extend the tests, so this cant happen in the future.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/445"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+```
+
+```json
+{
+ "raw": {
+  "timestamp": "2026-02-23T23:56:38.536Z",
+  "hookEventName": "PostToolUse",
+  "sessionId": "0667d8ff-9287-40a9-8302-3703ce26153e",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl",
+  "tool_name": "grep_search",
+  "tool_input": {
+   "maxResults": 20,
+   "includePattern": "**/repo/cli/main.go",
+   "isRegexp": true,
+   "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field"
+  },
+  "tool_response": "",
+  "tool_use_id": "toolu_vrtx_016RpgqsJL2G725EBNagUaXa__vscode-1771851203893",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "include": ["**/repo/cli/main.go"],
+  "kind": "agent.tool.searching.ended",
+  "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field",
+  "response": "",
+  "session": "0667d8ff-9287-40a9-8302-3703ce26153e",
+  "timestamp": "2026-02-23T23:56:39Z",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+```json
+{
+ "raw": {
+  "timestamp": "2026-02-23T23:56:38.536Z",
+  "hookEventName": "PostToolUse",
+  "sessionId": "0667d8ff-9287-40a9-8302-3703ce26153e",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl",
+  "tool_name": "grep_search",
+  "tool_input": {
+   "maxResults": 20,
+   "includePattern": "**/repo/cli/main.go",
+   "isRegexp": true,
+   "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field"
+  },
+  "tool_response": "",
+  "tool_use_id": "toolu_vrtx_016RpgqsJL2G725EBNagUaXa__vscode-1771851203893",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "include": ["🧰repo⌨️cli💻maingo"],
+  "kind": "agent.tool.searching.ended",
+  "query": "ticketType.*:=.*graphql\\.NewObject|\\\"dates\\\".*graphql\\.Field",
+  "response": "",
+  "session": "0667d8ff-9287-40a9-8302-3703ce26153e",
+  "timestamp": "2026-02-23T23:56:39Z",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/0667d8ff-9287-40a9-8302-3703ce26153e.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+```json
+{
+ "raw": {
+  "timestamp": "2026-02-23T16:35:17.038Z",
+  "hookEventName": "PreToolUse",
+  "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+  "tool_name": "replace_string_in_file",
+  "tool_input": {
+   "filePath": "/workspaces/semio/repo/cli/main_test.go",
+   "newString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+   "oldString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}"
+  },
+  "tool_use_id": "toolu_vrtx_01L6kAK9eijwjpaMZ1BNhTZZ__vscode-1771851203222",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "allowed": true,
+  "client": "copilot-chat",
+  "kind": "agent.tool.code.editing",
+  "new": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+  "old": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+  "path": "/workspaces/semio/repo/cli/main_test.go",
+  "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "timestamp": "2026-02-23T16:35:17Z",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+should be:
+
+```json
+{
+ "raw": {
+  "timestamp": "2026-02-23T16:35:17.038Z",
+  "hookEventName": "PreToolUse",
+  "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+  "tool_name": "replace_string_in_file",
+  "tool_input": {
+   "filePath": "/workspaces/semio/repo/cli/main_test.go",
+   "newString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+   "oldString": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}"
+  },
+  "tool_use_id": "toolu_vrtx_01L6kAK9eijwjpaMZ1BNhTZZ__vscode-1771851203222",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "kind": "agent.tool.code.editing",
+  "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "file": "🧰repo⌨️cli🥼maintestgo",
+  "sections": ["🧰repo⌨️cli🥼maintestgo🔖"],
+  "new": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: \"2026-02-20T10:00:00Z\",\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+  "old": "func TestHookLogging(t *testing.T) {\n\ttmpDir := t.TempDir()\n\tlogDir := filepath.Join(tmpDir, \".repo\", \"📜\", \"🪝\", \"🤖\", \"sess-log\")\n\tpayload := json.RawMessage(`{\"session_id\":\"sess-log\",\"timestamp\":\"2026-02-20T10:00:00Z\",\"transcript_path\":\"/tmp/transcript.jsonl\"}`)\n\thctx := HookContext{\n\t\tEvent:     HookAgentStarted,\n\t\tClient:    \"claude-code\",\n\t\tTimestamp: time.Now().UTC().Format(time.RFC3339),\n\t\tRepoRoot:  tmpDir,\n\t\tInput:     payload,\n\t}",
+  "timestamp": "2026-02-23T16:35:17Z"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+The data is not cleanly modeled.
+
+```json
+{
+  "kind": "agent.tool.terminal.starting",
+  "timestamp": "2026-02-23T15:41:15Z",
+  "pattern": "sed -n '14860,14880p' repo/cli/main_test.go"
+},
+```
+
+should be:
+
+```json
+{
+  "kind": "agent.tool.search.starting",
+  "timestamp": "2026-02-23T15:41:15Z",
+  "pattern": "repo/cli/main_test.go#L14860-14880"
+},
+```
+
+````json
+{
+  "kind": "agent.tool.terminal.starting",
+  "timestamp": "2026-02-23T15:41:00Z",
+  "pattern": "grep -rn 'HookLogEntry' repo/cli/main_test.go"
+}
+should be:
+{
+  "kind": "agent.tool.terminal.starting",
+  "timestamp": "2026-02-23T15:41:00Z",
+  "pattern": "HookLogEntry",
+  "include": "repo/cli/main_test.go"
+}
+
+"cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5"
+
+should be:
+
+Everything like this:
+```json
+{
+  "raw": {
+    "timestamp": "2026-02-23T16:23:51.780Z",
+    "hookEventName": "PostToolUse",
+    "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+    "tool_name": "run_in_terminal",
+    "tool_input": {
+      "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5",
+      "explanation": "Find where HookResultAgentStarted is created",
+      "goal": "Check if Kind is set",
+      "isBackground": false,
+      "timeout": 5000
+    },
+    "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5`, and this is the output of running that command instead:\n35392:          return HookResultAgentStarted{HookResultAgentBase: ab}\n",
+    "tool_use_id": "toolu_vrtx_01ExheXDoKS6VANFeLUBZTEj__vscode-1771851203197",
+    "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "allowed": true,
+    "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+    "timestamp": "2026-02-23T16:23:52Z",
+    "client": "copilot-chat",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+    "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5"
+  },
+  "response": {
+    "allowed": true
+  }
+}
+````
+
+should be this:
+
+```json
+{
+ "raw": {
+  "timestamp": "2026-02-23T16:23:51.780Z",
+  "hookEventName": "PostToolUse",
+  "sessionId": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+  "tool_name": "run_in_terminal",
+  "tool_input": {
+   "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5",
+   "explanation": "Find where HookResultAgentStarted is created",
+   "goal": "Check if Kind is set",
+   "isBackground": false,
+   "timeout": 5000
+  },
+  "tool_response": "Note: The tool simplified the command to ` cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5`, and this is the output of running that command instead:\n35392:          return HookResultAgentStarted{HookResultAgentBase: ab}\n",
+  "tool_use_id": "toolu_vrtx_01ExheXDoKS6VANFeLUBZTEj__vscode-1771851203197",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "kind": "agent.tool.searching",
+  "session": "6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a",
+  "timestamp": "2026-02-23T16:23:52Z",
+  "client": "copilot-chat",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ed5c1ec-2f9f-4c1f-87c2-24464f5d686a.jsonl",
+  "command": "cd /workspaces/semio \u0026\u0026 grep -n 'HookResultAgentStarted{' repo/cli/main.go | head -5"
+ },
+ "response": {
+  "allowed": true
+ }
+}
+```
+
+```go
+// #region 🔖Header
+
+// [🧰repo⌨️cli💻maingo](repo://file/repo/cli/main.go)
+
+// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
+
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// Monorepo CLI tool for repository management, analysis and code generation.
+
+// #endregion 🔖Header
+```
+
+should be
+
+````go
+// #region 🔖Header
+// [🧰repo⌨️cli💻maingo](repo://file/repo/cli/main.go)
+// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+// Monorepo CLI tool for repository management, analysis and code generation.
+// #endregion 🔖Header
+
+All searching patterns with line numbers should be displayed like this:
+ `semio/js/sketchpad/Design.tsx#L532` for lines
+ `semio/js/sketchpad/Design.tsx#L532-L771` for ranges
+ here some wrong displays:
+ ```json
+{
+  "input": {
+    "timestamp": "2026-02-23T10:53:51.987Z",
+    "hookEventName": "PostToolUse",
+    "sessionId": "7ff6f48c-24ba-41ee-bd06-531829800935",
+    "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl",
+    "tool_name": "read_file",
+    "tool_input": {
+      "endLine": 35540,
+      "filePath": "/workspaces/semio/repo/cli/main.go",
+      "startLine": 35490
+    },
+    "tool_response": "",
+    "tool_use_id": "toolu_vrtx_011DzYuTksYPRzS528HKBogs__vscode-1771801077693",
+    "cwd": "/workspaces/semio"
+  },
+  "event": {
+    "kind": "agent.tool.searching.ended",
+    "session": "7ff6f48c-24ba-41ee-bd06-531829800935",
+    "timestamp": "2026-02-23T10:53:51.987Z",
+    "client": "copilot-chat",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl"
+  },
+  "response": {},
+  "data": {
+    "allowed": true,
+    "session": "7ff6f48c-24ba-41ee-bd06-531829800935",
+    "timestamp": "2026-02-23T10:53:52Z",
+    "client": "copilot-chat",
+    "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/7ff6f48c-24ba-41ee-bd06-531829800935.jsonl",
+    "query": "/workspaces/semio/repo/cli/main.go",
+    "response": ""
+  }
+````
+
+```json
+{
+  "kind": "agent.tool.searching",
+  "timestamp": "2026-02-23T11:13:35Z",
+  "pattern": "/workspaces/semio/repo/cli/main_test.go"
+},
+{
+  "kind": "agent.tool.searching.ended",
+  "timestamp": "2026-02-23T11:13:41Z",
+  "pattern": "/workspaces/semio/repo/cli/main_test.go"
+},
+```
+
+Agents MUST NOT actively track plan/progress/changes. Everything is tracked over agent hooks. Remove `ticket.md` in the mechanism and update all docs.
+
+The logging path of agent of hooks should change to
+
+- .repo
+  - 📜
+    - 🪝
+      - 🤖
+        - {{session-id}}
+          - {{timestamp}}\_{{repo-agent-hook-event-kind}}.json
+      - 🔀
+        - {{change-id}}
+          - {{timestamp}}\_{{repo-vcs-hook-event-kind}}.json
+
+The mapping of the native agent hooks to the general hook system MUST be tested for every single native hook event with real data. Use the `./.repo/📜/*.json` files for real data.
+
+Logs MUST be clean and just have input, event and response data.
+e.g.
+
+```json
+{
+ "context": {
+  "event": "agent.ended",
+  "client": "copilot-chat",
+  "timestamp": "2026-02-20T09:11:47Z",
+  "repoRoot": "/workspaces/semio",
+  "input": {
+   "timestamp": "2026-02-20T09:11:46.811Z",
+   "hookEventName": "Stop",
+   "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
+   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
+   "stop_hook_active": false,
+   "cwd": "/workspaces/semio"
+  }
+ },
+ "result": {
+  "allowed": true,
+  "raw": {
+   "timestamp": "2026-02-20T09:11:46.811Z",
+   "hookEventName": "Stop",
+   "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
+   "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
+   "stop_hook_active": false,
+   "cwd": "/workspaces/semio"
+  },
+  "session": "372c099f-a49d-4973-983c-4b6d2bf28298",
+  "timestamp": "2026-02-20T09:11:47Z",
+  "client": "copilot-chat",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl"
+ }
+}
+```
+
+should be:
+
+```json
+{
+ "input": {
+  "timestamp": "2026-02-20T09:11:46.811Z",
+  "hookEventName": "Stop",
+  "sessionId": "372c099f-a49d-4973-983c-4b6d2bf28298",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl",
+  "stop_hook_active": false,
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "kind": "agent.ended",
+  "session": "372c099f-a49d-4973-983c-4b6d2bf28298",
+  "timestamp": "2026-02-20T09:11:46.811Z",
+  "client": "copilot-chat",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/372c099f-a49d-4973-983c-4b6d2bf28298.jsonl"
+ },
+ "response": {}
+}
+```
+
+Extend the cli by a general project requirements, docs and todo generation system.
+
+```bash
+./repo/cli/cli project <project-name> generate <kind>
+
+./repo/cli/cli project semio generate requirements
+./repo/cli/cli project repo generate docs
+./repo/cli/cli project coda generate todos
+```
+
+---
+
+`DOCS.md`
+
+```md
+# 📚 Docs
+
+## [{{ENTITYID}}]({{ENTITYURI}})
+
+{{ENTITYDOCS}}
+```
+
+`SPECS.MD`
+
+```md
+# 💯 Requirements
+
+## [{{ENTITYID}}]({{ENTITYURI}})
+
+{{ENTITYSPECS}}
+```
+
+`TODOS.md`
+
+```md
+# 🔳 TODOs
+
+## [{{ENTITYID}}]({{ENTITYURI}})
+
+### TODO: {{TODOTITLE}}
+
+{{TODODESCRIPTION}}
+```
+
+You MUST implement, test and run it for all projects.
+
+The information is sourced from the code:
+
+Create a `generate <kind> ` command that generates.
+
+```bash
+./repo/cli/cli mermaid <visualization>
+./repo/cli/cli mermaid loc-by-projects-bundles-folders-files
+./repo/cli/cli mermaid loc-by-contributors
+./repo/cli/cli mermaid loc-by-language
+```
+
+---
+
+Currently a lot of dependencies are hardcoded. Generalize them, so that everything is composable.
+There are SourceControlProvider (GitHub, GitLab, BitBucket, …), TrackerProvider (Jira, Trello, Linear, GitHub, …), SandboxProvider (Devcontainer, Podman, …), LanguageProviders (Typescript, Go, Python, C#, …), AIProvider (VSCode, Windsurf, Cursor, Antigrvity, Claude Code, Codex, Droid, …), MonorepoProvider (Nx, Turborepo, Bazel, Pant, Buck2, Lage, Rush, …).
+You MUST use for every Provider the native cli.
+All Providers MUST provide a configure method that adjusts config files accordingly.
+All issue/milestone related code usage from GitHub MUST be abstracted to ManagmentProvider.
+All native agent hooks MUST be abstracted to EditorProvider. EditorProvider provide things like adapters for native agent hooks where they can map to common repo agent hooks.
+Dont stop until you have refactored and tested everything.
+
+---
+
+#### 🔀versions
+
+Abstract version control system such as git and implement a git provider.
+
+Events:
+
+```yaml
+version:
+ checkpoint:
+  starting: # e.g. in git pre-commit
+   timestamp: "{{timestamp}}"
+   description: "{{checkpoint-description}}" # e.g. in git commit message
+  ended: # e.g. in git post-commit
+   timestamp: "{{timestamp}}"
+   id: "{{checkpoint-id}}" # e.g. in git commit sha
+   description: "{{checkpoint-description}}" # e.g. in git commit message
+ checkin:
+  starting:
+   checkpoint: "{{checkpoint-id}}" # current checkpoint id
+   timestamp: "{{timestamp}}"
+  ended:
+   checkpoint: "{{checkpoint-id}}" # new checkin checkpoint id
+   timestamp: "{{timestamp}}"
+ checkout:
+  starting:
+   description: "{{checkout-description}}"
+   checkpoints: ["{{checkpoint-id-between-checkin-and-checkout}}"] # e.g. in git commit sha of squash checkpoints between checkin and checkout
+   archive: ["{{archive-checkpoint-id}}"] # e.g. in git branch name of the archive branch e.g. "kinan/2026/02/24"
+  ended:
+   id: "{{checkpoint-id}}" # e.g. in new git commit sha of squash checkpoints between checkin and checkout
+   description: "{{checkout-description}}" # e.g. in git commit message
+```
+
+Lifecycle:
+
+```mermaid
+sequenceDiagram
+ Contributor->>+repo: checkin
+ repo->>+git: fast foward `contributor/latest` to `main`
+ git->>-repo: ✅
+ repo->>-Contributor: ✅
+ Contributor->>+repo: checkpoint
+ repo->>+git: commit `contributor/latest`
+ git->>-repo: ✅
+ repo->>-Contributor: ✅
+ Contributor->>+repo: checkout
+ repo->>+git: create branch `contributor/backup`
+ git->>-repo: ✅
+ repo->>+git: squashmerge `contributor/latest` to `main`
+ git->>-repo: ✅
+ repo->>-Contributor: ✅
+```
+
+#### 📊metrics
+
+The repo cli MUST generate mermaid diagram strings.
+
+```bash
+./repo/cli/cli mermaid <visualization>
+./repo/cli/cli mermaid loc-by-projects-bundles-folders-files
+./repo/cli/cli mermaid loc-by-contributors
+./repo/cli/cli mermaid loc-by-language
+```
+
+e.g `./repo/cli/cli mermaid loc-by-projects-bundles-folders-files` should be something like this:
+
+```mermaid
+treemap-beta
+"Lines of Code (k)"
+    "👤semio"
+      "📚js"
+        "🗃️skethcpad"
+          "💻designtsx"
+            "🔖statemanagment"
+              "🔖store": 40
+            "🔖designtsx": 80
+        "💻semio.ts": 30
+      "📚sketchpad": 80
+    "🧰repo"
+      "⌨️cli": 30
+    "🔬coda"
+      "⌨️cli": 2
+```
+
+e.g `./repo/cli/cli mermaid loc-by-projects-bundles-folders-files` should be something like this:
+
+```mermaid
+treemap-beta
+"Lines of Code (k)"
+    "🐍Python"
+      "📚js"
+        "🗃️skethcpad"
+          "💻Design.tsx": 80
+        "💻semio.ts": 30
+      "📚sketchpad": 80
+    "🧰repo"
+      "⌨️cli": 30
+    "🔬coda"
+      "⌨️cli": 2
+```
+
+#### 🪪identification
+
+repo:
+The id system has some problems. Recently special root project and root bundle was introduced. There are only meant for orphan folders and files.
+e.g. 👤semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixabletsx🔖missingend should be `👤semio🏪assets🗃️some🗃️folder💻filefixabletsx🔖missingend`
+
+---
+
+The id system should be changed. From now on all bundles MUST have a parent project and all folders MUST have a parent bundle and all files MUST have a parent folder.
+For this purpose introduce the virtual `🥇mono` project and virtual `🪆repo` bundle. Files and folders that are on the root level are children of the `🪆repo` bundle.
+Every bundle has a virtual folder called `🌱root` that is the parent of all files that are on the root folder level of the bundle.
+This makes it much easier because the hierarchy PROJECT - BUNDLE - FOLDER - FILE is now strict.
+Adjust the cli and the vscode extension accordingly.
+
+---
+
+All ids are designed to be displayed as tree.
+The --text option should not show the full ids but only the tree part of the ids.
+e.g. this:
+
+```bash
+ $ ./repo/cli/cli tree --only-goal --text
+[🎯Goals](repo://goals)
+├── 🎯aioptimizedrepo AI-optimized Repo open created 2 weeks ago AI-optimized Repo goal
+│   ├── 🎯aioptimizedrepo🎯consistentrepohistory Consistent Repo History open Goal for Consistent Repo History
+│   ├── 🎯aioptimizedrepo🎯repoclient Repo Client open Goal for Repo Client
+│   │   ├── 🎯aioptimizedrepo🎯repoclient🎯repobinary Repo Binary open Goal for Repo Binary
+│   │   │   ├── 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli Repo CLI open Goal for Repo CLI
+│   │   │   │   └── 🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters Repo CLI Filters open Goal for Repo CLI Filters
+```
+
+should be:
+
+```bash
+ $ ./repo/cli/cli tree --only-goal --text
+[🎯Goals](repo://goals)
+├── 🎯aioptimizedrepo AI-optimized Repo open created 2 weeks ago AI-optimized Repo goal
+│   ├── 🎯consistentrepohistory Consistent Repo History open Goal for Consistent Repo History
+│   ├── 🎯repoclient Repo Client open Goal for Repo Client
+│   │   ├── 🎯repobinary Repo Binary open Goal for Repo Binary
+│   │   │   ├── 🎯repocli Repo CLI open Goal for Repo CLI
+│   │   │   │   └── 🎯repoclifilters Repo CLI Filters open Goal for Repo CLI Filters
+```
+
+---
+
+The repo requirements were majorly updated.
+
+You MUST adapt all implementations and tests. Dont care about backwards compatiblity.
+
+flat strings means slugged (preserve only alphanumeric and emojis) and then lower cased.
+
+Every id is full, globally unique and treelike.
+
+Extract all the ids from below and refactor/extend the existing tests to use them.
+
+entity kinds: root, year, month, day, hour, minute, second, project, bundle, folder, file, line, range, section, definition, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
+
+resource kinds: repo, project, bundle, folder, file, section, definition
+diffable: root, year, month, day, hour, project, bundle, folder, file, section, definition, goal, ticket, contributor, commit, interaction
+interactable:
+
+relations:
+
+- year | month | day | hour | second - project: A project has years
+  related-to-files: root, year, month, day, hour, minute, second, project, bundle, folder, goal, ticket, draft, todo, policy, breach, contributor, commit, interaction
+
+Only stop once you have tests every single list and tree command to have exactly this ids:
+
+The uri system (mcp, rest, rdf) is:
+
+repo: `repo://` e.g. `repo://`
+years: `repo://years` e.g. `repo://years`
+year: `repo://year/{{YY}}` e.g. `repo://year/26`
+months: `repo://months/{{YY}}` e.g. `repo://months/26`
+month: `repo://month/{{YY}}/{{MM}}` e.g. `repo://month/26/02`
+days: `repo://days/{{YY}}/{{MM}}` e.g. `repo://days/26/02`
+day: `repo://day/{{YY}}/{{MM}}/{{DD}}` e.g. `repo://day/26/02/15`
+hours: `repo://hours/{{YY}}/{{MM}}/{{DD}}` e.g. `repo://hours/26/02/15`
+hour: `repo://hour/{{YY}}/{{MM}}/{{DD}}/{{HH}}` e.g. `repo://hour/26/02/15/14`
+minutes: `repo://minutes/{{YY}}/{{MM}}/{{DD}}/{{HH}}` e.g. `repo://minutes/26/02/15/14`
+minute: `repo://minute/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}` e.g. `repo://minute/26/02/15/14/33`
+seconds: `repo://seconds/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}` e.g. `repo://seconds/26/02/15/14/33`
+second: `repo://second/{{YY}}/{{MM}}/{{DD}}/{{HH}}/{{mm}}/{{SS}}` e.g. `repo://second/26/02/15/14/33/38`
+projects: `repo://projects` e.g. `repo://projects`
+project: `repo://project/{{project-id}}` e.g. `repo://project/repo`
+bundles: `repo://bundles/{{project-id}}` e.g. `repo://bundles/repo`
+bundle: `repo://bundle/{{project-id}}/{{bundle-code}}` e.g. `repo://bundle/repo/cli`
+folders: `repo://folders/{{uri-encoded-parent-path?*}}` e.g. `repo://folders/semio/js`
+folder: `repo://folder/{{uri-encoded-path*}}` e.g. `repo://folder/semio/js/sketchpad`
+files: `repo://files/{{uri-encoded-parent-path?*}}` e.g. `repo://files/semio/js/sketchpad`
+file: `repo://file/{{uri-encoded-file-path*}}` e.g. `repo://file/semio/js/sketchpad/design.tsx`
+lines: `repo://lines/{{uri-encoded-file-path*}}` e.g. `repo://lines/semio/js/sketchpad/design.tsx`
+line: `repo://line/{{uri-encoded-file-path*}}/{{linenumber}}` e.g. `repo://line/semio/js/sketchpad/design.tsx/3872`
+ranges: `repo://ranges/{{uri-encoded-file-path*}}` e.g. `repo://ranges/semio/js/sketchpad/design.tsx`
+range: `repo://range/{{uri-encoded-file-path*}}/{{start-linenumber}}/{{end-linenumber}}` e.g. `repo://range/semio/js/sketchpad/design.tsx/3872/3875`
+sections: `repo://sections/{{uri-encoded-file-path*}}` e.g. `repo://sections/semio/js/sketchpad/design.tsx`
+section: `repo://section/{{uri-encoded-section-path*}}` e.g. `repo://section/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
+definitions: `repo://definitions/{{uri-encoded-parent-section-path*}}` e.g. `repo://definitions/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store`
+definition: `repo://definition/{{uri-encoded-definition-path*}}` e.g. `repo://definition/semio/js/sketchpad/design.tsx/State%20Management/Design%20Store/createSketchpadStore`
+goals: `repo://goals/{{uri-encoded-parent-goal-path?*}}` e.g. `repo://goals/r26.02-1`
+goal: `repo://goal/{{uri-encoded-goal-path*}}` e.g. `repo://goal/r26.02-1/Running%20Sketchpad`
+tickets: `repo://tickets/{{uri-encoded-parent-scope?*}}` e.g. `repo://tickets/r26.02-1/Running%20Sketchpad`
+ticket: `repo://ticket/{{uri-encoded-ticket-path*}}` e.g. `repo://ticket/r26.02-1/Running%20Sketchpad/Introduce%20Key%20Guid%20Uri%20Mechanism`
+drafts: `repo://drafts/{{uri-encoded-parent-resource-uri?*}}` e.g. `repo://drafts/repo%3A%2F%2Fbundle%2Frepo%2Fcli`
+draft: `repo://draft/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-draft-title*}}` e.g. `repo://draft/repo%3A%2F%2Fbundle%2Frepo%2Fcli/New%20Architecture`
+todos: `repo://todos/{{uri-encoded-parent-resource-uri?*}}` e.g. `repo://todos/repo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore`
+todo: `repo://todo/{{uri-encoded-parent-resource-uri*}}/{{uri-encoded-todo-title*}}` e.g. `repo://todo/repo%3A%2F%2Fdefinition%2Fsemio%2Fjs%2Fsketchpad%2Fdesign.tsx%2FState%2520Management%2FDesign%2520Store%2FcreateSketchpadStore/Introduce%20Proper%20Sync%20Mechanism`
+policies: `repo://policies/{{uri-encoded-parent-resource-or-kind?*}}` e.g. `repo://policies/code`
+policy: `repo://policy/{{uri-encoded-parent-resource-or-kind?*}}/{{uri-encoded-policy-name*}}` e.g. `repo://policy/code/Godfiles`
+statutes: `repo://statutes/{{uri-encoded-policy-path?*}}` e.g. `repo://statutes/code/Godfiles`
+statute: `repo://statute/{{uri-encoded-policy-path*}}/{{uri-encoded-statute-name*}}` e.g. `repo://statute/code/Godfiles/Max%20Lines%20Per%20File`
+breaches: `repo://breaches/{{uri-encoded-policy-path?*}}` e.g. `repo://breaches/code/Godfiles`
+breach: `repo://breach/{{uri-encoded-policy-path*}}/affects/{{uri-encoded-affected-resource-uri*}}/at/{{uri-encoded-location-uri*}}/when/{{uri-encoded-second-path*}}` e.g. `repo://breach/code/Godfiles/affects/repo%3A%2F%2Ffile%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts/at/repo%3A%2F%2Frange%2Fsemio%2Fjs%2Fsketchpad%2Fdesign-store.ts%2F3872-3875/when/repo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12`
+contributors: `repo://contributors` e.g. `repo://contributors`
+contributor: `repo://contributor/{{uri-encoded-contributor-name*}}` e.g. `repo://contributor/usalu`
+commits: `repo://commits` e.g. `repo://commits`
+commit: `repo://commit/{{uri-encoded-commit-sha*}}` e.g. `repo://commit/cfb3b6084ff3fe883d5f39b08810a0b90997907a`
+interactions: `repo://interactions` e.g. `repo://interactions`
+interaction: `repo://interaction/when/{{uri-encoded-second-path*}}/on/{{uri-encoded-entity-uri*}}/{{interaction-kind}}/by/{{uri-encoded-contributor-name*}}` e.g. `repo://interaction/when/repo%3A%2F%2Fsecond%2F26%2F02%2F14%2F19%2F07%2F12/on/repo%3A%2F%2Fticket%2Fr26.02-1%2FRunning%2520Sketchpad%2FIntroduce%2520Key%2520Guid%2520Uri%2520Mechanism/started/by/usalu`
+
+The query params are
+General query params:
+{?client}
+tickets: at least one interaction with the given client
+goals: at least one interaction with the given client
+{?llm?}
+tickets: at least one interaction with the given llm
+goal: at least one interaction with the given llm
+{?year}
+tickets: at least one interaction with the given year
+goals: at least one interaction with the given year
+{?month}
+tickets: at least one interaction with the given month
+goals: at least one interaction with the given month
+{?day}
+tickets: at least one interaction with the given day
+goals: at least one interaction with the given day
+{?contributor}
+tickets: at least one interaction with the given contributor
+goals: at least one interaction with the given contributor
+{?status}
+tickets: only the given status
+goals: only the given status
+
+The repo folder layout changed.
+
+You must update the implementation and tests to match the new layout.
+
+Dont keep any legacy api.
+
+- .repo
+- ✍️ // drafts
+- 🎫 // tickets
+  - {{YY}}
+    - {{MM}}
+      - {{DD}}
+        - {{UPPERCASESLUG}}
+- 🎯 // goals
+- 👤 // contributors
+  - {{github}}
+- 💡
+- 💬 // prompts
+  - 👤 // contributors
+    - {{contributor-name}}
+  - 📋 // templates
+    - {{template-name}}.
+
+---
+
+#### 🪝hooks
+
+Make sure all common terminal commands (grep, ls, sed, …) are semantically correctly identified as searching, editing, etc.
+Add a test for every single command in every single native agent hook format.
+
+Make sure that all `sed` are semantically correctly mapped.
+All modifiying command should be code edits, all reading are searching, etc and not agent.tool
+
+---
+
+repo cli:
+All agent terminal events should have command and
+
+```json
+{
+ "input": {
+  "timestamp": "2026-02-21T23:09:35.693Z",
+  "hookEventName": "PreToolUse",
+  "sessionId": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
+  "tool_name": "run_in_terminal",
+  "tool_input": {
+   "command": "cd /workspaces/semio \u0026\u0026 ls repo/cli/",
+   "explanation": "List the repo/cli directory to understand its structure",
+   "goal": "Understand CLI structure",
+   "isBackground": false,
+   "timeout": 5000
+  },
+  "tool_use_id": "toolu_vrtx_01S5hFNgtM7xsNKXZ8cV9rGC__vscode-1771707349366",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "kind": "agent.tool.terminal.starting",
+  "session": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+  "timestamp": "2026-02-21T23:09:35.693Z",
+  "client": "copilot-chat",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl"
+ },
+ "response": {}
+}
+```
+
+should be
+
+```json
+{
+ "input": {
+  "timestamp": "2026-02-21T23:09:35.693Z",
+  "hookEventName": "PreToolUse",
+  "sessionId": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
+  "tool_name": "run_in_terminal",
+  "tool_input": {
+   "command": "cd /workspaces/semio \u0026\u0026 ls repo/cli/",
+   "explanation": "List the repo/cli directory to understand its structure",
+   "goal": "Understand CLI structure",
+   "isBackground": false,
+   "timeout": 5000
+  },
+  "tool_use_id": "toolu_vrtx_01S5hFNgtM7xsNKXZ8cV9rGC__vscode-1771707349366",
+  "cwd": "/workspaces/semio"
+ },
+ "event": {
+  "kind": "agent.tool.terminal.starting",
+  "session": "6ab2861d-f00e-40fe-b7b8-0601d4555149",
+  "timestamp": "2026-02-21T23:09:35.693Z",
+  "client": "copilot-chat",
+  "transcript": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/6ab2861d-f00e-40fe-b7b8-0601d4555149.jsonl",
+  "command": "cd /workspaces/semio && ls repo/cli/",
+  "timeout": 5000 // when timeout is set then it is no background task
+ },
+ "response": {}
+}
+```
+
+---
+
+ticket
+
+```md
+- .repo # folder
+  - 🎫 # folder
+    - {{YY}} # folder
+      - {{MM}} # folder
+        - {{DD}} # folder
+          - ticket.json
+```
+
+Agent hooks are matched with session id to tickets.
+
+---
+
+repo cli:
+The hooks from vscode-chat are not working and not calling the hooks from repo. The hooks MUST be only configured by `./repo/cli/cli configure`.
+
+---
+
+repo hook:
+In vscode this command was blocked allthough it shouldnt be blocked. Only some git commands should be blocked.
+cd /workspaces/semio && ./repo/cli/cli tree "hooks events inlet adapter cli" 2>&1 | head -200
+
+---
+
+vscode
+
+```json
+{
+ "input": {
+  "timestamp": "2026-02-18T09:25:46.649Z",
+  "hookEventName": "PostToolUse",
+  "sessionId": "34ec4d3a-862a-4732-82b3-01532df2aca2",
+  "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/26249932fdb4f192e6be60a6ba3b0700/GitHub.copilot-chat/transcripts/34ec4d3a-862a-4732-82b3-01532df2aca2.jsonl",
+  "tool_name": "manage_todo_list",
+  "tool_input": {
+   "todoList": [
+    {
+     "id": 1,
+     "status": "completed",
+     "title": "Read test patterns for hooks"
+    },
+    {
+     "id": 2,
+     "status": "completed",
+     "title": "Add formatVSCodeHookOutput function"
+    },
+    {
+     "id": 3,
+     "status": "completed",
+     "title": "Extract tool_name from stdin JSON"
+    },
+    {
+     "id": 4,
+     "status": "completed",
+     "title": "Modify hookCommand for copilot-chat output"
+    },
+    {
+     "id": 5,
+     "status": "completed",
+     "title": "Update generateCopilotConfig"
+    },
+    {
+     "id": 6,
+     "status": "completed",
+     "title": "Update tests for VS Code output"
+    },
+    {
+     "id": 7,
+     "status": "completed",
+     "title": "Run configure and rebuild CLI"
+    },
+    {
+     "id": 8,
+     "status": "completed",
+     "title": "Run all hook tests"
+    },
+    {
+     "id": 9,
+     "status": "completed",
+     "title": "Close ticket"
+    }
+   ]
+  },
+  "tool_response": "Successfully wrote todo list",
+  "tool_use_id": "toolu_vrtx_01YQjTvPuR25jrTCD8mg1baT__vscode-1771370659744",
+  "cwd": "/workspaces/semio"
+ }
+}
+```
+
+---
+
+All mcp tools that have
+
+All hooks should always include all possible information and have no matchers in the plattform configs. Only the repo cli then can drop information when mapping to the native repo hook events. Make sure configure cli command is correctly setting everything up.
+
+All hooks should log all information to `./repo/📜/{{YY}}{{MM}}{{DD}}{{HH}}{{MM}}{{SS}}_{{client}}_{{hook-kind}}.json` e.g. `./repo/📜/260218230207_vscode-chat_agent-started.json`.
+
+The cli should be extended by hooks.
+A hook is a go function that runs on a certain event on the lifecycle of development. That go function receives one argument a context which has event information and also a handle to interact with the codebase (all CRUDs for all repo entities - projects, bundles, folder, files, sections, definitions, goals, tickets, policies, statutes, breaches, commits, contributors, interactions, etc)
+There are two kind of hooks: 🦑 git hooks and 🤖 agent hooks
+For git hooks use pre-commit.
+For agent hooks the events MUST be mapped to client (vscode-chat, windsurf-chat, cursor-chat, claude-code, droid) native events.
+
+The hook architecture MUST work with a shared common implementation.
+inlet adapter -> neutral hook implementation -> outlet adapter
+The mapping is not a 1-to-1 mapping.
+E.g. vscode PreToolUse and PostToolUse can be agent.plan.updating, code.searching or terminal in the neutral hook impkementation
+
+Platforms:
+VSCode: `.github/hooks/repo.json` with `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PreCompact`, `SubagentStart`, `SubagentStop`, `Stop`
+Windsurf: `.windsurf/hooks.json` with `pre_read_code`, `post_read_code`, `pre_write_code`, `post_write_code`, `pre_run_command`, `pre_mcp_tool_use`, `post_mcp_tool_use`, `pre_user_prompt`, `post_cascade_response`, `post_setup_worktree`
+Cursor: `.cursor/hooks.json` with `sessionStart`, `sessionEnd`, `preToolUse`, `postToolUse`, `postToolUseFailure`, `subagentStart`, `subagentStop`, `beforeShellExecution`, `afterShellExecution`, `beforeMCPExecution`, `afterMCPExecution`, `beforeReadFile`, `afterFileEdit`, `beforeSubmitPrompt`, `preCompact`, `stop`, `afterAgentResponse`, `afterAgentThought`, `beforeTabFileRead`, `afterTabFileEdit`
+Claude Code: `.claude/settings.json` with `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `Notification`, `SubagentStart`, `SubagentStop`, `Stop`, `TeammateIdle`, `TaskCompleted`, `PreCompact`, `SessionEnd`
+Droid: `.factory/hooks.json` with `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Notification`, `Stop`, `SubagentStop`, `PreCompact`, `SessionStart`, `SessionEnd`
+
+The api for hooks maps to native events:
+
+```bash
+./repo/cli/cli hook PreCompact vscode-chat
+./repo/cli/cli hook pre_mcp_tool_use windsurf-chat
+./repo/cli/cli hook SubagentStart droid
+…
+```
+
+You MUST make sure that the hooks return exactly this information (additionally make sure to add raw as a field where you add the raw input json and leave it for logging for now):
+
+Events
+
+Hooks:
+
+```yaml
+git:
+  commit:
+    starting: pre-commit (stage: pre-commit)
+    ended: pre-commit (stage: post-commit)
+agent:
+  started:
+    vscode-chat: SessionStart | SubagentStart (optionally include parent agent info)
+    windsurf-chat: pre_user_prompt (best-effort: first prompt of a session; include parent agent info if known)
+    cursor-chat: sessionStart | subagentStart (optionally include parent agent info)
+    claude-code: SessionStart | SubagentStart (optionally include parent agent info)
+    droid: SessionStart (optionally include parent agent info)
+  ended:
+    vscode-chat: Stop | SubagentStop (optionally include parent agent info)
+    windsurf-chat: post_cascade_response (best-effort: last response in session; include parent agent info if known)
+    cursor-chat: stop | subagentStop | sessionEnd (optionally include parent agent info)
+    claude-code: Stop | SubagentStop | SessionEnd (optionally include parent agent info)
+    droid: Stop | SubagentStop | SessionEnd (optionally include parent agent info)
+  prompt:
+    submit:
+      vscode-chat: UserPromptSubmit
+      windsurf-chat: pre_user_prompt
+      cursor-chat: beforeSubmitPrompt
+      claude-code: UserPromptSubmit
+      droid: UserPromptSubmit
+  compacting:
+    vscode-chat: PreCompact
+    windsurf-chat: pre_user_prompt where prompt triggers/requests compaction (emulated; no native compact event)
+    cursor-chat: preCompact
+    claude-code: PreCompact
+    droid: PreCompact
+  tool:
+    starting: # excluding task, code and terminal
+      vscode-chat: PreToolUse (exclude code.reading/code.edited + terminal.starting/ended)
+      windsurf-chat: pre_mcp_tool_use (MCP tools only; exclude code/terminal hooks)
+      cursor-chat: preToolUse (exclude code.reading/code.edited + terminal.starting/ended) | beforeMCPExecution (MCP)
+      claude-code: PreToolUse (exclude code.reading/code.edited + terminal.starting/ended)
+      droid: PreToolUse (exclude code.reading/code.edited + terminal.starting/ended)
+    ended: # excluding task, code and terminal
+      vscode-chat: PostToolUse (with return info; exclude code/terminal)
+      windsurf-chat: post_mcp_tool_use (with return info; MCP tools only; exclude code/terminal)
+      cursor-chat: postToolUse | postToolUseFailure (with return info; exclude code/terminal) | afterMCPExecution (MCP)
+      claude-code: PostToolUse | PostToolUseFailure (with return info; exclude code/terminal)
+      droid: PostToolUse (with return info; exclude code/terminal)
+    plan: # A list of tasks/steps/todos
+      updating: # Planning involves changing the task list
+        vscode-chat: PreToolUse where tool_name == "manage_todo_list"
+        windsurf-chat: pre_write_code where file_path matches plan.md / planning-mode plan file
+        cursor-chat: preToolUse where tool_name in ["todo_tool","manage_todo_list"]
+        claude-code: PreToolUse matcher == "Task" (or tool_name == "Task")
+        droid: PreToolUse matcher == "Task"
+    search:
+      started:
+      starting:
+        vscode-chat: PreToolUse where tool_name indicates search (file, folder, web, … search tools)
+        windsurf-chat: pre_read_code or pre_run_command or pre_mcp_tool_use
+        cursor-chat: beforeReadFile
+        claude-code: PreToolUse (matcher == "Read" / file-read tool)
+        droid: PreToolUse (matcher == "Read" / file-read tool)
+      ended:
+        vscode-chat: PostToolUse where tool_name indicates search (file, folder, web, … search tools)
+        windsurf-chat: post_read_code or post_run_command or post_mcp_tool_use
+        cursor-chat: afterReadFile
+        claude-code: PostToolUse (matcher == "Read" / file-read tool)
+        droid: PostToolUse (matcher == "Read" / file-read tool)
+    code:
+      editing:
+        vscode-chat: PreToolUse where tool_name indicates edit/write/create (file write tools)
+        windsurf-chat: pre_write_code
+        cursor-chat: beforeFileEdit
+        claude-code: PreToolUse (matcher == "Edit" or "Write") + PostToolUse | PostToolUseFailure
+        droid: PreToolUse (matcher == "Edit" or "Write") + PostToolUse
+      edited:
+        vscode-chat: PostToolUse where tool_name indicates edit/write/create (file write tools)
+        windsurf-chat: post_write_code
+        cursor-chat: afterFileEdit
+        claude-code: PostToolUse (matcher == "Edit" or "Write") + PostToolUse | PostToolUseFailure
+        droid: PostToolUse (matcher == "Edit" or "Write") + PostToolUse
+    terminal:
+      starting:
+        vscode-chat: PreToolUse where tool_name indicates terminal execution e.g. "tool_name": "run_in_terminal"
+        windsurf-chat: pre_run_command
+        cursor-chat: beforeShellExecution
+        claude-code: PreToolUse matcher == "Bash"
+        droid: PreToolUse matcher == "Bash"
+      ended:
+        vscode-chat: PostToolUse for that terminal tool invocation e.g. "tool_name": "run_in_terminal"
+        windsurf-chat: post_run_command
+        cursor-chat: afterShellExecution
+        claude-code: PostToolUse | PostToolUseFailure (matcher "Bash") | Stop (if terminal run ends the turn)
+        droid: PostToolUse (matcher "Bash") | Stop (if terminal run ends the turn)
+```
+
+- git
+  - commit
+    - starting # pre-commit
+    - ended # post-comit
+- agent
+  - starting # session.start or subagent.start with optionally the parent agent information
+  - ended # agent stop or subagent.stop with optionally the parent agent information
+  - prompt
+    - submit droid: UserPromptSubmit
+  - compacting # compact.pre
+  - tool # both for regular tools (except code reading and edited, terminal starting and ended) and also mcp tools
+    - starting # tool.pre
+    - ended # with return information, tool.post cursor: postToolUse or postToolUseFailure
+    - task
+      - plan # vscode-chat: "toolName": "manage_todo_list" with non-completed
+      - starting # vscode-chat: "toolName": "manage_todo_list" and compare
+      - ended # vscode-chat: "toolName": "manage_todo_list" and compare if the, claude-code: TaskCompleted
+    - code
+      - reading # vscode-chat: tool.pre with proper tool, cursor-chat: beforeReadFile, windsurf-chat: pre_read_code, claude-code: PreToolUse"
+      - edited # vscode-chat: tool.pre with proper tool, cursor-chat: afterFileEdit, windsurf-chat: pre_write_code,
+    - terminal
+      - starting # claude-code: "tool_name": "Bash", windsurf: pre_run_command, cursor-chat: beforeShellExecution
+      - ended # terminal.stop
+
+Tool calling should implement a block decision. e.g. `git checkout`, `git stash`, `git reset`, `git commit` should be always denied.
+
+Support:
+
+```bash
+./repo/cli/cli hook <event-kind> <client>
+./repo/cli/cli hook commit.starting vscode-chat
+./repo/cli/cli hook agent.starting vscode-chat
+./repo/cli/cli hook agent.stopped cursor-chat
+./repo/cli/cli hook tool.pre windsurf-chat
+…
+```
+
+Extend the cli with a command `configure` that automatically configures the repo (you MUST always define workspace configs that are checked in with source control) the pre-commit config, all the agent hook config for (copilot-chat, cursor-chat, windsurf-chat, claude-code, droid, etc)
+
+The codebase diff mechanism should change. Instead of adding the diffs on ticket close, require files on ticket create and on ticket close. Dont compute any diffs on ticket interactions. Just require files (accept path, id and uri).
+Introduce a git hook that adds the commit message as a commit under `.repo/commits/YYYY/MM/DD/SLUGGED-MESSAGE` with the codebase diff. That diff should be complete and contain all changes (removed, renamed, modified, added) for all diffable entities (project, bundle, folder, file, section, definition, goal, ticket, draft, todo, policy, breach, contributor)
+
+```
+- 🔀 # commits
+  - {{YY}} # e.g. 26
+    - {{MM}} # e.g. 02
+      - {{DD}} # e.g. 16
+        - {{SLUGGED-MESSAGE}} # e.g. ``
+```
+
+---
+
+The cli is increadibly slow. Hence the tests take really long.
+Probably the caching/indexing mechanism is not working properly. Every entity should be cached and only based on git diffs, entities should be reindexed/recached.
+You MUST refactor until `tree` returns after less than 5s the second time (after the cache is built).
+
+---
+
+The test mechanism should be centralized to only use
+
+```bash
+./repo/cli/cli test # run all tests
+./repo/cli/cli test <test-id> # run shared tests
+./repo/cli/cli test <entity-id-or-uri> # run tests for a specific entity
+```
+
+---
+
+The uri are only uri-escaped but dont contain any modification such as case changing.
+No modifcation, no slugs, nothing - just uri encode. No loss of information.
+Fix implementations and tests.
+
+---
+
+repo cli tree is not showing the full project tree.
+Note that TODO, STATUTE, BREACH are not shown because they can be children of most entities.
+
+- FOLDER\*
+  - FILE
+- PROJECT
+  - BUNDLE
+    - FOLDER\*
+      - FILE
+        - SECTION
+          - DEFINITION
+- GOAL\*
+  - TICKET
+- DRAFT\*
+- POLICY
+  - ENTITYKIND
+    - STATUTE
+
+#### 🫡commands
+
+Rename `tree` to command to `search`.
+
+Remove all documentation about `--no-management`. It is a hidden feature. Only leave it for users that know it.
+
+Remove all documentation about `list`. It is a hidden feature. Only leave it for users that know it.
+
+Remove the `format` flag option from any documentation. It is a hidden feature. Only leave it for users that know it.
+
+#### 🤖mcp
+
+The mcp toolnames and descriptions are out of date with the commands.
+
+Remove tools from mcp:
+
+- analyze
+- contributor add
+- contributor delete
+- draft create
+- draft delete
+- export
+- file create
+- file delete
+- file move
+- folder
+- graphql
+- move
+- policy check
+- ticket read
+
+Names and description are not consistent with cli:
+
+- fix
+- tree
+
+## history
 
 Sketchpad.tsx, elements.tsx and APP.tsx (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should be refactored to follow the open/closed principle. All app specific logic should be part of the APP.tsx files. elements.tsx should not import anything from sketchpad or any app. There should be no design, type, etc logic part of Sketchpad.tsx file. If the file is deleted then sketchpad should work, if a new file is added, the new app should work.
 E.g.
