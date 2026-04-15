@@ -6557,13 +6557,13 @@ pub use flatten_design::*;
 mod find_replaceable_types_in_designs {
     // 🔍Find Replaceable Types In Designs
     // Find Replaceable Types In Designs MUST find all types and designs that can replace selected pieces in a design.
-    // Specs: For each external connection, get ALL connector ports of the other piece's type, compute compatible port set, candidate must have connector in set for every connection. Without connections, use selected pieces' connector ports.
+    // Specs: Build one selection boundary requirement multiset from actual opposite-side connectors and accept a candidate only if distinct compatible candidate connectors can satisfy the whole multiset. Without boundary connections, use the selected pieces' own connectors with multiplicity.
 
     use super::*;
     use std::collections::{HashMap, HashSet};
 
     /// 🔍Finds all types and designs whose root type can replace the selected pieces in a design.
-    /// Specs: Returns (type_guids, design_guids). For connected pieces, checks port compatibility per external connection. For isolated pieces, checks compatible port set from selected types' connectors.
+    /// Specs: Returns (type_guids, design_guids). Boundary requirements come from actual opposite-side connectors, isolated selections use selected-piece connectors, and candidate validity requires one injective connector matching across the whole requirement multiset.
     pub fn find_replaceable_types_in_designs_for_pieces_in_design(
         kit: &Kit,
         design_guid: &str,
@@ -6580,257 +6580,316 @@ mod find_replaceable_types_in_designs {
         let pieces = design.pieces.as_deref().unwrap_or(&[]);
         let connections = design.connections.as_deref().unwrap_or(&[]);
 
-        let ports_map: HashMap<&str, &Port> = ports.iter().map(|p| (p.guid.as_str(), p)).collect();
-        let types_map: HashMap<&str, &Type> = types.iter().map(|t| (t.guid.as_str(), t)).collect();
-
-        let piece_map: HashMap<&str, &Piece> =
-            pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+        let ports_map: HashMap<&str, &Port> = ports
+            .iter()
+            .map(|port| (port.guid.as_str(), port))
+            .collect();
+        let types_map: HashMap<&str, &Type> = types
+            .iter()
+            .map(|kind| (kind.guid.as_str(), kind))
+            .collect();
+        let piece_map: HashMap<&str, &Piece> = pieces
+            .iter()
+            .map(|piece| (piece.guid.as_str(), piece))
+            .collect();
 
         let selected_set: HashSet<&str> = piece_guids.iter().map(|s| s.as_str()).collect();
 
-        // Port compatibility check
-        let are_ports_compatible = |pg1: &str, pg2: &str| -> bool {
-            if pg1 == pg2 {
+        let are_ports_compatible = |candidate_port_guid: &str, required_port_guid: &str| -> bool {
+            if candidate_port_guid.is_empty() || required_port_guid.is_empty() {
+                return false;
+            }
+            if candidate_port_guid == required_port_guid {
                 return true;
             }
-            let port1 = match ports_map.get(pg1) {
-                Some(p) => p,
+            let candidate_port = match ports_map.get(candidate_port_guid) {
+                Some(port) => port,
                 None => return false,
             };
-            let port2 = match ports_map.get(pg2) {
-                Some(p) => p,
+            let required_port = match ports_map.get(required_port_guid) {
+                Some(port) => port,
                 None => return false,
             };
-            let ci1 = port1.compatible_interfaces.as_deref().unwrap_or(&[]);
-            let ci2 = port2.compatible_interfaces.as_deref().unwrap_or(&[]);
-            if ci1.is_empty() && ci2.is_empty() {
+            if candidate_port
+                .compatible_interfaces
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .any(|compatible_port| compatible_port.guid == required_port_guid)
+            {
                 return true;
             }
-            if ci1.iter().any(|c| c.guid == pg2) {
-                return true;
-            }
-            if ci2.iter().any(|c| c.guid == pg1) {
+            if required_port
+                .compatible_interfaces
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .any(|compatible_port| compatible_port.guid == candidate_port_guid)
+            {
                 return true;
             }
             false
         };
 
-        // Build compatible port set for a type's connector ports
-        let build_compatible_port_set = |typ: &Type| -> HashSet<String> {
-            let mut set = HashSet::new();
-            let connectors = typ.connectors.as_deref().unwrap_or(&[]);
-            for connector in connectors {
-                let port_guid = match connector.port.as_ref() {
-                    Some(p) => p.guid.as_str(),
-                    None => continue,
-                };
-                // Add the port itself
-                set.insert(port_guid.to_string());
-                // Add all compatible ports
-                if let Some(port) = ports_map.get(port_guid) {
-                    for ci in port.compatible_interfaces.as_deref().unwrap_or(&[]) {
-                        set.insert(ci.guid.clone());
-                    }
-                    // Add ports that list this port as compatible
-                    for other_port in ports {
-                        if other_port.guid == port_guid {
-                            continue;
-                        }
-                        for ci in other_port.compatible_interfaces.as_deref().unwrap_or(&[]) {
-                            if ci.guid == port_guid {
-                                set.insert(other_port.guid.clone());
-                                break;
-                            }
-                        }
-                    }
-                }
-                // Also add ports compatible with each compatible port (bidirectional)
-                for p in ports {
-                    if are_ports_compatible(port_guid, &p.guid) {
-                        set.insert(p.guid.clone());
-                    }
+        let get_connector_port_guid = |type_guid: &str, connector_guid: &str| -> String {
+            if type_guid.is_empty() || connector_guid.is_empty() {
+                return String::new();
+            }
+            let candidate_type = match types_map.get(type_guid) {
+                Some(kind) => *kind,
+                None => return String::new(),
+            };
+            for connector in candidate_type.connectors.as_deref().unwrap_or(&[]) {
+                if connector.guid == connector_guid {
+                    return connector
+                        .port
+                        .as_ref()
+                        .map(|port| port.guid.clone())
+                        .unwrap_or_default();
                 }
             }
-            set
+            String::new()
         };
 
-        // Check if connectors have any port in the set
-        let has_connector_in_set = |connectors: &[Connector], port_set: &HashSet<String>| -> bool {
-            connectors.iter().any(|c| {
-                c.port
-                    .as_ref()
-                    .map(|p| port_set.contains(&p.guid))
-                    .unwrap_or(false)
-            })
+        let get_own_requirement_port_guids = |piece_guid: &str| -> Vec<String> {
+            let piece = match piece_map.get(piece_guid) {
+                Some(piece) => *piece,
+                None => return vec![],
+            };
+            let type_guid = match piece.type_ref.as_ref() {
+                Some(kind) => kind.guid.as_str(),
+                None => return vec![],
+            };
+            let candidate_type = match types_map.get(type_guid) {
+                Some(kind) => *kind,
+                None => return vec![],
+            };
+            candidate_type
+                .connectors
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .map(|connector| {
+                    connector
+                        .port
+                        .as_ref()
+                        .map(|port| port.guid.clone())
+                        .unwrap_or_default()
+                })
+                .collect()
         };
 
-        // Find external connections (connections where one side is selected, other is not)
-        let mut external_connections: Vec<&Connection> = Vec::new();
-        for conn in connections {
-            let connected_selected = selected_set.contains(conn.connected.piece.guid.as_str());
-            let connecting_selected = selected_set.contains(conn.connecting.piece.guid.as_str());
-            if connected_selected != connecting_selected {
-                external_connections.push(conn);
-            }
-        }
+        let get_boundary_requirement_port_guids = || -> Vec<String> {
+            let mut requirement_port_guids = Vec::new();
+            for connection in connections {
+                let connected_selected =
+                    selected_set.contains(connection.connected.piece.guid.as_str());
+                let connecting_selected =
+                    selected_set.contains(connection.connecting.piece.guid.as_str());
+                if connected_selected == connecting_selected {
+                    continue;
+                }
 
-        let has_connections = !external_connections.is_empty();
-
-        let mut type_guids: Vec<String> = Vec::new();
-        let mut design_guids: Vec<String> = Vec::new();
-
-        if has_connections {
-            // Build per-connection compatible port sets from the OTHER (non-selected) piece's type
-            let mut per_connection_sets: Vec<HashSet<String>> = Vec::new();
-            for conn in &external_connections {
-                let connected_selected = selected_set.contains(conn.connected.piece.guid.as_str());
-                let other_piece_guid = if connected_selected {
-                    conn.connecting.piece.guid.as_str()
+                let other_side = if connected_selected {
+                    &connection.connecting
                 } else {
-                    conn.connected.piece.guid.as_str()
+                    &connection.connected
                 };
-                let other_piece = match piece_map.get(other_piece_guid) {
-                    Some(p) => p,
-                    None => continue,
+
+                let other_piece = match piece_map.get(other_side.piece.guid.as_str()) {
+                    Some(piece) => *piece,
+                    None => {
+                        requirement_port_guids.push(String::new());
+                        continue;
+                    }
                 };
                 let other_type_guid = match other_piece.type_ref.as_ref() {
-                    Some(t) => t.guid.as_str(),
-                    None => continue,
-                };
-                let other_type = match types_map.get(other_type_guid) {
-                    Some(t) => *t,
-                    None => continue,
-                };
-                let compatible_set = build_compatible_port_set(other_type);
-                per_connection_sets.push(compatible_set);
-            }
-
-            // Candidate type must have a connector with port in EACH connection's compatible set
-            for typ in types {
-                let connectors = typ.connectors.as_deref().unwrap_or(&[]);
-                if connectors.is_empty() {
-                    continue;
-                }
-                let all_match = per_connection_sets
-                    .iter()
-                    .all(|cs| has_connector_in_set(connectors, cs));
-                if all_match {
-                    type_guids.push(typ.guid.clone());
-                }
-            }
-
-            // Check designs against the compatible connector sets.
-            for d in designs {
-                let mut design_connectors: Vec<Connector> = Vec::new();
-                for piece in d.pieces.as_deref().unwrap_or(&[]) {
-                    let type_guid = match piece.type_ref.as_ref() {
-                        Some(t) => t.guid.as_str(),
-                        None => continue,
-                    };
-                    let typ = match types_map.get(type_guid) {
-                        Some(t) => *t,
-                        None => continue,
-                    };
-                    design_connectors.extend(typ.connectors.as_deref().unwrap_or(&[]).iter().cloned());
-                }
-                if design_connectors.is_empty() {
-                    continue;
-                }
-                if per_connection_sets
-                    .iter()
-                    .all(|cs| has_connector_in_set(&design_connectors, cs))
-                {
-                    design_guids.push(d.guid.clone());
-                }
-            }
-        } else {
-            // No external connections: use selected pieces' types' connector ports
-            let mut selected_port_guids: HashSet<String> = HashSet::new();
-            for pg in &selected_set {
-                if let Some(piece) = piece_map.get(pg) {
-                    if let Some(ref type_ref) = piece.type_ref {
-                        if let Some(typ) = types_map.get(type_ref.guid.as_str()) {
-                            for connector in typ.connectors.as_deref().unwrap_or(&[]) {
-                                if let Some(ref port) = connector.port {
-                                    selected_port_guids.insert(port.guid.clone());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if selected_port_guids.is_empty() {
-                // No connectors on selected types: return only types with no connectors
-                for typ in types {
-                    let connectors = typ.connectors.as_deref().unwrap_or(&[]);
-                    if connectors.is_empty() {
-                        type_guids.push(typ.guid.clone());
-                    }
-                }
-
-                // No connectors on selected types: return only designs with no connectors
-                for d in designs {
-                    let mut design_connectors: Vec<Connector> = Vec::new();
-                    for piece in d.pieces.as_deref().unwrap_or(&[]) {
-                        let type_guid = match piece.type_ref.as_ref() {
-                            Some(t) => t.guid.as_str(),
-                            None => continue,
-                        };
-                        let typ = match types_map.get(type_guid) {
-                            Some(t) => *t,
-                            None => continue,
-                        };
-                        design_connectors.extend(typ.connectors.as_deref().unwrap_or(&[]).iter().cloned());
-                    }
-                    if design_connectors.is_empty() {
-                        design_guids.push(d.guid.clone());
-                    }
-                }
-            } else {
-                // Build compatible port set from all selected ports
-                let mut compatible_set: HashSet<String> = HashSet::new();
-                for pg in &selected_port_guids {
-                    compatible_set.insert(pg.clone());
-                    for p in ports {
-                        if are_ports_compatible(pg, &p.guid) {
-                            compatible_set.insert(p.guid.clone());
-                        }
-                    }
-                }
-
-                for typ in types {
-                    let connectors = typ.connectors.as_deref().unwrap_or(&[]);
-                    if connectors.is_empty() {
+                    Some(kind) => kind.guid.as_str(),
+                    None => {
+                        requirement_port_guids.push(String::new());
                         continue;
                     }
-                    if has_connector_in_set(connectors, &compatible_set) {
-                        type_guids.push(typ.guid.clone());
-                    }
-                }
-                // Check designs against the compatible connector set.
-                for d in designs {
-                    let mut design_connectors: Vec<Connector> = Vec::new();
-                    for piece in d.pieces.as_deref().unwrap_or(&[]) {
-                        let type_guid = match piece.type_ref.as_ref() {
-                            Some(t) => t.guid.as_str(),
-                            None => continue,
-                        };
-                        let typ = match types_map.get(type_guid) {
-                            Some(t) => *t,
-                            None => continue,
-                        };
-                        design_connectors.extend(typ.connectors.as_deref().unwrap_or(&[]).iter().cloned());
-                    }
-                    if design_connectors.is_empty() {
-                        continue;
-                    }
-                    if has_connector_in_set(&design_connectors, &compatible_set) {
-                        design_guids.push(d.guid.clone());
-                    }
-                }
+                };
+                let other_connector_guid = other_side
+                    .connector
+                    .as_ref()
+                    .map(|connector| connector.guid.as_str())
+                    .unwrap_or("");
+                requirement_port_guids.push(get_connector_port_guid(
+                    other_type_guid,
+                    other_connector_guid,
+                ));
             }
+            requirement_port_guids
+        };
+
+        let get_selection_own_requirement_port_guids = || -> Vec<String> {
+            piece_guids
+                .iter()
+                .flat_map(|piece_guid| get_own_requirement_port_guids(piece_guid.as_str()))
+                .collect()
+        };
+
+        let mut required_port_guids = get_boundary_requirement_port_guids();
+        if required_port_guids.is_empty() {
+            required_port_guids = get_selection_own_requirement_port_guids();
         }
+
+        let can_satisfy_requirements =
+            |required_port_guids: &[String], available_port_guids: &[String]| -> bool {
+                if required_port_guids.is_empty() {
+                    return true;
+                }
+                if available_port_guids.len() < required_port_guids.len() {
+                    return false;
+                }
+
+                let mut requirement_options: Vec<Vec<usize>> =
+                    Vec::with_capacity(required_port_guids.len());
+                for required_port_guid in required_port_guids {
+                    let connector_indexes: Vec<usize> = available_port_guids
+                        .iter()
+                        .enumerate()
+                        .filter_map(|(connector_index, available_port_guid)| {
+                            if are_ports_compatible(
+                                available_port_guid.as_str(),
+                                required_port_guid.as_str(),
+                            ) {
+                                Some(connector_index)
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                    if connector_indexes.is_empty() {
+                        return false;
+                    }
+                    requirement_options.push(connector_indexes);
+                }
+                requirement_options.sort_by_key(|connector_indexes| connector_indexes.len());
+
+                fn match_requirements(
+                    requirement_index: usize,
+                    requirement_options: &[Vec<usize>],
+                    used_connector_indexes: &mut [bool],
+                ) -> bool {
+                    if requirement_index >= requirement_options.len() {
+                        return true;
+                    }
+                    for connector_index in &requirement_options[requirement_index] {
+                        if used_connector_indexes[*connector_index] {
+                            continue;
+                        }
+                        used_connector_indexes[*connector_index] = true;
+                        if match_requirements(
+                            requirement_index + 1,
+                            requirement_options,
+                            used_connector_indexes,
+                        ) {
+                            return true;
+                        }
+                        used_connector_indexes[*connector_index] = false;
+                    }
+                    false
+                }
+
+                let mut used_connector_indexes = vec![false; available_port_guids.len()];
+                match_requirements(0, &requirement_options, &mut used_connector_indexes)
+            };
+
+        let candidate_type_available_port_guids = |candidate_type: &Type| -> Vec<String> {
+            candidate_type
+                .connectors
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .map(|connector| {
+                    connector
+                        .port
+                        .as_ref()
+                        .map(|port| port.guid.clone())
+                        .unwrap_or_default()
+                })
+                .collect()
+        };
+
+        let candidate_design_available_port_guids = |candidate_design: &Design| -> Vec<String> {
+            let mut consumed_connector_keys: HashSet<String> = HashSet::new();
+            for connection in candidate_design.connections.as_deref().unwrap_or(&[]) {
+                for side in [&connection.connected, &connection.connecting] {
+                    if let Some(connector) = &side.connector {
+                        consumed_connector_keys
+                            .insert(format!("{}::{}", side.piece.guid, connector.guid));
+                    }
+                }
+            }
+
+            let mut available_port_guids = Vec::new();
+            for piece in candidate_design.pieces.as_deref().unwrap_or(&[]) {
+                let type_guid = match piece.type_ref.as_ref() {
+                    Some(kind) => kind.guid.as_str(),
+                    None => continue,
+                };
+                let candidate_type = match types_map.get(type_guid) {
+                    Some(kind) => *kind,
+                    None => continue,
+                };
+                for connector in candidate_type.connectors.as_deref().unwrap_or(&[]) {
+                    if consumed_connector_keys
+                        .contains(format!("{}::{}", piece.guid, connector.guid).as_str())
+                    {
+                        continue;
+                    }
+                    available_port_guids.push(
+                        connector
+                            .port
+                            .as_ref()
+                            .map(|port| port.guid.clone())
+                            .unwrap_or_default(),
+                    );
+                }
+            }
+            available_port_guids
+        };
+
+        if piece_guids.is_empty() {
+            let type_guids = types
+                .iter()
+                .filter(|candidate_type| {
+                    candidate_type_available_port_guids(candidate_type).is_empty()
+                })
+                .map(|candidate_type| candidate_type.guid.clone())
+                .collect();
+            let design_guids = designs
+                .iter()
+                .filter(|candidate_design| {
+                    candidate_design_available_port_guids(candidate_design).is_empty()
+                })
+                .map(|candidate_design| candidate_design.guid.clone())
+                .collect();
+            return (type_guids, design_guids);
+        }
+
+        let is_valid_candidate = |available_port_guids: &[String]| -> bool {
+            can_satisfy_requirements(&required_port_guids, available_port_guids)
+        };
+
+        let type_guids = types
+            .iter()
+            .filter(|candidate_type| {
+                let available_port_guids = candidate_type_available_port_guids(candidate_type);
+                is_valid_candidate(&available_port_guids)
+            })
+            .map(|candidate_type| candidate_type.guid.clone())
+            .collect();
+        let design_guids = designs
+            .iter()
+            .filter(|candidate_design| {
+                let available_port_guids = candidate_design_available_port_guids(candidate_design);
+                is_valid_candidate(&available_port_guids)
+            })
+            .map(|candidate_design| candidate_design.guid.clone())
+            .collect();
 
         (type_guids, design_guids)
     }
@@ -15199,94 +15258,343 @@ mod tests {
 
             mod find_replaceable {
                 use super::*;
+                use std::collections::HashMap;
 
-                #[derive(serde::Deserialize)]
-                struct Selection {
-                    pieces: Vec<PieceId>,
-                    connections: Vec<ConnectionId>,
+                #[test]
+                pub fn synthetic_selection_enforces_distinct_connectors_and_free_design_connectors()
+                {
+                    let kit: Kit = serde_json::from_value(serde_json::json!({
+                        "guid": "synthetic-kit",
+                        "name": "synthetic-kit",
+                        "ports": [
+                            { "guid": "port-L", "name": "port-L", "compatiblePorts": [{ "guid": "port-L-compatible" }] },
+                            { "guid": "port-L-compatible", "name": "port-L-compatible", "compatiblePorts": [{ "guid": "port-L" }] },
+                            { "guid": "port-G", "name": "port-G" }
+                        ],
+                        "types": [
+                            {
+                                "guid": "selected-external-lg",
+                                "name": "selected-external-lg",
+                                "connectors": []
+                            },
+                            {
+                                "guid": "selected-isolated-lg",
+                                "name": "selected-isolated-lg",
+                                "connectors": [
+                                    { "guid": "selected-isolated-lg-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L" } },
+                                    { "guid": "selected-isolated-lg-connector-1", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } }
+                                ]
+                            },
+                            {
+                                "guid": "selected-external-ll",
+                                "name": "selected-external-ll",
+                                "connectors": []
+                            },
+                            {
+                                "guid": "neighbor-l",
+                                "name": "neighbor-l",
+                                "connectors": [
+                                    { "guid": "neighbor-l-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L" } }
+                                ]
+                            },
+                            {
+                                "guid": "neighbor-g",
+                                "name": "neighbor-g",
+                                "connectors": [
+                                    { "guid": "neighbor-g-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } }
+                                ]
+                            },
+                            {
+                                "guid": "candidate-l",
+                                "name": "candidate-l",
+                                "connectors": [
+                                    { "guid": "candidate-l-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L" } }
+                                ]
+                            },
+                            {
+                                "guid": "candidate-lg",
+                                "name": "candidate-lg",
+                                "connectors": [
+                                    { "guid": "candidate-lg-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L-compatible" } },
+                                    { "guid": "candidate-lg-connector-1", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } }
+                                ]
+                            },
+                            {
+                                "guid": "candidate-lg-lg",
+                                "name": "candidate-lg-lg",
+                                "connectors": [
+                                    { "guid": "candidate-lg-lg-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L-compatible" } },
+                                    { "guid": "candidate-lg-lg-connector-1", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } },
+                                    { "guid": "candidate-lg-lg-connector-2", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L" } },
+                                    { "guid": "candidate-lg-lg-connector-3", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } }
+                                ]
+                            },
+                            {
+                                "guid": "candidate-ll",
+                                "name": "candidate-ll",
+                                "connectors": [
+                                    { "guid": "candidate-ll-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L" } },
+                                    { "guid": "candidate-ll-connector-1", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L-compatible" } }
+                                ]
+                            },
+                            {
+                                "guid": "candidate-g",
+                                "name": "candidate-g",
+                                "connectors": [
+                                    { "guid": "candidate-g-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } }
+                                ]
+                            }
+                        ],
+                        "designs": [
+                            {
+                                "guid": "root-design",
+                                "name": "root-design",
+                                "pieces": [
+                                    { "guid": "piece-external-lg", "type": { "guid": "selected-external-lg" } },
+                                    { "guid": "piece-isolated-lg", "type": { "guid": "selected-isolated-lg" } },
+                                    { "guid": "piece-external-ll", "type": { "guid": "selected-external-ll" } },
+                                    { "guid": "neighbor-piece-l", "type": { "guid": "neighbor-l" } },
+                                    { "guid": "neighbor-piece-g", "type": { "guid": "neighbor-g" } },
+                                    { "guid": "neighbor-piece-l-a", "type": { "guid": "neighbor-l" } },
+                                    { "guid": "neighbor-piece-l-b", "type": { "guid": "neighbor-l" } }
+                                ],
+                                "connections": [
+                                    { "guid": "external-lg-l", "connected": { "piece": { "guid": "piece-external-lg" }, "connector": { "guid": "selected-external-lg-connector-0" } }, "connecting": { "piece": { "guid": "neighbor-piece-l" }, "connector": { "guid": "neighbor-l-connector-0" } } },
+                                    { "guid": "external-lg-g", "connected": { "piece": { "guid": "piece-external-lg" }, "connector": { "guid": "selected-external-lg-connector-1" } }, "connecting": { "piece": { "guid": "neighbor-piece-g" }, "connector": { "guid": "neighbor-g-connector-0" } } },
+                                    { "guid": "external-ll-a", "connected": { "piece": { "guid": "piece-external-ll" }, "connector": { "guid": "selected-external-ll-connector-0" } }, "connecting": { "piece": { "guid": "neighbor-piece-l-a" }, "connector": { "guid": "neighbor-l-connector-0" } } },
+                                    { "guid": "external-ll-b", "connected": { "piece": { "guid": "piece-external-ll" }, "connector": { "guid": "selected-external-ll-connector-1" } }, "connecting": { "piece": { "guid": "neighbor-piece-l-b" }, "connector": { "guid": "neighbor-l-connector-0" } } }
+                                ]
+                            },
+                            {
+                                "guid": "candidate-design-free-lg",
+                                "name": "candidate-design-free-lg",
+                                "pieces": [
+                                    { "guid": "candidate-design-free-piece", "type": { "guid": "candidate-lg" } }
+                                ]
+                            },
+                            {
+                                "guid": "candidate-design-consumed-lg",
+                                "name": "candidate-design-consumed-lg",
+                                "pieces": [
+                                    { "guid": "candidate-design-consumed-a", "type": { "guid": "candidate-lg" } },
+                                    { "guid": "candidate-design-consumed-b", "type": { "guid": "candidate-l" } }
+                                ],
+                                "connections": [
+                                    { "guid": "candidate-design-consumed-link", "connected": { "piece": { "guid": "candidate-design-consumed-a" }, "connector": { "guid": "candidate-lg-connector-0" } }, "connecting": { "piece": { "guid": "candidate-design-consumed-b" }, "connector": { "guid": "candidate-l-connector-0" } } }
+                                ]
+                            }
+                        ]
+                    })).expect("Synthetic kit should deserialize");
+
+                    let double_left_selection = vec!["piece-external-ll".to_string()];
+                    let (double_left_type_guids, _) =
+                        find_replaceable_types_in_designs_for_pieces_in_design(
+                            &kit,
+                            "root-design",
+                            &double_left_selection,
+                        );
+                    assert!(double_left_type_guids.contains(&"candidate-ll".to_string()));
+                    assert!(!double_left_type_guids.contains(&"candidate-l".to_string()));
+                    assert!(!double_left_type_guids.contains(&"candidate-g".to_string()));
+
+                    let left_and_gable_selection = vec!["piece-external-lg".to_string()];
+                    let (left_and_gable_type_guids, left_and_gable_design_guids) =
+                        find_replaceable_types_in_designs_for_pieces_in_design(
+                            &kit,
+                            "root-design",
+                            &left_and_gable_selection,
+                        );
+                    assert!(left_and_gable_type_guids.contains(&"candidate-lg".to_string()));
+                    assert!(!left_and_gable_type_guids.contains(&"candidate-l".to_string()));
+                    assert!(left_and_gable_design_guids
+                        .contains(&"candidate-design-free-lg".to_string()));
+                    assert!(!left_and_gable_design_guids
+                        .contains(&"candidate-design-consumed-lg".to_string()));
+
+                    let isolated_selection = vec!["piece-isolated-lg".to_string()];
+                    let (isolated_type_guids, _) =
+                        find_replaceable_types_in_designs_for_pieces_in_design(
+                            &kit,
+                            "root-design",
+                            &isolated_selection,
+                        );
+                    assert!(isolated_type_guids.contains(&"candidate-lg".to_string()));
+                    assert!(!isolated_type_guids.contains(&"candidate-l".to_string()));
+
+                    let multiple_piece_selection = vec![
+                        "piece-external-lg".to_string(),
+                        "piece-isolated-lg".to_string(),
+                    ];
+                    let (multiple_piece_type_guids, _) =
+                        find_replaceable_types_in_designs_for_pieces_in_design(
+                            &kit,
+                            "root-design",
+                            &multiple_piece_selection,
+                        );
+                    assert!(multiple_piece_type_guids.contains(&"candidate-lg".to_string()));
+                    assert!(!multiple_piece_type_guids.contains(&"candidate-l".to_string()));
                 }
 
                 #[test]
-                pub fn selection_asset_returns_compatible_type_and_design_guids() {
+                pub fn connector_level_boundary_matching_shrinks_candidates_as_demand_grows() {
                     let kit = load_kit("metabolism.kit.semio.json");
                     let designs = kit.designs.as_ref().expect("Kit has no designs");
                     let design = designs
                         .iter()
                         .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
                         .expect("Nakagin Capsule Tower design not found");
-                    let selection: Selection = load_json("nakagin-capsule-tower.copy.design.selection.semio.json");
+                    let pieces = design.pieces.as_ref().expect("Design has no pieces");
+                    let types = kit.types.as_ref().expect("Kit has no types");
 
-                    assert_eq!(selection.pieces.len(), 10, "Expected 10 selection pieces");
-                    assert_eq!(selection.connections.len(), 9, "Expected 9 selection connections");
+                    let name_to_guid: HashMap<&str, &str> = pieces
+                        .iter()
+                        .filter_map(|piece| {
+                            piece
+                                .name
+                                .as_deref()
+                                .map(|name| (name, piece.guid.as_str()))
+                        })
+                        .collect();
+                    let type_name_by_guid: HashMap<&str, &str> = types
+                        .iter()
+                        .map(|kind| (kind.guid.as_str(), kind.name.as_str()))
+                        .collect();
 
-                    let piece_guids: Vec<String> = selection.pieces.into_iter().map(|piece| piece.guid).collect();
-                    let (type_guids, design_guids) = find_replaceable_types_in_designs_for_pieces_in_design(
-                        &kit,
-                        &design.guid,
-                        &piece_guids,
+                    let type_names_for_selection = |piece_names: &[&str]| -> Vec<String> {
+                        let piece_guids: Vec<String> = piece_names
+                            .iter()
+                            .map(|piece_name| {
+                                name_to_guid
+                                    .get(piece_name)
+                                    .expect("Piece not found")
+                                    .to_string()
+                            })
+                            .collect();
+                        let (type_guids, _) =
+                            find_replaceable_types_in_designs_for_pieces_in_design(
+                                &kit,
+                                &design.guid,
+                                &piece_guids,
+                            );
+                        type_guids
+                            .iter()
+                            .map(|type_guid| {
+                                type_name_by_guid
+                                    .get(type_guid.as_str())
+                                    .expect("Type not found")
+                                    .to_string()
+                            })
+                            .collect()
+                    };
+                    let unique_type_names_for_selection = |piece_names: &[&str]| -> Vec<String> {
+                        let mut unique_type_names = type_names_for_selection(piece_names);
+                        unique_type_names.sort();
+                        unique_type_names.dedup();
+                        unique_type_names
+                    };
+
+                    let single_capsule_names = type_names_for_selection(&["cs_sl2_d0_t_f9_b_c1"]);
+                    let two_capsule_names =
+                        type_names_for_selection(&["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"]);
+                    let four_capsule_names = type_names_for_selection(&[
+                        "cs_sl1_d0_t_f9_b_c1",
+                        "cs_sl1_d1_t_f9_b_c1",
+                        "cs_sl2_d0_t_f9_b_c1",
+                        "cs_sl2_d1_t_f9_b_c1",
+                    ]);
+                    let eight_capsule_names = type_names_for_selection(&[
+                        "cs_sl0_d0_t_f0_b_c0",
+                        "cs_sl0_d1_t_f0_b_c0",
+                        "cs_sl0_d2_t_f0_b_c0",
+                        "cs_sl0_d3_t_f0_b_c0",
+                        "cs_sl1_d0_t_f0_b_c0",
+                        "cs_sl1_d1_t_f0_b_c0",
+                        "cs_sl2_d0_t_f0_b_c0",
+                        "cs_sl2_d1_t_f0_b_c0",
+                    ]);
+                    let tambour_piece_guid = name_to_guid
+                        .get("t_f9_b_c1")
+                        .expect("Tambour piece not found")
+                        .to_string();
+                    let (tambour_type_guids, tambour_design_guids) =
+                        find_replaceable_types_in_designs_for_pieces_in_design(
+                            &kit,
+                            &design.guid,
+                            &[tambour_piece_guid],
+                        );
+
+                    assert!(single_capsule_names.len() > two_capsule_names.len());
+                    assert!(two_capsule_names.len() >= four_capsule_names.len());
+                    assert!(four_capsule_names.len() >= eight_capsule_names.len());
+
+                    for forbidden_family in ["\\", "/", "q", "p", "J", "L", "s", "z"] {
+                        assert!(!two_capsule_names
+                            .iter()
+                            .any(|name| name == forbidden_family));
+                        assert!(!four_capsule_names
+                            .iter()
+                            .any(|name| name == forbidden_family));
+                        assert!(!eight_capsule_names
+                            .iter()
+                            .any(|name| name == forbidden_family));
+                    }
+                    assert!(!four_capsule_names.iter().any(|name| name == "Bridge"));
+                    assert!(!eight_capsule_names.iter().any(|name| name == "Bridge"));
+
+                    assert_eq!(
+                        unique_type_names_for_selection(&[
+                            "cs_sl2_d0_t_f8_b_c1",
+                            "cs_sl2_d0_t_f9_b_c1",
+                        ]),
+                        vec![
+                            "Bridge".to_string(),
+                            "Cylindric Tambour".to_string(),
+                            "First Storey".to_string(),
+                            "Last Storey".to_string(),
+                            "Single Storey".to_string(),
+                            "Tambour".to_string(),
+                        ]
                     );
-
-                    let expected_type_guids = vec![
-                        "cb25017e-5505-4677-a71e-cccbc7a5be7d".to_string(),
-                        "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5".to_string(),
-                        "e1878572-0fe1-4780-b877-90df9b25d31f".to_string(),
-                        "357b841f-b121-463c-88a6-153d7cbf272f".to_string(),
-                        "818f2a23-569b-47cb-a69c-147694beb815".to_string(),
-                        "6ed26ed1-dffa-40d3-b405-d49b35a90fcd".to_string(),
-                        "214a30f8-adfc-40de-840b-151d9f7e17dd".to_string(),
-                        "cc9a4330-537f-49c2-a70d-5e6383b535f5".to_string(),
-                        "f1779b1f-2324-4bad-86da-773a1e90b57c".to_string(),
-                        "3697e115-c2e7-4279-b09a-03e1d1e9c21e".to_string(),
-                        "7ca051a6-8752-4ff2-9430-71a80114a88e".to_string(),
-                        "6cbd2d9c-5710-452c-af7a-6859cfb0151a".to_string(),
-                        "af980393-c613-47c2-88a4-461298b0b8f9".to_string(),
-                        "8ee84149-4198-4223-ae89-3021ad2950c7".to_string(),
-                        "5aa65d97-778b-4449-be63-7948730d64bc".to_string(),
-                        "bfb4b43c-8e75-4265-b64a-7ebe4f62e099".to_string(),
-                        "c90e216d-d899-4709-995b-5abfcce75bcb".to_string(),
-                        "eefe6d3e-f18d-474e-b82e-04bb406d290f".to_string(),
-                        "ccb67521-5ca1-42cf-bd81-4058c6c5348d".to_string(),
-                        "4b8563c5-37ad-49e8-9b6c-d635378bffce".to_string(),
-                        "5af2d54e-309c-46a6-8454-c91b957a59f9".to_string(),
-                        "a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd".to_string(),
-                        "aa34760a-d543-46c8-afa1-d83a38d42f2b".to_string(),
-                        "f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364".to_string(),
-                        "93b1cab5-ad4b-422b-a0e0-8b0de23a8534".to_string(),
-                        "5ee4ad14-091f-42f4-a357-09fc16c3ae39".to_string(),
-                        "34ddd546-4df3-480c-9aa3-880fb51b8016".to_string(),
-                        "e913ffae-6ae9-44e0-b516-1cc763bfefe7".to_string(),
-                        "7ec14f29-b730-4000-b66d-aa304767e8c1".to_string(),
-                        "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5".to_string(),
-                        "67917609-d54d-4afc-9f9a-6e3abc0d18a4".to_string(),
-                        "94c31826-ae8e-432a-9a27-73346f49c704".to_string(),
-                        "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7".to_string(),
-                        "5b3e2b28-e331-420b-83bd-9a8c05ac2918".to_string(),
-                        "49233ca9-f005-4d15-b515-2a18a94dd7a8".to_string(),
-                        "1b1fcf80-0acc-4456-bc16-71f69c5df571".to_string(),
-                        "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7".to_string(),
-                        "2951ab00-3891-4d50-b887-26f1d308bfef".to_string(),
-                        "0271dcc8-c961-4ecf-8591-9f8027252174".to_string(),
-                        "277e1960-c3c8-4186-9a83-8f7eb66bcf28".to_string(),
-                    ];
-                    let expected_design_guids = vec![
-                        "9a890dd4-0a9c-48ac-920a-9e62666465ef".to_string(),
-                        "b3f11a7f-0660-48c6-84ed-41d3009a6bdf".to_string(),
-                        "38f0f014-ceba-42df-9339-4aab84bfbc1f".to_string(),
-                        "c3ee87b6-7453-49bc-8d7b-9405892f9452".to_string(),
-                        "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8".to_string(),
-                        "d7e12638-9749-471b-937e-a6e5523778ff".to_string(),
-                        "79fa8945-b47d-4896-965f-f921067cbae2".to_string(),
-                        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf".to_string(),
-                        "019ab4e0-8da8-7217-946f-5b5a83aca0e3".to_string(),
-                        "019ab4e0-cb2a-7613-a16a-ae086e331c95".to_string(),
-                    ];
-
-                    assert_eq!(type_guids, expected_type_guids);
-                    assert_eq!(design_guids, expected_design_guids);
+                    assert_eq!(
+                        unique_type_names_for_selection(&[
+                            "cs_sl1_d0_t_f9_b_c1",
+                            "cs_sl1_d1_t_f9_b_c1",
+                            "cs_sl2_d0_t_f9_b_c1",
+                            "cs_sl2_d1_t_f9_b_c1",
+                        ]),
+                        vec![
+                            "Cylindric Tambour".to_string(),
+                            "First Storey".to_string(),
+                            "Last Storey".to_string(),
+                            "Single Storey".to_string(),
+                            "Tambour".to_string(),
+                        ]
+                    );
+                    assert_eq!(
+                        unique_type_names_for_selection(&[
+                            "cs_sl0_d0_t_f0_b_c0",
+                            "cs_sl0_d1_t_f0_b_c0",
+                            "cs_sl0_d2_t_f0_b_c0",
+                            "cs_sl0_d3_t_f0_b_c0",
+                            "cs_sl1_d0_t_f0_b_c0",
+                            "cs_sl1_d1_t_f0_b_c0",
+                            "cs_sl2_d0_t_f0_b_c0",
+                            "cs_sl2_d1_t_f0_b_c0",
+                        ]),
+                        vec![
+                            "Cylindric Tambour".to_string(),
+                            "First Storey".to_string(),
+                            "Last Storey".to_string(),
+                            "Single Storey".to_string(),
+                            "Tambour".to_string(),
+                        ]
+                    );
+                    assert!(tambour_type_guids.is_empty());
+                    assert_eq!(tambour_design_guids.len(), 3);
                 }
 
                 #[test]
-                pub fn connected_piece() {
+                pub fn connected_piece_yields_only_exact_design_matches() {
                     let kit = load_kit("metabolism.kit.semio.json");
                     let designs = kit.designs.as_ref().expect("Kit has no designs");
                     let design = designs
@@ -15297,36 +15605,20 @@ mod tests {
                     let piece =
                         find_piece_by_name(pieces, "t_f1_b_c0").expect("Piece t_f1_b_c0 not found");
 
-                    let (type_guids, _design_guids) =
+                    let (type_guids, design_guids) =
                         find_replaceable_types_in_designs_for_pieces_in_design(
                             &kit,
                             &design.guid,
                             &[piece.guid.clone()],
                         );
 
-                    assert!(
-                        !type_guids.is_empty(),
-                        "Should find replaceable types for connected piece"
-                    );
-
-                    let types = kit.types.as_ref().unwrap();
-                    let tambour_type = types
-                        .iter()
-                        .find(|t| t.name == "Tambour")
-                        .expect("Tambour type not found");
-                    assert!(
-                        type_guids.contains(&tambour_type.guid),
-                        "Tambour should be in replaceable types"
-                    );
-
-                    let capsule_type = types
-                        .iter()
-                        .find(|t| t.name == "Capsule")
-                        .expect("Capsule type not found");
-                    assert!(
-                        !type_guids.contains(&capsule_type.guid),
-                        "Capsule should NOT be in replaceable types (no connectors)"
-                    );
+                    let expected_design_guids = vec![
+                        "d7e12638-9749-471b-937e-a6e5523778ff".to_string(),
+                        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf".to_string(),
+                        "019ab4e0-8da8-7217-946f-5b5a83aca0e3".to_string(),
+                    ];
+                    assert!(type_guids.is_empty(), "Expected no replaceable types");
+                    assert_eq!(design_guids, expected_design_guids);
                 }
 
                 #[test]
@@ -15419,7 +15711,7 @@ mod tests {
                 }
 
                 #[test]
-                pub fn multiple_selected_pieces() {
+                pub fn multiple_selected_pieces_yield_only_exact_design_matches() {
                     let kit = load_kit("metabolism.kit.semio.json");
                     let designs = kit.designs.as_ref().expect("Kit has no designs");
                     let design = designs
@@ -15432,27 +15724,20 @@ mod tests {
                     let piece2 =
                         find_piece_by_name(pieces, "t_f2_b_c0").expect("Piece t_f2_b_c0 not found");
 
-                    let (type_guids, _design_guids) =
+                    let (type_guids, design_guids) =
                         find_replaceable_types_in_designs_for_pieces_in_design(
                             &kit,
                             &design.guid,
                             &[piece1.guid.clone(), piece2.guid.clone()],
                         );
 
-                    assert!(
-                        !type_guids.is_empty(),
-                        "Should find replaceable types for multiple pieces"
-                    );
-
-                    let types = kit.types.as_ref().unwrap();
-                    let tambour_type = types
-                        .iter()
-                        .find(|t| t.name == "Tambour")
-                        .expect("Tambour type not found");
-                    assert!(
-                        type_guids.contains(&tambour_type.guid),
-                        "Tambour should be in replaceable types for multiple pieces"
-                    );
+                    let expected_design_guids = vec![
+                        "d7e12638-9749-471b-937e-a6e5523778ff".to_string(),
+                        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf".to_string(),
+                        "019ab4e0-8da8-7217-946f-5b5a83aca0e3".to_string(),
+                    ];
+                    assert!(type_guids.is_empty(), "Expected no replaceable types");
+                    assert_eq!(design_guids, expected_design_guids);
                 }
 
                 #[test]

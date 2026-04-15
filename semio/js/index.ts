@@ -6631,17 +6631,19 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
 
 /**
  * Finds replaceable types and designs for the selected pieces in a design.
- * Specs: Looks at pieces in the selection and finds all connections attached to them.
- * If connections found: looks at the types of the connected (other) pieces and finds all connectors
- * within those types. Gets the ports of these connectors and finds all compatible ports.
- * Suggests types that have connectors with compatible ports.
- * Only suggests if a replaceable type/design exists for every connection.
- * If no connections found: suggests types with same or compatible ports as the selected pieces.
+ * Specs: A candidate is valid only when the whole selection boundary requirement multiset can be
+ * injectively matched to distinct compatible candidate connectors. Boundary requirements use the
+ * actual opposite-side connector ports, isolated selections use the selected pieces' own kind
+ * connectors with multiplicity, and candidate designs only expose connectors not already consumed by
+ * internal design connections.
  **/
 export const findReplaceableTypesInDesignsForPiecesInDesign = (design: Design, designs: Design[], types: Type[], ports: Port[], selection: { pieces: string[] }): { types: string[]; designs: string[] } => {
   const selectedPieceSet = new Set(selection.pieces);
   const pieces = design.pieces ?? [];
   const connections = design.connections ?? [];
+
+  const pieceMap = new Map<string, Piece>();
+  for (const piece of pieces) pieceMap.set(piece.guid, piece);
 
   const portMap = new Map<string, Port>();
   for (const p of ports) portMap.set(p.guid, p);
@@ -6649,156 +6651,110 @@ export const findReplaceableTypesInDesignsForPiecesInDesign = (design: Design, d
   const typeMap = new Map<string, Type>();
   for (const t of types) typeMap.set(t.guid, t);
 
-  const checkPortCompatibility = (portGuid1: string | undefined, portGuid2: string | undefined): boolean => {
-    if (!portGuid1 || !portGuid2) return true;
-    if (portGuid1 === portGuid2) return true;
-    const p1 = portMap.get(portGuid1);
-    const p2 = portMap.get(portGuid2);
-    if (!p1 || !p2) return true;
-    const p1Compat = p1.compatiblePorts ?? [];
-    const p2Compat = p2.compatiblePorts ?? [];
-    if (p1Compat.length === 0 && p2Compat.length === 0) return true;
-    if (p1Compat.length === 0) return p2Compat.some((c) => c.guid === portGuid1);
-    if (p2Compat.length === 0) return p1Compat.some((c) => c.guid === portGuid2);
-    return p1Compat.some((c) => c.guid === portGuid2) || p2Compat.some((c) => c.guid === portGuid1);
+  const checkPortCompatibility = (candidatePortGuid: string, requiredPortGuid: string): boolean => {
+    if (!candidatePortGuid || !requiredPortGuid) return false;
+    if (candidatePortGuid === requiredPortGuid) return true;
+    const candidatePort = portMap.get(candidatePortGuid);
+    const requiredPort = portMap.get(requiredPortGuid);
+    if (!candidatePort || !requiredPort) return false;
+    return (candidatePort.compatiblePorts ?? []).some((compatiblePort) => compatiblePort.guid === requiredPortGuid)
+      || (requiredPort.compatiblePorts ?? []).some((compatiblePort) => compatiblePort.guid === candidatePortGuid);
   };
 
-  // Build compatible port set for a given type: all ports compatible with any of its connector ports
-  const buildCompatiblePortSet = (type: Type): Set<string> => {
-    const connectorPorts = new Set<string>();
-    for (const c of type.connectors ?? []) {
-      if (c.port?.guid) connectorPorts.add(c.port.guid);
+  const getConnectorPortGuid = (typeGuid: string | undefined, connectorGuid: string | undefined): string => {
+    if (!typeGuid || !connectorGuid) return "";
+    const type = typeMap.get(typeGuid);
+    const connector = type?.connectors?.find((candidateConnector) => candidateConnector.guid === connectorGuid);
+    return connector?.port?.guid ?? "";
+  };
+
+  const getOwnRequirementPortGuids = (pieceGuid: string): string[] => {
+    const piece = pieceMap.get(pieceGuid);
+    const type = piece?.type?.guid ? typeMap.get(piece.type.guid) : undefined;
+    return (type?.connectors ?? []).map((connector) => connector.port?.guid ?? "");
+  };
+
+  const getBoundaryRequirementPortGuids = (): string[] => {
+    const requirementPortGuids: string[] = [];
+    for (const connection of connections) {
+      const connectedSelected = selectedPieceSet.has(connection.connected.piece.guid);
+      const connectingSelected = selectedPieceSet.has(connection.connecting.piece.guid);
+      if (connectedSelected === connectingSelected) continue;
+
+      const otherSide = connectedSelected ? connection.connecting : connection.connected;
+
+      const otherPiece = pieceMap.get(otherSide.piece.guid);
+      requirementPortGuids.push(getConnectorPortGuid(otherPiece?.type?.guid, otherSide.connector?.guid));
     }
-    const compatSet = new Set<string>();
-    for (const cp of connectorPorts) {
-      for (const p of ports) {
-        if (checkPortCompatibility(cp, p.guid)) {
-          compatSet.add(p.guid);
-        }
+    return requirementPortGuids;
+  };
+
+  const getSelectionOwnRequirementPortGuids = (): string[] => selection.pieces.flatMap((pieceGuid) => getOwnRequirementPortGuids(pieceGuid));
+
+  const canSatisfyRequirements = (requiredPortGuids: string[], availablePortGuids: string[]): boolean => {
+    if (requiredPortGuids.length === 0) return true;
+    if (availablePortGuids.length < requiredPortGuids.length) return false;
+
+    const requirementOptions = requiredPortGuids.map((requiredPortGuid) => ({
+      connectorIndexes: availablePortGuids.flatMap((availablePortGuid, connectorIndex) => (checkPortCompatibility(availablePortGuid, requiredPortGuid) ? [connectorIndex] : [])),
+    })).sort((leftRequirement, rightRequirement) => leftRequirement.connectorIndexes.length - rightRequirement.connectorIndexes.length);
+
+    if (requirementOptions.some((requirementOption) => requirementOption.connectorIndexes.length === 0)) return false;
+
+    const usedConnectorIndexes = new Array(availablePortGuids.length).fill(false);
+    const matchRequirement = (requirementOptionIndex: number): boolean => {
+      if (requirementOptionIndex >= requirementOptions.length) return true;
+      for (const connectorIndex of requirementOptions[requirementOptionIndex].connectorIndexes) {
+        if (usedConnectorIndexes[connectorIndex]) continue;
+        usedConnectorIndexes[connectorIndex] = true;
+        if (matchRequirement(requirementOptionIndex + 1)) return true;
+        usedConnectorIndexes[connectorIndex] = false;
+      }
+      return false;
+    };
+
+    return matchRequirement(0);
+  };
+
+  const candidateTypeAvailablePortGuids = (candidateType: Type): string[] => (candidateType.connectors ?? []).map((connector) => connector.port?.guid ?? "");
+
+  const candidateDesignAvailablePortGuids = (candidateDesign: Design): string[] => {
+    const consumedConnectorKeys = new Set<string>();
+    for (const connection of candidateDesign.connections ?? []) {
+      for (const side of [connection.connected, connection.connecting]) {
+        if (side.piece.guid && side.connector?.guid) consumedConnectorKeys.add(`${side.piece.guid}::${side.connector.guid}`);
       }
     }
-    return compatSet;
-  };
 
-  const hasConnectorInSet = (connectors: Connector[], portSet: Set<string>): boolean => {
-    return connectors.some((c) => c.port?.guid && portSet.has(c.port.guid));
-  };
-
-  // Find external connections
-  type ExternalConnection = { otherTypeGuid: string };
-  const externalConnections: ExternalConnection[] = [];
-  let hasExternalConnections = false;
-
-  for (const pieceGuid of selection.pieces) {
-    const pieceConns = connections.filter((c) => c.connected.piece.guid === pieceGuid || c.connecting.piece.guid === pieceGuid);
-    for (const conn of pieceConns) {
-      const isConnectedSide = conn.connected.piece.guid === pieceGuid;
-      const otherPieceGuid = isConnectedSide ? conn.connecting.piece.guid : conn.connected.piece.guid;
-      if (selectedPieceSet.has(otherPieceGuid)) continue;
-      hasExternalConnections = true;
-      const otherPiece = pieces.find((p) => p.guid === otherPieceGuid);
-      if (!otherPiece || !otherPiece.type?.guid) continue;
-      externalConnections.push({ otherTypeGuid: otherPiece.type.guid });
+    const availablePortGuids: string[] = [];
+    for (const piece of candidateDesign.pieces ?? []) {
+      const type = piece.type?.guid ? typeMap.get(piece.type.guid) : undefined;
+      for (const connector of type?.connectors ?? []) {
+        if (consumedConnectorKeys.has(`${piece.guid}::${connector.guid}`)) continue;
+        availablePortGuids.push(connector.port?.guid ?? "");
+      }
     }
+    return availablePortGuids;
+  };
+
+  if (selection.pieces.length === 0) {
+    return {
+      types: types.filter((candidateType) => candidateTypeAvailablePortGuids(candidateType).length === 0).map((candidateType) => candidateType.guid),
+      designs: designs.filter((candidateDesign) => candidateDesignAvailablePortGuids(candidateDesign).length === 0).map((candidateDesign) => candidateDesign.guid),
+    };
   }
 
-  if (hasExternalConnections) {
-    // Build per-connection compatible port sets (cached by type)
-    const compatSetsByType = new Map<string, Set<string>>();
-    for (const ec of externalConnections) {
-      if (!compatSetsByType.has(ec.otherTypeGuid)) {
-        const otherType = typeMap.get(ec.otherTypeGuid);
-        if (otherType) {
-          compatSetsByType.set(ec.otherTypeGuid, buildCompatiblePortSet(otherType));
-        }
-      }
-    }
+  const requiredPortGuids = (() => {
+    const boundaryRequirementPortGuids = getBoundaryRequirementPortGuids();
+    return boundaryRequirementPortGuids.length > 0 ? boundaryRequirementPortGuids : getSelectionOwnRequirementPortGuids();
+  })();
 
-    // For each connection, candidate must have at least one connector in the compatible set
-    const perConnectionSets: Set<string>[] = externalConnections.map((ec) => compatSetsByType.get(ec.otherTypeGuid) ?? new Set());
+  const isValidCandidate = (availablePortGuids: string[]): boolean => canSatisfyRequirements(requiredPortGuids, availablePortGuids);
 
-    const validTypes: string[] = [];
-    for (const candidateType of types) {
-      const candidateConnectors = candidateType.connectors ?? [];
-      if (candidateConnectors.length === 0) continue;
-      const passesAll = perConnectionSets.every((cs) => hasConnectorInSet(candidateConnectors, cs));
-      if (passesAll) {
-        validTypes.push(candidateType.guid);
-      }
-    }
-
-    const validDesigns: string[] = [];
-    for (const candidateDesign of designs) {
-      const designConnectors: Connector[] = [];
-      for (const p of candidateDesign.pieces ?? []) {
-        if (!p.type?.guid) continue;
-        const t = typeMap.get(p.type.guid);
-        if (!t) continue;
-        designConnectors.push(...(t.connectors ?? []));
-      }
-      if (designConnectors.length === 0) continue;
-      const passesAll = perConnectionSets.every((cs) => hasConnectorInSet(designConnectors, cs));
-      if (passesAll) {
-        validDesigns.push(candidateDesign.guid);
-      }
-    }
-
-    return { types: validTypes, designs: validDesigns };
-  } else {
-    // No connections: suggest types with same/compatible ports as selected pieces
-    const selectedPorts = new Set<string>();
-    for (const pieceGuid of selection.pieces) {
-      const piece = pieces.find((p) => p.guid === pieceGuid);
-      if (!piece || !piece.type?.guid) continue;
-      const type = typeMap.get(piece.type.guid);
-      if (!type) continue;
-      for (const conn of type.connectors ?? []) {
-        if (conn.port?.guid) selectedPorts.add(conn.port.guid);
-      }
-    }
-
-    // Build compatible set from selected ports
-    const compatSet = new Set<string>();
-    for (const sp of selectedPorts) {
-      for (const p of ports) {
-        if (checkPortCompatibility(sp, p.guid)) {
-          compatSet.add(p.guid);
-        }
-      }
-    }
-
-    const validTypes: string[] = [];
-    for (const candidateType of types) {
-      const candidateConnectors = candidateType.connectors ?? [];
-      if (selectedPorts.size === 0 && candidateConnectors.length === 0) {
-        validTypes.push(candidateType.guid);
-        continue;
-      }
-      if (hasConnectorInSet(candidateConnectors, compatSet)) {
-        validTypes.push(candidateType.guid);
-      }
-    }
-
-    const validDesigns: string[] = [];
-    for (const candidateDesign of designs) {
-      const designConnectors: Connector[] = [];
-      for (const p of candidateDesign.pieces ?? []) {
-        if (!p.type?.guid) continue;
-        const t = typeMap.get(p.type.guid);
-        if (!t) continue;
-        designConnectors.push(...(t.connectors ?? []));
-      }
-      if (selectedPorts.size === 0 && designConnectors.length === 0) {
-        validDesigns.push(candidateDesign.guid);
-        continue;
-      }
-      if (hasConnectorInSet(designConnectors, compatSet)) {
-        validDesigns.push(candidateDesign.guid);
-      }
-    }
-
-    return { types: validTypes, designs: validDesigns };
-  }
+  return {
+    types: types.filter((candidateType) => isValidCandidate(candidateTypeAvailablePortGuids(candidateType))).map((candidateType) => candidateType.guid),
+    designs: designs.filter((candidateDesign) => isValidCandidate(candidateDesignAvailablePortGuids(candidateDesign))).map((candidateDesign) => candidateDesign.guid),
+  };
 };
 
 // #endregion 📐Design
@@ -16363,77 +16319,192 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
   // #region 🔍Find Replaceable Types In Designs Tests
   describe("FindReplaceableTypesInDesigns", () => {
-    it("Nakagin Capsule Tower: selection asset returns compatible type and design guids", () => {
+    it("Synthetic selection enforces distinct compatible connectors and ignores consumed design connectors", () => {
+      const makeConnector = (guid: string, portGuid: string) => ({
+        guid,
+        t: 0,
+        point: { x: 0, y: 0, z: 0 },
+        direction: { x: 1, y: 0, z: 0 },
+        port: { guid: portGuid },
+      }) as Connector;
+      const makeType = (guid: string, connectorPortGuids: string[]) => ({
+        guid,
+        name: guid,
+        connectors: connectorPortGuids.map((connectorPortGuid, connectorIndex) => makeConnector(`${guid}-connector-${connectorIndex}`, connectorPortGuid)),
+      }) as Type;
+      const makePiece = (guid: string, typeGuid: string) => ({ guid, type: { guid: typeGuid } }) as Piece;
+      const makeConnection = (guid: string, connectedPieceGuid: string, connectedConnectorGuid: string, connectingPieceGuid: string, connectingConnectorGuid: string) => ({
+        guid,
+        connected: { piece: { guid: connectedPieceGuid }, connector: { guid: connectedConnectorGuid } },
+        connecting: { piece: { guid: connectingPieceGuid }, connector: { guid: connectingConnectorGuid } },
+      }) as Connection;
+
+      const ports = [
+        { guid: "port-L", compatiblePorts: [{ guid: "port-L-compatible" }] },
+        { guid: "port-L-compatible", compatiblePorts: [{ guid: "port-L" }] },
+        { guid: "port-G" },
+      ] as Port[];
+      const types = [
+        makeType("selected-external-lg", []),
+        makeType("selected-isolated-lg", ["port-L", "port-G"]),
+        makeType("selected-external-ll", []),
+        makeType("neighbor-l", ["port-L"]),
+        makeType("neighbor-g", ["port-G"]),
+        makeType("candidate-l", ["port-L"]),
+        makeType("candidate-lg", ["port-L-compatible", "port-G"]),
+        makeType("candidate-lg-lg", ["port-L-compatible", "port-G", "port-L", "port-G"]),
+        makeType("candidate-ll", ["port-L", "port-L-compatible"]),
+        makeType("candidate-g", ["port-G"]),
+      ];
+      const designs = [
+        {
+          guid: "candidate-design-free-lg",
+          name: "candidate-design-free-lg",
+          pieces: [makePiece("candidate-design-free-piece", "candidate-lg")],
+        },
+        {
+          guid: "candidate-design-consumed-lg",
+          name: "candidate-design-consumed-lg",
+          pieces: [makePiece("candidate-design-consumed-a", "candidate-lg"), makePiece("candidate-design-consumed-b", "candidate-l")],
+          connections: [
+            makeConnection(
+              "candidate-design-consumed-link",
+              "candidate-design-consumed-a",
+              "candidate-lg-connector-0",
+              "candidate-design-consumed-b",
+              "candidate-l-connector-0",
+            ),
+          ],
+        },
+      ] as Design[];
+      const design = {
+        guid: "root-design",
+        name: "root-design",
+        pieces: [
+          makePiece("piece-external-lg", "selected-external-lg"),
+          makePiece("piece-isolated-lg", "selected-isolated-lg"),
+          makePiece("piece-external-ll", "selected-external-ll"),
+          makePiece("neighbor-piece-l", "neighbor-l"),
+          makePiece("neighbor-piece-g", "neighbor-g"),
+          makePiece("neighbor-piece-l-a", "neighbor-l"),
+          makePiece("neighbor-piece-l-b", "neighbor-l"),
+        ],
+        connections: [
+          makeConnection("external-lg-l", "piece-external-lg", "selected-external-lg-connector-0", "neighbor-piece-l", "neighbor-l-connector-0"),
+          makeConnection("external-lg-g", "piece-external-lg", "selected-external-lg-connector-1", "neighbor-piece-g", "neighbor-g-connector-0"),
+          makeConnection("external-ll-a", "piece-external-ll", "selected-external-ll-connector-0", "neighbor-piece-l-a", "neighbor-l-connector-0"),
+          makeConnection("external-ll-b", "piece-external-ll", "selected-external-ll-connector-1", "neighbor-piece-l-b", "neighbor-l-connector-0"),
+        ],
+      } as Design;
+
+      const doubleLeftResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-external-ll"] });
+      expect(doubleLeftResult.types).toContain("candidate-ll");
+      expect(doubleLeftResult.types).not.toContain("candidate-l");
+      expect(doubleLeftResult.types).not.toContain("candidate-g");
+
+      const leftAndGableResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-external-lg"] });
+      expect(leftAndGableResult.types).toContain("candidate-lg");
+      expect(leftAndGableResult.types).not.toContain("candidate-l");
+      expect(leftAndGableResult.designs).toContain("candidate-design-free-lg");
+      expect(leftAndGableResult.designs).not.toContain("candidate-design-consumed-lg");
+
+      const isolatedResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-isolated-lg"] });
+      expect(isolatedResult.types).toContain("candidate-lg");
+      expect(isolatedResult.types).not.toContain("candidate-l");
+
+      const multiplePieceResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-external-lg", "piece-isolated-lg"] });
+      expect(multiplePieceResult.types).toContain("candidate-lg");
+      expect(multiplePieceResult.types).not.toContain("candidate-l");
+    });
+
+    it("Nakagin Capsule Tower: connector-level boundary matching shrinks candidates as demand grows", () => {
       const kit = MetabolismKit as unknown as Kit;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
-      const selection = NakaginCapsuleTowerCopySelection as any;
-      const pieceGuids = (selection.pieces ?? []).map((piece: { guid: string }) => piece.guid);
+      const nameToGuid = new Map((design.pieces ?? []).map((piece) => [piece.name, piece.guid]));
+      const forbiddenSingleConnectorFamilies = new Set(["\\", "/", "q", "p", "J", "L", "s", "z"]);
+      const typeNamesForSelection = (pieceNames: string[]): string[] => {
+        const pieceGuids = pieceNames.map((pieceName) => nameToGuid.get(pieceName) ?? "");
+        const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: pieceGuids });
+        return types.filter((candidateType) => result.types.includes(candidateType.guid)).map((candidateType) => candidateType.name);
+      };
+      const uniqueTypeNamesForSelection = (pieceNames: string[]): string[] => [...new Set(typeNamesForSelection(pieceNames))].sort((leftName, rightName) => leftName.localeCompare(rightName));
 
-      expect(pieceGuids.length).toBe(10);
-      expect((selection.connections ?? []).length).toBe(9);
-
-      const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: pieceGuids });
-
-      expect(result.types).toEqual([
-        "cb25017e-5505-4677-a71e-cccbc7a5be7d",
-        "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
-        "e1878572-0fe1-4780-b877-90df9b25d31f",
-        "357b841f-b121-463c-88a6-153d7cbf272f",
-        "818f2a23-569b-47cb-a69c-147694beb815",
-        "6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
-        "214a30f8-adfc-40de-840b-151d9f7e17dd",
-        "cc9a4330-537f-49c2-a70d-5e6383b535f5",
-        "f1779b1f-2324-4bad-86da-773a1e90b57c",
-        "3697e115-c2e7-4279-b09a-03e1d1e9c21e",
-        "7ca051a6-8752-4ff2-9430-71a80114a88e",
-        "6cbd2d9c-5710-452c-af7a-6859cfb0151a",
-        "af980393-c613-47c2-88a4-461298b0b8f9",
-        "8ee84149-4198-4223-ae89-3021ad2950c7",
-        "5aa65d97-778b-4449-be63-7948730d64bc",
-        "bfb4b43c-8e75-4265-b64a-7ebe4f62e099",
-        "c90e216d-d899-4709-995b-5abfcce75bcb",
-        "eefe6d3e-f18d-474e-b82e-04bb406d290f",
-        "ccb67521-5ca1-42cf-bd81-4058c6c5348d",
-        "4b8563c5-37ad-49e8-9b6c-d635378bffce",
-        "5af2d54e-309c-46a6-8454-c91b957a59f9",
-        "a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd",
-        "aa34760a-d543-46c8-afa1-d83a38d42f2b",
-        "f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364",
-        "93b1cab5-ad4b-422b-a0e0-8b0de23a8534",
-        "5ee4ad14-091f-42f4-a357-09fc16c3ae39",
-        "34ddd546-4df3-480c-9aa3-880fb51b8016",
-        "e913ffae-6ae9-44e0-b516-1cc763bfefe7",
-        "7ec14f29-b730-4000-b66d-aa304767e8c1",
-        "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5",
-        "67917609-d54d-4afc-9f9a-6e3abc0d18a4",
-        "94c31826-ae8e-432a-9a27-73346f49c704",
-        "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
-        "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
-        "49233ca9-f005-4d15-b515-2a18a94dd7a8",
-        "1b1fcf80-0acc-4456-bc16-71f69c5df571",
-        "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7",
-        "2951ab00-3891-4d50-b887-26f1d308bfef",
-        "0271dcc8-c961-4ecf-8591-9f8027252174",
-        "277e1960-c3c8-4186-9a83-8f7eb66bcf28",
+      const singleCapsuleNames = typeNamesForSelection(["cs_sl2_d0_t_f9_b_c1"]);
+      const twoCapsuleNames = typeNamesForSelection(["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"]);
+      const fourCapsuleNames = typeNamesForSelection([
+        "cs_sl1_d0_t_f9_b_c1",
+        "cs_sl1_d1_t_f9_b_c1",
+        "cs_sl2_d0_t_f9_b_c1",
+        "cs_sl2_d1_t_f9_b_c1",
       ]);
-      expect(result.designs).toEqual([
-        "9a890dd4-0a9c-48ac-920a-9e62666465ef",
-        "b3f11a7f-0660-48c6-84ed-41d3009a6bdf",
-        "38f0f014-ceba-42df-9339-4aab84bfbc1f",
-        "c3ee87b6-7453-49bc-8d7b-9405892f9452",
-        "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8",
-        "d7e12638-9749-471b-937e-a6e5523778ff",
-        "79fa8945-b47d-4896-965f-f921067cbae2",
-        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
-        "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
-        "019ab4e0-cb2a-7613-a16a-ae086e331c95",
+      const eightCapsuleNames = typeNamesForSelection([
+        "cs_sl0_d0_t_f0_b_c0",
+        "cs_sl0_d1_t_f0_b_c0",
+        "cs_sl0_d2_t_f0_b_c0",
+        "cs_sl0_d3_t_f0_b_c0",
+        "cs_sl1_d0_t_f0_b_c0",
+        "cs_sl1_d1_t_f0_b_c0",
+        "cs_sl2_d0_t_f0_b_c0",
+        "cs_sl2_d1_t_f0_b_c0",
       ]);
+      const tambourPieceGuid = nameToGuid.get("t_f9_b_c1")!;
+      const tambourResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [tambourPieceGuid] });
+
+      expect(singleCapsuleNames.length).toBeGreaterThan(twoCapsuleNames.length);
+      expect(twoCapsuleNames.length).toBeGreaterThanOrEqual(fourCapsuleNames.length);
+      expect(fourCapsuleNames.length).toBeGreaterThanOrEqual(eightCapsuleNames.length);
+
+      for (const forbiddenFamily of forbiddenSingleConnectorFamilies) {
+        expect(twoCapsuleNames).not.toContain(forbiddenFamily);
+        expect(fourCapsuleNames).not.toContain(forbiddenFamily);
+        expect(eightCapsuleNames).not.toContain(forbiddenFamily);
+      }
+      expect(fourCapsuleNames).not.toContain("Bridge");
+      expect(eightCapsuleNames).not.toContain("Bridge");
+      expect(uniqueTypeNamesForSelection(["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"])).toEqual([
+        "Bridge",
+        "Cylindric Tambour",
+        "First Storey",
+        "Last Storey",
+        "Single Storey",
+        "Tambour",
+      ]);
+      expect(uniqueTypeNamesForSelection([
+        "cs_sl1_d0_t_f9_b_c1",
+        "cs_sl1_d1_t_f9_b_c1",
+        "cs_sl2_d0_t_f9_b_c1",
+        "cs_sl2_d1_t_f9_b_c1",
+      ])).toEqual([
+        "Cylindric Tambour",
+        "First Storey",
+        "Last Storey",
+        "Single Storey",
+        "Tambour",
+      ]);
+      expect(uniqueTypeNamesForSelection([
+        "cs_sl0_d0_t_f0_b_c0",
+        "cs_sl0_d1_t_f0_b_c0",
+        "cs_sl0_d2_t_f0_b_c0",
+        "cs_sl0_d3_t_f0_b_c0",
+        "cs_sl1_d0_t_f0_b_c0",
+        "cs_sl1_d1_t_f0_b_c0",
+        "cs_sl2_d0_t_f0_b_c0",
+        "cs_sl2_d1_t_f0_b_c0",
+      ])).toEqual([
+        "Cylindric Tambour",
+        "First Storey",
+        "Last Storey",
+        "Single Storey",
+        "Tambour",
+      ]);
+      expect(tambourResult.types).toEqual([]);
+      expect(tambourResult.designs.length).toBe(3);
     });
 
-    it("Nakagin Capsule Tower: selection asset yields compatible sets", () => {
+    it("Nakagin Capsule Tower: selection asset yields only exact design matches", () => {
       const kit = MetabolismKit as unknown as Kit;
       const rootPlan = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const kindItems = kit.types ?? [];
@@ -16446,13 +16517,15 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
 
       const result = findReplaceableTypesInDesignsForPiecesInDesign(rootPlan, allPlans, kindItems, linkItems, { pieces: pieceGuids });
 
-      expect(result.types.length).toBeGreaterThan(0);
-      expect(result.designs.length).toBeGreaterThan(0);
-      expect(result.types).toContain("cb25017e-5505-4677-a71e-cccbc7a5be7d");
-      expect(result.designs).toContain("9a890dd4-0a9c-48ac-920a-9e62666465ef");
+      expect(result.types).toEqual([]);
+      expect(result.designs).toEqual([
+        "d7e12638-9749-471b-937e-a6e5523778ff",
+        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+        "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
+      ]);
     });
 
-    it("Nakagin Capsule Tower: connected piece suggests types with compatible ports", () => {
+    it("Nakagin Capsule Tower: connected piece yields only exact design matches", () => {
       const kit = MetabolismKit as unknown as Kit;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const types = kit.types ?? [];
@@ -16463,16 +16536,12 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       const tambourPiece = design.pieces!.find((p) => p.name === "t_f1_b_c0")!;
       const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [tambourPiece.guid] });
 
-      // Must have results since there are external connections
-      expect(result.types.length).toBeGreaterThan(0);
-
-      // The Tambour type itself should be in the results
-      const tambourType = types.find((t) => t.guid === tambourPiece.type!.guid)!;
-      expect(result.types).toContain(tambourType.guid);
-
-      // Types with no connectors should NOT be in the results (e.g. Capsule has no connectors)
-      const capsuleType = types.find((t) => t.name === "Capsule")!;
-      expect(result.types).not.toContain(capsuleType.guid);
+      expect(result.types).toEqual([]);
+      expect(result.designs).toEqual([
+        "d7e12638-9749-471b-937e-a6e5523778ff",
+        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+        "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
+      ]);
     });
 
     it("Nakagin Capsule Tower: isolated piece with no connections suggests types with compatible ports", () => {
@@ -16522,7 +16591,7 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       expect(result.types).not.toContain(capsuleType.guid);
     });
 
-    it("Nakagin Capsule Tower: multiple selected pieces with external connections", () => {
+    it("Nakagin Capsule Tower: multiple selected pieces yield only exact design matches", () => {
       const kit = MetabolismKit as unknown as Kit;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const types = kit.types ?? [];
@@ -16534,12 +16603,12 @@ if (typeof (globalThis as any).__vitest_worker__ !== "undefined") {
       const t2 = design.pieces!.find((p) => p.name === "t_f2_b_c0")!;
       const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [t1.guid, t2.guid] });
 
-      // Per-piece checking: each tambour's external connections must be satisfiable individually
-      expect(result.types.length).toBeGreaterThan(0);
-
-      // Tambour type should be in results (it can satisfy each piece's connections)
-      const tambourType = types.find((t) => t.guid === t1.type!.guid)!;
-      expect(result.types).toContain(tambourType.guid);
+      expect(result.types).toEqual([]);
+      expect(result.designs).toEqual([
+        "d7e12638-9749-471b-937e-a6e5523778ff",
+        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+        "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
+      ]);
     });
 
     it("Returns empty when no pieces selected", () => {

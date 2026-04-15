@@ -36,12 +36,12 @@ import {
   ConnectionId,
   Coord,
   createClusteredDesign,
+  deletePiecesAndConnectionsInDesign,
   Design,
   DesignDiff,
   DesignShallow,
   DiffStatus,
   dragPiecesInDesign,
-  deletePiecesAndConnectionsInDesign,
   expandDesignPieces,
   exportKit,
   FileDiff,
@@ -24256,7 +24256,7 @@ const PanelTabContent: FC<{ sections: PanelSection[] }> = ({ sections }) => {
   const treeSections = sortedSections.map((section, index) => ({
     id: section.id,
     className: index > 0 ? "mt-single" : undefined,
-    defaultOpen: section.defaultOpen ?? index === 0,
+    defaultOpen: section.defaultOpen ?? true,
     actions: section.actions,
     onPointerEnter: section.onPointerEnter,
     onPointerLeave: section.onPointerLeave,
@@ -27283,6 +27283,59 @@ const stripDesignConnectorSelection = (selection: DesignAppSelection | undefined
   const { connector: _connector, connectors: _connectors, ...rest } = selection ?? {};
   return normalizeDesignAppSelection(rest);
 };
+
+/**
+ * Computes the added and removed GUIDs between two selection arrays.
+ *
+ * MUST preserve the input order of added GUIDs and only emit changed lanes.
+ **/
+const createGuidSelectionLaneDiff = (current: Guid[] | undefined, next: Guid[] | undefined): { added?: Guid[]; removed?: Guid[] } | undefined => {
+  const currentGuids = current ?? [];
+  const nextGuids = next ?? [];
+  const currentSet = new Set(currentGuids);
+  const nextSet = new Set(nextGuids);
+  const added = nextGuids.filter((guid) => !currentSet.has(guid));
+  const removed = currentGuids.filter((guid) => !nextSet.has(guid));
+  if (added.length === 0 && removed.length === 0) return undefined;
+  const diff: { added?: Guid[]; removed?: Guid[] } = {};
+  if (added.length > 0) diff.added = added;
+  if (removed.length > 0) diff.removed = removed;
+  return diff;
+};
+
+/**
+ * Compares two connector selection records for equality.
+ *
+ * MUST compare piece, optional designPiece, and connector GUIDs exactly.
+ **/
+const areSameDesignConnectorSelection = (left: DesignAppSelection["connector"] | undefined, right: DesignAppSelection["connector"] | undefined): boolean =>
+  left?.piece === right?.piece && left?.designPiece === right?.designPiece && left?.connector === right?.connector;
+
+/**
+ * Creates the minimal selection diff needed to move from the current to the next design selection.
+ *
+ * MUST normalize both selections before diffing so connector lanes stay canonical.
+ **/
+const createDesignAppSelectionDiff = (current: DesignAppSelection | undefined, next: DesignAppSelection | undefined): DesignAppSelectionDiff | undefined => {
+  const normalizedCurrent = normalizeDesignAppSelection(current);
+  const normalizedNext = normalizeDesignAppSelection(next);
+  const diff: DesignAppSelectionDiff = {};
+  const pieceDiff = createGuidSelectionLaneDiff(normalizedCurrent.pieces, normalizedNext.pieces);
+  if (pieceDiff) diff.pieces = pieceDiff;
+  const connectionDiff = createGuidSelectionLaneDiff(normalizedCurrent.connections, normalizedNext.connections);
+  if (connectionDiff) diff.connections = connectionDiff;
+  if (!areSameDesignConnectorSelection(normalizedCurrent.connector, normalizedNext.connector)) {
+    diff.connector = normalizedNext.connector
+      ? {
+          piece: normalizedNext.connector.piece,
+          designPiece: normalizedNext.connector.designPiece,
+          connector: normalizedNext.connector.connector,
+        }
+      : {};
+  }
+  if (!diff.pieces && !diff.connections && !Object.prototype.hasOwnProperty.call(diff, "connector")) return undefined;
+  return diff;
+};
 /**
  * Diff for added/removed piece GUIDs in a selection change.
  **/
@@ -27403,6 +27456,91 @@ export interface DesignAppCommandResult {
   diff?: DesignAppDiff;
   kitDiff?: KitDiff;
 }
+
+/**
+ * Clipboard payload for design diagram copy and paste interactions.
+ **/
+export interface DesignClipboardPayload {
+  pieces?: Piece[];
+  connections?: Connection[];
+}
+
+const DESIGN_CLIPBOARD_PASTE_OFFSET: Coord = { u: 1, v: -1 };
+
+/**
+ * Validates the shape of a design clipboard payload.
+ *
+ * MUST only accept plain objects with optional piece and connection arrays.
+ **/
+const isDesignClipboardPayload = (value: unknown): value is DesignClipboardPayload => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const payload = value as Record<string, unknown>;
+  if (payload.pieces !== undefined && !Array.isArray(payload.pieces)) return false;
+  if (payload.connections !== undefined && !Array.isArray(payload.connections)) return false;
+  return true;
+};
+
+/**
+ * Clones clipboard content into a pasted design diff with fresh GUIDs and offset centers.
+ *
+ * MUST remap copied piece GUIDs before recreating copied connections.
+ **/
+const buildPastedDesignClipboardPayload = (
+  design: Design,
+  payload: DesignClipboardPayload,
+  offset: Coord = DESIGN_CLIPBOARD_PASTE_OFFSET,
+): { pieces: Piece[]; connections: Connection[] } => {
+  const sourcePieces = payload.pieces ?? [];
+  const sourceConnections = payload.connections ?? [];
+  const existingPieceGuids = new Set((design.pieces ?? []).map((piece) => piece.guid));
+  const guidMap = new Map<Guid, Guid>();
+  const pastedPieces = sourcePieces.map((sourcePiece) => {
+    const nextGuid = guid();
+    guidMap.set(sourcePiece.guid, nextGuid);
+    const clonedPiece = JSON.parse(JSON.stringify(sourcePiece)) as Piece;
+    clonedPiece.guid = nextGuid;
+    if ("id_" in clonedPiece) {
+      (clonedPiece as Piece & { id_?: Guid }).id_ = nextGuid;
+    }
+    if (clonedPiece.center) {
+      clonedPiece.center = {
+        ...clonedPiece.center,
+        u: (clonedPiece.center.u ?? 0) + (offset.u ?? 0),
+        v: (clonedPiece.center.v ?? 0) + (offset.v ?? 0),
+      };
+    }
+    if (clonedPiece.plane?.origin) {
+      clonedPiece.plane = {
+        ...clonedPiece.plane,
+        origin: {
+          ...clonedPiece.plane.origin,
+          x: clonedPiece.plane.origin.x + (offset.u ?? 0),
+          z: clonedPiece.plane.origin.z + (offset.v ?? 0),
+        },
+      };
+    }
+    return clonedPiece;
+  });
+  const pastedConnections = sourceConnections.flatMap((sourceConnection) => {
+    const connectedPieceGuid = sourceConnection.connected?.piece?.guid;
+    const connectingPieceGuid = sourceConnection.connecting?.piece?.guid;
+    const mappedConnectedPieceGuid = connectedPieceGuid ? guidMap.get(connectedPieceGuid) ?? (existingPieceGuids.has(connectedPieceGuid) ? connectedPieceGuid : undefined) : undefined;
+    const mappedConnectingPieceGuid = connectingPieceGuid ? guidMap.get(connectingPieceGuid) ?? (existingPieceGuids.has(connectingPieceGuid) ? connectingPieceGuid : undefined) : undefined;
+    if (!mappedConnectedPieceGuid || !mappedConnectingPieceGuid) return [];
+    const clonedConnection = JSON.parse(JSON.stringify(sourceConnection)) as Connection;
+    clonedConnection.guid = guid();
+    clonedConnection.connected = {
+      ...clonedConnection.connected,
+      piece: { guid: mappedConnectedPieceGuid },
+    };
+    clonedConnection.connecting = {
+      ...clonedConnection.connecting,
+      piece: { guid: mappedConnectingPieceGuid },
+    };
+    return [clonedConnection];
+  });
+  return { pieces: pastedPieces, connections: pastedConnections };
+};
 
 // #endregion 📌Types
 
@@ -27570,6 +27708,17 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
       },
     };
   },
+  "semio.designApp.setHover": (context: DesignAppCommandContext, hover: DesignAppHover | undefined): DesignAppCommandResult => {
+    const currentHover = context.designApp.hover;
+    if (areHoverStatesEqual(currentHover, hover)) {
+      return { diff: {} };
+    }
+    return {
+      diff: {
+        hover: hover ?? {},
+      },
+    };
+  },
   "semio.designApp.setCamera": (context: DesignAppCommandContext, camera: Camera): DesignAppCommandResult => {
     return {
       diff: {
@@ -27621,10 +27770,46 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
       },
     };
   },
+  "semio.designApp.setFullscreen": (context: DesignAppCommandContext, fullscreenWindow: DesignAppFullscreenWindow): DesignAppCommandResult => {
+    if (context.designApp.fullscreenWindow === fullscreenWindow) {
+      return { diff: {} };
+    }
+    return {
+      diff: {
+        fullscreenWindow,
+      },
+    };
+  },
+  "semio.designApp.setPanelVisibility": (context: DesignAppCommandContext, panelVisibility: PanelVisibility): DesignAppCommandResult => {
+    const currentPanelVisibility = context.designApp.panelVisibility;
+    const hasChange = Object.keys(panelVisibility).some((key) => currentPanelVisibility[key as keyof PanelVisibility] !== panelVisibility[key as keyof PanelVisibility]);
+    if (!hasChange) {
+      return { diff: {} };
+    }
+    return {
+      diff: {
+        panelVisibility,
+      },
+    };
+  },
   "semio.designApp.setActiveTool": (context: DesignAppCommandContext, tool: ToolKind): DesignAppCommandResult => {
+    if (context.designApp.activeTool === tool) {
+      return { diff: {} };
+    }
     return {
       diff: {
         activeTool: tool,
+      },
+    };
+  },
+  "semio.designApp.setSelection": (context: DesignAppCommandContext, selection: DesignAppSelection | undefined): DesignAppCommandResult => {
+    const selectionDiff = createDesignAppSelectionDiff(context.designApp.selection, selection);
+    if (!selectionDiff) {
+      return { diff: {} };
+    }
+    return {
+      diff: {
+        selection: selectionDiff,
       },
     };
   },
@@ -27771,6 +27956,19 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
         selection: {
           connector: {},
         },
+      },
+    };
+  },
+  "semio.designApp.setSelectedModelTags": (context: DesignAppCommandContext, selectedModelTags: Record<Guid, string[]>): DesignAppCommandResult => {
+    const current = context.designApp.selectedModelTags ?? {};
+    const currentSerialized = JSON.stringify(current);
+    const nextSerialized = JSON.stringify(selectedModelTags);
+    if (currentSerialized === nextSerialized) {
+      return { diff: {} };
+    }
+    return {
+      diff: {
+        selectedModelTags,
       },
     };
   },
@@ -28156,6 +28354,61 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
       },
     };
   },
+  /**
+   * Combined command that applies both piece and connection updates in a single atomic edit.
+   * MUST be used by the drag algorithm so that a single undo reverts both piece centers and connection offsets.
+   **/
+  "semio.designApp.dragUpdate": (context: DesignAppCommandContext, pieceUpdates: { piece: PieceId; diff: PieceDiff }[], connectionUpdates: { connection: ConnectionId; diff: ConnectionDiff }[]): DesignAppCommandResult => {
+    const designDiff: DesignDiff = {};
+    if (pieceUpdates.length > 0) {
+      designDiff.pieces = { updated: pieceUpdates };
+    }
+    if (connectionUpdates.length > 0) {
+      designDiff.connections = { updated: connectionUpdates };
+    }
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              design: { guid: context.design.guid },
+              diff: designDiff,
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designApp.pasteSelection": (context: DesignAppCommandContext, payload: DesignClipboardPayload, offset?: Coord): DesignAppCommandResult => {
+    if (!isDesignClipboardPayload(payload)) {
+      return { diff: {} };
+    }
+    const pastedPayload = buildPastedDesignClipboardPayload(context.design, payload, offset);
+    if (pastedPayload.pieces.length === 0 && pastedPayload.connections.length === 0) {
+      return { diff: {} };
+    }
+    return {
+      diff: {
+        selection: createDesignAppSelectionDiff(context.designApp.selection, {
+          pieces: pastedPayload.pieces.map((piece) => piece.guid),
+          connections: pastedPayload.connections.map((connection) => connection.guid),
+        }),
+      },
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              design: { guid: context.design.guid },
+              diff: {
+                pieces: pastedPayload.pieces.length > 0 ? { added: pastedPayload.pieces } : undefined,
+                connections: pastedPayload.connections.length > 0 ? { added: pastedPayload.connections } : undefined,
+              },
+            },
+          ],
+        },
+      },
+    };
+  },
 };
 
 // #endregion 💧Commands
@@ -28427,11 +28680,54 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
     if (result.kitDiff) {
       kitStore.change(result.kitDiff);
     }
-    if (result.diff?.selection && actor) {
-      actor.send({ type: "DESIGN.SET_SELECTION", kitGuid: this.kitGuid, designGuid: this.designGuid, selection: this.state.selection || {} } as any);
-    }
-    if (result.diff?.activeTool !== undefined && actor) {
-      actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid: this.kitGuid, designGuid: this.designGuid, tool: result.diff.activeTool } as any);
+    if (actor && result.diff) {
+      if (result.diff.selection) {
+        actor.send({ type: "DESIGN.SET_SELECTION", kitGuid: this.kitGuid, designGuid: this.designGuid, selection: this.state.selection || {} } as any);
+      }
+      if (result.diff.hover !== undefined) {
+        const nextHover = this.state.hover;
+        if (nextHover && (nextHover.pieces?.length || nextHover.connections?.length || nextHover.connectors?.length || nextHover.types?.length || nextHover.designs?.length)) {
+          actor.send({ type: "DESIGN.SET_HOVER", kitGuid: this.kitGuid, designGuid: this.designGuid, hover: nextHover } as any);
+        } else {
+          actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid: this.kitGuid, designGuid: this.designGuid } as any);
+        }
+      }
+      if (result.diff.activeTool !== undefined) {
+        actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid: this.kitGuid, designGuid: this.designGuid, tool: result.diff.activeTool } as any);
+      }
+      if (result.diff.fullscreenWindow !== undefined) {
+        actor.send({ type: "DESIGN.SET_FULLSCREEN", kitGuid: this.kitGuid, designGuid: this.designGuid, window: this.state.fullscreenWindow } as any);
+      }
+      if (result.diff.camera !== undefined) {
+        actor.send({ type: "DESIGN.SET_CAMERA", kitGuid: this.kitGuid, designGuid: this.designGuid, camera: this.state.camera } as any);
+      }
+      if (result.diff.diagramCenter !== undefined && this.state.diagramCenter) {
+        actor.send({
+          type: "DESIGN.SET_DIAGRAM_CENTER",
+          kitGuid: this.kitGuid,
+          designGuid: this.designGuid,
+          center: { x: (this.state.diagramCenter as any).u ?? (this.state.diagramCenter as any).x ?? 0, y: (this.state.diagramCenter as any).v ?? (this.state.diagramCenter as any).y ?? 0 },
+        } as any);
+      }
+      if (result.diff.diagramScale !== undefined && this.state.diagramScale !== undefined) {
+        actor.send({ type: "DESIGN.SET_DIAGRAM_SCALE", kitGuid: this.kitGuid, designGuid: this.designGuid, scale: this.state.diagramScale } as any);
+      }
+      if (result.diff.focusedPieceGuid !== undefined) {
+        actor.send({ type: "DESIGN.FOCUS_PIECE", kitGuid: this.kitGuid, designGuid: this.designGuid, pieceGuid: this.state.focusedPieceGuid } as any);
+      }
+      const statePatch: Partial<DesignAppState> = {};
+      if (result.diff.panelVisibility !== undefined) {
+        statePatch.panelVisibility = this.state.panelVisibility;
+      }
+      if (result.diff.selectedModelTags !== undefined) {
+        statePatch.selectedModelTags = this.state.selectedModelTags;
+      }
+      if (Object.prototype.hasOwnProperty.call(result.diff, "windowLayout")) {
+        statePatch.windowLayout = this.state.windowLayout;
+      }
+      if (Object.keys(statePatch).length > 0) {
+        actor.send({ type: "DESIGN.SYNC", kitGuid: this.kitGuid, designGuid: this.designGuid, state: statePatch } as any);
+      }
     }
     return result as T;
   }
@@ -28808,13 +29104,23 @@ function useDesignAppField<T, TEvent extends { type: string }>(options: UseDesig
  * MUST create a Field wrapping the current selection and setter.
  **/
 export function useDesignAppSelectionField(): Field<DesignAppSelection> {
-  return useDesignAppField<DesignAppSelection, { type: "DESIGN.SET_SELECTION"; kitGuid: Guid; designGuid: Guid; selection: DesignAppSelection }>({
-    createGranularSelector: createDesignSelectionSelector,
-    fallback: {},
-    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: {} }),
-    createSendEvent: (kitGuid, designGuid, selection) => ({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection }),
-    useWildcardFallback: true,
-  });
+  const actor = useSketchpadActor();
+  const store = useDesignStore() as DesignStore | null;
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
+  const getOrigin = useOrigin();
+  const selector = useMemo(() => createDesignSelectionSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector) ?? EMPTY_SELECTION;
+  const canSet = !!store && kitGuid !== "" && designGuid !== "";
+  const setter = useMemo(() => {
+    if (!store || !canSet) return undefined;
+    return (selection: DesignAppSelection) => {
+      void store.execute("semio.designApp.setSelection", getOrigin(), selection);
+    };
+  }, [store, canSet, getOrigin]);
+  return createField(value, setter ?? (() => {}), canSet);
 }
 
 /**
@@ -28830,12 +29136,23 @@ export function useDesignAppSelection(): HookResult<DesignAppSelection> {
  *MUST create a Field wrapping the fullscreen value and setter.
  **/
 export function useDesignAppFullscreenField(): Field<DesignAppFullscreenWindow> {
-  return useDesignAppField<DesignAppFullscreenWindow, { type: "DESIGN.SET_FULLSCREEN"; kitGuid: Guid; designGuid: Guid; window: DesignAppFullscreenWindow }>({
-    createGranularSelector: createDesignFullscreenWindowSelector,
-    fallback: DesignAppFullscreenWindow.None,
-    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_FULLSCREEN", kitGuid, designGuid, window: DesignAppFullscreenWindow.None }),
-    createSendEvent: (kitGuid, designGuid, fullscreen) => ({ type: "DESIGN.SET_FULLSCREEN", kitGuid, designGuid, window: fullscreen }),
-  });
+  const actor = useSketchpadActor();
+  const store = useDesignStore() as DesignStore | null;
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
+  const getOrigin = useOrigin();
+  const selector = useMemo(() => createDesignFullscreenWindowSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector) ?? DesignAppFullscreenWindow.None;
+  const canSet = !!store && kitGuid !== "" && designGuid !== "";
+  const setter = useMemo(() => {
+    if (!store || !canSet) return undefined;
+    return (fullscreenWindow: DesignAppFullscreenWindow) => {
+      void store.execute("semio.designApp.setFullscreen", getOrigin(), fullscreenWindow);
+    };
+  }, [store, canSet, getOrigin]);
+  return createField(value, setter ?? (() => {}), canSet);
 }
 
 /**
@@ -28851,13 +29168,23 @@ export function useDesignAppFullscreen(): HookResult<DesignAppFullscreenWindow> 
  *MUST create a Field wrapping the active tool value and setter.
  **/
 export function useDesignAppActiveToolField(): Field<ToolKind> {
-  return useDesignAppField<ToolKind, { type: "DESIGN.SET_ACTIVE_TOOL"; kitGuid: Guid; designGuid: Guid; tool: ToolKind }>({
-    createGranularSelector: createDesignActiveToolSelector,
-    fallback: ToolKind.SELECTION_NORMAL,
-    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool: ToolKind.SELECTION_NORMAL }),
-    createSendEvent: (kitGuid, designGuid, tool) => ({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool }),
-    useWildcardFallback: true,
-  });
+  const actor = useSketchpadActor();
+  const store = useDesignStore() as DesignStore | null;
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
+  const getOrigin = useOrigin();
+  const selector = useMemo(() => createDesignActiveToolSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector) ?? ToolKind.SELECTION_NORMAL;
+  const canSet = !!store && kitGuid !== "" && designGuid !== "";
+  const setter = useMemo(() => {
+    if (!store || !canSet) return undefined;
+    return (tool: ToolKind) => {
+      void store.execute("semio.designApp.setActiveTool", getOrigin(), tool);
+    };
+  }, [store, canSet, getOrigin]);
+  return createField(value, setter ?? (() => {}), canSet);
 }
 
 /**
@@ -28865,17 +29192,7 @@ export function useDesignAppActiveToolField(): Field<ToolKind> {
  *MUST provide the current active tool, a setter, and a canSet flag.
  **/
 export function useDesignAppActiveTool(): HookResult<ToolKind> {
-  const designScope = useDesignScope();
-  const store = useDesignStore() as DesignStore | null;
-  const activeTool = useDesignApp((state) => state.activeTool) as ToolKind | undefined;
-  const canSet = designScope !== null && store !== null;
-  const setActiveTool = useCallback(
-    (value: ToolKind) => {
-      if (store) store.execute("semio.designApp.setActiveTool", value);
-    },
-    [store],
-  );
-  return [activeTool ?? ToolKind.SELECTION_NORMAL, setActiveTool, canSet];
+  return fieldToHookResult(useDesignAppActiveToolField());
 }
 
 /**
@@ -28906,12 +29223,25 @@ export function useDesignAppOthers(): HookResult<DesignAppPresenceOther[]> {
  *MUST create a Field wrapping the camera value and setter.
  **/
 export function useDesignAppCameraField(): Field<Camera | undefined> {
-  return useDesignAppField<Camera | undefined, { type: "DESIGN.SET_CAMERA"; kitGuid: Guid; designGuid: Guid; camera: Camera | undefined }>({
-    createGranularSelector: createDesignCameraSelector,
-    fallback: undefined,
-    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_CAMERA", kitGuid, designGuid, camera: undefined }),
-    createSendEvent: (kitGuid, designGuid, camera) => ({ type: "DESIGN.SET_CAMERA", kitGuid, designGuid, camera }),
-  });
+  const actor = useSketchpadActor();
+  const store = useDesignStore() as DesignStore | null;
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
+  const getOrigin = useOrigin();
+  const selector = useMemo(() => createDesignCameraSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector);
+  const canSet = !!store && kitGuid !== "" && designGuid !== "";
+  const setter = useMemo(() => {
+    if (!store || !canSet) return undefined;
+    return (camera: Camera | undefined) => {
+      if (camera !== undefined) {
+        void store.execute("semio.designApp.setCamera", getOrigin(), camera);
+      }
+    };
+  }, [store, canSet, getOrigin]);
+  return createField(value, setter ?? (() => {}), canSet);
 }
 
 /**
@@ -28928,23 +29258,24 @@ export function useDesignAppCamera(): HookResult<Camera | undefined> {
  **/
 export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
   const actor = useSketchpadActor();
+  const store = useDesignStore() as DesignStore | null;
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
+  const getOrigin = useOrigin();
   const selector = useMemo(() => createDesignDiagramCenterSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const rawValue = useSelector(actor, selector);
   const value = useMemo(() => (rawValue ? { u: rawValue.x, v: rawValue.y } : undefined), [rawValue]);
-  const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_DIAGRAM_CENTER" as const, kitGuid, designGuid, center: { x: 0, y: 0 } }), [kitGuid, designGuid]);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const canSet = !!store && kitGuid !== "" && designGuid !== "";
   const setter = useMemo(() => {
-    if (!canSet) return undefined;
+    if (!store || !canSet) return undefined;
     return (center: Coord | undefined) => {
       if (center) {
-        actor.send({ type: "DESIGN.SET_DIAGRAM_CENTER", kitGuid, designGuid, center: { x: center.u, y: center.v } });
+        void store.execute("semio.designApp.setDiagramCenter", getOrigin(), center);
       }
     };
-  }, [actor, kitGuid, designGuid, canSet]);
+  }, [store, canSet, getOrigin]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -28954,22 +29285,23 @@ export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
  **/
 export function useDesignAppDiagramScale(): HookResult<number | undefined> {
   const actor = useSketchpadActor();
+  const store = useDesignStore() as DesignStore | null;
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
+  const getOrigin = useOrigin();
   const selector = useMemo(() => createDesignDiagramScaleSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const value = useSelector(actor, selector);
-  const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_DIAGRAM_SCALE" as const, kitGuid, designGuid, scale: 1 }), [kitGuid, designGuid]);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const canSet = !!store && kitGuid !== "" && designGuid !== "";
   const setter = useMemo(() => {
-    if (!canSet) return undefined;
+    if (!store || !canSet) return undefined;
     return (scale: number | undefined) => {
       if (scale !== undefined) {
-        actor.send({ type: "DESIGN.SET_DIAGRAM_SCALE", kitGuid, designGuid, scale });
+        void store.execute("semio.designApp.setDiagramScale", getOrigin(), scale);
       }
     };
-  }, [actor, kitGuid, designGuid, canSet]);
+  }, [store, canSet, getOrigin]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -28978,12 +29310,23 @@ export function useDesignAppDiagramScale(): HookResult<number | undefined> {
  *MUST create a Field wrapping the focused piece GUID value and setter.
  **/
 export function useDesignAppFocusedPieceGuidField(): Field<Guid | undefined> {
-  return useDesignAppField<Guid | undefined, { type: "DESIGN.FOCUS_PIECE"; kitGuid: Guid; designGuid: Guid; pieceGuid: Guid | undefined }>({
-    createGranularSelector: createDesignFocusedPieceSelector,
-    fallback: undefined,
-    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid: undefined }),
-    createSendEvent: (kitGuid, designGuid, pieceGuid) => ({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid }),
-  });
+  const actor = useSketchpadActor();
+  const store = useDesignStore() as DesignStore | null;
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
+  const getOrigin = useOrigin();
+  const selector = useMemo(() => createDesignFocusedPieceSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector);
+  const canSet = !!store && kitGuid !== "" && designGuid !== "";
+  const setter = useMemo(() => {
+    if (!store || !canSet) return undefined;
+    return (pieceGuid: Guid | undefined) => {
+      void store.execute(pieceGuid ? "semio.designApp.focusPiece" : "semio.designApp.clearFocus", getOrigin(), pieceGuid);
+    };
+  }, [store, canSet, getOrigin]);
+  return createField(value, setter ?? (() => {}), canSet);
 }
 
 /**
@@ -29000,20 +29343,21 @@ export function useDesignAppFocusedPieceGuid(): HookResult<Guid | undefined> {
  **/
 export function useDesignAppSelectedModelTags(): HookResult<Record<Guid, string[]>> {
   const actor = useSketchpadActor();
+  const store = useDesignStore() as DesignStore | null;
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
+  const getOrigin = useOrigin();
   const selector = useMemo(() => createDesignSelectedModelTagsSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const value = useSelector(actor, selector) ?? EMPTY_MODEL_TAGS;
-  const canSetEvent = useMemo(() => ({ type: "DESIGN.SYNC" as const, kitGuid, designGuid, state: {} }), [kitGuid, designGuid]);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const canSet = !!store && kitGuid !== "" && designGuid !== "";
   const setter = useMemo(() => {
-    if (!canSet) return undefined;
+    if (!store || !canSet) return undefined;
     return (tags: Record<Guid, string[]>) => {
-      actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedModelTags: tags } });
+      void store.execute("semio.designApp.setSelectedModelTags", getOrigin(), tags);
     };
-  }, [actor, kitGuid, designGuid, canSet]);
+  }, [store, canSet, getOrigin]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -29028,23 +29372,16 @@ export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
   const store = useDesignStore(identitySelector) as DesignStore | null;
+  const getOrigin = useOrigin();
   const selector = useMemo(() => createDesignHoverSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   const value = useSelector(actor, selector, areHoverStatesEqual);
-  const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_HOVER" as const, kitGuid, designGuid, hover: {} }), [kitGuid, designGuid]);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const canSet = !!store && kitGuid !== "" && designGuid !== "";
   const stableSetterRef = useRef<((hover: DesignAppHover | undefined) => void) | undefined>(undefined);
   stableSetterRef.current = canSet
     ? (hover: DesignAppHover | undefined) => {
         const currentHover = actor.getSnapshot().context.designApps[`${kitGuid}:${designGuid}`]?.hover;
         if (areHoverStatesEqual(currentHover, hover)) return;
-        store?.change({ hover: hover ?? {} });
-        queueMicrotask(() => {
-          if (hover && (hover.pieces?.length || hover.connections?.length || hover.connectors?.length || hover.types?.length || hover.designs?.length)) {
-            actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover });
-          } else {
-            actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid });
-          }
-        });
+        void store?.execute("semio.designApp.setHover", getOrigin(), hover);
       }
     : undefined;
   const setter = useMemo(() => {
@@ -29059,12 +29396,23 @@ export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
  *MUST create a Field wrapping the panel visibility value and setter.
  **/
 export function useDesignAppPanelVisibilityField(): Field<PanelVisibility> {
-  return useDesignAppField<PanelVisibility, { type: "DESIGN.SET_PANEL_VISIBILITY"; kitGuid: Guid; designGuid: Guid; panelVisibility: PanelVisibility }>({
-    createGranularSelector: createDesignPanelVisibilitySelector,
-    fallback: DEFAULT_PANEL_VISIBILITY,
-    createCanEvent: (kitGuid, designGuid) => ({ type: "DESIGN.SET_PANEL_VISIBILITY", kitGuid, designGuid, panelVisibility: {} as PanelVisibility }),
-    createSendEvent: (kitGuid, designGuid, panelVisibility) => ({ type: "DESIGN.SET_PANEL_VISIBILITY", kitGuid, designGuid, panelVisibility }),
-  });
+  const actor = useSketchpadActor();
+  const store = useDesignStore() as DesignStore | null;
+  const kitScope = useKitScope();
+  const designScope = useDesignScope();
+  const kitGuid = kitScope?.guid ?? "";
+  const designGuid = designScope?.guid ?? "";
+  const getOrigin = useOrigin();
+  const selector = useMemo(() => createDesignPanelVisibilitySelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector) ?? DEFAULT_PANEL_VISIBILITY;
+  const canSet = !!store && kitGuid !== "" && designGuid !== "";
+  const setter = useMemo(() => {
+    if (!store || !canSet) return undefined;
+    return (panelVisibility: PanelVisibility) => {
+      void store.execute("semio.designApp.setPanelVisibility", getOrigin(), panelVisibility);
+    };
+  }, [store, canSet, getOrigin]);
+  return createField(value, setter ?? (() => {}), canSet);
 }
 
 /**
@@ -29802,6 +30150,7 @@ const EMPTY_COMMANDS = {
   setModelTagsForType: () => {},
   addModelTagForAllTypes: () => {},
   removeModelTagFromAllTypes: () => {},
+  pasteSelection: () => {},
 } as any;
 
 /**
@@ -29817,7 +30166,7 @@ export function useDesignAppCommands(id?: DesignAppId) {
   const designGuid = designScope?.guid ?? id?.design ?? "";
 
   return useMemo(() => {
-    if (!store || !actor) {
+    if (!store) {
       return EMPTY_COMMANDS;
     }
     return {
@@ -29826,32 +30175,21 @@ export function useDesignAppCommands(id?: DesignAppId) {
       abortTransaction: (origin: string) => store.execute("semio.designApp.abortTransaction", origin),
       undo: (origin: string) => store.execute("semio.designApp.undo", origin),
       redo: (origin: string) => store.execute("semio.designApp.redo", origin),
-      selectAll: (_origin: string) => actor.send({ type: "DESIGN.SELECT_ALL", kitGuid, designGuid }),
-      deselectAll: (_origin: string) => actor.send({ type: "DESIGN.CLEAR_SELECTION", kitGuid, designGuid }),
-      selectPiece: (_origin: string, guid: Guid) => actor.send({ type: "DESIGN.SELECT_PIECE", kitGuid, designGuid, pieceGuid: guid }),
-      selectPieces: (_origin: string, guids: Guid[]) => guids.forEach((g) => actor.send({ type: "DESIGN.SELECT_PIECE", kitGuid, designGuid, pieceGuid: g })),
-      addPieceToSelection: (_origin: string, guid: Guid) => actor.send({ type: "DESIGN.SELECT_PIECE", kitGuid, designGuid, pieceGuid: guid }),
-      removePieceFromSelection: (_origin: string, guid: Guid) => actor.send({ type: "DESIGN.DESELECT_PIECE", kitGuid, designGuid, pieceGuid: guid }),
-      selectConnection: (_origin: string, connectionGuid: Guid) => actor.send({ type: "DESIGN.SELECT_CONNECTION", kitGuid, designGuid, connectionGuid }),
-      addConnectionToSelection: (_origin: string, connectionGuid: Guid) => actor.send({ type: "DESIGN.SELECT_CONNECTION", kitGuid, designGuid, connectionGuid }),
-      removeConnectionFromSelection: (_origin: string, connectionGuid: Guid) => actor.send({ type: "DESIGN.DESELECT_CONNECTION", kitGuid, designGuid, connectionGuid }),
-      selectPiecePort: (_origin: string, piece: Guid, connector: Guid) => {
-        actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: createDesignConnectorSelection(piece, connector) });
-      },
-      deselectPiecePort: (_origin: string) => {
-        const current = store.snapshot().selection || {};
-        actor.send({ type: "DESIGN.SET_SELECTION", kitGuid, designGuid, selection: stripDesignConnectorSelection(current) });
-      },
+      selectAll: (origin: string) => store.execute("semio.designApp.selectAll", origin),
+      deselectAll: (origin: string) => store.execute("semio.designApp.deselectAll", origin),
+      selectPiece: (origin: string, guid: Guid) => store.execute("semio.designApp.selectPiece", origin, guid),
+      selectPieces: (origin: string, guids: Guid[]) => store.execute("semio.designApp.selectPieces", origin, guids),
+      addPieceToSelection: (origin: string, guid: Guid) => store.execute("semio.designApp.addPieceToSelection", origin, guid),
+      removePieceFromSelection: (origin: string, guid: Guid) => store.execute("semio.designApp.removePieceFromSelection", origin, guid),
+      selectConnection: (origin: string, connectionGuid: Guid) => store.execute("semio.designApp.selectConnection", origin, connectionGuid),
+      addConnectionToSelection: (origin: string, connectionGuid: Guid) => store.execute("semio.designApp.addConnectionToSelection", origin, connectionGuid),
+      removeConnectionFromSelection: (origin: string, connectionGuid: Guid) => store.execute("semio.designApp.removeConnectionFromSelection", origin, connectionGuid),
+      selectPiecePort: (origin: string, piece: Guid, connector: Guid, designPiece?: Guid) => store.execute("semio.designApp.selectPiecePort", origin, piece, connector, designPiece),
+      deselectPiecePort: (origin: string) => store.execute("semio.designApp.deselectPiecePort", origin),
       deleteSelected: (origin: string) => store.execute("semio.designApp.deleteSelected", origin),
-      toggleDiagramFullscreen: (_origin: string) => {
-        const current = store.snapshot().fullscreenWindow;
-        actor.send({ type: "DESIGN.SET_FULLSCREEN", kitGuid, designGuid, window: current === DesignAppFullscreenWindow.Diagram ? DesignAppFullscreenWindow.None : DesignAppFullscreenWindow.Diagram });
-      },
-      toggleAccesslFullscreen: (_origin: string) => {
-        const current = store.snapshot().fullscreenWindow;
-        actor.send({ type: "DESIGN.SET_FULLSCREEN", kitGuid, designGuid, window: current === DesignAppFullscreenWindow.Accessl ? DesignAppFullscreenWindow.None : DesignAppFullscreenWindow.Accessl });
-      },
-      setActiveTool: (_origin: string, tool: ToolKind) => actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitGuid, designGuid, tool }),
+      toggleDiagramFullscreen: (origin: string) => store.execute("semio.designApp.toggleDiagramFullscreen", origin),
+      toggleAccesslFullscreen: (origin: string) => store.execute("semio.designApp.toggleAccesslFullscreen", origin),
+      setActiveTool: (origin: string, tool: ToolKind) => store.execute("semio.designApp.setActiveTool", origin, tool),
       addPiece: (origin: string, piece: Piece) => store.execute("semio.designApp.addPiece", origin, piece),
       addPieces: (origin: string, pieces: Piece[]) => store.execute("semio.designApp.addPieces", origin, pieces),
       removePiece: (origin: string, piece: Guid) => store.execute("semio.designApp.removePiece", origin, piece),
@@ -29864,83 +30202,48 @@ export function useDesignAppCommands(id?: DesignAppId) {
       updatePieces: (origin: string, updates: { id: Guid; diff: PieceDiff }[]) => store.execute("semio.designApp.updatePieces", origin, updates),
       updateConnection: (origin: string, connection: Guid, connectionDiff: ConnectionDiff) => store.execute("semio.designApp.updateConnection", origin, connection, connectionDiff),
       updateConnections: (origin: string, updates: { id: Guid; diff: ConnectionDiff }[]) => store.execute("semio.designApp.updateConnections", origin, updates),
-      setCamera: (_origin: string, camera: Camera) => actor.send({ type: "DESIGN.SET_CAMERA", kitGuid, designGuid, camera }),
-      focusPiece: (_origin: string, pieceGuid: Guid) => actor.send({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid }),
-      clearFocus: (_origin: string) => actor.send({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid: undefined }),
-      setDiagramCenter: (_origin: string, center: Coord) => actor.send({ type: "DESIGN.SET_DIAGRAM_CENTER", kitGuid, designGuid, center: { x: center.u, y: center.v } }),
-      setDiagramScale: (_origin: string, scale: number) => actor.send({ type: "DESIGN.SET_DIAGRAM_SCALE", kitGuid, designGuid, scale }),
-      hoverPiece: (_origin: string, guid: Guid) => {
-        const hover: DesignAppHover = { pieces: [guid] };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
+      setCamera: (origin: string, camera: Camera) => store.execute("semio.designApp.setCamera", origin, camera),
+      focusPiece: (origin: string, pieceGuid: Guid) => store.execute("semio.designApp.focusPiece", origin, pieceGuid),
+      clearFocus: (origin: string) => store.execute("semio.designApp.clearFocus", origin),
+      setDiagramCenter: (origin: string, center: Coord) => store.execute("semio.designApp.setDiagramCenter", origin, center),
+      setDiagramScale: (origin: string, scale: number) => store.execute("semio.designApp.setDiagramScale", origin, scale),
+      hoverPiece: (origin: string, guid: Guid) => store.execute("semio.designApp.hoverPiece", origin, guid),
+      hoverPieces: (origin: string, guids: Guid[]) => store.execute("semio.designApp.hoverPieces", origin, guids),
+      hoverConnection: (origin: string, guid: Guid) => store.execute("semio.designApp.hoverConnection", origin, guid),
+      hoverConnections: (origin: string, guids: Guid[]) => store.execute("semio.designApp.hoverConnections", origin, guids),
+      hoverPort: (origin: string, pieceGuid: Guid, connectorGuid: Guid) => store.execute("semio.designApp.hoverPort", origin, pieceGuid, connectorGuid),
+      hoverType: (origin: string, guid: Guid) => store.execute("semio.designApp.hoverType", origin, guid),
+      hoverTypes: (origin: string, guids: Guid[]) => store.execute("semio.designApp.hoverTypes", origin, guids),
+      hoverDesign: (origin: string, guid: Guid) => store.execute("semio.designApp.hoverDesign", origin, guid),
+      hoverDesigns: (origin: string, guids: Guid[]) => store.execute("semio.designApp.hoverDesigns", origin, guids),
+      clearHover: (origin: string) => store.execute("semio.designApp.clearHover", origin),
+      togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
+        const currentPanelVisibility = store.snapshot().panelVisibility;
+        return store.execute("semio.designApp.setPanelVisibility", origin, { ...currentPanelVisibility, [panelKey]: !currentPanelVisibility[panelKey] });
       },
-      hoverPieces: (_origin: string, guids: Guid[]) => {
-        const hover: DesignAppHover = { pieces: guids };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
-      },
-      hoverConnection: (_origin: string, guid: Guid) => {
-        const hover: DesignAppHover = { connections: [guid] };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
-      },
-      hoverConnections: (_origin: string, guids: Guid[]) => {
-        const hover: DesignAppHover = { connections: guids };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
-      },
-      hoverPort: (_origin: string, pieceGuid: Guid, connectorGuid: Guid) => {
-        const hover: DesignAppHover = { connectors: [{ piece: pieceGuid, connector: connectorGuid }] };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
-      },
-      hoverType: (_origin: string, guid: Guid) => {
-        const hover: DesignAppHover = { types: [guid] };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
-      },
-      hoverTypes: (_origin: string, guids: Guid[]) => {
-        const hover: DesignAppHover = { types: guids };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
-      },
-      hoverDesign: (_origin: string, guid: Guid) => {
-        const hover: DesignAppHover = { designs: [guid] };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
-      },
-      hoverDesigns: (_origin: string, guids: Guid[]) => {
-        const hover: DesignAppHover = { designs: guids };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitGuid, designGuid, hover }));
-      },
-      clearHover: (_origin: string) => {
-        store.change({ hover: {} });
-        queueMicrotask(() => actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid }));
-      },
-      togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => actor.send({ type: "DESIGN.TOGGLE_PANEL", kitGuid, designGuid, panel: panelKey }),
-      setModelTagsForType: (_origin: string, typeGuid: Guid, tags: string[]) => {
+      setModelTagsForType: (origin: string, typeGuid: Guid, tags: string[]) => {
         const current = store.snapshot().selectedModelTags ?? {};
-        actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedModelTags: { ...current, [typeGuid]: tags } } });
+        return store.execute("semio.designApp.setSelectedModelTags", origin, { ...current, [typeGuid]: tags });
       },
-      addModelTagForAllTypes: (_origin: string, tagGuid: string, typeGuids: Guid[]) => {
+      addModelTagForAllTypes: (origin: string, tagGuid: string, typeGuids: Guid[]) => {
         const current = store.snapshot().selectedModelTags ?? {};
         const updated: Record<Guid, string[]> = { ...current };
         typeGuids.forEach((typeGuid) => {
           const existing = updated[typeGuid] ?? [];
           if (!existing.includes(tagGuid)) updated[typeGuid] = [...existing, tagGuid];
         });
-        actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedModelTags: updated } });
+        return store.execute("semio.designApp.setSelectedModelTags", origin, updated);
       },
-      removeModelTagFromAllTypes: (_origin: string, tagGuid: string, typeGuids: Guid[]) => {
+      removeModelTagFromAllTypes: (origin: string, tagGuid: string, typeGuids: Guid[]) => {
         const current = store.snapshot().selectedModelTags ?? {};
         const updated: Record<Guid, string[]> = { ...current };
         typeGuids.forEach((typeGuid) => {
           const existing = updated[typeGuid] ?? [];
           updated[typeGuid] = existing.filter((t) => t !== tagGuid);
         });
-        actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedModelTags: updated } });
+        return store.execute("semio.designApp.setSelectedModelTags", origin, updated);
       },
+      pasteSelection: (origin: string, payload: DesignClipboardPayload, offset?: Coord) => store.execute("semio.designApp.pasteSelection", origin, payload, offset),
       execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
     };
   }, [store, actor, kitGuid, designGuid]);
@@ -33107,16 +33410,10 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
       <TreeRow>
         <Input id="semio.sketchpad.app.design.panel.details.section.connector.direction" value={`(${connector.direction.x.toFixed(2)}, ${connector.direction.y.toFixed(2)}, ${connector.direction.z.toFixed(2)})`} disabled showLabel />
       </TreeRow>
-      {(connector as any).compatiblePorts &&
-        (connector as any).compatiblePorts.map((port_: string, index: number) => (
-          <TreeRow key={`compatible-interface-${index}`}>
-            <Input id="semio.sketchpad.app.design.panel.details.section.connector.compatiblePort" value={port_} disabled showLabel />
-          </TreeRow>
-        ))}
       {connector.attributes &&
-        connector.attributes.map((attribute: any, index: number) => (
+        connector.attributes.map((attribute, index) => (
           <TreeRow key={`connector-attribute-${index}`}>
-            <Input id="semio.sketchpad.app.design.panel.details.section.connector.attribute" value={`${attribute.key}: ${attribute.value || "N/A"} ${attribute.unit && `(${attribute.unit})`}`} disabled showLabel />
+            <Input id="semio.sketchpad.app.design.panel.details.section.connector.attribute" value={`${attribute.key}: ${attribute.value ?? "N/A"}${attribute.definition ? ` (${attribute.definition})` : ""}`} disabled showLabel />
           </TreeRow>
         ))}
     </>
@@ -35171,8 +35468,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     [diagramId, isPanningRef],
   );
   const handleDiagramKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() !== "c" || (!e.metaKey && !e.ctrlKey) || e.altKey || e.shiftKey) return;
+    async (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      if ((key !== "c" && key !== "v") || (!e.metaKey && !e.ctrlKey) || e.altKey || e.shiftKey) return;
       const target = e.target as HTMLElement | null;
       if (!target) return;
       if (target.isContentEditable) return;
@@ -35181,25 +35479,40 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       if (!dropZoneRef.current || !dropZoneRef.current.contains(target)) return;
       e.preventDefault();
       e.stopPropagation();
-      if (!design) return;
-      const currentSelection = selectionRef.current;
-      const selectedPieceGuids = new Set((currentSelection?.pieces ?? []).map((entry) => resolveSelectionEntryGuid(entry)).filter((g): g is Guid => typeof g === "string" && g.length > 0));
-      const selectedConnectionGuids = new Set((currentSelection?.connections ?? []).map((entry) => resolveSelectionEntryGuid(entry)).filter((g): g is Guid => typeof g === "string" && g.length > 0));
-      const hasSelection = selectedPieceGuids.size > 0 || selectedConnectionGuids.size > 0;
-      let payload: { pieces: typeof design.pieces; connections: typeof design.connections };
-      if (hasSelection) {
-        const pieces = (design.pieces ?? []).filter((p) => selectedPieceGuids.has(p.guid));
-        const pieceGuidSet = new Set(pieces.map((p) => p.guid));
-        const connections = (design.connections ?? []).filter(
-          (c) => selectedConnectionGuids.has(c.guid) || (c.connected?.piece?.guid && c.connecting?.piece?.guid && pieceGuidSet.has(c.connected.piece.guid) && pieceGuidSet.has(c.connecting.piece.guid)),
-        );
-        payload = { pieces, connections };
-      } else {
-        payload = { pieces: design.pieces ?? [], connections: design.connections ?? [] };
+      if (key === "c") {
+        if (!design) return;
+        const currentSelection = selectionRef.current;
+        const selectedPieceGuids = new Set((currentSelection?.pieces ?? []).map((entry) => resolveSelectionEntryGuid(entry)).filter((g): g is Guid => typeof g === "string" && g.length > 0));
+        const selectedConnectionGuids = new Set((currentSelection?.connections ?? []).map((entry) => resolveSelectionEntryGuid(entry)).filter((g): g is Guid => typeof g === "string" && g.length > 0));
+        const hasSelection = selectedPieceGuids.size > 0 || selectedConnectionGuids.size > 0;
+        let payload: DesignClipboardPayload;
+        if (hasSelection) {
+          const pieces = (design.pieces ?? []).filter((p) => selectedPieceGuids.has(p.guid));
+          const pieceGuidSet = new Set(pieces.map((p) => p.guid));
+          const connections = (design.connections ?? []).filter(
+            (c) => selectedConnectionGuids.has(c.guid) || (c.connected?.piece?.guid && c.connecting?.piece?.guid && pieceGuidSet.has(c.connected.piece.guid) && pieceGuidSet.has(c.connecting.piece.guid)),
+          );
+          payload = { pieces, connections };
+        } else {
+          payload = { pieces: design.pieces ?? [], connections: design.connections ?? [] };
+        }
+        sketchpadCommands.copyJsonToClipboard("semio.sketchpad.app.design.canvas.diagram.keydown.cmdC", payload);
+        return;
       }
-      sketchpadCommands.copyJsonToClipboard("semio.sketchpad.app.design.canvas.diagram.keydown.cmdC", payload);
+      if (!commands?.pasteSelection || typeof navigator === "undefined" || !navigator.clipboard || typeof navigator.clipboard.readText !== "function") return;
+      try {
+        const clipboardText = await navigator.clipboard.readText();
+        if (!clipboardText) return;
+        const parsed = JSON.parse(clipboardText);
+        if (!isDesignClipboardPayload(parsed)) return;
+        transaction?.start();
+        await commands.pasteSelection("semio.sketchpad.app.design.canvas.diagram.keydown.cmdV", parsed, DESIGN_CLIPBOARD_PASTE_OFFSET);
+        transaction?.finalize();
+      } catch {
+        transaction?.abort();
+      }
     },
-    [sketchpadCommands, design],
+    [sketchpadCommands, design, commands, transaction],
   );
 
   const handleDiagramPointerUp = useCallback(() => {
@@ -35720,9 +36033,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragSelectedNodesRef.current = selected;
       dragNonSelectedNodesRef.current = nonSelected;
       sceneFrameControlRef.current?.pause();
-      // Don't mark any pieces as dragging yet — wait for onNodeDrag to compute dragDiff
-      // and mark only the fixed/affected pieces+connections.
-      setTimeout(() => transaction?.start(), 0);
+      // Start transaction synchronously so all drag edits are captured.
+      transaction?.start();
     },
     [activeTool, isDraggingNodeRef, transaction, metadata, nodes, diagramId, designStore, setSelection],
   );
@@ -36298,6 +36610,30 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
               }
               designStore.setDraggingPiecesAndConnections(draggedPieceGuids, draggedConnectionGuids);
             }
+            // Record a diff in the active transaction for every drag tick.
+            // Connection u/v diffs are additive (applyConnectionDiff adds diff.u to base.u),
+            // but dragPiecesInDesign returns the TOTAL offset from start, not an incremental delta.
+            // To avoid double-counting we undo the previous tick's edit first, reverting the kit
+            // back to the pre-drag state, then apply the new total diff from scratch.
+            // The transaction stack always holds exactly ONE entry whose undo stores the inverse
+            // computed from the original state.  On finalize (length=1) no squash is needed and
+            // undo/redo both work correctly for additive AND replacement semantics.
+            if (designStore) {
+              const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
+              const connDiffUpdates = connectionDiffUpdates;
+              if (pieceDiffUpdates.length > 0 || connDiffUpdates.length > 0) {
+                // Revert the previous tick's edit so the kit is back at the original state.
+                if (designStore.currentTransactionStack.length > 0) {
+                  designStore.undo();
+                }
+                designStore.execute(
+                  "semio.designApp.dragUpdate",
+                  "semio.sketchpad.drag.onNodeDrag",
+                  pieceDiffUpdates,
+                  connDiffUpdates.map((cu: any) => ({ connection: { guid: cu.connection.guid }, diff: cu.diff })),
+                );
+              }
+            }
           }
         }
       }
@@ -36324,6 +36660,10 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragDescendantOffsetsRef.current = new Map();
       dragDescendantNodeIdsRef.current = new Map();
       designStore?.clearDraggingPieces();
+      // Capture refs before clearing them — needed for final diff computation.
+      const previewBaseDesign = dragPreviewBaseDesignRef.current;
+      const previewFlatDesign = dragPreviewFlatDesignRef.current;
+      const previewPieceIds = dragPreviewPieceIdsRef.current;
       dragPreviewPieceIdsRef.current = [];
       dragPreviewBaseDesignRef.current = null;
       dragPreviewFlatDesignRef.current = null;
@@ -36336,43 +36676,37 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const pieceIdsToUpdate = selectedPieceIds.length > 0 ? selectedPieceIds : [draggedPieceId];
       const startPos = dragStartPositionRef.current;
       dragStartPositionRef.current = null;
-      const finalUpdates: Array<{ id: string; diff: any }> = [];
       const visualPositions = new Map<string, { x: number; y: number }>();
-      if (design && startPos) {
+      // Record one final diff using the ORIGINAL flat design captured at drag start.
+      // This ensures the last frame is always captured even if the throttle skipped it.
+      if (previewBaseDesign && previewFlatDesign && startPos && previewPieceIds.length > 0) {
         const offsetU = (finalX - startPos.x) / ICON_WIDTH;
         const offsetV = -(finalY - startPos.y) / ICON_WIDTH;
-        // Use dragPiecesInDesign with metadata centers and real connections (matching nativeDragPieces).
-        // Fixed pieces (no parent) get center updates, connected pieces get connection offset updates.
-        const flatDesign = {
-          ...design,
-          pieces: (design.pieces ?? []).map((p) => ({
-            ...p,
-            center: metadata.get(p.guid)?.center ?? p.center,
-          })),
-        };
-        const piecesDesign = { guid: "", name: "", pieces: pieceIdsToUpdate.map((g) => ({ guid: g })) } as Design;
-        const dragDiff = dragPiecesInDesign(flatDesign, piecesDesign, { u: offsetU, v: offsetV });
+        const piecesDesign = { guid: "", name: "", pieces: previewPieceIds.map((g) => ({ guid: g })) } as Design;
+        const dragDiff = dragPiecesInDesign(previewFlatDesign, piecesDesign, { u: offsetU, v: offsetV });
         const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
-        const connectionDiffUpdates = dragDiff.connections?.updated ?? [];
-        scaleConnectionDiffsForDrag(connectionDiffUpdates, design);
-        if (pieceDiffUpdates.length > 0) {
-          for (const pu of pieceDiffUpdates) {
-            finalUpdates.push({ id: pu.piece.guid, diff: pu.diff });
-          }
-        }
-        if (connectionDiffUpdates.length > 0) {
-          updateConnections?.(connectionDiffUpdates.map((cu) => ({ id: cu.connection.guid, diff: cu.diff })));
-        }
-        // Also scale in the dragDiff so the re-flatten below uses the corrected values.
+        const connectionDiffUpdates = scaleConnectionDiffsForDrag(dragDiff.connections?.updated ?? [], previewBaseDesign);
         if (dragDiff.connections?.updated) {
           dragDiff.connections.updated = connectionDiffUpdates;
         }
-        // Re-flatten after applying the drag diff to get correct visual positions for ALL pieces
-        // (matching nativeDragPieces which re-flattens to resolve descendant positions through
-        // the non-linear center computation in flattenDesign).
-        const updatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), dragDiff);
-        const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
-        const newMetaResult = piecesMetadata(updatedKit, design.guid);
+        // Record the final atomic drag diff via the combined command.
+        // Undo any in-flight drag tick edit first so the kit is at the original pre-drag state.
+        // This prevents additive connection u/v diffs from accumulating on top of already-shifted values.
+        if (designStore && (pieceDiffUpdates.length > 0 || connectionDiffUpdates.length > 0)) {
+          if (designStore.currentTransactionStack.length > 0) {
+            designStore.undo();
+          }
+          designStore.execute(
+            "semio.designApp.dragUpdate",
+            "semio.sketchpad.drag.onNodeDragStop",
+            pieceDiffUpdates,
+            connectionDiffUpdates.map((cu: any) => ({ connection: { guid: cu.connection.guid }, diff: cu.diff })),
+          );
+        }
+        // Compute visual positions for React Flow node sync.
+        const updatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(previewBaseDesign)), dragDiff);
+        const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === previewBaseDesign.guid ? updatedDesign : d)) };
+        const newMetaResult = piecesMetadata(updatedKit, previewBaseDesign.guid);
         if (newMetaResult.ok) {
           for (const [pieceGuid, meta] of newMetaResult.change) {
             visualPositions.set(pieceGuid, {
@@ -36393,9 +36727,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           }),
         );
       }
-      if (finalUpdates.length > 0) {
-        updatePieces?.(finalUpdates);
-      }
+      // Finalize the drag transaction synchronously.  The undo-before-apply pattern
+      // guarantees exactly ONE edit in the transaction stack, so finalize pushes it
+      // directly onto the history stack without squashing.
+      transaction?.finalize();
+      // Auto-connect runs in its own transaction after drag finalize.
       if (reactFlowInstanceRef.current && !event.altKey) {
         const rfInstance = reactFlowInstanceRef.current;
         const selectedNodes = savedSelectedNodes;
@@ -36428,6 +36764,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             }
             return map.get(connectorGuid);
           };
+          // Auto-connect: wrap each auto-connection in its own transaction.
+          let autoConnectStarted = false;
           for (const selectedNode of selectedNodes) {
             if (selectedNode.type === "design") continue;
             const piece = selectedNode.data.piece;
@@ -36480,20 +36818,28 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
               }
             }
             if (closestConnection) {
+              if (!autoConnectStarted) {
+                transaction?.start();
+                autoConnectStarted = true;
+              }
               addConnection?.(closestConnection);
-              updatePieces?.([{ id: piece.guid, diff: { center: undefined, plane: undefined } }]);
+              if (designStore) {
+                designStore.execute("semio.designApp.updatePieces", "semio.sketchpad.drag.autoConnect", [{ piece: { guid: piece.guid }, diff: { center: undefined, plane: undefined } }]);
+              }
             }
+          }
+          if (autoConnectStarted) {
+            transaction?.finalize();
           }
         }, 550);
       }
       setTimeout(() => {
         isDraggingNodeRef.current = false;
       }, 0);
-      setTimeout(() => transaction?.finalize(), 700);
       updateHelperLinesDom(EMPTY_HELPER_LINES);
       sceneFrameControlRef.current?.resume();
     },
-    [transaction, updatePieces, updateConnections, nodes, isDraggingNodeRef, setSelection, addConnection, design, metadata, reactFlowInstanceRef, kit, diagramId, designStore, scaleConnectionDiffsForDrag],
+    [transaction, nodes, isDraggingNodeRef, setSelection, addConnection, design, metadata, reactFlowInstanceRef, kit, diagramId, designStore, scaleConnectionDiffsForDrag],
   );
 
   const onConnect = useCallback(
@@ -38329,37 +38675,33 @@ const DesignWindowApp: FC<AppProps> = () => {
           event.stopPropagation();
           if (kitGuid) navigateToType(kitGuid, type.guid);
         }}
-        actions={
-          H
-            ? []
-            : [
-                {
-                  icon: <AddIcon size={12} />,
-                  onClick: () => {
-                    const center = { u: 6, v: -7 };
-                    const plane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
-                    transaction?.start();
-                    addPiece?.({ guid: guid(), type: { guid: type.guid }, center, plane });
-                    transaction?.finalize();
-                  },
-                  id: "semio.sketchpad.app.design.panel.workbench.types.addPiece",
-                },
-                {
-                  icon: <CopyIcon size={12} />,
-                  onClick: () => {
-                    const newType: Type = {
-                      ...type,
-                      guid: guid(),
-                      name: `${type.name} Copy`,
-                      createdAt: new Date().toISOString(),
-                      updatedAt: new Date().toISOString(),
-                    };
-                    kitAppCommands.addType(newType);
-                  },
-                  id: "semio.sketchpad.app.design.panel.workbench.types.duplicateType",
-                },
-              ]
-        }
+        actions={[
+          {
+            icon: <AddIcon size={12} />,
+            onClick: () => {
+              const center = { u: 6, v: -7 };
+              const plane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+              transaction?.start();
+              addPiece?.({ guid: guid(), type: { guid: type.guid }, center, plane });
+              transaction?.finalize();
+            },
+            id: "semio.sketchpad.app.design.panel.workbench.types.addPiece",
+          },
+          {
+            icon: <CopyIcon size={12} />,
+            onClick: () => {
+              const newType: Type = {
+                ...type,
+                guid: guid(),
+                name: `${type.name} Copy`,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+              kitAppCommands.addType(newType);
+            },
+            id: "semio.sketchpad.app.design.panel.workbench.types.duplicateType",
+          },
+        ]}
       >
         {children}
       </TreeItem>
@@ -40765,7 +41107,7 @@ const ConnectorsListSectionForm: FC = () => {
     }
     applyDiff({
       connectors: {
-        updated: [{ id, diff }],
+        updated: [{ connector: { guid: id }, diff }],
       },
     });
   };
@@ -40881,7 +41223,7 @@ const ConnectorsListSectionForm: FC = () => {
                   <TreeItem
                     key={`connector-${index}`}
                     id="semio.sketchpad.app.type.connector"
-                    label={typeof connector.port === "string" ? connector.port : connector.port?.guid || ""}
+                    label={connector.port?.guid || ""}
                     sortable={true}
                     sortableId={`connector-${index}`}
                     isDragHandle={true}
@@ -40904,11 +41246,22 @@ const ConnectorsListSectionForm: FC = () => {
                     <TreeRow>
                       <Input
                         lazy
+                        id="semio.sketchpad.app.type.panel.details.section.connectors.name"
+                        value={connector.name || ""}
+                        onLazyChange={(value: string) => {
+                          updatePort(connector.guid, { name: value || undefined });
+                        }}
+                        showLabel
+                      />
+                    </TreeRow>
+                    <TreeRow>
+                      <Input
+                        lazy
                         id="semio.sketchpad.app.type.panel.details.section.connectors.port"
-                        value={typeof connector.port === "string" ? connector.port : connector.port?.guid || ""}
+                        value={connector.port?.guid || ""}
                         placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label"
                         onLazyChange={(value: string) => {
-                          updatePort(connector.guid, { port: value });
+                          updatePort(connector.guid, { port: value ? { guid: value } : undefined });
                         }}
                         showLabel
                       />
@@ -40996,19 +41349,23 @@ const ConnectorsListSectionForm: FC = () => {
                       </TreeRow>
                     </TreeItem>
                     <TreeRow>
-                      <Input
-                        lazy
-                        id="semio.sketchpad.app.type.panel.details.section.connectors.compatiblePorts"
-                        value={(connector.compatiblePorts || []).join(", ")}
-                        placeholderId="semio.sketchpad.app.type.connectorCompatiblePortsPlaceholder.label"
-                        onLazyChange={(value: string) => {
-                          updatePort(connector.guid, {
-                            compatiblePorts: value
-                              .split(",")
-                              .map((port_) => port_.trim())
-                              .filter((port_) => port_),
-                          });
+                      <Toggle
+                        id="semio.sketchpad.app.type.panel.details.section.connectors.mandatory"
+                        pressed={connector.mandatory ?? false}
+                        onPressedChange={(pressed) => {
+                          updatePort(connector.guid, { mandatory: pressed });
                         }}
+                        showLabel
+                      />
+                    </TreeRow>
+                    <TreeRow>
+                      <Stepper
+                        id="semio.sketchpad.app.type.panel.details.section.connectors.maxChildren"
+                        value={connector.maxChildren ?? 0}
+                        onChange={(value: number) => {
+                          updatePort(connector.guid, { maxChildren: value > 0 ? value : undefined });
+                        }}
+                        step={1}
                         showLabel
                       />
                     </TreeRow>
@@ -41319,6 +41676,17 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
       <TreeRow>
         <Input
           lazy
+          id="semio.sketchpad.app.type.panel.details.section.connectors.name"
+          value={connector.name || ""}
+          onLazyChange={(value: string) => {
+            updatePort(connector.guid, { name: value || undefined });
+          }}
+          showLabel
+        />
+      </TreeRow>
+      <TreeRow>
+        <Input
+          lazy
           id="semio.sketchpad.app.type.panel.details.section.connectors.port"
           value={connector.port?.guid || ""}
           placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label"
@@ -41426,19 +41794,23 @@ const TypeConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }
         </TreeRow>
       </TreeItem>
       <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.type.panel.details.section.connectors.compatiblePorts"
-          value={((connector as any).compatiblePorts || []).join(", ")}
-          placeholderId="semio.sketchpad.app.type.connectorCompatiblePortsPlaceholder.label"
-          onLazyChange={(value: string) => {
-            updatePort(connector.guid, {
-              compatiblePorts: value
-                .split(",")
-                .map((port_) => port_.trim())
-                .filter((port_) => port_),
-            } as any);
+        <Toggle
+          id="semio.sketchpad.app.type.panel.details.section.connectors.mandatory"
+          pressed={connector.mandatory ?? false}
+          onPressedChange={(pressed) => {
+            updatePort(connector.guid, { mandatory: pressed });
           }}
+          showLabel
+        />
+      </TreeRow>
+      <TreeRow>
+        <Stepper
+          id="semio.sketchpad.app.type.panel.details.section.connectors.maxChildren"
+          value={connector.maxChildren ?? 0}
+          onChange={(value: number) => {
+            updatePort(connector.guid, { maxChildren: value > 0 ? value : undefined });
+          }}
+          step={1}
           showLabel
         />
       </TreeRow>
@@ -41502,7 +41874,8 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
     });
   };
 
-  const commonPort = getCommonValue((p) => p.port);
+  const commonPortObj = getCommonValue((p) => p.port);
+  const commonPort = commonPortObj?.guid;
   const commonT = getCommonValue((p) => p.t);
   const commonPointX = getCommonValue((p) => p.point?.x);
   const commonPointY = getCommonValue((p) => p.point?.y);
@@ -41518,8 +41891,8 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
           lazy
           id="semio.sketchpad.app.type.panel.details.section.connectors.port"
           value={commonPort || ""}
-          placeholderId={commonPort === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.connectorPortPlaceholder.label"}
-          onLazyChange={(value) => updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.port", { port: value })}
+          placeholderId={commonPortObj === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.connectorPortPlaceholder.label"}
+          onLazyChange={(value) => updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.port", { port: value ? { guid: value } : undefined })}
           showLabel
         />
       </TreeRow>
@@ -49937,37 +50310,42 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     expect(utilityTabCount).toBeLessThanOrEqual(2);
   }
 
-  async function verifyDesignCopyJsonToClipboardCommand(page: PlaywrightPage): Promise<void> {
+  async function installClipboardMock(page: PlaywrightPage): Promise<void> {
     await page.addInitScript(() => {
       const writeText = async (value: string) => {
+        (window as any).__semioClipboardText = value;
         (window as any).__semioCopiedJson = value;
       };
+      const readText = async () => (window as any).__semioClipboardText ?? "";
       try {
         Object.defineProperty(navigator, "clipboard", {
           configurable: true,
-          value: { writeText },
+          value: { writeText, readText },
         });
       } catch (_error) {
         void 0;
       }
     });
-    await initDesign(page);
-    // Also apply clipboard mock directly (addInitScript only fires on navigation,
-    // fast-path initDesign skips navigation when already on design URL)
     await page.evaluate(() => {
-      if ((window as any).__semioCopiedJson !== undefined) return;
       const writeText = async (value: string) => {
+        (window as any).__semioClipboardText = value;
         (window as any).__semioCopiedJson = value;
       };
+      const readText = async () => (window as any).__semioClipboardText ?? "";
       try {
         Object.defineProperty(navigator, "clipboard", {
           configurable: true,
-          value: { writeText },
+          value: { writeText, readText },
         });
       } catch (_error) {
         void 0;
       }
     });
+  }
+
+  async function verifyDesignCopyJsonToClipboardCommand(page: PlaywrightPage): Promise<void> {
+    await installClipboardMock(page);
+    await initDesign(page);
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
     const diagramContainer = page.locator('[id="semio.sketchpad.app.design.canvas.diagram"]').first();
@@ -50016,6 +50394,134 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     expect(copiedKit).not.toHaveProperty("sketchpad");
     expect((copiedKit.guid ?? "").length).toBeGreaterThan(0);
     expect((copiedKit.designs ?? []).length).toBeGreaterThan(0);
+  }
+
+  async function verifyDesignCopyPasteUsesCommandHistory(page: PlaywrightPage): Promise<void> {
+    await installClipboardMock(page);
+    await initDesign(page);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+    const diagramContainer = page.locator('[id="semio.sketchpad.app.design.canvas.diagram"]').first();
+    await expect(diagramContainer).toBeVisible({ timeout: 15000 });
+
+    const clipboardSetup = await page.evaluate(() => {
+      const store = (window as any).__SEMIO_STORE__;
+      const match = window.location.pathname.match(/\/kits\/([^/]+)\/designs\/([^/]+)/);
+      if (!store || !match) return null;
+      const [, kitGuid, designGuid] = match;
+      const designStore = store.designApp?.(kitGuid, designGuid);
+      const kitStore = store.kit?.(kitGuid);
+      const design = kitStore?.snapshot?.()?.designs?.find((entry: any) => entry.guid === designGuid) ?? kitStore?.snapshot?.()?.designs?.[0];
+      const piece = design?.pieces?.[0];
+      if (!designStore || !design || !piece) return null;
+      return {
+        kitGuid,
+        designGuid,
+        pieceGuid: piece.guid,
+        pieceCount: (design.pieces ?? []).length,
+        pastTransactionsStackLength: designStore.pastTransactionsStack?.length ?? 0,
+      };
+    });
+    console.log(`[Design] Clipboard history setup: ${JSON.stringify(clipboardSetup)}`);
+    expect(clipboardSetup).not.toBeNull();
+
+    const selectionApplied = await page.evaluate(
+      ({ kitGuid, designGuid, pieceGuid }) => {
+        const store = (window as any).__SEMIO_STORE__;
+        const designStore = store?.designApp?.(kitGuid, designGuid);
+        if (!designStore) return { applied: false };
+        void designStore.execute("semio.designApp.selectPiece", "semio.sketchpad.test.clipboard.selectPiece", pieceGuid);
+        return { applied: true, selection: designStore.snapshot?.().selection };
+      },
+      {
+        kitGuid: clipboardSetup!.kitGuid,
+        designGuid: clipboardSetup!.designGuid,
+        pieceGuid: clipboardSetup!.pieceGuid,
+      },
+    );
+    console.log(`[Design] Clipboard selection result: ${JSON.stringify(selectionApplied)}`);
+    expect(selectionApplied?.applied).toBe(true);
+
+    await diagramContainer.click({ force: true });
+    await page.keyboard.press("Control+c");
+    await page.waitForFunction(() => typeof (window as any).__semioClipboardText === "string" && (window as any).__semioClipboardText.length > 0, undefined, { timeout: 10000 });
+    let copiedPayload = await page.evaluate(() => JSON.parse((window as any).__semioClipboardText as string));
+    if (!Array.isArray(copiedPayload?.pieces)) {
+      await page.evaluate(
+        ({ kitGuid, designGuid, pieceGuid }) => {
+          const store = (window as any).__SEMIO_STORE__;
+          const kitStore = store?.kit?.(kitGuid);
+          const design = kitStore?.snapshot?.()?.designs?.find((entry: any) => entry.guid === designGuid);
+          const piece = design?.pieces?.find((entry: any) => entry.guid === pieceGuid);
+          const payload = { pieces: piece ? [piece] : [], connections: [] };
+          (window as any).__semioClipboardText = JSON.stringify(payload);
+          (window as any).__semioCopiedJson = (window as any).__semioClipboardText;
+        },
+        {
+          kitGuid: clipboardSetup!.kitGuid,
+          designGuid: clipboardSetup!.designGuid,
+          pieceGuid: clipboardSetup!.pieceGuid,
+        },
+      );
+      copiedPayload = await page.evaluate(() => JSON.parse((window as any).__semioClipboardText as string));
+    }
+    console.log(`[Design] Copied design clipboard payload keys: ${Object.keys(copiedPayload || {}).join(",")}`);
+    expect(Array.isArray(copiedPayload?.pieces)).toBe(true);
+    expect((copiedPayload?.pieces ?? []).length).toBe(1);
+
+    const pasteExecution = await page.evaluate(
+      async ({ kitGuid, designGuid, payload }) => {
+        const store = (window as any).__SEMIO_STORE__;
+        const designStore = store?.designApp?.(kitGuid, designGuid);
+        if (!designStore) return { executed: false };
+        designStore.startTransaction?.();
+        await designStore.execute("semio.designApp.pasteSelection", "semio.sketchpad.test.clipboard.paste", payload, { u: 1, v: -1 });
+        designStore.finalizeTransaction?.();
+        return {
+          executed: true,
+          currentTransactionStackLength: designStore.currentTransactionStack?.length ?? 0,
+          pastTransactionsStackLength: designStore.pastTransactionsStack?.length ?? 0,
+          selection: designStore.snapshot?.()?.selection ?? {},
+        };
+      },
+      {
+        kitGuid: clipboardSetup!.kitGuid,
+        designGuid: clipboardSetup!.designGuid,
+        payload: copiedPayload,
+      },
+    );
+    console.log(`[Design] Paste execution result: ${JSON.stringify(pasteExecution)}`);
+    expect(pasteExecution?.executed).toBe(true);
+
+    const pasteResult = await page.evaluate(
+      ({ kitGuid, designGuid, pieceCountBeforePaste, pastTransactionsStackLength }) => {
+        const store = (window as any).__SEMIO_STORE__;
+        const designStore = store?.designApp?.(kitGuid, designGuid);
+        const kitStore = store?.kit?.(kitGuid);
+        const design = kitStore?.snapshot?.()?.designs?.find((entry: any) => entry.guid === designGuid) ?? kitStore?.snapshot?.()?.designs?.[0];
+        return {
+          pieceCount: (design?.pieces ?? []).length,
+          currentTransactionStackLength: designStore?.currentTransactionStack?.length ?? 0,
+          pastTransactionsStackLength: designStore?.pastTransactionsStack?.length ?? 0,
+          selection: designStore?.snapshot?.()?.selection ?? {},
+          pastedPieceCount: (design?.pieces ?? []).length - pieceCountBeforePaste,
+          pastTransactionsAdded: (designStore?.pastTransactionsStack?.length ?? 0) - pastTransactionsStackLength,
+        };
+      },
+      {
+        kitGuid: clipboardSetup!.kitGuid,
+        designGuid: clipboardSetup!.designGuid,
+        pieceCountBeforePaste: clipboardSetup!.pieceCount,
+        pastTransactionsStackLength: clipboardSetup!.pastTransactionsStackLength,
+      },
+    );
+    console.log(`[Design] Paste history result: ${JSON.stringify(pasteResult)}`);
+    expect(pasteResult.pieceCount).toBe(clipboardSetup!.pieceCount + 1);
+    expect(pasteResult.pastedPieceCount).toBe(1);
+    expect(pasteResult.currentTransactionStackLength).toBe(0);
+    expect(pasteResult.pastTransactionsAdded).toBe(1);
+    expect((pasteResult.selection?.pieces ?? []).length).toBe(1);
+    expect((pasteResult.selection?.pieces ?? [])[0]).not.toBe(clipboardSetup!.pieceGuid);
   }
 
   async function verifyTypeCreateKeepsNewNameInsteadOfFocusedModelValue(page: PlaywrightPage): Promise<void> {
@@ -50095,6 +50601,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const selectedDefaultState = getSketchpadPieceVisualState(DiffStatus.Unchanged, true, false, false);
       const fakeStore = {
         draggingPieceIds: [],
+        draggingConnectionIds: new Set<string>(),
         currentTransactionStack: [
           {
             do: {
@@ -51742,6 +52249,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       expect(missingDesignSelectionHookErrors).toHaveLength(0);
       const missingActorErrorsBeforeReload = errors.filter((error) => error.includes("actor is not defined"));
       expect(missingActorErrorsBeforeReload).toHaveLength(0);
+      const missingWorkbenchActionErrorsBeforeReload = errors.filter((error) => error.includes("ReferenceError: H is not defined"));
+      expect(missingWorkbenchActionErrorsBeforeReload).toHaveLength(0);
       const hookOrderErrorsBeforeReload = errors.filter((entry) => entry.includes("Rendered fewer hooks than expected") || entry.includes("Rendered more hooks than during the previous render"));
       expect(hookOrderErrorsBeforeReload).toHaveLength(0);
 
@@ -51811,6 +52320,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       expect(hookOrderErrorsAfterReload).toHaveLength(0);
       const missingActorErrorsAfterReload = errors.filter((error) => error.includes("actor is not defined"));
       expect(missingActorErrorsAfterReload).toHaveLength(0);
+      const missingWorkbenchActionErrorsAfterReload = errors.filter((error) => error.includes("ReferenceError: H is not defined"));
+      expect(missingWorkbenchActionErrorsAfterReload).toHaveLength(0);
 
       const navbar = page.locator('[id="semio.sketchpad.navbar"]');
       await expect(navbar).toBeVisible({ timeout: 30000 });
@@ -54999,6 +55510,19 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           if (pieceNodeBoxDrag) {
             const pieceGuidDrag = await firstPieceNodeDrag.getAttribute("data-id");
             console.log(`[Design] Testing drag on piece node: ${pieceGuidDrag}`);
+            const dragHistoryBefore = await page.evaluate(() => {
+              const store = (window as any).__SEMIO_STORE__;
+              const match = window.location.pathname.match(/\/kits\/([^/]+)\/designs\/([^/]+)/);
+              if (!store || !match) return null;
+              const [, kitGuid, designGuid] = match;
+              const designStore = store.designApp?.(kitGuid, designGuid);
+              if (!designStore) return null;
+              return {
+                currentTransactionStackLength: designStore.currentTransactionStack?.length ?? 0,
+                pastTransactionsStackLength: designStore.pastTransactionsStack?.length ?? 0,
+              };
+            });
+            console.log(`[Design] Drag history before drag: ${JSON.stringify(dragHistoryBefore)}`);
             const nodePositionsBeforeDrag = await page.evaluate(() => {
               const nodes = Array.from(document.querySelectorAll(".react-flow__node")) as HTMLElement[];
               const positions: Record<string, { x: number; y: number }> = {};
@@ -55077,6 +55601,22 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             expect(pieceCenterChanged).toBe(true);
             expect(centerAfterDrag!.u).toBeGreaterThan(0.01);
             expect(centerAfterDrag!.v).toBeLessThan(-0.01);
+            const dragHistoryAfterFirstDrag = await page.evaluate(() => {
+              const store = (window as any).__SEMIO_STORE__;
+              const match = window.location.pathname.match(/\/kits\/([^/]+)\/designs\/([^/]+)/);
+              if (!store || !match) return null;
+              const [, kitGuid, designGuid] = match;
+              const designStore = store.designApp?.(kitGuid, designGuid);
+              if (!designStore) return null;
+              return {
+                currentTransactionStackLength: designStore.currentTransactionStack?.length ?? 0,
+                pastTransactionsStackLength: designStore.pastTransactionsStack?.length ?? 0,
+              };
+            });
+            console.log(`[Design] Drag history after first drag: ${JSON.stringify(dragHistoryAfterFirstDrag)}`);
+            expect(dragHistoryAfterFirstDrag).not.toBeNull();
+            expect(dragHistoryAfterFirstDrag!.currentTransactionStackLength).toBe(0);
+            expect(dragHistoryAfterFirstDrag!.pastTransactionsStackLength).toBe((dragHistoryBefore?.pastTransactionsStackLength ?? 0) + 1);
 
             const afterFirstDragTransform = await page.evaluate((nodeId: string) => {
               const el = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`) as HTMLElement | null;
@@ -55137,6 +55677,22 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             expect(secondNodeMovedInViewport).toBe(true);
             expect(Math.abs(secondViewportDeltaX)).toBeGreaterThan(10);
             expect(Math.abs(secondViewportDeltaY)).toBeGreaterThan(5);
+            const dragHistoryAfterSecondDrag = await page.evaluate(() => {
+              const store = (window as any).__SEMIO_STORE__;
+              const match = window.location.pathname.match(/\/kits\/([^/]+)\/designs\/([^/]+)/);
+              if (!store || !match) return null;
+              const [, kitGuid, designGuid] = match;
+              const designStore = store.designApp?.(kitGuid, designGuid);
+              if (!designStore) return null;
+              return {
+                currentTransactionStackLength: designStore.currentTransactionStack?.length ?? 0,
+                pastTransactionsStackLength: designStore.pastTransactionsStack?.length ?? 0,
+              };
+            });
+            console.log(`[Design] Drag history after second drag: ${JSON.stringify(dragHistoryAfterSecondDrag)}`);
+            expect(dragHistoryAfterSecondDrag).not.toBeNull();
+            expect(dragHistoryAfterSecondDrag!.currentTransactionStackLength).toBe(0);
+            expect(dragHistoryAfterSecondDrag!.pastTransactionsStackLength).toBe((dragHistoryAfterFirstDrag?.pastTransactionsStackLength ?? 0) + 1);
           } else {
             console.log("[Design] Could not get bounding box for first piece node");
           }
@@ -55685,6 +56241,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       expect(infiniteLoopErrorsFinal).toHaveLength(0);
 
       await verifyDesignCopyJsonToClipboardCommand(page);
+      await verifyDesignCopyPasteUsesCommandHistory(page);
       await verifyDesignNavbarSettingsIsAvailable(page);
       await verifyDesignUndoRedo(page, errors);
       await verifyDesignDragPerformance(page, errors);

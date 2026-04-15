@@ -4058,6 +4058,30 @@ const elementUiTranslationBundles = {
                       "tutorial": "hello-semio/model-brick-set"
                     }
                   },
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "Ein optionaler Name fuer diesen Connector."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "mandatory": {
+                    "label": {
+                      "normal": "Pflichtfeld",
+                      "beginner": "Ob dieser Connector fuer eine gueltige Verbindung zwingend erforderlich ist."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "maxChildren": {
+                    "label": {
+                      "normal": "Max. Kinder",
+                      "beginner": "Die maximale Anzahl von Verbindungen, die an diesem Connector erlaubt sind."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
                   "point": {
                     "label": {
                       "normal": "",
@@ -8828,6 +8852,30 @@ const elementUiTranslationBundles = {
                       "manual": "type#connectors",
                       "tutorial": "hello-semio/model-brick-set"
                     }
+                  },
+                  "name": {
+                    "label": {
+                      "normal": "Name",
+                      "beginner": "An optional name for this connector."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "mandatory": {
+                    "label": {
+                      "normal": "Mandatory",
+                      "beginner": "Whether this connector is required for a valid connection."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
+                  },
+                  "maxChildren": {
+                    "label": {
+                      "normal": "Max Children",
+                      "beginner": "The maximum number of connections allowed at this connector."
+                    },
+                    "manual": "type#connectors",
+                    "tutorial": "hello-semio/model-brick-set"
                   },
                   "point": {
                     "label": {

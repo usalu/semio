@@ -1,5 +1,11 @@
 
+there seem to be an issue with the state in sketchpad . make sure this is happening: every ui interaction must trigger a command. every command will create a new diff. after trasnaction is finalized, the diffs are squashed and placed in the history stack. drag algorithm and all other should use this. drag now is not working like it should because of that. e.g. when user starts draging a transaction start is fired and constantly diffs shall be created as the user drags. as soon as the drag is released the diffs are squashed together and put in history stack. when then user undo it will get back to the last position before the user started dragging to the new position becuase all the inbetween steps got squashed into one becuase the transation got finalaized. trasnactions are forward and backward as well as history stack. refractor and change whatever needed. teh goal is a drag algorithm that works as in sketchpad algorithms but uses the correct sketchpad state. if this issue is  corrected all other algorithms are gonan work properly as well. dont be scared of change. you have to do whatever needed to fix 
+
+-----
+
 sketchpad inbetween until mouse release should show the preview of the piece being dragged. the preview should update in real-time as the user moves the mouse, so they can see how the piece will fit with other pieces in the design.currently, it applies to few pieces but not all pieces. make sure to implement it for all pieces and make sure it works for all pieces in the design. also make sure that connections are also previewed in real-time as the user drags the piece. dont break the drag funtionalty or do cheap ui hacks to make it work. make sure to test it thoroughly to ensure that the preview is accurate and responsive, and that it does not cause any performance issues or bugs in the design process
+
+
 -------------------------------------
 
 
