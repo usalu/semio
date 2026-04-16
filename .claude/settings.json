@@ -12,7 +12,7 @@
       {
         "hooks": [
           {
-            "command": "go run ./repo/cli hook Notification claude-code",
+            "command": "go run ./repo/claude hook Notification",
             "type": "command"
           }
         ],
@@ -23,7 +23,7 @@
       {
         "hooks": [
           {
-            "command": "go run ./repo/cli hook PermissionRequest claude-code",
+            "command": "go run ./repo/claude hook PermissionRequest",
             "type": "command"
           }
         ],
@@ -34,7 +34,7 @@
       {
         "hooks": [
           {
-            "command": "go run ./repo/cli hook TaskCompleted claude-code",
+            "command": "go run ./repo/claude hook TaskCompleted",
             "type": "command"
           }
         ],
@@ -45,7 +45,7 @@
       {
         "hooks": [
           {
-            "command": "go run ./repo/cli hook TeammateIdle claude-code",
+            "command": "go run ./repo/claude hook TeammateIdle",
             "type": "command"
           }
         ],

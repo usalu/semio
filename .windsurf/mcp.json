@@ -1,41 +1,10 @@
 {
   "mcpServers": {
-    "playwright-test": {
-      "command": "npx",
-      "args": [
-        "playwright",
-        "run-test-mcp-server"
-      ],
-      "disabled": false
-    },
     "repo": {
       "command": "go",
       "args": [
         "run",
-        "./repo/cli",
-        "mcp"
-      ],
-      "disabled": false
-    },
-    "semio": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "semio/engine",
-        "run",
-        "main.py",
-        "--mcp-stdio"
-      ],
-      "disabled": false
-    },
-    "coda": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "coda/assistant",
-        "run",
-        "main.py",
-        "--mcp-stdio"
+        "./repo/mcp"
       ],
       "disabled": false
     }

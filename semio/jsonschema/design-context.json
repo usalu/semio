@@ -103,8 +103,8 @@
             "title": "ConnectorId",
             "type": "object"
         },
-        "Coord": {
-            "description": "\ud83d\udfe0Context fields for understanding a coord by an LLM.",
+        "Coordinate": {
+            "description": "\ud83d\udfe0Context fields for understanding a coordinate by an LLM.",
             "properties": {
                 "u": {
                     "title": "U",
@@ -119,7 +119,7 @@
                 "u",
                 "v"
             ],
-            "title": "Coord",
+            "title": "Coordinate",
             "type": "object"
         },
         "DesignId": {
@@ -219,7 +219,7 @@
                 "center": {
                     "anyOf": [
                         {
-                            "$ref": "#/$defs/Coord"
+                            "$ref": "#/$defs/Coordinate"
                         },
                         {
                             "type": "null"
@@ -334,12 +334,6 @@
         "TypeId": {
             "description": "\ud83d\udd16Identity fields for uniquely identifying a type.",
             "properties": {
-                "variant": {
-                    "default": "",
-                    "maxLength": 64,
-                    "title": "Variant",
-                    "type": "string"
-                },
                 "name": {
                     "maxLength": 64,
                     "title": "Name",
@@ -350,6 +344,19 @@
                 "name"
             ],
             "title": "TypeId",
+            "type": "object"
+        },
+        "FamilyId": {
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "FamilyId",
             "type": "object"
         },
         "Vector": {
@@ -406,6 +413,13 @@
                 }
             ],
             "default": null
+        },
+        "families": {
+            "items": {
+                "$ref": "#/$defs/FamilyId"
+            },
+            "title": "Families",
+            "type": "array"
         },
         "pieces": {
             "items": {

@@ -1,0 +1,16 @@
+{
+  "title": "Loc Command Categories Scanner And Contributor Filter",
+  "emoji": "🔢",
+  "status": "closed",
+  "description": "Refactor repo client `loc`: internal git-aware snapshot scan (skip hidden path segments, recognized extensions only), classify Code (5 langs), Markup, Data (JSON LOC = object key count), aggregate rows Code/Markup/Data/Total, sort by LOC with Total last, always show percentages, add --by-contributor=\u003calias\u003e working with --history, extend tests.",
+  "summary": "Refactored `loc` to drop cloc: git ls-files / ls-tree + per-bucket counting (JSON uses recursive object-key count; other data/markup use physical lines). Skips paths under hidden segments (.*) in addition to .repo/gitignore. Numstat + snapshots include Markup and Data; composed rows add Code and Total with percents; tables sort by LOC with Total last. Added `--by-contributor` (filters git deltas and history commits; narrows `--by-contributors` map when combined). Extended TestLocCommand. Verified: `go test -run TestLocCommand ./repo/client/` and `go build ./repo/client/`.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli🎯repoclifilters",
+  "plan": {
+    "client": "cursor",
+    "id": "65ba6379",
+    "local": "loc-command-refactor_65ba6379.plan.md"
+  },
+  "sessions": [
+    "⚪5159fa0915364dd88f0b0a7eccf59adf"
+  ]
+}

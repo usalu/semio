@@ -1,0 +1,38 @@
+{
+  "id": "a2846351-afdb-434d-9a6b-91d2840de2d2",
+  "uri": "repo://session/a2846351-afdb-434d-9a6b-91d2840de2d2",
+  "client": "claude-code",
+  "second": "2026-04-16T20:34:02Z",
+  "checkpoint": "e03f4d0329144829dbcc3e2bb99dd90c1c4866ba",
+  "contributor": "unknown",
+  "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\a2846351-afdb-434d-9a6b-91d2840de2d2.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "e03f4d0329144829dbcc3e2bb99dd90c1c4866ba",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-04-16T20:34:02Z",
+        "session": "a2846351-afdb-434d-9a6b-91d2840de2d2",
+        "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\a2846351-afdb-434d-9a6b-91d2840de2d2.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "a2846351-afdb-434d-9a6b-91d2840de2d2",
+          "transcript_path": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\a2846351-afdb-434d-9a6b-91d2840de2d2.jsonl",
+          "cwd": "C:\\git\\semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "PermissionRequest",
+          "tool_name": "Write",
+          "tool_input": {
+            "file_path": "c:\\git\\semio\\.mcp.json",
+            "content": "{\n  \"mcpServers\": {\n    \"repo\": {\n      \"type\": \"stdio\",\n      \"command\": \"go\",\n      \"args\": [\n        \"run\",\n        \"./repo/cli\",\n        \"mcp\"\n      ]\n    }\n  }\n}"
+          },
+          "permission_suggestions": []
+        }
+      },
+      "response": {}
+    }
+  ]
+}

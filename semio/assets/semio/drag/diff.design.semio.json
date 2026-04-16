@@ -3,7 +3,7 @@
         "updated": [
             {
                 "piece": {
-                    "guid": "e2faf536-dbe0-49e2-97b2-965e57acd512"
+                    "id": "e2faf536-dbe0-49e2-97b2-965e57acd512"
                 },
                 "diff": {
                     "center": {
@@ -14,7 +14,7 @@
             },
             {
                 "piece": {
-                    "guid": "3910be91-289e-493b-9f4c-7ef4ac75603e"
+                    "id": "3910be91-289e-493b-9f4c-7ef4ac75603e"
                 },
                 "diff": {
                     "center": {
@@ -29,7 +29,7 @@
         "updated": [
             {
                 "connection": {
-                    "guid": "b9c2feb0-4c1d-4cf0-adc6-c5bf4cd1beac"
+                    "id": "b9c2feb0-4c1d-4cf0-adc6-c5bf4cd1beac"
                 },
                 "diff": {
                     "u": -1,

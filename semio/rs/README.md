@@ -1,6 +1,6 @@
 # Summary
 
-Rust library for semio domain models.
+Rust library for semio domain representations.
 
 # Docs
 

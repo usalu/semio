@@ -9,13 +9,17 @@ bundle:
 
 # 🧾 Specification
 
+## Strict layering (algorithms Storybook)
+
+All algorithm story paths use **`@semio/js` `KitStore`** as the browser-facing `semio/rs` re-export for kit reads/writes. For **UI** and shared DTO shapes, use **`@semio/react`** and **`@semio/ui`** re-exports.
+
 ## 🕸️ Systems
 
 - **Algorithm Visualization System**: Storybook-based UI shell that renders algorithm inputs and outputs using the standardized `AlgorithmApp` from `@semio/ui`.
 
 ## 🧮 Algorithms
 
-- **Cluster**: Clusters multiple selected pieces into a single design-guid designPiece.
+- **Cluster**: Clusters multiple selected pieces into a single design-id designPiece.
 - **Copy/Paste**: Copies selected pieces and connections into a clipboard design, then pastes them onto a target design.
 - **Delete**: Removes selected pieces from a design.
 - **Drag**: Offsets center for all fixed pieces (pieces with center and plane) by drag offset (piece diff). If a selected piece is a descendant of another selected piece then it is ignored. Otherwise adds the drag offset to the parent connection (connection diff).
@@ -26,6 +30,6 @@ bundle:
 ## 🛠️ Mechanisms
 
 - **AlgorithmApp Shell**: Standardized golden-layout configuration that wires context state to specialized windows (VecInput, PiecesSelectionInput, etc.).
-- **Language Provider**: Storybook global decorator that injects the selected implementation language into the algorithm context.
+- **Single Source Runner**: Storybook helpers call `@semio/js` `KitStore`, which re-exports the `semio/rs` WASM implementation. Do not add native bridge, REST, stdin, or multi-language adapter paths here.
 
 ## 📛 Entities

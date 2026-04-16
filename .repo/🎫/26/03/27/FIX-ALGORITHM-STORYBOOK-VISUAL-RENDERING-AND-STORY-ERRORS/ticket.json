@@ -1,8 +1,9 @@
 {
   "title": "Fix Algorithm Storybook Visual Rendering and Story Errors",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "The algorithm stories don't look like the elements/ui/UI component. Some algorithm stories have errors. Fix visual rendering to match elements/ui/UI and fix all story errors.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1146"
   },

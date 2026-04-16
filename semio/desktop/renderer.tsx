@@ -14,11 +14,15 @@
 
 import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { createFolderKitStore, createSessionKitStore } from "@semio/sketchpad";
-import type { KitFolderAdapter, KitJsonFileAdapter } from "@semio/sketchpad";
-import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
-import { createJsonFileKitStore } from "@semio/sketchpad";
-import { InMemoryKitStore } from "@semio/js";
+import {
+  createFolderKitStore,
+  createJsonFileKitStore,
+  createSessionKitStore,
+  InMemoryKitStore,
+  type KitFolderAdapter,
+  type KitJsonFileAdapter,
+} from "@semio/react";
+import type { SketchpadKitStoreFactory } from "@semio/react";
 
 import "./globals.css";
 
@@ -214,7 +218,7 @@ function App() {
     throw new Error("File kit store not available in this environment");
   }, []);
 
-  // 🏭Remote kit store factory for connecting to semio/server.
+  // 🏭Remote kit store factory for connecting to semio/hub.
   // Specs: The server URL is passed in kit.name by the openKit command.
   const remoteKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (kit) => {
     const source = (kit as any)?.__semioKitPersistenceSource as { kind?: string; url?: string } | undefined;

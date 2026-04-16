@@ -1,0 +1,11 @@
+{
+  "title": "Rename Coord to Coordinate",
+  "status": "closed",
+  "description": "Rename the domain type `Coord` to `Coordinate` across all semio language implementations (py, ts, rs, cs, go, rb, graphql, jsonschema, openapi, xmi, liveblocks, assets, AGENTS.md). The AGENTS.md spec already standardizes on `Coordinate` (section \"Coordinate\" at line 2312, class `Coordinate` at line 701), but many source files still use the abbreviation `Coord`. Apply word-boundary aware substitution covering: Coord-\u003eCoordinate, Coords-\u003eCoordinates, coord-\u003ecoordinate, coords-\u003ecoordinates. Preserve already-correct `Coordinate` tokens. Do not touch ticket folders, session logs, cursor plans, or other historical artifacts. Run test suites per implementation to confirm.",
+  "summary": "(Accidentally reopened; re-closing with original summary restored.) Renamed `Coord`/`coord` → `Coordinate`/`coordinate` across the semio source tree using a scoped regex rewrite. 27 files, 743 replacements across Python, TypeScript/JS, Rust, Go, C#, GraphQL, JSON schema, OpenAPI, XMI, Liveblocks, Mermaid, and asset fixtures. Cascade updates: renamed `nakagin-capsule-tower.paste.with-coord.design.diff.semio.json` to `...with-coordinate...` with references updated in `semio/go/main_test.go`, `semio/net/Semio.Tests/Tests.cs`, `semio/assets/index.ts`, `semio/assets/semio/copy-paste.cases.semio.json`; Go hash tag strings changed to `Coordinate`/`CoordinateDiff`, deliberately changing the canonical kit hash; `hash.cases.semio.json` expected hash updated to `8b77d0ccf79c61e6454df276c3d29c0c8f40a84e49a3e2e2179f54d1455b99ee`; fixed unrelated `semio/rs/Cargo.toml` path. Verification: Rust 77/77 pass; Go builds with only pre-existing unrelated test failures (confirmed at pre-rename commit 63eec0e86); JS 211/228 pass with pre-existing divergence; .NET does not compile due to pre-existing `Model`→`Representation` over-rewrite. Follow-ups: unify JS/Go kit hash, fix `Model`→`Representation` artifacts, resolve `sqlrepresentation` package.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪83007bd2a650405ea9eeaa98c51f599a",
+    "⚪60f611b93451432f8c16986aecc817bd"
+  ]
+}

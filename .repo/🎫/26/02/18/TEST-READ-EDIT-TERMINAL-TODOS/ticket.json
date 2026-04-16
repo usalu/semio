@@ -1,8 +1,9 @@
 {
   "title": "Test Read Edit Terminal Todos",
   "emoji": "🧪",
-  "status": "open",
+  "status": "closed",
   "description": "Test read, edit, terminal and todos functionality in the repo. This ticket will demonstrate:\n1. Reading files and sections\n2. Editing files with proper section structure\n3. Running terminal commands\n4. Managing todos with the todo system",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/627"
   },

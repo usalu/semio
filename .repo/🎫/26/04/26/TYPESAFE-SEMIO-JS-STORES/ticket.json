@@ -1,0 +1,10 @@
+{
+  "title": "Typesafe Semio Js Stores",
+  "emoji": "📜",
+  "status": "open",
+  "description": "Implement typesafe semio/js stores: typed KitEvent wire, GraphQL/schema tests, per-event subscriptions, remove command leaks from public API, migrate semio/react and semio/sketchpad off kitWire/executeSemioKitCommand.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪ec14beb8eb2c4cbe8d3646fa6876a4c2"
+  ]
+}

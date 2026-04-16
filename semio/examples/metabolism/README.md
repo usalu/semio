@@ -15,7 +15,7 @@
     <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badges/ports.svg" alt="Ports"></a>
     <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badges/attributes.svg" alt="Attributes"></a>
     <br/>
-    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badges/models.svg" alt="Models"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badges/representations.svg" alt="Representations"></a>
     <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badges/lods.svg" alt="LoDs"></a>
     <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badges/tags.svg" alt="Tags"></a>
     <br/>
@@ -65,7 +65,7 @@ A bit overwhelmed? Just take a look at the source files 💡
 
 ### 🦗 Grasshopper
 
-> Make sure to open Rhino 8 and set the model units to `Meter` Ⓜ️
+> Make sure to open Rhino 8 and set the representation units to `Meter` Ⓜ️
 
 Just open the main Grasshopper definition `nakagin-capule-tower.gh`, hit the run toggles and enjoy 🍸
 
@@ -75,11 +75,11 @@ The `Capsule Dream` design should take around a minute to load the geometry 🐚
 
 ![Design Variants](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/docs/design-variants-rhino.png)
 
-Every model has a 1to500 model:
+Every representation has a 1to500 representation:
 
 ![Rhino Default Variant 1to500 volume](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/docs/rhino-default-variant-1to500-volume.png)
 
-and a 1to200 model:
+and a 1to200 representation:
 
 ![Rhino Default Variant 1to200 volume](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/docs/rhino-default-variant-1to200-volume.png)
 
@@ -109,15 +109,15 @@ Further they have metadata attached:
 
 ### 💻 Integrations
 
-Looking closely at the `types`, you see that `model` are not (only) linking to files but instead they link `urls`. This enables you to use any storage, collaboration and version environment you like (Speckle, Dropbox, OneDrive, GitHub, Nextcloud, Spline, ...) or all of them together 🕸️
+Looking closely at the `types`, you see that `representation` are not (only) linking to files but instead they link `urls`. This enables you to use any storage, collaboration and version environment you like (Speckle, Dropbox, OneDrive, GitHub, Nextcloud, Spline, ...) or all of them together 🕸️
 
-[Here](https://app.speckle.systems/projects/e7de1a2f8f) you can view the models even on your phone 📱
+[Here](https://app.speckle.systems/projects/e7de1a2f8f) you can view the representations even on your phone 📱
 
-![Speckle Models Overview](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/docs/speckle-models-overview.png)
+![Speckle Representations Overview](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/docs/speckle-representations-overview.png)
 
 Or load the geometry directly from Speckle into Grasshopper ⬇️
 
-![Speckle Models Overview](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/docs/grasshopper-speckle.png)
+![Speckle Representations Overview](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/docs/grasshopper-speckle.png)
 
 > The Speckle Grasshopper plugin is not particulary the best 🥴 Most likely your receive components are not fetching and instead showing errors or show no errors and still not fetch ❌ If you replace them with fresh receive components and hit `Receive` then it should work ✅ And yes, you have to do that every time you open the file again 🥵
 
@@ -143,7 +143,7 @@ When analyzing the folder structure you see that there is a special file `.semio
 │       capsule.gh
 │       ...
 │
-└───models
+└───representations
         ...
         capsule_1.3dm
         capsule_1.glb

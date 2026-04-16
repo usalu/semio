@@ -1,8 +1,9 @@
 {
   "title": "Fix Diagram Diff Parent Reassignment",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Fix semio UI diagram diff handling so a parent reassignment on connection 4e90d5ab-6f49-4ecb-a527-7b240353fbe0 in semio/assets/semio/nakgin-capsule-tower.diff.design.semio.json does not remove and readd the tambour piece. The diff should preserve the existing piece identity and only apply the new parent 357c1d20-f0ce-4da7-b6d7-feb4a0e42eb9 for that connection. Update existing tests and validate behavior.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1197"
   },

@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "name": "nakagin_capsule_tower",
+      "kit": "metabolism.kit.semio.json",
+      "designName": "Nakagin Capsule Tower"
+    }
+  ]
+}

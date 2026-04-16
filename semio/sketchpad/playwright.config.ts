@@ -35,7 +35,8 @@ const viteBin = resolve(repoRoot, "node_modules/vite/bin/vite.js");
 const previewHost = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
 
 export default defineConfig({
-  testMatch: ["**/*.spec.ts", "**/index.tsx"],
+  testDir: __dirname,
+  testMatch: ["index.tsx"],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

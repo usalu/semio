@@ -1,2314 +1,725 @@
-scalar DateTime
-
-enum DiffStatus {
-  unchanged
-  added
-  removed
-  modified
-}
-
-type Coord {
-  u: Float!
-  v: Float!
-}
-
-type Vec {
-  u: Float!
-  v: Float!
-}
-
-type Point {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-type Vector {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-type Plane {
-  origin: Point!
-  xAxis: Vector!
-  yAxis: Vector!
-}
-
-type Camera {
-  position: Point!
-  forward: Vector!
-  up: Vector!
-}
-
-type Attribute {
-  guid: String!
-  key: String!
-  value: String
-  definition: String
-}
-
-type AttributeMeta {
-  guid: String!
-  key: String!
-  value: String
-  definition: String
-}
-
-type AttributeShallow {
-  guid: String!
-  key: String!
-  value: String
-  definition: String
-}
-
-type AttributeDiff {
-  guid: String
-  key: String
-  value: String
-  definition: String
-}
-
-type AttributesDiff {
-  removed: [AttributeId!]
-  updated: [AttributeUpdate!]
-  added: [Attribute!]
-}
-
-type AttributeUpdate {
-  attribute: AttributeId!
-  diff: AttributeDiff!
-}
-
-type AttributeId {
-  guid: String!
-}
-
-type LocationId {
-  guid: String!
-}
-
-type AuthorId {
-  guid: String!
-}
-
-type FileId {
-  guid: String!
-}
-
-type FolderId {
-  guid: String!
-}
-
-type BenchmarkId {
-  guid: String!
-}
-
-type QualityId {
-  guid: String!
-}
-
-type PortId {
-  guid: String!
-}
-
-type PropId {
-  guid: String!
-}
-
-type ModelId {
-  guid: String!
-}
-
-type ConnectorId {
-  guid: String!
-}
-
-type TypeId {
-  guid: String!
-}
-
-type LayerId {
-  guid: String!
-}
-
-type PieceId {
-  guid: String!
-}
-
-type GroupId {
-  guid: String!
-}
-
-type ConnectionId {
-  guid: String!
-}
-
-type StatId {
-  guid: String!
-}
-
-type DesignId {
-  guid: String!
-}
-
-type KitId {
-  guid: String!
-}
-
-type TagId {
-  guid: String!
-}
-
-type ConceptId {
-  guid: String!
-}
-
-type Location {
-  guid: String!
-  longitude: Float!
-  latitude: Float!
-  altitude: Float
-  attributes: [Attribute!]
-}
-
-type LocationDiff {
-  guid: String
-  longitude: Float
-  latitude: Float
-  altitude: Float
-  attributes: AttributesDiff
-}
-
-type Author {
-  guid: String!
-  name: String!
-  email: String!
-  attributes: [Attribute!]
-}
-
-type AuthorMeta {
-  guid: String!
-  name: String!
-  email: String!
-}
-
-type AuthorShallow {
-  guid: String!
-  name: String!
-  email: String!
-  attributes: [Attribute!]
-}
-
-type AuthorDiff {
-  guid: String
-  name: String
-  email: String
-  attributes: AttributesDiff
-}
-
-type AuthorsDiff {
-  removed: [AuthorId!]
-  updated: [AuthorUpdate!]
-  added: [Author!]
-}
-
-type AuthorUpdate {
-  author: AuthorId!
-  diff: AuthorDiff!
-}
-
-type File {
-  guid: String!
-  name: String!
-  remote: String
-  folder: FolderId
-  size: Float
-  hash: String
-  blob: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-type FileMeta {
-  guid: String!
-  name: String!
-  remote: String
-  folder: FolderId
-  size: Float
-  hash: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-type FileShallow {
-  guid: String!
-  name: String!
-  remote: String
-  folder: FolderId
-  size: Float
-  hash: String
-  blob: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-type FileDiff {
-  guid: String
-  name: String
-  remote: String
-  folder: FolderId
-  size: Float
-  hash: String
-  blob: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-type FilesDiff {
-  removed: [FileId!]
-  updated: [FileUpdate!]
-  added: [File!]
-}
-
-type FileUpdate {
-  file: FileId!
-  diff: FileDiff!
-}
-
-type Folder {
-  guid: String!
-  name: String!
-  parent: FolderId
-  description: String
-  attributes: [Attribute!]
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-type FolderMeta {
-  guid: String!
-  name: String!
-  parent: FolderId
-  description: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-type FolderShallow {
-  guid: String!
-  name: String!
-  parent: FolderId
-  description: String
-  attributes: [Attribute!]
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-type FolderDiff {
-  guid: String
-  name: String
-  parent: FolderId
-  description: String
-  attributes: AttributesDiff
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-type FoldersDiff {
-  removed: [FolderId!]
-  updated: [FolderUpdate!]
-  added: [Folder!]
-}
-
-type FolderUpdate {
-  folder: FolderId!
-  diff: FolderDiff!
-}
-
-type Benchmark {
-  guid: String!
-  name: String!
-  icon: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-  attributes: [Attribute!]
-}
-
-type BenchmarkDiff {
-  guid: String
-  name: String
-  icon: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-  attributes: AttributesDiff
-}
-
-type BenchmarksDiff {
-  removed: [BenchmarkId!]
-  updated: [BenchmarkUpdate!]
-  added: [Benchmark!]
-}
-
-type BenchmarkUpdate {
-  benchmark: BenchmarkId!
-  diff: BenchmarkDiff!
-}
-
-type Quality {
-  guid: String!
-  key: String!
-  name: String!
-  description: String
-  uri: String
-  kind: Int
-  folder: String
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-  benchmarks: [Benchmark!]
-  attributes: [Attribute!]
-}
-
-type QualityMeta {
-  guid: String!
-  key: String!
-  name: String!
-  description: String
-  uri: String
-  kind: Int
-  folder: String
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-}
-
-type QualityShallow {
-  guid: String!
-  key: String!
-  name: String!
-  description: String
-  uri: String
-  kind: Int
-  folder: String
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-  benchmarks: [Benchmark!]
-  attributes: [AttributeMeta!]
-}
-
-type QualityDiff {
-  guid: String
-  key: String
-  name: String
-  description: String
-  uri: String
-  kind: Int
-  folder: String
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-  benchmarks: BenchmarksDiff
-  attributes: AttributesDiff
-}
-
-type QualitiesDiff {
-  removed: [QualityId!]
-  updated: [QualityUpdate!]
-  added: [Quality!]
-}
-
-type QualityUpdate {
-  quality: QualityId!
-  diff: QualityDiff!
-}
-
-type Port {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  maxChildren: Int
-  compatiblePorts: [PortId!]
-  attributes: [Attribute!]
-}
-
-type PortMeta {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  maxChildren: Int
-}
-
-type PortShallow {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  maxChildren: Int
-  compatiblePorts: [PortId!]
-  attributes: [Attribute!]
-}
-
-type PortDiff {
-  guid: String
-  name: String
-  description: String
-  icon: String
-  maxChildren: Int
-  compatiblePorts: [PortId!]
-  attributes: AttributesDiff
-}
-
-type PortsDiff {
-  removed: [PortId!]
-  updated: [PortUpdate!]
-  added: [Port!]
-}
-
-type PortUpdate {
-  port: PortId!
-  diff: PortDiff!
-}
-
-type Prop {
-  guid: String!
-  quality: QualityId!
-  value: String!
-  unit: String
-  attributes: [Attribute!]
-}
-
-type PropMeta {
-  guid: String!
-  quality: QualityId!
-  value: String!
-  unit: String
-}
-
-type PropShallow {
-  guid: String!
-  quality: QualityId!
-  value: String!
-  unit: String
-  attributes: [Attribute!]
-}
-
-type PropDiff {
-  guid: String
-  quality: QualityId
-  value: String
-  unit: String
-  attributes: AttributesDiff
-}
-
-type PropsDiff {
-  removed: [PropId!]
-  updated: [PropUpdate!]
-  added: [Prop!]
-}
-
-type PropUpdate {
-  prop: PropId!
-  diff: PropDiff!
-}
-
-type Tag {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  attributes: [Attribute!]
-}
-
-type TagMeta {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-}
-
-type TagShallow {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  attributes: [Attribute!]
-}
-
-type TagDiff {
-  guid: String
-  name: String
-  description: String
-  icon: String
-  attributes: AttributesDiff
-}
-
-type TagsDiff {
-  removed: [TagId!]
-  updated: [TagUpdate!]
-  added: [Tag!]
-}
-
-type TagUpdate {
-  tag: TagId!
-  diff: TagDiff!
-}
-
-type Concept {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  attributes: [Attribute!]
-}
-
-type ConceptMeta {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-}
-
-type ConceptShallow {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  attributes: [Attribute!]
-}
-
-type ConceptDiff {
-  guid: String
-  name: String
-  description: String
-  icon: String
-  attributes: AttributesDiff
-}
-
-type ConceptsDiff {
-  removed: [ConceptId!]
-  updated: [ConceptUpdate!]
-  added: [Concept!]
-}
-
-type ConceptUpdate {
-  concept: ConceptId!
-  diff: ConceptDiff!
-}
-
-type Model {
-  guid: String!
-  name: String
-  tags: [TagId!]
-  file: FileId!
-  description: String
-  attributes: [Attribute!]
-}
-
-type ModelMeta {
-  guid: String!
-  name: String
-  file: FileId!
-  description: String
-}
-
-type ModelShallow {
-  guid: String!
-  name: String
-  tags: [TagId!]
-  file: FileId!
-  description: String
-  attributes: [Attribute!]
-}
-
-type ModelDiff {
-  guid: String
-  name: String
-  tags: [TagId!]
-  file: FileId
-  description: String
-  attributes: AttributesDiff
-}
-
-type ModelsDiff {
-  removed: [ModelId!]
-  updated: [ModelUpdate!]
-  added: [Model!]
-}
-
-type ModelUpdate {
-  model: ModelId!
-  diff: ModelDiff!
-}
-
-type Connector {
-  guid: String!
-  name: String
-  t: Float!
-  point: Point!
-  direction: Vector!
-  description: String
-  port: PortId
-  mandatory: Boolean
-  maxChildren: Int
-  props: [Prop!]
-  attributes: [Attribute!]
-}
-
-type ConnectorMeta {
-  guid: String!
-  name: String
-  t: Float!
-  point: Point!
-  direction: Vector!
-  description: String
-  port: PortId
-  mandatory: Boolean
-  maxChildren: Int
-}
-
-type ConnectorShallow {
-  guid: String!
-  name: String
-  t: Float!
-  point: Point!
-  direction: Vector!
-  description: String
-  port: PortId
-  mandatory: Boolean
-  maxChildren: Int
-  props: [PropMeta!]
-  attributes: [AttributeMeta!]
-}
-
-type ConnectorDiff {
-  guid: String
-  name: String
-  t: Float
-  point: PointDiff
-  direction: VectorDiff
-  description: String
-  port: PortId
-  mandatory: Boolean
-  maxChildren: Int
-  props: PropsDiff
-  attributes: AttributesDiff
-}
-
-type ConnectorsDiff {
-  removed: [ConnectorId!]
-  updated: [ConnectorUpdate!]
-  added: [Connector!]
-}
-
-type ConnectorUpdate {
-  connector: ConnectorId!
-  diff: ConnectorDiff!
-}
-
-type CoordDiff {
-  u: Float
-  v: Float
-}
-
-type VecDiff {
-  u: Float
-  v: Float
-}
-
-type PointDiff {
-  x: Float
-  y: Float
-  z: Float
-}
-
-type VectorDiff {
-  x: Float
-  y: Float
-  z: Float
-}
-
-type PlaneDiff {
-  origin: PointDiff
-  xAxis: VectorDiff
-  yAxis: VectorDiff
-}
-
-type CameraDiff {
-  position: PointDiff
-  forward: VectorDiff
-  up: VectorDiff
-}
-
-type Type {
-  guid: String!
-  name: String!
-  parent: TypeId
-  isAbstract: Boolean
-  folder: String
-  models: [Model!]
-  connectors: [Connector!]
-  props: [Prop!]
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationId
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
-  icon: String
-  image: String
-  description: String
-  attributes: [Attribute!]
-}
-
-type TypeMeta {
-  guid: String!
-  name: String!
-  parent: TypeId
-  isAbstract: Boolean
-  folder: String
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationId
-  icon: String
-  image: String
-  description: String
-}
-
-type TypeShallow {
-  guid: String!
-  name: String!
-  parent: TypeId
-  isAbstract: Boolean
-  folder: String
-  models: [ModelMeta!]
-  connectors: [ConnectorMeta!]
-  props: [PropMeta!]
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationId
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeMeta!]
-}
-
-type TypeDiff {
-  name: String
-  parent: TypeId
-  isAbstract: Boolean
-  folder: String
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationId
-  icon: String
-  image: String
-  description: String
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
-  models: ModelsDiff
-  connectors: ConnectorsDiff
-  props: PropsDiff
-  attributes: AttributesDiff
-}
-
-type TypesDiff {
-  removed: [TypeId!]
-  updated: [TypeUpdate!]
-  added: [Type!]
-}
-
-type TypeUpdate {
-  type: TypeId!
-  diff: TypeDiff!
-}
-
-type Layer {
-  guid: String!
-  path: String!
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  attributes: [Attribute!]
+input AlternativeBatchCommandInput @oneOf {
+	createAlternative: CreateAlternativeBatchInput
+	unifyAlternative: MessageOnlyInput
 }
 
-type LayerMeta {
-  guid: String!
-  path: String!
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
+input AlternativeBatchInput {
+	alternativeId: String
+	commands: [AlternativeBatchCommandInput!]!
 }
 
-type LayerShallow {
-  guid: String!
-  path: String!
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  attributes: [AttributeMeta!]
-}
-
-type LayerDiff {
-  guid: String
-  path: String
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  attributes: AttributesDiff
-}
-
-type LayersDiff {
-  removed: [LayerId!]
-  updated: [LayerUpdate!]
-  added: [Layer!]
-}
-
-type LayerUpdate {
-  layer: LayerId!
-  diff: LayerDiff!
-}
-
-type Piece {
-  guid: String!
-  name: String
-  type: TypeId
-  design: DesignId
-  plane: Plane
-  center: Coord
-  scale: Float
-  mirrorPlane: Plane
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  props: [Prop!]
-  attributes: [Attribute!]
-}
-
-type PieceMeta {
-  guid: String!
-  name: String
-  type: TypeId
-  design: DesignId
-  plane: Plane
-  center: Coord
-  scale: Float
-  mirrorPlane: Plane
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-}
-
-type PieceShallow {
-  guid: String!
-  name: String
-  type: TypeId
-  design: DesignId
-  plane: Plane
-  center: Coord
-  scale: Float
-  mirrorPlane: Plane
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  props: [PropMeta!]
-  attributes: [AttributeMeta!]
-}
-
-type PieceDiff {
-  name: String
-  type: TypeId
-  design: DesignId
-  plane: PlaneDiff
-  center: Coord
-  scale: Float
-  mirrorPlane: Plane
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  props: PropsDiff
-  attributes: AttributesDiff
-}
+scalar AuthorShallowList
 
-type PiecesDiff {
-  removed: [PieceId!]
-  updated: [PieceUpdate!]
-  added: [Piece!]
+input BackboneBatchCommandInput @oneOf {
+	attachBackbone: BackboneConfigBatchInput
+	detachBackbone: ConfirmOnlyInput
+	listConflicts: ConfirmOnlyInput
+	resolveConflict: ResolveConflictBatchInput
+	backboneStatus: ConfirmOnlyInput
+	syncNow: ConfirmOnlyInput
 }
 
-type PieceUpdate {
-  piece: PieceId!
-  diff: PieceDiff!
+input BackboneBatchInput {
+	commands: [BackboneBatchCommandInput!]!
 }
 
-type Group {
-  guid: String!
-  pieces: [PieceId!]!
-  color: String
-  name: String
-  description: String
-  attributes: [Attribute!]
+type BackboneBatchStatus {
+	attached: Boolean!
+	kind: String
+	tip: String
 }
 
-type GroupMeta {
-  guid: String!
-  pieces: [PieceId!]!
-  color: String
-  name: String
-  description: String
+input BackboneConfigBatchInput @oneOf {
+	"""
+	Uses [`ConfirmOnlyInput`] so the oneof variant carries a valid GraphQL input object (no zero-field structs).
+	"""
+	memory: ConfirmOnlyInput
+	dev: DevBackboneBatchInput
+	local: LocalBackboneBatchInput
+	remote: RemoteBackboneBatchInput
 }
 
-type GroupShallow {
-  guid: String!
-  pieces: [PieceId!]!
-  color: String
-  name: String
-  description: String
-  attributes: [AttributeMeta!]
-}
+scalar ChangeKitCommand
 
-type GroupDiff {
-  guid: String
-  pieces: [PieceId!]
-  color: String
-  name: String
-  description: String
-  attributes: AttributesDiff
+input ChangeKitCommandsBatchInput {
+	commands: [ChangeKitCommand!]!
 }
 
-type GroupsDiff {
-  removed: [GroupId!]
-  updated: [GroupUpdate!]
-  added: [Group!]
+input ChangePieceTypeBatchInput {
+	pieceId: String!
+	newTypeId: String!
 }
 
-type GroupUpdate {
-  group: GroupId!
-  diff: GroupDiff!
+input CheckpointBatchCommandInput @oneOf {
+	markRelease: ConfirmOnlyInput
+	setActive: ConfirmOnlyInput
 }
 
-type Side {
-  piece: PieceId!
-  designPiece: PieceId
-  connector: ConnectorId
+input CheckpointBatchInput {
+	checkpointId: String
+	commands: [CheckpointBatchCommandInput!]!
 }
 
-type SideDiff {
-  piece: PieceId
-  designPiece: PieceId
-  connector: ConnectorId
+input ClusterPiecesBatchInput {
+	pieceIds: [String!]!
+	clusterName: String!
 }
 
-type SideId {
-  piece: PieceId!
-  designPiece: PieceId
-  connector: ConnectorId
+input ConfirmOnlyInput {
+	confirm: Boolean
 }
 
-type SidesDiff {
-  removed: [SideId!]
-  updated: [SideUpdate!]
-  added: [Side!]
+type ConflictBatchRecord {
+	id: String!
+	backboneTip: String
+	reason: String!
+	createdAt: String!
 }
 
-type SideUpdate {
-  side: SideId!
-  diff: SideDiff!
+enum ConflictResolutionBatchInput {
+	DROP_WIP
+	FORCE_OVERWRITE_BACKBONE
 }
 
 type Connection {
-  guid: String!
-  connected: Side!
-  connecting: Side!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: [Attribute!]
+	id: String!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	u: Float
+	v: Float
+	description: String
 }
 
-type ConnectionMeta {
-  guid: String!
-  connected: Side!
-  connecting: Side!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
+scalar ConnectionFullList
+
+type Connector {
+	id: String!
+	code: String!
 }
 
-type ConnectionShallow {
-  guid: String!
-  connected: Side!
-  connecting: Side!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: [AttributeMeta!]
+input CountInput {
+	count: Int
 }
 
-type ConnectionDiff {
-  connected: SideDiff
-  connecting: SideDiff
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: AttributesDiff
+input CreateAlternativeBatchInput {
+	name: String!
+	fromCheckpointId: String
 }
 
-type ConnectionsDiff {
-  removed: [ConnectionId!]
-  updated: [ConnectionUpdate!]
-  added: [Connection!]
+input CreateConnectedPieceBatchInput {
+	parentPiece: String!
+	parentPort: String!
+	childType: String!
+	childPort: String!
 }
 
-type ConnectionUpdate {
-  connection: ConnectionId!
-  diff: ConnectionDiff!
+input CreateDraftBatchInput {
+	parentCheckpointId: String
+	targetAlternativeId: String
 }
 
-type Stat {
-  guid: String!
-  quality: QualityId!
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
+input CreateFixedPieceBatchInput {
+	typeId: String!
+	plane: PlaneInputBatch!
 }
 
-type StatMeta {
-  guid: String!
-  quality: QualityId!
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
+input CreateHangingPiecesBatchInput {
+	typeIds: [String!]!
+	plane: PlaneInputBatch!
 }
 
-type StatShallow {
-  guid: String!
-  quality: QualityId!
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-}
-
-type StatDiff {
-  guid: String
-  quality: QualityId
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-}
-
-type StatsDiff {
-  removed: [StatId!]
-  updated: [StatUpdate!]
-  added: [Stat!]
-}
-
-type StatUpdate {
-  stat: StatId!
-  diff: StatDiff!
+input DeleteConnectionBatchInput {
+	connectionId: String!
 }
 
 type Design {
-  guid: String!
-  name: String!
-  parent: DesignId
-  isAbstract: Boolean
-  folder: String
-  pieces: [Piece!]
-  connections: [Connection!]
-  stats: [Stat!]
-  props: [Prop!]
-  layers: [Layer!]
-  activeLayer: LayerId
-  groups: [Group!]
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationId
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
-  icon: String
-  image: String
-  description: String
-  attributes: [Attribute!]
-  createdAt: DateTime
-  updatedAt: DateTime
+	id: String!
+	name: String!
+	description: String
+	pieces: [Piece!]!
+	"""
+	🌐 Resolves a piece by persisted DTO id within this design.
+	"""
+	pieceByDtoId(id: String!): Piece
+	connections: [Connection!]!
+	"""
+	🌐 `PieceFullDto` wire list (semio read batch); prefer [`Self::pieces`] in graph UI.
+	"""
+	piecesFull: PieceFullList!
+	"""
+	🌐 `ConnectionFullDto` wire list; prefer [`Self::connections`] in graph UI.
+	"""
+	connectionsFull: ConnectionFullList!
+	flattenMap: [DesignFlattenMapEntryObject!]!
+	clusterableGroups(selection: [String!]!): [[String!]!]!
+	qualitySum(qualityId: String!): Float!
+	replaceableCatalog(selection: [String!]!): ReplaceableCatalog!
+	includedDesigns: [IncludedDesignObject!]!
+	includedDesignIds: [String!]!
+	"""
+	🌐 Per-piece derived placement map (see [`KitGraph::piece_placement_metadata`]); use `pieces` and `connections` for materialized graph nodes.
+	"""
+	piecePlacement: [PiecePlacementRowObject!]!
 }
 
-type DesignMeta {
-  guid: String!
-  name: String!
-  parent: DesignId
-  isAbstract: Boolean
-  folder: String
-  activeLayer: LayerId
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationId
-  icon: String
-  image: String
-  description: String
-  createdAt: DateTime
-  updatedAt: DateTime
+input DesignBatchCommandInput @oneOf {
+	clusterPieces: ClusterPiecesBatchInput
+	dragPieces: DragPiecesBatchInput
+	movePieces: MovePiecesBatchInput
+	fixPieces: PieceIdsBatchInput
+	flattenDesign: ConfirmOnlyInput
+	expandDesign: ExpandDesignBatchInput
+	deleteConnection: DeleteConnectionBatchInput
+	changePieceType: ChangePieceTypeBatchInput
+	createHangingPieces: CreateHangingPiecesBatchInput
+	createConnectedPiece: CreateConnectedPieceBatchInput
+	createFixedPiece: CreateFixedPieceBatchInput
 }
 
-type DesignShallow {
-  guid: String!
-  name: String!
-  parent: DesignId
-  isAbstract: Boolean
-  folder: String
-  pieces: [PieceMeta!]
-  connections: [ConnectionMeta!]
-  stats: [StatMeta!]
-  props: [PropMeta!]
-  layers: [LayerMeta!]
-  activeLayer: LayerId
-  groups: [GroupMeta!]
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationId
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeMeta!]
-  createdAt: DateTime
-  updatedAt: DateTime
+input DesignBatchInput {
+	designId: String!
+	commands: [DesignBatchCommandInput!]!
 }
 
-type DesignDiff {
-  name: String
-  parent: DesignId
-  isAbstract: Boolean
-  folder: String
-  activeLayer: LayerId
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationId
-  icon: String
-  image: String
-  description: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  pieces: PiecesDiff
-  connections: ConnectionsDiff
-  stats: StatsDiff
-  props: PropsDiff
-  layers: LayersDiff
-  groups: GroupsDiff
-  authors: AuthorsDiff
-  attributes: AttributesDiff
+type DesignFlattenMapEntryObject {
+	pieceId: String!
+	plane: GqlPlaneObject!
+	center: GqlCoordinate3!
 }
 
-type DesignsDiff {
-  removed: [DesignId!]
-  updated: [DesignUpdate!]
-  added: [Design!]
+type DesignMetadataObject {
+	id: String!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	location: GqlIdOnly
+	unit: String
+	created: String
+	updated: String
+	kit: GqlIdOnly
 }
 
-type DesignUpdate {
-  design: DesignId!
-  diff: DesignDiff!
+scalar DesignShallowList
+
+input DevBackboneBatchInput {
+	path: String!
 }
 
-type DesignChange {
-  forward: DesignDiff!
-  backward: DesignDiff!
+input DraftBatchCommandInput @oneOf {
+	finalizeDraft: MessageOnlyInput
+	abortDraft: ConfirmOnlyInput
+	undoDraft: CountInput
+	redoDraft: CountInput
+	startTransaction: ConfirmOnlyInput
+	transaction: TransactionBatchInput
 }
 
-type Kit {
-  guid: String!
-  name: String!
-  version: String
-  types: [Type!]
-  designs: [Design!]
-  tags: [Tag!]
-  concepts: [Concept!]
-  ports: [Port!]
-  qualities: [Quality!]
-  files: [File!]
-  folders: [Folder!]
-  authors: [Author!]
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  attributes: [Attribute!]
-  createdAt: DateTime
-  updatedAt: DateTime
+input DraftBatchInput {
+	draftId: String
+	commands: [DraftBatchCommandInput!]!
 }
 
-type KitMeta {
-  guid: String!
-  name: String!
-  version: String
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  createdAt: DateTime
-  updatedAt: DateTime
+input DragPiecesBatchInput {
+	pieceIds: [String!]!
+	du: Float!
+	dv: Float!
 }
 
-type KitShallow {
-  guid: String!
-  name: String!
-  version: String
-  types: [TypeMeta!]
-  designs: [DesignMeta!]
-  tags: [TagMeta!]
-  concepts: [ConceptMeta!]
-  ports: [PortMeta!]
-  qualities: [QualityMeta!]
-  files: [FileMeta!]
-  folders: [FolderMeta!]
-  authors: [AuthorMeta!]
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeMeta!]
-  createdAt: DateTime
-  updatedAt: DateTime
+input ExpandDesignBatchInput {
+	nestedDesignId: String!
 }
 
-type KitDiff {
-  name: String
-  version: String
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  types: TypesDiff
-  designs: DesignsDiff
-  tags: TagsDiff
-  concepts: ConceptsDiff
-  ports: PortsDiff
-  qualities: QualitiesDiff
-  authors: AuthorsDiff
-  files: FilesDiff
-  folders: FoldersDiff
-  attributes: AttributesDiff
+type GqlCoordinate3 {
+	x: Float!
+	y: Float!
+	z: Float!
 }
 
-type KitsDiff {
-  removed: [KitId!]
-  updated: [KitUpdate!]
-  added: [Kit!]
+type GqlIdOnly {
+	id: String!
 }
 
-type KitUpdate {
-  kit: KitId!
-  diff: KitDiff!
+type GqlPlaneObject {
+	origin: GqlPoint3!
+	xAxis: GqlVector3!
+	yAxis: GqlVector3!
 }
 
-type KitChange {
-  forward: KitDiff!
-  backward: KitDiff!
+type GqlPoint3 {
+	x: Float!
+	y: Float!
+	z: Float!
 }
 
-type Query {
-  kit(guid: String!): Kit
+type GqlPoseObject {
+	plane: GqlPlaneObject!
+	center: GqlCoordinate3!
+}
+
+type GqlVector3 {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type IncludedDesignObject {
+	id: String!
+	designId: String!
+	connectionKind: String!
+	center: GqlCoordinate3
+	plane: GqlPlaneObject
+	externalConnections: ConnectionFullList!
+}
+
+type KitColoredConnectorObject {
+	typeId: GqlIdOnly!
+	connectorId: GqlIdOnly!
+	color: String!
+}
+
+scalar KitEvent
+
+scalar KitFullSnapshot
+
+type KitMetadataObject {
+	id: String!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	preview: String
+	remote: String
+	homepage: String
+	license: String
+	uri: String
+	created: String
+	updated: String
+	version: String
+}
+
+input KitReadScopeAlternativeInput {
+	alternativeId: String!
+}
+
+input KitReadScopeCheckpointInput {
+	checkpointId: String!
+}
+
+input KitReadScopeDraftInput {
+	sessionId: String!
+	draftId: String!
+}
+
+"""
+GraphQL input: one of the wire shapes for [`crate::kit_read_scope::KitReadScope`].
+"""
+input KitReadScopeInput @oneOf {
+	theKit: ConfirmOnlyInput
+	checkpoint: KitReadScopeCheckpointInput
+	alternative: KitReadScopeAlternativeInput
+	draft: KitReadScopeDraftInput
+	transaction: KitReadScopeTransactionInput
+}
+
+input KitReadScopeTransactionInput {
+	sessionId: String!
+	draftId: String!
+	transactionId: String!
+}
+
+type KitStore {
+	name: String!
+	"""
+	🌐 Resolves a design by persisted DTO id (linear scan; for hosts that only hold string ids).
+	"""
+	designByDtoId(id: String!): Design
+	"""
+	🌐 Resolves a kit [`crate::typ::TypeStore`] by persisted DTO id.
+	"""
+	typeByDtoId(id: String!): Type
+	description: String
+	"""
+	🌐 Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
+	"""
+	typeIds: [String!]!
+	"""
+	🌐 Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
+	"""
+	designIds: [String!]!
+	types: [Type!]!
+	designs: [Design!]!
+	"""
+	🌐 Per-type metadata rows.
+	"""
+	typesMetadata: [TypeMetadataObject!]!
+	"""
+	🌐 Per-design metadata rows.
+	"""
+	designsMetadata: [DesignMetadataObject!]!
+	"""
+	🌐 Colored connector index rows.
+	"""
+	coloredConnectors: [KitColoredConnectorObject!]!
+	"""
+	🌐 Full kit DTO snapshot for this **scoped** resolver graph (live authority when scope is `theKit`; materialized otherwise).
+	"""
+	fullDto: KitFullSnapshot!
+	"""
+	`the_kit` line DTO (committed main line).
+	"""
+	theKitDto: KitFullSnapshot!
+	materializeAt(checkpointId: String): KitFullSnapshot!
+	"""
+	🌐 Kit metadata (same as [`KitGraph::get_kit_json`], strongly typed here).
+	"""
+	kitMetadata: KitMetadataObject!
+	"""
+	🌐 Shallow design rows (same as [`KitGraph::get_designs_json`]; scalar is not `JSON`).
+	"""
+	designsShallow: DesignShallowList!
+	"""
+	🌐 Shallow type rows (same as [`KitGraph::get_types_json`]).
+	"""
+	typesShallow: TypeShallowList!
+	"""
+	🌐 Shallow author rows (same as [`KitGraph::get_authors_json`]).
+	"""
+	authorsShallow: AuthorShallowList!
+	"""
+	Opaque VCS tree (same shape as `vcsState` WASM helper) as typed graph objects.
+	"""
+	vcsState: VcsStateGql!
+}
+
+input KitStoreBatchCommandInput @oneOf {
+	session: SessionBatchInput
+	checkpoint: CheckpointBatchInput
+	alternative: AlternativeBatchInput
+	backbone: BackboneBatchInput
+}
+
+input KitStoreBatchInput {
+	clientMutationId: String
+	commands: [KitStoreBatchCommandInput!]!
+}
+
+type KitStoreBatchPayload {
+	clientMutationId: String
+	results: [KitStoreBatchResult!]!
+}
+
+type KitStoreBatchResult {
+	kind: KitStoreBatchResultKind!
+	ok: Boolean
+	count: Int
+	sessionId: String
+	draftId: String
+	transactionId: String
+	checkpointId: String
+	alternativeId: String
+	backbone: BackboneBatchStatus
+	conflicts: [ConflictBatchRecord!]
+	"""
+	🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; serde wire label of [`crate::kit_change::KitChangeKind`].
+	"""
+	changeKind: String
+	"""
+	🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; undo atoms as [`GqlChangeKitCommand`] list.
+	"""
+	inverse: [ChangeKitCommand!]
+}
+
+enum KitStoreBatchResultKind {
+	CHANGE_KIT_COMMANDS
+	"""
+	🧾 Same forward application as [`KitStoreBatchResultKind::ChangeKitCommands`], plus `changeKind` and `inverse` in [`KitStoreBatchResult`].
+	"""
+	CHANGE_KIT_WITH_INVERSE
+	CLUSTER_PIECES
+	DRAG_PIECES
+	MOVE_PIECES
+	FIX_PIECES
+	FLATTEN_DESIGN
+	EXPAND_DESIGN
+	DELETE_CONNECTION
+	CHANGE_PIECE_TYPE
+	CREATE_HANGING_PIECES
+	CREATE_CONNECTED_PIECE
+	CREATE_FIXED_PIECE
+	NEW_SESSION
+	END_SESSION
+	NEW_DRAFT
+	START_TRANSACTION
+	FINALIZE_DRAFT
+	ABORT_DRAFT
+	UNDO_DRAFT
+	REDO_DRAFT
+	FINALIZE_TRANSACTION
+	ABORT_TRANSACTION
+	UNDO_TRANSACTION
+	REDO_TRANSACTION
+	MARK_RELEASE
+	SET_ACTIVE_CHECKPOINT
+	NEW_ALTERNATIVE
+	UNIFY_ALTERNATIVE
+	ATTACH_BACKBONE
+	DETACH_BACKBONE
+	LIST_CONFLICTS
+	RESOLVE_CONFLICT
+	BACKBONE_STATUS
+	SYNC_NOW
+}
+
+type KitStoreMutation {
+	"""
+	Batched control-plane writes (VCS, session/draft/transaction, backbone); replaces the former `submitKitCommand` shell.
+	"""
+	batch(input: KitStoreBatchInput!): KitStoreBatchPayload!
+}
+
+input LocalBackboneBatchInput {
+	folder: String!
+}
+
+input MessageOnlyInput {
+	message: String!
+}
+
+input MovePiecesBatchInput {
+	pieceIds: [String!]!
+	gap: Float!
+	shift: Float!
+	rise: Float!
 }
 
 type Mutation {
-  applyKitDiff(guid: String!, diff: KitDiffInput!): Kit
+	"""
+	Control-plane kit mutations (batched commands, VCS, design canvas).
+	"""
+	kitStore: KitStoreMutation!
 }
 
-input CoordInput {
-  u: Float!
-  v: Float!
+type Piece {
+	id: String!
+	name: String
+	description: String
+	flatPlane: GqlPlaneObject!
+	flatCenter: GqlCoordinate3!
+	flatPose: GqlPoseObject!
+	scale: Float
+	"""
+	Strong ref to the resolved type for this piece (in-memory, not a lookup by id).
+	"""
+	refType: Type
+	"""
+	Parent connection when the piece is linked through a connection.
+	"""
+	parentConnection: Connection
 }
 
-input VecInput {
-  u: Float!
-  v: Float!
-}
-
-input PointInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input VectorInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input PlaneInput {
-  origin: PointInput!
-  xAxis: VectorInput!
-  yAxis: VectorInput!
-}
-
-input CameraInput {
-  position: PointInput!
-  forward: VectorInput!
-  up: VectorInput!
-}
-
-input AttributeInput {
-  guid: String!
-  key: String!
-  value: String
-  definition: String
-}
-
-input AttributeIdInput {
-  guid: String!
-}
-
-input LocationIdInput {
-  guid: String!
-}
-
-input AuthorIdInput {
-  guid: String!
-}
-
-input FileIdInput {
-  guid: String!
-}
-
-input FolderIdInput {
-  guid: String!
-}
-
-input BenchmarkIdInput {
-  guid: String!
-}
-
-input QualityIdInput {
-  guid: String!
-}
-
-input PortIdInput {
-  guid: String!
-}
-
-input PropIdInput {
-  guid: String!
-}
-
-input ModelIdInput {
-  guid: String!
-}
-
-input ConnectorIdInput {
-  guid: String!
-}
-
-input TypeIdInput {
-  guid: String!
-}
-
-input LayerIdInput {
-  guid: String!
-}
-
-input PieceIdInput {
-  guid: String!
-}
-
-input GroupIdInput {
-  guid: String!
-}
-
-input ConnectionIdInput {
-  guid: String!
-}
-
-input StatIdInput {
-  guid: String!
-}
-
-input DesignIdInput {
-  guid: String!
-}
-
-input KitIdInput {
-  guid: String!
-}
-
-input TagIdInput {
-  guid: String!
-}
-
-input ConceptIdInput {
-  guid: String!
-}
-
-input AttributesDiffInput {
-  removed: [AttributeIdInput!]
-  updated: [AttributeUpdateInput!]
-  added: [AttributeInput!]
-}
-
-input AttributeUpdateInput {
-  attribute: AttributeIdInput!
-  diff: AttributeDiffInput!
-}
-
-input AttributeDiffInput {
-  guid: String
-  key: String
-  value: String
-  definition: String
-}
-
-input AuthorInput {
-  guid: String!
-  name: String!
-  email: String!
-  attributes: [AttributeInput!]
-}
-
-input AuthorDiffInput {
-  guid: String
-  name: String
-  email: String
-  attributes: AttributesDiffInput
-}
-
-input AuthorsDiffInput {
-  removed: [AuthorIdInput!]
-  updated: [AuthorUpdateInput!]
-  added: [AuthorInput!]
-}
-
-input AuthorUpdateInput {
-  author: AuthorIdInput!
-  diff: AuthorDiffInput!
-}
-
-input FileInput {
-  guid: String!
-  name: String!
-  remote: String
-  folder: FolderIdInput
-  size: Float
-  hash: String
-  blob: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-input FileDiffInput {
-  guid: String
-  name: String
-  remote: String
-  folder: FolderIdInput
-  size: Float
-  hash: String
-  blob: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-input FilesDiffInput {
-  removed: [FileIdInput!]
-  updated: [FileUpdateInput!]
-  added: [FileInput!]
-}
-
-input FileUpdateInput {
-  file: FileIdInput!
-  diff: FileDiffInput!
-}
-
-input FolderInput {
-  guid: String!
-  name: String!
-  parent: FolderIdInput
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-input FolderDiffInput {
-  guid: String
-  name: String
-  parent: FolderIdInput
-  description: String
-  attributes: AttributesDiffInput
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-input FoldersDiffInput {
-  removed: [FolderIdInput!]
-  updated: [FolderUpdateInput!]
-  added: [FolderInput!]
-}
-
-input FolderUpdateInput {
-  folder: FolderIdInput!
-  diff: FolderDiffInput!
-}
-
-input BenchmarkInput {
-  guid: String!
-  name: String!
-  icon: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-  attributes: [AttributeInput!]
-}
-
-input BenchmarkDiffInput {
-  guid: String
-  name: String
-  icon: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-  attributes: AttributesDiffInput
-}
-
-input BenchmarksDiffInput {
-  removed: [BenchmarkIdInput!]
-  updated: [BenchmarkUpdateInput!]
-  added: [BenchmarkInput!]
-}
-
-input BenchmarkUpdateInput {
-  benchmark: BenchmarkIdInput!
-  diff: BenchmarkDiffInput!
-}
-
-input QualityInput {
-  guid: String!
-  key: String!
-  name: String!
-  description: String
-  uri: String
-  kind: Int
-  folder: String
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-  benchmarks: [BenchmarkInput!]
-  attributes: [AttributeInput!]
-}
-
-input QualityDiffInput {
-  guid: String
-  key: String
-  name: String
-  description: String
-  uri: String
-  kind: Int
-  folder: String
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-  benchmarks: BenchmarksDiffInput
-  attributes: AttributesDiffInput
-}
-
-input QualitiesDiffInput {
-  removed: [QualityIdInput!]
-  updated: [QualityUpdateInput!]
-  added: [QualityInput!]
-}
-
-input QualityUpdateInput {
-  quality: QualityIdInput!
-  diff: QualityDiffInput!
-}
-
-input PortInput {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  compatiblePorts: [PortIdInput!]
-  attributes: [AttributeInput!]
-}
-
-input PortDiffInput {
-  guid: String
-  name: String
-  description: String
-  icon: String
-  compatiblePorts: [PortIdInput!]
-  attributes: AttributesDiffInput
-}
-
-input PortsDiffInput {
-  removed: [PortIdInput!]
-  updated: [PortUpdateInput!]
-  added: [PortInput!]
-}
-
-input PortUpdateInput {
-  port: PortIdInput!
-  diff: PortDiffInput!
-}
-
-input PropInput {
-  guid: String!
-  quality: QualityIdInput!
-  value: String!
-  unit: String
-  attributes: [AttributeInput!]
-}
-
-input PropDiffInput {
-  guid: String
-  quality: QualityIdInput
-  value: String
-  unit: String
-  attributes: AttributesDiffInput
-}
-
-input PropsDiffInput {
-  removed: [PropIdInput!]
-  updated: [PropUpdateInput!]
-  added: [PropInput!]
-}
-
-input PropUpdateInput {
-  prop: PropIdInput!
-  diff: PropDiffInput!
-}
-
-input TagInput {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  attributes: [AttributeInput!]
-}
-
-input TagDiffInput {
-  guid: String
-  name: String
-  description: String
-  icon: String
-  attributes: AttributesDiffInput
-}
-
-input TagsDiffInput {
-  removed: [TagIdInput!]
-  updated: [TagUpdateInput!]
-  added: [TagInput!]
-}
-
-input TagUpdateInput {
-  tag: TagIdInput!
-  diff: TagDiffInput!
-}
-
-input ConceptInput {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  attributes: [AttributeInput!]
-}
-
-input ConceptDiffInput {
-  guid: String
-  name: String
-  description: String
-  icon: String
-  attributes: AttributesDiffInput
-}
-
-input ConceptsDiffInput {
-  removed: [ConceptIdInput!]
-  updated: [ConceptUpdateInput!]
-  added: [ConceptInput!]
-}
-
-input ConceptUpdateInput {
-  concept: ConceptIdInput!
-  diff: ConceptDiffInput!
-}
-
-input ModelInput {
-  guid: String!
-  name: String
-  tags: [TagIdInput!]
-  file: FileIdInput!
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input ModelDiffInput {
-  guid: String
-  name: String
-  tags: [TagIdInput!]
-  file: FileIdInput
-  description: String
-  attributes: AttributesDiffInput
-}
-
-input ModelsDiffInput {
-  removed: [ModelIdInput!]
-  updated: [ModelUpdateInput!]
-  added: [ModelInput!]
-}
-
-input ModelUpdateInput {
-  model: ModelIdInput!
-  diff: ModelDiffInput!
-}
-
-input ConnectorInput {
-  guid: String!
-  name: String
-  t: Float!
-  point: PointInput!
-  direction: VectorInput!
-  description: String
-  port: PortIdInput
-  mandatory: Boolean
-  props: [PropInput!]
-  attributes: [AttributeInput!]
-}
-
-input ConnectorDiffInput {
-  guid: String
-  name: String
-  t: Float
-  point: PointInput
-  direction: VectorInput
-  description: String
-  port: PortIdInput
-  mandatory: Boolean
-  props: PropsDiffInput
-  attributes: AttributesDiffInput
-}
-
-input ConnectorsDiffInput {
-  removed: [ConnectorIdInput!]
-  updated: [ConnectorUpdateInput!]
-  added: [ConnectorInput!]
-}
-
-input ConnectorUpdateInput {
-  connector: ConnectorIdInput!
-  diff: ConnectorDiffInput!
-}
-
-input TypeInput {
-  guid: String!
-  name: String!
-  parent: TypeIdInput
-  isAbstract: Boolean
-  folder: String
-  models: [ModelInput!]
-  connectors: [ConnectorInput!]
-  props: [PropInput!]
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationIdInput
-  authors: [AuthorIdInput!]
-  concepts: [ConceptIdInput!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input TypeDiffInput {
-  name: String
-  parent: TypeIdInput
-  isAbstract: Boolean
-  folder: String
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationIdInput
-  icon: String
-  image: String
-  description: String
-  authors: [AuthorIdInput!]
-  concepts: [ConceptIdInput!]
-  models: ModelsDiffInput
-  connectors: ConnectorsDiffInput
-  props: PropsDiffInput
-  attributes: AttributesDiffInput
-}
-
-input TypesDiffInput {
-  removed: [TypeIdInput!]
-  updated: [TypeUpdateInput!]
-  added: [TypeInput!]
-}
-
-input TypeUpdateInput {
-  type: TypeIdInput!
-  diff: TypeDiffInput!
-}
-
-input LayerInput {
-  guid: String!
-  path: String!
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input LayerDiffInput {
-  guid: String
-  path: String
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  attributes: AttributesDiffInput
-}
-
-input LayersDiffInput {
-  removed: [LayerIdInput!]
-  updated: [LayerUpdateInput!]
-  added: [LayerInput!]
-}
-
-input LayerUpdateInput {
-  layer: LayerIdInput!
-  diff: LayerDiffInput!
-}
-
-input PieceInput {
-  guid: String!
-  name: String
-  type: TypeIdInput
-  design: DesignIdInput
-  plane: PlaneInput
-  center: CoordInput
-  scale: Float
-  mirrorPlane: PlaneInput
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  props: [PropInput!]
-  attributes: [AttributeInput!]
-}
-
-input PieceDiffInput {
-  name: String
-  type: TypeIdInput
-  design: DesignIdInput
-  plane: PlaneInput
-  center: CoordInput
-  scale: Float
-  mirrorPlane: PlaneInput
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  props: PropsDiffInput
-  attributes: AttributesDiffInput
-}
-
-input PiecesDiffInput {
-  removed: [PieceIdInput!]
-  updated: [PieceUpdateInput!]
-  added: [PieceInput!]
-}
-
-input PieceUpdateInput {
-  piece: PieceIdInput!
-  diff: PieceDiffInput!
-}
-
-input GroupInput {
-  guid: String!
-  pieces: [PieceIdInput!]!
-  color: String
-  name: String
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input GroupDiffInput {
-  guid: String
-  pieces: [PieceIdInput!]
-  color: String
-  name: String
-  description: String
-  attributes: AttributesDiffInput
-}
-
-input GroupsDiffInput {
-  removed: [GroupIdInput!]
-  updated: [GroupUpdateInput!]
-  added: [GroupInput!]
-}
-
-input GroupUpdateInput {
-  group: GroupIdInput!
-  diff: GroupDiffInput!
-}
-
-input SideInput {
-  piece: PieceIdInput!
-  designPiece: PieceIdInput
-  connector: ConnectorIdInput
-}
-
-input ConnectionInput {
-  guid: String!
-  connected: SideInput!
-  connecting: SideInput!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input SideDiffInput {
-  piece: PieceIdInput
-  designPiece: PieceIdInput
-  connector: ConnectorIdInput
-}
-
-input ConnectionDiffInput {
-  connected: SideDiffInput
-  connecting: SideDiffInput
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: AttributesDiffInput
-}
-
-input ConnectionsDiffInput {
-  removed: [ConnectionIdInput!]
-  updated: [ConnectionUpdateInput!]
-  added: [ConnectionInput!]
-}
-
-input ConnectionUpdateInput {
-  connection: ConnectionIdInput!
-  diff: ConnectionDiffInput!
-}
-
-input StatInput {
-  guid: String!
-  quality: QualityIdInput!
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-}
-
-input StatDiffInput {
-  guid: String
-  quality: QualityIdInput
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-}
-
-input StatsDiffInput {
-  removed: [StatIdInput!]
-  updated: [StatUpdateInput!]
-  added: [StatInput!]
-}
-
-input StatUpdateInput {
-  stat: StatIdInput!
-  diff: StatDiffInput!
-}
-
-input DesignInput {
-  guid: String!
-  name: String!
-  parent: DesignIdInput
-  isAbstract: Boolean
-  folder: String
-  pieces: [PieceInput!]
-  connections: [ConnectionInput!]
-  stats: [StatInput!]
-  props: [PropInput!]
-  layers: [LayerInput!]
-  activeLayer: LayerIdInput
-  groups: [GroupInput!]
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationIdInput
-  authors: [AuthorIdInput!]
-  concepts: [ConceptIdInput!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input DesignDiffInput {
-  name: String
-  parent: DesignIdInput
-  isAbstract: Boolean
-  folder: String
-  activeLayer: LayerIdInput
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationIdInput
-  icon: String
-  image: String
-  description: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  pieces: PiecesDiffInput
-  connections: ConnectionsDiffInput
-  stats: StatsDiffInput
-  props: PropsDiffInput
-  layers: LayersDiffInput
-  groups: GroupsDiffInput
-  authors: AuthorsDiffInput
-  attributes: AttributesDiffInput
-}
-
-input DesignsDiffInput {
-  removed: [DesignIdInput!]
-  updated: [DesignUpdateInput!]
-  added: [DesignInput!]
-}
+scalar PieceFullList
 
-input DesignUpdateInput {
-  design: DesignIdInput!
-  diff: DesignDiffInput!
+input PieceIdsBatchInput {
+	pieceIds: [String!]!
 }
 
-input KitInput {
-  guid: String!
-  name: String!
-  version: String
-  types: [TypeInput!]
-  designs: [DesignInput!]
-  tags: [TagInput!]
-  concepts: [ConceptInput!]
-  ports: [PortInput!]
-  qualities: [QualityInput!]
-  files: [FileInput!]
-  folders: [FolderInput!]
-  authors: [AuthorInput!]
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  updatedAt: DateTime
+type PiecePlacementRowObject {
+	pieceId: String!
+	plane: GqlPlaneObject!
+	center: GqlCoordinate3!
+	fixedPieceId: String!
+	parentPieceId: String
+	depth: Int!
+	path: [String!]!
 }
 
-input KitDiffInput {
-  name: String
-  version: String
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  types: TypesDiffInput
-  designs: DesignsDiffInput
-  tags: TagsDiffInput
-  concepts: ConceptsDiffInput
-  ports: PortsDiffInput
-  qualities: QualitiesDiffInput
-  authors: AuthorsDiffInput
-  files: FilesDiffInput
-  folders: FoldersDiffInput
-  attributes: AttributesDiffInput
+input PlaneInputBatch {
+	origin: PointInputBatch!
+	xAxis: VectorInputBatch!
+	yAxis: VectorInputBatch!
+}
+
+input PointInputBatch {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type Query {
+	"""
+	🌐 **Scoped** kit graph root: every read requires an explicit [`KitReadScopeInput`] (see [`crate::kit_read_scope::KitReadScope`]).
+	"""
+	kit(scope: KitReadScopeInput!): KitStore!
+}
+
+input RemoteBackboneBatchInput {
+	url: String!
+	sessionId: String!
+}
+
+type ReplaceableCatalog {
+	"""
+	🌐
+	"""
+	typeIds: [String!]!
+	"""
+	🌐
+	"""
+	designIds: [String!]!
+}
+
+type Representation {
+	id: String!
+	url: String!
+	description: String
+}
+
+input ResolveConflictBatchInput {
+	conflictId: String!
+	strategy: ConflictResolutionBatchInput!
+}
+
+input SessionBatchCommandInput @oneOf {
+	createSession: ConfirmOnlyInput
+	endSession: ConfirmOnlyInput
+	createDraft: CreateDraftBatchInput
+	draft: DraftBatchInput
+}
+
+input SessionBatchInput {
+	sessionId: String
+	commands: [SessionBatchCommandInput!]!
+}
+
+type Subscription {
+	"""
+	Broadcast [`KitEvent`] stream (same bus as `KitStoreHandle::subscribe`); wire uses the `KitEvent` GraphQL scalar (not `JSON`).
+	"""
+	eventStream: KitEvent!
+}
+
+input TransactionBatchCommandInput @oneOf {
+	changeKitCommands: ChangeKitCommandsBatchInput
+	"""
+	🧾 Like [`TransactionBatchCommandInput::ChangeKitCommands`] but surfaces `changeKind` + `inverse` atoms from the pre-apply transaction view.
+	"""
+	changeKitWithInverse: ChangeKitCommandsBatchInput
+	"""
+	🧾 Design-canvas commands (same atoms as [`ChangeKitCommand`]) applied only inside an open transaction.
+	"""
+	design: DesignBatchInput
+	finalizeTransaction: ConfirmOnlyInput
+	abortTransaction: ConfirmOnlyInput
+	undoTransaction: CountInput
+	redoTransaction: CountInput
+}
+
+input TransactionBatchInput {
+	transactionId: String
+	commands: [TransactionBatchCommandInput!]!
+}
+
+type Type {
+	id: String!
+	name: String!
+	description: String
+	connectors: [Connector!]!
+	representations: [Representation!]!
+	"""
+	Best matching representation for tag selection.
+	"""
+	bestRepresentation(tagIds: [String!]!): Representation
+}
+
+type TypeMetadataObject {
+	id: String!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	stock: Int
+	typeVirtual: Boolean
+	unit: String
+	location: GqlIdOnly
+	created: String
+	updated: String
+}
+
+scalar TypeShallowList
+
+type VcsAlternativeGql {
+	id: String!
+	name: String!
+	root: String!
+	checkpoints: [String!]!
+}
+
+type VcsCheckpointGql {
+	id: String!
+	parent: String
+	message: String
+	time: String
+	authors: [String!]!
+	hash: String!
+	isRelease: Boolean!
+	changeCount: Int!
+}
+
+type VcsDraftGql {
+	id: String!
+	parentCheckpoint: String
+	targetAlternative: String
+	finalizedTransactionCount: Int!
+	redoTransactionCount: Int!
+	openTransactionId: String
+	canUndo: Boolean!
+	canRedo: Boolean!
+}
+
+type VcsRootGql {
+	id: String!
+	name: String!
+}
+
+type VcsSessionGql {
+	id: String!
+	drafts: [VcsDraftGql!]!
+}
+
+type VcsStateGql {
+	theKitHead: String
+	root: VcsRootGql!
+	checkpoints: [VcsCheckpointGql!]!
+	alternatives: [VcsAlternativeGql!]!
+	sessions: [VcsSessionGql!]!
+	theKitLine: [String!]!
+}
+
+input VectorInputBatch {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+"""
+Directs the executor to include this field or fragment only when the `if` argument is true.
+"""
+directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+"""
+Indicates that an Input Object is a OneOf Input Object (and thus requires exactly one of its field be provided)
+"""
+directive @oneOf on INPUT_OBJECT
+"""
+Directs the executor to skip this field or fragment when the `if` argument is true.
+"""
+directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+schema {
+	query: Query
+	mutation: Mutation
+	subscription: Subscription
 }

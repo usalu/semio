@@ -1,8 +1,9 @@
 {
   "title": "Finish Kiro CLI and MCP Setup for Devcontainer",
   "emoji": "🔌",
-  "status": "open",
+  "status": "closed",
   "description": "Set up and finish the Kiro CLI and MCP configuration for the devcontainer environment. This includes ensuring kiro-cli is properly installed, configured, and integrated with the MCP server setup in the devcontainer lifecycle scripts.",
+  "summary": "Bulk close",
   "goal": "🎯aioptimizedrepo🎯sandboxedrepo🎯zerotouchdevcontainer",
   "sessions": [
     "⚪b2754da88e7b49c3909eb59473da9529"

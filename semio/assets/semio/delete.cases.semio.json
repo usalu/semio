@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "name": "nakagin_capsule_tower_third_tambour_and_first_small_tower_connection",
+      "kit": "metabolism.kit.semio.json",
+      "designName": "Nakagin Capsule Tower",
+      "selectionAsset": "nakagin-capsule-tower.deleted.selection.semio.json",
+      "expectedDiffAsset": "nakagin-capsule-tower.deleted.design.diff.semio.json",
+      "designFamilies": []
+    }
+  ]
+}

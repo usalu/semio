@@ -1,0 +1,48 @@
+[package]
+name = "semio-store"
+version = "0.1.0"
+edition = "2021"
+description = "HTTP GraphQL sidecar for semio native KitStore (semio::kit_graphql control plane)"
+publish = false
+
+[[bin]]
+name = "semio-store"
+path = "bin.rs"
+
+[dependencies]
+semio = { path = "../rs" }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+futures-lite = "2.6.0"
+async-broadcast = "0.7"
+async-channel = "2"
+axum = "0.7.9"
+tokio = { version = "1.40", features = [
+  "rt-multi-thread",
+  "macros",
+  "net",
+  "sync",
+  "signal",
+] }
+tower-http = { version = "0.5.2", features = ["cors", "fs"] }
+async-graphql = { version = "7.0.17", default-features = false, features = [
+  "graphiql",
+] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", default-features = false, features = [
+  "env-filter",
+  "fmt",
+  "std",
+] }
+
+[dev-dependencies]
+reqwest = { version = "0.12", default-features = false, features = [
+  "json",
+  "rustls-tls",
+] }
+tokio = { version = "1.40", features = [
+  "rt-multi-thread",
+  "macros",
+  "net",
+  "time",
+] }

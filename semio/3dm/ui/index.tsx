@@ -13,8 +13,8 @@
 
 import React, { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
-import type { Kit, Type as SemioType, Design, Model } from "@semio/js";
-import { importKit } from "@semio/js";
+import type { Kit, Type as SemioType, Design, Representation } from "@semio/react";
+import { Kit } from "@semio/react";
 import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio/assets";
 import "./globals.css";
 
@@ -160,13 +160,13 @@ export const documentApi = {
 };
 
 export const importApi = {
-    importModel: (params: {
+    importRepresentation: (params: {
         kitName: string;
         typeName: string;
-        modelGuid: string;
+        representationId: string;
         fileUrl: string;
         tags: string[];
-    }) => callBridge<{ layerPath: string; objectCount: number }>("import", "importModel", params),
+    }) => callBridge<{ layerPath: string; objectCount: number }>("import", "importRepresentation", params),
     openImportKitDialog: () => callBridge<{ dialogKind: string }>("import", "openImportKitDialog"),
 };
 
@@ -175,7 +175,7 @@ export const importApi = {
 // #region 🧬TreeNodeKind
 // Tree node kind MUST distinguish between structural folders and selectable items.
 
-type TreeNodeKind = "kits" | "kit" | "types" | "type" | "models" | "model" | "designs" | "design";
+type TreeNodeKind = "kits" | "kit" | "types" | "type" | "representations" | "representation" | "designs" | "design";
 
 interface TreeNode {
     id: string;
@@ -196,41 +196,41 @@ function buildTree(kits: Kit[]): TreeNode {
         label: "Kits",
         kind: "kits",
         children: kits.map((kit) => ({
-            id: `kit-${kit.guid}`,
+            id: `kit-${kit.id}`,
             label: kit.name,
             kind: "kit" as const,
             data: kit,
             children: [
                 {
-                    id: `kit-${kit.guid}-types`,
+                    id: `kit-${kit.id}-types`,
                     label: "Types",
                     kind: "types" as const,
                     children: (kit.types ?? []).map((type) => ({
-                        id: `type-${type.guid}`,
+                        id: `type-${type.id}`,
                         label: type.name,
                         kind: "type" as const,
                         data: type,
                         children: [
                             {
-                                id: `type-${type.guid}-models`,
-                                label: "Models",
-                                kind: "models" as const,
-                                children: (type.models ?? []).map((model) => ({
-                                    id: `model-${model.guid}`,
-                                    label: model.name ?? model.guid.substring(0, 8),
-                                    kind: "model" as const,
-                                    data: { model, type, kit },
+                                id: `type-${type.id}-representations`,
+                                label: "Representations",
+                                kind: "representations" as const,
+                                children: (type.representations ?? []).map((representation) => ({
+                                    id: `representation-${representation.id}`,
+                                    label: representation.name ?? representation.id.substring(0, 8),
+                                    kind: "representation" as const,
+                                    data: { representation, type, kit },
                                 })),
                             },
                         ],
                     })),
                 },
                 {
-                    id: `kit-${kit.guid}-designs`,
+                    id: `kit-${kit.id}-designs`,
                     label: "Designs",
                     kind: "designs" as const,
                     children: (kit.designs ?? []).map((design) => ({
-                        id: `design-${design.guid}`,
+                        id: `design-${design.id}`,
                         label: design.name,
                         kind: "design" as const,
                         data: design,
@@ -257,7 +257,7 @@ function TreeNodeIcon({ kind }: { kind: TreeNodeKind }) {
     }
 }
 
-function TreeNodeView({ node, depth, onImportKit, onImportModel }: { node: TreeNode; depth: number; onImportKit: () => void; onImportModel: (data: { model: Model; type: SemioType; kit: Kit }) => void }) {
+function TreeNodeView({ node, depth, onImportKit, onImportRepresentation }: { node: TreeNode; depth: number; onImportKit: () => void; onImportRepresentation: (data: { representation: Representation; type: SemioType; kit: Kit }) => void }) {
     const [expanded, setExpanded] = useState(depth < 2);
     const hasChildren = node.children && node.children.length > 0;
     const paddingLeft = depth * 16;
@@ -271,14 +271,14 @@ function TreeNodeView({ node, depth, onImportKit, onImportModel }: { node: TreeN
             e.stopPropagation();
             if (node.kind === "kits") {
                 onImportKit();
-            } else if (node.kind === "model") {
-                onImportModel(node.data as { model: Model; type: SemioType; kit: Kit });
+            } else if (node.kind === "representation") {
+                onImportRepresentation(node.data as { representation: Representation; type: SemioType; kit: Kit });
             }
         },
-        [node, onImportKit, onImportModel],
+        [node, onImportKit, onImportRepresentation],
     );
 
-    const showAction = node.kind === "kits" || node.kind === "model";
+    const showAction = node.kind === "kits" || node.kind === "representation";
 
     return (
         <div>
@@ -287,12 +287,12 @@ function TreeNodeView({ node, depth, onImportKit, onImportModel }: { node: TreeN
                 <TreeNodeIcon kind={node.kind} />
                 <span className="truncate text-sm">{node.label}</span>
                 {showAction && (
-                    <button className="ml-auto shrink-0 rounded p-0.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200" onClick={handleAction} title={node.kind === "kits" ? "Import Kit" : "Import Model"}>
+                    <button className="ml-auto shrink-0 rounded p-0.5 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200" onClick={handleAction} title={node.kind === "kits" ? "Import Kit" : "Import Representation"}>
                         <AddIcon className="h-3.5 w-3.5" />
                     </button>
                 )}
             </div>
-            {expanded && hasChildren && node.children!.map((child) => <TreeNodeView key={child.id} node={child} depth={depth + 1} onImportKit={onImportKit} onImportModel={onImportModel} />)}
+            {expanded && hasChildren && node.children!.map((child) => <TreeNodeView key={child.id} node={child} depth={depth + 1} onImportKit={onImportKit} onImportRepresentation={onImportRepresentation} />)}
         </div>
     );
 }
@@ -317,21 +317,17 @@ export function RhinoPanel() {
         try {
             const response = await fetch(importUrl.trim());
             const blob = await response.blob();
-            const result = await importKit(blob);
-            if (result.kit) {
-                setKits((prev) => {
-                    const existing = prev.findIndex((k) => k.guid === result.kit!.guid);
-                    if (existing >= 0) {
-                        const next = [...prev];
-                        next[existing] = result.kit!;
-                        return next;
-                    }
-                    return [...prev, result.kit!];
-                });
-                setImportUrl("");
-            } else {
-                setError("Failed to import kit.");
-            }
+            const kitLoaded = await Kit.importFromSource(blob);
+            setKits((prev) => {
+              const existing = prev.findIndex((k) => k.id === kitLoaded.id);
+              if (existing >= 0) {
+                const next = [...prev];
+                next[existing] = kitLoaded;
+                return next;
+              }
+              return [...prev, kitLoaded];
+            });
+            setImportUrl("");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Import failed.");
         } finally {
@@ -339,24 +335,24 @@ export function RhinoPanel() {
         }
     }, [importUrl]);
 
-    const handleImportModel = useCallback(async (data: { model: Model; type: SemioType; kit: Kit }) => {
-        const { model, type, kit } = data;
+    const handleImportRepresentation = useCallback(async (data: { representation: Representation; type: SemioType; kit: Kit }) => {
+        const { representation, type, kit } = data;
         try {
-            const file = kit.files?.find((f) => f.guid === model.file.guid);
+            const file = kit.files?.find((f) => f.id === representation.file.id);
             const fileUrl = file?.url ?? "";
-            const tagNames = (model.tags ?? []).map((t) => {
-                const tag = kit.tags?.find((kt) => kt.guid === t.guid);
+            const tagNames = (representation.tags ?? []).map((t) => {
+                const tag = kit.tags?.find((kt) => kt.id === t.id);
                 return tag?.value ?? "";
             });
-            await importApi.importModel({
+            await importApi.importRepresentation({
                 kitName: kit.name,
                 typeName: type.name,
-                modelGuid: model.guid,
+                representationId: representation.id,
                 fileUrl,
                 tags: tagNames,
             });
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Model import failed.");
+            setError(err instanceof Error ? err.message : "Representation import failed.");
         }
     }, []);
 
@@ -396,7 +392,7 @@ export function RhinoPanel() {
                         onImportKit={() => {
                             /* Focus the URL input */
                         }}
-                        onImportModel={handleImportModel}
+                        onImportRepresentation={handleImportRepresentation}
                     />
                 )}
             </div>

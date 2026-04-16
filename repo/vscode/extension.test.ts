@@ -197,8 +197,7 @@ function isDocumentSymbol(value: vscode.DocumentSymbol | vscode.SymbolInformatio
   return "selectionRange" in value;
 }
 
-function collectNativeDefinitionFallbackScopes(document: vscode.TextDocument): string[] {
-  const relativePath = getDocumentRelativePath(document);
+function collectNativeDefinitionFallbackEntries(document: vscode.TextDocument): Array<{ name: string; line: number }> {
   const patternsByLanguage: Partial<Record<string, RegExp[]>> = {
     typescript: [
       /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/,
@@ -221,31 +220,35 @@ function collectNativeDefinitionFallbackScopes(document: vscode.TextDocument): s
     go: [/^\s*func\s+(?:\([^)]+\)\s*)?([A-Za-z_][\w]*)\b/, /^\s*type\s+([A-Za-z_][\w]*)\b/, /^\s*const\s+([A-Za-z_][\w]*)\b/, /^\s*var\s+([A-Za-z_][\w]*)\b/],
   };
   const patterns = patternsByLanguage[document.languageId] ?? [];
-  const scopes = new Set<string>();
+  const entries: Array<{ name: string; line: number }> = [];
   for (let lineIndex = 0; lineIndex < document.lineCount; lineIndex++) {
     const textLine = document.lineAt(lineIndex).text;
     for (const pattern of patterns) {
       const match = pattern.exec(textLine);
       if (!match?.[1]) continue;
-      scopes.add(`${relativePath}§${match[1]}`);
+      entries.push({ name: match[1], line: lineIndex });
       break;
     }
   }
-  return Array.from(scopes);
+  return entries;
 }
 
 async function collectNativeDefinitionScopes(document: vscode.TextDocument): Promise<string[]> {
   const relativePath = getDocumentRelativePath(document);
   const symbols = (await vscode.commands.executeCommand<Array<vscode.DocumentSymbol | vscode.SymbolInformation>>("vscode.executeDocumentSymbolProvider", document.uri)) ?? [];
-  const scopes = new Set<string>();
+  const scopes: string[] = [];
+  const linesSeen = new Set<number>();
 
-  const addScope = (name: string, kind: vscode.SymbolKind): void => {
+  const addScope = (name: string, kind: vscode.SymbolKind, range: vscode.Range): void => {
     if (!name || !NATIVE_DEFINITION_SYMBOL_KINDS.has(kind)) return;
-    scopes.add(`${relativePath}§${name}`);
+    const line = range.start.line;
+    if (linesSeen.has(line)) return;
+    linesSeen.add(line);
+    scopes.push(`${relativePath}§${name}`);
   };
 
   const visitDocumentSymbol = (symbol: vscode.DocumentSymbol): void => {
-    addScope(symbol.name, symbol.kind);
+    addScope(symbol.name, symbol.kind, symbol.selectionRange);
     for (const child of symbol.children) {
       visitDocumentSymbol(child);
     }
@@ -255,15 +258,17 @@ async function collectNativeDefinitionScopes(document: vscode.TextDocument): Pro
     if (isDocumentSymbol(symbol)) {
       visitDocumentSymbol(symbol);
     } else {
-      addScope(symbol.name, symbol.kind);
+      addScope(symbol.name, symbol.kind, symbol.location.range);
     }
   }
 
-  if (scopes.size === 0) {
-    return collectNativeDefinitionFallbackScopes(document);
+  for (const fallback of collectNativeDefinitionFallbackEntries(document)) {
+    if (linesSeen.has(fallback.line)) continue;
+    linesSeen.add(fallback.line);
+    scopes.push(`${relativePath}§${fallback.name}`);
   }
 
-  return Array.from(scopes);
+  return scopes;
 }
 
 async function getAnalyzeLensIds(document: vscode.TextDocument): Promise<string[]> {
@@ -272,11 +277,6 @@ async function getAnalyzeLensIds(document: vscode.TextDocument): Promise<string[
     .filter((lens) => lens.command?.command === "semio.analyze")
     .map((lens) => String(lens.command?.arguments?.[0] ?? ""))
     .filter((id) => id.length > 0);
-
-  if (document.uri.fsPath.endsWith("/repo/vscode/extension.ts") || document.uri.fsPath.endsWith("/repo/go/events.go")) {
-    const nativeScopeIds = ids.filter((id) => id.includes("§"));
-    console.log("[DEBUG] Analyze lens ids", document.uri.fsPath, "total", ids.length, "native", nativeScopeIds.length, nativeScopeIds.slice(0, 20));
-  }
 
   return ids;
 }
@@ -961,7 +961,7 @@ suite("Monorepo Provider Test Suite", () => {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const children = await provider.getChildren();
-    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/cli/cli");
+    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/client/client");
     assert.ok(children.length > 0, "CLI returned no children — check that 'search' command exists");
     const labels = children.map((c) => c.label as string);
     assert.ok(
@@ -974,7 +974,7 @@ suite("Monorepo Provider Test Suite", () => {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const roots = await provider.getChildren();
-    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/cli/cli");
+    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/client/client");
     assert.ok(roots.length > 0, "CLI returned no root elements — check that 'search' command exists");
     for (const r of roots) {
       assert.strictEqual(r.contextValue, "category", `Root ${r.label} should have category contextValue`);
@@ -996,7 +996,7 @@ suite("Monorepo Provider Test Suite", () => {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const roots = await provider.getChildren();
-    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/cli/cli");
+    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/client/client");
     const codebaseRoot = roots.find((r: MonorepoTreeItem) => (r.label as string).includes("Codebase"));
     assert.ok(codebaseRoot, "Codebase category not found in tree root");
     const expanded = await provider.getChildren(codebaseRoot);
@@ -1914,7 +1914,7 @@ suite("CodeLens Behavior Test Suite", function () {
       },
       {
         label: "Go",
-        paths: ["repo/go/events.go", "go/events.go", "events.go"],
+        paths: ["repo/go/main.go", "go/main.go", "main.go"],
       },
     ];
 
@@ -1944,7 +1944,7 @@ suite("CodeLens Behavior Test Suite", function () {
       },
       {
         label: "Go",
-        paths: ["repo/go/events.go", "go/events.go", "events.go"],
+        paths: ["repo/go/main.go", "go/main.go", "main.go"],
       },
     ];
 

@@ -3233,7 +3233,7 @@
       "description": "Safety and health protection coordination services.",
       "si": "€",
       "imperial": "$",
-      "symbol": "C_{safety-health-coord}",
+      "symbol": "C_{safety-health-coordinate}",
       "format": "#,##0.##"
     },
     {

@@ -59,7 +59,7 @@ function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
       if (n === "scheduler" || (n.includes("scheduler/index.js") && !n.includes("/cjs/scheduler."))) {
         return opts.schedulerEntry;
       }
-      // `stats.js` ships as legacy UMD/CJS; Vite may serve `/@fs/.../build/stats.min.js` directly and break default import.
+      // `stats.js` ships as UMD/CJS; Vite may serve `/@fs/.../build/stats.min.js` directly and break default import.
       // Force the ESM-compatible implementation from `three/examples` so drei `Stats` can load in Electron dev.
       if (n === "stats.js" || n.endsWith("/stats.js")) {
         return opts.statsEntry;
@@ -202,6 +202,11 @@ export default defineConfig(async ({ mode }) => {
         usePolling: true,
         interval: 1000,
       },
+    },
+    define: {
+      __SEMIO_JS_RUN_BENCHMARKS__: "false",
+      __SEMIO_JS_RUN_EMBEDDED_TESTS__: "false",
+      __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
     },
     resolve: {
       dedupe: ["cookie", "dagre", "graphlib", "html-parse-stringify", "lodash", "react", "react-dom", "react-i18next", "react-router", "scheduler", "stats.js", "use-sync-external-store", "void-elements"],

@@ -105,7 +105,7 @@ type ConnectorId {
 # ⭕ A piece is a 3d-instance of a type in a design.
 type Piece {
     # 📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
-    center?: null | Coord;
+    center?: null | Coordinate;
     # 🆔 The id of the piece.
     id_?: string;
     # ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
@@ -115,7 +115,7 @@ type Piece {
 }
 
 # 📺 A 2d-point (xy) of integers in screen coordinate system.
-type Coord {
+type Coordinate {
     # 🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
     x: number;
     # 🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
@@ -189,7 +189,7 @@ type Type {
     name: string;
     connectors?: Connector[];
     attributes?: Attribute[];
-    models?: Model[];
+    representations?: Representation[];
     # Ⓜ️ The length unit of the point and the direction of the connectors of the type.
     unit?: string;
     # 🔀The optional variant of the type. No variant means the default variant.
@@ -220,15 +220,15 @@ type Locator {
     subgroup?: string;
 }
 
-# 💾A model is a link to a resource that describes a type for a certain level of detail and tags.
-type Model {
-    # 🔍 The optional Level of Detail/Development/Design (LoD) of the model. No lod means the default lod.
+# 💾A representation is a link to a resource that describes a type for a certain level of detail and tags.
+type Representation {
+    # 🔍 The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
     lod: string;
-    # ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the model.
+    # ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
     mime: string;
-    # 🏷️️The optional tags to group models. No tags means default.
+    # 🏷️️The optional tags to group representations. No tags means default.
     tags?: string[];
-    # 🔗 The Unique Resource Locator (URL) to the resource of the model.
+    # 🔗 The Unique Resource Locator (URL) to the resource of the representation.
     url: string;
 }
 

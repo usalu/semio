@@ -52,13 +52,20 @@
         "uriFormat": "%s"
       }
     },
+    {
+      "name": "🚀benchmark",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "go run ./repo/cli benchmark",
+      "cwd": "${workspaceFolder}"
+    },
     // #endregion
     // #region 🛠️ Dev
     {
-      "name": "🛠️dev👤semio📚server",
+      "name": "🛠️dev👤semio📚hub",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo run -p semio-session",
+      "command": "cargo run -p semio-hub",
       "env": {
         "DATABASE_URL": "postgres://semio:semio@localhost:5432/semio",
         "RUST_LOG": "info",
@@ -195,6 +202,23 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://localhost:4000)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev👤semio🏪store📊graphiql",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo run -p semio-store",
+      "env": {
+        "RUST_LOG": "info",
+        "SEMIO_STORE_PORT": "4010"
+      },
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://127\\.0\\.0\\.1:4010/graphiql)",
         "uriFormat": "%s"
       }
     },
@@ -375,7 +399,7 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/cli&serverArgs=mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {

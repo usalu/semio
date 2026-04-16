@@ -5,33 +5,31 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design } from "@semio/js";
-import { findReplaceableTypesInDesignsForPiecesInDesign } from "@semio/js";
-import type { Meta, StoryObj } from "@storybook/react";
+import { getKitPorts, Kit as KitRuntime, type Design } from "@semio/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef, useAlgorithm } from "../../index";
-import { nativeFlatDesign, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
-import { useAlgorithmLanguage } from "../withLanguage";
+import { flatDesign } from "../../index";
 
 import { NakaginCapsuleTowerCopySelection } from "../../../assets/index";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
-const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
-const rawDesign = ((metabolismKit as any).designs ?? []).find((d: any) => d.guid === nakaginCapsuleTowerDesignGuid) as any;
+const nakaginCapsuleTowerDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+const rawDesign = ((metabolismKit as any).designs ?? []).find((d: any) => d.id === nakaginCapsuleTowerDesignId) as any;
 
 /** Omits t_f1_b_c1 and t_f0→t_f1 link so t_f1 is external-stub in clipboard; includes t_f5/regressions. */
-const omitFromCopySelectionPieceGuids = new Set<string>(["31be08e1-e75c-4024-86b4-c3c6d3939fbb"]);
-const omitFromCopySelectionConnectionGuids = new Set<string>(["b1ecc6c5-722a-4814-9047-a87222bbaa4d"]);
-const selectionPieceGuids = Array.from(
+const omitFromCopySelectionPieceIds = new Set<string>(["31be08e1-e75c-4024-86b4-c3c6d3939fbb"]);
+const omitFromCopySelectionConnectionIds = new Set<string>(["b1ecc6c5-722a-4814-9047-a87222bbaa4d"]);
+const selectionPieceIds = Array.from(
   new Set(
-    [...(((NakaginCapsuleTowerCopySelection as any).pieces ?? []) as { guid: string }[]).map((p) => p.guid), "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9", "5feebbf8-33d9-41ad-a13a-24c271a1860b"].filter((g) => !omitFromCopySelectionPieceGuids.has(g)),
+    [...(((NakaginCapsuleTowerCopySelection as any).pieces ?? []) as { id: string }[]).map((p) => p.id), "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9", "5feebbf8-33d9-41ad-a13a-24c271a1860b"].filter((g) => !omitFromCopySelectionPieceIds.has(g)),
   ),
 ) as string[];
-const selectionConnectionGuids = Array.from(
+const selectionConnectionIds = Array.from(
   new Set(
-    [...(((NakaginCapsuleTowerCopySelection as any).connections ?? []) as { guid: string }[]).map((c) => c.guid), "eb8ce9ce-091c-4495-a651-fa703748dfef", "4d5ff333-d70a-43e1-8b7a-8849c8c91405"].filter(
-      (g) => !omitFromCopySelectionConnectionGuids.has(g),
+    [...(((NakaginCapsuleTowerCopySelection as any).connections ?? []) as { id: string }[]).map((c) => c.id), "eb8ce9ce-091c-4495-a651-fa703748dfef", "4d5ff333-d70a-43e1-8b7a-8849c8c91405"].filter(
+      (g) => !omitFromCopySelectionConnectionIds.has(g),
     ),
   ),
 ) as string[];
@@ -48,18 +46,18 @@ type CompatibleDesignTreeNode = {
 /**
  * Builds the visible design tree for the compatible design output.
  */
-function buildCompatibleDesignTree(designs: Design[], visibleDesignGuids: Set<string>): CompatibleDesignTreeNode[] {
+function buildCompatibleDesignTree(designs: Design[], visibleDesignIds: Set<string>): CompatibleDesignTreeNode[] {
   const childrenByParent = new Map<string | null, Design[]>();
   for (const nextDesign of designs) {
-    const parentGuid = nextDesign.parent?.guid ?? null;
-    const nextChildren = childrenByParent.get(parentGuid) ?? [];
+    const parentId = nextDesign.parent?.id ?? null;
+    const nextChildren = childrenByParent.get(parentId) ?? [];
     nextChildren.push(nextDesign);
-    childrenByParent.set(parentGuid, nextChildren);
+    childrenByParent.set(parentId, nextChildren);
   }
 
   const buildNode = (nextDesign: Design): CompatibleDesignTreeNode | null => {
-    const children = (childrenByParent.get(nextDesign.guid) ?? []).map(buildNode).filter((child): child is CompatibleDesignTreeNode => child !== null);
-    if (!visibleDesignGuids.has(nextDesign.guid) && children.length === 0) return null;
+    const children = (childrenByParent.get(nextDesign.id) ?? []).map(buildNode).filter((child): child is CompatibleDesignTreeNode => child !== null);
+    if (!visibleDesignIds.has(nextDesign.id) && children.length === 0) return null;
     return { design: nextDesign, children };
   };
 
@@ -73,10 +71,10 @@ function renderCompatibleDesignTreeNode(node: CompatibleDesignTreeNode, depth = 
   const hasChildren = node.children.length > 0;
   const baseClassName = hasChildren ? "border-border/50 bg-muted/35 text-muted-foreground" : "border-success/40 bg-success/10 text-foreground";
   return (
-    <div key={node.design.guid} className="space-y-1" style={{ marginLeft: depth * 14 }}>
+    <div key={node.design.id} className="space-y-1" style={{ marginLeft: depth * 14 }}>
       <div className={`rounded-md border px-2 py-1 text-xs ${baseClassName}`}>
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate font-medium">{node.design.name ?? node.design.guid}</span>
+          <span className="truncate font-medium">{node.design.name ?? node.design.id}</span>
           <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.18em]">{hasChildren ? "muted" : "highlighted"}</span>
         </div>
       </div>
@@ -86,13 +84,14 @@ function renderCompatibleDesignTreeNode(node: CompatibleDesignTreeNode, depth = 
 }
 
 const CompatibleTypesAndDesignsWindow: React.FC = () => {
-  const { kit, design, selectedPieceGuids } = useAlgorithm();
-  const allTypes = (kit.types ?? []) as { guid: string; name?: string }[];
+  const { kit, design, selectedPieceIds } = useAlgorithm();
+  const allTypes = (kit.types ?? []) as { id: string; name?: string }[];
   const allDesigns = (kit.designs ?? []) as Design[];
-  const result = React.useMemo(() => findReplaceableTypesInDesignsForPiecesInDesign(design, allDesigns, kit.types ?? [], kit.ports ?? [], { pieces: selectedPieceGuids }), [allDesigns, design, kit.ports, selectedPieceGuids]);
-  const typeByGuid = React.useMemo(() => new Map(allTypes.map((nextType) => [nextType.guid, nextType] as const)), [allTypes]);
-  const visibleDesignGuids = React.useMemo(() => new Set(result.designs), [result.designs]);
-  const designForest = React.useMemo(() => buildCompatibleDesignTree(allDesigns, visibleDesignGuids), [allDesigns, visibleDesignGuids]);
+  const allPorts = React.useMemo(() => getKitPorts(kit as any), [kit]);
+  const result = React.useMemo(() => KitRuntime.ensure(kit).findReplaceableTypesInDesignsForPiecesInDesignOp(design, allDesigns, kit.types ?? [], allPorts, { pieces: selectedPieceIds }), [allDesigns, allPorts, design, kit, selectedPieceIds]);
+  const typeById = React.useMemo(() => new Map(allTypes.map((nextType) => [nextType.id, nextType] as const)), [allTypes]);
+  const visibleDesignIds = React.useMemo(() => new Set(result.designs), [result.designs]);
+  const designForest = React.useMemo(() => buildCompatibleDesignTree(allDesigns, visibleDesignIds), [allDesigns, visibleDesignIds]);
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-auto border-border/40 border-t p-3">
@@ -100,7 +99,7 @@ const CompatibleTypesAndDesignsWindow: React.FC = () => {
         <div className="space-y-1">
           <div className="text-sm font-semibold">Compatible Types And Designs</div>
           <div className="text-xs text-muted-foreground">
-            {selectedPieceGuids.length} selected pieces, {result.types.length} compatible types, {result.designs.length} compatible designs
+            {selectedPieceIds.length} selected pieces, {result.types.length} compatible types, {result.designs.length} compatible designs
           </div>
         </div>
         <div className="text-right text-[11px] leading-4 text-muted-foreground">
@@ -111,11 +110,11 @@ const CompatibleTypesAndDesignsWindow: React.FC = () => {
       <div className="space-y-2">
         <div className="text-xs font-medium text-muted-foreground">Compatible types</div>
         <div className="flex flex-wrap gap-1.5">
-          {result.types.map((typeGuid) => {
-            const nextType = typeByGuid.get(typeGuid);
+          {result.types.map((typeId) => {
+            const nextType = typeById.get(typeId);
             return (
-              <span key={typeGuid} className="rounded-full border border-border/40 bg-background px-2 py-0.5 text-[11px] text-foreground">
-                {nextType?.name ?? typeGuid}
+              <span key={typeId} className="rounded-full border border-border/40 bg-background px-2 py-0.5 text-[11px] text-foreground">
+                {nextType?.name ?? typeId}
               </span>
             );
           })}
@@ -153,23 +152,22 @@ const DEFAULT_LAYOUT = {
 };
 
 function FindReplaceableTypesInDesignsFrame() {
-  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const [flatSourceDesign, setFlatSourceDesign] = React.useState<Design | null>(null);
-  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>(selectionPieceGuids);
-  const [selectedConnectionGuids, setSelectedConnectionGuids] = React.useState<string[]>(selectionConnectionGuids);
+  const [selectedPieceIds, setSelectedPieceIds] = React.useState<string[]>(selectionPieceIds);
+  const [selectedConnectionIds, setSelectedConnectionIds] = React.useState<string[]>(selectionConnectionIds);
 
   React.useEffect(() => {
     let cancelled = false;
     setFlatSourceDesign(null);
     void (async () => {
-      const flatSrc = await nativeFlatDesign(kit, rawDesign.guid, language);
+      const flatSrc = await flatDesign(kit, rawDesign.id);
       if (!cancelled) setFlatSourceDesign(flatSrc);
     })();
     return () => {
       cancelled = true;
     };
-  }, [kit, language]);
+  }, [kit]);
 
   const design = (flatSourceDesign ?? rawDesign) as Design;
 
@@ -177,14 +175,14 @@ function FindReplaceableTypesInDesignsFrame() {
     () => ({
       kit,
       design,
-      selectedPieceGuids,
-      onSelectedPieceGuidsChange: setSelectedPieceGuids,
-      selectedConnectionGuids,
-      onSelectedConnectionGuidsChange: setSelectedConnectionGuids,
+      selectedPieceIds,
+      onSelectedPieceIdsChange: setSelectedPieceIds,
+      selectedConnectionIds,
+      onSelectedConnectionIdsChange: setSelectedConnectionIds,
       outputDesign: design,
-      error: !flatSourceDesign ? `Loading design (${language})…` : undefined,
+      error: !flatSourceDesign ? "Loading design…" : undefined,
     }),
-    [design, flatSourceDesign, kit, language, selectedConnectionGuids, selectedPieceGuids],
+    [design, flatSourceDesign, kit, selectedConnectionIds, selectedPieceIds],
   );
 
   return <AlgorithmApp id="find-replaceable-types-in-designs" label="Find Replaceable Types In Designs" windows={WINDOWS} defaultLayout={DEFAULT_LAYOUT} context={context} className="h-full w-full" />;

@@ -59,7 +59,7 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "gomod"
-    directory: "/repo/cli"
+    directory: "/repo/client"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gomod"

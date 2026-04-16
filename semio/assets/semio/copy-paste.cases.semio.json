@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "name": "nakagin_capsule_tower",
+      "kit": "metabolism.kit.semio.json",
+      "designName": "Nakagin Capsule Tower",
+      "selectionAsset": "nakagin-capsule-tower.copy.design.selection.semio.json",
+      "expectedCopyAsset": "nakagin-capsule-tower.copy.design.semio.json",
+      "pasteTargetAsset": "nakagin-capsule-tower.paste.design.semio.json",
+      "expectedPasteDiffAsset": "nakagin-capsule-tower.paste.design.diff.semio.json",
+      "pasteCoordinate": {
+        "u": 10,
+        "v": 10
+      },
+      "expectedPasteWithCoordinateDiffAsset": "nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json",
+      "designFamilies": []
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "title": "Kit Graphql Catalog Only Read Path",
+  "status": "closed",
+  "summary": "RS wasm GraphQL: kitMetadataJson, designs/types/authors ShallowJson, design piecesFullJson/connectionsFullJson/piecesMetadataJson. semio/js FallbackKitStoreClient catalog getters use KitStoreHandle.execute only (kitGraphqlKit* helpers in index KitGraphqlWire). semio/react: useKitPieces, useKitConnections, useKitDesignsShallow, useKitTypesShallow, useKitAuthorsShallow; useTypes/useDesigns/useAuthors use shallow hooks; removed useRpc* and triad aliases. sketchpad imports updated."
+}

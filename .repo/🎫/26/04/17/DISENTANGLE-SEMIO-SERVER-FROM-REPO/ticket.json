@@ -1,0 +1,16 @@
+{
+  "title": "Disentangle Semio Server From Repo",
+  "status": "closed",
+  "description": "repo and semio are separate technologies. semio/server compose and k8s must not reference repo paths, images, or services. Caddy in repo must not proxy to semio-session.",
+  "goal": "🎯r2603",
+  "sessions": [],
+  "summary": "semio/server/compose.yml is now postgres + semio-session only: default DB semio_session, no repo schema mount, no web/worker/caddy. semio/server/k8s.yaml is semio-session-only (namespace semio-session): Postgres StatefulSet without repo init SQL, session Deployment with DATABASE_URL from Secret (fixes non-working $(VAR) expansion in env), Ingress with a single backend to session:8788. repo/server/Caddyfile reverted to reverse_proxy web:8787 only.",
+  "files": [
+    "semio/server/compose.yml",
+    "semio/server/k8s.yaml",
+    "repo/server/Caddyfile",
+    ".repo/🎫/26/04/17/DISENTANGLE-SEMIO-SERVER-FROM-REPO/ticket.json"
+  ],
+  "closed_by": "opus-4-7",
+  "client": "cursor-chat"
+}

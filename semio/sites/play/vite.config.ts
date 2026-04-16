@@ -44,9 +44,11 @@ export default defineConfig(async () => {
   const fs = await import("fs");
   const viteInternalFallback = path.resolve(__dirname, "../../../node_modules/vite/dist/node/index.js");
   return {
+    base: "./",
     resolve: {
       alias: [
         { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },
+        { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg") },
         { find: "@semio/ui", replacement: path.resolve(__dirname, "../../ui") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../../sketchpad") },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
@@ -75,6 +77,7 @@ export default defineConfig(async () => {
         configureServer(server: any) {
           const sketchpadPublicPath = path.resolve(__dirname, "../../sketchpad/public");
           const assetsPath = path.resolve(__dirname, "../../assets");
+          const metabolismKitPath = path.resolve(assetsPath, "semio/metabolism.zip");
           server.middlewares.use((req: any, res: any, next: any) => {
             if (req.url?.endsWith(".wasm")) {
               const wasmFile = path.join(sketchpadPublicPath, req.url);
@@ -83,6 +86,12 @@ export default defineConfig(async () => {
                 fs.createReadStream(wasmFile).pipe(res);
                 return;
               }
+            }
+            const bareUrl = req.url?.split(/[?#]/, 1)[0];
+            if (bareUrl === "/metabolism.zip" && fs.existsSync(metabolismKitPath) && fs.statSync(metabolismKitPath).isFile()) {
+              res.setHeader("Content-Type", "application/zip");
+              fs.createReadStream(metabolismKitPath).pipe(res);
+              return;
             }
             if (req.url?.startsWith("/assets/")) {
               const filePath = path.join(assetsPath, req.url.replace("/assets/", ""));
@@ -93,6 +102,17 @@ export default defineConfig(async () => {
             }
             next();
           });
+        },
+        generateBundle(this: { emitFile: (asset: { type: "asset"; fileName: string; source: Buffer }) => void }) {
+          const assetsPath = path.resolve(__dirname, "../../assets");
+          const metabolismKitPath = path.resolve(assetsPath, "semio/metabolism.zip");
+          if (fs.existsSync(metabolismKitPath) && fs.statSync(metabolismKitPath).isFile()) {
+            this.emitFile({
+              type: "asset",
+              fileName: "metabolism.zip",
+              source: fs.readFileSync(metabolismKitPath),
+            });
+          }
         },
       },
     ],

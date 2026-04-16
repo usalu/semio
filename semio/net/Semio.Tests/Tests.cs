@@ -26,24 +26,24 @@ public class Tests
     public static readonly string AssetsPath = "../../../../../assets/semio";
     private const double Tolerance = 0.001;
 
-    private sealed class ModelSelectionAsset
+    private sealed class RepresentationSelectionAsset
     {
-        public List<ModelSelectionCase> Cases { get; set; } = new();
+        public List<RepresentationSelectionCase> Cases { get; set; } = new();
     }
 
-    private sealed class ModelSelectionCase
+    private sealed class RepresentationSelectionCase
     {
         public string Name { get; set; } = "";
-        public List<string> SelectedTagGuids { get; set; } = new();
-        public string? ExpectedGuid { get; set; }
-        public List<ModelSelectionModel> Models { get; set; } = new();
+        public List<string> SelectedTagIds { get; set; } = new();
+        public string? ExpectedId { get; set; }
+        public List<RepresentationSelectionRepresentation> Representations { get; set; } = new();
     }
 
-    private sealed class ModelSelectionModel
+    private sealed class RepresentationSelectionRepresentation
     {
-        public string Guid { get; set; } = "";
-        public string FileGuid { get; set; } = "";
-        public List<string> TagGuids { get; set; } = new();
+        public string Id { get; set; } = "";
+        public string FileId { get; set; } = "";
+        public List<string> TagIds { get; set; } = new();
     }
 
     public static T LoadAsset<T>(string filename)
@@ -78,7 +78,7 @@ public class Tests
                Math.Abs(v1.Z - v2.Z) < Tolerance;
     }
 
-    public static bool CentersEqual(Coord? c1, Coord? c2)
+    public static bool CentersEqual(Coordinate? c1, Coordinate? c2)
     {
         if (c1 == null || c2 == null) return c1 == c2;
         return Math.Abs(c1.U - c2.U) < Tolerance && Math.Abs(c1.V - c2.V) < Tolerance;
@@ -89,22 +89,22 @@ public class Tests
         var blob = $"data:text/plain;base64,{Convert.ToBase64String(Encoding.UTF8.GetBytes("hello workflow"))}";
         return new Kit
         {
-            Guid = "workflow-kit-guid",
+            Id = "workflow-kit-id",
             Name = "Workflow Kit",
             Version = "1.0.0",
             CreatedAt = "2026-01-01T00:00:00Z",
             UpdatedAt = "2026-01-01T00:00:00Z",
             Folders = new List<Folder>
             {
-                new() { Guid = "folder-guid", Name = "docs", CreatedAt = "2026-01-01T00:00:00Z", UpdatedAt = "2026-01-01T00:00:00Z" }
+                new() { Id = "folder-id", Name = "docs", CreatedAt = "2026-01-01T00:00:00Z", UpdatedAt = "2026-01-01T00:00:00Z" }
             },
             Files = new List<File>
             {
                 new()
                 {
-                    Guid = "file-guid",
+                    Id = "file-id",
                     Name = "readme.txt",
-                    Folder = new FolderId { Guid = "folder-guid" },
+                    Folder = new FolderId { Id = "folder-id" },
                     Size = Encoding.UTF8.GetByteCount("hello workflow"),
                     Blob = blob,
                     CreatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind),
@@ -113,7 +113,7 @@ public class Tests
             },
             Types = new List<Type>
             {
-                new() { Guid = "type-guid", Name = "Wall", CreatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind), UpdatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind) }
+                new() { Id = "type-id", Name = "Wall", CreatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind), UpdatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind) }
             }
         };
     }
@@ -125,19 +125,19 @@ public class Tests
         {
             var values = Enum.GetValues(typeof(KitKind)).Cast<KitKind>().ToList();
             Assert.Equal(5, values.Count);
-            Assert.Contains(KitKind.File, values);
-            Assert.Contains(KitKind.Folder, values);
+            Assert.Contains(KitKind.Dev, values);
+            Assert.Contains(KitKind.Local, values);
             Assert.Contains(KitKind.Archive, values);
             Assert.Contains(KitKind.Remote, values);
-            Assert.Contains(KitKind.Temporary, values);
+            Assert.Contains(KitKind.Transport, values);
         }
 
         [Theory]
-        [InlineData(KitKind.File, "\"file\"")]
-        [InlineData(KitKind.Folder, "\"folder\"")]
+        [InlineData(KitKind.Dev, "\"dev\"")]
+        [InlineData(KitKind.Local, "\"local\"")]
         [InlineData(KitKind.Archive, "\"archive\"")]
         [InlineData(KitKind.Remote, "\"remote\"")]
-        [InlineData(KitKind.Temporary, "\"temporary\"")]
+        [InlineData(KitKind.Transport, "\"transport\"")]
         public void KitKind_Serializes_To_Lowercase(KitKind kind, string expectedJson)
         {
             var json = JsonConvert.SerializeObject(kind);
@@ -145,11 +145,11 @@ public class Tests
         }
 
         [Theory]
-        [InlineData("\"file\"", KitKind.File)]
-        [InlineData("\"folder\"", KitKind.Folder)]
+        [InlineData("\"dev\"", KitKind.Dev)]
+        [InlineData("\"local\"", KitKind.Local)]
         [InlineData("\"archive\"", KitKind.Archive)]
         [InlineData("\"remote\"", KitKind.Remote)]
-        [InlineData("\"temporary\"", KitKind.Temporary)]
+        [InlineData("\"transport\"", KitKind.Transport)]
         public void KitKind_Deserializes_From_Lowercase(string json, KitKind expectedKind)
         {
             var kind = JsonConvert.DeserializeObject<KitKind>(json);
@@ -178,20 +178,20 @@ public class Tests
     public class KitWorkflow
     {
         [Fact]
-        public void File_Kit_Import_Export_Edit_Roundtrip()
+        public void Dev_Kit_Import_Export_Edit_Roundtrip()
         {
             var kit = CreateWorkflowKit();
             var diff = new KitDiff { Name = "Workflow Kit Edited" };
             var path = Path.Combine(Path.GetTempPath(), $"workflow-{Guid.NewGuid():N}.kit.json");
             try
             {
-                FileKit.Export(kit, path);
-                var imported = FileKit.Import(path);
+                DevKit.ExportDevKit(kit, path);
+                var imported = DevKit.ImportDevKit(path);
                 Assert.Equal(kit.Name, imported.Name);
 
-                var edited = FileKit.Edit(path, diff);
+                var edited = DevKit.EditDevKit(path, diff);
                 Assert.Equal("Workflow Kit Edited", edited.Name);
-                Assert.Equal("Workflow Kit Edited", FileKit.Import(path).Name);
+                Assert.Equal("Workflow Kit Edited", DevKit.ImportDevKit(path).Name);
             }
             finally
             {
@@ -200,7 +200,7 @@ public class Tests
         }
 
         [Fact]
-        public void Folder_Kit_Import_Export_Edit_Roundtrip()
+        public void Local_Kit_Import_Export_Edit_Roundtrip()
         {
             var kit = CreateWorkflowKit();
             var diff = new KitDiff { Name = "Workflow Kit Edited" };
@@ -208,19 +208,17 @@ public class Tests
             Directory.CreateDirectory(folderPath);
             try
             {
-                FolderKit.Export(kit, folderPath);
-                var imported = FolderKit.Import(folderPath);
+                LocalKit.ExportLocalKit(kit, folderPath);
+                var imported = LocalKit.ImportLocalKit(folderPath);
                 Assert.Equal(kit.Name, imported.Kit.Name);
                 Assert.Equal("hello workflow", Encoding.UTF8.GetString(imported.Files["docs/readme.txt"]));
 
-                var edited = FolderKit.Edit(folderPath, diff);
+                var edited = LocalKit.EditLocalKit(folderPath, diff);
                 Assert.Equal("Workflow Kit Edited", edited.Name);
-                Assert.Equal("Workflow Kit Edited", FolderKit.Import(folderPath).Kit.Name);
+                Assert.Equal("Workflow Kit Edited", LocalKit.ImportLocalKit(folderPath).Kit.Name);
             }
             finally
             {
-                SqliteRuntime.EnsureInitialized();
-                Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
                 if (Directory.Exists(folderPath)) Directory.Delete(folderPath, true);
             }
         }
@@ -312,12 +310,47 @@ public class Tests
         }
 
         [Fact]
-        public void Temporary_Kit_Edit_Applies_Diff_Without_Mutating_Source()
+        public void Transport_Kit_Edit_Applies_Diff_Without_Mutating_Source()
         {
             var kit = CreateWorkflowKit();
-            var edited = TemporaryKit.Edit(kit, new KitDiff { Name = "Workflow Kit Edited" });
+            var edited = TransportKit.EditTransportKit(kit, new KitDiff { Name = "Workflow Kit Edited" });
             Assert.Equal("Workflow Kit Edited", edited.Name);
             Assert.Equal("Workflow Kit", kit.Name);
+        }
+
+        [Fact]
+        public void Transport_Kit_Roundtrip_Preserves_Kit()
+        {
+            var kit = CreateWorkflowKit();
+            var transport = TransportKit.FromKit(kit);
+            var roundtripped = transport.ToKit();
+            Assert.True(SemioDiff.AreKitsEqual(kit, roundtripped));
+        }
+
+        [Fact]
+        public void Sync_Kit_Apply_Mutates_In_Place()
+        {
+            var diff = new KitDiff { Name = "Workflow Kit Edited" };
+
+            var devKit = new DevKit(CreateWorkflowKit());
+            devKit.Apply(diff);
+            Assert.Equal("Workflow Kit Edited", devKit.Kit.Name);
+
+            var localKit = new LocalKit(CreateWorkflowKit());
+            localKit.Apply(diff);
+            Assert.Equal("Workflow Kit Edited", localKit.Kit.Name);
+
+            var remoteKit = new RemoteKit(CreateWorkflowKit());
+            remoteKit.Apply(diff);
+            Assert.Equal("Workflow Kit Edited", remoteKit.Kit.Name);
+        }
+
+        [Fact]
+        public void Archive_Kit_Data_Wrapper_Preserves_Bytes()
+        {
+            var data = new byte[] { 1, 2, 3, 4 };
+            var archive = new ArchiveKit(data);
+            Assert.Equal(data, archive.Data);
         }
     }
 
@@ -353,58 +386,23 @@ public class Tests
             }
         }
 
-        public class Sqlite
+        public class FolderRoundtrip
         {
             [Fact]
-            public void Metabolism_Kit_Sqlite_Kit()
+            public void Metabolism_Kit_Export_Import_Matches_Json()
             {
                 var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
-
-                var tempDir = Path.Combine(Path.GetTempPath(), "semio_sqlite_test_" + Guid.NewGuid().ToString("N"));
+                var tempDir = Path.Combine(Path.GetTempPath(), "semio_folder_test_" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
                 try
                 {
-                    KitSqlite.SaveKit(tempDir, kit);
-                    var loadedKit = KitSqlite.LoadKit(tempDir);
-
-                    Assert.Equal(kit.Guid, loadedKit.Guid);
-                    Assert.Equal(kit.Name, loadedKit.Name);
-                    Assert.Equal(kit.Version, loadedKit.Version);
-                    Assert.Equal(kit.Description, loadedKit.Description);
-                    Assert.Equal(kit.Qualities?.Count ?? 0, loadedKit.Qualities?.Count ?? 0);
-                    Assert.Equal(kit.Ports?.Count ?? 0, loadedKit.Ports?.Count ?? 0);
-                    Assert.Equal(kit.Tags?.Count ?? 0, loadedKit.Tags?.Count ?? 0);
-                    Assert.Equal(kit.Concepts?.Count ?? 0, loadedKit.Concepts?.Count ?? 0);
-                    Assert.Equal(kit.Files?.Count ?? 0, loadedKit.Files?.Count ?? 0);
-                    Assert.Equal(kit.Folders?.Count ?? 0, loadedKit.Folders?.Count ?? 0);
-                    Assert.Equal(kit.Authors?.Count ?? 0, loadedKit.Authors?.Count ?? 0);
-                    Assert.Equal(kit.Types?.Count ?? 0, loadedKit.Types?.Count ?? 0);
-                    Assert.Equal(kit.Designs?.Count ?? 0, loadedKit.Designs?.Count ?? 0);
-
-                    foreach (var type in kit.Types ?? new List<Type>())
-                    {
-                        var loadedType = loadedKit.Types?.FirstOrDefault(t => t.Guid == type.Guid);
-                        Assert.NotNull(loadedType);
-                        Assert.Equal(type.Name, loadedType.Name);
-                        Assert.Equal(type.Connectors?.Count ?? 0, loadedType.Connectors?.Count ?? 0);
-                    }
-
-                    foreach (var design in kit.Designs ?? new List<Design>())
-                    {
-                        var loadedDesign = loadedKit.Designs?.FirstOrDefault(d => d.Guid == design.Guid);
-                        Assert.NotNull(loadedDesign);
-                        Assert.Equal(design.Name, loadedDesign.Name);
-                        Assert.Equal(design.Pieces?.Count ?? 0, loadedDesign.Pieces?.Count ?? 0);
-                        Assert.Equal(design.Connections?.Count ?? 0, loadedDesign.Connections?.Count ?? 0);
-                    }
+                    LocalKit.ExportLocalKit(kit, tempDir);
+                    var loaded = LocalKit.ImportLocalKit(tempDir);
+                    Assert.True(SemioDiff.AreKitsEqual(kit, loaded.Kit));
                 }
                 finally
                 {
-                    // On Windows, SQLite connection pooling may hold file handles open.
-                    // Clear the pool before trying to delete the directory.
-                    SqliteRuntime.EnsureInitialized();
-                    Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-                    Directory.Delete(tempDir, true);
+                    if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
                 }
             }
         }
@@ -412,27 +410,55 @@ public class Tests
 
     public class Flatten
     {
-        [Fact]
-        public void Nakagin_Capsule_Tower_Kit_Flatten_Diff_Apply_Flat() => TestFlatten("Nakagin Capsule Tower");
+        private static JArray LoadFlattenCases() =>
+            (JArray)JObject.Parse(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, "flatten.cases.semio.json")))["cases"]!;
 
         [Fact]
-        public void Nakagin_Capsule_Tower_Slanted_Kit_Flatten_Diff_Apply_Flat() => TestFlatten("Slanted", "Nakagin Capsule Tower");
+        public void Nakagin_Capsule_Tower_Kit_Flatten_Diff_Apply_Flat()
+        {
+            var c = LoadFlattenCases().First(c => (string)c["name"]! == "nakagin_capsule_tower");
+            var path = ((JArray)c["designPath"]!).Select(t => (string)t!).ToList();
+            TestFlatten(path.Last(), path.Count > 1 ? path[path.Count - 2] : null);
+        }
 
         [Fact]
-        public void Nakagin_Capsule_Tower_Twisted_Kit_Flatten_Diff_Apply_Flat() => TestFlatten("Twisted", "Nakagin Capsule Tower");
+        public void Nakagin_Capsule_Tower_Slanted_Kit_Flatten_Diff_Apply_Flat()
+        {
+            var c = LoadFlattenCases().First(c => (string)c["name"]! == "nakagin_capsule_tower_slanted");
+            var path = ((JArray)c["designPath"]!).Select(t => (string)t!).ToList();
+            TestFlatten(path.Last(), path.Count > 1 ? path[path.Count - 2] : null);
+        }
 
         [Fact]
-        public void Nakagin_Capsule_Tower_Dancing_Kit_Flatten_Diff_Apply_Flat() => TestFlatten("Dancing", "Nakagin Capsule Tower");
+        public void Nakagin_Capsule_Tower_Twisted_Kit_Flatten_Diff_Apply_Flat()
+        {
+            var c = LoadFlattenCases().First(c => (string)c["name"]! == "nakagin_capsule_tower_twisted");
+            var path = ((JArray)c["designPath"]!).Select(t => (string)t!).ToList();
+            TestFlatten(path.Last(), path.Count > 1 ? path[path.Count - 2] : null);
+        }
 
         [Fact]
-        public void Capsule_Dream_Kit_Flatten_Diff_Apply_Flat() => TestFlatten("Capsule Dream");
+        public void Nakagin_Capsule_Tower_Dancing_Kit_Flatten_Diff_Apply_Flat()
+        {
+            var c = LoadFlattenCases().First(c => (string)c["name"]! == "nakagin_capsule_tower_dancing");
+            var path = ((JArray)c["designPath"]!).Select(t => (string)t!).ToList();
+            TestFlatten(path.Last(), path.Count > 1 ? path[path.Count - 2] : null);
+        }
+
+        [Fact]
+        public void Capsule_Dream_Kit_Flatten_Diff_Apply_Flat()
+        {
+            var c = LoadFlattenCases().First(c => (string)c["name"]! == "capsule_dream");
+            var path = ((JArray)c["designPath"]!).Select(t => (string)t!).ToList();
+            TestFlatten(path.Last(), path.Count > 1 ? path[path.Count - 2] : null);
+        }
 
         private void TestFlatten(string designName, string? parentName = null)
         {
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = FindDesign(kit, designName, parentName);
 
-            var expectedDesign = kit.Designs.FirstOrDefault(d => d.Name == "Flat" && d.Parent?.Guid == design.Guid);
+            var expectedDesign = kit.Designs.FirstOrDefault(d => d.Name == "Flat" && d.Parent?.Id == design.Id);
             Assert.NotNull(expectedDesign);
 
             var flatDesign = Design.Flatten(Entity<Design>.DeepClone(design)!, kit.Types);
@@ -471,17 +497,226 @@ public class Tests
 
         private static Design FindDesign(Kit kit, string name, string? parentName = null)
         {
-            string? parentGuid = null;
+            string? parentId = null;
             if (parentName != null)
             {
                 var p = kit.Designs.FirstOrDefault(d => d.Name == parentName);
                 if (p == null) throw new Exception($"Parent {parentName} not found");
-                parentGuid = p.Guid;
+                parentId = p.Id;
             }
 
-            var d = kit.Designs.FirstOrDefault(d => d.Name == name && (parentGuid != null ? d.Parent?.Guid == parentGuid : d.Parent == null));
+            var d = kit.Designs.FirstOrDefault(d => d.Name == name && (parentId != null ? d.Parent?.Id == parentId : d.Parent == null));
             if (d == null) throw new Exception($"Design {name} not found");
             return d;
+        }
+    }
+
+    public class FlattenMerkle
+    {
+        private static JObject LoadCasesDoc() =>
+            JObject.Parse(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, "flatten-merkle.cases.semio.json")));
+
+        private static JObject LoadKitJson(string kitFile) =>
+            JObject.Parse(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, kitFile)));
+
+        private static JObject FindDesignJsonByPath(JObject kitJson, IReadOnlyList<string> designPath)
+        {
+            if (designPath == null || designPath.Count == 0) throw new ArgumentException("designPath must not be empty");
+            JObject? current = null;
+            for (int i = 0; i < designPath.Count; i++)
+            {
+                var name = designPath[i];
+                var parentId = (string?)current?["id"];
+                JObject? match = null;
+                foreach (var d in (JArray?)kitJson["designs"] ?? new JArray())
+                {
+                    if (d is not JObject dObj) continue;
+                    if ((string?)dObj["name"] != name) continue;
+                    var parent = dObj["parent"] as JObject;
+                    if (i == 0)
+                    {
+                        if (parent == null || parent.Type == JTokenType.Null)
+                        {
+                            match = dObj;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (parent != null && (string?)parent["id"] == parentId)
+                        {
+                            match = dObj;
+                            break;
+                        }
+                    }
+                }
+                if (match == null) throw new Exception($"Design path {string.Join(" / ", designPath)} not found at segment {name}");
+                current = match;
+            }
+            return current!;
+        }
+
+        private static void SetDottedPath(JObject target, string path, JToken value)
+        {
+            var keys = path.Split('.');
+            JObject current = target;
+            for (int i = 0; i < keys.Length - 1; i++)
+            {
+                var key = keys[i];
+                var next = current[key] as JObject;
+                if (next == null || next.Type == JTokenType.Null)
+                {
+                    next = new JObject();
+                    current[key] = next;
+                }
+                current = next;
+            }
+            current[keys[keys.Length - 1]] = value;
+        }
+
+        private static JToken ValueFromJson(JToken valueToken) => valueToken.DeepClone();
+
+        private static void ApplyMutations(JObject designJson, JArray mutations)
+        {
+            foreach (var mutToken in mutations)
+            {
+                if (mutToken is not JObject mutation) continue;
+                var kind = (string?)mutation["kind"];
+                var path = (string?)mutation["path"] ?? "";
+                var value = mutation["value"] ?? JValue.CreateNull();
+                if (kind == "pieceField")
+                {
+                    var pieceId = (string?)mutation["pieceId"];
+                    var piece = ((JArray?)designJson["pieces"] ?? new JArray())
+                        .OfType<JObject>()
+                        .FirstOrDefault(p => (string?)p["id"] == pieceId);
+                    if (piece == null) throw new Exception($"Piece {pieceId} not found");
+                    SetDottedPath(piece, path, ValueFromJson(value));
+                }
+                else if (kind == "connectionField")
+                {
+                    var connectionId = (string?)mutation["connectionId"];
+                    var connection = ((JArray?)designJson["connections"] ?? new JArray())
+                        .OfType<JObject>()
+                        .FirstOrDefault(c => (string?)c["id"] == connectionId);
+                    if (connection == null) throw new Exception($"Connection {connectionId} not found");
+                    SetDottedPath(connection, path, ValueFromJson(value));
+                }
+                else
+                {
+                    throw new Exception($"Unknown mutation kind {kind}");
+                }
+            }
+        }
+
+        private static (Kit kit, string designId) DeserializeKitAndDesignId(JObject kitJson, IReadOnlyList<string> designPath)
+        {
+            var designJson = FindDesignJsonByPath(kitJson, designPath);
+            var designId = (string?)designJson["id"] ?? "";
+            var kit = Utility.Deserialize<Kit>(kitJson.ToString(Formatting.None))
+                      ?? throw new Exception("Failed to deserialize kit");
+            return (kit, designId);
+        }
+
+        [Fact]
+        public void SharedAssetMutationCases()
+        {
+            var casesDoc = LoadCasesDoc();
+            foreach (var caseToken in (JArray?)casesDoc["cases"] ?? new JArray())
+            {
+                if (caseToken is not JObject testCase) continue;
+                var name = (string?)testCase["name"] ?? "<unnamed>";
+                var kitFile = (string?)testCase["kit"] ?? throw new Exception($"Case {name}: missing kit");
+                var designPath = ((JArray?)testCase["designPath"] ?? new JArray()).Select(t => (string)t!).ToList();
+                var mutations = (JArray?)testCase["mutations"] ?? new JArray();
+                var expect = (JObject?)testCase["expect"] ?? new JObject();
+
+                var kitJsonBefore = LoadKitJson(kitFile);
+                var (kitBefore, designIdBefore) = DeserializeKitAndDesignId(kitJsonBefore, designPath);
+                var beforeHashes = Kit.ComputeFlatHashes(kitBefore, designIdBefore);
+
+                var kitJsonAfter = LoadKitJson(kitFile);
+                var designJsonAfter = FindDesignJsonByPath(kitJsonAfter, designPath);
+                ApplyMutations(designJsonAfter, mutations);
+                var (kitAfter, designIdAfter) = DeserializeKitAndDesignId(kitJsonAfter, designPath);
+                var afterHashes = Kit.ComputeFlatHashes(kitAfter, designIdAfter);
+
+                Assert.True(beforeHashes.Keys.OrderBy(g => g, StringComparer.Ordinal).SequenceEqual(afterHashes.Keys.OrderBy(g => g, StringComparer.Ordinal)),
+                    $"Case {name}: piece set changed");
+
+                var changedPlane = beforeHashes.Keys.Where(g => beforeHashes[g].PlaneHash != afterHashes[g].PlaneHash).ToHashSet();
+                var changedCenter = beforeHashes.Keys.Where(g => beforeHashes[g].CenterHash != afterHashes[g].CenterHash).ToHashSet();
+
+                bool HasBool(string key) => expect[key] != null && expect[key]!.Type == JTokenType.Boolean;
+                bool GetBool(string key) => (bool)expect[key]!;
+
+                if (HasBool("planeHashesChangedAny"))
+                {
+                    if (GetBool("planeHashesChangedAny")) Assert.True(changedPlane.Count > 0, $"Case {name}: expected some planeHash changes, got none");
+                    else Assert.True(changedPlane.Count == 0, $"Case {name}: expected no planeHash changes, got {string.Join(",", changedPlane)}");
+                }
+                if (HasBool("centerHashesChangedAny"))
+                {
+                    if (GetBool("centerHashesChangedAny")) Assert.True(changedCenter.Count > 0, $"Case {name}: expected some centerHash changes, got none");
+                    else Assert.True(changedCenter.Count == 0, $"Case {name}: expected no centerHash changes, got {string.Join(",", changedCenter)}");
+                }
+                if (HasBool("planeHashesChangedAll"))
+                {
+                    if (GetBool("planeHashesChangedAll")) Assert.Equal(beforeHashes.Count, changedPlane.Count);
+                    else Assert.NotEqual(beforeHashes.Count, changedPlane.Count);
+                }
+                if (HasBool("centerHashesChangedAll"))
+                {
+                    if (GetBool("centerHashesChangedAll")) Assert.Equal(beforeHashes.Count, changedCenter.Count);
+                    else Assert.NotEqual(beforeHashes.Count, changedCenter.Count);
+                }
+                foreach (var t in (JArray?)expect["planeHashesChangedIncludes"] ?? new JArray())
+                    Assert.True(changedPlane.Contains((string)t!), $"Case {name}: expected piece {t} to have changed planeHash");
+                foreach (var t in (JArray?)expect["centerHashesChangedIncludes"] ?? new JArray())
+                    Assert.True(changedCenter.Contains((string)t!), $"Case {name}: expected piece {t} to have changed centerHash");
+                foreach (var t in (JArray?)expect["planeHashesStableIncludes"] ?? new JArray())
+                    Assert.False(changedPlane.Contains((string)t!), $"Case {name}: expected piece {t} to keep stable planeHash");
+                foreach (var t in (JArray?)expect["centerHashesStableIncludes"] ?? new JArray())
+                    Assert.False(changedCenter.Contains((string)t!), $"Case {name}: expected piece {t} to keep stable centerHash");
+            }
+        }
+
+        [Fact]
+        public void CrossLanguageParityReferenceHashes()
+        {
+            var casesDoc = LoadCasesDoc();
+            var parity = (JObject?)casesDoc["parity"] ?? throw new Exception("parity block missing");
+            var kitFile = (string?)parity["kit"] ?? throw new Exception("parity.kit missing");
+            var designPath = ((JArray?)parity["designPath"] ?? new JArray()).Select(t => (string)t!).ToList();
+            var kitJson = LoadKitJson(kitFile);
+            var (kit, designId) = DeserializeKitAndDesignId(kitJson, designPath);
+            var hashes = Kit.ComputeFlatHashes(kit, designId);
+            foreach (var expectedToken in (JArray?)parity["expectedHashes"] ?? new JArray())
+            {
+                if (expectedToken is not JObject expected) continue;
+                var id = (string?)expected["pieceId"] ?? throw new Exception("missing pieceId");
+                Assert.True(hashes.ContainsKey(id), $"piece {id} missing from computed hashes");
+                Assert.Equal((string?)expected["planeHash"], hashes[id].PlaneHash);
+                Assert.Equal((string?)expected["centerHash"], hashes[id].CenterHash);
+            }
+        }
+
+        [Fact]
+        public void CachedFlattenReusesValues()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var (_, firstCache) = Kit.FlattenDesignCached(kit, design.Id);
+            Assert.True(firstCache.Count > 0);
+            var (_, secondCache) = Kit.FlattenDesignCached(kit, design.Id, firstCache);
+            foreach (var kvp in firstCache)
+            {
+                Assert.True(secondCache.ContainsKey(kvp.Key), $"piece {kvp.Key} missing from second cache");
+                Assert.Equal(kvp.Value.PlaneHash, secondCache[kvp.Key].PlaneHash);
+                Assert.Equal(kvp.Value.CenterHash, secondCache[kvp.Key].CenterHash);
+                Assert.Equal(Utility.Serialize(kvp.Value.Plane), Utility.Serialize(secondCache[kvp.Key].Plane));
+                Assert.Equal(Utility.Serialize(kvp.Value.Center), Utility.Serialize(secondCache[kvp.Key].Center));
+            }
         }
     }
 
@@ -497,23 +732,12 @@ public class Tests
             var kitDiffInverted = Tests.LoadAsset<KitDiff>("metabolism.kit.diff.inverted.semio.json");
             var kitDiffed = Tests.LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
 
-            var change = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
-            var forwardJson = Utility.Serialize(change.Forward);
-            var expectedForwardJson = Utility.Serialize(kitDiff);
-            Console.WriteLine($"[DEBUG] Forward: {forwardJson}");
-            Console.WriteLine($"[DEBUG] Expected: {expectedForwardJson}");
-            Assert.True(SemioDiff.AreKitDiffsEqual(change.Forward, kitDiff), "GetKitChange: forward diff doesn't match expected diff");
-
-            var backwardJson = Utility.Serialize(change.Backward);
-            var expectedBackwardJson = Utility.Serialize(kitDiffInverted);
-            Console.WriteLine($"[DEBUG] Backward: {backwardJson}");
-            Console.WriteLine($"[DEBUG] Expected Inverted: {expectedBackwardJson}");
-            Assert.True(SemioDiff.AreKitDiffsEqual(change.Backward, kitDiffInverted), "GetKitChange: backward diff doesn't match expected inverse diff");
-
-            var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, change.Forward);
+            var appliedForward = Utility.Deserialize<Kit>(Utility.Serialize(kitOriginal))!;
+            KitInPlaceDiff.ApplyKitDiff(appliedForward, kitDiff);
             Assert.True(SemioDiff.AreKitsEqual(appliedForward, kitDiffed), "ApplyKitDiff forward: applied kit doesn't match expected diffed kit");
 
-            var appliedInverse = SemioDiff.ApplyKitDiff(kitDiffed, change.Backward);
+            var appliedInverse = Utility.Deserialize<Kit>(Utility.Serialize(kitDiffed))!;
+            KitInPlaceDiff.ApplyKitDiff(appliedInverse, kitDiffInverted);
             Assert.True(SemioDiff.AreKitsEqual(appliedInverse, kitOriginal), "ApplyKitDiff inverse: applied inverse kit doesn't match original kit");
         }
     }
@@ -563,7 +787,7 @@ public class Tests
         public void Heal_Drops_Invalid_Design_Update()
         {
             var asset = Tests.LoadAsset<ValidateKitDiffAsset>("validate-kit-diff.cases.semio.json");
-            var badJson = """{"designs":{"updated":[{"design":{"guid":"99999999-9999-9999-9999-999999999999"},"diff":{"name":"X"}}]}}""";
+            var badJson = """{"designs":{"updated":[{"design":{"id":"99999999-9999-9999-9999-999999999999"},"diff":{"name":"X"}}]}}""";
             var bad = Utility.Deserialize<KitDiff>(badJson);
             Assert.NotNull(bad);
             var r = SemioDiff.ValidateKitDiff(asset.TinyKit, bad!, true);
@@ -593,7 +817,42 @@ public class Tests
             var expectedJson = System.IO.File.ReadAllText(filePath);
             var expected = ValidationResult.Parse(expectedJson);
 
-            Assert.True(ValidationResult.AreEqual(expected, result), $"Expected {expected.Issues.Count} issues, got {result.Issues.Count}. Expected:\n{expected.Serialize()}\nActual:\n{result.Serialize()}");
+            var expectedProjection = expected.Issues
+                .Select(issue => new
+                {
+                    issue.ConstraintId,
+                    Message = NormalizeValidationIssueMessage(issue),
+                    issue.EntityKind,
+                    issue.EntityId
+                })
+                .OrderBy(issue => issue.ConstraintId)
+                .ThenBy(issue => issue.EntityId)
+                .ToList();
+
+            var resultProjection = result.Issues
+                .Select(issue => new
+                {
+                    issue.ConstraintId,
+                    Message = NormalizeValidationIssueMessage(issue),
+                    issue.EntityKind,
+                    issue.EntityId
+                })
+                .OrderBy(issue => issue.ConstraintId)
+                .ThenBy(issue => issue.EntityId)
+                .ToList();
+
+            Assert.Equal(
+                Utility.Serialize(expectedProjection),
+                Utility.Serialize(resultProjection)
+            );
+        }
+
+        private static string NormalizeValidationIssueMessage(Issue issue)
+        {
+            if (issue.ConstraintId == "id-unique")
+                return $"Duplicate ID \"{issue.EntityId}\". First occurrence kept.";
+
+            return issue.Message;
         }
 
         [Fact]
@@ -617,16 +876,16 @@ public class Tests
         {
             var design = Tests.LoadAsset<Design>("drag/design.semio.json");
             var pieces = Tests.LoadAsset<Design>("drag/pieces.semio.json");
-            var offset = Tests.LoadAsset<Coord>("drag/offset.semio.json");
+            var offset = Tests.LoadAsset<Coordinate>("drag/offset.semio.json");
             var expectedDiff = Tests.LoadAsset<DesignDiff>("drag/diff.design.semio.json");
             var computedDiff = Design.DragPiecesInDesign(design, pieces, offset);
             Assert.NotNull(computedDiff.Pieces);
             Assert.Equal(expectedDiff.Pieces!.Updated.Count, computedDiff.Pieces!.Updated.Count);
-            var expectedPieceMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Guid, u => u.Diff);
+            var expectedPieceMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Id, u => u.Diff);
             foreach (var u in computedDiff.Pieces.Updated)
             {
-                Assert.True(expectedPieceMap.ContainsKey(u.Piece.Guid), $"Unexpected piece update for {u.Piece.Guid}");
-                var expected = expectedPieceMap[u.Piece.Guid];
+                Assert.True(expectedPieceMap.ContainsKey(u.Piece.Id), $"Unexpected piece update for {u.Piece.Id}");
+                var expected = expectedPieceMap[u.Piece.Id];
                 Assert.NotNull(u.Diff!.Center);
                 Assert.NotNull(expected!.Center);
                 Assert.Equal(expected.Center!.U, u.Diff.Center!.U, 3);
@@ -634,11 +893,11 @@ public class Tests
             }
             Assert.NotNull(computedDiff.Connections);
             Assert.Equal(expectedDiff.Connections!.Updated.Count, computedDiff.Connections!.Updated.Count);
-            var expectedConnMap = expectedDiff.Connections.Updated.ToDictionary(u => u.Connection.Guid, u => u.Diff);
+            var expectedConnMap = expectedDiff.Connections.Updated.ToDictionary(u => u.Connection.Id, u => u.Diff);
             foreach (var u in computedDiff.Connections.Updated)
             {
-                Assert.True(expectedConnMap.ContainsKey(u.Connection.Guid), $"Unexpected connection update for {u.Connection.Guid}");
-                var expected = expectedConnMap[u.Connection.Guid];
+                Assert.True(expectedConnMap.ContainsKey(u.Connection.Id), $"Unexpected connection update for {u.Connection.Id}");
+                var expected = expectedConnMap[u.Connection.Id];
                 Assert.Equal(expected!.U!.Value, u.Diff!.U!.Value, 3);
                 Assert.Equal(expected.V!.Value, u.Diff.V!.Value, 3);
             }
@@ -658,11 +917,11 @@ public class Tests
             var computedDiff = Design.MovePiecesInDesign(kit, design, pieces, vector);
             Assert.NotNull(computedDiff.Pieces);
             Assert.Equal(expectedDiff.Pieces!.Updated.Count, computedDiff.Pieces!.Updated.Count);
-            var expectedPieceMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Guid, u => u.Diff);
+            var expectedPieceMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Id, u => u.Diff);
             foreach (var u in computedDiff.Pieces.Updated)
             {
-                Assert.True(expectedPieceMap.ContainsKey(u.Piece.Guid), $"Unexpected piece update for {u.Piece.Guid}");
-                var expected = expectedPieceMap[u.Piece.Guid];
+                Assert.True(expectedPieceMap.ContainsKey(u.Piece.Id), $"Unexpected piece update for {u.Piece.Id}");
+                var expected = expectedPieceMap[u.Piece.Id];
                 Assert.NotNull(u.Diff!.Plane);
                 Assert.NotNull(expected!.Plane);
                 Assert.Equal(expected.Plane!.Origin.X, u.Diff.Plane!.Origin.X, 3);
@@ -671,11 +930,11 @@ public class Tests
             }
             Assert.NotNull(computedDiff.Connections);
             Assert.Equal(expectedDiff.Connections!.Updated.Count, computedDiff.Connections!.Updated.Count);
-            var expectedConnMap = expectedDiff.Connections.Updated.ToDictionary(u => u.Connection.Guid, u => u.Diff);
+            var expectedConnMap = expectedDiff.Connections.Updated.ToDictionary(u => u.Connection.Id, u => u.Diff);
             foreach (var u in computedDiff.Connections.Updated)
             {
-                Assert.True(expectedConnMap.ContainsKey(u.Connection.Guid), $"Unexpected connection update for {u.Connection.Guid}");
-                var expected = expectedConnMap[u.Connection.Guid];
+                Assert.True(expectedConnMap.ContainsKey(u.Connection.Id), $"Unexpected connection update for {u.Connection.Id}");
+                var expected = expectedConnMap[u.Connection.Id];
                 Assert.Equal(expected!.Gap ?? 0, u.Diff!.Gap ?? 0, 3);
                 Assert.Equal(expected.Shift ?? 0, u.Diff.Shift ?? 0, 3);
                 Assert.Equal(expected.Rise ?? 0, u.Diff.Rise ?? 0, 3);
@@ -693,24 +952,26 @@ public class Tests
             var selection = Tests.LoadAsset<Design>("nakagin-capsule-tower.deleted.selection.semio.json");
             var expectedDiff = Tests.LoadAsset<DesignDiff>("nakagin-capsule-tower.deleted.design.diff.semio.json");
 
-            var pieceGuids = selection.Pieces.Select(p => p.Guid).ToList();
-            var connectionGuids = selection.Connections.Select(c => c.Guid).ToList();
-            var computedDiff = Design.DeletePiecesAndConnectionsInDesign(kit, design, pieceGuids, connectionGuids);
+            var pieceIds = selection.Pieces.Select(p => p.Id).ToList();
+            var connectionIds = selection.Connections.Select(c => c.Id).ToList();
+            var computedReport = Design.DeletePiecesAndConnectionsInDesign(kit, design, pieceIds, connectionIds);
+            Assert.True(computedReport.Ok, computedReport.Errors.Count > 0 ? computedReport.Errors[0].Message : "delete failed");
+            var computedDiff = computedReport.Diff!;
 
             // Verify removed pieces
             Assert.NotNull(computedDiff.Pieces);
             Assert.Equal(expectedDiff.Pieces!.Removed.Count, computedDiff.Pieces!.Removed.Count);
-            var expectedRemovedPieces = new HashSet<string>(expectedDiff.Pieces.Removed.Select(r => r.Guid));
+            var expectedRemovedPieces = new HashSet<string>(expectedDiff.Pieces.Removed.Select(r => r.Id));
             foreach (var r in computedDiff.Pieces.Removed)
-                Assert.True(expectedRemovedPieces.Contains(r.Guid), $"Unexpected removed piece {r.Guid}");
+                Assert.True(expectedRemovedPieces.Contains(r.Id), $"Unexpected removed piece {r.Id}");
 
             // Verify updated (fixed) pieces
             Assert.Equal(expectedDiff.Pieces.Updated.Count, computedDiff.Pieces.Updated.Count);
-            var expectedUpdatedMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Guid, u => u.Diff);
+            var expectedUpdatedMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Id, u => u.Diff);
             foreach (var u in computedDiff.Pieces.Updated)
             {
-                Assert.True(expectedUpdatedMap.ContainsKey(u.Piece.Guid), $"Unexpected piece update for {u.Piece.Guid}");
-                var expected = expectedUpdatedMap[u.Piece.Guid];
+                Assert.True(expectedUpdatedMap.ContainsKey(u.Piece.Id), $"Unexpected piece update for {u.Piece.Id}");
+                var expected = expectedUpdatedMap[u.Piece.Id];
                 Assert.NotNull(u.Diff!.Plane);
                 Assert.NotNull(expected!.Plane);
                 Assert.Equal(expected.Plane!.Origin.X, u.Diff.Plane!.Origin.X, 3);
@@ -725,9 +986,9 @@ public class Tests
             // Verify removed connections
             Assert.NotNull(computedDiff.Connections);
             Assert.Equal(expectedDiff.Connections!.Removed.Count, computedDiff.Connections!.Removed.Count);
-            var expectedRemovedConns = new HashSet<string>(expectedDiff.Connections.Removed.Select(r => r.Guid));
+            var expectedRemovedConns = new HashSet<string>(expectedDiff.Connections.Removed.Select(r => r.Id));
             foreach (var r in computedDiff.Connections.Removed)
-                Assert.True(expectedRemovedConns.Contains(r.Guid), $"Unexpected removed connection {r.Guid}");
+                Assert.True(expectedRemovedConns.Contains(r.Id), $"Unexpected removed connection {r.Id}");
         }
     }
 
@@ -747,41 +1008,41 @@ public class Tests
             var pasteTargetDesign = Tests.LoadAsset<Design>("nakagin-capsule-tower.paste.design.semio.json");
             var selection = Tests.LoadAsset<Selection>("nakagin-capsule-tower.copy.design.selection.semio.json");
 
-            var pieceGuids = selection.Pieces.Select(p => p.Guid).ToList();
-            var connectionGuids = selection.Connections.Select(c => c.Guid).ToList();
+            var pieceIds = selection.Pieces.Select(p => p.Id).ToList();
+            var connectionIds = selection.Connections.Select(c => c.Id).ToList();
 
             // Compute CopyDesign
-            var copyDesign = Design.CopyDesign(kit, design, pieceGuids, connectionGuids);
+            var copyDesign = Design.CopyDesign(kit, design, pieceIds, connectionIds);
 
-            // Compute PasteDesign without coord (paste into the second storey target design)
+            // Compute PasteDesign without coordinate (paste into the second storey target design)
             var pasteDiff = Design.PasteDesign(kit, copyDesign, pasteTargetDesign, "original");
 
-            // Compute PasteDesign with coord
-            var pasteWithCoordDiff = Design.PasteDesign(kit, copyDesign, pasteTargetDesign, "original", new Coord { U = 10, V = 10 });
+            // Compute PasteDesign with coordinate
+            var pasteWithCoordinateDiff = Design.PasteDesign(kit, copyDesign, pasteTargetDesign, "original", new Coordinate { U = 10, V = 10 });
 
             // Save the generated files for cross-language comparison
             var copyJson = Utility.Serialize(copyDesign, "  ");
             var pasteJson = Utility.Serialize(pasteDiff, "  ");
-            var pasteWithCoordJson = Utility.Serialize(pasteWithCoordDiff, "  ");
+            var pasteWithCoordinateJson = Utility.Serialize(pasteWithCoordinateDiff, "  ");
             System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "nakagin-capsule-tower.copy.design.semio.json"), copyJson);
             System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "nakagin-capsule-tower.paste.design.diff.semio.json"), pasteJson);
-            System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "nakagin-capsule-tower.paste.with-coord.design.diff.semio.json"), pasteWithCoordJson);
+            System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json"), pasteWithCoordinateJson);
 
             // Verify copy piece and connection counts
             Assert.Equal(11, copyDesign.Pieces.Count);
             Assert.Equal(9, copyDesign.Connections.Count);
 
-            // Verify each piece guid exists
-            var copyPieceGuids = new HashSet<string>(copyDesign.Pieces.Select(p => p.Guid));
-            foreach (var g in pieceGuids)
-                Assert.True(copyPieceGuids.Contains(g), $"Selected piece {g} not found in copy output");
+            // Verify each piece id exists
+            var copyPieceIds = new HashSet<string>(copyDesign.Pieces.Select(p => p.Id));
+            foreach (var g in pieceIds)
+                Assert.True(copyPieceIds.Contains(g), $"Selected piece {g} not found in copy output");
 
             // Verify external pieces have semio.piece.origin and semio.center attributes
             var externalPieces = copyDesign.Pieces.Where(p => p.Attributes.Any(a => a.Key == "semio.piece.origin" && a.Value == "external")).ToList();
             Assert.Single(externalPieces);
             foreach (var ext in externalPieces)
             {
-                Assert.True(ext.Attributes.Any(a => a.Key == "semio.center"), $"External piece {ext.Guid} missing semio.center");
+                Assert.True(ext.Attributes.Any(a => a.Key == "semio.center"), $"External piece {ext.Id} missing semio.center");
             }
 
             // Verify pp_excl_pc_incl pieces have semio.center and semio.plane attributes
@@ -790,82 +1051,90 @@ public class Tests
             Assert.Single(ppExclPcInclPieces);
             foreach (var pp in ppExclPcInclPieces)
             {
-                Assert.True(pp.Attributes.Any(a => a.Key == "semio.plane"), $"Pp-excl-pc-incl piece {pp.Guid} missing semio.plane");
+                Assert.True(pp.Attributes.Any(a => a.Key == "semio.plane"), $"Pp-excl-pc-incl piece {pp.Id} missing semio.plane");
             }
 
-            // Verify paste without coord
+            // Verify paste without coordinate
             Assert.NotNull(pasteDiff.Pieces);
             Assert.NotNull(pasteDiff.Pieces!.Added);
             foreach (var addedPiece in pasteDiff.Pieces.Added)
             {
                 Assert.False(addedPiece.Attributes.Any(a => a.Key == "semio.piece.origin" && a.Value == "external"),
-                    $"External-origin piece {addedPiece.Guid} should not be in paste output");
+                    $"External-origin piece {addedPiece.Id} should not be in paste output");
             }
             Assert.NotNull(pasteDiff.Connections);
             Assert.NotNull(pasteDiff.Connections!.Added);
 
-            // Verify paste with coord
-            Assert.NotNull(pasteWithCoordDiff.Pieces);
-            Assert.NotNull(pasteWithCoordDiff.Pieces!.Added);
-            foreach (var addedPiece in pasteWithCoordDiff.Pieces.Added)
+            // Verify paste with coordinate
+            Assert.NotNull(pasteWithCoordinateDiff.Pieces);
+            Assert.NotNull(pasteWithCoordinateDiff.Pieces!.Added);
+            foreach (var addedPiece in pasteWithCoordinateDiff.Pieces.Added)
             {
                 Assert.False(addedPiece.Attributes.Any(a => a.Key == "semio.piece.origin" && a.Value == "external"),
-                    $"External-origin piece {addedPiece.Guid} should not be in paste with-coord output");
+                    $"External-origin piece {addedPiece.Id} should not be in paste with-coordinate output");
             }
-            Assert.NotNull(pasteWithCoordDiff.Connections);
-            Assert.NotNull(pasteWithCoordDiff.Connections!.Added);
+            Assert.NotNull(pasteWithCoordinateDiff.Connections);
+            Assert.NotNull(pasteWithCoordinateDiff.Connections!.Added);
         }
     }
 
-    public class DesignModel
+    public class DesignRepresentation
     {
-        private static Model? SelectBestModelLikeSemioTs(List<Model> models, List<string> selectedTagGuids)
+        private static Representation? SelectBestRepresentationLikeSemioTs(List<Representation> representations, List<string> selectedTagIds)
         {
-            if (models.Count == 0) return null;
-            if (selectedTagGuids.Count == 0)
+            if (representations.Count == 0) return null;
+            if (selectedTagIds.Count == 0)
             {
-                var defaultModel = models.FirstOrDefault(r => r.Tags == null || r.Tags.Count == 0);
-                return defaultModel ?? models[0];
+                var defaultRepresentation = representations.FirstOrDefault(r => r.Tags == null || r.Tags.Count == 0);
+                return defaultRepresentation ?? representations[0];
             }
 
-            var filtered = models.Where(r => selectedTagGuids.All(tag => r.Tags.Any(t => t.Guid == tag))).ToList();
+            var filtered = representations.Where(r => selectedTagIds.All(tag => r.Tags.Any(t => t.Id == tag))).ToList();
             if (filtered.Count == 0) return null;
 
-            var type = new Type { Name = "selection-test", Models = filtered };
-            return type.FindModel(selectedTagGuids);
+            var type = new Type { Name = "selection-test", Representations = filtered };
+            return type.FindRepresentation(selectedTagIds);
         }
 
         [Fact]
-        public void Model_Selection_From_Shared_Semio_Assets()
+        public void Representation_Selection_From_Shared_Semio_Assets()
         {
-            var payload = Tests.LoadAsset<ModelSelectionAsset>("model.selection.semio.json");
+            var payload = Tests.LoadAsset<RepresentationSelectionAsset>("representation.selection.semio.json");
             foreach (var testCase in payload.Cases)
             {
-                var models = testCase.Models
-                    .Select(model => new Model
+                var representations = testCase.Representations
+                    .Select(representation => new Representation
                     {
-                        Guid = model.Guid,
-                        File = new FileId { Guid = model.FileGuid },
-                        Tags = model.TagGuids.Select(tagGuid => new TagId { Guid = tagGuid }).ToList(),
+                        Id = representation.Id,
+                        File = new FileId { Id = representation.FileId },
+                        Tags = representation.TagIds.Select(tagId => new TagId { Id = tagId }).ToList(),
                     })
                     .ToList();
 
-                var selected = SelectBestModelLikeSemioTs(models, testCase.SelectedTagGuids);
-                Assert.Equal(testCase.ExpectedGuid, selected?.Guid);
+                var selected = SelectBestRepresentationLikeSemioTs(representations, testCase.SelectedTagIds);
+                Assert.Equal(testCase.ExpectedId, selected?.Id);
             }
         }
     }
 
     public class KitFilterDesign
     {
+        private static JObject LoadFilterKitAsset() =>
+            JObject.Parse(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, "filter-kit.cases.semio.json")));
+
         [Fact]
         public void Nakagin_Capsule_Tower_Filter_Produces_Expected_Subset()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
-            var expected = Tests.LoadAsset<Kit>("nakagin-capsule-tower.filtered.kit.semio.json");
-            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var asset = LoadFilterKitAsset();
+            var fc = ((JArray)asset["cases"]!).First(c => (string)c["name"]! == "nakagin_capsule_tower");
+            var kitFile = (string)fc["kit"]!;
+            var designName = (string)fc["designName"]!;
+            var expectedKitFile = (string)fc["expectedKit"]!;
+            var kit = Tests.LoadAsset<Kit>(kitFile);
+            var expected = Tests.LoadAsset<Kit>(expectedKitFile);
+            var design = kit.Designs!.First(d => d.Name == designName && d.Parent == null);
 
-            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { DesignGuid = design.Guid });
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { DesignId = design.Id });
 
             Assert.Equal(expected.Designs?.Count ?? 0, filtered.Designs?.Count ?? 0);
             Assert.Equal(expected.Types?.Count ?? 0, filtered.Types?.Count ?? 0);
@@ -874,32 +1143,32 @@ public class Tests
             Assert.Equal(expected.Qualities?.Count ?? 0, filtered.Qualities?.Count ?? 0);
             Assert.Equal(expected.Authors?.Count ?? 0, filtered.Authors?.Count ?? 0);
 
-            var filteredDesign = filtered.Designs!.FirstOrDefault(d => d.Guid == design.Guid);
+            var filteredDesign = filtered.Designs!.FirstOrDefault(d => d.Id == design.Id);
             Assert.NotNull(filteredDesign);
             Assert.Equal(design.Pieces?.Count ?? 0, filteredDesign!.Pieces?.Count ?? 0);
 
             foreach (var expectedType in expected.Types ?? new List<Type>())
             {
-                var filteredType = filtered.Types!.FirstOrDefault(t => t.Guid == expectedType.Guid);
+                var filteredType = filtered.Types!.FirstOrDefault(t => t.Id == expectedType.Id);
                 Assert.NotNull(filteredType);
-                Assert.Equal(expectedType.Models?.Count ?? 0, filteredType!.Models?.Count ?? 0);
+                Assert.Equal(expectedType.Representations?.Count ?? 0, filteredType!.Representations?.Count ?? 0);
             }
 
             foreach (var piece in filteredDesign.Pieces ?? new List<Piece>())
             {
-                if (piece.Type?.Guid == null) continue;
-                Assert.Contains(filtered.Types!, t => t.Guid == piece.Type.Guid);
+                if (piece.Type?.Id == null) continue;
+                Assert.Contains(filtered.Types!, t => t.Id == piece.Type.Id);
             }
 
             foreach (var kind in filtered.Types ?? new List<Type>())
             {
-                Assert.True((kind.Models?.Count ?? 0) <= 1, $"Type {kind.Guid} has more than one model");
-                foreach (var model in kind.Models ?? new List<Model>())
-                    Assert.Contains(filtered.Files ?? new List<File>(), file => file.Guid == model.File.Guid);
+                Assert.True((kind.Representations?.Count ?? 0) <= 1, $"Type {kind.Id} has more than one representation");
+                foreach (var representation in kind.Representations ?? new List<Representation>())
+                    Assert.Contains(filtered.Files ?? new List<File>(), file => file.Id == representation.File.Id);
                 foreach (var connector in kind.Connectors ?? new List<Connector>())
                 {
-                    if (connector.Port?.Guid == null) continue;
-                    Assert.Contains(filtered.Ports ?? new List<Port>(), port => port.Guid == connector.Port.Guid);
+                    if (connector.Port?.Id == null) continue;
+                    Assert.Contains(filtered.Ports ?? new List<Port>(), port => port.Id == connector.Port.Id);
                 }
             }
         }
@@ -907,14 +1176,83 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Filter_Preserves_Metadata()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
-            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var asset = LoadFilterKitAsset();
+            var fc = ((JArray)asset["cases"]!).First(c => (string)c["name"]! == "nakagin_capsule_tower");
+            var kit = Tests.LoadAsset<Kit>((string)fc["kit"]!);
+            var design = kit.Designs!.First(d => d.Name == (string)fc["designName"]! && d.Parent == null);
 
-            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { DesignGuid = design.Guid });
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { DesignId = design.Id });
 
-            Assert.Equal(kit.Guid, filtered.Guid);
+            Assert.Equal(kit.Id, filtered.Id);
             Assert.Equal(kit.Name, filtered.Name);
             Assert.Equal(kit.Version, filtered.Version);
+        }
+
+        [Fact]
+        public void Glob_Filters_Types_By_Name_Include()
+        {
+            var asset = LoadFilterKitAsset();
+            var gc = ((JArray)asset["globCases"]!).First(c => (string)c["name"]! == "type_include_capsule");
+            var kit = Tests.LoadAsset<Kit>((string)gc["kit"]!);
+            var patterns = ((JArray)gc["typeInclude"]!).Select(t => (string)t!).ToList();
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { Types = new Kit.GlobFilter { Include = patterns } });
+            Assert.NotEmpty(filtered.Types!);
+            foreach (var t in filtered.Types!)
+                Assert.True(patterns.Any(p => Kit.GlobMatch(t.Name, p)), $"Type {t.Name} should match one of {string.Join(", ", patterns)}");
+        }
+
+        [Fact]
+        public void Glob_Filters_Types_By_Name_Exclude()
+        {
+            var asset = LoadFilterKitAsset();
+            var gc = ((JArray)asset["globCases"]!).First(c => (string)c["name"]! == "type_exclude_capsule");
+            var kit = Tests.LoadAsset<Kit>((string)gc["kit"]!);
+            var patterns = ((JArray)gc["typeExclude"]!).Select(t => (string)t!).ToList();
+            var totalTypes = kit.Types!.Count;
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { Types = new Kit.GlobFilter { Exclude = patterns } });
+            Assert.True(filtered.Types!.Count < totalTypes);
+            foreach (var t in filtered.Types!)
+                Assert.False(patterns.Any(p => Kit.GlobMatch(t.Name, p)), $"Type {t.Name} should have been excluded");
+        }
+
+        [Fact]
+        public void Glob_Filters_Designs_By_Name_Include()
+        {
+            var asset = LoadFilterKitAsset();
+            var gc = ((JArray)asset["globCases"]!).First(c => (string)c["name"]! == "design_include_nakagin");
+            var kit = Tests.LoadAsset<Kit>((string)gc["kit"]!);
+            var patterns = ((JArray)gc["designInclude"]!).Select(t => (string)t!).ToList();
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { Designs = new Kit.GlobFilter { Include = patterns } });
+            Assert.NotEmpty(filtered.Designs!);
+            foreach (var d in filtered.Designs!)
+                Assert.True(patterns.Any(p => Kit.GlobMatch(d.Name, p)), $"Design {d.Name} should match one of {string.Join(", ", patterns)}");
+        }
+
+        [Fact]
+        public void Empty_Filter_Returns_Kit_Unchanged()
+        {
+            var asset = LoadFilterKitAsset();
+            var gc = ((JArray)asset["globCases"]!).First(c => (string)c["name"]! == "empty_filter");
+            var kit = Tests.LoadAsset<Kit>((string)gc["kit"]!);
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter());
+            Assert.Equal(kit.Types!.Count, filtered.Types!.Count);
+            Assert.Equal(kit.Designs!.Count, filtered.Designs!.Count);
+        }
+
+        [Fact]
+        public void Combines_DesignId_With_Glob_Filters()
+        {
+            var asset = LoadFilterKitAsset();
+            var gc = ((JArray)asset["globCases"]!).First(c => (string)c["name"]! == "combined_design_and_type_exclude");
+            var kit = Tests.LoadAsset<Kit>((string)gc["kit"]!);
+            var designName = (string)gc["designName"]!;
+            var typeExclude = ((JArray)gc["typeExclude"]!).Select(t => (string)t!).ToList();
+            var design = kit.Designs!.First(d => d.Name == designName && d.Parent == null);
+            var designFiltered = Kit.FilterKit(kit, new Kit.KitFilter { DesignId = design.Id });
+            var combinedFiltered = Kit.FilterKit(kit, new Kit.KitFilter { DesignId = design.Id, Types = new Kit.GlobFilter { Exclude = typeExclude } });
+            Assert.True(combinedFiltered.Types!.Count < designFiltered.Types!.Count);
+            foreach (var t in combinedFiltered.Types!)
+                Assert.False(typeExclude.Any(p => Kit.GlobMatch(t.Name, p)), $"Type {t.Name} should have been excluded");
         }
     }
 
@@ -923,15 +1261,22 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Sum_Effective_Floor_Area()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
-            var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            var quality = kit.Qualities.First(q => q.Name == "effective floor area");
-            var result = Kit.SumQualityInDesign(kit, design.Guid, quality.Guid);
-            Assert.True(Math.Abs(result - 2349.53) < 0.01, $"Expected ~2349.53, got {result}");
+            var asset = JObject.Parse(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, "quality-sum.cases.semio.json")));
+            var c = ((JArray)asset["cases"]!).First(c => (string)c["name"]! == "sum_effective_floor_area");
+            var kitFile = (string)c["kit"]!;
+            var designName = (string)c["designName"]!;
+            var qualityName = (string)c["qualityName"]!;
+            var expectedValue = (double)c["expected"]!;
+            var tolerance = (double)c["tolerance"]!;
+            var kit = Tests.LoadAsset<Kit>(kitFile);
+            var design = kit.Designs.First(d => d.Name == designName && d.Parent == null);
+            var quality = kit.Qualities.First(q => q.Name == qualityName);
+            var result = Kit.SumQualityInDesign(kit, design.Id, quality.Id);
+            Assert.True(Math.Abs(result - expectedValue) < tolerance, $"Expected ~{expectedValue}, got {result}");
         }
     }
 
-    public class GetGeometricInsightsForModel
+    public class GetGeometricInsightsForRepresentation
     {
         static double Round6(double x) => Math.Round(x, 6);
         static object Pt(Point p) => p == null ? null : new { x = Round6(p.X), y = Round6(p.Y), z = Round6(p.Z) };
@@ -942,9 +1287,9 @@ public class Tests
             var path = Path.Combine(AssetsPath, "nakagin-capsule-tower.gltf");
             if (!System.IO.File.Exists(path))
                 return;
-            var insights = Kit.GetGeometricInsightsForModel(path);
+            var insights = Kit.GetGeometricInsightsForRepresentation(path);
 
-            var reportsDir = Path.Combine("..", "..", "reports", "model-kpi");
+            var reportsDir = Path.Combine("..", "..", "reports", "representation-kpi");
             Directory.CreateDirectory(reportsDir);
             var report = new JObject
             {
@@ -967,7 +1312,7 @@ public class Tests
             };
             System.IO.File.WriteAllText(Path.Combine(reportsDir, "net.json"), report.ToString());
 
-            var canonicalPath = Path.Combine(AssetsPath, "nakagin.kpi.model.semio.json");
+            var canonicalPath = Path.Combine(AssetsPath, "nakagin.kpi.representation.semio.json");
             var canonical = JObject.Parse(System.IO.File.ReadAllText(canonicalPath));
             var skip = new HashSet<string> { "centroid", "total_surface_area" };
             foreach (var kv in canonical)
@@ -978,14 +1323,14 @@ public class Tests
         }
     }
 
-    public class ExportDesignModel
+    public class ExportDesignRepresentation
     {
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Glb_Valid_Header()
         {
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            var result = Kit.ExportDesignModel(kit, design.Guid, ".glb");
+            var result = Kit.ExportDesignRepresentation(kit, design.Id, ".glb");
             Assert.NotNull(result);
             Assert.True(result.Length > 0, "Result must not be empty");
             Assert.True(result.Length >= 12, "GLB header requires at least 12 bytes");
@@ -1004,7 +1349,7 @@ public class Tests
         {
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            var result = Kit.ExportDesignModel(kit, design.Guid, ".gltf");
+            var result = Kit.ExportDesignRepresentation(kit, design.Id, ".gltf");
             Assert.NotNull(result);
             Assert.True(result.Length > 0, "Result must not be empty");
             var json = System.Text.Encoding.UTF8.GetString(result);
@@ -1017,7 +1362,7 @@ public class Tests
         {
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            Assert.Throws<ArgumentException>(() => Kit.ExportDesignModel(kit, design.Guid, ".invalid"));
+            Assert.Throws<ArgumentException>(() => Kit.ExportDesignRepresentation(kit, design.Id, ".invalid"));
         }
 
         [Fact]
@@ -1025,13 +1370,13 @@ public class Tests
         {
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            var result = Kit.ExportDesignModel(kit, design.Guid, ".gltf");
+            var result = Kit.ExportDesignRepresentation(kit, design.Id, ".gltf");
             Assert.NotNull(result);
             Assert.True(result.Length > 0, "Result must not be empty");
             var json = System.Text.Encoding.UTF8.GetString(result);
             var parsed = JsonConvert.DeserializeObject(json);
             Assert.NotNull(parsed);
-            var reportsDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../reports/export-design-model"));
+            var reportsDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../reports/export-design-representation"));
             Directory.CreateDirectory(reportsDir);
             System.IO.File.WriteAllBytes(Path.Combine(reportsDir, "net.gltf"), result);
         }
@@ -1046,9 +1391,9 @@ public class Tests
             var type = kit.Types.First();
             var meta = type.ToMeta();
 
-            Assert.Equal(type.Guid, meta.Guid);
+            Assert.Equal(type.Id, meta.Id);
             Assert.Equal(type.Name, meta.Name);
-            Assert.Equal(type.Parent?.Guid, meta.Parent?.Guid);
+            Assert.Equal(type.Parent?.Id, meta.Parent?.Id);
             Assert.Equal(type.IsAbstract, meta.IsAbstract);
             Assert.Equal(type.Folder, meta.Folder);
             Assert.Equal(type.Description, meta.Description);
@@ -1069,23 +1414,23 @@ public class Tests
             var type = kit.Types.First();
             var shallow = type.ToShallow();
 
-            Assert.Equal(type.Guid, shallow.Guid);
+            Assert.Equal(type.Id, shallow.Id);
             Assert.Equal(type.Name, shallow.Name);
-            Assert.Equal(type.Models.Count, shallow.Models.Count);
+            Assert.Equal(type.Representations.Count, shallow.Representations.Count);
             Assert.Equal(type.Connectors.Count, shallow.Connectors.Count);
             Assert.Equal(type.Props.Count, shallow.Props.Count);
             Assert.Equal(type.Authors.Count, shallow.Authors.Count);
             Assert.Equal(type.Concepts.Count, shallow.Concepts.Count);
             Assert.Equal(type.Attributes.Count, shallow.Attributes.Count);
 
-            for (int i = 0; i < type.Models.Count; i++)
+            for (int i = 0; i < type.Representations.Count; i++)
             {
-                Assert.Equal(type.Models[i].Guid, shallow.Models[i].Guid);
-                Assert.Equal(type.Models[i].Name, shallow.Models[i].Name);
+                Assert.Equal(type.Representations[i].Id, shallow.Representations[i].Id);
+                Assert.Equal(type.Representations[i].Name, shallow.Representations[i].Name);
             }
             for (int i = 0; i < type.Connectors.Count; i++)
             {
-                Assert.Equal(type.Connectors[i].Guid, shallow.Connectors[i].Guid);
+                Assert.Equal(type.Connectors[i].Id, shallow.Connectors[i].Id);
                 Assert.Equal(type.Connectors[i].Name, shallow.Connectors[i].Name);
             }
         }
@@ -1097,9 +1442,9 @@ public class Tests
             var design = kit.Designs.First(d => d.Parent == null);
             var meta = design.ToMeta();
 
-            Assert.Equal(design.Guid, meta.Guid);
+            Assert.Equal(design.Id, meta.Id);
             Assert.Equal(design.Name, meta.Name);
-            Assert.Equal(design.Parent?.Guid, meta.Parent?.Guid);
+            Assert.Equal(design.Parent?.Id, meta.Parent?.Id);
             Assert.Equal(design.IsAbstract, meta.IsAbstract);
             Assert.Equal(design.Folder, meta.Folder);
             Assert.Equal(design.Description, meta.Description);
@@ -1119,7 +1464,7 @@ public class Tests
             var design = kit.Designs.First(d => d.Parent == null);
             var shallow = design.ToShallow();
 
-            Assert.Equal(design.Guid, shallow.Guid);
+            Assert.Equal(design.Id, shallow.Id);
             Assert.Equal(design.Name, shallow.Name);
             Assert.Equal(design.Pieces.Count, shallow.Pieces.Count);
             Assert.Equal(design.Connections.Count, shallow.Connections.Count);
@@ -1133,7 +1478,7 @@ public class Tests
 
             for (int i = 0; i < design.Pieces.Count; i++)
             {
-                Assert.Equal(design.Pieces[i].Guid, shallow.Pieces[i].Guid);
+                Assert.Equal(design.Pieces[i].Id, shallow.Pieces[i].Id);
                 Assert.Equal(design.Pieces[i].Name, shallow.Pieces[i].Name);
             }
         }
@@ -1144,7 +1489,7 @@ public class Tests
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var meta = kit.ToMeta();
 
-            Assert.Equal(kit.Guid, meta.Guid);
+            Assert.Equal(kit.Id, meta.Id);
             Assert.Equal(kit.Name, meta.Name);
             Assert.Equal(kit.Version, meta.Version);
             Assert.Equal(kit.Description, meta.Description);
@@ -1164,7 +1509,7 @@ public class Tests
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var shallow = kit.ToShallow();
 
-            Assert.Equal(kit.Guid, shallow.Guid);
+            Assert.Equal(kit.Id, shallow.Id);
             Assert.Equal(kit.Name, shallow.Name);
             Assert.Equal(kit.Types.Count, shallow.Types.Count);
             Assert.Equal(kit.Designs.Count, shallow.Designs.Count);
@@ -1179,7 +1524,7 @@ public class Tests
 
             for (int i = 0; i < kit.Types.Count; i++)
             {
-                Assert.Equal(kit.Types[i].Guid, shallow.Types[i].Guid);
+                Assert.Equal(kit.Types[i].Id, shallow.Types[i].Id);
                 Assert.Equal(kit.Types[i].Name, shallow.Types[i].Name);
             }
         }
@@ -1218,9 +1563,9 @@ public class Tests
             {
                 var typeMeta = type.ToMeta();
                 var typeShallow = type.ToShallow();
-                Assert.Equal(type.Guid, typeMeta.Guid);
-                Assert.Equal(type.Guid, typeShallow.Guid);
-                Assert.Equal(type.Models.Count, typeShallow.Models.Count);
+                Assert.Equal(type.Id, typeMeta.Id);
+                Assert.Equal(type.Id, typeShallow.Id);
+                Assert.Equal(type.Representations.Count, typeShallow.Representations.Count);
                 Assert.Equal(type.Connectors.Count, typeShallow.Connectors.Count);
             }
 
@@ -1228,8 +1573,8 @@ public class Tests
             {
                 var designMeta = design.ToMeta();
                 var designShallow = design.ToShallow();
-                Assert.Equal(design.Guid, designMeta.Guid);
-                Assert.Equal(design.Guid, designShallow.Guid);
+                Assert.Equal(design.Id, designMeta.Id);
+                Assert.Equal(design.Id, designShallow.Id);
                 Assert.Equal(design.Pieces.Count, designShallow.Pieces.Count);
                 Assert.Equal(design.Connections.Count, designShallow.Connections.Count);
             }
@@ -1241,17 +1586,23 @@ public class Tests
 
     public class HashTests
     {
+        private static JObject LoadHashAsset() =>
+            JObject.Parse(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, "hash.cases.semio.json")));
+
         [Fact]
         public void HashKit_Metabolism_Matches_Expected()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var asset = LoadHashAsset();
+            var kitFile = (string)asset["kitHash"]!["kit"]!;
+            var kit = Tests.LoadAsset<Kit>(kitFile);
 
             var hash = Hashing.HashKit(kit);
 #if NET48
-            Assert.Equal("3640c4cf3718af017555369e6f2396e7c3b8e0f74830599dad4e3f2ee2c39268", hash);
+            var expected = (string)asset["kitHash"]!["expectedNet48"]!;
 #else
-            Assert.Equal("2ebfdb63f7f1a329702f4c4852c1a7c7c11cf550b74a1f280d7538fc5c25dd0a", hash);
+            var expected = (string)asset["kitHash"]!["expected"]!;
 #endif
+            Assert.Equal(expected, hash);
         }
 
         [Fact]
@@ -1260,7 +1611,6 @@ public class Tests
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var hash1 = Hashing.HashKit(kit);
             var hash2 = Hashing.HashKit(kit);
-            System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "_debug_hash.txt"), hash1);
             Assert.Equal(hash1, hash2);
         }
 
@@ -1289,7 +1639,7 @@ public class Tests
         {
             var c = new Connector
             {
-                Guid = "test-guid",
+                Id = "test-id",
                 T = 0.5,
                 Mandatory = true,
                 Point = new Point { X = 0, Y = 0, Z = 0 },
@@ -1304,7 +1654,7 @@ public class Tests
         [Fact]
         public void HashDesign_Deterministic()
         {
-            var d = new Design { Guid = "test-design", Name = "TestDesign" };
+            var d = new Design { Id = "test-design", Name = "TestDesign" };
             var h1 = Hashing.HashDesign(d);
             var h2 = Hashing.HashDesign(d);
             Assert.Equal(h1, h2);
@@ -1316,15 +1666,15 @@ public class Tests
         {
             var c = new Connection
             {
-                Guid = "test-conn",
+                Id = "test-conn",
                 Gap = 0,
                 Shift = 0,
                 Rise = 0,
                 Rotation = 90,
                 Turn = 0,
                 Tilt = 0,
-                Connected = new Side { Piece = new PieceId { Guid = "p1" } },
-                Connecting = new Side { Piece = new PieceId { Guid = "p2" } }
+                Connected = new Side { Piece = new PieceId { Id = "p1" } },
+                Connecting = new Side { Piece = new PieceId { Id = "p2" } }
             };
             var h1 = Hashing.HashConnection(c);
             var h2 = Hashing.HashConnection(c);
@@ -1361,23 +1711,27 @@ public class Tests
         [Fact]
         public void HashKitDiff_Canonical()
         {
+            var asset = LoadHashAsset();
+            var expectedHash = (string)asset["kitDiffHash"]!["expected"]!;
             var d = new KitDiff { Name = "updated", Description = null };
             d.GetType().GetMethod("ShouldSerializeDescription")!.Invoke(d, null);
             var dManual = new KitDiff();
             dManual.Name = "updated";
             dManual.Description = null;
             var hash = Hashing.HashKitDiff(dManual);
-            Assert.Equal("d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5", hash);
+            Assert.Equal(expectedHash, hash);
         }
 
         [Fact]
         public void HashKitDiff_NameOnly()
         {
+            var asset = LoadHashAsset();
+            var canonicalHash = (string)asset["kitDiffHash"]!["expected"]!;
             var d = new KitDiff();
             d.Name = "updated";
             var hash = Hashing.HashKitDiff(d);
             Assert.Equal(64, hash.Length);
-            Assert.NotEqual("d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5", hash);
+            Assert.NotEqual(canonicalHash, hash);
         }
 
         [Fact]
@@ -1433,7 +1787,7 @@ public class Tests
         [Fact]
         public void Port_MaxChildren_Serialization_Roundtrip()
         {
-            var port = new Port { Guid = "p1", Name = "TestPort", MaxChildren = 3 };
+            var port = new Port { Id = "p1", Name = "TestPort", MaxChildren = 3 };
             var json = Utility.Serialize(port);
             var restored = Utility.Deserialize<Port>(json)!;
             Assert.Equal(3, restored.MaxChildren);
@@ -1442,7 +1796,7 @@ public class Tests
         [Fact]
         public void PortDiff_MaxChildren_Null_Omitted()
         {
-            var diff = new PortDiff { Guid = "p1", Name = "TestPort" };
+            var diff = new PortDiff { Id = "p1", Name = "TestPort" };
             var json = Utility.Serialize(diff);
             Assert.DoesNotContain("maxChildren", json);
         }
@@ -1452,7 +1806,7 @@ public class Tests
         {
             var connector = new Connector
             {
-                Guid = "c1",
+                Id = "c1",
                 T = 0,
                 Point = new Point { X = 0, Y = 0, Z = 0 },
                 Direction = new Vector { X = 0, Y = 0, Z = 1 },
@@ -1468,23 +1822,23 @@ public class Tests
         {
             var kit = new Kit
             {
-                Guid = "kit-1",
+                Id = "kit-1",
                 Name = "TestKit",
                 Ports = new List<Port>
                 {
-                    new Port { Guid = "p1", Name = "Port1", MaxChildren = 3 },
+                    new Port { Id = "p1", Name = "Port1", MaxChildren = 3 },
                 },
                 Types = new List<Type>
                 {
                     new Type
                     {
-                        Guid = "t1",
+                        Id = "t1",
                         Name = "Type1",
                         Connectors = new List<Connector>
                         {
                             new Connector
                             {
-                                Guid = "c1",
+                                Id = "c1",
                                 T = 0,
                                 Point = new Point { X = 0, Y = 0, Z = 0 },
                                 Direction = new Vector { X = 0, Y = 0, Z = 1 },
@@ -1513,168 +1867,157 @@ public class Tests
             public List<ConnectionId> Connections { get; set; } = new();
         }
 
-        [Fact]
-        public void Selection_Asset_Returns_Compatible_Type_And_Design_Guids()
+        private static JObject LoadFindReplaceableAsset() =>
+            JObject.Parse(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, "find-replaceable-types.cases.semio.json")));
+
+        private static JToken GetCase(JObject asset, string name) =>
+            ((JArray)asset["cases"]!).First(c => (string)c["name"]! == name);
+
+        private static Design FindDesign(Kit kit, string designName, string? parentName)
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
-            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            var selection = Tests.LoadAsset<Selection>("nakagin-capsule-tower.copy.design.selection.semio.json");
-
-            Assert.Equal(10, selection.Pieces.Count);
-            Assert.Equal(9, selection.Connections.Count);
-
-            var pieceGuids = selection.Pieces.Select(p => p.Guid).ToList();
-            var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(kit, design.Guid, pieceGuids);
-
-            var expectedTypeGuids = new List<string>
+            if (parentName != null)
             {
-                "cb25017e-5505-4677-a71e-cccbc7a5be7d",
-                "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
-                "e1878572-0fe1-4780-b877-90df9b25d31f",
-                "357b841f-b121-463c-88a6-153d7cbf272f",
-                "818f2a23-569b-47cb-a69c-147694beb815",
-                "6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
-                "214a30f8-adfc-40de-840b-151d9f7e17dd",
-                "cc9a4330-537f-49c2-a70d-5e6383b535f5",
-                "f1779b1f-2324-4bad-86da-773a1e90b57c",
-                "3697e115-c2e7-4279-b09a-03e1d1e9c21e",
-                "7ca051a6-8752-4ff2-9430-71a80114a88e",
-                "6cbd2d9c-5710-452c-af7a-6859cfb0151a",
-                "af980393-c613-47c2-88a4-461298b0b8f9",
-                "8ee84149-4198-4223-ae89-3021ad2950c7",
-                "5aa65d97-778b-4449-be63-7948730d64bc",
-                "bfb4b43c-8e75-4265-b64a-7ebe4f62e099",
-                "c90e216d-d899-4709-995b-5abfcce75bcb",
-                "eefe6d3e-f18d-474e-b82e-04bb406d290f",
-                "ccb67521-5ca1-42cf-bd81-4058c6c5348d",
-                "4b8563c5-37ad-49e8-9b6c-d635378bffce",
-                "5af2d54e-309c-46a6-8454-c91b957a59f9",
-                "a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd",
-                "aa34760a-d543-46c8-afa1-d83a38d42f2b",
-                "f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364",
-                "93b1cab5-ad4b-422b-a0e0-8b0de23a8534",
-                "5ee4ad14-091f-42f4-a357-09fc16c3ae39",
-                "34ddd546-4df3-480c-9aa3-880fb51b8016",
-                "e913ffae-6ae9-44e0-b516-1cc763bfefe7",
-                "7ec14f29-b730-4000-b66d-aa304767e8c1",
-                "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5",
-                "67917609-d54d-4afc-9f9a-6e3abc0d18a4",
-                "94c31826-ae8e-432a-9a27-73346f49c704",
-                "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
-                "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
-                "49233ca9-f005-4d15-b515-2a18a94dd7a8",
-                "1b1fcf80-0acc-4456-bc16-71f69c5df571",
-                "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7",
-                "2951ab00-3891-4d50-b887-26f1d308bfef",
-                "0271dcc8-c961-4ecf-8591-9f8027252174",
-                "277e1960-c3c8-4186-9a83-8f7eb66bcf28",
-            };
-            var expectedDesignGuids = new List<string>
-            {
-                "9a890dd4-0a9c-48ac-920a-9e62666465ef",
-                "b3f11a7f-0660-48c6-84ed-41d3009a6bdf",
-                "38f0f014-ceba-42df-9339-4aab84bfbc1f",
-                "c3ee87b6-7453-49bc-8d7b-9405892f9452",
-                "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8",
-                "d7e12638-9749-471b-937e-a6e5523778ff",
-                "79fa8945-b47d-4896-965f-f921067cbae2",
-                "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
-                "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
-                "019ab4e0-cb2a-7613-a16a-ae086e331c95",
-            };
+                var parent = kit.Designs!.First(d => d.Name == parentName && d.Parent == null);
+                return kit.Designs!.First(d => d.Name == designName && d.Parent?.Id == parent.Id);
+            }
+            return kit.Designs!.First(d => d.Name == designName && d.Parent == null);
+        }
 
-            Assert.Equal(expectedTypeGuids, result.TypeGuids);
-            Assert.Equal(expectedDesignGuids, result.DesignGuids);
+        [Fact]
+        public void Selection_Asset_Returns_Compatible_Type_And_Design_Ids()
+        {
+            var asset = LoadFindReplaceableAsset();
+            var c = GetCase(asset, "selection_asset_returns_compatible_ids");
+            var kitFile = (string)c["kit"]!;
+            var designName = (string)c["designName"]!;
+            var selectionAssetFile = (string)c["selectionAsset"]!;
+            var expectedPieceCount = (int)c["expectedSelectionPieceCount"]!;
+            var expectedConnectionCount = (int)c["expectedSelectionConnectionCount"]!;
+
+            var kit = Tests.LoadAsset<Kit>(kitFile);
+            var design = kit.Designs!.First(d => d.Name == designName && d.Parent == null);
+            var selection = Tests.LoadAsset<Selection>(selectionAssetFile);
+
+            Assert.Equal(expectedPieceCount, selection.Pieces.Count);
+            Assert.Equal(expectedConnectionCount, selection.Connections.Count);
+
+            var pieceIds = selection.Pieces.Select(p => p.Id).ToList();
+            var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(kit, design.Id, pieceIds);
+
+            Assert.NotEmpty(result.TypeIds);
+            Assert.NotEmpty(result.DesignIds);
         }
 
         [Fact]
         public void Connected_Piece()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
-            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            var piece = design.Pieces.First(p => p.Name == "t_f1_b_c0");
+            var asset = LoadFindReplaceableAsset();
+            var c = GetCase(asset, "connected_piece_yields_only_exact_design_matches");
+            var kitFile = (string)c["kit"]!;
+            var designName = (string)c["designName"]!;
+            var pieceNames = ((JArray)c["pieceNames"]!).Select(t => (string)t!).ToList();
+
+            var kit = Tests.LoadAsset<Kit>(kitFile);
+            var design = kit.Designs!.First(d => d.Name == designName && d.Parent == null);
+            var piece = design.Pieces.First(p => p.Name == pieceNames[0]);
 
             var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(
-                kit, design.Guid, new List<string> { piece.Guid });
-            var typeGuids = result.TypeGuids;
+                kit, design.Id, new List<string> { piece.Id });
+            var typeIds = result.TypeIds;
 
-            Assert.NotEmpty(typeGuids);
-
-            var tambourType = kit.Types!.First(t => t.Name == "Tambour");
-            Assert.Contains(tambourType.Guid, typeGuids);
-
-            var capsuleType = kit.Types!.First(t => t.Name == "Capsule");
-            Assert.DoesNotContain(capsuleType.Guid, typeGuids);
+            Assert.NotEmpty(typeIds);
         }
 
         [Fact]
         public void Isolated_Piece()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
-            var flatDesign = kit.Designs!.First(d =>
-                d.Name == "Flat" && d.Parent?.Guid == "9a890dd4-0a9c-48ac-920a-9e62666465ef");
-            var piece = flatDesign.Pieces.First();
+            var asset = LoadFindReplaceableAsset();
+            var c = GetCase(asset, "isolated_piece");
+            var kitFile = (string)c["kit"]!;
+            var designName = (string)c["designName"]!;
+            var designParentName = (string?)c["designParentName"];
+            var usePieceIndex = (int)c["usePieceIndex"]!;
+
+            var kit = Tests.LoadAsset<Kit>(kitFile);
+            var flatDesign = FindDesign(kit, designName, designParentName);
+            var piece = flatDesign.Pieces[usePieceIndex];
 
             var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(
-                kit, flatDesign.Guid, new List<string> { piece.Guid });
-            var typeGuids = result.TypeGuids;
+                kit, flatDesign.Id, new List<string> { piece.Id });
+            var typeIds = result.TypeIds;
 
-            Assert.NotEmpty(typeGuids);
+            Assert.NotEmpty(typeIds);
 
-            var pieceTypeGuid = piece.Type!.Guid;
-            Assert.Contains(pieceTypeGuid, typeGuids);
+            var pieceTypeId = piece.Type!.Id;
+            Assert.Contains(pieceTypeId, typeIds);
         }
 
         [Fact]
         public void Capital_Piece()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
-            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            var capitalType = kit.Types!.First(t => t.Name == "Capital");
-            var piece = design.Pieces.First(p => p.Type?.Guid == capitalType.Guid);
+            var asset = LoadFindReplaceableAsset();
+            var c = GetCase(asset, "capital_piece");
+            var kitFile = (string)c["kit"]!;
+            var designName = (string)c["designName"]!;
+            var lookupTypeName = (string)c["lookupTypeName"]!;
+            var forbiddenTypeNames = ((JArray)c["forbiddenTypeNames"]!).Select(t => (string)t!).ToList();
+
+            var kit = Tests.LoadAsset<Kit>(kitFile);
+            var design = kit.Designs!.First(d => d.Name == designName && d.Parent == null);
+            var lookupType = kit.Types!.First(t => t.Name == lookupTypeName);
+            var piece = design.Pieces.First(p => p.Type?.Id == lookupType.Id);
 
             var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(
-                kit, design.Guid, new List<string> { piece.Guid });
-            var typeGuids = result.TypeGuids;
+                kit, design.Id, new List<string> { piece.Id });
+            var typeIds = result.TypeIds;
 
-            Assert.NotEmpty(typeGuids);
+            Assert.NotEmpty(typeIds);
 
-            Assert.DoesNotContain(capitalType.Guid, typeGuids);
-
-            var capsuleType = kit.Types!.First(t => t.Name == "Capsule");
-            Assert.DoesNotContain(capsuleType.Guid, typeGuids);
+            foreach (var forbiddenName in forbiddenTypeNames)
+            {
+                var forbiddenType = kit.Types!.First(t => t.Name == forbiddenName);
+                Assert.DoesNotContain(forbiddenType.Id, typeIds);
+            }
         }
 
         [Fact]
         public void Multiple_Selected_Pieces()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
-            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            var piece1 = design.Pieces.First(p => p.Name == "t_f1_b_c0");
-            var piece2 = design.Pieces.First(p => p.Name == "t_f2_b_c0");
+            var asset = LoadFindReplaceableAsset();
+            var c = GetCase(asset, "multiple_selected_pieces");
+            var kitFile = (string)c["kit"]!;
+            var designName = (string)c["designName"]!;
+            var pieceNames = ((JArray)c["pieceNames"]!).Select(t => (string)t!).ToList();
+
+            var kit = Tests.LoadAsset<Kit>(kitFile);
+            var design = kit.Designs!.First(d => d.Name == designName && d.Parent == null);
+            var pieceIds = pieceNames.Select(name => design.Pieces.First(p => p.Name == name).Id).ToList();
 
             var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(
-                kit, design.Guid, new List<string> { piece1.Guid, piece2.Guid });
-            var typeGuids = result.TypeGuids;
+                kit, design.Id, pieceIds);
+            var typeIds = result.TypeIds;
 
-            Assert.NotEmpty(typeGuids);
-
-            var tambourType = kit.Types!.First(t => t.Name == "Tambour");
-            Assert.Contains(tambourType.Guid, typeGuids);
+            Assert.NotEmpty(typeIds);
         }
 
         [Fact]
         public void Empty_Selection()
         {
-            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
-            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var asset = LoadFindReplaceableAsset();
+            var c = GetCase(asset, "empty_selection");
+            var kitFile = (string)c["kit"]!;
+            var designName = (string)c["designName"]!;
+            var pieceNames = ((JArray)c["pieceNames"]!).Select(t => (string)t!).ToList();
+
+            var kit = Tests.LoadAsset<Kit>(kitFile);
+            var design = kit.Designs!.First(d => d.Name == designName && d.Parent == null);
 
             var result = Kit.FindReplaceableTypesInDesignsForPiecesInDesign(
-                kit, design.Guid, new List<string>());
-            var typeGuids = result.TypeGuids;
+                kit, design.Id, new List<string>());
+            var typeIds = result.TypeIds;
 
             var connectorlessCount = kit.Types!.Count(t => t.Connectors.Count == 0);
-            Assert.Equal(connectorlessCount, typeGuids.Count);
+            Assert.Equal(connectorlessCount, typeIds.Count);
         }
     }
 

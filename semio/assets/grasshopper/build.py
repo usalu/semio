@@ -76,7 +76,7 @@ def parse_components_and_groups_xml(xml_file_path):
     tree = ET.parse(xml_file_path)
     root = tree.getroot()
 
-    components_by_guid = {}
+    components_by_id = {}
     all_components = []
     definition_objects_chunk = root.find(
         "./chunks/chunk[@name='Definition']/chunks/chunk[@name='DefinitionObjects']"
@@ -86,7 +86,7 @@ def parse_components_and_groups_xml(xml_file_path):
             "./chunks/chunk[@name='Object']"
         ):
             component_props = {}
-            instance_guid = None
+            instance_id = None
 
             for item in obj_chunk.findall("./items/item"):
                 if item.get("name") == "Name":
@@ -100,8 +100,8 @@ def parse_components_and_groups_xml(xml_file_path):
                         component_props["nickname"] = item.text
                     elif name_attr == "Description":
                         component_props["description"] = item.text
-                    elif name_attr == "InstanceGuid":
-                        instance_guid = item.text
+                    elif name_attr == "InstanceId":
+                        instance_id = item.text
                     elif name_attr == "IconOverride":
                         component_props["icon"] = "icon"
 
@@ -147,8 +147,8 @@ def parse_components_and_groups_xml(xml_file_path):
 
             if "icon" not in component_props:
                 component_props["icon"] = ""
-            if instance_guid and component_props.get("name"):
-                components_by_guid[instance_guid] = (component_props, pivot_y)
+            if instance_id and component_props.get("name"):
+                components_by_id[instance_id] = (component_props, pivot_y)
                 all_components.append((component_props, pivot_y))
 
     groups = {}
@@ -179,7 +179,7 @@ def parse_components_and_groups_xml(xml_file_path):
                             group_ids.append(item.text)
 
                     subgroups = {}
-                    for guid in group_ids:
+                    for id in group_ids:
                         subgroup_obj = None
                         for sub_obj_chunk in definition_objects_chunk.findall(
                             "./chunks/chunk[@name='Object']"
@@ -192,8 +192,8 @@ def parse_components_and_groups_xml(xml_file_path):
                                 sub_nickname = None
                                 for sub_item in sub_container.findall("./items/item"):
                                     if (
-                                        sub_item.get("name") == "InstanceGuid"
-                                        and sub_item.text == guid
+                                        sub_item.get("name") == "InstanceId"
+                                        and sub_item.text == id
                                     ):
                                         for sub_name_item in sub_container.findall(
                                             "./items/item"
@@ -222,9 +222,9 @@ def parse_components_and_groups_xml(xml_file_path):
                                 if sub_item.get("name") == "ID":
                                     subgroup_ids.append(sub_item.text)
                             subgroup_components = []
-                            for sub_guid in subgroup_ids:
-                                if sub_guid in components_by_guid:
-                                    comp, pivot_y = components_by_guid[sub_guid]
+                            for sub_id in subgroup_ids:
+                                if sub_id in components_by_id:
+                                    comp, pivot_y = components_by_id[sub_id]
                                     subgroup_components.append((comp, pivot_y))
 
                             subgroup_components.sort(
@@ -235,8 +235,8 @@ def parse_components_and_groups_xml(xml_file_path):
                             if exposure_index is not None:
                                 subgroups[exposure_index] = subgroup_components
                         else:
-                            if guid in components_by_guid:
-                                comp, pivot_y = components_by_guid[guid]
+                            if id in components_by_id:
+                                comp, pivot_y = components_by_id[id]
 
                                 if "1" not in subgroups:
                                     subgroups["1"] = []

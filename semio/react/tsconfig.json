@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "incremental": false,
+    "noEmit": true,
+    "types": [
+      "react",
+      "react-dom",
+      "vitest/importMeta"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@semio/react": [
+        "./index.tsx"
+      ],
+      "@semio/react/*": [
+        "./*"
+      ],
+      "@semio/js": [
+        "../js"
+      ],
+      "@semio/js/*": [
+        "../js/*"
+      ],
+      "@semio/rs-wasm": [
+        "../rs/pkg/semio.d.ts"
+      ],
+      "@semio/sketchpad": [
+        "../sketchpad"
+      ],
+      "@semio/sketchpad/*": [
+        "../sketchpad/*"
+      ],
+      "@semio/assets": [
+        "../assets"
+      ],
+      "@semio/assets/*": [
+        "../assets/*"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

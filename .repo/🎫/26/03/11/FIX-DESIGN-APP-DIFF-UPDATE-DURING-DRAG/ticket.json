@@ -1,23 +1,10 @@
 {
   "title": "Fix Design App Diff Update During Drag",
-  "status": "open",
-  "prompt": "Make diff update as diagram nodes are dragged with children propagation without breaking functionality",
+  "status": "closed",
+  "description": "Make diff update as diagram nodes are dragged with children propagation without breaking functionality",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/836"
   },
-  "goal": "SKETCHPAD-IMPROVEMENTS",
-  "started": "2026-03-11T12:40:52.134258688Z",
-  "interactions": [
-    {
-      "dates": {
-        "started": "2026-03-11 12:40:52"
-      },
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "67c69ca7d7ad7d60f3c098535b1d0b224025fcce",
-      "prompt": "Make diff update as diagram nodes are dragged with children propagation without breaking functionality",
-      "llm": "opus-4-6"
-    }
-  ]
+  "goal": "🎯sketchpadimprovements"
 }

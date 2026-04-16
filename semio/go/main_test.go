@@ -11,6 +11,7 @@ package semio
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -18,27 +19,260 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
-type modelSelectionAsset struct {
-	Cases []modelSelectionCase `json:"cases"`
+var benchmarkCsvLanguages = []string{"go", "typescript", "python", "rust", "csharp"}
+
+func benchmarkCsvPath() string {
+	if _, err := os.Stat(filepath.Join("..", "benchmark.csv")); err == nil {
+		return filepath.Join("..", "benchmark.csv")
+	}
+	return filepath.Join("..", "benchmark.csv")
 }
 
-type modelSelectionCase struct {
+func parseCsvLine(line string) []string {
+	var values []string
+	var current strings.Builder
+	inQuotes := false
+	for i := 0; i < len(line); i++ {
+		ch := line[i]
+		if ch == '"' {
+			if inQuotes && i+1 < len(line) && line[i+1] == '"' {
+				current.WriteByte('"')
+				i++
+				continue
+			}
+			inQuotes = !inQuotes
+			continue
+		}
+		if ch == ',' && !inQuotes {
+			values = append(values, current.String())
+			current.Reset()
+			continue
+		}
+		current.WriteByte(ch)
+	}
+	values = append(values, current.String())
+	return values
+}
+
+func csvValue(value string) string {
+	return `"` + strings.ReplaceAll(value, `"`, `""`) + `"`
+}
+
+func appendBenchmarkCsv(language string, name string, durationSeconds float64) {
+	path := benchmarkCsvPath()
+	rows := map[string]map[string]string{}
+	order := []string{}
+	if data, err := os.ReadFile(path); err == nil {
+		lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+		if len(lines) > 0 && strings.HasPrefix(lines[0], "name,") {
+			headers := parseCsvLine(lines[0])
+			for _, line := range lines[1:] {
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
+				values := parseCsvLine(line)
+				if len(values) == 0 {
+					continue
+				}
+				rowName := values[0]
+				if _, ok := rows[rowName]; !ok {
+					rows[rowName] = map[string]string{}
+					order = append(order, rowName)
+				}
+				for i := 1; i < len(values) && i < len(headers); i++ {
+					if values[i] != "" {
+						rows[rowName][headers[i]] = values[i]
+					}
+				}
+			}
+		}
+	}
+	if _, ok := rows[name]; !ok {
+		rows[name] = map[string]string{}
+		order = append(order, name)
+	}
+	rows[name][language] = fmt.Sprintf("%.6f", durationSeconds*1000)
+	var out strings.Builder
+	out.WriteString("name")
+	for _, lang := range benchmarkCsvLanguages {
+		out.WriteString(",")
+		out.WriteString(lang)
+	}
+	out.WriteString("\n")
+	for _, rowName := range order {
+		out.WriteString(csvValue(rowName))
+		for _, lang := range benchmarkCsvLanguages {
+			out.WriteString(",")
+			out.WriteString(rows[rowName][lang])
+		}
+		out.WriteString("\n")
+	}
+	_ = os.WriteFile(path, []byte(out.String()), 0644)
+}
+
+type representationSelectionAsset struct {
+	Cases []representationSelectionCase `json:"cases"`
+}
+
+type representationSelectionCase struct {
 	Name             string                `json:"name"`
-	SelectedTagGuids []string              `json:"selectedTagGuids"`
-	ExpectedGuid     *string               `json:"expectedGuid"`
-	Models           []modelSelectionModel `json:"models"`
+	SelectedTagIds []string              `json:"selectedTagIds"`
+	ExpectedId     *string               `json:"expectedId"`
+	Representations           []representationSelectionRepresentation `json:"representations"`
 }
 
-type modelSelectionModel struct {
-	Guid     string   `json:"guid"`
-	FileGuid string   `json:"fileGuid"`
-	TagGuids []string `json:"tagGuids"`
+type representationSelectionRepresentation struct {
+	Id     string   `json:"id"`
+	FileId string   `json:"fileId"`
+	TagIds []string `json:"tagIds"`
 }
+
+// #region 🗂️Asset Structs
+
+type selectionAsset struct {
+	Pieces []struct {
+		Id string `json:"id"`
+	} `json:"pieces"`
+	Connections []struct {
+		Id string `json:"id"`
+	} `json:"connections"`
+}
+
+type flattenCasesAsset struct {
+	Cases []flattenCase `json:"cases"`
+}
+
+type flattenCase struct {
+	Name       string   `json:"name"`
+	Kit        string   `json:"kit"`
+	DesignPath []string `json:"designPath"`
+}
+
+type qualitySumCasesAsset struct {
+	Cases []qualitySumCase `json:"cases"`
+}
+
+type qualitySumCase struct {
+	Name         string  `json:"name"`
+	Kit          string  `json:"kit"`
+	DesignName   string  `json:"designName"`
+	DesignParent *string `json:"designParent"`
+	QualityName  string  `json:"qualityName"`
+	Expected     float64 `json:"expected"`
+	Tolerance    float64 `json:"tolerance"`
+}
+
+type hashCasesAsset struct {
+	KitHash struct {
+		Kit           string `json:"kit"`
+		Expected      string `json:"expected"`
+		ExpectedNet48 string `json:"expectedNet48"`
+	} `json:"kitHash"`
+	KitDiffHash struct {
+		JSON     string `json:"json"`
+		Expected string `json:"expected"`
+	} `json:"kitDiffHash"`
+	DesignName string `json:"designName"`
+}
+
+type designWithDiffCasesAsset struct {
+	Cases []designWithDiffCase `json:"cases"`
+}
+
+type designWithDiffCase struct {
+	Name                     string         `json:"name"`
+	Kit                      string         `json:"kit"`
+	DesignName               string         `json:"designName"`
+	DesignParent             *string        `json:"designParent"`
+	Diff                     string         `json:"diff"`
+	Expected                 string         `json:"expected"`
+	ExpectedPieceCounts      map[string]int `json:"expectedPieceCounts"`
+	ExpectedConnectionCounts map[string]int `json:"expectedConnectionCounts"`
+}
+
+type filterKitCasesAsset struct {
+	Cases     []filterKitCase     `json:"cases"`
+	GlobCases []filterKitGlobCase `json:"globCases"`
+}
+
+type filterKitCase struct {
+	Name         string  `json:"name"`
+	Kit          string  `json:"kit"`
+	DesignName   string  `json:"designName"`
+	DesignParent *string `json:"designParent"`
+	ExpectedKit  string  `json:"expectedKit"`
+}
+
+type filterKitGlobCase struct {
+	Name          string   `json:"name"`
+	Kit           string   `json:"kit"`
+	DesignName    string   `json:"designName,omitempty"`
+	DesignParent  *string  `json:"designParent,omitempty"`
+	TypeInclude   []string `json:"typeInclude,omitempty"`
+	TypeExclude   []string `json:"typeExclude,omitempty"`
+	DesignInclude []string `json:"designInclude,omitempty"`
+}
+
+type findReplaceableCasesAsset struct {
+	SyntheticKit   string                  `json:"syntheticKit"`
+	Cases          []findReplaceableCase   `json:"cases"`
+	BoundaryCases  findReplaceableBoundary `json:"boundaryCases"`
+	SyntheticCases []syntheticCase         `json:"syntheticCases"`
+}
+
+type findReplaceableCase struct {
+	Name                             string   `json:"name"`
+	Kit                              string   `json:"kit"`
+	DesignName                       string   `json:"designName"`
+	DesignParent                     *string  `json:"designParent"`
+	DesignParentName                 string   `json:"designParentName,omitempty"`
+	PieceNames                       []string `json:"pieceNames,omitempty"`
+	SelectionAsset                   string   `json:"selectionAsset,omitempty"`
+	ExpectedSelectionPieceCount      int      `json:"expectedSelectionPieceCount,omitempty"`
+	ExpectedSelectionConnectionCount int      `json:"expectedSelectionConnectionCount,omitempty"`
+	ExpectedTypeIds                []string `json:"expectedTypeIds,omitempty"`
+	ExpectedDesignIds              []string `json:"expectedDesignIds,omitempty"`
+	ExpectedTypeIdCount            *int     `json:"expectedTypeIdCount,omitempty"`
+	UsePieceIndex                    *int     `json:"usePieceIndex,omitempty"`
+	LookupTypeName                   string   `json:"lookupTypeName,omitempty"`
+	ExpectNonEmptyTypes              bool     `json:"expectNonEmptyTypes,omitempty"`
+	ExpectOwnTypeInResults           bool     `json:"expectOwnTypeInResults,omitempty"`
+	ForbiddenTypeNames               []string `json:"forbiddenTypeNames,omitempty"`
+	ExpectConnectorlessTypeCount     bool     `json:"expectConnectorlessTypeCount,omitempty"`
+}
+
+type findReplaceableBoundary struct {
+	Kit                            string   `json:"kit"`
+	DesignName                     string   `json:"designName"`
+	DesignParent                   *string  `json:"designParent"`
+	SingleCapsulePieces            []string `json:"singleCapsulePieces"`
+	TwoCapsulePieces               []string `json:"twoCapsulePieces"`
+	FourCapsulePieces              []string `json:"fourCapsulePieces"`
+	EightCapsulePieces             []string `json:"eightCapsulePieces"`
+	TambourPieceName               string   `json:"tambourPieceName"`
+	ExpectedTambourTypeIdCount   int      `json:"expectedTambourTypeIdCount"`
+	ExpectedTambourDesignIdCount int      `json:"expectedTambourDesignIdCount"`
+	ForbiddenFamilies              []string `json:"forbiddenFamilies"`
+	ExpectedTwoCapsuleFamilies     []string `json:"expectedTwoCapsuleFamilies"`
+	ExpectedLargeFamilies          []string `json:"expectedLargeFamilies"`
+}
+
+type syntheticCase struct {
+	Name                       string   `json:"name"`
+	DesignId                 string   `json:"designId"`
+	PieceIds                 []string `json:"pieceIds"`
+	ExpectedContainsTypes      []string `json:"expectedContainsTypes,omitempty"`
+	ExpectedNotContainsTypes   []string `json:"expectedNotContainsTypes,omitempty"`
+	ExpectedContainsDesigns    []string `json:"expectedContainsDesigns,omitempty"`
+	ExpectedNotContainsDesigns []string `json:"expectedNotContainsDesigns,omitempty"`
+}
+
+// #endregion 🗂️Asset Structs
 
 func loadJSON(t *testing.T, filename string, v interface{}) {
 	path := filepath.Join(AssetsPath, filename)
@@ -51,11 +285,11 @@ func loadJSON(t *testing.T, filename string, v interface{}) {
 	}
 }
 
-func containsAllTags(model Model, selectedTagGuids []string) bool {
-	for _, selectedGuid := range selectedTagGuids {
+func containsAllTags(representation Representation, selectedTagIds []string) bool {
+	for _, selectedId := range selectedTagIds {
 		found := false
-		for _, tag := range model.Tags {
-			if tag.Guid == selectedGuid {
+		for _, tag := range representation.Tags {
+			if tag.Id == selectedId {
 				found = true
 				break
 			}
@@ -67,27 +301,27 @@ func containsAllTags(model Model, selectedTagGuids []string) bool {
 	return true
 }
 
-func jaccardTagGuids(a []TagId, b []string) float64 {
+func jaccardTagIds(a []TagId, b []string) float64 {
 	if len(a) == 0 && len(b) == 0 {
 		return 1
 	}
 	setA := make(map[string]bool)
 	setB := make(map[string]bool)
 	for _, tag := range a {
-		setA[tag.Guid] = true
+		setA[tag.Id] = true
 	}
-	for _, guid := range b {
-		setB[guid] = true
+	for _, id := range b {
+		setB[id] = true
 	}
 	intersection := 0
-	for guid := range setA {
-		if setB[guid] {
+	for id := range setA {
+		if setB[id] {
 			intersection++
 		}
 	}
 	union := len(setA)
-	for guid := range setB {
-		if !setA[guid] {
+	for id := range setB {
+		if !setA[id] {
 			union++
 		}
 	}
@@ -97,31 +331,31 @@ func jaccardTagGuids(a []TagId, b []string) float64 {
 	return float64(intersection) / float64(union)
 }
 
-func selectBestModelLikeSemioTS(models []Model, selectedTagGuids []string) *Model {
-	if len(models) == 0 {
+func selectBestRepresentationLikeSemioTS(representations []Representation, selectedTagIds []string) *Representation {
+	if len(representations) == 0 {
 		return nil
 	}
-	if len(selectedTagGuids) == 0 {
-		for i := range models {
-			if len(models[i].Tags) == 0 {
-				return &models[i]
+	if len(selectedTagIds) == 0 {
+		for i := range representations {
+			if len(representations[i].Tags) == 0 {
+				return &representations[i]
 			}
 		}
-		return &models[0]
+		return &representations[0]
 	}
-	filtered := make([]Model, 0)
-	for _, model := range models {
-		if containsAllTags(model, selectedTagGuids) {
-			filtered = append(filtered, model)
+	filtered := make([]Representation, 0)
+	for _, representation := range representations {
+		if containsAllTags(representation, selectedTagIds) {
+			filtered = append(filtered, representation)
 		}
 	}
 	if len(filtered) == 0 {
 		return nil
 	}
 	maxIndex := 0
-	maxScore := jaccardTagGuids(filtered[0].Tags, selectedTagGuids)
+	maxScore := jaccardTagIds(filtered[0].Tags, selectedTagIds)
 	for i := 1; i < len(filtered); i++ {
-		score := jaccardTagGuids(filtered[i].Tags, selectedTagGuids)
+		score := jaccardTagIds(filtered[i].Tags, selectedTagIds)
 		if score > maxScore {
 			maxScore = score
 			maxIndex = i
@@ -145,7 +379,7 @@ func planesEqual(p1, p2 *Plane, tolerance float64) bool {
 		floatEqual(p1.YAxis.Z, p2.YAxis.Z, tolerance)
 }
 
-func centersEqual(c1, c2 *Coord, tolerance float64) bool {
+func centersEqual(c1, c2 *Coordinate, tolerance float64) bool {
 	if c1 == nil && c2 == nil {
 		return true
 	}
@@ -155,23 +389,41 @@ func centersEqual(c1, c2 *Coord, tolerance float64) bool {
 	return floatEqual(c1.U, c2.U, tolerance) && floatEqual(c1.V, c2.V, tolerance)
 }
 
-func findDesignByName(designs []Design, name string, parentGuid *string) *Design {
+func findDesignByName(designs []Design, name string, parentId *string) *Design {
+	var parentFamilies []FamilyId
+	if parentId != nil {
+		for i := range designs {
+			if designs[i].Id == *parentId {
+				parentFamilies = designs[i].Families
+				break
+			}
+		}
+	}
 	for i := range designs {
 		d := &designs[i]
 		if d.Name != name {
 			continue
 		}
-		if parentGuid == nil {
-			if d.Parent == nil {
-				return d
-			}
+		if parentId == nil {
+			return d
 		} else {
-			if d.Parent != nil && d.Parent.Guid == *parentGuid {
+			if familiesOverlap(d.Families, parentFamilies) {
 				return d
 			}
 		}
 	}
 	return nil
+}
+
+func familiesOverlap(a, b []FamilyId) bool {
+	for _, left := range a {
+		for _, right := range b {
+			if left.Id == right.Id {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func findPieceByName(pieces []Piece, name string) *Piece {
@@ -185,27 +437,31 @@ func findPieceByName(pieces []Piece, name string) *Piece {
 
 func testFlattenDesign(t *testing.T, kit Kit, designPath []string) {
 	var design *Design
-	var parentGuid *string
+	var parentId *string
 
 	for _, designName := range designPath {
-		design = findDesignByName(kit.Designs, designName, parentGuid)
+		design = findDesignByName(kit.Designs, designName, parentId)
 		if design == nil {
 			t.Fatalf("Design %q not found", designName)
 		}
-		parentGuid = &design.Guid
+		parentId = &design.Id
 	}
 
 	if design == nil {
 		t.Fatal("Design is nil")
 	}
 
-	expectedDesign := findDesignByName(kit.Designs, "Flat", &design.Guid)
+	expectedDesign := findDesignByName(kit.Designs, "Flat", &design.Id)
 	if expectedDesign == nil {
 		t.Fatalf("Expected flat design not found for %q", design.Name)
 	}
 
-	flatDesignDiff := FlattenDesign(&kit, design.Guid)
-	flatDesign := ApplyDesignDiff(*design, flatDesignDiff)
+	flatRep := FlattenDesign(&kit, design.Id)
+	if !flatRep.Ok || flatRep.Diff == nil {
+		t.Fatalf("FlattenDesign failed: ok=%v errors=%v", flatRep.Ok, flatRep.Errors)
+	}
+	flatDesign := deepCloneDesign(*design)
+	ApplyDesignDiff(&flatDesign, &flatRep.Diff.Forward)
 
 	const tolerance = 0.001
 	for _, piece := range flatDesign.Pieces {
@@ -285,36 +541,36 @@ func TestRoundtrip(t *testing.T) {
 	})
 }
 
-func TestDesignModel(t *testing.T) {
-	t.Run("Model selection cases from shared semio assets", func(t *testing.T) {
-		var payload modelSelectionAsset
-		loadJSON(t, "model.selection.semio.json", &payload)
+func TestDesignRepresentation(t *testing.T) {
+	t.Run("Representation selection cases from shared semio assets", func(t *testing.T) {
+		var payload representationSelectionAsset
+		loadJSON(t, "representation.selection.semio.json", &payload)
 		for _, testCase := range payload.Cases {
-			models := make([]Model, 0, len(testCase.Models))
-			for _, model := range testCase.Models {
-				tags := make([]TagId, 0, len(model.TagGuids))
-				for _, guid := range model.TagGuids {
-					tags = append(tags, TagId{Guid: guid})
+			representations := make([]Representation, 0, len(testCase.Representations))
+			for _, representation := range testCase.Representations {
+				tags := make([]TagId, 0, len(representation.TagIds))
+				for _, id := range representation.TagIds {
+					tags = append(tags, TagId{Id: id})
 				}
-				models = append(models, Model{
-					Guid: model.Guid,
-					File: FileId{Guid: model.FileGuid},
+				representations = append(representations, Representation{
+					Id: representation.Id,
+					File: FileId{Id: representation.FileId},
 					Tags: tags,
 				})
 			}
-			selected := selectBestModelLikeSemioTS(models, testCase.SelectedTagGuids)
-			if testCase.ExpectedGuid == nil {
+			selected := selectBestRepresentationLikeSemioTS(representations, testCase.SelectedTagIds)
+			if testCase.ExpectedId == nil {
 				if selected != nil {
-					t.Fatalf("Case %q failed: got %q expected nil", testCase.Name, selected.Guid)
+					t.Fatalf("Case %q failed: got %q expected nil", testCase.Name, selected.Id)
 				}
 				continue
 			}
-			if selected == nil || selected.Guid != *testCase.ExpectedGuid {
+			if selected == nil || selected.Id != *testCase.ExpectedId {
 				got := "<nil>"
 				if selected != nil {
-					got = selected.Guid
+					got = selected.Id
 				}
-				t.Fatalf("Case %q failed: got %q expected %q", testCase.Name, got, *testCase.ExpectedGuid)
+				t.Fatalf("Case %q failed: got %q expected %q", testCase.Name, got, *testCase.ExpectedId)
 			}
 		}
 	})
@@ -333,7 +589,7 @@ func TestKitFilterDesign(t *testing.T) {
 	}
 
 	t.Run("filters kit to Nakagin Capsule Tower subset", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{DesignGuid: nakaginDesign.Guid})
+		filtered := FilterKit(kit, KitFilter{DesignId: nakaginDesign.Id})
 
 		if len(filtered.Designs) != len(expected.Designs) {
 			t.Fatalf("Expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
@@ -344,8 +600,8 @@ func TestKitFilterDesign(t *testing.T) {
 		if len(filtered.Files) != len(expected.Files) {
 			t.Fatalf("Expected %d files, got %d", len(expected.Files), len(filtered.Files))
 		}
-		if len(filtered.Ports) != len(expected.Ports) {
-			t.Fatalf("Expected %d ports, got %d", len(expected.Ports), len(filtered.Ports))
+		if len(AllPortsInKit(&filtered)) != len(AllPortsInKit(&expected)) {
+			t.Fatalf("Expected %d ports, got %d", len(AllPortsInKit(&expected)), len(AllPortsInKit(&filtered)))
 		}
 		if len(filtered.Qualities) != len(expected.Qualities) {
 			t.Fatalf("Expected %d qualities, got %d", len(expected.Qualities), len(filtered.Qualities))
@@ -365,15 +621,15 @@ func TestKitFilterDesign(t *testing.T) {
 		for _, expectedType := range expected.Types {
 			matches := 0
 			for _, filteredType := range filtered.Types {
-				if filteredType.Guid == expectedType.Guid {
+				if filteredType.Id == expectedType.Id {
 					matches++
-					if len(filteredType.Models) != len(expectedType.Models) {
-						t.Fatalf("Expected type %s to have %d models, got %d", expectedType.Guid, len(expectedType.Models), len(filteredType.Models))
+					if len(filteredType.Representations) != len(expectedType.Representations) {
+						t.Fatalf("Expected type %s to have %d representations, got %d", expectedType.Id, len(expectedType.Representations), len(filteredType.Representations))
 					}
 				}
 			}
 			if matches != 1 {
-				t.Fatalf("Expected filtered type %s exactly once, got %d", expectedType.Guid, matches)
+				t.Fatalf("Expected filtered type %s exactly once, got %d", expectedType.Id, matches)
 			}
 		}
 
@@ -383,30 +639,30 @@ func TestKitFilterDesign(t *testing.T) {
 			}
 			found := false
 			for _, filteredType := range filtered.Types {
-				if filteredType.Guid == piece.Type.Guid {
+				if filteredType.Id == piece.Type.Id {
 					found = true
 					break
 				}
 			}
 			if !found {
-				t.Fatalf("Missing filtered type %s for piece", piece.Type.Guid)
+				t.Fatalf("Missing filtered type %s for piece", piece.Type.Id)
 			}
 		}
 
 		for _, filteredType := range filtered.Types {
-			if len(filteredType.Models) > 1 {
-				t.Fatalf("Type %s has %d models, expected at most 1", filteredType.Guid, len(filteredType.Models))
+			if len(filteredType.Representations) > 1 {
+				t.Fatalf("Type %s has %d representations, expected at most 1", filteredType.Id, len(filteredType.Representations))
 			}
-			for _, model := range filteredType.Models {
+			for _, representation := range filteredType.Representations {
 				foundFile := false
 				for _, file := range filtered.Files {
-					if file.Guid == model.File.Guid {
+					if file.Id == representation.File.Id {
 						foundFile = true
 						break
 					}
 				}
 				if !foundFile {
-					t.Fatalf("Missing filtered file %s for type %s", model.File.Guid, filteredType.Guid)
+					t.Fatalf("Missing filtered file %s for type %s", representation.File.Id, filteredType.Id)
 				}
 			}
 			for _, connector := range filteredType.Connectors {
@@ -414,58 +670,421 @@ func TestKitFilterDesign(t *testing.T) {
 					continue
 				}
 				foundPort := false
-				for _, port := range filtered.Ports {
-					if port.Guid == connector.Port.Guid {
+				for _, port := range AllPortsInKit(&filtered) {
+					if port.Id == connector.Port.Id {
 						foundPort = true
 						break
 					}
 				}
 				if !foundPort {
-					t.Fatalf("Missing filtered port %s for type %s", connector.Port.Guid, filteredType.Guid)
+					t.Fatalf("Missing filtered port %s for type %s", connector.Port.Id, filteredType.Id)
 				}
 			}
 		}
 	})
 
 	t.Run("preserves kit metadata", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{DesignGuid: nakaginDesign.Guid})
-		if filtered.Guid != kit.Guid || filtered.Name != kit.Name || filtered.Version != kit.Version {
+		filtered := FilterKit(kit, KitFilter{DesignId: nakaginDesign.Id})
+		if filtered.Id != kit.Id || filtered.Name != kit.Name || filtered.Version != kit.Version {
 			t.Fatalf("Filtered kit metadata mismatch")
 		}
 	})
 }
 
 func TestFlatten(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "metabolism.kit.semio.json", &kit)
+	var asset flattenCasesAsset
+	loadJSON(t, "flatten.cases.semio.json", &asset)
 
-	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
-		t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
-			testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower"})
-		})
-		t.Run("Slanted", func(t *testing.T) {
+	for _, tc := range asset.Cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, tc.Kit, &kit)
 			t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
-				testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Slanted"})
+				testFlattenDesign(t, kit, tc.DesignPath)
 			})
 		})
-		t.Run("Twisted", func(t *testing.T) {
-			t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
-				testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Twisted"})
+	}
+}
+
+// #region 🌳Flatten Merkle Hash Tests
+
+// 🌳flattenMerkleMutation representations a single kit mutation described by the shared merkle cases asset.
+type flattenMerkleMutation struct {
+	Kind           string          `json:"kind"`
+	PieceId      string          `json:"pieceId"`
+	ConnectionId string          `json:"connectionId"`
+	Path           string          `json:"path"`
+	Value          json.RawMessage `json:"value"`
+}
+
+// 🌳flattenMerkleExpect captures the optional assertions bundled with each merkle case.
+type flattenMerkleExpect struct {
+	PlaneHashesChangedAny       *bool    `json:"planeHashesChangedAny,omitempty"`
+	CenterHashesChangedAny      *bool    `json:"centerHashesChangedAny,omitempty"`
+	PlaneHashesChangedAll       *bool    `json:"planeHashesChangedAll,omitempty"`
+	CenterHashesChangedAll      *bool    `json:"centerHashesChangedAll,omitempty"`
+	PlaneHashesChangedIncludes  []string `json:"planeHashesChangedIncludes,omitempty"`
+	CenterHashesChangedIncludes []string `json:"centerHashesChangedIncludes,omitempty"`
+	PlaneHashesStableIncludes   []string `json:"planeHashesStableIncludes,omitempty"`
+	CenterHashesStableIncludes  []string `json:"centerHashesStableIncludes,omitempty"`
+}
+
+// 🌳flattenMerkleCase represents a single entry in flatten-merkle.cases.semio.json.
+type flattenMerkleCase struct {
+	Name       string                  `json:"name"`
+	Kit        string                  `json:"kit"`
+	DesignPath []string                `json:"designPath"`
+	Mutations  []flattenMerkleMutation `json:"mutations"`
+	Expect     flattenMerkleExpect     `json:"expect"`
+}
+
+// 🌳flattenMerkleParity captures the cross-language reference hashes block.
+type flattenMerkleParity struct {
+	Kit            string   `json:"kit"`
+	DesignPath     []string `json:"designPath"`
+	ExpectedHashes []struct {
+		PieceId  string `json:"pieceId"`
+		PlaneHash  string `json:"planeHash"`
+		CenterHash string `json:"centerHash"`
+	} `json:"expectedHashes"`
+}
+
+// 🌳flattenMerkleAsset mirrors the shared flatten-merkle cases asset.
+type flattenMerkleAsset struct {
+	Parity flattenMerkleParity `json:"parity"`
+	Cases  []flattenMerkleCase `json:"cases"`
+}
+
+// 🌳flattenMerkleFindDesignByPath walks the kit to resolve a design by its ordered name path.
+func flattenMerkleFindDesignByPath(kit map[string]interface{}, designPath []string) map[string]interface{} {
+	if len(designPath) == 0 {
+		return nil
+	}
+	designs, _ := kit["designs"].([]interface{})
+	var current map[string]interface{}
+	for i, name := range designPath {
+		var parentId string
+		if current != nil {
+			parentId, _ = current["id"].(string)
+		}
+		var match map[string]interface{}
+		for _, d := range designs {
+			dm, ok := d.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			dn, _ := dm["name"].(string)
+			if dn != name {
+				continue
+			}
+			parent, _ := dm["parent"].(map[string]interface{})
+			if i == 0 {
+				if parent == nil {
+					match = dm
+					break
+				}
+			} else {
+				if parent != nil {
+					pg, _ := parent["id"].(string)
+					if pg == parentId {
+						match = dm
+						break
+					}
+				}
+			}
+		}
+		if match == nil {
+			return nil
+		}
+		current = match
+	}
+	return current
+}
+
+// 🌳flattenMerkleSetPath assigns a value inside a nested JSON map using a dotted path, creating intermediate maps as needed.
+func flattenMerkleSetPath(obj map[string]interface{}, path string, value interface{}) {
+	keys := strings.Split(path, ".")
+	current := obj
+	for _, k := range keys[:len(keys)-1] {
+		next, ok := current[k].(map[string]interface{})
+		if !ok || next == nil {
+			next = map[string]interface{}{}
+			current[k] = next
+		}
+		current = next
+	}
+	current[keys[len(keys)-1]] = value
+}
+
+// 🌳flattenMerkleApplyMutations applies the mutation list in-place on a kit map prior to rehashing.
+func flattenMerkleApplyMutations(t *testing.T, design map[string]interface{}, mutations []flattenMerkleMutation) {
+	for _, m := range mutations {
+		var value interface{}
+		if err := json.Unmarshal(m.Value, &value); err != nil {
+			t.Fatalf("decode mutation value %q: %v", string(m.Value), err)
+		}
+		switch m.Kind {
+		case "pieceField":
+			pieces, _ := design["pieces"].([]interface{})
+			var target map[string]interface{}
+			for _, p := range pieces {
+				pm, ok := p.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				if g, _ := pm["id"].(string); g == m.PieceId {
+					target = pm
+					break
+				}
+			}
+			if target == nil {
+				t.Fatalf("piece %s not found", m.PieceId)
+			}
+			flattenMerkleSetPath(target, m.Path, value)
+		case "connectionField":
+			conns, _ := design["connections"].([]interface{})
+			var target map[string]interface{}
+			for _, c := range conns {
+				cm, ok := c.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				if g, _ := cm["id"].(string); g == m.ConnectionId {
+					target = cm
+					break
+				}
+			}
+			if target == nil {
+				t.Fatalf("connection %s not found", m.ConnectionId)
+			}
+			flattenMerkleSetPath(target, m.Path, value)
+		default:
+			t.Fatalf("unknown mutation kind %q", m.Kind)
+		}
+	}
+}
+
+// 🌳flattenMerkleLoadKitAsMap reads a kit asset into a generic JSON map so mutations can touch arbitrary nested fields.
+func flattenMerkleLoadKitAsMap(t *testing.T, filename string) map[string]interface{} {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(AssetsPath, filename))
+	if err != nil {
+		t.Fatalf("read %s: %v", filename, err)
+	}
+	var m map[string]interface{}
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("parse %s: %v", filename, err)
+	}
+	return m
+}
+
+// 🌳flattenMerkleKitFromMap remarshals a JSON map back through the typed Kit structs for hashing.
+func flattenMerkleKitFromMap(t *testing.T, m map[string]interface{}) Kit {
+	t.Helper()
+	data, err := json.Marshal(m)
+	if err != nil {
+		t.Fatalf("marshal kit map: %v", err)
+	}
+	var kit Kit
+	if err := json.Unmarshal(data, &kit); err != nil {
+		t.Fatalf("unmarshal into Kit: %v", err)
+	}
+	return kit
+}
+
+// 🌳flattenMerkleDesignId resolves the design id by path from a typed kit.
+func flattenMerkleDesignId(t *testing.T, kit Kit, designPath []string) string {
+	t.Helper()
+	var current *Design
+	var parentId *string
+	for _, name := range designPath {
+		current = findDesignByName(kit.Designs, name, parentId)
+		if current == nil {
+			t.Fatalf("design path %v not found at %q", designPath, name)
+		}
+		g := current.Id
+		parentId = &g
+	}
+	if current == nil {
+		t.Fatalf("design path %v resolved to nil", designPath)
+	}
+	return current.Id
+}
+
+// 🌳flattenMerkleChangedSets returns the piece ids whose plane/center hash differs between two runs.
+func flattenMerkleChangedSets(before, after map[string]FlatMerkleHashes) (changedPlane, changedCenter map[string]bool) {
+	changedPlane = map[string]bool{}
+	changedCenter = map[string]bool{}
+	for id, b := range before {
+		a, ok := after[id]
+		if !ok {
+			changedPlane[id] = true
+			changedCenter[id] = true
+			continue
+		}
+		if a.PlaneHash != b.PlaneHash {
+			changedPlane[id] = true
+		}
+		if a.CenterHash != b.CenterHash {
+			changedCenter[id] = true
+		}
+	}
+	return
+}
+
+func TestFlattenMerkle(t *testing.T) {
+	var asset flattenMerkleAsset
+	loadJSON(t, "flatten-merkle.cases.semio.json", &asset)
+
+	t.Run("SharedAssetMutationCases", func(t *testing.T) {
+		for _, tc := range asset.Cases {
+			tc := tc
+			t.Run(tc.Name, func(t *testing.T) {
+				kitMapBefore := flattenMerkleLoadKitAsMap(t, tc.Kit)
+				kitBefore := flattenMerkleKitFromMap(t, kitMapBefore)
+				designIdBefore := flattenMerkleDesignId(t, kitBefore, tc.DesignPath)
+				before := ComputeFlatHashes(&kitBefore, designIdBefore)
+
+				kitMapAfter := flattenMerkleLoadKitAsMap(t, tc.Kit)
+				designAfterMap := flattenMerkleFindDesignByPath(kitMapAfter, tc.DesignPath)
+				if designAfterMap == nil {
+					t.Fatalf("design path %v not found in mutable kit", tc.DesignPath)
+				}
+				flattenMerkleApplyMutations(t, designAfterMap, tc.Mutations)
+				kitAfter := flattenMerkleKitFromMap(t, kitMapAfter)
+				designIdAfter := flattenMerkleDesignId(t, kitAfter, tc.DesignPath)
+				after := ComputeFlatHashes(&kitAfter, designIdAfter)
+
+				if len(before) != len(after) {
+					t.Fatalf("piece set size changed: %d -> %d", len(before), len(after))
+				}
+				for id := range before {
+					if _, ok := after[id]; !ok {
+						t.Fatalf("piece %s missing after mutation", id)
+					}
+				}
+
+				changedPlane, changedCenter := flattenMerkleChangedSets(before, after)
+
+				if tc.Expect.PlaneHashesChangedAny != nil {
+					if *tc.Expect.PlaneHashesChangedAny && len(changedPlane) == 0 {
+						t.Fatalf("expected some planeHash changes, got none")
+					}
+					if !*tc.Expect.PlaneHashesChangedAny && len(changedPlane) != 0 {
+						t.Fatalf("expected no planeHash changes, got %v", sortedKeys(changedPlane))
+					}
+				}
+				if tc.Expect.CenterHashesChangedAny != nil {
+					if *tc.Expect.CenterHashesChangedAny && len(changedCenter) == 0 {
+						t.Fatalf("expected some centerHash changes, got none")
+					}
+					if !*tc.Expect.CenterHashesChangedAny && len(changedCenter) != 0 {
+						t.Fatalf("expected no centerHash changes, got %v", sortedKeys(changedCenter))
+					}
+				}
+				if tc.Expect.PlaneHashesChangedAll != nil {
+					if *tc.Expect.PlaneHashesChangedAll && len(changedPlane) != len(before) {
+						t.Fatalf("expected every planeHash to change, got %d/%d", len(changedPlane), len(before))
+					}
+					if !*tc.Expect.PlaneHashesChangedAll && len(changedPlane) == len(before) {
+						t.Fatalf("expected not every planeHash to change, but all did")
+					}
+				}
+				if tc.Expect.CenterHashesChangedAll != nil {
+					if *tc.Expect.CenterHashesChangedAll && len(changedCenter) != len(before) {
+						t.Fatalf("expected every centerHash to change, got %d/%d", len(changedCenter), len(before))
+					}
+					if !*tc.Expect.CenterHashesChangedAll && len(changedCenter) == len(before) {
+						t.Fatalf("expected not every centerHash to change, but all did")
+					}
+				}
+				for _, id := range tc.Expect.PlaneHashesChangedIncludes {
+					if !changedPlane[id] {
+						t.Fatalf("expected piece %s to have changed planeHash", id)
+					}
+				}
+				for _, id := range tc.Expect.CenterHashesChangedIncludes {
+					if !changedCenter[id] {
+						t.Fatalf("expected piece %s to have changed centerHash", id)
+					}
+				}
+				for _, id := range tc.Expect.PlaneHashesStableIncludes {
+					if changedPlane[id] {
+						t.Fatalf("expected piece %s to keep stable planeHash", id)
+					}
+				}
+				for _, id := range tc.Expect.CenterHashesStableIncludes {
+					if changedCenter[id] {
+						t.Fatalf("expected piece %s to keep stable centerHash", id)
+					}
+				}
 			})
-		})
-		t.Run("Dancing", func(t *testing.T) {
-			t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
-				testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Dancing"})
-			})
-		})
+		}
 	})
 
-	t.Run("Capsule Dream", func(t *testing.T) {
-		t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
-			testFlattenDesign(t, kit, []string{"Capsule Dream"})
-		})
+	t.Run("CrossLanguageParityReferenceHashes", func(t *testing.T) {
+		if asset.Parity.Kit == "" {
+			t.Fatal("parity block missing")
+		}
+		var kit Kit
+		loadJSON(t, asset.Parity.Kit, &kit)
+		designId := flattenMerkleDesignId(t, kit, asset.Parity.DesignPath)
+		hashes := ComputeFlatHashes(&kit, designId)
+		for _, expected := range asset.Parity.ExpectedHashes {
+			got, ok := hashes[expected.PieceId]
+			if !ok {
+				t.Fatalf("piece %s missing from computed hashes", expected.PieceId)
+			}
+			if got.PlaneHash != expected.PlaneHash {
+				t.Fatalf("piece %s planeHash mismatch: got %s want %s", expected.PieceId, got.PlaneHash, expected.PlaneHash)
+			}
+			if got.CenterHash != expected.CenterHash {
+				t.Fatalf("piece %s centerHash mismatch: got %s want %s", expected.PieceId, got.CenterHash, expected.CenterHash)
+			}
+		}
+	})
+
+	t.Run("CachedFlattenReusesValues", func(t *testing.T) {
+		var kit Kit
+		loadJSON(t, "metabolism.kit.semio.json", &kit)
+		designId := flattenMerkleDesignId(t, kit, []string{"Nakagin Capsule Tower"})
+		_, firstCache := FlattenDesignCached(&kit, designId, nil)
+		if len(firstCache) == 0 {
+			t.Fatal("first cache is empty")
+		}
+		_, secondCache := FlattenDesignCached(&kit, designId, firstCache)
+		for id, entry := range firstCache {
+			second, ok := secondCache[id]
+			if !ok {
+				t.Fatalf("piece %s missing from second cache", id)
+			}
+			if entry.PlaneHash != second.PlaneHash {
+				t.Fatalf("piece %s planeHash mismatch %s vs %s", id, entry.PlaneHash, second.PlaneHash)
+			}
+			if entry.CenterHash != second.CenterHash {
+				t.Fatalf("piece %s centerHash mismatch %s vs %s", id, entry.CenterHash, second.CenterHash)
+			}
+			if !reflect.DeepEqual(entry.Plane, second.Plane) {
+				t.Fatalf("piece %s plane mismatch: %#v vs %#v", id, entry.Plane, second.Plane)
+			}
+			if !reflect.DeepEqual(entry.Center, second.Center) {
+				t.Fatalf("piece %s center mismatch: %#v vs %#v", id, entry.Center, second.Center)
+			}
+		}
 	})
 }
+
+// 🌳sortedKeys returns a deterministic sorted slice of map keys for readable error messages.
+func sortedKeys(m map[string]bool) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// #endregion 🌳Flatten Merkle Hash Tests
 
 func TestChange(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
@@ -493,12 +1112,14 @@ func TestChange(t *testing.T) {
 				t.Error("Computed inverse diff should equal expected inverse diff")
 			}
 
-			appliedForward := ApplyKitDiff(kitOriginal, change.Forward)
+			appliedForward := deepCloneKit(kitOriginal)
+			ApplyKitDiff(&appliedForward, &change.Forward)
 			if !AreKitsEqual(appliedForward, kitDiffed) {
 				t.Error("Original + Diff should equal DiffedKit")
 			}
 
-			appliedInverse := ApplyKitDiff(kitDiffed, change.Backward)
+			appliedInverse := deepCloneKit(kitDiffed)
+			ApplyKitDiff(&appliedInverse, &change.Backward)
 			if !AreKitsEqual(appliedInverse, kitOriginal) {
 				t.Error("DiffedKit + InverseDiff should equal original Kit")
 			}
@@ -553,7 +1174,7 @@ func TestValidateKitDiffAsset(t *testing.T) {
 		Updated: []struct {
 			Design DesignId   `json:"design"`
 			Diff   DesignDiff `json:"diff"`
-		}{{Design: DesignId{Guid: "99999999-9999-9999-9999-999999999999"}, Diff: DesignDiff{Name: ptrStringGoTest("X")}}},
+		}{{Design: DesignId{Id: "99999999-9999-9999-9999-999999999999"}, Diff: DesignDiff{Name: ptrStringGoTest("X")}}},
 	}
 	r := ValidateKitDiff(asset.TinyKit, bad, true)
 	if r.Diff == nil {
@@ -600,13 +1221,13 @@ func TestDelete(t *testing.T) {
 			var selection Selection
 			loadJSON(t, "nakagin-capsule-tower.deleted.selection.semio.json", &selection)
 
-			pieceGuids := make([]string, len(selection.Pieces))
+			pieceIds := make([]string, len(selection.Pieces))
 			for i, p := range selection.Pieces {
-				pieceGuids[i] = p.Guid
+				pieceIds[i] = p.Id
 			}
-			connectionGuids := make([]string, len(selection.Connections))
+			connectionIds := make([]string, len(selection.Connections))
 			for i, c := range selection.Connections {
-				connectionGuids[i] = c.Guid
+				connectionIds[i] = c.Id
 			}
 
 			// 🔶Load expected diff
@@ -614,7 +1235,11 @@ func TestDelete(t *testing.T) {
 			loadJSON(t, "nakagin-capsule-tower.deleted.design.diff.semio.json", &expectedDiff)
 
 			// Compute diff
-			computedDiff := DeletePiecesAndConnectionsInDesign(&kit, *design, pieceGuids, connectionGuids)
+			computedReport := DeletePiecesAndConnectionsInDesign(&kit, *design, pieceIds, connectionIds)
+			if !computedReport.Ok || computedReport.Diff == nil {
+				t.Fatalf("DeletePiecesAndConnectionsInDesign failed: ok=%v errors=%v", computedReport.Ok, computedReport.Errors)
+			}
+			computedDiff := *computedReport.Diff
 
 			// Verify removed pieces
 			if computedDiff.Pieces == nil {
@@ -628,8 +1253,8 @@ func TestDelete(t *testing.T) {
 					len(computedDiff.Pieces.Removed), len(expectedDiff.Pieces.Removed))
 			}
 			for i, c := range computedDiff.Pieces.Removed {
-				if c.Guid != expectedDiff.Pieces.Removed[i].Guid {
-					t.Errorf("Removed piece guid mismatch at %d: %s vs %s", i, c.Guid, expectedDiff.Pieces.Removed[i].Guid)
+				if c.Id != expectedDiff.Pieces.Removed[i].Id {
+					t.Errorf("Removed piece id mismatch at %d: %s vs %s", i, c.Id, expectedDiff.Pieces.Removed[i].Id)
 				}
 			}
 
@@ -638,59 +1263,59 @@ func TestDelete(t *testing.T) {
 				t.Fatalf("Updated pieces count mismatch: %d vs %d",
 					len(computedDiff.Pieces.Updated), len(expectedDiff.Pieces.Updated))
 			}
-			computedGuids := make([]string, len(computedDiff.Pieces.Updated))
+			computedIds := make([]string, len(computedDiff.Pieces.Updated))
 			for i, u := range computedDiff.Pieces.Updated {
-				computedGuids[i] = u.Piece.Guid
+				computedIds[i] = u.Piece.Id
 			}
-			expectedGuids := make([]string, len(expectedDiff.Pieces.Updated))
+			expectedIds := make([]string, len(expectedDiff.Pieces.Updated))
 			for i, u := range expectedDiff.Pieces.Updated {
-				expectedGuids[i] = u.Piece.Guid
+				expectedIds[i] = u.Piece.Id
 			}
-			sort.Strings(computedGuids)
-			sort.Strings(expectedGuids)
-			for i := range computedGuids {
-				if computedGuids[i] != expectedGuids[i] {
-					t.Errorf("Updated piece guid mismatch at %d: %s vs %s", i, computedGuids[i], expectedGuids[i])
+			sort.Strings(computedIds)
+			sort.Strings(expectedIds)
+			for i := range computedIds {
+				if computedIds[i] != expectedIds[i] {
+					t.Errorf("Updated piece id mismatch at %d: %s vs %s", i, computedIds[i], expectedIds[i])
 				}
 			}
 			// Verify updated pieces have both plane and center matching expected
 			expectedUpdatedMap := make(map[string]PieceDiff)
 			for _, u := range expectedDiff.Pieces.Updated {
-				expectedUpdatedMap[u.Piece.Guid] = u.Diff
+				expectedUpdatedMap[u.Piece.Id] = u.Diff
 			}
 			for _, u := range computedDiff.Pieces.Updated {
 				if u.Diff.Plane == nil {
-					t.Errorf("Updated piece %s missing plane", u.Piece.Guid)
+					t.Errorf("Updated piece %s missing plane", u.Piece.Id)
 				}
 				if u.Diff.Center == nil {
-					t.Errorf("Updated piece %s missing center", u.Piece.Guid)
+					t.Errorf("Updated piece %s missing center", u.Piece.Id)
 				}
-				exp, ok := expectedUpdatedMap[u.Piece.Guid]
+				exp, ok := expectedUpdatedMap[u.Piece.Id]
 				if !ok {
-					t.Errorf("Unexpected updated piece %s", u.Piece.Guid)
+					t.Errorf("Unexpected updated piece %s", u.Piece.Id)
 					continue
 				}
 				if u.Diff.Plane != nil && exp.Plane != nil {
 					tolerance := 0.001
 					if u.Diff.Plane.Origin != nil && exp.Plane.Origin != nil {
 						if math.Abs(*u.Diff.Plane.Origin.X-*exp.Plane.Origin.X) > tolerance {
-							t.Errorf("Updated piece %s plane origin x: got %f, expected %f", u.Piece.Guid, *u.Diff.Plane.Origin.X, *exp.Plane.Origin.X)
+							t.Errorf("Updated piece %s plane origin x: got %f, expected %f", u.Piece.Id, *u.Diff.Plane.Origin.X, *exp.Plane.Origin.X)
 						}
 						if math.Abs(*u.Diff.Plane.Origin.Y-*exp.Plane.Origin.Y) > tolerance {
-							t.Errorf("Updated piece %s plane origin y: got %f, expected %f", u.Piece.Guid, *u.Diff.Plane.Origin.Y, *exp.Plane.Origin.Y)
+							t.Errorf("Updated piece %s plane origin y: got %f, expected %f", u.Piece.Id, *u.Diff.Plane.Origin.Y, *exp.Plane.Origin.Y)
 						}
 						if math.Abs(*u.Diff.Plane.Origin.Z-*exp.Plane.Origin.Z) > tolerance {
-							t.Errorf("Updated piece %s plane origin z: got %f, expected %f", u.Piece.Guid, *u.Diff.Plane.Origin.Z, *exp.Plane.Origin.Z)
+							t.Errorf("Updated piece %s plane origin z: got %f, expected %f", u.Piece.Id, *u.Diff.Plane.Origin.Z, *exp.Plane.Origin.Z)
 						}
 					}
 				}
 				if u.Diff.Center != nil && exp.Center != nil {
 					tolerance := 0.001
 					if math.Abs(*u.Diff.Center.U-*exp.Center.U) > tolerance {
-						t.Errorf("Updated piece %s center U: got %f, expected %f", u.Piece.Guid, *u.Diff.Center.U, *exp.Center.U)
+						t.Errorf("Updated piece %s center U: got %f, expected %f", u.Piece.Id, *u.Diff.Center.U, *exp.Center.U)
 					}
 					if math.Abs(*u.Diff.Center.V-*exp.Center.V) > tolerance {
-						t.Errorf("Updated piece %s center V: got %f, expected %f", u.Piece.Guid, *u.Diff.Center.V, *exp.Center.V)
+						t.Errorf("Updated piece %s center V: got %f, expected %f", u.Piece.Id, *u.Diff.Center.V, *exp.Center.V)
 					}
 				}
 			}
@@ -706,19 +1331,19 @@ func TestDelete(t *testing.T) {
 				t.Fatalf("Removed connections count mismatch: %d vs %d",
 					len(computedDiff.Connections.Removed), len(expectedDiff.Connections.Removed))
 			}
-			computedConnGuids := make([]string, len(computedDiff.Connections.Removed))
+			computedConnIds := make([]string, len(computedDiff.Connections.Removed))
 			for i, r := range computedDiff.Connections.Removed {
-				computedConnGuids[i] = r.Guid
+				computedConnIds[i] = r.Id
 			}
-			expectedConnGuids := make([]string, len(expectedDiff.Connections.Removed))
+			expectedConnIds := make([]string, len(expectedDiff.Connections.Removed))
 			for i, r := range expectedDiff.Connections.Removed {
-				expectedConnGuids[i] = r.Guid
+				expectedConnIds[i] = r.Id
 			}
-			sort.Strings(computedConnGuids)
-			sort.Strings(expectedConnGuids)
-			for i := range computedConnGuids {
-				if computedConnGuids[i] != expectedConnGuids[i] {
-					t.Errorf("Removed connection guid mismatch at %d: %s vs %s", i, computedConnGuids[i], expectedConnGuids[i])
+			sort.Strings(computedConnIds)
+			sort.Strings(expectedConnIds)
+			for i := range computedConnIds {
+				if computedConnIds[i] != expectedConnIds[i] {
+					t.Errorf("Removed connection id mismatch at %d: %s vs %s", i, computedConnIds[i], expectedConnIds[i])
 				}
 			}
 		})
@@ -731,19 +1356,19 @@ func TestDrag(t *testing.T) {
 		loadJSON(t, "drag/design.semio.json", &design)
 		var pieces Design
 		loadJSON(t, "drag/pieces.semio.json", &pieces)
-		var offset Coord
+		var offset Coordinate
 		loadJSON(t, "drag/offset.semio.json", &offset)
 		type expectedPieceUpdate struct {
 			Piece struct {
-				Guid string `json:"guid"`
+				Id string `json:"id"`
 			} `json:"piece"`
 			Diff struct {
-				Center *Coord `json:"center"`
+				Center *Coordinate `json:"center"`
 			} `json:"diff"`
 		}
 		type expectedConnUpdate struct {
 			Connection struct {
-				Guid string `json:"guid"`
+				Id string `json:"id"`
 			} `json:"connection"`
 			Diff struct {
 				U *float64 `json:"u"`
@@ -768,22 +1393,22 @@ func TestDrag(t *testing.T) {
 			if len(computed.Pieces.Updated) != len(expected.Pieces.Updated) {
 				t.Fatalf("Expected %d piece updates, got %d", len(expected.Pieces.Updated), len(computed.Pieces.Updated))
 			}
-			expectedMap := make(map[string]*Coord)
+			expectedMap := make(map[string]*Coordinate)
 			for _, u := range expected.Pieces.Updated {
-				expectedMap[u.Piece.Guid] = u.Diff.Center
+				expectedMap[u.Piece.Id] = u.Diff.Center
 			}
 			for _, u := range computed.Pieces.Updated {
-				ec, ok := expectedMap[u.Piece.Guid]
+				ec, ok := expectedMap[u.Piece.Id]
 				if !ok {
-					t.Errorf("Unexpected piece update for %s", u.Piece.Guid)
+					t.Errorf("Unexpected piece update for %s", u.Piece.Id)
 					continue
 				}
 				if u.Diff.Center == nil {
-					t.Errorf("Piece %s has nil center diff", u.Piece.Guid)
+					t.Errorf("Piece %s has nil center diff", u.Piece.Id)
 					continue
 				}
 				if !floatEqual(*u.Diff.Center.U, ec.U, 0.001) || !floatEqual(*u.Diff.Center.V, ec.V, 0.001) {
-					t.Errorf("Piece %s center mismatch: got (%f,%f), want (%f,%f)", u.Piece.Guid, *u.Diff.Center.U, *u.Diff.Center.V, ec.U, ec.V)
+					t.Errorf("Piece %s center mismatch: got (%f,%f), want (%f,%f)", u.Piece.Id, *u.Diff.Center.U, *u.Diff.Center.V, ec.U, ec.V)
 				}
 			}
 		}
@@ -800,20 +1425,20 @@ func TestDrag(t *testing.T) {
 			}
 			expectedConnMap := make(map[string][2]float64)
 			for _, u := range expected.Connections.Updated {
-				expectedConnMap[u.Connection.Guid] = [2]float64{*u.Diff.U, *u.Diff.V}
+				expectedConnMap[u.Connection.Id] = [2]float64{*u.Diff.U, *u.Diff.V}
 			}
 			for _, u := range computed.Connections.Updated {
-				ev, ok := expectedConnMap[u.Connection.Guid]
+				ev, ok := expectedConnMap[u.Connection.Id]
 				if !ok {
-					t.Errorf("Unexpected connection update for %s", u.Connection.Guid)
+					t.Errorf("Unexpected connection update for %s", u.Connection.Id)
 					continue
 				}
 				if u.Diff.U == nil || u.Diff.V == nil {
-					t.Errorf("Connection %s has nil u/v diff", u.Connection.Guid)
+					t.Errorf("Connection %s has nil u/v diff", u.Connection.Id)
 					continue
 				}
 				if !floatEqual(*u.Diff.U, ev[0], 0.001) || !floatEqual(*u.Diff.V, ev[1], 0.001) {
-					t.Errorf("Connection %s uv mismatch: got (%f,%f), want (%f,%f)", u.Connection.Guid, *u.Diff.U, *u.Diff.V, ev[0], ev[1])
+					t.Errorf("Connection %s uv mismatch: got (%f,%f), want (%f,%f)", u.Connection.Id, *u.Diff.U, *u.Diff.V, ev[0], ev[1])
 				}
 			}
 		}
@@ -837,7 +1462,7 @@ func TestMove(t *testing.T) {
 		}
 		type expPiece struct {
 			Piece struct {
-				Guid string `json:"guid"`
+				Id string `json:"id"`
 			} `json:"piece"`
 			Diff struct {
 				Plane struct {
@@ -857,7 +1482,7 @@ func TestMove(t *testing.T) {
 		}
 		type expConn struct {
 			Connection struct {
-				Guid string `json:"guid"`
+				Id string `json:"id"`
 			} `json:"connection"`
 			Diff expConnDiff `json:"diff"`
 		}
@@ -874,26 +1499,26 @@ func TestMove(t *testing.T) {
 		if computed.Pieces == nil || len(computed.Pieces.Updated) != len(expected.Pieces.Updated) {
 			t.Fatalf("piece updates: want %d got %v", len(expected.Pieces.Updated), computed.Pieces)
 		}
-		expByGuid := make(map[string]expPiece)
+		expById := make(map[string]expPiece)
 		for _, u := range expected.Pieces.Updated {
-			expByGuid[u.Piece.Guid] = u
+			expById[u.Piece.Id] = u
 		}
 		for _, u := range computed.Pieces.Updated {
-			ex, ok := expByGuid[u.Piece.Guid]
+			ex, ok := expById[u.Piece.Id]
 			if !ok {
-				t.Errorf("unexpected piece %s", u.Piece.Guid)
+				t.Errorf("unexpected piece %s", u.Piece.Id)
 				continue
 			}
 			if u.Diff.Plane == nil || u.Diff.Plane.Origin == nil {
-				t.Fatalf("nil plane for %s", u.Piece.Guid)
+				t.Fatalf("nil plane for %s", u.Piece.Id)
 			}
 			if u.Diff.Plane.Origin.X == nil || u.Diff.Plane.Origin.Y == nil || u.Diff.Plane.Origin.Z == nil {
-				t.Fatalf("nil origin for %s", u.Piece.Guid)
+				t.Fatalf("nil origin for %s", u.Piece.Id)
 			}
 			if !floatEqual(*u.Diff.Plane.Origin.X, ex.Diff.Plane.Origin.X, 0.001) ||
 				!floatEqual(*u.Diff.Plane.Origin.Y, ex.Diff.Plane.Origin.Y, 0.001) ||
 				!floatEqual(*u.Diff.Plane.Origin.Z, ex.Diff.Plane.Origin.Z, 0.001) {
-				t.Errorf("piece %s origin mismatch got (%v,%v,%v) want (%f,%f,%f)", u.Piece.Guid,
+				t.Errorf("piece %s origin mismatch got (%v,%v,%v) want (%f,%f,%f)", u.Piece.Id,
 					*u.Diff.Plane.Origin.X, *u.Diff.Plane.Origin.Y, *u.Diff.Plane.Origin.Z,
 					ex.Diff.Plane.Origin.X, ex.Diff.Plane.Origin.Y, ex.Diff.Plane.Origin.Z)
 			}
@@ -906,7 +1531,7 @@ func TestMove(t *testing.T) {
 		}
 		expC := make(map[string]expConn)
 		for _, u := range expected.Connections.Updated {
-			expC[u.Connection.Guid] = u
+			expC[u.Connection.Id] = u
 		}
 		optF := func(p *float64) float64 {
 			if p == nil {
@@ -915,9 +1540,9 @@ func TestMove(t *testing.T) {
 			return *p
 		}
 		for _, u := range computed.Connections.Updated {
-			ex, ok := expC[u.Connection.Guid]
+			ex, ok := expC[u.Connection.Id]
 			if !ok {
-				t.Errorf("unexpected conn %s", u.Connection.Guid)
+				t.Errorf("unexpected conn %s", u.Connection.Id)
 				continue
 			}
 			for _, kv := range []struct {
@@ -935,7 +1560,7 @@ func TestMove(t *testing.T) {
 				{"v", u.Diff.V, ex.Diff.V},
 			} {
 				if !floatEqual(optF(kv.got), optF(kv.expected), 0.001) {
-					t.Errorf("conn %s %s mismatch got %f want %f", u.Connection.Guid, kv.name, optF(kv.got), optF(kv.expected))
+					t.Errorf("conn %s %s mismatch got %f want %f", u.Connection.Id, kv.name, optF(kv.got), optF(kv.expected))
 				}
 			}
 		}
@@ -944,490 +1569,312 @@ func TestMove(t *testing.T) {
 
 // #region 🔍Find Replaceable Types In Designs Tests
 func TestFindReplaceableTypesInDesigns(t *testing.T) {
-	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
-		t.Run("Connected piece yields only exact design matches", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
+	var frAsset findReplaceableCasesAsset
+	loadJSON(t, "find-replaceable-types.cases.semio.json", &frAsset)
 
+	containsId := func(ids []string, expectedId string) bool {
+		for _, id := range ids {
+			if id == expectedId {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, tc := range frAsset.Cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, tc.Kit, &kit)
+
+			// Find the design
 			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
+			if tc.DesignParentName != "" {
+				parentDesign := findDesignByName(kit.Designs, tc.DesignParentName, nil)
+				if parentDesign == nil {
+					t.Fatalf("Parent design %q not found", tc.DesignParentName)
 				}
+				design = findDesignByName(kit.Designs, tc.DesignName, &parentDesign.Id)
+			} else {
+				design = findDesignByName(kit.Designs, tc.DesignName, nil)
 			}
 			if design == nil {
-				t.Fatal("Design 'Nakagin Capsule Tower' not found")
+				t.Fatalf("Design %q not found", tc.DesignName)
 			}
 
-			var tambourPiece *Piece
-			for i := range design.Pieces {
-				n := design.Pieces[i].Name
-				if n != nil && *n == "t_f1_b_c0" {
-					tambourPiece = &design.Pieces[i]
-					break
+			// Determine piece ids for selection
+			var pieceIds []string
+			if tc.SelectionAsset != "" {
+				var sel selectionAsset
+				loadJSON(t, tc.SelectionAsset, &sel)
+				if tc.ExpectedSelectionPieceCount > 0 && len(sel.Pieces) != tc.ExpectedSelectionPieceCount {
+					t.Fatalf("Expected %d selection pieces, got %d", tc.ExpectedSelectionPieceCount, len(sel.Pieces))
 				}
-			}
-			if tambourPiece == nil {
-				t.Fatal("Tambour piece 't_f1_b_c0' not found")
-			}
-
-			typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{tambourPiece.Guid})
-
-			expectedDesignGuids := []string{
-				"d7e12638-9749-471b-937e-a6e5523778ff",
-				"019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
-				"019ab4e0-8da8-7217-946f-5b5a83aca0e3",
-			}
-			if len(typeGuids) != 0 {
-				t.Fatalf("Expected no replaceable types, got %#v", typeGuids)
-			}
-			if !reflect.DeepEqual(designGuids, expectedDesignGuids) {
-				t.Fatalf("Design guids mismatch:\n got: %#v\nwant: %#v", designGuids, expectedDesignGuids)
-			}
-		})
-
-		t.Run("Isolated piece with no connections suggests types with compatible ports", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
-
-			var flatDesign *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Flat" && kit.Designs[i].Parent != nil && kit.Designs[i].Parent.Guid == "9a890dd4-0a9c-48ac-920a-9e62666465ef" {
-					flatDesign = &kit.Designs[i]
-					break
+				if tc.ExpectedSelectionConnectionCount > 0 && len(sel.Connections) != tc.ExpectedSelectionConnectionCount {
+					t.Fatalf("Expected %d selection connections, got %d", tc.ExpectedSelectionConnectionCount, len(sel.Connections))
 				}
-			}
-			if flatDesign == nil {
-				t.Fatal("Flat design not found")
-			}
-			if len(flatDesign.Pieces) == 0 {
-				t.Fatal("Flat design has no pieces")
-			}
-
-			piece := flatDesign.Pieces[0]
-			typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*flatDesign, kit.Designs, kit.Types, kit.Ports, []string{piece.Guid})
-
-			if len(typeGuids) == 0 {
-				t.Error("Expected at least one replaceable type")
-			}
-
-			if piece.Type != nil && piece.Type.Guid != "" {
-				found := false
-				for _, tg := range typeGuids {
-					if tg == piece.Type.Guid {
-						found = true
+				pieceIds = make([]string, 0, len(sel.Pieces))
+				for _, p := range sel.Pieces {
+					pieceIds = append(pieceIds, p.Id)
+				}
+			} else if tc.PieceNames != nil {
+				pieceIds = make([]string, 0, len(tc.PieceNames))
+				for _, pieceName := range tc.PieceNames {
+					piece := findPieceByName(design.Pieces, pieceName)
+					if piece == nil {
+						t.Fatalf("Piece %q not found", pieceName)
+					}
+					pieceIds = append(pieceIds, piece.Id)
+				}
+			} else if tc.UsePieceIndex != nil {
+				if *tc.UsePieceIndex >= len(design.Pieces) {
+					t.Fatalf("Piece index %d out of range", *tc.UsePieceIndex)
+				}
+				pieceIds = []string{design.Pieces[*tc.UsePieceIndex].Id}
+			} else if tc.LookupTypeName != "" {
+				var lookupTypeId string
+				for _, tp := range kit.Types {
+					if tp.Name == tc.LookupTypeName {
+						lookupTypeId = tp.Id
 						break
 					}
 				}
-				if !found {
-					t.Error("Expected piece's own type to be in results")
+				for i := range design.Pieces {
+					if design.Pieces[i].Type != nil && design.Pieces[i].Type.Id == lookupTypeId {
+						pieceIds = []string{design.Pieces[i].Id}
+						break
+					}
 				}
-			}
-		})
-
-		t.Run("Capital piece with single connection", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
-
-			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
-				}
-			}
-			if design == nil {
-				t.Fatal("Design not found")
-			}
-
-			var capitalTypeGuid string
-			for _, tp := range kit.Types {
-				if tp.Name == "Capital" {
-					capitalTypeGuid = tp.Guid
-					break
+				if len(pieceIds) == 0 {
+					t.Fatalf("Piece with type %q not found", tc.LookupTypeName)
 				}
 			}
 
-			var capitalPiece *Piece
-			for i := range design.Pieces {
-				if design.Pieces[i].Type != nil && design.Pieces[i].Type.Guid == capitalTypeGuid {
-					capitalPiece = &design.Pieces[i]
-					break
+			typeIds, designIds := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, AllPortsInKit(&kit), pieceIds)
+
+			// Check expected type id count
+			if tc.ExpectedTypeIdCount != nil {
+				if len(typeIds) != *tc.ExpectedTypeIdCount {
+					t.Fatalf("Expected %d type ids, got %d: %#v", *tc.ExpectedTypeIdCount, len(typeIds), typeIds)
 				}
 			}
-			if capitalPiece == nil {
-				t.Fatal("Capital piece not found")
+
+			// Check expected type ids (full list)
+			if tc.ExpectedTypeIds != nil {
+				if !reflect.DeepEqual(typeIds, tc.ExpectedTypeIds) {
+					t.Fatalf("Type ids mismatch:\n got: %#v\nwant: %#v", typeIds, tc.ExpectedTypeIds)
+				}
 			}
 
-			typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{capitalPiece.Guid})
+			// Check expected design ids
+			if tc.ExpectedDesignIds != nil {
+				if !reflect.DeepEqual(designIds, tc.ExpectedDesignIds) {
+					t.Fatalf("Design ids mismatch:\n got: %#v\nwant: %#v", designIds, tc.ExpectedDesignIds)
+				}
+			}
 
-			if len(typeGuids) == 0 {
+			// Check expectNonEmptyTypes
+			if tc.ExpectNonEmptyTypes && len(typeIds) == 0 {
 				t.Error("Expected at least one replaceable type")
 			}
 
-			// Capital uses roof rectangular top, Last Storey uses roof circular bottom (incompatible)
-			for _, tg := range typeGuids {
-				if tg == capitalTypeGuid {
-					t.Error("Capital type should NOT be in results (incompatible port shapes)")
-				}
-			}
-
-			// Capsule should NOT be in results
-			var capsuleGuid string
-			for _, tp := range kit.Types {
-				if tp.Name == "Capsule" {
-					capsuleGuid = tp.Guid
-					break
-				}
-			}
-			for _, tg := range typeGuids {
-				if tg == capsuleGuid {
-					t.Error("Capsule type should not be in results")
-				}
-			}
-		})
-
-		t.Run("Multiple selected pieces yield only exact design matches", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
-
-			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
-				}
-			}
-			if design == nil {
-				t.Fatal("Design not found")
-			}
-
-			var t1, t2 *Piece
-			for i := range design.Pieces {
-				n := design.Pieces[i].Name
-				if n != nil {
-					if *n == "t_f1_b_c0" {
-						t1 = &design.Pieces[i]
-					} else if *n == "t_f2_b_c0" {
-						t2 = &design.Pieces[i]
+			// Check expectOwnTypeInResults
+			if tc.ExpectOwnTypeInResults && tc.UsePieceIndex != nil {
+				piece := design.Pieces[*tc.UsePieceIndex]
+				if piece.Type != nil && piece.Type.Id != "" {
+					if !containsId(typeIds, piece.Type.Id) {
+						t.Error("Expected piece's own type to be in results")
 					}
 				}
 			}
-			if t1 == nil || t2 == nil {
-				t.Fatal("Tambour pieces not found")
-			}
 
-			typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{t1.Guid, t2.Guid})
-
-			expectedDesignGuids := []string{
-				"d7e12638-9749-471b-937e-a6e5523778ff",
-				"019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
-				"019ab4e0-8da8-7217-946f-5b5a83aca0e3",
-			}
-			if len(typeGuids) != 0 {
-				t.Fatalf("Expected no replaceable types, got %#v", typeGuids)
-			}
-			if !reflect.DeepEqual(designGuids, expectedDesignGuids) {
-				t.Fatalf("Design guids mismatch:\n got: %#v\nwant: %#v", designGuids, expectedDesignGuids)
-			}
-		})
-
-		t.Run("Synthetic selection enforces distinct compatible connectors and ignores consumed design connectors", func(t *testing.T) {
-			makeConnector := func(guid, portGuid string) Connector {
-				return Connector{
-					Guid:      guid,
-					T:         0,
-					Point:     Point{},
-					Direction: Vector{X: 1},
-					Port:      &PortId{Guid: portGuid},
-				}
-			}
-			makeType := func(guid string, connectorPortGuids []string) Type {
-				connectors := make([]Connector, 0, len(connectorPortGuids))
-				for connectorIndex, connectorPortGuid := range connectorPortGuids {
-					connectors = append(connectors, makeConnector(guid+"-connector-"+strconv.Itoa(connectorIndex), connectorPortGuid))
-				}
-				return Type{Guid: guid, Name: guid, Connectors: connectors}
-			}
-			makePiece := func(guid, typeGuid string) Piece {
-				return Piece{Guid: guid, Type: &TypeId{Guid: typeGuid}}
-			}
-			makeConnection := func(guid, connectedPieceGuid, connectedConnectorGuid, connectingPieceGuid, connectingConnectorGuid string) Connection {
-				return Connection{
-					Guid: guid,
-					Connected: Side{
-						Piece:     PieceId{Guid: connectedPieceGuid},
-						Connector: &ConnectorId{Guid: connectedConnectorGuid},
-					},
-					Connecting: Side{
-						Piece:     PieceId{Guid: connectingPieceGuid},
-						Connector: &ConnectorId{Guid: connectingConnectorGuid},
-					},
-				}
-			}
-			containsGuid := func(guids []string, expectedGuid string) bool {
-				for _, guid := range guids {
-					if guid == expectedGuid {
-						return true
+			// Check forbidden type names
+			for _, forbiddenName := range tc.ForbiddenTypeNames {
+				var forbiddenId string
+				for _, tp := range kit.Types {
+					if tp.Name == forbiddenName {
+						forbiddenId = tp.Id
+						break
 					}
 				}
-				return false
-			}
-
-			ports := []Port{
-				{Guid: "port-L", CompatiblePorts: []PortId{{Guid: "port-L-compatible"}}},
-				{Guid: "port-L-compatible", CompatiblePorts: []PortId{{Guid: "port-L"}}},
-				{Guid: "port-G"},
-			}
-			types := []Type{
-				makeType("selected-external-lg", []string{}),
-				makeType("selected-isolated-lg", []string{"port-L", "port-G"}),
-				makeType("selected-external-ll", []string{}),
-				makeType("neighbor-l", []string{"port-L"}),
-				makeType("neighbor-g", []string{"port-G"}),
-				makeType("candidate-l", []string{"port-L"}),
-				makeType("candidate-lg", []string{"port-L-compatible", "port-G"}),
-				makeType("candidate-lg-lg", []string{"port-L-compatible", "port-G", "port-L", "port-G"}),
-				makeType("candidate-ll", []string{"port-L", "port-L-compatible"}),
-				makeType("candidate-g", []string{"port-G"}),
-			}
-			designs := []Design{
-				{
-					Guid:   "candidate-design-free-lg",
-					Name:   "candidate-design-free-lg",
-					Pieces: []Piece{makePiece("candidate-design-free-piece", "candidate-lg")},
-				},
-				{
-					Guid: "candidate-design-consumed-lg",
-					Name: "candidate-design-consumed-lg",
-					Pieces: []Piece{
-						makePiece("candidate-design-consumed-a", "candidate-lg"),
-						makePiece("candidate-design-consumed-b", "candidate-l"),
-					},
-					Connections: []Connection{
-						makeConnection(
-							"candidate-design-consumed-link",
-							"candidate-design-consumed-a",
-							"candidate-lg-connector-0",
-							"candidate-design-consumed-b",
-							"candidate-l-connector-0",
-						),
-					},
-				},
-			}
-			design := Design{
-				Guid: "root-design",
-				Name: "root-design",
-				Pieces: []Piece{
-					makePiece("piece-external-lg", "selected-external-lg"),
-					makePiece("piece-isolated-lg", "selected-isolated-lg"),
-					makePiece("piece-external-ll", "selected-external-ll"),
-					makePiece("neighbor-piece-l", "neighbor-l"),
-					makePiece("neighbor-piece-g", "neighbor-g"),
-					makePiece("neighbor-piece-l-a", "neighbor-l"),
-					makePiece("neighbor-piece-l-b", "neighbor-l"),
-				},
-				Connections: []Connection{
-					makeConnection("external-lg-l", "piece-external-lg", "selected-external-lg-connector-0", "neighbor-piece-l", "neighbor-l-connector-0"),
-					makeConnection("external-lg-g", "piece-external-lg", "selected-external-lg-connector-1", "neighbor-piece-g", "neighbor-g-connector-0"),
-					makeConnection("external-ll-a", "piece-external-ll", "selected-external-ll-connector-0", "neighbor-piece-l-a", "neighbor-l-connector-0"),
-					makeConnection("external-ll-b", "piece-external-ll", "selected-external-ll-connector-1", "neighbor-piece-l-b", "neighbor-l-connector-0"),
-				},
-			}
-
-			doubleLeftTypeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-external-ll"})
-			if !containsGuid(doubleLeftTypeGuids, "candidate-ll") {
-				t.Fatal("Expected candidate-ll to satisfy two left-port requirements")
-			}
-			if containsGuid(doubleLeftTypeGuids, "candidate-l") {
-				t.Fatal("candidate-l should not satisfy two left-port requirements with one connector")
-			}
-			if containsGuid(doubleLeftTypeGuids, "candidate-g") {
-				t.Fatal("candidate-g should not satisfy left-port requirements")
-			}
-
-			leftAndGableTypeGuids, leftAndGableDesignGuids := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-external-lg"})
-			if !containsGuid(leftAndGableTypeGuids, "candidate-lg") {
-				t.Fatal("Expected candidate-lg to satisfy left-and-gable requirements")
-			}
-			if containsGuid(leftAndGableTypeGuids, "candidate-l") {
-				t.Fatal("candidate-l should not satisfy left-and-gable requirements")
-			}
-			if !containsGuid(leftAndGableDesignGuids, "candidate-design-free-lg") {
-				t.Fatal("Expected free design connectors to be available")
-			}
-			if containsGuid(leftAndGableDesignGuids, "candidate-design-consumed-lg") {
-				t.Fatal("Design should not expose internally consumed connectors")
-			}
-
-			isolatedTypeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-isolated-lg"})
-			if !containsGuid(isolatedTypeGuids, "candidate-lg") {
-				t.Fatal("Expected candidate-lg to satisfy isolated piece connector demands")
-			}
-			if containsGuid(isolatedTypeGuids, "candidate-l") {
-				t.Fatal("candidate-l should not satisfy both isolated piece connector demands")
-			}
-
-			multiplePieceTypeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-external-lg", "piece-isolated-lg"})
-			if !containsGuid(multiplePieceTypeGuids, "candidate-lg") {
-				t.Fatal("Expected candidate-lg to satisfy the selection boundary requirements")
-			}
-			if containsGuid(multiplePieceTypeGuids, "candidate-l") {
-				t.Fatal("candidate-l should fail when any selected piece is unsatisfied")
-			}
-		})
-
-		t.Run("Connector-level boundary matching shrinks candidates as demand grows", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
-
-			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
-				}
-			}
-			if design == nil {
-				t.Fatal("Design not found")
-			}
-
-			nameToGuid := map[string]string{}
-			typeNameByGuid := map[string]string{}
-			for _, piece := range design.Pieces {
-				if piece.Name != nil {
-					nameToGuid[*piece.Name] = piece.Guid
-				}
-			}
-			for _, kind := range kit.Types {
-				typeNameByGuid[kind.Guid] = kind.Name
-			}
-			typeNamesForSelection := func(pieceNames []string) []string {
-				pieceGuids := make([]string, 0, len(pieceNames))
-				for _, pieceName := range pieceNames {
-					pieceGuid, ok := nameToGuid[pieceName]
-					if !ok {
-						t.Fatalf("Piece %q not found", pieceName)
-					}
-					pieceGuids = append(pieceGuids, pieceGuid)
-				}
-				typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, pieceGuids)
-				typeNames := make([]string, 0, len(typeGuids))
-				for _, typeGuid := range typeGuids {
-					typeNames = append(typeNames, typeNameByGuid[typeGuid])
-				}
-				return typeNames
-			}
-			uniqueTypeNamesForSelection := func(pieceNames []string) []string {
-				seen := map[string]bool{}
-				typeNames := typeNamesForSelection(pieceNames)
-				unique := make([]string, 0, len(typeNames))
-				for _, typeName := range typeNames {
-					if seen[typeName] {
-						continue
-					}
-					seen[typeName] = true
-					unique = append(unique, typeName)
-				}
-				sort.Strings(unique)
-				return unique
-			}
-			containsName := func(typeNames []string, expectedName string) bool {
-				for _, typeName := range typeNames {
-					if typeName == expectedName {
-						return true
+				if forbiddenId != "" {
+					for _, tg := range typeIds {
+						if tg == forbiddenId {
+							t.Errorf("%s type should NOT be in results", forbiddenName)
+						}
 					}
 				}
-				return false
 			}
 
-			singleCapsuleNames := typeNamesForSelection([]string{"cs_sl2_d0_t_f9_b_c1"})
-			twoCapsuleNames := typeNamesForSelection([]string{"cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"})
-			fourCapsuleNames := typeNamesForSelection([]string{"cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"})
-			eightCapsuleNames := typeNamesForSelection([]string{"cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"})
-			tambourPieceGuid, ok := nameToGuid["t_f9_b_c1"]
-			if !ok {
-				t.Fatal("Tambour piece t_f9_b_c1 not found")
-			}
-			tambourTypeGuids, tambourDesignGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{tambourPieceGuid})
-
-			if len(singleCapsuleNames) <= len(twoCapsuleNames) {
-				t.Fatalf("Expected single capsule result to be larger than two capsules, got %d <= %d", len(singleCapsuleNames), len(twoCapsuleNames))
-			}
-			if len(twoCapsuleNames) < len(fourCapsuleNames) {
-				t.Fatalf("Expected two capsules result to be at least as large as four capsules, got %d < %d", len(twoCapsuleNames), len(fourCapsuleNames))
-			}
-			if len(fourCapsuleNames) < len(eightCapsuleNames) {
-				t.Fatalf("Expected four capsules result to be at least as large as eight capsules, got %d < %d", len(fourCapsuleNames), len(eightCapsuleNames))
-			}
-
-			for _, forbiddenFamily := range []string{"\\", "/", "q", "p", "J", "L", "s", "z"} {
-				if containsName(twoCapsuleNames, forbiddenFamily) {
-					t.Fatalf("Forbidden single-connector family %q survived two-capsule selection", forbiddenFamily)
+			// Check connectorless type count
+			if tc.ExpectConnectorlessTypeCount {
+				noConnectorCount := 0
+				for _, tp := range kit.Types {
+					if len(tp.Connectors) == 0 {
+						noConnectorCount++
+					}
 				}
-				if containsName(fourCapsuleNames, forbiddenFamily) {
-					t.Fatalf("Forbidden single-connector family %q survived four-capsule selection", forbiddenFamily)
+				if len(typeIds) != noConnectorCount {
+					t.Errorf("Expected %d types with no connectors, got %d", noConnectorCount, len(typeIds))
 				}
-				if containsName(eightCapsuleNames, forbiddenFamily) {
-					t.Fatalf("Forbidden single-connector family %q survived eight-capsule selection", forbiddenFamily)
-				}
-			}
-			if containsName(fourCapsuleNames, "Bridge") {
-				t.Fatal("Bridge should not survive four-capsule selection")
-			}
-			if containsName(eightCapsuleNames, "Bridge") {
-				t.Fatal("Bridge should not survive eight-capsule selection")
-			}
-
-			expectedTwoCapsuleFamilies := []string{"Bridge", "Cylindric Tambour", "First Storey", "Last Storey", "Single Storey", "Tambour"}
-			expectedLargeFamilies := []string{"Cylindric Tambour", "First Storey", "Last Storey", "Single Storey", "Tambour"}
-			if !reflect.DeepEqual(uniqueTypeNamesForSelection([]string{"cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"}), expectedTwoCapsuleFamilies) {
-				t.Fatalf("Unexpected two-capsule families: %#v", uniqueTypeNamesForSelection([]string{"cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"}))
-			}
-			if !reflect.DeepEqual(uniqueTypeNamesForSelection([]string{"cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"}), expectedLargeFamilies) {
-				t.Fatalf("Unexpected four-capsule families: %#v", uniqueTypeNamesForSelection([]string{"cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"}))
-			}
-			if !reflect.DeepEqual(uniqueTypeNamesForSelection([]string{"cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"}), expectedLargeFamilies) {
-				t.Fatalf("Unexpected eight-capsule families: %#v", uniqueTypeNamesForSelection([]string{"cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"}))
-			}
-			if len(tambourTypeGuids) != 0 {
-				t.Fatalf("Expected no compatible types for tambour selection, got %#v", tambourTypeGuids)
-			}
-			if len(tambourDesignGuids) != 3 {
-				t.Fatalf("Expected exactly 3 compatible designs for tambour selection, got %#v", tambourDesignGuids)
 			}
 		})
+	}
 
-		t.Run("Returns empty when no pieces selected", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
+	t.Run("Synthetic selection enforces distinct compatible connectors and ignores consumed design connectors", func(t *testing.T) {
+		var syntheticKit Kit
+		loadJSON(t, frAsset.SyntheticKit, &syntheticKit)
 
-			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
+		for _, sc := range frAsset.SyntheticCases {
+			t.Run(sc.Name, func(t *testing.T) {
+				var syntheticDesign *Design
+				for i := range syntheticKit.Designs {
+					if syntheticKit.Designs[i].Id == sc.DesignId {
+						syntheticDesign = &syntheticKit.Designs[i]
+						break
+					}
+				}
+				if syntheticDesign == nil {
+					t.Fatalf("Design %q not found in synthetic kit", sc.DesignId)
+				}
+
+				typeIds, designIds := FindReplaceableTypesInDesignsForPiecesInDesign(*syntheticDesign, syntheticKit.Designs, syntheticKit.Types, AllPortsInKit(&syntheticKit), sc.PieceIds)
+
+				for _, expected := range sc.ExpectedContainsTypes {
+					if !containsId(typeIds, expected) {
+						t.Fatalf("Expected type %q to be in results, got %#v", expected, typeIds)
+					}
+				}
+				for _, forbidden := range sc.ExpectedNotContainsTypes {
+					if containsId(typeIds, forbidden) {
+						t.Fatalf("Type %q should NOT be in results", forbidden)
+					}
+				}
+				for _, expected := range sc.ExpectedContainsDesigns {
+					if !containsId(designIds, expected) {
+						t.Fatalf("Expected design %q to be in results, got %#v", expected, designIds)
+					}
+				}
+				for _, forbidden := range sc.ExpectedNotContainsDesigns {
+					if containsId(designIds, forbidden) {
+						t.Fatalf("Design %q should NOT be in results", forbidden)
+					}
+				}
+			})
+		}
+	})
+
+	t.Run("Connector-level boundary matching shrinks candidates as demand grows", func(t *testing.T) {
+		bc := frAsset.BoundaryCases
+		var kit Kit
+		loadJSON(t, bc.Kit, &kit)
+
+		design := findDesignByName(kit.Designs, bc.DesignName, nil)
+		if design == nil {
+			t.Fatal("Design not found")
+		}
+
+		nameToId := map[string]string{}
+		typeNameById := map[string]string{}
+		for _, piece := range design.Pieces {
+			if piece.Name != nil {
+				nameToId[*piece.Name] = piece.Id
+			}
+		}
+		for _, kind := range kit.Types {
+			typeNameById[kind.Id] = kind.Name
+		}
+		typeNamesForSelection := func(pieceNames []string) []string {
+			pIds := make([]string, 0, len(pieceNames))
+			for _, pieceName := range pieceNames {
+				pieceId, ok := nameToId[pieceName]
+				if !ok {
+					t.Fatalf("Piece %q not found", pieceName)
+				}
+				pIds = append(pIds, pieceId)
+			}
+			tIds, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, AllPortsInKit(&kit), pIds)
+			typeNames := make([]string, 0, len(tIds))
+			for _, typeId := range tIds {
+				typeNames = append(typeNames, typeNameById[typeId])
+			}
+			return typeNames
+		}
+		uniqueTypeNamesForSelection := func(pieceNames []string) []string {
+			seen := map[string]bool{}
+			typeNames := typeNamesForSelection(pieceNames)
+			unique := make([]string, 0, len(typeNames))
+			for _, typeName := range typeNames {
+				if seen[typeName] {
+					continue
+				}
+				seen[typeName] = true
+				unique = append(unique, typeName)
+			}
+			sort.Strings(unique)
+			return unique
+		}
+		containsName := func(typeNames []string, expectedName string) bool {
+			for _, typeName := range typeNames {
+				if typeName == expectedName {
+					return true
 				}
 			}
-			if design == nil {
-				t.Fatal("Design not found")
-			}
+			return false
+		}
 
-			typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{})
+		singleCapsuleNames := typeNamesForSelection(bc.SingleCapsulePieces)
+		twoCapsuleNames := typeNamesForSelection(bc.TwoCapsulePieces)
+		fourCapsuleNames := typeNamesForSelection(bc.FourCapsulePieces)
+		eightCapsuleNames := typeNamesForSelection(bc.EightCapsulePieces)
+		tambourPieceId, ok := nameToId[bc.TambourPieceName]
+		if !ok {
+			t.Fatalf("Tambour piece %q not found", bc.TambourPieceName)
+		}
+		tambourTypeIds, tambourDesignIds := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, AllPortsInKit(&kit), []string{tambourPieceId})
 
-			// Count types with no connectors
-			noConnectorCount := 0
-			for _, tp := range kit.Types {
-				if len(tp.Connectors) == 0 {
-					noConnectorCount++
-				}
-			}
+		if len(singleCapsuleNames) <= len(twoCapsuleNames) {
+			t.Fatalf("Expected single capsule result to be larger than two capsules, got %d <= %d", len(singleCapsuleNames), len(twoCapsuleNames))
+		}
+		if len(twoCapsuleNames) < len(fourCapsuleNames) {
+			t.Fatalf("Expected two capsules result to be at least as large as four capsules, got %d < %d", len(twoCapsuleNames), len(fourCapsuleNames))
+		}
+		if len(fourCapsuleNames) < len(eightCapsuleNames) {
+			t.Fatalf("Expected four capsules result to be at least as large as eight capsules, got %d < %d", len(fourCapsuleNames), len(eightCapsuleNames))
+		}
 
-			if len(typeGuids) != noConnectorCount {
-				t.Errorf("Expected %d types with no connectors, got %d", noConnectorCount, len(typeGuids))
+		for _, forbiddenFamily := range bc.ForbiddenFamilies {
+			if containsName(twoCapsuleNames, forbiddenFamily) {
+				t.Fatalf("Forbidden single-connector family %q survived two-capsule selection", forbiddenFamily)
 			}
-		})
+			if containsName(fourCapsuleNames, forbiddenFamily) {
+				t.Fatalf("Forbidden single-connector family %q survived four-capsule selection", forbiddenFamily)
+			}
+			if containsName(eightCapsuleNames, forbiddenFamily) {
+				t.Fatalf("Forbidden single-connector family %q survived eight-capsule selection", forbiddenFamily)
+			}
+		}
+		if containsName(fourCapsuleNames, "Bridge") {
+			t.Fatal("Bridge should not survive four-capsule selection")
+		}
+		if containsName(eightCapsuleNames, "Bridge") {
+			t.Fatal("Bridge should not survive eight-capsule selection")
+		}
+
+		if !reflect.DeepEqual(uniqueTypeNamesForSelection(bc.TwoCapsulePieces), bc.ExpectedTwoCapsuleFamilies) {
+			t.Fatalf("Unexpected two-capsule families: %#v", uniqueTypeNamesForSelection(bc.TwoCapsulePieces))
+		}
+		if !reflect.DeepEqual(uniqueTypeNamesForSelection(bc.FourCapsulePieces), bc.ExpectedLargeFamilies) {
+			t.Fatalf("Unexpected four-capsule families: %#v", uniqueTypeNamesForSelection(bc.FourCapsulePieces))
+		}
+		if !reflect.DeepEqual(uniqueTypeNamesForSelection(bc.EightCapsulePieces), bc.ExpectedLargeFamilies) {
+			t.Fatalf("Unexpected eight-capsule families: %#v", uniqueTypeNamesForSelection(bc.EightCapsulePieces))
+		}
+		if len(tambourTypeIds) != bc.ExpectedTambourTypeIdCount {
+			t.Fatalf("Expected %d compatible types for tambour selection, got %#v", bc.ExpectedTambourTypeIdCount, tambourTypeIds)
+		}
+		if len(tambourDesignIds) != bc.ExpectedTambourDesignIdCount {
+			t.Fatalf("Expected %d compatible designs for tambour selection, got %#v", bc.ExpectedTambourDesignIdCount, tambourDesignIds)
+		}
 	})
 }
 
@@ -1440,12 +1887,7 @@ func TestCopyAndPaste(t *testing.T) {
 			loadJSON(t, "metabolism.kit.semio.json", &kit)
 
 			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
-				}
-			}
+			design = findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
 			if design == nil {
 				t.Fatal("Design 'Nakagin Capsule Tower' not found")
 			}
@@ -1458,13 +1900,13 @@ func TestCopyAndPaste(t *testing.T) {
 			var selection Selection
 			loadJSON(t, "nakagin-capsule-tower.copy.design.selection.semio.json", &selection)
 
-			pieceGuids := make([]string, len(selection.Pieces))
+			pieceIds := make([]string, len(selection.Pieces))
 			for i, p := range selection.Pieces {
-				pieceGuids[i] = p.Guid
+				pieceIds[i] = p.Id
 			}
-			connectionGuids := make([]string, len(selection.Connections))
+			connectionIds := make([]string, len(selection.Connections))
 			for i, c := range selection.Connections {
-				connectionGuids[i] = c.Guid
+				connectionIds[i] = c.Id
 			}
 
 			// Load expected copy design
@@ -1472,7 +1914,7 @@ func TestCopyAndPaste(t *testing.T) {
 			loadJSON(t, "nakagin-capsule-tower.copy.design.semio.json", &expectedCopy)
 
 			// Compute copy
-			copyDesign := CopyDesign(&kit, *design, pieceGuids, connectionGuids)
+			copyDesign := CopyDesign(&kit, *design, pieceIds, connectionIds)
 
 			// Verify piece count
 			if len(copyDesign.Pieces) != len(expectedCopy.Pieces) {
@@ -1485,25 +1927,25 @@ func TestCopyAndPaste(t *testing.T) {
 			}
 
 			// Verify each piece exists in the copy
-			copyPieceGuids := make(map[string]bool)
+			copyPieceIds := make(map[string]bool)
 			for _, p := range copyDesign.Pieces {
-				copyPieceGuids[p.Guid] = true
+				copyPieceIds[p.Id] = true
 			}
 			for _, p := range expectedCopy.Pieces {
-				if !copyPieceGuids[p.Guid] {
-					t.Errorf("Expected piece %s not found in copy output", p.Guid)
+				if !copyPieceIds[p.Id] {
+					t.Errorf("Expected piece %s not found in copy output", p.Id)
 				}
 			}
 
 			// Verify external pieces have semio.piece.origin attribute
 			expectedPieceMap := make(map[string]Piece)
 			for _, p := range expectedCopy.Pieces {
-				expectedPieceMap[p.Guid] = p
+				expectedPieceMap[p.Id] = p
 			}
 			for _, p := range copyDesign.Pieces {
-				ep, ok := expectedPieceMap[p.Guid]
+				ep, ok := expectedPieceMap[p.Id]
 				if !ok {
-					t.Errorf("Unexpected piece %s in copy output", p.Guid)
+					t.Errorf("Unexpected piece %s in copy output", p.Id)
 					continue
 				}
 				hasOriginAttr := false
@@ -1519,13 +1961,13 @@ func TestCopyAndPaste(t *testing.T) {
 					}
 				}
 				if hasOriginAttr != expectedOriginAttr {
-					t.Errorf("Piece %s: semio.piece.origin mismatch: got %v, want %v", p.Guid, hasOriginAttr, expectedOriginAttr)
+					t.Errorf("Piece %s: semio.piece.origin mismatch: got %v, want %v", p.Id, hasOriginAttr, expectedOriginAttr)
 				}
 			}
 
 			// Verify pp_excl_pc_incl pieces have semio.center and semio.plane attributes
 			for _, p := range copyDesign.Pieces {
-				ep := expectedPieceMap[p.Guid]
+				ep := expectedPieceMap[p.Id]
 				hasCenterAttr := false
 				hasPlaneAttr := false
 				for _, a := range p.Attributes {
@@ -1547,25 +1989,25 @@ func TestCopyAndPaste(t *testing.T) {
 					}
 				}
 				if hasCenterAttr != expectedCenterAttr {
-					t.Errorf("Piece %s: semio.center attr mismatch: got %v, want %v", p.Guid, hasCenterAttr, expectedCenterAttr)
+					t.Errorf("Piece %s: semio.center attr mismatch: got %v, want %v", p.Id, hasCenterAttr, expectedCenterAttr)
 				}
 				if hasPlaneAttr != expectedPlaneAttr {
-					t.Errorf("Piece %s: semio.plane attr mismatch: got %v, want %v", p.Guid, hasPlaneAttr, expectedPlaneAttr)
+					t.Errorf("Piece %s: semio.plane attr mismatch: got %v, want %v", p.Id, hasPlaneAttr, expectedPlaneAttr)
 				}
 			}
 
 			// Verify connections are in expected set
-			copyConnGuids := make(map[string]bool)
+			copyConnIds := make(map[string]bool)
 			for _, c := range copyDesign.Connections {
-				copyConnGuids[c.Guid] = true
+				copyConnIds[c.Id] = true
 			}
 			for _, c := range expectedCopy.Connections {
-				if !copyConnGuids[c.Guid] {
-					t.Errorf("Expected connection %s not found in copy output", c.Guid)
+				if !copyConnIds[c.Id] {
+					t.Errorf("Expected connection %s not found in copy output", c.Id)
 				}
 			}
 
-			// Test PasteDesign with original anchoring (no coord)
+			// Test PasteDesign with original anchoring (no coordinate)
 			var pasteTargetDesign Design
 			loadJSON(t, "nakagin-capsule-tower.paste.design.semio.json", &pasteTargetDesign)
 			pasteDiff := PasteDesign(&kit, copyDesign, pasteTargetDesign, "original", nil)
@@ -1586,7 +2028,7 @@ func TestCopyAndPaste(t *testing.T) {
 			for _, p := range pasteDiff.Pieces.Added {
 				for _, attr := range p.Attributes {
 					if attr.Key == "semio.piece.origin" && attr.Value != nil && *attr.Value == "external" {
-						t.Errorf("External-origin piece %s should not be in paste output", p.Guid)
+						t.Errorf("External-origin piece %s should not be in paste output", p.Id)
 					}
 				}
 			}
@@ -1599,44 +2041,44 @@ func TestCopyAndPaste(t *testing.T) {
 				t.Fatalf("Paste added connections count mismatch: got %d, want %d", len(pasteDiff.Connections.Added), len(expectedPaste.Connections.Added))
 			}
 
-			// Test PasteDesign with original anchoring and coord
-			coordVal := Coord{U: 10, V: 10}
-			pasteWithCoordDiff := PasteDesign(&kit, copyDesign, pasteTargetDesign, "original", &coordVal)
+			// Test PasteDesign with original anchoring and coordinate
+			coordinateVal := Coordinate{U: 10, V: 10}
+			pasteWithCoordinateDiff := PasteDesign(&kit, copyDesign, pasteTargetDesign, "original", &coordinateVal)
 
-			// Load expected paste with coord diff
-			var expectedPasteWithCoord DesignDiff
-			loadJSON(t, "nakagin-capsule-tower.paste.with-coord.design.diff.semio.json", &expectedPasteWithCoord)
+			// Load expected paste with coordinate diff
+			var expectedPasteWithCoordinate DesignDiff
+			loadJSON(t, "nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json", &expectedPasteWithCoordinate)
 
 			// Verify pasted pieces count
-			if pasteWithCoordDiff.Pieces == nil {
-				t.Fatal("No pieces diff in paste with coord result")
+			if pasteWithCoordinateDiff.Pieces == nil {
+				t.Fatal("No pieces diff in paste with coordinate result")
 			}
-			if len(pasteWithCoordDiff.Pieces.Added) != len(expectedPasteWithCoord.Pieces.Added) {
-				t.Fatalf("Paste with coord added pieces count mismatch: got %d, want %d", len(pasteWithCoordDiff.Pieces.Added), len(expectedPasteWithCoord.Pieces.Added))
+			if len(pasteWithCoordinateDiff.Pieces.Added) != len(expectedPasteWithCoordinate.Pieces.Added) {
+				t.Fatalf("Paste with coordinate added pieces count mismatch: got %d, want %d", len(pasteWithCoordinateDiff.Pieces.Added), len(expectedPasteWithCoordinate.Pieces.Added))
 			}
 
 			// Verify pasted connections count
-			if pasteWithCoordDiff.Connections == nil {
-				t.Fatal("No connections diff in paste with coord result")
+			if pasteWithCoordinateDiff.Connections == nil {
+				t.Fatal("No connections diff in paste with coordinate result")
 			}
-			if len(pasteWithCoordDiff.Connections.Added) != len(expectedPasteWithCoord.Connections.Added) {
-				t.Fatalf("Paste with coord added connections count mismatch: got %d, want %d", len(pasteWithCoordDiff.Connections.Added), len(expectedPasteWithCoord.Connections.Added))
+			if len(pasteWithCoordinateDiff.Connections.Added) != len(expectedPasteWithCoordinate.Connections.Added) {
+				t.Fatalf("Paste with coordinate added connections count mismatch: got %d, want %d", len(pasteWithCoordinateDiff.Connections.Added), len(expectedPasteWithCoordinate.Connections.Added))
 			}
 
-			// Verify centers are offset by coord
+			// Verify centers are offset by coordinate
 			expectedPWCPieceMap := make(map[string]Piece)
-			for _, p := range expectedPasteWithCoord.Pieces.Added {
-				expectedPWCPieceMap[p.Guid] = p
+			for _, p := range expectedPasteWithCoordinate.Pieces.Added {
+				expectedPWCPieceMap[p.Id] = p
 			}
-			for _, p := range pasteWithCoordDiff.Pieces.Added {
-				ep, ok := expectedPWCPieceMap[p.Guid]
+			for _, p := range pasteWithCoordinateDiff.Pieces.Added {
+				ep, ok := expectedPWCPieceMap[p.Id]
 				if !ok {
-					t.Errorf("Unexpected piece %s in paste with coord output", p.Guid)
+					t.Errorf("Unexpected piece %s in paste with coordinate output", p.Id)
 					continue
 				}
 				if p.Center != nil && ep.Center != nil {
 					if math.Abs(p.Center.U-ep.Center.U) > 0.001 || math.Abs(p.Center.V-ep.Center.V) > 0.001 {
-						t.Errorf("Piece %s center mismatch: got (%f,%f), want (%f,%f)", p.Guid, p.Center.U, p.Center.V, ep.Center.U, ep.Center.V)
+						t.Errorf("Piece %s center mismatch: got (%f,%f), want (%f,%f)", p.Id, p.Center.U, p.Center.V, ep.Center.U, ep.Center.V)
 					}
 				}
 			}
@@ -1696,39 +2138,38 @@ func TestValidation(t *testing.T) {
 }
 
 func TestDesignQualitySum(t *testing.T) {
-	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
-		t.Run("Sum Effective Floor Area", func(t *testing.T) {
+	var asset qualitySumCasesAsset
+	loadJSON(t, "quality-sum.cases.semio.json", &asset)
+
+	for _, tc := range asset.Cases {
+		t.Run(tc.Name, func(t *testing.T) {
 			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
-			var designGuid string
-			for _, d := range kit.Designs {
-				if d.Name == "Nakagin Capsule Tower" && d.Parent == nil {
-					designGuid = d.Guid
-					break
-				}
+			loadJSON(t, tc.Kit, &kit)
+
+			design := findDesignByName(kit.Designs, tc.DesignName, nil)
+			if design == nil {
+				t.Fatalf("Design %q not found", tc.DesignName)
 			}
-			if designGuid == "" {
-				t.Fatal("Nakagin Capsule Tower design not found")
-			}
-			var qualityGuid string
+
+			var qualityId string
 			for _, q := range kit.Qualities {
-				if q.Name == "effective floor area" {
-					qualityGuid = q.Guid
+				if q.Name == tc.QualityName {
+					qualityId = q.Id
 					break
 				}
 			}
-			if qualityGuid == "" {
-				t.Fatal("effective floor area quality not found")
+			if qualityId == "" {
+				t.Fatalf("Quality %q not found", tc.QualityName)
 			}
-			result := SumQualityInDesign(&kit, designGuid, qualityGuid)
-			if math.Abs(result-2349.53) > 0.01 {
-				t.Errorf("Expected ~2349.53, got %f", result)
+			result := SumQualityInDesign(&kit, design.Id, qualityId)
+			if math.Abs(result-tc.Expected) > tc.Tolerance {
+				t.Errorf("Expected ~%f, got %f", tc.Expected, result)
 			}
 		})
-	})
+	}
 }
 
-func TestExportDesignModel(t *testing.T) {
+func TestExportDesignRepresentation(t *testing.T) {
 	var kit Kit
 	loadJSON(t, "metabolism.kit.semio.json", &kit)
 
@@ -1738,9 +2179,9 @@ func TestExportDesignModel(t *testing.T) {
 	}
 
 	t.Run("GLB format", func(t *testing.T) {
-		result, err := ExportDesignModel(&kit, design.Guid, ".glb", nil, nil)
+		result, err := ExportDesignRepresentation(&kit, design.Id, ".glb", nil, nil)
 		if err != nil {
-			t.Fatalf("ExportDesignModel failed: %v", err)
+			t.Fatalf("ExportDesignRepresentation failed: %v", err)
 		}
 		if result == nil {
 			t.Fatal("result is nil")
@@ -1766,9 +2207,9 @@ func TestExportDesignModel(t *testing.T) {
 	})
 
 	t.Run("GLTF format", func(t *testing.T) {
-		result, err := ExportDesignModel(&kit, design.Guid, ".gltf", nil, nil)
+		result, err := ExportDesignRepresentation(&kit, design.Id, ".gltf", nil, nil)
 		if err != nil {
-			t.Fatalf("ExportDesignModel failed: %v", err)
+			t.Fatalf("ExportDesignRepresentation failed: %v", err)
 		}
 		if result == nil {
 			t.Fatal("result is nil")
@@ -1783,7 +2224,7 @@ func TestExportDesignModel(t *testing.T) {
 	})
 
 	t.Run("Invalid format", func(t *testing.T) {
-		result, err := ExportDesignModel(&kit, design.Guid, ".xyz", nil, nil)
+		result, err := ExportDesignRepresentation(&kit, design.Id, ".xyz", nil, nil)
 		if err == nil {
 			t.Fatal("expected error for invalid format, got nil")
 		}
@@ -1793,15 +2234,15 @@ func TestExportDesignModel(t *testing.T) {
 	})
 
 	t.Run("Scene graph report", func(t *testing.T) {
-		result, err := ExportDesignModel(&kit, design.Guid, ".gltf", nil, nil)
+		result, err := ExportDesignRepresentation(&kit, design.Id, ".gltf", nil, nil)
 		if err != nil {
-			t.Fatalf("ExportDesignModel failed: %v", err)
+			t.Fatalf("ExportDesignRepresentation failed: %v", err)
 		}
 		var parsed interface{}
 		if err := json.Unmarshal(result, &parsed); err != nil {
 			t.Fatalf("result is not valid JSON: %v", err)
 		}
-		reportsDir := filepath.Join("..", "..", "reports", "export-design-model")
+		reportsDir := filepath.Join("..", "..", "reports", "export-design-representation")
 		if err := os.MkdirAll(reportsDir, 0o755); err != nil {
 			t.Fatalf("failed to create reports directory: %v", err)
 		}
@@ -1812,22 +2253,22 @@ func TestExportDesignModel(t *testing.T) {
 	})
 }
 
-func TestExportDesignModelSceneGraphReport(t *testing.T) {
+func TestExportDesignRepresentationSceneGraphReport(t *testing.T) {
 	var kit Kit
 	loadJSON(t, "metabolism.kit.semio.json", &kit)
 	design := findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
 	if design == nil {
 		t.Fatal("Nakagin Capsule Tower design not found")
 	}
-	result, err := ExportDesignModel(&kit, design.Guid, ".gltf", nil, nil)
+	result, err := ExportDesignRepresentation(&kit, design.Id, ".gltf", nil, nil)
 	if err != nil {
-		t.Fatalf("ExportDesignModel failed: %v", err)
+		t.Fatalf("ExportDesignRepresentation failed: %v", err)
 	}
 	var parsed interface{}
 	if err := json.Unmarshal(result, &parsed); err != nil {
 		t.Fatalf("result is not valid JSON: %v", err)
 	}
-	reportsDir := filepath.Join("..", "..", "reports", "export-design-model")
+	reportsDir := filepath.Join("..", "..", "reports", "export-design-representation")
 	if err := os.MkdirAll(reportsDir, 0o755); err != nil {
 		t.Fatalf("failed to create reports directory: %v", err)
 	}
@@ -1839,16 +2280,16 @@ func TestExportDesignModelSceneGraphReport(t *testing.T) {
 
 func round6(x float64) float64 { return math.Round(x*1e6) / 1e6 }
 
-func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
-	modelPath := filepath.Join(AssetsPath, "nakagin-capsule-tower.gltf")
-	if _, err := os.Stat(modelPath); err != nil {
+func TestGetGeometricInsightsForRepresentation_NakaginCapsuleTower(t *testing.T) {
+	representationPath := filepath.Join(AssetsPath, "nakagin-capsule-tower.gltf")
+	if _, err := os.Stat(representationPath); err != nil {
 		t.Skipf("nakagin-capsule-tower.gltf not found: %v", err)
 	}
-	insights, err := GetGeometricInsightsForModel(modelPath)
+	insights, err := GetGeometricInsightsForRepresentation(representationPath)
 	if err != nil {
-		t.Fatalf("GetGeometricInsightsForModel: %v", err)
+		t.Fatalf("GetGeometricInsightsForRepresentation: %v", err)
 	}
-	reportsDir := filepath.Join("..", "..", "reports", "model-kpi")
+	reportsDir := filepath.Join("..", "..", "reports", "representation-kpi")
 	if err := os.MkdirAll(reportsDir, 0o755); err != nil {
 		t.Fatalf("failed to create reports directory: %v", err)
 	}
@@ -1873,24 +2314,24 @@ func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
 	}
 	b, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
-		t.Fatalf("failed to marshal go model-kpi report: %v", err)
+		t.Fatalf("failed to marshal go representation-kpi report: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(reportsDir, "go.json"), b, 0o644); err != nil {
-		t.Fatalf("failed to write go model-kpi report: %v", err)
+		t.Fatalf("failed to write go representation-kpi report: %v", err)
 	}
 
-	canonicalPath := filepath.Join(AssetsPath, "nakagin.kpi.model.semio.json")
+	canonicalPath := filepath.Join(AssetsPath, "nakagin.kpi.representation.semio.json")
 	canonicalData, err := os.ReadFile(canonicalPath)
 	if err != nil {
-		t.Fatalf("failed to read canonical model-kpi asset: %v", err)
+		t.Fatalf("failed to read canonical representation-kpi asset: %v", err)
 	}
 	var canonical map[string]any
 	if err := json.Unmarshal(canonicalData, &canonical); err != nil {
-		t.Fatalf("failed to unmarshal canonical model-kpi asset: %v", err)
+		t.Fatalf("failed to unmarshal canonical representation-kpi asset: %v", err)
 	}
 	var current map[string]any
 	if err := json.Unmarshal(b, &current); err != nil {
-		t.Fatalf("failed to unmarshal go model-kpi report: %v", err)
+		t.Fatalf("failed to unmarshal go representation-kpi report: %v", err)
 	}
 	// Skip centroid and total_surface_area until GLTF merge/float pipeline matches Python exactly.
 	skipKeys := map[string]bool{"centroid": true, "total_surface_area": true}
@@ -1914,8 +2355,8 @@ func TestMetaShallow(t *testing.T) {
 		var kit Kit
 		loadJSON(t, "metabolism.kit.semio.json", &kit)
 		meta := ToKitMeta(kit)
-		if meta.Guid != kit.Guid {
-			t.Errorf("KitMeta.Guid = %q, want %q", meta.Guid, kit.Guid)
+		if meta.Id != kit.Id {
+			t.Errorf("KitMeta.Id = %q, want %q", meta.Id, kit.Id)
 		}
 		if meta.Name != kit.Name {
 			t.Errorf("KitMeta.Name = %q, want %q", meta.Name, kit.Name)
@@ -1929,8 +2370,8 @@ func TestMetaShallow(t *testing.T) {
 		var kit Kit
 		loadJSON(t, "metabolism.kit.semio.json", &kit)
 		shallow := ToKitShallow(kit)
-		if shallow.Guid != kit.Guid {
-			t.Errorf("KitShallow.Guid = %q, want %q", shallow.Guid, kit.Guid)
+		if shallow.Id != kit.Id {
+			t.Errorf("KitShallow.Id = %q, want %q", shallow.Id, kit.Id)
 		}
 		if len(shallow.Types) != len(kit.Types) {
 			t.Errorf("KitShallow.Types len = %d, want %d", len(shallow.Types), len(kit.Types))
@@ -1945,8 +2386,8 @@ func TestMetaShallow(t *testing.T) {
 			t.Errorf("KitShallow.Files len = %d, want %d", len(shallow.Files), len(kit.Files))
 		}
 		for i, tm := range shallow.Types {
-			if tm.Guid != kit.Types[i].Guid {
-				t.Errorf("KitShallow.Types[%d].Guid = %q, want %q", i, tm.Guid, kit.Types[i].Guid)
+			if tm.Id != kit.Types[i].Id {
+				t.Errorf("KitShallow.Types[%d].Id = %q, want %q", i, tm.Id, kit.Types[i].Id)
 			}
 		}
 	})
@@ -1954,8 +2395,8 @@ func TestMetaShallow(t *testing.T) {
 	t.Run("TypeMeta from JSON", func(t *testing.T) {
 		var meta TypeMeta
 		loadJSON(t, "tambour.meta.type.semio.json", &meta)
-		if meta.Guid == "" {
-			t.Error("TypeMeta.Guid is empty")
+		if meta.Id == "" {
+			t.Error("TypeMeta.Id is empty")
 		}
 		if meta.Name != "Tambour" {
 			t.Errorf("TypeMeta.Name = %q, want %q", meta.Name, "Tambour")
@@ -1965,8 +2406,8 @@ func TestMetaShallow(t *testing.T) {
 	t.Run("TypeShallow from JSON", func(t *testing.T) {
 		var shallow TypeShallow
 		loadJSON(t, "tambour.shallow.type.semio.json", &shallow)
-		if shallow.Guid == "" {
-			t.Error("TypeShallow.Guid is empty")
+		if shallow.Id == "" {
+			t.Error("TypeShallow.Id is empty")
 		}
 		if shallow.Name != "Tambour" {
 			t.Errorf("TypeShallow.Name = %q, want %q", shallow.Name, "Tambour")
@@ -1974,8 +2415,8 @@ func TestMetaShallow(t *testing.T) {
 		if len(shallow.Connectors) == 0 {
 			t.Error("TypeShallow.Connectors is empty")
 		}
-		if len(shallow.Models) == 0 {
-			t.Error("TypeShallow.Models is empty")
+		if len(shallow.Representations) == 0 {
+			t.Error("TypeShallow.Representations is empty")
 		}
 		if len(shallow.Props) == 0 {
 			t.Error("TypeShallow.Props is empty")
@@ -1985,8 +2426,8 @@ func TestMetaShallow(t *testing.T) {
 	t.Run("DesignMeta from JSON", func(t *testing.T) {
 		var meta DesignMeta
 		loadJSON(t, "nakagin-capsule-tower.meta.design.semio.json", &meta)
-		if meta.Guid == "" {
-			t.Error("DesignMeta.Guid is empty")
+		if meta.Id == "" {
+			t.Error("DesignMeta.Id is empty")
 		}
 		if meta.Name != "Nakagin Capsule Tower" {
 			t.Errorf("DesignMeta.Name = %q, want %q", meta.Name, "Nakagin Capsule Tower")
@@ -1996,8 +2437,8 @@ func TestMetaShallow(t *testing.T) {
 	t.Run("DesignShallow from JSON", func(t *testing.T) {
 		var shallow DesignShallow
 		loadJSON(t, "nakagin-capsule-tower.shallow.design.semio.json", &shallow)
-		if shallow.Guid == "" {
-			t.Error("DesignShallow.Guid is empty")
+		if shallow.Id == "" {
+			t.Error("DesignShallow.Id is empty")
 		}
 		if shallow.Name != "Nakagin Capsule Tower" {
 			t.Errorf("DesignShallow.Name = %q, want %q", shallow.Name, "Nakagin Capsule Tower")
@@ -2016,8 +2457,8 @@ func TestMetaShallow(t *testing.T) {
 	t.Run("KitMeta from JSON", func(t *testing.T) {
 		var meta KitMeta
 		loadJSON(t, "metabolism.meta.kit.semio.json", &meta)
-		if meta.Guid == "" {
-			t.Error("KitMeta.Guid is empty")
+		if meta.Id == "" {
+			t.Error("KitMeta.Id is empty")
 		}
 		if meta.Name != "Metabolism" {
 			t.Errorf("KitMeta.Name = %q, want %q", meta.Name, "Metabolism")
@@ -2030,8 +2471,8 @@ func TestMetaShallow(t *testing.T) {
 	t.Run("KitShallow from JSON", func(t *testing.T) {
 		var shallow KitShallow
 		loadJSON(t, "metabolism.shallow.kit.semio.json", &shallow)
-		if shallow.Guid == "" {
-			t.Error("KitShallow.Guid is empty")
+		if shallow.Id == "" {
+			t.Error("KitShallow.Id is empty")
 		}
 		if shallow.Name != "Metabolism" {
 			t.Errorf("KitShallow.Name = %q, want %q", shallow.Name, "Metabolism")
@@ -2048,8 +2489,8 @@ func TestMetaShallow(t *testing.T) {
 		if len(shallow.Files) == 0 {
 			t.Error("KitShallow.Files is empty")
 		}
-		if len(shallow.Ports) == 0 {
-			t.Error("KitShallow.Ports is empty")
+		if len(shallow.Families) == 0 || len(shallow.Families[0].Ports) == 0 {
+			t.Error("KitShallow.Families ports is empty")
 		}
 		if len(shallow.Tags) == 0 {
 			t.Error("KitShallow.Tags is empty")
@@ -2071,7 +2512,7 @@ func TestKitKind(t *testing.T) {
 	})
 
 	t.Run("Kit/AllKitKinds contains all five kinds", func(t *testing.T) {
-		expected := []KitKind{KitKindFile, KitKindFolder, KitKindArchive, KitKindRemote, KitKindTemporary}
+		expected := []KitKind{KitKindDev, KitKindLocal, KitKindArchive, KitKindRemote, KitKindTransport}
 		for _, kind := range expected {
 			found := false
 			for _, k := range AllKitKinds {
@@ -2104,7 +2545,7 @@ func TestKitKind(t *testing.T) {
 	})
 
 	t.Run("Kit/File: roundtrips through JSON serialize/deserialize", func(t *testing.T) {
-		kit := Kit{Guid: "file-kit-guid", Name: "FileKit Test", Version: "1.0"}
+		kit := Kit{Id: "file-kit-id", Name: "FileKit Test", Version: "1.0"}
 		data, err := SerializeKit(kit)
 		if err != nil {
 			t.Fatal(err)
@@ -2113,8 +2554,8 @@ func TestKitKind(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if restored.Guid != kit.Guid {
-			t.Errorf("Guid = %q, want %q", restored.Guid, kit.Guid)
+		if restored.Id != kit.Id {
+			t.Errorf("Id = %q, want %q", restored.Id, kit.Id)
 		}
 		if restored.Name != kit.Name {
 			t.Errorf("Name = %q, want %q", restored.Name, kit.Name)
@@ -2123,10 +2564,10 @@ func TestKitKind(t *testing.T) {
 
 	t.Run("Kit/Folder: roundtrips through SQLite", func(t *testing.T) {
 		kit := Kit{
-			Guid:    "folder-kit-guid",
+			Id:    "folder-kit-id",
 			Name:    "FolderKit Test",
 			Version: "1.0",
-			Types:   []Type{{Guid: "t1", Name: "Wall"}},
+			Types:   []Type{{Id: "t1", Name: "Wall"}},
 		}
 		tmpDir := t.TempDir()
 		dbPath := filepath.Join(tmpDir, "kit.db")
@@ -2142,8 +2583,8 @@ func TestKitKind(t *testing.T) {
 		if err != nil {
 			t.Fatalf("KitFromSqlite: %v", err)
 		}
-		if restored.Guid != kit.Guid {
-			t.Errorf("Guid = %q, want %q", restored.Guid, kit.Guid)
+		if restored.Id != kit.Id {
+			t.Errorf("Id = %q, want %q", restored.Id, kit.Id)
 		}
 		if restored.Name != kit.Name {
 			t.Errorf("Name = %q, want %q", restored.Name, kit.Name)
@@ -2158,10 +2599,10 @@ func TestKitKind(t *testing.T) {
 
 	t.Run("Kit/Archive: roundtrips through zip export/import", func(t *testing.T) {
 		kit := Kit{
-			Guid:    "archive-kit-guid",
+			Id:    "archive-kit-id",
 			Name:    "ArchiveKit Test",
 			Version: "1.0",
-			Types:   []Type{{Guid: "at1", Name: "Beam"}},
+			Types:   []Type{{Id: "at1", Name: "Beam"}},
 		}
 		tmpDir := t.TempDir()
 		zipPath := filepath.Join(tmpDir, "kit.zip")
@@ -2177,8 +2618,8 @@ func TestKitKind(t *testing.T) {
 		if err != nil {
 			t.Fatalf("KitFromZip: %v", err)
 		}
-		if restored.Guid != kit.Guid {
-			t.Errorf("Guid = %q, want %q", restored.Guid, kit.Guid)
+		if restored.Id != kit.Id {
+			t.Errorf("Id = %q, want %q", restored.Id, kit.Id)
 		}
 		if restored.Name != kit.Name {
 			t.Errorf("Name = %q, want %q", restored.Name, kit.Name)
@@ -2191,9 +2632,37 @@ func TestKitKind(t *testing.T) {
 		}
 	})
 
+	t.Run("Kit/Postgres schema: includes normalized snapshots and VCS tables", func(t *testing.T) {
+		schemaPath := filepath.Join("..", "postgres", "schema.sql")
+		schemaBytes, err := os.ReadFile(schemaPath)
+		if err != nil {
+			t.Fatalf("Failed to read postgres schema: %v", err)
+		}
+		schema := string(schemaBytes)
+		checks := []string{
+			"CREATE TABLE IF NOT EXISTS core.kit_snapshot",
+			"CREATE TABLE IF NOT EXISTS core.family",
+			"CREATE TABLE IF NOT EXISTS core.type_entity",
+			"CREATE TABLE IF NOT EXISTS core.design",
+			"CREATE TABLE IF NOT EXISTS history.kit_checkpoint",
+			"CREATE TABLE IF NOT EXISTS history.kit_alternative",
+			"CREATE TABLE IF NOT EXISTS history.kit_release",
+			"CREATE TABLE IF NOT EXISTS runtime.kit_session",
+			"CREATE TABLE IF NOT EXISTS runtime.kit_draft",
+			"CREATE TABLE IF NOT EXISTS runtime.kit_transaction",
+			"CREATE TABLE IF NOT EXISTS runtime.kit_transaction_change",
+			"CREATE UNIQUE INDEX IF NOT EXISTS idx_draft_one_active_branch",
+		}
+		for _, check := range checks {
+			if !strings.Contains(schema, check) {
+				t.Fatalf("postgres schema is missing %q", check)
+			}
+		}
+	})
+
 	t.Run("Kit/Remote: validates remote URL field", func(t *testing.T) {
 		remote := "https://example.com/metabolism.kit.json"
-		kit := Kit{Guid: "remote-kit-guid", Name: "RemoteKit Test", Remote: &remote}
+		kit := Kit{Id: "remote-kit-id", Name: "RemoteKit Test", Remote: &remote}
 		data, err := SerializeKit(kit)
 		if err != nil {
 			t.Fatal(err)
@@ -2208,7 +2677,7 @@ func TestKitKind(t *testing.T) {
 	})
 
 	t.Run("Kit/Temporary: in-memory kit operations", func(t *testing.T) {
-		kit := Kit{Guid: "temp-kit-guid", Name: "TemporaryKit Test", Version: "1.0"}
+		kit := Kit{Id: "temp-kit-id", Name: "TemporaryKit Test", Version: "1.0"}
 		kit.Name = "Modified Temporary"
 		if kit.Name != "Modified Temporary" {
 			t.Errorf("Name = %q, want %q", kit.Name, "Modified Temporary")
@@ -2220,11 +2689,11 @@ func TestKitKind(t *testing.T) {
 
 	t.Run("Kit/KitKind string values match JSON enum", func(t *testing.T) {
 		expectedValues := map[KitKind]string{
-			KitKindFile:      "file",
-			KitKindFolder:    "folder",
+			KitKindDev:       "dev",
+			KitKindLocal:     "local",
 			KitKindArchive:   "archive",
 			KitKindRemote:    "remote",
-			KitKindTemporary: "temporary",
+			KitKindTransport: "transport",
 		}
 		for kind, expected := range expectedValues {
 			if string(kind) != expected {
@@ -2238,28 +2707,28 @@ func TestKitWorkflowKinds(t *testing.T) {
 	assetBlob := blobEncode([]byte("hello workflow"), "readme.txt")
 	assetSize := int64(len("hello workflow"))
 	kit := Kit{
-		Guid:      "workflow-kit-guid",
+		Id:      "workflow-kit-id",
 		Name:      "Workflow Kit",
 		Version:   "1.0.0",
 		CreatedAt: "2026-01-01T00:00:00.000Z",
 		UpdatedAt: "2026-01-01T00:00:00.000Z",
 		Folders: []Folder{{
-			Guid:      "folder-guid",
+			Id:      "folder-id",
 			Name:      "docs",
 			CreatedAt: "2026-01-01T00:00:00.000Z",
 			UpdatedAt: "2026-01-01T00:00:00.000Z",
 		}},
 		Files: []File{{
-			Guid:      "file-guid",
+			Id:      "file-id",
 			Name:      "readme.txt",
-			Folder:    &FolderId{Guid: "folder-guid"},
+			Folder:    &FolderId{Id: "folder-id"},
 			Size:      &assetSize,
 			Blob:      &assetBlob,
 			CreatedAt: "2026-01-01T00:00:00.000Z",
 			UpdatedAt: "2026-01-01T00:00:00.000Z",
 		}},
 		Types: []Type{{
-			Guid:      "type-guid",
+			Id:      "type-id",
 			Name:      "Wall",
 			CreatedAt: "2026-01-01T00:00:00.000Z",
 			UpdatedAt: "2026-01-01T00:00:00.000Z",
@@ -2410,13 +2879,11 @@ func TestKitWorkflowKinds(t *testing.T) {
 		}
 	})
 
-	t.Run("Kit/Temporary workflow edits in memory without mutating source", func(t *testing.T) {
-		edited := EditTemporaryKit(kit, diff)
-		if edited.Name != updatedName {
-			t.Fatalf("edited.Name = %q, want %q", edited.Name, updatedName)
-		}
-		if kit.Name != "Workflow Kit" {
-			t.Fatalf("kit.Name = %q, want %q", kit.Name, "Workflow Kit")
+	t.Run("Kit/Transport workflow edits in memory in place", func(t *testing.T) {
+		transportKit := deepCloneKit(kit)
+		EditTemporaryKit(&transportKit, &diff)
+		if transportKit.Name != updatedName {
+			t.Fatalf("transportKit.Name = %q, want %q", transportKit.Name, updatedName)
 		}
 	})
 }
@@ -2425,142 +2892,176 @@ func TestKitWorkflowKinds(t *testing.T) {
 // Tests for FilterKit MUST verify correct subset extraction.
 
 func TestFilterKit(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "metabolism.kit.semio.json", &kit)
-	designGuid := "9a890dd4-0a9c-48ac-920a-9e62666465ef"
-	var expected Kit
-	loadJSON(t, "nakagin-capsule-tower.filtered.kit.semio.json", &expected)
+	var asset filterKitCasesAsset
+	loadJSON(t, "filter-kit.cases.semio.json", &asset)
 
-	t.Run("filters kit to only contain entities related to Nakagin Capsule Tower design", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
+	for _, tc := range asset.Cases {
+		var kit Kit
+		loadJSON(t, tc.Kit, &kit)
 
-		if len(filtered.Designs) != len(expected.Designs) {
-			t.Errorf("expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
+		design := findDesignByName(kit.Designs, tc.DesignName, nil)
+		if design == nil {
+			t.Fatalf("Design %q not found", tc.DesignName)
 		}
-		if len(filtered.Types) != len(expected.Types) {
-			t.Errorf("expected %d types, got %d", len(expected.Types), len(filtered.Types))
-		}
-		if len(filtered.Files) != len(expected.Files) {
-			t.Errorf("expected %d files, got %d", len(expected.Files), len(filtered.Files))
-		}
-		if len(filtered.Ports) != len(expected.Ports) {
-			t.Errorf("expected %d ports, got %d", len(expected.Ports), len(filtered.Ports))
-		}
-		if len(filtered.Qualities) != len(expected.Qualities) {
-			t.Errorf("expected %d qualities, got %d", len(expected.Qualities), len(filtered.Qualities))
-		}
-		if len(filtered.Authors) != len(expected.Authors) {
-			t.Errorf("expected %d authors, got %d", len(expected.Authors), len(filtered.Authors))
-		}
+		designId := design.Id
 
-		// 🧹Find the Nakagin design in filtered kit
-		var filteredDesign *Design
-		for i := range filtered.Designs {
-			if filtered.Designs[i].Guid == designGuid {
-				filteredDesign = &filtered.Designs[i]
-				break
+		var expected Kit
+		loadJSON(t, tc.ExpectedKit, &expected)
+
+		t.Run("filters kit to only contain entities related to "+tc.DesignName+" design", func(t *testing.T) {
+			filtered := FilterKit(kit, KitFilter{DesignId: designId})
+
+			if len(filtered.Designs) != len(expected.Designs) {
+				t.Errorf("expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
 			}
-		}
-		if filteredDesign == nil {
-			t.Fatal("Nakagin Capsule Tower design not found in filtered kit")
-		}
-
-		// 🔷Find original design for comparison
-		var originalDesign *Design
-		for i := range kit.Designs {
-			if kit.Designs[i].Guid == designGuid {
-				originalDesign = &kit.Designs[i]
-				break
+			if len(filtered.Types) != len(expected.Types) {
+				t.Errorf("expected %d types, got %d", len(expected.Types), len(filtered.Types))
 			}
-		}
-		if originalDesign == nil {
-			t.Fatal("Nakagin Capsule Tower design not found in original kit")
-		}
-
-		if len(filteredDesign.Pieces) != len(originalDesign.Pieces) {
-			t.Errorf("expected %d pieces, got %d", len(originalDesign.Pieces), len(filteredDesign.Pieces))
-		}
-
-		// Verify each type has at most one model
-		for _, typeItem := range filtered.Types {
-			if len(typeItem.Models) > 1 {
-				t.Errorf("type %s has %d models, expected at most 1", typeItem.Guid, len(typeItem.Models))
+			if len(filtered.Files) != len(expected.Files) {
+				t.Errorf("expected %d files, got %d", len(expected.Files), len(filtered.Files))
 			}
-		}
-	})
-
-	t.Run("preserves kit metadata", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
-		if filtered.Guid != kit.Guid {
-			t.Errorf("expected guid %s, got %s", kit.Guid, filtered.Guid)
-		}
-		if filtered.Name != kit.Name {
-			t.Errorf("expected name %s, got %s", kit.Name, filtered.Name)
-		}
-		if filtered.Version != kit.Version {
-			t.Errorf("expected version %s, got %s", kit.Version, filtered.Version)
-		}
-	})
-
-	t.Run("glob filters types by name include", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{Types: &GlobFilter{Include: []string{"Capsule*"}}})
-		if len(filtered.Types) == 0 {
-			t.Fatal("expected at least one type matching Capsule*")
-		}
-		for _, ty := range filtered.Types {
-			if !GlobMatch(ty.Name, "Capsule*") {
-				t.Errorf("type %s should not be included", ty.Name)
+			if len(AllPortsInKit(&filtered)) != len(AllPortsInKit(&expected)) {
+				t.Errorf("expected %d ports, got %d", len(AllPortsInKit(&expected)), len(AllPortsInKit(&filtered)))
 			}
-		}
-	})
-
-	t.Run("glob filters types by name exclude", func(t *testing.T) {
-		totalTypes := len(kit.Types)
-		filtered := FilterKit(kit, KitFilter{Types: &GlobFilter{Exclude: []string{"Capsule*"}}})
-		if len(filtered.Types) >= totalTypes {
-			t.Errorf("expected fewer types after excluding Capsule*")
-		}
-		for _, ty := range filtered.Types {
-			if GlobMatch(ty.Name, "Capsule*") {
-				t.Errorf("type %s should have been excluded", ty.Name)
+			if len(filtered.Qualities) != len(expected.Qualities) {
+				t.Errorf("expected %d qualities, got %d", len(expected.Qualities), len(filtered.Qualities))
 			}
-		}
-	})
-
-	t.Run("glob filters designs by name include", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{Designs: &GlobFilter{Include: []string{"Nakagin*"}}})
-		if len(filtered.Designs) == 0 {
-			t.Fatal("expected at least one design matching Nakagin*")
-		}
-		for _, d := range filtered.Designs {
-			if !GlobMatch(d.Name, "Nakagin*") {
-				t.Errorf("design %s should not be included", d.Name)
+			if len(filtered.Authors) != len(expected.Authors) {
+				t.Errorf("expected %d authors, got %d", len(expected.Authors), len(filtered.Authors))
 			}
-		}
-	})
 
-	t.Run("empty filter returns kit unchanged", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{})
-		if len(filtered.Types) != len(kit.Types) {
-			t.Errorf("expected %d types, got %d", len(kit.Types), len(filtered.Types))
-		}
-		if len(filtered.Designs) != len(kit.Designs) {
-			t.Errorf("expected %d designs, got %d", len(kit.Designs), len(filtered.Designs))
-		}
-	})
-
-	t.Run("combines designGuid with glob filters", func(t *testing.T) {
-		designFiltered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
-		combinedFiltered := FilterKit(kit, KitFilter{DesignGuid: designGuid, Types: &GlobFilter{Exclude: []string{"Capsule*"}}})
-		if len(combinedFiltered.Types) >= len(designFiltered.Types) {
-			t.Errorf("expected fewer types with combined filter")
-		}
-		for _, ty := range combinedFiltered.Types {
-			if GlobMatch(ty.Name, "Capsule*") {
-				t.Errorf("type %s should have been excluded", ty.Name)
+			filteredDesign := findDesignByName(filtered.Designs, tc.DesignName, nil)
+			if filteredDesign == nil {
+				t.Fatalf("Design %q not found in filtered kit", tc.DesignName)
 			}
+
+			if len(filteredDesign.Pieces) != len(design.Pieces) {
+				t.Errorf("expected %d pieces, got %d", len(design.Pieces), len(filteredDesign.Pieces))
+			}
+
+			for _, typeItem := range filtered.Types {
+				if len(typeItem.Representations) > 1 {
+					t.Errorf("type %s has %d representations, expected at most 1", typeItem.Id, len(typeItem.Representations))
+				}
+			}
+		})
+
+		t.Run("preserves kit metadata", func(t *testing.T) {
+			filtered := FilterKit(kit, KitFilter{DesignId: designId})
+			if filtered.Id != kit.Id {
+				t.Errorf("expected id %s, got %s", kit.Id, filtered.Id)
+			}
+			if filtered.Name != kit.Name {
+				t.Errorf("expected name %s, got %s", kit.Name, filtered.Name)
+			}
+			if filtered.Version != kit.Version {
+				t.Errorf("expected version %s, got %s", kit.Version, filtered.Version)
+			}
+		})
+
+		for _, gc := range asset.GlobCases {
+			t.Run(gc.Name, func(t *testing.T) {
+				var gcKit Kit
+				loadJSON(t, gc.Kit, &gcKit)
+
+				filter := KitFilter{}
+				if len(gc.TypeInclude) > 0 {
+					if filter.Types == nil {
+						filter.Types = &GlobFilter{}
+					}
+					filter.Types.Include = gc.TypeInclude
+				}
+				if len(gc.TypeExclude) > 0 {
+					if filter.Types == nil {
+						filter.Types = &GlobFilter{}
+					}
+					filter.Types.Exclude = gc.TypeExclude
+				}
+				if len(gc.DesignInclude) > 0 {
+					if filter.Designs == nil {
+						filter.Designs = &GlobFilter{}
+					}
+					filter.Designs.Include = gc.DesignInclude
+				}
+				if gc.DesignName != "" {
+					gcDesign := findDesignByName(gcKit.Designs, gc.DesignName, nil)
+					if gcDesign != nil {
+						filter.DesignId = gcDesign.Id
+					}
+				}
+
+				filtered := FilterKit(gcKit, filter)
+
+				if len(gc.TypeInclude) > 0 {
+					if len(filtered.Types) == 0 {
+						t.Fatalf("expected at least one type matching %v", gc.TypeInclude)
+					}
+					for _, ty := range filtered.Types {
+						matched := false
+						for _, pattern := range gc.TypeInclude {
+							if GlobMatch(ty.Name, pattern) {
+								matched = true
+								break
+							}
+						}
+						if !matched {
+							t.Errorf("type %s should not be included", ty.Name)
+						}
+					}
+				}
+				if len(gc.TypeExclude) > 0 && gc.DesignName == "" {
+					if len(filtered.Types) >= len(gcKit.Types) {
+						t.Errorf("expected fewer types after excluding %v", gc.TypeExclude)
+					}
+					for _, ty := range filtered.Types {
+						for _, pattern := range gc.TypeExclude {
+							if GlobMatch(ty.Name, pattern) {
+								t.Errorf("type %s should have been excluded", ty.Name)
+							}
+						}
+					}
+				}
+				if len(gc.DesignInclude) > 0 {
+					if len(filtered.Designs) == 0 {
+						t.Fatalf("expected at least one design matching %v", gc.DesignInclude)
+					}
+					for _, d := range filtered.Designs {
+						matched := false
+						for _, pattern := range gc.DesignInclude {
+							if GlobMatch(d.Name, pattern) {
+								matched = true
+								break
+							}
+						}
+						if !matched {
+							t.Errorf("design %s should not be included", d.Name)
+						}
+					}
+				}
+				if gc.Name == "empty_filter" {
+					if len(filtered.Types) != len(gcKit.Types) {
+						t.Errorf("expected %d types, got %d", len(gcKit.Types), len(filtered.Types))
+					}
+					if len(filtered.Designs) != len(gcKit.Designs) {
+						t.Errorf("expected %d designs, got %d", len(gcKit.Designs), len(filtered.Designs))
+					}
+				}
+				if gc.DesignName != "" && len(gc.TypeExclude) > 0 {
+					designOnlyFiltered := FilterKit(gcKit, KitFilter{DesignId: filter.DesignId})
+					if len(filtered.Types) >= len(designOnlyFiltered.Types) {
+						t.Errorf("expected fewer types with combined filter")
+					}
+					for _, ty := range filtered.Types {
+						for _, pattern := range gc.TypeExclude {
+							if GlobMatch(ty.Name, pattern) {
+								t.Errorf("type %s should have been excluded", ty.Name)
+							}
+						}
+					}
+				}
+			})
 		}
-	})
+	}
 }
 
 // #endregion 🏰Kit Filter Tests
@@ -2568,14 +3069,11 @@ func TestFilterKit(t *testing.T) {
 // #region 🗝️Hash Tests
 
 func TestHashKit(t *testing.T) {
-	kitJSON, err := os.ReadFile(filepath.Join(AssetsPath, "metabolism.kit.semio.json"))
-	if err != nil {
-		t.Fatalf("failed to read metabolism kit: %v", err)
-	}
+	var hashAsset hashCasesAsset
+	loadJSON(t, "hash.cases.semio.json", &hashAsset)
+
 	var kit Kit
-	if err := json.Unmarshal(kitJSON, &kit); err != nil {
-		t.Fatalf("failed to unmarshal metabolism kit: %v", err)
-	}
+	loadJSON(t, hashAsset.KitHash.Kit, &kit)
 
 	t.Run("hashKit produces a 64-char lowercase hex string", func(t *testing.T) {
 		h := HashKit(kit)
@@ -2599,9 +3097,8 @@ func TestHashKit(t *testing.T) {
 
 	t.Run("hashKit of metabolism kit matches expected hash", func(t *testing.T) {
 		h := HashKit(kit)
-		expected := "2ebfdb63f7f1a329702f4c4852c1a7c7c11cf550b74a1f280d7538fc5c25dd0a"
-		if h != expected {
-			t.Errorf("expected %s, got %s", expected, h)
+		if h != hashAsset.KitHash.Expected {
+			t.Errorf("expected %s, got %s", hashAsset.KitHash.Expected, h)
 		}
 	})
 
@@ -2616,15 +3113,9 @@ func TestHashKit(t *testing.T) {
 	})
 
 	t.Run("hashDesign produces a 64-char lowercase hex string", func(t *testing.T) {
-		var nct *Design
-		for i := range kit.Designs {
-			if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-				nct = &kit.Designs[i]
-				break
-			}
-		}
+		nct := findDesignByName(kit.Designs, hashAsset.DesignName, nil)
 		if nct == nil {
-			t.Fatal("Nakagin Capsule Tower design not found")
+			t.Fatalf("Design %q not found", hashAsset.DesignName)
 		}
 		h := HashDesign(*nct)
 		if len(h) != 64 {
@@ -2644,22 +3135,23 @@ func TestHashKit(t *testing.T) {
 }
 
 func TestHashKitDiff(t *testing.T) {
+	var hashAsset hashCasesAsset
+	loadJSON(t, "hash.cases.semio.json", &hashAsset)
+
 	t.Run("hashKitDiff matches expected canonical value", func(t *testing.T) {
-		// Create KitDiff with name="updated" and description=null
-		raw := []byte(`{"name":"updated","description":null}`)
+		raw := []byte(hashAsset.KitDiffHash.JSON)
 		var d KitDiff
 		if err := json.Unmarshal(raw, &d); err != nil {
 			t.Fatalf("failed to unmarshal KitDiff: %v", err)
 		}
 		h := HashKitDiff(d)
-		expected := "d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5"
-		if h != expected {
-			t.Errorf("expected %s, got %s", expected, h)
+		if h != hashAsset.KitDiffHash.Expected {
+			t.Errorf("expected %s, got %s", hashAsset.KitDiffHash.Expected, h)
 		}
 	})
 
 	t.Run("hashKitDiff is deterministic", func(t *testing.T) {
-		raw := []byte(`{"name":"updated","description":null}`)
+		raw := []byte(hashAsset.KitDiffHash.JSON)
 		var d KitDiff
 		if err := json.Unmarshal(raw, &d); err != nil {
 			t.Fatalf("failed to unmarshal KitDiff: %v", err)
@@ -2672,7 +3164,7 @@ func TestHashKitDiff(t *testing.T) {
 	})
 
 	t.Run("hashKitDiff produces different hashes for different diffs", func(t *testing.T) {
-		raw1 := []byte(`{"name":"updated","description":null}`)
+		raw1 := []byte(hashAsset.KitDiffHash.JSON)
 		raw2 := []byte(`{"name":"other"}`)
 		var d1, d2 KitDiff
 		json.Unmarshal(raw1, &d1)
@@ -2703,12 +3195,12 @@ func TestHashKitDiff(t *testing.T) {
 		}
 	})
 
-	t.Run("hashCoordDiff is deterministic", func(t *testing.T) {
+	t.Run("hashCoordinateDiff is deterministic", func(t *testing.T) {
 		u := 1.0
 		v := 2.0
-		d := CoordDiff{U: &u, V: &v}
-		h1 := HashCoordDiff(d)
-		h2 := HashCoordDiff(d)
+		d := CoordinateDiff{U: &u, V: &v}
+		h1 := HashCoordinateDiff(d)
+		h2 := HashCoordinateDiff(d)
 		if h1 != h2 {
 			t.Errorf("expected same hash, got %s and %s", h1, h2)
 		}
@@ -2720,76 +3212,63 @@ func TestHashKitDiff(t *testing.T) {
 // #region 🎉DesignWithDiff Tests
 
 func TestDesignWithDiff(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "metabolism.kit.semio.json", &kit)
+	var asset designWithDiffCasesAsset
+	loadJSON(t, "design-with-diff.cases.semio.json", &asset)
 
-	var design *Design
-	for i := range kit.Designs {
-		if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-			design = &kit.Designs[i]
-			break
-		}
-	}
-	if design == nil {
-		t.Fatal("Nakagin Capsule Tower design not found")
-	}
+	for _, tc := range asset.Cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, tc.Kit, &kit)
 
-	var diff DesignDiff
-	loadJSON(t, "nakgin-capsule-tower.diff.design.semio.json", &diff)
-
-	var expected Design
-	loadJSON(t, "nakagin-capsule-tower.with-diff.design.semio.json", &expected)
-
-	computed := DesignWithDiff(*design, diff)
-
-	if len(computed.Pieces) != len(expected.Pieces) {
-		t.Errorf("pieces count: got %d, want %d", len(computed.Pieces), len(expected.Pieces))
-	}
-	if len(computed.Connections) != len(expected.Connections) {
-		t.Errorf("connections count: got %d, want %d", len(computed.Connections), len(expected.Connections))
-	}
-
-	getStatus := func(attrs []Attribute) string {
-		for _, a := range attrs {
-			if a.Key == "semio.diffStatus" && a.Value != nil {
-				return *a.Value
+			design := findDesignByName(kit.Designs, tc.DesignName, nil)
+			if design == nil {
+				t.Fatalf("Design %q not found", tc.DesignName)
 			}
-		}
-		return ""
-	}
 
-	counts := map[string]int{}
-	for _, p := range computed.Pieces {
-		counts[getStatus(p.Attributes)]++
-	}
-	if counts["unchanged"] != 163 {
-		t.Errorf("unchanged pieces: got %d, want 163", counts["unchanged"])
-	}
-	if counts["modified"] != 7 {
-		t.Errorf("modified pieces: got %d, want 7", counts["modified"])
-	}
-	if counts["removed"] != 10 {
-		t.Errorf("removed pieces: got %d, want 10", counts["removed"])
-	}
-	if counts["added"] != 5 {
-		t.Errorf("added pieces: got %d, want 5", counts["added"])
-	}
+			var diff DesignDiff
+			loadJSON(t, tc.Diff, &diff)
 
-	connCounts := map[string]int{}
-	for _, c := range computed.Connections {
-		connCounts[getStatus(c.Attributes)]++
-	}
-	if connCounts["unchanged"] != 168 {
-		t.Errorf("unchanged connections: got %d, want 168", connCounts["unchanged"])
-	}
-	if connCounts["modified"] != 1 {
-		t.Errorf("modified connections: got %d, want 1", connCounts["modified"])
-	}
-	if connCounts["removed"] != 10 {
-		t.Errorf("removed connections: got %d, want 10", connCounts["removed"])
-	}
-	if connCounts["added"] != 4 {
-		t.Errorf("added connections: got %d, want 4", connCounts["added"])
+			var expected Design
+			loadJSON(t, tc.Expected, &expected)
+
+			computed := DesignWithDiff(*design, diff)
+
+			if len(computed.Pieces) != len(expected.Pieces) {
+				t.Errorf("pieces count: got %d, want %d", len(computed.Pieces), len(expected.Pieces))
+			}
+			if len(computed.Connections) != len(expected.Connections) {
+				t.Errorf("connections count: got %d, want %d", len(computed.Connections), len(expected.Connections))
+			}
+
+			getStatus := func(attrs []Attribute) string {
+				for _, a := range attrs {
+					if a.Key == "semio.diffStatus" && a.Value != nil {
+						return *a.Value
+					}
+				}
+				return ""
+			}
+
+			counts := map[string]int{}
+			for _, p := range computed.Pieces {
+				counts[getStatus(p.Attributes)]++
+			}
+			for status, expectedCount := range tc.ExpectedPieceCounts {
+				if counts[status] != expectedCount {
+					t.Errorf("%s pieces: got %d, want %d", status, counts[status], expectedCount)
+				}
+			}
+
+			connCounts := map[string]int{}
+			for _, c := range computed.Connections {
+				connCounts[getStatus(c.Attributes)]++
+			}
+			for status, expectedCount := range tc.ExpectedConnectionCounts {
+				if connCounts[status] != expectedCount {
+					t.Errorf("%s connections: got %d, want %d", status, connCounts[status], expectedCount)
+				}
+			}
+		})
 	}
 }
 
@@ -2800,7 +3279,7 @@ func TestDesignWithDiff(t *testing.T) {
 func TestMaxChildrenPortSerialization(t *testing.T) {
 	mc := 3
 	port := Port{
-		Guid:        "p1",
+		Id:        "p1",
 		Name:        "TestPort",
 		MaxChildren: &mc,
 	}
@@ -2818,7 +3297,7 @@ func TestMaxChildrenPortSerialization(t *testing.T) {
 }
 
 func TestMaxChildrenPortOmitted(t *testing.T) {
-	port := Port{Guid: "p1", Name: "TestPort"}
+	port := Port{Id: "p1", Name: "TestPort"}
 	data, err := json.Marshal(port)
 	if err != nil {
 		t.Fatalf("marshal: %v", err)
@@ -2832,7 +3311,7 @@ func TestMaxChildrenPortOmitted(t *testing.T) {
 func TestMaxChildrenConnectorSerialization(t *testing.T) {
 	mc := 5
 	connector := Connector{
-		Guid:        "c1",
+		Id:        "c1",
 		T:           0,
 		Point:       Point{X: 0, Y: 0, Z: 0},
 		Direction:   Vector{X: 0, Y: 0, Z: 1},
@@ -2855,18 +3334,22 @@ func TestMaxChildrenKitRoundtrip(t *testing.T) {
 	mc3 := 3
 	mc5 := 5
 	kit := Kit{
-		Guid: "kit-1",
+		Id: "kit-1",
 		Name: "TestKit",
-		Ports: []Port{{
-			Guid:        "p1",
-			Name:        "Port1",
-			MaxChildren: &mc3,
+		Families: []Family{{
+			Id: "f1",
+			Name: "Family1",
+			Ports: []Port{{
+				Id:        "p1",
+				Name:        "Port1",
+				MaxChildren: &mc3,
+			}},
 		}},
 		Types: []Type{{
-			Guid: "t1",
+			Id: "t1",
 			Name: "Type1",
 			Connectors: []Connector{{
-				Guid:        "c1",
+				Id:        "c1",
 				T:           0,
 				Point:       Point{X: 0, Y: 0, Z: 0},
 				Direction:   Vector{X: 0, Y: 0, Z: 1},
@@ -2882,8 +3365,8 @@ func TestMaxChildrenKitRoundtrip(t *testing.T) {
 	if err := json.Unmarshal(data, &restored); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	if restored.Ports[0].MaxChildren == nil || *restored.Ports[0].MaxChildren != 3 {
-		t.Errorf("port maxChildren: got %v, want 3", restored.Ports[0].MaxChildren)
+	if AllPortsInKit(&restored)[0].MaxChildren == nil || *AllPortsInKit(&restored)[0].MaxChildren != 3 {
+		t.Errorf("port maxChildren: got %v, want 3", AllPortsInKit(&restored)[0].MaxChildren)
 	}
 	if restored.Types[0].Connectors[0].MaxChildren == nil || *restored.Types[0].Connectors[0].MaxChildren != 5 {
 		t.Errorf("connector maxChildren: got %v, want 5", restored.Types[0].Connectors[0].MaxChildren)
@@ -2921,29 +3404,16 @@ func benchLoadKitFile(b *testing.B, filename string) Kit {
 	return kit
 }
 
-func benchLoadKitDiffFile(b *testing.B, filename string) KitDiff {
-	b.Helper()
-	data, err := os.ReadFile(AssetsPath + "/" + filename)
-	if err != nil {
-		b.Fatal(err)
-	}
-	var diff KitDiff
-	if err := json.Unmarshal(data, &diff); err != nil {
-		b.Fatal(err)
-	}
-	return diff
-}
-
 func benchFindDesign(kit Kit, name string, parentName string) Design {
-	var parentGuid string
+	var parentFamilies []FamilyId
 	if parentName != "" {
 		for _, d := range kit.Designs {
 			if d.Name == parentName {
-				parentGuid = d.Guid
+				parentFamilies = d.Families
 				break
 			}
 		}
-		if parentGuid == "" {
+		if parentFamilies == nil {
 			panic("Parent design not found: " + parentName)
 		}
 	}
@@ -2951,11 +3421,9 @@ func benchFindDesign(kit Kit, name string, parentName string) Design {
 	for _, d := range kit.Designs {
 		if d.Name == name {
 			if parentName == "" {
-				if d.Parent == nil {
-					return d
-				}
+				return d
 			} else {
-				if d.Parent != nil && d.Parent.Guid == parentGuid {
+				if familiesOverlap(d.Families, parentFamilies) {
 					return d
 				}
 			}
@@ -2965,103 +3433,158 @@ func benchFindDesign(kit Kit, name string, parentName string) Design {
 }
 
 func BenchmarkRoundtripMetabolism(b *testing.B) {
-	schemaPath := filepath.Join("..", "sqlite", "schema.sql")
-	schemaData, err := os.ReadFile(schemaPath)
-	if err != nil {
-		b.Fatal(err)
-	}
-	schema := string(schemaData)
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
 	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
-		kit, files, err := KitFromZip(AssetsPath + "/metabolism.zip")
+		data, err := SerializeKit(kit)
 		if err != nil {
 			b.Fatal(err)
 		}
-		err = KitToZip(kit, files, "temp_benchmark_metabolism.zip", schema)
+		parsed, err := DeserializeKit(data)
 		if err != nil {
 			b.Fatal(err)
 		}
-		_ = os.Remove("temp_benchmark_metabolism.zip")
+		if !AreKitsEqual(kit, parsed) {
+			b.Fatal("Roundtrip/Metabolism output does not match test expectation")
+		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Roundtrip/Metabolism", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkDiffMetabolism(b *testing.B) {
-	diffForward := benchLoadKitDiffFile(b, "metabolism.kit.diff.semio.json")
-	diffInverse := benchLoadKitDiffFile(b, "metabolism.kit.diff.inverted.semio.json")
-	b.ResetTimer()
-	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		b.StartTimer()
-		k2 := ApplyKitDiff(kit, diffForward)
-		ApplyKitDiff(k2, diffInverse)
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	kitOriginal := kit
+	kitOriginal.Designs = nil
+	for _, design := range kit.Designs {
+		if design.Name != "Flat" {
+			kitOriginal.Designs = append(kitOriginal.Designs, design)
+		}
 	}
+	kitDiffed := benchLoadKitFile(b, "metabolism.kit.diffed.semio.json")
+	change := GetKitChange(kitOriginal, kitDiffed, nil, nil)
+	diffForward := change.Forward
+	diffInverse := change.Backward
+	b.ResetTimer()
+	start := time.Now()
+	for range b.N {
+		k2 := deepCloneKit(kitOriginal)
+		ApplyKitDiff(&k2, &diffForward)
+		if !AreKitsEqual(k2, kitDiffed) {
+			b.Fatal("Diff/Metabolism forward output does not match test expectation")
+		}
+		restored := deepCloneKit(k2)
+		ApplyKitDiff(&restored, &diffInverse)
+		if !AreKitsEqual(restored, kitOriginal) {
+			b.Fatal("Diff/Metabolism inverse output does not match test expectation")
+		}
+	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Diff/Metabolism", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkFlattenDesign_NakaginCapsuleTower(b *testing.B) {
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	d := benchFindDesign(kit, "Nakagin Capsule Tower", "")
+	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		d := benchFindDesign(kit, "Nakagin Capsule Tower", "")
-		b.StartTimer()
-		FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesignDiff(&kit, d.Id)
+		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
+			b.Fatal("Flatten Design/Nakagin Capsule Tower output does not match test expectation")
+		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Flatten Design/Nakagin Capsule Tower", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkFlattenDesign_Nakagin_Slanted(b *testing.B) {
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	d := benchFindDesign(kit, "Slanted", "Nakagin Capsule Tower")
+	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		d := benchFindDesign(kit, "Slanted", "Nakagin Capsule Tower")
-		b.StartTimer()
-		FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesignDiff(&kit, d.Id)
+		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
+			b.Fatal("Flatten Design/Nakagin Capsule Tower/Slanted output does not match test expectation")
+		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Flatten Design/Nakagin Capsule Tower/Slanted", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkFlattenDesign_Nakagin_Twisted(b *testing.B) {
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	d := benchFindDesign(kit, "Twisted", "Nakagin Capsule Tower")
+	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		d := benchFindDesign(kit, "Twisted", "Nakagin Capsule Tower")
-		b.StartTimer()
-		FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesignDiff(&kit, d.Id)
+		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
+			b.Fatal("Flatten Design/Nakagin Capsule Tower/Twisted output does not match test expectation")
+		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Flatten Design/Nakagin Capsule Tower/Twisted", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkFlattenDesign_Nakagin_Dancing(b *testing.B) {
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	d := benchFindDesign(kit, "Dancing", "Nakagin Capsule Tower")
+	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		d := benchFindDesign(kit, "Dancing", "Nakagin Capsule Tower")
-		b.StartTimer()
-		FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesignDiff(&kit, d.Id)
+		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
+			b.Fatal("Flatten Design/Nakagin Capsule Tower/Dancing output does not match test expectation")
+		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Flatten Design/Nakagin Capsule Tower/Dancing", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkFlattenDesign_CapsuleDream(b *testing.B) {
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	d := benchFindDesign(kit, "Capsule Dream", "")
+	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		d := benchFindDesign(kit, "Capsule Dream", "")
-		b.StartTimer()
-		FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesignDiff(&kit, d.Id)
+		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
+			b.Fatal("Flatten Design/Capsule Dream output does not match test expectation")
+		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Flatten Design/Capsule Dream", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkValidateKit_Invalid(b *testing.B) {
 	kit := benchLoadKitFile(b, "invalid.kit.semio.json")
 	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
-		ValidateKit(kit)
+		result := ValidateKit(kit)
+		if len(result.Problems) == 0 {
+			b.Fatal("Validation/Invalid Kit output does not match test expectation")
+		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Validation/Invalid Kit", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkValidateKit_Metabolism(b *testing.B) {
 	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
 	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
-		ValidateKit(kit)
+		result := ValidateKit(kit)
+		if len(result.Problems) != 0 {
+			b.Fatal("Validation/Metabolism output does not match test expectation")
+		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Validation/Metabolism", time.Since(start).Seconds()/float64(b.N))
 }
 
 // #endregion 🎑Performance Benchmarks

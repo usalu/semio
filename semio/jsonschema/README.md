@@ -1,5 +1,5 @@
 # Summary
 
-JSON Schema definitions for semio data models.
+JSON Schema definitions for semio data representations.
 
 # 💯Requirements

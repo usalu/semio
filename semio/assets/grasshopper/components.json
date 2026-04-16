@@ -357,7 +357,7 @@
       },
       {
         "name": "Normalize Type",
-        "description": "Normalize a type for this document. This converts the length unit of the type to the length unit of this document and it scales the connectors by the right scaling factor. Further it sorts the models, connectors, attributes by it's keys. The order of authors is not changed.",
+        "description": "Normalize a type for this document. This converts the length unit of the type to the length unit of this document and it scales the connectors by the right scaling factor. Further it sorts the representations, connectors, attributes by it's keys. The order of authors is not changed.",
         "icon": "icon",
         "nickname": "\u21d2Typ",
         "inputs": [
@@ -914,19 +914,19 @@
         ]
       },
       {
-        "name": "Select Model",
-        "description": "Select exactly one model based on tags. The tag matching is based on the highest Jaccard index (|\u2229|/|\u222a|).",
+        "name": "Select Representation",
+        "description": "Select exactly one representation based on tags. The tag matching is based on the highest Jaccard index (|\u2229|/|\u222a|).",
         "icon": "icon",
         "nickname": "?Rep",
         "inputs": [
           {
-            "description": "A model is a link to a resource that describes a type for a certain level of detail and tags.",
-            "name": "Model",
+            "description": "A representation is a link to a resource that describes a type for a certain level of detail and tags.",
+            "name": "Representation",
             "nickname": "Rp",
-            "kind": "Model"
+            "kind": "Representation"
           },
           {
-            "description": "The optional tags to group models. No tags means default.",
+            "description": "The optional tags to group representations. No tags means default.",
             "name": "Tags",
             "nickname": "Tg*",
             "kind": "Tags"
@@ -934,10 +934,10 @@
         ],
         "outputs": [
           {
-            "description": "A model is a link to a resource that describes a type for a certain level of detail and tags.",
-            "name": "Model",
+            "description": "A representation is a link to a resource that describes a type for a certain level of detail and tags.",
+            "name": "Representation",
             "nickname": "Rp",
-            "kind": "Model"
+            "kind": "Representation"
           },
           {
             "description": "Contains a collection of integer numbers",
@@ -1112,12 +1112,12 @@
         "icon": ""
       },
       {
-        "name": "Deserialize Model",
-        "description": "Deserialize a model.",
+        "name": "Deserialize Representation",
+        "description": "Deserialize a representation.",
         "nickname": "<Rep",
         "inputs": [
           {
-            "description": "Text of serialized Model.",
+            "description": "Text of serialized Representation.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -1125,10 +1125,10 @@
         ],
         "outputs": [
           {
-            "description": "Deserialized Model.",
-            "name": "Model",
+            "description": "Deserialized Representation.",
+            "name": "Representation",
             "nickname": "Rp",
-            "kind": "Model"
+            "kind": "Representation"
           }
         ],
         "icon": ""
@@ -1156,12 +1156,12 @@
         "icon": ""
       },
       {
-        "name": "Deserialize Coord",
-        "description": "Deserialize a coord.",
+        "name": "Deserialize Coordinate",
+        "description": "Deserialize a coordinate.",
         "nickname": "<DPt",
         "inputs": [
           {
-            "description": "Text of serialized Coord.",
+            "description": "Text of serialized Coordinate.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -1169,10 +1169,10 @@
         ],
         "outputs": [
           {
-            "description": "Deserialized Coord.",
-            "name": "Coord",
+            "description": "Deserialized Coordinate.",
+            "name": "Coordinate",
             "nickname": "DP",
-            "kind": "Coord"
+            "kind": "Coordinate"
           }
         ],
         "icon": ""
@@ -1588,18 +1588,18 @@
         "icon": ""
       },
       {
-        "name": "Serialize Model",
-        "description": "Serialize a model.",
+        "name": "Serialize Representation",
+        "description": "Serialize a representation.",
         "nickname": ">Rep",
         "inputs": [
           {
-            "description": "The model to serialize.",
-            "name": "Model",
+            "description": "The representation to serialize.",
+            "name": "Representation",
             "nickname": "Rp",
-            "kind": "Model"
+            "kind": "Representation"
           },
           {
-            "description": "The optional indent unit for the serialized model. Empty text for no indent or spaces or tabs",
+            "description": "The optional indent unit for the serialized representation. Empty text for no indent or spaces or tabs",
             "name": "Indent",
             "nickname": "In?",
             "kind": "Indent"
@@ -1607,7 +1607,7 @@
         ],
         "outputs": [
           {
-            "description": "Text of serialized Model.",
+            "description": "Text of serialized Representation.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -1644,18 +1644,18 @@
         "icon": ""
       },
       {
-        "name": "Serialize Coord",
-        "description": "Serialize a coord.",
+        "name": "Serialize Coordinate",
+        "description": "Serialize a coordinate.",
         "nickname": ">DPt",
         "inputs": [
           {
-            "description": "The coord to serialize.",
-            "name": "Coord",
+            "description": "The coordinate to serialize.",
+            "name": "Coordinate",
             "nickname": "DP",
-            "kind": "Coord"
+            "kind": "Coordinate"
           },
           {
-            "description": "The optional indent unit for the serialized coord. Empty text for no indent or spaces or tabs",
+            "description": "The optional indent unit for the serialized coordinate. Empty text for no indent or spaces or tabs",
             "name": "Indent",
             "nickname": "In?",
             "kind": "Indent"
@@ -1663,7 +1663,7 @@
         ],
         "outputs": [
           {
-            "description": "Text of serialized Coord.",
+            "description": "Text of serialized Coordinate.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -1729,10 +1729,10 @@
       }
     ]
   },
-  "Modeling": {
+  "Representationing": {
     "1": [
       {
-        "name": "Model Kit",
+        "name": "Representation Kit",
         "description": "Construct, deconstruct or modify a kit",
         "nickname": "~Kit",
         "inputs": [
@@ -1910,7 +1910,7 @@
         "icon": ""
       },
       {
-        "name": "Model Design",
+        "name": "Representation Design",
         "description": "Construct, deconstruct or modify a design",
         "nickname": "~Dsn",
         "inputs": [
@@ -2088,7 +2088,7 @@
         "icon": ""
       },
       {
-        "name": "Model Type",
+        "name": "Representation Type",
         "description": "Construct, deconstruct or modify a type",
         "nickname": "~Typ",
         "inputs": [
@@ -2159,10 +2159,10 @@
             "kind": "Unit"
           },
           {
-            "description": "The optional models of the type.",
-            "name": "Models",
+            "description": "The optional representations of the type.",
+            "name": "Representations",
             "nickname": "Rp*",
-            "kind": "Models"
+            "kind": "Representations"
           },
           {
             "description": "The optional connectors of the type.",
@@ -2251,10 +2251,10 @@
             "kind": "Unit"
           },
           {
-            "description": "The optional models of the type.",
-            "name": "Models",
+            "description": "The optional representations of the type.",
+            "name": "Representations",
             "nickname": "Rp*",
-            "kind": "Models"
+            "kind": "Representations"
           },
           {
             "description": "The optional connectors of the type.",
@@ -2278,7 +2278,7 @@
         "icon": ""
       },
       {
-        "name": "Model Connection",
+        "name": "Representation Connection",
         "description": "Construct, deconstruct or modify a connection",
         "nickname": "~Con",
         "inputs": [
@@ -2480,7 +2480,7 @@
         "icon": ""
       },
       {
-        "name": "Model Piece",
+        "name": "Representation Piece",
         "description": "Construct, deconstruct or modify a piece",
         "nickname": "~Pce",
         "inputs": [
@@ -2533,7 +2533,7 @@
             "kind": "Center"
           },
           {
-            "description": "Whether the piece is hidden. A hidden piece is not visible in the model.",
+            "description": "Whether the piece is hidden. A hidden piece is not visible in the representation.",
             "name": "Hidden",
             "nickname": "Hi?",
             "kind": "Hidden"
@@ -2601,7 +2601,7 @@
             "kind": "Center"
           },
           {
-            "description": "Whether the piece is hidden. A hidden piece is not visible in the model.",
+            "description": "Whether the piece is hidden. A hidden piece is not visible in the representation.",
             "name": "Hidden",
             "nickname": "Hi?",
             "kind": "Hidden"
@@ -2622,7 +2622,7 @@
         "icon": ""
       },
       {
-        "name": "Model Connector",
+        "name": "Representation Connector",
         "description": "Construct, deconstruct or modify a connector",
         "nickname": "~Por",
         "inputs": [
@@ -2764,42 +2764,42 @@
         "icon": ""
       },
       {
-        "name": "Model Model",
-        "description": "Construct, deconstruct or modify a model",
+        "name": "Representation Representation",
+        "description": "Construct, deconstruct or modify a representation",
         "nickname": "~Rep",
         "inputs": [
           {
-            "description": "The optional model to deconstruct or modify.",
-            "name": "Model",
+            "description": "The optional representation to deconstruct or modify.",
+            "name": "Representation",
             "nickname": "Rp?",
-            "kind": "Model"
+            "kind": "Representation"
           },
           {
-            "description": "Whether the model should be validated.",
+            "description": "Whether the representation should be validated.",
             "name": "Validate",
             "nickname": "Vd?",
             "kind": "Validate"
           },
           {
-            "description": "The Unique Resource Locator (URL) to the resource of the model.",
+            "description": "The Unique Resource Locator (URL) to the resource of the representation.",
             "name": "Url",
             "nickname": "Ur",
             "kind": "Url"
           },
           {
-            "description": "The optional human-readable description of the model.",
+            "description": "The optional human-readable description of the representation.",
             "name": "Description",
             "nickname": "Dc?",
             "kind": "Description"
           },
           {
-            "description": "The optional tags to group models. No tags means default.",
+            "description": "The optional tags to group representations. No tags means default.",
             "name": "Tags",
             "nickname": "Tg*",
             "kind": "Tags"
           },
           {
-            "description": "The optional attributes of the model.",
+            "description": "The optional attributes of the representation.",
             "name": "Attributes",
             "nickname": "At*",
             "kind": "Attributes"
@@ -2807,37 +2807,37 @@
         ],
         "outputs": [
           {
-            "description": "The constructed or modified model.",
-            "name": "Model",
+            "description": "The constructed or modified representation.",
+            "name": "Representation",
             "nickname": "Rp",
-            "kind": "Model"
+            "kind": "Representation"
           },
           {
-            "description": "True if the model is valid. Null if no validation was performed.",
+            "description": "True if the representation is valid. Null if no validation was performed.",
             "name": "Valid",
             "nickname": "Vd?",
             "kind": "Valid"
           },
           {
-            "description": "The Unique Resource Locator (URL) to the resource of the model.",
+            "description": "The Unique Resource Locator (URL) to the resource of the representation.",
             "name": "Url",
             "nickname": "Ur",
             "kind": "Url"
           },
           {
-            "description": "The optional human-readable description of the model.",
+            "description": "The optional human-readable description of the representation.",
             "name": "Description",
             "nickname": "Dc?",
             "kind": "Description"
           },
           {
-            "description": "The optional tags to group models. No tags means default.",
+            "description": "The optional tags to group representations. No tags means default.",
             "name": "Tags",
             "nickname": "Tg*",
             "kind": "Tags"
           },
           {
-            "description": "The optional attributes of the model.",
+            "description": "The optional attributes of the representation.",
             "name": "Attributes",
             "nickname": "At*",
             "kind": "Attributes"
@@ -2846,7 +2846,7 @@
         "icon": ""
       },
       {
-        "name": "Model Attribute",
+        "name": "Representation Attribute",
         "description": "Construct, deconstruct or modify a attribute",
         "nickname": "~Atr",
         "inputs": [
@@ -2928,18 +2928,18 @@
         "icon": ""
       },
       {
-        "name": "Model Coord",
-        "description": "Construct, deconstruct or modify a coord",
+        "name": "Representation Coordinate",
+        "description": "Construct, deconstruct or modify a coordinate",
         "nickname": "~DPt",
         "inputs": [
           {
-            "description": "The optional coord to deconstruct or modify.",
-            "name": "Coord",
+            "description": "The optional coordinate to deconstruct or modify.",
+            "name": "Coordinate",
             "nickname": "DP?",
-            "kind": "Coord"
+            "kind": "Coordinate"
           },
           {
-            "description": "Whether the coord should be validated.",
+            "description": "Whether the coordinate should be validated.",
             "name": "Validate",
             "nickname": "Vd?",
             "kind": "Validate"
@@ -2959,13 +2959,13 @@
         ],
         "outputs": [
           {
-            "description": "The constructed or modified coord.",
-            "name": "Coord",
+            "description": "The constructed or modified coordinate.",
+            "name": "Coordinate",
             "nickname": "DP",
-            "kind": "Coord"
+            "kind": "Coordinate"
           },
           {
-            "description": "True if the coord is valid. Null if no validation was performed.",
+            "description": "True if the coordinate is valid. Null if no validation was performed.",
             "name": "Valid",
             "nickname": "Vd?",
             "kind": "Valid"
@@ -2986,7 +2986,7 @@
         "icon": ""
       },
       {
-        "name": "Model Location",
+        "name": "Representation Location",
         "description": "Construct, deconstruct or modify a location",
         "nickname": "~Loc",
         "inputs": [
@@ -3044,7 +3044,7 @@
         "icon": ""
       },
       {
-        "name": "Model Author",
+        "name": "Representation Author",
         "description": "Construct, deconstruct or modify an author",
         "nickname": "~Aut",
         "inputs": [
@@ -3107,7 +3107,7 @@
     "1": [
       {
         "name": "Design to Block",
-        "description": "Bake the design to blocks: by selecting a model with mime and tags and turn it to block-definitions and flatten the design and turn every piece into a block-definition with the plane as it transform.",
+        "description": "Bake the design to blocks: by selecting a representation with mime and tags and turn it to block-definitions and flatten the design and turn every piece into a block-definition with the plane as it transform.",
         "icon": "icon",
         "nickname": "Dsn\u2192Bl",
         "inputs": [
@@ -3130,13 +3130,13 @@
             "kind": "Data"
           },
           {
-            "description": "The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the model.",
+            "description": "The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.",
             "name": "Mime",
             "nickname": "Mm",
             "kind": "Mime"
           },
           {
-            "description": "The optional tags to group models. No tags means default.",
+            "description": "The optional tags to group representations. No tags means default.",
             "name": "Tags",
             "nickname": "Tg*",
             "kind": "Tags"
@@ -3144,10 +3144,10 @@
         ],
         "outputs": [
           {
-            "description": "Contains a collection of model block definitions",
-            "name": "Model Block Definition",
+            "description": "Contains a collection of representation block definitions",
+            "name": "Representation Block Definition",
             "nickname": "Block Definition",
-            "kind": "Model Block Definition"
+            "kind": "Representation Block Definition"
           },
           {
             "description": "Contains a collection of block instances",
@@ -3638,7 +3638,7 @@
             "kind": "Data"
           },
           {
-            "description": "The optional tags to group models. No tags means default.",
+            "description": "The optional tags to group representations. No tags means default.",
             "name": "Tags",
             "nickname": "Tg*",
             "kind": "Tags"
@@ -3673,7 +3673,7 @@
       },
       {
         "name": "Preview Pieces",
-        "description": "Preview pieces in a design. Use tags to select matching models of the types of the pieces.",
+        "description": "Preview pieces in a design. Use tags to select matching representations of the types of the pieces.",
         "icon": "icon",
         "nickname": ":Pce",
         "inputs": [
@@ -3696,7 +3696,7 @@
             "kind": "Data"
           },
           {
-            "description": "The optional tags to group models. No tags means default.",
+            "description": "The optional tags to group representations. No tags means default.",
             "name": "Tags",
             "nickname": "Tg*",
             "kind": "Tags"
@@ -4167,7 +4167,7 @@
     "1": [
       {
         "name": "Cache Kit",
-        "description": "Cache a kit by downloading the remote kit with all remote models.",
+        "description": "Cache a kit by downloading the remote kit with all remote representations.",
         "icon": "icon",
         "nickname": "\u2193Kit",
         "inputs": [
@@ -4192,7 +4192,7 @@
             "kind": "Type"
           },
           {
-            "description": "The Unique Resource Locator (URL) to the resource of the model.",
+            "description": "The Unique Resource Locator (URL) to the resource of the representation.",
             "name": "Url",
             "nickname": "Ur",
             "kind": "Url"
@@ -4204,19 +4204,19 @@
             "kind": "Data"
           },
           {
-            "description": "The Unique Resource Locator (URL) to the resource of the model.",
+            "description": "The Unique Resource Locator (URL) to the resource of the representation.",
             "name": "Url",
             "nickname": "UrPa",
             "kind": "Url"
           },
           {
-            "description": "The Unique Resource Locator (URL) to the resource of the model.",
+            "description": "The Unique Resource Locator (URL) to the resource of the representation.",
             "name": "Url",
             "nickname": "UrPaLc",
             "kind": "Url"
           },
           {
-            "description": "The Unique Resource Locator (URL) to the resource of the model.",
+            "description": "The Unique Resource Locator (URL) to the resource of the representation.",
             "name": "Url",
             "nickname": "UrPaRe",
             "kind": "Url"
@@ -4224,18 +4224,18 @@
         ]
       },
       {
-        "name": "Cache Model",
-        "description": "Download and cache a remote model.",
+        "name": "Cache Representation",
+        "description": "Download and cache a remote representation.",
         "nickname": "\u2193Rep",
         "inputs": [
           {
-            "description": "Unique Resource Locator (URL) of the remote model.",
+            "description": "Unique Resource Locator (URL) of the remote representation.",
             "name": "Url",
             "nickname": "Ur",
             "kind": "Url"
           },
           {
-            "description": "True to downloaded and cache the remote model.",
+            "description": "True to downloaded and cache the remote representation.",
             "name": "Run",
             "nickname": "R",
             "kind": "Run"
@@ -4243,13 +4243,13 @@
         ],
         "outputs": [
           {
-            "description": "Path to the cached model.",
+            "description": "Path to the cached representation.",
             "name": "Path",
             "nickname": "Pa",
             "kind": "Path"
           },
           {
-            "description": "True if the model was successfully downloaded and cached.",
+            "description": "True if the representation was successfully downloaded and cached.",
             "name": "Success",
             "nickname": "Sc",
             "kind": "Success"
@@ -4259,7 +4259,7 @@
       },
       {
         "name": "Load Design",
-        "description": "Load the design. If the models are urls to files then the objects are loaded for a certain level of details and tags.",
+        "description": "Load the design. If the representations are urls to files then the objects are loaded for a certain level of details and tags.",
         "icon": "icon",
         "nickname": "/Dsn",
         "inputs": [
@@ -4276,19 +4276,19 @@
             "kind": "Name"
           },
           {
-            "description": "The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the model.",
+            "description": "The Multipurpose Internet Mail Extensions (MIME) type of the content of the file of the representation.",
             "name": "Mime",
             "nickname": "Mm",
             "kind": "Mime"
           },
           {
-            "description": "The optional Level of Detail/Development/Design (LoD) of the model. No lod means default.",
+            "description": "The optional Level of Detail/Development/Design (LoD) of the representation. No lod means default.",
             "name": "Lod",
             "nickname": "Ld?",
             "kind": "Lod"
           },
           {
-            "description": "The optional tags to group models. No tags means default.",
+            "description": "The optional tags to group representations. No tags means default.",
             "name": "Tags",
             "nickname": "Tg*",
             "kind": "Tags"
@@ -4308,10 +4308,10 @@
             "kind": "Design"
           },
           {
-            "description": "Contains a collection of model objects",
-            "name": "Model Object",
+            "description": "Contains a collection of representation objects",
+            "name": "Representation Object",
             "nickname": "Object",
-            "kind": "Model Object"
+            "kind": "Representation Object"
           },
           {
             "description": "Contains a collection of display materials",
@@ -4320,7 +4320,7 @@
             "kind": "Shader"
           },
           {
-            "description": "The Unique Resource Locator (URL) to the resource of the model.",
+            "description": "The Unique Resource Locator (URL) to the resource of the representation.",
             "name": "Url",
             "nickname": "Ur",
             "kind": "Url"
@@ -4372,10 +4372,10 @@
         ],
         "outputs": [
           {
-            "description": "Contains a collection of model objects",
-            "name": "Model Object",
+            "description": "Contains a collection of representation objects",
+            "name": "Representation Object",
             "nickname": "Object",
-            "kind": "Model Object"
+            "kind": "Representation Object"
           },
           {
             "description": "Contains a collection of RGB colours",
@@ -4433,7 +4433,7 @@
       },
       {
         "name": "Load Type",
-        "description": "Load the type. If the models are urls to files then the geometry is loaded for a certain level of details and tags.",
+        "description": "Load the type. If the representations are urls to files then the geometry is loaded for a certain level of details and tags.",
         "icon": "icon",
         "nickname": "/Typ",
         "inputs": [
@@ -4450,19 +4450,19 @@
             "kind": "Name"
           }
           {
-            "description": "The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the model.",
+            "description": "The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
             "name": "Mime",
             "nickname": "Mm",
             "kind": "Mime"
           },
           {
-            "description": "The optional Level of Detail/Development/Design (LoD) of the model. No lod means default.",
+            "description": "The optional Level of Detail/Development/Design (LoD) of the representation. No lod means default.",
             "name": "Lod",
             "nickname": "Ld?",
             "kind": "Lod"
           },
           {
-            "description": "The optional tags to group models. No tags means default.",
+            "description": "The optional tags to group representations. No tags means default.",
             "name": "Tags",
             "nickname": "Tg*",
             "kind": "Tags"
@@ -4482,10 +4482,10 @@
             "kind": "Type"
           },
           {
-            "description": "Contains a collection of model objects",
-            "name": "Model Object",
+            "description": "Contains a collection of representation objects",
+            "name": "Representation Object",
             "nickname": "Object",
-            "kind": "Model Object"
+            "kind": "Representation Object"
           },
           {
             "description": "Contains a collection of display materials",
@@ -4494,7 +4494,7 @@
             "kind": "Shader"
           },
           {
-            "description": "The Unique Resource Locator (URL) to the resource of the model.",
+            "description": "The Unique Resource Locator (URL) to the resource of the representation.",
             "name": "Url",
             "nickname": "Ur",
             "kind": "Url"
@@ -4594,10 +4594,10 @@
         ],
         "outputs": [
           {
-            "description": "Contains a collection of model block definitions",
-            "name": "Model Block Definition",
+            "description": "Contains a collection of representation block definitions",
+            "name": "Representation Block Definition",
             "nickname": "Block Definition",
-            "kind": "Model Block Definition"
+            "kind": "Representation Block Definition"
           },
           {
             "description": "Contains a collection of file paths",
@@ -4757,7 +4757,7 @@
         "nickname": "-Cac",
         "inputs": [
           {
-            "description": "Optional Unique Resource Identifier (URI) of a kit or Unique Resource Locator (URL) of a model. If None is provided, it will clear the entire cache.",
+            "description": "Optional Unique Resource Identifier (URI) of a kit or Unique Resource Locator (URL) of a representation. If None is provided, it will clear the entire cache.",
             "name": "Uri|Url",
             "nickname": "Ur?",
             "kind": "Uri|Url"

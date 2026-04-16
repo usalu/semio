@@ -1,0 +1,10 @@
+{
+  "title": "Single Async Kitstore Export In semio/js",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Implement single-export KitStore in semio/js: GraphQL-only wasm string transport per dedicated worker, RxJS internally, thick async typesafe API, migrate react/sketchpad/consumers.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪03399f555e1343b0948f69aedc5b65ef"
+  ]
+}

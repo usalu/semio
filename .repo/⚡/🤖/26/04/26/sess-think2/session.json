@@ -1,0 +1,32 @@
+{
+  "id": "sess-think2",
+  "uri": "repo://session/sess-think2",
+  "client": "cursor-chat",
+  "second": "2026-04-26T23:34:19Z",
+  "checkpoint": "f9eb5840e2c76b94eff37a8a1c4c651beb0f52a7",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "f9eb5840e2c76b94eff37a8a1c4c651beb0f52a7",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.ended",
+        "second": "2026-04-26T23:34:19Z",
+        "session": "sess-think2"
+      },
+      "native": {
+        "event": {
+          "native": {
+            "event": {
+              "text": "Thinking deeply",
+              "hook_event_name": "afterAgentThought"
+            }
+          },
+          "session_id": "sess-think2"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

@@ -14,8 +14,8 @@ using System.Runtime.InteropServices;
 using Grasshopper.Kernel;
 using Grasshopper.Kernel.Parameters;
 using Grasshopper.Kernel.Types;
-using Grasshopper.Rhinoceros.Model;
-using Grasshopper.Rhinoceros.Model.Params;
+using Grasshopper.Rhinoceros.Representation;
+using Grasshopper.Rhinoceros.Representation.Params;
 using Rhino.FileIO;
 using Rhino.Geometry;
 using Semio.Grasshopper;
@@ -58,7 +58,7 @@ internal static class RhinoNativeBootstrap
         Ensure();
         try
         {
-            using var model = new File3dm();
+            using var representation = new File3dm();
             _canUseFile3dm = true;
         }
         catch
@@ -87,7 +87,7 @@ public class IconResourceTests
     }
 
     [Fact]
-    public void ResolveOrPlaceholder_ShouldResolveLegacyAliasWithoutUnderscore()
+    public void ResolveOrPlaceholder_ShouldResolveAlternateAliasWithoutUnderscore()
     {
         var bitmap = IconResources.ResolveOrPlaceholder("attributeid_24x24");
         Assert.NotNull(bitmap);
@@ -106,11 +106,11 @@ public class IconResourceTests
 }
 #endregion 📌IconResourceTests
 
-#region 🎠ImportModelUtilityTests
-// Tests MUST verify model import utility supports base64 and data URI file blobs.
-public class ImportModelUtilityTests
+#region 🎠ImportRepresentationUtilityTests
+// Tests MUST verify representation import utility supports base64 and data URI file blobs.
+public class ImportRepresentationUtilityTests
 {
-    public ImportModelUtilityTests() => RhinoNativeBootstrap.Ensure();
+    public ImportRepresentationUtilityTests() => RhinoNativeBootstrap.Ensure();
 
     private static bool ShouldSkipRhinoFile3dmAssertions() => !RhinoNativeBootstrap.CanUseFile3dm();
 
@@ -137,101 +137,101 @@ public class ImportModelUtilityTests
     }
 
     [Fact]
-    public void ImportRhinoModelObjectFromBlob_ShouldReturnFirstModelObject()
+    public void ImportRhinoRepresentationObjectFromBlob_ShouldReturnFirstRepresentationObject()
     {
         if (ShouldSkipRhinoFile3dmAssertions())
             return;
 
-        var model = new File3dm();
-        model.Objects.AddPoint(Point3d.Origin);
-        model.Objects.AddPoint(new Point3d(1, 1, 1));
-        var blob = Convert.ToBase64String(model.ToByteArray());
+        var representation = new File3dm();
+        representation.Objects.AddPoint(Point3d.Origin);
+        representation.Objects.AddPoint(new Point3d(1, 1, 1));
+        var blob = Convert.ToBase64String(representation.ToByteArray());
 
-        var modelObject = Utility.ImportRhinoModelObjectFromBlob(blob);
+        var representationObject = Utility.ImportRhinoRepresentationObjectFromBlob(blob);
 
-        Assert.NotNull(modelObject);
-        Assert.Equal(Rhino.DocObjects.ObjectType.Point, modelObject.Geometry.ObjectType);
-        Assert.Equal(2, model.Objects.Count);
+        Assert.NotNull(representationObject);
+        Assert.Equal(Rhino.DocObjects.ObjectType.Point, representationObject.Geometry.ObjectType);
+        Assert.Equal(2, representation.Objects.Count);
     }
 
     [Fact]
-    public void ImportRhinoModelContextFromSemioFile_ShouldImportFromFileBlob()
+    public void ImportRhinoRepresentationContextFromSemioFile_ShouldImportFromFileBlob()
     {
         if (ShouldSkipRhinoFile3dmAssertions())
             return;
 
-        var model = new File3dm();
-        model.Objects.AddPoint(Point3d.Origin);
-        var blob = Convert.ToBase64String(model.ToByteArray());
-        var file = new Semio.File { Guid = "file-1", Blob = blob };
+        var representation = new File3dm();
+        representation.Objects.AddPoint(Point3d.Origin);
+        var blob = Convert.ToBase64String(representation.ToByteArray());
+        var file = new Semio.File { Id = "file-1", Blob = blob };
 
-        var context = Utility.ImportRhinoModelContextFromSemioFile(file);
+        var context = Utility.ImportRhinoRepresentationContextFromSemioFile(file);
 
         Assert.NotNull(context);
-        Assert.NotNull(context.Model);
-        Assert.NotNull(context.ModelObject);
-        Assert.Equal(Rhino.DocObjects.ObjectType.Point, context.ModelObject.Geometry.ObjectType);
+        Assert.NotNull(context.Representation);
+        Assert.NotNull(context.RepresentationObject);
+        Assert.Equal(Rhino.DocObjects.ObjectType.Point, context.RepresentationObject.Geometry.ObjectType);
     }
 
     [Fact]
-    public void ImportRhinoModelContextFromSemioFile_ShouldAllowModelWithoutObjects()
+    public void ImportRhinoRepresentationContextFromSemioFile_ShouldAllowRepresentationWithoutObjects()
     {
         if (ShouldSkipRhinoFile3dmAssertions())
             return;
 
-        var model = new File3dm();
-        var blob = Convert.ToBase64String(model.ToByteArray());
-        var file = new Semio.File { Guid = "file-empty", Blob = blob, Name = "empty.3dm" };
+        var representation = new File3dm();
+        var blob = Convert.ToBase64String(representation.ToByteArray());
+        var file = new Semio.File { Id = "file-empty", Blob = blob, Name = "empty.3dm" };
 
-        var context = Utility.ImportRhinoModelContextFromSemioFile(file);
+        var context = Utility.ImportRhinoRepresentationContextFromSemioFile(file);
 
         Assert.NotNull(context);
-        Assert.NotNull(context.Model);
-        Assert.Null(context.ModelObject);
+        Assert.NotNull(context.Representation);
+        Assert.Null(context.RepresentationObject);
     }
 
     [Fact]
-    public void ImportRhinoModelObjectDataFromSemioFile_ShouldReturnGrasshopperModelObjectWithImportMetadata()
+    public void ImportRhinoRepresentationObjectDataFromSemioFile_ShouldReturnGrasshopperRepresentationObjectWithImportMetadata()
     {
         if (ShouldSkipRhinoFile3dmAssertions())
             return;
 
-        var model = new File3dm();
-        model.Objects.AddPoint(Point3d.Origin);
-        var blob = Convert.ToBase64String(model.ToByteArray());
-        var file = new Semio.File { Guid = "file-object-data", Blob = blob, Name = "sample.3dm" };
+        var representation = new File3dm();
+        representation.Objects.AddPoint(Point3d.Origin);
+        var blob = Convert.ToBase64String(representation.ToByteArray());
+        var file = new Semio.File { Id = "file-object-data", Blob = blob, Name = "sample.3dm" };
 
-        var importedModelObjectData = Utility.ImportRhinoModelObjectDataFromSemioFile(file);
+        var importedRepresentationObjectData = Utility.ImportRhinoRepresentationObjectDataFromSemioFile(file);
 
-        Assert.NotNull(importedModelObjectData);
-        Assert.IsType<ModelObject>(importedModelObjectData);
-        Assert.True(importedModelObjectData.IsValid);
-        Assert.True(importedModelObjectData.UserText.TryGetValue("semio.import-model.blob", out var resolvedBlob));
+        Assert.NotNull(importedRepresentationObjectData);
+        Assert.IsType<RepresentationObject>(importedRepresentationObjectData);
+        Assert.True(importedRepresentationObjectData.IsValid);
+        Assert.True(importedRepresentationObjectData.UserText.TryGetValue("semio.import-representation.blob", out var resolvedBlob));
         Assert.Equal(blob, resolvedBlob);
     }
 
     [Fact]
-    public void TranslateRhinoModelObjectToSingleGroup_ShouldCreateRecursiveNamedLayerGroups()
+    public void TranslateRhinoRepresentationObjectToSingleGroup_ShouldCreateRecursiveNamedLayerGroups()
     {
         if (ShouldSkipRhinoFile3dmAssertions())
             return;
 
-        var model = new File3dm();
-        var parentLayer = new Rhino.DocObjects.Layer { Name = "Parent", Id = Guid.NewGuid(), Color = Color.Red };
-        var childLayer = new Rhino.DocObjects.Layer { Name = "Child", Id = Guid.NewGuid(), ParentLayerId = parentLayer.Id, Color = Color.Blue };
-        model.Layers.Add(parentLayer);
-        model.Layers.Add(childLayer);
+        var representation = new File3dm();
+        var parentLayer = new Rhino.DocObjects.Layer { Name = "Parent", Id = __ID_NEWID__(), Color = Color.Red };
+        var childLayer = new Rhino.DocObjects.Layer { Name = "Child", Id = __ID_NEWID__(), ParentLayerId = parentLayer.Id, Color = Color.Blue };
+        representation.Layers.Add(parentLayer);
+        representation.Layers.Add(childLayer);
         var parentLayerIndex = 0;
         var childLayerIndex = 1;
 
         var parentAttributes = new Rhino.DocObjects.ObjectAttributes { LayerIndex = parentLayerIndex };
         var childAttributes = new Rhino.DocObjects.ObjectAttributes { LayerIndex = childLayerIndex };
-        model.Objects.AddPoint(new Point3d(0, 0, 0), parentAttributes);
-        model.Objects.AddPoint(new Point3d(1, 0, 0), childAttributes);
+        representation.Objects.AddPoint(new Point3d(0, 0, 0), parentAttributes);
+        representation.Objects.AddPoint(new Point3d(1, 0, 0), childAttributes);
 
-        var blob = Convert.ToBase64String(model.ToByteArray());
-        var imported = Utility.ImportRhinoModelContextFromBlob(blob);
-        var group = Utility.TranslateRhinoModelObjectToSingleGroup(imported);
+        var blob = Convert.ToBase64String(representation.ToByteArray());
+        var imported = Utility.ImportRhinoRepresentationContextFromBlob(blob);
+        var group = Utility.TranslateRhinoRepresentationObjectToSingleGroup(imported);
 
         Assert.NotNull(group);
         Assert.Equal("Imported Rhino Layer Group", group.Name);
@@ -242,31 +242,31 @@ public class ImportModelUtilityTests
     }
 
     [Fact]
-    public void TranslateRhinoModelObjectsToSingleGroup_ShouldMergeListIntoSingleRecursiveGroup()
+    public void TranslateRhinoRepresentationObjectsToSingleGroup_ShouldMergeListIntoSingleRecursiveGroup()
     {
         if (ShouldSkipRhinoFile3dmAssertions())
             return;
 
-        var firstModel = new File3dm();
-        var firstLayer = new Rhino.DocObjects.Layer { Name = "First", Id = Guid.NewGuid(), Color = Color.Red };
-        var firstChildLayer = new Rhino.DocObjects.Layer { Name = "Nested", Id = Guid.NewGuid(), ParentLayerId = firstLayer.Id, Color = Color.Orange };
-        firstModel.Layers.Add(firstLayer);
-        firstModel.Layers.Add(firstChildLayer);
-        firstModel.Objects.AddPoint(new Point3d(0, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 0 });
-        firstModel.Objects.AddPoint(new Point3d(1, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 1 });
+        var firstRepresentation = new File3dm();
+        var firstLayer = new Rhino.DocObjects.Layer { Name = "First", Id = __ID_NEWID__(), Color = Color.Red };
+        var firstChildLayer = new Rhino.DocObjects.Layer { Name = "Nested", Id = __ID_NEWID__(), ParentLayerId = firstLayer.Id, Color = Color.Orange };
+        firstRepresentation.Layers.Add(firstLayer);
+        firstRepresentation.Layers.Add(firstChildLayer);
+        firstRepresentation.Objects.AddPoint(new Point3d(0, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 0 });
+        firstRepresentation.Objects.AddPoint(new Point3d(1, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 1 });
 
-        var secondModel = new File3dm();
-        var secondLayer = new Rhino.DocObjects.Layer { Name = "Second", Id = Guid.NewGuid(), Color = Color.Blue };
-        secondModel.Layers.Add(secondLayer);
-        secondModel.Objects.AddPoint(new Point3d(2, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 0 });
+        var secondRepresentation = new File3dm();
+        var secondLayer = new Rhino.DocObjects.Layer { Name = "Second", Id = __ID_NEWID__(), Color = Color.Blue };
+        secondRepresentation.Layers.Add(secondLayer);
+        secondRepresentation.Objects.AddPoint(new Point3d(2, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 0 });
 
-        var importedModelObjects = new List<Utility.RhinoModelObject>
+        var importedRepresentationObjects = new List<Utility.RhinoRepresentationObject>
         {
-            Utility.ImportRhinoModelContextFromBlob(Convert.ToBase64String(firstModel.ToByteArray())),
-            Utility.ImportRhinoModelContextFromBlob(Convert.ToBase64String(secondModel.ToByteArray()))
+            Utility.ImportRhinoRepresentationContextFromBlob(Convert.ToBase64String(firstRepresentation.ToByteArray())),
+            Utility.ImportRhinoRepresentationContextFromBlob(Convert.ToBase64String(secondRepresentation.ToByteArray()))
         };
 
-        var group = Utility.TranslateRhinoModelObjectsToSingleGroup(importedModelObjects);
+        var group = Utility.TranslateRhinoRepresentationObjectsToSingleGroup(importedRepresentationObjects);
 
         Assert.NotNull(group);
         Assert.Equal("Imported Rhino Layer Group", group.Name);
@@ -278,29 +278,29 @@ public class ImportModelUtilityTests
     }
 
     [Fact]
-    public void TranslateRhinoModelObjectsToSingleGroup_ShouldThrowWhenListIsEmpty()
+    public void TranslateRhinoRepresentationObjectsToSingleGroup_ShouldThrowWhenListIsEmpty()
     {
-        var exception = Assert.Throws<InvalidOperationException>(() => Utility.TranslateRhinoModelObjectsToSingleGroup(new List<Utility.RhinoModelObject>()));
-        Assert.Contains("at least one Rhino ModelObject", exception.Message, StringComparison.OrdinalIgnoreCase);
+        var exception = Assert.Throws<InvalidOperationException>(() => Utility.TranslateRhinoRepresentationObjectsToSingleGroup(new List<Utility.RhinoRepresentationObject>()));
+        Assert.Contains("at least one Rhino RepresentationObject", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
-#endregion 🎠ImportModelUtilityTests
+#endregion 🎠ImportRepresentationUtilityTests
 
-#region 🔧ModelObjectToGroupComponentTests
-// Tests MUST verify ModelObject To Group consumes list input from Import Model output.
-public class ModelObjectToGroupComponentTests
+#region 🔧RepresentationObjectToGroupComponentTests
+// Tests MUST verify RepresentationObject To Group consumes list input from Import Representation output.
+public class RepresentationObjectToGroupComponentTests
 {
-    public ModelObjectToGroupComponentTests() => RhinoNativeBootstrap.Ensure();
+    public RepresentationObjectToGroupComponentTests() => RhinoNativeBootstrap.Ensure();
 
     [Fact]
     public void RegisterParams_ShouldUseNativeRhinoKindsForInputAndOutput()
     {
-        var component = new ModelObjectToGroupComponent();
+        var component = new RepresentationObjectToGroupComponent();
 
         Assert.Single(component.Params.Input);
         Assert.Equal(GH_ParamAccess.list, component.Params.Input[0].Access);
         Assert.Equal("Rh*", component.Params.Input[0].NickName);
-        Assert.IsType<Param_ModelObject>(component.Params.Input[0]);
+        Assert.IsType<Param_RepresentationObject>(component.Params.Input[0]);
         Assert.Single(component.Params.Output);
         Assert.Equal("Gr", component.Params.Output[0].NickName);
         Assert.IsType<Param_Group>(component.Params.Output[0]);
@@ -312,34 +312,34 @@ public class ModelObjectToGroupComponentTests
         if (!RhinoNativeBootstrap.CanUseFile3dm())
             return;
 
-        var model = new File3dm();
+        var representation = new File3dm();
         const int expectedObjectCount = 459;
         for (var index = 0; index < expectedObjectCount; index++)
         {
             var unlayeredAttributes = new Rhino.DocObjects.ObjectAttributes { LayerIndex = -1 };
-            model.Objects.AddPoint(new Point3d(index, 0, 0), unlayeredAttributes);
+            representation.Objects.AddPoint(new Point3d(index, 0, 0), unlayeredAttributes);
         }
 
         var file = new Semio.File
         {
-            Guid = "unlayered-import",
+            Id = "unlayered-import",
             Name = "unlayered.3dm",
-            Blob = Convert.ToBase64String(model.ToByteArray())
+            Blob = Convert.ToBase64String(representation.ToByteArray())
         };
 
         var importedRhinoObjects = Utility.ImportRhinoDocumentObjectsFromSemioFile(file);
         Assert.Equal(expectedObjectCount, importedRhinoObjects.Count);
 
-        var resolvedContexts = new List<Utility.RhinoModelObject>();
+        var resolvedContexts = new List<Utility.RhinoRepresentationObject>();
         foreach (var importedRhinoObject in importedRhinoObjects)
         {
-            var didResolve = Utility.TryResolveRhinoModelContext(new ModelObject(importedRhinoObject), out var resolvedContext);
+            var didResolve = Utility.TryResolveRhinoRepresentationContext(new RepresentationObject(importedRhinoObject), out var resolvedContext);
             Assert.True(didResolve);
-            Assert.NotNull(resolvedContext.ModelObject);
+            Assert.NotNull(resolvedContext.RepresentationObject);
             resolvedContexts.Add(resolvedContext);
         }
 
-        var buildNativeGroupMethod = typeof(ModelObjectToGroupComponent)
+        var buildNativeGroupMethod = typeof(RepresentationObjectToGroupComponent)
             .GetMethod("BuildNativeRhinoGeometryGroup", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(buildNativeGroupMethod);
 
@@ -348,16 +348,16 @@ public class ModelObjectToGroupComponentTests
         Assert.Equal(expectedObjectCount, nativeGroup.Objects.Count(geometryItem => geometryItem is not GH_GeometryGroup));
     }
 }
-#endregion 🔧ModelObjectToGroupComponentTests
+#endregion 🔧RepresentationObjectToGroupComponentTests
 
-#region 👓GroupToModelObjectComponentTests
-// Tests MUST verify Group To Model Object consumes a single Group input and produces list ModelObject output.
-public class GroupToModelObjectComponentTests
+#region 👓GroupToRepresentationObjectComponentTests
+// Tests MUST verify Group To Representation Object consumes a single Group input and produces list RepresentationObject output.
+public class GroupToRepresentationObjectComponentTests
 {
     [Fact]
     public void RegisterParams_ShouldUseNativeRhinoKindsForInputAndOutput()
     {
-        var component = new GroupToModelObjectComponent();
+        var component = new GroupToRepresentationObjectComponent();
 
         Assert.Single(component.Params.Input);
         Assert.Equal(GH_ParamAccess.item, component.Params.Input[0].Access);
@@ -366,10 +366,10 @@ public class GroupToModelObjectComponentTests
         Assert.Single(component.Params.Output);
         Assert.Equal("Rh*", component.Params.Output[0].NickName);
         Assert.Equal(GH_ParamAccess.list, component.Params.Output[0].Access);
-        Assert.IsType<Param_ModelObject>(component.Params.Output[0]);
+        Assert.IsType<Param_RepresentationObject>(component.Params.Output[0]);
     }
 }
-#endregion 👓GroupToModelObjectComponentTests
+#endregion 👓GroupToRepresentationObjectComponentTests
 
 #region 🌩️NamingConventionTests
 // Tests MUST verify Grasshopper components and parameters follow repo naming and description rules.
@@ -424,7 +424,7 @@ public class NamingConventionTests
 #endregion 🌩️NamingConventionTests
 
 #region 🪁ExportDesignToBlocksComponentTests
-// Tests MUST verify ExportDesignToBlocks component registration, param structure, and GUID uniqueness.
+// Tests MUST verify ExportDesignToBlocks component registration, param structure, and ID uniqueness.
 public class ExportDesignToBlocksComponentTests
 {
     [Fact]
@@ -451,7 +451,7 @@ public class ExportDesignToBlocksComponentTests
     }
 
     [Fact]
-    public void ComponentGuid_ShouldBeUnique()
+    public void ComponentId_ShouldBeUnique()
     {
         var component = new ExportDesignToBlocksComponent();
         var componentKind = typeof(global::Grasshopper.Kernel.GH_Component);
@@ -459,13 +459,13 @@ public class ExportDesignToBlocksComponentTests
             .Where(kind => kind.IsClass && !kind.IsAbstract && componentKind.IsAssignableFrom(kind))
             .ToList();
 
-        var guids = allComponentKinds
-            .Select(kind => (Activator.CreateInstance(kind) as global::Grasshopper.Kernel.GH_Component)?.ComponentGuid)
+        var ids = allComponentKinds
+            .Select(kind => (Activator.CreateInstance(kind) as global::Grasshopper.Kernel.GH_Component)?.ComponentId)
             .Where(g => g.HasValue)
             .Select(g => g!.Value)
             .ToList();
 
-        var duplicates = guids.GroupBy(g => g).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+        var duplicates = ids.GroupBy(g => g).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
         Assert.Empty(duplicates);
     }
 

@@ -1,0 +1,15 @@
+Hang / slowness findings (repo/client go test):
+
+1) GraphQL breachs with no scope -> Analyze defaults to technology scope "semio" -> full policy walk (TestBreachsNonEmpty, TestNodesAndEdgesQuick root breachs). Fixed by breachs(scope: "repo/client/main.go").
+
+2) ToolGoalList / ToolTicketList (unfiltered) / ToolPolicyList called BuildMonorepoTreeCached for markdown only. Replaced with direct list + render (or policy iterate).
+
+3) Ticket close tests passed repo/client/main.go into ComputeTicketFiles -> heavy ParseDefinitions on huge main.go. Tests now use repo/client/package.json.
+
+4) Tree tests use BuildMonorepoTreeCached to reuse on-disk tree cache when fingerprint stable.
+
+5) TestMermaidLocByTechnologiesBundlesFoldersFiles skips under -short (full LOC treemap walk).
+
+6) locComposeLocReportSnapshot tests updated for new wipGlobalDenom parameter.
+
+Full suite still exceeds 120s/600s here when tree cache invalidates often (e.g. TestListCommands many list subtests). Use npm run test:quick for -short bounded runs.

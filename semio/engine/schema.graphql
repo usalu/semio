@@ -72,7 +72,7 @@ input TypeInputNode {
   isAbstract: Boolean = null
   folder: String = null
   location: LocationInputNode = null
-  models: [ModelInputNode] = null
+  representations: [RepresentationInputNode] = null
   connectors: [ConnectorInputNode] = null
   props: [PropInputNode] = null
   authors: [String] = null
@@ -87,8 +87,8 @@ input LocationInputNode {
   altitude: Float = null
 }
 
-"""🔖GraphQL input node for model mutations."""
-input ModelInputNode {
+"""🔖GraphQL input node for representation mutations."""
+input RepresentationInputNode {
   url: String!
   file: String!
   name: String = null
@@ -164,7 +164,7 @@ input PieceInputNode {
   id_: String = ""
   description: String = ""
   plane: PlaneInputNode = null
-  center: CoordInputNode = null
+  center: CoordinateInputNode = null
   attributes: [AttributeInputNode] = null
   type: TypeIdInputNode
   designPiece: DesignIdInputNode = null
@@ -177,8 +177,8 @@ input PlaneInputNode {
   yAxis: VectorInputNode!
 }
 
-"""🟤GraphQL input node for coord mutations."""
-input CoordInputNode {
+"""🟤GraphQL input node for coordinate mutations."""
+input CoordinateInputNode {
   u: Float!
   v: Float!
 }
@@ -228,7 +228,7 @@ input ConnectorIdInputNode {
 
 """🔖GraphQL input node for folder mutations."""
 input FolderInputNode {
-  guid: String!
+  id: String!
   name: String!
   parent: String = null
   description: String = ""

@@ -1,8 +1,8 @@
 {
   "title": "Fix Kit App Folder Row Creation",
-  "status": "open",
+  "status": "closed",
   "description": "Investigate and fix the semio sketchpad kit app bug where creating new folders does not produce rows in the table. Trace create-folder flow, table row derivation, and any filtering/state sync gaps. Refactor existing code directly, extend existing tests only, verify behavior with targeted test execution, and close the ticket with affected files.",
-  "summary": "Embedded dropped files into file-kit JSON. Added JsonFileKitStore.embedFileBlob(fileGuid, blob) which inlines the blob as a data URL via a kit diff so it persists in *.kit.semio.json on save. uploadKitFileToProvider now short-circuits to embedFileBlob when the kit store is a JsonFileKitStore, covering drops from the kit app, the type app, addFiles, updateFile, and import flows. Fixed applyFileDiff which previously dropped diff.blob (and diff.description) — they are now merged into the result. Extended the existing JsonFileKitStore vitest block with two new tests: one verifies the data URL ends up in file.blob, is persisted to the JSON on save, and survives reload; the other verifies embedFileBlob is a no-op when the target file is missing. All 198 js tests pass.",
+  "summary": "Bulk close",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp",
   "sessions": [
     "⚪797f6228fe61441785f2e78838ee7fbb",

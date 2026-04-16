@@ -1,0 +1,13 @@
+{
+  "title": "Stop Temporary Kit Persistence",
+  "status": "closed",
+  "description": "Temporary kits in semio sketchpad must not be persisted. Reproduce and fix the semio/play path where kit changes are currently persisted. Extend existing tests only, and verify the relevant test suite passes.",
+  "summary": "Stopped temporary kit browser snapshot persistence by filtering persisted kit snapshots to durable kinds only (file, folder, remote) on localStorage and IndexedDB reads/writes. Added an embedded sketchpad regression test proving legacy temporary snapshots are ignored and edited temporary kits write an empty browser snapshot instead of persisting kit data. Verification: focused regression test passed; adjacent persistence restore tests passed. Full sketchpad Playwright suite timed out after 10 minutes, and tsc --noEmit still reports existing unrelated sketchpad type errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1348"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪b9ab2328f58445189a8c33e425e8ff4c"
+  ]
+}

@@ -1,20 +1,22 @@
 -- #region 🧲Header
 -- semio/sqlite/schema.sql
 -- 2025 Ueli Saluz <ueli@semio-tech.com>
--- This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
--- This schema supports the complete semio data model with GUIDs as primary identifiers
+-- This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+-- Normalized SQLite schema for semio kit persistence aligned with the current Rust kit DTO graph.
 -- #endregion 🧲Header
-CREATE TABLE semio (
-	release VARCHAR NOT NULL,
-	engine VARCHAR NOT NULL,
-	created DATETIME NOT NULL,
-	PRIMARY KEY (release)
+
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS semio_schema (
+	schema_version TEXT NOT NULL,
+	engine TEXT NOT NULL,
+	created_at TEXT NOT NULL,
+	PRIMARY KEY (schema_version)
 );
 
-CREATE TABLE kit (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256) NOT NULL,
-	version VARCHAR(64),
+CREATE TABLE IF NOT EXISTS kit (
+	id TEXT NOT NULL,
+	name TEXT NOT NULL,
 	description TEXT,
 	icon TEXT,
 	image TEXT,
@@ -22,432 +24,612 @@ CREATE TABLE kit (
 	remote TEXT,
 	homepage TEXT,
 	license TEXT,
-	created DATETIME NOT NULL,
-	updated DATETIME NOT NULL,
-	PRIMARY KEY (guid)
+	uri TEXT,
+	created_at TEXT,
+	updated_at TEXT,
+	vcs_initial_json TEXT NOT NULL,
+	PRIMARY KEY (id)
 );
 
-CREATE TABLE quality (
-	guid VARCHAR(36) NOT NULL,
-	key VARCHAR(128) NOT NULL,
-	name VARCHAR(256) NOT NULL,
-	kind INTEGER NOT NULL,
-	default_value FLOAT,
-	formula TEXT,
-	default_si_unit VARCHAR(64),
-	default_imperial_unit VARCHAR(64),
-	min_value FLOAT,
-	min_excluded BOOLEAN,
-	max_value FLOAT,
-	max_excluded BOOLEAN,
-	can_scale BOOLEAN NOT NULL DEFAULT 0,
-	definition TEXT,
-	kit_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
-);
-
-CREATE TABLE benchmark (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256) NOT NULL,
-	icon TEXT,
-	min_value FLOAT,
-	min_excluded BOOLEAN,
-	max_value FLOAT,
-	max_excluded BOOLEAN,
-	definition TEXT,
-	quality_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
-);
-
-CREATE TABLE port (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256) NOT NULL,
+CREATE TABLE IF NOT EXISTS folder (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	path TEXT NOT NULL,
 	description TEXT,
-	icon TEXT,
-	max_children INTEGER,
-	kit_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+	kit_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
 );
 
-CREATE TABLE port_compatibility (
-	port_guid VARCHAR(36) NOT NULL,
-	compatible_port_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (port_guid, compatible_port_guid),
-	FOREIGN KEY(port_guid) REFERENCES port (guid),
-	FOREIGN KEY(compatible_port_guid) REFERENCES port (guid)
-);
-
-
-
-CREATE TABLE author (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256) NOT NULL,
-	email VARCHAR(256),
-	kit_guid VARCHAR(36),
-	type_guid VARCHAR(36),
-	design_guid VARCHAR(36),
-	PRIMARY KEY (guid),
-	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
-);
-
-CREATE TABLE folder (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256) NOT NULL,
-	parent_guid VARCHAR(36),
-	created DATETIME NOT NULL,
-	updated DATETIME NOT NULL,
-	kit_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(parent_guid) REFERENCES folder (guid),
-	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
-);
-
-CREATE TABLE file (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256) NOT NULL,
+CREATE TABLE IF NOT EXISTS file (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	url TEXT NOT NULL,
 	mime TEXT,
-	folder_guid VARCHAR(36),
 	size INTEGER,
-	hash VARCHAR(256),
-	remote_url TEXT,
-	created DATETIME NOT NULL,
-	updated DATETIME NOT NULL,
-	kit_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(folder_guid) REFERENCES folder (guid),
-	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+	hash TEXT,
+	description TEXT,
+	created_at TEXT,
+	updated_at TEXT,
+	kit_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
 );
 
-CREATE TABLE type (
-	guid VARCHAR(36) NOT NULL UNIQUE,
-	name VARCHAR(256) NOT NULL,
-	parent_guid VARCHAR(36),
-	is_abstract BOOLEAN NOT NULL DEFAULT 0,
-	folder VARCHAR(256),
+CREATE TABLE IF NOT EXISTS type (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
+	description TEXT,
+	icon TEXT,
+	image TEXT,
 	stock INTEGER,
-	virtual BOOLEAN NOT NULL DEFAULT 0,
-	unit VARCHAR(64),
-	location_guid VARCHAR(36),
+	virtual INTEGER,
+	unit TEXT,
+	location_id TEXT,
+	created_at TEXT,
+	updated_at TEXT,
+	kit_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS family (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
+	description TEXT,
+	icon TEXT,
+	kit_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS type_family (
+	type_id TEXT NOT NULL,
+	family_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	PRIMARY KEY (type_id, family_id),
+	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE,
+	FOREIGN KEY (family_id) REFERENCES family (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS port (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL DEFAULT '',
+	icon TEXT,
+	mandatory INTEGER,
+	t REAL,
+	description TEXT,
+	point_x REAL,
+	point_y REAL,
+	point_z REAL,
+	direction_x REAL,
+	direction_y REAL,
+	direction_z REAL,
+	kit_id TEXT NOT NULL,
+	parent_family_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
+	FOREIGN KEY (parent_family_id) REFERENCES family (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS port_compatible_family (
+	port_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	family_id TEXT NOT NULL,
+	PRIMARY KEY (port_id, ordinal),
+	FOREIGN KEY (port_id) REFERENCES port (id) ON DELETE CASCADE,
+	FOREIGN KEY (family_id) REFERENCES family (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS port_compatible_port (
+	port_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	compatible_port_id TEXT NOT NULL,
+	PRIMARY KEY (port_id, ordinal),
+	FOREIGN KEY (port_id) REFERENCES port (id) ON DELETE CASCADE,
+	FOREIGN KEY (compatible_port_id) REFERENCES port (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS connector (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
+	description TEXT,
+	port_id TEXT NOT NULL,
+	type_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (port_id) REFERENCES port (id) ON DELETE CASCADE,
+	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS representation (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	url TEXT NOT NULL,
+	description TEXT,
+	file_id TEXT,
+	type_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (file_id) REFERENCES file (id),
+	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS design (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
 	description TEXT,
 	icon TEXT,
 	image TEXT,
-	created DATETIME NOT NULL,
-	updated DATETIME NOT NULL,
-	kit_guid VARCHAR(36) NOT NULL,
-	row_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	UNIQUE (guid, kit_guid, parent_guid),
-	FOREIGN KEY(parent_guid) REFERENCES type (guid),
-	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+	location_id TEXT,
+	unit TEXT,
+	created_at TEXT,
+	updated_at TEXT,
+	kit_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
 );
 
-CREATE TABLE tag (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256) NOT NULL,
+CREATE TABLE IF NOT EXISTS design_family (
+	design_id TEXT NOT NULL,
+	family_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	PRIMARY KEY (design_id, family_id),
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE,
+	FOREIGN KEY (family_id) REFERENCES family (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS layer (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
 	description TEXT,
+	color TEXT,
+	order_index INTEGER,
+	visible INTEGER,
+	locked INTEGER,
+	design_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS piece (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT,
+	description TEXT,
+	plane_origin_x REAL,
+	plane_origin_y REAL,
+	plane_origin_z REAL,
+	plane_x_axis_x REAL,
+	plane_x_axis_y REAL,
+	plane_x_axis_z REAL,
+	plane_y_axis_x REAL,
+	plane_y_axis_y REAL,
+	plane_y_axis_z REAL,
+	center_x REAL,
+	center_y REAL,
+	center_z REAL,
+	scale REAL,
+	mirror_plane_origin_x REAL,
+	mirror_plane_origin_y REAL,
+	mirror_plane_origin_z REAL,
+	mirror_plane_x_axis_x REAL,
+	mirror_plane_x_axis_y REAL,
+	mirror_plane_x_axis_z REAL,
+	mirror_plane_y_axis_x REAL,
+	mirror_plane_y_axis_y REAL,
+	mirror_plane_y_axis_z REAL,
+	hidden INTEGER,
+	locked INTEGER,
+	color TEXT,
+	type_id TEXT,
+	design_ref_id TEXT,
+	design_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (type_id) REFERENCES type (id),
+	FOREIGN KEY (design_ref_id) REFERENCES design (id),
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS "group" (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
+	description TEXT,
+	color TEXT,
 	icon TEXT,
-	kit_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+	design_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE
 );
 
-CREATE TABLE model (
-	guid VARCHAR(36) NOT NULL,
-	file_guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256),
+CREATE TABLE IF NOT EXISTS group_piece (
+	group_id TEXT NOT NULL,
+	piece_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	PRIMARY KEY (group_id, piece_id),
+	FOREIGN KEY (group_id) REFERENCES "group" (id) ON DELETE CASCADE,
+	FOREIGN KEY (piece_id) REFERENCES piece (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS connection (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	connected_side_id TEXT NOT NULL,
+	connected_piece_id TEXT NOT NULL,
+	connected_port_id TEXT,
+	connected_design_piece_id TEXT,
+	connecting_side_id TEXT NOT NULL,
+	connecting_piece_id TEXT NOT NULL,
+	connecting_port_id TEXT,
+	connecting_design_piece_id TEXT,
+	gap REAL,
+	shift REAL,
+	rise REAL,
+	rotation REAL,
+	turn REAL,
+	tilt REAL,
+	x REAL,
+	y REAL,
 	description TEXT,
-	type_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(type_guid) REFERENCES type (guid)
+	design_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (connected_piece_id) REFERENCES piece (id),
+	FOREIGN KEY (connected_port_id) REFERENCES port (id),
+	FOREIGN KEY (connected_design_piece_id) REFERENCES piece (id),
+	FOREIGN KEY (connecting_piece_id) REFERENCES piece (id),
+	FOREIGN KEY (connecting_port_id) REFERENCES port (id),
+	FOREIGN KEY (connecting_design_piece_id) REFERENCES piece (id),
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE
 );
 
-CREATE TABLE model_tag (
-	model_guid VARCHAR(36) NOT NULL,
-	tag_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (model_guid, tag_guid),
-	FOREIGN KEY(model_guid) REFERENCES model (guid),
-	FOREIGN KEY(tag_guid) REFERENCES tag (guid)
-);
-
-CREATE TABLE prop (
-	guid VARCHAR(36) NOT NULL,
-	key VARCHAR(128) NOT NULL,
-	value FLOAT NOT NULL,
-	unit VARCHAR(64),
-	quality_guid VARCHAR(36),
-	connector_guid VARCHAR(36),
-	PRIMARY KEY (guid),
-	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
-);
-
-CREATE TABLE type_prop (
-	type_guid VARCHAR(36) NOT NULL,
-	prop_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (type_guid, prop_guid),
-	FOREIGN KEY(type_guid) REFERENCES type (guid),
-	FOREIGN KEY(prop_guid) REFERENCES prop (guid)
-);
-
-CREATE TABLE connector (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256),
-	point_x FLOAT NOT NULL,
-	point_y FLOAT NOT NULL,
-	point_z FLOAT NOT NULL,
-	direction_x FLOAT NOT NULL,
-	direction_y FLOAT NOT NULL,
-	direction_z FLOAT NOT NULL,
-	t FLOAT NOT NULL,
-	mandatory BOOLEAN NOT NULL DEFAULT 0,
-	port_guid VARCHAR(36),
-	max_children INTEGER,
+CREATE TABLE IF NOT EXISTS stat (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	key TEXT NOT NULL,
+	value TEXT NOT NULL,
+	unit TEXT,
 	description TEXT,
-	type_guid VARCHAR(36) NOT NULL,
-	row_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	UNIQUE (guid, type_guid),
-	FOREIGN KEY(port_guid) REFERENCES port (guid),
-	FOREIGN KEY(type_guid) REFERENCES type (guid)
+	design_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE
 );
 
-CREATE TABLE design (
-	guid VARCHAR(36) NOT NULL UNIQUE,
-	name VARCHAR(256) NOT NULL,
-	parent_guid VARCHAR(36),
-	variant VARCHAR(256),
-	view_center_u FLOAT,
-	view_center_v FLOAT,
-	view_zoom FLOAT,
-	unit VARCHAR(64),
-	location_guid VARCHAR(36),
-	active_layer_guid VARCHAR(36),
-	is_abstract BOOLEAN,
-	folder VARCHAR(256),
-	can_scale BOOLEAN,
-	can_mirror BOOLEAN,
+CREATE TABLE IF NOT EXISTS author (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
+	email TEXT NOT NULL,
+	role TEXT,
+	rank INTEGER,
+	kit_id TEXT,
+	type_id TEXT,
+	design_id TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
+	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE,
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE,
+	CHECK (
+		(CASE WHEN kit_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN type_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN design_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+	)
+);
+
+CREATE TABLE IF NOT EXISTS concept (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
 	description TEXT,
-	icon TEXT,
-	image TEXT,
-	created DATETIME NOT NULL,
-	updated DATETIME NOT NULL,
-	kit_guid VARCHAR(36) NOT NULL,
-	row_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	UNIQUE (guid, kit_guid, parent_guid),
-	FOREIGN KEY(parent_guid) REFERENCES design (guid),
-	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+	order_index INTEGER,
+	kit_id TEXT,
+	type_id TEXT,
+	design_id TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
+	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE,
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE,
+	CHECK (
+		(CASE WHEN kit_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN type_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN design_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+	)
 );
 
-CREATE TABLE design_prop (
-	design_guid VARCHAR(36) NOT NULL,
-	quality_guid VARCHAR(36) NOT NULL,
-	value FLOAT NOT NULL,
-	unit VARCHAR(64),
-	PRIMARY KEY (design_guid, quality_guid),
-	FOREIGN KEY(design_guid) REFERENCES design (guid),
-	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
+CREATE TABLE IF NOT EXISTS tag (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
+	order_index INTEGER,
+	kit_id TEXT,
+	type_id TEXT,
+	design_id TEXT,
+	representation_id TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
+	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE,
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE,
+	FOREIGN KEY (representation_id) REFERENCES representation (id) ON DELETE CASCADE,
+	CHECK (
+		(CASE WHEN kit_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN type_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN design_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN representation_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+	)
 );
 
-CREATE TABLE design_author (
-	design_guid VARCHAR(36) NOT NULL,
-	author_guid VARCHAR(36) NOT NULL,
-	rank INTEGER NOT NULL,
-	PRIMARY KEY (design_guid, author_guid),
-	FOREIGN KEY(design_guid) REFERENCES design (guid),
-	FOREIGN KEY(author_guid) REFERENCES author (guid)
-);
-
-CREATE TABLE layer (
-	guid VARCHAR(36) NOT NULL,
-	path VARCHAR(512) NOT NULL,
-	is_hidden BOOLEAN NOT NULL DEFAULT 0,
-	is_locked BOOLEAN NOT NULL DEFAULT 0,
-	color VARCHAR(32),
-	description TEXT,
-	design_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(design_guid) REFERENCES design (guid)
-);
-
-CREATE TABLE piece (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256),
-	type_guid VARCHAR(36),
-	design_guid_ref VARCHAR(36),
-	plane_origin_x FLOAT,
-	plane_origin_y FLOAT,
-	plane_origin_z FLOAT,
-	plane_x_axis_x FLOAT,
-	plane_x_axis_y FLOAT,
-	plane_x_axis_z FLOAT,
-	plane_y_axis_x FLOAT,
-	plane_y_axis_y FLOAT,
-	plane_y_axis_z FLOAT,
-	center_u FLOAT,
-	center_v FLOAT,
-	scale FLOAT,
-	mirror_plane_origin_x FLOAT,
-	mirror_plane_origin_y FLOAT,
-	mirror_plane_origin_z FLOAT,
-	mirror_plane_x_axis_x FLOAT,
-	mirror_plane_x_axis_y FLOAT,
-	mirror_plane_x_axis_z FLOAT,
-	mirror_plane_y_axis_x FLOAT,
-	mirror_plane_y_axis_y FLOAT,
-	mirror_plane_y_axis_z FLOAT,
-	is_hidden BOOLEAN NOT NULL DEFAULT 0,
-	is_locked BOOLEAN NOT NULL DEFAULT 0,
-	color VARCHAR(32),
-	description TEXT,
-	design_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(type_guid) REFERENCES type (guid),
-	FOREIGN KEY(design_guid_ref) REFERENCES design (guid),
-	FOREIGN KEY(design_guid) REFERENCES design (guid)
-);
-
-CREATE TABLE piece_prop (
-	piece_guid VARCHAR(36) NOT NULL,
-	prop_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (piece_guid, prop_guid),
-	FOREIGN KEY(piece_guid) REFERENCES piece (guid),
-	FOREIGN KEY(prop_guid) REFERENCES prop (guid)
-);
-
-CREATE TABLE "group" (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256),
-	color VARCHAR(32),
-	description TEXT,
-	design_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(design_guid) REFERENCES design (guid)
-);
-
-CREATE TABLE group_piece (
-	group_guid VARCHAR(36) NOT NULL,
-	piece_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (group_guid, piece_guid),
-	FOREIGN KEY(group_guid) REFERENCES "group" (guid),
-	FOREIGN KEY(piece_guid) REFERENCES piece (guid)
-);
-
-CREATE TABLE connection (
-	guid VARCHAR(36) NOT NULL,
-	connected_piece_guid VARCHAR(36) NOT NULL,
-	connected_design_piece_guid VARCHAR(36),
-	connected_connector_guid VARCHAR(36) NOT NULL,
-	connecting_piece_guid VARCHAR(36) NOT NULL,
-	connecting_design_piece_guid VARCHAR(36),
-	connecting_connector_guid VARCHAR(36) NOT NULL,
-	gap FLOAT NOT NULL DEFAULT 0,
-	shift FLOAT NOT NULL DEFAULT 0,
-	rise FLOAT NOT NULL DEFAULT 0,
-	rotation FLOAT NOT NULL DEFAULT 0,
-	turn FLOAT NOT NULL DEFAULT 0,
-	tilt FLOAT NOT NULL DEFAULT 0,
-	u FLOAT,
-	v FLOAT,
-	description TEXT,
-	design_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	CHECK (connecting_piece_guid != connected_piece_guid),
-	FOREIGN KEY(connected_piece_guid) REFERENCES piece (guid),
-	FOREIGN KEY(connected_connector_guid) REFERENCES connector (guid),
-	FOREIGN KEY(connecting_piece_guid) REFERENCES piece (guid),
-	FOREIGN KEY(connecting_connector_guid) REFERENCES connector (guid),
-	FOREIGN KEY(design_guid) REFERENCES design (guid)
-);
-
-CREATE TABLE stat (
-	guid VARCHAR(36) NOT NULL,
-	quality_guid VARCHAR(36) NOT NULL,
-	min_value FLOAT,
-	min_excluded BOOLEAN,
-	max_value FLOAT,
-	max_excluded BOOLEAN,
-	unit VARCHAR(64),
-	design_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(quality_guid) REFERENCES quality (guid),
-	FOREIGN KEY(design_guid) REFERENCES design (guid)
-);
-
-CREATE TABLE concept (
-	guid VARCHAR(36) NOT NULL,
-	name VARCHAR(256) NOT NULL,
-	description TEXT,
-	icon TEXT,
-	kit_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (guid),
-	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
-);
-
-CREATE TABLE type_concept (
-	type_guid VARCHAR(36) NOT NULL,
-	concept_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (type_guid, concept_guid),
-	FOREIGN KEY(type_guid) REFERENCES type (guid),
-	FOREIGN KEY(concept_guid) REFERENCES concept (guid)
-);
-
-CREATE TABLE type_author (
-	type_guid VARCHAR(36) NOT NULL,
-	author_guid VARCHAR(36) NOT NULL,
-	rank INTEGER NOT NULL,
-	PRIMARY KEY (type_guid, author_guid),
-	FOREIGN KEY(type_guid) REFERENCES type (guid),
-	FOREIGN KEY(author_guid) REFERENCES author (guid)
-);
-
-CREATE TABLE design_concept (
-	design_guid VARCHAR(36) NOT NULL,
-	concept_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (design_guid, concept_guid),
-	FOREIGN KEY(design_guid) REFERENCES design (guid),
-	FOREIGN KEY(concept_guid) REFERENCES concept (guid)
-);
-
-CREATE TABLE attribute (
-	guid VARCHAR(36) NOT NULL,
-	key VARCHAR(256) NOT NULL,
+CREATE TABLE IF NOT EXISTS quality (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	key TEXT NOT NULL,
 	value TEXT,
+	unit TEXT,
 	definition TEXT,
-	quality_guid VARCHAR(36),
-	benchmark_guid VARCHAR(36),
-	port_guid VARCHAR(36),
-	tag_guid VARCHAR(36),
-	concept_guid VARCHAR(36),
-	folder_guid VARCHAR(36),
-	file_guid VARCHAR(36),
-	author_guid VARCHAR(36),
-	model_guid VARCHAR(36),
-	prop_guid VARCHAR(36),
-	connector_guid VARCHAR(36),
-	type_guid VARCHAR(36),
-	layer_guid VARCHAR(36),
-	piece_guid VARCHAR(36),
-	group_guid VARCHAR(36),
-	connection_guid VARCHAR(36),
-	stat_guid VARCHAR(36),
-	design_guid VARCHAR(36),
-	kit_guid VARCHAR(36),
-	PRIMARY KEY (guid),
-	FOREIGN KEY(quality_guid) REFERENCES quality (guid),
-	FOREIGN KEY(benchmark_guid) REFERENCES benchmark (guid),
-	FOREIGN KEY(port_guid) REFERENCES port (guid),
-	FOREIGN KEY(tag_guid) REFERENCES tag (guid),
-	FOREIGN KEY(concept_guid) REFERENCES concept (guid),
-	FOREIGN KEY(author_guid) REFERENCES author (guid),
-	FOREIGN KEY(model_guid) REFERENCES model (guid),
-	FOREIGN KEY(prop_guid) REFERENCES prop (guid),
-	FOREIGN KEY(connector_guid) REFERENCES connector (guid),
-	FOREIGN KEY(type_guid) REFERENCES type (guid),
-	FOREIGN KEY(layer_guid) REFERENCES layer (guid),
-	FOREIGN KEY(piece_guid) REFERENCES piece (guid),
-	FOREIGN KEY(group_guid) REFERENCES "group" (guid),
-	FOREIGN KEY(connection_guid) REFERENCES connection (guid),
-	FOREIGN KEY(stat_guid) REFERENCES stat (guid),
-	FOREIGN KEY(design_guid) REFERENCES design (guid),
-	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+	description TEXT,
+	kit_id TEXT,
+	type_id TEXT,
+	design_id TEXT,
+	port_id TEXT,
+	connector_id TEXT,
+	representation_id TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
+	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE,
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE,
+	FOREIGN KEY (port_id) REFERENCES port (id) ON DELETE CASCADE,
+	FOREIGN KEY (connector_id) REFERENCES connector (id) ON DELETE CASCADE,
+	FOREIGN KEY (representation_id) REFERENCES representation (id) ON DELETE CASCADE,
+	CHECK (
+		(CASE WHEN kit_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN type_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN design_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN port_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN connector_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN representation_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+	)
 );
+
+CREATE TABLE IF NOT EXISTS benchmark (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
+	min_value REAL,
+	max_value REAL,
+	min_excluded INTEGER,
+	max_excluded INTEGER,
+	quality_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (quality_id) REFERENCES quality (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS prop (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	key TEXT NOT NULL,
+	value TEXT NOT NULL,
+	unit TEXT,
+	kit_id TEXT,
+	type_id TEXT,
+	design_id TEXT,
+	piece_id TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
+	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE,
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE,
+	FOREIGN KEY (piece_id) REFERENCES piece (id) ON DELETE CASCADE,
+	CHECK (
+		(CASE WHEN kit_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN type_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN design_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN piece_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+	)
+);
+
+CREATE TABLE IF NOT EXISTS attribute (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	key TEXT NOT NULL,
+	value TEXT NOT NULL,
+	definition TEXT,
+	kit_id TEXT,
+	type_id TEXT,
+	design_id TEXT,
+	piece_id TEXT,
+	port_id TEXT,
+	connector_id TEXT,
+	representation_id TEXT,
+	connection_id TEXT,
+	family_id TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
+	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE,
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE,
+	FOREIGN KEY (piece_id) REFERENCES piece (id) ON DELETE CASCADE,
+	FOREIGN KEY (port_id) REFERENCES port (id) ON DELETE CASCADE,
+	FOREIGN KEY (connector_id) REFERENCES connector (id) ON DELETE CASCADE,
+	FOREIGN KEY (representation_id) REFERENCES representation (id) ON DELETE CASCADE,
+	FOREIGN KEY (connection_id) REFERENCES connection (id) ON DELETE CASCADE,
+	FOREIGN KEY (family_id) REFERENCES family (id) ON DELETE CASCADE,
+		CHECK (
+		(CASE WHEN kit_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN type_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN design_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN piece_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN port_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN connector_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN representation_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN connection_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN family_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+	)
+);
+
+-- #region Version control (kit → alternatives → checkpoints → kit_change; session → draft → transaction)
+CREATE TABLE IF NOT EXISTS kit_change (
+	id TEXT NOT NULL,
+	kind TEXT NOT NULL,
+	forward_json TEXT NOT NULL,
+	inverse_json TEXT NOT NULL,
+	author_id TEXT,
+	time TEXT,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS checkpoint (
+	id TEXT NOT NULL,
+	kit_id TEXT NOT NULL,
+	parent_checkpoint_id TEXT,
+	change_id TEXT NOT NULL,
+	message TEXT,
+	time TEXT,
+	is_release INTEGER NOT NULL DEFAULT 0,
+	materialized_kit_hash TEXT,
+	author_ids TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
+	FOREIGN KEY (change_id) REFERENCES kit_change (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS materialized_kit (
+	checkpoint_id TEXT NOT NULL,
+	kit_json TEXT NOT NULL,
+	PRIMARY KEY (checkpoint_id),
+	FOREIGN KEY (checkpoint_id) REFERENCES checkpoint (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS alternative (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	kit_id TEXT NOT NULL,
+	name TEXT NOT NULL,
+	description TEXT,
+	branch_from_checkpoint_id TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS alternative_checkpoint (
+	alternative_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	checkpoint_id TEXT NOT NULL,
+	PRIMARY KEY (alternative_id, ordinal),
+	FOREIGN KEY (alternative_id) REFERENCES alternative (id) ON DELETE CASCADE,
+	FOREIGN KEY (checkpoint_id) REFERENCES checkpoint (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS session (
+	id TEXT NOT NULL,
+	kit_id TEXT NOT NULL,
+	client_id TEXT NOT NULL,
+	opened_at TEXT NOT NULL,
+	last_seen_at TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS draft (
+	id TEXT NOT NULL,
+	session_id TEXT NOT NULL,
+	checkpoint_id TEXT NOT NULL,
+	alternative_id TEXT,
+	cursor INTEGER NOT NULL DEFAULT 0,
+	PRIMARY KEY (id),
+	FOREIGN KEY (session_id) REFERENCES session (id) ON DELETE CASCADE,
+	FOREIGN KEY (checkpoint_id) REFERENCES checkpoint (id) ON DELETE CASCADE,
+	FOREIGN KEY (alternative_id) REFERENCES alternative (id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS "transaction" (
+	id TEXT NOT NULL,
+	draft_id TEXT NOT NULL,
+	time TEXT NOT NULL,
+	committed INTEGER NOT NULL DEFAULT 0,
+	PRIMARY KEY (id),
+	FOREIGN KEY (draft_id) REFERENCES draft (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS transaction_forward_command (
+	transaction_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	command_json TEXT NOT NULL,
+	PRIMARY KEY (transaction_id, ordinal),
+	FOREIGN KEY (transaction_id) REFERENCES "transaction" (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS transaction_inverse_command (
+	transaction_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	command_json TEXT NOT NULL,
+	PRIMARY KEY (transaction_id, ordinal),
+	FOREIGN KEY (transaction_id) REFERENCES "transaction" (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS kit_main_line (
+	kit_id TEXT NOT NULL,
+	head_checkpoint_id TEXT,
+	PRIMARY KEY (kit_id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS kit_sessions_bundle (
+	kit_id TEXT NOT NULL,
+	json TEXT NOT NULL,
+	PRIMARY KEY (kit_id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+);
+-- #endregion Version control
+
+CREATE INDEX IF NOT EXISTS idx_folder_kit ON folder (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_file_kit ON file (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_type_kit ON type (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_port_kit ON port (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_port_parent_family ON port (parent_family_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_port_compat_port ON port_compatible_port (compatible_port_id);
+CREATE INDEX IF NOT EXISTS idx_port_compat_family ON port_compatible_family (family_id);
+CREATE INDEX IF NOT EXISTS idx_checkpoint_kit ON checkpoint (kit_id);
+CREATE INDEX IF NOT EXISTS idx_alternative_kit ON alternative (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_session_kit ON session (kit_id);
+CREATE INDEX IF NOT EXISTS idx_family_kit ON family (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_type_family_type ON type_family (type_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_design_family_design ON design_family (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_connector_type ON connector (type_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_representation_type ON representation (type_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_design_kit ON design (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_layer_design ON layer (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_piece_design ON piece (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_group_design ON "group" (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_connection_design ON connection (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_stat_design ON stat (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_author_kit ON author (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_author_type ON author (type_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_author_design ON author (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_concept_kit ON concept (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_concept_type ON concept (type_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_concept_design ON concept (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_tag_kit ON tag (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_tag_type ON tag (type_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_tag_design ON tag (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_tag_representation ON tag (representation_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_quality_kit ON quality (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_quality_type ON quality (type_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_quality_design ON quality (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_quality_port ON quality (port_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_quality_connector ON quality (connector_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_quality_representation ON quality (representation_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_benchmark_quality ON benchmark (quality_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_prop_kit ON prop (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_prop_type ON prop (type_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_prop_design ON prop (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_prop_piece ON prop (piece_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_attribute_kit ON attribute (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_attribute_type ON attribute (type_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_attribute_design ON attribute (design_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_attribute_piece ON attribute (piece_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_attribute_port ON attribute (port_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_attribute_connector ON attribute (connector_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_attribute_representation ON attribute (representation_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_attribute_connection ON attribute (connection_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_attribute_family ON attribute (family_id, ordinal);

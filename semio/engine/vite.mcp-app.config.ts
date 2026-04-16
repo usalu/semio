@@ -3,7 +3,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // Specs: Vite config for building the standalone MCP App as a single HTML file.
-// Bundles React, @semio/ui, and @modelcontextprotocol/ext-apps into one inlined HTML file.
+// Bundles React, @semio/ui, and @representationcontextprotocol/ext-apps into one inlined HTML file.
 // Summary: Vite build config bundling the MCP App into a single inlined HTML file.
 
 // #endregion 🧲Header
@@ -15,7 +15,7 @@ import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 
 // #region 🪵ZodJitlessPlugin
-// Specs: Zod v4 (dependency of @modelcontextprotocol/ext-apps) uses `new Function()`
+// Specs: Zod v4 (dependency of @representationcontextprotocol/ext-apps) uses `new Function()`
 // for JIT-compiled object parsing which violates CSP `script-src` in MCP App hosts.
 // This plugin patches Zod's `allowsEval` check and `Doc.compile()` to never use
 // dynamic code generation, forcing Zod to fall back to its interpreted parser.
@@ -50,7 +50,7 @@ function zodJitlessPlugin(): Plugin {
 // `semio/ui/index.tsx` imports named exports at module scope and an ESM stub
 // that doesn't provide those exact exports can crash the bundle before React mounts.
 // We only stub semio assets and unrelated heavy deps.
-// cytoscape is NOT stubbed: flattenDesign uses cytoscape headless BFS for 2D layout (diagram centers + planes).
+// flattenDesign uses native adjacency BFS (no cytoscape) for 2D layout (diagram centers + planes).
 // 🔧Stubbing it breaks the diagram entirely because cy.elements() returns undefined → TypeError.
 const STUBBED_PREFIXES = ["@semio/assets", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
 
@@ -117,6 +117,15 @@ function stubHeavyDepsPlugin(): Plugin {
 
 export default defineConfig({
   root: __dirname,
+  define: {
+    __SEMIO_JS_RUN_BENCHMARKS__: "false",
+    __SEMIO_JS_RUN_EMBEDDED_TESTS__: "false",
+  },
+  resolve: {
+    alias: [
+      { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../rs/pkg") },
+    ],
+  },
   build: {
     outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,
@@ -129,6 +138,14 @@ export default defineConfig({
     },
   },
   plugins: [meshoptNoopPlugin(), stubHeavyDepsPlugin(), tailwindcss(), mdx(), zodJitlessPlugin(), viteSingleFile()],
+  worker: {
+    format: "es",
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true,
+      },
+    },
+  },
   esbuild: {
     jsx: "automatic",
   },

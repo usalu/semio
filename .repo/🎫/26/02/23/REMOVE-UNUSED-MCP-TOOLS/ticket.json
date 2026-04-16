@@ -1,8 +1,9 @@
 {
   "title": "Remove Unused MCP Tools",
   "emoji": "🗑️",
-  "status": "open",
+  "status": "closed",
   "description": "Remove tools from mcp: analyze, contributor add, contributor delete, export, file create, file delete, file move, folder, graphql, move, policy check, ticket read",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/655"
   },

@@ -1,8 +1,9 @@
 {
   "title": "Fix dev semio sketchpad not running",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "dev semio sketchpad is not running",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1007"
   },

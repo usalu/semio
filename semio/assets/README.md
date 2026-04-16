@@ -1,6 +1,6 @@
 # Summary
 
-Shared assets including badges, fonts, icons, logo, models, and kit fixtures.
+Shared assets including badges, fonts, icons, logo, representations, and kit fixtures.
 
 # Docs
 
@@ -35,6 +35,6 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 
 `assets/index.ts` is the shared entry point for `semio/assets`. It re-exports the icon layer plus the Metabolism kit fixtures and helper constants. The kit fixtures are available as `MetabolismKit`, `MetabolismKitDiff`, `MetabolismKitDiffed`, `MetabolismKitDiffInverted`, `InvalidKit`, and `InvalidKitValidation`, while each kit entity list is exposed through `MetabolismKitTypes`, `MetabolismKitDesigns`, `MetabolismKitPorts`, `MetabolismKitQualities`, `MetabolismKitFiles`, `MetabolismKitFolders`, `MetabolismKitAuthors`, `MetabolismKitTags`, `MetabolismKitConcepts`, `MetabolismKitAttributes`, and the dedicated `MetabolismKitNakaginCapsuleTowerDesigns`.
 
-Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `MetabolismKitDesignsByGuid`, `MetabolismKitDesignsByName`, `MetabolismKitPortsByGuid`, and `MetabolismKitPortsByName` provide direct access to every type, design, and port without filtering.
+Lookup tables `MetabolismKitTypesById`, `MetabolismKitTypesByName`, `MetabolismKitDesignsById`, `MetabolismKitDesignsByName`, `MetabolismKitPortsById`, and `MetabolismKitPortsByName` provide direct access to every type, design, and port without filtering.
 
 # 💯Requirements

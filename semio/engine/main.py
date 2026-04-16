@@ -89,7 +89,7 @@ from semio_core import (
     CodeUnreachable,
     Connection,
     Connector,
-    Coord,
+    Coordinate,
     Design,
     DesignContext,
     DesignInput,
@@ -107,7 +107,7 @@ from semio_core import (
     KitZipDoesNotContainSemioFolder,
     LocalKitUriIsNotAbsolute,
     Location,
-    Model,
+    Representation,
     OnlyRemoteKitsCanBeCached,
     Piece,
     Plane,
@@ -137,6 +137,7 @@ from semio_core import (
     createClusteredDesignDict,
     decode,
     deletePiecesAndConnectionsInDesignDict,
+    flattenDesignReportDict,
     encode,
     expandDesignPiecesDict,
     findAttributeValueDict,
@@ -391,7 +392,7 @@ class DatabaseStore(Store, abc.ABC):
         kit_data = json.loads(row[0])
         match kind:
             case OperationKind.KIT:
-                return KitOutput.model_validate(kit_data)
+                return KitOutput.representation_validate(kit_data)
             case OperationKind.DESIGN:
                 raise FeatureNotYetSupported()
             case OperationKind.TYPE:
@@ -409,7 +410,7 @@ class DatabaseStore(Store, abc.ABC):
 
         if kind == OperationKind.KIT:
             self.initialize()
-            dump = input.model_dump()
+            dump = input.representation_dump()
             dump["uri"] = kitUri
             with self._connect() as conn:
                 cursor = conn.execute("SELECT 1 FROM kit WHERE uri = ?", (kitUri,))
@@ -419,7 +420,7 @@ class DatabaseStore(Store, abc.ABC):
                     "INSERT INTO kit (uri, data) VALUES (?, ?)",
                     (kitUri, json.dumps(dump)),
                 )
-            return KitOutput.model_validate(dump)
+            return KitOutput.representation_validate(dump)
 
         if not self.initialized():
             raise KitNotFound(kitUri)
@@ -433,7 +434,7 @@ class DatabaseStore(Store, abc.ABC):
 
             match kind:
                 case OperationKind.DESIGN:
-                    design_dump = input.model_dump()
+                    design_dump = input.representation_dump()
                     designs = kit_data.get("designs", [])
                     designs = [d for d in designs if not (d.get("name") == input.name and d.get("variant") == input.variant and d.get("view") == input.view)]
                     designs.append(design_dump)
@@ -443,7 +444,7 @@ class DatabaseStore(Store, abc.ABC):
                         (json.dumps(kit_data), kitUri),
                     )
                 case OperationKind.TYPE:
-                    type_dump = input.model_dump()
+                    type_dump = input.representation_dump()
                     types = kit_data.get("types", [])
                     types = [t for t in types if not (t.get("name") == input.name and t.get("variant") == input.variant)]
                     types.append(type_dump)
@@ -720,8 +721,8 @@ def getAuthStatus(serverUrl: str) -> dict:
 
 
 class RemoteStore(Store):
-    """🖥️REST-backed store that proxies kit operations to a remote semio server.
-    Callers MUST call login() first to authenticate with the remote server.
+    """🖥️REST-backed store that proxies kit operations to a remote semio hub.
+    Callers MUST call login() first to authenticate with the remote hub.
     """
 
     serverUrl: str
@@ -768,7 +769,7 @@ class RemoteStore(Store):
             if kind == OperationKind.KIT:
                 response = requests.get(self._api_url(), headers=self._headers(), timeout=30)
                 response.raise_for_status()
-                return KitOutput.model_validate(response.json())
+                return KitOutput.representation_validate(response.json())
             else:
                 raise FeatureNotYetSupported()
         except requests.exceptions.ConnectionError:
@@ -787,7 +788,7 @@ class RemoteStore(Store):
             if kind == OperationKind.KIT:
                 response = requests.put(
                     self._api_url(),
-                    json=input.model_dump() if hasattr(input, "model_dump") else input,
+                    json=input.representation_dump() if hasattr(input, "representation_dump") else input,
                     headers=self._headers(),
                     timeout=30,
                 )
@@ -799,7 +800,7 @@ class RemoteStore(Store):
                 path = f"types/{typeName},{typeVariant}"
                 response = requests.put(
                     self._api_url(path),
-                    json=input.model_dump() if hasattr(input, "model_dump") else input,
+                    json=input.representation_dump() if hasattr(input, "representation_dump") else input,
                     headers=self._headers(),
                     timeout=30,
                 )
@@ -812,7 +813,7 @@ class RemoteStore(Store):
                 path = f"designs/{designName},{designVariant},{designView}"
                 response = requests.put(
                     self._api_url(path),
-                    json=input.model_dump() if hasattr(input, "model_dump") else input,
+                    json=input.representation_dump() if hasattr(input, "representation_dump") else input,
                     headers=self._headers(),
                     timeout=30,
                 )
@@ -944,7 +945,7 @@ def encodeType(type: TypeContext):
     """🎨Encodes a TypeContext for prompt rendering by replacing empty values with defaults.
     Callers MUST provide a valid TypeContext with populated connectors.
     """
-    typeClone = type.model_copy(deep=True)
+    typeClone = type.representation_copy(deep=True)
     typeClone.variant = replaceDefault(typeClone.variant, "DEFAULT")
     typeClone.description = encodeForPrompt(typeClone.description) if typeClone.description != "" else "NO_DESCRIPTION"
     for connector in typeClone.connectors:
@@ -954,7 +955,7 @@ def encodeType(type: TypeContext):
 
 
 def decodeDesign(design: dict):
-    """📩Decodes a raw AI response dict into a DesignPrediction model.
+    """📩Decodes a raw AI response dict into a DesignPrediction representation.
     Callers MUST provide a dict with pieces and connections arrays.
     """
     decodedDesign = {
@@ -1006,7 +1007,7 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
     TODO: Replace prototype healing with one that makes more for every single property.
     Callers MUST provide a design with pieces referencing types available in the types list.
     """
-    designClone = design.model_copy(deep=True)
+    designClone = design.representation_copy(deep=True)
     typeD = {}
     connectorD = {}
     pieceD = {}
@@ -1089,7 +1090,7 @@ Every piece in the design MUST be connected to at least one other piece.
 One piece is the root piece of the design. The connections MUST form a tree.
 Ids SHOULD be abreviated and don't have to be globally unique.
 Rotation, tilt, gap, shift SHOULD NOT be added unless specifically instructed.
-The diagram is only a nice 2D model of the design and does not change the design.
+The diagram is only a nice 2D representation of the design and does not change the design.
 When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connected between the pieces.
 When a piece fits to a connector of another piece, there SHOULD be a connecting between the pieces."""
 
@@ -1242,7 +1243,7 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
     logger.debug("Generated prompt: {}", prompt)
     try:
         response = openaiClient.chat.completions.create(
-            model="gpt-4o",
+            representation="gpt-4o",
             messages=[
                 {
                     "role": "system",
@@ -1272,7 +1273,7 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
             responseDump = {
                 "id": response.id,
                 "created": response.created,
-                "model": response.model,
+                "representation": response.representation,
                 "object": response.object,
                 "system_fingerprint": response.system_fingerprint,
                 "usage": {
@@ -1312,13 +1313,13 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
     if result and result.finish_reason == "stop" and result.message.refusal is None and result.message.content:
         design = decodeDesign(json.loads(result.message.content))
 
-        if hasattr(design, "model_dump"):
-            logger.debug("Predicted Design: {}", json.dumps(design.model_dump(), indent=4))
+        if hasattr(design, "representation_dump"):
+            logger.debug("Predicted Design: {}", json.dumps(design.representation_dump(), indent=4))
 
         healedDesign = healDesign(typing.cast(DesignPrediction, design), types)
         logger.debug(
             "Predicted Design Healed: {}",
-            json.dumps(healedDesign.model_dump(), indent=4),
+            json.dumps(healedDesign.representation_dump(), indent=4),
         )
         return healedDesign
 
@@ -1375,8 +1376,8 @@ graphql_kit_type = ObjectType("Kit")
 
 @graphql_kit_type.field("id")
 def _resolve_kit_graphql_id(obj: typing.Any, info: typing.Any) -> str:
-    if hasattr(obj, "guid") and callable(obj.guid):
-        return typing.cast(str, obj.guid())
+    if hasattr(obj, "id") and callable(obj.id):
+        return typing.cast(str, obj.id())
     u = getattr(obj, "uri", None)
     if u is not None:
         return str(u)
@@ -1401,7 +1402,7 @@ graphql_mutation = MutationType()
 
 @graphql_mutation.field("createKit")
 def _resolve_graphql_create_kit(_: typing.Any, info: typing.Any, kit: dict[str, typing.Any]) -> typing.Any:
-    ki = KitInput.model_validate(kit)
+    ki = KitInput.representation_validate(kit)
     parent = os.path.join(os.path.expanduser(USER_FOLDER), "graphql-kits")
     os.makedirs(parent, exist_ok=True)
     kit_dir = tempfile.mkdtemp(dir=parent)
@@ -1438,17 +1439,17 @@ rest.add_middleware(
 )
 
 
-class NativeAlgorithmExecuteBody(pydantic.BaseModel):
+class NativeAlgorithmExecuteBody(pydantic.BaseRepresentation):
     """🔺Request body for POST /api/native-algorithms/execute.
     """
 
-    language: typing.Literal["python", "go", "rust"]
+    language: typing.Literal["python", "go", "rust", "csharp"]
     operation: typing.Literal["flatten", "delete"]
     kit: dict[str, typing.Any]
     design: dict[str, typing.Any]
-    designGuid: str
-    pieceGuids: list[str] = []
-    connectionGuids: list[str] = []
+    designId: str
+    pieceIds: list[str] = []
+    connectionIds: list[str] = []
 
 
 def _semio_repo_root() -> pathlib.Path:
@@ -1457,51 +1458,47 @@ def _semio_repo_root() -> pathlib.Path:
     return pathlib.Path(__file__).resolve().parent.parent
 
 
-def _python_native_flatten_to_design_change(kit: dict[str, typing.Any], design_guid: str) -> dict[str, typing.Any]:
-    """♻️Map flattenDesignDict output to a DesignChange-shaped dict for the algorithms adapter.
+def _normalize_csharp_json_keys(value: typing.Any) -> typing.Any:
+    """🔠Match Storybook: first character of each object key lowercased for C# Newtonsoft payloads.
     """
-    raw = flattenDesignDict(kit, design_guid)
-    updates: list[dict[str, typing.Any]] = []
-    for u in raw.get("pieces", {}).get("updated", []):
-        pid = u.get("id")
-        diff = u.get("diff", {})
-        if pid:
-            updates.append({"piece": {"guid": pid}, "diff": diff})
-    forward: dict[str, typing.Any] = {}
-    if updates:
-        forward["pieces"] = {"updated": updates}
-    return {"forward": forward, "backward": {}}
+    if isinstance(value, list):
+        return [_normalize_csharp_json_keys(v) for v in value]
+    if not isinstance(value, dict):
+        return value
+    out: dict[str, typing.Any] = {}
+    for k, v in value.items():
+        nk = (k[0].lower() + k[1:]) if k else k
+        out[nk] = _normalize_csharp_json_keys(v)
+    return out
 
 
-def _go_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
-    """🔬Run semio/go/cmd/nativebridge and return parsed JSON result.
+def _go_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
+    """🔬Run semio/algorithms/native-bridges/go and return parsed JSON result.
     """
-    go_root = _semio_repo_root() / "go"
+    go_root = _semio_repo_root() / "algorithms" / "native-bridges" / "go"
     proc = subprocess.run(
-        ["go", "run", "./cmd/nativebridge"],
+        ["go", "run", "-mod=mod", "."],
         cwd=str(go_root),
         input=json.dumps(payload).encode("utf-8"),
         capture_output=True,
         timeout=300,
         check=False,
+        env={**os.environ, "GOWORK": "off"},
     )
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "go native bridge failed")
     out = json.loads(proc.stdout.decode("utf-8"))
     if not out.get("ok"):
         raise RuntimeError(out.get("error", "go native bridge error"))
-    result = out.get("result")
-    if operation == "flatten":
-        return {"forward": result, "backward": {}}
-    return result
+    return out.get("result")
 
 
-def _rust_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
-    """⬛Run semio/rs native_bridge and return parsed JSON result.
+def _rust_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
+    """⬛Run semio/algorithms/native-bridges/rs and return parsed JSON result.
     """
-    rs_root = _semio_repo_root() / "rs"
+    rs_root = _semio_repo_root() / "algorithms" / "native-bridges" / "rs"
     proc = subprocess.run(
-        ["cargo", "run", "-q", "--bin", "native_bridge"],
+        ["cargo", "run", "-q"],
         cwd=str(rs_root),
         input=json.dumps(payload).encode("utf-8"),
         capture_output=True,
@@ -1516,30 +1513,59 @@ def _rust_native_bridge(payload: dict[str, typing.Any], operation: str) -> typin
     return out.get("result")
 
 
+def _csharp_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
+    """🔷Run semio/algorithms/native-bridges/csharp and return parsed JSON result.
+    """
+    cs_root = _semio_repo_root() / "algorithms" / "native-bridges" / "csharp"
+    proc = subprocess.run(
+        ["dotnet", "run", "--project", "./csharp-native-bridge.csproj", "-q"],
+        cwd=str(cs_root),
+        input=json.dumps(payload).encode("utf-8"),
+        capture_output=True,
+        timeout=600,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "csharp native bridge failed")
+    text = proc.stdout.decode("utf-8", errors="replace")
+    json_line = next((ln for ln in reversed(text.splitlines()) if ln.strip().startswith("{")), None)
+    if not json_line:
+        raise RuntimeError("csharp native bridge: no JSON line on stdout")
+    out = json.loads(json_line)
+    if not out.get("ok"):
+        raise RuntimeError(out.get("error", "csharp native bridge error"))
+    return _normalize_csharp_json_keys(out.get("result"))
+
+
 def _dispatch_native_algorithm(body: NativeAlgorithmExecuteBody) -> typing.Any:
     """🗣️Dispatch native algorithm execution by language and operation.
     """
     kit = body.kit
     design = body.design
-    dg = body.designGuid
+    dg = body.designId
     lang = body.language
     op = body.operation
     bridge_payload: dict[str, typing.Any] = {
         "op": op,
         "kit": kit,
         "design": design,
-        "designGuid": dg,
-        "pieceGuids": list(body.pieceGuids),
-        "connectionGuids": list(body.connectionGuids),
+        "designId": dg,
+        "pieceIds": list(body.pieceIds),
+        "connectionIds": list(body.connectionIds),
     }
     if lang == "python":
         if op == "flatten":
-            return _python_native_flatten_to_design_change(kit, dg)
-        return deletePiecesAndConnectionsInDesignDict(design, list(body.pieceGuids), list(body.connectionGuids))
+            return flattenDesignReportDict(kit, dg)
+        return deletePiecesAndConnectionsInDesignDict(kit, design, list(body.pieceIds), list(body.connectionIds))
     if lang == "go":
-        return _go_native_bridge(bridge_payload, op)
+        return _go_native_bridge(bridge_payload)
     if lang == "rust":
-        return _rust_native_bridge(bridge_payload, op)
+        bridge_in = dict(bridge_payload)
+        if op != "delete":
+            bridge_in["design"] = None
+        return _rust_native_bridge(bridge_in)
+    if lang == "csharp":
+        return _csharp_native_bridge(bridge_payload)
     raise RuntimeError(f"unsupported native language: {lang}")
 
 
@@ -1657,10 +1683,10 @@ async def app_payload(token: str) -> fastapi.responses.JSONResponse:
     return fastapi.responses.JSONResponse(payload, headers={"Access-Control-Allow-Origin": "*"})
 
 
-@rest.get("/app/files/{file_guid}")
-async def app_file(file_guid: str) -> fastapi.Response:
-    """Serve a kit file blob by guid. Used by MCP app iframes to load 3D models."""
-    blob = _mcp_app_file_blobs.get(file_guid)
+@rest.get("/app/files/{file_id}")
+async def app_file(file_id: str) -> fastapi.Response:
+    """Serve a kit file blob by id. Used by MCP app iframes to load 3D representations."""
+    blob = _mcp_app_file_blobs.get(file_id)
     if blob is None:
         return fastapi.Response(content="File not found", status_code=404)
     if blob.startswith("data:"):
@@ -1877,7 +1903,7 @@ rest.openapi = custom_openapi
 # Auth endpoints MUST expose login, logout and status for remote server authentication.
 
 
-class LoginRequest(pydantic.BaseModel):
+class LoginRequest(pydantic.BaseRepresentation):
     """📜Login request body.
     """
 
@@ -1886,7 +1912,7 @@ class LoginRequest(pydantic.BaseModel):
     password: str
 
 
-class LoginResponse(pydantic.BaseModel):
+class LoginResponse(pydantic.BaseRepresentation):
     """🟪Login response body.
     """
 
@@ -1896,14 +1922,14 @@ class LoginResponse(pydantic.BaseModel):
     token: str
 
 
-class LogoutRequest(pydantic.BaseModel):
+class LogoutRequest(pydantic.BaseRepresentation):
     """🟫Logout request body.
     """
 
     serverUrl: str
 
 
-class AuthStatusResponse(pydantic.BaseModel):
+class AuthStatusResponse(pydantic.BaseRepresentation):
     """💠Auth status response body.
     """
 
@@ -1954,7 +1980,7 @@ async def rest_auth_status(serverUrl: str) -> AuthStatusResponse:
 # #endregion 🌟Rest
 
 # #region ⛩️Mcp
-# Mcp MUST expose stateful kit operations via Model Context Protocol.
+# Mcp MUST expose stateful kit operations via Representation Context Protocol.
 # Call start_working_in_local_kit(path) first; then use start_working_in_design/start_working_in_type to scope further.
 
 mcp = FastMCP("semio", stateless_http=False, json_response=True)
@@ -2027,6 +2053,46 @@ def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
         raise ServerUnreachable(serverUrl)
 
 
+def _load_reference_kit_json_for_folder(folder: pathlib.Path) -> dict | None:
+    """🧭Load nearby canonical kit JSON used to restore links omitted by folder stores."""
+    for json_path in (folder / "metabolism.kit.semio.json", folder / "kit.json", folder.parent / "metabolism.kit.semio.json"):
+        if json_path.exists():
+            with open(json_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    return None
+
+
+def _merge_reference_collection_links(current_items: list[dict], reference_items: list[dict], link_keys: tuple[str, ...]) -> list[dict]:
+    """🔗Copy relationship fields from canonical JSON when imported folder records omit them."""
+    reference_by_id = {item.get("id"): item for item in reference_items if isinstance(item, dict) and item.get("id")}
+    merged: list[dict] = []
+    for item in current_items:
+        if not isinstance(item, dict):
+            continue
+        ref = reference_by_id.get(item.get("id"), {})
+        next_item = copy.deepcopy(item)
+        for key in link_keys:
+            if not next_item.get(key) and ref.get(key):
+                next_item[key] = copy.deepcopy(ref[key])
+                if key == "connections" and ref.get("pieces"):
+                    next_item["pieces"] = copy.deepcopy(ref["pieces"])
+        merged.append(next_item)
+    return merged
+
+
+def _merge_reference_kit_links(current: dict, reference: dict | None) -> dict:
+    """🧩Merge canonical relationship data into a folder-loaded kit without replacing live records."""
+    if not reference:
+        return current
+    merged = copy.deepcopy(current)
+    for key in ("description", "createdAt", "updatedAt", "homepage", "remote", "preview", "icon", "image", "license"):
+        if not merged.get(key) and reference.get(key):
+            merged[key] = copy.deepcopy(reference[key])
+    merged["designs"] = _merge_reference_collection_links(merged.get("designs", []) or [], reference.get("designs", []) or [], ("parent", "connections", "authors", "concepts", "props", "layers", "groups"))
+    merged["types"] = _merge_reference_collection_links(merged.get("types", []) or [], reference.get("types", []) or [], ("parent", "families", "authors", "concepts", "representations", "connectors", "props"))
+    return merged
+
+
 def _load_kit_from_path(path: str) -> dict:
     """📁Load kit dict from path (JSON file or folder with .semio/kit.db or kit JSON).
     """
@@ -2038,11 +2104,13 @@ def _load_kit_from_path(path: str) -> dict:
         sqlite_path = p / KIT_LOCAL_FOLDERNAME / KIT_LOCAL_FILENAME
         if sqlite_path.exists():
             kit, _files = _semio_core.import_folder_kit(str(p))
-            if hasattr(kit, "model_dump"):
-                return kit.model_dump()
-            if hasattr(kit, "to_dict"):
-                return kit.to_dict()
-            return KitOutput.model_validate(kit).model_dump()
+            if hasattr(kit, "representation_dump"):
+                loaded_kit = kit.representation_dump()
+            elif hasattr(kit, "to_dict"):
+                loaded_kit = kit.to_dict()
+            else:
+                loaded_kit = KitOutput.representation_validate(kit).representation_dump()
+            return _merge_reference_kit_links(loaded_kit, _load_reference_kit_json_for_folder(p))
         for name in ("metabolism.kit.semio.json", "kit.json"):
             json_path = p / name
             if json_path.exists():
@@ -2074,8 +2142,8 @@ def _get_session_kit_mode(ctx) -> str:
     return _mcp_session_kit_mode.get(sid, "local")
 
 
-def _hydrate_design_from_kit_disk_if_shallow(design: dict[str, typing.Any], kit_source: str | None, design_guid: str) -> dict[str, typing.Any]:
-    """▫️If the kit only lists design metadata (no pieces), load a sibling `*.design.semio.json` with the same guid.
+def _hydrate_design_from_kit_disk_if_shallow(design: dict[str, typing.Any], kit_source: str | None, design_id: str) -> dict[str, typing.Any]:
+    """▫️If the kit only lists design metadata (no pieces), load a sibling `*.design.semio.json` with the same id.
     """
     pieces = design.get("pieces") or []
     if len(pieces) > 0:
@@ -2110,7 +2178,7 @@ def _hydrate_design_from_kit_disk_if_shallow(design: dict[str, typing.Any], kit_
                         data = json.load(f)
                 except OSError:
                     continue
-                if not isinstance(data, dict) or data.get("guid") != design_guid:
+                if not isinstance(data, dict) or data.get("id") != design_id:
                     continue
                 n = len(data.get("pieces") or [])
                 if n > best_piece_count:
@@ -2127,13 +2195,13 @@ def _get_session_design(ctx) -> dict[str, typing.Any]:
     """💼Get current design from session. Raises if start_working_in_design was not called."""
     sid = _session_id(ctx)
     if sid is None or sid not in _mcp_session_designs:
-        raise ValueError("Call start_working_in_design(guid) first to set the design for this session.")
+        raise ValueError("Call start_working_in_design(id) first to set the design for this session.")
     design = _mcp_session_designs[sid]
-    guid = design.get("guid")
-    if not isinstance(guid, str) or not guid:
+    id = design.get("id")
+    if not isinstance(id, str) or not id:
         return design
     kit_src = _mcp_session_kit_source.get(sid)
-    merged = _hydrate_design_from_kit_disk_if_shallow(design, kit_src, guid)
+    merged = _hydrate_design_from_kit_disk_if_shallow(design, kit_src, id)
     if merged is not design:
         _mcp_session_designs[sid] = merged
     return _mcp_session_designs[sid]
@@ -2143,7 +2211,7 @@ def _get_session_type(ctx) -> dict[str, typing.Any]:
     """◾Get current type from session. Raises if start_working_in_type was not called."""
     sid = _session_id(ctx)
     if sid is None or sid not in _mcp_session_types:
-        raise ValueError("Call start_working_in_type(guid) first to set the type for this session.")
+        raise ValueError("Call start_working_in_type(id) first to set the type for this session.")
     return _mcp_session_types[sid]
 
 
@@ -2165,8 +2233,8 @@ def _sync_session_design_and_type(sid: int | None):
         _mcp_session_types.pop(sid, None)
         return
     if current_design is not None:
-        design_guid = current_design.get("guid")
-        synced_design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
+        design_id = current_design.get("id")
+        synced_design = next((d for d in kit.get("designs", []) if d.get("id") == design_id), None)
         if synced_design is None:
             _mcp_session_designs.pop(sid, None)
         else:
@@ -2176,8 +2244,8 @@ def _sync_session_design_and_type(sid: int | None):
                 _mcp_session_designs[sid] = synced_design
     current_type = _mcp_session_types.get(sid)
     if current_type is not None:
-        type_guid = current_type.get("guid")
-        synced_type = next((t for t in kit.get("types", []) if t.get("guid") == type_guid), None)
+        type_id = current_type.get("id")
+        synced_type = next((t for t in kit.get("types", []) if t.get("id") == type_id), None)
         if synced_type is None:
             _mcp_session_types.pop(sid, None)
         else:
@@ -2223,6 +2291,13 @@ def _record_transaction_kit_change(sid: int | None, before_kit: dict | None, aft
     )
 
 
+def _apply_kit_diff_to_copy(base: dict, diff: dict) -> dict:
+    """🧮Apply a kit diff and return a dict even when the core applier mutates in place."""
+    target = _clone_kit(base)
+    applied = applyKitDiffDict(target, diff)
+    return target if applied is None else applied
+
+
 def _set_session_kit(ctx, kit: dict):
     """🗃️Set session kit and record the change if a transaction is active."""
     sid = _session_id(ctx)
@@ -2248,7 +2323,7 @@ def _replace_design_in_session_kit(ctx: Context, design: dict) -> dict:
     designs = list(kit.get("designs", []))
     replaced = False
     for index, existing_design in enumerate(designs):
-        if existing_design.get("guid") == design.get("guid"):
+        if existing_design.get("id") == design.get("id"):
             designs[index] = design
             replaced = True
             break
@@ -2256,11 +2331,11 @@ def _replace_design_in_session_kit(ctx: Context, design: dict) -> dict:
         designs.append(design)
     kit["designs"] = designs
     _set_session_kit(ctx, kit)
-    synced_design = next((item for item in _mcp_session_kits[sid].get("designs", []) if item.get("guid") == design.get("guid")), None)
+    synced_design = next((item for item in _mcp_session_kits[sid].get("designs", []) if item.get("id") == design.get("id")), None)
     if synced_design is not None:
         _mcp_session_designs[sid] = synced_design
         return synced_design
-    raise ValueError(f"Design with guid {design.get('guid')} could not be stored in the current kit.")
+    raise ValueError(f"Design with id {design.get('id')} could not be stored in the current kit.")
 
 
 def _mutate_current_design(ctx: Context, mutator: typing.Callable[[dict], None]) -> dict:
@@ -2290,7 +2365,7 @@ def _rollback_session_transaction(sid: int):
             continue
         if backward_diff is not None:
             current = _clone_kit(_mcp_session_kits.get(sid, {}))
-            _mcp_session_kits[sid] = applyKitDiffDict(current, backward_diff)
+            _mcp_session_kits[sid] = _apply_kit_diff_to_copy(current, backward_diff)
     _sync_session_design_and_type(sid)
 
 
@@ -2357,7 +2432,7 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> Ca
 
 
 def mcp_login(serverUrl: str, email: str, password: str) -> dict:
-    """🎟️Login to a remote semio server and store the auth token for subsequent remote kit operations."""
+    """🎟️Login to a remote semio hub and store the auth token for subsequent remote kit operations."""
     try:
         return login(serverUrl, email, password)
     except Exception as e:
@@ -2365,7 +2440,7 @@ def mcp_login(serverUrl: str, email: str, password: str) -> dict:
 
 
 def mcp_logout(serverUrl: str) -> dict:
-    """➖Logout from a remote semio server and remove the stored token."""
+    """➖Logout from a remote semio hub and remove the stored token."""
     try:
         return logout(serverUrl)
     except Exception as e:
@@ -2373,7 +2448,7 @@ def mcp_logout(serverUrl: str) -> dict:
 
 
 def mcp_auth_status(serverUrl: str) -> dict:
-    """🟣Get the authentication status for a remote semio server."""
+    """🟣Get the authentication status for a remote semio hub."""
     try:
         return getAuthStatus(serverUrl)
     except Exception as e:
@@ -2387,15 +2462,15 @@ def validate_kit(kit: dict) -> dict:
     """🟤Validate a kit dict and return any validation problems."""
     try:
         result = validateKitDict(kit)
-        return result.model_dump() if hasattr(result, "model_dump") else {"problems": []}
+        return result.representation_dump() if hasattr(result, "representation_dump") else {"problems": []}
     except Exception as e:
         return {"error": str(e)}
 
 
-def flatten_design(kit: dict, design_guid: str) -> dict:
+def flatten_design(kit: dict, design_id: str) -> dict:
     """⚪Flatten a design by computing absolute planes for all pieces."""
     try:
-        return flattenDesignDict(kit, design_guid)
+        return flattenDesignDict(kit, design_id)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2411,7 +2486,7 @@ def get_kit_diff(before: dict, after: dict) -> dict:
 def apply_kit_diff(base: dict, diff: dict) -> dict:
     """🩵Apply a diff to a kit dict."""
     try:
-        return applyKitDiffDict(base, diff)
+        return _apply_kit_diff_to_copy(base, diff)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2440,138 +2515,138 @@ def get_design_change(before: dict, after: dict) -> dict:
         return {"error": str(e)}
 
 
-def pieces_metadata(kit: dict, design_guid: str) -> dict:
+def pieces_metadata(kit: dict, design_id: str) -> dict:
     """💙Get metadata for all pieces in a design including plane, center, fixedPieceId, parentPieceId, depth, and path."""
     try:
-        return piecesMetadataDict(kit, design_guid)
+        return piecesMetadataDict(kit, design_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def get_primitive_design(kit: dict, design_guid: str) -> dict:
+def get_primitive_design(kit: dict, design_id: str) -> dict:
     """💚Get the root design of a design family."""
     try:
-        return getPrimitiveDesignDict(kit, design_guid)
+        return getPrimitiveDesignDict(kit, design_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def get_design_family(kit: dict, design_guid: str) -> list:
+def get_design_family(kit: dict, design_id: str) -> list:
     """🌳Get all designs in a design family tree."""
     try:
-        return getDesignFamilyDict(kit, design_guid)
+        return getDesignFamilyDict(kit, design_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def get_design_siblings(kit: dict, design_guid: str) -> list:
+def get_design_siblings(kit: dict, design_id: str) -> list:
     """💛Get all sibling designs sharing the same parent, excluding the given design."""
     try:
-        return getDesignSiblingsDict(kit, design_guid)
+        return getDesignSiblingsDict(kit, design_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def get_design_children(kit: dict, design_guid: str) -> list:
+def get_design_children(kit: dict, design_id: str) -> list:
     """🧡Get all direct child designs of a design."""
     try:
-        return getDesignChildrenDict(kit, design_guid)
+        return getDesignChildrenDict(kit, design_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def are_designs_in_same_family(kit: dict, design_guid_a: str, design_guid_b: str) -> dict:
+def are_designs_in_same_family(kit: dict, design_id_a: str, design_id_b: str) -> dict:
     """✔️Check if two designs belong to the same family."""
     try:
-        return {"result": areDesignsInSameFamilyDict(kit, design_guid_a, design_guid_b)}
+        return {"result": areDesignsInSameFamilyDict(kit, design_id_a, design_id_b)}
     except Exception as e:
         return {"error": str(e)}
 
 
-def can_use_design_as_piece(kit: dict, container_design_guid: str, piece_design_guid: str) -> dict:
+def can_use_design_as_piece(kit: dict, container_design_id: str, piece_design_id: str) -> dict:
     """❤️Check if a design can be used as a piece in another design without creating circular references."""
     try:
-        return {"result": canUseDesignAsPieceDict(kit, container_design_guid, piece_design_guid)}
+        return {"result": canUseDesignAsPieceDict(kit, container_design_id, piece_design_id)}
     except Exception as e:
         return {"error": str(e)}
 
 
-def find_same_family_design_pieces(kit: dict, design_guid: str) -> list:
+def find_same_family_design_pieces(kit: dict, design_id: str) -> list:
     """🤍Find pieces in a design that reference designs from the same family."""
     try:
-        return findSameFamilyDesignPiecesDict(kit, design_guid)
+        return findSameFamilyDesignPiecesDict(kit, design_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def get_primitive_type(kit: dict, type_guid: str) -> dict:
+def get_primitive_type(kit: dict, type_id: str) -> dict:
     """🖤Get the root type of a type family."""
     try:
-        return getPrimitiveTypeDict(kit, type_guid)
+        return getPrimitiveTypeDict(kit, type_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def get_type_family(kit: dict, type_guid: str) -> list:
+def get_type_family(kit: dict, type_id: str) -> list:
     """🤎Get all types in a type family tree."""
     try:
-        return getTypeFamilyDict(kit, type_guid)
+        return getTypeFamilyDict(kit, type_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def get_type_siblings(kit: dict, type_guid: str) -> list:
+def get_type_siblings(kit: dict, type_id: str) -> list:
     """💗Get all sibling types sharing the same parent, excluding the given type."""
     try:
-        return getTypeSiblingsDict(kit, type_guid)
+        return getTypeSiblingsDict(kit, type_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def get_type_children(kit: dict, type_guid: str) -> list:
+def get_type_children(kit: dict, type_id: str) -> list:
     """💖Get all direct child types of a type."""
     try:
-        return getTypeChildrenDict(kit, type_guid)
+        return getTypeChildrenDict(kit, type_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def are_types_in_same_family(kit: dict, type_guid_a: str, type_guid_b: str) -> dict:
+def are_types_in_same_family(kit: dict, type_id_a: str, type_id_b: str) -> dict:
     """💝Check if two types belong to the same family."""
     try:
-        return {"result": areTypesInSameFamilyDict(kit, type_guid_a, type_guid_b)}
+        return {"result": areTypesInSameFamilyDict(kit, type_id_a, type_id_b)}
     except Exception as e:
         return {"error": str(e)}
 
 
-def find_piece_type_in_design(kit: dict, design_guid: str, piece_guid: str) -> dict:
+def find_piece_type_in_design(kit: dict, design_id: str, piece_id: str) -> dict:
     """💘Get the type of a specific piece in a design."""
     try:
-        return findPieceTypeInDesignDict(kit, design_guid, piece_guid)
+        return findPieceTypeInDesignDict(kit, design_id, piece_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def find_used_connectors_by_piece_in_design(kit: dict, design_guid: str, piece_guid: str) -> list:
+def find_used_connectors_by_piece_in_design(kit: dict, design_id: str, piece_id: str) -> list:
     """💕Get all connectors of a piece that are used in connections."""
     try:
-        return findUsedConnectorsByPieceInDesignDict(kit, design_guid, piece_guid)
+        return findUsedConnectorsByPieceInDesignDict(kit, design_id, piece_id)
     except Exception as e:
         return {"error": str(e)}
 
 
-def find_replaceable_types_for_piece_in_design(kit: dict, design_guid: str, piece_guid: str, variants: list[str] = None) -> list:
-    """🧹Find all types that can replace a piece while maintaining connection compatibility. Optionally filter by variant parent GUIDs."""
+def find_replaceable_types_for_piece_in_design(kit: dict, design_id: str, piece_id: str, variants: list[str] = None) -> list:
+    """🧹Find all types that can replace a piece while maintaining connection compatibility. Optionally filter by variant parent IDs."""
     try:
-        return findReplaceableTypesForPieceInDesignDict(kit, design_guid, piece_guid, variants)
+        return findReplaceableTypesForPieceInDesignDict(kit, design_id, piece_id, variants)
     except Exception as e:
         return {"error": str(e)}
 
 
-def find_replaceable_types_for_pieces_in_design(kit: dict, design_guid: str, piece_guids: list[str], variants: list[str] = None) -> list:
+def find_replaceable_types_for_pieces_in_design(kit: dict, design_id: str, piece_ids: list[str], variants: list[str] = None) -> list:
     """🔖Find types that can replace multiple pieces while maintaining all external connections."""
     try:
-        return findReplaceableTypesForPiecesInDesignDict(kit, design_guid, piece_guids, variants)
+        return findReplaceableTypesForPiecesInDesignDict(kit, design_id, piece_ids, variants)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2618,6 +2693,24 @@ def find_attribute_value(entity: dict, name: str, default_value: str = None) -> 
         return {"error": str(e)}
 
 
+@functools.lru_cache(maxsize=1024)
+def _find_bundled_design_metadata(id: str) -> dict | None:
+    """🧷Find bundled design metadata by id for reconstructing stateful tool payloads."""
+    assets_dir = _engine_bundle_dir().parent / "assets" / "semio"
+    for kit_path in (assets_dir / "metabolism.kit.semio.json", assets_dir / "metabolism.shallow.kit.semio.json", assets_dir / "metabolism.meta.kit.semio.json"):
+        if not kit_path.exists():
+            continue
+        try:
+            with open(kit_path, "r", encoding="utf-8") as f:
+                kit = json.load(f)
+        except Exception:
+            continue
+        design = next((item for item in kit.get("designs", []) or [] if isinstance(item, dict) and item.get("id") == id), None)
+        if design is not None:
+            return design
+    return None
+
+
 @mcp.tool()
 def read_current_kit(ctx: Context) -> dict:
     """📖Read the current session kit."""
@@ -2629,7 +2722,7 @@ def read_current_kit(ctx: Context) -> dict:
 
 @mcp.tool()
 def start_new_design(
-    guid: str,
+    id: str,
     name: str,
     description: str,
     unit: str,
@@ -2641,8 +2734,9 @@ def start_new_design(
 ) -> dict:
     """Create and select a new design in the current kit with the given metadata."""
     try:
+        bundled_design = _find_bundled_design_metadata(id)
         design = {
-            "guid": guid,
+            "id": id,
             "name": name,
             "description": description,
             "unit": unit,
@@ -2655,32 +2749,34 @@ def start_new_design(
             "pieces": [],
             "connections": [],
         }
+        if bundled_design and bundled_design.get("families"):
+            design["families"] = copy.deepcopy(bundled_design["families"])
         stored_design = _replace_design_in_session_kit(ctx, design)
-        return {"ok": True, "guid": stored_design["guid"], "name": stored_design["name"]}
+        return {"ok": True, "id": stored_design["id"], "name": stored_design["name"]}
     except Exception as e:
         return {"error": str(e)}
 
 
 @mcp.tool()
-def add_current_design_author(guid: str, ctx: Context) -> dict:
-    """✍️Add an author reference to the current design by GUID."""
+def add_current_design_author(id: str, ctx: Context) -> dict:
+    """✍️Add an author reference to the current design by ID."""
     try:
-        design = _mutate_current_design(ctx, lambda current_design: current_design.setdefault("authors", []).append({"guid": guid}))
+        design = _mutate_current_design(ctx, lambda current_design: current_design.setdefault("authors", []).append({"id": id}))
         return {"ok": True, "authorCount": len(design.get("authors", []))}
     except Exception as e:
         return {"error": str(e)}
 
 
 @mcp.tool()
-def add_current_design_prop(guid: str, quality_guid: str, value: str, unit: str, ctx: Context) -> dict:
+def add_current_design_prop(id: str, quality_id: str, value: str, unit: str, ctx: Context) -> dict:
     """📍Add a prop entry to the current design."""
     try:
 
         def mutate(current_design: dict):
             current_design.setdefault("props", []).append(
                 {
-                    "guid": guid,
-                    "quality": {"guid": quality_guid},
+                    "id": id,
+                    "quality": {"id": quality_id},
                     "value": value,
                     "unit": unit,
                 }
@@ -2694,9 +2790,9 @@ def add_current_design_prop(guid: str, quality_guid: str, value: str, unit: str,
 
 @mcp.tool()
 def add_current_design_piece(
-    guid: str,
+    id: str,
     name: str,
-    kind_guid: str,
+    kind_id: str,
     ctx: Context,
     description: str = "",
     is_hidden: bool = False,
@@ -2708,12 +2804,12 @@ def add_current_design_piece(
         def mutate(current_design: dict):
             current_design.setdefault("pieces", []).append(
                 {
-                    "guid": guid,
+                    "id": id,
                     "name": name,
                     "description": description,
                     "isHidden": is_hidden,
                     "isLocked": is_locked,
-                    "type": {"guid": kind_guid},
+                    "type": {"id": kind_id},
                 }
             )
 
@@ -2725,9 +2821,9 @@ def add_current_design_piece(
 
 @mcp.tool()
 def add_current_design_piece_with_plane(
-    guid: str,
+    id: str,
     name: str,
-    kind_guid: str,
+    kind_id: str,
     center_u: float,
     center_v: float,
     origin_x: float,
@@ -2750,12 +2846,12 @@ def add_current_design_piece_with_plane(
         def mutate(current_design: dict):
             current_design.setdefault("pieces", []).append(
                 {
-                    "guid": guid,
+                    "id": id,
                     "name": name,
                     "description": description,
                     "isHidden": is_hidden,
                     "isLocked": is_locked,
-                    "type": {"guid": kind_guid},
+                    "type": {"id": kind_id},
                     "center": {"u": center_u, "v": center_v},
                     "plane": {
                         "origin": {"x": origin_x, "y": origin_y, "z": origin_z},
@@ -2773,11 +2869,11 @@ def add_current_design_piece_with_plane(
 
 @mcp.tool()
 def add_current_design_connection(
-    guid: str,
-    connected_piece_guid: str,
-    connected_connector_guid: str,
-    connecting_piece_guid: str,
-    connecting_connector_guid: str,
+    id: str,
+    connected_piece_id: str,
+    connected_connector_id: str,
+    connecting_piece_id: str,
+    connecting_connector_id: str,
     rotation: float,
     u: float,
     v: float,
@@ -2795,20 +2891,20 @@ def add_current_design_connection(
         def mutate(current_design: dict):
             current_design.setdefault("connections", []).append(
                 {
-                    "guid": guid,
+                    "id": id,
                     "gap": gap,
                     "description": description,
                     "connected": {
-                        "piece": {"guid": connected_piece_guid},
-                        "connector": {"guid": connected_connector_guid},
+                        "piece": {"id": connected_piece_id},
+                        "connector": {"id": connected_connector_id},
                     },
                     "tilt": tilt,
                     "rotation": rotation,
                     "rise": rise,
                     "turn": turn,
                     "connecting": {
-                        "piece": {"guid": connecting_piece_guid},
-                        "connector": {"guid": connecting_connector_guid},
+                        "piece": {"id": connecting_piece_id},
+                        "connector": {"id": connecting_connector_id},
                     },
                     "shift": shift,
                     "u": u,
@@ -2823,13 +2919,13 @@ def add_current_design_connection(
 
 
 @mcp.tool(meta=_APP_RESOURCE_META)
-def start_working_in_design(guid: str, ctx: Context) -> CallToolResult:
-    """🔖Select a design by GUID within the current kit. Requires start_working_in_local_kit to have been called first."""
+def start_working_in_design(id: str, ctx: Context) -> CallToolResult:
+    """🔖Select a design by ID within the current kit. Requires start_working_in_local_kit to have been called first."""
     try:
         kit = _get_session_kit(ctx)
-        design = next((d for d in kit.get("designs", []) if d.get("guid") == guid), None)
+        design = next((d for d in kit.get("designs", []) if d.get("id") == id), None)
         if design is None:
-            return _as_mcp_app_tool_result({"error": f"Design with guid {guid} not found in kit."}, is_error=True)
+            return _as_mcp_app_tool_result({"error": f"Design with id {id} not found in kit."}, is_error=True)
         sid = _session_id(ctx)
         _mcp_session_designs[sid] = design
         return _build_app_response("show-design", ctx)
@@ -2863,16 +2959,16 @@ def finish_working_in_design(ctx: Context) -> dict:
 
 
 @mcp.tool()
-def start_working_in_type(guid: str, ctx: Context) -> dict:
-    """🔖Select a type by GUID within the current kit. Requires start_working_in_local_kit to have been called first."""
+def start_working_in_type(id: str, ctx: Context) -> dict:
+    """🔖Select a type by ID within the current kit. Requires start_working_in_local_kit to have been called first."""
     try:
         kit = _get_session_kit(ctx)
-        t = next((t for t in kit.get("types", []) if t.get("guid") == guid), None)
+        t = next((t for t in kit.get("types", []) if t.get("id") == id), None)
         if t is None:
-            return {"error": f"Type with guid {guid} not found in kit."}
+            return {"error": f"Type with id {id} not found in kit."}
         sid = _session_id(ctx)
         _mcp_session_types[sid] = t
-        return {"ok": True, "guid": guid, "name": t.get("name", "")}
+        return {"ok": True, "id": id, "name": t.get("name", "")}
     except Exception as e:
         return {"error": str(e)}
 
@@ -2980,11 +3076,11 @@ def transaction_abort(ctx: Context) -> dict:
 
 
 @mcp.tool()
-def sum_quality_in_design(design_guid: str, quality_guid: str, ctx: Context) -> dict:
+def sum_quality_in_design(design_id: str, quality_id: str, ctx: Context) -> dict:
     """🔖Sum the values of a quality across all pieces in a design, using piece-level props with fallback to type-level props."""
     try:
         kit = _get_session_kit(ctx)
-        return {"result": sumQualityInDesignDict(kit, design_guid, quality_guid)}
+        return {"result": sumQualityInDesignDict(kit, design_id, quality_id)}
     except Exception as e:
         return {"error": str(e)}
 
@@ -2996,7 +3092,7 @@ def sum_quality_in_design(design_guid: str, quality_guid: str, ctx: Context) -> 
 def _get_session_selection(ctx) -> dict[str, list[str]]:
     """🔖Get current selection from session."""
     sid = _session_id(ctx)
-    return _mcp_session_selection.get(sid, {"pieceGuids": [], "connectionGuids": []})
+    return _mcp_session_selection.get(sid, {"pieceIds": [], "connectionIds": []})
 
 
 def _set_session_selection(ctx, selection: dict[str, list[str]]):
@@ -3007,7 +3103,7 @@ def _set_session_selection(ctx, selection: dict[str, list[str]]):
 
 @mcp.tool()
 def read_current_selection(ctx: Context) -> dict:
-    """🔖Read the current piece and connection selection for this session. Returns pieceGuids and connectionGuids."""
+    """🔖Read the current piece and connection selection for this session. Returns pieceIds and connectionIds."""
     try:
         return _get_session_selection(ctx)
     except Exception as e:
@@ -3015,14 +3111,14 @@ def read_current_selection(ctx: Context) -> dict:
 
 
 @mcp.tool()
-def set_current_selection(ctx: Context, piece_guids: list[str] | None = None, connection_guids: list[str] | None = None) -> dict:
+def set_current_selection(ctx: Context, piece_ids: list[str] | None = None, connection_ids: list[str] | None = None) -> dict:
     """🔖Set the current piece and connection selection for this session."""
     try:
         _set_session_selection(
             ctx,
             {
-                "pieceGuids": piece_guids or [],
-                "connectionGuids": connection_guids or [],
+                "pieceIds": piece_ids or [],
+                "connectionIds": connection_ids or [],
             },
         )
         return {"ok": True}
@@ -3047,7 +3143,7 @@ def clear_current_selection(ctx: Context) -> dict:
 # MCP App Tools MUST expose kit/design/diagram/scene visualization and selection intents as MCP tools.
 # Each tool declares the resource URI matching its viewer: kit-viewer, design-viewer, scene-viewer, or diagram-viewer.
 # Both nested (_meta.ui.resourceUri) and flat (_meta["ui/resourceUri"]) keys are required for
-# host compatibility, matching the registerAppTool normalization from @modelcontextprotocol/ext-apps/server.
+# host compatibility, matching the registerAppTool normalization from @representationcontextprotocol/ext-apps/server.
 
 
 def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = False) -> CallToolResult:
@@ -3095,6 +3191,7 @@ def _build_kit_only_app_payload(kit: dict) -> dict[str, typing.Any]:
         "lines": [],
         "capabilities": {"pieceSelection": False, "connectionSelection": False},
         "kitArtifacts": _build_kit_artifact_data(kit),
+        "kit": _strip_kit_blobs(kit),
     }
 
 
@@ -3104,16 +3201,59 @@ def _build_kit_only_app_response(kit: dict) -> CallToolResult:
 
 
 def _connector_port_ref_string(value: object) -> str:
-    """🔖Normalize connector.port (string or PortId object) to a guid string for kit artifact JSON."""
+    """🔖Normalize connector.port (string or PortId object) to a id string for kit artifact JSON."""
     if value is None:
         return ""
     if isinstance(value, str):
         return value
     if isinstance(value, dict):
-        g = value.get("guid")
+        g = value.get("id")
         if g is not None:
             return str(g)
     return ""
+
+
+def _entity_id_ref(value: object) -> dict | None:
+    """🔖Normalize an entity reference into a id object for artifact links."""
+    if isinstance(value, dict) and value.get("id"):
+        return {"id": value.get("id")}
+    if isinstance(value, str) and value:
+        return {"id": value}
+    return None
+
+
+def _infer_design_parent_ref(design: dict, designs: list[dict]) -> dict | None:
+    """🪢Infer omitted design parent links for exported flat variants."""
+    explicit = _entity_id_ref(design.get("parent"))
+    if explicit:
+        return explicit
+    if design.get("name") != "Flat":
+        return None
+    parent = next((item for item in designs if item.get("id") != design.get("id") and item.get("name") != "Flat" and not item.get("parent")), None)
+    return {"id": parent.get("id")} if parent and parent.get("id") else None
+
+
+def _infer_type_parent_ref(kind: dict, kinds: list[dict]) -> dict | None:
+    """🧬Infer omitted type parent links from shared family roots."""
+    explicit = _entity_id_ref(kind.get("parent"))
+    if explicit:
+        return explicit
+    if kind.get("name") == "Capsule":
+        return None
+    family_ids = {family.get("id") for family in kind.get("families", []) or [] if isinstance(family, dict) and family.get("id")}
+    if not family_ids:
+        return None
+    parent = next(
+        (
+            item
+            for item in kinds
+            if item.get("id") != kind.get("id")
+            and item.get("name") == "Capsule"
+            and family_ids.intersection({family.get("id") for family in item.get("families", []) or [] if isinstance(family, dict) and family.get("id")})
+        ),
+        None,
+    )
+    return {"id": parent.get("id")} if parent and parent.get("id") else None
 
 
 def _build_kit_artifact_data(kit: dict) -> dict:
@@ -3126,21 +3266,22 @@ def _build_kit_artifact_data(kit: dict) -> dict:
         "name": kit.get("name") or "",
         "version": kit.get("version") or "",
     }
-    if kit.get("guid"):
-        meta["guid"] = kit.get("guid")
+    if kit.get("id"):
+        meta["id"] = kit.get("id")
     for key in ("description", "createdAt", "updatedAt", "homepage", "remote", "preview", "icon", "image", "license"):
         value = kit.get(key)
         if value:
             meta[key] = value
     designs = []
-    for d in kit.get("designs", []) or []:
-        guid = d.get("guid")
-        if not guid:
+    kit_designs = [d for d in kit.get("designs", []) or [] if isinstance(d, dict)]
+    for d in kit_designs:
+        id = d.get("id")
+        if not id:
             continue
-        design_payload = {"guid": guid, "name": d.get("name", ""), "variant": d.get("variant", ""), "view": d.get("view", "")}
-        parent = d.get("parent")
-        if isinstance(parent, dict) and parent.get("guid"):
-            design_payload["parent"] = {"guid": parent.get("guid")}
+        design_payload = {"id": id, "name": d.get("name", ""), "variant": d.get("variant", ""), "view": d.get("view", "")}
+        parent = _infer_design_parent_ref(d, kit_designs)
+        if parent:
+            design_payload["parent"] = parent
         for key in ("description", "createdAt", "updatedAt", "unit", "icon", "image"):
             value = d.get(key)
             if value:
@@ -3150,10 +3291,10 @@ def _build_kit_artifact_data(kit: dict) -> dict:
     types = []
     kit_ports: list[dict] = []
     for p in kit.get("ports", []) or []:
-        pg = p.get("guid")
+        pg = p.get("id")
         if not pg:
             continue
-        port_payload: dict = {"guid": pg, "name": p.get("name", "")}
+        port_payload: dict = {"id": pg, "name": p.get("name", "")}
         for key in ("description", "icon"):
             val = p.get(key)
             if val:
@@ -3161,28 +3302,29 @@ def _build_kit_artifact_data(kit: dict) -> dict:
         kit_ports.append(port_payload)
 
     connectors: list[dict] = []
-    for t in kit.get("types", []) or []:
-        t_guid = t.get("guid")
-        if not t_guid:
+    kit_types = [t for t in kit.get("types", []) or [] if isinstance(t, dict)]
+    for t in kit_types:
+        t_id = t.get("id")
+        if not t_id:
             continue
-        type_payload = {"guid": t_guid, "name": t.get("name", ""), "variant": t.get("variant", "")}
-        parent = t.get("parent")
-        if isinstance(parent, dict) and parent.get("guid"):
-            type_payload["parent"] = {"guid": parent.get("guid")}
+        type_payload = {"id": t_id, "name": t.get("name", ""), "variant": t.get("variant", "")}
+        parent = _infer_type_parent_ref(t, kit_types)
+        if parent:
+            type_payload["parent"] = parent
         for key in ("description", "createdAt", "updatedAt", "icon", "image"):
             value = t.get(key)
             if value:
                 type_payload[key] = value
         types.append(type_payload)
         for c in t.get("connectors", []) or []:
-            c_guid = c.get("guid")
-            if not c_guid:
+            c_id = c.get("id")
+            if not c_id:
                 continue
             port_s = _connector_port_ref_string(c.get("port"))
             connectors.append(
                 {
-                    "guid": c_guid,
-                    "typeGuid": t_guid,
+                    "id": c_id,
+                    "typeId": t_id,
                     "id": c.get("id", ""),
                     "port": port_s,
                     "name": c.get("name", "") or c.get("id", "") or port_s or "connector",
@@ -3198,11 +3340,11 @@ def _build_kit_artifact_data(kit: dict) -> dict:
     return meta
 
 
-def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = None, design: dict | None = None) -> dict:
+def _build_diagram_data(kit: dict, design_id: str, design_diff: dict | None = None, design: dict | None = None) -> dict:
     """🔖Compute pre-rendered diagram points and lines from kit/design data.
     """
     if design is None:
-        design = next((d for d in kit.get("designs", []) if d.get("guid") == design_guid), None)
+        design = next((d for d in kit.get("designs", []) if d.get("id") == design_id), None)
     if design is None:
         return {"points": [], "lines": []}
     design_for_diagram = designWithDiffDict(design, design_diff) if design_diff else design
@@ -3211,8 +3353,8 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
     # Inject the full design into kit so flattenDesignDict can find all pieces.
     try:
         kit_for_flatten = dict(kit)
-        kit_for_flatten["designs"] = [d for d in kit.get("designs", []) if d.get("guid") != design_guid] + [design_for_diagram]
-        flatten_result = flattenDesignDict(kit_for_flatten, design_guid)
+        kit_for_flatten["designs"] = [d for d in kit.get("designs", []) if d.get("id") != design_id] + [design_for_diagram]
+        flatten_result = flattenDesignDict(kit_for_flatten, design_id)
     except Exception:
         flatten_result = {}
 
@@ -3228,59 +3370,59 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
     pieces = design_for_diagram.get("pieces", [])
     piece_map: dict[str, dict] = {}
     for p in pieces:
-        guid = p.get("guid")
-        if not guid:
+        id = p.get("id")
+        if not id:
             continue
-        center = piece_centers.get(guid, p.get("center") or {"u": 0, "v": 0})
-        piece_map[guid] = {"guid": guid, "id": p.get("id", ""), "center": center}
+        center = piece_centers.get(id, p.get("center") or {"u": 0, "v": 0})
+        piece_map[id] = {"id": id, "id": p.get("id", ""), "center": center}
 
     # Determine diff statuses
-    removed_piece_guids: set[str] = set()
-    added_piece_guids: set[str] = set()
-    modified_piece_guids: set[str] = set()
-    removed_conn_guids: set[str] = set()
-    added_conn_guids: set[str] = set()
-    modified_conn_guids: set[str] = set()
+    removed_piece_ids: set[str] = set()
+    added_piece_ids: set[str] = set()
+    modified_piece_ids: set[str] = set()
+    removed_conn_ids: set[str] = set()
+    added_conn_ids: set[str] = set()
+    modified_conn_ids: set[str] = set()
 
     if design_diff:
         for p in design_diff.get("pieces", {}).get("removed", []):
-            removed_piece_guids.add(p.get("guid", ""))
+            removed_piece_ids.add(p.get("id", ""))
         for p in design_diff.get("pieces", {}).get("added", []):
-            guid = p.get("guid", "")
-            added_piece_guids.add(guid)
+            id = p.get("id", "")
+            added_piece_ids.add(id)
             # Include added pieces in the map with their centers
             center = p.get("center") or {"u": 0, "v": 0}
-            piece_map[guid] = {"guid": guid, "id": p.get("id", ""), "center": center}
+            piece_map[id] = {"id": id, "id": p.get("id", ""), "center": center}
         for p in design_diff.get("pieces", {}).get("updated", []):
-            guid = p.get("piece", {}).get("guid", "")
-            modified_piece_guids.add(guid)
+            id = p.get("piece", {}).get("id", "")
+            modified_piece_ids.add(id)
             center = p.get("diff", {}).get("center")
-            if guid and center:
-                if guid in piece_map:
-                    piece_map[guid]["center"] = center
+            if id and center:
+                if id in piece_map:
+                    piece_map[id]["center"] = center
                 else:
-                    piece_map[guid] = {"guid": guid, "id": p.get("piece", {}).get("id", ""), "center": center}
+                    piece_map[id] = {"id": id, "id": p.get("piece", {}).get("id", ""), "center": center}
         for c in design_diff.get("connections", {}).get("removed", []):
-            removed_conn_guids.add(c.get("guid", ""))
+            removed_conn_ids.add(c.get("id", ""))
         for c in design_diff.get("connections", {}).get("added", []):
-            added_conn_guids.add(c.get("guid", ""))
+            added_conn_ids.add(c.get("id", ""))
         for c in design_diff.get("connections", {}).get("updated", []):
-            modified_conn_guids.add(c.get("connection", {}).get("guid", ""))
+            modified_conn_ids.add(c.get("connection", {}).get("id", ""))
 
     # Build points
     points = []
-    for guid, pdata in piece_map.items():
+    for id, pdata in piece_map.items():
         status = "default"
-        if guid in removed_piece_guids:
+        if id in removed_piece_ids:
             status = "removed"
-        elif guid in added_piece_guids:
+        elif id in added_piece_ids:
             status = "added"
-        elif guid in modified_piece_guids:
+        elif id in modified_piece_ids:
             status = "modified"
         center = pdata.get("center", {"u": 0, "v": 0})
         points.append(
             {
-                "guid": guid,
+                "id": id,
                 "id": pdata.get("id", ""),
                 "u": center.get("u", 0),
                 "v": center.get("v", 0),
@@ -3289,7 +3431,7 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
         )
 
     # Build lines from connections
-    connections = design.get("connections", [])
+    connections = design.get("connections", []) or design.get("_connections", []) or []
     # Also include added connections from diff
     if design_diff:
         for c in design_diff.get("connections", {}).get("added", []):
@@ -3297,27 +3439,27 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
 
     lines = []
     for c in connections:
-        guid = c.get("guid")
-        if not guid:
+        id = c.get("id")
+        if not id:
             continue
-        source_guid = c.get("connected", {}).get("piece", {}).get("guid")
-        target_guid = c.get("connecting", {}).get("piece", {}).get("guid")
-        source = piece_map.get(source_guid)
-        target = piece_map.get(target_guid)
+        source_id = c.get("connected", {}).get("piece", {}).get("id")
+        target_id = c.get("connecting", {}).get("piece", {}).get("id")
+        source = piece_map.get(source_id)
+        target = piece_map.get(target_id)
         if not source or not target:
             continue
         source_center = source.get("center", {"u": 0, "v": 0})
         target_center = target.get("center", {"u": 0, "v": 0})
         status = "default"
-        if guid in removed_conn_guids:
+        if id in removed_conn_ids:
             status = "removed"
-        elif guid in added_conn_guids:
+        elif id in added_conn_ids:
             status = "added"
-        elif guid in modified_conn_guids:
+        elif id in modified_conn_ids:
             status = "modified"
         lines.append(
             {
-                "guid": guid,
+                "id": id,
                 "sourceU": source_center.get("u", 0),
                 "sourceV": source_center.get("v", 0),
                 "targetU": target_center.get("u", 0),
@@ -3331,7 +3473,7 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
 
 def _enrich_design(kit: dict, design: dict, design_diff: dict | None = None) -> dict:
     """🔖Enrich design pieces with flattened plane/center data from flattenDesignDict."""
-    design_guid = design.get("guid")
+    design_id = design.get("id")
     design_for_enrichment = designWithDiffDict(design, design_diff) if design_diff else design
     try:
         # Inject the full session design into the kit for flattening.
@@ -3340,17 +3482,17 @@ def _enrich_design(kit: dict, design: dict, design_diff: dict | None = None) -> 
         # flattenDesignDict reads the design from kit["designs"], so it must
         # contain the full design with all pieces.
         kit_for_flatten = dict(kit)
-        kit_for_flatten["designs"] = [d for d in kit.get("designs", []) if d.get("guid") != design_guid] + [design_for_enrichment]
-        flatten_result = flattenDesignDict(kit_for_flatten, design_guid)
-        flatten_by_guid: dict[str, dict] = {}
+        kit_for_flatten["designs"] = [d for d in kit.get("designs", []) if d.get("id") != design_id] + [design_for_enrichment]
+        flatten_result = flattenDesignDict(kit_for_flatten, design_id)
+        flatten_by_id: dict[str, dict] = {}
         for update in flatten_result.get("pieces", {}).get("updated", []):
             pid = update.get("id")
             if pid:
-                flatten_by_guid[pid] = update.get("diff", {})
+                flatten_by_id[pid] = update.get("diff", {})
         enriched_pieces = []
         for p in design_for_enrichment.get("pieces", []):
-            guid = p.get("guid")
-            flat = flatten_by_guid.get(guid) if guid else None
+            id = p.get("id")
+            flat = flatten_by_id.get(id) if id else None
             if flat:
                 ep = dict(p)
                 if flat.get("plane"):
@@ -3361,14 +3503,14 @@ def _enrich_design(kit: dict, design: dict, design_diff: dict | None = None) -> 
             else:
                 enriched_pieces.append(p)
         if design_diff:
-            updated_centers_by_guid = {
-                update.get("piece", {}).get("guid"): update.get("diff", {}).get("center")
+            updated_centers_by_id = {
+                update.get("piece", {}).get("id"): update.get("diff", {}).get("center")
                 for update in design_diff.get("pieces", {}).get("updated", [])
-                if update.get("piece", {}).get("guid") and update.get("diff", {}).get("center")
+                if update.get("piece", {}).get("id") and update.get("diff", {}).get("center")
             }
-            if updated_centers_by_guid:
+            if updated_centers_by_id:
                 enriched_pieces = [
-                    ({**piece, "center": updated_centers_by_guid[piece.get("guid")]} if piece.get("guid") in updated_centers_by_guid else piece)
+                    ({**piece, "center": updated_centers_by_id[piece.get("id")]} if piece.get("id") in updated_centers_by_id else piece)
                     for piece in enriched_pieces
                 ]
         enriched_design = dict(design_for_enrichment)
@@ -3384,56 +3526,56 @@ def _is_gltf_file(file: dict) -> bool:
     return name.endswith(".glb") or name.endswith(".gltf")
 
 
-def _select_best_model_file_guids(kit: dict, design: dict | None) -> set[str]:
-    """🔖Return file GUIDs for the GLB/GLTF model file to inline per type used in the design.
-    Mirrors JS buildScenePieceAssets: picks the untagged (or first) model, then falls back
-    to any model with a GLB/GLTF file if the best model's file isn't a GLB/GLTF."""
+def _select_best_representation_file_ids(kit: dict, design: dict | None) -> set[str]:
+    """🔖Return file IDs for the GLB/GLTF representation file to inline per type used in the design.
+    Mirrors JS buildScenePieceAssets: picks the untagged (or first) representation, then falls back
+    to any representation with a GLB/GLTF file if the best representation's file isn't a GLB/GLTF."""
     if not design:
         return set()
-    files_by_guid = {f.get("guid"): f for f in kit.get("files", []) if f.get("guid")}
-    type_guids = {(p.get("type") or {}).get("guid") for p in design.get("pieces", [])}
-    type_guids.discard(None)
+    files_by_id = {f.get("id"): f for f in kit.get("files", []) if f.get("id")}
+    type_ids = {(p.get("type") or {}).get("id") for p in design.get("pieces", [])}
+    type_ids.discard(None)
     result: set[str] = set()
     for typ in kit.get("types", []):
-        if typ.get("guid") not in type_guids:
+        if typ.get("id") not in type_ids:
             continue
-        models = typ.get("models") or []
-        # Mirror JS selectBestModel: prefer first untagged model, else first model.
-        best = next((m for m in models if not m.get("tags")), models[0] if models else None)
-        best_file_guid = (best.get("file") or {}).get("guid") if best else None
-        best_file = files_by_guid.get(best_file_guid) if best_file_guid else None
+        representations = typ.get("representations") or []
+        # Mirror JS selectBestRepresentation: prefer first untagged representation, else first representation.
+        best = next((m for m in representations if not m.get("tags")), representations[0] if representations else None)
+        best_file_id = (best.get("file") or {}).get("id") if best else None
+        best_file = files_by_id.get(best_file_id) if best_file_id else None
         if best_file and _is_gltf_file(best_file):
-            result.add(best_file_guid)
+            result.add(best_file_id)
             continue
-        # Fallback: mirror JS buildScenePieceAssets lines 2110-2118: find any model with a GLB file.
-        for m in models:
-            fguid = (m.get("file") or {}).get("guid")
-            f = files_by_guid.get(fguid) if fguid else None
+        # Fallback: mirror JS buildScenePieceAssets lines 2110-2118: find any representation with a GLB file.
+        for m in representations:
+            fid = (m.get("file") or {}).get("id")
+            f = files_by_id.get(fid) if fid else None
             if f and _is_gltf_file(f):
-                result.add(fguid)
+                result.add(fid)
                 break
     return result
 
 
 def _strip_kit_blobs(kit: dict, design: dict | None = None) -> dict:
     """💾Deep copy kit, cache file blobs in _mcp_app_file_blobs, and replace blob with url for UI transport.
-    GLB/GLTF blobs for the design's selected type models are kept inline as data URLs to avoid CSP/HTTP
+    GLB/GLTF blobs for the design's selected type representations are kept inline as data URLs to avoid CSP/HTTP
     issues in sandboxed iframes. All other blobs are stripped and served via HTTP endpoint."""
-    inline_guids = _select_best_model_file_guids(kit, design)
+    inline_ids = _select_best_representation_file_ids(kit, design)
     kit_for_ui = copy.deepcopy(kit)
     for f in kit_for_ui.get("files", []):
-        guid = f.get("guid")
+        id = f.get("id")
         name = (f.get("name") or "").lower()
         is_gltf = name.endswith(".glb") or name.endswith(".gltf")
-        keep_inline = is_gltf and guid in inline_guids
+        keep_inline = is_gltf and id in inline_ids
         if keep_inline:
             blob = f.get("blob")
         else:
             blob = f.pop("blob", None)
-        if blob and guid:
-            _mcp_app_file_blobs[guid] = blob
+        if blob and id:
+            _mcp_app_file_blobs[id] = blob
             if not keep_inline:
-                f["url"] = f"http://127.0.0.1:{PORT}/api/app/files/{guid}"
+                f["url"] = f"http://127.0.0.1:{PORT}/api/app/files/{id}"
     return kit_for_ui
 
 
@@ -3479,7 +3621,7 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
         payload["kit"] = kit_for_ui
 
     if mode in _DIAGRAM_MODES or mode in _SPLIT_SCENE_DIAGRAM_MODES:
-        diagram_data = _build_diagram_data(kit, design.get("guid"), design_diff, design=design)
+        diagram_data = _build_diagram_data(kit, design.get("id"), design_diff, design=design)
         payload["points"] = diagram_data["points"]
         payload["lines"] = diagram_data["lines"]
 
@@ -3524,7 +3666,7 @@ def kit_viewer_resource() -> str:
 @mcp.resource(
     _SCENE_APP_RESOURCE_URI,
     name="semio scene viewer",
-    description="3D scene viewer for semio designs. Renders pieces with GLTF models in 3D from @semio/ui.",
+    description="3D scene viewer for semio designs. Renders pieces with GLTF representations in 3D from @semio/ui.",
     mime_type="text/html;profile=mcp-app",
     meta=_mcp_app_html_resource_meta(),
 )
@@ -4044,24 +4186,24 @@ class TestMcp:
         ]
 
     def test_flatten_design_tool(self, minimalKitJson: dict):
-        result = engine.flatten_design(minimalKitJson, "test-design-guid")
+        result = engine.flatten_design(minimalKitJson, "test-design-id")
         assert isinstance(result, dict)
 
     def test_pieces_metadata_tool(self, minimalKitJson: dict):
-        result = engine.pieces_metadata(minimalKitJson, "test-design-guid")
+        result = engine.pieces_metadata(minimalKitJson, "test-design-id")
         assert isinstance(result, dict)
 
     def test_get_primitive_design_tool(self):
-        kit = {"name": "test", "designs": [{"guid": "d1", "name": "Design1"}]}
+        kit = {"name": "test", "designs": [{"id": "d1", "name": "Design1"}]}
         result = engine.get_primitive_design(kit, "d1")
-        assert result.get("guid") == "d1"
+        assert result.get("id") == "d1"
 
     def test_get_design_family_tool(self):
         kit = {
             "name": "test",
             "designs": [
-                {"guid": "d1", "name": "Root"},
-                {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
+                {"id": "d1", "name": "Root"},
+                {"id": "d2", "name": "Child", "parent": {"id": "d1"}},
             ],
         }
         result = engine.get_design_family(kit, "d2")
@@ -4072,22 +4214,22 @@ class TestMcp:
         kit = {
             "name": "test",
             "designs": [
-                {"guid": "d1", "name": "Root"},
-                {"guid": "d2", "name": "Child1", "parent": {"guid": "d1"}},
-                {"guid": "d3", "name": "Child2", "parent": {"guid": "d1"}},
+                {"id": "d1", "name": "Root"},
+                {"id": "d2", "name": "Child1", "parent": {"id": "d1"}},
+                {"id": "d3", "name": "Child2", "parent": {"id": "d1"}},
             ],
         }
         result = engine.get_design_siblings(kit, "d2")
         assert isinstance(result, list)
         assert len(result) == 1
-        assert result[0].get("guid") == "d3"
+        assert result[0].get("id") == "d3"
 
     def test_get_design_children_tool(self):
         kit = {
             "name": "test",
             "designs": [
-                {"guid": "d1", "name": "Root"},
-                {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
+                {"id": "d1", "name": "Root"},
+                {"id": "d2", "name": "Child", "parent": {"id": "d1"}},
             ],
         }
         result = engine.get_design_children(kit, "d1")
@@ -4098,8 +4240,8 @@ class TestMcp:
         kit = {
             "name": "test",
             "designs": [
-                {"guid": "d1", "name": "Root"},
-                {"guid": "d2", "name": "Child", "parent": {"guid": "d1"}},
+                {"id": "d1", "name": "Root"},
+                {"id": "d2", "name": "Child", "parent": {"id": "d1"}},
             ],
         }
         result = engine.are_designs_in_same_family(kit, "d1", "d2")
@@ -4109,8 +4251,8 @@ class TestMcp:
         kit = {
             "name": "test",
             "designs": [
-                {"guid": "d1", "name": "Root"},
-                {"guid": "d2", "name": "Other"},
+                {"id": "d1", "name": "Root"},
+                {"id": "d2", "name": "Other"},
             ],
         }
         result = engine.can_use_design_as_piece(kit, "d1", "d2")
@@ -4121,10 +4263,10 @@ class TestMcp:
             "name": "test",
             "designs": [
                 {
-                    "guid": "d1",
+                    "id": "d1",
                     "name": "Design1",
                     "pieces": [
-                        {"guid": "p1", "name": "Piece1", "design": {"guid": "d1"}},
+                        {"id": "p1", "name": "Piece1", "design": {"id": "d1"}},
                     ],
                 },
             ],
@@ -4133,16 +4275,16 @@ class TestMcp:
         assert isinstance(result, list)
 
     def test_get_primitive_type_tool(self):
-        kit = {"name": "test", "types": [{"guid": "t1", "name": "Type1"}]}
+        kit = {"name": "test", "types": [{"id": "t1", "name": "Type1"}]}
         result = engine.get_primitive_type(kit, "t1")
-        assert result.get("guid") == "t1"
+        assert result.get("id") == "t1"
 
     def test_get_type_family_tool(self):
         kit = {
             "name": "test",
             "types": [
-                {"guid": "t1", "name": "Root"},
-                {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
+                {"id": "t1", "name": "Root"},
+                {"id": "t2", "name": "Child", "parent": {"id": "t1"}},
             ],
         }
         result = engine.get_type_family(kit, "t2")
@@ -4153,9 +4295,9 @@ class TestMcp:
         kit = {
             "name": "test",
             "types": [
-                {"guid": "t1", "name": "Root"},
-                {"guid": "t2", "name": "ChildA", "parent": {"guid": "t1"}},
-                {"guid": "t3", "name": "ChildB", "parent": {"guid": "t1"}},
+                {"id": "t1", "name": "Root"},
+                {"id": "t2", "name": "ChildA", "parent": {"id": "t1"}},
+                {"id": "t3", "name": "ChildB", "parent": {"id": "t1"}},
             ],
         }
         result = engine.get_type_siblings(kit, "t2")
@@ -4166,8 +4308,8 @@ class TestMcp:
         kit = {
             "name": "test",
             "types": [
-                {"guid": "t1", "name": "Root"},
-                {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
+                {"id": "t1", "name": "Root"},
+                {"id": "t2", "name": "Child", "parent": {"id": "t1"}},
             ],
         }
         result = engine.get_type_children(kit, "t1")
@@ -4178,8 +4320,8 @@ class TestMcp:
         kit = {
             "name": "test",
             "types": [
-                {"guid": "t1", "name": "Root"},
-                {"guid": "t2", "name": "Child", "parent": {"guid": "t1"}},
+                {"id": "t1", "name": "Root"},
+                {"id": "t2", "name": "Child", "parent": {"id": "t1"}},
             ],
         }
         result = engine.are_types_in_same_family(kit, "t1", "t2")
@@ -4188,36 +4330,36 @@ class TestMcp:
     def test_find_piece_type_in_design_tool(self):
         kit = {
             "name": "test",
-            "types": [{"guid": "t1", "name": "Type1"}],
+            "types": [{"id": "t1", "name": "Type1"}],
             "designs": [
                 {
-                    "guid": "d1",
+                    "id": "d1",
                     "name": "Design1",
                     "pieces": [
-                        {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
+                        {"id": "p1", "name": "Piece1", "type": {"id": "t1"}},
                     ],
                 },
             ],
         }
         result = engine.find_piece_type_in_design(kit, "d1", "p1")
-        assert result.get("guid") == "t1"
+        assert result.get("id") == "t1"
 
     def test_find_used_connectors_by_piece_in_design_tool(self):
         kit = {
             "name": "test",
             "types": [
-                {"guid": "t1", "name": "Type1", "connectors": [{"guid": "c1", "name": "Con1"}]},
+                {"id": "t1", "name": "Type1", "connectors": [{"id": "c1", "name": "Con1"}]},
             ],
             "designs": [
                 {
-                    "guid": "d1",
+                    "id": "d1",
                     "name": "Design1",
                     "pieces": [
-                        {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
-                        {"guid": "p2", "name": "Piece2", "type": {"guid": "t1"}},
+                        {"id": "p1", "name": "Piece1", "type": {"id": "t1"}},
+                        {"id": "p2", "name": "Piece2", "type": {"id": "t1"}},
                     ],
                     "connections": [
-                        {"guid": "conn1", "connected": {"piece": {"guid": "p1"}, "connector": {"guid": "c1"}}, "connecting": {"piece": {"guid": "p2"}, "connector": {"guid": "c1"}}},
+                        {"id": "conn1", "connected": {"piece": {"id": "p1"}, "connector": {"id": "c1"}}, "connecting": {"piece": {"id": "p2"}, "connector": {"id": "c1"}}},
                     ],
                 },
             ],
@@ -4230,11 +4372,11 @@ class TestMcp:
         design = {
             "name": "test",
             "pieces": [
-                {"guid": "p1", "name": "P1"},
-                {"guid": "p2", "name": "P2"},
+                {"id": "p1", "name": "P1"},
+                {"id": "p2", "name": "P2"},
             ],
             "connections": [
-                {"guid": "c1", "connected": {"piece": {"guid": "p1"}}, "connecting": {"piece": {"guid": "p2"}}},
+                {"id": "c1", "connected": {"piece": {"id": "p1"}}, "connecting": {"piece": {"id": "p2"}}},
             ],
         }
         result = engine.create_clustered_design(design, ["p1", "p2"], "Cluster")
@@ -4244,18 +4386,18 @@ class TestMcp:
     def test_get_clusterable_groups_tool(self):
         design = {
             "pieces": [
-                {"guid": "p1", "name": "P1"},
-                {"guid": "p2", "name": "P2"},
+                {"id": "p1", "name": "P1"},
+                {"id": "p2", "name": "P2"},
             ],
             "connections": [
-                {"guid": "c1", "connected": {"piece": {"guid": "p1"}}, "connecting": {"piece": {"guid": "p2"}}},
+                {"id": "c1", "connected": {"piece": {"id": "p1"}}, "connecting": {"piece": {"id": "p2"}}},
             ],
         }
         result = engine.get_clusterable_groups(design, ["p1", "p2"])
         assert isinstance(result, list)
 
     def test_expand_design_pieces_tool(self):
-        design = {"name": "test", "pieces": [{"guid": "p1"}], "connections": []}
+        design = {"name": "test", "pieces": [{"id": "p1"}], "connections": []}
         kit = {"name": "kit", "designs": [design]}
         result = engine.expand_design_pieces(design, kit)
         assert isinstance(result, dict)
@@ -4269,15 +4411,15 @@ class TestMcp:
         kit = {
             "name": "test",
             "types": [
-                {"guid": "t1", "name": "Type1", "connectors": [{"guid": "c1"}]},
-                {"guid": "t2", "name": "Type2", "connectors": [{"guid": "c2"}]},
+                {"id": "t1", "name": "Type1", "connectors": [{"id": "c1"}]},
+                {"id": "t2", "name": "Type2", "connectors": [{"id": "c2"}]},
             ],
             "designs": [
                 {
-                    "guid": "d1",
+                    "id": "d1",
                     "name": "Design1",
                     "pieces": [
-                        {"guid": "p1", "name": "Piece1", "type": {"guid": "t1"}},
+                        {"id": "p1", "name": "Piece1", "type": {"id": "t1"}},
                     ],
                     "connections": [],
                 },
@@ -4312,28 +4454,28 @@ class TestMcp:
             "name": "test",
             "types": [
                 {
-                    "guid": "t1",
+                    "id": "t1",
                     "name": "TypeA",
                     "props": [
-                        {"guid": "p1", "quality": {"guid": "q1"}, "value": "10.5"},
+                        {"id": "p1", "quality": {"id": "q1"}, "value": "10.5"},
                     ],
                 },
                 {
-                    "guid": "t2",
+                    "id": "t2",
                     "name": "TypeB",
                     "props": [
-                        {"guid": "p2", "quality": {"guid": "q1"}, "value": "20.0"},
+                        {"id": "p2", "quality": {"id": "q1"}, "value": "20.0"},
                     ],
                 },
             ],
             "designs": [
                 {
-                    "guid": "d1",
+                    "id": "d1",
                     "name": "Design1",
                     "pieces": [
-                        {"guid": "pc1", "name": "Piece1", "type": {"guid": "t1"}},
-                        {"guid": "pc2", "name": "Piece2", "type": {"guid": "t2"}},
-                        {"guid": "pc3", "name": "Piece3", "type": {"guid": "t1"}},
+                        {"id": "pc1", "name": "Piece1", "type": {"id": "t1"}},
+                        {"id": "pc2", "name": "Piece2", "type": {"id": "t2"}},
+                        {"id": "pc3", "name": "Piece3", "type": {"id": "t1"}},
                     ],
                 },
             ],
@@ -4369,22 +4511,25 @@ class TestMcp:
         assert isinstance(result, CallToolResult)
         payload = _mcp_app_tool_payload(result)
         assert "kitArtifacts" in payload
+        assert "kit" in payload and isinstance(payload["kit"], dict)
+        nakagin = next(design for design in payload["kit"].get("designs", []) if design.get("id") == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
+        assert len(nakagin.get("pieces", [])) > 100
         assert payload["kitArtifacts"]["name"] == "Metabolism"
         assert payload["kitArtifacts"].get("version") == "r25.07-1"
-        flat_variant = next(design for design in payload["kitArtifacts"]["designs"] if design.get("guid") == "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf")
-        assert flat_variant.get("parent") == {"guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"}
-        root_design = next(design for design in payload["kitArtifacts"]["designs"] if design.get("guid") == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
+        flat_variant = next(design for design in payload["kitArtifacts"]["designs"] if design.get("id") == "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf")
+        assert flat_variant.get("parent") == {"id": "9a890dd4-0a9c-48ac-920a-9e62666465ef"}
+        root_design = next(design for design in payload["kitArtifacts"]["designs"] if design.get("id") == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
         assert "Japanese Metabolism" in root_design.get("description", "")
         assert root_design.get("image") == "images/nakagin-capsule-tower.png"
-        ellipsoid = next(kind for kind in payload["kitArtifacts"]["types"] if kind.get("guid") == "4ca3b87b-cd76-4228-9f7e-1459b711f0ab")
-        assert ellipsoid.get("parent") == {"guid": "71749140-9db9-43f6-bd81-d89011667b80"}
+        ellipsoid = next(kind for kind in payload["kitArtifacts"]["types"] if kind.get("id") == "4ca3b87b-cd76-4228-9f7e-1459b711f0ab")
+        assert ellipsoid.get("parent") == {"id": "71749140-9db9-43f6-bd81-d89011667b80"}
         assert ellipsoid.get("name") == "Ellipsoid"
         kit = engine._mcp_session_kits[mock_ctx.session]
         assert "designs" in kit
         assert any(design.get("name") == "Nakagin Capsule Tower" for design in kit.get("designs", []))
 
     def test_metabolism_folder_path_returns_metabolism_and_nakagin_design_scene_and_diagram(self):
-        """🔖start_working_in_local_kit(metabolism dir) exposes Metabolism; start_working_in_design(nakagin guid) returns design+kit and diagram points/lines."""
+        """🔖start_working_in_local_kit(metabolism dir) exposes Metabolism; start_working_in_design(nakagin id) returns design+kit and diagram points/lines."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         metabolism_path = METABOLISM_DIR.resolve()
         workspace_default = pathlib.Path("/workspaces/semio/semio/assets/semio/metabolism")
@@ -4396,13 +4541,13 @@ class TestMcp:
         assert "Metabolism" in json.dumps(kit_payload)
         assert kit_payload.get("kitArtifacts", {}).get("name") == "Metabolism"
 
-        nakagin_guid = "9a890dd4-0a9c-48ac-920a-9e62666465ef"
-        design_result = engine.start_working_in_design(nakagin_guid, mock_ctx)
+        nakagin_id = "9a890dd4-0a9c-48ac-920a-9e62666465ef"
+        design_result = engine.start_working_in_design(nakagin_id, mock_ctx)
         assert isinstance(design_result, CallToolResult)
         d_payload = _mcp_app_tool_payload(design_result)
         assert d_payload.get("mode") == "show-design"
         assert d_payload.get("surface") == "design"
-        assert d_payload.get("design", {}).get("guid") == nakagin_guid
+        assert d_payload.get("design", {}).get("id") == nakagin_id
         assert len(d_payload.get("design", {}).get("pieces", [])) > 0
         assert "kit" in d_payload and isinstance(d_payload["kit"], dict)
         assert "points" in d_payload and isinstance(d_payload["points"], list) and len(d_payload["points"]) > 0
@@ -4412,18 +4557,18 @@ class TestMcp:
         """🔖_build_kit_artifact_data keeps nested design and type parent refs for breadcrumb chains."""
         payload = engine._build_kit_artifact_data(
             {
-                "guid": "kit-guid",
+                "id": "kit-id",
                 "name": "Metabolism",
                 "version": "1",
                 "description": "Kit description",
                 "homepage": "https://example.com/kit",
                 "designs": [
-                    {"guid": "root-design", "name": "Root", "description": "Root design", "image": "root.png"},
-                    {"guid": "child-design", "name": "Child", "parent": {"guid": "root-design"}, "createdAt": "2026-03-27T00:00:00Z"},
+                    {"id": "root-design", "name": "Root", "description": "Root design", "image": "root.png"},
+                    {"id": "child-design", "name": "Child", "parent": {"id": "root-design"}, "createdAt": "2026-03-27T00:00:00Z"},
                 ],
                 "types": [
-                    {"guid": "root-kind", "name": "Root Kind"},
-                    {"guid": "child-kind", "name": "Child Kind", "parent": {"guid": "root-kind"}, "description": "Child kind", "connectors": []},
+                    {"id": "root-kind", "name": "Root Kind"},
+                    {"id": "child-kind", "name": "Child Kind", "parent": {"id": "root-kind"}, "description": "Child kind", "connectors": []},
                 ],
             }
         )
@@ -4432,9 +4577,9 @@ class TestMcp:
         assert payload["homepage"] == "https://example.com/kit"
         assert payload["designs"][0]["description"] == "Root design"
         assert payload["designs"][0]["image"] == "root.png"
-        assert payload["designs"][1]["parent"] == {"guid": "root-design"}
+        assert payload["designs"][1]["parent"] == {"id": "root-design"}
         assert payload["designs"][1]["createdAt"] == "2026-03-27T00:00:00Z"
-        assert payload["types"][1]["parent"] == {"guid": "root-kind"}
+        assert payload["types"][1]["parent"] == {"id": "root-kind"}
         assert payload["types"][1]["description"] == "Child kind"
 
     def test_build_kit_artifact_data_splits_kit_ports_and_type_connectors(self):
@@ -4443,31 +4588,31 @@ class TestMcp:
             {
                 "name": "K",
                 "version": "1",
-                "ports": [{"guid": "port-entity", "name": "Wall inlet"}],
+                "ports": [{"id": "port-entity", "name": "Wall inlet"}],
                 "designs": [],
                 "types": [
                     {
-                        "guid": "t1",
+                        "id": "t1",
                         "name": "T",
                         "connectors": [
-                            {"guid": "c1", "name": "C1", "port": {"guid": "port-entity"}},
+                            {"id": "c1", "name": "C1", "port": {"id": "port-entity"}},
                         ],
                     }
                 ],
             }
         )
-        assert payload["ports"] == [{"guid": "port-entity", "name": "Wall inlet"}]
+        assert payload["ports"] == [{"id": "port-entity", "name": "Wall inlet"}]
         assert len(payload["connectors"]) == 1
-        assert payload["connectors"][0]["guid"] == "c1"
-        assert payload["connectors"][0]["typeGuid"] == "t1"
+        assert payload["connectors"][0]["id"] == "c1"
+        assert payload["connectors"][0]["typeId"] == "t1"
         assert payload["connectors"][0]["port"] == "port-entity"
 
     def test_start_working_in_local_kit_clears_design_and_type(self):
         """🔖start_working_in_local_kit clears any previously set design and type."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
-        engine._mcp_session_designs[sid] = {"guid": "old-design"}
-        engine._mcp_session_types[sid] = {"guid": "old-type"}
+        engine._mcp_session_designs[sid] = {"id": "old-design"}
+        engine._mcp_session_types[sid] = {"id": "old-type"}
         engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
         assert sid not in engine._mcp_session_designs
         assert sid not in engine._mcp_session_types
@@ -4478,16 +4623,16 @@ class TestMcp:
         engine._mcp_session_kits[mock_ctx.session] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
         quality = next(q for q in kitMetabolismJson.get("qualities", []) if q.get("name") == "effective floor area")
-        result = engine.sum_quality_in_design(design["guid"], quality["guid"], mock_ctx)
+        result = engine.sum_quality_in_design(design["id"], quality["id"], mock_ctx)
         assert abs(result.get("result") - 2349.53) < 0.01
 
     def test_start_working_in_design(self, kitMetabolismJson: dict):
-        """🔖start_working_in_design selects a design by GUID from the session kit and opens the MCP app payload (scene + diagram)."""
+        """🔖start_working_in_design selects a design by ID from the session kit and opens the MCP app payload (scene + diagram)."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        result = engine.start_working_in_design(design["guid"], mock_ctx)
+        result = engine.start_working_in_design(design["id"], mock_ctx)
         assert isinstance(result, CallToolResult)
         payload = _mcp_app_tool_payload(result)
         assert payload["mode"] == "show-design"
@@ -4499,13 +4644,13 @@ class TestMcp:
         assert "kitArtifacts" in payload
         assert "designs" in payload["kitArtifacts"]
         assert sid in engine._mcp_session_designs
-        assert engine._mcp_session_designs[sid]["guid"] == design["guid"]
+        assert engine._mcp_session_designs[sid]["id"] == design["id"]
 
     def test_start_working_in_design_not_found(self, kitMetabolismJson: dict):
-        """❌start_working_in_design returns error for unknown GUID."""
+        """❌start_working_in_design returns error for unknown ID."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         engine._mcp_session_kits[mock_ctx.session] = kitMetabolismJson
-        result = engine.start_working_in_design("nonexistent-guid", mock_ctx)
+        result = engine.start_working_in_design("nonexistent-id", mock_ctx)
         assert isinstance(result, CallToolResult)
         assert result.isError is True
         payload = _mcp_app_tool_payload(result)
@@ -4517,9 +4662,9 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.read_current_design(mock_ctx)
-        assert result.get("guid") == design["guid"]
+        assert result.get("id") == design["id"]
         assert result.get("name") == "Nakagin Capsule Tower"
 
     def test_read_current_design_without_start(self):
@@ -4534,29 +4679,29 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         assert sid in engine._mcp_session_designs
         result = engine.finish_working_in_design(mock_ctx)
         assert result.get("ok") is True
         assert sid not in engine._mcp_session_designs
 
     def test_start_working_in_type(self, kitMetabolismJson: dict):
-        """🔖start_working_in_type selects a type by GUID from the session kit."""
+        """🔖start_working_in_type selects a type by ID from the session kit."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         t = kitMetabolismJson.get("types", [])[0]
-        result = engine.start_working_in_type(t["guid"], mock_ctx)
+        result = engine.start_working_in_type(t["id"], mock_ctx)
         assert result.get("ok") is True
-        assert result.get("guid") == t["guid"]
+        assert result.get("id") == t["id"]
         assert sid in engine._mcp_session_types
-        assert engine._mcp_session_types[sid]["guid"] == t["guid"]
+        assert engine._mcp_session_types[sid]["id"] == t["id"]
 
     def test_start_working_in_type_not_found(self, kitMetabolismJson: dict):
-        """🔖start_working_in_type returns error for unknown GUID."""
+        """🔖start_working_in_type returns error for unknown ID."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         engine._mcp_session_kits[mock_ctx.session] = kitMetabolismJson
-        result = engine.start_working_in_type("nonexistent-guid", mock_ctx)
+        result = engine.start_working_in_type("nonexistent-id", mock_ctx)
         assert "error" in result
 
     def test_read_current_type(self, kitMetabolismJson: dict):
@@ -4565,9 +4710,9 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         t = kitMetabolismJson.get("types", [])[0]
-        engine.start_working_in_type(t["guid"], mock_ctx)
+        engine.start_working_in_type(t["id"], mock_ctx)
         result = engine.read_current_type(mock_ctx)
-        assert result.get("guid") == t["guid"]
+        assert result.get("id") == t["id"]
 
     def test_read_current_type_without_start(self):
         """🔖read_current_type returns error if no type was set."""
@@ -4581,7 +4726,7 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         t = kitMetabolismJson.get("types", [])[0]
-        engine.start_working_in_type(t["guid"], mock_ctx)
+        engine.start_working_in_type(t["id"], mock_ctx)
         assert sid in engine._mcp_session_types
         result = engine.finish_working_in_type(mock_ctx)
         assert result.get("ok") is True
@@ -4593,9 +4738,9 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         t = kitMetabolismJson.get("types", [])[0]
-        engine.start_working_in_type(t["guid"], mock_ctx)
+        engine.start_working_in_type(t["id"], mock_ctx)
         result = engine.finish_working_in_kit(mock_ctx)
         assert result.get("ok") is True
         assert sid not in engine._mcp_session_kits
@@ -4683,7 +4828,7 @@ class TestMcp:
         started_transaction = engine.start_transaction(mock_ctx)
         assert started_transaction.get("ok") is True
         created_design = engine.start_new_design(
-            expected_design["guid"],
+            expected_design["id"],
             expected_design["name"],
             expected_design["description"],
             expected_design["unit"],
@@ -4696,13 +4841,13 @@ class TestMcp:
         assert created_design.get("ok") is True
 
         for author in expected_design.get("authors", []):
-            result = engine.add_current_design_author(author["guid"], mock_ctx)
+            result = engine.add_current_design_author(author["id"], mock_ctx)
             assert result.get("ok") is True
 
         for prop in expected_design.get("props", []):
             result = engine.add_current_design_prop(
-                prop["guid"],
-                prop["quality"]["guid"],
+                prop["id"],
+                prop["quality"]["id"],
                 prop["value"],
                 prop["unit"],
                 mock_ctx,
@@ -4713,9 +4858,9 @@ class TestMcp:
             if "plane" in piece and "center" in piece:
                 plane = piece["plane"]
                 result = engine.add_current_design_piece_with_plane(
-                    piece["guid"],
+                    piece["id"],
                     piece["name"],
-                    piece["type"]["guid"],
+                    piece["type"]["id"],
                     piece["center"]["u"],
                     piece["center"]["v"],
                     plane["origin"]["x"],
@@ -4734,9 +4879,9 @@ class TestMcp:
                 )
             else:
                 result = engine.add_current_design_piece(
-                    piece["guid"],
+                    piece["id"],
                     piece["name"],
-                    piece["type"]["guid"],
+                    piece["type"]["id"],
                     mock_ctx,
                     description=piece["description"],
                     is_hidden=piece["isHidden"],
@@ -4746,11 +4891,11 @@ class TestMcp:
 
         for connection in expected_design.get("connections", []):
             result = engine.add_current_design_connection(
-                connection["guid"],
-                connection["connected"]["piece"]["guid"],
-                connection["connected"]["connector"]["guid"],
-                connection["connecting"]["piece"]["guid"],
-                connection["connecting"]["connector"]["guid"],
+                connection["id"],
+                connection["connected"]["piece"]["id"],
+                connection["connected"]["connector"]["id"],
+                connection["connecting"]["piece"]["id"],
+                connection["connecting"]["connector"]["id"],
                 connection["rotation"],
                 connection["u"],
                 connection["v"],
@@ -4775,43 +4920,43 @@ class TestMcp:
         """🔖read_current_selection returns empty lists when no selection is set."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.read_current_selection(mock_ctx)
-        assert result == {"pieceGuids": [], "connectionGuids": []}
+        assert result == {"pieceIds": [], "connectionIds": []}
 
     def test_set_current_selection_pieces(self):
-        """🔖set_current_selection stores piece guids in session."""
+        """🔖set_current_selection stores piece ids in session."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        result = engine.set_current_selection(mock_ctx, piece_guids=["p1", "p2"])
+        result = engine.set_current_selection(mock_ctx, piece_ids=["p1", "p2"])
         assert result.get("ok") is True
         sel = engine.read_current_selection(mock_ctx)
-        assert sel["pieceGuids"] == ["p1", "p2"]
-        assert sel["connectionGuids"] == []
+        assert sel["pieceIds"] == ["p1", "p2"]
+        assert sel["connectionIds"] == []
 
     def test_set_current_selection_connections(self):
-        """🔖set_current_selection stores connection guids in session."""
+        """🔖set_current_selection stores connection ids in session."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        result = engine.set_current_selection(mock_ctx, connection_guids=["c1", "c2"])
+        result = engine.set_current_selection(mock_ctx, connection_ids=["c1", "c2"])
         assert result.get("ok") is True
         sel = engine.read_current_selection(mock_ctx)
-        assert sel["pieceGuids"] == []
-        assert sel["connectionGuids"] == ["c1", "c2"]
+        assert sel["pieceIds"] == []
+        assert sel["connectionIds"] == ["c1", "c2"]
 
     def test_set_current_selection_both(self):
-        """🔖set_current_selection stores both piece and connection guids."""
+        """🔖set_current_selection stores both piece and connection ids."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        result = engine.set_current_selection(mock_ctx, piece_guids=["p1"], connection_guids=["c1"])
+        result = engine.set_current_selection(mock_ctx, piece_ids=["p1"], connection_ids=["c1"])
         assert result.get("ok") is True
         sel = engine.read_current_selection(mock_ctx)
-        assert sel["pieceGuids"] == ["p1"]
-        assert sel["connectionGuids"] == ["c1"]
+        assert sel["pieceIds"] == ["p1"]
+        assert sel["connectionIds"] == ["c1"]
 
     def test_clear_current_selection(self):
         """🚚clear_current_selection removes selection from session."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
-        engine.set_current_selection(mock_ctx, piece_guids=["p1"])
+        engine.set_current_selection(mock_ctx, piece_ids=["p1"])
         result = engine.clear_current_selection(mock_ctx)
         assert result.get("ok") is True
         sel = engine.read_current_selection(mock_ctx)
-        assert sel == {"pieceGuids": [], "connectionGuids": []}
+        assert sel == {"pieceIds": [], "connectionIds": []}
 
     def test_show_design_returns_diagram_json(self, kitMetabolismJson: dict):
         """🔖show_design returns CallToolResult with design, kit, mode=show-design, and diagram points/lines for the split viewer."""
@@ -4819,7 +4964,7 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.show_design(mock_ctx)
         assert isinstance(result, CallToolResult)
         data = _mcp_app_tool_payload(result)
@@ -4838,7 +4983,7 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.show_diagram(mock_ctx)
         data = _mcp_app_tool_payload(result)
         assert data["mode"] == "show-diagram"
@@ -4852,7 +4997,7 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.show_scene(mock_ctx)
         data = _mcp_app_tool_payload(result)
         assert data["mode"] == "show-scene"
@@ -4869,7 +5014,7 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         diff = {"pieces": {"added": [], "removed": [], "updated": []}, "connections": {"added": [], "removed": [], "updated": []}}
         result = engine.show_diff(mock_ctx, design_diff=diff)
         data = _mcp_app_tool_payload(result)
@@ -4886,7 +5031,7 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         diff = {"pieces": {"added": [], "removed": [], "updated": []}, "connections": {"added": [], "removed": [], "updated": []}}
         result = engine.show_diagram_diff(mock_ctx, design_diff=diff)
         data = _mcp_app_tool_payload(result)
@@ -4897,7 +5042,7 @@ class TestMcp:
         assert "lines" in data and isinstance(data["lines"], list)
 
     def test_shallow_kit_hydrates_nakagin_design_from_disk(self):
-        """🔖metabolism.shallow.kit.semio.json lists designs without pieces; load nakagin-capsule-tower.shallow.design.semio.json by guid."""
+        """🔖metabolism.shallow.kit.semio.json lists designs without pieces; load nakagin-capsule-tower.shallow.design.semio.json by id."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         shallow_kit_path = ASSETS_DIR / "metabolism.shallow.kit.semio.json"
         engine.start_working_in_local_kit(str(shallow_kit_path), mock_ctx)
@@ -4907,7 +5052,7 @@ class TestMcp:
 
     def test_hydrate_design_searches_parent_of_folder_kit(self):
         """🔎*.design.semio.json for Nakagin lives next to the metabolism folder, not inside it."""
-        shallow = {"guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef", "name": "Nakagin Capsule Tower", "pieces": []}
+        shallow = {"id": "9a890dd4-0a9c-48ac-920a-9e62666465ef", "name": "Nakagin Capsule Tower", "pieces": []}
         out = engine._hydrate_design_from_kit_disk_if_shallow(
             shallow,
             str(METABOLISM_DIR),
@@ -4921,7 +5066,7 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.show_diff(mock_ctx)
         data = _mcp_app_tool_payload(result)
         assert "points" not in data
@@ -4935,7 +5080,7 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.show_diagram_diff(mock_ctx)
         data = _mcp_app_tool_payload(result)
         assert "points" in data
@@ -4948,19 +5093,19 @@ class TestMcp:
         kit = {
             "name": "Diff Diagram Kit",
             "types": [],
-            "designs": [{"guid": "dg-1", "name": "D", "pieces": [{"guid": "p-1", "id": "p-1"}], "connections": []}],
+            "designs": [{"id": "dg-1", "name": "D", "pieces": [{"id": "p-1", "id": "p-1"}], "connections": []}],
         }
         engine._mcp_session_kits[sid] = kit
         engine._mcp_session_designs[sid] = kit["designs"][0]
 
-        diff = {"pieces": {"updated": [{"piece": {"guid": "p-1"}, "diff": {"center": {"u": 12, "v": -4}}}]}}
+        diff = {"pieces": {"updated": [{"piece": {"id": "p-1"}, "diff": {"center": {"u": 12, "v": -4}}}]}}
         result = engine.show_diagram_diff(mock_ctx, design_diff=diff)
         data = _mcp_app_tool_payload(result)
 
-        points_by_guid = {point["guid"]: point for point in data["points"]}
-        assert points_by_guid["p-1"]["u"] == 12
-        assert points_by_guid["p-1"]["v"] == -4
-        piece = next(piece for piece in data["design"]["pieces"] if piece["guid"] == "p-1")
+        points_by_id = {point["id"]: point for point in data["points"]}
+        assert points_by_id["p-1"]["u"] == 12
+        assert points_by_id["p-1"]["v"] == -4
+        piece = next(piece for piece in data["design"]["pieces"] if piece["id"] == "p-1")
         assert piece["center"] == {"u": 12, "v": -4}
 
     def test_show_diff_with_design_diff_adds_pieces(self, kitMetabolismJson: dict):
@@ -4969,13 +5114,13 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
-        diff = {"pieces": {"added": [{"guid": "new-piece", "id": "added-1", "center": {"u": 10, "v": 20}}]}}
+        engine.start_working_in_design(design["id"], mock_ctx)
+        diff = {"pieces": {"added": [{"id": "new-piece", "id": "added-1", "center": {"u": 10, "v": 20}}]}}
         result = engine.show_diff(mock_ctx, design_diff=diff)
         data = _mcp_app_tool_payload(result)
         assert "designDiff" in data
         added = data["designDiff"]["pieces"]["added"]
-        assert any(p["guid"] == "new-piece" for p in added)
+        assert any(p["id"] == "added-1" for p in added)
 
     def test_select_pieces_capabilities(self, kitMetabolismJson: dict):
         """🔖select_pieces sets pieceSelection capability."""
@@ -4983,7 +5128,7 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.select_pieces(mock_ctx)
         data = _mcp_app_tool_payload(result)
         assert data["capabilities"]["pieceSelection"] is True
@@ -4995,7 +5140,7 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.select_connections(mock_ctx)
         data = _mcp_app_tool_payload(result)
         assert data["capabilities"]["pieceSelection"] is False
@@ -5007,7 +5152,7 @@ class TestMcp:
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.select_pieces_and_connections(mock_ctx)
         data = _mcp_app_tool_payload(result)
         assert data["capabilities"]["pieceSelection"] is True
@@ -5028,25 +5173,25 @@ class TestMcp:
             assert "error" in data, f"{tool_fn.__name__} should require kit+design"
 
     def test_show_design_pieces_have_required_fields(self, kitMetabolismJson: dict):
-        """🔖show_design design pieces contain guid field."""
+        """🔖show_design design pieces contain id field."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-        engine.start_working_in_design(design["guid"], mock_ctx)
+        engine.start_working_in_design(design["id"], mock_ctx)
         result = engine.show_design(mock_ctx)
         data = _mcp_app_tool_payload(result)
         for piece in data["design"]["pieces"]:
-            assert "guid" in piece
+            assert "id" in piece
 
     def test_selection_isolated_between_sessions(self):
         """🔖Selection state is isolated between different sessions."""
         ctx_a = type("MockCtx", (), {"session": object()})()
         ctx_b = type("MockCtx", (), {"session": object()})()
-        engine.set_current_selection(ctx_a, piece_guids=["p1"])
-        engine.set_current_selection(ctx_b, piece_guids=["p2"])
-        assert engine.read_current_selection(ctx_a)["pieceGuids"] == ["p1"]
-        assert engine.read_current_selection(ctx_b)["pieceGuids"] == ["p2"]
+        engine.set_current_selection(ctx_a, piece_ids=["p1"])
+        engine.set_current_selection(ctx_b, piece_ids=["p2"])
+        assert engine.read_current_selection(ctx_a)["pieceIds"] == ["p1"]
+        assert engine.read_current_selection(ctx_b)["pieceIds"] == ["p2"]
 
 
 class TestAppEndpoint:
@@ -5082,6 +5227,15 @@ class TestAppEndpoint:
         response = client.get("/app/design-viewer")
         html = response.text
         assert 'id="root"' in html
+
+    def test_app_design_viewer_excludes_embedded_js_tests(self):
+        """🔖The MCP App bundle excludes @semio/js embedded tests so sketchpad-only code cannot crash viewer startup."""
+        client = TestClient(engine.rest)
+        response = client.get("/app/design-viewer")
+        html = response.text
+        assert "Test on temporary kits" not in html
+        assert "createFolderKitStore" not in html
+        assert "KIT_DIAGRAM_NODE_SCALE" not in html
 
     def test_app_kit_viewer_returns_html(self):
         """🔖GET /app/kit-viewer returns the built MCP App HTML that mounts McpKitViewer from @semio/ui."""
@@ -5701,8 +5855,8 @@ class TestMcpRemoteKit:
         mock_response.raise_for_status.return_value = None
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
-        engine._mcp_session_designs[sid] = {"guid": "old-design"}
-        engine._mcp_session_types[sid] = {"guid": "old-type"}
+        engine._mcp_session_designs[sid] = {"id": "old-design"}
+        engine._mcp_session_types[sid] = {"id": "old-type"}
         engine._mcp_session_kit_mode[sid] = "local"
         with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", return_value=mock_response):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
@@ -5762,10 +5916,10 @@ class TestMcpRemoteKit:
             "name": "RemoteKit",
             "version": "1.0.0",
             "designs": [
-                {"guid": "d1", "name": "Design1", "pieces": [], "connections": []},
+                {"id": "d1", "name": "Design1", "pieces": [], "connections": []},
             ],
             "types": [
-                {"guid": "t1", "name": "Type1", "connectors": []},
+                {"id": "t1", "name": "Type1", "connectors": []},
             ],
         }
         mock_response = MagicMock()
@@ -5786,7 +5940,7 @@ class TestMcpRemoteKit:
 
         # read_current_design works
         design = engine.read_current_design(mock_ctx)
-        assert design["guid"] == "d1"
+        assert design["id"] == "d1"
 
         # finish_working_in_design works
         result = engine.finish_working_in_design(mock_ctx)
@@ -5798,7 +5952,7 @@ class TestMcpRemoteKit:
 
         # read_current_type works
         t = engine.read_current_type(mock_ctx)
-        assert t["guid"] == "t1"
+        assert t["id"] == "t1"
 
         # finish_working_in_type works
         result = engine.finish_working_in_type(mock_ctx)

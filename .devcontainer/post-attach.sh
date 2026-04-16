@@ -12,6 +12,7 @@ INSTALL_LOCK_FILE="/tmp/semio-post-attach-extension-install.lock"
 WSL_ERROR="Command is only available in WSL or inside a Visual Studio Code terminal."
 GITKRAKEN_WORKSPACE_NAME="${SEMIO_GITKRAKEN_WORKSPACE_NAME:-semio}"
 SKIP_EXTENSION_INSTALL="${SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL:-}"
+SKIP_TOOL_INSTALL="${SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL:-}"
 
 #region 🔖GitKrakenCliHelpers
 install_gitkraken_desktop() {
@@ -368,15 +369,21 @@ configure_gitkraken_workspace() {
 }
 #endregion 🔖GitKrakenWorkspace
 
-install_gitkraken_desktop
-install_gitkraken_cli
+if [ -n "$SKIP_TOOL_INSTALL" ]; then
+  echo "ℹ️  Tool installation skipped."
+else
+  install_gitkraken_desktop
+  install_gitkraken_cli
+fi
 configure_gitkraken_workspace
-install_f3d
+if [ -z "$SKIP_TOOL_INSTALL" ]; then
+  install_f3d
+fi
 
 #region 🔖RepoConfigure
 echo "🔧 Syncing repo hook and MCP configuration..."
-if [ -x "$REPO_ROOT/repo/cli/cli" ]; then
-  if "$REPO_ROOT/repo/cli/cli" configure --repo "$REPO_ROOT"; then
+if [ -x "$REPO_ROOT/repo/client/client" ]; then
+  if "$REPO_ROOT/repo/client/client" configure --repo "$REPO_ROOT"; then
     echo "✅ Repo hook and MCP configuration synced."
   else
     echo "⚠️  Repo configure failed, continuing without blocking attach."
