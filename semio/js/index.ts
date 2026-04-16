@@ -19389,6 +19389,7 @@ async function runBenchmarks() {
   const BenchInvalidKit = (await importAtRuntime<any>(["@semio/assets", "semio/invalid.kit.semio.json"].join("/"))).default;
 
   const kitMetabolism = BenchMetabolismKit as unknown as Kit;
+  const kitOriginal = { ...kitMetabolism, designs: kitMetabolism.designs?.filter((d) => !d.parent) };
   const kitInvalid = BenchInvalidKit as unknown as Kit;
   const diffForward = DiffForward as unknown as KitDiff;
   const diffInverse = DiffInverse as unknown as KitDiff;
@@ -19406,17 +19407,16 @@ async function runBenchmarks() {
   };
 
   await bench("Roundtrip/Metabolism", async () => {
-    const fs = await import("fs");
-    const path = await import("path");
-    const zipPath = path.resolve("../assets/semio/metabolism.zip");
-    const zipBuffer = fs.readFileSync(zipPath);
-    const { kit } = await importKit(zipBuffer);
-    await exportKit(kit);
+    const serialized = serializeKit(kitMetabolism);
+    const restored = deserializeKit(serialized);
+    if (!areKitsEqual(restored, kitMetabolism)) throw new Error("Roundtrip/Metabolism output does not match test expectation");
   });
 
   await bench("Diff/Metabolism", () => {
-    const k2 = applyKitDiff(kitMetabolism, diffForward);
-    applyKitDiff(k2, diffInverse);
+    const k2 = applyKitDiff(kitOriginal, diffForward);
+    if (!areKitDiffsEqual(getKitDiff(kitOriginal, k2), diffForward)) throw new Error("Diff/Metabolism forward output does not match test expectation");
+    const restored = applyKitDiff(k2, diffInverse);
+    if (!areKitsEqual(restored, kitOriginal)) throw new Error("Diff/Metabolism inverse output does not match test expectation");
   });
 
   const d1 = findBenchDesign(kitMetabolism, "Nakagin Capsule Tower");
@@ -19450,11 +19450,13 @@ async function runBenchmarks() {
   });
 
   await bench("Validation/Invalid Kit", () => {
-    validateKit(kitInvalid);
+    const result = validateKit(kitInvalid);
+    if (result.problems.length === 0) throw new Error("Validation/Invalid Kit output does not match test expectation");
   });
 
   await bench("Validation/Metabolism", () => {
-    validateKit(kitMetabolism);
+    const result = validateKit(kitMetabolism);
+    if (result.problems.length !== 0) throw new Error("Validation/Metabolism output does not match test expectation");
   });
 }
 

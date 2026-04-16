@@ -11,6 +11,7 @@ package semio
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -18,10 +19,32 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 	"testing"
 )
+
+const benchmarkCsvHeader = "language,name,durationSeconds\n"
+
+func benchmarkCsvPath() string {
+	if _, err := os.Stat(filepath.Join("..", "benchmark.csv")); err == nil {
+		return filepath.Join("..", "benchmark.csv")
+	}
+	return filepath.Join("..", "benchmark.csv")
+}
+
+func appendBenchmarkCsv(language string, name string, durationSeconds float64) {
+	path := benchmarkCsvPath()
+	if info, err := os.Stat(path); err != nil || info.Size() == 0 {
+		_ = os.WriteFile(path, []byte(benchmarkCsvHeader), 0644)
+	}
+	row := fmt.Sprintf("%s,%q,%.9f\n", language, name, durationSeconds)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	_, _ = f.WriteString(row)
+}
 
 type modelSelectionAsset struct {
 	Cases []modelSelectionCase `json:"cases"`
@@ -39,6 +62,148 @@ type modelSelectionModel struct {
 	FileGuid string   `json:"fileGuid"`
 	TagGuids []string `json:"tagGuids"`
 }
+
+// #region 🗂️Asset Structs
+
+type selectionAsset struct {
+	Pieces []struct {
+		Guid string `json:"guid"`
+	} `json:"pieces"`
+	Connections []struct {
+		Guid string `json:"guid"`
+	} `json:"connections"`
+}
+
+type flattenCasesAsset struct {
+	Cases []flattenCase `json:"cases"`
+}
+
+type flattenCase struct {
+	Name       string   `json:"name"`
+	Kit        string   `json:"kit"`
+	DesignPath []string `json:"designPath"`
+}
+
+type qualitySumCasesAsset struct {
+	Cases []qualitySumCase `json:"cases"`
+}
+
+type qualitySumCase struct {
+	Name         string  `json:"name"`
+	Kit          string  `json:"kit"`
+	DesignName   string  `json:"designName"`
+	DesignParent *string `json:"designParent"`
+	QualityName  string  `json:"qualityName"`
+	Expected     float64 `json:"expected"`
+	Tolerance    float64 `json:"tolerance"`
+}
+
+type hashCasesAsset struct {
+	KitHash struct {
+		Kit           string `json:"kit"`
+		Expected      string `json:"expected"`
+		ExpectedNet48 string `json:"expectedNet48"`
+	} `json:"kitHash"`
+	KitDiffHash struct {
+		JSON     string `json:"json"`
+		Expected string `json:"expected"`
+	} `json:"kitDiffHash"`
+	DesignName string `json:"designName"`
+}
+
+type designWithDiffCasesAsset struct {
+	Cases []designWithDiffCase `json:"cases"`
+}
+
+type designWithDiffCase struct {
+	Name                     string         `json:"name"`
+	Kit                      string         `json:"kit"`
+	DesignName               string         `json:"designName"`
+	DesignParent             *string        `json:"designParent"`
+	Diff                     string         `json:"diff"`
+	Expected                 string         `json:"expected"`
+	ExpectedPieceCounts      map[string]int `json:"expectedPieceCounts"`
+	ExpectedConnectionCounts map[string]int `json:"expectedConnectionCounts"`
+}
+
+type filterKitCasesAsset struct {
+	Cases     []filterKitCase     `json:"cases"`
+	GlobCases []filterKitGlobCase `json:"globCases"`
+}
+
+type filterKitCase struct {
+	Name         string  `json:"name"`
+	Kit          string  `json:"kit"`
+	DesignName   string  `json:"designName"`
+	DesignParent *string `json:"designParent"`
+	ExpectedKit  string  `json:"expectedKit"`
+}
+
+type filterKitGlobCase struct {
+	Name          string   `json:"name"`
+	Kit           string   `json:"kit"`
+	DesignName    string   `json:"designName,omitempty"`
+	DesignParent  *string  `json:"designParent,omitempty"`
+	TypeInclude   []string `json:"typeInclude,omitempty"`
+	TypeExclude   []string `json:"typeExclude,omitempty"`
+	DesignInclude []string `json:"designInclude,omitempty"`
+}
+
+type findReplaceableCasesAsset struct {
+	SyntheticKit   string                  `json:"syntheticKit"`
+	Cases          []findReplaceableCase   `json:"cases"`
+	BoundaryCases  findReplaceableBoundary `json:"boundaryCases"`
+	SyntheticCases []syntheticCase         `json:"syntheticCases"`
+}
+
+type findReplaceableCase struct {
+	Name                             string   `json:"name"`
+	Kit                              string   `json:"kit"`
+	DesignName                       string   `json:"designName"`
+	DesignParent                     *string  `json:"designParent"`
+	DesignParentName                 string   `json:"designParentName,omitempty"`
+	PieceNames                       []string `json:"pieceNames,omitempty"`
+	SelectionAsset                   string   `json:"selectionAsset,omitempty"`
+	ExpectedSelectionPieceCount      int      `json:"expectedSelectionPieceCount,omitempty"`
+	ExpectedSelectionConnectionCount int      `json:"expectedSelectionConnectionCount,omitempty"`
+	ExpectedTypeGuids                []string `json:"expectedTypeGuids,omitempty"`
+	ExpectedDesignGuids              []string `json:"expectedDesignGuids,omitempty"`
+	ExpectedTypeGuidCount            *int     `json:"expectedTypeGuidCount,omitempty"`
+	UsePieceIndex                    *int     `json:"usePieceIndex,omitempty"`
+	LookupTypeName                   string   `json:"lookupTypeName,omitempty"`
+	ExpectNonEmptyTypes              bool     `json:"expectNonEmptyTypes,omitempty"`
+	ExpectOwnTypeInResults           bool     `json:"expectOwnTypeInResults,omitempty"`
+	ForbiddenTypeNames               []string `json:"forbiddenTypeNames,omitempty"`
+	ExpectConnectorlessTypeCount     bool     `json:"expectConnectorlessTypeCount,omitempty"`
+}
+
+type findReplaceableBoundary struct {
+	Kit                            string   `json:"kit"`
+	DesignName                     string   `json:"designName"`
+	DesignParent                   *string  `json:"designParent"`
+	SingleCapsulePieces            []string `json:"singleCapsulePieces"`
+	TwoCapsulePieces               []string `json:"twoCapsulePieces"`
+	FourCapsulePieces              []string `json:"fourCapsulePieces"`
+	EightCapsulePieces             []string `json:"eightCapsulePieces"`
+	TambourPieceName               string   `json:"tambourPieceName"`
+	ExpectedTambourTypeGuidCount   int      `json:"expectedTambourTypeGuidCount"`
+	ExpectedTambourDesignGuidCount int      `json:"expectedTambourDesignGuidCount"`
+	ForbiddenFamilies              []string `json:"forbiddenFamilies"`
+	ExpectedTwoCapsuleFamilies     []string `json:"expectedTwoCapsuleFamilies"`
+	ExpectedLargeFamilies          []string `json:"expectedLargeFamilies"`
+}
+
+type syntheticCase struct {
+	Name                       string   `json:"name"`
+	DesignGuid                 string   `json:"designGuid"`
+	PieceGuids                 []string `json:"pieceGuids"`
+	ExpectedContainsTypes      []string `json:"expectedContainsTypes,omitempty"`
+	ExpectedNotContainsTypes   []string `json:"expectedNotContainsTypes,omitempty"`
+	ExpectedContainsDesigns    []string `json:"expectedContainsDesigns,omitempty"`
+	ExpectedNotContainsDesigns []string `json:"expectedNotContainsDesigns,omitempty"`
+}
+
+// #endregion 🗂️Asset Structs
 
 func loadJSON(t *testing.T, filename string, v interface{}) {
 	path := filepath.Join(AssetsPath, filename)
@@ -436,35 +601,18 @@ func TestKitFilterDesign(t *testing.T) {
 }
 
 func TestFlatten(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "metabolism.kit.semio.json", &kit)
+	var asset flattenCasesAsset
+	loadJSON(t, "flatten.cases.semio.json", &asset)
 
-	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
-		t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
-			testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower"})
-		})
-		t.Run("Slanted", func(t *testing.T) {
+	for _, tc := range asset.Cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, tc.Kit, &kit)
 			t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
-				testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Slanted"})
+				testFlattenDesign(t, kit, tc.DesignPath)
 			})
 		})
-		t.Run("Twisted", func(t *testing.T) {
-			t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
-				testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Twisted"})
-			})
-		})
-		t.Run("Dancing", func(t *testing.T) {
-			t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
-				testFlattenDesign(t, kit, []string{"Nakagin Capsule Tower", "Dancing"})
-			})
-		})
-	})
-
-	t.Run("Capsule Dream", func(t *testing.T) {
-		t.Run("Kit -> Flatten -> Diff -> Apply = Flat", func(t *testing.T) {
-			testFlattenDesign(t, kit, []string{"Capsule Dream"})
-		})
-	})
+	}
 }
 
 func TestChange(t *testing.T) {
@@ -944,490 +1092,312 @@ func TestMove(t *testing.T) {
 
 // #region 🔍Find Replaceable Types In Designs Tests
 func TestFindReplaceableTypesInDesigns(t *testing.T) {
-	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
-		t.Run("Connected piece yields only exact design matches", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
+	var frAsset findReplaceableCasesAsset
+	loadJSON(t, "find-replaceable-types.cases.semio.json", &frAsset)
 
+	containsGuid := func(guids []string, expectedGuid string) bool {
+		for _, guid := range guids {
+			if guid == expectedGuid {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, tc := range frAsset.Cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, tc.Kit, &kit)
+
+			// Find the design
 			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
+			if tc.DesignParentName != "" {
+				parentDesign := findDesignByName(kit.Designs, tc.DesignParentName, nil)
+				if parentDesign == nil {
+					t.Fatalf("Parent design %q not found", tc.DesignParentName)
 				}
+				design = findDesignByName(kit.Designs, tc.DesignName, &parentDesign.Guid)
+			} else {
+				design = findDesignByName(kit.Designs, tc.DesignName, nil)
 			}
 			if design == nil {
-				t.Fatal("Design 'Nakagin Capsule Tower' not found")
+				t.Fatalf("Design %q not found", tc.DesignName)
 			}
 
-			var tambourPiece *Piece
-			for i := range design.Pieces {
-				n := design.Pieces[i].Name
-				if n != nil && *n == "t_f1_b_c0" {
-					tambourPiece = &design.Pieces[i]
-					break
+			// Determine piece guids for selection
+			var pieceGuids []string
+			if tc.SelectionAsset != "" {
+				var sel selectionAsset
+				loadJSON(t, tc.SelectionAsset, &sel)
+				if tc.ExpectedSelectionPieceCount > 0 && len(sel.Pieces) != tc.ExpectedSelectionPieceCount {
+					t.Fatalf("Expected %d selection pieces, got %d", tc.ExpectedSelectionPieceCount, len(sel.Pieces))
 				}
-			}
-			if tambourPiece == nil {
-				t.Fatal("Tambour piece 't_f1_b_c0' not found")
-			}
-
-			typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{tambourPiece.Guid})
-
-			expectedDesignGuids := []string{
-				"d7e12638-9749-471b-937e-a6e5523778ff",
-				"019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
-				"019ab4e0-8da8-7217-946f-5b5a83aca0e3",
-			}
-			if len(typeGuids) != 0 {
-				t.Fatalf("Expected no replaceable types, got %#v", typeGuids)
-			}
-			if !reflect.DeepEqual(designGuids, expectedDesignGuids) {
-				t.Fatalf("Design guids mismatch:\n got: %#v\nwant: %#v", designGuids, expectedDesignGuids)
-			}
-		})
-
-		t.Run("Isolated piece with no connections suggests types with compatible ports", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
-
-			var flatDesign *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Flat" && kit.Designs[i].Parent != nil && kit.Designs[i].Parent.Guid == "9a890dd4-0a9c-48ac-920a-9e62666465ef" {
-					flatDesign = &kit.Designs[i]
-					break
+				if tc.ExpectedSelectionConnectionCount > 0 && len(sel.Connections) != tc.ExpectedSelectionConnectionCount {
+					t.Fatalf("Expected %d selection connections, got %d", tc.ExpectedSelectionConnectionCount, len(sel.Connections))
 				}
-			}
-			if flatDesign == nil {
-				t.Fatal("Flat design not found")
-			}
-			if len(flatDesign.Pieces) == 0 {
-				t.Fatal("Flat design has no pieces")
-			}
-
-			piece := flatDesign.Pieces[0]
-			typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*flatDesign, kit.Designs, kit.Types, kit.Ports, []string{piece.Guid})
-
-			if len(typeGuids) == 0 {
-				t.Error("Expected at least one replaceable type")
-			}
-
-			if piece.Type != nil && piece.Type.Guid != "" {
-				found := false
-				for _, tg := range typeGuids {
-					if tg == piece.Type.Guid {
-						found = true
+				pieceGuids = make([]string, 0, len(sel.Pieces))
+				for _, p := range sel.Pieces {
+					pieceGuids = append(pieceGuids, p.Guid)
+				}
+			} else if tc.PieceNames != nil {
+				pieceGuids = make([]string, 0, len(tc.PieceNames))
+				for _, pieceName := range tc.PieceNames {
+					piece := findPieceByName(design.Pieces, pieceName)
+					if piece == nil {
+						t.Fatalf("Piece %q not found", pieceName)
+					}
+					pieceGuids = append(pieceGuids, piece.Guid)
+				}
+			} else if tc.UsePieceIndex != nil {
+				if *tc.UsePieceIndex >= len(design.Pieces) {
+					t.Fatalf("Piece index %d out of range", *tc.UsePieceIndex)
+				}
+				pieceGuids = []string{design.Pieces[*tc.UsePieceIndex].Guid}
+			} else if tc.LookupTypeName != "" {
+				var lookupTypeGuid string
+				for _, tp := range kit.Types {
+					if tp.Name == tc.LookupTypeName {
+						lookupTypeGuid = tp.Guid
 						break
 					}
 				}
-				if !found {
-					t.Error("Expected piece's own type to be in results")
+				for i := range design.Pieces {
+					if design.Pieces[i].Type != nil && design.Pieces[i].Type.Guid == lookupTypeGuid {
+						pieceGuids = []string{design.Pieces[i].Guid}
+						break
+					}
 				}
-			}
-		})
-
-		t.Run("Capital piece with single connection", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
-
-			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
-				}
-			}
-			if design == nil {
-				t.Fatal("Design not found")
-			}
-
-			var capitalTypeGuid string
-			for _, tp := range kit.Types {
-				if tp.Name == "Capital" {
-					capitalTypeGuid = tp.Guid
-					break
+				if len(pieceGuids) == 0 {
+					t.Fatalf("Piece with type %q not found", tc.LookupTypeName)
 				}
 			}
 
-			var capitalPiece *Piece
-			for i := range design.Pieces {
-				if design.Pieces[i].Type != nil && design.Pieces[i].Type.Guid == capitalTypeGuid {
-					capitalPiece = &design.Pieces[i]
-					break
+			typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, pieceGuids)
+
+			// Check expected type guid count
+			if tc.ExpectedTypeGuidCount != nil {
+				if len(typeGuids) != *tc.ExpectedTypeGuidCount {
+					t.Fatalf("Expected %d type guids, got %d: %#v", *tc.ExpectedTypeGuidCount, len(typeGuids), typeGuids)
 				}
 			}
-			if capitalPiece == nil {
-				t.Fatal("Capital piece not found")
+
+			// Check expected type guids (full list)
+			if tc.ExpectedTypeGuids != nil {
+				if !reflect.DeepEqual(typeGuids, tc.ExpectedTypeGuids) {
+					t.Fatalf("Type guids mismatch:\n got: %#v\nwant: %#v", typeGuids, tc.ExpectedTypeGuids)
+				}
 			}
 
-			typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{capitalPiece.Guid})
+			// Check expected design guids
+			if tc.ExpectedDesignGuids != nil {
+				if !reflect.DeepEqual(designGuids, tc.ExpectedDesignGuids) {
+					t.Fatalf("Design guids mismatch:\n got: %#v\nwant: %#v", designGuids, tc.ExpectedDesignGuids)
+				}
+			}
 
-			if len(typeGuids) == 0 {
+			// Check expectNonEmptyTypes
+			if tc.ExpectNonEmptyTypes && len(typeGuids) == 0 {
 				t.Error("Expected at least one replaceable type")
 			}
 
-			// Capital uses roof rectangular top, Last Storey uses roof circular bottom (incompatible)
-			for _, tg := range typeGuids {
-				if tg == capitalTypeGuid {
-					t.Error("Capital type should NOT be in results (incompatible port shapes)")
-				}
-			}
-
-			// Capsule should NOT be in results
-			var capsuleGuid string
-			for _, tp := range kit.Types {
-				if tp.Name == "Capsule" {
-					capsuleGuid = tp.Guid
-					break
-				}
-			}
-			for _, tg := range typeGuids {
-				if tg == capsuleGuid {
-					t.Error("Capsule type should not be in results")
-				}
-			}
-		})
-
-		t.Run("Multiple selected pieces yield only exact design matches", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
-
-			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
-				}
-			}
-			if design == nil {
-				t.Fatal("Design not found")
-			}
-
-			var t1, t2 *Piece
-			for i := range design.Pieces {
-				n := design.Pieces[i].Name
-				if n != nil {
-					if *n == "t_f1_b_c0" {
-						t1 = &design.Pieces[i]
-					} else if *n == "t_f2_b_c0" {
-						t2 = &design.Pieces[i]
+			// Check expectOwnTypeInResults
+			if tc.ExpectOwnTypeInResults && tc.UsePieceIndex != nil {
+				piece := design.Pieces[*tc.UsePieceIndex]
+				if piece.Type != nil && piece.Type.Guid != "" {
+					if !containsGuid(typeGuids, piece.Type.Guid) {
+						t.Error("Expected piece's own type to be in results")
 					}
 				}
 			}
-			if t1 == nil || t2 == nil {
-				t.Fatal("Tambour pieces not found")
-			}
 
-			typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{t1.Guid, t2.Guid})
-
-			expectedDesignGuids := []string{
-				"d7e12638-9749-471b-937e-a6e5523778ff",
-				"019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
-				"019ab4e0-8da8-7217-946f-5b5a83aca0e3",
-			}
-			if len(typeGuids) != 0 {
-				t.Fatalf("Expected no replaceable types, got %#v", typeGuids)
-			}
-			if !reflect.DeepEqual(designGuids, expectedDesignGuids) {
-				t.Fatalf("Design guids mismatch:\n got: %#v\nwant: %#v", designGuids, expectedDesignGuids)
-			}
-		})
-
-		t.Run("Synthetic selection enforces distinct compatible connectors and ignores consumed design connectors", func(t *testing.T) {
-			makeConnector := func(guid, portGuid string) Connector {
-				return Connector{
-					Guid:      guid,
-					T:         0,
-					Point:     Point{},
-					Direction: Vector{X: 1},
-					Port:      &PortId{Guid: portGuid},
-				}
-			}
-			makeType := func(guid string, connectorPortGuids []string) Type {
-				connectors := make([]Connector, 0, len(connectorPortGuids))
-				for connectorIndex, connectorPortGuid := range connectorPortGuids {
-					connectors = append(connectors, makeConnector(guid+"-connector-"+strconv.Itoa(connectorIndex), connectorPortGuid))
-				}
-				return Type{Guid: guid, Name: guid, Connectors: connectors}
-			}
-			makePiece := func(guid, typeGuid string) Piece {
-				return Piece{Guid: guid, Type: &TypeId{Guid: typeGuid}}
-			}
-			makeConnection := func(guid, connectedPieceGuid, connectedConnectorGuid, connectingPieceGuid, connectingConnectorGuid string) Connection {
-				return Connection{
-					Guid: guid,
-					Connected: Side{
-						Piece:     PieceId{Guid: connectedPieceGuid},
-						Connector: &ConnectorId{Guid: connectedConnectorGuid},
-					},
-					Connecting: Side{
-						Piece:     PieceId{Guid: connectingPieceGuid},
-						Connector: &ConnectorId{Guid: connectingConnectorGuid},
-					},
-				}
-			}
-			containsGuid := func(guids []string, expectedGuid string) bool {
-				for _, guid := range guids {
-					if guid == expectedGuid {
-						return true
+			// Check forbidden type names
+			for _, forbiddenName := range tc.ForbiddenTypeNames {
+				var forbiddenGuid string
+				for _, tp := range kit.Types {
+					if tp.Name == forbiddenName {
+						forbiddenGuid = tp.Guid
+						break
 					}
 				}
-				return false
-			}
-
-			ports := []Port{
-				{Guid: "port-L", CompatiblePorts: []PortId{{Guid: "port-L-compatible"}}},
-				{Guid: "port-L-compatible", CompatiblePorts: []PortId{{Guid: "port-L"}}},
-				{Guid: "port-G"},
-			}
-			types := []Type{
-				makeType("selected-external-lg", []string{}),
-				makeType("selected-isolated-lg", []string{"port-L", "port-G"}),
-				makeType("selected-external-ll", []string{}),
-				makeType("neighbor-l", []string{"port-L"}),
-				makeType("neighbor-g", []string{"port-G"}),
-				makeType("candidate-l", []string{"port-L"}),
-				makeType("candidate-lg", []string{"port-L-compatible", "port-G"}),
-				makeType("candidate-lg-lg", []string{"port-L-compatible", "port-G", "port-L", "port-G"}),
-				makeType("candidate-ll", []string{"port-L", "port-L-compatible"}),
-				makeType("candidate-g", []string{"port-G"}),
-			}
-			designs := []Design{
-				{
-					Guid:   "candidate-design-free-lg",
-					Name:   "candidate-design-free-lg",
-					Pieces: []Piece{makePiece("candidate-design-free-piece", "candidate-lg")},
-				},
-				{
-					Guid: "candidate-design-consumed-lg",
-					Name: "candidate-design-consumed-lg",
-					Pieces: []Piece{
-						makePiece("candidate-design-consumed-a", "candidate-lg"),
-						makePiece("candidate-design-consumed-b", "candidate-l"),
-					},
-					Connections: []Connection{
-						makeConnection(
-							"candidate-design-consumed-link",
-							"candidate-design-consumed-a",
-							"candidate-lg-connector-0",
-							"candidate-design-consumed-b",
-							"candidate-l-connector-0",
-						),
-					},
-				},
-			}
-			design := Design{
-				Guid: "root-design",
-				Name: "root-design",
-				Pieces: []Piece{
-					makePiece("piece-external-lg", "selected-external-lg"),
-					makePiece("piece-isolated-lg", "selected-isolated-lg"),
-					makePiece("piece-external-ll", "selected-external-ll"),
-					makePiece("neighbor-piece-l", "neighbor-l"),
-					makePiece("neighbor-piece-g", "neighbor-g"),
-					makePiece("neighbor-piece-l-a", "neighbor-l"),
-					makePiece("neighbor-piece-l-b", "neighbor-l"),
-				},
-				Connections: []Connection{
-					makeConnection("external-lg-l", "piece-external-lg", "selected-external-lg-connector-0", "neighbor-piece-l", "neighbor-l-connector-0"),
-					makeConnection("external-lg-g", "piece-external-lg", "selected-external-lg-connector-1", "neighbor-piece-g", "neighbor-g-connector-0"),
-					makeConnection("external-ll-a", "piece-external-ll", "selected-external-ll-connector-0", "neighbor-piece-l-a", "neighbor-l-connector-0"),
-					makeConnection("external-ll-b", "piece-external-ll", "selected-external-ll-connector-1", "neighbor-piece-l-b", "neighbor-l-connector-0"),
-				},
-			}
-
-			doubleLeftTypeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-external-ll"})
-			if !containsGuid(doubleLeftTypeGuids, "candidate-ll") {
-				t.Fatal("Expected candidate-ll to satisfy two left-port requirements")
-			}
-			if containsGuid(doubleLeftTypeGuids, "candidate-l") {
-				t.Fatal("candidate-l should not satisfy two left-port requirements with one connector")
-			}
-			if containsGuid(doubleLeftTypeGuids, "candidate-g") {
-				t.Fatal("candidate-g should not satisfy left-port requirements")
-			}
-
-			leftAndGableTypeGuids, leftAndGableDesignGuids := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-external-lg"})
-			if !containsGuid(leftAndGableTypeGuids, "candidate-lg") {
-				t.Fatal("Expected candidate-lg to satisfy left-and-gable requirements")
-			}
-			if containsGuid(leftAndGableTypeGuids, "candidate-l") {
-				t.Fatal("candidate-l should not satisfy left-and-gable requirements")
-			}
-			if !containsGuid(leftAndGableDesignGuids, "candidate-design-free-lg") {
-				t.Fatal("Expected free design connectors to be available")
-			}
-			if containsGuid(leftAndGableDesignGuids, "candidate-design-consumed-lg") {
-				t.Fatal("Design should not expose internally consumed connectors")
-			}
-
-			isolatedTypeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-isolated-lg"})
-			if !containsGuid(isolatedTypeGuids, "candidate-lg") {
-				t.Fatal("Expected candidate-lg to satisfy isolated piece connector demands")
-			}
-			if containsGuid(isolatedTypeGuids, "candidate-l") {
-				t.Fatal("candidate-l should not satisfy both isolated piece connector demands")
-			}
-
-			multiplePieceTypeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-external-lg", "piece-isolated-lg"})
-			if !containsGuid(multiplePieceTypeGuids, "candidate-lg") {
-				t.Fatal("Expected candidate-lg to satisfy the selection boundary requirements")
-			}
-			if containsGuid(multiplePieceTypeGuids, "candidate-l") {
-				t.Fatal("candidate-l should fail when any selected piece is unsatisfied")
-			}
-		})
-
-		t.Run("Connector-level boundary matching shrinks candidates as demand grows", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
-
-			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
-				}
-			}
-			if design == nil {
-				t.Fatal("Design not found")
-			}
-
-			nameToGuid := map[string]string{}
-			typeNameByGuid := map[string]string{}
-			for _, piece := range design.Pieces {
-				if piece.Name != nil {
-					nameToGuid[*piece.Name] = piece.Guid
-				}
-			}
-			for _, kind := range kit.Types {
-				typeNameByGuid[kind.Guid] = kind.Name
-			}
-			typeNamesForSelection := func(pieceNames []string) []string {
-				pieceGuids := make([]string, 0, len(pieceNames))
-				for _, pieceName := range pieceNames {
-					pieceGuid, ok := nameToGuid[pieceName]
-					if !ok {
-						t.Fatalf("Piece %q not found", pieceName)
-					}
-					pieceGuids = append(pieceGuids, pieceGuid)
-				}
-				typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, pieceGuids)
-				typeNames := make([]string, 0, len(typeGuids))
-				for _, typeGuid := range typeGuids {
-					typeNames = append(typeNames, typeNameByGuid[typeGuid])
-				}
-				return typeNames
-			}
-			uniqueTypeNamesForSelection := func(pieceNames []string) []string {
-				seen := map[string]bool{}
-				typeNames := typeNamesForSelection(pieceNames)
-				unique := make([]string, 0, len(typeNames))
-				for _, typeName := range typeNames {
-					if seen[typeName] {
-						continue
-					}
-					seen[typeName] = true
-					unique = append(unique, typeName)
-				}
-				sort.Strings(unique)
-				return unique
-			}
-			containsName := func(typeNames []string, expectedName string) bool {
-				for _, typeName := range typeNames {
-					if typeName == expectedName {
-						return true
+				if forbiddenGuid != "" {
+					for _, tg := range typeGuids {
+						if tg == forbiddenGuid {
+							t.Errorf("%s type should NOT be in results", forbiddenName)
+						}
 					}
 				}
-				return false
 			}
 
-			singleCapsuleNames := typeNamesForSelection([]string{"cs_sl2_d0_t_f9_b_c1"})
-			twoCapsuleNames := typeNamesForSelection([]string{"cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"})
-			fourCapsuleNames := typeNamesForSelection([]string{"cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"})
-			eightCapsuleNames := typeNamesForSelection([]string{"cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"})
-			tambourPieceGuid, ok := nameToGuid["t_f9_b_c1"]
-			if !ok {
-				t.Fatal("Tambour piece t_f9_b_c1 not found")
-			}
-			tambourTypeGuids, tambourDesignGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{tambourPieceGuid})
-
-			if len(singleCapsuleNames) <= len(twoCapsuleNames) {
-				t.Fatalf("Expected single capsule result to be larger than two capsules, got %d <= %d", len(singleCapsuleNames), len(twoCapsuleNames))
-			}
-			if len(twoCapsuleNames) < len(fourCapsuleNames) {
-				t.Fatalf("Expected two capsules result to be at least as large as four capsules, got %d < %d", len(twoCapsuleNames), len(fourCapsuleNames))
-			}
-			if len(fourCapsuleNames) < len(eightCapsuleNames) {
-				t.Fatalf("Expected four capsules result to be at least as large as eight capsules, got %d < %d", len(fourCapsuleNames), len(eightCapsuleNames))
-			}
-
-			for _, forbiddenFamily := range []string{"\\", "/", "q", "p", "J", "L", "s", "z"} {
-				if containsName(twoCapsuleNames, forbiddenFamily) {
-					t.Fatalf("Forbidden single-connector family %q survived two-capsule selection", forbiddenFamily)
+			// Check connectorless type count
+			if tc.ExpectConnectorlessTypeCount {
+				noConnectorCount := 0
+				for _, tp := range kit.Types {
+					if len(tp.Connectors) == 0 {
+						noConnectorCount++
+					}
 				}
-				if containsName(fourCapsuleNames, forbiddenFamily) {
-					t.Fatalf("Forbidden single-connector family %q survived four-capsule selection", forbiddenFamily)
+				if len(typeGuids) != noConnectorCount {
+					t.Errorf("Expected %d types with no connectors, got %d", noConnectorCount, len(typeGuids))
 				}
-				if containsName(eightCapsuleNames, forbiddenFamily) {
-					t.Fatalf("Forbidden single-connector family %q survived eight-capsule selection", forbiddenFamily)
-				}
-			}
-			if containsName(fourCapsuleNames, "Bridge") {
-				t.Fatal("Bridge should not survive four-capsule selection")
-			}
-			if containsName(eightCapsuleNames, "Bridge") {
-				t.Fatal("Bridge should not survive eight-capsule selection")
-			}
-
-			expectedTwoCapsuleFamilies := []string{"Bridge", "Cylindric Tambour", "First Storey", "Last Storey", "Single Storey", "Tambour"}
-			expectedLargeFamilies := []string{"Cylindric Tambour", "First Storey", "Last Storey", "Single Storey", "Tambour"}
-			if !reflect.DeepEqual(uniqueTypeNamesForSelection([]string{"cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"}), expectedTwoCapsuleFamilies) {
-				t.Fatalf("Unexpected two-capsule families: %#v", uniqueTypeNamesForSelection([]string{"cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"}))
-			}
-			if !reflect.DeepEqual(uniqueTypeNamesForSelection([]string{"cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"}), expectedLargeFamilies) {
-				t.Fatalf("Unexpected four-capsule families: %#v", uniqueTypeNamesForSelection([]string{"cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"}))
-			}
-			if !reflect.DeepEqual(uniqueTypeNamesForSelection([]string{"cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"}), expectedLargeFamilies) {
-				t.Fatalf("Unexpected eight-capsule families: %#v", uniqueTypeNamesForSelection([]string{"cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"}))
-			}
-			if len(tambourTypeGuids) != 0 {
-				t.Fatalf("Expected no compatible types for tambour selection, got %#v", tambourTypeGuids)
-			}
-			if len(tambourDesignGuids) != 3 {
-				t.Fatalf("Expected exactly 3 compatible designs for tambour selection, got %#v", tambourDesignGuids)
 			}
 		})
+	}
 
-		t.Run("Returns empty when no pieces selected", func(t *testing.T) {
-			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
+	t.Run("Synthetic selection enforces distinct compatible connectors and ignores consumed design connectors", func(t *testing.T) {
+		var syntheticKit Kit
+		loadJSON(t, frAsset.SyntheticKit, &syntheticKit)
 
-			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
+		for _, sc := range frAsset.SyntheticCases {
+			t.Run(sc.Name, func(t *testing.T) {
+				var syntheticDesign *Design
+				for i := range syntheticKit.Designs {
+					if syntheticKit.Designs[i].Guid == sc.DesignGuid {
+						syntheticDesign = &syntheticKit.Designs[i]
+						break
+					}
+				}
+				if syntheticDesign == nil {
+					t.Fatalf("Design %q not found in synthetic kit", sc.DesignGuid)
+				}
+
+				typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*syntheticDesign, syntheticKit.Designs, syntheticKit.Types, syntheticKit.Ports, sc.PieceGuids)
+
+				for _, expected := range sc.ExpectedContainsTypes {
+					if !containsGuid(typeGuids, expected) {
+						t.Fatalf("Expected type %q to be in results, got %#v", expected, typeGuids)
+					}
+				}
+				for _, forbidden := range sc.ExpectedNotContainsTypes {
+					if containsGuid(typeGuids, forbidden) {
+						t.Fatalf("Type %q should NOT be in results", forbidden)
+					}
+				}
+				for _, expected := range sc.ExpectedContainsDesigns {
+					if !containsGuid(designGuids, expected) {
+						t.Fatalf("Expected design %q to be in results, got %#v", expected, designGuids)
+					}
+				}
+				for _, forbidden := range sc.ExpectedNotContainsDesigns {
+					if containsGuid(designGuids, forbidden) {
+						t.Fatalf("Design %q should NOT be in results", forbidden)
+					}
+				}
+			})
+		}
+	})
+
+	t.Run("Connector-level boundary matching shrinks candidates as demand grows", func(t *testing.T) {
+		bc := frAsset.BoundaryCases
+		var kit Kit
+		loadJSON(t, bc.Kit, &kit)
+
+		design := findDesignByName(kit.Designs, bc.DesignName, nil)
+		if design == nil {
+			t.Fatal("Design not found")
+		}
+
+		nameToGuid := map[string]string{}
+		typeNameByGuid := map[string]string{}
+		for _, piece := range design.Pieces {
+			if piece.Name != nil {
+				nameToGuid[*piece.Name] = piece.Guid
+			}
+		}
+		for _, kind := range kit.Types {
+			typeNameByGuid[kind.Guid] = kind.Name
+		}
+		typeNamesForSelection := func(pieceNames []string) []string {
+			pGuids := make([]string, 0, len(pieceNames))
+			for _, pieceName := range pieceNames {
+				pieceGuid, ok := nameToGuid[pieceName]
+				if !ok {
+					t.Fatalf("Piece %q not found", pieceName)
+				}
+				pGuids = append(pGuids, pieceGuid)
+			}
+			tGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, pGuids)
+			typeNames := make([]string, 0, len(tGuids))
+			for _, typeGuid := range tGuids {
+				typeNames = append(typeNames, typeNameByGuid[typeGuid])
+			}
+			return typeNames
+		}
+		uniqueTypeNamesForSelection := func(pieceNames []string) []string {
+			seen := map[string]bool{}
+			typeNames := typeNamesForSelection(pieceNames)
+			unique := make([]string, 0, len(typeNames))
+			for _, typeName := range typeNames {
+				if seen[typeName] {
+					continue
+				}
+				seen[typeName] = true
+				unique = append(unique, typeName)
+			}
+			sort.Strings(unique)
+			return unique
+		}
+		containsName := func(typeNames []string, expectedName string) bool {
+			for _, typeName := range typeNames {
+				if typeName == expectedName {
+					return true
 				}
 			}
-			if design == nil {
-				t.Fatal("Design not found")
-			}
+			return false
+		}
 
-			typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{})
+		singleCapsuleNames := typeNamesForSelection(bc.SingleCapsulePieces)
+		twoCapsuleNames := typeNamesForSelection(bc.TwoCapsulePieces)
+		fourCapsuleNames := typeNamesForSelection(bc.FourCapsulePieces)
+		eightCapsuleNames := typeNamesForSelection(bc.EightCapsulePieces)
+		tambourPieceGuid, ok := nameToGuid[bc.TambourPieceName]
+		if !ok {
+			t.Fatalf("Tambour piece %q not found", bc.TambourPieceName)
+		}
+		tambourTypeGuids, tambourDesignGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{tambourPieceGuid})
 
-			// Count types with no connectors
-			noConnectorCount := 0
-			for _, tp := range kit.Types {
-				if len(tp.Connectors) == 0 {
-					noConnectorCount++
-				}
-			}
+		if len(singleCapsuleNames) <= len(twoCapsuleNames) {
+			t.Fatalf("Expected single capsule result to be larger than two capsules, got %d <= %d", len(singleCapsuleNames), len(twoCapsuleNames))
+		}
+		if len(twoCapsuleNames) < len(fourCapsuleNames) {
+			t.Fatalf("Expected two capsules result to be at least as large as four capsules, got %d < %d", len(twoCapsuleNames), len(fourCapsuleNames))
+		}
+		if len(fourCapsuleNames) < len(eightCapsuleNames) {
+			t.Fatalf("Expected four capsules result to be at least as large as eight capsules, got %d < %d", len(fourCapsuleNames), len(eightCapsuleNames))
+		}
 
-			if len(typeGuids) != noConnectorCount {
-				t.Errorf("Expected %d types with no connectors, got %d", noConnectorCount, len(typeGuids))
+		for _, forbiddenFamily := range bc.ForbiddenFamilies {
+			if containsName(twoCapsuleNames, forbiddenFamily) {
+				t.Fatalf("Forbidden single-connector family %q survived two-capsule selection", forbiddenFamily)
 			}
-		})
+			if containsName(fourCapsuleNames, forbiddenFamily) {
+				t.Fatalf("Forbidden single-connector family %q survived four-capsule selection", forbiddenFamily)
+			}
+			if containsName(eightCapsuleNames, forbiddenFamily) {
+				t.Fatalf("Forbidden single-connector family %q survived eight-capsule selection", forbiddenFamily)
+			}
+		}
+		if containsName(fourCapsuleNames, "Bridge") {
+			t.Fatal("Bridge should not survive four-capsule selection")
+		}
+		if containsName(eightCapsuleNames, "Bridge") {
+			t.Fatal("Bridge should not survive eight-capsule selection")
+		}
+
+		if !reflect.DeepEqual(uniqueTypeNamesForSelection(bc.TwoCapsulePieces), bc.ExpectedTwoCapsuleFamilies) {
+			t.Fatalf("Unexpected two-capsule families: %#v", uniqueTypeNamesForSelection(bc.TwoCapsulePieces))
+		}
+		if !reflect.DeepEqual(uniqueTypeNamesForSelection(bc.FourCapsulePieces), bc.ExpectedLargeFamilies) {
+			t.Fatalf("Unexpected four-capsule families: %#v", uniqueTypeNamesForSelection(bc.FourCapsulePieces))
+		}
+		if !reflect.DeepEqual(uniqueTypeNamesForSelection(bc.EightCapsulePieces), bc.ExpectedLargeFamilies) {
+			t.Fatalf("Unexpected eight-capsule families: %#v", uniqueTypeNamesForSelection(bc.EightCapsulePieces))
+		}
+		if len(tambourTypeGuids) != bc.ExpectedTambourTypeGuidCount {
+			t.Fatalf("Expected %d compatible types for tambour selection, got %#v", bc.ExpectedTambourTypeGuidCount, tambourTypeGuids)
+		}
+		if len(tambourDesignGuids) != bc.ExpectedTambourDesignGuidCount {
+			t.Fatalf("Expected %d compatible designs for tambour selection, got %#v", bc.ExpectedTambourDesignGuidCount, tambourDesignGuids)
+		}
 	})
 }
 
@@ -1696,36 +1666,35 @@ func TestValidation(t *testing.T) {
 }
 
 func TestDesignQualitySum(t *testing.T) {
-	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
-		t.Run("Sum Effective Floor Area", func(t *testing.T) {
+	var asset qualitySumCasesAsset
+	loadJSON(t, "quality-sum.cases.semio.json", &asset)
+
+	for _, tc := range asset.Cases {
+		t.Run(tc.Name, func(t *testing.T) {
 			var kit Kit
-			loadJSON(t, "metabolism.kit.semio.json", &kit)
-			var designGuid string
-			for _, d := range kit.Designs {
-				if d.Name == "Nakagin Capsule Tower" && d.Parent == nil {
-					designGuid = d.Guid
-					break
-				}
+			loadJSON(t, tc.Kit, &kit)
+
+			design := findDesignByName(kit.Designs, tc.DesignName, nil)
+			if design == nil {
+				t.Fatalf("Design %q not found", tc.DesignName)
 			}
-			if designGuid == "" {
-				t.Fatal("Nakagin Capsule Tower design not found")
-			}
+
 			var qualityGuid string
 			for _, q := range kit.Qualities {
-				if q.Name == "effective floor area" {
+				if q.Name == tc.QualityName {
 					qualityGuid = q.Guid
 					break
 				}
 			}
 			if qualityGuid == "" {
-				t.Fatal("effective floor area quality not found")
+				t.Fatalf("Quality %q not found", tc.QualityName)
 			}
-			result := SumQualityInDesign(&kit, designGuid, qualityGuid)
-			if math.Abs(result-2349.53) > 0.01 {
-				t.Errorf("Expected ~2349.53, got %f", result)
+			result := SumQualityInDesign(&kit, design.Guid, qualityGuid)
+			if math.Abs(result-tc.Expected) > tc.Tolerance {
+				t.Errorf("Expected ~%f, got %f", tc.Expected, result)
 			}
 		})
-	})
+	}
 }
 
 func TestExportDesignModel(t *testing.T) {
@@ -2425,142 +2394,176 @@ func TestKitWorkflowKinds(t *testing.T) {
 // Tests for FilterKit MUST verify correct subset extraction.
 
 func TestFilterKit(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "metabolism.kit.semio.json", &kit)
-	designGuid := "9a890dd4-0a9c-48ac-920a-9e62666465ef"
-	var expected Kit
-	loadJSON(t, "nakagin-capsule-tower.filtered.kit.semio.json", &expected)
+	var asset filterKitCasesAsset
+	loadJSON(t, "filter-kit.cases.semio.json", &asset)
 
-	t.Run("filters kit to only contain entities related to Nakagin Capsule Tower design", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
+	for _, tc := range asset.Cases {
+		var kit Kit
+		loadJSON(t, tc.Kit, &kit)
 
-		if len(filtered.Designs) != len(expected.Designs) {
-			t.Errorf("expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
+		design := findDesignByName(kit.Designs, tc.DesignName, nil)
+		if design == nil {
+			t.Fatalf("Design %q not found", tc.DesignName)
 		}
-		if len(filtered.Types) != len(expected.Types) {
-			t.Errorf("expected %d types, got %d", len(expected.Types), len(filtered.Types))
-		}
-		if len(filtered.Files) != len(expected.Files) {
-			t.Errorf("expected %d files, got %d", len(expected.Files), len(filtered.Files))
-		}
-		if len(filtered.Ports) != len(expected.Ports) {
-			t.Errorf("expected %d ports, got %d", len(expected.Ports), len(filtered.Ports))
-		}
-		if len(filtered.Qualities) != len(expected.Qualities) {
-			t.Errorf("expected %d qualities, got %d", len(expected.Qualities), len(filtered.Qualities))
-		}
-		if len(filtered.Authors) != len(expected.Authors) {
-			t.Errorf("expected %d authors, got %d", len(expected.Authors), len(filtered.Authors))
-		}
+		designGuid := design.Guid
 
-		// 🧹Find the Nakagin design in filtered kit
-		var filteredDesign *Design
-		for i := range filtered.Designs {
-			if filtered.Designs[i].Guid == designGuid {
-				filteredDesign = &filtered.Designs[i]
-				break
+		var expected Kit
+		loadJSON(t, tc.ExpectedKit, &expected)
+
+		t.Run("filters kit to only contain entities related to "+tc.DesignName+" design", func(t *testing.T) {
+			filtered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
+
+			if len(filtered.Designs) != len(expected.Designs) {
+				t.Errorf("expected %d designs, got %d", len(expected.Designs), len(filtered.Designs))
 			}
-		}
-		if filteredDesign == nil {
-			t.Fatal("Nakagin Capsule Tower design not found in filtered kit")
-		}
-
-		// 🔷Find original design for comparison
-		var originalDesign *Design
-		for i := range kit.Designs {
-			if kit.Designs[i].Guid == designGuid {
-				originalDesign = &kit.Designs[i]
-				break
+			if len(filtered.Types) != len(expected.Types) {
+				t.Errorf("expected %d types, got %d", len(expected.Types), len(filtered.Types))
 			}
-		}
-		if originalDesign == nil {
-			t.Fatal("Nakagin Capsule Tower design not found in original kit")
-		}
-
-		if len(filteredDesign.Pieces) != len(originalDesign.Pieces) {
-			t.Errorf("expected %d pieces, got %d", len(originalDesign.Pieces), len(filteredDesign.Pieces))
-		}
-
-		// Verify each type has at most one model
-		for _, typeItem := range filtered.Types {
-			if len(typeItem.Models) > 1 {
-				t.Errorf("type %s has %d models, expected at most 1", typeItem.Guid, len(typeItem.Models))
+			if len(filtered.Files) != len(expected.Files) {
+				t.Errorf("expected %d files, got %d", len(expected.Files), len(filtered.Files))
 			}
-		}
-	})
-
-	t.Run("preserves kit metadata", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
-		if filtered.Guid != kit.Guid {
-			t.Errorf("expected guid %s, got %s", kit.Guid, filtered.Guid)
-		}
-		if filtered.Name != kit.Name {
-			t.Errorf("expected name %s, got %s", kit.Name, filtered.Name)
-		}
-		if filtered.Version != kit.Version {
-			t.Errorf("expected version %s, got %s", kit.Version, filtered.Version)
-		}
-	})
-
-	t.Run("glob filters types by name include", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{Types: &GlobFilter{Include: []string{"Capsule*"}}})
-		if len(filtered.Types) == 0 {
-			t.Fatal("expected at least one type matching Capsule*")
-		}
-		for _, ty := range filtered.Types {
-			if !GlobMatch(ty.Name, "Capsule*") {
-				t.Errorf("type %s should not be included", ty.Name)
+			if len(filtered.Ports) != len(expected.Ports) {
+				t.Errorf("expected %d ports, got %d", len(expected.Ports), len(filtered.Ports))
 			}
-		}
-	})
-
-	t.Run("glob filters types by name exclude", func(t *testing.T) {
-		totalTypes := len(kit.Types)
-		filtered := FilterKit(kit, KitFilter{Types: &GlobFilter{Exclude: []string{"Capsule*"}}})
-		if len(filtered.Types) >= totalTypes {
-			t.Errorf("expected fewer types after excluding Capsule*")
-		}
-		for _, ty := range filtered.Types {
-			if GlobMatch(ty.Name, "Capsule*") {
-				t.Errorf("type %s should have been excluded", ty.Name)
+			if len(filtered.Qualities) != len(expected.Qualities) {
+				t.Errorf("expected %d qualities, got %d", len(expected.Qualities), len(filtered.Qualities))
 			}
-		}
-	})
-
-	t.Run("glob filters designs by name include", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{Designs: &GlobFilter{Include: []string{"Nakagin*"}}})
-		if len(filtered.Designs) == 0 {
-			t.Fatal("expected at least one design matching Nakagin*")
-		}
-		for _, d := range filtered.Designs {
-			if !GlobMatch(d.Name, "Nakagin*") {
-				t.Errorf("design %s should not be included", d.Name)
+			if len(filtered.Authors) != len(expected.Authors) {
+				t.Errorf("expected %d authors, got %d", len(expected.Authors), len(filtered.Authors))
 			}
-		}
-	})
 
-	t.Run("empty filter returns kit unchanged", func(t *testing.T) {
-		filtered := FilterKit(kit, KitFilter{})
-		if len(filtered.Types) != len(kit.Types) {
-			t.Errorf("expected %d types, got %d", len(kit.Types), len(filtered.Types))
-		}
-		if len(filtered.Designs) != len(kit.Designs) {
-			t.Errorf("expected %d designs, got %d", len(kit.Designs), len(filtered.Designs))
-		}
-	})
-
-	t.Run("combines designGuid with glob filters", func(t *testing.T) {
-		designFiltered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
-		combinedFiltered := FilterKit(kit, KitFilter{DesignGuid: designGuid, Types: &GlobFilter{Exclude: []string{"Capsule*"}}})
-		if len(combinedFiltered.Types) >= len(designFiltered.Types) {
-			t.Errorf("expected fewer types with combined filter")
-		}
-		for _, ty := range combinedFiltered.Types {
-			if GlobMatch(ty.Name, "Capsule*") {
-				t.Errorf("type %s should have been excluded", ty.Name)
+			filteredDesign := findDesignByName(filtered.Designs, tc.DesignName, nil)
+			if filteredDesign == nil {
+				t.Fatalf("Design %q not found in filtered kit", tc.DesignName)
 			}
+
+			if len(filteredDesign.Pieces) != len(design.Pieces) {
+				t.Errorf("expected %d pieces, got %d", len(design.Pieces), len(filteredDesign.Pieces))
+			}
+
+			for _, typeItem := range filtered.Types {
+				if len(typeItem.Models) > 1 {
+					t.Errorf("type %s has %d models, expected at most 1", typeItem.Guid, len(typeItem.Models))
+				}
+			}
+		})
+
+		t.Run("preserves kit metadata", func(t *testing.T) {
+			filtered := FilterKit(kit, KitFilter{DesignGuid: designGuid})
+			if filtered.Guid != kit.Guid {
+				t.Errorf("expected guid %s, got %s", kit.Guid, filtered.Guid)
+			}
+			if filtered.Name != kit.Name {
+				t.Errorf("expected name %s, got %s", kit.Name, filtered.Name)
+			}
+			if filtered.Version != kit.Version {
+				t.Errorf("expected version %s, got %s", kit.Version, filtered.Version)
+			}
+		})
+
+		for _, gc := range asset.GlobCases {
+			t.Run(gc.Name, func(t *testing.T) {
+				var gcKit Kit
+				loadJSON(t, gc.Kit, &gcKit)
+
+				filter := KitFilter{}
+				if len(gc.TypeInclude) > 0 {
+					if filter.Types == nil {
+						filter.Types = &GlobFilter{}
+					}
+					filter.Types.Include = gc.TypeInclude
+				}
+				if len(gc.TypeExclude) > 0 {
+					if filter.Types == nil {
+						filter.Types = &GlobFilter{}
+					}
+					filter.Types.Exclude = gc.TypeExclude
+				}
+				if len(gc.DesignInclude) > 0 {
+					if filter.Designs == nil {
+						filter.Designs = &GlobFilter{}
+					}
+					filter.Designs.Include = gc.DesignInclude
+				}
+				if gc.DesignName != "" {
+					gcDesign := findDesignByName(gcKit.Designs, gc.DesignName, nil)
+					if gcDesign != nil {
+						filter.DesignGuid = gcDesign.Guid
+					}
+				}
+
+				filtered := FilterKit(gcKit, filter)
+
+				if len(gc.TypeInclude) > 0 {
+					if len(filtered.Types) == 0 {
+						t.Fatalf("expected at least one type matching %v", gc.TypeInclude)
+					}
+					for _, ty := range filtered.Types {
+						matched := false
+						for _, pattern := range gc.TypeInclude {
+							if GlobMatch(ty.Name, pattern) {
+								matched = true
+								break
+							}
+						}
+						if !matched {
+							t.Errorf("type %s should not be included", ty.Name)
+						}
+					}
+				}
+				if len(gc.TypeExclude) > 0 && gc.DesignName == "" {
+					if len(filtered.Types) >= len(gcKit.Types) {
+						t.Errorf("expected fewer types after excluding %v", gc.TypeExclude)
+					}
+					for _, ty := range filtered.Types {
+						for _, pattern := range gc.TypeExclude {
+							if GlobMatch(ty.Name, pattern) {
+								t.Errorf("type %s should have been excluded", ty.Name)
+							}
+						}
+					}
+				}
+				if len(gc.DesignInclude) > 0 {
+					if len(filtered.Designs) == 0 {
+						t.Fatalf("expected at least one design matching %v", gc.DesignInclude)
+					}
+					for _, d := range filtered.Designs {
+						matched := false
+						for _, pattern := range gc.DesignInclude {
+							if GlobMatch(d.Name, pattern) {
+								matched = true
+								break
+							}
+						}
+						if !matched {
+							t.Errorf("design %s should not be included", d.Name)
+						}
+					}
+				}
+				if gc.Name == "empty_filter" {
+					if len(filtered.Types) != len(gcKit.Types) {
+						t.Errorf("expected %d types, got %d", len(gcKit.Types), len(filtered.Types))
+					}
+					if len(filtered.Designs) != len(gcKit.Designs) {
+						t.Errorf("expected %d designs, got %d", len(gcKit.Designs), len(filtered.Designs))
+					}
+				}
+				if gc.DesignName != "" && len(gc.TypeExclude) > 0 {
+					designOnlyFiltered := FilterKit(gcKit, KitFilter{DesignGuid: filter.DesignGuid})
+					if len(filtered.Types) >= len(designOnlyFiltered.Types) {
+						t.Errorf("expected fewer types with combined filter")
+					}
+					for _, ty := range filtered.Types {
+						for _, pattern := range gc.TypeExclude {
+							if GlobMatch(ty.Name, pattern) {
+								t.Errorf("type %s should have been excluded", ty.Name)
+							}
+						}
+					}
+				}
+			})
 		}
-	})
+	}
 }
 
 // #endregion 🏰Kit Filter Tests
@@ -2568,14 +2571,11 @@ func TestFilterKit(t *testing.T) {
 // #region 🗝️Hash Tests
 
 func TestHashKit(t *testing.T) {
-	kitJSON, err := os.ReadFile(filepath.Join(AssetsPath, "metabolism.kit.semio.json"))
-	if err != nil {
-		t.Fatalf("failed to read metabolism kit: %v", err)
-	}
+	var hashAsset hashCasesAsset
+	loadJSON(t, "hash.cases.semio.json", &hashAsset)
+
 	var kit Kit
-	if err := json.Unmarshal(kitJSON, &kit); err != nil {
-		t.Fatalf("failed to unmarshal metabolism kit: %v", err)
-	}
+	loadJSON(t, hashAsset.KitHash.Kit, &kit)
 
 	t.Run("hashKit produces a 64-char lowercase hex string", func(t *testing.T) {
 		h := HashKit(kit)
@@ -2599,9 +2599,8 @@ func TestHashKit(t *testing.T) {
 
 	t.Run("hashKit of metabolism kit matches expected hash", func(t *testing.T) {
 		h := HashKit(kit)
-		expected := "2ebfdb63f7f1a329702f4c4852c1a7c7c11cf550b74a1f280d7538fc5c25dd0a"
-		if h != expected {
-			t.Errorf("expected %s, got %s", expected, h)
+		if h != hashAsset.KitHash.Expected {
+			t.Errorf("expected %s, got %s", hashAsset.KitHash.Expected, h)
 		}
 	})
 
@@ -2616,15 +2615,9 @@ func TestHashKit(t *testing.T) {
 	})
 
 	t.Run("hashDesign produces a 64-char lowercase hex string", func(t *testing.T) {
-		var nct *Design
-		for i := range kit.Designs {
-			if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-				nct = &kit.Designs[i]
-				break
-			}
-		}
+		nct := findDesignByName(kit.Designs, hashAsset.DesignName, nil)
 		if nct == nil {
-			t.Fatal("Nakagin Capsule Tower design not found")
+			t.Fatalf("Design %q not found", hashAsset.DesignName)
 		}
 		h := HashDesign(*nct)
 		if len(h) != 64 {
@@ -2644,22 +2637,23 @@ func TestHashKit(t *testing.T) {
 }
 
 func TestHashKitDiff(t *testing.T) {
+	var hashAsset hashCasesAsset
+	loadJSON(t, "hash.cases.semio.json", &hashAsset)
+
 	t.Run("hashKitDiff matches expected canonical value", func(t *testing.T) {
-		// Create KitDiff with name="updated" and description=null
-		raw := []byte(`{"name":"updated","description":null}`)
+		raw := []byte(hashAsset.KitDiffHash.JSON)
 		var d KitDiff
 		if err := json.Unmarshal(raw, &d); err != nil {
 			t.Fatalf("failed to unmarshal KitDiff: %v", err)
 		}
 		h := HashKitDiff(d)
-		expected := "d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5"
-		if h != expected {
-			t.Errorf("expected %s, got %s", expected, h)
+		if h != hashAsset.KitDiffHash.Expected {
+			t.Errorf("expected %s, got %s", hashAsset.KitDiffHash.Expected, h)
 		}
 	})
 
 	t.Run("hashKitDiff is deterministic", func(t *testing.T) {
-		raw := []byte(`{"name":"updated","description":null}`)
+		raw := []byte(hashAsset.KitDiffHash.JSON)
 		var d KitDiff
 		if err := json.Unmarshal(raw, &d); err != nil {
 			t.Fatalf("failed to unmarshal KitDiff: %v", err)
@@ -2672,7 +2666,7 @@ func TestHashKitDiff(t *testing.T) {
 	})
 
 	t.Run("hashKitDiff produces different hashes for different diffs", func(t *testing.T) {
-		raw1 := []byte(`{"name":"updated","description":null}`)
+		raw1 := []byte(hashAsset.KitDiffHash.JSON)
 		raw2 := []byte(`{"name":"other"}`)
 		var d1, d2 KitDiff
 		json.Unmarshal(raw1, &d1)
@@ -2720,76 +2714,63 @@ func TestHashKitDiff(t *testing.T) {
 // #region 🎉DesignWithDiff Tests
 
 func TestDesignWithDiff(t *testing.T) {
-	var kit Kit
-	loadJSON(t, "metabolism.kit.semio.json", &kit)
+	var asset designWithDiffCasesAsset
+	loadJSON(t, "design-with-diff.cases.semio.json", &asset)
 
-	var design *Design
-	for i := range kit.Designs {
-		if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-			design = &kit.Designs[i]
-			break
-		}
-	}
-	if design == nil {
-		t.Fatal("Nakagin Capsule Tower design not found")
-	}
+	for _, tc := range asset.Cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, tc.Kit, &kit)
 
-	var diff DesignDiff
-	loadJSON(t, "nakgin-capsule-tower.diff.design.semio.json", &diff)
-
-	var expected Design
-	loadJSON(t, "nakagin-capsule-tower.with-diff.design.semio.json", &expected)
-
-	computed := DesignWithDiff(*design, diff)
-
-	if len(computed.Pieces) != len(expected.Pieces) {
-		t.Errorf("pieces count: got %d, want %d", len(computed.Pieces), len(expected.Pieces))
-	}
-	if len(computed.Connections) != len(expected.Connections) {
-		t.Errorf("connections count: got %d, want %d", len(computed.Connections), len(expected.Connections))
-	}
-
-	getStatus := func(attrs []Attribute) string {
-		for _, a := range attrs {
-			if a.Key == "semio.diffStatus" && a.Value != nil {
-				return *a.Value
+			design := findDesignByName(kit.Designs, tc.DesignName, nil)
+			if design == nil {
+				t.Fatalf("Design %q not found", tc.DesignName)
 			}
-		}
-		return ""
-	}
 
-	counts := map[string]int{}
-	for _, p := range computed.Pieces {
-		counts[getStatus(p.Attributes)]++
-	}
-	if counts["unchanged"] != 163 {
-		t.Errorf("unchanged pieces: got %d, want 163", counts["unchanged"])
-	}
-	if counts["modified"] != 7 {
-		t.Errorf("modified pieces: got %d, want 7", counts["modified"])
-	}
-	if counts["removed"] != 10 {
-		t.Errorf("removed pieces: got %d, want 10", counts["removed"])
-	}
-	if counts["added"] != 5 {
-		t.Errorf("added pieces: got %d, want 5", counts["added"])
-	}
+			var diff DesignDiff
+			loadJSON(t, tc.Diff, &diff)
 
-	connCounts := map[string]int{}
-	for _, c := range computed.Connections {
-		connCounts[getStatus(c.Attributes)]++
-	}
-	if connCounts["unchanged"] != 168 {
-		t.Errorf("unchanged connections: got %d, want 168", connCounts["unchanged"])
-	}
-	if connCounts["modified"] != 1 {
-		t.Errorf("modified connections: got %d, want 1", connCounts["modified"])
-	}
-	if connCounts["removed"] != 10 {
-		t.Errorf("removed connections: got %d, want 10", connCounts["removed"])
-	}
-	if connCounts["added"] != 4 {
-		t.Errorf("added connections: got %d, want 4", connCounts["added"])
+			var expected Design
+			loadJSON(t, tc.Expected, &expected)
+
+			computed := DesignWithDiff(*design, diff)
+
+			if len(computed.Pieces) != len(expected.Pieces) {
+				t.Errorf("pieces count: got %d, want %d", len(computed.Pieces), len(expected.Pieces))
+			}
+			if len(computed.Connections) != len(expected.Connections) {
+				t.Errorf("connections count: got %d, want %d", len(computed.Connections), len(expected.Connections))
+			}
+
+			getStatus := func(attrs []Attribute) string {
+				for _, a := range attrs {
+					if a.Key == "semio.diffStatus" && a.Value != nil {
+						return *a.Value
+					}
+				}
+				return ""
+			}
+
+			counts := map[string]int{}
+			for _, p := range computed.Pieces {
+				counts[getStatus(p.Attributes)]++
+			}
+			for status, expectedCount := range tc.ExpectedPieceCounts {
+				if counts[status] != expectedCount {
+					t.Errorf("%s pieces: got %d, want %d", status, counts[status], expectedCount)
+				}
+			}
+
+			connCounts := map[string]int{}
+			for _, c := range computed.Connections {
+				connCounts[getStatus(c.Attributes)]++
+			}
+			for status, expectedCount := range tc.ExpectedConnectionCounts {
+				if connCounts[status] != expectedCount {
+					t.Errorf("%s connections: got %d, want %d", status, connCounts[status], expectedCount)
+				}
+			}
+		})
 	}
 }
 
@@ -2965,86 +2946,103 @@ func benchFindDesign(kit Kit, name string, parentName string) Design {
 }
 
 func BenchmarkRoundtripMetabolism(b *testing.B) {
-	schemaPath := filepath.Join("..", "sqlite", "schema.sql")
-	schemaData, err := os.ReadFile(schemaPath)
-	if err != nil {
-		b.Fatal(err)
-	}
-	schema := string(schemaData)
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	start := time.Now()
 	b.ResetTimer()
 	for range b.N {
-		kit, files, err := KitFromZip(AssetsPath + "/metabolism.zip")
+		data, err := SerializeKit(kit)
 		if err != nil {
 			b.Fatal(err)
 		}
-		err = KitToZip(kit, files, "temp_benchmark_metabolism.zip", schema)
+		parsed, err := DeserializeKit(data)
 		if err != nil {
 			b.Fatal(err)
 		}
-		_ = os.Remove("temp_benchmark_metabolism.zip")
+		if !AreKitsEqual(kit, parsed) {
+			b.Fatal("Roundtrip/Metabolism output does not match test expectation")
+		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Roundtrip/Metabolism", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkDiffMetabolism(b *testing.B) {
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	kitOriginal := kit
+	kitOriginal.Designs = nil
+	for _, design := range kit.Designs {
+		if design.Parent == nil {
+			kitOriginal.Designs = append(kitOriginal.Designs, design)
+		}
+	}
+	kitDiffed := benchLoadKitFile(b, "metabolism.kit.diffed.semio.json")
 	diffForward := benchLoadKitDiffFile(b, "metabolism.kit.diff.semio.json")
 	diffInverse := benchLoadKitDiffFile(b, "metabolism.kit.diff.inverted.semio.json")
 	b.ResetTimer()
 	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		b.StartTimer()
-		k2 := ApplyKitDiff(kit, diffForward)
-		ApplyKitDiff(k2, diffInverse)
+		k2 := ApplyKitDiff(kitOriginal, diffForward)
+		if !AreKitsEqual(k2, kitDiffed) {
+			b.Fatal("Diff/Metabolism forward output does not match test expectation")
+		}
+		restored := ApplyKitDiff(k2, diffInverse)
+		if !AreKitsEqual(restored, kitOriginal) {
+			b.Fatal("Diff/Metabolism inverse output does not match test expectation")
+		}
 	}
 }
 
 func BenchmarkFlattenDesign_NakaginCapsuleTower(b *testing.B) {
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	d := benchFindDesign(kit, "Nakagin Capsule Tower", "")
 	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		d := benchFindDesign(kit, "Nakagin Capsule Tower", "")
-		b.StartTimer()
-		FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesign(&kit, d.Guid)
+		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
+			b.Fatal("Flatten Design/Nakagin Capsule Tower output does not match test expectation")
+		}
 	}
 }
 
 func BenchmarkFlattenDesign_Nakagin_Slanted(b *testing.B) {
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	d := benchFindDesign(kit, "Slanted", "Nakagin Capsule Tower")
 	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		d := benchFindDesign(kit, "Slanted", "Nakagin Capsule Tower")
-		b.StartTimer()
-		FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesign(&kit, d.Guid)
+		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
+			b.Fatal("Flatten Design/Nakagin Capsule Tower/Slanted output does not match test expectation")
+		}
 	}
 }
 
 func BenchmarkFlattenDesign_Nakagin_Twisted(b *testing.B) {
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	d := benchFindDesign(kit, "Twisted", "Nakagin Capsule Tower")
 	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		d := benchFindDesign(kit, "Twisted", "Nakagin Capsule Tower")
-		b.StartTimer()
-		FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesign(&kit, d.Guid)
+		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
+			b.Fatal("Flatten Design/Nakagin Capsule Tower/Twisted output does not match test expectation")
+		}
 	}
 }
 
 func BenchmarkFlattenDesign_Nakagin_Dancing(b *testing.B) {
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	d := benchFindDesign(kit, "Dancing", "Nakagin Capsule Tower")
 	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		d := benchFindDesign(kit, "Dancing", "Nakagin Capsule Tower")
-		b.StartTimer()
-		FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesign(&kit, d.Guid)
+		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
+			b.Fatal("Flatten Design/Nakagin Capsule Tower/Dancing output does not match test expectation")
+		}
 	}
 }
 
 func BenchmarkFlattenDesign_CapsuleDream(b *testing.B) {
+	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
+	d := benchFindDesign(kit, "Capsule Dream", "")
 	for range b.N {
-		b.StopTimer()
-		kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-		d := benchFindDesign(kit, "Capsule Dream", "")
-		b.StartTimer()
-		FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesign(&kit, d.Guid)
+		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
+			b.Fatal("Flatten Design/Capsule Dream output does not match test expectation")
+		}
 	}
 }
 
@@ -3052,7 +3050,10 @@ func BenchmarkValidateKit_Invalid(b *testing.B) {
 	kit := benchLoadKitFile(b, "invalid.kit.semio.json")
 	b.ResetTimer()
 	for range b.N {
-		ValidateKit(kit)
+		result := ValidateKit(kit)
+		if len(result.Problems) == 0 {
+			b.Fatal("Validation/Invalid Kit output does not match test expectation")
+		}
 	}
 }
 
@@ -3060,7 +3061,10 @@ func BenchmarkValidateKit_Metabolism(b *testing.B) {
 	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
 	b.ResetTimer()
 	for range b.N {
-		ValidateKit(kit)
+		result := ValidateKit(kit)
+		if len(result.Problems) != 0 {
+			b.Fatal("Validation/Metabolism output does not match test expectation")
+		}
 	}
 }
 

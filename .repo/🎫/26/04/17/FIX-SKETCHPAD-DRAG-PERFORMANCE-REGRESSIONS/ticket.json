@@ -1,0 +1,13 @@
+{
+  "title": "Fix Sketchpad Drag Performance Regressions",
+  "status": "closed",
+  "description": "Drag in semio sketchpad is very slow. Each drag tick currently:\n1. Deep-clones the entire base design via JSON.parse(JSON.stringify) before applyDesignDiff.\n2. Recomputes piecesMetadata over the full updated kit (re-flattens the full design).\n3. Rebuilds a \"previewFlatDesign\" shallow copy even when nothing structurally changed.\n\nAlso on drag start the whole design is deep-cloned once.\n\nonNodeDragStop repeats the clone + metadata recompute a second time.\n\nGoal: remove the whole-design clone and the whole-kit metadata recompute from the drag hot path. Use incremental position math: only fixed/moved pieces' centers and the connections whose u/v change (returned by dragPiecesInDesign) need to be applied to React Flow. Do not recreate file blobs or rebuild the full flat design every tick.\n\nEdit semio/sketchpad/index.tsx directly. Do not change drag semantics.",
+  "summary": "Aligned Semio benchmark execution across Go, TypeScript, Python, Rust, and C# around the shared pure asset-backed benchmark set: Roundtrip/Metabolism, Diff/Metabolism, five Flatten Design cases, and two Validation cases. Benchmarks now avoid archive/temp-file timing for roundtrip, validate outputs against the same asset expectations as tests, use the same fixture loaders and diff paths as tests, and include the missing Rust Diff/Metabolism benchmark. Verified Go, TypeScript, Python, Rust, and .NET tests plus benchmark runners.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1345"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪d9f0244f25f74ed4b55c68eba50e9ae2"
+  ]
+}

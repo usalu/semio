@@ -38053,9 +38053,12 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   // #region 🧲DragPreview
   const dragPreviewPieceIdsRef = useRef<string[]>([]);
   const dragPreviewBaseDesignRef = useRef<Design | null>(null);
-  const dragPreviewFlatDesignRef = useRef<Design | null>(null);
   const dragPreviewNodeIdMapRef = useRef<Map<string, string>>(new Map());
   const dragPreviewLastPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+  // Baseline visual positions for selected pieces + descendants at drag start.
+  // Per tick new position = baseline + (draggedX - startX, draggedY - startY),
+  // so the hot path is O(affected pieces) instead of re-flattening the design.
+  const dragAffectedBaselinePositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   /**
    * scaleConnectionDiffsForDrag holds the data fields for a scaleConnectionDiffsForDrag record.
@@ -38187,27 +38190,23 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragDescendantOffsetsRef.current = offsets;
       dragDescendantNodeIdsRef.current = descNodeIds;
       dragPreviewPieceIdsRef.current = updatedSelectedIds.length > 0 ? updatedSelectedIds : [pieceId];
-      if (design) {
-        dragPreviewBaseDesignRef.current = JSON.parse(JSON.stringify(design));
-        dragPreviewFlatDesignRef.current = {
-          ...design,
-          pieces: (design.pieces ?? []).map((p) => ({
-            ...p,
-            center: metadata.get(p.guid)?.center ?? p.center,
-          })),
-        };
-      } else {
-        dragPreviewBaseDesignRef.current = null;
-        dragPreviewFlatDesignRef.current = null;
-      }
+      // Store the current design by reference (no clone). dragPiecesInDesign, applyDesignDiff,
+      // and scaleConnectionDiffsForDrag only read from it; during drag `design` is stable
+      // because edge recompute is suppressed and the transaction stack buffers updates.
+      dragPreviewBaseDesignRef.current = design ?? null;
       dragPreviewLastPositionsRef.current = new Map();
       const previewNodeIdMap = new Map<string, string>();
+      const affectedBaseline = new Map<string, { x: number; y: number }>();
       for (const n of nodes) {
         const pieceGuid = getPieceIdFromNode(n);
         if (!pieceGuid) continue;
         previewNodeIdMap.set(pieceGuid, n.id);
+        if (dragRoots.has(pieceGuid) || descendants.has(pieceGuid)) {
+          affectedBaseline.set(pieceGuid, { x: n.position.x, y: n.position.y });
+        }
       }
       dragPreviewNodeIdMapRef.current = previewNodeIdMap;
+      dragAffectedBaselinePositionsRef.current = affectedBaseline;
       const diagramEl = document.querySelector(`[data-diagram-id="${diagramId}"]`);
       if (diagramEl) (diagramEl as HTMLElement).dataset.dragging = "true";
       const selectedIds = new Set(dragRoots);

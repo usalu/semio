@@ -1,0 +1,9 @@
+{
+  "title": "Refactor Rust Tests to Load Data From Shared Assets",
+  "status": "open",
+  "description": "Refactor the Rust test code in semio/rs/lib.rs to load hardcoded test data from shared JSON asset files located in semio/assets/semio/. All hardcoded GUIDs, design names, piece names, expected values, hash strings, glob patterns, expected counts must be loaded from asset files. The test behavior (logic, assertions, helpers) stays in Rust code - only data moves to assets.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪b07508b3fa3c4bb3b633b2cc39685386"
+  ]
+}

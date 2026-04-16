@@ -9,9 +9,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
 using Semio;
 
 namespace Semio.Benchmark;
@@ -20,14 +20,30 @@ class Program
 {
     const string AssetsPath = "../assets/semio";
     const int Iterations = 3;
-    const float Tolerance = 1e-5f;
+
+    static string ResolveAssetPath(string filename)
+    {
+        var candidates = new[]
+        {
+            Path.Combine(AssetsPath, filename),
+            Path.Combine("semio", "assets", "semio", filename),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "assets", "semio", filename),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "assets", "semio", filename),
+        };
+        foreach (var candidate in candidates)
+        {
+            var fullPath = Path.GetFullPath(candidate);
+            if (System.IO.File.Exists(fullPath)) return fullPath;
+        }
+        return Path.GetFullPath(candidates[0]);
+    }
 
     static T LoadAsset<T>(string filename)
     {
-        var path = Path.Combine(AssetsPath, filename);
-        if (!System.IO.File.Exists(path)) throw new FileNotFoundException($"Asset not found at {Path.GetFullPath(path)}");
+        var path = ResolveAssetPath(filename);
+        if (!System.IO.File.Exists(path)) throw new FileNotFoundException($"Asset not found at {path}");
         var json = System.IO.File.ReadAllText(path);
-        return JsonConvert.DeserializeObject<T>(json)!;
+        return Utility.Deserialize<T>(json)!;
     }
 
     static void Bench(string name, Action action)
@@ -39,7 +55,7 @@ class Program
         }
         sw.Stop();
         double duration = sw.Elapsed.TotalSeconds / Iterations;
-        Console.WriteLine($"{name},{duration:F6}");
+        Console.WriteLine($"{name},{duration.ToString("F6", CultureInfo.InvariantCulture)}");
     }
 
     static Design FindDesign(Kit kit, string name, string? parentName = null)
@@ -60,65 +76,76 @@ class Program
     static void Main(string[] args)
     {
         var kitMetabolism = LoadAsset<Kit>("metabolism.kit.semio.json");
+        var kitOriginal = LoadAsset<Kit>("metabolism.kit.semio.json");
+        kitOriginal.Designs = kitOriginal.Designs.Where(d => d.Parent == null).ToList();
+        var kitDiffed = LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
         var kitInvalid = LoadAsset<Kit>("invalid.kit.semio.json");
         var diffForward = LoadAsset<KitDiff>("metabolism.kit.diff.semio.json");
         var diffInverse = LoadAsset<KitDiff>("metabolism.kit.diff.inverted.semio.json");
 
         Bench("Roundtrip/Metabolism", () =>
         {
-            var zipPath = Path.Combine(AssetsPath, "metabolism.zip");
-            var importResult = ZipRoundtrip.ImportKit(zipPath);
-
-            var tempZipPath = "temp_benchmark_metabolism.zip";
-
-            ZipRoundtrip.ExportKit(importResult.Kit, tempZipPath);
-            if (System.IO.File.Exists(tempZipPath)) System.IO.File.Delete(tempZipPath);
+            var json = Utility.Serialize(kitMetabolism);
+            var restored = Utility.Deserialize<Kit>(json)!;
+            if (!SemioDiff.AreKitsEqual(kitMetabolism, restored)) throw new Exception("Roundtrip/Metabolism output does not match test expectation");
         });
 
         Bench("Diff/Metabolism", () =>
         {
-            var k2 = Kit.ApplyDiff(kitMetabolism, diffForward);
-            Kit.ApplyDiff(k2, diffInverse);
+            var change = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
+            if (!SemioDiff.AreKitDiffsEqual(change.Forward, diffForward)) throw new Exception("Diff/Metabolism forward diff output does not match test expectation");
+            if (!SemioDiff.AreKitDiffsEqual(change.Backward, diffInverse)) throw new Exception("Diff/Metabolism inverse diff output does not match test expectation");
+            var k2 = SemioDiff.ApplyKitDiff(kitOriginal, change.Forward);
+            if (!SemioDiff.AreKitsEqual(k2, kitDiffed)) throw new Exception("Diff/Metabolism forward output does not match test expectation");
+            var restored = SemioDiff.ApplyKitDiff(k2, change.Backward);
+            if (!SemioDiff.AreKitsEqual(restored, kitOriginal)) throw new Exception("Diff/Metabolism inverse output does not match test expectation");
         });
 
         var d1 = FindDesign(kitMetabolism, "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower", () =>
         {
-            Design.Flatten(Entity<Design>.DeepClone(d1)!, kitMetabolism.Types);
+            var flat = Kit.FlattenDesign(kitMetabolism, d1.Guid);
+            if (flat.Pieces?.Updated == null || flat.Pieces.Updated.Count == 0) throw new Exception("Flatten Design/Nakagin Capsule Tower output does not match test expectation");
         });
 
         var d2 = FindDesign(kitMetabolism, "Slanted", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Slanted", () =>
         {
-            Design.Flatten(Entity<Design>.DeepClone(d2)!, kitMetabolism.Types);
+            var flat = Kit.FlattenDesign(kitMetabolism, d2.Guid);
+            if (flat.Pieces?.Updated == null || flat.Pieces.Updated.Count == 0) throw new Exception("Flatten Design/Nakagin Capsule Tower/Slanted output does not match test expectation");
         });
 
         var d3 = FindDesign(kitMetabolism, "Twisted", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Twisted", () =>
         {
-            Design.Flatten(Entity<Design>.DeepClone(d3)!, kitMetabolism.Types);
+            var flat = Kit.FlattenDesign(kitMetabolism, d3.Guid);
+            if (flat.Pieces?.Updated == null || flat.Pieces.Updated.Count == 0) throw new Exception("Flatten Design/Nakagin Capsule Tower/Twisted output does not match test expectation");
         });
 
         var d4 = FindDesign(kitMetabolism, "Dancing", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Dancing", () =>
         {
-            Design.Flatten(Entity<Design>.DeepClone(d4)!, kitMetabolism.Types);
+            var flat = Kit.FlattenDesign(kitMetabolism, d4.Guid);
+            if (flat.Pieces?.Updated == null || flat.Pieces.Updated.Count == 0) throw new Exception("Flatten Design/Nakagin Capsule Tower/Dancing output does not match test expectation");
         });
 
         var d5 = FindDesign(kitMetabolism, "Capsule Dream");
         Bench("Flatten Design/Capsule Dream", () =>
         {
-            Design.Flatten(Entity<Design>.DeepClone(d5)!, kitMetabolism.Types);
+            var flat = Kit.FlattenDesign(kitMetabolism, d5.Guid);
+            if (flat.Pieces?.Updated == null || flat.Pieces.Updated.Count == 0) throw new Exception("Flatten Design/Capsule Dream output does not match test expectation");
         });
 
         Bench("Validation/Invalid Kit", () =>
         {
-            SemioValidator.ValidateKit(kitInvalid);
+            var result = SemioValidator.ValidateKit(kitInvalid);
+            if (result.Issues.Count == 0) throw new Exception("Validation/Invalid Kit output does not match test expectation");
         });
 
         Bench("Validation/Metabolism", () =>
         {
-            SemioValidator.ValidateKit(kitMetabolism);
+            var result = SemioValidator.ValidateKit(kitMetabolism);
+            if (result.Issues.Count != 0) throw new Exception("Validation/Metabolism output does not match test expectation");
         });
     }
 }

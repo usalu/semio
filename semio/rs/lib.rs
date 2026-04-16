@@ -17141,67 +17141,100 @@ mod benchmark {
 
         pub fn run_benchmarks() {
             let kit_metabolism = load_kit("metabolism.kit.semio.json");
-            let kit_invalid = load_kit("metabolism.kit.semio.json");
-            let metabolism_zip_path = Path::new(ASSETS_DIR).join("metabolism.semio.zip");
-            let metabolism_zip_str = metabolism_zip_path.to_str().unwrap();
-            // We assume running from rs/semio
+            let mut kit_original = kit_metabolism.clone();
+            kit_original.designs = kit_metabolism
+                .designs
+                .clone()
+                .map(|designs| designs.into_iter().filter(|design| design.parent.is_none()).collect());
+            let kit_diffed = load_kit("metabolism.kit.diffed.semio.json");
+            let kit_invalid = load_kit("invalid.kit.semio.json");
+            let diff_forward = load_kit_diff("metabolism.kit.diff.semio.json");
+            let diff_inverse = load_kit_diff("metabolism.kit.diff.inverted.semio.json");
 
             bench("Roundtrip/Metabolism", || {
-                let import_result =
-                    super::zip_roundtrip::import_kit_from_zip(metabolism_zip_str).unwrap();
+                let serialized = serialize_kit(&kit_metabolism).unwrap();
+                let restored = deserialize_kit(&serialized).unwrap();
+                if !are_kits_equal(&kit_metabolism, &restored) {
+                    panic!("Roundtrip/Metabolism output does not match test expectation");
+                }
+            });
 
-                let temp_zip = "temp_benchmark_metabolism.zip";
-                // Need schema? Rust ExportKitToZip calls KitToSqlite which executes schema.
-                // Wait, Rust implementation of export_kit_to_zip in semio.rs...
-                // Let's check signature.
-
-                super::zip_roundtrip::export_kit_to_zip(
-                    &import_result.kit,
-                    &import_result.files,
-                    temp_zip,
-                )
-                .unwrap();
-                if Path::new(temp_zip).exists() {
-                    std::fs::remove_file(temp_zip).unwrap();
+            bench("Diff/Metabolism", || {
+                let change = get_kit_change(&kit_original, &kit_diffed);
+                if change.forward != diff_forward {
+                    panic!("Diff/Metabolism forward diff output does not match test expectation");
+                }
+                if change.backward != diff_inverse {
+                    panic!("Diff/Metabolism inverse diff output does not match test expectation");
+                }
+                let mut k2 = kit_original.clone();
+                apply_kit_diff(&mut k2, &change.forward);
+                if !are_kits_equal(&k2, &kit_diffed) {
+                    panic!("Diff/Metabolism forward output does not match test expectation");
+                }
+                apply_kit_diff(&mut k2, &change.backward);
+                if !are_kits_equal(&k2, &kit_original) {
+                    panic!("Diff/Metabolism inverse output does not match test expectation");
                 }
             });
 
             let d1 = find_design(&kit_metabolism, "Nakagin Capsule Tower", None);
             let d1_guid = d1.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower", || {
-                let _ = flatten_design(&kit_metabolism, &d1_guid);
+                let diff = flatten_design(&kit_metabolism, &d1_guid);
+                if diff.forward.pieces.as_ref().and_then(|p| p.updated.as_ref()).map_or(0, Vec::len) == 0 {
+                    panic!("Flatten Design/Nakagin Capsule Tower output does not match test expectation");
+                }
             });
 
             let d2 = find_design(&kit_metabolism, "Slanted", Some("Nakagin Capsule Tower"));
             let d2_guid = d2.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Slanted", || {
-                let _ = flatten_design(&kit_metabolism, &d2_guid);
+                let diff = flatten_design(&kit_metabolism, &d2_guid);
+                if diff.forward.pieces.as_ref().and_then(|p| p.updated.as_ref()).map_or(0, Vec::len) == 0 {
+                    panic!("Flatten Design/Nakagin Capsule Tower/Slanted output does not match test expectation");
+                }
             });
 
             let d3 = find_design(&kit_metabolism, "Twisted", Some("Nakagin Capsule Tower"));
             let d3_guid = d3.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Twisted", || {
-                let _ = flatten_design(&kit_metabolism, &d3_guid);
+                let diff = flatten_design(&kit_metabolism, &d3_guid);
+                if diff.forward.pieces.as_ref().and_then(|p| p.updated.as_ref()).map_or(0, Vec::len) == 0 {
+                    panic!("Flatten Design/Nakagin Capsule Tower/Twisted output does not match test expectation");
+                }
             });
 
             let d4 = find_design(&kit_metabolism, "Dancing", Some("Nakagin Capsule Tower"));
             let d4_guid = d4.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Dancing", || {
-                let _ = flatten_design(&kit_metabolism, &d4_guid);
+                let diff = flatten_design(&kit_metabolism, &d4_guid);
+                if diff.forward.pieces.as_ref().and_then(|p| p.updated.as_ref()).map_or(0, Vec::len) == 0 {
+                    panic!("Flatten Design/Nakagin Capsule Tower/Dancing output does not match test expectation");
+                }
             });
 
             let d5 = find_design(&kit_metabolism, "Capsule Dream", None);
             let d5_guid = d5.guid.clone();
             bench("Flatten Design/Capsule Dream", || {
-                let _ = flatten_design(&kit_metabolism, &d5_guid);
+                let diff = flatten_design(&kit_metabolism, &d5_guid);
+                if diff.forward.pieces.as_ref().and_then(|p| p.updated.as_ref()).map_or(0, Vec::len) == 0 {
+                    panic!("Flatten Design/Capsule Dream output does not match test expectation");
+                }
             });
 
             bench("Validation/Invalid Kit", || {
-                let _ = validate_kit(&kit_invalid);
+                let result = validate_kit(&kit_invalid);
+                if result.problems.is_empty() {
+                    panic!("Validation/Invalid Kit output does not match test expectation");
+                }
             });
 
             bench("Validation/Metabolism", || {
-                let _ = validate_kit(&kit_metabolism);
+                let result = validate_kit(&kit_metabolism);
+                if !result.problems.is_empty() {
+                    panic!("Validation/Metabolism output does not match test expectation");
+                }
             });
         }
     }

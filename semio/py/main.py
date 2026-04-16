@@ -1685,79 +1685,96 @@ def _bench(name: str, func):
 
 
 def benchmark_main():
-    kit_metabolism = _test_load_kit("metabolism.kit.semio.json")
+    kit_metabolism = _test_load_json("metabolism.kit.semio.json")
+    kit_original = {**kit_metabolism, "designs": [d for d in kit_metabolism.get("designs", []) if not d.get("parent")]}
     kit_invalid = _test_load_kit("invalid.kit.semio.json")
 
-    kit_obj = Kit.parse(kit_metabolism)
-
-    kit_invalid_obj = Kit.parse(kit_invalid)
-
     def test_roundtrip():
-        kit, files = import_kit(os.path.join(TEST_ASSETS_DIR, "metabolism.zip"))
-
-        export_kit(kit, files, "temp_benchmark_metabolism.zip")
-        if os.path.exists("temp_benchmark_metabolism.zip"):
-            os.remove("temp_benchmark_metabolism.zip")
+        serialized = json.dumps(kit_metabolism)
+        deserialized = json.loads(serialized)
+        if not areKitsDictEqual(kit_metabolism, deserialized):
+            raise AssertionError("Roundtrip/Metabolism output does not match test expectation")
 
     _bench("Roundtrip/Metabolism", test_roundtrip)
 
     diff_forward = _test_load_json("metabolism.kit.diff.semio.json")
     diff_inverse = _test_load_json("metabolism.kit.diff.inverted.semio.json")
+    kit_diffed = _test_load_json("metabolism.kit.diffed.semio.json")
 
     def test_diff_metabolism():
-        k2 = applyKitDiffDict(kit_metabolism, diff_forward)
-        applyKitDiffDict(k2, diff_inverse)
+        change = getKitChange(kit_original, kit_diffed)
+        if not areKitDiffsDictEqual(change.forward, diff_forward):
+            raise AssertionError("Diff/Metabolism forward output does not match test expectation")
+        if not areKitDiffsDictEqual(change.backward, diff_inverse):
+            raise AssertionError("Diff/Metabolism inverse diff output does not match test expectation")
+        k2 = applyKitDiffDict(kit_original, change.forward)
+        if not areKitsDictEqual(k2, kit_diffed):
+            raise AssertionError("Diff/Metabolism forward kit output does not match test expectation")
+        restored = applyKitDiffDict(k2, change.backward)
+        if not areKitsDictEqual(restored, kit_original):
+            raise AssertionError("Diff/Metabolism inverse output does not match test expectation")
 
     _bench("Diff/Metabolism", test_diff_metabolism)
 
     d1 = _test_find_design(kit_metabolism, "Nakagin Capsule Tower")
 
     def test_flatten_nakagin():
-        flattenDesignDict(kit_metabolism, d1["guid"])
+        diff = flattenDesignDict(kit_metabolism, d1["guid"])
+        if not diff.get("pieces", {}).get("updated"):
+            raise AssertionError("Flatten Design/Nakagin Capsule Tower output does not match test expectation")
 
     _bench("Flatten Design/Nakagin Capsule Tower", test_flatten_nakagin)
 
     d2 = _test_find_design(kit_metabolism, "Slanted", "Nakagin Capsule Tower")
 
     def test_flatten_nakagin_slanted():
-        flattenDesignDict(kit_metabolism, d2["guid"])
+        diff = flattenDesignDict(kit_metabolism, d2["guid"])
+        if not diff.get("pieces", {}).get("updated"):
+            raise AssertionError("Flatten Design/Nakagin Capsule Tower/Slanted output does not match test expectation")
 
     _bench("Flatten Design/Nakagin Capsule Tower/Slanted", test_flatten_nakagin_slanted)
 
     d3 = _test_find_design(kit_metabolism, "Twisted", "Nakagin Capsule Tower")
 
     def test_flatten_nakagin_twisted():
-        flattenDesignDict(kit_metabolism, d3["guid"])
+        diff = flattenDesignDict(kit_metabolism, d3["guid"])
+        if not diff.get("pieces", {}).get("updated"):
+            raise AssertionError("Flatten Design/Nakagin Capsule Tower/Twisted output does not match test expectation")
 
     _bench("Flatten Design/Nakagin Capsule Tower/Twisted", test_flatten_nakagin_twisted)
 
     d4 = _test_find_design(kit_metabolism, "Dancing", "Nakagin Capsule Tower")
 
     def test_flatten_nakagin_dancing():
-        flattenDesignDict(kit_metabolism, d4["guid"])
+        diff = flattenDesignDict(kit_metabolism, d4["guid"])
+        if not diff.get("pieces", {}).get("updated"):
+            raise AssertionError("Flatten Design/Nakagin Capsule Tower/Dancing output does not match test expectation")
 
     _bench("Flatten Design/Nakagin Capsule Tower/Dancing", test_flatten_nakagin_dancing)
 
     d5 = _test_find_design(kit_metabolism, "Capsule Dream")
 
     def test_flatten_capsule_dream():
-        flattenDesignDict(kit_metabolism, d5["guid"])
+        diff = flattenDesignDict(kit_metabolism, d5["guid"])
+        if not diff.get("pieces", {}).get("updated"):
+            raise AssertionError("Flatten Design/Capsule Dream output does not match test expectation")
 
     _bench("Flatten Design/Capsule Dream", test_flatten_capsule_dream)
 
     def test_validate_invalid():
-        validateKit(kit_invalid_obj)
+        result = validateKitDict(kit_invalid)
+        if not result.hasErrors():
+            raise AssertionError("Validation/Invalid Kit output does not match test expectation")
 
     _bench("Validation/Invalid Kit", test_validate_invalid)
 
     def test_validate_metabolism():
-        validateKit(kit_obj)
+        result = validateKitDict(kit_metabolism)
+        if result.hasErrors():
+            raise AssertionError("Validation/Metabolism output does not match test expectation")
 
     _bench("Validation/Metabolism", test_validate_metabolism)
 
-
-if __name__ == "__main__":
-    benchmark_main()
 
 # #endregion 📏Benchmark
 
@@ -18017,3 +18034,7 @@ class TestMaxChildren:
 
 
 # #endregion 🧪Tests
+
+
+if __name__ == "__main__":
+    benchmark_main()

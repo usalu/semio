@@ -230,6 +230,10 @@ Keep the renderer isolated from native details
 
 ## 👤semio
 
+semio sketchpad:
+The drag is increadibly unperformant.
+Make sure the drag and the rerender with flatten etc is not using any unnecessary file blobs, or recomputed unnecessary.
+
 ###
 
 TODO: Rename tilt to slope, Add rotation to piece node
@@ -244,6 +248,13 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+
+Optimize the computation of flat piece planes and center.
+Implement an efficient merkle-tree based hashed optimization for flattenDesign to be able to only recompute parts of the tree that need to updated. Plane and center computation need to be computed individually.
+Make sure the hashes only change when inputs change that actually affect the computation.
+You MUST implement it for all programming languages and add identical tests accross all implementation that use the same assets for input and output.
+
+There MUST be 100% paroty between benchmarkds and tests across all programming languages. For every test there MUST be exactly one benchmark. All of them MUST test pure function execution time with same inputs and outputs from assets - same as tests.
 
 Create complete parity between tests across all programming lanugages. Create assets for all inputs and outputs.
 The implementations, tests and benchmarks MUST be functionally 100% equivalent. Behaviour of the test MUST NOT be part of the. All input and expected ouput MUST be part of the assets. ids or guids MUST NOT be part of the code and MUST be part of the assets. Extend the necessary assets.
