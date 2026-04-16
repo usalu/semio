@@ -3060,36 +3060,36 @@ class Type(
             location_obj = obj.get("location")
             if location_obj:
                 entity.location = Location.parse(location_obj) if isinstance(location_obj, dict) else location_obj
-        except (KeyError, AttributeError):
+        except KeyError, AttributeError:
             pass
         try:
             models = [Model.parse(r) for r in obj["models"]]
             entity.models = models
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             connectors = [Connector.parse(p) for p in obj["connectors"]]
             entity.connectors = connectors
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
 
         return entity
@@ -3602,12 +3602,12 @@ class Side(BaseModel):
         try:
             connectorObj = obj.get("connector")
             connector = ConnectorId.parse(connectorObj) if connectorObj is not None else None
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             connector = None
         try:
             designPieceObj = obj.get("designPiece")
             designPiece = PieceId.parse(designPieceObj) if designPieceObj is not None else None
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             designPiece = None
         return cls(piece=piece, designPiece=designPiece, connector=connector)
 
@@ -4426,7 +4426,7 @@ class Design(
         entity = cls(**props.model_dump())
         try:
             entity.location = props.location
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         typesDict = {}
         for type in types:
@@ -4438,32 +4438,32 @@ class Design(
         try:
             pieces = [Piece.parse(p, typesDict, designsById) for p in obj["pieces"]]
             entity.pieces = pieces
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             connections = [Connection.parse(c, pieces, designsById) for c in obj["connections"]]
             entity.connections = connections
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             attributes = [Attribute.parse(q) for q in obj["attributes"]]
             entity.attributes = attributes
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         return entity
 
@@ -4778,22 +4778,22 @@ class Kit(
         try:
             types = [Type.parse(t) for t in obj["types"]]
             entity.types = types
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             designs = [Design.parse(d, types) for d in obj["designs"]]
             entity.designs = designs
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             folders = [Folder.parse(f) for f in obj["folders"]]
             entity.folders = folders
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         return entity
 
@@ -5125,7 +5125,7 @@ class Kit(
                     continue
                 other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
                 required_connectors.append(other_connector)
-            except (ValueError, AttributeError):
+            except ValueError, AttributeError:
                 continue
         result = []
         for replacement_type in self.types or []:
@@ -5168,7 +5168,7 @@ class Kit(
                             continue
                         other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
                         external_connectors.append(other_connector)
-                    except (ValueError, AttributeError):
+                    except ValueError, AttributeError:
                         continue
         result = []
         for replacement_type in self.types or []:
@@ -10908,7 +10908,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                 if attr.get("key") == "semio.center" and attr.get("value"):
                     try:
                         center = json.loads(attr["value"])
-                    except (json.JSONDecodeError, TypeError):
+                    except json.JSONDecodeError, TypeError:
                         pass
         if center is not None:
             centerCoords.append(center)
@@ -11058,7 +11058,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except (json.JSONDecodeError, TypeError):
+                                                    except json.JSONDecodeError, TypeError:
                                                         pass
                                         if flatParentCenter is None:
                                             for attr in externalParent.get("attributes", []):
@@ -11066,7 +11066,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except (json.JSONDecodeError, TypeError):
+                                                    except json.JSONDecodeError, TypeError:
                                                         pass
                                         if flatParentCenter is None and externalParent.get("center"):
                                             flatParentCenter = externalParent["center"]
@@ -11076,7 +11076,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                 try:
                                                     flatChildCenter = json.loads(attr["value"])
                                                     break
-                                                except (json.JSONDecodeError, TypeError):
+                                                except json.JSONDecodeError, TypeError:
                                                     pass
                                         if flatChildCenter is None and piece.get("center"):
                                             flatChildCenter = piece["center"]
@@ -11094,12 +11094,12 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                         if attr.get("key") == "semio.center" and attr.get("value"):
                             try:
                                 copied["center"] = json.loads(attr["value"])
-                            except (json.JSONDecodeError, TypeError):
+                            except json.JSONDecodeError, TypeError:
                                 pass
                         if attr.get("key") == "semio.plane" and attr.get("value"):
                             try:
                                 copied["plane"] = json.loads(attr["value"])
-                            except (json.JSONDecodeError, TypeError):
+                            except json.JSONDecodeError, TypeError:
                                 pass
                     center = copied.get("center") or {"u": 0, "v": 0}
                     newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
@@ -17160,6 +17160,14 @@ class TestKitFilterDesign:
         assert len(types) < total_types
         for t in types:
             assert not fnmatch.fnmatch(t["name"].lower(), "capsule*")
+
+    def test_glob_filters_designs_by_name_include(self):
+        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        filtered = KitData(kit_dict).filter_kit({"designs": {"include": ["Nakagin*"]}}).to_dict()
+        designs = filtered.get("designs", [])
+        assert len(designs) > 0
+        for d in designs:
+            assert fnmatch.fnmatch(d["name"].lower(), "nakagin*")
 
     def test_empty_filter_returns_kit_unchanged(self):
         kit_dict = _test_load_json("metabolism.kit.semio.json")

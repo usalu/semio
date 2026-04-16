@@ -655,6 +655,11 @@ const kitKindDataToShellKind = (k: KitKindData): SemioKind =>
     connectors: [],
   }) as SemioKind;
 
+const resolveKitArtifactDesignForPreview = (design: Design, kit: Kit | undefined): Design => {
+  if (!kit) return design;
+  return mcpFlattenDesignForSemioSurface(design, kit, "design");
+};
+
 //#endregion 🧲KitArtifactShells
 
 export const SemioKit: React.FC<KitProps> = ({
@@ -858,6 +863,8 @@ export const SemioKit: React.FC<KitProps> = ({
     return shell ? kitDesignDataToShellDesign(shell) : null;
   }, [effectiveDesigns, focusedNode.guid, focusedNode.kind, kit?.designs]);
 
+  const artifactPreviewDesign = React.useMemo(() => (artifactDesign ? resolveKitArtifactDesignForPreview(artifactDesign, kit) : null), [artifactDesign, kit]);
+
   const artifactKind: SemioKind | null = React.useMemo(() => {
     if (focusedNode.kind !== "kind" || !focusedNode.guid) return null;
     const full = kit?.types?.find((t) => t.guid === focusedNode.guid);
@@ -988,7 +995,7 @@ export const SemioKit: React.FC<KitProps> = ({
           </div>
         ) : null}
 
-        {artifactDesign && designDataEnabled ? (
+        {artifactPreviewDesign && designDataEnabled ? (
           <div
             style={{
               height: 480,
@@ -999,7 +1006,7 @@ export const SemioKit: React.FC<KitProps> = ({
               border: "1px solid var(--border, rgba(0,0,0,0.12))",
             }}
           >
-            <SemioDesign design={artifactDesign} kit={kit} title={artifactDesign.name ?? focusedNode.label} selectionEnabled={false} splitLayout="always" onPieceDoubleClick={onKitPieceDoubleClick} />
+            <SemioDesign design={artifactPreviewDesign} kit={kit} title={artifactPreviewDesign.name ?? focusedNode.label} selectionEnabled={false} splitLayout="always" onPieceDoubleClick={onKitPieceDoubleClick} />
           </div>
         ) : null}
 
@@ -4964,7 +4971,7 @@ export const McpKitViewer: React.FC = () => {
         color: "var(--foreground)",
       }}
     >
-      <SemioKit data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit" className="min-h-0 text-foreground" />
+      <SemioKit kit={payload.kit} data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit" className="min-h-0 text-foreground" />
     </div>
   );
 };
@@ -5959,6 +5966,21 @@ if ((import.meta as any).vitest) {
         },
       ]);
     });
+  });
+
+  describe("resolveKitArtifactDesignForPreview", () => {
+    it("flattens the Nakagin Capsule Tower kit preview to match the Design surface", async () => {
+      const assets = await import("@semio/assets");
+      const kit = assets.MetabolismKit as unknown as Kit;
+      const design = (kit.designs ?? []).find((d) => d.name === "Nakagin Capsule Tower" && !d.parent) as Design | undefined;
+      expect(design).toBeTruthy();
+
+      const preview = resolveKitArtifactDesignForPreview(design!, kit);
+      const piecesWithPlaneAndCenter = (preview.pieces ?? []).filter((p) => p.plane && p.center).length;
+
+      expect(preview.pieces?.length).toBeGreaterThan(100);
+      expect(piecesWithPlaneAndCenter).toBe(preview.pieces?.length);
+    }, 20000);
   });
 
   describe("buildKitHierarchy", () => {

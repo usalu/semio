@@ -3094,7 +3094,7 @@ async fn main() {
             .unwrap_or_else(|_| "semio_session=debug,tower_http=debug".into()))
         .init();
     let database_url = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "postgres://semio:semio@localhost:5432/semio".to_string());
+        .unwrap_or_else(|_| "postgres://semio:semio@localhost:5432/semio_session".to_string());
     let pool = create_pool(&database_url).await;
     run_migrations(&pool).await;
     let admin_config = AdminConfig::from_env();

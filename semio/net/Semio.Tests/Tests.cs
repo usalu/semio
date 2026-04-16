@@ -916,6 +916,58 @@ public class Tests
             Assert.Equal(kit.Name, filtered.Name);
             Assert.Equal(kit.Version, filtered.Version);
         }
+
+        [Fact]
+        public void Glob_Filters_Types_By_Name_Include()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { Types = new Kit.GlobFilter { Include = new List<string> { "Capsule*" } } });
+            Assert.NotEmpty(filtered.Types!);
+            foreach (var t in filtered.Types!)
+                Assert.True(Kit.GlobMatch(t.Name, "Capsule*"), $"Type {t.Name} should match Capsule*");
+        }
+
+        [Fact]
+        public void Glob_Filters_Types_By_Name_Exclude()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var totalTypes = kit.Types!.Count;
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { Types = new Kit.GlobFilter { Exclude = new List<string> { "Capsule*" } } });
+            Assert.True(filtered.Types!.Count < totalTypes);
+            foreach (var t in filtered.Types!)
+                Assert.False(Kit.GlobMatch(t.Name, "Capsule*"), $"Type {t.Name} should have been excluded");
+        }
+
+        [Fact]
+        public void Glob_Filters_Designs_By_Name_Include()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter { Designs = new Kit.GlobFilter { Include = new List<string> { "Nakagin*" } } });
+            Assert.NotEmpty(filtered.Designs!);
+            foreach (var d in filtered.Designs!)
+                Assert.True(Kit.GlobMatch(d.Name, "Nakagin*"), $"Design {d.Name} should match Nakagin*");
+        }
+
+        [Fact]
+        public void Empty_Filter_Returns_Kit_Unchanged()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var filtered = Kit.FilterKit(kit, new Kit.KitFilter());
+            Assert.Equal(kit.Types!.Count, filtered.Types!.Count);
+            Assert.Equal(kit.Designs!.Count, filtered.Designs!.Count);
+        }
+
+        [Fact]
+        public void Combines_DesignGuid_With_Glob_Filters()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var design = kit.Designs!.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var designFiltered = Kit.FilterKit(kit, new Kit.KitFilter { DesignGuid = design.Guid });
+            var combinedFiltered = Kit.FilterKit(kit, new Kit.KitFilter { DesignGuid = design.Guid, Types = new Kit.GlobFilter { Exclude = new List<string> { "Capsule*" } } });
+            Assert.True(combinedFiltered.Types!.Count < designFiltered.Types!.Count);
+            foreach (var t in combinedFiltered.Types!)
+                Assert.False(Kit.GlobMatch(t.Name, "Capsule*"), $"Type {t.Name} should have been excluded");
+        }
     }
 
     public class DesignQualitySum

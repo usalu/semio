@@ -3095,6 +3095,7 @@ def _build_kit_only_app_payload(kit: dict) -> dict[str, typing.Any]:
         "lines": [],
         "capabilities": {"pieceSelection": False, "connectionSelection": False},
         "kitArtifacts": _build_kit_artifact_data(kit),
+        "kit": _strip_kit_blobs(kit),
     }
 
 
@@ -4369,6 +4370,9 @@ class TestMcp:
         assert isinstance(result, CallToolResult)
         payload = _mcp_app_tool_payload(result)
         assert "kitArtifacts" in payload
+        assert "kit" in payload and isinstance(payload["kit"], dict)
+        nakagin = next(design for design in payload["kit"].get("designs", []) if design.get("guid") == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
+        assert len(nakagin.get("pieces", [])) > 100
         assert payload["kitArtifacts"]["name"] == "Metabolism"
         assert payload["kitArtifacts"].get("version") == "r25.07-1"
         flat_variant = next(design for design in payload["kitArtifacts"]["designs"] if design.get("guid") == "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf")
@@ -5082,6 +5086,15 @@ class TestAppEndpoint:
         response = client.get("/app/design-viewer")
         html = response.text
         assert 'id="root"' in html
+
+    def test_app_design_viewer_excludes_embedded_js_tests(self):
+        """🔖The MCP App bundle excludes @semio/js embedded tests so sketchpad-only code cannot crash viewer startup."""
+        client = TestClient(engine.rest)
+        response = client.get("/app/design-viewer")
+        html = response.text
+        assert "Test on temporary kits" not in html
+        assert "createFolderKitStore" not in html
+        assert "KIT_DIAGRAM_NODE_SCALE" not in html
 
     def test_app_kit_viewer_returns_html(self):
         """🔖GET /app/kit-viewer returns the built MCP App HTML that mounts McpKitViewer from @semio/ui."""

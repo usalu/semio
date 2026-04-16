@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "name": "nakagin_capsule_tower",
+      "kit": "metabolism.kit.semio.json",
+      "designName": "Nakagin Capsule Tower",
+      "designParent": null,
+      "diff": "nakgin-capsule-tower.diff.design.semio.json",
+      "expected": "nakagin-capsule-tower.with-diff.design.semio.json",
+      "expectedPieceCounts": {
+        "unchanged": 163,
+        "modified": 7,
+        "removed": 10,
+        "added": 5
+      },
+      "expectedConnectionCounts": {
+        "unchanged": 168,
+        "modified": 1,
+        "removed": 10,
+        "added": 4
+      }
+    }
+  ]
+}

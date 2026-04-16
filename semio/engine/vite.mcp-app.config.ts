@@ -117,6 +117,10 @@ function stubHeavyDepsPlugin(): Plugin {
 
 export default defineConfig({
   root: __dirname,
+  define: {
+    __SEMIO_JS_RUN_BENCHMARKS__: "false",
+    __SEMIO_JS_RUN_EMBEDDED_TESTS__: "false",
+  },
   build: {
     outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,

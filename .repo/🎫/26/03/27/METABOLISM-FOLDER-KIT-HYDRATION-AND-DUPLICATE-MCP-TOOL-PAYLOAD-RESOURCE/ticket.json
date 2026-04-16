@@ -3,12 +3,13 @@
   "emoji": "🔌",
   "status": "closed",
   "description": "Hydrate design JSON from parent of folder kit path; duplicate full JSON in EmbeddedResource; parse each content block; sync session design without downgrading piece count.",
-  "summary": "Root cause: nakagin-capsule-tower.shallow.design.semio.json sits in semio/assets/semio/ while metabolism folder kit path is semio/assets/semio/metabolism — hydration only searched inside the folder. Now search kit dir + parent. _sync_session_design_and_type no longer replaces a hydrated design with a shallower kit row (fewer pieces). _as_mcp_app_tool_result adds EmbeddedResource duplicate JSON; parseDiagramPayloadFromToolResult parses each text/resource segment separately. Tests: engine hydrate parent, vitest dual content blocks. Rebuilt dist/mcp-app.html.",
+  "summary": "Fixed SemioKit design previews so kit-backed designs are flattened before rendering in SemioDesign, matching semio/ui/Design for Nakagin Capsule Tower instead of showing only the fixed/root piece. Updated the MCP kit viewer path to pass a blob-stripped full kit alongside kitArtifacts so previews can resolve full design geometry. Extended existing semio/ui and semio/engine tests to cover Nakagin preview flattening and full kit payload availability. Verified @semio/ui test, @semio/engine test, and rebuilt the engine MCP app bundle.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1156"
   },
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
   "sessions": [
-    "⚪23af28c10611408baf74d3547701f23d"
+    "⚪23af28c10611408baf74d3547701f23d",
+    "⚪4910dcca7b414d51a0cc683be5734787"
   ]
 }

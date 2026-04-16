@@ -14440,6 +14440,30 @@ mod tests {
                 }
 
                 #[test]
+                pub fn glob_filters_designs_by_name_include() {
+                    let kit = load_kit("metabolism.kit.semio.json");
+                    let filtered = filter_kit(
+                        &kit,
+                        &KitFilter {
+                            designs: Some(GlobFilter {
+                                include: Some(vec!["Nakagin*".to_string()]),
+                                exclude: None,
+                            }),
+                            ..Default::default()
+                        },
+                    );
+                    let designs = filtered.designs.as_ref().unwrap();
+                    assert!(!designs.is_empty());
+                    for d in designs {
+                        assert!(
+                            glob_match(&d.name, "Nakagin*"),
+                            "Design {} should match Nakagin*",
+                            d.name
+                        );
+                    }
+                }
+
+                #[test]
                 pub fn empty_filter_returns_kit_unchanged() {
                     let kit = load_kit("metabolism.kit.semio.json");
                     let filtered = filter_kit(&kit, &KitFilter::default());

@@ -33818,7 +33818,7 @@ const DesignSectionForm: FC = () => {
   const scopedDesignGuid = designScope?.guid ?? pathScope.designGuid;
   const kit = useKit(identitySelector, scopedKitGuid as Guid | undefined, true) as Kit | null;
   const kitDesigns = useKitDesigns(scopedKitGuid as Guid | undefined);
-  const designFromScope = useDesign() as Design | null;
+  const designFromScope = useDiffedDesign() as Design | null;
   const design = useMemo(() => {
     if (designFromScope) return designFromScope;
     if (scopedDesignGuid) {
@@ -37375,7 +37375,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const [savedDiagramScale] = useDesignAppDiagramScale();
   const [panelVisibility] = useDesignAppPanelVisibility();
 
-  const design = useDesign(undefined, undefined, true) as Design | null;
+  const design = useDiffedDesign() as Design | null;
   const metadata = usePiecesMetadataMap();
 
   const commands = useDesignAppCommands();
@@ -40212,7 +40212,7 @@ const DesignWindowApp: FC<AppProps> = () => {
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kit = useKit(undefined, undefined, true) as Kit | null;
-  const designFromScope = useDesign() as Design | null;
+  const designFromScope = useDiffedDesign() as Design | null;
   const design = useMemo(() => {
     if (designFromScope) return designFromScope;
     if (!kit || !designScope) return undefined;
@@ -45604,6 +45604,18 @@ const qualityAppCommands = {
       },
     };
   },
+  "semio.qualityApp.setPanelVisibility": (context: QualityAppCommandContext, panelVisibility: PanelVisibility): QualityAppCommandResult => {
+    const currentPanelVisibility = context.qualityApp.panelVisibility;
+    const hasChange = Object.keys(panelVisibility).some((key) => currentPanelVisibility[key as keyof PanelVisibility] !== panelVisibility[key as keyof PanelVisibility]);
+    if (!hasChange) {
+      return { diff: {} };
+    }
+    return {
+      diff: {
+        panelVisibility,
+      },
+    };
+  },
 };
 
 // #endregion 💧Commands
@@ -45917,11 +45929,7 @@ export function useQualityAppCommands(id?: QualityAppId) {
     connectNodes: (origin: string, sourceId: Guid, targetId: Guid) => store.execute("semio.qualityApp.connectNodes", origin, sourceId, targetId),
     togglePanel: (origin: string, panelKey: keyof PanelVisibility) => {
       const current = store.snapshot().panelVisibility;
-      store.change({
-        panelVisibility: {
-          [panelKey]: !current[panelKey],
-        },
-      });
+      return store.execute("semio.qualityApp.setPanelVisibility", origin, { ...current, [panelKey]: !current[panelKey] });
     },
     execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
   };

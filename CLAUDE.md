@@ -36,21 +36,9 @@ There are many inconsistencies that you MUST refactor. You MUST use clean mechan
   - Available LLMs are: `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-3-codex`, `gpt-5-2-codex`, `swe-1-5`, `gpt-5-mini`.
   - Available Clients are: `copilot-chat`, `windsurf-chat`, `cursor-chat`, `antigravity-chat`, `claude-code`, `codex`, `droid`, `kiro-cli`.
 
-- You MUST add id, summary, specs and docs to every project, bundle, folder, file, section, definition.
-  - You MUST summarize (not longer than 256 characters) under the following locations:
-    - **Project-level**: The first block of `### Summary` in the `README.md` at the project root.
-    - **Bundle-level**: The first block of `### Summary` in the `README.md` at the bundle root.
-    - **Folder-level**: The first block of `### Summary` in the `README.md` in the folder (a bundle or project root folder has no information because they are bundle-wide or project-wide).
-    - **File-level**: The fourth comment block under `Header` section.
-    - **Section-level**: Comments after section start markers.
-    - **Definition-level**: Language-native docstrings.
-  - You MUST document every specification decision called `specs` under the following locations:
-    - **Project-level**: `README.md` at the project root (under `### Specs`).
-    - **Bundle-level**: `README.md` at the bundle root (under `### Specs`).
-    - **Folder-level**: `README.md` in the folder (under `### Specs`).
-    - **File-level**: The third comment block under `Header` section.
-    - **Section-level**: The third comment block under the section start marker.
-    - **Definition-level**: The second comment block inside of the language-native docstring.
+- You MUST NOT mix technologies (elements, coda, semio) if NOT explicitly asked.
+
+- You MUST summarize definitions (start with unique emoji inside the section, not longer than 256 characters) in language-native docstrings.
 
 - You MUST NOT assume and you MUST validate your assumptions.
   - You MUST NOT say that a test is passing when you didn't run it.

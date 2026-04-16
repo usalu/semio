@@ -245,6 +245,9 @@ TODO: Introduce Design/Interpolate algorithm.
 
 semio:
 
+Create complete parity between tests across all programming lanugages. Create assets for all inputs and outputs.
+The implementations, tests and benchmarks MUST be functionally 100% equivalent. Behaviour of the test MUST NOT be part of the. All input and expected ouput MUST be part of the assets. ids or guids MUST NOT be part of the code and MUST be part of the assets. Extend the necessary assets.
+
 The copy and paste function is not correct (adjust typescript for now and once we are done, I'll tell you to implement it for the remaining languages).
 
 - e.g. When selecting only one connected piece (t_f0_b_c0) in the source design, the diff doesnt show it anywhere. See algorithm board.
