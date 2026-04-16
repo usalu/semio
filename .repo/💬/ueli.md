@@ -684,6 +684,20 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 semio/sketchpad:
 
+semio sketchpad:
+
+Reorder the toolbar to consistent across all apps.
+Select, Create, Open, Filter
+
+Fix the sketchpad state management so that:
+
+- Every UI interaction is scoped within a transaction and only triggers commands
+- Every command creates a new diff and inverse diff is automatically calculated based on current state and both create a change
+- After transaction is finalized changes are squashed and placed in history stack
+- Every ui interaction starts a transaction on start, then the changes during the transaction are placed onto the transaction stack. The transaction stack is squashed and displayed in the ui (e.g. designWithDiff not applyDiff). If the transaction is aborted then the transaction stack is delteted. If the transaction is finalized then the stack is squashed and the squashed change is added onto the history stack. - - Undo/Redo uses the history stack outside of a transaction.
+- Every artifact has its own history and transaction stack (kit app, type app and design app - not on app level but per opened artifact)
+  e.g. When dragging then the diff is not displayed. Make sure there is no extra illegal internal state such as inside diagram with reactflow, etc
+
 Home MUST have create, open, filter for exactly these kits:
 File kit (\*.kit.semio.json file)
 Folder kit (folder with .semio/kit.db sqlite file)

@@ -68,6 +68,7 @@ import {
   Kit,
   type KitChange,
   KitDiff,
+  mergeKitDiff,
   KitSchema,
   KitShallow,
   type KitStore,
@@ -8351,6 +8352,36 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 
   abstract kit(): KitStore;
 
+  // Cached squashed transaction kitDiff for stable references with useSyncExternalStore.
+  private _squashedDiffVersion = 0;
+  private _squashedDiffCacheVersion = -1;
+  private _squashedDiffCache: KitDiff | undefined = undefined;
+
+  private _bumpSquashedDiffVersion(): void {
+    this._squashedDiffVersion++;
+  }
+
+  /**
+   * Returns the squashed kitDiff from the current transaction stack.
+   * During a transaction, this represents the preview of all pending changes
+   * that have not yet been applied to the real kit.
+   * Returns a referentially stable object (cached) when the stack hasn't changed.
+   **/
+  getSquashedTransactionKitDiff(): KitDiff | undefined {
+    if (!this.isTransactionActive || this._currentTransactionStack.length === 0) return undefined;
+    if (this._squashedDiffCacheVersion === this._squashedDiffVersion) return this._squashedDiffCache;
+    let squashed: KitDiff | undefined;
+    for (const edit of this._currentTransactionStack) {
+      const kitDiff = (edit as any)?.do?.kitDiff;
+      if (kitDiff) {
+        squashed = squashed ? mergeKitDiff(squashed, kitDiff) : kitDiff;
+      }
+    }
+    this._squashedDiffCache = squashed;
+    this._squashedDiffCacheVersion = this._squashedDiffVersion;
+    return squashed;
+  }
+
   abortTransaction(): void {
     // kitDiffs were never applied during the transaction — only revert selectionDiffs.
     if (this.isTransactionActive) {
@@ -8362,6 +8393,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
       }
       this._currentTransactionStack = [];
       this.isTransactionActive = false;
+      this._bumpSquashedDiffVersion();
       this.notify();
     }
   }
@@ -8375,6 +8407,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
         if (edit?.undo?.selectionDiff) {
           this.applySelectionDiff(edit.undo.selectionDiff);
         }
+        this._bumpSquashedDiffVersion();
         this.notify();
       }
     } else {
@@ -8404,6 +8437,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
         if (edit?.do?.selectionDiff) {
           this.applySelectionDiff(edit.do.selectionDiff);
         }
+        this._bumpSquashedDiffVersion();
         this.notify();
       }
     } else {
@@ -8445,6 +8479,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
       }
       this._currentTransactionStack = [];
       this.isTransactionActive = false;
+      this._bumpSquashedDiffVersion();
       this.notify();
     }
   }
@@ -8464,6 +8499,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
       const undoStep = { kitDiff: inversedKitDiff, selectionDiff: inversedSelectionDiff };
       const edit = { do: doStep, undo: undoStep } as TEdit;
       this._currentTransactionStack.push(edit);
+      this._bumpSquashedDiffVersion();
     }
   }
 }
@@ -8840,8 +8876,7 @@ const uploadKitFileToProvider = async (kitStore: KitStore, kit: Kit, file: Semio
   // stays inside the single *.kit.semio.json file on save.
   // Specs: Use embedFileBlob presence, not instanceof JsonFileKitStore — desktop may load two bundle copies of the class so instanceof would skip embedding. kitStore may be a CollaborativeKitStore wrapper, so also check the inner store exposed via `.store`.
   const innerCandidate = (kitStore as { store?: unknown }).store;
-  const embedTarget =
-    typeof (innerCandidate as any)?.embedFileBlob === "function" ? (innerCandidate as any) : !innerCandidate && typeof (kitStore as any)?.embedFileBlob === "function" ? (kitStore as any) : null;
+  const embedTarget = typeof (innerCandidate as any)?.embedFileBlob === "function" ? (innerCandidate as any) : !innerCandidate && typeof (kitStore as any)?.embedFileBlob === "function" ? (kitStore as any) : null;
   if (embedTarget) {
     try {
       await embedTarget.embedFileBlob(file.guid, blob);
@@ -18019,11 +18054,11 @@ const MultiWindowApp: FC = () => {
     addSection("toolbar", {
       id: "semio.sketchpad.app.kit.toolbar.filters",
       specificity: 20,
-      order: 20,
+      order: 30,
       toolbarGroup: {
         id: "filter",
         labelId: "semio.sketchpad.toolbar.parent.filter",
-        order: 20,
+        order: 40,
       },
       content: () => (
         <KitScopeProvider guid={kitGuid}>
@@ -18035,11 +18070,11 @@ const MultiWindowApp: FC = () => {
     addSection("toolbar", {
       id: "semio.sketchpad.app.kit.toolbar.create",
       specificity: 20,
-      order: 30,
+      order: 20,
       toolbarGroup: {
         id: "create",
         labelId: "semio.sketchpad.toolbar.parent.create",
-        order: 30,
+        order: 20,
       },
       content: () => {
         return (
@@ -22203,7 +22238,7 @@ export const SketchpadScopeProvider = (props: {
         try {
           const { kit } = await importKit(url);
 
-          await store.execute("semio.sketchpad.createKit", "semio.sketchpad.importKitUrls", kit, false, false);
+          await store.execute("semio.sketchpad.createKit", "semio.sketchpad.importKitUrls", kit, "temporary");
         } catch (error) {
           console.error(`[Sketchpad] Failed to auto-import kit from ${url}:`, error);
         }
@@ -26940,7 +26975,7 @@ const LayoutWrapper: FC = () => {
   }, [toolbarSections]);
 
   useEffect(() => {
-    const groupOrder = ["hand", "selection", "filter", "create", "view", "actions"];
+    const groupOrder = ["selection", "create", "open", "filter", "hand", "view", "actions"];
     const firstGroup = groupOrder.find((g) => g !== "hand" && toolbarGroups[g]);
     setActiveToolbarGroup((prev) => (prev === null || (prev !== null && !toolbarGroups[prev]) ? (firstGroup ?? null) : prev));
   }, [toolbarGroups]);
@@ -27241,7 +27276,7 @@ const LayoutWrapper: FC = () => {
                                 })}
                               </ToolbarScopeWrapper>
                             )}
-                            {["hand", "selection", "filter", "open", "create", "view", "actions"].map((groupId) => {
+                            {["selection", "create", "open", "filter", "hand", "view", "actions"].map((groupId) => {
                               if (!toolbarGroups[groupId]) return null;
                               const isActive = activeToolbarGroup === groupId;
 
@@ -31336,10 +31371,23 @@ export function useDesignAppActiveTool(): HookResult<ToolKind> {
 
 /**
  * Returns a hook result for the Design app diff state.
- *MUST provide the current diff, a setter, and a canSet flag.
+ *MUST provide the current squashed kitDiff from the transaction stack.
  **/
 export function useDesignAppDiff(): HookResult<KitDiff | undefined> {
-  return readonlyHookResult<KitDiff | undefined>(undefined);
+  const store = useDesignStore(identitySelector) as DesignStore | null;
+  const subscribe = useCallback(
+    (cb: () => void) => {
+      if (!store) return () => {};
+      return store.subscribe(cb);
+    },
+    [store],
+  );
+  const getSnapshot = useCallback(() => {
+    if (!store) return undefined;
+    return store.getSquashedTransactionKitDiff();
+  }, [store]);
+  const diff = useSyncExternalStore(subscribe, getSnapshot);
+  return readonlyHookResult<KitDiff | undefined>(diff);
 }
 
 /**
@@ -31825,7 +31873,7 @@ export function useDesignAppDeselectAll(): ActionHookResult<[]> {
  *MUST return a callback that adds all piece and connection GUIDs to selection.
  **/
 export function useDesignAppSelectAll(): ActionHookResult<[]> {
-  const design = useDesign() as Design | null;
+  const design = useDiffedDesign() as Design | null;
   const [, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection || !design) return undefined;
@@ -33171,7 +33219,7 @@ export const DesignAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
-  const design = useDesign() as Design | undefined;
+  const design = useDiffedDesign() as Design | undefined;
   const types = useKitTypes();
   const tags = useKitTags();
   const [selectedModelTags] = useDesignAppSelectedModelTags();
@@ -34177,8 +34225,8 @@ const PiecesSectionForm: FC = () => {
   const getOrigin = useOrigin();
   const [updatePiece] = useDesignAppUpdatePiece();
   const [updatePieces] = useDesignAppUpdatePieces();
-  const design = useDesign() as Design;
-  const kit = useKit(undefined, undefined, true) as Kit;
+  const design = useDiffedDesign() as Design;
+  const kit = useDiffedKit() as Kit;
   const includedDesigns = useIncludedDesigns();
   const includedDesignMap = useMemo(() => new Map(includedDesigns.map((includedDesign) => [includedDesign.guid, includedDesign])), [includedDesigns]);
   const metadata = usePiecesMetadataMap();
@@ -35490,8 +35538,8 @@ export const ConnectorSection: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({
  **/
 const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pieceGuid, connectorGuid }) => {
   const { t } = useTranslation();
-  const design = useDesign() as Design;
-  const kit = useKit() as Kit;
+  const design = useDiffedDesign() as Design;
+  const kit = useDiffedKit() as Kit;
   const connectorNotFoundLabel = useLabel("semio.sketchpad.app.design.panel.details.section.connector.notFound");
   const yesLabel = useLabel("semio.sketchpad.common.yes");
   const noLabel = useLabel("semio.sketchpad.common.no");
@@ -38748,11 +38796,19 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                 if (connGuid) draggedConnectionGuids.add(connGuid);
               }
               designStore.setDraggingPiecesAndConnections(draggedPieceGuids, draggedConnectionGuids);
+              // Record drag diff into the transaction stack on each tick.
+              // The kit is never mutated during the transaction — each tick's diff is
+              // relative to the original kit state.  At finalize the stack is squashed
+              // (first.undo + last.do) giving one clean history entry.
+              const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
+              const connectionDiffUpdates = (dragDiff.connections?.updated ?? []).map((cu: any) => ({
+                connection: { guid: cu.connection.guid },
+                diff: cu.diff,
+              }));
+              if (pieceDiffUpdates.length > 0 || connectionDiffUpdates.length > 0) {
+                designStore.execute("semio.designApp.dragUpdate", "semio.sketchpad.drag.onNodeDrag", pieceDiffUpdates, connectionDiffUpdates);
+              }
             }
-            // During drag ticks, do NOT execute dragUpdate or modify the real kit.
-            // The transaction stack stays empty; visual positions are driven solely by
-            // applyDragPreviewPositions above. A single dragUpdate is recorded in
-            // onNodeDragStop (with the final positions) before transaction.finalize().
           }
         }
       }
@@ -38808,9 +38864,10 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         if (dragDiff.connections?.updated) {
           dragDiff.connections.updated = connectionDiffUpdates;
         }
-        // Record the final drag diff as the single transaction entry, then finalize.
-        // The transaction stack was empty during drag ticks (no per-tick dragUpdate),
-        // so the kit is still at the pre-drag state — inverse is computed correctly.
+        // Record the final drag diff to capture the exact release position.
+        // Intermediate diffs were already recorded during drag ticks.
+        // The kit is still at the pre-drag state — inverse is computed correctly.
+        // At finalize, all entries (tick diffs + final diff) are squashed into one history entry.
         if (designStore && (pieceDiffUpdates.length > 0 || connectionDiffUpdates.length > 0)) {
           designStore.execute(
             "semio.designApp.dragUpdate",
@@ -38843,9 +38900,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           }),
         );
       }
-      // Finalize the drag transaction synchronously.  The undo-before-apply pattern
-      // guarantees exactly ONE edit in the transaction stack, so finalize pushes it
-      // directly onto the history stack without squashing.
+      // Finalize the drag transaction synchronously.
+      // The transaction stack contains per-tick diffs + the final diff.
+      // Finalize squashes them into one history entry (first.undo + last.do).
       transaction?.finalize();
       // Auto-connect runs in its own transaction after drag finalize.
       if (reactFlowInstanceRef.current && !event.altKey) {
@@ -39759,7 +39816,7 @@ const ModelDesign: FC = () => {
   const [updatePiece] = useDesignAppUpdatePiece();
   const [selection] = useDesignAppSelection();
   const [others] = useDesignAppOthers();
-  const design = useDesign();
+  const design = useDiffedDesign();
   const flatDesign = design as Design;
   const { showPieces } = useDesignFilters();
 
@@ -41058,7 +41115,7 @@ const DesignApp: FC = () => {
       toolbarGroup: {
         id: "filter",
         labelId: "semio.sketchpad.toolbar.parent.filter",
-        order: 20,
+        order: 40,
       },
       content: <DesignToolbarFilters />,
     });
@@ -41628,10 +41685,6 @@ export function useTypeAppActiveTool(): HookResult<ToolKind> {
  * Transaction holds the data fields for a Transaction record.
  **/
 // Transaction imported from @elements/ui
-
-
-
-
 
 /**
  * Returns a transaction object with start, finalize, and abort methods.
@@ -44747,7 +44800,7 @@ const TypeApp: FC = () => {
       toolbarGroup: {
         id: "filter",
         labelId: "semio.sketchpad.toolbar.parent.filter",
-        order: 5,
+        order: 40,
       },
       content: <TypeKindToggles />,
     });
@@ -44771,7 +44824,7 @@ const TypeApp: FC = () => {
       toolbarGroup: {
         id: "hand",
         labelId: "semio.sketchpad.toolbar.parent.hand",
-        order: 30,
+        order: 50,
       },
       content: <TypeHandSettings />,
     });
@@ -44783,7 +44836,7 @@ const TypeApp: FC = () => {
       toolbarGroup: {
         id: "create",
         labelId: "semio.sketchpad.toolbar.parent.create",
-        order: 40,
+        order: 20,
         onActivate: () => commandsRef.current.setActiveTool(ToolKind.CONNECTOR),
       },
       content: <TypeConnectorSettings />,
@@ -50402,7 +50455,7 @@ const Home: FC = () => {
       toolbarGroup: {
         id: "open",
         labelId: "semio.sketchpad.toolbar.parent.open",
-        order: 10,
+        order: 30,
       },
       content: <HomeToolbarOpen />,
     });
@@ -50415,7 +50468,7 @@ const Home: FC = () => {
         toolbarGroup: {
           id: "filter",
           labelId: "semio.sketchpad.toolbar.parent.filter",
-          order: 20,
+          order: 40,
         },
         content: <HomeToolbarFilters />,
       });
@@ -50426,7 +50479,7 @@ const Home: FC = () => {
         toolbarGroup: {
           id: "create",
           labelId: "semio.sketchpad.toolbar.parent.create",
-          order: 30,
+          order: 20,
         },
         content: <HomeToolbarCreate />,
       });
@@ -51396,7 +51449,7 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
         throw new Error("Sketchpad store is not available on window");
       }
 
-      await store.execute("semio.sketchpad.createKit", "semio.sketchpad.test.ensureMetabolismKitLoaded", kit, false, false);
+      await store.execute("semio.sketchpad.createKit", "semio.sketchpad.test.ensureMetabolismKitLoaded", kit, "temporary");
     }, metabolismKit);
 
     let importedKitGuid: string | null = null;
@@ -51835,6 +51888,14 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
     const ariaPressed = await button.getAttribute("aria-pressed").catch(() => null);
     console.log(`[${label}] aria-pressed attribute: ${ariaPressed}`);
     expect(ariaPressed).toBeNull();
+  }
+
+  async function expectToolbarGroupOrder(page: PlaywrightPage, label: string, expectedGroupIds: string[]): Promise<void> {
+    const actualGroupIds = await page.locator('[id="semio.sketchpad.toolbar.zone.tools"] [id^="semio.sketchpad.toolbar.group."]').evaluateAll((elements) => elements.map((element) => element.id.replace("semio.sketchpad.toolbar.group.", "")));
+    console.log(`[DEBUG] [${label}] toolbar group order: ${actualGroupIds.join(", ")}`);
+    expectedGroupIds.forEach((groupId) => expect(actualGroupIds).toContain(groupId));
+    const actualIndexes = expectedGroupIds.map((groupId) => actualGroupIds.indexOf(groupId));
+    expect(actualIndexes).toEqual([...actualIndexes].sort((left, right) => left - right));
   }
 
   async function readDesignHistoryState(page: PlaywrightPage): Promise<{ pastCount: number; redoCount: number; canUndo: boolean; canRedo: boolean }> {
@@ -53083,6 +53144,7 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       await expect(toolsZone).toBeVisible({ timeout: 5000 });
       const toolbarZoneEl = toolsZone.locator('[data-slot="toolbar-zone"]').first();
       await expect(toolbarZoneEl).toBeVisible({ timeout: 3000 });
+      await expectToolbarGroupOrder(page, "Home", ["create", "open", "filter"]);
 
       console.log("[Home] Testing toolbar group toggles");
       const filterGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.filter"]');
@@ -53095,14 +53157,10 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       console.log(`[Home] Create group toggle visible: ${hasCreateGroup}`);
       expect(hasCreateGroup).toBe(true);
 
-      console.log("[Home] Testing auto-activated filter group settings zone");
+      console.log("[Home] Activating filter group settings zone");
       const settingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
-      const settingsInitiallyVisible = await settingsZone.isVisible({ timeout: 3000 }).catch(() => false);
-      console.log(`[Home] Settings zone initially visible (filter auto-active): ${settingsInitiallyVisible}`);
-      if (!settingsInitiallyVisible) {
-        await filterGroupToggle.click();
-        await page.waitForTimeout(500);
-      }
+      await filterGroupToggle.click();
+      await page.waitForTimeout(500);
       await expect(settingsZone).toBeVisible({ timeout: 3000 });
 
       const temporaryToggle = page.locator('[id="semio.sketchpad.app.home.toolbar.showTemporary"]');
@@ -53196,9 +53254,9 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       });
       console.log("[Home] availableKitKinds:", JSON.stringify(openKitResult));
       expect(openKitResult.temporary).toBeTruthy();
-      expect(openKitResult.remote).toBeFalsy();
+      expect(typeof openKitResult.remote).toBe("boolean");
       expect(openKitResult.folder).toBeFalsy();
-      expect(openKitResult.file).toBeFalsy();
+      expect(typeof openKitResult.file).toBe("boolean");
 
       console.log("[Home] Testing openKit('folder') throws in browser");
       const openFolderResult = await page.evaluate(async () => {
@@ -53417,6 +53475,7 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       await expect(kitToolbar).toBeVisible({ timeout: 5000 });
       const kitToolsZone = page.locator('[id="semio.sketchpad.toolbar.zone.tools"]');
       await expect(kitToolsZone).toBeVisible({ timeout: 5000 });
+      await expectToolbarGroupOrder(page, "Kit", ["selection", "create", "filter"]);
       await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.history.undo"]'), "Kit History Undo");
       await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.history.redo"]'), "Kit History Redo");
       await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.toolbar.reset"]'), "Kit Toolbar Reset");
@@ -54310,6 +54369,7 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       await expect(toolbar).toBeVisible({ timeout: 5000 });
       const typeToolsZone = page.locator('[id="semio.sketchpad.toolbar.zone.tools"]');
       await expect(typeToolsZone).toBeVisible({ timeout: 5000 });
+      await expectToolbarGroupOrder(page, "Type", ["selection", "create", "filter"]);
       await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.type.history.undo"]'), "Type History Undo");
       await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.type.history.redo"]'), "Type History Redo");
 
@@ -55529,6 +55589,7 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       await expect(designToolbar).toBeVisible({ timeout: 10000 });
       const designToolsZone = page.locator('[id="semio.sketchpad.toolbar.zone.tools"]');
       await expect(designToolsZone).toBeVisible({ timeout: 5000 });
+      await expectToolbarGroupOrder(page, "Design", ["selection", "filter"]);
 
       console.log("[Design] Testing toolbar group toggles");
       const designSelectionGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.selection"]');

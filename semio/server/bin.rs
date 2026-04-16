@@ -20,6 +20,9 @@ pub use sqlx_core::row::Row;
 pub use sqlx_postgres::{PgPool, PgPoolOptions};
 pub use std::collections::BTreeMap;
 pub use std::sync::Arc;
+pub use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
+pub use std::time::Instant;
+pub use time::OffsetDateTime;
 #[cfg(test)]
 pub use testcontainers::runners::AsyncRunner;
 #[cfg(test)]
@@ -2050,7 +2053,20 @@ use super::*;
 pub struct SessionHandle {
     pub command_tx: mpsc::Sender<ActorMessage>,
     pub event_tx: broadcast::Sender<SessionEvent>,
+    pub active_connections: Arc<AtomicUsize>,
+    pub activated_at: Arc<Instant>,
 }
+
+//#region 🔖ActiveSessionInfo
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ActiveSessionInfo {
+    pub session_id: Uuid,
+    pub active_connections: usize,
+    pub activated_at_secs_ago: u64,
+}
+
+//#endregion 🔖ActiveSessionInfo
 
 #[derive(Clone)]
 pub struct SessionDirectory {
@@ -2078,7 +2094,12 @@ impl SessionDirectory {
                 dashmap::mapref::entry::Entry::Vacant(v) => {
                     let (command_tx, command_rx) = mpsc::channel(256);
                     let (event_tx, _) = broadcast::channel(256);
-                    let handle = SessionHandle { command_tx, event_tx: event_tx.clone() };
+                    let handle = SessionHandle {
+                        command_tx,
+                        event_tx: event_tx.clone(),
+                        active_connections: Arc::new(AtomicUsize::new(0)),
+                        activated_at: Arc::new(Instant::now()),
+                    };
                     v.insert(handle.clone());
                     let pool = self.pool.clone();
                     let sessions = self.sessions.clone();
@@ -2097,6 +2118,34 @@ impl SessionDirectory {
     }
 
     pub fn remove(&self, session_id: &Uuid) { self.sessions.remove(session_id); }
+
+    //#region 🔖Admin Introspection
+
+    /// Snapshot of all currently-active session actors with WS connection counts.
+    pub fn list_active(&self) -> Vec<ActiveSessionInfo> {
+        self.sessions.iter()
+            .map(|entry| {
+                let h = entry.value();
+                ActiveSessionInfo {
+                    session_id: *entry.key(),
+                    active_connections: h.active_connections.load(AtomicOrdering::Relaxed),
+                    activated_at_secs_ago: h.activated_at.elapsed().as_secs(),
+                }
+            })
+            .collect()
+    }
+
+    /// Number of currently-active session actors.
+    pub fn active_session_count(&self) -> usize { self.sessions.len() }
+
+    /// Total WS connections across all active sessions.
+    pub fn total_active_connections(&self) -> usize {
+        self.sessions.iter()
+            .map(|e| e.value().active_connections.load(AtomicOrdering::Relaxed))
+            .sum()
+    }
+
+    //#endregion 🔖Admin Introspection
 }
 
 } // 🎯Directory
@@ -2354,6 +2403,16 @@ async fn handle_socket(socket: WebSocket, state: AppState, session_id: Uuid) {
         Some(h) => h,
         None => { tracing::warn!("ws: session {} not found", session_id); return; }
     };
+    //#region 🔖Connection Accounting
+    // Increment active connection counter for admin visibility. Decrement on scope exit via _guard.
+    handle.active_connections.fetch_add(1, AtomicOrdering::Relaxed);
+    let conn_counter = handle.active_connections.clone();
+    struct Decrement(Arc<AtomicUsize>);
+    impl Drop for Decrement {
+        fn drop(&mut self) { self.0.fetch_sub(1, AtomicOrdering::Relaxed); }
+    }
+    let _guard = Decrement(conn_counter);
+    //#endregion 🔖Connection Accounting
     let mut event_rx = handle.event_tx.subscribe();
     let (mut ws_tx, mut ws_rx) = socket.split();
     // Send connection acknowledgment so clients know the subscription is active
@@ -2376,8 +2435,655 @@ async fn handle_socket(socket: WebSocket, state: AppState, session_id: Uuid) {
 } // 🤖Ws
 pub use ws::*;
 
+mod admin { // 🛡️Admin
+// Specs: Server-admin HTTP surface protected by a shared bearer token (SEMIO_ADMIN_TOKEN). Exposes read-only introspection
+// (sessions, kits, persons, share tokens, connections, config) and targeted write operations (close/passivate a session,
+// revoke a share token, update compaction config). When SEMIO_ADMIN_TOKEN is unset the /admin/* endpoints return 503 so
+// an unconfigured deployment never silently exposes itself. A single embedded HTML dashboard aggregates all views for
+// human operators; it calls the same JSON endpoints over fetch() with the bearer token supplied at sign-in.
+// Summary: Server-admin dashboard, introspection endpoints, and configuration API for semio-session.
+
+
+use super::*;
+use axum::http::HeaderMap;
+
+//#region 🔖AdminConfig
+
+/// Process-global admin configuration. Populated from environment at startup.
+#[derive(Clone)]
+pub struct AdminConfig {
+    pub admin_token: Option<String>,
+    pub started_at: Arc<Instant>,
+}
+
+impl AdminConfig {
+    pub fn from_env() -> Self {
+        let admin_token = std::env::var("SEMIO_ADMIN_TOKEN").ok().filter(|s| !s.is_empty());
+        Self { admin_token, started_at: Arc::new(Instant::now()) }
+    }
+}
+
+//#endregion 🔖AdminConfig
+
+//#region 🔖AdminAuth
+
+/// Validates Bearer token against configured admin token. Returns error if token is unset or wrong.
+pub fn require_admin(headers: &HeaderMap, config: &AdminConfig) -> Result<(), SessionError> {
+    let expected = match &config.admin_token {
+        Some(t) => t,
+        None => return Err(SessionError::Forbidden("admin endpoints disabled: SEMIO_ADMIN_TOKEN is not set".into())),
+    };
+    let provided = headers.get("authorization")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.strip_prefix("Bearer "))
+        .unwrap_or("");
+    if provided.is_empty() {
+        return Err(SessionError::Unauthorized("admin token required".into()));
+    }
+    if provided != expected.as_str() {
+        return Err(SessionError::Unauthorized("admin token invalid".into()));
+    }
+    Ok(())
+}
+
+//#endregion 🔖AdminAuth
+
+//#region 🔖AdminRows
+
+#[derive(Debug, Serialize)]
+pub struct AdminSessionRow {
+    pub session_id: Uuid,
+    pub root_kit_id: Uuid,
+    pub status: String,
+    pub domain_version: i64,
+    pub semio_version: i64,
+    pub created_at: String,
+    pub updated_at: String,
+    pub active_connections: usize,
+    pub is_activated: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AdminKitRow {
+    pub session_id: Uuid,
+    pub kit_id: Uuid,
+    pub name: String,
+    pub version: Option<String>,
+    pub remote: Option<String>,
+    pub lifecycle: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AdminPersonRow {
+    pub session_id: Uuid,
+    pub person_id: Uuid,
+    pub frontend_id: String,
+    pub display_name: Option<String>,
+    pub color: Option<String>,
+    pub is_present: bool,
+    pub last_seen_at: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AdminShareTokenRow {
+    pub token: Uuid,
+    pub session_id: Uuid,
+    pub access_mode: String,
+    pub entity_kind: Option<String>,
+    pub entity_id: Option<Uuid>,
+    pub label: Option<String>,
+    pub created_at: String,
+    pub expires_at: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AdminOverview {
+    pub uptime_secs: u64,
+    pub total_sessions: i64,
+    pub active_sessions: i64,
+    pub passivated_sessions: i64,
+    pub closed_sessions: i64,
+    pub total_kits: i64,
+    pub total_persons: i64,
+    pub total_share_tokens: i64,
+    pub active_actors: usize,
+    pub active_connections: usize,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AdminSessionDetail {
+    pub row: AdminSessionRow,
+    pub kit: Option<AdminKitRow>,
+    pub persons: Vec<AdminPersonRow>,
+    pub share_tokens: Vec<AdminShareTokenRow>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AdminCompactionConfig {
+    pub session_id: Uuid,
+    pub lookback_tokens: Vec<String>,
+    pub last_compacted_at: Option<String>,
+}
+
+//#endregion 🔖AdminRows
+
+//#region 🔖AdminQueries
+
+pub async fn load_admin_overview(pool: &PgPool, directory: &SessionDirectory, started_at: Instant) -> Result<AdminOverview, SessionError> {
+    let (total, active, passivated, closed): (i64, i64, i64, i64) = sqlx_core::query_as::query_as(
+        "SELECT
+            COUNT(*)::bigint,
+            COUNT(*) FILTER (WHERE status = 'active')::bigint,
+            COUNT(*) FILTER (WHERE status = 'passivated')::bigint,
+            COUNT(*) FILTER (WHERE status = 'closed')::bigint
+         FROM runtime.session"
+    ).fetch_one(pool).await?;
+    let (total_kits,): (i64,) = sqlx_core::query_as::query_as(
+        "SELECT COUNT(*)::bigint FROM core.kit WHERE lifecycle = 'active'"
+    ).fetch_one(pool).await?;
+    let (total_persons,): (i64,) = sqlx_core::query_as::query_as(
+        "SELECT COUNT(*)::bigint FROM semio.person"
+    ).fetch_one(pool).await?;
+    let (total_share_tokens,): (i64,) = sqlx_core::query_as::query_as(
+        "SELECT COUNT(*)::bigint FROM runtime.share_token"
+    ).fetch_one(pool).await?;
+    Ok(AdminOverview {
+        uptime_secs: started_at.elapsed().as_secs(),
+        total_sessions: total,
+        active_sessions: active,
+        passivated_sessions: passivated,
+        closed_sessions: closed,
+        total_kits,
+        total_persons,
+        total_share_tokens,
+        active_actors: directory.active_session_count(),
+        active_connections: directory.total_active_connections(),
+    })
+}
+
+pub async fn load_admin_sessions(pool: &PgPool, directory: &SessionDirectory) -> Result<Vec<AdminSessionRow>, SessionError> {
+    let rows: Vec<(Uuid, Uuid, String, i64, i64, time::OffsetDateTime, time::OffsetDateTime)> = sqlx_core::query_as::query_as(
+        "SELECT session_id, root_kit_id, status::text, domain_version, semio_version, created_at, updated_at
+         FROM runtime.session ORDER BY created_at DESC"
+    ).fetch_all(pool).await?;
+    let active = directory.list_active();
+    Ok(rows.into_iter().map(|r| {
+        let is_activated = active.iter().any(|a| a.session_id == r.0);
+        let active_connections = active.iter().find(|a| a.session_id == r.0).map(|a| a.active_connections).unwrap_or(0);
+        AdminSessionRow {
+            session_id: r.0, root_kit_id: r.1, status: r.2,
+            domain_version: r.3, semio_version: r.4,
+            created_at: r.5.to_string(), updated_at: r.6.to_string(),
+            active_connections, is_activated,
+        }
+    }).collect())
+}
+
+pub async fn load_admin_session_detail(pool: &PgPool, directory: &SessionDirectory, session_id: Uuid) -> Result<AdminSessionDetail, SessionError> {
+    let row: Option<(Uuid, Uuid, String, i64, i64, time::OffsetDateTime, time::OffsetDateTime)> = sqlx_core::query_as::query_as(
+        "SELECT session_id, root_kit_id, status::text, domain_version, semio_version, created_at, updated_at
+         FROM runtime.session WHERE session_id = $1"
+    ).bind(session_id).fetch_optional(pool).await?;
+    let row = row.ok_or_else(|| SessionError::SessionNotFound(session_id.to_string()))?;
+    let active = directory.list_active();
+    let is_activated = active.iter().any(|a| a.session_id == session_id);
+    let active_connections = active.iter().find(|a| a.session_id == session_id).map(|a| a.active_connections).unwrap_or(0);
+    let session_row = AdminSessionRow {
+        session_id: row.0, root_kit_id: row.1, status: row.2,
+        domain_version: row.3, semio_version: row.4,
+        created_at: row.5.to_string(), updated_at: row.6.to_string(),
+        active_connections, is_activated,
+    };
+    let kit: Option<(Uuid, String, Option<String>, Option<String>, String)> = sqlx_core::query_as::query_as(
+        "SELECT kit_id, name, version, remote, lifecycle::text FROM core.kit WHERE session_id = $1 LIMIT 1"
+    ).bind(session_id).fetch_optional(pool).await?;
+    let kit = kit.map(|k| AdminKitRow { session_id, kit_id: k.0, name: k.1, version: k.2, remote: k.3, lifecycle: k.4 });
+    let person_rows: Vec<(Uuid, String, Option<String>, Option<String>, bool, time::OffsetDateTime)> = sqlx_core::query_as::query_as(
+        "SELECT person_id, frontend_id, display_name, color, is_present, last_seen_at
+         FROM semio.person WHERE session_id = $1 ORDER BY last_seen_at DESC"
+    ).bind(session_id).fetch_all(pool).await?;
+    let persons = person_rows.into_iter().map(|p| AdminPersonRow {
+        session_id, person_id: p.0, frontend_id: p.1, display_name: p.2, color: p.3, is_present: p.4, last_seen_at: p.5.to_string(),
+    }).collect();
+    let token_rows: Vec<(Uuid, String, Option<String>, Option<Uuid>, Option<String>, time::OffsetDateTime, Option<time::OffsetDateTime>)> = sqlx_core::query_as::query_as(
+        "SELECT token, access_mode, entity_kind, entity_id, label, created_at, expires_at
+         FROM runtime.share_token WHERE session_id = $1 ORDER BY created_at DESC"
+    ).bind(session_id).fetch_all(pool).await?;
+    let share_tokens = token_rows.into_iter().map(|t| AdminShareTokenRow {
+        token: t.0, session_id, access_mode: t.1, entity_kind: t.2, entity_id: t.3, label: t.4,
+        created_at: t.5.to_string(), expires_at: t.6.map(|d| d.to_string()),
+    }).collect();
+    Ok(AdminSessionDetail { row: session_row, kit, persons, share_tokens })
+}
+
+pub async fn load_admin_kits(pool: &PgPool) -> Result<Vec<AdminKitRow>, SessionError> {
+    let rows: Vec<(Uuid, Uuid, String, Option<String>, Option<String>, String)> = sqlx_core::query_as::query_as(
+        "SELECT session_id, kit_id, name, version, remote, lifecycle::text FROM core.kit ORDER BY name"
+    ).fetch_all(pool).await?;
+    Ok(rows.into_iter().map(|r| AdminKitRow {
+        session_id: r.0, kit_id: r.1, name: r.2, version: r.3, remote: r.4, lifecycle: r.5,
+    }).collect())
+}
+
+pub async fn load_admin_persons(pool: &PgPool) -> Result<Vec<AdminPersonRow>, SessionError> {
+    let rows: Vec<(Uuid, Uuid, String, Option<String>, Option<String>, bool, time::OffsetDateTime)> = sqlx_core::query_as::query_as(
+        "SELECT session_id, person_id, frontend_id, display_name, color, is_present, last_seen_at
+         FROM semio.person ORDER BY last_seen_at DESC"
+    ).fetch_all(pool).await?;
+    Ok(rows.into_iter().map(|r| AdminPersonRow {
+        session_id: r.0, person_id: r.1, frontend_id: r.2, display_name: r.3, color: r.4, is_present: r.5, last_seen_at: r.6.to_string(),
+    }).collect())
+}
+
+pub async fn load_admin_share_tokens(pool: &PgPool) -> Result<Vec<AdminShareTokenRow>, SessionError> {
+    let rows: Vec<(Uuid, Uuid, String, Option<String>, Option<Uuid>, Option<String>, time::OffsetDateTime, Option<time::OffsetDateTime>)> = sqlx_core::query_as::query_as(
+        "SELECT token, session_id, access_mode, entity_kind, entity_id, label, created_at, expires_at
+         FROM runtime.share_token ORDER BY created_at DESC"
+    ).fetch_all(pool).await?;
+    Ok(rows.into_iter().map(|r| AdminShareTokenRow {
+        token: r.0, session_id: r.1, access_mode: r.2, entity_kind: r.3, entity_id: r.4, label: r.5,
+        created_at: r.6.to_string(), expires_at: r.7.map(|d| d.to_string()),
+    }).collect())
+}
+
+pub async fn admin_close_session(pool: &PgPool, session_id: Uuid) -> Result<bool, SessionError> {
+    let res = sqlx_core::query::query("UPDATE runtime.session SET status = 'closed', updated_at = now() WHERE session_id = $1")
+        .bind(session_id).execute(pool).await?;
+    Ok(res.rows_affected() > 0)
+}
+
+pub async fn admin_load_compaction_config(pool: &PgPool, session_id: Uuid) -> Result<AdminCompactionConfig, SessionError> {
+    let row: Option<(serde_json::Value, Option<time::OffsetDateTime>)> = sqlx_core::query_as::query_as(
+        "SELECT lookback_tokens, last_compacted_at FROM history.compaction_config WHERE session_id = $1"
+    ).bind(session_id).fetch_optional(pool).await?;
+    let (tokens, last) = match row {
+        Some((json, ts)) => {
+            let tokens: Vec<String> = serde_json::from_value(json).unwrap_or_default();
+            (tokens, ts.map(|d| d.to_string()))
+        }
+        None => (lookback_tokens().iter().map(|s| s.to_string()).collect(), None),
+    };
+    Ok(AdminCompactionConfig { session_id, lookback_tokens: tokens, last_compacted_at: last })
+}
+
+pub async fn admin_update_compaction_config(pool: &PgPool, session_id: Uuid, tokens: Vec<String>) -> Result<AdminCompactionConfig, SessionError> {
+    let json = serde_json::to_value(&tokens).unwrap_or(serde_json::json!([]));
+    sqlx_core::query::query(
+        "INSERT INTO history.compaction_config (session_id, lookback_tokens) VALUES ($1, $2)
+         ON CONFLICT (session_id) DO UPDATE SET lookback_tokens = EXCLUDED.lookback_tokens"
+    ).bind(session_id).bind(&json).execute(pool).await?;
+    admin_load_compaction_config(pool, session_id).await
+}
+
+//#endregion 🔖AdminQueries
+
+//#region 🔖AdminHandlers
+
+#[derive(Clone)]
+pub struct AdminState {
+    pub pool: PgPool,
+    pub directory: SessionDirectory,
+    pub config: AdminConfig,
+}
+
+pub fn router(state: AdminState) -> Router<()> {
+    Router::new()
+        .route("/admin", get(handler_dashboard))
+        .route("/admin/", get(handler_dashboard))
+        .route("/admin/overview", get(handler_overview))
+        .route("/admin/sessions", get(handler_list_sessions))
+        .route("/admin/sessions/{id}", get(handler_session_detail))
+        .route("/admin/sessions/{id}/passivate", post(handler_passivate_session))
+        .route("/admin/sessions/{id}/close", post(handler_close_session))
+        .route("/admin/kits", get(handler_list_kits))
+        .route("/admin/persons", get(handler_list_persons))
+        .route("/admin/share-tokens", get(handler_list_share_tokens))
+        .route("/admin/share-tokens/{token}", axum::routing::delete(handler_revoke_share_token))
+        .route("/admin/connections", get(handler_list_connections))
+        .route("/admin/config/{session_id}", get(handler_get_config))
+        .route("/admin/config/{session_id}", axum::routing::patch(handler_patch_config))
+        .with_state(state)
+}
+
+async fn handler_dashboard() -> Response {
+    (StatusCode::OK, [("content-type", "text/html; charset=utf-8")], DASHBOARD_HTML).into_response()
+}
+
+async fn handler_overview(State(s): State<AdminState>, headers: HeaderMap) -> Result<Json<AdminOverview>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    let overview = load_admin_overview(&s.pool, &s.directory, *s.config.started_at).await?;
+    Ok(Json(overview))
+}
+
+async fn handler_list_sessions(State(s): State<AdminState>, headers: HeaderMap) -> Result<Json<Vec<AdminSessionRow>>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    Ok(Json(load_admin_sessions(&s.pool, &s.directory).await?))
+}
+
+async fn handler_session_detail(State(s): State<AdminState>, headers: HeaderMap, Path(session_id): Path<Uuid>) -> Result<Json<AdminSessionDetail>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    Ok(Json(load_admin_session_detail(&s.pool, &s.directory, session_id).await?))
+}
+
+async fn handler_passivate_session(State(s): State<AdminState>, headers: HeaderMap, Path(session_id): Path<Uuid>) -> Result<Json<serde_json::Value>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    s.directory.remove(&session_id);
+    Ok(Json(serde_json::json!({"passivated": true, "session_id": session_id})))
+}
+
+async fn handler_close_session(State(s): State<AdminState>, headers: HeaderMap, Path(session_id): Path<Uuid>) -> Result<Json<serde_json::Value>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    let ok = admin_close_session(&s.pool, session_id).await?;
+    if !ok { return Err(SessionError::SessionNotFound(session_id.to_string())); }
+    s.directory.remove(&session_id);
+    Ok(Json(serde_json::json!({"closed": true, "session_id": session_id})))
+}
+
+async fn handler_list_kits(State(s): State<AdminState>, headers: HeaderMap) -> Result<Json<Vec<AdminKitRow>>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    Ok(Json(load_admin_kits(&s.pool).await?))
+}
+
+async fn handler_list_persons(State(s): State<AdminState>, headers: HeaderMap) -> Result<Json<Vec<AdminPersonRow>>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    Ok(Json(load_admin_persons(&s.pool).await?))
+}
+
+async fn handler_list_share_tokens(State(s): State<AdminState>, headers: HeaderMap) -> Result<Json<Vec<AdminShareTokenRow>>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    Ok(Json(load_admin_share_tokens(&s.pool).await?))
+}
+
+async fn handler_revoke_share_token(State(s): State<AdminState>, headers: HeaderMap, Path(token): Path<Uuid>) -> Result<Json<serde_json::Value>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    let deleted = delete_share_token(&s.pool, token).await?;
+    Ok(Json(serde_json::json!({"revoked": deleted, "token": token})))
+}
+
+async fn handler_list_connections(State(s): State<AdminState>, headers: HeaderMap) -> Result<Json<Vec<ActiveSessionInfo>>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    Ok(Json(s.directory.list_active()))
+}
+
+async fn handler_get_config(State(s): State<AdminState>, headers: HeaderMap, Path(session_id): Path<Uuid>) -> Result<Json<AdminCompactionConfig>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    Ok(Json(admin_load_compaction_config(&s.pool, session_id).await?))
+}
+
+#[derive(Deserialize)]
+pub struct PatchConfigBody { pub lookback_tokens: Vec<String> }
+
+async fn handler_patch_config(State(s): State<AdminState>, headers: HeaderMap, Path(session_id): Path<Uuid>, Json(body): Json<PatchConfigBody>) -> Result<Json<AdminCompactionConfig>, SessionError> {
+    require_admin(&headers, &s.config)?;
+    let known: std::collections::HashSet<&'static str> = lookback_tokens().iter().copied().collect();
+    for t in &body.lookback_tokens {
+        if !known.contains(t.as_str()) {
+            return Err(SessionError::Validation(format!("unknown lookback token: {}", t)));
+        }
+    }
+    Ok(Json(admin_update_compaction_config(&s.pool, session_id, body.lookback_tokens).await?))
+}
+
+//#endregion 🔖AdminHandlers
+
+//#region 🔖Dashboard HTML
+
+pub const DASHBOARD_HTML: &str = r###"<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>semio · server admin</title>
+<style>
+:root {
+  --bg: #0e1014;
+  --fg: #e6e8eb;
+  --muted: #8b95a1;
+  --panel: #171a21;
+  --panel-2: #1f232c;
+  --border: #2a2f3a;
+  --accent: #ff7a1f;
+  --accent-2: #4fd1c5;
+  --danger: #ef476f;
+  --ok: #06d6a0;
+}
+* { box-sizing: border-box; }
+html,body { margin:0; padding:0; background: var(--bg); color: var(--fg); font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+header { display:flex; justify-content:space-between; align-items:center; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--panel); }
+header h1 { margin:0; font-size: 15px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+header h1 span { color: var(--accent); }
+.badge { padding: 2px 8px; border: 1px solid var(--border); border-radius: 2px; color: var(--muted); margin-left: 10px; font-size: 11px; }
+.main { display: grid; grid-template-columns: 200px 1fr; min-height: calc(100vh - 54px); }
+nav { border-right: 1px solid var(--border); background: var(--panel); padding: 12px 0; }
+nav button { display:block; width:100%; text-align:left; padding: 10px 20px; background: transparent; color: var(--fg); border: none; cursor: pointer; font: inherit; border-left: 3px solid transparent; }
+nav button:hover { background: var(--panel-2); }
+nav button.active { border-left-color: var(--accent); background: var(--panel-2); color: var(--accent); }
+section.view { padding: 20px; overflow: auto; }
+section.view h2 { margin: 0 0 16px 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 12px; margin-bottom: 24px; }
+.card { border: 1px solid var(--border); padding: 14px; background: var(--panel); }
+.card .k { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.card .v { font-size: 22px; margin-top: 8px; color: var(--fg); }
+.card .v.accent { color: var(--accent); }
+.card .v.ok { color: var(--ok); }
+.card .v.danger { color: var(--danger); }
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; font-size: 12px; }
+th { background: var(--panel-2); color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
+tr:hover td { background: var(--panel-2); }
+.muted { color: var(--muted); }
+.ok { color: var(--ok); }
+.danger { color: var(--danger); }
+button.act { background: var(--panel-2); color: var(--fg); border: 1px solid var(--border); padding: 4px 10px; font-family: inherit; font-size: 11px; cursor: pointer; }
+button.act:hover { border-color: var(--accent); color: var(--accent); }
+button.act.danger { border-color: var(--danger); color: var(--danger); }
+.controls { display:flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+input[type=text], input[type=password] { background: var(--panel-2); color: var(--fg); border: 1px solid var(--border); padding: 6px 10px; font: inherit; min-width: 260px; }
+input[type=text]:focus, input[type=password]:focus { outline: none; border-color: var(--accent); }
+pre.json { background: var(--panel-2); padding: 12px; border: 1px solid var(--border); overflow: auto; white-space: pre-wrap; max-height: 500px; }
+.auth-wrap { display:flex; align-items:center; justify-content:center; min-height: 80vh; }
+.auth-box { border: 1px solid var(--border); padding: 28px 32px; background: var(--panel); width: 380px; }
+.auth-box h2 { margin-top: 0; }
+.flex-row { display:flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+code { color: var(--accent-2); }
+</style>
+</head>
+<body>
+<div id="auth" class="auth-wrap">
+  <div class="auth-box">
+    <h2>semio · server admin</h2>
+    <p class="muted">Enter the admin bearer token configured via <code>SEMIO_ADMIN_TOKEN</code>.</p>
+    <form id="auth-form">
+      <div class="flex-row" style="margin-top:12px"><input type="password" id="token-input" placeholder="admin token" autofocus></div>
+      <div class="flex-row" style="margin-top:12px"><button type="submit" class="act">Sign in</button><span class="muted" id="auth-error"></span></div>
+    </form>
+  </div>
+</div>
+<div id="app" style="display:none">
+  <header>
+    <h1>semio · <span>server</span> · admin<span class="badge" id="uptime">uptime · --</span></h1>
+    <div class="flex-row"><span class="muted" id="ts"></span><button class="act" onclick="signOut()">Sign out</button></div>
+  </header>
+  <div class="main">
+    <nav>
+      <button class="tab-btn active" data-tab="overview">Overview</button>
+      <button class="tab-btn" data-tab="sessions">Sessions</button>
+      <button class="tab-btn" data-tab="kits">Kits</button>
+      <button class="tab-btn" data-tab="persons">Persons</button>
+      <button class="tab-btn" data-tab="shares">Share tokens</button>
+      <button class="tab-btn" data-tab="connections">Connections</button>
+      <button class="tab-btn" data-tab="config">Config</button>
+    </nav>
+    <section class="view" id="view"></section>
+  </div>
+</div>
+<script>
+const LS_KEY = 'semio.admin.token';
+let token = sessionStorage.getItem(LS_KEY) || '';
+let current = 'overview';
+
+async function api(path, opts={}) {
+  const headers = Object.assign({'authorization': 'Bearer ' + token, 'content-type': 'application/json'}, opts.headers || {});
+  const res = await fetch(path, Object.assign({}, opts, {headers}));
+  if (!res.ok) { const t = await res.text(); throw new Error(res.status + ' ' + t); }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
+}
+
+function show(id) { document.getElementById('auth').style.display = id === 'auth' ? 'flex' : 'none'; document.getElementById('app').style.display = id === 'app' ? 'block' : 'none'; }
+
+function fmtSecs(s) { if (s < 60) return s + 's'; if (s < 3600) return Math.floor(s/60) + 'm'; if (s < 86400) return Math.floor(s/3600) + 'h'; return Math.floor(s/86400) + 'd'; }
+function esc(s) { if (s == null) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function signIn(e) {
+  e.preventDefault();
+  token = document.getElementById('token-input').value.trim();
+  try { await api('/admin/overview'); sessionStorage.setItem(LS_KEY, token); show('app'); bindTabs(); load('overview'); setInterval(() => load(current, true), 5000); }
+  catch (err) { document.getElementById('auth-error').textContent = 'Invalid token: ' + err.message; }
+}
+
+function signOut() { sessionStorage.removeItem(LS_KEY); token = ''; show('auth'); }
+
+function bindTabs() {
+  document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    load(b.dataset.tab);
+  }));
+}
+
+async function load(tab, silent=false) {
+  current = tab;
+  const view = document.getElementById('view');
+  try {
+    if (tab === 'overview') await renderOverview(view);
+    else if (tab === 'sessions') await renderSessions(view);
+    else if (tab === 'kits') await renderKits(view);
+    else if (tab === 'persons') await renderPersons(view);
+    else if (tab === 'shares') await renderShares(view);
+    else if (tab === 'connections') await renderConnections(view);
+    else if (tab === 'config') await renderConfig(view);
+    document.getElementById('ts').textContent = 'updated ' + new Date().toLocaleTimeString();
+  } catch (err) {
+    if (!silent) view.innerHTML = '<pre class="json danger">' + esc(err.message) + '</pre>';
+  }
+}
+
+async function renderOverview(v) {
+  const o = await api('/admin/overview');
+  document.getElementById('uptime').textContent = 'uptime · ' + fmtSecs(o.uptime_secs);
+  v.innerHTML = `<h2>Overview</h2>
+    <div class="cards">
+      <div class="card"><div class="k">Sessions total</div><div class="v">${o.total_sessions}</div></div>
+      <div class="card"><div class="k">Active</div><div class="v ok">${o.active_sessions}</div></div>
+      <div class="card"><div class="k">Passivated</div><div class="v">${o.passivated_sessions}</div></div>
+      <div class="card"><div class="k">Closed</div><div class="v danger">${o.closed_sessions}</div></div>
+      <div class="card"><div class="k">Actors in memory</div><div class="v accent">${o.active_actors}</div></div>
+      <div class="card"><div class="k">WS connections</div><div class="v accent">${o.active_connections}</div></div>
+      <div class="card"><div class="k">Kits</div><div class="v">${o.total_kits}</div></div>
+      <div class="card"><div class="k">Persons</div><div class="v">${o.total_persons}</div></div>
+      <div class="card"><div class="k">Share tokens</div><div class="v">${o.total_share_tokens}</div></div>
+    </div>`;
+}
+
+async function renderSessions(v) {
+  const rows = await api('/admin/sessions');
+  v.innerHTML = `<h2>Sessions (${rows.length})</h2>` + tableSessions(rows);
+}
+
+function tableSessions(rows) {
+  if (!rows.length) return '<p class="muted">No sessions.</p>';
+  return `<table><thead><tr><th>Session</th><th>Kit</th><th>Status</th><th>Domain v</th><th>Semio v</th><th>Conn</th><th>Actor</th><th>Updated</th><th></th></tr></thead><tbody>${rows.map(r => `
+    <tr>
+      <td><code>${esc(r.session_id)}</code></td>
+      <td><code class="muted">${esc(r.root_kit_id)}</code></td>
+      <td class="${r.status === 'active' ? 'ok' : (r.status === 'closed' ? 'danger' : 'muted')}">${esc(r.status)}</td>
+      <td>${r.domain_version}</td>
+      <td>${r.semio_version}</td>
+      <td>${r.active_connections}</td>
+      <td>${r.is_activated ? '<span class="ok">yes</span>' : '<span class="muted">no</span>'}</td>
+      <td class="muted">${esc(r.updated_at)}</td>
+      <td class="flex-row">
+        <button class="act" onclick="detail('${r.session_id}')">Detail</button>
+        ${r.is_activated ? `<button class="act" onclick="passivate('${r.session_id}')">Passivate</button>` : ''}
+        ${r.status !== 'closed' ? `<button class="act danger" onclick="closeSession('${r.session_id}')">Close</button>` : ''}
+      </td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+async function detail(id) {
+  const d = await api('/admin/sessions/' + id);
+  const v = document.getElementById('view');
+  v.innerHTML = `<h2>Session · ${esc(id)}</h2>
+    <button class="act" onclick="load('sessions')">&larr; Back</button>
+    <div class="cards">
+      <div class="card"><div class="k">Status</div><div class="v">${esc(d.row.status)}</div></div>
+      <div class="card"><div class="k">Connections</div><div class="v">${d.row.active_connections}</div></div>
+      <div class="card"><div class="k">Domain v</div><div class="v">${d.row.domain_version}</div></div>
+      <div class="card"><div class="k">Semio v</div><div class="v">${d.row.semio_version}</div></div>
+    </div>
+    <h2>Kit</h2>${d.kit ? `<pre class="json">${esc(JSON.stringify(d.kit, null, 2))}</pre>` : '<p class="muted">No kit.</p>'}
+    <h2>Persons (${d.persons.length})</h2>${d.persons.length ? tablePersons(d.persons) : '<p class="muted">None.</p>'}
+    <h2>Share tokens (${d.share_tokens.length})</h2>${d.share_tokens.length ? tableShares(d.share_tokens) : '<p class="muted">None.</p>'}`;
+}
+
+async function passivate(id) { if (!confirm('Passivate actor for ' + id + '?')) return; await api('/admin/sessions/' + id + '/passivate', {method:'POST'}); load('sessions'); }
+async function closeSession(id) { if (!confirm('Close session ' + id + '? This is permanent.')) return; await api('/admin/sessions/' + id + '/close', {method:'POST'}); load('sessions'); }
+
+async function renderKits(v) {
+  const rows = await api('/admin/kits');
+  v.innerHTML = `<h2>Kits (${rows.length})</h2>` + (rows.length ? `<table><thead><tr><th>Name</th><th>Version</th><th>Session</th><th>Kit id</th><th>Remote</th><th>Lifecycle</th></tr></thead><tbody>${rows.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.version || '')}</td><td><code>${esc(r.session_id)}</code></td><td><code class="muted">${esc(r.kit_id)}</code></td><td class="muted">${esc(r.remote || '')}</td><td>${esc(r.lifecycle)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No kits.</p>');
+}
+
+async function renderPersons(v) { const rows = await api('/admin/persons'); v.innerHTML = `<h2>Persons (${rows.length})</h2>` + (rows.length ? tablePersons(rows) : '<p class="muted">No persons.</p>'); }
+function tablePersons(rows) { return `<table><thead><tr><th>Display name</th><th>Person id</th><th>Frontend</th><th>Session</th><th>Present</th><th>Last seen</th></tr></thead><tbody>${rows.map(r => `<tr><td>${esc(r.display_name || '(anonymous)')}</td><td><code class="muted">${esc(r.person_id)}</code></td><td>${esc(r.frontend_id)}</td><td><code class="muted">${esc(r.session_id)}</code></td><td>${r.is_present ? '<span class="ok">yes</span>' : '<span class="muted">no</span>'}</td><td class="muted">${esc(r.last_seen_at)}</td></tr>`).join('')}</tbody></table>`; }
+
+async function renderShares(v) { const rows = await api('/admin/share-tokens'); v.innerHTML = `<h2>Share tokens (${rows.length})</h2>` + (rows.length ? tableShares(rows) : '<p class="muted">None.</p>'); }
+function tableShares(rows) { return `<table><thead><tr><th>Token</th><th>Session</th><th>Access</th><th>Entity</th><th>Label</th><th>Expires</th><th></th></tr></thead><tbody>${rows.map(r => `<tr><td><code>${esc(r.token)}</code></td><td><code class="muted">${esc(r.session_id)}</code></td><td>${esc(r.access_mode)}</td><td>${esc(r.entity_kind || '')} ${esc(r.entity_id || '')}</td><td>${esc(r.label || '')}</td><td class="muted">${esc(r.expires_at || '—')}</td><td><button class="act danger" onclick="revokeShare('${r.token}')">Revoke</button></td></tr>`).join('')}</tbody></table>`; }
+async function revokeShare(token) { if (!confirm('Revoke share token ' + token + '?')) return; await api('/admin/share-tokens/' + token, {method:'DELETE'}); load(current); }
+
+async function renderConnections(v) {
+  const rows = await api('/admin/connections');
+  v.innerHTML = `<h2>Active WebSocket connections (${rows.length} session(s))</h2>` + (rows.length ? `<table><thead><tr><th>Session</th><th>Connections</th><th>Activated</th></tr></thead><tbody>${rows.map(r => `<tr><td><code>${esc(r.session_id)}</code></td><td>${r.active_connections}</td><td class="muted">${fmtSecs(r.activated_at_secs_ago)} ago</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No active actors.</p>');
+}
+
+async function renderConfig(v) {
+  v.innerHTML = `<h2>Compaction config (per session)</h2>
+    <div class="controls"><input type="text" id="cfg-sid" placeholder="session uuid"><button class="act" onclick="loadConfig()">Load</button></div>
+    <div id="cfg"></div>`;
+}
+
+async function loadConfig() {
+  const sid = document.getElementById('cfg-sid').value.trim();
+  if (!sid) return;
+  const cfg = await api('/admin/config/' + sid);
+  document.getElementById('cfg').innerHTML = `<p>Last compacted: <span class="muted">${esc(cfg.last_compacted_at || '—')}</span></p>
+    <label>Lookback tokens (comma-separated)</label><br><input type="text" id="cfg-tokens" value="${esc(cfg.lookback_tokens.join(','))}" style="width: 500px">
+    <div style="margin-top:8px"><button class="act" onclick="saveConfig('${sid}')">Save</button></div>
+    <pre class="json">${esc(JSON.stringify(cfg, null, 2))}</pre>`;
+}
+
+async function saveConfig(sid) {
+  const tokens = document.getElementById('cfg-tokens').value.split(',').map(s => s.trim()).filter(Boolean);
+  await api('/admin/config/' + sid, {method:'PATCH', body: JSON.stringify({lookback_tokens: tokens})});
+  loadConfig();
+}
+
+document.getElementById('auth-form').addEventListener('submit', signIn);
+if (token) { api('/admin/overview').then(() => { show('app'); bindTabs(); load('overview'); setInterval(() => load(current, true), 5000); }).catch(() => show('auth')); }
+else show('auth');
+</script>
+</body>
+</html>
+"###;
+
+//#endregion 🔖Dashboard HTML
+
+} // 🛡️Admin
+pub use admin::*;
+
 // 🔖Main
-// Specs: Main bootstraps tracing, database, and HTTP server.
+// Specs: Main bootstraps tracing, database, admin config, and HTTP server with both session and admin routers merged.
 // Summary: Entry point for the semio session-backend service.
 
 
@@ -2391,8 +3097,15 @@ async fn main() {
         .unwrap_or_else(|_| "postgres://semio:semio@localhost:5432/semio".to_string());
     let pool = create_pool(&database_url).await;
     run_migrations(&pool).await;
-    let app_state = AppState::new(pool);
-    let app_router = router(app_state);
+    let admin_config = AdminConfig::from_env();
+    if admin_config.admin_token.is_none() {
+        tracing::warn!("SEMIO_ADMIN_TOKEN is not set: /admin/* endpoints will return 403");
+    } else {
+        tracing::info!("admin dashboard mounted at /admin");
+    }
+    let app_state = AppState::new(pool.clone());
+    let admin_state = AdminState { pool, directory: app_state.directory.clone(), config: admin_config };
+    let app_router = api::router(app_state).merge(admin::router(admin_state));
     let default_host = if std::env::var("DEVCONTAINER").as_deref() == Ok("true") { "0.0.0.0" } else { "127.0.0.1" };
     let addr: std::net::SocketAddr = std::env::var("LISTEN_ADDR")
         .unwrap_or_else(|_| format!("{}:8080", default_host))
@@ -3698,7 +4411,7 @@ use super::*;
         run_migrations(&pool).await;
 
         let app_state = AppState::new(pool);
-        let app = router(app_state);
+        let app = api::router(app_state);
 
         // Start server on random port
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -3852,7 +4565,7 @@ use super::*;
         run_migrations(&pool).await;
 
         let app_state = AppState::new(pool.clone());
-        let app = router(app_state);
+        let app = api::router(app_state);
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         tokio::spawn(async move { axum::serve(listener, app).await.unwrap(); });
@@ -3918,7 +4631,7 @@ use super::*;
         run_migrations(&pool).await;
 
         let app_state = AppState::new(pool.clone());
-        let app = router(app_state);
+        let app = api::router(app_state);
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         tokio::spawn(async move { axum::serve(listener, app).await.unwrap(); });
@@ -4013,7 +4726,7 @@ use super::*;
         run_migrations(&pool).await;
 
         let app_state = AppState::new(pool);
-        let app = router(app_state);
+        let app = api::router(app_state);
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         tokio::spawn(async move { axum::serve(listener, app).await.unwrap(); });
@@ -4105,7 +4818,7 @@ use super::*;
         run_migrations(&pool).await;
 
         let app_state = AppState::new(pool);
-        let app = router(app_state);
+        let app = api::router(app_state);
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         tokio::spawn(async move { axum::serve(listener, app).await.unwrap(); });
@@ -4247,6 +4960,228 @@ use super::*;
         assert_eq!(resp.status(), 200);
         let shares: Vec<serde_json::Value> = resp.json().await.unwrap();
         assert_eq!(shares.len(), 2, "should have 2 share tokens after deletion");
+    }
+
+    #[test]
+    pub fn require_admin_rejects_without_token_set() {
+        // Specs: When SEMIO_ADMIN_TOKEN is unset, require_admin returns Forbidden so /admin/* never leaks in misconfigured deployments.
+        let cfg = AdminConfig { admin_token: None, started_at: Arc::new(Instant::now()) };
+        let headers = axum::http::HeaderMap::new();
+        let err = require_admin(&headers, &cfg).unwrap_err();
+        assert_eq!(err.into_response().status(), StatusCode::FORBIDDEN);
+    }
+
+    #[test]
+    pub fn require_admin_rejects_missing_bearer() {
+        let cfg = AdminConfig { admin_token: Some("s3cret".into()), started_at: Arc::new(Instant::now()) };
+        let headers = axum::http::HeaderMap::new();
+        let err = require_admin(&headers, &cfg).unwrap_err();
+        assert_eq!(err.into_response().status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[test]
+    pub fn require_admin_rejects_wrong_bearer() {
+        let cfg = AdminConfig { admin_token: Some("s3cret".into()), started_at: Arc::new(Instant::now()) };
+        let mut headers = axum::http::HeaderMap::new();
+        headers.insert("authorization", axum::http::HeaderValue::from_static("Bearer nope"));
+        let err = require_admin(&headers, &cfg).unwrap_err();
+        assert_eq!(err.into_response().status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[test]
+    pub fn require_admin_accepts_correct_bearer() {
+        let cfg = AdminConfig { admin_token: Some("s3cret".into()), started_at: Arc::new(Instant::now()) };
+        let mut headers = axum::http::HeaderMap::new();
+        headers.insert("authorization", axum::http::HeaderValue::from_static("Bearer s3cret"));
+        require_admin(&headers, &cfg).unwrap();
+    }
+
+    #[test]
+    pub fn session_directory_tracks_active_connections() {
+        // Specs: active_connections counter and activated_at are initialized on actor creation and observable through list_active.
+        let handle = SessionHandle {
+            command_tx: tokio::sync::mpsc::channel(1).0,
+            event_tx: tokio::sync::broadcast::channel(1).0,
+            active_connections: Arc::new(AtomicUsize::new(0)),
+            activated_at: Arc::new(Instant::now()),
+        };
+        handle.active_connections.fetch_add(3, AtomicOrdering::Relaxed);
+        assert_eq!(handle.active_connections.load(AtomicOrdering::Relaxed), 3);
+        handle.active_connections.fetch_sub(1, AtomicOrdering::Relaxed);
+        assert_eq!(handle.active_connections.load(AtomicOrdering::Relaxed), 2);
+    }
+
+    #[tokio::test]
+    async fn e2e_admin_endpoints_with_postgres() {
+        // Specs: Full round-trip against the embedded admin router: overview, session list, kit list, share-token list, session detail, compaction config read/write, and auth boundary.
+        if !docker_available() {
+            eprintln!("[SKIP] Docker not available, skipping admin E2E test");
+            return;
+        }
+
+        let pg = Postgres::default().start().await.expect("start postgres container");
+        let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
+        let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
+
+        let pool = create_pool(&db_url).await;
+        run_migrations(&pool).await;
+
+        let app_state = AppState::new(pool.clone());
+        let admin_config = AdminConfig { admin_token: Some("test-admin-token".into()), started_at: Arc::new(Instant::now()) };
+        let admin_state = AdminState { pool: pool.clone(), directory: app_state.directory.clone(), config: admin_config };
+        let app = api::router(app_state).merge(admin::router(admin_state));
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move { axum::serve(listener, app).await.unwrap(); });
+
+        let client = reqwest::Client::new();
+        let base = format!("http://{}", addr);
+
+        // Seed: create two sessions via public HTTP API.
+        let resp_a = client.post(format!("{}/sessions", base))
+            .json(&serde_json::json!({"kit_name": "Admin Kit A"}))
+            .send().await.unwrap();
+        assert_eq!(resp_a.status(), 200);
+        let body_a: serde_json::Value = resp_a.json().await.unwrap();
+        let session_a = body_a["session_id"].as_str().unwrap().to_string();
+        let owner_a = body_a["owner_token"].as_str().unwrap().to_string();
+
+        let resp_b = client.post(format!("{}/sessions", base))
+            .json(&serde_json::json!({"kit_name": "Admin Kit B"}))
+            .send().await.unwrap();
+        assert_eq!(resp_b.status(), 200);
+        let body_b: serde_json::Value = resp_b.json().await.unwrap();
+        let session_b = body_b["session_id"].as_str().unwrap().to_string();
+
+        // Seed a share token for session A so admin share-token endpoints have data.
+        let share_resp = client.post(format!("{}/sessions/{}/shares", base, session_a))
+            .bearer_auth(&owner_a)
+            .json(&serde_json::json!({"access_mode": "viewer", "label": "demo"}))
+            .send().await.unwrap();
+        assert_eq!(share_resp.status(), 200);
+        let share_body: serde_json::Value = share_resp.json().await.unwrap();
+        let share_token = share_body["token"].as_str().unwrap().to_string();
+
+        // Admin without token -> 401
+        let resp = client.get(format!("{}/admin/overview", base)).send().await.unwrap();
+        assert_eq!(resp.status(), 401);
+
+        // Admin with wrong token -> 401
+        let resp = client.get(format!("{}/admin/overview", base))
+            .bearer_auth("wrong").send().await.unwrap();
+        assert_eq!(resp.status(), 401);
+
+        // Overview
+        let resp = client.get(format!("{}/admin/overview", base))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let overview: serde_json::Value = resp.json().await.unwrap();
+        assert!(overview["total_sessions"].as_i64().unwrap() >= 2);
+        assert!(overview["total_kits"].as_i64().unwrap() >= 2);
+        assert!(overview["total_share_tokens"].as_i64().unwrap() >= 1);
+
+        // List sessions
+        let resp = client.get(format!("{}/admin/sessions", base))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let sessions: Vec<serde_json::Value> = resp.json().await.unwrap();
+        assert!(sessions.iter().any(|s| s["session_id"].as_str() == Some(&session_a)));
+        assert!(sessions.iter().any(|s| s["session_id"].as_str() == Some(&session_b)));
+
+        // Session detail for A
+        let resp = client.get(format!("{}/admin/sessions/{}", base, session_a))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let detail: serde_json::Value = resp.json().await.unwrap();
+        assert_eq!(detail["row"]["session_id"].as_str().unwrap(), session_a);
+        assert_eq!(detail["kit"]["name"].as_str().unwrap(), "Admin Kit A");
+        assert_eq!(detail["share_tokens"].as_array().unwrap().len(), 1);
+
+        // List kits
+        let resp = client.get(format!("{}/admin/kits", base))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let kits: Vec<serde_json::Value> = resp.json().await.unwrap();
+        let names: Vec<&str> = kits.iter().map(|k| k["name"].as_str().unwrap()).collect();
+        assert!(names.contains(&"Admin Kit A"));
+        assert!(names.contains(&"Admin Kit B"));
+
+        // List share tokens
+        let resp = client.get(format!("{}/admin/share-tokens", base))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let tokens: Vec<serde_json::Value> = resp.json().await.unwrap();
+        assert!(tokens.iter().any(|t| t["token"].as_str() == Some(&share_token)));
+
+        // Revoke share token
+        let resp = client.delete(format!("{}/admin/share-tokens/{}", base, share_token))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let revoke: serde_json::Value = resp.json().await.unwrap();
+        assert_eq!(revoke["revoked"].as_bool().unwrap(), true);
+
+        // List persons (empty but should return 200)
+        let resp = client.get(format!("{}/admin/persons", base))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let _persons: Vec<serde_json::Value> = resp.json().await.unwrap();
+
+        // Connections endpoint
+        let resp = client.get(format!("{}/admin/connections", base))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let _connections: Vec<serde_json::Value> = resp.json().await.unwrap();
+
+        // Compaction config: GET returns defaults, PATCH updates, GET reflects update.
+        let resp = client.get(format!("{}/admin/config/{}", base, session_a))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let cfg: serde_json::Value = resp.json().await.unwrap();
+        assert_eq!(cfg["lookback_tokens"].as_array().unwrap().len(), 12);
+
+        let resp = client.patch(format!("{}/admin/config/{}", base, session_a))
+            .bearer_auth("test-admin-token")
+            .json(&serde_json::json!({"lookback_tokens": ["1min", "1h", "1d"]}))
+            .send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let cfg: serde_json::Value = resp.json().await.unwrap();
+        assert_eq!(cfg["lookback_tokens"].as_array().unwrap().len(), 3);
+
+        // Invalid lookback token -> 400
+        let resp = client.patch(format!("{}/admin/config/{}", base, session_a))
+            .bearer_auth("test-admin-token")
+            .json(&serde_json::json!({"lookback_tokens": ["not-a-real-token"]}))
+            .send().await.unwrap();
+        assert_eq!(resp.status(), 400);
+
+        // Close session B
+        let resp = client.post(format!("{}/admin/sessions/{}/close", base, session_b))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let close: serde_json::Value = resp.json().await.unwrap();
+        assert_eq!(close["closed"].as_bool().unwrap(), true);
+
+        // After close, detail should report status = closed.
+        let resp = client.get(format!("{}/admin/sessions/{}", base, session_b))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let detail: serde_json::Value = resp.json().await.unwrap();
+        assert_eq!(detail["row"]["status"].as_str().unwrap(), "closed");
+
+        // Passivate a session that was never activated -> still returns 200 (idempotent).
+        let resp = client.post(format!("{}/admin/sessions/{}/passivate", base, session_a))
+            .bearer_auth("test-admin-token").send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+
+        // Embedded dashboard is served without auth (static HTML; endpoints behind auth).
+        let resp = client.get(format!("{}/admin", base)).send().await.unwrap();
+        assert_eq!(resp.status(), 200);
+        let ctype = resp.headers().get("content-type").unwrap().to_str().unwrap().to_string();
+        assert!(ctype.starts_with("text/html"));
+        let html = resp.text().await.unwrap();
+        assert!(html.contains("semio"));
+        assert!(html.contains("overview"));
     }
 
     } // 🌊E2E Testcontainer Tests

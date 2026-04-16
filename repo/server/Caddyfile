@@ -1,6 +1,9 @@
 # Caddy reverse proxy config for semio repo server.
-# Replace {$DOMAIN} with your actual domain or use env var.
+# Routes /admin, /sessions and /ws to the semio-session backend; all other paths go to the repo web service.
 
 {$DOMAIN:repo.semio.dev} {
+    @session path /admin* /sessions* /ws*
+    reverse_proxy @session session:8788
+
     reverse_proxy web:8787
 }

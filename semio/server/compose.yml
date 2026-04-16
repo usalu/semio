@@ -79,6 +79,7 @@ services:
   # #endregion 🔖ReverseProxy
 
   # #region 🔖Session
+  # Specs: Runs the semio-session Rust backend with the embedded /admin dashboard protected by SEMIO_ADMIN_TOKEN.
   session:
     image: rust:1.89-bookworm
     restart: unless-stopped
@@ -86,8 +87,9 @@ services:
     command: ["cargo", "run", "--bin", "semio-session"]
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-semio}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-semio_repo}
-      SESSION_HOST: 0.0.0.0
-      SESSION_PORT: 8788
+      LISTEN_ADDR: 0.0.0.0:8788
+      SEMIO_ADMIN_TOKEN: ${SEMIO_ADMIN_TOKEN:?SEMIO_ADMIN_TOKEN required to enable /admin dashboard}
+      RUST_LOG: ${RUST_LOG:-semio_session=info,tower_http=info}
     volumes:
       - ../..:/workspace
     depends_on:
@@ -95,6 +97,13 @@ services:
         condition: service_healthy
     expose:
       - "8788"
+    ports:
+      - "127.0.0.1:8788:8788"
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "exec 3<>/dev/tcp/127.0.0.1/8788"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
   # #endregion 🔖Session
 
 volumes:

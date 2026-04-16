@@ -10894,7 +10894,11 @@ export const getSqlJs = async () => {
         const path = await import("path");
         const url = await import("url");
         const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-        const candidatePaths = [path.join(__dirname, "public", "sql-wasm.wasm"), path.join(__dirname, "..", "sketchpad", "public", "sql-wasm.wasm")];
+        const candidatePaths = [
+          path.join(__dirname, "public", "sql-wasm.wasm"),
+          path.join(__dirname, "..", "sketchpad", "public", "sql-wasm.wasm"),
+          path.join(__dirname, "..", "..", "node_modules", "sql.js", "dist", "sql-wasm.wasm"),
+        ];
         const wasmPath = candidatePaths.find((candidate) => fs.existsSync(candidate)) ?? candidatePaths[0];
         cachedSqlJs = await initSqlJs({
           locateFile: () => wasmPath,
