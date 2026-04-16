@@ -26,4 +26,8 @@
     <ProjectReference Include="..\Semio\Semio.csproj" />
   </ItemGroup>
 
+  <Target Name="CopyNet48SqliteNativeRuntime" AfterTargets="Build" Condition="'$(TargetFramework)' == 'net48'">
+    <Copy SourceFiles="$(OutDir)runtimes\win-x64\native\e_sqlite3.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" Condition="Exists('$(OutDir)runtimes\win-x64\native\e_sqlite3.dll')" />
+  </Target>
+
 </Project>

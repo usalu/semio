@@ -8047,45 +8047,8 @@ def findReplaceableTypesForPieceInDesignDict(
     variants: typing.Optional[list[str]] = None,
 ) -> list[dict]:
     """Finds all types that can replace a piece while maintaining connection compatibility."""
-    design = _findDesignInKitDict(kit, design_guid)
-    connections = _findPieceConnectionsInDesignDict(design, piece_guid)
-    required_connectors: list[dict] = []
-    for connection in connections:
-        try:
-            connected_guid = connection.get("connected", {}).get("piece", {}).get("guid")
-            connecting_guid = connection.get("connecting", {}).get("piece", {}).get("guid")
-            other_piece_guid = connecting_guid if connected_guid == piece_guid else connected_guid
-            other_piece = _findPieceInDesignDict(design, other_piece_guid)
-            other_type_guid = (other_piece.get("type") or {}).get("guid")
-            if not other_type_guid:
-                continue
-            other_type = _findTypeInKitDict(kit, other_type_guid)
-            if connected_guid == piece_guid:
-                other_connector_guid = (connection.get("connecting", {}).get("connector") or {}).get("guid")
-            else:
-                other_connector_guid = (connection.get("connected", {}).get("connector") or {}).get("guid")
-            if not other_connector_guid:
-                continue
-            other_connector = _findConnectorInTypeDict(other_type, other_connector_guid)
-            required_connectors.append(other_connector)
-        except (ValueError, AttributeError, KeyError):
-            continue
-    result = []
-    for replacement_type in kit.get("types", []):
-        if replacement_type.get("isAbstract"):
-            continue
-        if variants is not None:
-            parent_guid = (replacement_type.get("parent") or {}).get("guid", "")
-            if parent_guid not in variants:
-                continue
-        type_connectors = replacement_type.get("connectors") or []
-        if len(type_connectors) == 0:
-            if len(required_connectors) == 0:
-                result.append(replacement_type)
-            continue
-        if all(len(type_connectors) > 0 for _ in required_connectors):
-            result.append(replacement_type)
-    return result
+    result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design_guid, [piece_guid])
+    return result["types"]
 
 
 def findReplaceableTypesForPiecesInDesignDict(
@@ -8095,48 +8058,151 @@ def findReplaceableTypesForPiecesInDesignDict(
     variants: typing.Optional[list[str]] = None,
 ) -> list[dict]:
     """Finds types that can replace multiple pieces while maintaining all external connections."""
+    result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design_guid, piece_guids)
+    return result["types"]
+
+
+def findReplaceableTypesInDesignsForPiecesInDesignDict(
+    kit: dict,
+    design_guid: str,
+    piece_guids: list[str],
+) -> dict:
+    """Finds replaceable types and designs for the selected pieces in a design.
+    Specs: A candidate is valid only when the whole selection boundary requirement multiset can be
+    injectively matched to distinct compatible candidate connectors. Boundary requirements use the
+    actual opposite-side connector ports, isolated selections use the selected pieces' own kind
+    connectors with multiplicity, and candidate designs only expose connectors not already consumed
+    by internal design connections.
+    """
     design = _findDesignInKitDict(kit, design_guid)
-    piece_set = set(piece_guids)
-    external_connectors: list[dict] = []
-    for piece_guid in piece_guids:
-        connections = _findPieceConnectionsInDesignDict(design, piece_guid)
-        for connection in connections:
-            connected_guid = connection.get("connected", {}).get("piece", {}).get("guid")
-            connecting_guid = connection.get("connecting", {}).get("piece", {}).get("guid")
-            other_piece_guid = connecting_guid if connected_guid == piece_guid else connected_guid
-            if other_piece_guid not in piece_set:
-                try:
-                    other_piece = _findPieceInDesignDict(design, other_piece_guid)
-                    other_type_guid = (other_piece.get("type") or {}).get("guid")
-                    if not other_type_guid:
-                        continue
-                    other_type = _findTypeInKitDict(kit, other_type_guid)
-                    if connected_guid == piece_guid:
-                        other_connector_guid = (connection.get("connecting", {}).get("connector") or {}).get("guid")
-                    else:
-                        other_connector_guid = (connection.get("connected", {}).get("connector") or {}).get("guid")
-                    if not other_connector_guid:
-                        continue
-                    other_connector = _findConnectorInTypeDict(other_type, other_connector_guid)
-                    external_connectors.append(other_connector)
-                except (ValueError, AttributeError, KeyError):
-                    continue
-    result = []
-    for replacement_type in kit.get("types", []):
-        if replacement_type.get("isAbstract"):
-            continue
-        if variants is not None:
-            parent_guid = (replacement_type.get("parent") or {}).get("guid", "")
-            if parent_guid not in variants:
+    selected_piece_set = set(piece_guids)
+    pieces = design.get("pieces", [])
+    connections = design.get("connections", [])
+    piece_map = {piece.get("guid"): piece for piece in pieces}
+
+    port_map = {p["guid"]: p for p in kit.get("ports", [])}
+    type_map = {t["guid"]: t for t in kit.get("types", [])}
+    all_types = kit.get("types", [])
+    all_designs = kit.get("designs", [])
+
+    def check_port_compatibility(candidate_port_guid: str, required_port_guid: str) -> bool:
+        if not candidate_port_guid or not required_port_guid:
+            return False
+        if candidate_port_guid == required_port_guid:
+            return True
+        candidate_port = port_map.get(candidate_port_guid)
+        required_port = port_map.get(required_port_guid)
+        if not candidate_port or not required_port:
+            return False
+        return any(port_ref.get("guid") == required_port_guid for port_ref in candidate_port.get("compatiblePorts") or []) or any(port_ref.get("guid") == candidate_port_guid for port_ref in required_port.get("compatiblePorts") or [])
+
+    def get_connector_port_guid(type_guid: str, connector_guid: str) -> str:
+        if not type_guid or not connector_guid:
+            return ""
+        type_dict = type_map.get(type_guid) or {}
+        for connector in type_dict.get("connectors") or []:
+            if connector.get("guid") == connector_guid:
+                return ((connector.get("port") or {}).get("guid")) or ""
+        return ""
+
+    def get_own_requirement_port_guids(piece_guid: str) -> list[str]:
+        piece = piece_map.get(piece_guid) or {}
+        type_guid = (piece.get("type") or {}).get("guid", "")
+        type_dict = type_map.get(type_guid) or {}
+        return [((connector.get("port") or {}).get("guid")) or "" for connector in type_dict.get("connectors") or []]
+
+    def get_boundary_requirement_port_guids() -> list[str]:
+        requirement_port_guids: list[str] = []
+        for conn in connections:
+            connected_guid = conn.get("connected", {}).get("piece", {}).get("guid", "")
+            connecting_guid = conn.get("connecting", {}).get("piece", {}).get("guid", "")
+            connected_selected = connected_guid in selected_piece_set
+            connecting_selected = connecting_guid in selected_piece_set
+            if connected_selected == connecting_selected:
                 continue
-        type_connectors = replacement_type.get("connectors") or []
-        if len(type_connectors) == 0:
-            if len(external_connectors) == 0:
-                result.append(replacement_type)
-            continue
-        if all(len(type_connectors) > 0 for _ in external_connectors):
-            result.append(replacement_type)
-    return result
+            other_side = conn.get("connecting") if connected_selected else conn.get("connected")
+            other_piece_guid = (other_side or {}).get("piece", {}).get("guid", "")
+            other_piece = piece_map.get(other_piece_guid) or {}
+            other_type_guid = (other_piece.get("type") or {}).get("guid", "")
+            other_connector_guid = ((other_side or {}).get("connector") or {}).get("guid", "")
+            requirement_port_guids.append(get_connector_port_guid(other_type_guid, other_connector_guid))
+        return requirement_port_guids
+
+    def get_selection_own_requirement_port_guids() -> list[str]:
+        requirement_port_guids: list[str] = []
+        for piece_guid in piece_guids:
+            requirement_port_guids.extend(get_own_requirement_port_guids(piece_guid))
+        return requirement_port_guids
+
+    required_port_guids = get_boundary_requirement_port_guids()
+    if len(required_port_guids) == 0:
+        required_port_guids = get_selection_own_requirement_port_guids()
+
+    def can_satisfy_requirements(required_port_guids: list[str], available_port_guids: list[str]) -> bool:
+        if len(required_port_guids) == 0:
+            return True
+        if len(available_port_guids) < len(required_port_guids):
+            return False
+
+        requirement_options = []
+        for required_port_guid in required_port_guids:
+            connector_indexes = [connector_index for connector_index, available_port_guid in enumerate(available_port_guids) if check_port_compatibility(available_port_guid, required_port_guid)]
+            if len(connector_indexes) == 0:
+                return False
+            requirement_options.append(connector_indexes)
+        requirement_options.sort(key=len)
+
+        used_connector_indexes = [False] * len(available_port_guids)
+
+        def match_requirement(requirement_index: int) -> bool:
+            if requirement_index >= len(requirement_options):
+                return True
+            for connector_index in requirement_options[requirement_index]:
+                if used_connector_indexes[connector_index]:
+                    continue
+                used_connector_indexes[connector_index] = True
+                if match_requirement(requirement_index + 1):
+                    return True
+                used_connector_indexes[connector_index] = False
+            return False
+
+        return match_requirement(0)
+
+    def candidate_type_available_port_guids(candidate_type: dict) -> list[str]:
+        return [((connector.get("port") or {}).get("guid")) or "" for connector in candidate_type.get("connectors") or []]
+
+    def candidate_design_available_port_guids(candidate_design: dict) -> list[str]:
+        consumed_connector_keys = set()
+        for connection in candidate_design.get("connections") or []:
+            for side in [connection.get("connected") or {}, connection.get("connecting") or {}]:
+                piece_guid = (side.get("piece") or {}).get("guid", "")
+                connector_guid = (side.get("connector") or {}).get("guid", "")
+                if piece_guid and connector_guid:
+                    consumed_connector_keys.add(f"{piece_guid}::{connector_guid}")
+
+        available_port_guids = []
+        for piece in candidate_design.get("pieces") or []:
+            type_guid = (piece.get("type") or {}).get("guid", "")
+            type_dict = type_map.get(type_guid) or {}
+            for connector in type_dict.get("connectors") or []:
+                if f"{piece.get('guid', '')}::{connector.get('guid', '')}" in consumed_connector_keys:
+                    continue
+                available_port_guids.append(((connector.get("port") or {}).get("guid")) or "")
+        return available_port_guids
+
+    if len(piece_guids) == 0:
+        return {
+            "types": [candidate_type for candidate_type in all_types if len(candidate_type_available_port_guids(candidate_type)) == 0],
+            "designs": [candidate_design for candidate_design in all_designs if len(candidate_design_available_port_guids(candidate_design)) == 0],
+        }
+
+    def is_valid_candidate(available_port_guids: list[str]) -> bool:
+        return can_satisfy_requirements(required_port_guids, available_port_guids)
+
+    return {
+        "types": [candidate_type for candidate_type in all_types if is_valid_candidate(candidate_type_available_port_guids(candidate_type))],
+        "designs": [candidate_design for candidate_design in all_designs if is_valid_candidate(candidate_design_available_port_guids(candidate_design))],
+    }
 
 
 def sumQualityInDesignDict(kit: dict, design_guid: str, quality_guid: str) -> float:
@@ -17109,6 +17175,246 @@ class TestKitFilterDesign:
         assert len(combined_filtered.get("types", [])) < len(design_filtered.get("types", []))
         for t in combined_filtered.get("types", []):
             assert not fnmatch.fnmatch(t["name"].lower(), "capsule*")
+
+
+# #region 🔍Find Replaceable Types In Designs Tests
+class TestFindReplaceableTypesInDesigns:
+    class TestNakaginCapsuleTower:
+        def test_synthetic_selection_enforces_distinct_connectors_and_free_design_connectors(self):
+            def make_connector(guid: str, port_guid: str) -> dict:
+                return {
+                    "guid": guid,
+                    "t": 0,
+                    "point": {"x": 0, "y": 0, "z": 0},
+                    "direction": {"x": 1, "y": 0, "z": 0},
+                    "port": {"guid": port_guid},
+                }
+
+            def make_type(guid: str, connector_port_guids: list[str]) -> dict:
+                return {
+                    "guid": guid,
+                    "name": guid,
+                    "connectors": [make_connector(f"{guid}-connector-{connector_index}", connector_port_guid) for connector_index, connector_port_guid in enumerate(connector_port_guids)],
+                }
+
+            def make_piece(guid: str, type_guid: str) -> dict:
+                return {"guid": guid, "type": {"guid": type_guid}}
+
+            def make_connection(guid: str, connected_piece_guid: str, connected_connector_guid: str, connecting_piece_guid: str, connecting_connector_guid: str) -> dict:
+                return {
+                    "guid": guid,
+                    "connected": {"piece": {"guid": connected_piece_guid}, "connector": {"guid": connected_connector_guid}},
+                    "connecting": {"piece": {"guid": connecting_piece_guid}, "connector": {"guid": connecting_connector_guid}},
+                }
+
+            kit = {
+                "ports": [
+                    {"guid": "port-L", "compatiblePorts": [{"guid": "port-L-compatible"}]},
+                    {"guid": "port-L-compatible", "compatiblePorts": [{"guid": "port-L"}]},
+                    {"guid": "port-G"},
+                ],
+                "types": [
+                    make_type("selected-external-lg", []),
+                    make_type("selected-isolated-lg", ["port-L", "port-G"]),
+                    make_type("selected-external-ll", []),
+                    make_type("neighbor-l", ["port-L"]),
+                    make_type("neighbor-g", ["port-G"]),
+                    make_type("candidate-l", ["port-L"]),
+                    make_type("candidate-lg", ["port-L-compatible", "port-G"]),
+                    make_type("candidate-lg-lg", ["port-L-compatible", "port-G", "port-L", "port-G"]),
+                    make_type("candidate-ll", ["port-L", "port-L-compatible"]),
+                    make_type("candidate-g", ["port-G"]),
+                ],
+                "designs": [
+                    {
+                        "guid": "root-design",
+                        "name": "root-design",
+                        "pieces": [
+                            make_piece("piece-external-lg", "selected-external-lg"),
+                            make_piece("piece-isolated-lg", "selected-isolated-lg"),
+                            make_piece("piece-external-ll", "selected-external-ll"),
+                            make_piece("neighbor-piece-l", "neighbor-l"),
+                            make_piece("neighbor-piece-g", "neighbor-g"),
+                            make_piece("neighbor-piece-l-a", "neighbor-l"),
+                            make_piece("neighbor-piece-l-b", "neighbor-l"),
+                        ],
+                        "connections": [
+                            make_connection("external-lg-l", "piece-external-lg", "selected-external-lg-connector-0", "neighbor-piece-l", "neighbor-l-connector-0"),
+                            make_connection("external-lg-g", "piece-external-lg", "selected-external-lg-connector-1", "neighbor-piece-g", "neighbor-g-connector-0"),
+                            make_connection("external-ll-a", "piece-external-ll", "selected-external-ll-connector-0", "neighbor-piece-l-a", "neighbor-l-connector-0"),
+                            make_connection("external-ll-b", "piece-external-ll", "selected-external-ll-connector-1", "neighbor-piece-l-b", "neighbor-l-connector-0"),
+                        ],
+                    },
+                    {
+                        "guid": "candidate-design-free-lg",
+                        "name": "candidate-design-free-lg",
+                        "pieces": [make_piece("candidate-design-free-piece", "candidate-lg")],
+                    },
+                    {
+                        "guid": "candidate-design-consumed-lg",
+                        "name": "candidate-design-consumed-lg",
+                        "pieces": [
+                            make_piece("candidate-design-consumed-a", "candidate-lg"),
+                            make_piece("candidate-design-consumed-b", "candidate-l"),
+                        ],
+                        "connections": [
+                            make_connection("candidate-design-consumed-link", "candidate-design-consumed-a", "candidate-lg-connector-0", "candidate-design-consumed-b", "candidate-l-connector-0"),
+                        ],
+                    },
+                ],
+            }
+
+            double_left_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, "root-design", ["piece-external-ll"])
+            double_left_type_guids = [type_dict["guid"] for type_dict in double_left_result["types"]]
+            assert "candidate-ll" in double_left_type_guids
+            assert "candidate-l" not in double_left_type_guids
+            assert "candidate-g" not in double_left_type_guids
+
+            left_and_gable_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, "root-design", ["piece-external-lg"])
+            left_and_gable_type_guids = [type_dict["guid"] for type_dict in left_and_gable_result["types"]]
+            left_and_gable_design_guids = [design_dict["guid"] for design_dict in left_and_gable_result["designs"]]
+            assert "candidate-lg" in left_and_gable_type_guids
+            assert "candidate-l" not in left_and_gable_type_guids
+            assert "candidate-design-free-lg" in left_and_gable_design_guids
+            assert "candidate-design-consumed-lg" not in left_and_gable_design_guids
+
+            isolated_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, "root-design", ["piece-isolated-lg"])
+            isolated_type_guids = [type_dict["guid"] for type_dict in isolated_result["types"]]
+            assert "candidate-lg" in isolated_type_guids
+            assert "candidate-l" not in isolated_type_guids
+
+            multiple_piece_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, "root-design", ["piece-external-lg", "piece-isolated-lg"])
+            multiple_piece_type_guids = [type_dict["guid"] for type_dict in multiple_piece_result["types"]]
+            assert "candidate-lg" in multiple_piece_type_guids
+            assert "candidate-l" not in multiple_piece_type_guids
+
+        def test_connector_level_boundary_matching_shrinks_candidates_as_demand_grows(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+            name_to_guid = {piece.get("name"): piece.get("guid") for piece in design.get("pieces", [])}
+            type_name_by_guid = {type_dict.get("guid"): type_dict.get("name") for type_dict in kit.get("types", [])}
+
+            def type_names_for_selection(piece_names: list[str]) -> list[str]:
+                piece_guids = [name_to_guid[piece_name] for piece_name in piece_names]
+                result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], piece_guids)
+                return [type_name_by_guid[type_dict["guid"]] for type_dict in result["types"]]
+
+            def unique_type_names_for_selection(piece_names: list[str]) -> list[str]:
+                return sorted(set(type_names_for_selection(piece_names)))
+
+            single_capsule_names = type_names_for_selection(["cs_sl2_d0_t_f9_b_c1"])
+            two_capsule_names = type_names_for_selection(["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"])
+            four_capsule_names = type_names_for_selection(["cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"])
+            eight_capsule_names = type_names_for_selection(["cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"])
+            tambour_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [name_to_guid["t_f9_b_c1"]])
+
+            assert len(single_capsule_names) > len(two_capsule_names)
+            assert len(two_capsule_names) >= len(four_capsule_names)
+            assert len(four_capsule_names) >= len(eight_capsule_names)
+
+            for forbidden_family in {"\\", "/", "q", "p", "J", "L", "s", "z"}:
+                assert forbidden_family not in two_capsule_names
+                assert forbidden_family not in four_capsule_names
+                assert forbidden_family not in eight_capsule_names
+
+            assert "Bridge" not in four_capsule_names
+            assert "Bridge" not in eight_capsule_names
+            assert unique_type_names_for_selection(["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"]) == [
+                "Bridge",
+                "Cylindric Tambour",
+                "First Storey",
+                "Last Storey",
+                "Single Storey",
+                "Tambour",
+            ]
+            assert unique_type_names_for_selection(["cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"]) == [
+                "Cylindric Tambour",
+                "First Storey",
+                "Last Storey",
+                "Single Storey",
+                "Tambour",
+            ]
+            assert unique_type_names_for_selection(["cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"]) == [
+                "Cylindric Tambour",
+                "First Storey",
+                "Last Storey",
+                "Single Storey",
+                "Tambour",
+            ]
+            assert [type_dict["guid"] for type_dict in tambour_result["types"]] == []
+            assert len(tambour_result["designs"]) == 3
+
+        def test_connected_piece_yields_only_exact_design_matches(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+            tambour_piece = next(p for p in design.get("pieces", []) if p.get("name") == "t_f1_b_c0")
+
+            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [tambour_piece["guid"]])
+            type_guids = [t["guid"] for t in result["types"]]
+            design_guids = [d["guid"] for d in result["designs"]]
+
+            assert type_guids == []
+            assert design_guids == [
+                "d7e12638-9749-471b-937e-a6e5523778ff",
+                "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+                "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
+            ]
+
+        def test_isolated_piece_with_no_connections_suggests_types_with_compatible_ports(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            flat_design = next(d for d in kit.get("designs", []) if d.get("name") == "Flat" and (d.get("parent") or {}).get("guid") == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
+            piece = flat_design["pieces"][0]
+
+            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, flat_design["guid"], [piece["guid"]])
+            type_guids = [t["guid"] for t in result["types"]]
+
+            assert len(type_guids) > 0
+            if piece.get("type", {}).get("guid"):
+                assert piece["type"]["guid"] in type_guids
+
+        def test_capital_piece_with_single_connection(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+            capital_type = next(t for t in kit.get("types", []) if t.get("name") == "Capital")
+            capital_piece = next(p for p in design.get("pieces", []) if (p.get("type") or {}).get("guid") == capital_type["guid"])
+
+            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [capital_piece["guid"]])
+            type_guids = [t["guid"] for t in result["types"]]
+
+            assert len(type_guids) > 0
+            assert capital_type["guid"] not in type_guids
+            capsule_type = next(t for t in kit.get("types", []) if t.get("name") == "Capsule")
+            assert capsule_type["guid"] not in type_guids
+
+        def test_multiple_selected_pieces_yield_only_exact_design_matches(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+            t1 = next(p for p in design.get("pieces", []) if p.get("name") == "t_f1_b_c0")
+            t2 = next(p for p in design.get("pieces", []) if p.get("name") == "t_f2_b_c0")
+
+            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [t1["guid"], t2["guid"]])
+            type_guids = [t["guid"] for t in result["types"]]
+            design_guids = [d["guid"] for d in result["designs"]]
+
+            assert type_guids == []
+            assert design_guids == [
+                "d7e12638-9749-471b-937e-a6e5523778ff",
+                "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+                "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
+            ]
+
+        def test_returns_empty_when_no_pieces_selected(self):
+            kit = _test_load_json("metabolism.kit.semio.json")
+            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
+
+            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [])
+            type_guids = [t["guid"] for t in result["types"]]
+
+            no_connector_types = [t for t in kit.get("types", []) if len(t.get("connectors") or []) == 0]
+            assert len(type_guids) == len(no_connector_types)
+
+
+# #endregion 🔍Find Replaceable Types In Designs Tests
 
 
 class TestDesignQualitySum:

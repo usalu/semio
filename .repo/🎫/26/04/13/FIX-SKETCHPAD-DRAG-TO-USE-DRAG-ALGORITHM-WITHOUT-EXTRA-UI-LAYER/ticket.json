@@ -1,0 +1,14 @@
+{
+  "title": "Fix Sketchpad Drag to Use Drag Algorithm Without Extra UI Layer",
+  "status": "closed",
+  "description": "Sketchpad drag should use the drag algorithm directly without adding an extra UI layer on top. The drag behavior in sketchpad must match the behavior in the storybook algorithms drag story.",
+  "summary": "Fixed three bugs in sketchpad onNodeDragStop to match the storybook nativeDragPieces algorithm: (1) Removed 'connections: []' — flatDesign now preserves actual design connections, allowing dragPiecesInDesign to correctly classify pieces as fixed vs connected. (2) Added updateConnections call — connection diff updates are dispatched to the store. (3) Re-flatten after applying diff via applyDesignDiff + piecesMetadata instead of using descCenter + offset, which was wrong due to non-linear flattenDesign scaling. Updated test to verify descendants move after re-flatten.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1317"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪636bd43fe4b04ebbaef97dadb7fd6162",
+    "⚪6ab79ba4a84a4995bdbb67c8c23832fe"
+  ]
+}

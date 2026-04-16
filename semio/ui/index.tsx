@@ -16,27 +16,27 @@ import { Grid } from "@react-three/drei/core/Grid.js";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
 import { Canvas as ThreeCanvas, useFrame, useThree } from "@react-three/fiber";
 import {
-    applyDesignDiff,
-    designWithDiff,
-    DiffStatus,
-    flattenDesign,
-    planeToMatrix,
-    selectBestModel,
-    toThreeRotation,
-    type Attribute,
-    type Camera,
-    type Connection,
-    type Connector,
-    type Coord,
-    type Design,
-    type DesignDiff,
-    type Kit,
-    type MoveVector,
-    type Piece,
-    type Plane,
-    type File as SemioFile,
-    type Type as SemioKind,
-    type Vector as SemioVector,
+  applyDesignDiff,
+  designWithDiff,
+  DiffStatus,
+  flattenDesign,
+  planeToMatrix,
+  selectBestModel,
+  toThreeRotation,
+  type Attribute,
+  type Camera,
+  type Connection,
+  type Connector,
+  type Coord,
+  type Design,
+  type DesignDiff,
+  type Kit,
+  type MoveVector,
+  type Piece,
+  type Plane,
+  type File as SemioFile,
+  type Type as SemioKind,
+  type Vector as SemioVector,
 } from "@semio/js";
 import * as React from "react";
 import * as THREE from "three";
@@ -999,14 +999,7 @@ export const SemioKit: React.FC<KitProps> = ({
               border: "1px solid var(--border, rgba(0,0,0,0.12))",
             }}
           >
-            <SemioDesign
-              design={artifactDesign}
-              kit={kit}
-              title={artifactDesign.name ?? focusedNode.label}
-              selectionEnabled={false}
-              splitLayout="always"
-              onPieceDoubleClick={onKitPieceDoubleClick}
-            />
+            <SemioDesign design={artifactDesign} kit={kit} title={artifactDesign.name ?? focusedNode.label} selectionEnabled={false} splitLayout="always" onPieceDoubleClick={onKitPieceDoubleClick} />
           </div>
         ) : null}
 
@@ -1326,11 +1319,7 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
   const merged = designDiff ? designWithDiff(design, designDiff) : design;
   const layoutGeometry = designDiff ? applyDesignDiff(design, designDiff) : design;
   const layoutCenters = centersFromLayoutDiff(layoutDiff);
-  const geometryCentersByGuid = new Map(
-    (layoutGeometry.pieces ?? [])
-      .filter((p): p is Piece & { guid: string } => typeof p.guid === "string" && p.guid.length > 0)
-      .map((p) => [p.guid, p.center] as const),
-  );
+  const geometryCentersByGuid = new Map((layoutGeometry.pieces ?? []).filter((p): p is Piece & { guid: string } => typeof p.guid === "string" && p.guid.length > 0).map((p) => [p.guid, p.center] as const));
 
   const pointMap = new Map<string, DiagramPoint>();
   (merged.pieces ?? []).forEach((piece) => {
@@ -1351,6 +1340,20 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(connection.attributes) : "default";
     lineMap.set(connection.guid, { guid: connection.guid, connection, source, target, status });
   });
+
+  // One-hop propagation: a connection whose endpoint piece has non-default status becomes "modified".
+  // This does NOT cascade back from connections to pieces — only pieces propagate to connections.
+  if (designDiff) {
+    for (const line of lineMap.values()) {
+      if (line.status === "default") {
+        const src = pointMap.get(line.connection.connected.piece.guid);
+        const tgt = pointMap.get(line.connection.connecting.piece.guid);
+        if ((src && src.status !== "default") || (tgt && tgt.status !== "default")) {
+          (line as { status: DiagramEntityStatus }).status = "modified";
+        }
+      }
+    }
+  }
 
   const lines = Array.from(lineMap.values());
 
@@ -1457,18 +1460,14 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   const effectivePieceSelectionEnabled = effectiveSelectionEnabled && pieceSelectionEnabled;
   const effectiveConnectionSelectionEnabled = effectiveSelectionEnabled && connectionSelectionEnabled;
   const effectiveHoverEnabled = hoverEnabled ?? true;
-  const effectivePieceHoverEnabled =
-    effectiveHoverEnabled && pieceHoverEnabled && (effectivePieceSelectionEnabled || !!onPieceClick || !!onPieceDoubleClick);
+  const effectivePieceHoverEnabled = effectiveHoverEnabled && pieceHoverEnabled && (effectivePieceSelectionEnabled || !!onPieceClick || !!onPieceDoubleClick);
   const effectiveConnectionHoverEnabled = effectiveHoverEnabled && connectionHoverEnabled && (effectiveConnectionSelectionEnabled || !!onConnectionClick);
   const resolvedDesignDiff = useResolvedValue(designDiff, defaultDesignDiff);
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeSelection(defaultSelection), onSelectionChange);
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeHover(defaultHover), onHoverChange);
   const [resolvedPan, setResolvedPan, isPanControlled] = useInteractiveControllableValue(pan, defaultPan ?? { x: 0, y: 0 }, onPanChange);
   const [resolvedZoom, setResolvedZoom, isZoomControlled] = useInteractiveControllableValue(zoom, defaultZoom ?? DEFAULT_DIAGRAM_ZOOM, onZoomChange);
-  const snapshot = React.useMemo(
-    () => buildDiagramSnapshot(design, padding, effectiveDiffEnabled ? resolvedDesignDiff : undefined, layoutDiff),
-    [design, effectiveDiffEnabled, layoutDiff, padding, resolvedDesignDiff],
-  );
+  const snapshot = React.useMemo(() => buildDiagramSnapshot(design, padding, effectiveDiffEnabled ? resolvedDesignDiff : undefined, layoutDiff), [design, effectiveDiffEnabled, layoutDiff, padding, resolvedDesignDiff]);
   const selectedPieceGuids = React.useMemo(() => new Set(effectiveSelectionEnabled ? (resolvedSelection.pieceGuids ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.pieceGuids]);
   const selectedConnectionGuids = React.useMemo(() => new Set(effectiveSelectionEnabled ? (resolvedSelection.connectionGuids ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.connectionGuids]);
   const hoveredPieceGuid = effectivePieceHoverEnabled ? (resolvedHover.pieceGuid ?? null) : null;
@@ -2389,14 +2388,7 @@ export interface MoveVectorInputProps {
   className?: string;
 }
 
-export const MoveVectorInput: React.FC<MoveVectorInputProps> = ({
-  id,
-  value,
-  min = { gap: -10, shift: -10, rise: -10 },
-  max = { gap: 10, shift: 10, rise: 10 },
-  onChange,
-  className = "",
-}) => (
+export const MoveVectorInput: React.FC<MoveVectorInputProps> = ({ id, value, min = { gap: -10, shift: -10, rise: -10 }, max = { gap: 10, shift: 10, rise: 10 }, onChange, className = "" }) => (
   <Vector
     id={id}
     vector={{ x: value.shift, y: value.gap, z: value.rise }}
@@ -2458,6 +2450,11 @@ interface SceneConnectionAsset {
   status: DiagramEntityStatus;
 }
 
+interface SceneGizmoViewportPlacement {
+  alignment: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  margin: [number, number];
+}
+
 interface SceneSnapshot {
   pieces: ScenePieceAsset[];
   connections: SceneConnectionAsset[];
@@ -2485,6 +2482,15 @@ const isSceneGltfSource = (source?: string, modelName?: string): boolean => {
   return loweredName.endsWith(".glb") || loweredName.endsWith(".gltf") || loweredSource.endsWith(".glb") || loweredSource.endsWith(".gltf");
 };
 
+export const resolveSceneGizmoViewportPlacement = (viewport: { width: number; height: number }): SceneGizmoViewportPlacement => {
+  const clampHorizontalMargin = (width: number): number => Math.min(56, Math.max(26, Math.floor(width / 5)));
+  const clampVerticalMargin = (height: number): number => Math.min(40, Math.max(18, Math.floor(height / 7)));
+  return {
+    alignment: "bottom-right",
+    margin: [clampHorizontalMargin(viewport.width), clampVerticalMargin(viewport.height)],
+  };
+};
+
 const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: DiagramEntityStatus }>): ScenePieceAsset[] => {
   const kindsByGuid = new Map((kit.types ?? []).map((kind) => [kind.guid, kind] as const));
   const filesByGuid = new Map((kit.files ?? []).map((file) => [file.guid, file] as const));
@@ -2493,7 +2499,7 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
     const kindGuid = piece.type?.guid;
     let kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
     if (!kind && piece.type?.name) {
-      kind = kit.types?.find((t) => t.name === piece.type!.name);
+      kind = kit.types?.find((candidateKind) => candidateKind.name === piece.type!.name);
     }
     let file: SemioFile | undefined;
     let selectedModel = kind?.models?.length ? selectBestModel(kind.models, []) : undefined;
@@ -2544,11 +2550,18 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
     connectionMap.set(connection.guid, { connection, sourcePiece, targetPiece, status });
   });
 
-  for (const { connection, status } of connectionMap.values()) {
-    if (status === "default") continue;
-    const childGuid = connection.connecting.piece.guid;
-    const asset = pieceMap.get(childGuid);
-    if (asset && asset.status === "default") asset.status = "modified";
+  // One-hop propagation: a modified connection colors its child (connecting) piece.
+  // This does NOT cascade back from pieces to connections — only connections propagate to child pieces.
+  if (designDiff) {
+    for (const connAsset of connectionMap.values()) {
+      if (connAsset.status !== "default") {
+        const childGuid = connAsset.connection.connecting.piece.guid;
+        const childAsset = pieceMap.get(childGuid);
+        if (childAsset && childAsset.status === "default") {
+          childAsset.status = "modified";
+        }
+      }
+    }
   }
 
   return {
@@ -2989,9 +3002,10 @@ interface SceneGizmoProps {
 }
 
 const SceneGizmo: React.FC<SceneGizmoProps> = ({ show, onAxisClick }) => {
+  const { size } = useThree();
   const [colors, setColors] = React.useState<[string, string, string]>(() => [getSceneComputedColor("--accent") || "#ef4444", getSceneComputedColor("--accent-tertiary") || "#22c55e", getSceneComputedColor("--accent-secondary") || "#3b82f6"]);
+  const placement = React.useMemo(() => resolveSceneGizmoViewportPlacement(size), [size]);
   // GizmoViewport axis box uses boxGeometry args [length, thickness, thickness]; uniform scale yields a chunky cube.
-  const margin = React.useMemo(() => [80, 80] as [number, number], []);
   const axisScale = React.useMemo(() => [0.88, 0.036, 0.036] as [number, number, number], []);
   const labelColor = React.useMemo(() => getSceneComputedColor("--foreground") || "#111827", []);
 
@@ -3005,7 +3019,7 @@ const SceneGizmo: React.FC<SceneGizmoProps> = ({ show, onAxisClick }) => {
 
   if (!show) return null;
   return (
-    <GizmoHelper alignment="bottom-right" margin={margin}>
+    <GizmoHelper alignment={placement.alignment} margin={placement.margin}>
       <GizmoViewport
         labels={["X", "Z", "-Y"]}
         axisColors={colors}
@@ -3110,8 +3124,7 @@ const SceneAutoFit: React.FC<{ zoomTarget: ZoomTarget; snapshot: SceneSnapshot }
   const bounds = useBounds();
   const fittedRef = React.useRef(false);
   const snapshotKey = React.useMemo(
-    () =>
-      `${zoomTarget}|${snapshot.pieces.map((a) => `${a.piece.guid}:${a.status}`).join(";")}|c:${snapshot.connections.length}|p:${snapshot.pieces.length}`,
+    () => `${zoomTarget}|${snapshot.pieces.map((a) => `${a.piece.guid}:${a.status}`).join(";")}|c:${snapshot.connections.length}|p:${snapshot.pieces.length}`,
     [snapshot.connections.length, snapshot.pieces, zoomTarget],
   );
   React.useEffect(() => {
@@ -3247,8 +3260,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
 
   const effectivePieceSelectionEnabled = selectionEnabled && pieceSelectionEnabled;
   const effectiveConnectionSelectionEnabled = selectionEnabled && connectionSelectionEnabled;
-  const effectivePieceHoverEnabled =
-    hoverEnabled && pieceHoverEnabled && (effectivePieceSelectionEnabled || !!onPieceClick || !!onPieceDoubleClick);
+  const effectivePieceHoverEnabled = hoverEnabled && pieceHoverEnabled && (effectivePieceSelectionEnabled || !!onPieceClick || !!onPieceDoubleClick);
   const effectiveConnectionHoverEnabled = hoverEnabled && connectionHoverEnabled && (effectiveConnectionSelectionEnabled || !!onConnectionClick);
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeSelection(defaultSelection), onSelectionChange);
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeHover(defaultHover), onHoverChange);
@@ -3349,7 +3361,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
             onAxisClick={onProjectionChange ? handleAxisClick : undefined}
             onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}
           >
-            <SceneSelectionBoundsFromModels selectedConnectionGuids={selectedConnectionGuids} selectedPieceGuids={selectedPieceGuids} selectionEnabled={selectionEnabled} />
+            <SceneSelectionBoundsFromModels selectedConnectionGuids={selectedConnectionGuids} selectedPieceGuids={selectedPieceGuids} />
             {snapshot.connections.map(({ connection, sourcePiece, targetPiece, status }) => (
               <SceneConnection
                 key={connection.guid}
@@ -4176,10 +4188,8 @@ const mergeRichestDesignFromCandidates = (candidates: Array<McpDiagramPayload | 
     }
   }
   /** Prefer the richest `kitArtifacts` among candidates (hint channel may omit kit while another carries the full artifact tree). */
-  let bestKitArtifacts: KitData | undefined =
-    merged.kitArtifacts && !isEmptyKitArtifactsData(merged.kitArtifacts) ? merged.kitArtifacts : undefined;
-  let bestKitScore =
-    bestKitArtifacts !== undefined ? scoreMcpDiagramPayload({ points: [], lines: [], kitArtifacts: bestKitArtifacts }) : -1;
+  let bestKitArtifacts: KitData | undefined = merged.kitArtifacts && !isEmptyKitArtifactsData(merged.kitArtifacts) ? merged.kitArtifacts : undefined;
+  let bestKitScore = bestKitArtifacts !== undefined ? scoreMcpDiagramPayload({ points: [], lines: [], kitArtifacts: bestKitArtifacts }) : -1;
   for (const c of candidates) {
     if (!c?.kitArtifacts || isEmptyKitArtifactsData(c.kitArtifacts)) continue;
     const sc = scoreMcpDiagramPayload({ points: [], lines: [], kitArtifacts: c.kitArtifacts });
@@ -5762,7 +5772,7 @@ if (import.meta.vitest) {
         points: [],
         lines: [],
         capabilities: {},
-        kitArtifacts: { name: "MergedKit", designs: [{ guid: "d1", name: "D", variant: "", view: "" }], types: [], ports: [], connectors: [] },
+        kitArtifacts: { name: "MergedKit", designs: [{ guid: "d1", name: "D" }], types: [], ports: [], connectors: [] },
       };
       const merged = mergeRichestDesignFromCandidates([diagramHeavy, withKit], diagramHeavy);
       expect(merged?.kitArtifacts?.name).toBe("MergedKit");
@@ -6331,6 +6341,25 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("scene helpers", () => {
+    it("keeps the gizmo in the bottom-right corner with a larger inset so it stays visible", () => {
+      expect(resolveSceneGizmoViewportPlacement({ width: 1280, height: 720 })).toEqual({
+        alignment: "bottom-right",
+        margin: [56, 40],
+      });
+
+      expect(resolveSceneGizmoViewportPlacement({ width: 120, height: 160 })).toEqual({
+        alignment: "bottom-right",
+        margin: [26, 22],
+      });
+
+      expect(resolveSceneGizmoViewportPlacement({ width: 40, height: 48 })).toEqual({
+        alignment: "bottom-right",
+        margin: [26, 18],
+      });
+    });
+  });
+
   describe("buildSceneSnapshot", () => {
     it("includes piece and connection statuses for flattened scene rendering", () => {
       const pieceA = {
@@ -6398,7 +6427,7 @@ if (import.meta.vitest) {
       ]);
     });
 
-    it("keeps existing scene pieces when the next diff version has no plane and only promotes changed connection children to modified", () => {
+    it("keeps existing scene pieces when the next diff version has no plane and propagates connection status to child", () => {
       const pieceA = {
         guid: "piece-a",
         type: { guid: "kind-1" },
@@ -6447,7 +6476,7 @@ if (import.meta.vitest) {
       expect(snapshot.connections.map((asset) => [asset.connection.guid, asset.status])).toEqual([["connection-a", "modified"]]);
     });
 
-    it("keeps a reparented child piece in the scene when only its parent connection is updated", () => {
+    it("propagates modified to child endpoint of a reparented connection", () => {
       const pieceA = {
         guid: "piece-a",
         type: { guid: "kind-1" },
@@ -6534,7 +6563,7 @@ if (import.meta.vitest) {
   });
 
   describe("buildDiagramSnapshot with diff", () => {
-    it("annotates updated pieces as modified and other pieces as default", () => {
+    it("annotates updated pieces as modified and propagates piece status to connections (one-hop)", () => {
       const design = {
         guid: "d",
         pieces: [
@@ -6558,6 +6587,7 @@ if (import.meta.vitest) {
 
       const pieceStatuses = new Map(snapshot.points.map((p) => [p.guid, p.status]));
       expect(pieceStatuses.get("piece-a")).toBe("modified");
+      // piece-b is NOT in the diff → stays default (no connection→piece cascade)
       expect(pieceStatuses.get("piece-b")).toBe("default");
       expect(pieceStatuses.get("piece-c")).toBe("default");
 
@@ -6566,13 +6596,87 @@ if (import.meta.vitest) {
       expect(pieceA.u).toBe(1);
       expect(pieceA.v).toBe(2);
 
-      // Unchanged pieces stay at original positions
+      // piece-b is not in the diff itself, stays at original center
       const pieceB = snapshot.points.find((p) => p.guid === "piece-b")!;
       expect(pieceB.u).toBe(5);
       expect(pieceB.v).toBe(3);
 
       const connectionStatuses = new Map(snapshot.lines.map((l) => [l.guid, l.status]));
+      // conn-ab is explicitly modified from diff + piece-a is modified → stays modified
       expect(connectionStatuses.get("conn-ab")).toBe("modified");
+    });
+
+    it("propagates piece status one-hop to adjacent connections only (no multi-hop cascade)", () => {
+      const design = {
+        guid: "d",
+        pieces: [
+          { guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece,
+          { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece,
+          { guid: "piece-c", type: { guid: "k" }, plane: testPlane, center: { u: 10, v: 0 } } as unknown as Piece,
+        ],
+        connections: [
+          { guid: "conn-ab", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection,
+          { guid: "conn-bc", connected: { piece: { guid: "piece-b" } }, connecting: { piece: { guid: "piece-c" } } } as unknown as Connection,
+        ],
+      } as unknown as Design;
+
+      const diff: DesignDiff = {
+        pieces: {
+          updated: [{ piece: { guid: "piece-a" }, diff: { center: { u: 1, v: 2 } } }],
+        },
+      } as unknown as DesignDiff;
+
+      const snapshot = buildDiagramSnapshot(design, 12, diff);
+
+      const pieceStatuses = new Map(snapshot.points.map((p) => [p.guid, p.status]));
+      // piece-a explicitly modified
+      expect(pieceStatuses.get("piece-a")).toBe("modified");
+      // piece-b and piece-c are NOT in the diff → stay default (no connection→piece cascade)
+      expect(pieceStatuses.get("piece-b")).toBe("default");
+      expect(pieceStatuses.get("piece-c")).toBe("default");
+
+      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.guid, l.status]));
+      // conn-ab: piece-a is modified → conn-ab becomes modified (piece→connection one-hop)
+      expect(connectionStatuses.get("conn-ab")).toBe("modified");
+      // conn-bc: neither piece-b nor piece-c is non-default → conn-bc stays default
+      expect(connectionStatuses.get("conn-bc")).toBe("default");
+    });
+
+    it("propagates status to connections when endpoint piece is added or removed", () => {
+      const design = {
+        guid: "d",
+        pieces: [{ guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece],
+        connections: [
+          { guid: "conn-ab", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection,
+          { guid: "conn-ac", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-c" } } } as unknown as Connection,
+        ],
+      } as unknown as Design;
+
+      const diff: DesignDiff = {
+        pieces: {
+          removed: [{ guid: "piece-b" } as unknown as Piece],
+          added: [{ guid: "piece-c", type: { guid: "k" }, plane: testPlane, center: { u: 8, v: 1 } } as unknown as Piece],
+        },
+      } as unknown as DesignDiff;
+
+      const snapshot = buildDiagramSnapshot(design, 12, diff);
+
+      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.guid, l.status]));
+      expect(connectionStatuses.get("conn-ab")).toBe("modified");
+      expect(connectionStatuses.get("conn-ac")).toBe("modified");
+    });
+
+    it("does not propagate status when diff is absent", () => {
+      const design = {
+        guid: "d",
+        pieces: [{ guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece],
+        connections: [{ guid: "conn-ab", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection],
+      } as unknown as Design;
+
+      const snapshot = buildDiagramSnapshot(design, 12, undefined);
+
+      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.guid, l.status]));
+      expect(connectionStatuses.get("conn-ab")).toBe("default");
     });
 
     it("annotates added pieces as added and removed pieces as removed", () => {
@@ -6595,6 +6699,46 @@ if (import.meta.vitest) {
       expect(pieceStatuses.get("piece-a")).toBe("default");
       expect(pieceStatuses.get("piece-b")).toBe("removed");
       expect(pieceStatuses.get("piece-c")).toBe("added");
+    });
+
+    it("connection-only diff colors only the explicit connection (no cascade to pieces or child connections)", () => {
+      // Simulates dragging a connected piece: only the parent connection is in the diff.
+      // Only conn-ab should be modified. No cascade to pieces or downstream connections.
+      const design = {
+        guid: "d",
+        pieces: [
+          { guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece,
+          { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece,
+          { guid: "piece-c", type: { guid: "k" }, plane: testPlane, center: { u: 10, v: 0 } } as unknown as Piece,
+          { guid: "piece-d", type: { guid: "k" }, plane: testPlane, center: { u: 15, v: 0 } } as unknown as Piece,
+        ],
+        connections: [
+          { guid: "conn-ab", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection,
+          { guid: "conn-bc", connected: { piece: { guid: "piece-b" } }, connecting: { piece: { guid: "piece-c" } } } as unknown as Connection,
+        ],
+      } as unknown as Design;
+
+      // Only the connection is in the diff (like dragPiecesInDesign for a connected piece)
+      const diff: DesignDiff = {
+        connections: {
+          updated: [{ connection: { guid: "conn-ab" }, diff: { u: 2, v: 1 } }],
+        },
+      } as unknown as DesignDiff;
+
+      const snapshot = buildDiagramSnapshot(design, 12, diff);
+
+      const pieceStatuses = new Map(snapshot.points.map((p) => [p.guid, p.status]));
+      // No pieces are in the diff → all stay default (no connection→piece cascade)
+      expect(pieceStatuses.get("piece-a")).toBe("default");
+      expect(pieceStatuses.get("piece-b")).toBe("default");
+      expect(pieceStatuses.get("piece-c")).toBe("default");
+      expect(pieceStatuses.get("piece-d")).toBe("default");
+
+      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.guid, l.status]));
+      // conn-ab explicitly modified from diff
+      expect(connectionStatuses.get("conn-ab")).toBe("modified");
+      // conn-bc has no non-default endpoint pieces → stays default
+      expect(connectionStatuses.get("conn-bc")).toBe("default");
     });
   });
 
@@ -6781,22 +6925,22 @@ if (import.meta.vitest) {
 // Summary: Standardized algorithm IPO shell using typed WindowKind-based windows.
 
 import {
-    cn,
-    createDefaultLayout,
-    createWindowLayout,
-    TreeItem,
-    TreeRow,
-    TreeSection,
-    UI,
-    WindowKind,
-    type FooterItem,
-    type SidePanelTabConfig,
-    type TreeHeaderAction,
-    type UIAppConfig,
-    type UIWindowKindDefinition,
-    type UIWindowLayout,
-    type UIWindowLayoutAxisNode,
-    type UIWindowLayoutStackNode,
+  cn,
+  createDefaultLayout,
+  createWindowLayout,
+  TreeItem,
+  TreeRow,
+  TreeSection,
+  UI,
+  WindowKind,
+  type FooterItem,
+  type SidePanelTabConfig,
+  type TreeHeaderAction,
+  type UIAppConfig,
+  type UIWindowKindDefinition,
+  type UIWindowLayout,
+  type UIWindowLayoutAxisNode,
+  type UIWindowLayoutStackNode,
 } from "@elements/ui/elements";
 import { AlertCircleIcon, DetailsIcon, PieceIcon } from "@semio/assets/icons";
 
@@ -7061,12 +7205,7 @@ const buildAlgorithmDiffEntries = (design: Design | undefined, groupKind: Algori
         ? resolveAlgorithmPieceDiffLabel(design, changeKind === "updated" && item && typeof item === "object" && "piece" in item ? (item as { piece?: unknown }).piece : item, index)
         : resolveAlgorithmConnectionDiffLabel(design, changeKind === "updated" && item && typeof item === "object" && "connection" in item ? (item as { connection?: unknown }).connection : item, index);
     const id = buildAlgorithmDiffEntryId(groupKind, changeKind, guid);
-    const detail =
-      changeKind === "updated" && groupKind === "connections"
-        ? buildAlgorithmConnectionUpdateDiffDetail(item, id)
-        : changeKind === "updated" && groupKind === "pieces"
-          ? buildAlgorithmPieceUpdateDiffDetail(item, id)
-          : undefined;
+    const detail = changeKind === "updated" && groupKind === "connections" ? buildAlgorithmConnectionUpdateDiffDetail(item, id) : changeKind === "updated" && groupKind === "pieces" ? buildAlgorithmPieceUpdateDiffDetail(item, id) : undefined;
     return { id, label, checked: !uncheckedEntryIds.has(id), detail };
   });
   const checkedCount = entries.filter((entry) => entry.checked).length;
@@ -7166,23 +7305,9 @@ export interface AlgorithmWindowDef {
   component?: React.FC;
 }
 
-type AlgorithmWindowKind =
-  | WindowKind.VEC_INPUT
-  | WindowKind.VECTOR_INPUT
-  | WindowKind.PIECES_SELECTION_INPUT
-  | WindowKind.SELECTION_INPUT
-  | WindowKind.DESIGN_INPUT
-  | WindowKind.DESIGN_DIFF_OUTPUT
-  | WindowKind.DESIGN_OUTPUT
-  | WindowKind.SCENE;
+type AlgorithmWindowKind = WindowKind.VEC_INPUT | WindowKind.VECTOR_INPUT | WindowKind.PIECES_SELECTION_INPUT | WindowKind.SELECTION_INPUT | WindowKind.DESIGN_INPUT | WindowKind.DESIGN_DIFF_OUTPUT | WindowKind.DESIGN_OUTPUT | WindowKind.SCENE;
 
-type AlgorithmUiComponentId =
-  | "semio/ui:Vec"
-  | "semio/ui:MoveVectorInput"
-  | "semio/ui:PieceSelection"
-  | "semio/ui:DiagramSelection"
-  | "semio/ui:Diagram"
-  | "semio/ui:Scene";
+type AlgorithmUiComponentId = "semio/ui:Vec" | "semio/ui:MoveVectorInput" | "semio/ui:PieceSelection" | "semio/ui:DiagramSelection" | "semio/ui:Diagram" | "semio/ui:Scene";
 
 interface AlgorithmWindowBehavior {
   kind: AlgorithmWindowKind;
@@ -7454,13 +7579,7 @@ export function createAlgorithmWindowKinds(windows: AlgorithmWindowDef[]): UIWin
  * one for diff output, one for final design output. Matches the semio UI shell used in elements/UI stories.
  */
 export function createIpoAlgorithmLayout(windows: AlgorithmWindowDef[]): UIWindowLayout {
-  const inputKinds = new Set<WindowKind>([
-    WindowKind.VEC_INPUT,
-    WindowKind.VECTOR_INPUT,
-    WindowKind.PIECES_SELECTION_INPUT,
-    WindowKind.SELECTION_INPUT,
-    WindowKind.DESIGN_INPUT,
-  ]);
+  const inputKinds = new Set<WindowKind>([WindowKind.VEC_INPUT, WindowKind.VECTOR_INPUT, WindowKind.PIECES_SELECTION_INPUT, WindowKind.SELECTION_INPUT, WindowKind.DESIGN_INPUT]);
   const inputWindows = windows.filter((w) => inputKinds.has(w.kind));
   const diffWindow = windows.find((w) => w.kind === WindowKind.DESIGN_DIFF_OUTPUT);
   const outputWindow = windows.find((w) => w.kind === WindowKind.DESIGN_OUTPUT || w.kind === WindowKind.SCENE);

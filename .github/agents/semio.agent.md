@@ -27,6 +27,7 @@ tools:
     "search",
     "web/fetch",
     "todo",
+    "mcp/repo"
   ]
 ---
 

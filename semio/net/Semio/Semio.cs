@@ -11253,6 +11253,215 @@ public sealed class KitDiffValidationResult
 #endregion 📦Kit Diff Validation
 
 
+#region 🔍Find Replaceable Types In Designs
+// Find Replaceable Types In Designs MUST find all types and designs that can replace selected pieces in a design.
+// Specs: For each external connection, get ALL connector ports of the other piece's type, compute compatible port set, candidate must have connector in set for every connection.
+
+public partial class Kit
+{
+    /// <summary>
+    /// 🔍Finds all types and designs whose root type can replace the selected pieces in a design.
+    /// </summary>
+    /// <remarks>
+    /// Specs: Returns (typeGuids, designGuids). For connected pieces, checks port compatibility per external connection.
+    /// For isolated pieces, checks compatible port set from selected types' connectors.
+    /// </remarks>
+    public static (List<string> TypeGuids, List<string> DesignGuids) FindReplaceableTypesInDesignsForPiecesInDesign(
+        Kit kit, string designGuid, List<string> pieceGuids)
+    {
+        var design = kit.Designs?.FirstOrDefault(d => d.Guid == designGuid);
+        if (design == null) return (new List<string>(), new List<string>());
+
+        var ports = kit.Ports ?? new List<Port>();
+        var types = kit.Types ?? new List<Type>();
+        var designs = kit.Designs ?? new List<Design>();
+        var pieces = design.Pieces ?? new List<Piece>();
+        var connections = design.Connections ?? new List<Connection>();
+
+        var portsMap = ports.ToDictionary(p => p.Guid);
+        var typesMap = types.ToDictionary(t => t.Guid);
+        var pieceMap = pieces.ToDictionary(p => p.Guid);
+        var selectedSet = new HashSet<string>(pieceGuids);
+
+        bool ArePortsCompatible(string pg1, string pg2)
+        {
+            if (pg1 == pg2) return true;
+            if (!portsMap.TryGetValue(pg1, out var port1) || !portsMap.TryGetValue(pg2, out var port2))
+                return false;
+            if (port1.CompatiblePorts.Count == 0 && port2.CompatiblePorts.Count == 0)
+                return true;
+            if (port1.CompatiblePorts.Any(cp => cp.Guid == pg2))
+                return true;
+            if (port2.CompatiblePorts.Any(cp => cp.Guid == pg1))
+                return true;
+            return false;
+        }
+
+        HashSet<string> BuildCompatiblePortSet(Type typ)
+        {
+            var set = new HashSet<string>();
+            foreach (var connector in typ.Connectors)
+            {
+                var portGuid = connector.Port?.Guid;
+                if (string.IsNullOrEmpty(portGuid)) continue;
+                set.Add(portGuid);
+                if (portsMap.TryGetValue(portGuid, out var port))
+                {
+                    foreach (var ci in port.CompatiblePorts)
+                        set.Add(ci.Guid);
+                    foreach (var otherPort in ports)
+                    {
+                        if (otherPort.Guid == portGuid) continue;
+                        if (otherPort.CompatiblePorts.Any(ci => ci.Guid == portGuid))
+                            set.Add(otherPort.Guid);
+                    }
+                }
+                foreach (var p in ports)
+                {
+                    if (ArePortsCompatible(portGuid, p.Guid))
+                        set.Add(p.Guid);
+                }
+            }
+            return set;
+        }
+
+        bool HasConnectorInSet(List<Connector> connectors, HashSet<string> portSet)
+        {
+            return connectors.Any(c => c.Port?.Guid != null && portSet.Contains(c.Port.Guid));
+        }
+
+        // Find external connections
+        var externalConnections = connections.Where(conn =>
+        {
+            var connectedSelected = selectedSet.Contains(conn.Connected.Piece.Guid);
+            var connectingSelected = selectedSet.Contains(conn.Connecting.Piece.Guid);
+            return connectedSelected != connectingSelected;
+        }).ToList();
+
+        var hasConnections = externalConnections.Count > 0;
+        var typeGuids = new List<string>();
+        var designGuids = new List<string>();
+
+        if (hasConnections)
+        {
+            var perConnectionSets = new List<HashSet<string>>();
+            foreach (var conn in externalConnections)
+            {
+                var connectedSelected = selectedSet.Contains(conn.Connected.Piece.Guid);
+                var otherPieceGuid = connectedSelected
+                    ? conn.Connecting.Piece.Guid
+                    : conn.Connected.Piece.Guid;
+                if (!pieceMap.TryGetValue(otherPieceGuid, out var otherPiece)) continue;
+                var otherTypeGuid = otherPiece.Type?.Guid;
+                if (string.IsNullOrEmpty(otherTypeGuid)) continue;
+                if (!typesMap.TryGetValue(otherTypeGuid, out var otherType)) continue;
+                perConnectionSets.Add(BuildCompatiblePortSet(otherType));
+            }
+
+            foreach (var typ in types)
+            {
+                if (typ.Connectors.Count == 0) continue;
+                if (perConnectionSets.All(cs => HasConnectorInSet(typ.Connectors, cs)))
+                    typeGuids.Add(typ.Guid);
+            }
+
+            foreach (var d in designs)
+            {
+                var designConnectors = new List<Connector>();
+                foreach (var p in d.Pieces ?? new List<Piece>())
+                {
+                    if (p.Type == null || string.IsNullOrEmpty(p.Type.Guid))
+                        continue;
+                    if (typesMap.TryGetValue(p.Type.Guid, out var t))
+                        designConnectors.AddRange(t.Connectors);
+                }
+                if (designConnectors.Count == 0) continue;
+                if (perConnectionSets.All(cs => HasConnectorInSet(designConnectors, cs)))
+                    designGuids.Add(d.Guid);
+            }
+        }
+        else
+        {
+            var selectedPortGuids = new HashSet<string>();
+            foreach (var pg in selectedSet)
+            {
+                if (!pieceMap.TryGetValue(pg, out var piece)) continue;
+                var typeGuid = piece.Type?.Guid;
+                if (string.IsNullOrEmpty(typeGuid)) continue;
+                if (!typesMap.TryGetValue(typeGuid, out var typ)) continue;
+                foreach (var connector in typ.Connectors)
+                {
+                    if (connector.Port?.Guid != null)
+                        selectedPortGuids.Add(connector.Port.Guid);
+                }
+            }
+
+            if (selectedPortGuids.Count == 0)
+            {
+                foreach (var typ in types)
+                {
+                    if (typ.Connectors.Count == 0)
+                        typeGuids.Add(typ.Guid);
+                }
+
+                foreach (var d in designs)
+                {
+                    var designConnectors = new List<Connector>();
+                    foreach (var p in d.Pieces ?? new List<Piece>())
+                    {
+                        if (p.Type == null || string.IsNullOrEmpty(p.Type.Guid))
+                            continue;
+                        if (typesMap.TryGetValue(p.Type.Guid, out var t))
+                            designConnectors.AddRange(t.Connectors);
+                    }
+                    if (designConnectors.Count == 0)
+                        designGuids.Add(d.Guid);
+                }
+            }
+            else
+            {
+                var compatibleSet = new HashSet<string>();
+                foreach (var pg in selectedPortGuids)
+                {
+                    compatibleSet.Add(pg);
+                    foreach (var p in ports)
+                    {
+                        if (ArePortsCompatible(pg, p.Guid))
+                            compatibleSet.Add(p.Guid);
+                    }
+                }
+
+                foreach (var typ in types)
+                {
+                    if (typ.Connectors.Count == 0) continue;
+                    if (HasConnectorInSet(typ.Connectors, compatibleSet))
+                        typeGuids.Add(typ.Guid);
+                }
+                foreach (var d in designs)
+                {
+                    var designConnectors = new List<Connector>();
+                    foreach (var p in d.Pieces ?? new List<Piece>())
+                    {
+                        if (p.Type == null || string.IsNullOrEmpty(p.Type.Guid))
+                            continue;
+                        if (typesMap.TryGetValue(p.Type.Guid, out var t))
+                            designConnectors.AddRange(t.Connectors);
+                    }
+                    if (designConnectors.Count == 0)
+                        continue;
+                    if (HasConnectorInSet(designConnectors, compatibleSet))
+                        designGuids.Add(d.Guid);
+                }
+            }
+        }
+
+        return (typeGuids, designGuids);
+    }
+}
+
+#endregion 🔍Find Replaceable Types In Designs
+
+
 #region 🌤️Flatten Design
 // Callers MUST use FlattenDesign to compute a DesignDiff that assigns world-space planes to all pieces.
 
@@ -11556,7 +11765,6 @@ public partial class Kit
 }
 
 #endregion 🌤️Flatten Design
-
 
 #region 🔩Kit Model Export
 // Callers MUST use ExportDesignModel to produce a valid 3D file from a design.
@@ -12455,6 +12663,7 @@ public static class ZipRoundtrip
 
     private static Kit LoadKitFromSqlite(string dbPath)
     {
+        SqliteRuntime.EnsureInitialized();
         using var connection = new SqliteConnection($"Data Source={dbPath}");
         connection.Open();
 
@@ -12573,6 +12782,7 @@ public static class ZipRoundtrip
 
     private static void SaveKitToSqlite(Kit kit, string dbPath, string schemaSQL)
     {
+        SqliteRuntime.EnsureInitialized();
         using var connection = new SqliteConnection($"Data Source={dbPath}");
         connection.Open();
 
@@ -12652,6 +12862,18 @@ public static class ZipRoundtrip
 #region 🔓KitSqlite
 // Callers MUST use KitSqlite for direct CRUD operations on local static SQLite kit databases.
 
+/// <summary>🗄️Initializes the bundled SQLite runtime before Microsoft.Data.Sqlite touches native handles.</summary>
+public static class SqliteRuntime
+{
+    private static int initialized;
+
+    public static void EnsureInitialized()
+    {
+        if (System.Threading.Interlocked.Exchange(ref initialized, 1) == 1) return;
+        SQLitePCL.Batteries_V2.Init();
+    }
+}
+
 /// <summary>🗄️Direct CRUD operations on local SQLite kit databases (.semio/kit.db).</summary>
 public static class KitSqlite
 {
@@ -12703,6 +12925,7 @@ public static class KitSqlite
 
     private static SqliteConnection OpenConnection(string dbPath)
     {
+        SqliteRuntime.EnsureInitialized();
         var connection = new SqliteConnection($"Data Source={dbPath}");
         connection.Open();
         using var pragma = connection.CreateCommand();

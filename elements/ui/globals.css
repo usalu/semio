@@ -5,7 +5,9 @@
 @import "golden-layout/dist/css/themes/goldenlayout-dark-theme.css";
 @plugin "@tailwindcss/typography";
 
-#navbar {
+#navbar,
+#semio\.sketchpad\.navbar,
+[data-slot="navbar"] {
   position: relative !important;
   z-index: var(--z-base) !important;
   pointer-events: auto !important;
@@ -17,12 +19,28 @@
 #navbar [role="link"],
 #navbar input,
 #navbar select,
-#navbar textarea {
+#navbar textarea,
+#semio\.sketchpad\.navbar button,
+#semio\.sketchpad\.navbar [role="button"],
+#semio\.sketchpad\.navbar a,
+#semio\.sketchpad\.navbar [role="link"],
+#semio\.sketchpad\.navbar input,
+#semio\.sketchpad\.navbar select,
+#semio\.sketchpad\.navbar textarea,
+[data-slot="navbar"] button,
+[data-slot="navbar"] [role="button"],
+[data-slot="navbar"] a,
+[data-slot="navbar"] [role="link"],
+[data-slot="navbar"] input,
+[data-slot="navbar"] select,
+[data-slot="navbar"] textarea {
   pointer-events: auto !important;
   -webkit-app-region: no-drag !important;
 }
 
-#navbar {
+#navbar,
+#semio\.sketchpad\.navbar,
+[data-slot="navbar"] {
   -webkit-app-region: drag !important;
 }
 
@@ -538,6 +556,11 @@
     }
 
     .react-flow__node:not(.cursor-pointer):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text) {
+      cursor: var(--cursor-selectable) !important;
+    }
+
+    .react-flow__node:has([data-kit-node]),
+    .react-flow__node:has([data-kit-node]) * {
       cursor: var(--cursor-selectable) !important;
     }
 
@@ -1185,29 +1208,29 @@
   }
 }
 
-.fullscreen #navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  transform: translateY(-100%);
-  transition: transform 0.2s ease-in-out;
-  z-index: var(--z-modal);
+.fullscreen #navbar,
+.fullscreen #semio\.sketchpad\.navbar,
+.fullscreen [data-slot="navbar"] {
+  position: relative;
+  transform: translateY(0);
+  transition: none;
+  z-index: var(--z-navbar);
 }
 
 .fullscreen #navbar:hover,
-.fullscreen #navbar:focus-within {
+.fullscreen #navbar:focus-within,
+.fullscreen #semio\.sketchpad\.navbar:hover,
+.fullscreen #semio\.sketchpad\.navbar:focus-within,
+.fullscreen [data-slot="navbar"]:hover,
+.fullscreen [data-slot="navbar"]:focus-within {
   transform: translateY(0);
 }
 
 .fullscreen #footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  transform: translateY(100%);
-  transition: transform 0.2s ease-in-out;
-  z-index: var(--z-modal);
+  position: relative;
+  transform: translateY(0);
+  transition: none;
+  z-index: var(--z-footer);
 }
 
 .fullscreen #footer:hover,
@@ -1216,12 +1239,16 @@
 }
 
 .fullscreen:has(#navbar:hover) #navbar,
+.fullscreen:has(#semio\.sketchpad\.navbar:hover) #semio\.sketchpad\.navbar,
+.fullscreen:has([data-slot="navbar"]:hover) [data-slot="navbar"],
 .fullscreen:has(#footer:hover) #footer {
   transform: translateY(0);
 }
 
 @media (pointer: coarse) {
   .fullscreen #navbar,
+  .fullscreen #semio\.sketchpad\.navbar,
+  .fullscreen [data-slot="navbar"],
   .fullscreen #footer {
     transition: none;
   }

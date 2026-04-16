@@ -42,13 +42,19 @@ export default defineConfig(async () => {
   // 📥normal import fails in electron due to esm stuff
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
+  const viteInternalFallback = path.resolve(__dirname, "../../../node_modules/vite/dist/node/index.js");
   return {
     resolve: {
-      alias: {
-        "@semio/js": path.resolve(__dirname, "../../js"),
-        "@semio/sketchpad": path.resolve(__dirname, "../../sketchpad"),
-        "@semio/assets": path.resolve(__dirname, "../../assets"),
-      },
+      alias: [
+        { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },
+        { find: "@semio/ui", replacement: path.resolve(__dirname, "../../ui") },
+        { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../../sketchpad") },
+        { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },
+        { find: "@semio/assets", replacement: path.resolve(__dirname, "../../assets") },
+        { find: /^@elements\/ui\/elements$/, replacement: path.resolve(__dirname, "../../../elements/ui/index.tsx") },
+        { find: /^@elements\/ui$/, replacement: path.resolve(__dirname, "../../../elements/ui/index.tsx") },
+        { find: "vite/internal", replacement: viteInternalFallback },
+      ],
     },
     plugins: [
       tailwind.default(),

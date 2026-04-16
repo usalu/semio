@@ -37,10 +37,10 @@ function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
     enforce: "pre",
     resolveId(id) {
       const n = id.replace(/\\/g, "/");
-      if (n.includes("use-sync-external-store/shim/with-selector")) {
+      if (n === "use-sync-external-store/shim/with-selector" || n === "use-sync-external-store/shim/with-selector.js") {
         return opts.shimWithSelector;
       }
-      if (n.includes("use-sync-external-store/shim")) {
+      if (n === "use-sync-external-store/shim" || n === "use-sync-external-store/shim.js") {
         return opts.shimMain;
       }
       if (n === "scheduler" || (n.includes("scheduler/index.js") && !n.includes("/cjs/scheduler."))) {
@@ -97,19 +97,23 @@ export default defineConfig(async ({ mode }) => {
   const shimWithSelector = path.join(useSyncRoot, "use-sync-external-store-shim", prod ? "with-selector.production.js" : "with-selector.development.js");
   const schedulerRoot = path.resolve(__dirname, "../../node_modules/scheduler/cjs");
   const schedulerEntry = path.join(schedulerRoot, prod ? "scheduler.production.js" : "scheduler.development.js");
+  const viteInternalFallback = path.resolve(__dirname, "../../node_modules/vite/dist/node/index.js");
   return {
     resolve: {
       dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
-      alias: {
-        "@semio/js": path.resolve(__dirname, "../js"),
-        "@semio/sketchpad": path.resolve(__dirname),
-        "@semio/assets": path.resolve(__dirname, "../assets"),
-        "use-sync-external-store/shim/with-selector.js": shimWithSelector,
-        "use-sync-external-store/shim/with-selector": shimWithSelector,
-        "use-sync-external-store/shim.js": shimMain,
-        "use-sync-external-store/shim": shimMain,
-        scheduler: schedulerEntry,
-      },
+      alias: [
+        { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
+        { find: "@semio/ui", replacement: path.resolve(__dirname, "../ui") },
+        { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
+        { find: "@semio/studio", replacement: path.resolve(__dirname, "../studio") },
+        { find: "@semio/assets", replacement: path.resolve(__dirname, "../assets") },
+        { find: /^@elements\/ui\/elements$/, replacement: path.resolve(__dirname, "../../elements/ui/index.tsx") },
+        { find: /^@elements\/ui$/, replacement: path.resolve(__dirname, "../../elements/ui/index.tsx") },
+        { find: /^use-sync-external-store\/shim\/with-selector(?:\.js)?$/, replacement: shimWithSelector },
+        { find: /^use-sync-external-store\/shim(?:\.js)?$/, replacement: shimMain },
+        { find: "scheduler", replacement: schedulerEntry },
+        { find: "vite/internal", replacement: viteInternalFallback },
+      ],
     },
     plugins: [
       reactCjsFacadeResolvePlugin({ shimMain, shimWithSelector, schedulerEntry }),

@@ -10742,6 +10742,277 @@ func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
 
 // #endregion 🌊Kit Change Helpers
 
+// #region 🔍Find Replaceable Types In Designs
+// Find Replaceable Types In Designs MUST suggest replaceable types and designs for selected pieces.
+// Specs: Looks at pieces in the selection and finds all connections attached to them.
+// If connections found: looks at the types of the connected (other) pieces and finds all connectors
+// within those types. Gets the ports of these connectors and finds all compatible ports.
+// Suggests types that have connectors with compatible ports.
+// Only suggests if a replaceable type/design exists for every connection.
+// If no connections found: suggests types with same or compatible ports as the selected pieces.
+
+// FindReplaceableTypesInDesignsForPiecesInDesign finds replaceable types and designs for the selected pieces.
+func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Design, types []Type, ports []Port, selectionPieces []string) (typeGuids []string, designGuids []string) {
+	selectedPieceSet := make(map[string]bool)
+	for _, pg := range selectionPieces {
+		selectedPieceSet[pg] = true
+	}
+
+	pieceMap := make(map[string]Piece)
+	for _, piece := range design.Pieces {
+		pieceMap[piece.Guid] = piece
+	}
+
+	portMap := make(map[string]Port)
+	for _, p := range ports {
+		portMap[p.Guid] = p
+	}
+
+	typeMap := make(map[string]Type)
+	for _, t := range types {
+		typeMap[t.Guid] = t
+	}
+
+	checkPortCompatibility := func(candidatePortGuid, requiredPortGuid string) bool {
+		if candidatePortGuid == "" || requiredPortGuid == "" {
+			return false
+		}
+		if candidatePortGuid == requiredPortGuid {
+			return true
+		}
+		candidatePort, okCandidate := portMap[candidatePortGuid]
+		requiredPort, okRequired := portMap[requiredPortGuid]
+		if !okCandidate || !okRequired {
+			return false
+		}
+		for _, compatiblePort := range candidatePort.CompatiblePorts {
+			if compatiblePort.Guid == requiredPortGuid {
+				return true
+			}
+		}
+		for _, compatiblePort := range requiredPort.CompatiblePorts {
+			if compatiblePort.Guid == candidatePortGuid {
+				return true
+			}
+		}
+		return false
+	}
+
+	getConnectorPortGuid := func(typeGuid, connectorGuid string) string {
+		if typeGuid == "" || connectorGuid == "" {
+			return ""
+		}
+		candidateType, ok := typeMap[typeGuid]
+		if !ok {
+			return ""
+		}
+		for _, connector := range candidateType.Connectors {
+			if connector.Guid == connectorGuid {
+				if connector.Port != nil {
+					return connector.Port.Guid
+				}
+				return ""
+			}
+		}
+		return ""
+	}
+
+	getOwnRequirementPortGuids := func(pieceGuid string) []string {
+		piece, ok := pieceMap[pieceGuid]
+		if !ok || piece.Type == nil || piece.Type.Guid == "" {
+			return []string{}
+		}
+		candidateType, ok := typeMap[piece.Type.Guid]
+		if !ok {
+			return []string{}
+		}
+		requirementPortGuids := make([]string, 0, len(candidateType.Connectors))
+		for _, connector := range candidateType.Connectors {
+			if connector.Port != nil {
+				requirementPortGuids = append(requirementPortGuids, connector.Port.Guid)
+			} else {
+				requirementPortGuids = append(requirementPortGuids, "")
+			}
+		}
+		return requirementPortGuids
+	}
+
+	getBoundaryRequirementPortGuids := func() []string {
+		requirementPortGuids := []string{}
+		for _, conn := range design.Connections {
+			connectedSelected := selectedPieceSet[conn.Connected.Piece.Guid]
+			connectingSelected := selectedPieceSet[conn.Connecting.Piece.Guid]
+			if connectedSelected == connectingSelected {
+				continue
+			}
+
+			otherSide := conn.Connected
+			if connectedSelected {
+				otherSide = conn.Connecting
+			}
+			otherPiece, ok := pieceMap[otherSide.Piece.Guid]
+			if !ok || otherPiece.Type == nil {
+				requirementPortGuids = append(requirementPortGuids, "")
+				continue
+			}
+			connectorGuid := ""
+			if otherSide.Connector != nil {
+				connectorGuid = otherSide.Connector.Guid
+			}
+			requirementPortGuids = append(requirementPortGuids, getConnectorPortGuid(otherPiece.Type.Guid, connectorGuid))
+		}
+		return requirementPortGuids
+	}
+
+	getSelectionOwnRequirementPortGuids := func() []string {
+		requirementPortGuids := []string{}
+		for _, pieceGuid := range selectionPieces {
+			requirementPortGuids = append(requirementPortGuids, getOwnRequirementPortGuids(pieceGuid)...)
+		}
+		return requirementPortGuids
+	}
+
+	requiredPortGuids := getBoundaryRequirementPortGuids()
+	if len(requiredPortGuids) == 0 {
+		requiredPortGuids = getSelectionOwnRequirementPortGuids()
+	}
+
+	canSatisfyRequirements := func(requiredPortGuids []string, availablePortGuids []string) bool {
+		if len(requiredPortGuids) == 0 {
+			return true
+		}
+		if len(availablePortGuids) < len(requiredPortGuids) {
+			return false
+		}
+
+		type requirementOption struct {
+			connectorIndexes []int
+		}
+
+		requirementOptions := make([]requirementOption, 0, len(requiredPortGuids))
+		for _, requiredPortGuid := range requiredPortGuids {
+			connectorIndexes := []int{}
+			for connectorIndex, availablePortGuid := range availablePortGuids {
+				if checkPortCompatibility(availablePortGuid, requiredPortGuid) {
+					connectorIndexes = append(connectorIndexes, connectorIndex)
+				}
+			}
+			if len(connectorIndexes) == 0 {
+				return false
+			}
+			requirementOptions = append(requirementOptions, requirementOption{connectorIndexes: connectorIndexes})
+		}
+		sort.Slice(requirementOptions, func(i, j int) bool {
+			return len(requirementOptions[i].connectorIndexes) < len(requirementOptions[j].connectorIndexes)
+		})
+
+		usedConnectorIndexes := make([]bool, len(availablePortGuids))
+		var matchRequirements func(int) bool
+		matchRequirements = func(requirementIndex int) bool {
+			if requirementIndex >= len(requirementOptions) {
+				return true
+			}
+			for _, connectorIndex := range requirementOptions[requirementIndex].connectorIndexes {
+				if usedConnectorIndexes[connectorIndex] {
+					continue
+				}
+				usedConnectorIndexes[connectorIndex] = true
+				if matchRequirements(requirementIndex + 1) {
+					return true
+				}
+				usedConnectorIndexes[connectorIndex] = false
+			}
+			return false
+		}
+		return matchRequirements(0)
+	}
+
+	candidateTypeAvailablePortGuids := func(candidateType Type) []string {
+		availablePortGuids := make([]string, 0, len(candidateType.Connectors))
+		for _, connector := range candidateType.Connectors {
+			if connector.Port != nil {
+				availablePortGuids = append(availablePortGuids, connector.Port.Guid)
+			} else {
+				availablePortGuids = append(availablePortGuids, "")
+			}
+		}
+		return availablePortGuids
+	}
+
+	candidateDesignAvailablePortGuids := func(candidateDesign Design) []string {
+		consumedConnectorKeys := make(map[string]bool)
+		for _, conn := range candidateDesign.Connections {
+			for _, side := range []Side{conn.Connected, conn.Connecting} {
+				if side.Connector != nil && side.Connector.Guid != "" {
+					consumedConnectorKeys[side.Piece.Guid+"::"+side.Connector.Guid] = true
+				}
+			}
+		}
+
+		availablePortGuids := []string{}
+		for _, piece := range candidateDesign.Pieces {
+			if piece.Type == nil || piece.Type.Guid == "" {
+				continue
+			}
+			candidateType, ok := typeMap[piece.Type.Guid]
+			if !ok {
+				continue
+			}
+			for _, connector := range candidateType.Connectors {
+				if consumedConnectorKeys[piece.Guid+"::"+connector.Guid] {
+					continue
+				}
+				if connector.Port != nil {
+					availablePortGuids = append(availablePortGuids, connector.Port.Guid)
+				} else {
+					availablePortGuids = append(availablePortGuids, "")
+				}
+			}
+		}
+		return availablePortGuids
+	}
+
+	if len(selectionPieces) == 0 {
+		for _, candidateType := range types {
+			if len(candidateTypeAvailablePortGuids(candidateType)) == 0 {
+				typeGuids = append(typeGuids, candidateType.Guid)
+			}
+		}
+		for _, candidateDesign := range designs {
+			if len(candidateDesignAvailablePortGuids(candidateDesign)) == 0 {
+				designGuids = append(designGuids, candidateDesign.Guid)
+			}
+		}
+		return typeGuids, designGuids
+	}
+
+	isValidCandidate := func(availablePortGuids []string) bool {
+		return canSatisfyRequirements(requiredPortGuids, availablePortGuids)
+	}
+
+	for _, candidateType := range types {
+		if isValidCandidate(candidateTypeAvailablePortGuids(candidateType)) {
+			typeGuids = append(typeGuids, candidateType.Guid)
+		}
+	}
+
+	for _, candidateDesign := range designs {
+		if isValidCandidate(candidateDesignAvailablePortGuids(candidateDesign)) {
+			designGuids = append(designGuids, candidateDesign.Guid)
+		}
+	}
+
+	if typeGuids == nil {
+		typeGuids = []string{}
+	}
+	if designGuids == nil {
+		designGuids = []string{}
+	}
+	return typeGuids, designGuids
+}
+
+// #endregion 🔍Find Replaceable Types In Designs
+
 // #region 📋Copy Paste Design
 // Copy Paste Design MUST provide copy and paste functionality for designs.
 // Specs: CopyDesign extracts selected pieces and connections from a design. PasteDesign inserts them into a target design.
@@ -13184,6 +13455,10 @@ func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector
 			Connection: ConnectionId{Guid: parent.connectionGuid},
 			Diff:       connDiff,
 		})
+		if vector.Rise != 0 {
+			r := vector.Rise
+			connectionUpdates[len(connectionUpdates)-1].Diff.Rise = &r
+		}
 	}
 	diff := DesignDiff{}
 	if len(pieceUpdates) > 0 {

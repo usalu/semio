@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -940,6 +941,497 @@ func TestMove(t *testing.T) {
 		}
 	})
 }
+
+// #region 🔍Find Replaceable Types In Designs Tests
+func TestFindReplaceableTypesInDesigns(t *testing.T) {
+	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
+		t.Run("Connected piece yields only exact design matches", func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, "metabolism.kit.semio.json", &kit)
+
+			var design *Design
+			for i := range kit.Designs {
+				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
+					design = &kit.Designs[i]
+					break
+				}
+			}
+			if design == nil {
+				t.Fatal("Design 'Nakagin Capsule Tower' not found")
+			}
+
+			var tambourPiece *Piece
+			for i := range design.Pieces {
+				n := design.Pieces[i].Name
+				if n != nil && *n == "t_f1_b_c0" {
+					tambourPiece = &design.Pieces[i]
+					break
+				}
+			}
+			if tambourPiece == nil {
+				t.Fatal("Tambour piece 't_f1_b_c0' not found")
+			}
+
+			typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{tambourPiece.Guid})
+
+			expectedDesignGuids := []string{
+				"d7e12638-9749-471b-937e-a6e5523778ff",
+				"019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+				"019ab4e0-8da8-7217-946f-5b5a83aca0e3",
+			}
+			if len(typeGuids) != 0 {
+				t.Fatalf("Expected no replaceable types, got %#v", typeGuids)
+			}
+			if !reflect.DeepEqual(designGuids, expectedDesignGuids) {
+				t.Fatalf("Design guids mismatch:\n got: %#v\nwant: %#v", designGuids, expectedDesignGuids)
+			}
+		})
+
+		t.Run("Isolated piece with no connections suggests types with compatible ports", func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, "metabolism.kit.semio.json", &kit)
+
+			var flatDesign *Design
+			for i := range kit.Designs {
+				if kit.Designs[i].Name == "Flat" && kit.Designs[i].Parent != nil && kit.Designs[i].Parent.Guid == "9a890dd4-0a9c-48ac-920a-9e62666465ef" {
+					flatDesign = &kit.Designs[i]
+					break
+				}
+			}
+			if flatDesign == nil {
+				t.Fatal("Flat design not found")
+			}
+			if len(flatDesign.Pieces) == 0 {
+				t.Fatal("Flat design has no pieces")
+			}
+
+			piece := flatDesign.Pieces[0]
+			typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*flatDesign, kit.Designs, kit.Types, kit.Ports, []string{piece.Guid})
+
+			if len(typeGuids) == 0 {
+				t.Error("Expected at least one replaceable type")
+			}
+
+			if piece.Type != nil && piece.Type.Guid != "" {
+				found := false
+				for _, tg := range typeGuids {
+					if tg == piece.Type.Guid {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Error("Expected piece's own type to be in results")
+				}
+			}
+		})
+
+		t.Run("Capital piece with single connection", func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, "metabolism.kit.semio.json", &kit)
+
+			var design *Design
+			for i := range kit.Designs {
+				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
+					design = &kit.Designs[i]
+					break
+				}
+			}
+			if design == nil {
+				t.Fatal("Design not found")
+			}
+
+			var capitalTypeGuid string
+			for _, tp := range kit.Types {
+				if tp.Name == "Capital" {
+					capitalTypeGuid = tp.Guid
+					break
+				}
+			}
+
+			var capitalPiece *Piece
+			for i := range design.Pieces {
+				if design.Pieces[i].Type != nil && design.Pieces[i].Type.Guid == capitalTypeGuid {
+					capitalPiece = &design.Pieces[i]
+					break
+				}
+			}
+			if capitalPiece == nil {
+				t.Fatal("Capital piece not found")
+			}
+
+			typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{capitalPiece.Guid})
+
+			if len(typeGuids) == 0 {
+				t.Error("Expected at least one replaceable type")
+			}
+
+			// Capital uses roof rectangular top, Last Storey uses roof circular bottom (incompatible)
+			for _, tg := range typeGuids {
+				if tg == capitalTypeGuid {
+					t.Error("Capital type should NOT be in results (incompatible port shapes)")
+				}
+			}
+
+			// Capsule should NOT be in results
+			var capsuleGuid string
+			for _, tp := range kit.Types {
+				if tp.Name == "Capsule" {
+					capsuleGuid = tp.Guid
+					break
+				}
+			}
+			for _, tg := range typeGuids {
+				if tg == capsuleGuid {
+					t.Error("Capsule type should not be in results")
+				}
+			}
+		})
+
+		t.Run("Multiple selected pieces yield only exact design matches", func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, "metabolism.kit.semio.json", &kit)
+
+			var design *Design
+			for i := range kit.Designs {
+				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
+					design = &kit.Designs[i]
+					break
+				}
+			}
+			if design == nil {
+				t.Fatal("Design not found")
+			}
+
+			var t1, t2 *Piece
+			for i := range design.Pieces {
+				n := design.Pieces[i].Name
+				if n != nil {
+					if *n == "t_f1_b_c0" {
+						t1 = &design.Pieces[i]
+					} else if *n == "t_f2_b_c0" {
+						t2 = &design.Pieces[i]
+					}
+				}
+			}
+			if t1 == nil || t2 == nil {
+				t.Fatal("Tambour pieces not found")
+			}
+
+			typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{t1.Guid, t2.Guid})
+
+			expectedDesignGuids := []string{
+				"d7e12638-9749-471b-937e-a6e5523778ff",
+				"019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+				"019ab4e0-8da8-7217-946f-5b5a83aca0e3",
+			}
+			if len(typeGuids) != 0 {
+				t.Fatalf("Expected no replaceable types, got %#v", typeGuids)
+			}
+			if !reflect.DeepEqual(designGuids, expectedDesignGuids) {
+				t.Fatalf("Design guids mismatch:\n got: %#v\nwant: %#v", designGuids, expectedDesignGuids)
+			}
+		})
+
+		t.Run("Synthetic selection enforces distinct compatible connectors and ignores consumed design connectors", func(t *testing.T) {
+			makeConnector := func(guid, portGuid string) Connector {
+				return Connector{
+					Guid:      guid,
+					T:         0,
+					Point:     Point{},
+					Direction: Vector{X: 1},
+					Port:      &PortId{Guid: portGuid},
+				}
+			}
+			makeType := func(guid string, connectorPortGuids []string) Type {
+				connectors := make([]Connector, 0, len(connectorPortGuids))
+				for connectorIndex, connectorPortGuid := range connectorPortGuids {
+					connectors = append(connectors, makeConnector(guid+"-connector-"+strconv.Itoa(connectorIndex), connectorPortGuid))
+				}
+				return Type{Guid: guid, Name: guid, Connectors: connectors}
+			}
+			makePiece := func(guid, typeGuid string) Piece {
+				return Piece{Guid: guid, Type: &TypeId{Guid: typeGuid}}
+			}
+			makeConnection := func(guid, connectedPieceGuid, connectedConnectorGuid, connectingPieceGuid, connectingConnectorGuid string) Connection {
+				return Connection{
+					Guid: guid,
+					Connected: Side{
+						Piece:     PieceId{Guid: connectedPieceGuid},
+						Connector: &ConnectorId{Guid: connectedConnectorGuid},
+					},
+					Connecting: Side{
+						Piece:     PieceId{Guid: connectingPieceGuid},
+						Connector: &ConnectorId{Guid: connectingConnectorGuid},
+					},
+				}
+			}
+			containsGuid := func(guids []string, expectedGuid string) bool {
+				for _, guid := range guids {
+					if guid == expectedGuid {
+						return true
+					}
+				}
+				return false
+			}
+
+			ports := []Port{
+				{Guid: "port-L", CompatiblePorts: []PortId{{Guid: "port-L-compatible"}}},
+				{Guid: "port-L-compatible", CompatiblePorts: []PortId{{Guid: "port-L"}}},
+				{Guid: "port-G"},
+			}
+			types := []Type{
+				makeType("selected-external-lg", []string{}),
+				makeType("selected-isolated-lg", []string{"port-L", "port-G"}),
+				makeType("selected-external-ll", []string{}),
+				makeType("neighbor-l", []string{"port-L"}),
+				makeType("neighbor-g", []string{"port-G"}),
+				makeType("candidate-l", []string{"port-L"}),
+				makeType("candidate-lg", []string{"port-L-compatible", "port-G"}),
+				makeType("candidate-lg-lg", []string{"port-L-compatible", "port-G", "port-L", "port-G"}),
+				makeType("candidate-ll", []string{"port-L", "port-L-compatible"}),
+				makeType("candidate-g", []string{"port-G"}),
+			}
+			designs := []Design{
+				{
+					Guid:   "candidate-design-free-lg",
+					Name:   "candidate-design-free-lg",
+					Pieces: []Piece{makePiece("candidate-design-free-piece", "candidate-lg")},
+				},
+				{
+					Guid: "candidate-design-consumed-lg",
+					Name: "candidate-design-consumed-lg",
+					Pieces: []Piece{
+						makePiece("candidate-design-consumed-a", "candidate-lg"),
+						makePiece("candidate-design-consumed-b", "candidate-l"),
+					},
+					Connections: []Connection{
+						makeConnection(
+							"candidate-design-consumed-link",
+							"candidate-design-consumed-a",
+							"candidate-lg-connector-0",
+							"candidate-design-consumed-b",
+							"candidate-l-connector-0",
+						),
+					},
+				},
+			}
+			design := Design{
+				Guid: "root-design",
+				Name: "root-design",
+				Pieces: []Piece{
+					makePiece("piece-external-lg", "selected-external-lg"),
+					makePiece("piece-isolated-lg", "selected-isolated-lg"),
+					makePiece("piece-external-ll", "selected-external-ll"),
+					makePiece("neighbor-piece-l", "neighbor-l"),
+					makePiece("neighbor-piece-g", "neighbor-g"),
+					makePiece("neighbor-piece-l-a", "neighbor-l"),
+					makePiece("neighbor-piece-l-b", "neighbor-l"),
+				},
+				Connections: []Connection{
+					makeConnection("external-lg-l", "piece-external-lg", "selected-external-lg-connector-0", "neighbor-piece-l", "neighbor-l-connector-0"),
+					makeConnection("external-lg-g", "piece-external-lg", "selected-external-lg-connector-1", "neighbor-piece-g", "neighbor-g-connector-0"),
+					makeConnection("external-ll-a", "piece-external-ll", "selected-external-ll-connector-0", "neighbor-piece-l-a", "neighbor-l-connector-0"),
+					makeConnection("external-ll-b", "piece-external-ll", "selected-external-ll-connector-1", "neighbor-piece-l-b", "neighbor-l-connector-0"),
+				},
+			}
+
+			doubleLeftTypeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-external-ll"})
+			if !containsGuid(doubleLeftTypeGuids, "candidate-ll") {
+				t.Fatal("Expected candidate-ll to satisfy two left-port requirements")
+			}
+			if containsGuid(doubleLeftTypeGuids, "candidate-l") {
+				t.Fatal("candidate-l should not satisfy two left-port requirements with one connector")
+			}
+			if containsGuid(doubleLeftTypeGuids, "candidate-g") {
+				t.Fatal("candidate-g should not satisfy left-port requirements")
+			}
+
+			leftAndGableTypeGuids, leftAndGableDesignGuids := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-external-lg"})
+			if !containsGuid(leftAndGableTypeGuids, "candidate-lg") {
+				t.Fatal("Expected candidate-lg to satisfy left-and-gable requirements")
+			}
+			if containsGuid(leftAndGableTypeGuids, "candidate-l") {
+				t.Fatal("candidate-l should not satisfy left-and-gable requirements")
+			}
+			if !containsGuid(leftAndGableDesignGuids, "candidate-design-free-lg") {
+				t.Fatal("Expected free design connectors to be available")
+			}
+			if containsGuid(leftAndGableDesignGuids, "candidate-design-consumed-lg") {
+				t.Fatal("Design should not expose internally consumed connectors")
+			}
+
+			isolatedTypeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-isolated-lg"})
+			if !containsGuid(isolatedTypeGuids, "candidate-lg") {
+				t.Fatal("Expected candidate-lg to satisfy isolated piece connector demands")
+			}
+			if containsGuid(isolatedTypeGuids, "candidate-l") {
+				t.Fatal("candidate-l should not satisfy both isolated piece connector demands")
+			}
+
+			multiplePieceTypeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, []string{"piece-external-lg", "piece-isolated-lg"})
+			if !containsGuid(multiplePieceTypeGuids, "candidate-lg") {
+				t.Fatal("Expected candidate-lg to satisfy the selection boundary requirements")
+			}
+			if containsGuid(multiplePieceTypeGuids, "candidate-l") {
+				t.Fatal("candidate-l should fail when any selected piece is unsatisfied")
+			}
+		})
+
+		t.Run("Connector-level boundary matching shrinks candidates as demand grows", func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, "metabolism.kit.semio.json", &kit)
+
+			var design *Design
+			for i := range kit.Designs {
+				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
+					design = &kit.Designs[i]
+					break
+				}
+			}
+			if design == nil {
+				t.Fatal("Design not found")
+			}
+
+			nameToGuid := map[string]string{}
+			typeNameByGuid := map[string]string{}
+			for _, piece := range design.Pieces {
+				if piece.Name != nil {
+					nameToGuid[*piece.Name] = piece.Guid
+				}
+			}
+			for _, kind := range kit.Types {
+				typeNameByGuid[kind.Guid] = kind.Name
+			}
+			typeNamesForSelection := func(pieceNames []string) []string {
+				pieceGuids := make([]string, 0, len(pieceNames))
+				for _, pieceName := range pieceNames {
+					pieceGuid, ok := nameToGuid[pieceName]
+					if !ok {
+						t.Fatalf("Piece %q not found", pieceName)
+					}
+					pieceGuids = append(pieceGuids, pieceGuid)
+				}
+				typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, pieceGuids)
+				typeNames := make([]string, 0, len(typeGuids))
+				for _, typeGuid := range typeGuids {
+					typeNames = append(typeNames, typeNameByGuid[typeGuid])
+				}
+				return typeNames
+			}
+			uniqueTypeNamesForSelection := func(pieceNames []string) []string {
+				seen := map[string]bool{}
+				typeNames := typeNamesForSelection(pieceNames)
+				unique := make([]string, 0, len(typeNames))
+				for _, typeName := range typeNames {
+					if seen[typeName] {
+						continue
+					}
+					seen[typeName] = true
+					unique = append(unique, typeName)
+				}
+				sort.Strings(unique)
+				return unique
+			}
+			containsName := func(typeNames []string, expectedName string) bool {
+				for _, typeName := range typeNames {
+					if typeName == expectedName {
+						return true
+					}
+				}
+				return false
+			}
+
+			singleCapsuleNames := typeNamesForSelection([]string{"cs_sl2_d0_t_f9_b_c1"})
+			twoCapsuleNames := typeNamesForSelection([]string{"cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"})
+			fourCapsuleNames := typeNamesForSelection([]string{"cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"})
+			eightCapsuleNames := typeNamesForSelection([]string{"cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"})
+			tambourPieceGuid, ok := nameToGuid["t_f9_b_c1"]
+			if !ok {
+				t.Fatal("Tambour piece t_f9_b_c1 not found")
+			}
+			tambourTypeGuids, tambourDesignGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{tambourPieceGuid})
+
+			if len(singleCapsuleNames) <= len(twoCapsuleNames) {
+				t.Fatalf("Expected single capsule result to be larger than two capsules, got %d <= %d", len(singleCapsuleNames), len(twoCapsuleNames))
+			}
+			if len(twoCapsuleNames) < len(fourCapsuleNames) {
+				t.Fatalf("Expected two capsules result to be at least as large as four capsules, got %d < %d", len(twoCapsuleNames), len(fourCapsuleNames))
+			}
+			if len(fourCapsuleNames) < len(eightCapsuleNames) {
+				t.Fatalf("Expected four capsules result to be at least as large as eight capsules, got %d < %d", len(fourCapsuleNames), len(eightCapsuleNames))
+			}
+
+			for _, forbiddenFamily := range []string{"\\", "/", "q", "p", "J", "L", "s", "z"} {
+				if containsName(twoCapsuleNames, forbiddenFamily) {
+					t.Fatalf("Forbidden single-connector family %q survived two-capsule selection", forbiddenFamily)
+				}
+				if containsName(fourCapsuleNames, forbiddenFamily) {
+					t.Fatalf("Forbidden single-connector family %q survived four-capsule selection", forbiddenFamily)
+				}
+				if containsName(eightCapsuleNames, forbiddenFamily) {
+					t.Fatalf("Forbidden single-connector family %q survived eight-capsule selection", forbiddenFamily)
+				}
+			}
+			if containsName(fourCapsuleNames, "Bridge") {
+				t.Fatal("Bridge should not survive four-capsule selection")
+			}
+			if containsName(eightCapsuleNames, "Bridge") {
+				t.Fatal("Bridge should not survive eight-capsule selection")
+			}
+
+			expectedTwoCapsuleFamilies := []string{"Bridge", "Cylindric Tambour", "First Storey", "Last Storey", "Single Storey", "Tambour"}
+			expectedLargeFamilies := []string{"Cylindric Tambour", "First Storey", "Last Storey", "Single Storey", "Tambour"}
+			if !reflect.DeepEqual(uniqueTypeNamesForSelection([]string{"cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"}), expectedTwoCapsuleFamilies) {
+				t.Fatalf("Unexpected two-capsule families: %#v", uniqueTypeNamesForSelection([]string{"cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"}))
+			}
+			if !reflect.DeepEqual(uniqueTypeNamesForSelection([]string{"cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"}), expectedLargeFamilies) {
+				t.Fatalf("Unexpected four-capsule families: %#v", uniqueTypeNamesForSelection([]string{"cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"}))
+			}
+			if !reflect.DeepEqual(uniqueTypeNamesForSelection([]string{"cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"}), expectedLargeFamilies) {
+				t.Fatalf("Unexpected eight-capsule families: %#v", uniqueTypeNamesForSelection([]string{"cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"}))
+			}
+			if len(tambourTypeGuids) != 0 {
+				t.Fatalf("Expected no compatible types for tambour selection, got %#v", tambourTypeGuids)
+			}
+			if len(tambourDesignGuids) != 3 {
+				t.Fatalf("Expected exactly 3 compatible designs for tambour selection, got %#v", tambourDesignGuids)
+			}
+		})
+
+		t.Run("Returns empty when no pieces selected", func(t *testing.T) {
+			var kit Kit
+			loadJSON(t, "metabolism.kit.semio.json", &kit)
+
+			var design *Design
+			for i := range kit.Designs {
+				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
+					design = &kit.Designs[i]
+					break
+				}
+			}
+			if design == nil {
+				t.Fatal("Design not found")
+			}
+
+			typeGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{})
+
+			// Count types with no connectors
+			noConnectorCount := 0
+			for _, tp := range kit.Types {
+				if len(tp.Connectors) == 0 {
+					noConnectorCount++
+				}
+			}
+
+			if len(typeGuids) != noConnectorCount {
+				t.Errorf("Expected %d types with no connectors, got %d", noConnectorCount, len(typeGuids))
+			}
+		})
+	})
+}
+
+// #endregion 🔍Find Replaceable Types In Designs Tests
 
 func TestCopyAndPaste(t *testing.T) {
 	t.Run("Nakagin Capsule Tower", func(t *testing.T) {

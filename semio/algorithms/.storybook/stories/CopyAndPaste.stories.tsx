@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/CopyAndPaste.stories.tsx
-// Specs: Pure UI proxy to nativeFlatDesign + nativeCopyDesign + nativePasteDesign. No domain logic. All designs include connections.
-// Summary: Flat source/target designs via nativeFlatDesign; copy/paste via native adapters; output via applyDesignDiff.
+// Specs: Copy/paste proxies through native adapters and the native copy/paste selectors.
+// Summary: Copy/paste Storybook shells with native adapters, source selection, and diff/output previews.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 

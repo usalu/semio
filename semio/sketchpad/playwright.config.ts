@@ -15,6 +15,7 @@
 // type stripping, Vite import.meta.glob stubs, and JSON imports without type attributes.
 
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 const __dirname = resolve(fileURLToPath(import.meta.url), "..");
@@ -28,7 +29,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4181";
 const repoRoot = resolve(__dirname, "..", "..");
-const crossEnvBin = resolve(repoRoot, "node_modules/cross-env/dist/bin/cross-env.js");
+const crossEnvBinCandidates = [resolve(repoRoot, "node_modules/cross-env/dist/bin/cross-env.js"), resolve(repoRoot, "node_modules/cross-env/src/bin/cross-env.js")];
+const crossEnvBin = crossEnvBinCandidates.find((candidate) => existsSync(candidate)) ?? crossEnvBinCandidates[crossEnvBinCandidates.length - 1];
 const viteBin = resolve(repoRoot, "node_modules/vite/bin/vite.js");
 const previewHost = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
 

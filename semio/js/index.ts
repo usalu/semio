@@ -6802,6 +6802,135 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
   return diff;
 };
 
+/**
+ * Finds replaceable types and designs for the selected pieces in a design.
+ * Specs: A candidate is valid only when the whole selection boundary requirement multiset can be
+ * injectively matched to distinct compatible candidate connectors. Boundary requirements use the
+ * actual opposite-side connector ports, isolated selections use the selected pieces' own kind
+ * connectors with multiplicity, and candidate designs only expose connectors not already consumed by
+ * internal design connections.
+ **/
+export const findReplaceableTypesInDesignsForPiecesInDesign = (design: Design, designs: Design[], types: Type[], ports: Port[], selection: { pieces: string[] }): { types: string[]; designs: string[] } => {
+  const selectedPieceSet = new Set(selection.pieces);
+  const pieces = design.pieces ?? [];
+  const connections = design.connections ?? [];
+
+  const pieceMap = new Map<string, Piece>();
+  for (const piece of pieces) pieceMap.set(piece.guid, piece);
+
+  const portMap = new Map<string, Port>();
+  for (const p of ports) portMap.set(p.guid, p);
+
+  const typeMap = new Map<string, Type>();
+  for (const t of types) typeMap.set(t.guid, t);
+
+  const checkPortCompatibility = (candidatePortGuid: string, requiredPortGuid: string): boolean => {
+    if (!candidatePortGuid || !requiredPortGuid) return false;
+    if (candidatePortGuid === requiredPortGuid) return true;
+    const candidatePort = portMap.get(candidatePortGuid);
+    const requiredPort = portMap.get(requiredPortGuid);
+    if (!candidatePort || !requiredPort) return false;
+    return (candidatePort.compatiblePorts ?? []).some((compatiblePort) => compatiblePort.guid === requiredPortGuid) || (requiredPort.compatiblePorts ?? []).some((compatiblePort) => compatiblePort.guid === candidatePortGuid);
+  };
+
+  const getConnectorPortGuid = (typeGuid: string | undefined, connectorGuid: string | undefined): string => {
+    if (!typeGuid || !connectorGuid) return "";
+    const type = typeMap.get(typeGuid);
+    const connector = type?.connectors?.find((candidateConnector) => candidateConnector.guid === connectorGuid);
+    return connector?.port?.guid ?? "";
+  };
+
+  const getOwnRequirementPortGuids = (pieceGuid: string): string[] => {
+    const piece = pieceMap.get(pieceGuid);
+    const type = piece?.type?.guid ? typeMap.get(piece.type.guid) : undefined;
+    return (type?.connectors ?? []).map((connector) => connector.port?.guid ?? "");
+  };
+
+  const getBoundaryRequirementPortGuids = (): string[] => {
+    const requirementPortGuids: string[] = [];
+    for (const connection of connections) {
+      const connectedSelected = selectedPieceSet.has(connection.connected.piece.guid);
+      const connectingSelected = selectedPieceSet.has(connection.connecting.piece.guid);
+      if (connectedSelected === connectingSelected) continue;
+
+      const otherSide = connectedSelected ? connection.connecting : connection.connected;
+
+      const otherPiece = pieceMap.get(otherSide.piece.guid);
+      requirementPortGuids.push(getConnectorPortGuid(otherPiece?.type?.guid, otherSide.connector?.guid));
+    }
+    return requirementPortGuids;
+  };
+
+  const getSelectionOwnRequirementPortGuids = (): string[] => selection.pieces.flatMap((pieceGuid) => getOwnRequirementPortGuids(pieceGuid));
+
+  const canSatisfyRequirements = (requiredPortGuids: string[], availablePortGuids: string[]): boolean => {
+    if (requiredPortGuids.length === 0) return true;
+    if (availablePortGuids.length < requiredPortGuids.length) return false;
+
+    const requirementOptions = requiredPortGuids
+      .map((requiredPortGuid) => ({
+        connectorIndexes: availablePortGuids.flatMap((availablePortGuid, connectorIndex) => (checkPortCompatibility(availablePortGuid, requiredPortGuid) ? [connectorIndex] : [])),
+      }))
+      .sort((leftRequirement, rightRequirement) => leftRequirement.connectorIndexes.length - rightRequirement.connectorIndexes.length);
+
+    if (requirementOptions.some((requirementOption) => requirementOption.connectorIndexes.length === 0)) return false;
+
+    const usedConnectorIndexes = new Array(availablePortGuids.length).fill(false);
+    const matchRequirement = (requirementOptionIndex: number): boolean => {
+      if (requirementOptionIndex >= requirementOptions.length) return true;
+      for (const connectorIndex of requirementOptions[requirementOptionIndex].connectorIndexes) {
+        if (usedConnectorIndexes[connectorIndex]) continue;
+        usedConnectorIndexes[connectorIndex] = true;
+        if (matchRequirement(requirementOptionIndex + 1)) return true;
+        usedConnectorIndexes[connectorIndex] = false;
+      }
+      return false;
+    };
+
+    return matchRequirement(0);
+  };
+
+  const candidateTypeAvailablePortGuids = (candidateType: Type): string[] => (candidateType.connectors ?? []).map((connector) => connector.port?.guid ?? "");
+
+  const candidateDesignAvailablePortGuids = (candidateDesign: Design): string[] => {
+    const consumedConnectorKeys = new Set<string>();
+    for (const connection of candidateDesign.connections ?? []) {
+      for (const side of [connection.connected, connection.connecting]) {
+        if (side.piece.guid && side.connector?.guid) consumedConnectorKeys.add(`${side.piece.guid}::${side.connector.guid}`);
+      }
+    }
+
+    const availablePortGuids: string[] = [];
+    for (const piece of candidateDesign.pieces ?? []) {
+      const type = piece.type?.guid ? typeMap.get(piece.type.guid) : undefined;
+      for (const connector of type?.connectors ?? []) {
+        if (consumedConnectorKeys.has(`${piece.guid}::${connector.guid}`)) continue;
+        availablePortGuids.push(connector.port?.guid ?? "");
+      }
+    }
+    return availablePortGuids;
+  };
+
+  if (selection.pieces.length === 0) {
+    return {
+      types: types.filter((candidateType) => candidateTypeAvailablePortGuids(candidateType).length === 0).map((candidateType) => candidateType.guid),
+      designs: designs.filter((candidateDesign) => candidateDesignAvailablePortGuids(candidateDesign).length === 0).map((candidateDesign) => candidateDesign.guid),
+    };
+  }
+
+  const requiredPortGuids = (() => {
+    const boundaryRequirementPortGuids = getBoundaryRequirementPortGuids();
+    return boundaryRequirementPortGuids.length > 0 ? boundaryRequirementPortGuids : getSelectionOwnRequirementPortGuids();
+  })();
+
+  const isValidCandidate = (availablePortGuids: string[]): boolean => canSatisfyRequirements(requiredPortGuids, availablePortGuids);
+
+  return {
+    types: types.filter((candidateType) => isValidCandidate(candidateTypeAvailablePortGuids(candidateType))).map((candidateType) => candidateType.guid),
+    designs: designs.filter((candidateDesign) => isValidCandidate(candidateDesignAvailablePortGuids(candidateDesign))).map((candidateDesign) => candidateDesign.guid),
+  };
+};
+
 // #endregion 📐Design
 
 // #region ⏱️Kit
@@ -14161,13 +14290,24 @@ export const findParentPieceInDesign = (kit: Kit, designGuid: string, pieceGuid:
 
 /**
  * Searches for matching ParentConnectionForPieceInDesign entry.
+ *
+ * Specs: Parent link comes from flatten metadata (`parentPieceId` is a piece guid). The connection guid differs; pick the incident connection on `pieceGuid` whose other endpoint is that parent piece.
  **/
 export const findParentConnectionForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Connection => {
   const meta = piecesMetadata(kit, designGuid);
   if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
   const parentPieceId = meta.change.get(pieceGuid)?.parentPieceId;
   if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece and connection`);
-  return findConnectionInDesign(findDesignInKit(kit, designGuid), parentPieceId);
+  const design = findDesignInKit(kit, designGuid);
+  const incident = findPieceConnectionsInDesign(design, pieceGuid);
+  const parentConnection = incident.find((c) => {
+    const other = c.connected.piece.guid === pieceGuid ? c.connecting.piece.guid : c.connected.piece.guid;
+    return other === parentPieceId;
+  });
+  if (!parentConnection) {
+    throw new Error(`No connection found from piece ${pieceGuid} to parent piece ${parentPieceId}`);
+  }
+  return parentConnection;
 };
 
 /**
@@ -14559,11 +14699,7 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
 // Specs: Other workspaces (e.g. @semio/ui) import this module while Vitest runs their tests; `SEMIO_JS_RUN_EMBEDDED_TESTS` is set only in @semio/js `npm test` so we do not pull @semio/sketchpad into unrelated Vitest SSR graphs.
-if (
-  typeof (globalThis as any).__vitest_worker__ !== "undefined" &&
-  typeof process !== "undefined" &&
-  process.env.SEMIO_JS_RUN_EMBEDDED_TESTS === "1"
-) {
+if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof process !== "undefined" && process.env.SEMIO_JS_RUN_EMBEDDED_TESTS === "1") {
   const { beforeAll, describe, expect, it, vi } = await import("vitest");
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
@@ -15536,6 +15672,482 @@ if (
       expect(diff.pieces!.updated![0].diff.center?.u).toBeCloseTo(baseU + offset.u, 6);
       expect(diff.pieces!.updated![0].diff.center?.v).toBeCloseTo(baseV + offset.v, 6);
     });
+
+    it("Nakagin sketchpad flow: drag root piece with connections preserved moves all descendants", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      expect((design.connections ?? []).length).toBeGreaterThan(0);
+
+      // Step 1: Compute metadata (simulates usePiecesMetadataMap)
+      const metaResult = piecesMetadata(kit, design.guid);
+      expect(metaResult.ok).toBe(true);
+      if (!metaResult.ok) return;
+      const metadata = metaResult.change;
+      expect(metadata.size).toBeGreaterThan(0);
+
+      // Step 2: Find a root piece (no parentPieceId) and its descendants
+      let rootGuid: string | undefined;
+      const childrenMap = new Map<string, string[]>();
+      for (const [guid, meta] of metadata) {
+        if (!meta.parentPieceId && !rootGuid) rootGuid = guid;
+        if (meta.parentPieceId) {
+          const siblings = childrenMap.get(meta.parentPieceId);
+          if (siblings) siblings.push(guid);
+          else childrenMap.set(meta.parentPieceId, [guid]);
+        }
+      }
+      expect(rootGuid).toBeDefined();
+      // BFS to find all descendants of root
+      const descendants = new Set<string>();
+      const queue = [rootGuid!];
+      while (queue.length > 0) {
+        const current = queue.pop()!;
+        const children = childrenMap.get(current);
+        if (!children) continue;
+        for (const child of children) {
+          if (child !== rootGuid && !descendants.has(child)) {
+            descendants.add(child);
+            queue.push(child);
+          }
+        }
+      }
+      expect(descendants.size).toBeGreaterThan(0);
+
+      // Record pre-drag centers from metadata for root + descendants
+      const preDragCenters = new Map<string, { u: number; v: number }>();
+      preDragCenters.set(rootGuid!, { u: metadata.get(rootGuid!)!.center.u, v: metadata.get(rootGuid!)!.center.v });
+      for (const descGuid of descendants) {
+        const center = metadata.get(descGuid)!.center;
+        preDragCenters.set(descGuid, { u: center.u, v: center.v });
+      }
+
+      // Step 3: Build flatDesign like sketchpad does (raw design + metadata centers + connections preserved)
+      const sketchpadFlatDesign: Design = {
+        ...design,
+        pieces: (design.pieces ?? []).map((p) => ({
+          ...p,
+          center: metadata.get(p.guid)?.center ?? p.center,
+        })),
+      };
+
+      // Step 4: Call dragPiecesInDesign (same as sketchpad onNodeDragStop)
+      const offset = { u: 5, v: -3 };
+      const piecesDesign = { guid: "", name: "", pieces: [{ guid: rootGuid! }] } as Design;
+      const dragDiff = dragPiecesInDesign(sketchpadFlatDesign, piecesDesign, offset);
+
+      // Root should get a center update (it's fixed - no parent)
+      expect(dragDiff.pieces?.updated?.length).toBe(1);
+      expect(dragDiff.pieces!.updated![0].piece.guid).toBe(rootGuid);
+      const rootCenter = metadata.get(rootGuid!)!.center;
+      expect(dragDiff.pieces!.updated![0].diff.center?.u).toBeCloseTo(rootCenter.u + offset.u, 6);
+      expect(dragDiff.pieces!.updated![0].diff.center?.v).toBeCloseTo(rootCenter.v + offset.v, 6);
+      // No connection updates needed (only root selected, no connected pieces)
+      expect(dragDiff.connections?.updated?.length ?? 0).toBe(0);
+
+      // Step 5: Apply the diff to the raw design (sketchpad calls updatePieces + updateConnections)
+      const updatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), dragDiff);
+
+      // Step 6: Recompute metadata (simulates reactive chain: store update -> re-flatten)
+      const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
+      const postMetaResult = piecesMetadata(updatedKit, design.guid);
+      expect(postMetaResult.ok).toBe(true);
+      if (!postMetaResult.ok) return;
+      const postMetadata = postMetaResult.change;
+
+      // Step 7: Verify root moved by exactly offset
+      const postRootCenter = postMetadata.get(rootGuid!)!.center;
+      expect(postRootCenter.u).toBeCloseTo(preDragCenters.get(rootGuid!)!.u + offset.u, 3);
+      expect(postRootCenter.v).toBeCloseTo(preDragCenters.get(rootGuid!)!.v + offset.v, 3);
+
+      // Step 8: Verify descendants moved (positions changed after re-flatten).
+      // Due to non-linear layout in flattenDesign (horizontalScale, radius, etc.),
+      // descendants may NOT shift by exactly the offset, but they MUST move.
+      for (const descGuid of descendants) {
+        const preCenter = preDragCenters.get(descGuid)!;
+        const postCenter = postMetadata.get(descGuid)!.center;
+        const moved = Math.abs(postCenter.u - preCenter.u) > 0.001 || Math.abs(postCenter.v - preCenter.v) > 0.001;
+        expect(moved).toBe(true);
+      }
+    });
+
+    it("Nakagin store chain: updatePieces-only diff (no full dragDiff) still moves descendants via re-flatten", () => {
+      // This test simulates the EXACT sketchpad store flow:
+      // 1. onNodeDragStop calls dragPiecesInDesign → gets dragDiff
+      // 2. updatePieces sends ONLY the piece updates from dragDiff to the kit store
+      // 3. Kit store applies piece-only kitDiff via applyKitDiff
+      // 4. Reactive chain recomputes piecesMetadata → descendants should have new positions
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      expect((design.connections ?? []).length).toBeGreaterThan(0);
+
+      // Step 1: Compute metadata
+      const metaResult = piecesMetadata(kit, design.guid);
+      expect(metaResult.ok).toBe(true);
+      if (!metaResult.ok) return;
+      const metadata = metaResult.change;
+
+      // Step 2: Find root and descendants
+      let rootGuid: string | undefined;
+      const childrenMap = new Map<string, string[]>();
+      for (const [guid, meta] of metadata) {
+        if (!meta.parentPieceId && !rootGuid) rootGuid = guid;
+        if (meta.parentPieceId) {
+          const siblings = childrenMap.get(meta.parentPieceId);
+          if (siblings) siblings.push(guid);
+          else childrenMap.set(meta.parentPieceId, [guid]);
+        }
+      }
+      expect(rootGuid).toBeDefined();
+      const descendants = new Set<string>();
+      const queue = [rootGuid!];
+      while (queue.length > 0) {
+        const current = queue.pop()!;
+        const children = childrenMap.get(current);
+        if (!children) continue;
+        for (const child of children) {
+          if (child !== rootGuid && !descendants.has(child)) {
+            descendants.add(child);
+            queue.push(child);
+          }
+        }
+      }
+      expect(descendants.size).toBeGreaterThan(0);
+
+      // Record pre-drag centers
+      const preDragCenters = new Map<string, { u: number; v: number }>();
+      preDragCenters.set(rootGuid!, { u: metadata.get(rootGuid!)!.center.u, v: metadata.get(rootGuid!)!.center.v });
+      for (const descGuid of descendants) {
+        const center = metadata.get(descGuid)!.center;
+        preDragCenters.set(descGuid, { u: center.u, v: center.v });
+      }
+
+      // Step 3: Build flatDesign (same as sketchpad)
+      const sketchpadFlatDesign: Design = {
+        ...design,
+        pieces: (design.pieces ?? []).map((p) => ({
+          ...p,
+          center: metadata.get(p.guid)?.center ?? p.center,
+        })),
+      };
+
+      // Step 4: Compute drag diff
+      const offset = { u: 5, v: -3 };
+      const piecesDesign = { guid: "", name: "", pieces: [{ guid: rootGuid! }] } as Design;
+      const dragDiff = dragPiecesInDesign(sketchpadFlatDesign, piecesDesign, offset);
+      const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
+      const connectionDiffUpdates = dragDiff.connections?.updated ?? [];
+
+      // Step 5: Simulate what updatePieces does — apply ONLY pieceUpdates to kit via kitDiff
+      // This is the EXACT path: updatePieces → command handler → kitStore.change(kitDiff)
+      const kitDiff: any = {};
+      if (pieceDiffUpdates.length > 0) {
+        kitDiff.designs = {
+          updated: [
+            {
+              design: { guid: design.guid },
+              diff: {
+                pieces: { updated: pieceDiffUpdates },
+              },
+            },
+          ],
+        };
+      }
+      // Apply connection updates separately (same as updateConnections)
+      if (connectionDiffUpdates.length > 0) {
+        if (!kitDiff.designs) {
+          kitDiff.designs = { updated: [{ design: { guid: design.guid }, diff: {} }] };
+        }
+        kitDiff.designs.updated[0].diff.connections = { updated: connectionDiffUpdates };
+      }
+
+      // Step 6: Apply kitDiff to kit (same as InMemoryKitStore.apply)
+      const storeKit = applyKitDiff(kit, kitDiff);
+
+      // Step 7: Recompute metadata (same as usePiecesMetadataMap)
+      const postMetaResult = piecesMetadata(storeKit, design.guid);
+      expect(postMetaResult.ok).toBe(true);
+      if (!postMetaResult.ok) {
+        console.error("piecesMetadata failed:", postMetaResult.errors);
+        return;
+      }
+      const postMetadata = postMetaResult.change;
+
+      // Step 8: Verify root moved
+      const postRootCenter = postMetadata.get(rootGuid!)!.center;
+      expect(postRootCenter.u).toBeCloseTo(preDragCenters.get(rootGuid!)!.u + offset.u, 3);
+      expect(postRootCenter.v).toBeCloseTo(preDragCenters.get(rootGuid!)!.v + offset.v, 3);
+
+      // Step 9: Verify ALL descendants moved
+      for (const descGuid of descendants) {
+        const preCenter = preDragCenters.get(descGuid)!;
+        const postCenter = postMetadata.get(descGuid)!.center;
+        const moved = Math.abs(postCenter.u - preCenter.u) > 0.001 || Math.abs(postCenter.v - preCenter.v) > 0.001;
+        expect(moved).toBe(true);
+      }
+
+      // Step 10: Verify local re-flatten (visualPositions) matches store re-flatten
+      // This is the key test — if these differ, the useEffect overwrites with wrong positions
+      const localUpdatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), dragDiff);
+      const localUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? localUpdatedDesign : d)) };
+      const localMetaResult = piecesMetadata(localUpdatedKit, design.guid);
+      expect(localMetaResult.ok).toBe(true);
+      if (!localMetaResult.ok) return;
+      const localMetadata = localMetaResult.change;
+
+      // Compare ALL piece centers between local and store re-flatten
+      for (const [pieceGuid, localMeta] of localMetadata) {
+        const storeMeta = postMetadata.get(pieceGuid);
+        expect(storeMeta).toBeDefined();
+        expect(localMeta.center.u).toBeCloseTo(storeMeta!.center.u, 6);
+        expect(localMeta.center.v).toBeCloseTo(storeMeta!.center.v, 6);
+      }
+    });
+
+    it("Nakagin leaf drag: dragging a leaf node (parent, no children) offsets through parent connection and matches nativeDragPieces", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      expect((design.connections ?? []).length).toBeGreaterThan(0);
+
+      // Step 1: Compute metadata
+      const metaResult = piecesMetadata(kit, design.guid);
+      expect(metaResult.ok).toBe(true);
+      if (!metaResult.ok) return;
+      const metadata = metaResult.change;
+
+      // Step 2: Find a LEAF node (has parentPieceId but no children)
+      const childrenMap = new Map<string, string[]>();
+      for (const [guid, meta] of metadata) {
+        if (meta.parentPieceId) {
+          const siblings = childrenMap.get(meta.parentPieceId);
+          if (siblings) siblings.push(guid);
+          else childrenMap.set(meta.parentPieceId, [guid]);
+        }
+      }
+      let leafGuid: string | undefined;
+      for (const [guid, meta] of metadata) {
+        if (meta.parentPieceId && !childrenMap.has(guid)) {
+          leafGuid = guid;
+          break;
+        }
+      }
+      expect(leafGuid).toBeDefined();
+      const leafMeta = metadata.get(leafGuid!)!;
+      expect(leafMeta.parentPieceId).toBeDefined();
+      expect(childrenMap.has(leafGuid!)).toBe(false);
+
+      // Step 3: Record pre-drag center
+      const preDragCenter = { u: leafMeta.center.u, v: leafMeta.center.v };
+      const offset = { u: 2, v: -1.5 };
+
+      // Step 4a: Sketchpad flow — build flatDesign with metadata centers + raw connections
+      const sketchpadFlatDesign: Design = {
+        ...design,
+        pieces: (design.pieces ?? []).map((p) => ({
+          ...p,
+          center: metadata.get(p.guid)?.center ?? p.center,
+        })),
+      };
+      const piecesDesign = { guid: "", name: "", pieces: [{ guid: leafGuid! }] } as Design;
+      const sketchpadDragDiff = dragPiecesInDesign(sketchpadFlatDesign, piecesDesign, offset);
+
+      // Leaf has a parent → should produce connection update, NOT piece update
+      expect(sketchpadDragDiff.pieces?.updated?.length ?? 0).toBe(0);
+      expect(sketchpadDragDiff.connections?.updated?.length).toBe(1);
+
+      // Step 4b: nativeDragPieces flow — flatten, drag, apply to raw, re-flatten
+      const fc = flattenDesign(kit, design.guid);
+      expect(fc.ok).toBe(true);
+      if (!fc.ok) return;
+      const nativeFlatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), { pieces: fc.change.forward.pieces });
+      const nativePiecesDesign: Design = { guid: nativeFlatDesign.guid, name: nativeFlatDesign.name, pieces: (nativeFlatDesign.pieces ?? []).filter((p) => p.guid === leafGuid) };
+      const nativeDragDiff = dragPiecesInDesign(nativeFlatDesign, nativePiecesDesign, offset);
+
+      // Both flows should produce the same connection diff
+      expect(nativeDragDiff.pieces?.updated?.length ?? 0).toBe(0);
+      expect(nativeDragDiff.connections?.updated?.length).toBe(1);
+      expect(sketchpadDragDiff.connections!.updated![0].connection.guid).toBe(nativeDragDiff.connections!.updated![0].connection.guid);
+      expect(sketchpadDragDiff.connections!.updated![0].diff.u).toBeCloseTo(nativeDragDiff.connections!.updated![0].diff.u!, 6);
+      expect(sketchpadDragDiff.connections!.updated![0].diff.v).toBeCloseTo(nativeDragDiff.connections!.updated![0].diff.v!, 6);
+
+      // Step 5a: Sketchpad re-flatten
+      const sketchpadUpdatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), sketchpadDragDiff);
+      const sketchpadUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? sketchpadUpdatedDesign : d)) };
+      const sketchpadPostMeta = piecesMetadata(sketchpadUpdatedKit, design.guid);
+      expect(sketchpadPostMeta.ok).toBe(true);
+      if (!sketchpadPostMeta.ok) return;
+
+      // Step 5b: nativeDragPieces re-flatten
+      const nativeUpdatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), nativeDragDiff);
+      const nativeUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? nativeUpdatedDesign : d)) };
+      const nativePostMeta = piecesMetadata(nativeUpdatedKit, design.guid);
+      expect(nativePostMeta.ok).toBe(true);
+      if (!nativePostMeta.ok) return;
+
+      // Step 6: Leaf must have moved from its pre-drag position
+      const sketchpadLeafPost = sketchpadPostMeta.change.get(leafGuid!)!;
+      const nativeLeafPost = nativePostMeta.change.get(leafGuid!)!;
+      expect(Math.abs(sketchpadLeafPost.center.u - preDragCenter.u) > 0.001 || Math.abs(sketchpadLeafPost.center.v - preDragCenter.v) > 0.001).toBe(true);
+
+      // Step 7: Sketchpad and native must produce identical results for ALL pieces
+      for (const [pieceGuid, skMeta] of sketchpadPostMeta.change) {
+        const natMeta = nativePostMeta.change.get(pieceGuid);
+        expect(natMeta).toBeDefined();
+        expect(skMeta.center.u).toBeCloseTo(natMeta!.center.u, 6);
+        expect(skMeta.center.v).toBeCloseTo(natMeta!.center.v, 6);
+      }
+
+      // Step 8: Verify store chain — applyKitDiff with connection-only updates matches
+      const connectionDiffUpdates = sketchpadDragDiff.connections?.updated ?? [];
+      expect(connectionDiffUpdates.length).toBe(1);
+      const kitDiff: any = {
+        designs: {
+          updated: [{ design: { guid: design.guid }, diff: { connections: { updated: connectionDiffUpdates } } }],
+        },
+      };
+      const storeKit = applyKitDiff(kit, kitDiff);
+      const storeMetaResult = piecesMetadata(storeKit, design.guid);
+      expect(storeMetaResult.ok).toBe(true);
+      if (!storeMetaResult.ok) return;
+      // Store re-flatten must match local re-flatten
+      for (const [pieceGuid, storeMeta] of storeMetaResult.change) {
+        const localMeta = sketchpadPostMeta.change.get(pieceGuid);
+        expect(localMeta).toBeDefined();
+        expect(storeMeta.center.u).toBeCloseTo(localMeta!.center.u, 6);
+        expect(storeMeta.center.v).toBeCloseTo(localMeta!.center.v, 6);
+      }
+    });
+
+    it("Nakagin center-space to connection-space scaling: pixel offset scales by horizontalScale for horizontal connections", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const metaResult = piecesMetadata(kit, design.guid);
+      expect(metaResult.ok).toBe(true);
+      if (!metaResult.ok) return;
+      const metadata = metaResult.change;
+
+      // Find a leaf node (has parent, no children)
+      const childrenMap = new Map<string, string[]>();
+      for (const [guid, meta] of metadata) {
+        if (meta.parentPieceId) {
+          const siblings = childrenMap.get(meta.parentPieceId);
+          if (siblings) siblings.push(guid);
+          else childrenMap.set(meta.parentPieceId, [guid]);
+        }
+      }
+      let leafGuid: string | undefined;
+      for (const [guid, meta] of metadata) {
+        if (meta.parentPieceId && !childrenMap.has(guid)) {
+          leafGuid = guid;
+          break;
+        }
+      }
+      expect(leafGuid).toBeDefined();
+      const leafMeta = metadata.get(leafGuid!)!;
+      const preDragCenter = { u: leafMeta.center.u, v: leafMeta.center.v };
+
+      // Simulate a pixel drag: user drags 100px to the right, 50px down
+      const pixelDeltaX = 100;
+      const pixelDeltaY = -50;
+      const centerOffsetU = pixelDeltaX / ICON_WIDTH; // 2.0 in center-space
+      const centerOffsetV = -pixelDeltaY / ICON_WIDTH; // 1.0 in center-space
+
+      // Build flat design (sketchpad style)
+      const flatDesign: Design = {
+        ...design,
+        pieces: (design.pieces ?? []).map((p) => ({
+          ...p,
+          center: metadata.get(p.guid)?.center ?? p.center,
+        })),
+      };
+
+      // Get dragPiecesInDesign result (unscaled — in center-space)
+      const piecesDesign = { guid: "", name: "", pieces: [{ guid: leafGuid! }] } as Design;
+      const dragDiff = dragPiecesInDesign(flatDesign, piecesDesign, { u: centerOffsetU, v: centerOffsetV });
+      expect(dragDiff.connections?.updated?.length).toBe(1);
+      const rawConnDiff = dragDiff.connections!.updated![0].diff;
+
+      // The raw diff has the center-space offset as connection diff — this is WRONG for visual positioning
+      expect(rawConnDiff.u).toBeCloseTo(centerOffsetU, 6);
+      expect(rawConnDiff.v).toBeCloseTo(centerOffsetV, 6);
+
+      // Find the parent connector to determine the scale
+      const conn = (design.connections ?? []).find((c) => c.guid === dragDiff.connections!.updated![0].connection.guid)!;
+      expect(conn).toBeDefined();
+      const parentPieceGuid = conn.connected.piece.guid;
+      const parentMeta = metadata.get(parentPieceGuid)!;
+      const parentPiece = (design.pieces ?? []).find((p) => p.guid === parentPieceGuid)!;
+      const parentType = findTypeInKit(kit, parentPiece.type!.guid!)!;
+      const parentConnector = parentType.connectors!.find((c) => c.guid === conn.connected.connector?.guid)!;
+      const isVerticalConnection = Math.abs(parentConnector?.direction?.z ?? 0) > 0.5;
+      const horizontalScale = 3.0633;
+      const scale = isVerticalConnection ? 1 : horizontalScale;
+
+      // Scale the connection diff from center-space to connection-space
+      const scaledConnDiff = {
+        u: rawConnDiff.u! / scale,
+        v: rawConnDiff.v! / scale,
+      };
+
+      // Apply the SCALED diff to the raw design and re-flatten
+      const scaledDragDiff: DesignDiff = {
+        connections: { updated: [{ connection: { guid: conn.guid }, diff: scaledConnDiff }] },
+      };
+      const updatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), scaledDragDiff);
+      const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
+      const postMeta = piecesMetadata(updatedKit, design.guid);
+      expect(postMeta.ok).toBe(true);
+      if (!postMeta.ok) return;
+
+      // The re-flattened leaf center should match the INTENDED visual offset (pre-drag center + center offset)
+      const leafPost = postMeta.change.get(leafGuid!)!;
+      const expectedU = preDragCenter.u + centerOffsetU;
+      const expectedV = preDragCenter.v + centerOffsetV;
+      expect(leafPost.center.u).toBeCloseTo(expectedU, 2);
+      expect(leafPost.center.v).toBeCloseTo(expectedV, 2);
+
+      // Without scaling, the re-flattened position would be amplified by horizontalScale
+      if (!isVerticalConnection) {
+        const unscaledDragDiff: DesignDiff = {
+          connections: { updated: [{ connection: { guid: conn.guid }, diff: { u: centerOffsetU, v: centerOffsetV } }] },
+        };
+        const unscaledDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), unscaledDragDiff);
+        const unscaledKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? unscaledDesign : d)) };
+        const unscaledMeta = piecesMetadata(unscaledKit, design.guid);
+        expect(unscaledMeta.ok).toBe(true);
+        if (!unscaledMeta.ok) return;
+        const unscaledLeaf = unscaledMeta.change.get(leafGuid!)!;
+        // Without scaling, the visual offset is amplified by horizontalScale — the "jump" bug
+        expect(unscaledLeaf.center.u).toBeCloseTo(preDragCenter.u + centerOffsetU * horizontalScale, 2);
+        expect(unscaledLeaf.center.v).toBeCloseTo(preDragCenter.v + centerOffsetV * horizontalScale, 2);
+      }
+    });
+
+    it("findParentConnectionForPieceInDesign and fixPieceInDesign use the connection to the parent piece, not the parent piece id as connection id", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const metaResult = piecesMetadata(kit, design.guid);
+      expect(metaResult.ok).toBe(true);
+      if (!metaResult.ok) return;
+      const metadata = metaResult.change;
+      let childGuid: string | undefined;
+      let parentPieceId: string | undefined;
+      for (const [guid, meta] of metadata) {
+        if (meta.parentPieceId) {
+          childGuid = guid;
+          parentPieceId = meta.parentPieceId;
+          break;
+        }
+      }
+      expect(childGuid).toBeDefined();
+      expect(parentPieceId).toBeDefined();
+      const conn = findParentConnectionForPieceInDesign(kit, design.guid, childGuid!);
+      expect(conn.guid).not.toBe(parentPieceId);
+      const otherPieceGuid = conn.connected.piece.guid === childGuid ? conn.connecting.piece.guid : conn.connected.piece.guid;
+      expect(otherPieceGuid).toBe(parentPieceId);
+      const fixDiff = fixPieceInDesign(kit, design.guid, childGuid!);
+      expect(fixDiff.connections?.removed?.length).toBe(1);
+      expect(fixDiff.connections!.removed![0].guid).toBe(conn.guid);
+    });
   });
 
   describe("Move", () => {
@@ -15919,6 +16531,254 @@ if (
   });
   // #endregion 📋Copy And Paste Tests
 
+  // #region 🔍Find Replaceable Types In Designs Tests
+  describe("FindReplaceableTypesInDesigns", () => {
+    it("Synthetic selection enforces distinct compatible connectors and ignores consumed design connectors", () => {
+      const makeConnector = (guid: string, portGuid: string) =>
+        ({
+          guid,
+          t: 0,
+          point: { x: 0, y: 0, z: 0 },
+          direction: { x: 1, y: 0, z: 0 },
+          port: { guid: portGuid },
+        }) as Connector;
+      const makeType = (guid: string, connectorPortGuids: string[]) =>
+        ({
+          guid,
+          name: guid,
+          connectors: connectorPortGuids.map((connectorPortGuid, connectorIndex) => makeConnector(`${guid}-connector-${connectorIndex}`, connectorPortGuid)),
+        }) as Type;
+      const makePiece = (guid: string, typeGuid: string) => ({ guid, type: { guid: typeGuid } }) as Piece;
+      const makeConnection = (guid: string, connectedPieceGuid: string, connectedConnectorGuid: string, connectingPieceGuid: string, connectingConnectorGuid: string) =>
+        ({
+          guid,
+          connected: { piece: { guid: connectedPieceGuid }, connector: { guid: connectedConnectorGuid } },
+          connecting: { piece: { guid: connectingPieceGuid }, connector: { guid: connectingConnectorGuid } },
+        }) as Connection;
+
+      const ports = [{ guid: "port-L", compatiblePorts: [{ guid: "port-L-compatible" }] }, { guid: "port-L-compatible", compatiblePorts: [{ guid: "port-L" }] }, { guid: "port-G" }] as Port[];
+      const types = [
+        makeType("selected-external-lg", []),
+        makeType("selected-isolated-lg", ["port-L", "port-G"]),
+        makeType("selected-external-ll", []),
+        makeType("neighbor-l", ["port-L"]),
+        makeType("neighbor-g", ["port-G"]),
+        makeType("candidate-l", ["port-L"]),
+        makeType("candidate-lg", ["port-L-compatible", "port-G"]),
+        makeType("candidate-lg-lg", ["port-L-compatible", "port-G", "port-L", "port-G"]),
+        makeType("candidate-ll", ["port-L", "port-L-compatible"]),
+        makeType("candidate-g", ["port-G"]),
+      ];
+      const designs = [
+        {
+          guid: "candidate-design-free-lg",
+          name: "candidate-design-free-lg",
+          pieces: [makePiece("candidate-design-free-piece", "candidate-lg")],
+        },
+        {
+          guid: "candidate-design-consumed-lg",
+          name: "candidate-design-consumed-lg",
+          pieces: [makePiece("candidate-design-consumed-a", "candidate-lg"), makePiece("candidate-design-consumed-b", "candidate-l")],
+          connections: [makeConnection("candidate-design-consumed-link", "candidate-design-consumed-a", "candidate-lg-connector-0", "candidate-design-consumed-b", "candidate-l-connector-0")],
+        },
+      ] as Design[];
+      const design = {
+        guid: "root-design",
+        name: "root-design",
+        pieces: [
+          makePiece("piece-external-lg", "selected-external-lg"),
+          makePiece("piece-isolated-lg", "selected-isolated-lg"),
+          makePiece("piece-external-ll", "selected-external-ll"),
+          makePiece("neighbor-piece-l", "neighbor-l"),
+          makePiece("neighbor-piece-g", "neighbor-g"),
+          makePiece("neighbor-piece-l-a", "neighbor-l"),
+          makePiece("neighbor-piece-l-b", "neighbor-l"),
+        ],
+        connections: [
+          makeConnection("external-lg-l", "piece-external-lg", "selected-external-lg-connector-0", "neighbor-piece-l", "neighbor-l-connector-0"),
+          makeConnection("external-lg-g", "piece-external-lg", "selected-external-lg-connector-1", "neighbor-piece-g", "neighbor-g-connector-0"),
+          makeConnection("external-ll-a", "piece-external-ll", "selected-external-ll-connector-0", "neighbor-piece-l-a", "neighbor-l-connector-0"),
+          makeConnection("external-ll-b", "piece-external-ll", "selected-external-ll-connector-1", "neighbor-piece-l-b", "neighbor-l-connector-0"),
+        ],
+      } as Design;
+
+      const doubleLeftResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-external-ll"] });
+      expect(doubleLeftResult.types).toContain("candidate-ll");
+      expect(doubleLeftResult.types).not.toContain("candidate-l");
+      expect(doubleLeftResult.types).not.toContain("candidate-g");
+
+      const leftAndGableResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-external-lg"] });
+      expect(leftAndGableResult.types).toContain("candidate-lg");
+      expect(leftAndGableResult.types).not.toContain("candidate-l");
+      expect(leftAndGableResult.designs).toContain("candidate-design-free-lg");
+      expect(leftAndGableResult.designs).not.toContain("candidate-design-consumed-lg");
+
+      const isolatedResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-isolated-lg"] });
+      expect(isolatedResult.types).toContain("candidate-lg");
+      expect(isolatedResult.types).not.toContain("candidate-l");
+
+      const multiplePieceResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-external-lg", "piece-isolated-lg"] });
+      expect(multiplePieceResult.types).toContain("candidate-lg");
+      expect(multiplePieceResult.types).not.toContain("candidate-l");
+    });
+
+    it("Nakagin Capsule Tower: connector-level boundary matching shrinks candidates as demand grows", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const types = kit.types ?? [];
+      const ports = kit.ports ?? [];
+      const designs = kit.designs ?? [];
+      const nameToGuid = new Map((design.pieces ?? []).map((piece) => [piece.name, piece.guid]));
+      const forbiddenSingleConnectorFamilies = new Set(["\\", "/", "q", "p", "J", "L", "s", "z"]);
+      const typeNamesForSelection = (pieceNames: string[]): string[] => {
+        const pieceGuids = pieceNames.map((pieceName) => nameToGuid.get(pieceName) ?? "");
+        const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: pieceGuids });
+        return types.filter((candidateType) => result.types.includes(candidateType.guid)).map((candidateType) => candidateType.name);
+      };
+      const uniqueTypeNamesForSelection = (pieceNames: string[]): string[] => [...new Set(typeNamesForSelection(pieceNames))].sort((leftName, rightName) => leftName.localeCompare(rightName));
+
+      const singleCapsuleNames = typeNamesForSelection(["cs_sl2_d0_t_f9_b_c1"]);
+      const twoCapsuleNames = typeNamesForSelection(["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"]);
+      const fourCapsuleNames = typeNamesForSelection(["cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"]);
+      const eightCapsuleNames = typeNamesForSelection(["cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"]);
+      const tambourPieceGuid = nameToGuid.get("t_f9_b_c1")!;
+      const tambourResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [tambourPieceGuid] });
+
+      expect(singleCapsuleNames.length).toBeGreaterThan(twoCapsuleNames.length);
+      expect(twoCapsuleNames.length).toBeGreaterThanOrEqual(fourCapsuleNames.length);
+      expect(fourCapsuleNames.length).toBeGreaterThanOrEqual(eightCapsuleNames.length);
+
+      for (const forbiddenFamily of forbiddenSingleConnectorFamilies) {
+        expect(twoCapsuleNames).not.toContain(forbiddenFamily);
+        expect(fourCapsuleNames).not.toContain(forbiddenFamily);
+        expect(eightCapsuleNames).not.toContain(forbiddenFamily);
+      }
+      expect(fourCapsuleNames).not.toContain("Bridge");
+      expect(eightCapsuleNames).not.toContain("Bridge");
+      expect(uniqueTypeNamesForSelection(["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"])).toEqual(["Bridge", "Cylindric Tambour", "First Storey", "Last Storey", "Single Storey", "Tambour"]);
+      expect(uniqueTypeNamesForSelection(["cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"])).toEqual(["Cylindric Tambour", "First Storey", "Last Storey", "Single Storey", "Tambour"]);
+      expect(uniqueTypeNamesForSelection(["cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"])).toEqual([
+        "Cylindric Tambour",
+        "First Storey",
+        "Last Storey",
+        "Single Storey",
+        "Tambour",
+      ]);
+      expect(tambourResult.types).toEqual([]);
+      expect(tambourResult.designs.length).toBe(3);
+    });
+
+    it("Nakagin Capsule Tower: selection asset yields only exact design matches", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const rootPlan = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const kindItems = kit.types ?? [];
+      const linkItems = kit.ports ?? [];
+      const allPlans = kit.designs ?? [];
+      const selection = NakaginCapsuleTowerCopySelection as any;
+      const pieceGuids = (selection.pieces ?? []).map((piece: { guid: string }) => piece.guid);
+
+      expect(pieceGuids.length).toBeGreaterThan(0);
+
+      const result = findReplaceableTypesInDesignsForPiecesInDesign(rootPlan, allPlans, kindItems, linkItems, { pieces: pieceGuids });
+
+      expect(result.types).toEqual([]);
+      expect(result.designs).toEqual(["d7e12638-9749-471b-937e-a6e5523778ff", "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf", "019ab4e0-8da8-7217-946f-5b5a83aca0e3"]);
+    });
+
+    it("Nakagin Capsule Tower: connected piece yields only exact design matches", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const types = kit.types ?? [];
+      const ports = kit.ports ?? [];
+      const designs = kit.designs ?? [];
+
+      // Select a Tambour piece that has connections (e.g. t_f1_b_c0)
+      const tambourPiece = design.pieces!.find((p) => p.name === "t_f1_b_c0")!;
+      const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [tambourPiece.guid] });
+
+      expect(result.types).toEqual([]);
+      expect(result.designs).toEqual(["d7e12638-9749-471b-937e-a6e5523778ff", "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf", "019ab4e0-8da8-7217-946f-5b5a83aca0e3"]);
+    });
+
+    it("Nakagin Capsule Tower: isolated piece with no connections suggests types with compatible ports", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      // Use the Flat design (parent=Nakagin) which has no connections
+      const flatDesign = kit.designs!.find((d) => d.name === "Flat" && d.parent?.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")!;
+      const types = kit.types ?? [];
+      const ports = kit.ports ?? [];
+      const designs = kit.designs ?? [];
+
+      // Select a piece from flat (no connections)
+      const piece = flatDesign.pieces![0];
+      const result = findReplaceableTypesInDesignsForPiecesInDesign(flatDesign, designs, types, ports, { pieces: [piece.guid] });
+
+      // Should suggest types with compatible ports
+      expect(result.types.length).toBeGreaterThan(0);
+
+      // The piece's own type should be in results
+      if (piece.type?.guid) {
+        expect(result.types).toContain(piece.type.guid);
+      }
+    });
+
+    it("Nakagin Capsule Tower: Capital piece with single connection", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const types = kit.types ?? [];
+      const ports = kit.ports ?? [];
+      const designs = kit.designs ?? [];
+
+      // Capital type has 1 connector (roof rectangular top) → connected to Last Storey
+      // Last Storey connectors use different ports (circular variants)
+      // So Capital type is NOT in the results due to shape incompatibility
+      const capitalType = types.find((t) => t.name === "Capital")!;
+      const capitalPiece = design.pieces!.find((p) => p.type?.guid === capitalType.guid)!;
+      const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [capitalPiece.guid] });
+
+      // Should have results (types with compatible ports to Last Storey's connectors)
+      expect(result.types.length).toBeGreaterThan(0);
+
+      // Capital uses roof rectangular top, but Last Storey uses roof circular bottom (incompatible)
+      // So Capital type is NOT in the results
+      expect(result.types).not.toContain(capitalType.guid);
+
+      // Types with no connectors should NOT be in the results
+      const capsuleType = types.find((t) => t.name === "Capsule")!;
+      expect(result.types).not.toContain(capsuleType.guid);
+    });
+
+    it("Nakagin Capsule Tower: multiple selected pieces yield only exact design matches", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const types = kit.types ?? [];
+      const ports = kit.ports ?? [];
+      const designs = kit.designs ?? [];
+
+      // Select two adjacent tambours (internal connections between them, but also external)
+      const t1 = design.pieces!.find((p) => p.name === "t_f1_b_c0")!;
+      const t2 = design.pieces!.find((p) => p.name === "t_f2_b_c0")!;
+      const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [t1.guid, t2.guid] });
+
+      expect(result.types).toEqual([]);
+      expect(result.designs).toEqual(["d7e12638-9749-471b-937e-a6e5523778ff", "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf", "019ab4e0-8da8-7217-946f-5b5a83aca0e3"]);
+    });
+
+    it("Returns empty when no pieces selected", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const types = kit.types ?? [];
+      const ports = kit.ports ?? [];
+      const designs = kit.designs ?? [];
+
+      const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [] });
+
+      // No pieces selected → no connections → no ports → only types with no connectors
+      const typesWithNoConnectors = types.filter((t) => (t.connectors ?? []).length === 0);
+      expect(result.types.length).toBe(typesWithNoConnectors.length);
+    });
+  });
+  // #endregion 🔍Find Replaceable Types In Designs Tests
+
   describe("Design/WithDiff", () => {
     it("Nakagin Capsule Tower with-diff preserves old entities and annotates status", () => {
       const kit = MetabolismKit as unknown as Kit;
@@ -15978,7 +16838,7 @@ if (
       const basePiece: Piece = {
         guid: "p1",
         name: "Base",
-        type: { name: "K" },
+        type: { guid: "K" },
         plane: { origin: { x: 1, y: 2, z: 3 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
         center: { u: 4, v: 5 },
       };
@@ -17374,6 +18234,24 @@ if (
     });
 
     describe("Folder Kit (FolderKitStore)", () => {
+      beforeAll(async () => {
+        // Regenerate kit.db from metabolism.kit.semio.json to ensure schema compatibility
+        const kitJsonPath = await getMetabolismKitJsonPath();
+        const nodeFs = await import("node:fs/promises");
+        const nodePath = await import("node:path");
+        const kitJson = await nodeFs.readFile(kitJsonPath, "utf-8");
+        const kit = JSON.parse(kitJson) as Kit;
+        const SQL = await getSqlJs();
+        const db = new SQL.Database();
+        await kitToSqlite(kit, db);
+        const data = db.export();
+        db.close();
+        const folderPath = await getMetabolismFolderPath();
+        const dbPath = nodePath.join(folderPath, ".semio", "kit.db");
+        await nodeFs.mkdir(nodePath.dirname(dbPath), { recursive: true });
+        await nodeFs.writeFile(dbPath, Buffer.from(data));
+      });
+
       it("opens existing metabolism folder via .semio/kit.db without creating a new kit", async () => {
         const studio = await loadStudio();
         const folderPath = await getMetabolismFolderPath();
@@ -18420,6 +19298,7 @@ if (
 
     it("kit diff roundtrip: apply then inverse restores original state", () => {
       const original: Kit = {
+        guid: "undo-kit-1",
         name: "UndoKit",
         types: [
           {
@@ -18427,7 +19306,7 @@ if (
             name: "Wall",
             description: "A wall segment",
             icon: "",
-            variant: "",
+
           },
         ],
         designs: [],
@@ -18440,7 +19319,7 @@ if (
               name: "Column",
               description: "A column",
               icon: "",
-              variant: "",
+
             },
           ],
           updated: [{ type: { guid: "t1" }, diff: { description: "Modified wall" } }],
