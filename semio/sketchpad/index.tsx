@@ -45822,7 +45822,7 @@ export function useQualityApp<T>(selector?: (state: QualityAppState) => T, id?: 
  *Functions MUST be called with an origin string for tracking.
  **/
 export function useQualityAppCommands(id?: QualityAppId) {
-  const store = useQualityAppStore(undefined, id) as QualityAppStore | null;
+  const store = useQualityAppStore(undefined, id) as any;
   if (!store) {
     return {
       startTransaction: () => {},
@@ -45880,7 +45880,7 @@ export function useQualityAppCommands(id?: QualityAppId) {
  **/
 export function useQualityAppFullscreen(): HookResult<QualityAppFullscreenWindow> {
   const qualityScope = useQualityScope();
-  const store = useQualityAppStore() as QualityAppStore | null;
+  const store = useQualityAppStore() as any;
   const fullscreen = useQualityApp((s) => s.fullscreenWindow) as QualityAppFullscreenWindow;
   const canSet = qualityScope !== null && store !== null;
   const setFullscreen = useCallback(
@@ -45898,7 +45898,7 @@ export function useQualityAppFullscreen(): HookResult<QualityAppFullscreenWindow
  **/
 export function useQualityAppSelection(): HookResult<QualityAppSelection> {
   const qualityScope = useQualityScope();
-  const store = useQualityAppStore() as QualityAppStore | null;
+  const store = useQualityAppStore() as any;
   const selection = useQualityApp((s) => s.selection) as QualityAppSelection | undefined;
   const canSet = qualityScope !== null && store !== null;
   const setSelection = useCallback(
@@ -45916,7 +45916,7 @@ export function useQualityAppSelection(): HookResult<QualityAppSelection> {
  **/
 export function useQualityAppHover(): HookResult<QualityAppHover | undefined> {
   const qualityScope = useQualityScope();
-  const store = useQualityAppStore() as QualityAppStore | null;
+  const store = useQualityAppStore() as any;
   const hover = useQualityApp((s) => s.hover) as QualityAppHover | undefined;
   const canSet = qualityScope !== null && store !== null;
   const setHover = useCallback(
@@ -45934,7 +45934,7 @@ export function useQualityAppHover(): HookResult<QualityAppHover | undefined> {
  **/
 export function useQualityAppActiveTool(): HookResult<ToolKind> {
   const qualityScope = useQualityScope();
-  const store = useQualityAppStore() as QualityAppStore | null;
+  const store = useQualityAppStore() as any;
   const activeTool = useQualityApp((s) => s.activeTool) as ToolKind;
   const canSet = qualityScope !== null && store !== null;
   const setActiveTool = useCallback(
@@ -45963,7 +45963,7 @@ export function useQualityAppFormulaNodes(): HookNoSetResult<FormulaNode[]> {
  **/
 export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
   const qualityScope = useQualityScope();
-  const store = useQualityAppStore() as QualityAppStore | null;
+  const store = useQualityAppStore() as any;
   const panelVisibility = useQualityApp((s) => s.panelVisibility) as PanelVisibility;
   const canSet = qualityScope !== null && store !== null;
   const setPanelVisibility = useCallback(
@@ -45980,7 +45980,7 @@ export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
  **/
 export function useQualityAppWindowLayout(): HookResult<any> {
   const qualityScope = useQualityScope();
-  const store = useQualityAppStore() as QualityAppStore | null;
+  const store = useQualityAppStore() as any;
   const windowLayout = useQualityApp((s) => s.windowLayout);
   const canSet = qualityScope !== null && store !== null;
   const setWindowLayout = useCallback(
@@ -46252,8 +46252,8 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const handleConnect = useCallback(
     (connection: Connection) => {
-      if (connection.source && connection.target) {
-        connectNodes?.("semio.sketchpad.app.quality.diagram.connect", connection.source, connection.target);
+      if ((connection as any).source && (connection as any).target) {
+        connectNodes?.("semio.sketchpad.app.quality.diagram.connect", (connection as any).source, (connection as any).target);
       }
     },
     [connectNodes],
@@ -46538,7 +46538,7 @@ export const QualityAvatar: FC<QualityAvatarProps> = ({ qualityId, quality: qual
  **/
 export const QualityWorkbench: FC = () => {
   const { t } = useTranslation();
-  const kit = useKit(undefined, undefined, true) as Kit | null;
+  const kit = useKit(undefined, undefined) as Kit | null;
   const qualities = kit?.qualities || [];
 
   return (
@@ -46655,7 +46655,7 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
  **/
 const QualityWorkbenchQualities: FC = () => {
   const { t } = useTranslation();
-  const kit = useKit(undefined, undefined, true) as Kit | null;
+  const kit = useKit(undefined, undefined) as Kit | null;
   const qualities = kit?.qualities || [];
 
   if (qualities.length === 0) {
@@ -46706,7 +46706,7 @@ export const QualitySelectSettings: FC = () => {
 };
 
 export const QualityHistorySettings: FC = () => {
-  const store = useQualityAppStore() as QualityAppStore | null;
+  const store = useQualityAppStore() as any;
   const canUndo = useSyncExternalStore(
     (listener) => (store ? store.onChangedDeep(listener) : () => {}),
     () => store?.canUndo() ?? false,
@@ -47056,7 +47056,7 @@ const QualityApp: FC<QualityAppProps> = () => {
     return () => window.removeEventListener("quality-drag-end", listener);
   }, [handleDragEnd]);
 
-  const store = useQualityAppStore() as QualityAppStore | null;
+  const store = useQualityAppStore() as any;
   const [windowLayout] = useQualityAppWindowLayout();
   const addSidePanelTab = useAddSidePanelTab();
   const removeSidePanelTab = useRemoveSidePanelTab();
@@ -47136,7 +47136,7 @@ const QualityApp: FC<QualityAppProps> = () => {
     };
   }, []);
 
-  const windowConfig: AppWindowConfig = useMemo(() => {
+  const windowConfig = useMemo<any>(() => {
     return {
       windowKinds: [
         {
@@ -47258,7 +47258,7 @@ export interface SectionInfo {
 /**
  * mdxModuleLoaders holds lazy MDX module loaders keyed by page path.
  **/
-const mdxModuleLoaders = import.meta.glob<MDXModule>("./pages/**/*.mdx");
+const mdxModuleLoaders = (import.meta as any).glob("./pages/**/*.mdx");
 
 /**
  * mdxModulePaths holds every docs page path discovered by Vite.
@@ -48235,7 +48235,7 @@ if (typeof window !== "undefined") {
 // #region 🔧Docs App Plugin Registration
 // Plugin registration MUST initialize docs app context and registry.
 
-const docsAppPlugin: AppPlugin = {
+const docsAppPlugin: any = {
   namespace: "DOCS",
   actions: {},
   guards: {},
@@ -48808,7 +48808,7 @@ const DocsApp: FC = () => {
     loadContent();
   }, [docsPath, appType]);
 
-  const windowConfig: AppWindowConfig = useMemo(
+  const windowConfig = useMemo<any>(
     () => ({
       windowKinds: [
         {
@@ -49365,7 +49365,7 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       try {
         const { kit } = await importKit(zipFile);
-        await createKit("semio.sketchpad.app.home.dropzone", kit, false, false);
+        await createKit("semio.sketchpad.app.home.dropzone", kit);
 
         await storeKitFileBlobs(kit.guid, kit);
         completeKitImport(operationId);
@@ -49387,7 +49387,7 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       try {
         const { kit } = await importKit(file);
-        await createKit("semio.sketchpad.app.home.fileInput", kit, false, false);
+        await createKit("semio.sketchpad.app.home.fileInput", kit);
 
         await storeKitFileBlobs(kit.guid, kit);
         completeKitImport(operationId);
@@ -49572,7 +49572,7 @@ const HomeToolbarExport: FC = () => {
   const handleExportArchive = useCallback(() => {
     for (const kitGuid of selectedKits) {
       if (store.hasKit(kitGuid)) {
-        store.kit(kitGuid).execute("semio.kit.export", "semio.sketchpad.app.home.toolbar.exportArchive");
+        (store.kit(kitGuid) as any).execute("semio.kit.export", "semio.sketchpad.app.home.toolbar.exportArchive");
       }
     }
   }, [selectedKits, store]);
@@ -50482,7 +50482,7 @@ const Home: FC = () => {
       },
     }),
     [],
-  );
+  ) as any;
 
   const windowLayout = useMemo(() => storedWindowLayout || defaultLayout, [storedWindowLayout, defaultLayout]);
 
@@ -51050,7 +51050,7 @@ export const feedbackConfig = {
   component: Feedback,
   routeSegments: [{ path: "feedback" }],
   getPanels: (): PanelDefinition[] => [createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show")],
-  matchesPath: (pathParts) => pathParts.length === 1 && pathParts[0] === "feedback",
+  matchesPath: (pathParts: any[]) => pathParts.length === 1 && pathParts[0] === "feedback",
   order: 10,
 };
 
@@ -51218,8 +51218,18 @@ if (typeof document !== "undefined" && document.getElementById("root") && !isVsc
 }
 // #endregion 🎆Entrypoint
 
+// #region 🧪Runtime Test Flags
+// Playwright tests live in this file but MUST compile out of browser runtime bundles.
+declare const __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__: boolean | undefined;
+
+const shouldRunEmbeddedSketchpadTests =
+  (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__) ||
+  (typeof __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__ === "undefined" && typeof process !== "undefined" && process.release && process.release.name === "node" && process.env.SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS === "1");
+
+// #endregion 🧪Runtime Test Flags
+
 // #region 📐Tests
-if (typeof process !== "undefined" && process.release && process.release.name === "node" && typeof (globalThis as any).__vitest_worker__ === "undefined") {
+if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worker__ === "undefined") {
   const importAtRuntime = async <TModule = any,>(moduleId: string): Promise<TModule> => import(/* @vite-ignore */ moduleId);
   const { expect, test } = await importAtRuntime<any>(["@playwright", "test"].join("/"));
   const MetabolismKitData = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.semio.json"].join("/"))).default;
@@ -52832,6 +52842,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       expect(viteConfig.server?.host).toBe("0.0.0.0");
       expect(viteConfig.server?.port).toBe(5173);
+      expect(viteConfig.define?.__SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__).toBe("false");
+      expect(viteConfig.define?.__SEMIO_JS_RUN_EMBEDDED_TESTS__).toBe("false");
+      expect(viteConfig.define?.__SEMIO_JS_RUN_BENCHMARKS__).toBe("false");
     });
 
     test("Sketchpad diff status helpers keep added removed and modified colors distinct", async () => {
@@ -52977,7 +52990,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       expect(getConnectionStatusFromTransactionStack(fakeStore, "conn-ab")).toBe(DiffStatus.Modified);
     });
 
-    test("Startup Fallback Prevents Blank Root", async ({ page }) => {
+    test("Startup Fallback Prevents Blank Root", async ({ page }: { page: any }) => {
       test.setTimeout(120000);
       await page.goto("/", { waitUntil: "commit" });
 
@@ -52987,7 +53000,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       expect(rootHtml.includes('class="h-screen w-screen"></div>')).toBeFalsy();
     });
 
-    test("Sketchpad Scope Provider Fallback Id", async ({ page }) => {
+    test("Sketchpad Scope Provider Fallback Id", async ({ page }: { page: any }) => {
       test.setTimeout(120000);
       const { errors } = await initConsole(page);
       await warmSketchpadEntrypoint(page);
@@ -53028,7 +53041,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       expect(errors.filter((error) => error.includes("Rendered more hooks than during the previous render"))).toHaveLength(0);
     });
 
-    test("Home", async ({ page }) => {
+    test("Home", async ({ page }: { page: any }) => {
       test.setTimeout(300000);
       const { errors } = await initConsole(page);
       await page.addInitScript(() => {
@@ -53110,13 +53123,13 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const expectHomeKindToggleCycle = async (toggle: Locator, kind: KitKind) => {
         console.log(`[Home] Testing ${kind} filter toggle on/off`);
         await toggle.click();
-        await page.waitForURL((url) => new URL(url.href).searchParams.get("kind") === kind, { timeout: 5000 }).catch(() => {});
+        await page.waitForURL((url: any) => new URL(url.href).searchParams.get("kind") === kind, { timeout: 5000 }).catch(() => {});
         await page.waitForTimeout(300);
         const kindAfterOn = new URL(page.url()).searchParams.get("kind");
         console.log(`[Home] Kind after ${kind} on: ${kindAfterOn}`);
         expect(kindAfterOn).toBe(kind);
         await toggle.click();
-        await page.waitForURL((url) => !new URL(url.href).searchParams.has("kind"), { timeout: 5000 }).catch(() => {});
+        await page.waitForURL((url: any) => !new URL(url.href).searchParams.has("kind"), { timeout: 5000 }).catch(() => {});
         await page.waitForTimeout(300);
         const kindAfterOff = new URL(page.url()).searchParams.get("kind");
         console.log(`[Home] Kind after ${kind} off: ${kindAfterOff}`);
@@ -53287,7 +53300,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await verifyPanelCoverageAcrossApps(page, errors);
     });
 
-    test("Kit", async ({ page }) => {
+    test("Kit", async ({ page }: { page: any }) => {
       test.setTimeout(240000);
       const { errors, warnings, messages } = await initConsole(page);
       await initKit(page);
@@ -53308,7 +53321,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
               if (!store) return [] as string[];
               return (store.kitShallows?.() ?? []).map((kit: any) => String(kit?.name ?? ""));
             });
-            return names.some((name) => name.toLowerCase().includes("metabolism"));
+            return names.some((name: any) => name.toLowerCase().includes("metabolism"));
           },
           { timeout: 30000, message: "Kit store should contain Metabolism kit" },
         )
@@ -53465,7 +53478,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         } else {
           await toggle.dispatchEvent("click");
         }
-        await page.waitForURL((url) => new URL(url.href).searchParams.getAll("kind").length > 0, { timeout: 5000 }).catch(() => {});
+        await page.waitForURL((url: any) => new URL(url.href).searchParams.getAll("kind").length > 0, { timeout: 5000 }).catch(() => {});
         await page.waitForTimeout(300);
         const kindsAfterOn = new URL(page.url()).searchParams.getAll("kind");
         console.log(`[Kit] Kinds after ${kind} on: ${JSON.stringify(kindsAfterOn)}`);
@@ -53476,7 +53489,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         } else {
           await toggle.dispatchEvent("click");
         }
-        await page.waitForURL((url) => new URL(url.href).searchParams.getAll("kind").length === 0, { timeout: 5000 }).catch(() => {});
+        await page.waitForURL((url: any) => new URL(url.href).searchParams.getAll("kind").length === 0, { timeout: 5000 }).catch(() => {});
         await page.waitForTimeout(300);
         const kindsAfterOff = new URL(page.url()).searchParams.getAll("kind");
         console.log(`[Kit] Kinds after ${kind} off: ${JSON.stringify(kindsAfterOff)}`);
@@ -53499,7 +53512,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log(`[Kit] Mirrored file/folder row IDs in mixed view: ${JSON.stringify(mirroredGuidRows)}`);
       expect(mirroredGuidRows).toHaveLength(0);
       if (zipFixture.realFolderName) {
-        const matchingZipFolderRows = await page.evaluate((folderName) => {
+        const matchingZipFolderRows = await page.evaluate((folderName: any) => {
           const rows = Array.from(document.querySelectorAll("tr[data-row-id]"));
           return rows
             .filter((row) => {
@@ -53509,8 +53522,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             })
             .map((row) => row.getAttribute("data-row-id") ?? "");
         }, zipFixture.realFolderName);
-        const mirroredFileFolderRows = matchingZipFolderRows.filter((rowId) => rowId.startsWith("file-"));
-        const folderRows = matchingZipFolderRows.filter((rowId) => rowId.startsWith("folder-"));
+        const mirroredFileFolderRows = matchingZipFolderRows.filter((rowId: any) => rowId.startsWith("file-"));
+        const folderRows = matchingZipFolderRows.filter((rowId: any) => rowId.startsWith("folder-"));
         console.log(`[Kit] Matching zip folder rows in mixed view: ${JSON.stringify(matchingZipFolderRows)}`);
         expect(folderRows.length).toBeLessThanOrEqual(matchingZipFolderRows.length);
         expect(mirroredFileFolderRows).toHaveLength(0);
@@ -53525,10 +53538,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         console.log(`[Kit] File row count in files view: ${fileRowCount}`);
         if (fileRowCount > 0) {
           await expect(fileRows.first()).toBeVisible({ timeout: 5000 });
-          const fileRowTexts = await fileRows.evaluateAll((rows) => rows.map((row) => row.textContent ?? ""));
+          const fileRowTexts = await fileRows.evaluateAll((rows: any[]) => rows.map((row: any) => row.textContent ?? ""));
           console.log(`[Kit] File row texts in files view: ${JSON.stringify(fileRowTexts)}`);
           if (zipFixture.realRootFileName || zipFixture.realFolderName) {
-            const hasExpectedImportedEntry = fileRowTexts.some((text) => {
+            const hasExpectedImportedEntry = fileRowTexts.some((text: any) => {
               if (zipFixture.realRootFileName && text.includes(zipFixture.realRootFileName)) return true;
               if (zipFixture.realFolderName && text.includes(zipFixture.realFolderName)) return true;
               return false;
@@ -53550,7 +53563,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           const expandButton = page.locator(`tr[data-row-id="${expandableFileRowId}"] button`).first();
           await expandButton.click({ force: true });
           await page.waitForTimeout(300);
-          const expandedAfterOpen = await page.evaluate((rowId) => {
+          const expandedAfterOpen = await page.evaluate((rowId: any) => {
             const actor = (window as any).__SEMIO_ACTOR__;
             if (!actor) return false;
             const snapshot = actor.getSnapshot();
@@ -53562,7 +53575,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           expect(expandedAfterOpen).toBe(true);
           await expandButton.click({ force: true });
           await page.waitForTimeout(300);
-          const expandedAfterClose = await page.evaluate((rowId) => {
+          const expandedAfterClose = await page.evaluate((rowId: any) => {
             const actor = (window as any).__SEMIO_ACTOR__;
             if (!actor) return false;
             const snapshot = actor.getSnapshot();
@@ -53595,7 +53608,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           const expandButton = page.locator(`tr[data-row-id="${expandableFolderRowId}"] button`).first();
           await expandButton.click();
           await page.waitForTimeout(300);
-          const expandedAfterOpen = await page.evaluate((rowId) => {
+          const expandedAfterOpen = await page.evaluate((rowId: any) => {
             const actor = (window as any).__SEMIO_ACTOR__;
             if (!actor) return false;
             const snapshot = actor.getSnapshot();
@@ -53893,7 +53906,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                   importedFolderPaths.add(segments.slice(0, i).join("/"));
                 }
               });
-              const foldersByGuid = new Map((kit.folders ?? []).map((f: any) => [f.guid, f]));
+              const foldersByGuid = new Map<string, any>((kit.folders ?? []).map((f: any) => [f.guid, f]));
               const getFolderPath = (folderGuid?: string): string => {
                 if (!folderGuid) return "";
                 const folder = foldersByGuid.get(folderGuid);
@@ -54108,7 +54121,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                   importedFolderPaths.add(segments.slice(0, i).join("/"));
                 }
               });
-              const foldersByGuid = new Map((kit.folders ?? []).map((f: any) => [f.guid, f]));
+              const foldersByGuid = new Map<string, any>((kit.folders ?? []).map((f: any) => [f.guid, f]));
               const getFolderPath = (folderGuid?: string): string => {
                 if (!folderGuid) return "";
                 const folder = foldersByGuid.get(folderGuid);
@@ -54185,7 +54198,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       expect(infiniteLoopErrors).toHaveLength(0);
     });
 
-    test("Type", async ({ page }) => {
+    test("Type", async ({ page }: { page: any }) => {
       test.setTimeout(1500000);
       const { errors, warnings, messages } = await initType(page);
       const currentUrl = page.url();
@@ -54484,7 +54497,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           console.log(`[Type] Successful connector placement point: ${JSON.stringify(placementPoint)}`);
           expect(placementPoint).not.toBeNull();
           expect(connectorGuidsAfterPlacement).toHaveLength(connectorGuidsBeforePlacement.length + 1);
-          expect(connectorGuidsAfterPlacement.some((guid) => !connectorGuidsBeforePlacement.includes(guid))).toBe(true);
+          expect(connectorGuidsAfterPlacement.some((guid: any) => !connectorGuidsBeforePlacement.includes(guid))).toBe(true);
         }
       }
 
@@ -54534,7 +54547,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       await verifyTypeCreateKeepsNewNameInsteadOfFocusedModelValue(page);
     });
-    test("Design", async ({ page }) => {
+    test("Design", async ({ page }: { page: any }) => {
       test.setTimeout(1500000);
 
       const { errors, warnings, messages } = await initConsole(page);
@@ -54580,7 +54593,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log("[Design Test] hasDiagram:", hasDiagram, "hasScene:", hasScene);
 
       if (!hasDiagram && !hasScene) {
-        console.log("[Design Test] Page HTML:", await page.content().then((c) => c.slice(0, 2000)));
+        console.log("[Design Test] Page HTML:", await page.content().then((c: any) => c.slice(0, 2000)));
       }
       expect(hasDiagram || hasScene).toBe(true);
 
@@ -55152,7 +55165,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                   });
                 });
                 await page.evaluate(
-                  ({ guid }) => {
+                  ({ guid }: any) => {
                     const diagramDropZone = document.querySelector('[data-drop-zone="diagram"]') as HTMLElement | null;
                     if (!diagramDropZone) return;
                     const diagramDropZoneId = diagramDropZone.getAttribute("data-drop-zone-id");
@@ -55191,7 +55204,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             if (afterDropPieceCount === beforeDropPieceCount && draggedTypeGuid) {
               console.log("[Design] Both drag methods failed, creating piece via store");
               await page.evaluate(
-                ({ typeGuid }) => {
+                ({ typeGuid }: any) => {
                   const store = (window as any).__SEMIO_STORE__;
                   if (!store) return;
                   const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
@@ -55297,7 +55310,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           const pieceCountBeforeAdd = beforeAddPieces.length;
           const beforeAddPieceGuids = new Set(beforeAddPieces.map((piece) => piece.guid));
           await page.evaluate(
-            ({ typeGuid }) => {
+            ({ typeGuid }: any) => {
               const store = (window as any).__SEMIO_STORE__;
               if (!store) return;
               const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
@@ -55584,7 +55597,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         let additiveStateReady = true;
         try {
           await page.waitForFunction(
-            (id) => {
+            (id: any) => {
               const el = document.getElementById(id);
               if (!el) return false;
               const btn = el.querySelector("button");
@@ -55619,7 +55632,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           let subtractiveStateReady = true;
           try {
             await page.waitForFunction(
-              (id) => {
+              (id: any) => {
                 const el = document.getElementById(id);
                 if (!el) return false;
                 const btn = el.querySelector("button");
@@ -55667,7 +55680,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         let rectangularStateReady = true;
         try {
           await page.waitForFunction(
-            (id) => {
+            (id: any) => {
               const el = document.getElementById(id);
               if (!el) return false;
               const btn = el.querySelector("button");
@@ -55705,7 +55718,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         let lassoStateReady = true;
         try {
           await page.waitForFunction(
-            (id) => {
+            (id: any) => {
               const el = document.getElementById(id);
               if (!el) return false;
               const btn = el.querySelector("button");
@@ -55743,7 +55756,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         let handStateReady = true;
         try {
           await page.waitForFunction(
-            (id) => {
+            (id: any) => {
               const el = document.getElementById(id);
               if (!el) return false;
               const btn = el.querySelector("button");
@@ -55827,8 +55840,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         const portCountBeforeFilter = await diagramContainer.locator(".react-flow__handle:visible").count();
         const visibleConnectorHandles = diagramContainer.locator('.react-flow__handle[role="button"]:visible');
         const connectorHandleCountBeforeFilter = await visibleConnectorHandles.count();
-        const connectionPathMetrics = await page.locator(".react-flow__edge path").evaluateAll((nodes) => {
-          const validNodes = nodes.filter((node) => {
+        const connectionPathMetrics = await page.locator(".react-flow__edge path").evaluateAll((nodes: any[]) => {
+          const validNodes = nodes.filter((node: any) => {
             const pathData = node.getAttribute("d");
             return Boolean(pathData && pathData.trim().length > 0);
           });
@@ -56408,7 +56421,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
               return await rightSidePanel
                 .locator(`[id="${fieldId}"]`)
                 .first()
-                .evaluate((node) => {
+                .evaluate((node: any) => {
                   const row = node.closest('[data-slot="property-row"]');
                   const label = row?.querySelector('[data-slot="property-label"]');
                   return label?.textContent?.trim() ?? null;
@@ -56595,7 +56608,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           const selectedPieceGuid = pieceGuidFromDiagram?.replace(/^piece-\d+-/, "") || "";
           const applySelectionShape = async (shape: "guid" | "nodeId" | "nestedObject" | "wrappedString") => {
             return await page.evaluate(
-              ({ shape, pieceGuid }) => {
+              ({ shape, pieceGuid }: any) => {
                 if (!pieceGuid) return { applied: false, reason: "missing-piece-guid" };
                 const actor = (window as any).__SEMIO_ACTOR__;
                 if (!actor) return { applied: false, reason: "missing-actor" };
@@ -56676,7 +56689,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                 const el = page.locator(`${panel} [id="${id}"]`).first();
                 try {
                   await el.scrollIntoViewIfNeeded({ timeout: 3000 });
-                  return await el.evaluate((node) => Boolean((node as HTMLElement).closest('[data-slot="property-row"]')));
+                  return await el.evaluate((node: any) => Boolean((node as HTMLElement).closest('[data-slot="property-row"]')));
                 } catch {
                   return false;
                 }
@@ -56737,9 +56750,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                 });
               });
               console.log(`[Design] ${label} piece property-group alignment => ${JSON.stringify(alignedPropertyGroups)}`);
-              const visibleAlignedPropertyGroups = alignedPropertyGroups.filter((entry) => entry.present);
+              const visibleAlignedPropertyGroups = alignedPropertyGroups.filter((entry: any) => entry.present);
               expect(visibleAlignedPropertyGroups.length).toBeGreaterThan(0);
-              visibleAlignedPropertyGroups.forEach((entry) => {
+              visibleAlignedPropertyGroups.forEach((entry: any) => {
                 expect(entry.topDelta).not.toBeNull();
                 expect((entry.topDelta as number) >= 0).toBe(true);
               });
@@ -56785,9 +56798,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                 });
               });
               console.log(`[Design] ${label} plane section spacing => ${JSON.stringify(planeSectionSpacing)}`);
-              const visiblePlaneSections = planeSectionSpacing.filter((entry) => entry.present);
+              const visiblePlaneSections = planeSectionSpacing.filter((entry: any) => entry.present);
               expect(visiblePlaneSections.length).toBe(3);
-              visiblePlaneSections.forEach((entry) => {
+              visiblePlaneSections.forEach((entry: any) => {
                 expect(entry.sectionToFirstRowGap).not.toBeNull();
                 expect((entry.sectionToFirstRowGap as number) >= 12).toBe(true);
                 expect(entry.sectionMarginBottom).not.toBeNull();
@@ -56902,7 +56915,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                 expect(connectingPortLabel).toBe("port");
                 expect(connectedPieceLabel).toBe("piece");
                 expect(connectedPortLabel).toBe("port");
-                connectionInfoRowStructure.forEach((entry) => {
+                connectionInfoRowStructure.forEach((entry: any) => {
                   expect(entry.present).toBe(true);
                   expect(entry.toggleButtons).toBe(0);
                   expect(entry.inputCenterDelta).not.toBeNull();
@@ -56953,9 +56966,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                   });
                 });
                 console.log(`[Design] ${label} connection group alignment => ${JSON.stringify(alignedConnectionGroups)}`);
-                const visibleAlignedConnectionGroups = alignedConnectionGroups.filter((entry) => entry.present);
+                const visibleAlignedConnectionGroups = alignedConnectionGroups.filter((entry: any) => entry.present);
                 expect(visibleAlignedConnectionGroups.length).toBeGreaterThan(0);
-                visibleAlignedConnectionGroups.forEach((entry) => {
+                visibleAlignedConnectionGroups.forEach((entry: any) => {
                   expect(entry.topDelta).not.toBeNull();
                   expect((entry.topDelta as number) >= 0).toBe(true);
                 });
@@ -57118,7 +57131,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
           if (visibleConnectorHandles.length >= 2) {
             const firstHandle = visibleConnectorHandles[0];
-            const secondHandle = visibleConnectorHandles.find((handle) => handle.pieceGuid !== firstHandle.pieceGuid || handle.connectorGuid !== firstHandle.connectorGuid) ?? visibleConnectorHandles[1];
+            const secondHandle = visibleConnectorHandles.find((handle: any) => handle.pieceGuid !== firstHandle.pieceGuid || handle.connectorGuid !== firstHandle.connectorGuid) ?? visibleConnectorHandles[1];
 
             const firstHandleLocator = diagramContainer.locator(`.react-flow__handle[role="button"][data-piece-guid="${firstHandle.pieceGuid}"][data-connector-guid="${firstHandle.connectorGuid}"]`).first();
             const secondHandleLocator = diagramContainer.locator(`.react-flow__handle[role="button"][data-piece-guid="${secondHandle.pieceGuid}"][data-connector-guid="${secondHandle.connectorGuid}"]`).first();
@@ -57144,7 +57157,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             await firstHandleLocator.click({ force: true });
 
             const firstConnectorClickSummary = await page.evaluate(
-              ({ firstHandle, secondHandle }) => {
+              ({ firstHandle, secondHandle }: any) => {
                 const actor = (window as any).__SEMIO_ACTOR__;
                 const store = (window as any).__SEMIO_STORE__;
                 const normalizeColor = (value: string) => {
@@ -57210,7 +57223,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             await secondHandleLocator.click({ force: true });
 
             const secondConnectorClickSummary = await page.evaluate(
-              ({ secondHandle }) => {
+              ({ secondHandle }: any) => {
                 const actor = (window as any).__SEMIO_ACTOR__;
                 const store = (window as any).__SEMIO_STORE__;
                 if (!actor || !store) return { ok: false, reason: "missing-store-or-actor" };
@@ -57419,7 +57432,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             };
             const applySharedSelection = async (pieceGuid: string) => {
               const result = await page.evaluate(
-                ({ pieceGuid }) => {
+                ({ pieceGuid }: any) => {
                   const actor = (window as any).__SEMIO_ACTOR__;
                   if (!actor) return { applied: false, reason: "missing-actor" };
                   const snapshot = actor.getSnapshot();
@@ -57449,7 +57462,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             };
             const applySharedSelectionPieces = async (pieceGuids: string[]) => {
               const result = await page.evaluate(
-                ({ pieceGuids }) => {
+                ({ pieceGuids }: any) => {
                   const actor = (window as any).__SEMIO_ACTOR__;
                   if (!actor) return { applied: false, reason: "missing-actor" };
                   const snapshot = actor.getSnapshot();
@@ -57481,23 +57494,23 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             };
             const dragRectangularSelection = async (targetNodeIds: string[]) => {
               const dragArea = await page.evaluate(
-                ({ targetNodeIds }) => {
+                ({ targetNodeIds }: any) => {
                   const pane = document.querySelector(".react-flow__pane");
                   if (!(pane instanceof HTMLElement)) return null;
                   const paneRect = pane.getBoundingClientRect();
                   const nodeRects = targetNodeIds
-                    .map((nodeId) => {
+                    .map((nodeId: any) => {
                       const node = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`);
                       if (!(node instanceof HTMLElement)) return null;
                       const rect = node.getBoundingClientRect();
                       return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
                     })
-                    .filter((entry): entry is { left: number; top: number; right: number; bottom: number } => entry !== null);
+                    .filter((entry: any): entry is { left: number; top: number; right: number; bottom: number } => entry !== null);
                   if (nodeRects.length !== targetNodeIds.length) return null;
-                  const left = Math.max(paneRect.left + 8, Math.min(...nodeRects.map((entry) => entry.left)) - 12);
-                  const top = Math.max(paneRect.top + 8, Math.min(...nodeRects.map((entry) => entry.top)) - 12);
-                  const right = Math.min(paneRect.right - 8, Math.max(...nodeRects.map((entry) => entry.right)) + 12);
-                  const bottom = Math.min(paneRect.bottom - 8, Math.max(...nodeRects.map((entry) => entry.bottom)) + 12);
+                  const left = Math.max(paneRect.left + 8, Math.min(...nodeRects.map((entry: any) => entry.left)) - 12);
+                  const top = Math.max(paneRect.top + 8, Math.min(...nodeRects.map((entry: any) => entry.top)) - 12);
+                  const right = Math.min(paneRect.right - 8, Math.max(...nodeRects.map((entry: any) => entry.right)) + 12);
+                  const bottom = Math.min(paneRect.bottom - 8, Math.max(...nodeRects.map((entry: any) => entry.bottom)) + 12);
                   return { left, top, right, bottom };
                 },
                 { targetNodeIds },
@@ -57578,7 +57591,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
             // 🧪Select both pieces via DESIGN.SET_SELECTION for multi-piece selection test
             const setSelResult = await page.evaluate(
-              ({ pieces }) => {
+              ({ pieces }: any) => {
                 const actor = (window as any).__SEMIO_ACTOR__;
                 if (!actor) return { sent: false, reason: "missing-actor" };
                 const snapshot = actor.getSnapshot();
@@ -57610,7 +57623,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                   if (current.length < 2) {
                     // Re-apply selection if onSelectionChange overwrote it
                     await page.evaluate(
-                      ({ pieces }) => {
+                      ({ pieces }: any) => {
                         const actor = (window as any).__SEMIO_ACTOR__;
                         if (!actor) return;
                         const snapshot = actor.getSnapshot();
@@ -57773,15 +57786,15 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       if (typeCountDnD > 0) {
         const firstTypeAvatarDnD = typeAvatarsDnD.first();
-        const avatarInfoDnD = await firstTypeAvatarDnD.evaluate((el) => {
+        const avatarInfoDnD = await firstTypeAvatarDnD.evaluate((el: any) => {
           return {
             tagName: el.tagName,
-            attributes: Array.from(el.attributes).map((a) => ({ name: a.name, value: a.value })),
+            attributes: Array.from(el.attributes).map((a: any) => ({ name: a.name, value: a.value })),
             innerText: el.textContent,
           };
         });
 
-        const hasDraggableAttributeDnD = avatarInfoDnD.attributes.some((a) => a.name === "aria-roledescription" && a.value === "draggable");
+        const hasDraggableAttributeDnD = avatarInfoDnD.attributes.some((a: any) => a.name === "aria-roledescription" && a.value === "draggable");
         console.log(`[Design] Type avatar has draggable attribute: ${hasDraggableAttributeDnD}`);
       } else {
         console.log("[Design] No type avatars found, skipping drag and drop verification");
@@ -58097,8 +58110,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           console.log(`[Design] Parent's parent: ${parentParentGuid?.slice(0, 8) ?? "none"}, siblings: ${siblingGuids.length}`);
 
           const allPieceNodes = diagramContainer.locator(".react-flow__node");
-          const nodeDataIds = await allPieceNodes.evaluateAll((nodes) => nodes.map((n) => (n as HTMLElement).getAttribute("data-id") ?? ""));
-          const findNodeDataId = (pieceGuid: string) => nodeDataIds.find((id) => id.endsWith(pieceGuid));
+          const nodeDataIds = await allPieceNodes.evaluateAll((nodes: any[]) => nodes.map((n: any) => (n as HTMLElement).getAttribute("data-id") ?? ""));
+          const findNodeDataId = (pieceGuid: string) => nodeDataIds.find((id: any) => id.endsWith(pieceGuid));
 
           const parentNodeId = findNodeDataId(parentWithChildAndGrandchild);
           const childNodeId = findNodeDataId(childGuid);
@@ -58366,9 +58379,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             .first()
             .isVisible()
             .catch(() => false);
-          const rightPanelIds = await page.locator(`${panel} [id]`).evaluateAll((els) =>
+          const rightPanelIds = await page.locator(`${panel} [id]`).evaluateAll((els: any[]) =>
             els
-              .map((el) => el.id)
+              .map((el: any) => el.id)
               .filter(Boolean)
               .slice(0, 30),
           );
@@ -58603,7 +58616,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await verifyDesignDragPerformance(page, errors);
     });
 
-    test("Docs", async ({ page }) => {
+    test("Docs", async ({ page }: { page: any }) => {
       const { errors: consoleErrors, messages: consoleMessages } = await initConsole(page);
       await initDocs(page);
       await expectNoLegacyWindowTabs(page, "Docs");
@@ -58677,7 +58690,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log("[Docs] Docs test complete");
     });
 
-    test("Feedback", async ({ page }) => {
+    test("Feedback", async ({ page }: { page: any }) => {
       // #region 🎲Navigation
       console.log("[Feedback] Testing navigation to feedback page");
       await warmSketchpadEntrypoint(page);
@@ -59947,11 +59960,11 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         const adapter = {
           operations: [] as string[],
           stored: undefined as Uint8Array | undefined,
-          readKit: async () => adapter.stored,
+          readKit: async () => adapter.stored ?? null,
           writeKit: async (bytes: Uint8Array) => {
             adapter.stored = bytes;
           },
-          readFile: async (_path: string) => undefined,
+          readFile: async (_path: string) => null,
           writeFile: async (_path: string, _blob: Blob) => {},
           deleteFile: async (_path: string) => {},
           createDirectory: async (path: string) => {
@@ -60188,7 +60201,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       }
     });
 
-    test("Settings Panel In All Apps", async ({ page }) => {
+    test("Settings Panel In All Apps", async ({ page }: { page: any }) => {
       test.setTimeout(180000);
       const { errors } = await initConsole(page);
 

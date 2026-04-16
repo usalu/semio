@@ -2498,8 +2498,8 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
   const result = withPlaneAndCenter.map(({ piece, status }) => {
     const kindGuid = piece.type?.guid;
     let kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
-    if (!kind && piece.type?.name) {
-      kind = kit.types?.find((candidateKind) => candidateKind.name === piece.type!.name);
+    if (!kind && (piece.type as any)?.name) {
+      kind = kit.types?.find((candidateKind) => candidateKind.name === (piece.type as any).name);
     }
     let file: SemioFile | undefined;
     let selectedModel = kind?.models?.length ? selectBestModel(kind.models, []) : undefined;
@@ -5362,8 +5362,8 @@ export const mountMcpKitViewer = (createRoot: (container: HTMLElement) => { rend
 
 // #endregion 🗿McpApp
 
-if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
+if ((import.meta as any).vitest) {
+  const { describe, expect, it } = (import.meta as any).vitest;
 
   describe("parseDiagramPayloadFromToolResult", () => {
     it("parses JSON from MCP text content blocks", () => {
@@ -6110,7 +6110,7 @@ if (import.meta.vitest) {
         files: [{ guid: "file-1", name: "cap.glb", blob: "data:model/gltf-binary;base64,QUFB" }],
       } as unknown as Kit;
 
-      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { name: "Capsule" } as { name: string }, plane: testPlane, center: testCenter } as Piece, status: "default" }]);
+      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { name: "Capsule" }, plane: testPlane, center: testCenter } as any as Piece, status: "default" }]);
 
       expect(assets[0]?.modelSource).toBe("data:model/gltf-binary;base64,QUFB");
     });

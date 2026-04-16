@@ -61,6 +61,7 @@ const __filename = fileURLToPath(import.meta.url);
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);
+const RUNTIME_ASSET_DIRECTORIES = new Set(["badges", "cursors", "fonts", "icons", "images", "logo", "models"]);
 
 function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: any, res: any, next: any) => void) => void } }, fsMod: typeof import("fs")) {
   const sketchpadPublicPath = path.resolve(__dirname, "public");
@@ -75,7 +76,13 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
       }
     }
     if (req.url?.startsWith("/assets/")) {
-      const filePath = path.join(assetsPath, req.url.replace("/assets/", ""));
+      const requestedAssetPath = req.url.replace("/assets/", "").split(/[?#]/, 1)[0];
+      const [assetDirectory] = requestedAssetPath.split("/");
+      if (!RUNTIME_ASSET_DIRECTORIES.has(assetDirectory)) {
+        next();
+        return;
+      }
+      const filePath = path.join(assetsPath, requestedAssetPath);
       if (fsMod.existsSync(filePath) && fsMod.statSync(filePath).isFile()) {
         fsMod.createReadStream(filePath).pipe(res);
         return;
@@ -99,6 +106,11 @@ export default defineConfig(async ({ mode }) => {
   const schedulerEntry = path.join(schedulerRoot, prod ? "scheduler.production.js" : "scheduler.development.js");
   const viteInternalFallback = path.resolve(__dirname, "../../node_modules/vite/dist/node/index.js");
   return {
+    define: {
+      __SEMIO_JS_RUN_BENCHMARKS__: "false",
+      __SEMIO_JS_RUN_EMBEDDED_TESTS__: "false",
+      __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
+    },
     resolve: {
       dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
       alias: [

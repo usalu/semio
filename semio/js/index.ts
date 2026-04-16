@@ -14695,11 +14695,26 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
 
 // #endregion 🕌File Tree Utilities
 
+// #region 🧪Runtime Test Flags
+// Test and benchmark blocks MUST compile out of browser bundles while staying runnable in Node.
+declare const __SEMIO_JS_RUN_EMBEDDED_TESTS__: boolean | undefined;
+declare const __SEMIO_JS_RUN_BENCHMARKS__: boolean | undefined;
+
+const shouldRunEmbeddedJsTests =
+  (typeof __SEMIO_JS_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_JS_RUN_EMBEDDED_TESTS__) ||
+  (typeof __SEMIO_JS_RUN_EMBEDDED_TESTS__ === "undefined" && typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof process !== "undefined" && process.env.SEMIO_JS_RUN_EMBEDDED_TESTS === "1");
+
+const shouldRunJsBenchmarks =
+  (typeof __SEMIO_JS_RUN_BENCHMARKS__ !== "undefined" && __SEMIO_JS_RUN_BENCHMARKS__) ||
+  (typeof __SEMIO_JS_RUN_BENCHMARKS__ === "undefined" && typeof process !== "undefined" && process.argv?.includes("--bench"));
+
+// #endregion 🧪Runtime Test Flags
+
 // #region 🧪Tests
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
 // Specs: Other workspaces (e.g. @semio/ui) import this module while Vitest runs their tests; `SEMIO_JS_RUN_EMBEDDED_TESTS` is set only in @semio/js `npm test` so we do not pull @semio/sketchpad into unrelated Vitest SSR graphs.
-if (typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof process !== "undefined" && process.env.SEMIO_JS_RUN_EMBEDDED_TESTS === "1") {
+if (shouldRunEmbeddedJsTests) {
   const { beforeAll, describe, expect, it, vi } = await import("vitest");
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
@@ -19363,10 +19378,11 @@ async function bench(name: string, fn: () => Promise<void> | void) {
 
 // 🚩Runs all benchmarks. MUST only be called explicitly (e.g. via CLI flag).
 async function runBenchmarks() {
-  const DiffForward = (await import("@semio/assets/semio/metabolism.kit.diff.semio.json")).default;
-  const DiffInverse = (await import("@semio/assets/semio/metabolism.kit.diff.inverted.semio.json")).default;
-  const BenchMetabolismKit = (await import("@semio/assets/semio/metabolism.kit.semio.json")).default;
-  const BenchInvalidKit = (await import("@semio/assets/semio/invalid.kit.semio.json")).default;
+  const importAtRuntime = async <TModule = any,>(moduleId: string): Promise<TModule> => import(/* @vite-ignore */ moduleId);
+  const DiffForward = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diff.semio.json"].join("/"))).default;
+  const DiffInverse = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diff.inverted.semio.json"].join("/"))).default;
+  const BenchMetabolismKit = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.semio.json"].join("/"))).default;
+  const BenchInvalidKit = (await importAtRuntime<any>(["@semio/assets", "semio/invalid.kit.semio.json"].join("/"))).default;
 
   const kitMetabolism = BenchMetabolismKit as unknown as Kit;
   const kitInvalid = BenchInvalidKit as unknown as Kit;
@@ -19438,7 +19454,7 @@ async function runBenchmarks() {
   });
 }
 
-if (typeof process !== "undefined" && process.argv?.includes("--bench")) {
+if (shouldRunJsBenchmarks) {
   runBenchmarks();
 }
 

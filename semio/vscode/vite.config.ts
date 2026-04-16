@@ -34,6 +34,11 @@ export default defineConfig(async ({ mode }) => {
     const tailwind = await import("@tailwindcss/vite");
     return {
       root: __dirname,
+      define: {
+        __SEMIO_JS_RUN_BENCHMARKS__: "false",
+        __SEMIO_JS_RUN_EMBEDDED_TESTS__: "false",
+        __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
+      },
       plugins: [
         // Stub Node.js-only modules, test frameworks, and benchmark assets as empty modules
         // so the browser bundle does not crash on missing Node.js built-ins.

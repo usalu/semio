@@ -44,6 +44,7 @@ export default defineConfig(async () => {
   const fs = await import("fs");
   const viteInternalFallback = path.resolve(__dirname, "../../../node_modules/vite/dist/node/index.js");
   return {
+    base: "./",
     resolve: {
       alias: [
         { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },

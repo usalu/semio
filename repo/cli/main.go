@@ -772,9 +772,27 @@ func syncCommand(factory EngineFactory, config *Config) *cobra.Command {
 	sync := &cobra.Command{
 		Use:   "sync",
 		Short: "Synchronize monorepo artifacts",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				return fmt.Errorf("unknown sync target %q", args[0])
+			}
+			return cmd.Help()
+		},
 	}
+	sync.AddCommand(syncGitHubCommand(factory, config))
 	sync.AddCommand(syncManagementCommand(factory, config))
 	return sync
+}
+
+// 🐙syncGitHubCommand wires the explicit GitHub synchronization CLI command.
+func syncGitHubCommand(factory EngineFactory, config *Config) *cobra.Command {
+	return &cobra.Command{
+		Use:   "github",
+		Short: "Synchronize local state with GitHub",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runSyncManagementMutation(cmd, factory, config)
+		},
+	}
 }
 
 // 🔸syncManagementCommand holds the data fields for a syncManagementCommand record.
@@ -783,10 +801,15 @@ func syncManagementCommand(factory EngineFactory, config *Config) *cobra.Command
 		Use:   "management",
 		Short: "Synchronize local state with management provider",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			query := `mutation SyncManagement { syncManagement }`
-			return runGraphQL(cmd, factory, config, query, nil)
+			return runSyncManagementMutation(cmd, factory, config)
 		},
 	}
+}
+
+// 🔁runSyncManagementMutation executes the shared management synchronization mutation.
+func runSyncManagementMutation(cmd *cobra.Command, factory EngineFactory, config *Config) error {
+	query := `mutation SyncManagement { syncManagement }`
+	return runGraphQL(cmd, factory, config, query, nil)
 }
 
 // 🔺mcpCommand holds the data fields for a mcpCommand record.
