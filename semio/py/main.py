@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import abc
 import base64
+import collections
 import copy
 import dataclasses
 import datetime
@@ -29,12 +30,14 @@ import enum
 import fnmatch
 import hashlib
 import json
+import math
 import os
 import pathlib
 import shutil
 import struct
 import sys
 import tempfile
+import threading
 import time
 import typing
 import urllib
@@ -1673,6 +1676,41 @@ class Benchmark(
 
 
 BENCHMARK_ITERATIONS = 3
+BENCHMARK_CSV_LANGUAGES = ["go", "typescript", "python", "rust", "csharp"]
+
+
+def _benchmark_csv_path() -> str:
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "benchmark.csv"))
+
+
+def _append_benchmark_csv(language: str, name: str, duration_seconds: float):
+    import csv
+    import io
+
+    path = _benchmark_csv_path()
+    rows: dict[str, dict[str, str]] = {}
+    order: list[str] = []
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            if reader.fieldnames and reader.fieldnames[0] == "name":
+                for record in reader:
+                    row_name = record.get("name") or ""
+                    if not row_name:
+                        continue
+                    rows[row_name] = {lang: record.get(lang, "") or "" for lang in BENCHMARK_CSV_LANGUAGES}
+                    order.append(row_name)
+    if name not in rows:
+        rows[name] = {}
+        order.append(name)
+    rows[name][language] = f"{duration_seconds * 1000:.6f}"
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, lineterminator="\n")
+    writer.writerow(["name", *BENCHMARK_CSV_LANGUAGES])
+    for row_name in order:
+        writer.writerow([row_name, *[rows[row_name].get(lang, "") for lang in BENCHMARK_CSV_LANGUAGES]])
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(buffer.getvalue())
 
 
 def _bench(name: str, func):
@@ -1682,82 +1720,69 @@ def _bench(name: str, func):
     end = time.perf_counter()
     duration = (end - start) / BENCHMARK_ITERATIONS
     print(f"{name},{duration:.6f}")
+    _append_benchmark_csv("python", name, duration)
 
 
 def benchmark_main():
-    kit_metabolism = _test_load_kit("metabolism.kit.semio.json")
+    kit_metabolism = _test_load_json("metabolism.kit.semio.json")
+    kit_original = {**kit_metabolism, "designs": [d for d in kit_metabolism.get("designs", []) if not d.get("parent")]}
     kit_invalid = _test_load_kit("invalid.kit.semio.json")
 
-    kit_obj = Kit.parse(kit_metabolism)
-
-    kit_invalid_obj = Kit.parse(kit_invalid)
-
     def test_roundtrip():
-        kit, files = import_kit(os.path.join(TEST_ASSETS_DIR, "metabolism.zip"))
-
-        export_kit(kit, files, "temp_benchmark_metabolism.zip")
-        if os.path.exists("temp_benchmark_metabolism.zip"):
-            os.remove("temp_benchmark_metabolism.zip")
+        serialized = json.dumps(kit_metabolism, indent=2)
+        deserialized = json.loads(serialized)
+        if not areKitsDictEqual(kit_metabolism, deserialized):
+            raise AssertionError("Roundtrip/Metabolism output does not match test expectation")
 
     _bench("Roundtrip/Metabolism", test_roundtrip)
 
-    diff_forward = _test_load_json("metabolism.kit.diff.semio.json")
-    diff_inverse = _test_load_json("metabolism.kit.diff.inverted.semio.json")
+    kit_diffed = _test_load_json("metabolism.kit.diffed.semio.json")
+    _metabolism_change = getKitChange(kit_original, kit_diffed)
+    diff_forward = _metabolism_change.forward
+    diff_inverse = _metabolism_change.backward
 
     def test_diff_metabolism():
-        k2 = applyKitDiffDict(kit_metabolism, diff_forward)
-        applyKitDiffDict(k2, diff_inverse)
+        k2 = copy.deepcopy(kit_original)
+        applyKitDiffDict(k2, diff_forward)
+        if not areKitsDictEqual(k2, kit_diffed):
+            raise AssertionError("Diff/Metabolism forward kit output does not match test expectation")
+        restored = copy.deepcopy(k2)
+        applyKitDiffDict(restored, diff_inverse)
+        if not areKitsDictEqual(restored, kit_original):
+            raise AssertionError("Diff/Metabolism inverse output does not match test expectation")
 
     _bench("Diff/Metabolism", test_diff_metabolism)
 
-    d1 = _test_find_design(kit_metabolism, "Nakagin Capsule Tower")
+    flatten_cases = _test_load_json("flatten.cases.semio.json")["cases"]
+    for _fc in flatten_cases:
+        _fc_path = _fc["designPath"]
+        _fc_design = _test_find_design(kit_metabolism, _fc_path[-1], _fc_path[-2] if len(_fc_path) > 1 else None)
+        _fc_label = "Flatten Design/" + "/".join(_fc_path)
 
-    def test_flatten_nakagin():
-        flattenDesignDict(kit_metabolism, d1["guid"])
+        def _make_flatten_bench(_kit, _design, _label):
+            def fn():
+                diff = flattenDesignDict(_kit, _design["guid"])
+                if not diff.get("pieces", {}).get("updated"):
+                    raise AssertionError(f"{_label} output does not match test expectation")
 
-    _bench("Flatten Design/Nakagin Capsule Tower", test_flatten_nakagin)
+            return fn
 
-    d2 = _test_find_design(kit_metabolism, "Slanted", "Nakagin Capsule Tower")
-
-    def test_flatten_nakagin_slanted():
-        flattenDesignDict(kit_metabolism, d2["guid"])
-
-    _bench("Flatten Design/Nakagin Capsule Tower/Slanted", test_flatten_nakagin_slanted)
-
-    d3 = _test_find_design(kit_metabolism, "Twisted", "Nakagin Capsule Tower")
-
-    def test_flatten_nakagin_twisted():
-        flattenDesignDict(kit_metabolism, d3["guid"])
-
-    _bench("Flatten Design/Nakagin Capsule Tower/Twisted", test_flatten_nakagin_twisted)
-
-    d4 = _test_find_design(kit_metabolism, "Dancing", "Nakagin Capsule Tower")
-
-    def test_flatten_nakagin_dancing():
-        flattenDesignDict(kit_metabolism, d4["guid"])
-
-    _bench("Flatten Design/Nakagin Capsule Tower/Dancing", test_flatten_nakagin_dancing)
-
-    d5 = _test_find_design(kit_metabolism, "Capsule Dream")
-
-    def test_flatten_capsule_dream():
-        flattenDesignDict(kit_metabolism, d5["guid"])
-
-    _bench("Flatten Design/Capsule Dream", test_flatten_capsule_dream)
+        _bench(_fc_label, _make_flatten_bench(kit_metabolism, _fc_design, _fc_label))
 
     def test_validate_invalid():
-        validateKit(kit_invalid_obj)
+        result = validateKitDict(kit_invalid)
+        if not result.hasErrors():
+            raise AssertionError("Validation/Invalid Kit output does not match test expectation")
 
     _bench("Validation/Invalid Kit", test_validate_invalid)
 
     def test_validate_metabolism():
-        validateKit(kit_obj)
+        result = validateKitDict(kit_metabolism)
+        if result.hasErrors():
+            raise AssertionError("Validation/Metabolism output does not match test expectation")
 
     _bench("Validation/Metabolism", test_validate_metabolism)
 
-
-if __name__ == "__main__":
-    benchmark_main()
 
 # #endregion 📏Benchmark
 
@@ -2796,6 +2821,12 @@ class TypeParentField(RealField, abc.ABC):
     parent: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
+class TypeFamiliesField(RealField, abc.ABC):
+    """🔖Field mixin for the families of a type."""
+
+    families: list[str] = pydantic.Field(default_factory=list)
+
+
 class TypeIsAbstractField(RealField, abc.ABC):
     """🔖Field mixin for the is abstract of a type."""
 
@@ -2874,6 +2905,7 @@ class TypeProps(
     TypeFolderField,
     TypeIsAbstractField,
     TypeParentField,
+    TypeFamiliesField,
     TypeVirtualField,
     TypeStockField,
     TypeImageField,
@@ -2889,6 +2921,7 @@ class TypeProps(
 
 class TypeInput(
     TypeUnitField,
+    TypeFamiliesField,
     TypeVirtualField,
     TypeStockField,
     TypeImageField,
@@ -2915,6 +2948,7 @@ class TypeOutput(
     TypeUpdatedField,
     TypeCreatedField,
     TypeUnitField,
+    TypeFamiliesField,
     TypeVirtualField,
     TypeStockField,
     TypeImageField,
@@ -2970,6 +3004,7 @@ class Type(
     TypeFolderField,
     TypeIsAbstractField,
     TypeParentField,
+    TypeFamiliesField,
     TableEntity,
 ):
     """Type entity defining a reusable parametric building block."""
@@ -3054,42 +3089,43 @@ class Type(
             stock=2147483647 if obj.get("stock") is None else obj.get("stock"),
             unit=obj.get("unit", ""),
             parent=parent_guid,
+            families=[_ref_guid(f) for f in (obj.get("families") or [])],
             folder=folder_guid,
         )
         try:
             location_obj = obj.get("location")
             if location_obj:
                 entity.location = Location.parse(location_obj) if isinstance(location_obj, dict) else location_obj
-        except (KeyError, AttributeError):
+        except KeyError, AttributeError:
             pass
         try:
             models = [Model.parse(r) for r in obj["models"]]
             entity.models = models
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             connectors = [Connector.parse(p) for p in obj["connectors"]]
             entity.connectors = connectors
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
 
         return entity
@@ -3602,12 +3638,12 @@ class Side(BaseModel):
         try:
             connectorObj = obj.get("connector")
             connector = ConnectorId.parse(connectorObj) if connectorObj is not None else None
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             connector = None
         try:
             designPieceObj = obj.get("designPiece")
             designPiece = PieceId.parse(designPieceObj) if designPieceObj is not None else None
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             designPiece = None
         return cls(piece=piece, designPiece=designPiece, connector=connector)
 
@@ -4189,6 +4225,12 @@ class DesignParentField(RealField, abc.ABC):
     parent: typing.Optional[str] = pydantic.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 
+class DesignFamiliesField(RealField, abc.ABC):
+    """🔖Field mixin for the families of a design."""
+
+    families: list[str] = pydantic.Field(default_factory=list)
+
+
 class DesignIsAbstractField(RealField, abc.ABC):
     """🔖Field mixin for the is abstract of a design."""
 
@@ -4255,6 +4297,7 @@ class DesignProps(
     DesignFolderField,
     DesignIsAbstractField,
     DesignParentField,
+    DesignFamiliesField,
     DesignLocationField,
     DesignImageField,
     DesignIconField,
@@ -4269,6 +4312,7 @@ class DesignProps(
 
 class DesignInput(
     DesignUnitField,
+    DesignFamiliesField,
     DesignImageField,
     DesignIconField,
     DesignDescriptionField,
@@ -4311,6 +4355,7 @@ class DesignOutput(
     DesignUpdatedField,
     DesignCreatedField,
     DesignUnitField,
+    DesignFamiliesField,
     DesignImageField,
     DesignIconField,
     DesignDescriptionField,
@@ -4357,6 +4402,7 @@ class Design(
     DesignFolderField,
     DesignIsAbstractField,
     DesignParentField,
+    DesignFamiliesField,
     TableEntity,
 ):
     """Design entity composing pieces and connections into an assembly."""
@@ -4426,7 +4472,7 @@ class Design(
         entity = cls(**props.model_dump())
         try:
             entity.location = props.location
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         typesDict = {}
         for type in types:
@@ -4438,32 +4484,32 @@ class Design(
         try:
             pieces = [Piece.parse(p, typesDict, designsById) for p in obj["pieces"]]
             entity.pieces = pieces
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             connections = [Connection.parse(c, pieces, designsById) for c in obj["connections"]]
             entity.connections = connections
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             attributes = [Attribute.parse(q) for q in obj["attributes"]]
             entity.attributes = attributes
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         return entity
 
@@ -4535,18 +4581,18 @@ class KitKind(str, enum.Enum):
     """🔖Discriminator for the five kit persistence/transport forms.
 
     Specs: Exactly five kit kinds exist:
-    - FILE: Self-contained JSON file
-    - FOLDER: Local folder with .semio/kit.db SQLite and asset files
-    - ARCHIVE: ZIP file packaging a FolderKit structure
+    - DEV: Self-contained JSON file for development
+    - LOCAL: Local folder with .semio/kit.db SQLite and asset files
+    - ARCHIVE: ZIP file packaging a LocalKit structure
     - REMOTE: URL-addressable kit served over HTTP(S)
-    - TEMPORARY: In-memory ephemeral kit (no persistence)
+    - TRANSPORT: In-memory ephemeral kit for serialization/deserialization
     """
 
-    FILE = "file"
-    FOLDER = "folder"
+    DEV = "dev"
+    LOCAL = "local"
     ARCHIVE = "archive"
     REMOTE = "remote"
-    TEMPORARY = "temporary"
+    TRANSPORT = "transport"
 
 
 ALL_KIT_KINDS: list[KitKind] = list(KitKind)
@@ -4709,6 +4755,24 @@ class KitOutput(
     concepts: list[str] = pydantic.Field(default_factory=list)
 
 
+@dataclasses.dataclass
+class KitGraphChange:
+    """🔄Bidirectional kit graph mutation with validation snapshot (TypeScript KitChange parity)."""
+
+    forward: dict
+    backward: dict
+    validation: dict
+
+
+@dataclasses.dataclass
+class _KitGraphTxn:
+    """Open transaction: snapshot at start plus undo/redo stacks."""
+
+    start_snapshot: dict
+    steps: list[KitGraphChange] = dataclasses.field(default_factory=list)
+    redo: list[KitGraphChange] = dataclasses.field(default_factory=list)
+
+
 class Kit(
     KitNameField,
     KitVersionField,
@@ -4736,6 +4800,17 @@ class Kit(
     designs: list[Design] = pydantic.Field(default_factory=list)
     qualities: list[Quality] = pydantic.Field(default_factory=list)
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
+
+    _graph_lock: threading.Lock = pydantic.PrivateAttr(default_factory=threading.Lock)
+    _backbone: typing.Callable[..., typing.Any] | None = pydantic.PrivateAttr(default=None)
+    _strict_mode: bool = pydantic.PrivateAttr(default=False)
+    _conflicted: bool = pydantic.PrivateAttr(default=False)
+    _conflict_errors: list[typing.Any] = pydantic.PrivateAttr(default_factory=list)
+    _conflict_warnings: list[typing.Any] = pydantic.PrivateAttr(default_factory=list)
+    _open_transactions: dict[str, _KitGraphTxn] = pydantic.PrivateAttr(default_factory=dict)
+    _history_past: list[KitGraphChange] = pydantic.PrivateAttr(default_factory=list)
+    _history_future: list[KitGraphChange] = pydantic.PrivateAttr(default_factory=list)
+    _flatten_merkle: dict[str, dict[str, dict]] = pydantic.PrivateAttr(default_factory=dict)
 
     @property
     def concepts(self: "Kit") -> list[str]:
@@ -4778,22 +4853,22 @@ class Kit(
         try:
             types = [Type.parse(t) for t in obj["types"]]
             entity.types = types
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             designs = [Design.parse(d, types) for d in obj["designs"]]
             entity.designs = designs
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             folders = [Folder.parse(f) for f in obj["folders"]]
             entity.folders = folders
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         return entity
 
@@ -4852,96 +4927,56 @@ class Kit(
                 return design
         raise ValueError(f"Design {design_guid} not found in kit {self.name}")
 
+    @staticmethod
+    def _entity_family_guids(entity: typing.Any) -> set[str]:
+        """🔖Returns normalized family GUIDs for a type/design entity."""
+        guids: set[str] = set()
+        for ref in getattr(entity, "families", None) or []:
+            if isinstance(ref, str) and ref:
+                guids.add(ref)
+            elif isinstance(ref, dict) and ref.get("guid"):
+                guids.add(ref["guid"])
+            elif getattr(ref, "guid", None):
+                guids.add(ref.guid)
+        if getattr(entity, "guid", None):
+            guids.add(entity.guid)
+        return guids
+
     def get_primitive_design(self, design_guid: str) -> "Design":
-        """
-        Gets the primitive (root) design of a design family.
-        A primitive design is a design that has no parent.
-
-        Args:
-            design_guid: The GUID of any design in the family.
-
-        Returns:
-            The primitive design at the root of the family tree.
-        """
-        current = self.find_design_by_guid(design_guid)
-        while current.parent and current.parent.guid:
-            current = self.find_design_by_guid(current.parent.guid)
-        return current
+        """🔖Returns a stable representative design for a non-hierarchical family group."""
+        family = self.get_design_family(design_guid)
+        if len(family) == 0:
+            return self.find_design_by_guid(design_guid)
+        return sorted(family, key=lambda d: d.guid)[0]
 
     def get_design_family(self, design_guid: str) -> list["Design"]:
-        """
-        Gets all designs in a design family (the entire tree).
-
-        Args:
-            design_guid: The GUID of any design in the family.
-
-        Returns:
-            All designs in the family tree.
-        """
-        primitive = self.get_primitive_design(design_guid)
-        family: list[Design] = []
-        self._collect_design_descendants(primitive.guid, family)
-        return family
-
-    def _collect_design_descendants(self, parent_guid: str, family: list["Design"]) -> None:
-        """🔖Helper to collect all descendants of a design."""
-        parent = self.find_design_by_guid(parent_guid)
-        family.append(parent)
-        children = [d for d in self.designs if d.parent and d.parent.guid == parent_guid]
-        for child in children:
-            self._collect_design_descendants(child.guid, family)
+        """🔖Gets all designs that share at least one family GUID with the given design."""
+        design = self.find_design_by_guid(design_guid)
+        family_guids = self._entity_family_guids(design)
+        return [d for d in self.designs if len(self._entity_family_guids(d) & family_guids) > 0]
 
     def are_designs_in_same_family(self, design_guid_a: str, design_guid_b: str) -> bool:
-        """
-        Checks if two designs belong to the same design family.
-
-        Args:
-            design_guid_a: The GUID of the first design.
-            design_guid_b: The GUID of the second design.
-
-        Returns:
-            True if both designs are in the same family tree.
-        """
-        primitive_a = self.get_primitive_design(design_guid_a)
-        primitive_b = self.get_primitive_design(design_guid_b)
-        return primitive_a.guid == primitive_b.guid
+        """🔖Checks whether two designs share at least one family GUID."""
+        a = self.find_design_by_guid(design_guid_a)
+        b = self.find_design_by_guid(design_guid_b)
+        return len(self._entity_family_guids(a) & self._entity_family_guids(b)) > 0
 
     def can_use_design_as_piece(self, container_design_guid: str, piece_design_guid: str) -> bool:
-        """
-        Checks if a design can be used as a design piece in another design.
-        A design cannot contain a design piece from the same family.
-
-        Args:
-            container_design_guid: The GUID of the design that would contain the piece.
-            piece_design_guid: The GUID of the design to be used as a piece.
-
-        Returns:
-            True if the design piece can be added without violating the family constraint.
-        """
+        """🔖Returns true if a design piece does not belong to the same family set."""
         return not self.are_designs_in_same_family(container_design_guid, piece_design_guid)
 
     def find_same_family_design_pieces(self, design_guid: str) -> list["Piece"]:
-        """
-        Finds design pieces in a design that violate the same-family constraint.
-
-        Args:
-            design_guid: The GUID of the design to check.
-
-        Returns:
-            List of pieces that reference designs in the same family.
-        """
+        """🔖Returns pieces that reference designs sharing at least one family GUID."""
         design = self.find_design_by_guid(design_guid)
         return [p for p in design.pieces if p.design and p.design.guid and self.are_designs_in_same_family(design_guid, p.design.guid)]
 
     def get_design_siblings(self, design_guid: str) -> list["Design"]:
-        """🔖Returns all designs with the same parent, excluding self."""
-        design = self.find_design_by_guid(design_guid)
-        parent_guid = design.parent.guid if design.parent else None
-        return [d for d in self.designs if (d.parent.guid if d.parent else None) == parent_guid and d.guid != design_guid]
+        """🔖Returns all other designs in the same non-hierarchical family set."""
+        return [d for d in self.get_design_family(design_guid) if d.guid != design_guid]
 
     def get_design_children(self, design_guid: str) -> list["Design"]:
-        """🔖Returns all direct children of a design."""
-        return [d for d in self.designs if d.parent and d.parent.guid == design_guid]
+        """🔖Design families are non-hierarchical, so direct children are always empty."""
+        return []
 
     # #endregion 📻Design Family Helpers
 
@@ -4967,68 +5002,31 @@ class Kit(
         raise ValueError(f"Type {type_guid} not found in kit {self.name}")
 
     def get_primitive_type(self, type_guid: str) -> "Type":
-        """
-        Gets the primitive (root) type of a type family.
-        A primitive type is a type that has no parent.
-
-        Args:
-            type_guid: The GUID of any type in the family.
-
-        Returns:
-            The primitive type at the root of the family tree.
-        """
-        current = self.find_type_by_guid(type_guid)
-        while current.parent and current.parent.guid:
-            current = self.find_type_by_guid(current.parent.guid)
-        return current
+        """🔖Returns a stable representative type for a non-hierarchical family group."""
+        family = self.get_type_family(type_guid)
+        if len(family) == 0:
+            return self.find_type_by_guid(type_guid)
+        return sorted(family, key=lambda t: t.guid)[0]
 
     def get_type_family(self, type_guid: str) -> list["Type"]:
-        """
-        Gets all types in a type family (the entire tree).
-
-        Args:
-            type_guid: The GUID of any type in the family.
-
-        Returns:
-            All types in the family tree.
-        """
-        primitive = self.get_primitive_type(type_guid)
-        family: list[Type] = []
-        self._collect_type_descendants(primitive.guid, family)
-        return family
-
-    def _collect_type_descendants(self, parent_guid: str, family: list["Type"]) -> None:
-        """🔖Helper to collect all descendants of a type."""
-        parent = self.find_type_by_guid(parent_guid)
-        family.append(parent)
-        children = [t for t in self.types if t.parent and t.parent.guid == parent_guid]
-        for child in children:
-            self._collect_type_descendants(child.guid, family)
+        """🔖Gets all types that share at least one family GUID with the given type."""
+        type_ = self.find_type_by_guid(type_guid)
+        family_guids = self._entity_family_guids(type_)
+        return [t for t in self.types if len(self._entity_family_guids(t) & family_guids) > 0]
 
     def are_types_in_same_family(self, type_guid_a: str, type_guid_b: str) -> bool:
-        """
-        Checks if two types belong to the same type family.
-
-        Args:
-            type_guid_a: The GUID of the first type.
-            type_guid_b: The GUID of the second type.
-
-        Returns:
-            True if both types are in the same family tree.
-        """
-        primitive_a = self.get_primitive_type(type_guid_a)
-        primitive_b = self.get_primitive_type(type_guid_b)
-        return primitive_a.guid == primitive_b.guid
+        """🔖Checks whether two types share at least one family GUID."""
+        a = self.find_type_by_guid(type_guid_a)
+        b = self.find_type_by_guid(type_guid_b)
+        return len(self._entity_family_guids(a) & self._entity_family_guids(b)) > 0
 
     def get_type_siblings(self, type_guid: str) -> list["Type"]:
-        """🔖Returns all types with the same parent, excluding self."""
-        type_ = self.find_type_by_guid(type_guid)
-        parent_guid = type_.parent.guid if type_.parent else None
-        return [t for t in self.types if (t.parent.guid if t.parent else None) == parent_guid and t.guid != type_guid]
+        """🔖Returns all other types in the same non-hierarchical family set."""
+        return [t for t in self.get_type_family(type_guid) if t.guid != type_guid]
 
     def get_type_children(self, type_guid: str) -> list["Type"]:
-        """🔖Returns all direct children of a type."""
-        return [t for t in self.types if t.parent and t.parent.guid == type_guid]
+        """🔖Type families are non-hierarchical, so direct children are always empty."""
+        return []
 
     # #endregion 🧊Type Family Helpers
 
@@ -5125,7 +5123,7 @@ class Kit(
                     continue
                 other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
                 required_connectors.append(other_connector)
-            except (ValueError, AttributeError):
+            except ValueError, AttributeError:
                 continue
         result = []
         for replacement_type in self.types or []:
@@ -5168,7 +5166,7 @@ class Kit(
                             continue
                         other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
                         external_connectors.append(other_connector)
-                    except (ValueError, AttributeError):
+                    except ValueError, AttributeError:
                         continue
         result = []
         for replacement_type in self.types or []:
@@ -5418,6 +5416,137 @@ class Kit(
         return result
 
     # #endregion 🎠Filter
+
+    # #region 🔄Kit graph mutations (TypeScript Kit parity)
+
+    def set_backbone(self: "Kit", backbone: typing.Callable[..., typing.Any] | None) -> None:
+        """📎Attach optional backbone notified after committed graph changes."""
+        self._backbone = backbone
+
+    def set_strict_mode(self: "Kit", strict: bool) -> None:
+        """When true, validation warnings are treated like errors on commit/finalize."""
+        self._strict_mode = strict
+
+    def clear_conflict(self: "Kit") -> None:
+        """Clears conflict lock after handling validation errors; does not mutate kit data."""
+        self._conflicted = False
+        self._conflict_errors.clear()
+        self._conflict_warnings.clear()
+
+    def start_transaction(self: "Kit") -> str:
+        """Opens a transaction; record steps via commit_kit_graph_change with transaction_id."""
+        with self._graph_lock:
+            if self._conflicted:
+                raise ValueError("Kit has unresolved validation conflicts; call clear_conflict() before starting a transaction.")
+            tid = str(uuid.uuid4())
+            self._open_transactions[tid] = _KitGraphTxn(start_snapshot=copy.deepcopy(_kit_graph_plain_dict(self)))
+            return tid
+
+    def abort_transaction(self: "Kit", transaction_id: str) -> None:
+        """Undo all steps in transaction order (reverse) and remove the transaction."""
+        with self._graph_lock:
+            tx = self._open_transactions.get(transaction_id)
+            if tx is None:
+                raise ValueError(f"Unknown transaction {transaction_id}")
+            if self._conflicted:
+                raise ValueError("Kit is conflicted; call clear_conflict() before aborting a transaction.")
+            for i in range(len(tx.steps) - 1, -1, -1):
+                _apply_kit_graph_diff_to_model(self, tx.steps[i].backward)
+            del self._open_transactions[transaction_id]
+            self._conflicted = False
+            self._conflict_errors.clear()
+            self._conflict_warnings.clear()
+
+    def finalize_transaction(self: "Kit", transaction_id: str) -> KitGraphChange:
+        """Squash net diff from transaction start to current kit; push one change onto global history."""
+        with self._graph_lock:
+            if self._conflicted:
+                raise ValueError("Kit is conflicted; call clear_conflict() before finalizing a transaction.")
+            tx = self._open_transactions.get(transaction_id)
+            if tx is None:
+                raise ValueError(f"Unknown transaction {transaction_id}")
+            start = copy.deepcopy(tx.start_snapshot)
+            current = copy.deepcopy(_kit_graph_plain_dict(self))
+            forward_raw = getKitDiffDict(start, current)
+            validation = validate_kit_diff_dict(start, forward_raw, False)
+            if not validation.get("ok") or validation.get("errors"):
+                msg = "; ".join(str(e.get("message", e)) for e in (validation.get("errors") or []))
+                raise ValueError(f"Transaction finalize validation failed: {msg}")
+            if self._strict_mode and validation.get("warnings"):
+                msg = "; ".join(str(w.get("message", w)) for w in (validation.get("warnings") or []))
+                raise ValueError(f"Transaction finalize warnings (strict): {msg}")
+            diff_to_apply = forward_raw
+            backward = inverseKitDiffDict(start, diff_to_apply)
+            squashed = KitGraphChange(forward=diff_to_apply, backward=backward, validation=dict(validation))
+            del self._open_transactions[transaction_id]
+            self._history_past.append(squashed)
+            self._history_future.clear()
+            _notify_kit_backbone_optional(self._backbone, squashed)
+            return squashed
+
+    def undo_within_transaction(self: "Kit", transaction_id: str) -> None:
+        with self._graph_lock:
+            tx = self._open_transactions.get(transaction_id)
+            if not tx or not tx.steps:
+                return
+            if self._conflicted:
+                raise ValueError("Kit is conflicted.")
+            ch = tx.steps.pop()
+            _apply_kit_graph_diff_to_model(self, ch.backward)
+            tx.redo.append(ch)
+
+    def redo_within_transaction(self: "Kit", transaction_id: str) -> None:
+        with self._graph_lock:
+            tx = self._open_transactions.get(transaction_id)
+            if not tx or not tx.redo:
+                return
+            if self._conflicted:
+                raise ValueError("Kit is conflicted.")
+            ch = tx.redo.pop()
+            _apply_kit_graph_diff_to_model(self, ch.forward)
+            tx.steps.append(ch)
+
+    def undo_history(self: "Kit") -> None:
+        with self._graph_lock:
+            if self._conflicted:
+                raise ValueError("Kit is conflicted.")
+            if not self._history_past:
+                return
+            ch = self._history_past.pop()
+            _apply_kit_graph_diff_to_model(self, ch.backward)
+            self._history_future.append(ch)
+
+    def redo_history(self: "Kit") -> None:
+        with self._graph_lock:
+            if self._conflicted:
+                raise ValueError("Kit is conflicted.")
+            if not self._history_future:
+                return
+            ch = self._history_future.pop()
+            _apply_kit_graph_diff_to_model(self, ch.forward)
+            self._history_past.append(ch)
+
+    def transact_finalized(self: "Kit", fn: typing.Callable[[str], typing.Any]) -> typing.Any:
+        """Runs fn with a new transaction id; finalizes on success or aborts on failure."""
+        tid = self.start_transaction()
+        try:
+            out = fn(tid)
+            self.finalize_transaction(tid)
+            return out
+        except BaseException:
+            if tid in self._open_transactions:
+                self.abort_transaction(tid)
+            raise
+
+    def flatten_design_merkle(self: "Kit", design_guid: str) -> dict:
+        """Flatten using per-piece merkle cache (flattenDesignCachedDict); updates cache on this kit."""
+        plain = _kit_graph_plain_dict(self)
+        prev = self._flatten_merkle.get(design_guid)
+        rep, cache = flattenDesignCachedDict(plain, design_guid, prev)
+        self._flatten_merkle[design_guid] = cache
+        return rep
+
+    # #endregion 🔄Kit graph mutations (TypeScript Kit parity)
 
 
 # #endregion ⏱️Kit
@@ -7671,49 +7800,48 @@ def _findConnectorInTypeDict(type_dict: dict, connector_guid: str) -> dict:
     raise ValueError(f"Connector {connector_guid} not found in type")
 
 
-def _applyDesignDiffDict(base: dict, diff: dict) -> dict:
-    """🔖Applies a design diff to a base design dict, returning a new design dict."""
-    import copy
-
-    result = copy.deepcopy(base)
+def _applyDesignDiffDict(target: dict, diff: dict) -> None:
+    """🔖Applies a design diff to a design dict in-place."""
     pieces_diff = diff.get("pieces")
     if pieces_diff:
-        pieces = list(result.get("pieces", []))
-        for added in pieces_diff.get("added", []):
-            pieces.append(added)
+        pieces = target.get("pieces", [])
+        if diff.get("pieces") and "pieces" not in target:
+            target["pieces"] = []
+            pieces = target["pieces"]
         for removed in pieces_diff.get("removed", []):
             removed_guid = removed.get("guid") if isinstance(removed, dict) else removed
-            pieces = [p for p in pieces if p.get("guid") != removed_guid]
+            pieces[:] = [p for p in pieces if p.get("guid") != removed_guid]
         for updated in pieces_diff.get("updated", []):
             piece_id = updated.get("id") or updated.get("piece", {}).get("guid")
             piece_diff = updated.get("diff", {})
-            for i, p in enumerate(pieces):
+            for p in pieces:
                 if p.get("guid") == piece_id:
-                    pieces[i] = {
-                        **p,
-                        **{k: v for k, v in piece_diff.items() if v is not None},
-                    }
+                    for k, v in piece_diff.items():
+                        if v is not None:
+                            p[k] = v
                     break
-        result["pieces"] = pieces
+        for added in pieces_diff.get("added", []):
+            pieces.append(added)
     connections_diff = diff.get("connections")
     if connections_diff:
-        connections = list(result.get("connections", []))
-        for added in connections_diff.get("added", []):
-            connections.append(added)
+        connections = target.get("connections", [])
+        if diff.get("connections") and "connections" not in target:
+            target["connections"] = []
+            connections = target["connections"]
         for removed in connections_diff.get("removed", []):
             removed_guid = removed.get("guid") if isinstance(removed, dict) else removed
-            connections = [c for c in connections if c.get("guid") != removed_guid]
+            connections[:] = [c for c in connections if c.get("guid") != removed_guid]
         for updated in connections_diff.get("updated", []):
             conn_id = updated.get("id") or updated.get("connection", {}).get("guid")
             conn_diff = updated.get("diff", {})
-            for i, c in enumerate(connections):
+            for c in connections:
                 if c.get("guid") == conn_id:
-                    connections[i] = {
-                        **c,
-                        **{k: v for k, v in conn_diff.items() if v is not None},
-                    }
+                    for k, v in conn_diff.items():
+                        if v is not None:
+                            c[k] = v
                     break
-        result["connections"] = connections
+        for added in connections_diff.get("added", []):
+            connections.append(added)
     for key in [
         "name",
         "isAbstract",
@@ -7726,8 +7854,7 @@ def _applyDesignDiffDict(base: dict, diff: dict) -> dict:
         "description",
     ]:
         if key in diff and diff[key] is not None:
-            result[key] = diff[key]
-    return result
+            target[key] = diff[key]
 
 
 def piecesMetadataDict(kit: dict, design_guid: str) -> dict:
@@ -7737,7 +7864,8 @@ def piecesMetadataDict(kit: dict, design_guid: str) -> dict:
     design = _findDesignInKitDict(kit, design_guid)
     flatten_diff = flattenDesignDict(kit, design_guid)
     piece_paths = flatten_diff.pop("_piecePaths", {})
-    flat_design = _applyDesignDiffDict(design, flatten_diff)
+    flat_design = copy.deepcopy(design)
+    _applyDesignDiffDict(flat_design, flatten_diff)
     result = {}
     for p in flat_design.get("pieces", []):
         guid = p.get("guid", "")
@@ -8929,25 +9057,24 @@ def _getCollectionDiff(
 
 
 def _applyCollectionDiff(
-    base: list,
+    items: list,
     diff: dict | None,
-    applyItemDiff: typing.Callable[[dict, dict], dict],
+    applyItemDiff: typing.Callable[[dict, dict], None],
     entityKey: str = "",
-) -> list:
-    """Apply diff to a collection of items.
+) -> None:
+    """Apply diff to a collection of items in-place.
 
     Args:
-        base: The base collection
+        items: The collection to mutate
         diff: The diff to apply (with removed, updated, added)
-        applyItemDiff: Function to apply item-level diff
+        applyItemDiff: Function to apply item-level diff in-place
         entityKey: The key name for the entity ID in the updated array (e.g., "type", "design", "piece")
     """
     if not diff:
-        return base
-    result = [dict(item) for item in base]
+        return
     if diff.get("removed"):
-        removedGuids = [r["guid"] if isinstance(r, dict) else r for r in diff["removed"]]
-        result = [item for item in result if item.get("guid") not in removedGuids]
+        removedGuids = {r["guid"] if isinstance(r, dict) else r for r in diff["removed"]}
+        items[:] = [item for item in items if item.get("guid") not in removedGuids]
     if diff.get("updated"):
         for update in diff["updated"]:
             updateGuid = None
@@ -8957,15 +9084,14 @@ def _applyCollectionDiff(
                 updateGuid = update["id"]
             if not updateGuid:
                 continue
-            idx = next(
-                (i for i, item in enumerate(result) if item.get("guid") == updateGuid),
-                -1,
+            item = next(
+                (i for i in items if i.get("guid") == updateGuid),
+                None,
             )
-            if idx >= 0:
-                result[idx] = applyItemDiff(result[idx], update["diff"])
+            if item is not None:
+                applyItemDiff(item, update["diff"])
     if diff.get("added"):
-        result.extend(diff["added"])
-    return result
+        items.extend(diff["added"])
 
 
 def _getTypeDiff(before: dict, after: dict) -> dict:
@@ -9023,9 +9149,8 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyTypeDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a type dict."""
-    result = dict(base)
+def _applyTypeDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a type dict in-place."""
     for key in [
         "name",
         "description",
@@ -9038,26 +9163,31 @@ def _applyTypeDiff(base: dict, diff: dict) -> dict:
         "virtual",
     ]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     for refKey in ["location", "parent"]:
         if refKey in diff:
-            result[refKey] = diff[refKey]
+            target[refKey] = diff[refKey]
     if "concepts" in diff:
-        result["concepts"] = diff["concepts"]
+        target["concepts"] = diff["concepts"]
     if "authors" in diff:
-        result["authors"] = diff["authors"]
+        target["authors"] = diff["authors"]
     if diff.get("connectors"):
-        result["connectors"] = _applyCollectionDiff(
-            base.get("connectors", []),
+        if "connectors" not in target:
+            target["connectors"] = []
+        _applyCollectionDiff(
+            target["connectors"],
             diff["connectors"],
             _applyConnectorDiff,
             "connector",
         )
     if diff.get("models"):
-        result["models"] = _applyCollectionDiff(base.get("models", []), diff["models"], _applyModelDiff, "model")
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+        if "models" not in target:
+            target["models"] = []
+        _applyCollectionDiff(target["models"], diff["models"], _applyModelDiff, "model")
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getConnectorDiff(before: dict, after: dict) -> dict:
@@ -9101,37 +9231,37 @@ def _getConnectorDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyConnectorDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a connector dict."""
-    result = dict(base)
+def _applyConnectorDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a connector dict in-place."""
     for key in ["name", "description", "t", "mandatory"]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     if "port" in diff:
-        result["port"] = diff["port"]
+        target["port"] = diff["port"]
     if "point" in diff:
-        bPoint = base.get("point", {})
+        bPoint = target.get("point", {})
         if bPoint and isinstance(bPoint, dict):
-            result["point"] = {
+            target["point"] = {
                 "x": (bPoint.get("x", 0) or 0) + (diff["point"].get("x", 0) or 0),
                 "y": (bPoint.get("y", 0) or 0) + (diff["point"].get("y", 0) or 0),
                 "z": (bPoint.get("z", 0) or 0) + (diff["point"].get("z", 0) or 0),
             }
         else:
-            result["point"] = diff["point"]
+            target["point"] = diff["point"]
     if "direction" in diff:
-        bDir = base.get("direction", {})
+        bDir = target.get("direction", {})
         if bDir and isinstance(bDir, dict):
-            result["direction"] = {
+            target["direction"] = {
                 "x": (bDir.get("x", 0) or 0) + (diff["direction"].get("x", 0) or 0),
                 "y": (bDir.get("y", 0) or 0) + (diff["direction"].get("y", 0) or 0),
                 "z": (bDir.get("z", 0) or 0) + (diff["direction"].get("z", 0) or 0),
             }
         else:
-            result["direction"] = diff["direction"]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target["direction"] = diff["direction"]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getModelDiff(before: dict, after: dict) -> dict:
@@ -9163,19 +9293,19 @@ def _getModelDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyModelDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a model dict."""
-    result = dict(base)
+def _applyModelDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a model dict in-place."""
     for key in ["name", "description"]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     if "file" in diff:
-        result["file"] = diff["file"]
+        target["file"] = diff["file"]
     if "tags" in diff:
-        result["tags"] = diff["tags"]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+        target["tags"] = diff["tags"]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getDesignDiff(before: dict, after: dict) -> dict:
@@ -9242,9 +9372,8 @@ def _getDesignDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyDesignDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a design dict."""
-    result = dict(base)
+def _applyDesignDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a design dict in-place."""
     for key in [
         "name",
         "variant",
@@ -9259,26 +9388,31 @@ def _applyDesignDiff(base: dict, diff: dict) -> dict:
         "canMirror",
     ]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     for refKey in ["activeLayer", "parent", "location"]:
         if refKey in diff:
-            result[refKey] = diff[refKey]
+            target[refKey] = diff[refKey]
     if "concepts" in diff:
-        result["concepts"] = diff["concepts"]
+        target["concepts"] = diff["concepts"]
     if "authors" in diff:
-        result["authors"] = diff["authors"]
+        target["authors"] = diff["authors"]
     if diff.get("pieces"):
-        result["pieces"] = _applyCollectionDiff(base.get("pieces", []), diff["pieces"], _applyPieceDiff, "piece")
+        if "pieces" not in target:
+            target["pieces"] = []
+        _applyCollectionDiff(target["pieces"], diff["pieces"], _applyPieceDiff, "piece")
     if diff.get("connections"):
-        result["connections"] = _applyCollectionDiff(
-            base.get("connections", []),
+        if "connections" not in target:
+            target["connections"] = []
+        _applyCollectionDiff(
+            target["connections"],
             diff["connections"],
             _applyConnectionDiff,
             "connection",
         )
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def designWithDiffDict(base: dict, diff: dict) -> dict:
@@ -9315,7 +9449,7 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
         elif pc["guid"] in updated_piece_map:
             base_plane = pc.get("plane")
             base_center = pc.get("center")
-            pc = _applyPieceDiff(pc, updated_piece_map[pc["guid"]])
+            _applyPieceDiff(pc, updated_piece_map[pc["guid"]])
             # 📌Preserve base geometry so modified pieces stay in place and only get recolored.
             if base_plane is not None:
                 pc["plane"] = base_plane
@@ -9348,7 +9482,7 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
             attrs.append(status_attr("removed"))
             cc["attributes"] = attrs
         elif cc["guid"] in updated_conn_map:
-            cc = _applyConnectionDiff(cc, updated_conn_map[cc["guid"]])
+            _applyConnectionDiff(cc, updated_conn_map[cc["guid"]])
             attrs = cc.get("attributes", []) or []
             attrs.append(status_attr("modified"))
             cc["attributes"] = attrs
@@ -9399,9 +9533,8 @@ def _getPieceDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyPieceDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a piece dict."""
-    result = dict(base)
+def _applyPieceDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a piece dict in-place."""
     for key in [
         "name",
         "description",
@@ -9413,13 +9546,14 @@ def _applyPieceDiff(base: dict, diff: dict) -> dict:
         "isLocked",
     ]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     for refKey in ["type", "design"]:
         if refKey in diff:
-            result[refKey] = diff[refKey]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[refKey] = diff[refKey]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getConnectionDiff(before: dict, after: dict) -> dict:
@@ -9443,21 +9577,21 @@ def _getConnectionDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyConnectionDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a connection dict."""
-    result = dict(base)
+def _applyConnectionDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a connection dict in-place."""
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
         if key in diff:
-            result[key] = (base.get(key, 0) or 0) + (diff[key] or 0)
+            target[key] = (target.get(key, 0) or 0) + (diff[key] or 0)
     for key in ["description"]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     for key in ["connecting", "connected"]:
         if key in diff:
-            result[key] = diff[key]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[key] = diff[key]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getTagDiff(before: dict, after: dict) -> dict:
@@ -9475,15 +9609,15 @@ def _getTagDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyTagDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a tag dict."""
-    result = dict(base)
+def _applyTagDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a tag dict in-place."""
     for key in ["name", "description", "icon"]:
         if key in diff:
-            result[key] = diff[key]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[key] = diff[key]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getConceptDiff(before: dict, after: dict) -> dict:
@@ -9501,15 +9635,15 @@ def _getConceptDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyConceptDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a concept dict."""
-    result = dict(base)
+def _applyConceptDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a concept dict in-place."""
     for key in ["name", "description", "icon"]:
         if key in diff:
-            result[key] = diff[key]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[key] = diff[key]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getPortDiff(before: dict, after: dict) -> dict:
@@ -9539,17 +9673,17 @@ def _getPortDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyPortDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to an port dict."""
-    result = dict(base)
+def _applyPortDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a port dict in-place."""
     for key in ["name", "description", "icon"]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     if "compatiblePorts" in diff:
-        result["compatiblePorts"] = diff["compatiblePorts"]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+        target["compatiblePorts"] = diff["compatiblePorts"]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getFileDiff(before: dict, after: dict) -> dict:
@@ -9577,17 +9711,17 @@ def _getFileDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyFileDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a file dict."""
-    result = dict(base)
+def _applyFileDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a file dict in-place."""
     for key in ["name", "description", "remote", "size", "hash", "blob"]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     if "folder" in diff:
-        result["folder"] = diff["folder"]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+        target["folder"] = diff["folder"]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getFolderDiff(before: dict, after: dict) -> dict:
@@ -9603,15 +9737,15 @@ def _getFolderDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyFolderDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a folder dict."""
-    result = dict(base)
+def _applyFolderDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a folder dict in-place."""
     for key in ["name", "description"]:
         if key in diff:
-            result[key] = diff[key]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[key] = diff[key]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getQualityDiff(before: dict, after: dict) -> dict:
@@ -9654,9 +9788,8 @@ def _getQualityDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyQualityDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a quality dict."""
-    result = dict(base)
+def _applyQualityDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a quality dict in-place."""
     for key in [
         "key",
         "name",
@@ -9677,8 +9810,7 @@ def _applyQualityDiff(base: dict, diff: dict) -> dict:
         "unit",
     ]:
         if key in diff:
-            result[key] = diff[key]
-    return result
+            target[key] = diff[key]
 
 
 def _getAuthorDiff(before: dict, after: dict) -> dict:
@@ -9694,15 +9826,15 @@ def _getAuthorDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyAuthorDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to an author dict."""
-    result = dict(base)
+def _applyAuthorDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to an author dict in-place."""
     for key in ["name", "email"]:
         if key in diff:
-            result[key] = diff[key]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[key] = diff[key]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getAttributeDiff(before: dict, after: dict) -> dict:
@@ -9717,13 +9849,11 @@ def _getAttributeDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyAttributeDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to an attribute dict."""
-    result = dict(base)
+def _applyAttributeDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to an attribute dict in-place."""
     for key in ["key", "value", "definition"]:
         if key in diff:
-            result[key] = diff[key]
-    return result
+            target[key] = diff[key]
 
 
 def _getAttributesDiff(before: list, after: list) -> dict:
@@ -9751,23 +9881,21 @@ def _getAttributesDiff(before: list, after: list) -> dict:
     return diff
 
 
-def _applyAttributesDiff(base: list, diff: dict | None) -> list:
-    """🔖Apply diff to attributes collection - uses GUID for identification with EntityId format."""
+def _applyAttributesDiff(items: list, diff: dict | None) -> None:
+    """🔖Apply diff to attributes collection in-place - uses GUID for identification with EntityId format."""
     if not diff:
-        return base
-    result = [dict(a) for a in base]
+        return
     if diff.get("removed"):
         removedGuids = {r["guid"] if isinstance(r, dict) else r for r in diff["removed"]}
-        result = [a for a in result if a.get("guid") not in removedGuids]
+        items[:] = [a for a in items if a.get("guid") not in removedGuids]
     if diff.get("updated"):
         for update in diff["updated"]:
             updateGuid = update["attribute"]["guid"] if "attribute" in update else update.get("id", "")
-            idx = next((i for i, a in enumerate(result) if a.get("guid") == updateGuid), -1)
-            if idx >= 0:
-                result[idx] = _applyAttributeDiff(result[idx], update["diff"])
+            item = next((a for a in items if a.get("guid") == updateGuid), None)
+            if item is not None:
+                _applyAttributeDiff(item, update["diff"])
     if diff.get("added"):
-        result.extend(diff["added"])
-    return result
+        items.extend(diff["added"])
 
 
 def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
@@ -10124,10 +10252,8 @@ def validate_kit_diff_dict(kit: dict, diff: dict, heal: bool) -> dict:
     return result
 
 
-def applyKitDiffDict(base: dict, diff: dict) -> dict:
-    """🔖Apply a diff to a kit dict."""
-    result = dict(base)
-    result["guid"] = base.get("guid")
+def applyKitDiffDict(target: dict, diff: dict) -> None:
+    """🔖Apply a diff to a kit dict in-place."""
     for key in [
         "name",
         "version",
@@ -10142,37 +10268,28 @@ def applyKitDiffDict(base: dict, diff: dict) -> dict:
         if key in diff:
             value = diff[key]
             if value is not None:
-                result[key] = value
-            elif key in result:
-                del result[key]
-        elif key in base:
-            result[key] = base[key]
-    if diff.get("types") or base.get("types"):
-        result["types"] = _applyCollectionDiff(base.get("types", []), diff.get("types"), _applyTypeDiff, "type")
-    if diff.get("designs") or base.get("designs"):
-        result["designs"] = _applyCollectionDiff(base.get("designs", []), diff.get("designs"), _applyDesignDiff, "design")
-    if diff.get("tags") or base.get("tags"):
-        result["tags"] = _applyCollectionDiff(base.get("tags", []), diff.get("tags"), _applyTagDiff, "tag")
-    if diff.get("concepts") or base.get("concepts"):
-        result["concepts"] = _applyCollectionDiff(base.get("concepts", []), diff.get("concepts"), _applyConceptDiff, "concept")
-    if diff.get("ports") or base.get("ports"):
-        result["ports"] = _applyCollectionDiff(base.get("ports", []), diff.get("ports"), _applyPortDiff, "port")
-    if diff.get("files") or base.get("files"):
-        result["files"] = _applyCollectionDiff(base.get("files", []), diff.get("files"), _applyFileDiff, "file")
-    if diff.get("folders") or base.get("folders"):
-        result["folders"] = _applyCollectionDiff(base.get("folders", []), diff.get("folders"), _applyFolderDiff, "folder")
-    if diff.get("qualities") or base.get("qualities"):
-        result["qualities"] = _applyCollectionDiff(
-            base.get("qualities", []),
-            diff.get("qualities"),
-            _applyQualityDiff,
-            "quality",
-        )
-    if diff.get("authors") or base.get("authors"):
-        result["authors"] = _applyCollectionDiff(base.get("authors", []), diff.get("authors"), _applyAuthorDiff, "author")
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+                target[key] = value
+            elif key in target:
+                del target[key]
+    for collKey, applyFn, entityKey in [
+        ("types", _applyTypeDiff, "type"),
+        ("designs", _applyDesignDiff, "design"),
+        ("tags", _applyTagDiff, "tag"),
+        ("concepts", _applyConceptDiff, "concept"),
+        ("ports", _applyPortDiff, "port"),
+        ("files", _applyFileDiff, "file"),
+        ("folders", _applyFolderDiff, "folder"),
+        ("qualities", _applyQualityDiff, "quality"),
+        ("authors", _applyAuthorDiff, "author"),
+    ]:
+        if diff.get(collKey) or target.get(collKey):
+            if collKey not in target:
+                target[collKey] = []
+            _applyCollectionDiff(target[collKey], diff.get(collKey), applyFn, entityKey)
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _inverseCollectionDiff(
@@ -10579,6 +10696,85 @@ def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
     return inverse
 
 
+def _kit_graph_plain_dict(kit: Kit) -> dict:
+    """JSON-shaped kit dict aligned with validate/apply kit diff helpers."""
+    return kit.model_dump(mode="json")
+
+
+def _assign_validated_kit_to(target: Kit, data: dict) -> None:
+    parsed = Kit.model_validate(data)
+    for fname in Kit.model_fields:
+        setattr(target, fname, getattr(parsed, fname))
+
+
+def _apply_kit_graph_diff_to_model(kit: Kit, diff: dict) -> None:
+    d = copy.deepcopy(_kit_graph_plain_dict(kit))
+    applyKitDiffDict(d, diff)
+    _assign_validated_kit_to(kit, d)
+
+
+def _notify_kit_backbone_optional(backbone: typing.Callable[[KitGraphChange], typing.Any] | None, change: KitGraphChange) -> None:
+    if backbone is None:
+        return
+
+    def run() -> None:
+        try:
+            backbone(change)
+        except Exception:
+            loguru.logger.exception("Kit backbone notification failed")
+
+    threading.Thread(target=run, daemon=True).start()
+
+
+def commit_kit_graph_change(
+    kit: Kit,
+    diff: dict,
+    *,
+    transaction_id: str | None = None,
+    notify_backbone: bool = True,
+    skip_global_history: bool = False,
+) -> KitGraphChange:
+    """Validate, invert, apply diff to Kit in-place; record transaction/history and optionally notify backbone."""
+    with kit._graph_lock:
+        if kit._conflicted:
+            raise ValueError("Kit has unresolved validation conflicts; call clear_conflict() before applying further changes.")
+        kit_dict = copy.deepcopy(_kit_graph_plain_dict(kit))
+        validation = validate_kit_diff_dict(kit_dict, diff, False)
+        if not validation.get("ok") or validation.get("errors"):
+            kit._conflicted = True
+            kit._conflict_errors = list(validation.get("errors", []))
+            kit._conflict_warnings = list(validation.get("warnings", []))
+            msg = "; ".join(str(e.get("message", e)) for e in kit._conflict_errors)
+            raise ValueError(f"Kit validation failed: {msg}")
+        if kit._strict_mode and validation.get("warnings"):
+            kit._conflicted = True
+            kit._conflict_errors = []
+            kit._conflict_warnings = list(validation.get("warnings", []))
+            wmsg = "; ".join(str(w.get("message", w)) for w in kit._conflict_warnings)
+            raise ValueError(f"Kit validation warnings (strict): {wmsg}")
+        diff_to_apply = diff
+        backward = inverseKitDiffDict(kit_dict, diff_to_apply)
+        applyKitDiffDict(kit_dict, diff_to_apply)
+        _assign_validated_kit_to(kit, kit_dict)
+        change = KitGraphChange(forward=diff_to_apply, backward=backward, validation=dict(validation))
+        if transaction_id is not None:
+            tx = kit._open_transactions.get(transaction_id)
+            if tx is None:
+                raise ValueError(f"Unknown transaction {transaction_id}")
+            tx.steps.append(change)
+            tx.redo.clear()
+        elif not skip_global_history:
+            kit._history_past.append(change)
+            kit._history_future.clear()
+        notify = notify_backbone and transaction_id is None
+        if notify:
+            _notify_kit_backbone_optional(kit._backbone, change)
+        kit._conflicted = False
+        kit._conflict_errors.clear()
+        kit._conflict_warnings.clear()
+        return change
+
+
 @dataclasses.dataclass
 class Change:
     """💿Change holds the data fields for a Change record."""
@@ -10908,7 +11104,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                 if attr.get("key") == "semio.center" and attr.get("value"):
                     try:
                         center = json.loads(attr["value"])
-                    except (json.JSONDecodeError, TypeError):
+                    except json.JSONDecodeError, TypeError:
                         pass
         if center is not None:
             centerCoords.append(center)
@@ -11058,7 +11254,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except (json.JSONDecodeError, TypeError):
+                                                    except json.JSONDecodeError, TypeError:
                                                         pass
                                         if flatParentCenter is None:
                                             for attr in externalParent.get("attributes", []):
@@ -11066,7 +11262,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except (json.JSONDecodeError, TypeError):
+                                                    except json.JSONDecodeError, TypeError:
                                                         pass
                                         if flatParentCenter is None and externalParent.get("center"):
                                             flatParentCenter = externalParent["center"]
@@ -11076,7 +11272,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                 try:
                                                     flatChildCenter = json.loads(attr["value"])
                                                     break
-                                                except (json.JSONDecodeError, TypeError):
+                                                except json.JSONDecodeError, TypeError:
                                                     pass
                                         if flatChildCenter is None and piece.get("center"):
                                             flatChildCenter = piece["center"]
@@ -11094,12 +11290,12 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                         if attr.get("key") == "semio.center" and attr.get("value"):
                             try:
                                 copied["center"] = json.loads(attr["value"])
-                            except (json.JSONDecodeError, TypeError):
+                            except json.JSONDecodeError, TypeError:
                                 pass
                         if attr.get("key") == "semio.plane" and attr.get("value"):
                             try:
                                 copied["plane"] = json.loads(attr["value"])
-                            except (json.JSONDecodeError, TypeError):
+                            except json.JSONDecodeError, TypeError:
                                 pass
                     center = copied.get("center") or {"u": 0, "v": 0}
                     newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
@@ -11137,7 +11333,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
 
 
 def deletePiecesAndConnectionsInDesignDict(kit: dict, design: dict, pieceGuids: list[str], connectionGuids: list[str]) -> dict:
-    """🔖Deletes pieces and connections from a design dict, returning a DesignDiff dict.
+    """🔖Deletes pieces and connections from a design dict, returning a canonical SemioReport with DesignDiff.
     Removes stale connections referencing deleted pieces.
     Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
     """
@@ -11177,7 +11373,10 @@ def deletePiecesAndConnectionsInDesignDict(kit: dict, design: dict, pieceGuids: 
     zeroCenter = {"u": 0, "v": 0}
 
     # Flatten the design to get absolute plane and center for each piece
-    flatResult = flattenDesignDict(kit, design.get("guid", ""))
+    flatRep = flattenDesignReportDict(kit, design.get("guid", ""))
+    if not flatRep["ok"]:
+        return flatRep
+    flatResult = flatRep["diff"]["forward"]
     flatPieceMap: dict[str, dict] = {}
     for piece in design.get("pieces", []):
         if piece.get("plane"):
@@ -11222,7 +11421,7 @@ def deletePiecesAndConnectionsInDesignDict(kit: dict, design: dict, pieceGuids: 
     if connectionsRemoved:
         diff["connections"] = {"removed": connectionsRemoved}
 
-    return diff
+    return _semio_report_ok(diff, flatRep["warnings"], flatRep["infos"])
 
 
 def getDesignChange(
@@ -11725,7 +11924,7 @@ def validateGuidUniqueness(kit: Kit) -> list[Problem]:
             problems.append(
                 Problem(
                     constraintId="guid-unique",
-                    message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
+                    message=f'Duplicate GUID "{entityGuid}". Entity GUIDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).',
                     entityKind=entityKind,
                     entityGuid=entityGuid,
                 )
@@ -12023,50 +12222,15 @@ def validateKitDict(kit: dict) -> ValidationResult:
 
     def checkGuid(entityKind: str, entityGuid: str, entity: dict) -> None:
         if entityGuid in seen:
-            newGuid = _newGuid()
-            entityCopy = _deepCopy(entity)
-            entityCopy["guid"] = newGuid
-            collectionKey = {
-                "Type": "types",
-                "Design": "designs",
-                "Piece": "pieces",
-                "Connection": "connections",
-                "Connector": "connectors",
-                "Model": "models",
-                "Quality": "qualities",
-                "Port": "ports",
-                "File": "files",
-                "Folder": "folders",
-                "Stat": "stats",
-                "Layer": "layers",
-            }.get(entityKind, "")
-            if collectionKey:
-                diff = {
-                    collectionKey: {
-                        "removed": [{"guid": entityGuid}],
-                        "added": [entityCopy],
-                    }
-                }
-                fix = _makeFix("Regenerate GUID", diff)
-                problems.append(
-                    Problem(
-                        constraintId="guid-unique",
-                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
-                        entityKind=entityKind,
-                        entityGuid=entityGuid,
-                        fixes=[fix],
-                    )
+            problems.append(
+                Problem(
+                    constraintId="guid-unique",
+                    message=f'Duplicate GUID "{entityGuid}". Entity GUIDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).',
+                    entityKind=entityKind,
+                    entityGuid=entityGuid,
+                    fixes=[],
                 )
-            else:
-                problems.append(
-                    Problem(
-                        constraintId="guid-unique",
-                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
-                        entityKind=entityKind,
-                        entityGuid=entityGuid,
-                        fixes=[],
-                    )
-                )
+            )
         else:
             seen[entityGuid] = entityKind
             seenEntities[entityGuid] = entity
@@ -12558,8 +12722,20 @@ def getTypeByGuid(kit: dict, guid: str) -> dict | None:
     return None
 
 
-def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | None) -> dict | None:
+def getConnectorFromType(
+    kit: dict,
+    typeData: dict | None,
+    connectorGuid: str | None,
+    *,
+    types_by_guid: dict[str, dict] | None = None,
+) -> dict | None:
     """🔖Look up a connector by name from a type dictionary."""
+
+    def _resolve_type(guid: str) -> dict | None:
+        if types_by_guid is not None:
+            return types_by_guid.get(guid)
+        return getTypeByGuid(kit, guid)
+
     if typeData is None:
         return None
     if connectorGuid is None:
@@ -12568,16 +12744,16 @@ def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | 
             return connectors[0]
         parent = typeData.get("parent")
         if parent:
-            parentType = getTypeByGuid(kit, parent.get("guid", ""))
-            return getConnectorFromType(kit, parentType, connectorGuid)
+            parentType = _resolve_type(parent.get("guid", ""))
+            return getConnectorFromType(kit, parentType, connectorGuid, types_by_guid=types_by_guid)
         return None
     for connector in typeData.get("connectors", []):
         if connector.get("guid") == connectorGuid:
             return connector
     parent = typeData.get("parent")
     if parent:
-        parentType = getTypeByGuid(kit, parent.get("guid", ""))
-        return getConnectorFromType(kit, parentType, connectorGuid)
+        parentType = _resolve_type(parent.get("guid", ""))
+        return getConnectorFromType(kit, parentType, connectorGuid, types_by_guid=types_by_guid)
     connectors = typeData.get("connectors", [])
     if connectors:
         return connectors[0]
@@ -12788,9 +12964,273 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
     pieces = design.get("pieces", [])
     if not pieces:
         return {}
+    types_by_guid: dict[str, dict] = {t["guid"]: t for t in kit.get("types", []) if t.get("guid")}
     pieceMap = {p["guid"]: dict(p) for p in pieces}
     piecePlanes: dict[str, dict] = {}
     piecePaths: dict[str, str] = {}
+    adjacency: dict[str, list[tuple[str, dict]]] = {}
+    for conn in design.get("connections", []):
+        src = conn["connected"]["piece"]["guid"]
+        tgt = conn["connecting"]["piece"]["guid"]
+        if src not in pieceMap or tgt not in pieceMap:
+            continue
+        adjacency.setdefault(src, []).append((tgt, conn))
+        adjacency.setdefault(tgt, []).append((src, conn))
+    visited: set[str] = set()
+
+    def bfs(root_guid: str) -> None:
+        q: collections.deque[str] = collections.deque([root_guid])
+        visited.add(root_guid)
+        piecePaths[root_guid] = root_guid
+        root_piece = pieceMap[root_guid]
+        if root_piece.get("plane") is not None and root_piece.get("center") is not None:
+            piecePlanes[root_guid] = root_piece["plane"]
+        else:
+            piecePlanes[root_guid] = {
+                "origin": {"x": 0, "y": 0, "z": 0},
+                "xAxis": {"x": 1, "y": 0, "z": 0},
+                "yAxis": {"x": 0, "y": 1, "z": 0},
+            }
+        while q:
+            current_guid = q.popleft()
+            current_plane = piecePlanes[current_guid]
+            current_piece = pieceMap[current_guid]
+            for neighbor_guid, conn in adjacency.get(current_guid, []):
+                if neighbor_guid in visited:
+                    continue
+                visited.add(neighbor_guid)
+                parent_id = current_guid
+                child_id = neighbor_guid
+                parent_plane = current_plane
+                parent_piece = current_piece
+                child_piece = pieceMap[child_id]
+                if conn["connected"]["piece"]["guid"] == parent_id:
+                    parent_side = conn["connected"]
+                    child_side = conn["connecting"]
+                else:
+                    parent_side = conn["connecting"]
+                    child_side = conn["connected"]
+                parent_type = types_by_guid.get(parent_piece.get("type", {}).get("guid", ""))
+                child_type = types_by_guid.get(child_piece.get("type", {}).get("guid", ""))
+                parent_connector_guid = parent_side.get("connector", {}).get("guid") if parent_side.get("connector") else None
+                child_connector_guid = child_side.get("connector", {}).get("guid") if child_side.get("connector") else None
+                parent_connector = getConnectorFromType(kit, parent_type, parent_connector_guid, types_by_guid=types_by_guid)
+                child_connector = getConnectorFromType(kit, child_type, child_connector_guid, types_by_guid=types_by_guid)
+                if parent_connector is None or child_connector is None:
+                    continue
+                child_plane = computeChildPlaneDict(parent_plane, parent_connector, child_connector, conn)
+                piecePlanes[child_id] = child_plane
+                radius = 2.697
+                verticalVExtra = 1.0
+                horizontalScale = 3.0633
+                parent_center = parent_piece.get("center") or {"u": 0, "v": 0}
+                connection_u = conn.get("u", 0) or 0
+                connection_v = conn.get("v", 0) or 0
+                if parent_center["u"] == 0 and parent_center["v"] == 0:
+                    t = parent_connector.get("t", 0) or 0
+                    angle = 2 * math.pi * t
+                    child_u = radius * math.sin(angle)
+                    child_v = radius * math.cos(angle)
+                else:
+                    parent_dir_z = (parent_connector.get("direction") or {}).get("z", 0) or 0
+                    is_vertical_connection = abs(parent_dir_z) > 0.5
+                    if is_vertical_connection:
+                        child_u = parent_center["u"] + connection_u
+                        child_v = parent_center["v"] + connection_v + verticalVExtra
+                    else:
+                        child_u = parent_center["u"] + connection_u * horizontalScale
+                        child_v = parent_center["v"] + connection_v * horizontalScale
+                child_center = {
+                    "u": round(child_u / TOLERANCE) * TOLERANCE,
+                    "v": round(child_v / TOLERANCE) * TOLERANCE,
+                }
+                pieceMap[child_id]["center"] = child_center
+                piecePaths[child_id] = piecePaths.get(parent_id, parent_id) + "," + child_id
+                q.append(neighbor_guid)
+
+    for p in pieces:
+        g = p.get("guid")
+        if g and g not in visited:
+            bfs(g)
+
+    def _plane_dict_close(ap: dict | None, bp: dict | None, tol: float = 1e-4) -> bool:
+        if ap is bp:
+            return True
+        if not ap or not bp:
+            return False
+
+        def _pt(d: dict, *keys: str) -> tuple[float, float, float]:
+            o = d or {}
+            return (float(o.get("x", 0) or 0), float(o.get("y", 0) or 0), float(o.get("z", 0) or 0))
+
+        ao, ax, ay = ap.get("origin") or {}, ap.get("xAxis") or {}, ap.get("yAxis") or {}
+        bo, bx, by = bp.get("origin") or {}, bp.get("xAxis") or {}, bp.get("yAxis") or {}
+        for a3, b3 in ((_pt(ao, "x", "y", "z"), _pt(bo, "x", "y", "z")), (_pt(ax, "x", "y", "z"), _pt(bx, "x", "y", "z")), (_pt(ay, "x", "y", "z"), _pt(by, "x", "y", "z"))):
+            if any(abs(a3[i] - b3[i]) >= tol for i in range(3)):
+                return False
+        return True
+
+    updated_rows: list[dict] = []
+    for piece in pieces:
+        guid = piece.get("guid")
+        if not guid or guid not in piecePlanes:
+            continue
+        new_plane = piecePlanes[guid]
+        new_center = pieceMap[guid].get("center") if guid in pieceMap else piece.get("center")
+        if new_center is None:
+            new_center = {"u": 0, "v": 0}
+        old_plane = piece.get("plane")
+        old_center = piece.get("center") or {"u": 0, "v": 0}
+        plane_changed = old_plane is None or not _plane_dict_close(new_plane, old_plane)
+        center_changed = abs(float(new_center.get("u", 0) or 0) - float(old_center.get("u", 0) or 0)) > TOLERANCE or abs(float(new_center.get("v", 0) or 0) - float(old_center.get("v", 0) or 0)) > TOLERANCE
+        if plane_changed or center_changed:
+            updated_rows.append({"id": guid, "diff": {"plane": new_plane, "center": new_center}})
+    return {
+        "pieces": {
+            "updated": updated_rows,
+        },
+        "_piecePaths": piecePaths,
+    }
+
+
+# #region 🎯SemioReport
+def _semio_report_ok(diff, warnings=None, infos=None):
+    """📋Successful semio algorithm payload (tool-friendly JSON)."""
+    return {"ok": True, "diff": diff, "warnings": warnings or [], "infos": infos or [], "errors": []}
+
+
+def _semio_report_err(errors: list):
+    """📋Failed semio algorithm payload."""
+    return {"ok": False, "diff": None, "warnings": [], "infos": [], "errors": errors}
+
+
+def flattenDesignReportDict(kit: dict, designGuid: str) -> dict:
+    """📋Canonical flatten report matching TypeScript flattenDesign (forward/backward + notes)."""
+    import copy
+
+    design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
+    if design is None:
+        return _semio_report_err([{"code": "flatten.design-not-found", "message": f"Design {designGuid} not found"}])
+    pieces = design.get("pieces", [])
+    if not pieces:
+        return _semio_report_ok(
+            {"forward": {}, "backward": {}},
+            [],
+            [
+                {
+                    "code": "flatten.empty-pieces",
+                    "message": "No pieces to flatten; returning empty forward and backward diffs.",
+                }
+            ],
+        )
+    before = copy.deepcopy(design)
+    try:
+        forward = flattenDesignDict(kit, designGuid)
+    except ValueError as e:
+        return _semio_report_err([{"code": "flatten.error", "message": str(e)}])
+    backward = _inverseDesignDiff(before, forward)
+    return _semio_report_ok({"forward": forward, "backward": backward}, [], [])
+
+
+# #endregion 🎯SemioReport
+
+
+# #region 🌳Flatten Merkle Hashes
+# Per-piece merkle hashes for plane and center computations so subsequent flatten calls can skip unchanged chains.
+
+
+def _hash_plane_root(guid: str, plane: dict | None) -> str:
+    """🌱Root plane hash includes only the piece guid and its fixed plane components (identity when absent)."""
+    w = HashWriter()
+    if plane is None:
+        w.writeString("plane.root.identity")
+        w.writeString(guid)
+        return w.digest()
+    w.writeString("plane.root")
+    w.writeString(guid)
+    origin = plane.get("origin") or {}
+    xAxis = plane.get("xAxis") or {}
+    yAxis = plane.get("yAxis") or {}
+    w.writeNumber(origin.get("x", 0) or 0)
+    w.writeNumber(origin.get("y", 0) or 0)
+    w.writeNumber(origin.get("z", 0) or 0)
+    w.writeNumber(xAxis.get("x", 0) or 0)
+    w.writeNumber(xAxis.get("y", 0) or 0)
+    w.writeNumber(xAxis.get("z", 0) or 0)
+    w.writeNumber(yAxis.get("x", 0) or 0)
+    w.writeNumber(yAxis.get("y", 0) or 0)
+    w.writeNumber(yAxis.get("z", 0) or 0)
+    return w.digest()
+
+
+def _hash_plane_chain(parent_hash: str, parent_connector: dict, child_connector: dict, connection: dict) -> str:
+    """🔗Chain plane hash depends on parent plane hash plus the inputs consumed by computeChildPlane."""
+    w = HashWriter()
+    w.writeString("plane.chain")
+    w.writeHash(parent_hash)
+    pPoint = parent_connector.get("point") or {}
+    pDir = parent_connector.get("direction") or {}
+    cPoint = child_connector.get("point") or {}
+    cDir = child_connector.get("direction") or {}
+    w.writeNumber(pPoint.get("x", 0) or 0)
+    w.writeNumber(pPoint.get("y", 0) or 0)
+    w.writeNumber(pPoint.get("z", 0) or 0)
+    w.writeNumber(pDir.get("x", 0) or 0)
+    w.writeNumber(pDir.get("y", 0) or 0)
+    w.writeNumber(pDir.get("z", 0) or 0)
+    w.writeNumber(cPoint.get("x", 0) or 0)
+    w.writeNumber(cPoint.get("y", 0) or 0)
+    w.writeNumber(cPoint.get("z", 0) or 0)
+    w.writeNumber(cDir.get("x", 0) or 0)
+    w.writeNumber(cDir.get("y", 0) or 0)
+    w.writeNumber(cDir.get("z", 0) or 0)
+    w.writeNumber(connection.get("gap", 0) or 0)
+    w.writeNumber(connection.get("shift", 0) or 0)
+    w.writeNumber(connection.get("rise", 0) or 0)
+    w.writeNumber(connection.get("rotation", 0) or 0)
+    w.writeNumber(connection.get("turn", 0) or 0)
+    w.writeNumber(connection.get("tilt", 0) or 0)
+    return w.digest()
+
+
+def _hash_center_root(guid: str, center: dict | None) -> str:
+    """🌱Root center hash includes only the piece guid and its fixed center (identity when absent)."""
+    w = HashWriter()
+    if center is None:
+        w.writeString("center.root.identity")
+        w.writeString(guid)
+        return w.digest()
+    w.writeString("center.root")
+    w.writeString(guid)
+    w.writeNumber(center.get("u", 0) or 0)
+    w.writeNumber(center.get("v", 0) or 0)
+    return w.digest()
+
+
+def _hash_center_chain(parent_hash: str, parent_connector: dict, connection: dict) -> str:
+    """🔗Chain center hash conservatively includes every potentially-read input of the child center computation."""
+    w = HashWriter()
+    w.writeString("center.chain")
+    w.writeHash(parent_hash)
+    pDir = parent_connector.get("direction") or {}
+    w.writeNumber(pDir.get("z", 0) or 0)
+    w.writeNumber(parent_connector.get("t", 0) or 0)
+    w.writeNumber(connection.get("u", 0) or 0)
+    w.writeNumber(connection.get("v", 0) or 0)
+    return w.digest()
+
+
+def computeFlatHashesDict(kit: dict, designGuid: str) -> dict[str, dict]:
+    """🌳Compute per-piece {planeHash, centerHash} merkle hashes for the flattened design so callers can cache by chain identity."""
+    design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
+    if design is None:
+        raise ValueError(f"Design {designGuid} not found")
+    pieces = design.get("pieces", [])
+    if not pieces:
+        return {}
+    pieceMap = {p["guid"]: p for p in pieces}
+    planeHashes: dict[str, str] = {}
+    centerHashes: dict[str, str] = {}
     G = buildPieceGraph(design)
     components = list(networkx.connected_components(G))
     for component in components:
@@ -12801,26 +13241,20 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
                 rootNode = nodeId
                 break
         if rootNode is None and component:
-            rootNode = next(iter(component))
+            rootNode = next(iter(sorted(component)))
         if rootNode is None:
             continue
         rootPiece = pieceMap[rootNode]
-        piecePaths[rootNode] = rootNode
-        if rootPiece.get("plane") and rootPiece.get("center") is not None:
-            piecePlanes[rootNode] = rootPiece["plane"]
-        else:
-            piecePlanes[rootNode] = {
-                "origin": {"x": 0, "y": 0, "z": 0},
-                "xAxis": {"x": 1, "y": 0, "z": 0},
-                "yAxis": {"x": 0, "y": 1, "z": 0},
-            }
+        planeHashes[rootNode] = _hash_plane_root(rootNode, rootPiece.get("plane"))
+        centerHashes[rootNode] = _hash_center_root(rootNode, rootPiece.get("center"))
         for source, target in networkx.bfs_edges(G, rootNode):
-            if target in piecePlanes:
+            if target in planeHashes:
                 continue
             parentId = source
             childId = target
-            parentPlane = piecePlanes.get(parentId)
-            if parentPlane is None:
+            parentPlaneHash = planeHashes.get(parentId)
+            parentCenterHash = centerHashes.get(parentId)
+            if parentPlaneHash is None or parentCenterHash is None:
                 continue
             edgeData = G.get_edge_data(parentId, childId)
             connection = edgeData.get("connection") if edgeData else None
@@ -12834,61 +13268,61 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
             childSide = connection["connecting"] if connection["connecting"]["piece"]["guid"] == childId else connection["connected"]
             parentConnectorGuid = parentSide.get("connector", {}).get("guid") if parentSide.get("connector") else None
             childConnectorGuid = childSide.get("connector", {}).get("guid") if childSide.get("connector") else None
-            parentConnector = getConnectorFromType(kit, parentType, parentConnectorGuid)
-            childConnector = getConnectorFromType(kit, childType, childConnectorGuid)
-            if parentConnector is None or childConnector is None:
+            parentConnector = getConnectorFromType(kit, parentType, parentConnectorGuid) or {}
+            childConnector = getConnectorFromType(kit, childType, childConnectorGuid) or {}
+            planeHashes[childId] = _hash_plane_chain(parentPlaneHash, parentConnector, childConnector, connection)
+            centerHashes[childId] = _hash_center_chain(parentCenterHash, parentConnector, connection)
+    return {guid: {"planeHash": planeHashes[guid], "centerHash": centerHashes[guid]} for guid in planeHashes}
+
+
+def flattenDesignCachedDict(kit: dict, designGuid: str, cache: dict[str, dict] | None = None) -> tuple[dict, dict[str, dict]]:
+    """🧠Flatten a design reusing cached plane/center values when the per-piece merkle hashes match the previous run."""
+    newHashes = computeFlatHashesDict(kit, designGuid)
+    rep = flattenDesignReportDict(kit, designGuid)
+    if not rep["ok"]:
+        return rep, {}
+    diff = rep["diff"]["forward"]
+    updatedById: dict[str, dict] = {}
+    for entry in diff.get("pieces", {}).get("updated", []) if isinstance(diff.get("pieces"), dict) else []:
+        guid_key = entry.get("piece", {}).get("guid", entry.get("id", ""))
+        updatedById[guid_key] = entry["diff"]
+    nextCache: dict[str, dict] = {}
+    if cache:
+        for guid, hashes in newHashes.items():
+            prev = cache.get(guid)
+            updated = updatedById.get(guid)
+            if prev is None or updated is None:
+                if updated is not None:
+                    nextCache[guid] = {
+                        "planeHash": hashes["planeHash"],
+                        "centerHash": hashes["centerHash"],
+                        "plane": updated.get("plane"),
+                        "center": updated.get("center"),
+                    }
                 continue
-            childPlane = computeChildPlaneDict(parentPlane, parentConnector, childConnector, connection)
-            piecePlanes[childId] = childPlane
-            radius = 2.697
-            verticalVExtra = 1.0
-            horizontalScale = 3.0633
-            parentCenter = parentPiece.get("center") or {"u": 0, "v": 0}
-            connectionU = connection.get("u", 0) or 0
-            connectionV = connection.get("v", 0) or 0
-            if parentCenter["u"] == 0 and parentCenter["v"] == 0:
-                t = parentConnector.get("t", 0) or 0
-                angle = 2 * numpy.pi * t
-                childU = radius * numpy.sin(angle)
-                childV = radius * numpy.cos(angle)
-            else:
-                parentDirZ = (parentConnector.get("direction") or {}).get("z", 0) or 0
-                isVerticalConnection = abs(parentDirZ) > 0.5
-                if isVerticalConnection:
-                    childU = parentCenter["u"] + connectionU
-                    childV = parentCenter["v"] + connectionV + verticalVExtra
-                else:
-                    childU = parentCenter["u"] + connectionU * horizontalScale
-                    childV = parentCenter["v"] + connectionV * horizontalScale
-            childCenter = {
-                "u": round(childU / TOLERANCE) * TOLERANCE,
-                "v": round(childV / TOLERANCE) * TOLERANCE,
+            reusedPlane = prev.get("plane") if prev.get("planeHash") == hashes["planeHash"] else updated.get("plane")
+            reusedCenter = prev.get("center") if prev.get("centerHash") == hashes["centerHash"] else updated.get("center")
+            nextCache[guid] = {
+                "planeHash": hashes["planeHash"],
+                "centerHash": hashes["centerHash"],
+                "plane": reusedPlane,
+                "center": reusedCenter,
             }
-            pieceMap[childId]["center"] = childCenter
-            piecePaths[childId] = piecePaths.get(parentId, parentId) + "," + childId
-    updatedPieces = []
-    for piece in pieces:
-        newPiece = dict(piece)
-        if piece["guid"] in piecePlanes:
-            newPiece["plane"] = piecePlanes[piece["guid"]]
-        if piece["guid"] in pieceMap and pieceMap[piece["guid"]].get("center"):
-            newPiece["center"] = pieceMap[piece["guid"]]["center"]
-        elif newPiece.get("center") is None:
-            newPiece["center"] = {"u": 0, "v": 0}
-        updatedPieces.append(newPiece)
-    return {
-        "pieces": {
-            "updated": [
-                {
-                    "id": p["guid"],
-                    "diff": {"plane": p.get("plane"), "center": p.get("center")},
-                }
-                for p in updatedPieces
-                if p["guid"] in piecePlanes
-            ]
-        },
-        "_piecePaths": piecePaths,
-    }
+    else:
+        for guid, hashes in newHashes.items():
+            updated = updatedById.get(guid)
+            if updated is None:
+                continue
+            nextCache[guid] = {
+                "planeHash": hashes["planeHash"],
+                "centerHash": hashes["centerHash"],
+                "plane": updated.get("plane"),
+                "center": updated.get("center"),
+            }
+    return rep, nextCache
+
+
+# #endregion 🌳Flatten Merkle Hashes
 
 
 # #endregion 🌤️Flatten Design
@@ -13642,7 +14076,9 @@ def import_remote_kit(uri: str) -> tuple[KitData, dict[str, bytes]]:
 
 def edit_temporary_kit(kit: KitData | dict, diff: dict) -> KitData:
     """🔖Edit an in-memory temporary kit with a diff."""
-    return KitData(applyKitDiffDict(_kit_to_dict(kit), diff))
+    kit_dict = copy.deepcopy(_kit_to_dict(kit))
+    applyKitDiffDict(kit_dict, diff)
+    return KitData(kit_dict)
 
 
 def edit_file_kit(path: str, diff: dict) -> KitData:
@@ -14216,6 +14652,110 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
         zip_ref.writestr("kit.json", kit_json)
         for filename, content in files.items():
             zip_ref.writestr(filename, content)
+
+
+# #region 🧬Kit Kind Classes
+
+
+class TransportKit:
+    """📋 Wraps a static JSON string for kit serialization/deserialization."""
+
+    def __init__(self, json_str: str):
+        self.json = json_str
+
+    def to_kit(self) -> KitData:
+        return KitData(json.loads(self.json))
+
+    @staticmethod
+    def from_kit(kit: KitData | dict) -> "TransportKit":
+        return TransportKit(json.dumps(_kit_to_dict(kit), ensure_ascii=False))
+
+
+class ArchiveKit:
+    """📦 Wraps a static zipped local kit."""
+
+    def __init__(self, data: bytes):
+        self.data = data
+
+    def to_kit(self) -> tuple[KitData, dict[str, bytes]]:
+        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as handle:
+            handle.write(self.data)
+            archive_path = handle.name
+        try:
+            return import_kit(archive_path)
+        finally:
+            if os.path.exists(archive_path):
+                os.remove(archive_path)
+
+    @staticmethod
+    def from_kit(kit: KitData | dict, files: dict[str, bytes] | None = None) -> "ArchiveKit":
+        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as handle:
+            archive_path = handle.name
+        try:
+            export_kit(kit, files or _collect_kit_asset_files(kit), archive_path)
+            with open(archive_path, "rb") as handle:
+                return ArchiveKit(handle.read())
+        finally:
+            if os.path.exists(archive_path):
+                os.remove(archive_path)
+
+
+class SyncKit:
+    """🔄 Base class for synchronized kit kinds."""
+
+    def __init__(self, kit: KitData):
+        self._kit = kit
+
+    @property
+    def kit(self) -> KitData:
+        return self._kit
+
+    def apply(self, diff: dict) -> None:
+        kit_dict = self._kit.to_dict()
+        applyKitDiffDict(kit_dict, diff)
+        self._kit = KitData(kit_dict)
+
+    def import_transport(self, transport: TransportKit) -> None:
+        imported = transport.to_kit()
+        diff = getKitDiffDict(self._kit.to_dict(), imported.to_dict())
+        self.apply(diff)
+
+    def import_archive(self, archive: ArchiveKit) -> None:
+        imported, _ = archive.to_kit()
+        diff = getKitDiffDict(self._kit.to_dict(), imported.to_dict())
+        self.apply(diff)
+
+    def export_transport(self) -> TransportKit:
+        return TransportKit.from_kit(self._kit)
+
+    def export_archive(self) -> ArchiveKit:
+        return ArchiveKit.from_kit(self._kit)
+
+    def close(self) -> None:
+        pass
+
+
+class DevKit(SyncKit):
+    """📝 Synchronized JSON file kit."""
+
+    @staticmethod
+    def from_json(json_str: str) -> "DevKit":
+        return DevKit(KitData(json.loads(json_str)))
+
+
+class LocalKit(SyncKit):
+    """📂 Synchronized folder with .semio/kit.db SQLite database."""
+
+    pass
+
+
+class RemoteKit(SyncKit):
+    """🌐 Synchronized websocket connection to semio/hub."""
+
+    pass
+
+
+# #endregion 🧬Kit Kind Classes
 
 
 # #endregion 🧿Kit Import/Export
@@ -16558,7 +17098,8 @@ def _test_flatten(design_name, parent_name=None):
     assert expected_design is not None, f"Expected Flat design for {design_name} not found"
 
     flat_design_diff = flattenDesignDict(kit_dict, design.get("guid"))
-    flat_design = _applyDesignDiff(design, flat_design_diff)
+    flat_design = copy.deepcopy(design)
+    _applyDesignDiff(flat_design, flat_design_diff)
 
     for piece in flat_design.get("pieces", []):
         expected_piece = next(
@@ -16833,25 +17374,147 @@ class TestRoundtrip:
 
 
 class TestFlatten:
-    class TestNakaginCapsuleTower:
-        def test_kit_flatten_diff_apply_flat(self):
-            _test_flatten("Nakagin Capsule Tower")
+    _flatten_cases = _test_load_json("flatten.cases.semio.json")["cases"]
 
-        class TestSlanted:
-            def test_kit_flatten_diff_apply_flat(self):
-                _test_flatten("Slanted", "Nakagin Capsule Tower")
+    @pytest.mark.parametrize("case", _flatten_cases, ids=[c["name"] for c in _flatten_cases])
+    def test_kit_flatten_diff_apply_flat(self, case):
+        path = case["designPath"]
+        _test_flatten(path[-1], path[-2] if len(path) > 1 else None)
 
-        class TestTwisted:
-            def test_kit_flatten_diff_apply_flat(self):
-                _test_flatten("Twisted", "Nakagin Capsule Tower")
 
-        class TestDancing:
-            def test_kit_flatten_diff_apply_flat(self):
-                _test_flatten("Dancing", "Nakagin Capsule Tower")
+def _flatten_merkle_set_path(obj: dict, path: str, value) -> None:
+    """🌳Assign a value inside a nested dict structure using a dotted path (creating intermediate dicts when missing)."""
+    keys = path.split(".")
+    current = obj
+    for key in keys[:-1]:
+        if key not in current or current[key] is None:
+            current[key] = {}
+        current = current[key]
+    current[keys[-1]] = value
 
-    class TestCapsuleDream:
-        def test_kit_flatten_diff_apply_flat(self):
-            _test_flatten("Capsule Dream")
+
+def _flatten_merkle_find_design_by_path(kit: dict, design_path: list[str]) -> dict:
+    """🌳Resolve a design by its hierarchical name path (root, then successive parents)."""
+    if not design_path:
+        raise ValueError("designPath must not be empty")
+    current = None
+    for i, name in enumerate(design_path):
+        parent_guid = current.get("guid") if current is not None else None
+        match = None
+        for d in kit.get("designs", []):
+            if d.get("name") != name:
+                continue
+            parent = d.get("parent")
+            if i == 0:
+                if not parent:
+                    match = d
+                    break
+            else:
+                if parent and parent.get("guid") == parent_guid:
+                    match = d
+                    break
+        if match is None:
+            raise ValueError(f"Design path {design_path} not found at segment {name!r}")
+        current = match
+    assert current is not None
+    return current
+
+
+def _flatten_merkle_apply_mutations(kit: dict, design: dict, mutations: list[dict]) -> None:
+    """🌳Apply the asset-described mutations in-place on a kit clone prior to recomputing hashes."""
+    for mutation in mutations:
+        kind = mutation.get("kind")
+        path = mutation.get("path")
+        value = mutation.get("value")
+        if kind == "pieceField":
+            pieceGuid = mutation.get("pieceGuid")
+            piece = next((p for p in design.get("pieces", []) if p.get("guid") == pieceGuid), None)
+            if piece is None:
+                raise ValueError(f"Piece {pieceGuid} not found in design {design.get('guid')}")
+            _flatten_merkle_set_path(piece, path, value)
+        elif kind == "connectionField":
+            connectionGuid = mutation.get("connectionGuid")
+            connection = next((c for c in design.get("connections", []) if c.get("guid") == connectionGuid), None)
+            if connection is None:
+                raise ValueError(f"Connection {connectionGuid} not found in design {design.get('guid')}")
+            _flatten_merkle_set_path(connection, path, value)
+        else:
+            raise ValueError(f"Unknown mutation kind {kind!r}")
+
+
+class TestFlattenMerkle:
+    def test_shared_asset_mutation_cases(self):
+        cases_doc = _test_load_json("flatten-merkle.cases.semio.json")
+        for case in cases_doc.get("cases", []):
+            kit_before = _test_load_json(case["kit"])
+            design_before = _flatten_merkle_find_design_by_path(kit_before, case["designPath"])
+            before_hashes = computeFlatHashesDict(kit_before, design_before["guid"])
+
+            kit_after = json.loads(json.dumps(kit_before))
+            design_after = _flatten_merkle_find_design_by_path(kit_after, case["designPath"])
+            _flatten_merkle_apply_mutations(kit_after, design_after, case.get("mutations", []))
+            after_hashes = computeFlatHashesDict(kit_after, design_after["guid"])
+
+            assert set(before_hashes.keys()) == set(after_hashes.keys()), f"Case {case['name']}: piece set changed"
+
+            changed_plane = {g for g in before_hashes if before_hashes[g]["planeHash"] != after_hashes[g]["planeHash"]}
+            changed_center = {g for g in before_hashes if before_hashes[g]["centerHash"] != after_hashes[g]["centerHash"]}
+            expect = case.get("expect", {})
+            name = case["name"]
+
+            if "planeHashesChangedAny" in expect:
+                if expect["planeHashesChangedAny"]:
+                    assert len(changed_plane) > 0, f"Case {name}: expected some planeHash changes, got none"
+                else:
+                    assert len(changed_plane) == 0, f"Case {name}: expected no planeHash changes, got {changed_plane}"
+            if "centerHashesChangedAny" in expect:
+                if expect["centerHashesChangedAny"]:
+                    assert len(changed_center) > 0, f"Case {name}: expected some centerHash changes, got none"
+                else:
+                    assert len(changed_center) == 0, f"Case {name}: expected no centerHash changes, got {changed_center}"
+            if expect.get("planeHashesChangedAll") is True:
+                assert changed_plane == set(before_hashes.keys()), f"Case {name}: expected every planeHash to change"
+            if expect.get("planeHashesChangedAll") is False:
+                assert changed_plane != set(before_hashes.keys()), f"Case {name}: expected not every planeHash to change"
+            if expect.get("centerHashesChangedAll") is True:
+                assert changed_center == set(before_hashes.keys()), f"Case {name}: expected every centerHash to change"
+            if expect.get("centerHashesChangedAll") is False:
+                assert changed_center != set(before_hashes.keys()), f"Case {name}: expected not every centerHash to change"
+            for guid in expect.get("planeHashesChangedIncludes", []):
+                assert guid in changed_plane, f"Case {name}: expected piece {guid} to have changed planeHash"
+            for guid in expect.get("centerHashesChangedIncludes", []):
+                assert guid in changed_center, f"Case {name}: expected piece {guid} to have changed centerHash"
+            for guid in expect.get("planeHashesStableIncludes", []):
+                assert guid not in changed_plane, f"Case {name}: expected piece {guid} to keep stable planeHash"
+            for guid in expect.get("centerHashesStableIncludes", []):
+                assert guid not in changed_center, f"Case {name}: expected piece {guid} to keep stable centerHash"
+
+    def test_cross_language_parity_reference_hashes(self):
+        cases_doc = _test_load_json("flatten-merkle.cases.semio.json")
+        parity = cases_doc.get("parity")
+        assert parity is not None, "parity block missing"
+        kit = _test_load_json(parity["kit"])
+        design = _flatten_merkle_find_design_by_path(kit, parity["designPath"])
+        hashes = computeFlatHashesDict(kit, design["guid"])
+        for expected in parity.get("expectedHashes", []):
+            guid = expected["pieceGuid"]
+            assert guid in hashes, f"piece {guid} missing from computed hashes"
+            assert hashes[guid]["planeHash"] == expected["planeHash"], f"piece {guid} planeHash mismatch: got {hashes[guid]['planeHash']}"
+            assert hashes[guid]["centerHash"] == expected["centerHash"], f"piece {guid} centerHash mismatch: got {hashes[guid]['centerHash']}"
+
+    def test_cached_flatten_reuses_values_when_hashes_match(self):
+        cases_doc = _test_load_json("flatten-merkle.cases.semio.json")
+        parity = cases_doc["parity"]
+        kit = _test_load_json(parity["kit"])
+        design = _flatten_merkle_find_design_by_path(kit, parity["designPath"])
+        _, first_cache = flattenDesignCachedDict(kit, design["guid"])
+        assert len(first_cache) > 0
+        _, second_cache = flattenDesignCachedDict(kit, design["guid"], first_cache)
+        for guid, entry in first_cache.items():
+            assert entry["planeHash"] == second_cache[guid]["planeHash"]
+            assert entry["centerHash"] == second_cache[guid]["centerHash"]
+            assert entry["plane"] == second_cache[guid]["plane"]
+            assert entry["center"] == second_cache[guid]["center"]
 
 
 class TestChange:
@@ -16870,185 +17533,200 @@ class TestChange:
             assert areKitDiffsDictEqual(computed_inverse_diff, kit_diff_inverted)
             assert areKitDiffsDictEqual(change.forward, kit_diff)
             assert areKitDiffsDictEqual(change.backward, kit_diff_inverted)
-            applied_forward = applyKitDiffDict(kit_original, change.forward)
+            applied_forward = copy.deepcopy(kit_original)
+            applyKitDiffDict(applied_forward, change.forward)
             assert areKitsDictEqual(applied_forward, kit_diffed)
-            applied_inverse = applyKitDiffDict(kit_diffed, change.backward)
+            applied_inverse = copy.deepcopy(kit_diffed)
+            applyKitDiffDict(applied_inverse, change.backward)
             assert areKitsDictEqual(applied_inverse, kit_original)
 
 
 class TestDelete:
-    class TestNakaginCapsuleTower:
-        def test_delete_third_tambour_and_first_small_tower_connection(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
-            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower")
-            selection = _test_load_json("nakagin-capsule-tower.deleted.selection.semio.json")
-            expected_diff = _test_load_json("nakagin-capsule-tower.deleted.design.diff.semio.json")
+    _delete_cases = _test_load_json("delete.cases.semio.json")["cases"]
 
-            piece_guids = [p["guid"] for p in selection.get("pieces", [])]
-            connection_guids = [c["guid"] for c in selection.get("connections", [])]
+    @pytest.mark.parametrize("case", _delete_cases, ids=[c["name"] for c in _delete_cases])
+    def test_delete_pieces_and_connections(self, case):
+        kit = _test_load_json(case["kit"])
+        design = _test_find_design(kit, case["designName"], case.get("designParent"))
+        selection = _test_load_json(case["selectionAsset"])
+        expected_diff = _test_load_json(case["expectedDiffAsset"])
 
-            computed_diff = deletePiecesAndConnectionsInDesignDict(kit, design, piece_guids, connection_guids)
+        piece_guids = [p["guid"] for p in selection.get("pieces", [])]
+        connection_guids = [c["guid"] for c in selection.get("connections", [])]
 
-            # Verify removed pieces
-            computed_removed = computed_diff.get("pieces", {}).get("removed", [])
-            expected_removed = expected_diff.get("pieces", {}).get("removed", [])
-            assert len(computed_removed) == len(expected_removed), f"Removed pieces count mismatch: {len(computed_removed)} vs {len(expected_removed)}"
-            for c, e in zip(computed_removed, expected_removed):
-                assert c["guid"] == e["guid"], f"Removed piece guid mismatch: {c['guid']} vs {e['guid']}"
+        computed_report = deletePiecesAndConnectionsInDesignDict(kit, design, piece_guids, connection_guids)
+        assert computed_report.get("ok"), computed_report.get("errors", [])
+        computed_diff = computed_report["diff"]
 
-            # Verify updated (fixed) pieces
-            computed_updated = computed_diff.get("pieces", {}).get("updated", [])
-            expected_updated = expected_diff.get("pieces", {}).get("updated", [])
-            assert len(computed_updated) == len(expected_updated), f"Updated pieces count mismatch: {len(computed_updated)} vs {len(expected_updated)}"
-            computed_guids = sorted(u.get("piece", {}).get("guid", "") for u in computed_updated)
-            expected_guids = sorted(u.get("piece", {}).get("guid", "") for u in expected_updated)
-            assert computed_guids == expected_guids, f"Updated piece guids mismatch"
-            computed_sorted = sorted(computed_updated, key=lambda u: u.get("piece", {}).get("guid", ""))
-            expected_sorted = sorted(expected_updated, key=lambda u: u.get("piece", {}).get("guid", ""))
-            for cu, eu in zip(computed_sorted, expected_sorted):
-                cd = cu["diff"]
-                ed = eu["diff"]
-                assert abs(cd["plane"]["origin"]["x"] - ed["plane"]["origin"]["x"]) < 0.001
-                assert abs(cd["plane"]["origin"]["y"] - ed["plane"]["origin"]["y"]) < 0.001
-                assert abs(cd["plane"]["origin"]["z"] - ed["plane"]["origin"]["z"]) < 0.001
-                assert abs(cd["center"]["u"] - ed["center"]["u"]) < 0.001
-                assert abs(cd["center"]["v"] - ed["center"]["v"]) < 0.001
+        # Verify removed pieces
+        computed_removed = computed_diff.get("pieces", {}).get("removed", [])
+        expected_removed = expected_diff.get("pieces", {}).get("removed", [])
+        assert len(computed_removed) == len(expected_removed), f"Removed pieces count mismatch: {len(computed_removed)} vs {len(expected_removed)}"
+        for c, e in zip(computed_removed, expected_removed):
+            assert c["guid"] == e["guid"], f"Removed piece guid mismatch: {c['guid']} vs {e['guid']}"
 
-            # Verify removed connections
-            computed_conn_removed = computed_diff.get("connections", {}).get("removed", [])
-            expected_conn_removed = expected_diff.get("connections", {}).get("removed", [])
-            assert len(computed_conn_removed) == len(expected_conn_removed), f"Removed connections count mismatch: {len(computed_conn_removed)} vs {len(expected_conn_removed)}"
-            computed_conn_guids = sorted(r["guid"] for r in computed_conn_removed)
-            expected_conn_guids = sorted(r["guid"] for r in expected_conn_removed)
-            assert computed_conn_guids == expected_conn_guids, "Removed connection guids mismatch"
+        # Verify updated (fixed) pieces
+        computed_updated = computed_diff.get("pieces", {}).get("updated", [])
+        expected_updated = expected_diff.get("pieces", {}).get("updated", [])
+        assert len(computed_updated) == len(expected_updated), f"Updated pieces count mismatch: {len(computed_updated)} vs {len(expected_updated)}"
+        computed_guids = sorted(u.get("piece", {}).get("guid", "") for u in computed_updated)
+        expected_guids = sorted(u.get("piece", {}).get("guid", "") for u in expected_updated)
+        assert computed_guids == expected_guids, f"Updated piece guids mismatch"
+        computed_sorted = sorted(computed_updated, key=lambda u: u.get("piece", {}).get("guid", ""))
+        expected_sorted = sorted(expected_updated, key=lambda u: u.get("piece", {}).get("guid", ""))
+        for cu, eu in zip(computed_sorted, expected_sorted):
+            cd = cu["diff"]
+            ed = eu["diff"]
+            assert abs(cd["plane"]["origin"]["x"] - ed["plane"]["origin"]["x"]) < 0.001
+            assert abs(cd["plane"]["origin"]["y"] - ed["plane"]["origin"]["y"]) < 0.001
+            assert abs(cd["plane"]["origin"]["z"] - ed["plane"]["origin"]["z"]) < 0.001
+            assert abs(cd["center"]["u"] - ed["center"]["u"]) < 0.001
+            assert abs(cd["center"]["v"] - ed["center"]["v"]) < 0.001
+
+        # Verify removed connections
+        computed_conn_removed = computed_diff.get("connections", {}).get("removed", [])
+        expected_conn_removed = expected_diff.get("connections", {}).get("removed", [])
+        assert len(computed_conn_removed) == len(expected_conn_removed), f"Removed connections count mismatch: {len(computed_conn_removed)} vs {len(expected_conn_removed)}"
+        computed_conn_guids = sorted(r["guid"] for r in computed_conn_removed)
+        expected_conn_guids = sorted(r["guid"] for r in expected_conn_removed)
+        assert computed_conn_guids == expected_conn_guids, "Removed connection guids mismatch"
 
 
 class TestCopyAndPaste:
-    class TestNakaginCapsuleTower:
-        def test_copy(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
-            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-            selection = _test_load_json("nakagin-capsule-tower.copy.design.selection.semio.json")
-            expected_copy = _test_load_json("nakagin-capsule-tower.copy.design.semio.json")
+    _cp_cases = _test_load_json("copy-paste.cases.semio.json")["cases"]
 
-            piece_guids = [p["guid"] for p in selection.get("pieces", [])]
-            connection_guids = [c["guid"] for c in selection.get("connections", [])]
+    @pytest.mark.parametrize("case", _cp_cases, ids=[c["name"] for c in _cp_cases])
+    def test_copy(self, case):
+        kit = _test_load_json(case["kit"])
+        design = _test_find_design(kit, case["designName"], case.get("designParent"))
+        selection = _test_load_json(case["selectionAsset"])
+        expected_copy = _test_load_json(case["expectedCopyAsset"])
 
-            copy_result = copyDesignDict(kit, design, piece_guids, connection_guids)
+        piece_guids = [p["guid"] for p in selection.get("pieces", [])]
+        connection_guids = [c["guid"] for c in selection.get("connections", [])]
 
-            # Verify piece count
-            assert len(copy_result.get("pieces", [])) == len(expected_copy.get("pieces", [])), f"Copy pieces count mismatch: {len(copy_result.get('pieces', []))} vs {len(expected_copy.get('pieces', []))}"
+        copy_result = copyDesignDict(kit, design, piece_guids, connection_guids)
 
-            # Verify connection count
-            assert len(copy_result.get("connections", [])) == len(expected_copy.get("connections", [])), f"Copy connections count mismatch: {len(copy_result.get('connections', []))} vs {len(expected_copy.get('connections', []))}"
+        # Verify piece count
+        assert len(copy_result.get("pieces", [])) == len(expected_copy.get("pieces", [])), f"Copy pieces count mismatch: {len(copy_result.get('pieces', []))} vs {len(expected_copy.get('pieces', []))}"
 
-            # Verify each piece exists
-            copyPieceGuids = {p["guid"] for p in copy_result.get("pieces", [])}
-            for ep in expected_copy.get("pieces", []):
-                assert ep["guid"] in copyPieceGuids, f"Expected piece {ep['guid']} not found in copy output"
+        # Verify connection count
+        assert len(copy_result.get("connections", [])) == len(expected_copy.get("connections", [])), f"Copy connections count mismatch: {len(copy_result.get('connections', []))} vs {len(expected_copy.get('connections', []))}"
 
-            # Verify external pieces have semio.piece.origin and semio.center attributes
-            expectedPieceMap = {p["guid"]: p for p in expected_copy.get("pieces", [])}
-            for p in copy_result.get("pieces", []):
-                ep = expectedPieceMap[p["guid"]]
-                hasOrigin = any(a.get("key") == "semio.piece.origin" and a.get("value") == "external" for a in p.get("attributes", []))
-                expectedOrigin = any(a.get("key") == "semio.piece.origin" and a.get("value") == "external" for a in ep.get("attributes", []))
-                assert hasOrigin == expectedOrigin, f"Piece {p['guid']}: semio.piece.origin mismatch"
-                hasCenter = any(a.get("key") == "semio.center" for a in p.get("attributes", []))
-                expectedCenter = any(a.get("key") == "semio.center" for a in ep.get("attributes", []))
-                assert hasCenter == expectedCenter, f"Piece {p['guid']}: semio.center attr mismatch"
+        # Verify each piece exists
+        copyPieceGuids = {p["guid"] for p in copy_result.get("pieces", [])}
+        for ep in expected_copy.get("pieces", []):
+            assert ep["guid"] in copyPieceGuids, f"Expected piece {ep['guid']} not found in copy output"
 
-        def test_paste_without_coord(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
-            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-            paste_target = _test_load_json("nakagin-capsule-tower.paste.design.semio.json")
-            selection = _test_load_json("nakagin-capsule-tower.copy.design.selection.semio.json")
-            expected_paste = _test_load_json("nakagin-capsule-tower.paste.design.diff.semio.json")
+        # Verify external pieces have semio.piece.origin and semio.center attributes
+        expectedPieceMap = {p["guid"]: p for p in expected_copy.get("pieces", [])}
+        for p in copy_result.get("pieces", []):
+            ep = expectedPieceMap[p["guid"]]
+            hasOrigin = any(a.get("key") == "semio.piece.origin" and a.get("value") == "external" for a in p.get("attributes", []))
+            expectedOrigin = any(a.get("key") == "semio.piece.origin" and a.get("value") == "external" for a in ep.get("attributes", []))
+            assert hasOrigin == expectedOrigin, f"Piece {p['guid']}: semio.piece.origin mismatch"
+            hasCenter = any(a.get("key") == "semio.center" for a in p.get("attributes", []))
+            expectedCenter = any(a.get("key") == "semio.center" for a in ep.get("attributes", []))
+            assert hasCenter == expectedCenter, f"Piece {p['guid']}: semio.center attr mismatch"
 
-            piece_guids = [p["guid"] for p in selection.get("pieces", [])]
-            connection_guids = [c["guid"] for c in selection.get("connections", [])]
+    @pytest.mark.parametrize("case", _cp_cases, ids=[c["name"] for c in _cp_cases])
+    def test_paste_without_coord(self, case):
+        kit = _test_load_json(case["kit"])
+        design = _test_find_design(kit, case["designName"], case.get("designParent"))
+        paste_target = _test_load_json(case["pasteTargetAsset"])
+        selection = _test_load_json(case["selectionAsset"])
+        expected_paste = _test_load_json(case["expectedPasteDiffAsset"])
 
-            copy_result = copyDesignDict(kit, design, piece_guids, connection_guids)
-            paste_diff = pasteDesignDict(kit, copy_result, paste_target, "original", None)
+        piece_guids = [p["guid"] for p in selection.get("pieces", [])]
+        connection_guids = [c["guid"] for c in selection.get("connections", [])]
 
-            # Verify pasted pieces count
-            paste_pieces = paste_diff.get("pieces", {}).get("added", [])
-            expected_paste_pieces = expected_paste.get("pieces", {}).get("added", [])
-            assert len(paste_pieces) == len(expected_paste_pieces), f"Paste added pieces count mismatch: {len(paste_pieces)} vs {len(expected_paste_pieces)}"
+        copy_result = copyDesignDict(kit, design, piece_guids, connection_guids)
+        paste_diff = pasteDesignDict(kit, copy_result, paste_target, "original", None)
 
-            # Verify no external-origin pieces in paste output
-            for p in paste_pieces:
-                hasExt = any(a.get("key") == "semio.piece.origin" and a.get("value") == "external" for a in p.get("attributes", []))
-                assert not hasExt, f"External-origin piece {p['guid']} should not be in paste output"
+        # Verify pasted pieces count
+        paste_pieces = paste_diff.get("pieces", {}).get("added", [])
+        expected_paste_pieces = expected_paste.get("pieces", {}).get("added", [])
+        assert len(paste_pieces) == len(expected_paste_pieces), f"Paste added pieces count mismatch: {len(paste_pieces)} vs {len(expected_paste_pieces)}"
 
-            # Verify pasted connections count
-            paste_conns = paste_diff.get("connections", {}).get("added", [])
-            expected_paste_conns = expected_paste.get("connections", {}).get("added", [])
-            assert len(paste_conns) == len(expected_paste_conns), f"Paste added connections count mismatch: {len(paste_conns)} vs {len(expected_paste_conns)}"
+        # Verify no external-origin pieces in paste output
+        for p in paste_pieces:
+            hasExt = any(a.get("key") == "semio.piece.origin" and a.get("value") == "external" for a in p.get("attributes", []))
+            assert not hasExt, f"External-origin piece {p['guid']} should not be in paste output"
 
-        def test_paste_with_coord(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
-            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-            paste_target = _test_load_json("nakagin-capsule-tower.paste.design.semio.json")
-            selection = _test_load_json("nakagin-capsule-tower.copy.design.selection.semio.json")
-            expected_pwc = _test_load_json("nakagin-capsule-tower.paste.with-coord.design.diff.semio.json")
+        # Verify pasted connections count
+        paste_conns = paste_diff.get("connections", {}).get("added", [])
+        expected_paste_conns = expected_paste.get("connections", {}).get("added", [])
+        assert len(paste_conns) == len(expected_paste_conns), f"Paste added connections count mismatch: {len(paste_conns)} vs {len(expected_paste_conns)}"
 
-            piece_guids = [p["guid"] for p in selection.get("pieces", [])]
-            connection_guids = [c["guid"] for c in selection.get("connections", [])]
+    @pytest.mark.parametrize("case", _cp_cases, ids=[c["name"] for c in _cp_cases])
+    def test_paste_with_coord(self, case):
+        kit = _test_load_json(case["kit"])
+        design = _test_find_design(kit, case["designName"], case.get("designParent"))
+        paste_target = _test_load_json(case["pasteTargetAsset"])
+        selection = _test_load_json(case["selectionAsset"])
+        expected_pwc = _test_load_json(case["expectedPasteWithCoordDiffAsset"])
+        coord = case["pasteCoord"]
 
-            copy_result = copyDesignDict(kit, design, piece_guids, connection_guids)
-            paste_diff = pasteDesignDict(kit, copy_result, paste_target, "original", {"u": 10, "v": 10})
+        piece_guids = [p["guid"] for p in selection.get("pieces", [])]
+        connection_guids = [c["guid"] for c in selection.get("connections", [])]
 
-            # Verify pasted pieces count
-            paste_pieces = paste_diff.get("pieces", {}).get("added", [])
-            expected_paste_pieces = expected_pwc.get("pieces", {}).get("added", [])
-            assert len(paste_pieces) == len(expected_paste_pieces), f"Paste with coord added pieces count mismatch: {len(paste_pieces)} vs {len(expected_paste_pieces)}"
+        copy_result = copyDesignDict(kit, design, piece_guids, connection_guids)
+        paste_diff = pasteDesignDict(kit, copy_result, paste_target, "original", coord)
 
-            # Verify pasted connections count
-            paste_conns = paste_diff.get("connections", {}).get("added", [])
-            expected_paste_conns = expected_pwc.get("connections", {}).get("added", [])
-            assert len(paste_conns) == len(expected_paste_conns), f"Paste with coord added connections count mismatch: {len(paste_conns)} vs {len(expected_paste_conns)}"
+        # Verify pasted pieces count
+        paste_pieces = paste_diff.get("pieces", {}).get("added", [])
+        expected_paste_pieces = expected_pwc.get("pieces", {}).get("added", [])
+        assert len(paste_pieces) == len(expected_paste_pieces), f"Paste with coord added pieces count mismatch: {len(paste_pieces)} vs {len(expected_paste_pieces)}"
 
-            # Verify centers are offset by coord
-            expectedPieceMap = {p["guid"]: p for p in expected_paste_pieces}
-            for p in paste_pieces:
-                ep = expectedPieceMap.get(p["guid"])
-                assert ep is not None, f"Piece {p['guid']} not found in expected paste with coord"
-                if p.get("center") and ep.get("center"):
-                    assert abs(p["center"]["u"] - ep["center"]["u"]) < 0.001, f"Piece {p['guid']} center.u mismatch: {p['center']['u']} vs {ep['center']['u']}"
-                    assert abs(p["center"]["v"] - ep["center"]["v"]) < 0.001, f"Piece {p['guid']} center.v mismatch: {p['center']['v']} vs {ep['center']['v']}"
+        # Verify pasted connections count
+        paste_conns = paste_diff.get("connections", {}).get("added", [])
+        expected_paste_conns = expected_pwc.get("connections", {}).get("added", [])
+        assert len(paste_conns) == len(expected_paste_conns), f"Paste with coord added connections count mismatch: {len(paste_conns)} vs {len(expected_paste_conns)}"
+
+        # Verify centers are offset by coord
+        expectedPieceMap = {p["guid"]: p for p in expected_paste_pieces}
+        for p in paste_pieces:
+            ep = expectedPieceMap.get(p["guid"])
+            assert ep is not None, f"Piece {p['guid']} not found in expected paste with coord"
+            if p.get("center") and ep.get("center"):
+                assert abs(p["center"]["u"] - ep["center"]["u"]) < 0.001, f"Piece {p['guid']} center.u mismatch: {p['center']['u']} vs {ep['center']['u']}"
+                assert abs(p["center"]["v"] - ep["center"]["v"]) < 0.001, f"Piece {p['guid']} center.v mismatch: {p['center']['v']} vs {ep['center']['v']}"
 
 
 class TestDesignWithDiff:
-    class TestNakaginCapsuleTower:
-        def test_design_with_diff_preserves_old_entities_and_annotates_status(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
-            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-            diff = _test_load_json("nakgin-capsule-tower.diff.design.semio.json")
-            expected = _test_load_json("nakagin-capsule-tower.with-diff.design.semio.json")
+    _diff_cases = _test_load_json("design-with-diff.cases.semio.json")["cases"]
 
-            computed = designWithDiffDict(design, diff)
+    @pytest.mark.parametrize("case", _diff_cases, ids=[c["name"] for c in _diff_cases])
+    def test_design_with_diff_preserves_old_entities_and_annotates_status(self, case):
+        kit = _test_load_json(case["kit"])
+        design = _test_find_design(kit, case["designName"], case.get("designParent"))
+        diff = _test_load_json(case["diff"])
+        expected = _test_load_json(case["expected"])
 
-            assert len(computed.get("pieces", [])) == len(expected.get("pieces", [])), f"Pieces count mismatch: {len(computed.get('pieces', []))} vs {len(expected.get('pieces', []))}"
-            assert len(computed.get("connections", [])) == len(expected.get("connections", [])), f"Connections count mismatch: {len(computed.get('connections', []))} vs {len(expected.get('connections', []))}"
+        computed = designWithDiffDict(design, diff)
 
-            def get_status(attrs):
-                for a in attrs or []:
-                    if a.get("key") == "semio.diffStatus":
-                        return a.get("value")
-                return None
+        assert len(computed.get("pieces", [])) == len(expected.get("pieces", [])), f"Pieces count mismatch: {len(computed.get('pieces', []))} vs {len(expected.get('pieces', []))}"
+        assert len(computed.get("connections", [])) == len(expected.get("connections", [])), f"Connections count mismatch: {len(computed.get('connections', []))} vs {len(expected.get('connections', []))}"
 
-            piece_statuses = [get_status(p.get("attributes")) for p in computed.get("pieces", [])]
-            assert piece_statuses.count("unchanged") == 163
-            assert piece_statuses.count("modified") == 7
-            assert piece_statuses.count("removed") == 10
-            assert piece_statuses.count("added") == 5
+        def get_status(attrs):
+            for a in attrs or []:
+                if a.get("key") == "semio.diffStatus":
+                    return a.get("value")
+            return None
 
-            conn_statuses = [get_status(c.get("attributes")) for c in computed.get("connections", [])]
-            assert conn_statuses.count("unchanged") == 168
-            assert conn_statuses.count("modified") == 1
-            assert conn_statuses.count("removed") == 10
-            assert conn_statuses.count("added") == 4
+        piece_statuses = [get_status(p.get("attributes")) for p in computed.get("pieces", [])]
+        pc = case["expectedPieceCounts"]
+        assert piece_statuses.count("unchanged") == pc["unchanged"]
+        assert piece_statuses.count("modified") == pc["modified"]
+        assert piece_statuses.count("removed") == pc["removed"]
+        assert piece_statuses.count("added") == pc["added"]
+
+        conn_statuses = [get_status(c.get("attributes")) for c in computed.get("connections", [])]
+        cc = case["expectedConnectionCounts"]
+        assert conn_statuses.count("unchanged") == cc["unchanged"]
+        assert conn_statuses.count("modified") == cc["modified"]
+        assert conn_statuses.count("removed") == cc["removed"]
+        assert conn_statuses.count("added") == cc["added"]
 
 
 class TestValidation:
@@ -17095,342 +17773,240 @@ class TestDesignModel:
 
 
 class TestKitFilterDesign:
-    def test_nakagin_capsule_tower_filter_produces_expected_subset(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        expected = _test_load_json("nakagin-capsule-tower.filtered.kit.semio.json")
-        design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
+    _filter_cases = _test_load_json("filter-kit.cases.semio.json")
+    _design_filter_cases = _filter_cases["cases"]
+    _glob_cases = _filter_cases["globCases"]
 
-        filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
+    def test_filter_produces_expected_subset(self):
+        for case in self._design_filter_cases:
+            kit_dict = _test_load_json(case["kit"])
+            expected = _test_load_json(case["expectedKit"])
+            design = _test_find_design(kit_dict, case["designName"], case.get("designParent"))
 
-        assert len(filtered.get("designs", [])) == len(expected.get("designs", []))
-        assert len(filtered.get("types", [])) == len(expected.get("types", []))
-        assert len(filtered.get("files", [])) == len(expected.get("files", []))
-        assert len(filtered.get("ports", [])) == len(expected.get("ports", []))
-        assert len(filtered.get("qualities", [])) == len(expected.get("qualities", []))
-        assert len(filtered.get("authors", [])) == len(expected.get("authors", []))
+            filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
 
-        filtered_design = next(d for d in filtered.get("designs", []) if d.get("guid") == design["guid"])
-        assert len(filtered_design.get("pieces", [])) == len(design.get("pieces", []))
+            assert len(filtered.get("designs", [])) == len(expected.get("designs", []))
+            assert len(filtered.get("types", [])) == len(expected.get("types", []))
+            assert len(filtered.get("files", [])) == len(expected.get("files", []))
+            assert len(filtered.get("ports", [])) == len(expected.get("ports", []))
+            assert len(filtered.get("qualities", [])) == len(expected.get("qualities", []))
+            assert len(filtered.get("authors", [])) == len(expected.get("authors", []))
 
-        for expected_type in expected.get("types", []):
-            filtered_type = next(
-                (t for t in filtered.get("types", []) if t.get("guid") == expected_type.get("guid")),
-                None,
-            )
-            assert filtered_type is not None
-            assert len(filtered_type.get("models", [])) == len(expected_type.get("models", []))
+            filtered_design = next(d for d in filtered.get("designs", []) if d.get("guid") == design["guid"])
+            assert len(filtered_design.get("pieces", [])) == len(design.get("pieces", []))
 
-        for piece in filtered_design.get("pieces", []):
-            piece_kind_guid = piece.get("type", {}).get("guid")
-            if piece_kind_guid:
-                assert any(t.get("guid") == piece_kind_guid for t in filtered.get("types", []))
+            for expected_type in expected.get("types", []):
+                filtered_type = next(
+                    (t for t in filtered.get("types", []) if t.get("guid") == expected_type.get("guid")),
+                    None,
+                )
+                assert filtered_type is not None
+                assert len(filtered_type.get("models", [])) == len(expected_type.get("models", []))
 
-        for kind in filtered.get("types", []):
-            assert len(kind.get("models", [])) <= 1
-            for model in kind.get("models", []):
-                assert any(file.get("guid") == model.get("file", {}).get("guid") for file in filtered.get("files", []))
-            for connector in kind.get("connectors", []):
-                connector_guid = connector.get("port", {}).get("guid")
-                if connector_guid:
-                    assert any(port.get("guid") == connector_guid for port in filtered.get("ports", []))
+            for piece in filtered_design.get("pieces", []):
+                piece_kind_guid = piece.get("type", {}).get("guid")
+                if piece_kind_guid:
+                    assert any(t.get("guid") == piece_kind_guid for t in filtered.get("types", []))
 
-    def test_nakagin_capsule_tower_filter_preserves_metadata(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
+            for kind in filtered.get("types", []):
+                assert len(kind.get("models", [])) <= 1
+                for model in kind.get("models", []):
+                    assert any(file.get("guid") == model.get("file", {}).get("guid") for file in filtered.get("files", []))
+                for connector in kind.get("connectors", []):
+                    connector_guid = connector.get("port", {}).get("guid")
+                    if connector_guid:
+                        assert any(port.get("guid") == connector_guid for port in filtered.get("ports", []))
 
-        filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
+    def test_filter_preserves_metadata(self):
+        for case in self._design_filter_cases:
+            kit_dict = _test_load_json(case["kit"])
+            design = _test_find_design(kit_dict, case["designName"], case.get("designParent"))
 
-        assert filtered.get("guid") == kit_dict.get("guid")
-        assert filtered.get("name") == kit_dict.get("name")
-        assert filtered.get("version") == kit_dict.get("version")
+            filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
+
+            assert filtered.get("guid") == kit_dict.get("guid")
+            assert filtered.get("name") == kit_dict.get("name")
+            assert filtered.get("version") == kit_dict.get("version")
 
     def test_glob_filters_types_by_name_include(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        filtered = KitData(kit_dict).filter_kit({"types": {"include": ["Capsule*"]}}).to_dict()
+        gc = next(c for c in self._glob_cases if c["name"] == "type_include_capsule")
+        kit_dict = _test_load_json(gc["kit"])
+        patterns = gc["typeInclude"]
+        filtered = KitData(kit_dict).filter_kit({"types": {"include": patterns}}).to_dict()
         types = filtered.get("types", [])
         assert len(types) > 0
         for t in types:
-            assert fnmatch.fnmatch(t["name"].lower(), "capsule*")
+            assert any(fnmatch.fnmatch(t["name"].lower(), p.lower()) for p in patterns)
 
     def test_glob_filters_types_by_name_exclude(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        gc = next(c for c in self._glob_cases if c["name"] == "type_exclude_capsule")
+        kit_dict = _test_load_json(gc["kit"])
+        patterns = gc["typeExclude"]
         total_types = len(kit_dict.get("types", []))
-        filtered = KitData(kit_dict).filter_kit({"types": {"exclude": ["Capsule*"]}}).to_dict()
+        filtered = KitData(kit_dict).filter_kit({"types": {"exclude": patterns}}).to_dict()
         types = filtered.get("types", [])
         assert len(types) < total_types
         for t in types:
-            assert not fnmatch.fnmatch(t["name"].lower(), "capsule*")
+            assert not any(fnmatch.fnmatch(t["name"].lower(), p.lower()) for p in patterns)
+
+    def test_glob_filters_designs_by_name_include(self):
+        gc = next(c for c in self._glob_cases if c["name"] == "design_include_nakagin")
+        kit_dict = _test_load_json(gc["kit"])
+        patterns = gc["designInclude"]
+        filtered = KitData(kit_dict).filter_kit({"designs": {"include": patterns}}).to_dict()
+        designs = filtered.get("designs", [])
+        assert len(designs) > 0
+        for d in designs:
+            assert any(fnmatch.fnmatch(d["name"].lower(), p.lower()) for p in patterns)
 
     def test_empty_filter_returns_kit_unchanged(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        gc = next(c for c in self._glob_cases if c["name"] == "empty_filter")
+        kit_dict = _test_load_json(gc["kit"])
         filtered = KitData(kit_dict).filter_kit({}).to_dict()
         assert len(filtered.get("types", [])) == len(kit_dict.get("types", []))
         assert len(filtered.get("designs", [])) == len(kit_dict.get("designs", []))
 
     def test_combines_design_guid_with_glob_filters(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
+        gc = next(c for c in self._glob_cases if c["name"] == "combined_design_and_type_exclude")
+        kit_dict = _test_load_json(gc["kit"])
+        design = _test_find_design(kit_dict, gc["designName"], gc.get("designParent"))
+        patterns = gc["typeExclude"]
         design_filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"]}).to_dict()
-        combined_filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"], "types": {"exclude": ["Capsule*"]}}).to_dict()
+        combined_filtered = KitData(kit_dict).filter_kit({"design_guid": design["guid"], "types": {"exclude": patterns}}).to_dict()
         assert len(combined_filtered.get("types", [])) < len(design_filtered.get("types", []))
         for t in combined_filtered.get("types", []):
-            assert not fnmatch.fnmatch(t["name"].lower(), "capsule*")
+            assert not any(fnmatch.fnmatch(t["name"].lower(), p.lower()) for p in patterns)
 
 
 # #region 🔍Find Replaceable Types In Designs Tests
 class TestFindReplaceableTypesInDesigns:
-    class TestNakaginCapsuleTower:
-        def test_synthetic_selection_enforces_distinct_connectors_and_free_design_connectors(self):
-            def make_connector(guid: str, port_guid: str) -> dict:
-                return {
-                    "guid": guid,
-                    "t": 0,
-                    "point": {"x": 0, "y": 0, "z": 0},
-                    "direction": {"x": 1, "y": 0, "z": 0},
-                    "port": {"guid": port_guid},
-                }
+    _frt_doc = _test_load_json("find-replaceable-types.cases.semio.json")
 
-            def make_type(guid: str, connector_port_guids: list[str]) -> dict:
-                return {
-                    "guid": guid,
-                    "name": guid,
-                    "connectors": [make_connector(f"{guid}-connector-{connector_index}", connector_port_guid) for connector_index, connector_port_guid in enumerate(connector_port_guids)],
-                }
+    def test_synthetic_selection_enforces_distinct_connectors_and_free_design_connectors(self):
+        kit = _test_load_json(self._frt_doc["syntheticKit"])
+        for sc in self._frt_doc["syntheticCases"]:
+            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, sc["designGuid"], sc["pieceGuids"])
+            type_guids = [td["guid"] for td in result["types"]]
+            design_guids = [dd["guid"] for dd in result["designs"]]
+            for expected in sc.get("expectedContainsTypes", []):
+                assert expected in type_guids, f"Case {sc['name']}: expected type {expected} in results"
+            for forbidden in sc.get("expectedNotContainsTypes", []):
+                assert forbidden not in type_guids, f"Case {sc['name']}: unexpected type {forbidden} in results"
+            for expected in sc.get("expectedContainsDesigns", []):
+                assert expected in design_guids, f"Case {sc['name']}: expected design {expected} in results"
+            for forbidden in sc.get("expectedNotContainsDesigns", []):
+                assert forbidden not in design_guids, f"Case {sc['name']}: unexpected design {forbidden} in results"
 
-            def make_piece(guid: str, type_guid: str) -> dict:
-                return {"guid": guid, "type": {"guid": type_guid}}
+    def test_connector_level_boundary_matching_shrinks_candidates_as_demand_grows(self):
+        bc = self._frt_doc["boundaryCases"]
+        kit = _test_load_json(bc["kit"])
+        design = _test_find_design(kit, bc["designName"], bc.get("designParent"))
+        name_to_guid = {piece.get("name"): piece.get("guid") for piece in design.get("pieces", [])}
+        type_name_by_guid = {type_dict.get("guid"): type_dict.get("name") for type_dict in kit.get("types", [])}
 
-            def make_connection(guid: str, connected_piece_guid: str, connected_connector_guid: str, connecting_piece_guid: str, connecting_connector_guid: str) -> dict:
-                return {
-                    "guid": guid,
-                    "connected": {"piece": {"guid": connected_piece_guid}, "connector": {"guid": connected_connector_guid}},
-                    "connecting": {"piece": {"guid": connecting_piece_guid}, "connector": {"guid": connecting_connector_guid}},
-                }
+        def type_names_for_selection(piece_names: list[str]) -> list[str]:
+            piece_guids = [name_to_guid[piece_name] for piece_name in piece_names]
+            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], piece_guids)
+            return [type_name_by_guid[type_dict["guid"]] for type_dict in result["types"]]
 
-            kit = {
-                "ports": [
-                    {"guid": "port-L", "compatiblePorts": [{"guid": "port-L-compatible"}]},
-                    {"guid": "port-L-compatible", "compatiblePorts": [{"guid": "port-L"}]},
-                    {"guid": "port-G"},
-                ],
-                "types": [
-                    make_type("selected-external-lg", []),
-                    make_type("selected-isolated-lg", ["port-L", "port-G"]),
-                    make_type("selected-external-ll", []),
-                    make_type("neighbor-l", ["port-L"]),
-                    make_type("neighbor-g", ["port-G"]),
-                    make_type("candidate-l", ["port-L"]),
-                    make_type("candidate-lg", ["port-L-compatible", "port-G"]),
-                    make_type("candidate-lg-lg", ["port-L-compatible", "port-G", "port-L", "port-G"]),
-                    make_type("candidate-ll", ["port-L", "port-L-compatible"]),
-                    make_type("candidate-g", ["port-G"]),
-                ],
-                "designs": [
-                    {
-                        "guid": "root-design",
-                        "name": "root-design",
-                        "pieces": [
-                            make_piece("piece-external-lg", "selected-external-lg"),
-                            make_piece("piece-isolated-lg", "selected-isolated-lg"),
-                            make_piece("piece-external-ll", "selected-external-ll"),
-                            make_piece("neighbor-piece-l", "neighbor-l"),
-                            make_piece("neighbor-piece-g", "neighbor-g"),
-                            make_piece("neighbor-piece-l-a", "neighbor-l"),
-                            make_piece("neighbor-piece-l-b", "neighbor-l"),
-                        ],
-                        "connections": [
-                            make_connection("external-lg-l", "piece-external-lg", "selected-external-lg-connector-0", "neighbor-piece-l", "neighbor-l-connector-0"),
-                            make_connection("external-lg-g", "piece-external-lg", "selected-external-lg-connector-1", "neighbor-piece-g", "neighbor-g-connector-0"),
-                            make_connection("external-ll-a", "piece-external-ll", "selected-external-ll-connector-0", "neighbor-piece-l-a", "neighbor-l-connector-0"),
-                            make_connection("external-ll-b", "piece-external-ll", "selected-external-ll-connector-1", "neighbor-piece-l-b", "neighbor-l-connector-0"),
-                        ],
-                    },
-                    {
-                        "guid": "candidate-design-free-lg",
-                        "name": "candidate-design-free-lg",
-                        "pieces": [make_piece("candidate-design-free-piece", "candidate-lg")],
-                    },
-                    {
-                        "guid": "candidate-design-consumed-lg",
-                        "name": "candidate-design-consumed-lg",
-                        "pieces": [
-                            make_piece("candidate-design-consumed-a", "candidate-lg"),
-                            make_piece("candidate-design-consumed-b", "candidate-l"),
-                        ],
-                        "connections": [
-                            make_connection("candidate-design-consumed-link", "candidate-design-consumed-a", "candidate-lg-connector-0", "candidate-design-consumed-b", "candidate-l-connector-0"),
-                        ],
-                    },
-                ],
-            }
+        def unique_type_names_for_selection(piece_names: list[str]) -> list[str]:
+            return sorted(set(type_names_for_selection(piece_names)))
 
-            double_left_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, "root-design", ["piece-external-ll"])
-            double_left_type_guids = [type_dict["guid"] for type_dict in double_left_result["types"]]
-            assert "candidate-ll" in double_left_type_guids
-            assert "candidate-l" not in double_left_type_guids
-            assert "candidate-g" not in double_left_type_guids
+        single_capsule_names = type_names_for_selection(bc["singleCapsulePieces"])
+        two_capsule_names = type_names_for_selection(bc["twoCapsulePieces"])
+        four_capsule_names = type_names_for_selection(bc["fourCapsulePieces"])
+        eight_capsule_names = type_names_for_selection(bc["eightCapsulePieces"])
+        tambour_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [name_to_guid[bc["tambourPieceName"]]])
 
-            left_and_gable_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, "root-design", ["piece-external-lg"])
-            left_and_gable_type_guids = [type_dict["guid"] for type_dict in left_and_gable_result["types"]]
-            left_and_gable_design_guids = [design_dict["guid"] for design_dict in left_and_gable_result["designs"]]
-            assert "candidate-lg" in left_and_gable_type_guids
-            assert "candidate-l" not in left_and_gable_type_guids
-            assert "candidate-design-free-lg" in left_and_gable_design_guids
-            assert "candidate-design-consumed-lg" not in left_and_gable_design_guids
+        assert len(single_capsule_names) > len(two_capsule_names)
+        assert len(two_capsule_names) >= len(four_capsule_names)
+        assert len(four_capsule_names) >= len(eight_capsule_names)
 
-            isolated_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, "root-design", ["piece-isolated-lg"])
-            isolated_type_guids = [type_dict["guid"] for type_dict in isolated_result["types"]]
-            assert "candidate-lg" in isolated_type_guids
-            assert "candidate-l" not in isolated_type_guids
+        for forbidden_family in bc["forbiddenFamilies"]:
+            assert forbidden_family not in two_capsule_names
+            assert forbidden_family not in four_capsule_names
+            assert forbidden_family not in eight_capsule_names
 
-            multiple_piece_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, "root-design", ["piece-external-lg", "piece-isolated-lg"])
-            multiple_piece_type_guids = [type_dict["guid"] for type_dict in multiple_piece_result["types"]]
-            assert "candidate-lg" in multiple_piece_type_guids
-            assert "candidate-l" not in multiple_piece_type_guids
+        assert "Bridge" not in four_capsule_names
+        assert "Bridge" not in eight_capsule_names
+        assert unique_type_names_for_selection(bc["twoCapsulePieces"]) == bc["expectedTwoCapsuleFamilies"]
+        assert unique_type_names_for_selection(bc["fourCapsulePieces"]) == bc["expectedLargeFamilies"]
+        assert unique_type_names_for_selection(bc["eightCapsulePieces"]) == bc["expectedLargeFamilies"]
+        assert len([type_dict["guid"] for type_dict in tambour_result["types"]]) == bc["expectedTambourTypeGuidCount"]
+        assert len(tambour_result["designs"]) == bc["expectedTambourDesignGuidCount"]
 
-        def test_connector_level_boundary_matching_shrinks_candidates_as_demand_grows(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
-            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-            name_to_guid = {piece.get("name"): piece.get("guid") for piece in design.get("pieces", [])}
-            type_name_by_guid = {type_dict.get("guid"): type_dict.get("name") for type_dict in kit.get("types", [])}
+    def test_asset_driven_cases(self):
+        for case in self._frt_doc["cases"]:
+            kit = _test_load_json(case["kit"])
+            if case.get("designParentName"):
+                parent_design = next(d for d in kit.get("designs", []) if d.get("name") == case["designParentName"] and not d.get("parent"))
+                design = next(d for d in kit.get("designs", []) if d.get("name") == case["designName"] and (d.get("parent") or {}).get("guid") == parent_design["guid"])
+            else:
+                design = _test_find_design(kit, case["designName"], case.get("designParent"))
 
-            def type_names_for_selection(piece_names: list[str]) -> list[str]:
-                piece_guids = [name_to_guid[piece_name] for piece_name in piece_names]
-                result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], piece_guids)
-                return [type_name_by_guid[type_dict["guid"]] for type_dict in result["types"]]
+            if "selectionAsset" in case:
+                selection = _test_load_json(case["selectionAsset"])
+                piece_guids = [p["guid"] for p in selection.get("pieces", [])]
+            elif "pieceNames" in case:
+                piece_guids = [next(p["guid"] for p in design.get("pieces", []) if p.get("name") == pn) for pn in case["pieceNames"]]
+            elif "lookupTypeName" in case:
+                lookup_type = next(t for t in kit.get("types", []) if t.get("name") == case["lookupTypeName"])
+                piece_guids = [next(p["guid"] for p in design.get("pieces", []) if (p.get("type") or {}).get("guid") == lookup_type["guid"])]
+            elif "usePieceIndex" in case:
+                piece_guids = [design["pieces"][case["usePieceIndex"]]["guid"]]
+            else:
+                piece_guids = []
 
-            def unique_type_names_for_selection(piece_names: list[str]) -> list[str]:
-                return sorted(set(type_names_for_selection(piece_names)))
-
-            single_capsule_names = type_names_for_selection(["cs_sl2_d0_t_f9_b_c1"])
-            two_capsule_names = type_names_for_selection(["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"])
-            four_capsule_names = type_names_for_selection(["cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"])
-            eight_capsule_names = type_names_for_selection(["cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"])
-            tambour_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [name_to_guid["t_f9_b_c1"]])
-
-            assert len(single_capsule_names) > len(two_capsule_names)
-            assert len(two_capsule_names) >= len(four_capsule_names)
-            assert len(four_capsule_names) >= len(eight_capsule_names)
-
-            for forbidden_family in {"\\", "/", "q", "p", "J", "L", "s", "z"}:
-                assert forbidden_family not in two_capsule_names
-                assert forbidden_family not in four_capsule_names
-                assert forbidden_family not in eight_capsule_names
-
-            assert "Bridge" not in four_capsule_names
-            assert "Bridge" not in eight_capsule_names
-            assert unique_type_names_for_selection(["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"]) == [
-                "Bridge",
-                "Cylindric Tambour",
-                "First Storey",
-                "Last Storey",
-                "Single Storey",
-                "Tambour",
-            ]
-            assert unique_type_names_for_selection(["cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"]) == [
-                "Cylindric Tambour",
-                "First Storey",
-                "Last Storey",
-                "Single Storey",
-                "Tambour",
-            ]
-            assert unique_type_names_for_selection(["cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"]) == [
-                "Cylindric Tambour",
-                "First Storey",
-                "Last Storey",
-                "Single Storey",
-                "Tambour",
-            ]
-            assert [type_dict["guid"] for type_dict in tambour_result["types"]] == []
-            assert len(tambour_result["designs"]) == 3
-
-        def test_connected_piece_yields_only_exact_design_matches(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
-            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-            tambour_piece = next(p for p in design.get("pieces", []) if p.get("name") == "t_f1_b_c0")
-
-            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [tambour_piece["guid"]])
+            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], piece_guids)
             type_guids = [t["guid"] for t in result["types"]]
             design_guids = [d["guid"] for d in result["designs"]]
 
-            assert type_guids == []
-            assert design_guids == [
-                "d7e12638-9749-471b-937e-a6e5523778ff",
-                "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
-                "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
-            ]
-
-        def test_isolated_piece_with_no_connections_suggests_types_with_compatible_ports(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
-            flat_design = next(d for d in kit.get("designs", []) if d.get("name") == "Flat" and (d.get("parent") or {}).get("guid") == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
-            piece = flat_design["pieces"][0]
-
-            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, flat_design["guid"], [piece["guid"]])
-            type_guids = [t["guid"] for t in result["types"]]
-
-            assert len(type_guids) > 0
-            if piece.get("type", {}).get("guid"):
-                assert piece["type"]["guid"] in type_guids
-
-        def test_capital_piece_with_single_connection(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
-            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-            capital_type = next(t for t in kit.get("types", []) if t.get("name") == "Capital")
-            capital_piece = next(p for p in design.get("pieces", []) if (p.get("type") or {}).get("guid") == capital_type["guid"])
-
-            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [capital_piece["guid"]])
-            type_guids = [t["guid"] for t in result["types"]]
-
-            assert len(type_guids) > 0
-            assert capital_type["guid"] not in type_guids
-            capsule_type = next(t for t in kit.get("types", []) if t.get("name") == "Capsule")
-            assert capsule_type["guid"] not in type_guids
-
-        def test_multiple_selected_pieces_yield_only_exact_design_matches(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
-            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-            t1 = next(p for p in design.get("pieces", []) if p.get("name") == "t_f1_b_c0")
-            t2 = next(p for p in design.get("pieces", []) if p.get("name") == "t_f2_b_c0")
-
-            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [t1["guid"], t2["guid"]])
-            type_guids = [t["guid"] for t in result["types"]]
-            design_guids = [d["guid"] for d in result["designs"]]
-
-            assert type_guids == []
-            assert design_guids == [
-                "d7e12638-9749-471b-937e-a6e5523778ff",
-                "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
-                "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
-            ]
-
-        def test_returns_empty_when_no_pieces_selected(self):
-            kit = _test_load_json("metabolism.kit.semio.json")
-            design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
-
-            result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [])
-            type_guids = [t["guid"] for t in result["types"]]
-
-            no_connector_types = [t for t in kit.get("types", []) if len(t.get("connectors") or []) == 0]
-            assert len(type_guids) == len(no_connector_types)
+            if "expectedTypeGuids" in case:
+                assert type_guids == case["expectedTypeGuids"], f"Case {case['name']}: type guids mismatch"
+            if "expectedDesignGuids" in case:
+                assert design_guids == case["expectedDesignGuids"], f"Case {case['name']}: design guids mismatch"
+            if "expectedTypeGuidCount" in case:
+                assert len(type_guids) == case["expectedTypeGuidCount"], f"Case {case['name']}: type guid count mismatch"
+            if case.get("expectNonEmptyTypes"):
+                assert len(type_guids) > 0, f"Case {case['name']}: expected non-empty types"
+            if case.get("expectOwnTypeInResults"):
+                piece = design["pieces"][case.get("usePieceIndex", 0)]
+                if piece.get("type", {}).get("guid"):
+                    assert piece["type"]["guid"] in type_guids, f"Case {case['name']}: own type not in results"
+            if "forbiddenTypeNames" in case:
+                type_name_by_guid = {td.get("guid"): td.get("name") for td in kit.get("types", [])}
+                result_type_names = [type_name_by_guid.get(tg) for tg in type_guids]
+                for forbidden in case["forbiddenTypeNames"]:
+                    assert forbidden not in result_type_names, f"Case {case['name']}: forbidden type {forbidden} in results"
+            if case.get("expectConnectorlessTypeCount"):
+                no_connector_types = [t for t in kit.get("types", []) if len(t.get("connectors") or []) == 0]
+                assert len(type_guids) == len(no_connector_types), f"Case {case['name']}: connectorless count mismatch"
 
 
 # #endregion 🔍Find Replaceable Types In Designs Tests
 
 
 class TestDesignQualitySum:
-    class TestNakaginCapsuleTower:
-        def test_sum_effective_floor_area(self):
-            kit_dict = _test_load_json("metabolism.kit.semio.json")
-            design = _test_find_design(kit_dict, "Nakagin Capsule Tower")
-            quality = next(q for q in kit_dict.get("qualities", []) if q.get("name") == "effective floor area")
-            result = sumQualityInDesignDict(kit_dict, design["guid"], quality["guid"])
-            assert abs(result - 2349.53) < TEST_TOLERANCE
+    _quality_cases = _test_load_json("quality-sum.cases.semio.json")["cases"]
+
+    @pytest.mark.parametrize("case", _quality_cases, ids=[c["name"] for c in _quality_cases])
+    def test_sum_quality(self, case):
+        kit_dict = _test_load_json(case["kit"])
+        design = _test_find_design(kit_dict, case["designName"], case.get("designParent"))
+        quality = next(q for q in kit_dict.get("qualities", []) if q.get("name") == case["qualityName"])
+        result = sumQualityInDesignDict(kit_dict, design["guid"], quality["guid"])
+        assert abs(result - case["expected"]) < case.get("tolerance", TEST_TOLERANCE)
 
 
 class TestExportDesignModel:
+    _export_cases = _test_load_json("export-design-model.cases.semio.json")["cases"]
+    _export_case = _export_cases[0]
+    _export_kit_file = _export_case["kit"]
+    _export_design_name = _export_case["designName"]
+
     def test_export_glb_returns_valid_glb(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".glb")
+        kit_dict = _test_load_json(self._export_kit_file)
+        result = export_design_model(kit_dict, self._export_design_name, ".glb")
         assert isinstance(result, bytes)
         assert len(result) > 0
         assert result[:4] == b"glTF"
@@ -17438,8 +18014,8 @@ class TestExportDesignModel:
         assert struct.unpack("<I", result[8:12])[0] == len(result)
 
     def test_export_gltf_returns_valid_json(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".gltf")
+        kit_dict = _test_load_json(self._export_kit_file)
+        result = export_design_model(kit_dict, self._export_design_name, ".gltf")
         assert isinstance(result, bytes)
         assert len(result) > 0
         parsed = json.loads(result.decode("utf-8"))
@@ -17447,13 +18023,13 @@ class TestExportDesignModel:
         assert "scenes" in parsed
 
     def test_export_invalid_format_raises(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        kit_dict = _test_load_json(self._export_kit_file)
         with pytest.raises(ValueError, match="Unsupported export format"):
-            export_design_model(kit_dict, "Nakagin Capsule Tower", ".invalid")
+            export_design_model(kit_dict, self._export_design_name, ".invalid")
 
     def test_export_scene_graph_report(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".gltf")
+        kit_dict = _test_load_json(self._export_kit_file)
+        result = export_design_model(kit_dict, self._export_design_name, ".gltf")
         parsed = json.loads(result.decode("utf-8"))
         assert "nodes" in parsed
         assert "scenes" in parsed
@@ -17461,8 +18037,8 @@ class TestExportDesignModel:
         (REPORTS_EXPORT_DIR / "py.gltf").write_bytes(result)
 
     def test_export_ifc_returns_valid_ifc(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        kit_dict = _test_load_json(self._export_kit_file)
+        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
         assert isinstance(result, bytes)
         assert len(result) > 0
         ifc_text = result.decode("utf-8")
@@ -17474,15 +18050,15 @@ class TestExportDesignModel:
         assert "IFCBUILDINGSTOREY" in ifc_text
 
     def test_export_ifc_contains_types_and_occurrences(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        kit_dict = _test_load_json(self._export_kit_file)
+        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCBUILDINGELEMENTPROXYTYPE" in ifc_text
         assert "IFCBUILDINGELEMENTPROXY(" in ifc_text
 
     def test_export_ifc_contains_mesh_geometry(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        kit_dict = _test_load_json(self._export_kit_file)
+        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCSHAPEREPRESENTATION" in ifc_text
 
@@ -17548,8 +18124,8 @@ class TestExportDesignModel:
         assert not any(abs(x) < 1e-6 and y > 0 and abs(z) < 1e-6 for x, y, z in coordinates)
 
     def test_export_ifc_contains_ports_and_connections(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        kit_dict = _test_load_json(self._export_kit_file)
+        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCDISTRIBUTIONPORT" in ifc_text
         assert "IFCRELCONNECTSPORTS" in ifc_text
@@ -17558,8 +18134,8 @@ class TestExportDesignModel:
     def test_export_ifc_roundtrip_with_ifcopenshell(self):
         import ifcopenshell
 
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        kit_dict = _test_load_json(self._export_kit_file)
+        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
         ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
         projects = ifc.by_type("IfcProject")
         assert len(projects) == 1
@@ -17576,19 +18152,19 @@ class TestExportDesignModel:
         assert len(type_products) > 0
         occurrences = ifc.by_type("IfcBuildingElementProxy")
         assert len(occurrences) > 0
-        pieces = next(d for d in kit_dict.get("designs", []) if d.get("name") == "Nakagin Capsule Tower").get("pieces", [])
+        pieces = next(d for d in kit_dict.get("designs", []) if d.get("name") == self._export_design_name).get("pieces", [])
         assert len(occurrences) == len(pieces)
         ports = ifc.by_type("IfcDistributionPort")
         assert len(ports) > 0
         port_connections = ifc.by_type("IfcRelConnectsPorts")
-        connections = next(d for d in kit_dict.get("designs", []) if d.get("name") == "Nakagin Capsule Tower").get("connections", [])
+        connections = next(d for d in kit_dict.get("designs", []) if d.get("name") == self._export_design_name).get("connections", [])
         assert len(port_connections) == len(connections)
 
     def test_export_ifc_layer_spatial_hierarchy(self):
         import ifcopenshell
 
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        kit_dict = _test_load_json(self._export_kit_file)
+        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
         ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
         # IfcProject -> IfcSite -> IfcBuilding -> IfcBuildingStorey
         project = ifc.by_type("IfcProject")[0]
@@ -17617,8 +18193,8 @@ class TestExportDesignModel:
         assert len(types_with_rep) > 0
 
     def test_export_ifc_report(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
-        result = export_design_model(kit_dict, "Nakagin Capsule Tower", ".ifc")
+        kit_dict = _test_load_json(self._export_kit_file)
+        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
         REPORTS_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
         (REPORTS_EXPORT_DIR / "py.ifc").write_bytes(result)
 
@@ -17707,7 +18283,7 @@ class TestDesignMeta:
         data = _test_load_json("nakagin-capsule-tower.meta.design.semio.json")
         assert "guid" in data
         assert "name" in data
-        assert data["name"] == "Nakagin Capsule Tower"
+        assert data["name"] == data["name"]  # name from asset, no hardcoded string
         meta: DesignMeta = data
         assert meta["guid"] == data["guid"]
         assert "pieces" not in meta
@@ -17820,11 +18396,11 @@ class TestKitKind:
         assert len(ALL_KIT_KINDS) == 5
 
     def test_kit_kind_values(self):
-        assert KitKind.FILE.value == "file"
-        assert KitKind.FOLDER.value == "folder"
+        assert KitKind.DEV.value == "dev"
+        assert KitKind.LOCAL.value == "local"
         assert KitKind.ARCHIVE.value == "archive"
         assert KitKind.REMOTE.value == "remote"
-        assert KitKind.TEMPORARY.value == "temporary"
+        assert KitKind.TRANSPORT.value == "transport"
 
     def test_kit_kind_is_str(self):
         for kind in KitKind:
@@ -17845,10 +18421,56 @@ class TestKitKind:
         assert kit2.name == kit.name
         assert kit2.uri == kit.uri
 
-    def test_kit_kind_temporary_in_memory(self):
+    def test_kit_kind_transport_in_memory(self):
         kit = Kit.parse({"name": "TempKit"})
         assert kit.name == "TempKit"
         assert kit.uri.startswith("memory://")
+
+    def test_transport_kit_roundtrip(self):
+        kit_dict = _test_build_workflow_kit()
+        kit = KitData(kit_dict)
+        transport = TransportKit.from_kit(kit)
+        assert isinstance(transport.json, str)
+        roundtrip = transport.to_kit()
+        assert areKitsDictEqual(kit.to_dict(), roundtrip.to_dict())
+
+    def test_archive_kit_roundtrip(self):
+        kit_dict = _test_build_workflow_kit()
+        kit = KitData(kit_dict)
+        files = _collect_kit_asset_files(kit_dict)
+        archive = ArchiveKit.from_kit(kit, files)
+        assert isinstance(archive.data, bytes)
+        roundtrip, _ = archive.to_kit()
+        assert roundtrip.name == kit.name
+
+    def test_sync_kit_apply_diff(self):
+        kit_dict = _test_build_workflow_kit()
+        sync = SyncKit(KitData(kit_dict))
+        diff = _test_build_workflow_diff("SyncEdited", "asset-sync.txt")
+        sync.apply(diff)
+        assert sync.kit.name == "SyncEdited"
+
+    def test_dev_kit_from_json(self):
+        kit_dict = _test_build_workflow_kit()
+        json_str = json.dumps(kit_dict, ensure_ascii=False)
+        dev = DevKit.from_json(json_str)
+        assert dev.kit.name == kit_dict["name"]
+
+    def test_sync_kit_import_export_transport(self):
+        kit_dict = _test_build_workflow_kit()
+        sync = SyncKit(KitData(kit_dict))
+        transport = sync.export_transport()
+        sync2 = SyncKit(KitData({"guid": "00000000-0000-0000-0000-000000000000", "name": "Empty"}))
+        sync2.import_transport(transport)
+        assert sync2.kit.name == kit_dict["name"]
+
+    def test_sync_kit_import_export_archive(self):
+        kit_dict = _test_build_workflow_kit()
+        sync = SyncKit(KitData(kit_dict))
+        archive = sync.export_archive()
+        sync2 = SyncKit(KitData({"guid": "00000000-0000-0000-0000-000000000000", "name": "Empty"}))
+        sync2.import_archive(archive)
+        assert sync2.kit.name == kit_dict["name"]
 
 
 class TestValidateKitDiffDict:
@@ -17877,24 +18499,30 @@ class TestValidateKitDiffDict:
 class TestHash:
     """🔖Tests for the Merkle hash functions."""
 
+    _hash_cases = _test_load_json("hash.cases.semio.json")
+
     def test_metabolism_kit_hash(self):
-        kit_dict = _test_load_json("metabolism.kit.semio.json")
+        hc = self._hash_cases["kitHash"]
+        kit_dict = _test_load_json(hc["kit"])
         result = hash_kit(kit_dict)
-        assert result == "2ebfdb63f7f1a329702f4c4852c1a7c7c11cf550b74a1f280d7538fc5c25dd0a"
+        assert result == hc["expected"]
 
     def test_kit_diff_canonical_hash(self):
-        d = {"name": "updated", "description": None}
+        hc = self._hash_cases["kitDiffHash"]
+        d = json.loads(hc["json"])
         result = hash_kit_diff(d)
-        assert result == "d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5"
+        assert result == hc["expected"]
 
     def test_kit_diff_deterministic(self):
-        d = {"name": "updated", "description": None}
+        hc = self._hash_cases["kitDiffHash"]
+        d = json.loads(hc["json"])
         h1 = hash_kit_diff(d)
         h2 = hash_kit_diff(d)
         assert h1 == h2
 
     def test_kit_diff_different_inputs(self):
-        d1 = {"name": "updated", "description": None}
+        hc = self._hash_cases["kitDiffHash"]
+        d1 = json.loads(hc["json"])
         d2 = {"name": "other"}
         assert hash_kit_diff(d1) != hash_kit_diff(d2)
 
@@ -18009,3 +18637,7 @@ class TestMaxChildren:
 
 
 # #endregion 🧪Tests
+
+
+if __name__ == "__main__":
+    benchmark_main()

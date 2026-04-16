@@ -11,9 +11,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "node --import ./pw-loader.mjs ../../node_modules/playwright/cli.js test",
-    "publish": "vite build && npm publish",
-    "postinstall": "node -e \"const fs=require('fs'),p=require('path');const s=p.join(__dirname,'..','..','node_modules','sql.js','dist','sql-wasm.wasm');const d=p.join(__dirname,'public');if(fs.existsSync(s)){fs.mkdirSync(d,{recursive:true});fs.copyFileSync(s,p.join(d,'sql-wasm.wasm'))}\""
+    "test": "cross-env SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS=1 node --import ./pw-loader.mjs ../../node_modules/playwright/cli.js test",
+    "publish": "vite build && npm publish"
   },
   "dependencies": {
     "@semio/ui": "*",
@@ -35,6 +34,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/sql.js": "^1.4.9",
     "@vitejs/plugin-react": "^5.1.2",
+    "cross-env": "^10.1.0",
     "playwright": "^1.56.1",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-slug": "^6.0.0",

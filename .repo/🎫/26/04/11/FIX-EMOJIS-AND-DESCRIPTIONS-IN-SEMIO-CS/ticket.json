@@ -1,7 +1,8 @@
 {
   "title": "Fix Emojis and Descriptions in Semio.cs",
-  "status": "open",
+  "status": "closed",
   "description": "Fix Emojis and Descriptions in Semio.cs",
+  "summary": "Bulk close",
   "goal": "🎯fixemojisdescriptionssemiocs",
   "sessions": [
     "⚪953506a902b240ffb29126d3a0f27d66"

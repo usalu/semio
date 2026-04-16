@@ -1,8 +1,9 @@
 {
   "title": "Fix Connector Description in getConnectorDiff and Pass All Lang Diff Tests",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Fix JS getConnectorDiff missing description comparison. Fix Python diff test. Fix Go and C# diff tests. All implementations must be functionally equivalent.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/807"
   },

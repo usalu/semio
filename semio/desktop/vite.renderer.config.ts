@@ -203,6 +203,11 @@ export default defineConfig(async ({ mode }) => {
         interval: 1000,
       },
     },
+    define: {
+      __SEMIO_JS_RUN_BENCHMARKS__: "false",
+      __SEMIO_JS_RUN_EMBEDDED_TESTS__: "false",
+      __SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
+    },
     resolve: {
       dedupe: ["cookie", "dagre", "graphlib", "html-parse-stringify", "lodash", "react", "react-dom", "react-i18next", "react-router", "scheduler", "stats.js", "use-sync-external-store", "void-elements"],
       // `shim/index.js` is CJS (`module.exports`); Vite would serve it as ESM and break `import { useSyncExternalStore }`.

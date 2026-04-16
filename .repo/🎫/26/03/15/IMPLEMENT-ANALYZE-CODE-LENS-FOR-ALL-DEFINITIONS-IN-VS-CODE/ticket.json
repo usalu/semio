@@ -1,9 +1,9 @@
 {
   "title": "Implement Analyze Code Lens For All Definitions In VS Code",
   "emoji": "🔨",
-  "status": "open",
+  "status": "closed",
   "description": "Ensure every definition in the repo VS Code extension shows an Analyze code lens across all programming languages and native definition kinds, including TypeScript const, function, class, interface and equivalent symbolized definitions. Remove the symbol-matching gaps and extend existing extension tests accordingly.",
-  "summary": "Implemented Analyze CodeLens emission for nested definition entity IDs in the repo VS Code extension and extended the existing extension tests to verify Analyze lenses across representative TypeScript and Go definition sources.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/906"
   },

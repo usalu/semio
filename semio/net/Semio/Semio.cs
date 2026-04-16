@@ -2148,6 +2148,40 @@ public class StatChange : Change<Stat, StatDiff> { }
 public class DesignChange : Change<Design, DesignDiff> { }
 public class KitChange : Change<Kit, KitDiff> { }
 
+#region 🎯SemioReport
+
+/// <summary>📋Human-readable note on a SemioReport.</summary>
+public sealed class OperationNote
+{
+    [JsonProperty("code")]
+    public string? Code { get; set; }
+    [JsonProperty("message")]
+    public string Message { get; set; } = "";
+}
+
+/// <summary>📋Canonical algorithm output: ok, diff, warnings, infos, errors.</summary>
+public sealed class SemioReport<TDiff>
+{
+    [JsonProperty("ok")]
+    public bool Ok { get; set; }
+    [JsonProperty("diff")]
+    public TDiff? Diff { get; set; }
+    [JsonProperty("warnings")]
+    public List<OperationNote> Warnings { get; set; } = new();
+    [JsonProperty("infos")]
+    public List<OperationNote> Infos { get; set; } = new();
+    [JsonProperty("errors")]
+    public List<OperationNote> Errors { get; set; } = new();
+
+    public static SemioReport<TDiff> Success(TDiff diff, List<OperationNote>? warnings = null, List<OperationNote>? infos = null) =>
+        new() { Ok = true, Diff = diff, Warnings = warnings ?? new List<OperationNote>(), Infos = infos ?? new List<OperationNote>(), Errors = new List<OperationNote>() };
+
+    public static SemioReport<TDiff> Failure(List<OperationNote> errors) =>
+        new() { Ok = false, Diff = default, Warnings = new List<OperationNote>(), Infos = new List<OperationNote>(), Errors = errors };
+}
+
+#endregion 🎯SemioReport
+
 #region 💎Attribute
 // Implementations MUST provide key-value metadata for annotating entities.
 
@@ -6590,11 +6624,11 @@ text {
     }
 
     /// <summary>
-    /// Deletes pieces and connections from a design, returning a DesignDiff.
+    /// Deletes pieces and connections from a design, returning a canonical SemioReport of DesignDiff.
     /// Removes stale connections referencing deleted pieces.
     /// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
     /// </summary>
-    public static DesignDiff DeletePiecesAndConnectionsInDesign(Kit kit, Design design, List<string> pieceGuids, List<string> connectionGuids)
+    public static SemioReport<DesignDiff> DeletePiecesAndConnectionsInDesign(Kit kit, Design design, List<string> pieceGuids, List<string> connectionGuids)
     {
         var deletedPieceSet = new HashSet<string>(pieceGuids);
 
@@ -6636,7 +6670,10 @@ text {
         var piecesRemoved = pieceGuids.Select(g => new PieceId { Guid = g }).ToList();
 
         // Flatten the design to get absolute plane and center for each piece
-        var flatResult = Kit.FlattenDesign(kit, design.Guid);
+        var flatRep = Kit.FlattenDesign(kit, design.Guid);
+        if (!flatRep.Ok)
+            return SemioReport<DesignDiff>.Failure(flatRep.Errors);
+        var flatResult = flatRep.Diff!.Forward;
         var flatPieceMap = new Dictionary<string, (Plane? Plane, Coord? Center)>();
         foreach (var piece in design.Pieces)
         {
@@ -6679,7 +6716,7 @@ text {
             diff.Pieces = new PiecesDiff { Removed = piecesRemoved, Updated = piecesUpdated };
         if (connectionsRemoved.Count > 0)
             diff.Connections = new ConnectionsDiff { Removed = connectionsRemoved };
-        return diff;
+        return SemioReport<DesignDiff>.Success(diff, flatRep.Warnings, flatRep.Infos);
     }
 
     /// <summary>
@@ -6707,7 +6744,7 @@ text {
         }
 
         // Flatten the design to get absolute planes/centers
-        var flatDiff = Kit.FlattenDesign(kit, design.Guid);
+        var flatDiff = Kit.FlattenDesignDiff(kit, design.Guid);
         var flatDesign = Design.ApplyDiff(Entity<Design>.DeepClone(design)!, flatDiff);
         var flatPieceMap = flatDesign.Pieces.ToDictionary(p => p.Guid);
 
@@ -7196,25 +7233,25 @@ text {
 /// </summary>
 /// <remarks>
 /// Specs: Exactly five kit kinds exist:
-/// - File: Self-contained JSON file
-/// - Folder: Local folder with .semio/kit.db SQLite and asset files
-/// - Archive: ZIP file packaging a FolderKit structure
+/// - Dev: Self-contained JSON file
+/// - Local: Local folder with .semio/kit.db SQLite and asset files
+/// - Archive: ZIP file packaging a LocalKit structure
 /// - Remote: URL-addressable kit served over HTTP(S)
-/// - Temporary: In-memory ephemeral kit (no persistence)
+/// - Transport: In-memory ephemeral kit transport payload
 /// </remarks>
 [JsonConverter(typeof(StringEnumConverter))]
 public enum KitKind
 {
-    [EnumMember(Value = "file")]
-    File,
-    [EnumMember(Value = "folder")]
-    Folder,
+    [EnumMember(Value = "dev")]
+    Dev,
+    [EnumMember(Value = "local")]
+    Local,
     [EnumMember(Value = "archive")]
     Archive,
     [EnumMember(Value = "remote")]
     Remote,
-    [EnumMember(Value = "temporary")]
-    Temporary
+    [EnumMember(Value = "transport")]
+    Transport
 }
 
 /// <summary>🔷Helpers for KitKind.</summary>
@@ -11090,6 +11127,88 @@ public static class Hashing
     // #endregion ⚗️Hash Diff Entities
 
     // #endregion 🔗Hash Diffs
+
+    // #region 🌳Flatten Merkle Hashes
+    // Per-piece merkle hashes for plane/center so cached flatten calls can reuse unchanged chains.
+
+    internal static string HashFlatPlaneRoot(string guid, Plane? plane)
+    {
+        var w = new HashWriter();
+        if (plane == null)
+        {
+            w.WriteString("plane.root.identity");
+            w.WriteString(guid);
+            return w.Digest();
+        }
+        w.WriteString("plane.root");
+        w.WriteString(guid);
+        w.WriteNumber(plane.Origin?.X ?? 0);
+        w.WriteNumber(plane.Origin?.Y ?? 0);
+        w.WriteNumber(plane.Origin?.Z ?? 0);
+        w.WriteNumber(plane.XAxis?.X ?? 0);
+        w.WriteNumber(plane.XAxis?.Y ?? 0);
+        w.WriteNumber(plane.XAxis?.Z ?? 0);
+        w.WriteNumber(plane.YAxis?.X ?? 0);
+        w.WriteNumber(plane.YAxis?.Y ?? 0);
+        w.WriteNumber(plane.YAxis?.Z ?? 0);
+        return w.Digest();
+    }
+
+    internal static string HashFlatPlaneChain(string parentHash, Connector parentConnector, Connector childConnector, Connection connection)
+    {
+        var w = new HashWriter();
+        w.WriteString("plane.chain");
+        w.WriteHash(parentHash);
+        w.WriteNumber(parentConnector.Point?.X ?? 0);
+        w.WriteNumber(parentConnector.Point?.Y ?? 0);
+        w.WriteNumber(parentConnector.Point?.Z ?? 0);
+        w.WriteNumber(parentConnector.Direction?.X ?? 0);
+        w.WriteNumber(parentConnector.Direction?.Y ?? 0);
+        w.WriteNumber(parentConnector.Direction?.Z ?? 0);
+        w.WriteNumber(childConnector.Point?.X ?? 0);
+        w.WriteNumber(childConnector.Point?.Y ?? 0);
+        w.WriteNumber(childConnector.Point?.Z ?? 0);
+        w.WriteNumber(childConnector.Direction?.X ?? 0);
+        w.WriteNumber(childConnector.Direction?.Y ?? 0);
+        w.WriteNumber(childConnector.Direction?.Z ?? 0);
+        w.WriteNumber(connection.Gap);
+        w.WriteNumber(connection.Shift);
+        w.WriteNumber(connection.Rise);
+        w.WriteNumber(connection.Rotation);
+        w.WriteNumber(connection.Turn);
+        w.WriteNumber(connection.Tilt);
+        return w.Digest();
+    }
+
+    internal static string HashFlatCenterRoot(string guid, Coord? center)
+    {
+        var w = new HashWriter();
+        if (center == null)
+        {
+            w.WriteString("center.root.identity");
+            w.WriteString(guid);
+            return w.Digest();
+        }
+        w.WriteString("center.root");
+        w.WriteString(guid);
+        w.WriteNumber(center.U);
+        w.WriteNumber(center.V);
+        return w.Digest();
+    }
+
+    internal static string HashFlatCenterChain(string parentHash, Connector parentConnector, Connection connection)
+    {
+        var w = new HashWriter();
+        w.WriteString("center.chain");
+        w.WriteHash(parentHash);
+        w.WriteNumber(parentConnector.Direction?.Z ?? 0);
+        w.WriteNumber(parentConnector.T);
+        w.WriteNumber(connection.U ?? 0);
+        w.WriteNumber(connection.V ?? 0);
+        return w.Digest();
+    }
+
+    // #endregion 🌳Flatten Merkle Hashes
 }
 
 #endregion 🖥️Hash
@@ -11465,10 +11584,26 @@ public partial class Kit
 #region 🌤️Flatten Design
 // Callers MUST use FlattenDesign to compute a DesignDiff that assigns world-space planes to all pieces.
 
+/// <summary>🌳Per-piece merkle hash pair used to cache flattenDesign results and skip recomputation when inputs are unchanged.</summary>
+public sealed class FlatMerkleHashes
+{
+    public string PlaneHash { get; set; } = "";
+    public string CenterHash { get; set; } = "";
+}
+
+/// <summary>🧠FlatMerkleCacheEntry bundles a piece's merkle hashes with its cached plane/center so incremental flatten calls can reuse unchanged values.</summary>
+public sealed class FlatMerkleCacheEntry
+{
+    public string PlaneHash { get; set; } = "";
+    public string CenterHash { get; set; } = "";
+    public Plane? Plane { get; set; }
+    public Coord? Center { get; set; }
+}
+
 public partial class Kit
 {
 
-    public static DesignDiff FlattenDesign(Kit kit, string designId)
+    public static DesignDiff FlattenDesignDiff(Kit kit, string designId)
     {
         var design = FindDesign(kit, designId);
         if (design.Pieces == null || design.Pieces.Count == 0) return new DesignDiff();
@@ -11529,6 +11664,17 @@ public partial class Kit
             var targetId = connection.Connecting.Piece.Guid;
             return pieceMap.ContainsKey(sourceId) && pieceMap.ContainsKey(targetId);
         }).ToList();
+
+        static (string, string) NormalizeEdgeEndpoints(string a, string b) =>
+            string.CompareOrdinal(a, b) <= 0 ? (a, b) : (b, a);
+
+        var connectionByEndpoints = new Dictionary<(string, string), Connection>();
+        foreach (var c in filteredConnections)
+        {
+            var a = c.Connected.Piece.Guid;
+            var b = c.Connecting.Piece.Guid;
+            connectionByEndpoints[NormalizeEdgeEndpoints(a, b)] = c;
+        }
 
         var graph = new UndirectedGraph<string, Edge<string>>();
         foreach (var p in flatDesign.Pieces) graph.AddVertex(p.Guid);
@@ -11608,10 +11754,7 @@ public partial class Kit
                 if (piecePlanes.ContainsKey(childPiece.Guid)) return;
                 if (!piecePlanes.TryGetValue(parentPiece.Guid, out var parentPlane)) return;
 
-                var connection = filteredConnections.FirstOrDefault(c =>
-                    (c.Connected.Piece.Guid == parentId && c.Connecting.Piece.Guid == childId) ||
-                    (c.Connecting.Piece.Guid == parentId && c.Connected.Piece.Guid == childId));
-                if (connection == null) return;
+                if (!connectionByEndpoints.TryGetValue(NormalizeEdgeEndpoints(parentId, childId), out var connection)) return;
 
                 var parentSide = connection.Connected.Piece.Guid == parentId ? connection.Connected : connection.Connecting;
                 var childSide = connection.Connecting.Piece.Guid == childId ? connection.Connecting : connection.Connected;
@@ -11682,6 +11825,44 @@ public partial class Kit
         flatDesign.Pieces = flatDesign.Pieces.Select(p => pieceMap.TryGetValue(p.Guid ?? "", out var mapped) ? mapped : p).ToList();
         flatDesign.Connections = new List<Connection>();
 
+        static bool FlattenPlanesApproxEqual(Plane? a, Plane? b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+            const double tol = 0.0001;
+            bool Pt(Point? p, Point? q) =>
+                p != null && q != null
+                && Math.Abs(p.X - q.X) < tol && Math.Abs(p.Y - q.Y) < tol && Math.Abs(p.Z - q.Z) < tol;
+            bool Vt(Vector? v, Vector? w) =>
+                v != null && w != null
+                && Math.Abs(v.X - w.X) < tol && Math.Abs(v.Y - w.Y) < tol && Math.Abs(v.Z - w.Z) < tol;
+            return Pt(a.Origin, b.Origin) && Vt(a.XAxis, b.XAxis) && Vt(a.YAxis, b.YAxis);
+        }
+
+        static bool FlattenCoordsApproxEqual(Coord? a, Coord? b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+            return Math.Abs(a.U - b.U) < 0.0001 && Math.Abs(a.V - b.V) < 0.0001;
+        }
+
+        static bool FlattenAttributesListsEqual(List<Attribute>? a, List<Attribute>? b)
+        {
+            static string? NormAttr(string? value) => string.IsNullOrEmpty(value) ? null : value;
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+            if (a.Count != b.Count) return false;
+            var byGuid = a.ToDictionary(x => x.Guid ?? "", x => x);
+            foreach (var bb in b)
+            {
+                if (bb.Guid == null || !byGuid.TryGetValue(bb.Guid, out var aa)) return false;
+                if (aa.Key != bb.Key) return false;
+                if (NormAttr(aa.Value) != NormAttr(bb.Value)) return false;
+                if (NormAttr(aa.Definition) != NormAttr(bb.Definition)) return false;
+            }
+            return true;
+        }
+
         var updatedPieces = flatDesign.Pieces.Select(flatPiece =>
         {
             var originalPiece = design.Pieces?.FirstOrDefault(p => p.Guid == flatPiece.Guid);
@@ -11690,19 +11871,19 @@ public partial class Kit
             var pieceDiff = new PieceDiff();
             bool hasChanges = false;
 
-            if (flatPiece.Plane != null && Utility.Serialize(flatPiece.Plane) != Utility.Serialize(originalPiece.Plane))
+            if (flatPiece.Plane != null && !FlattenPlanesApproxEqual(flatPiece.Plane, originalPiece.Plane))
             {
                 pieceDiff.Plane = flatPiece.Plane;
                 hasChanges = true;
             }
 
-            if (flatPiece.Center != null && Utility.Serialize(flatPiece.Center) != Utility.Serialize(originalPiece.Center))
+            if (flatPiece.Center != null && !FlattenCoordsApproxEqual(flatPiece.Center, originalPiece.Center))
             {
                 pieceDiff.Center = flatPiece.Center;
                 hasChanges = true;
             }
 
-            if (Utility.Serialize(flatPiece.Attributes) != Utility.Serialize(originalPiece.Attributes))
+            if (!FlattenAttributesListsEqual(flatPiece.Attributes, originalPiece.Attributes))
             {
                 pieceDiff.Attributes = flatPiece.Attributes.ToList();
                 hasChanges = true;
@@ -11727,6 +11908,237 @@ public partial class Kit
 
         return designDiff;
     }
+
+    /// <summary>🌤️Canonical flatten report (forward/backward DesignChange).</summary>
+    public static SemioReport<DesignChange> FlattenDesign(Kit kit, string designId)
+    {
+        var design = kit.Designs?.FirstOrDefault(d => d.Guid == designId);
+        if (design == null)
+            return SemioReport<DesignChange>.Failure(new List<OperationNote>
+            {
+                new() { Code = "flatten.design-not-found", Message = $"Design {designId} not found in kit {kit.Name}" }
+            });
+        if (design.Pieces == null || design.Pieces.Count == 0)
+        {
+            var emptyChange = new DesignChange { Forward = new DesignDiff(), Backward = new DesignDiff() };
+            return SemioReport<DesignChange>.Success(emptyChange, new List<OperationNote>(), new List<OperationNote>
+            {
+                new() { Code = "flatten.empty-pieces", Message = "No pieces to flatten; returning empty forward and backward diffs." }
+            });
+        }
+        var before = Entity<Design>.DeepClone(design) ?? design;
+        var forward = FlattenDesignDiff(kit, designId);
+        var after = Design.ApplyDiff(Entity<Design>.DeepClone(before)!, forward);
+        var backward = Design.GetDesignDiff(after, before);
+        var change = new DesignChange { Forward = forward, Backward = backward, Before = before, After = after };
+        return SemioReport<DesignChange>.Success(change, new List<OperationNote>(), new List<OperationNote>());
+    }
+
+    #region 🌳Flatten Merkle Hashes
+    // Per-piece {PlaneHash, CenterHash} merkle hashes so incremental FlattenDesign calls can reuse cached planes/centers when the chain inputs are unchanged.
+
+    public static Dictionary<string, FlatMerkleHashes> ComputeFlatHashes(Kit kit, string designGuid)
+    {
+        var design = FindDesign(kit, designGuid);
+        if (design.Pieces == null || design.Pieces.Count == 0) return new Dictionary<string, FlatMerkleHashes>();
+
+        var typesDict = (kit.Types ?? new List<Type>()).ToDictionary(t => t.Guid);
+
+        Type? GetConnectorType(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
+
+        Connector? GetConnector(Type? type, string? connectorGuid)
+        {
+            if (type == null) return null;
+            if (string.IsNullOrEmpty(connectorGuid))
+            {
+                if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
+                if (!string.IsNullOrEmpty(type.Parent?.Guid)) return GetConnector(GetConnectorType(type.Parent.Guid), connectorGuid);
+                return null;
+            }
+            if (type.Connectors != null && type.Connectors.Count > 0)
+            {
+                var connector = type.Connectors.FirstOrDefault(p => p.Guid == connectorGuid);
+                if (connector != null) return connector;
+            }
+            if (!string.IsNullOrEmpty(type.Parent?.Guid))
+            {
+                var connector = GetConnector(GetConnectorType(type.Parent.Guid), connectorGuid);
+                if (connector != null) return connector;
+            }
+            if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
+            return null;
+        }
+
+        var pieceMap = new Dictionary<string, Piece>();
+        var pieceOrder = new Dictionary<string, int>();
+        for (int i = 0; i < design.Pieces.Count; i++)
+        {
+            var piece = design.Pieces[i];
+            if (!string.IsNullOrEmpty(piece.Guid))
+            {
+                pieceMap[piece.Guid] = piece;
+                pieceOrder[piece.Guid] = i;
+            }
+        }
+
+        var filteredConnections = (design.Connections ?? new List<Connection>())
+            .Where(c => pieceMap.ContainsKey(c.Connected.Piece.Guid) && pieceMap.ContainsKey(c.Connecting.Piece.Guid))
+            .ToList();
+
+        var graph = new UndirectedGraph<string, Edge<string>>();
+        foreach (var piece in design.Pieces)
+            if (!string.IsNullOrEmpty(piece.Guid)) graph.AddVertex(piece.Guid);
+        foreach (var c in filteredConnections)
+            graph.AddEdge(new Edge<string>(c.Connected.Piece.Guid, c.Connecting.Piece.Guid));
+
+        var ccAlg = new ConnectedComponentsAlgorithm<string, Edge<string>>(graph);
+        ccAlg.Compute();
+        var components = ccAlg.Components;
+        var componentDict = new Dictionary<int, List<string>>();
+        foreach (var kvp in components)
+        {
+            if (!componentDict.TryGetValue(kvp.Value, out var list))
+            {
+                list = new List<string>();
+                componentDict[kvp.Value] = list;
+            }
+            list.Add(kvp.Key);
+        }
+
+        var planeHashes = new Dictionary<string, string>();
+        var centerHashes = new Dictionary<string, string>();
+
+        foreach (var component in componentDict.Values)
+        {
+            var ordered = component.OrderBy(g => pieceOrder.TryGetValue(g, out var idx) ? idx : int.MaxValue).ToList();
+            string? rootNode = null;
+            foreach (var guid in ordered)
+            {
+                if (pieceMap.TryGetValue(guid, out var piece) && piece.Plane != null && piece.Center != null)
+                {
+                    rootNode = guid;
+                    break;
+                }
+            }
+            if (string.IsNullOrEmpty(rootNode))
+                rootNode = component.OrderBy(g => g, StringComparer.Ordinal).FirstOrDefault();
+            if (string.IsNullOrEmpty(rootNode)) continue;
+
+            var rootPiece = pieceMap[rootNode];
+            planeHashes[rootNode] = Hashing.HashFlatPlaneRoot(rootNode, rootPiece.Plane);
+            centerHashes[rootNode] = Hashing.HashFlatCenterRoot(rootNode, rootPiece.Center);
+
+            var bfs = new UndirectedBreadthFirstSearchAlgorithm<string, Edge<string>>(graph);
+            bfs.TreeEdge += (sender, e) =>
+            {
+                var parentId = planeHashes.ContainsKey(e.Source) ? e.Source : e.Target;
+                var childId = parentId == e.Source ? e.Target : e.Source;
+                if (planeHashes.ContainsKey(childId)) return;
+                if (!planeHashes.TryGetValue(parentId, out var parentPlaneHash)) return;
+                if (!centerHashes.TryGetValue(parentId, out var parentCenterHash)) return;
+
+                var parentPiece = pieceMap.TryGetValue(parentId, out var pp) ? pp : null;
+                var childPiece = pieceMap.TryGetValue(childId, out var cp) ? cp : null;
+                if (parentPiece == null || childPiece == null) return;
+
+                var connection = filteredConnections.FirstOrDefault(c =>
+                    (c.Connected.Piece.Guid == parentId && c.Connecting.Piece.Guid == childId) ||
+                    (c.Connecting.Piece.Guid == parentId && c.Connected.Piece.Guid == childId));
+                if (connection == null) return;
+
+                var parentSide = connection.Connected.Piece.Guid == parentId ? connection.Connected : connection.Connecting;
+                var childSide = connection.Connecting.Piece.Guid == childId ? connection.Connecting : connection.Connected;
+
+                var parentType = parentPiece.Type != null ? GetConnectorType(parentPiece.Type.Guid) : null;
+                var childType = childPiece.Type != null ? GetConnectorType(childPiece.Type.Guid) : null;
+                var parentConnector = GetConnector(parentType, parentSide.Connector?.Guid) ?? new Connector();
+                var childConnector = GetConnector(childType, childSide.Connector?.Guid) ?? new Connector();
+
+                planeHashes[childId] = Hashing.HashFlatPlaneChain(parentPlaneHash, parentConnector, childConnector, connection);
+                centerHashes[childId] = Hashing.HashFlatCenterChain(parentCenterHash, parentConnector, connection);
+            };
+            bfs.Compute(rootNode);
+        }
+
+        var result = new Dictionary<string, FlatMerkleHashes>();
+        foreach (var guid in planeHashes.Keys)
+        {
+            result[guid] = new FlatMerkleHashes
+            {
+                PlaneHash = planeHashes[guid],
+                CenterHash = centerHashes.TryGetValue(guid, out var ch) ? ch : "",
+            };
+        }
+        return result;
+    }
+
+    public static (SemioReport<DesignChange> report, Dictionary<string, FlatMerkleCacheEntry> cache) FlattenDesignCached(Kit kit, string designGuid, Dictionary<string, FlatMerkleCacheEntry>? cache = null)
+    {
+        var newHashes = ComputeFlatHashes(kit, designGuid);
+        var report = FlattenDesign(kit, designGuid);
+        if (!report.Ok || report.Diff == null)
+            return (report, new Dictionary<string, FlatMerkleCacheEntry>());
+        var diff = report.Diff.Forward;
+        var updatedById = new Dictionary<string, PieceDiff>();
+        foreach (var entry in diff.Pieces?.Updated ?? new List<PieceDiffUpdate>())
+        {
+            if (entry.Piece != null && !string.IsNullOrEmpty(entry.Piece.Guid) && entry.Diff != null)
+                updatedById[entry.Piece.Guid] = entry.Diff;
+        }
+        var nextCache = new Dictionary<string, FlatMerkleCacheEntry>();
+        if (cache != null)
+        {
+            foreach (var kvp in newHashes)
+            {
+                var guid = kvp.Key;
+                var hashes = kvp.Value;
+                cache.TryGetValue(guid, out var prev);
+                updatedById.TryGetValue(guid, out var updated);
+                if (prev == null || updated == null)
+                {
+                    if (updated != null)
+                    {
+                        nextCache[guid] = new FlatMerkleCacheEntry
+                        {
+                            PlaneHash = hashes.PlaneHash,
+                            CenterHash = hashes.CenterHash,
+                            Plane = updated.Plane,
+                            Center = updated.Center,
+                        };
+                    }
+                    continue;
+                }
+                var reusedPlane = prev.PlaneHash == hashes.PlaneHash ? prev.Plane : updated.Plane;
+                var reusedCenter = prev.CenterHash == hashes.CenterHash ? prev.Center : updated.Center;
+                nextCache[guid] = new FlatMerkleCacheEntry
+                {
+                    PlaneHash = hashes.PlaneHash,
+                    CenterHash = hashes.CenterHash,
+                    Plane = reusedPlane,
+                    Center = reusedCenter,
+                };
+            }
+        }
+        else
+        {
+            foreach (var kvp in newHashes)
+            {
+                var guid = kvp.Key;
+                var hashes = kvp.Value;
+                if (!updatedById.TryGetValue(guid, out var updated)) continue;
+                nextCache[guid] = new FlatMerkleCacheEntry
+                {
+                    PlaneHash = hashes.PlaneHash,
+                    CenterHash = hashes.CenterHash,
+                    Plane = updated.Plane,
+                    Center = updated.Center,
+                };
+            }
+        }
+        return (report, nextCache);
+    }
+
+    #endregion 🌳Flatten Merkle Hashes
 
     public static DesignDiff ReplaceClusterWithDesign(Design originalDesign, List<string> clusterPieceIds, Design clusteredDesign, List<Connection> externalConnections)
     {
@@ -14282,7 +14694,8 @@ public static class KitSqlite
     public static KitChange ApplyKitDiff(string kitDirectory, KitDiff diff)
     {
         var before = LoadKit(kitDirectory);
-        var after = SemioDiff.ApplyKitDiff(before, diff);
+        var after = Entity<Kit>.DeepClone(before)!;
+        SemioDiff.ApplyKitDiff(after, diff);
         SaveKit(kitDirectory, after);
         var backward = SemioDiff.InverseKitDiff(before, diff);
         return new KitChange { Forward = diff, Backward = backward, Before = before, After = after };
@@ -14412,6 +14825,159 @@ public static class KitSqlite
 
 
 
+#region 📋TransportKit
+// Callers MUST use TransportKit to wrap serialized kit payloads for transport.
+
+/// <summary>📋 Wraps static JSON kit payloads for serialization and deserialization.</summary>
+public class TransportKit
+{
+    public string Json { get; }
+
+    public TransportKit(string json)
+    {
+        Json = json;
+    }
+
+    public Kit ToKit() => Utility.Deserialize<Kit>(Json)!;
+
+    public static TransportKit FromKit(Kit kit) => new(Utility.Serialize(kit));
+
+    public static Kit EditTransportKit(Kit kit, KitDiff diff)
+    {
+        var clone = Utility.Deserialize<Kit>(Utility.Serialize(kit))!;
+        SemioDiff.ApplyKitDiff(clone, diff);
+        return clone;
+    }
+}
+
+#endregion 📋TransportKit
+
+
+
+
+
+#region 🔄ISyncKit
+// Callers MUST implement ISyncKit for synchronized kit workflows.
+
+/// <summary>🔄 Contract for synchronized kit workflows.</summary>
+public interface ISyncKit
+{
+    Kit Kit { get; }
+    void Apply(KitDiff diff);
+    void ImportTransport(TransportKit transport);
+    TransportKit ExportTransport();
+    void Close();
+}
+
+#endregion 🔄ISyncKit
+
+
+
+
+
+#region 🧪DevKit
+// Callers MUST use DevKit for synchronized JSON file kit workflows.
+
+/// <summary>📝 Synchronized JSON file kit.</summary>
+public class DevKit : ISyncKit
+{
+    private readonly Kit _kit;
+
+    public DevKit(Kit kit)
+    {
+        _kit = kit;
+    }
+
+    public Kit Kit => _kit;
+
+    public void Apply(KitDiff diff)
+    {
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public void ImportTransport(TransportKit transport)
+    {
+        var imported = transport.ToKit();
+        var diff = SemioDiff.GetKitDiff(_kit, imported);
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public TransportKit ExportTransport() => TransportKit.FromKit(_kit);
+
+    public void Close() { }
+
+    public static DevKit FromJson(string json) => new(Utility.Deserialize<Kit>(json)!);
+
+    public static Kit Import(string path) => FileKit.Import(path);
+
+    public static void Export(Kit kit, string path) => FileKit.Export(kit, path);
+
+    public static Kit Edit(string path, KitDiff diff) => FileKit.Edit(path, diff);
+
+    public static Kit ImportDevKit(string path) => Import(path);
+
+    public static void ExportDevKit(Kit kit, string path) => Export(kit, path);
+
+    public static Kit EditDevKit(string path, KitDiff diff) => Edit(path, diff);
+}
+
+#endregion 🧪DevKit
+
+
+
+
+
+#region 🏡LocalKit
+// Callers MUST use LocalKit for synchronized local folder kit workflows.
+
+/// <summary>📂 Synchronized folder with .semio/kit.db SQLite database.</summary>
+public class LocalKit : ISyncKit
+{
+    private readonly Kit _kit;
+
+    public LocalKit(Kit kit)
+    {
+        _kit = kit;
+    }
+
+    public Kit Kit => _kit;
+
+    public void Apply(KitDiff diff)
+    {
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public void ImportTransport(TransportKit transport)
+    {
+        var imported = transport.ToKit();
+        var diff = SemioDiff.GetKitDiff(_kit, imported);
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public TransportKit ExportTransport() => TransportKit.FromKit(_kit);
+
+    public void Close() { }
+
+    public static KitImportResult Import(string folderPath) => FolderKit.Import(folderPath);
+
+    public static void Export(Kit kit, string folderPath) => FolderKit.Export(kit, folderPath);
+
+    public static Kit Edit(string folderPath, KitDiff diff) => FolderKit.Edit(folderPath, diff);
+
+    public static KitImportResult ImportLocalKit(string folderPath) => Import(folderPath);
+
+    public static void ExportLocalKit(Kit kit, string folderPath) => Export(kit, folderPath);
+
+    public static Kit EditLocalKit(string folderPath, KitDiff diff) => Edit(folderPath, diff);
+}
+
+#endregion 🏡LocalKit
+
+
+
+
+
+
 #region 📷FileKit
 // Callers MUST use FileKit for JSON file kit import, export, and edit operations.
 
@@ -14430,7 +14996,7 @@ public static class FileKit
 
     public static Kit Edit(string path, KitDiff diff)
     {
-        var edited = TemporaryKit.Edit(Import(path), diff);
+        var edited = TransportKit.EditTransportKit(Import(path), diff);
         Export(edited, path);
         return edited;
     }
@@ -14532,7 +15098,7 @@ public static class FolderKit
     public static Kit Edit(string folderPath, KitDiff diff)
     {
         var imported = Import(folderPath);
-        var edited = TemporaryKit.Edit(imported.Kit, diff);
+        var edited = TransportKit.EditTransportKit(imported.Kit, diff);
         Export(edited, folderPath);
         return edited;
     }
@@ -14548,8 +15114,15 @@ public static class FolderKit
 #region 📐ArchiveKit
 // Callers MUST use ArchiveKit for ZIP archive import, export, and edit operations.
 
-public static class ArchiveKit
+public class ArchiveKit
 {
+    public byte[] Data { get; }
+
+    public ArchiveKit(byte[] data)
+    {
+        Data = data;
+    }
+
     public static KitImportResult Import(string zipPath) => ZipRoundtrip.ImportKit(zipPath);
 
     public static void Export(Kit kit, string zipPath) => ZipRoundtrip.ExportKit(kit, zipPath);
@@ -14557,7 +15130,7 @@ public static class ArchiveKit
     public static Kit Edit(string zipPath, KitDiff diff)
     {
         var imported = Import(zipPath);
-        var edited = TemporaryKit.Edit(imported.Kit, diff);
+        var edited = TransportKit.EditTransportKit(imported.Kit, diff);
         Export(edited, zipPath);
         return edited;
     }
@@ -14573,8 +15146,33 @@ public static class ArchiveKit
 #region 🎆RemoteKit
 // Callers MUST use RemoteKit for HTTP-based JSON and ZIP kit import and in-memory edits.
 
-public static class RemoteKit
+public class RemoteKit : ISyncKit
 {
+    private readonly Kit _kit;
+
+    public RemoteKit(Kit kit)
+    {
+        _kit = kit;
+    }
+
+    public Kit Kit => _kit;
+
+    public void Apply(KitDiff diff)
+    {
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public void ImportTransport(TransportKit transport)
+    {
+        var imported = transport.ToKit();
+        var diff = SemioDiff.GetKitDiff(_kit, imported);
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public TransportKit ExportTransport() => TransportKit.FromKit(_kit);
+
+    public void Close() { }
+
     public static KitImportResult Import(string url)
     {
         using var client = new HttpClient();
@@ -14604,7 +15202,7 @@ public static class RemoteKit
     public static Kit Edit(string url, KitDiff diff)
     {
         var imported = Import(url);
-        return TemporaryKit.Edit(imported.Kit, diff);
+        return TransportKit.EditTransportKit(imported.Kit, diff);
     }
 }
 
@@ -14623,8 +15221,11 @@ public static class TemporaryKit
     public static Kit Edit(Kit kit, KitDiff diff)
     {
         var clone = Utility.Deserialize<Kit>(Utility.Serialize(kit))!;
-        return SemioDiff.ApplyKitDiff(clone, diff);
+        SemioDiff.ApplyKitDiff(clone, diff);
+        return clone;
     }
+
+    public static Kit EditTemporaryKit(Kit kit, KitDiff diff) => Edit(kit, diff);
 }
 
 #endregion 🔤TemporaryKit
@@ -16127,64 +16728,85 @@ public static class SemioDiff
     }
 
 
-    public static Kit ApplyKitDiff(Kit baseKit, KitDiff diff)
+    public static void ApplyKitDiff(Kit kit, KitDiff diff)
     {
-        var result = Entity<Kit>.DeepClone(baseKit)!;
-
-        if (diff.ShouldSerializeName()) result.Name = diff.Name ?? "";
-        if (diff.ShouldSerializeVersion()) result.Version = diff.Version ?? "";
-        if (diff.ShouldSerializeDescription()) result.Description = diff.Description;
-        if (diff.ShouldSerializeIcon()) result.Icon = diff.Icon;
-        if (diff.ShouldSerializeImage()) result.Image = diff.Image;
-        if (diff.ShouldSerializePreview()) result.Preview = diff.Preview;
-        if (diff.ShouldSerializeRemote()) result.Remote = diff.Remote;
-        if (diff.ShouldSerializeHomepage()) result.Homepage = diff.Homepage;
-        if (diff.ShouldSerializeLicense()) result.License = diff.License;
-        if (diff.ShouldSerializeCreatedAt()) result.CreatedAt = diff.CreatedAt;
-        if (diff.ShouldSerializeUpdatedAt()) result.UpdatedAt = diff.UpdatedAt;
+        if (diff.ShouldSerializeName()) kit.Name = diff.Name ?? "";
+        if (diff.ShouldSerializeVersion()) kit.Version = diff.Version ?? "";
+        if (diff.ShouldSerializeDescription()) kit.Description = diff.Description;
+        if (diff.ShouldSerializeIcon()) kit.Icon = diff.Icon;
+        if (diff.ShouldSerializeImage()) kit.Image = diff.Image;
+        if (diff.ShouldSerializePreview()) kit.Preview = diff.Preview;
+        if (diff.ShouldSerializeRemote()) kit.Remote = diff.Remote;
+        if (diff.ShouldSerializeHomepage()) kit.Homepage = diff.Homepage;
+        if (diff.ShouldSerializeLicense()) kit.License = diff.License;
+        if (diff.ShouldSerializeCreatedAt()) kit.CreatedAt = diff.CreatedAt;
+        if (diff.ShouldSerializeUpdatedAt()) kit.UpdatedAt = diff.UpdatedAt;
 
         if (diff.Types != null)
-            result.Types = ApplyTypesDiff(result.Types ?? new List<Type>(), diff.Types);
+        {
+            kit.Types ??= new List<Type>();
+            ApplyTypesDiff(kit.Types, diff.Types);
+        }
 
         if (diff.Designs != null)
-            result.Designs = ApplyDesignsDiff(result.Designs ?? new List<Design>(), diff.Designs);
+        {
+            kit.Designs ??= new List<Design>();
+            ApplyDesignsDiff(kit.Designs, diff.Designs);
+        }
 
         if (diff.Tags != null)
-            result.Tags = ApplyTagsDiff(result.Tags ?? new List<Tag>(), diff.Tags);
+        {
+            kit.Tags ??= new List<Tag>();
+            ApplyTagsDiff(kit.Tags, diff.Tags);
+        }
 
         if (diff.Folders != null)
-            result.Folders = ApplyFoldersDiff(result.Folders ?? new List<Folder>(), diff.Folders);
+        {
+            kit.Folders ??= new List<Folder>();
+            ApplyFoldersDiff(kit.Folders, diff.Folders);
+        }
 
         if (diff.Ports != null)
-            result.Ports = ApplyPortsDiff(result.Ports ?? new List<Port>(), diff.Ports);
+        {
+            kit.Ports ??= new List<Port>();
+            ApplyPortsDiff(kit.Ports, diff.Ports);
+        }
 
         if (diff.Concepts != null)
-            result.Concepts = ApplyConceptsDiff(result.Concepts ?? new List<Concept>(), diff.Concepts);
+        {
+            kit.Concepts ??= new List<Concept>();
+            ApplyConceptsDiff(kit.Concepts, diff.Concepts);
+        }
 
         if (diff.Files != null)
-            result.Files = ApplyFilesDiff(result.Files ?? new List<File>(), diff.Files);
+        {
+            kit.Files ??= new List<File>();
+            ApplyFilesDiff(kit.Files, diff.Files);
+        }
 
         if (diff.Authors != null)
-            result.Authors = ApplyAuthorsDiff(result.Authors ?? new List<Author>(), diff.Authors);
+        {
+            kit.Authors ??= new List<Author>();
+            ApplyAuthorsDiff(kit.Authors, diff.Authors);
+        }
 
         if (diff.Attributes != null)
-            result.Attributes = ApplyAttributesDiff(result.Attributes ?? new List<Attribute>(), diff.Attributes);
-
-        return result;
+        {
+            kit.Attributes ??= new List<Attribute>();
+            ApplyAttributesDiff(kit.Attributes, diff.Attributes);
+        }
     }
 
-    private static List<Tag> ApplyTagsDiff(List<Tag> baseTags, TagsDiff diff)
+    private static void ApplyTagsDiff(List<Tag> tags, TagsDiff diff)
     {
-        var result = new List<Tag>(baseTags);
-
         if (diff.Removed != null)
-            result.RemoveAll(t => diff.Removed.Any(r => r.Guid == t.Guid));
+            tags.RemoveAll(t => diff.Removed.Any(r => r.Guid == t.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var tag = result.FirstOrDefault(t => t.Guid == update.Tag.Guid);
+                var tag = tags.FirstOrDefault(t => t.Guid == update.Tag.Guid);
                 if (tag != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) tag.Name = update.Diff.Name ?? "";
@@ -16195,23 +16817,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            tags.AddRange(diff.Added);
     }
 
-    private static List<Folder> ApplyFoldersDiff(List<Folder> baseFolders, FoldersDiff diff)
+    private static void ApplyFoldersDiff(List<Folder> folders, FoldersDiff diff)
     {
-        var result = new List<Folder>(baseFolders);
-
         if (diff.Removed != null)
-            result.RemoveAll(f => diff.Removed.Any(r => r.Guid == f.Guid));
+            folders.RemoveAll(f => diff.Removed.Any(r => r.Guid == f.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var folder = result.FirstOrDefault(f => f.Guid == update.Folder.Guid);
+                var folder = folders.FirstOrDefault(f => f.Guid == update.Folder.Guid);
                 if (folder != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) folder.Name = update.Diff.Name ?? "";
@@ -16222,23 +16840,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            folders.AddRange(diff.Added);
     }
 
-    private static List<Port> ApplyPortsDiff(List<Port> basePorts, PortsDiff diff)
+    private static void ApplyPortsDiff(List<Port> ports, PortsDiff diff)
     {
-        var result = new List<Port>(basePorts);
-
         if (diff.Removed != null)
-            result.RemoveAll(p => diff.Removed.Any(r => r.Guid == p.Guid));
+            ports.RemoveAll(p => diff.Removed.Any(r => r.Guid == p.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var port = result.FirstOrDefault(p => p.Guid == update.Port.Guid);
+                var port = ports.FirstOrDefault(p => p.Guid == update.Port.Guid);
                 if (port != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) port.Name = update.Diff.Name ?? "";
@@ -16250,23 +16864,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            ports.AddRange(diff.Added);
     }
 
-    private static List<Concept> ApplyConceptsDiff(List<Concept> baseConcepts, ConceptsDiff diff)
+    private static void ApplyConceptsDiff(List<Concept> concepts, ConceptsDiff diff)
     {
-        var result = new List<Concept>(baseConcepts);
-
         if (diff.Removed != null)
-            result.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
+            concepts.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var concept = result.FirstOrDefault(c => c.Guid == update.Concept.Guid);
+                var concept = concepts.FirstOrDefault(c => c.Guid == update.Concept.Guid);
                 if (concept != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) concept.Name = update.Diff.Name ?? "";
@@ -16277,23 +16887,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            concepts.AddRange(diff.Added);
     }
 
-    private static List<File> ApplyFilesDiff(List<File> baseFiles, FilesDiff diff)
+    private static void ApplyFilesDiff(List<File> files, FilesDiff diff)
     {
-        var result = new List<File>(baseFiles);
-
         if (diff.Removed != null)
-            result.RemoveAll(f => diff.Removed.Any(r => r.Guid == f.Guid));
+            files.RemoveAll(f => diff.Removed.Any(r => r.Guid == f.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var file = result.FirstOrDefault(f => f.Guid == update.File.Guid);
+                var file = files.FirstOrDefault(f => f.Guid == update.File.Guid);
                 if (file != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) file.Name = update.Diff.Name ?? "";
@@ -16304,23 +16910,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            files.AddRange(diff.Added);
     }
 
-    private static List<Author> ApplyAuthorsDiff(List<Author> baseAuthors, AuthorsDiff diff)
+    private static void ApplyAuthorsDiff(List<Author> authors, AuthorsDiff diff)
     {
-        var result = new List<Author>(baseAuthors);
-
         if (diff.Removed != null)
-            result.RemoveAll(a => diff.Removed.Any(r => r.Guid == a.Guid));
+            authors.RemoveAll(a => diff.Removed.Any(r => r.Guid == a.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var author = result.FirstOrDefault(a => a.Guid == update.Author.Guid);
+                var author = authors.FirstOrDefault(a => a.Guid == update.Author.Guid);
                 if (author != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) author.Name = update.Diff.Name ?? "";
@@ -16330,23 +16932,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            authors.AddRange(diff.Added);
     }
 
-    private static List<Attribute> ApplyAttributesDiff(List<Attribute> baseAttributes, AttributesDiff diff)
+    private static void ApplyAttributesDiff(List<Attribute> attributes, AttributesDiff diff)
     {
-        var result = new List<Attribute>(baseAttributes);
-
         if (diff.Removed != null)
-            result.RemoveAll(a => diff.Removed.Any(r => r.Guid == a.Guid));
+            attributes.RemoveAll(a => diff.Removed.Any(r => r.Guid == a.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var attr = result.FirstOrDefault(a => a.Guid == update.Attribute.Guid);
+                var attr = attributes.FirstOrDefault(a => a.Guid == update.Attribute.Guid);
                 if (attr != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeValue()) attr.Value = update.Diff.Value;
@@ -16356,23 +16954,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            attributes.AddRange(diff.Added);
     }
 
-    private static List<Type> ApplyTypesDiff(List<Type> baseTypes, TypesDiff diff)
+    private static void ApplyTypesDiff(List<Type> types, TypesDiff diff)
     {
-        var result = new List<Type>(baseTypes);
-
         if (diff.Removed != null)
-            result.RemoveAll(t => diff.Removed.Any(r => r.Guid == t.Guid));
+            types.RemoveAll(t => diff.Removed.Any(r => r.Guid == t.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var type = result.FirstOrDefault(t => t.Guid == update.Type.Guid);
+                var type = types.FirstOrDefault(t => t.Guid == update.Type.Guid);
                 if (type != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) type.Name = update.Diff.Name ?? "";
@@ -16389,33 +16983,38 @@ public static class SemioDiff
                     if (update.Diff.ShouldSerializeAuthors()) type.Authors = update.Diff.Authors?.Select(a => new AuthorId { Guid = a.Guid }).ToList();
                     if (update.Diff.ShouldSerializeConcepts()) type.Concepts = update.Diff.Concepts?.Select(c => new ConceptId { Guid = c.Guid }).ToList();
                     if (update.Diff.Connectors != null)
-                        type.Connectors = ApplyConnectorsDiff(type.Connectors ?? new List<Connector>(), update.Diff.Connectors);
+                    {
+                        type.Connectors ??= new List<Connector>();
+                        ApplyConnectorsDiff(type.Connectors, update.Diff.Connectors);
+                    }
                     if (update.Diff.Models != null)
-                        type.Models = ApplyModelsDiff(type.Models ?? new List<Model>(), update.Diff.Models);
+                    {
+                        type.Models ??= new List<Model>();
+                        ApplyModelsDiff(type.Models, update.Diff.Models);
+                    }
                     if (update.Diff.Attributes != null)
-                        type.Attributes = ApplyAttributesDiff(type.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        type.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(type.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            types.AddRange(diff.Added);
     }
 
-    private static List<Connector> ApplyConnectorsDiff(List<Connector> baseConnectors, ConnectorsDiff diff)
+    private static void ApplyConnectorsDiff(List<Connector> connectors, ConnectorsDiff diff)
     {
-        var result = new List<Connector>(baseConnectors);
-
         if (diff.Removed != null)
-            result.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
+            connectors.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var connector = result.FirstOrDefault(c => c.Guid == update.Connector.Guid);
+                var connector = connectors.FirstOrDefault(c => c.Guid == update.Connector.Guid);
                 if (connector != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) connector.Name = update.Diff.Name;
@@ -16436,29 +17035,28 @@ public static class SemioDiff
                         connector.Direction = new Vector { X = bd.X + (dd?.X ?? 0), Y = bd.Y + (dd?.Y ?? 0), Z = bd.Z + (dd?.Z ?? 0) };
                     }
                     if (update.Diff.Attributes != null)
-                        connector.Attributes = ApplyAttributesDiff(connector.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        connector.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(connector.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            connectors.AddRange(diff.Added);
     }
 
-    private static List<Model> ApplyModelsDiff(List<Model> baseModels, ModelsDiff diff)
+    private static void ApplyModelsDiff(List<Model> models, ModelsDiff diff)
     {
-        var result = new List<Model>(baseModels);
-
         if (diff.Removed != null)
-            result.RemoveAll(m => diff.Removed.Any(r => r.Guid == m.Guid));
+            models.RemoveAll(m => diff.Removed.Any(r => r.Guid == m.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var model = result.FirstOrDefault(m => m.Guid == update.Model.Guid);
+                var model = models.FirstOrDefault(m => m.Guid == update.Model.Guid);
                 if (model != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) model.Name = update.Diff.Name;
@@ -16466,29 +17064,28 @@ public static class SemioDiff
                     if (update.Diff.ShouldSerializeFile()) model.File = update.Diff.File;
                     if (update.Diff.ShouldSerializeTags()) model.Tags = update.Diff.Tags;
                     if (update.Diff.Attributes != null)
-                        model.Attributes = ApplyAttributesDiff(model.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        model.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(model.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            models.AddRange(diff.Added);
     }
 
-    private static List<Design> ApplyDesignsDiff(List<Design> baseDesigns, DesignsDiff diff)
+    private static void ApplyDesignsDiff(List<Design> designs, DesignsDiff diff)
     {
-        var result = new List<Design>(baseDesigns);
-
         if (diff.Removed != null)
-            result.RemoveAll(d => diff.Removed.Any(r => r.Guid == d.Guid));
+            designs.RemoveAll(d => diff.Removed.Any(r => r.Guid == d.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var design = result.FirstOrDefault(d => d.Guid == update.Design.Guid);
+                var design = designs.FirstOrDefault(d => d.Guid == update.Design.Guid);
                 if (design != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) design.Name = update.Diff.Name ?? "";
@@ -16506,33 +17103,38 @@ public static class SemioDiff
                     if (update.Diff.ShouldSerializeAuthors()) design.Authors = update.Diff.Authors?.Select(a => new AuthorId { Guid = a.Guid }).ToList();
                     if (update.Diff.ShouldSerializeConcepts()) design.Concepts = update.Diff.Concepts?.Select(c => new ConceptId { Guid = c.Guid }).ToList();
                     if (update.Diff.Pieces != null)
-                        design.Pieces = ApplyPiecesDiff(design.Pieces ?? new List<Piece>(), update.Diff.Pieces);
+                    {
+                        design.Pieces ??= new List<Piece>();
+                        ApplyPiecesDiff(design.Pieces, update.Diff.Pieces);
+                    }
                     if (update.Diff.Connections != null)
-                        design.Connections = ApplyConnectionsDiff(design.Connections ?? new List<Connection>(), update.Diff.Connections);
+                    {
+                        design.Connections ??= new List<Connection>();
+                        ApplyConnectionsDiff(design.Connections, update.Diff.Connections);
+                    }
                     if (update.Diff.Attributes != null)
-                        design.Attributes = ApplyAttributesDiff(design.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        design.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(design.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            designs.AddRange(diff.Added);
     }
 
-    private static List<Piece> ApplyPiecesDiff(List<Piece> basePieces, PiecesDiff diff)
+    private static void ApplyPiecesDiff(List<Piece> pieces, PiecesDiff diff)
     {
-        var result = new List<Piece>(basePieces);
-
         if (diff.Removed != null)
-            result.RemoveAll(p => diff.Removed.Any(r => r.Guid == p.Guid));
+            pieces.RemoveAll(p => diff.Removed.Any(r => r.Guid == p.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var piece = result.FirstOrDefault(p => p.Guid == update.Piece.Guid);
+                var piece = pieces.FirstOrDefault(p => p.Guid == update.Piece.Guid);
                 if (piece != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) piece.Name = update.Diff.Name;
@@ -16547,29 +17149,28 @@ public static class SemioDiff
                     if (update.Diff.ShouldSerializeIsLocked()) piece.IsLocked = update.Diff.IsLocked;
                     if (update.Diff.ShouldSerializeColor()) piece.Color = update.Diff.Color;
                     if (update.Diff.Attributes != null)
-                        piece.Attributes = ApplyAttributesDiff(piece.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        piece.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(piece.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            pieces.AddRange(diff.Added);
     }
 
-    private static List<Connection> ApplyConnectionsDiff(List<Connection> baseConnections, ConnectionsDiff diff)
+    private static void ApplyConnectionsDiff(List<Connection> connections, ConnectionsDiff diff)
     {
-        var result = new List<Connection>(baseConnections);
-
         if (diff.Removed != null)
-            result.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
+            connections.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var connection = result.FirstOrDefault(c => c.Guid == update.Connection.Guid);
+                var connection = connections.FirstOrDefault(c => c.Guid == update.Connection.Guid);
                 if (connection != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeConnected() && update.Diff.Connected != null)
@@ -16598,15 +17199,16 @@ public static class SemioDiff
                     if (update.Diff.ShouldSerializeU()) connection.U = (connection.U ?? 0f) + (update.Diff.U ?? 0f);
                     if (update.Diff.ShouldSerializeV()) connection.V = (connection.V ?? 0f) + (update.Diff.V ?? 0f);
                     if (update.Diff.Attributes != null)
-                        connection.Attributes = ApplyAttributesDiff(connection.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        connection.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(connection.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            connections.AddRange(diff.Added);
     }
 
     public static bool AreKitsEqual(Kit a, Kit b)

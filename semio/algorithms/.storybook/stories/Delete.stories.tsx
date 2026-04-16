@@ -1,12 +1,12 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Delete.stories.tsx
 // Specs: Pure UI proxy to nativeFlatDesign + nativeDeletePieces. No domain logic. All designs include connections.
-// Summary: Flat input design via nativeFlatDesign; nativeDeletePieces returns diff; applyDesignDiff computes output.
+// Summary: Flat input design via nativeFlatDesign; nativeDeletePieces returns diff; Design.applyDiff computes output.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design, DesignDiff } from "@semio/js";
-import { applyDesignDiff } from "@semio/js";
+import type { Design, DesignDiff, DesignPlain, Kit } from "@semio/js";
+import { Design as DesignEntity, Kit } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -63,14 +63,22 @@ function DeleteFrame() {
       }
       setDesignDiff(undefined);
       const diffRes = await nativeDeletePieces(kit, flatInputDesign, selectedPieceGuids, selectedConnectionGuids, language);
-      if (!cancelled) setDesignDiff(diffRes.ok ? diffRes.change.forward : undefined);
+      if (!cancelled) setDesignDiff(diffRes.ok ? diffRes.diff : undefined);
     })();
     return () => {
       cancelled = true;
     };
   }, [kit, flatInputDesign, selectedPieceGuids, selectedConnectionGuids, language]);
 
-  const outputDesign = React.useMemo(() => (designDiff && flatInputDesign ? applyDesignDiff(flatInputDesign, designDiff) : (flatInputDesign ?? rawDesign)), [designDiff, flatInputDesign]);
+  const outputDesign = React.useMemo(() => {
+    if (!flatInputDesign) return rawDesign as Design;
+    if (!designDiff) return flatInputDesign as Design;
+    const k = Kit.ensure(kit as Kit);
+    const plain = (flatInputDesign as DesignEntity).toPlain?.() ?? (JSON.parse(JSON.stringify(flatInputDesign)) as DesignPlain);
+    const next = new DesignEntity(plain, k);
+    next.applyDiff(designDiff);
+    return next;
+  }, [designDiff, flatInputDesign, kit]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({

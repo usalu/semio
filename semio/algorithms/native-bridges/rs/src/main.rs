@@ -5,8 +5,6 @@ mod header { // 🧲Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 } // 🧲Header
 
-use semio::delete_pieces_and_connections_in_design;
-use semio::flatten_design;
 use semio::Design;
 use semio::Kit;
 use serde::Deserialize;
@@ -51,7 +49,13 @@ fn main() {
     };
     match req.op.as_str() {
         "flatten" => {
-            let dc = flatten_design(&req.kit, &req.design_guid);
+            let dc = match req.kit.design_by_guid(&req.design_guid) {
+                Some(d) => d.flatten(&req.kit),
+                None => {
+                    write_err(format!("design {} not found", req.design_guid));
+                    return;
+                }
+            };
             match serde_json::to_value(&dc) {
                 Ok(v) => write_ok(v),
                 Err(e) => write_err(format!("marshal flatten: {e}")),
@@ -65,13 +69,18 @@ fn main() {
                     return;
                 }
             };
-            let diff = delete_pieces_and_connections_in_design(
-                &req.kit,
-                &design,
-                &req.piece_guids,
-                &req.connection_guids,
-            );
-            match serde_json::to_value(&diff) {
+            let pieces: Vec<_> = req
+                .piece_guids
+                .iter()
+                .filter_map(|g| design.piece_by_guid(g).cloned())
+                .collect();
+            let connections: Vec<_> = req
+                .connection_guids
+                .iter()
+                .filter_map(|g| design.connection_by_guid(g).cloned())
+                .collect();
+            let rep = design.delete_pieces_and_connections(&req.kit, &pieces, &connections);
+            match serde_json::to_value(&rep) {
                 Ok(v) => write_ok(v),
                 Err(e) => write_err(format!("marshal delete: {e}")),
             }

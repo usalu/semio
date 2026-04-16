@@ -1,0 +1,7 @@
+{
+  "title": "Refactor Go Kit API to Stateful with Five Kit Kinds",
+  "status": "closed",
+  "description": "Refactored all ~36 apply*Diff functions in semio/go/main.go from functional (returning new values) to in-place mutation (void, pointer receivers). Renamed KitKind enum values: File->Dev, Folder->Local, Temporary->Transport. Added Kit Kind types (TransportKit, ArchiveKit, SyncKit interface, DevKit, LocalKit, RemoteKit). Added deepCloneKit helper for safe deep copies before in-place mutation. Fixed shallow copy bugs in all 12 KitChange helpers, CopyDesign, DeletePiecesAndConnectionsInDesign, and test callers. Fixed guid-unique validation message to match cross-language parity. Updated all test and benchmark callers. All tests pass.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": ["⚪02953bc4be144dc8b2288494b2613381"]
+}

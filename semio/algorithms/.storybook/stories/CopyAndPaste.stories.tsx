@@ -5,8 +5,8 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design, DesignDiff, PasteDesignAnchoringKind } from "@semio/js";
-import { PASTE_DESIGN_ANCHORING_KINDS, applyDesignDiff } from "@semio/js";
+import type { Design, DesignDiff, DesignPlain, PasteDesignAnchoringKind } from "@semio/js";
+import { Design as DesignEntity, Kit, type Kit as KitType } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -50,7 +50,7 @@ const PASTE_ANCHOR_LABELS: Record<PasteDesignAnchoringKind, string> = {
   topRight: "Top right",
 };
 
-const PASTE_DESIGN_ANCHOR_OPTIONS: readonly { anchoringKind: PasteDesignAnchoringKind; label: string }[] = PASTE_DESIGN_ANCHORING_KINDS.map((anchoringKind) => ({
+const PASTE_DESIGN_ANCHOR_OPTIONS: readonly { anchoringKind: PasteDesignAnchoringKind; label: string }[] = Kit.pasteDesignAnchoringKinds.map((anchoringKind) => ({
   anchoringKind,
   label: PASTE_ANCHOR_LABELS[anchoringKind],
 }));
@@ -199,7 +199,7 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
       const copyRes = await nativeCopyDesign(kit, flatSourceDesign, selectedPieceGuids, selectedConnectionGuids, language);
       if (cancelled) return;
       if (!copyRes.ok) return;
-      const copied = copyRes.change;
+      const copied = copyRes.diff;
       const coord = mode === "with" ? { u: vec.u, v: vec.v } : undefined;
       const diff = await nativePasteDesign(kit, copied, pasteTargetDesign, pasteAnchoring, coord, language);
       if (!cancelled) setDesignDiff(diff);
@@ -209,7 +209,15 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
     };
   }, [kit, flatSourceDesign, layoutReady, selectedPieceGuids, selectedConnectionGuids, language, mode, pasteAnchoring, mode === "with" ? vec.u : 0, mode === "with" ? vec.v : 0]);
 
-  const outputDesign = React.useMemo(() => (designDiff && flatPasteTargetDesign ? (applyDesignDiff(flatPasteTargetDesign, designDiff) as Design) : ((flatPasteTargetDesign ?? pasteTargetDesign) as Design)), [designDiff, flatPasteTargetDesign]);
+  const outputDesign = React.useMemo(() => {
+    if (!flatPasteTargetDesign) return pasteTargetDesign as Design;
+    if (!designDiff) return flatPasteTargetDesign as Design;
+    const k = Kit.ensure(kitWithPasteTarget as KitType);
+    const plain = (flatPasteTargetDesign as DesignEntity).toPlain?.() ?? (JSON.parse(JSON.stringify(flatPasteTargetDesign)) as DesignPlain);
+    const next = new DesignEntity(plain, k);
+    next.applyDiff(designDiff);
+    return next;
+  }, [designDiff, flatPasteTargetDesign, kitWithPasteTarget]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({

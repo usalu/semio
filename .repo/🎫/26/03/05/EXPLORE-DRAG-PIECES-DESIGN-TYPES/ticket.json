@@ -1,23 +1,10 @@
 {
   "title": "Explore Drag Pieces Design Types",
-  "status": "open",
-  "prompt": "Find Design, Piece, Connection, DesignDiff, PieceDiff, ConnectionDiff types and region structure in semio.ts for adding dragPiecesInDesign function",
+  "status": "closed",
+  "description": "Find Design, Piece, Connection, DesignDiff, PieceDiff, ConnectionDiff types and region structure in semio.ts for adding dragPiecesInDesign function",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/779"
   },
-  "goal": "SEMIO/JS",
-  "started": "2026-03-05T13:28:44.580419147Z",
-  "interactions": [
-    {
-      "dates": {
-        "started": "2026-03-05 13:28:44"
-      },
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "system": "linux",
-      "client": "copilot-chat",
-      "commit": "25a194ed76ad1a71a5d242990f19c5ace57b0bc2",
-      "prompt": "Find Design, Piece, Connection, DesignDiff, PieceDiff, ConnectionDiff types and region structure in semio.ts for adding dragPiecesInDesign function",
-      "llm": "opus-4-6"
-    }
-  ]
+  "goal": "🎯semio🎯js"
 }

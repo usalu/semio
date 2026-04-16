@@ -44,6 +44,17 @@ export { default as TambourMetaType } from "./semio/tambour.meta.type.semio.json
 export { default as TambourShallowType } from "./semio/tambour.shallow.type.semio.json";
 export { default as InvalidKitValidation } from "./semio/validation.semio.json";
 export { default as ValidateKitDiffCases } from "./semio/validate-kit-diff.cases.semio.json";
+export { default as FlattenMerkleCases } from "./semio/flatten-merkle.cases.semio.json";
+export { default as HashCases } from "./semio/hash.cases.semio.json";
+export { default as QualitySumCases } from "./semio/quality-sum.cases.semio.json";
+export { default as DesignWithDiffCases } from "./semio/design-with-diff.cases.semio.json";
+export { default as FilterKitCases } from "./semio/filter-kit.cases.semio.json";
+export { default as FindReplaceableTypesCases } from "./semio/find-replaceable-types.cases.semio.json";
+export { default as FlattenCases } from "./semio/flatten.cases.semio.json";
+export { default as SyntheticFindReplaceableKit } from "./semio/synthetic-find-replaceable.kit.semio.json";
+export { default as ExportDesignModelCases } from "./semio/export-design-model.cases.semio.json";
+export { default as DeleteCases } from "./semio/delete.cases.semio.json";
+export { default as CopyPasteCases } from "./semio/copy-paste.cases.semio.json";
 export { MetabolismKitData as MetabolismKit };
 
 /**
@@ -55,9 +66,9 @@ export const MetabolismKitTypes = MetabolismKitData.types ?? [];
  **/
 export const MetabolismKitDesigns = MetabolismKitData.designs ?? [];
 /**
- * Metabolism kit ports array
+ * Metabolism kit families array
  **/
-export const MetabolismKitPorts = MetabolismKitData.ports ?? [];
+export const MetabolismKitFamilies = (MetabolismKitData as { families?: unknown[] }).families ?? [];
 /**
  * Metabolism kit qualities array
  **/
@@ -117,9 +128,9 @@ const typeLookup = buildLookup(MetabolismKitTypes);
  **/
 const designLookup = buildLookup(MetabolismKitDesigns);
 /**
- * Port lookup maps by guid and name
+ * Family lookup maps by guid and name
  **/
-const portLookup = buildLookup(MetabolismKitPorts);
+const familyLookup = buildLookup(MetabolismKitFamilies);
 
 /**
  * Metabolism kit types indexed by guid
@@ -138,13 +149,13 @@ export const MetabolismKitDesignsByGuid = designLookup.byGuid;
  **/
 export const MetabolismKitDesignsByName = designLookup.byName;
 /**
- * Metabolism kit ports indexed by guid
+ * Metabolism kit families indexed by guid
  **/
-export const MetabolismKitPortsByGuid = portLookup.byGuid;
+export const MetabolismKitFamiliesByGuid = familyLookup.byGuid;
 /**
- * Metabolism kit ports indexed by name
+ * Metabolism kit families indexed by name
  **/
-export const MetabolismKitPortsByName = portLookup.byName;
+export const MetabolismKitFamiliesByName = familyLookup.byName;
 /**
  * nakaginCapsuleTowerDesign holds the data fields for a nakaginCapsuleTowerDesign record.
  **/

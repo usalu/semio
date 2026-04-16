@@ -43,16 +43,16 @@ static class NativeBridge
             {
                 case "flatten":
                 {
-                    var diff = Kit.FlattenDesign(kit, req.DesignGuid);
-                    WriteOk(JToken.FromObject(diff));
+                    var rep = Kit.FlattenDesign(kit, req.DesignGuid);
+                    WriteOk(JToken.FromObject(rep));
                     return 0;
                 }
                 case "delete":
                 {
                     var design = req.Design.ToObject<Design>();
                     if (design == null) throw new Exception("parse design: null");
-                    var diff = Design.DeletePiecesAndConnectionsInDesign(kit, design, req.PieceGuids ?? new List<string>(), req.ConnectionGuids ?? new List<string>());
-                    WriteOk(JToken.FromObject(diff));
+                    var rep = Design.DeletePiecesAndConnectionsInDesign(kit, design, req.PieceGuids ?? new List<string>(), req.ConnectionGuids ?? new List<string>());
+                    WriteOk(JToken.FromObject(rep));
                     return 0;
                 }
                 default:

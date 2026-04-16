@@ -1,8 +1,9 @@
 {
   "title": "Test Lifecycle json",
   "emoji": "🧪",
-  "status": "open",
+  "status": "closed",
   "description": "Test Prompt",
+  "summary": "Bulk close",
   "goal": "🎯testgoaljsonlifecycletest1774402026337401080",
   "sessions": [
     "⚪a5ff430112394c5c9e0f331e4b0fa9fe"

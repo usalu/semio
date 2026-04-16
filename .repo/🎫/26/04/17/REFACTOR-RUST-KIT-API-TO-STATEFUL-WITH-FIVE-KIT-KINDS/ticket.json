@@ -1,0 +1,13 @@
+{
+  "title": "Refactor Rust Kit API to Stateful with Five Kit Kinds",
+  "status": "closed",
+  "description": "Refactor Rust Kit API to Stateful with Five Kit Kinds",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1354"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪f824fcc5db63411491a23fca62dbc633"
+  ]
+}

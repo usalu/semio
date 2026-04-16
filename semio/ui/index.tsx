@@ -16,28 +16,27 @@ import { Grid } from "@react-three/drei/core/Grid.js";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
 import { Canvas as ThreeCanvas, useFrame, useThree } from "@react-three/fiber";
 import {
-  applyDesignDiff,
-  designWithDiff,
+  Design as DesignEntity,
   DiffStatus,
-  flattenDesign,
-  planeToMatrix,
-  selectBestModel,
-  toThreeRotation,
+  type FlatMerkleCacheEntry,
+  Kit,
+  Type,
   type Attribute,
   type Camera,
   type Connection,
   type Connector,
   type Coord,
-  type Design,
   type DesignDiff,
-  type Kit,
+  type DesignPlain,
+  type Design,
   type MoveVector,
   type Piece,
   type Plane,
+  type Port as SemioPort,
   type File as SemioFile,
-  type Type as SemioKind,
   type Vector as SemioVector,
 } from "@semio/js";
+import type { Type as SemioKind } from "@semio/js";
 import * as React from "react";
 import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -227,7 +226,7 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
     image: t.image,
     parent: t.parent ? { guid: t.parent.guid } : undefined,
   }));
-  const ports: KitPortArtifact[] = (kit.ports ?? []).map((p) => ({
+  const ports: KitPortArtifact[] = (kit.ports ?? []).map((p: SemioPort) => ({
     guid: p.guid,
     name: p.name,
     description: p.description,
@@ -640,7 +639,7 @@ const kitDesignDataToShellDesign = (d: KitDesignData): Design =>
     image: d.image,
     pieces: [],
     connections: [],
-  }) as Design;
+  }) as unknown as Design;
 
 const kitKindDataToShellKind = (k: KitKindData): SemioKind =>
   ({
@@ -653,7 +652,12 @@ const kitKindDataToShellKind = (k: KitKindData): SemioKind =>
     image: k.image,
     models: [],
     connectors: [],
-  }) as SemioKind;
+  }) as unknown as SemioKind;
+
+const resolveKitArtifactDesignForPreview = (design: Design, kit: Kit | undefined): Design => {
+  if (!kit) return design;
+  return mcpFlattenDesignForSemioSurface(design, kit, "design");
+};
 
 //#endregion 🧲KitArtifactShells
 
@@ -858,6 +862,8 @@ export const SemioKit: React.FC<KitProps> = ({
     return shell ? kitDesignDataToShellDesign(shell) : null;
   }, [effectiveDesigns, focusedNode.guid, focusedNode.kind, kit?.designs]);
 
+  const artifactPreviewDesign = React.useMemo(() => (artifactDesign ? resolveKitArtifactDesignForPreview(artifactDesign, kit) : null), [artifactDesign, kit]);
+
   const artifactKind: SemioKind | null = React.useMemo(() => {
     if (focusedNode.kind !== "kind" || !focusedNode.guid) return null;
     const full = kit?.types?.find((t) => t.guid === focusedNode.guid);
@@ -988,7 +994,7 @@ export const SemioKit: React.FC<KitProps> = ({
           </div>
         ) : null}
 
-        {artifactDesign && designDataEnabled ? (
+        {artifactPreviewDesign && designDataEnabled ? (
           <div
             style={{
               height: 480,
@@ -999,7 +1005,7 @@ export const SemioKit: React.FC<KitProps> = ({
               border: "1px solid var(--border, rgba(0,0,0,0.12))",
             }}
           >
-            <SemioDesign design={artifactDesign} kit={kit} title={artifactDesign.name ?? focusedNode.label} selectionEnabled={false} splitLayout="always" onPieceDoubleClick={onKitPieceDoubleClick} />
+            <SemioDesign design={artifactPreviewDesign} kit={kit} title={artifactPreviewDesign.name ?? focusedNode.label} selectionEnabled={false} splitLayout="always" onPieceDoubleClick={onKitPieceDoubleClick} />
           </div>
         ) : null}
 
@@ -1315,14 +1321,29 @@ const centersFromLayoutDiff = (layoutDiff?: DesignDiff): Map<string, { u: number
   return m;
 };
 
+const cloneDesignApplyDiff = (d: Design, diff: DesignDiff): Design => {
+  const copy = new DesignEntity(JSON.parse(JSON.stringify(d.toPlain()), (_k, v) => (v === null ? undefined : v)) as DesignPlain);
+  copy.applyDiff(diff);
+  return copy;
+};
+
+/** Connection rows for a live {@link Design} or plain design-shaped objects (tests / MCP payloads). */
+const snapshotDesignConnections = (design: Design): Connection[] => {
+  if (typeof (design as DesignEntity).getConnections === "function") {
+    return [...(design as DesignEntity).getConnections()];
+  }
+  const raw = (design as unknown as { connections?: unknown }).connections;
+  return Array.isArray(raw) ? (raw as Connection[]) : [];
+};
+
 const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: DesignDiff, layoutDiff?: DesignDiff): DiagramSnapshot => {
-  const merged = designDiff ? designWithDiff(design, designDiff) : design;
-  const layoutGeometry = designDiff ? applyDesignDiff(design, designDiff) : design;
+  const merged = designDiff ? DesignEntity.previewWithDiff(design, designDiff) : design;
+  const layoutGeometry = designDiff ? cloneDesignApplyDiff(design, designDiff) : design;
   const layoutCenters = centersFromLayoutDiff(layoutDiff);
   const geometryCentersByGuid = new Map((layoutGeometry.pieces ?? []).filter((p): p is Piece & { guid: string } => typeof p.guid === "string" && p.guid.length > 0).map((p) => [p.guid, p.center] as const));
 
   const pointMap = new Map<string, DiagramPoint>();
-  (merged.pieces ?? []).forEach((piece) => {
+  (merged.pieces ?? []).forEach((piece: Piece) => {
     if (!piece.guid) return;
     const center = geometryCentersByGuid.get(piece.guid) ?? piece.center ?? layoutCenters.get(piece.guid);
     if (!center) return;
@@ -1332,7 +1353,7 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
 
   const pointsByGuid = new Map(Array.from(pointMap.values()).map((point) => [point.guid, point]));
   const lineMap = new Map<string, DiagramLine>();
-  (merged.connections ?? []).forEach((connection) => {
+  snapshotDesignConnections(merged).forEach((connection) => {
     if (!connection.guid) return;
     const source = pointsByGuid.get(connection.connected.piece.guid);
     const target = pointsByGuid.get(connection.connecting.piece.guid);
@@ -1986,13 +2007,13 @@ export const buildDesignClipboardData = (design: Design, designDiff: DesignDiff 
   if (!hasDiff && hasSelection) {
     // 🔌No diff, selection present: copy selected pieces and connections
     const pieces = (design.pieces ?? []).filter((p) => selectedPieceGuids.has(p.guid));
-    const connections = (design.connections ?? []).filter((c) => selectedConnectionGuids.has(c.guid));
+    const connections = snapshotDesignConnections(design).filter((c) => selectedConnectionGuids.has(c.guid));
     return {
       design: {
         ...design,
         pieces: pieces.length > 0 ? pieces : undefined,
         connections: connections.length > 0 ? connections : undefined,
-      },
+      } as unknown as Design,
     };
   }
 
@@ -2433,7 +2454,7 @@ const resolveSceneColor = (cssValue: string, fallback: string): string => {
   if (cssValue === "currentColor") return fallback;
   return cssValue;
 };
-const SEMIO_TO_THREE_BASIS = toThreeRotation();
+const SEMIO_TO_THREE_BASIS = Kit.semioToThreeRootBasis();
 const THREE_TO_SEMIO_BASIS = SEMIO_TO_THREE_BASIS.clone().invert();
 
 interface ScenePieceAsset {
@@ -2498,11 +2519,11 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
   const result = withPlaneAndCenter.map(({ piece, status }) => {
     const kindGuid = piece.type?.guid;
     let kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
-    if (!kind && piece.type?.name) {
-      kind = kit.types?.find((candidateKind) => candidateKind.name === piece.type!.name);
+    if (!kind && (piece.type as any)?.name) {
+      kind = kit.types?.find((candidateKind) => candidateKind.name === (piece.type as any).name);
     }
     let file: SemioFile | undefined;
-    let selectedModel = kind?.models?.length ? selectBestModel(kind.models, []) : undefined;
+    let selectedModel = kind?.models?.length ? Type.pickBestModel(kind.models ?? [], []) : undefined;
     if (selectedModel?.file?.guid) file = filesByGuid.get(selectedModel.file.guid);
     if (!isSceneGltfSource(getSceneFileSource(file), file?.name) && kind?.models?.length) {
       for (const m of kind.models) {
@@ -2527,21 +2548,23 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
 const toSceneVector = (coord: { x: number; y: number; z: number }): THREE.Vector3 => new THREE.Vector3(coord.x, coord.y, coord.z).applyMatrix4(SEMIO_TO_THREE_BASIS);
 
 const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnapshot => {
-  const merged = designDiff ? designWithDiff(design, designDiff) : design;
+  const merged = designDiff ? DesignEntity.previewWithDiff(design, designDiff) : design;
 
   const pieceMap = new Map<string, ScenePieceAsset>();
-  (merged.pieces ?? []).forEach((piece) => {
+  (merged.pieces ?? []).forEach((piece: Piece) => {
     if (!piece.guid) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
     const existing = pieceMap.get(piece.guid);
-    const resolvedPiece = piece.plane && piece.center ? piece : existing?.piece?.plane && existing?.piece?.center ? { ...piece, plane: existing.piece.plane, center: existing.piece.center } : piece;
+    const resolvedPiece = (
+      piece.plane && piece.center ? piece : existing?.piece?.plane && existing?.piece?.center ? { ...piece, plane: existing.piece.plane, center: existing.piece.center } : piece
+    ) as Piece;
     if (!resolvedPiece.plane || !resolvedPiece.center) return;
     pieceMap.set(piece.guid, { piece: resolvedPiece, status: existing ? (status !== "default" ? status : existing.status) : status });
   });
 
   const piecesByGuid = new Map(Array.from(pieceMap.values()).map((asset) => [asset.piece.guid, asset.piece] as const));
   const connectionMap = new Map<string, SceneConnectionAsset>();
-  (merged.connections ?? []).forEach((connection) => {
+  snapshotDesignConnections(merged).forEach((connection) => {
     if (!connection.guid) return;
     const sourcePiece = piecesByGuid.get(connection.connected.piece.guid);
     const targetPiece = piecesByGuid.get(connection.connecting.piece.guid);
@@ -2571,7 +2594,7 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
 };
 
 const toScenePieceMatrix = (plane: Plane): THREE.Matrix4 => {
-  const planeMatrix = planeToMatrix(plane);
+  const planeMatrix = plane.toMatrix();
   return new THREE.Matrix4().multiplyMatrices(SEMIO_TO_THREE_BASIS, planeMatrix).multiply(THREE_TO_SEMIO_BASIS);
 };
 
@@ -3203,7 +3226,7 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
       position: { x: position.x, y: position.y, z: position.z },
       forward: { x: forward.x, y: forward.y, z: forward.z },
       up: { x: up.x, y: up.y, z: up.z },
-    });
+    } as unknown as Camera);
     invalidate();
   }, [invalidate, onCameraChange, onOrbitEnd, threeCamera]);
 
@@ -3487,7 +3510,7 @@ const buildTypeModelAsset = (kind: SemioKind, kit?: Kit): TypeModelAsset => {
 
   const filesByGuid = new Map((kit?.files ?? []).map((file) => [file.guid, file] as const));
 
-  let selectedModel = selectBestModel(models, []);
+  let selectedModel = Type.pickBestModel(models, []);
   let file = selectedModel?.file?.guid ? filesByGuid.get(selectedModel.file.guid) : undefined;
   if (!isSceneGltfSource(getSceneFileSource(file), file?.name)) {
     for (const candidateModel of models) {
@@ -3844,8 +3867,8 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
   const resolvedDesignDiff = useResolvedValue(designDiff, defaultDesignDiff);
   const hasPlanes = React.useMemo(() => {
     const effectiveDiff = diffEnabled ? resolvedDesignDiff : undefined;
-    const merged = effectiveDiff ? designWithDiff(design, effectiveDiff) : design;
-    return (merged.pieces ?? []).some((p) => p.plane && p.center);
+    const merged = effectiveDiff ? DesignEntity.previewWithDiff(design, effectiveDiff) : design;
+    return (merged.pieces ?? []).some((p: Piece) => p.plane && p.center);
   }, [design, resolvedDesignDiff, diffEnabled]);
 
   const showSceneColumn = semioDesignShowSceneColumn(splitLayout, hasPlanes);
@@ -4037,7 +4060,7 @@ const normalizeMcpDiagramPayload = (raw: Record<string, unknown>): McpDiagramPay
 const mcpDesignRichness = (p: McpDiagramPayload): number => {
   const d = p.design;
   if (!d || typeof d !== "object") return 0;
-  const o = d as { pieces?: unknown[]; connections?: unknown[] };
+  const o = d as unknown as { pieces?: unknown[]; connections?: unknown[] };
   const pieces = Array.isArray(o.pieces) ? o.pieces.length : 0;
   const conns = Array.isArray(o.connections) ? o.connections.length : 0;
   return pieces * 20 + conns * 10;
@@ -4361,7 +4384,7 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
  * - Connects to MCP host via useApp hook with PostMessageTransport.
  * - Receives pre-computed diagram points/lines from tool results via ontoolresult callback.
  * - Maps each merged {@link McpDiagramPayload} through {@link mcpMapPayloadToDesignViewerViewModel} → {@link SemioDesign} (split), {@link SemioScene}, {@link SemioDiagram}, or {@link SemioKit} fallback; no parallel ad-hoc surface/flatten rules in the component.
- * - Applies {@link flattenDesign} + {@link applyDesignDiff} inside the mapper for design/scene so pieces gain plane/center when the kit supplies geometry (see {@link mcpFlattenDesignForSemioSurface}).
+ * - Applies {@link Kit.runFlattenDesign} + {@link Design.applyDiff} inside the mapper for design/scene so pieces gain plane/center when the kit supplies geometry (see {@link mcpFlattenDesignForSemioSurface}).
  * - Refetches `show_design` via {@link McpApp.callServerTool} on a staggered schedule — hosts often pass a truncated `structuredContent` blob (one piece / one diagram node) while the engine has the full design in-session.
  * - Sends selection changes back to host via updateModelContext.
  **/
@@ -4402,7 +4425,12 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
   const kit = p.kit;
   const design = p.design as Design | undefined;
   const isDiff = mode === "show-diff" || mode === "show-diagram-diff";
-  const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface, isDiff ? p.designDiff : undefined) : isDiff && design && p.designDiff ? applyDesignDiff(design, p.designDiff) : undefined;
+  const designFlat =
+    design && kit
+      ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface, isDiff ? p.designDiff : undefined)
+      : isDiff && design && p.designDiff
+        ? cloneDesignApplyDiff(design, p.designDiff)
+        : undefined;
   const designGuid = design && typeof design === "object" && "guid" in design && typeof (design as { guid?: unknown }).guid === "string" ? (design as { guid: string }).guid : undefined;
   const hasDiagramPoints = (p.points?.length ?? 0) > 0;
   const fallbackDesign: Design = {
@@ -4414,7 +4442,7 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
       connecting: { piece: { guid: p.points.find((q) => q.u === l.targetU && q.v === l.targetV)?.guid ?? "" } },
     })),
   } as unknown as Design;
-  // Prefer JS-flattened design (correct cytoscape BFS centers) over raw Python-enriched design, over points fallback.
+  // Prefer JS-flattened design (correct BFS placement centers) over raw Python-enriched design, over points fallback.
   // If the chosen design has no pieces with centers, fall back to the pre-computed points/lines
   // 🔷which always have coordinates (hosts may truncate the design or flatten may fail).
   const candidateDesign = (designFlat ?? design) as Design | undefined;
@@ -4434,17 +4462,27 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
 }
 
 /**
+ * 🧠Per-design merkle cache for {@link mcpFlattenDesignForSemioSurface} so repeated MCP viewer refetches (which often send slightly-updated kit shells with the same geometry) reuse the cached plane/center for pieces whose merkle inputs are unchanged.
+ */
+const mcpFlattenMerkleCacheByDesign: Map<string, { [pieceGuid: string]: FlatMerkleCacheEntry }> = new Map();
+
+/**
  * 🔶Storybook's Design flow flattens a kit-backed design so pieces carry `plane+center`.
  * MCP viewers often receive a `kit` shell without the referenced `design` entry, even though
  * `payload.design` is present. In that case we augment `kit.designs` with the provided design
- * so {@link flattenDesign} can locate it by guid.
+ * so {@link Kit.flattenDesignCachedOp} can locate it by guid. Uses a module-level per-designGuid cache to
+ * incrementally reuse unchanged piece placements across refetches.
  *
  * Exported for unit tests to cover the "MCP kit missing design entry" scenario.
  */
 export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undefined, surface: "design" | "scene" | "diagram", diff?: DesignDiff): Design {
-  if (!kit) return diff ? applyDesignDiff(design, diff) : design;
+  if (!kit) {
+    if (diff) design.applyDiff(diff);
+    return design;
+  }
 
-  const merged = diff ? applyDesignDiff(design, diff) : design;
+  const merged = design;
+  if (diff) merged.applyDiff(diff);
   if (!merged?.guid) return merged;
 
   try {
@@ -4454,12 +4492,14 @@ export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undef
       designs: [...kitDesigns.filter((d) => d?.guid !== merged.guid), merged],
     } as Kit;
 
-    const fc = flattenDesign(kitForFlatten, merged.guid);
-    if (!fc.ok) return merged;
-    const piecesDiff = fc.change.forward?.pieces;
+    const prev = mcpFlattenMerkleCacheByDesign.get(merged.guid);
+    const { result, cache } = Kit.ensure(kitForFlatten).flattenDesignCachedOp(merged.guid, prev);
+    mcpFlattenMerkleCacheByDesign.set(merged.guid, cache);
+    if (!result.ok) return merged;
+    const piecesDiff = result.diff?.forward?.pieces;
     if (!piecesDiff) return merged;
-    const result = applyDesignDiff(merged, { pieces: piecesDiff });
-    return result;
+    merged.applyDiff({ pieces: piecesDiff });
+    return merged;
   } catch {
     return merged;
   }
@@ -4964,7 +5004,7 @@ export const McpKitViewer: React.FC = () => {
         color: "var(--foreground)",
       }}
     >
-      <SemioKit data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit" className="min-h-0 text-foreground" />
+      <SemioKit kit={payload.kit} data={payload.kitArtifacts} selection={kitSelection} onSelectionChange={handleKitSelectionChange} title="Kit" className="min-h-0 text-foreground" />
     </div>
   );
 };
@@ -5362,8 +5402,8 @@ export const mountMcpKitViewer = (createRoot: (container: HTMLElement) => { rend
 
 // #endregion 🗿McpApp
 
-if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
+if ((import.meta as any).vitest) {
+  const { describe, expect, it } = (import.meta as any).vitest;
 
   describe("parseDiagramPayloadFromToolResult", () => {
     it("parses JSON from MCP text content blocks", () => {
@@ -5861,12 +5901,12 @@ if (import.meta.vitest) {
     });
   });
 
-  const testPlane: Plane = {
+  const testPlane = {
     origin: { x: 0, y: 0, z: 0 },
     xAxis: { x: 1, y: 0, z: 0 },
     yAxis: { x: 0, y: 1, z: 0 },
-  };
-  const testCenter: Coord = { u: 0, v: 0 };
+  } as unknown as Plane;
+  const testCenter = { u: 0, v: 0 } as unknown as Coord;
 
   describe("buildKitDataFromKit", () => {
     it("normalizes connector port references into string labels instead of raw guid objects", () => {
@@ -5959,6 +5999,21 @@ if (import.meta.vitest) {
         },
       ]);
     });
+  });
+
+  describe("resolveKitArtifactDesignForPreview", () => {
+    it("flattens the Nakagin Capsule Tower kit preview to match the Design surface", async () => {
+      const assets = await import("@semio/assets");
+      const kit = assets.MetabolismKit as unknown as Kit;
+      const design = (kit.designs ?? []).find((d) => d.name === "Nakagin Capsule Tower" && !d.parent) as Design | undefined;
+      expect(design).toBeTruthy();
+
+      const preview = resolveKitArtifactDesignForPreview(design!, kit);
+      const piecesWithPlaneAndCenter = (preview.pieces ?? []).filter((p) => p.plane && p.center).length;
+
+      expect(preview.pieces?.length).toBeGreaterThan(100);
+      expect(piecesWithPlaneAndCenter).toBe(preview.pieces?.length);
+    }, 20000);
   });
 
   describe("buildKitHierarchy", () => {
@@ -6110,7 +6165,7 @@ if (import.meta.vitest) {
         files: [{ guid: "file-1", name: "cap.glb", blob: "data:model/gltf-binary;base64,QUFB" }],
       } as unknown as Kit;
 
-      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { name: "Capsule" } as { name: string }, plane: testPlane, center: testCenter } as Piece, status: "default" }]);
+      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { name: "Capsule" }, plane: testPlane, center: testCenter } as any as Piece, status: "default" }]);
 
       expect(assets[0]?.modelSource).toBe("data:model/gltf-binary;base64,QUFB");
     });
@@ -6718,7 +6773,7 @@ if (import.meta.vitest) {
         ],
       } as unknown as Design;
 
-      // Only the connection is in the diff (like dragPiecesInDesign for a connected piece)
+      // Only the connection is in the diff (like Design.dragBySelection for a connected piece)
       const diff: DesignDiff = {
         connections: {
           updated: [{ connection: { guid: "conn-ab" }, diff: { u: 2, v: 1 } }],
@@ -6806,7 +6861,7 @@ if (import.meta.vitest) {
   });
 
   describe("buildDesignClipboardData", () => {
-    const baseDesign: Design = {
+    const baseDesign = {
       guid: "design-1",
       name: "TestDesign",
       createdAt: "2026-01-01",
@@ -6820,7 +6875,7 @@ if (import.meta.vitest) {
         { guid: "c1", connected: { piece: { guid: "p1" } }, connecting: { piece: { guid: "p2" } } } as unknown as Connection,
         { guid: "c2", connected: { piece: { guid: "p2" } }, connecting: { piece: { guid: "p3" } } } as unknown as Connection,
       ],
-    };
+    } as unknown as Design;
 
     const baseDiff: DesignDiff = {
       pieces: {
@@ -6850,14 +6905,14 @@ if (import.meta.vitest) {
     it("copies selected pieces and connections when no diff and selection present", () => {
       const result = buildDesignClipboardData(baseDesign, undefined, { pieceGuids: ["p1", "p2"], connectionGuids: ["c1"] });
       expect(result.design?.pieces?.map((p) => p.guid)).toEqual(["p1", "p2"]);
-      expect(result.design?.connections?.map((c) => c.guid)).toEqual(["c1"]);
+      expect(snapshotDesignConnections(result.design!).map((c) => c.guid)).toEqual(["c1"]);
       expect(result.designDiff).toBeUndefined();
     });
 
     it("omits pieces/connections arrays when none are selected in a no-diff selection", () => {
       const result = buildDesignClipboardData(baseDesign, undefined, { pieceGuids: ["p1"], connectionGuids: [] });
       expect(result.design?.pieces?.map((p) => p.guid)).toEqual(["p1"]);
-      expect(result.design?.connections).toBeUndefined();
+      expect((result.design as unknown as { connections?: unknown }).connections).toBeUndefined();
     });
 
     it("copies the full diff when diff present and no selection", () => {
@@ -7153,10 +7208,10 @@ const buildAlgorithmPieceUpdateDiffDetail = (item: unknown, entryId: string): Re
 
 const resolveAlgorithmConnectionDiffLabel = (design: Design | undefined, connectionLike: unknown, fallbackIndex: number): string => {
   const connectionGuid = resolveAlgorithmConnectionDiffGuid(connectionLike, fallbackIndex);
-  const sourceConnection = design?.connections?.find((connection) => {
+  const sourceConnection = design ? snapshotDesignConnections(design).find((connection) => {
     if (connection.guid && connection.guid === connectionGuid) return true;
     return false;
-  });
+  }) : undefined;
   const connectedPieceGuid =
     (connectionLike &&
     typeof connectionLike === "object" &&
@@ -7684,7 +7739,7 @@ const AlgorithmDetailsPanel: React.FC = () => {
         <TreeRow id="algorithm.details.design.connections" label={null}>
           <div className="flex items-center justify-between w-full px-2 py-0.5">
             <span className="text-xs text-muted-foreground">connections</span>
-            <span className="text-xs font-mono">{design?.connections?.length ?? 0}</span>
+            <span className="text-xs font-mono">{design ? snapshotDesignConnections(design).length : 0}</span>
           </div>
         </TreeRow>
       </TreeSection>
@@ -8051,11 +8106,11 @@ if (algorithmVitest) {
       const pan = { x: 24, y: -18 };
       const zoom = 2.5;
       const runtimeContext: AlgorithmRuntimeContextValue = {
-        kit: { guid: "kit", name: "Kit", version: "1", designs: [], types: [] } as Kit,
-        design: { guid: "design", name: "", pieces: [], connections: [] } as Design,
+        kit: { guid: "kit", name: "Kit", version: "1", designs: [], types: [] } as unknown as Kit,
+        design: { guid: "design", name: "", pieces: [], connections: [] } as unknown as Design,
         selectedPieceGuids: [],
         selectedConnectionGuids: [],
-        outputDesign: { guid: "output", name: "", pieces: [], connections: [] } as Design,
+        outputDesign: { guid: "output", name: "", pieces: [], connections: [] } as unknown as Design,
         diagramViewport: { pan, zoom, sourceKind: WindowKind.DESIGN_INPUT },
         onDiagramViewportPanChange: () => undefined,
         onDiagramViewportZoomChange: () => undefined,
@@ -8172,12 +8227,12 @@ if (algorithmVitest) {
     });
 
     it("filters unchecked diff entries before wiring the diff output window", () => {
-      const design: Design = {
+      const design = {
         guid: "design-1",
         name: "Design",
         pieces: [{ guid: "piece-a", name: "Piece A", type: { guid: "type-a" }, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "piece-b", name: "Piece B", type: { guid: "type-a" }, center: { u: 1, v: 0 } } as unknown as Piece],
         connections: [{ guid: "connection-a", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection],
-      };
+      } as unknown as Design;
       const diff: DesignDiff = {
         pieces: {
           added: [{ guid: "piece-c", name: "Piece C", type: { guid: "type-a" }, center: { u: 2, v: 0 } } as unknown as Piece],

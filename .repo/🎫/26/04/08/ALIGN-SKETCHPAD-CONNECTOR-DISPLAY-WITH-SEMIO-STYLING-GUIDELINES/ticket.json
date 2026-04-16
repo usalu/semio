@@ -1,7 +1,8 @@
 {
   "title": "Align Sketchpad Connector Display With Semio Styling Guidelines",
-  "status": "open",
+  "status": "closed",
   "description": "Refactor the current connector display across sketchpad apps, especially the design app, so it follows Semio styling guidelines consistently. Update existing UI code in place, extend existing tests instead of creating new test files, and verify the relevant test/build paths.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1292"
   },

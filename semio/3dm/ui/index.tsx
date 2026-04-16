@@ -14,7 +14,7 @@
 import React, { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { Kit, Type as SemioType, Design, Model } from "@semio/js";
-import { importKit } from "@semio/js";
+import { Kit } from "@semio/js";
 import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio/assets";
 import "./globals.css";
 
@@ -317,21 +317,17 @@ export function RhinoPanel() {
         try {
             const response = await fetch(importUrl.trim());
             const blob = await response.blob();
-            const result = await importKit(blob);
-            if (result.kit) {
-                setKits((prev) => {
-                    const existing = prev.findIndex((k) => k.guid === result.kit!.guid);
-                    if (existing >= 0) {
-                        const next = [...prev];
-                        next[existing] = result.kit!;
-                        return next;
-                    }
-                    return [...prev, result.kit!];
-                });
-                setImportUrl("");
-            } else {
-                setError("Failed to import kit.");
-            }
+            const kitLoaded = await Kit.importFromSource(blob);
+            setKits((prev) => {
+              const existing = prev.findIndex((k) => k.guid === kitLoaded.guid);
+              if (existing >= 0) {
+                const next = [...prev];
+                next[existing] = kitLoaded;
+                return next;
+              }
+              return [...prev, kitLoaded];
+            });
+            setImportUrl("");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Import failed.");
         } finally {

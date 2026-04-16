@@ -232,6 +232,8 @@ Keep the renderer isolated from native details
 
 ###
 
+####
+
 TODO: Rename tilt to slope, Add rotation to piece node
 TODO: Rename scene to model
 TODO: Rename model to shape
@@ -244,6 +246,53 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+
+Currently everything uses mostly functional style programming.
+We are rewriting everythingy to be stateful in order to avoid expensive copy of memory.
+Rewrite everything object with classes and methods.
+Get rid of all cloning and only pass pointers around.
+Start with typescript.
+
+Currently everything uses mostly functional style programming.
+Rewrite everything to be stateful in order to avoid expensive copy of memory.
+
+There are five different kind of kits:
+
+- DevKit (a synchronized json file)
+- LocalKit (a synchronized folder with a .semio/kit.db with files and folders)
+- TransportKit (a static json string)
+- ArchiveKit (a static zipped local kit)
+- RemoteKit (a synchronized websocket connection to a semio/hub which uses postgres for kit data and buckets for files)
+
+There MUST be an in-memory `Kit` class which has everything. It is non-blocking, non-parallel.
+A `Kit` can optionally have an optional synchronized `Backbone` (LocalKitBackbone, DevKitBackbone, RemoteKitBackbone).
+A `Backbone` is a unified API where `changed(change:KitChange)` is a callback than can happen anytime.
+All CRUDs happen centrally `change(diff:KitDiff)`. Every change computes the inverse `KitDiff` and bundles it to a `KitChange` from the current state and the diff. Then the diff is applied instantly, and when a backbone is present, it is queued to be applied in the backbone (non-blocking).
+When the backbone is changing (e.g. by other process, user, ai, etc) then it is applied to in-memory kit.
+Before a `KitDiff` is applied to the kit, it is validated. The validation has access to the kit and the diff and produces errors, warnings and infos. If an error is present, then the in-memory kit is immutable until the conflict is resolved. If strict mode is enabled, then warnings also need conflict resolution.
+Clients of the class `Kit` (such as front-end or backend code) have no access to directly call `change(diff:KitDiff)` but they MUST use the tested functions that semio provides (e.g. piece.delete() which automatically deletes itself but also fixes then child pieces and deletes all stale connections - currently algorithm deletePiecesAndConnectionInDesign)
+You MUST migrate all semio functions into methods of the according classes.
+Add transaction support. A kit can not just have one active transaction but multiple at the same time. A transaction can be started, aborted or finalized. Use a transaction stack of `KitChange`. A transaction has undo/redo support. When a transaction is finalized all changes are squashed into a single change and added ontop of the history stack. When aborted then all backward diffs from all changes are squashed and the backward diff is applied to effectively revert the forward diffs.
+Add history stack with undo/redo of finalized transactions.
+Inbuilt maximum optimization (e.g. hashing for computing fixed planes and centers)
+
+All synchronized kits MUST have the same API. They MUST support the import and export of static kits.
+
+All cruds on synchronized kits MUST use exclusively diffs.
+
+You MUST implement it for every programming language.
+
+Optimize implementations according benchmarks. Find bottlenecks and fix them. It doesnt matter if you need to reimplement something. Make sure all tets pass and benchmark again.
+
+Optimize the computation of flat piece planes and center.
+Implement an efficient merkle-tree based hashed optimization for flattenDesign to be able to only recompute parts of the tree that need to updated. Plane and center computation need to be computed individually.
+Make sure the hashes only change when inputs change that actually affect the computation.
+You MUST implement it for all programming languages and add identical tests accross all implementation that use the same assets for input and output.
+
+There MUST be 100% paroty between benchmarkds and tests across all programming languages. For every test there MUST be exactly one benchmark. All of them MUST test pure function execution time with same inputs and outputs from assets - same as tests.
+
+Create complete parity between tests across all programming lanugages. Create assets for all inputs and outputs.
+The implementations, tests and benchmarks MUST be functionally 100% equivalent. Behaviour of the test MUST NOT be part of the. All input and expected ouput MUST be part of the assets. ids or guids MUST NOT be part of the code and MUST be part of the assets. Extend the necessary assets.
 
 The copy and paste function is not correct (adjust typescript for now and once we are done, I'll tell you to implement it for the remaining languages).
 
@@ -541,6 +590,18 @@ You MUST implement and test for all programming languages.
 All test MUST pass.
 There MUST be only one schema, no migrations or legacy api support.
 
+#### schema
+
+Introduce a new entity: family
+It replaced the old artifact (type or design) parent mechanism.
+The shift is from artifact inheritance to family composition.
+A type or a design can have multiple families.
+e.g. capsule->balcony->Z type becomes has three families.
+Families dont have hierarchy.
+Dont make family string. It is a proper entity as first-class citizen with name, description, icon etc.
+Ports have family as parent. They are no longer a kit entity but part of the family.
+You MUST refactor/extend/update everything (implementation, assets, tests, docs) for all programming languages.
+
 ### 📚ui
 
 semio ui:
@@ -680,9 +741,98 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 ### 🟨js
 
+### 🦀rs
+
+semio/rs:
+The code is very smelly and incomplete.
+You MUST refactor everything to be purely object-oriented, lazy-loading and no free pure functions.
+e.g. mod such as flatten MUST NOT exist and instead be methods such on design (keeps track of setting parent/child pointer for pieces and connections), pieces (use parent flat plane to derive flat plane)
+Achieve a pointer reference such as this schema:
+
+```graphql
+type Piece {
+ id: ID!
+ name: String
+ type: Type
+ alternativeTypes: [Type!]
+ design: Design
+ alternativeDesigns: [Design!]
+ plane: Plane
+ center: Coordinate
+ scale: Float
+ mirrorPlane: Plane
+ isHidden: Boolean
+ isLocked: Boolean
+ color: String
+ description: String
+ props: [Prop!]
+ attributes: [Attribute!]
+ flatPlane: Plane!
+ flatCenter: Coordinate!
+ parentPiece: Piece
+ parentConnection: Connection
+ childPieces: [Piece!]!
+}
+type Connection {
+ id: ID!
+ connected: Side!
+ connecting: Side!
+ gap: Float
+ shift: Float
+ rise: Float
+ rotation: Float
+ turn: Float
+ tilt: Float
+ u: Float
+ v: Float
+ description: String
+ attributes: [Attribute!]
+ parentPiece: Piece
+ parentConnector: Connector
+ childPiece: Piece
+ childConnector: Connector
+}
+```
+
+Do the same for other mod. All functions MUST be refactored and split apart into oo methods.
+
+Refactor semio/rs to be object-oriented and performant instead of pure functions.
+Requirements:
+
+- Never pass ids, just instance pointers
+- All methods are implemented inside the class (not just facade to pure function)
+  Here is the target:
+
+### graphql
+
+semio/graphql:
+Finish the schema. Complete all commands, etc. Take sketchpad as a reference. The complete store will use the api in the future for all ui state managment. Add all links and computed data such as a hash to every type. Etc. Dont alter the design. Dont be generic and name things the most semantic you can.
+
 ### ✏️sketchpad
 
 semio/sketchpad:
+
+The drag is increadibly unperformant.
+Make sure the drag and the rerender with flatten etc is not using any unnecessary file blobs, or recomputed unnecessary.
+
+Every single interation (every hover, every mouse click, every unfold, etc) MUST be dispatched over a single store. In there it MUST be logged. This goes through all the apps (home, kit, design, type, etc)
+
+Refactor state managment completly.
+Every UI element MUST only call commands of a store.
+Add central logging to the store where all executed commands which the resulting KitChanges are logged.
+Remove every direct mutation of the store. The UI element only fetches the input of the command and doesnt know about any business logic.
+
+Reorder the toolbar to consistent across all apps.
+Select, Create, Open, Filter
+
+Fix the sketchpad state management so that:
+
+- Every UI interaction is scoped within a transaction and only triggers commands
+- Every command creates a new diff and inverse diff is automatically calculated based on current state and both create a change
+- After transaction is finalized changes are squashed and placed in history stack
+- Every ui interaction starts a transaction on start, then the changes during the transaction are placed onto the transaction stack. The transaction stack is squashed and displayed in the ui (e.g. designWithDiff not applyDiff). If the transaction is aborted then the transaction stack is delteted. If the transaction is finalized then the stack is squashed and the squashed change is added onto the history stack. - - Undo/Redo uses the history stack outside of a transaction.
+- Every artifact has its own history and transaction stack (kit app, type app and design app - not on app level but per opened artifact)
+  e.g. When dragging then the diff is not displayed. Make sure there is no extra illegal internal state such as inside diagram with reactflow, etc
 
 Home MUST have create, open, filter for exactly these kits:
 File kit (\*.kit.semio.json file)
@@ -749,7 +899,7 @@ KITNAME
 Types
 TYPENAME
 Models
-MODELTAGS
+REPRESENTATIONTAGS
 
 Rhino Tree of semio for sidepanel:
 Kits # Import
@@ -8068,7 +8218,7 @@ date: TIMESTAMP
 slug: SLUG
 author: NAMEANDEMAILFROMGITCONFIG
 summary: SUMMARYFORCOMMITHEADER
-model: CURRENTLLMMODELIDENTIFIER
+model: CURRENTLLMREPRESENTATIONIDENTIFIER
 
 -
 

@@ -1,8 +1,9 @@
 {
   "title": "Fix VS Code Extension Build",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Get it working and building",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/903"
   },

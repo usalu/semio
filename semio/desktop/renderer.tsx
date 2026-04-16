@@ -214,7 +214,7 @@ function App() {
     throw new Error("File kit store not available in this environment");
   }, []);
 
-  // 🏭Remote kit store factory for connecting to semio/server.
+  // 🏭Remote kit store factory for connecting to semio/hub.
   // Specs: The server URL is passed in kit.name by the openKit command.
   const remoteKitStoreFactory: SketchpadKitStoreFactory = useCallback(async (kit) => {
     const source = (kit as any)?.__semioKitPersistenceSource as { kind?: string; url?: string } | undefined;

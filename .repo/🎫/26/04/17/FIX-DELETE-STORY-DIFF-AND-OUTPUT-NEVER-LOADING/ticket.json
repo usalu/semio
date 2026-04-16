@@ -1,0 +1,15 @@
+{
+  "title": "Fix Delete Story Diff And Output Never Loading",
+  "status": "closed",
+  "description": "In semio algorithms Storybook, the Delete story's Diff and Output windows are stuck on \"Loading delete result (...)\" forever. Root cause: Delete.stories.tsx uses `diffRes.change.forward`, but `nativeDeletePieces` returns `DesignDiffOperationResult` where `change` is the `DesignDiff` directly (no `.forward`). As a result `designDiff` stays undefined and the loading error text persists. Fix by setting `designDiff` to `diffRes.change`.",
+  "summary": "Fixed the Delete story's Diff and Output windows perpetually stuck on \"Loading delete result (...)\". Root cause: Delete.stories.tsx was reading `diffRes.change.forward`, but `nativeDeletePieces` returns `DesignDiffOperationResult` where `change` IS the `DesignDiff` directly (no forward/backward envelope — that shape belongs to `DesignOperationResult` used by flatten). Because `.forward` was always undefined, `setDesignDiff(undefined)` kept the loading error alive forever, and `outputDesign` fell back to `flatInputDesign`, so the diff never rendered and the output never applied the deletion. Fix: in Delete.stories.tsx line 66, use `diffRes.change` instead of `diffRes.change.forward`. The rest of the pipeline (`applyDesignDiff(flatInputDesign, designDiff)`) already expects a `DesignDiff`, so it now renders correctly. Other stories remain correct: Flatten uses `.change.forward` because it wraps `DesignChange`; CopyAndPaste uses `.change` (Design) and a bare `DesignDiff`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1342"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪e607bca57279412088aa822cd035e6d8",
+    "⚪3018268db27147b6a12d6ac0d62c053b",
+    "⚪5e61300900c54da4a342e911bfd42321"
+  ]
+}

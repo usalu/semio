@@ -1,7 +1,8 @@
 {
   "title": "Fix Settings Panel Rendering in Sketchpad Design App",
-  "status": "open",
+  "status": "closed",
   "description": "Fix the settings panel in the sketchpad design app so it renders all settings properly. In other apps the settings are rendered correctly but in the design app they are broken.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1289"
   },

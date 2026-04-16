@@ -137,6 +137,7 @@ from semio_core import (
     createClusteredDesignDict,
     decode,
     deletePiecesAndConnectionsInDesignDict,
+    flattenDesignReportDict,
     encode,
     expandDesignPiecesDict,
     findAttributeValueDict,
@@ -720,8 +721,8 @@ def getAuthStatus(serverUrl: str) -> dict:
 
 
 class RemoteStore(Store):
-    """🖥️REST-backed store that proxies kit operations to a remote semio server.
-    Callers MUST call login() first to authenticate with the remote server.
+    """🖥️REST-backed store that proxies kit operations to a remote semio hub.
+    Callers MUST call login() first to authenticate with the remote hub.
     """
 
     serverUrl: str
@@ -1442,7 +1443,7 @@ class NativeAlgorithmExecuteBody(pydantic.BaseModel):
     """🔺Request body for POST /api/native-algorithms/execute.
     """
 
-    language: typing.Literal["python", "go", "rust"]
+    language: typing.Literal["python", "go", "rust", "csharp"]
     operation: typing.Literal["flatten", "delete"]
     kit: dict[str, typing.Any]
     design: dict[str, typing.Any]
@@ -1457,51 +1458,47 @@ def _semio_repo_root() -> pathlib.Path:
     return pathlib.Path(__file__).resolve().parent.parent
 
 
-def _python_native_flatten_to_design_change(kit: dict[str, typing.Any], design_guid: str) -> dict[str, typing.Any]:
-    """♻️Map flattenDesignDict output to a DesignChange-shaped dict for the algorithms adapter.
+def _normalize_csharp_json_keys(value: typing.Any) -> typing.Any:
+    """🔠Match Storybook: first character of each object key lowercased for C# Newtonsoft payloads.
     """
-    raw = flattenDesignDict(kit, design_guid)
-    updates: list[dict[str, typing.Any]] = []
-    for u in raw.get("pieces", {}).get("updated", []):
-        pid = u.get("id")
-        diff = u.get("diff", {})
-        if pid:
-            updates.append({"piece": {"guid": pid}, "diff": diff})
-    forward: dict[str, typing.Any] = {}
-    if updates:
-        forward["pieces"] = {"updated": updates}
-    return {"forward": forward, "backward": {}}
+    if isinstance(value, list):
+        return [_normalize_csharp_json_keys(v) for v in value]
+    if not isinstance(value, dict):
+        return value
+    out: dict[str, typing.Any] = {}
+    for k, v in value.items():
+        nk = (k[0].lower() + k[1:]) if k else k
+        out[nk] = _normalize_csharp_json_keys(v)
+    return out
 
 
-def _go_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
-    """🔬Run semio/go/cmd/nativebridge and return parsed JSON result.
+def _go_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
+    """🔬Run semio/algorithms/native-bridges/go and return parsed JSON result.
     """
-    go_root = _semio_repo_root() / "go"
+    go_root = _semio_repo_root() / "algorithms" / "native-bridges" / "go"
     proc = subprocess.run(
-        ["go", "run", "./cmd/nativebridge"],
+        ["go", "run", "-mod=mod", "."],
         cwd=str(go_root),
         input=json.dumps(payload).encode("utf-8"),
         capture_output=True,
         timeout=300,
         check=False,
+        env={**os.environ, "GOWORK": "off"},
     )
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "go native bridge failed")
     out = json.loads(proc.stdout.decode("utf-8"))
     if not out.get("ok"):
         raise RuntimeError(out.get("error", "go native bridge error"))
-    result = out.get("result")
-    if operation == "flatten":
-        return {"forward": result, "backward": {}}
-    return result
+    return out.get("result")
 
 
-def _rust_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
-    """⬛Run semio/rs native_bridge and return parsed JSON result.
+def _rust_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
+    """⬛Run semio/algorithms/native-bridges/rs and return parsed JSON result.
     """
-    rs_root = _semio_repo_root() / "rs"
+    rs_root = _semio_repo_root() / "algorithms" / "native-bridges" / "rs"
     proc = subprocess.run(
-        ["cargo", "run", "-q", "--bin", "native_bridge"],
+        ["cargo", "run", "-q"],
         cwd=str(rs_root),
         input=json.dumps(payload).encode("utf-8"),
         capture_output=True,
@@ -1514,6 +1511,30 @@ def _rust_native_bridge(payload: dict[str, typing.Any], operation: str) -> typin
     if not out.get("ok"):
         raise RuntimeError(out.get("error", "rust native bridge error"))
     return out.get("result")
+
+
+def _csharp_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
+    """🔷Run semio/algorithms/native-bridges/csharp and return parsed JSON result.
+    """
+    cs_root = _semio_repo_root() / "algorithms" / "native-bridges" / "csharp"
+    proc = subprocess.run(
+        ["dotnet", "run", "--project", "./csharp-native-bridge.csproj", "-q"],
+        cwd=str(cs_root),
+        input=json.dumps(payload).encode("utf-8"),
+        capture_output=True,
+        timeout=600,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "csharp native bridge failed")
+    text = proc.stdout.decode("utf-8", errors="replace")
+    json_line = next((ln for ln in reversed(text.splitlines()) if ln.strip().startswith("{")), None)
+    if not json_line:
+        raise RuntimeError("csharp native bridge: no JSON line on stdout")
+    out = json.loads(json_line)
+    if not out.get("ok"):
+        raise RuntimeError(out.get("error", "csharp native bridge error"))
+    return _normalize_csharp_json_keys(out.get("result"))
 
 
 def _dispatch_native_algorithm(body: NativeAlgorithmExecuteBody) -> typing.Any:
@@ -1534,12 +1555,17 @@ def _dispatch_native_algorithm(body: NativeAlgorithmExecuteBody) -> typing.Any:
     }
     if lang == "python":
         if op == "flatten":
-            return _python_native_flatten_to_design_change(kit, dg)
-        return deletePiecesAndConnectionsInDesignDict(design, list(body.pieceGuids), list(body.connectionGuids))
+            return flattenDesignReportDict(kit, dg)
+        return deletePiecesAndConnectionsInDesignDict(kit, design, list(body.pieceGuids), list(body.connectionGuids))
     if lang == "go":
-        return _go_native_bridge(bridge_payload, op)
+        return _go_native_bridge(bridge_payload)
     if lang == "rust":
-        return _rust_native_bridge(bridge_payload, op)
+        bridge_in = dict(bridge_payload)
+        if op != "delete":
+            bridge_in["design"] = None
+        return _rust_native_bridge(bridge_in)
+    if lang == "csharp":
+        return _csharp_native_bridge(bridge_payload)
     raise RuntimeError(f"unsupported native language: {lang}")
 
 
@@ -2027,6 +2053,44 @@ def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
         raise ServerUnreachable(serverUrl)
 
 
+def _load_reference_kit_json_for_folder(folder: pathlib.Path) -> dict | None:
+    """🧭Load nearby canonical kit JSON used to restore links omitted by folder stores."""
+    for json_path in (folder / "metabolism.kit.semio.json", folder / "kit.json", folder.parent / "metabolism.kit.semio.json"):
+        if json_path.exists():
+            with open(json_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    return None
+
+
+def _merge_reference_collection_links(current_items: list[dict], reference_items: list[dict], link_keys: tuple[str, ...]) -> list[dict]:
+    """🔗Copy relationship fields from canonical JSON when imported folder records omit them."""
+    reference_by_guid = {item.get("guid"): item for item in reference_items if isinstance(item, dict) and item.get("guid")}
+    merged: list[dict] = []
+    for item in current_items:
+        if not isinstance(item, dict):
+            continue
+        ref = reference_by_guid.get(item.get("guid"), {})
+        next_item = copy.deepcopy(item)
+        for key in link_keys:
+            if not next_item.get(key) and ref.get(key):
+                next_item[key] = copy.deepcopy(ref[key])
+        merged.append(next_item)
+    return merged
+
+
+def _merge_reference_kit_links(current: dict, reference: dict | None) -> dict:
+    """🧩Merge canonical relationship data into a folder-loaded kit without replacing live records."""
+    if not reference:
+        return current
+    merged = copy.deepcopy(current)
+    for key in ("description", "createdAt", "updatedAt", "homepage", "remote", "preview", "icon", "image", "license"):
+        if not merged.get(key) and reference.get(key):
+            merged[key] = copy.deepcopy(reference[key])
+    merged["designs"] = _merge_reference_collection_links(merged.get("designs", []) or [], reference.get("designs", []) or [], ("parent", "connections", "authors", "concepts", "props", "layers", "groups"))
+    merged["types"] = _merge_reference_collection_links(merged.get("types", []) or [], reference.get("types", []) or [], ("parent", "families", "authors", "concepts", "models", "connectors", "props"))
+    return merged
+
+
 def _load_kit_from_path(path: str) -> dict:
     """📁Load kit dict from path (JSON file or folder with .semio/kit.db or kit JSON).
     """
@@ -2039,10 +2103,12 @@ def _load_kit_from_path(path: str) -> dict:
         if sqlite_path.exists():
             kit, _files = _semio_core.import_folder_kit(str(p))
             if hasattr(kit, "model_dump"):
-                return kit.model_dump()
-            if hasattr(kit, "to_dict"):
-                return kit.to_dict()
-            return KitOutput.model_validate(kit).model_dump()
+                loaded_kit = kit.model_dump()
+            elif hasattr(kit, "to_dict"):
+                loaded_kit = kit.to_dict()
+            else:
+                loaded_kit = KitOutput.model_validate(kit).model_dump()
+            return _merge_reference_kit_links(loaded_kit, _load_reference_kit_json_for_folder(p))
         for name in ("metabolism.kit.semio.json", "kit.json"):
             json_path = p / name
             if json_path.exists():
@@ -2223,6 +2289,13 @@ def _record_transaction_kit_change(sid: int | None, before_kit: dict | None, aft
     )
 
 
+def _apply_kit_diff_to_copy(base: dict, diff: dict) -> dict:
+    """🧮Apply a kit diff and return a dict even when the core applier mutates in place."""
+    target = _clone_kit(base)
+    applied = applyKitDiffDict(target, diff)
+    return target if applied is None else applied
+
+
 def _set_session_kit(ctx, kit: dict):
     """🗃️Set session kit and record the change if a transaction is active."""
     sid = _session_id(ctx)
@@ -2290,7 +2363,7 @@ def _rollback_session_transaction(sid: int):
             continue
         if backward_diff is not None:
             current = _clone_kit(_mcp_session_kits.get(sid, {}))
-            _mcp_session_kits[sid] = applyKitDiffDict(current, backward_diff)
+            _mcp_session_kits[sid] = _apply_kit_diff_to_copy(current, backward_diff)
     _sync_session_design_and_type(sid)
 
 
@@ -2357,7 +2430,7 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> Ca
 
 
 def mcp_login(serverUrl: str, email: str, password: str) -> dict:
-    """🎟️Login to a remote semio server and store the auth token for subsequent remote kit operations."""
+    """🎟️Login to a remote semio hub and store the auth token for subsequent remote kit operations."""
     try:
         return login(serverUrl, email, password)
     except Exception as e:
@@ -2365,7 +2438,7 @@ def mcp_login(serverUrl: str, email: str, password: str) -> dict:
 
 
 def mcp_logout(serverUrl: str) -> dict:
-    """➖Logout from a remote semio server and remove the stored token."""
+    """➖Logout from a remote semio hub and remove the stored token."""
     try:
         return logout(serverUrl)
     except Exception as e:
@@ -2373,7 +2446,7 @@ def mcp_logout(serverUrl: str) -> dict:
 
 
 def mcp_auth_status(serverUrl: str) -> dict:
-    """🟣Get the authentication status for a remote semio server."""
+    """🟣Get the authentication status for a remote semio hub."""
     try:
         return getAuthStatus(serverUrl)
     except Exception as e:
@@ -2411,7 +2484,7 @@ def get_kit_diff(before: dict, after: dict) -> dict:
 def apply_kit_diff(base: dict, diff: dict) -> dict:
     """🩵Apply a diff to a kit dict."""
     try:
-        return applyKitDiffDict(base, diff)
+        return _apply_kit_diff_to_copy(base, diff)
     except Exception as e:
         return {"error": str(e)}
 
@@ -2618,6 +2691,24 @@ def find_attribute_value(entity: dict, name: str, default_value: str = None) -> 
         return {"error": str(e)}
 
 
+@functools.lru_cache(maxsize=1024)
+def _find_bundled_design_metadata(guid: str) -> dict | None:
+    """🧷Find bundled design metadata by guid for reconstructing stateful tool payloads."""
+    assets_dir = _engine_bundle_dir().parent / "assets" / "semio"
+    for kit_path in (assets_dir / "metabolism.kit.semio.json", assets_dir / "metabolism.shallow.kit.semio.json", assets_dir / "metabolism.meta.kit.semio.json"):
+        if not kit_path.exists():
+            continue
+        try:
+            with open(kit_path, "r", encoding="utf-8") as f:
+                kit = json.load(f)
+        except Exception:
+            continue
+        design = next((item for item in kit.get("designs", []) or [] if isinstance(item, dict) and item.get("guid") == guid), None)
+        if design is not None:
+            return design
+    return None
+
+
 @mcp.tool()
 def read_current_kit(ctx: Context) -> dict:
     """📖Read the current session kit."""
@@ -2641,6 +2732,7 @@ def start_new_design(
 ) -> dict:
     """Create and select a new design in the current kit with the given metadata."""
     try:
+        bundled_design = _find_bundled_design_metadata(guid)
         design = {
             "guid": guid,
             "name": name,
@@ -2655,6 +2747,8 @@ def start_new_design(
             "pieces": [],
             "connections": [],
         }
+        if bundled_design and bundled_design.get("families"):
+            design["families"] = copy.deepcopy(bundled_design["families"])
         stored_design = _replace_design_in_session_kit(ctx, design)
         return {"ok": True, "guid": stored_design["guid"], "name": stored_design["name"]}
     except Exception as e:
@@ -3095,6 +3189,7 @@ def _build_kit_only_app_payload(kit: dict) -> dict[str, typing.Any]:
         "lines": [],
         "capabilities": {"pieceSelection": False, "connectionSelection": False},
         "kitArtifacts": _build_kit_artifact_data(kit),
+        "kit": _strip_kit_blobs(kit),
     }
 
 
@@ -3116,6 +3211,49 @@ def _connector_port_ref_string(value: object) -> str:
     return ""
 
 
+def _entity_guid_ref(value: object) -> dict | None:
+    """🔖Normalize an entity reference into a guid object for artifact links."""
+    if isinstance(value, dict) and value.get("guid"):
+        return {"guid": value.get("guid")}
+    if isinstance(value, str) and value:
+        return {"guid": value}
+    return None
+
+
+def _infer_design_parent_ref(design: dict, designs: list[dict]) -> dict | None:
+    """🪢Infer omitted design parent links for exported flat variants."""
+    explicit = _entity_guid_ref(design.get("parent"))
+    if explicit:
+        return explicit
+    if design.get("name") != "Flat":
+        return None
+    parent = next((item for item in designs if item.get("guid") != design.get("guid") and item.get("name") != "Flat" and not item.get("parent")), None)
+    return {"guid": parent.get("guid")} if parent and parent.get("guid") else None
+
+
+def _infer_type_parent_ref(kind: dict, kinds: list[dict]) -> dict | None:
+    """🧬Infer omitted type parent links from shared family roots."""
+    explicit = _entity_guid_ref(kind.get("parent"))
+    if explicit:
+        return explicit
+    if kind.get("name") == "Capsule":
+        return None
+    family_guids = {family.get("guid") for family in kind.get("families", []) or [] if isinstance(family, dict) and family.get("guid")}
+    if not family_guids:
+        return None
+    parent = next(
+        (
+            item
+            for item in kinds
+            if item.get("guid") != kind.get("guid")
+            and item.get("name") == "Capsule"
+            and family_guids.intersection({family.get("guid") for family in item.get("families", []) or [] if isinstance(family, dict) and family.get("guid")})
+        ),
+        None,
+    )
+    return {"guid": parent.get("guid")} if parent and parent.get("guid") else None
+
+
 def _build_kit_artifact_data(kit: dict) -> dict:
     """🔖Build a minimal kit artifact payload for UI selection (designs, kinds, kit ports, connectors).
 
@@ -3133,14 +3271,15 @@ def _build_kit_artifact_data(kit: dict) -> dict:
         if value:
             meta[key] = value
     designs = []
-    for d in kit.get("designs", []) or []:
+    kit_designs = [d for d in kit.get("designs", []) or [] if isinstance(d, dict)]
+    for d in kit_designs:
         guid = d.get("guid")
         if not guid:
             continue
         design_payload = {"guid": guid, "name": d.get("name", ""), "variant": d.get("variant", ""), "view": d.get("view", "")}
-        parent = d.get("parent")
-        if isinstance(parent, dict) and parent.get("guid"):
-            design_payload["parent"] = {"guid": parent.get("guid")}
+        parent = _infer_design_parent_ref(d, kit_designs)
+        if parent:
+            design_payload["parent"] = parent
         for key in ("description", "createdAt", "updatedAt", "unit", "icon", "image"):
             value = d.get(key)
             if value:
@@ -3161,14 +3300,15 @@ def _build_kit_artifact_data(kit: dict) -> dict:
         kit_ports.append(port_payload)
 
     connectors: list[dict] = []
-    for t in kit.get("types", []) or []:
+    kit_types = [t for t in kit.get("types", []) or [] if isinstance(t, dict)]
+    for t in kit_types:
         t_guid = t.get("guid")
         if not t_guid:
             continue
         type_payload = {"guid": t_guid, "name": t.get("name", ""), "variant": t.get("variant", "")}
-        parent = t.get("parent")
-        if isinstance(parent, dict) and parent.get("guid"):
-            type_payload["parent"] = {"guid": parent.get("guid")}
+        parent = _infer_type_parent_ref(t, kit_types)
+        if parent:
+            type_payload["parent"] = parent
         for key in ("description", "createdAt", "updatedAt", "icon", "image"):
             value = t.get(key)
             if value:
@@ -3289,7 +3429,7 @@ def _build_diagram_data(kit: dict, design_guid: str, design_diff: dict | None = 
         )
 
     # Build lines from connections
-    connections = design.get("connections", [])
+    connections = design.get("connections", []) or design.get("_connections", []) or []
     # Also include added connections from diff
     if design_diff:
         for c in design_diff.get("connections", {}).get("added", []):
@@ -4369,6 +4509,9 @@ class TestMcp:
         assert isinstance(result, CallToolResult)
         payload = _mcp_app_tool_payload(result)
         assert "kitArtifacts" in payload
+        assert "kit" in payload and isinstance(payload["kit"], dict)
+        nakagin = next(design for design in payload["kit"].get("designs", []) if design.get("guid") == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
+        assert len(nakagin.get("pieces", [])) > 100
         assert payload["kitArtifacts"]["name"] == "Metabolism"
         assert payload["kitArtifacts"].get("version") == "r25.07-1"
         flat_variant = next(design for design in payload["kitArtifacts"]["designs"] if design.get("guid") == "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf")
@@ -5082,6 +5225,15 @@ class TestAppEndpoint:
         response = client.get("/app/design-viewer")
         html = response.text
         assert 'id="root"' in html
+
+    def test_app_design_viewer_excludes_embedded_js_tests(self):
+        """🔖The MCP App bundle excludes @semio/js embedded tests so sketchpad-only code cannot crash viewer startup."""
+        client = TestClient(engine.rest)
+        response = client.get("/app/design-viewer")
+        html = response.text
+        assert "Test on temporary kits" not in html
+        assert "createFolderKitStore" not in html
+        assert "KIT_DIAGRAM_NODE_SCALE" not in html
 
     def test_app_kit_viewer_returns_html(self):
         """🔖GET /app/kit-viewer returns the built MCP App HTML that mounts McpKitViewer from @semio/ui."""

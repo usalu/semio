@@ -1,8 +1,9 @@
 {
   "title": "Fix Connector Diff Description and Complete All Diff Tests",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Fix missing description field in JS getConnectorDiff, complete C# getConnectorDiff implementation, and ensure all diff tests pass across all languages (JS, Python, Go, C#). The test asset includes description in connector diffs but JS computation is missing it.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/815"
   },

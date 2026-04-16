@@ -52,13 +52,20 @@
         "uriFormat": "%s"
       }
     },
+    {
+      "name": "🚀benchmark",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "go run ./repo/cli benchmark",
+      "cwd": "${workspaceFolder}"
+    },
     // #endregion
     // #region 🛠️ Dev
     {
-      "name": "🛠️dev👤semio📚server",
+      "name": "🛠️dev👤semio📚hub",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo run -p semio-session",
+      "command": "cargo run -p semio-hub",
       "env": {
         "DATABASE_URL": "postgres://semio:semio@localhost:5432/semio",
         "RUST_LOG": "info",

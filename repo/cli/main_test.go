@@ -25,6 +25,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/spf13/cobra"
 	_ "modernc.org/sqlite"
 )
@@ -256,6 +257,9 @@ func TestContributorDiscovery(t *testing.T) {
 }
 
 func TestDevcontainerPostAttachGitKrakenWorkspaceBootstrap(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("post-attach is a Linux devcontainer script; Windows bash wrappers can hang on path translation")
+	}
 	_, currentFile, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("failed to resolve current test file path")
@@ -326,6 +330,7 @@ exit 0
 			"XDG_DATA_HOME="+filepath.Join(homeDir, ".local", "share"),
 			"containerWorkspaceFolder="+workspaceDir,
 			"SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL=1",
+			"SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL=1",
 			"SEMIO_GITKRAKEN_WORKSPACE_NAME=Semio Test Workspace",
 		)
 		output, err := cmd.CombinedOutput()
@@ -450,6 +455,7 @@ exit 0
 			"XDG_DATA_HOME="+filepath.Join(homeDir, ".local", "share"),
 			"containerWorkspaceFolder="+workspaceDir,
 			"SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL=1",
+			"SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL=1",
 			"SEMIO_GITKRAKEN_WORKSPACE_NAME=Semio Existing Workspace",
 		)
 		output, err := cmd.CombinedOutput()
@@ -559,9 +565,9 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 	repoRoot := findTestRepoRoot(".")
 
 	cases := []struct {
-		name              string
-		path              string
-		requiredFragments []string
+		name               string
+		path               string
+		requiredFragments  []string
 		forbiddenFragments []string
 	}{
 		{
@@ -1922,6 +1928,83 @@ func executeCommandMd(args ...string) (string, string, error) {
 		fmt.Fprintln(stderr, err)
 	}
 	return stdout.String(), stderr.String(), err
+}
+
+type recordingGraphQLExecutor struct {
+	queries []string
+}
+
+func (e *recordingGraphQLExecutor) Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error) {
+	e.queries = append(e.queries, query)
+	return map[string]interface{}{"syncManagement": true}, nil
+}
+
+func TestSyncCommandRunsGitHubSynchronization(t *testing.T) {
+	newRoot := func(recorder *recordingGraphQLExecutor) *cobra.Command {
+		factory := func(config Config) (*Engine, error) {
+			return NewEngine(recorder), nil
+		}
+		root, config := NewRootWithConfig(factory)
+		config.Format = "json"
+		return root
+	}
+
+	t.Run("github target executes sync management mutation", func(t *testing.T) {
+		recorder := &recordingGraphQLExecutor{}
+		root := newRoot(recorder)
+		stdout := new(bytes.Buffer)
+		stderr := new(bytes.Buffer)
+		root.SetOut(stdout)
+		root.SetErr(stderr)
+		root.SetArgs([]string{"sync", "github"})
+
+		if err := root.Execute(); err != nil {
+			t.Fatalf("sync github failed: %v\nstdout: %s\nstderr: %s", err, stdout.String(), stderr.String())
+		}
+		if len(recorder.queries) != 1 {
+			t.Fatalf("expected one GraphQL query, got %d", len(recorder.queries))
+		}
+		if !strings.Contains(recorder.queries[0], "syncManagement") {
+			t.Fatalf("expected syncManagement mutation, got: %s", recorder.queries[0])
+		}
+		if !strings.Contains(stdout.String(), "syncManagement") {
+			t.Fatalf("expected sync result in stdout, got: %s", stdout.String())
+		}
+	})
+
+	t.Run("management target executes same mutation", func(t *testing.T) {
+		recorder := &recordingGraphQLExecutor{}
+		root := newRoot(recorder)
+		root.SetOut(new(bytes.Buffer))
+		root.SetErr(new(bytes.Buffer))
+		root.SetArgs([]string{"sync", "management"})
+
+		if err := root.Execute(); err != nil {
+			t.Fatalf("sync management failed: %v", err)
+		}
+		if len(recorder.queries) != 1 || !strings.Contains(recorder.queries[0], "syncManagement") {
+			t.Fatalf("expected syncManagement mutation, got queries: %v", recorder.queries)
+		}
+	})
+
+	t.Run("unknown target fails instead of printing help as success", func(t *testing.T) {
+		recorder := &recordingGraphQLExecutor{}
+		root := newRoot(recorder)
+		root.SetOut(new(bytes.Buffer))
+		root.SetErr(new(bytes.Buffer))
+		root.SetArgs([]string{"sync", "githb"})
+
+		err := root.Execute()
+		if err == nil {
+			t.Fatal("expected unknown sync target to fail")
+		}
+		if !strings.Contains(err.Error(), `unknown sync target "githb"`) {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(recorder.queries) != 0 {
+			t.Fatalf("unknown sync target must not execute GraphQL, got queries: %v", recorder.queries)
+		}
+	})
 }
 
 func toolOutputText(result ToolResult) string {
@@ -6426,7 +6509,59 @@ func TestGoalList(t *testing.T) {
 	result := ToolGoalList()
 
 	if result.Error != "" {
-		t.Logf("ToolGoalList returned error (may be due to existing malformed data): %s", result.Error)
+		t.Fatalf("ToolGoalList returned error: %s", result.Error)
+	}
+	goals, ok := result.Data.([]*Goal)
+	if !ok {
+		t.Fatalf("ToolGoalList Data was not []*Goal, got %T", result.Data)
+	}
+	if len(goals) == 0 {
+		t.Fatal("ToolGoalList returned no goals; expected the seeded goal hierarchy")
+	}
+	for _, g := range goals {
+		if g.ID == "" {
+			t.Errorf("goal has empty ID: %+v", g)
+		}
+		if g.Title == "" {
+			t.Errorf("goal %s has empty title", g.ID)
+		}
+	}
+}
+
+func TestGoalsMcpResource(t *testing.T) {
+	req := mcp.ReadResourceRequest{}
+	req.Params.URI = "repo://goals"
+	contents, err := handleGoalsResource(context.Background(), req)
+	if err != nil {
+		t.Fatalf("handleGoalsResource returned error: %v", err)
+	}
+	if len(contents) != 1 {
+		t.Fatalf("expected 1 ResourceContents entry, got %d", len(contents))
+	}
+	text, ok := contents[0].(mcp.TextResourceContents)
+	if !ok {
+		t.Fatalf("expected TextResourceContents, got %T", contents[0])
+	}
+	if text.URI != "repo://goals" {
+		t.Errorf("URI: expected repo://goals, got %q", text.URI)
+	}
+	if text.MIMEType != "text/plain" {
+		t.Errorf("MIMEType: expected text/plain, got %q", text.MIMEType)
+	}
+	if text.Text == "" {
+		t.Fatal("expected non-empty YAML text body")
+	}
+	goals, err := ListGoals()
+	if err != nil {
+		t.Fatalf("ListGoals failed: %v", err)
+	}
+	if len(goals) == 0 {
+		t.Skip("no goals seeded in repo; cannot assert content")
+	}
+	for _, g := range goals {
+		if !strings.Contains(text.Text, g.Title) {
+			t.Errorf("YAML body missing goal title %q", g.Title)
+		}
 	}
 }
 
@@ -7799,25 +7934,25 @@ func TestContributorListIDs(t *testing.T) {
 func TestGoalListIDs(t *testing.T) {
 	result := ToolGoalList()
 	if result.Error != "" {
-		t.Skipf("ToolGoalList returned error (may be due to existing data): %s", result.Error)
+		t.Fatalf("ToolGoalList returned error: %s", result.Error)
 	}
-	goals, ok := result.Data.([]Goal)
+	goals, ok := result.Data.([]*Goal)
 	if !ok {
-		t.Skip("ToolGoalList data is not []Goal")
+		t.Fatalf("ToolGoalList data is not []*Goal, got %T", result.Data)
 	}
 	for _, g := range goals {
 		id := g.GetID()
-		expectedPrefix := emojiText(EmojiGoal)
-		if !strings.HasPrefix(id, expectedPrefix) {
-			t.Errorf("goal %q id %q should start with %q", g.ID, id, expectedPrefix)
+		goalEmoji := emojiText(EmojiGoal)
+		if !strings.HasPrefix(id, goalEmoji) {
+			t.Errorf("goal %q id %q should start with %q", g.ID, id, goalEmoji)
 		}
-		flatID := Flat(g.ID)
-		if idx := strings.LastIndex(g.ID, "/"); idx >= 0 {
-			flatID = Flat(g.ID[idx+1:])
+		var expected strings.Builder
+		for _, segment := range strings.Split(g.ID, "/") {
+			expected.WriteString(goalEmoji)
+			expected.WriteString(Flat(segment))
 		}
-		expectedID := expectedPrefix + flatID
-		if id != expectedID {
-			t.Errorf("goal %q id: expected %q, got %q", g.ID, expectedID, id)
+		if id != expected.String() {
+			t.Errorf("goal %q id: expected %q, got %q", g.ID, expected.String(), id)
 		}
 	}
 }

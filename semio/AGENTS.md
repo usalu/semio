@@ -390,12 +390,13 @@ erDiagram
 
 ### Interface
 
-GraphQL-friendly JSON:
+REST and GraphQL-friendly JSON:
 
 ```
 kit : !Kit{
+    guid: !String
+    description !String
     name : !String
-    version : ?String // empty is latest
     types : *Type[
         name : !String
         models : +Model[
@@ -420,8 +421,8 @@ kit : !Kit{
             }
             t : !Float // [0,1[ for diagram ring position
             mandatory : ?Boolean // default false
-            port : ?String // For explicit compatibility
-            compatiblePorts : *String[] // Empty list means compatible with all
+            port : ?PortId
+            compatiblePorts : *PortId[] // Empty list means compatible with all
             description : ?String
             attributes : *Attribute[]
         ]
@@ -475,7 +476,6 @@ kit : !Kit{
     ]
     designs : *Design[
         name : !String
-        view : ?String // empty is default
         pieces : +Piece[
             id : !String
             type : !TypeId{
@@ -657,395 +657,1765 @@ kit : !Kit{
 }
 ```
 
+### InMemory
+
+```mermaid
+classDiagram
+direction TB
+
+class Store {
+  <<abstract>>
+  +toIdDto() IdDto
+  +toInputDto() InputDto
+  +toMetadataDto() MetadataDto
+  +toShallowDto() ShallowDto
+  +toFullDto() FullDto
+}
+
+class Dto {
+  <<abstract>>
+  +validate() Boolean
+}
+
+class IdDto {
+  +id: String
+}
+
+class InputDto
+class MetadataDto {
+  <<abstract>>
+}
+class ShallowDto {
+  <<abstract>>
+}
+class FullDto {
+  <<abstract>>
+}
+
+class SideDto {
+  +piece: PieceIdDto
+  +designPiece: PieceIdDto
+  +connector: ConnectorIdDto
+}
+
+class Coordinate {
+  +u: Float
+  +v: Float
+}
+
+class Point {
+  +x: Float
+  +y: Float
+  +z: Float
+}
+
+class Vector {
+  +x: Float
+  +y: Float
+  +z: Float
+}
+
+class Plane {
+  +origin: Point
+  +xAxis: Vector
+  +yAxis: Vector
+}
+
+class AttributeStore {
+  +AttributeStore(dto: AttributeIdDto)
+  +AttributeStore(dto: AttributeInputDto)
+  +AttributeStore(dto: AttributeMetadataDto)
+  +AttributeStore(dto: AttributeShallowDto)
+  +AttributeStore(dto: AttributeFullDto)
+  +toIdDto() AttributeIdDto
+  +toInputDto() AttributeInputDto
+  +toMetadataDto() AttributeMetadataDto
+  +toShallowDto() AttributeShallowDto
+  +toFullDto() AttributeFullDto
+}
+
+class AuthorStore {
+  +AuthorStore(dto: AuthorIdDto)
+  +AuthorStore(dto: AuthorInputDto)
+  +AuthorStore(dto: AuthorMetadataDto)
+  +AuthorStore(dto: AuthorShallowDto)
+  +AuthorStore(dto: AuthorFullDto)
+  +toIdDto() AuthorIdDto
+  +toInputDto() AuthorInputDto
+  +toMetadataDto() AuthorMetadataDto
+  +toShallowDto() AuthorShallowDto
+  +toFullDto() AuthorFullDto
+}
+
+class LocationStore {
+  +LocationStore(dto: LocationIdDto)
+  +LocationStore(dto: LocationInputDto)
+  +LocationStore(dto: LocationMetadataDto)
+  +LocationStore(dto: LocationShallowDto)
+  +LocationStore(dto: LocationFullDto)
+  +toIdDto() LocationIdDto
+  +toInputDto() LocationInputDto
+  +toMetadataDto() LocationMetadataDto
+  +toShallowDto() LocationShallowDto
+  +toFullDto() LocationFullDto
+}
+
+class FolderStore {
+  +FolderStore(dto: FolderIdDto)
+  +FolderStore(dto: FolderInputDto)
+  +FolderStore(dto: FolderMetadataDto)
+  +FolderStore(dto: FolderShallowDto)
+  +FolderStore(dto: FolderFullDto)
+  +toIdDto() FolderIdDto
+  +toInputDto() FolderInputDto
+  +toMetadataDto() FolderMetadataDto
+  +toShallowDto() FolderShallowDto
+  +toFullDto() FolderFullDto
+}
+
+class FileStore {
+  +FileStore(dto: FileIdDto)
+  +FileStore(dto: FileInputDto)
+  +FileStore(dto: FileMetadataDto)
+  +FileStore(dto: FileShallowDto)
+  +FileStore(dto: FileFullDto)
+  +toIdDto() FileIdDto
+  +toInputDto() FileInputDto
+  +toMetadataDto() FileMetadataDto
+  +toShallowDto() FileShallowDto
+  +toFullDto() FileFullDto
+}
+
+class ConceptStore {
+  +ConceptStore(dto: ConceptIdDto)
+  +ConceptStore(dto: ConceptInputDto)
+  +ConceptStore(dto: ConceptMetadataDto)
+  +ConceptStore(dto: ConceptShallowDto)
+  +ConceptStore(dto: ConceptFullDto)
+  +toIdDto() ConceptIdDto
+  +toInputDto() ConceptInputDto
+  +toMetadataDto() ConceptMetadataDto
+  +toShallowDto() ConceptShallowDto
+  +toFullDto() ConceptFullDto
+}
+
+class QualityStore {
+  +QualityStore(dto: QualityIdDto)
+  +QualityStore(dto: QualityInputDto)
+  +QualityStore(dto: QualityMetadataDto)
+  +QualityStore(dto: QualityShallowDto)
+  +QualityStore(dto: QualityFullDto)
+  +toIdDto() QualityIdDto
+  +toInputDto() QualityInputDto
+  +toMetadataDto() QualityMetadataDto
+  +toShallowDto() QualityShallowDto
+  +toFullDto() QualityFullDto
+}
+
+class BenchmarkStore {
+  +BenchmarkStore(dto: BenchmarkIdDto)
+  +BenchmarkStore(dto: BenchmarkInputDto)
+  +BenchmarkStore(dto: BenchmarkMetadataDto)
+  +BenchmarkStore(dto: BenchmarkShallowDto)
+  +BenchmarkStore(dto: BenchmarkFullDto)
+  +toIdDto() BenchmarkIdDto
+  +toInputDto() BenchmarkInputDto
+  +toMetadataDto() BenchmarkMetadataDto
+  +toShallowDto() BenchmarkShallowDto
+  +toFullDto() BenchmarkFullDto
+}
+
+class StatStore {
+  +StatStore(dto: StatIdDto)
+  +StatStore(dto: StatInputDto)
+  +StatStore(dto: StatMetadataDto)
+  +StatStore(dto: StatShallowDto)
+  +StatStore(dto: StatFullDto)
+  +toIdDto() StatIdDto
+  +toInputDto() StatInputDto
+  +toMetadataDto() StatMetadataDto
+  +toShallowDto() StatShallowDto
+  +toFullDto() StatFullDto
+}
+
+class TagStore {
+  +TagStore(dto: TagIdDto)
+  +TagStore(dto: TagInputDto)
+  +TagStore(dto: TagMetadataDto)
+  +TagStore(dto: TagShallowDto)
+  +TagStore(dto: TagFullDto)
+  +toIdDto() TagIdDto
+  +toInputDto() TagInputDto
+  +toMetadataDto() TagMetadataDto
+  +toShallowDto() TagShallowDto
+  +toFullDto() TagFullDto
+}
+
+class ModelStore {
+  +ModelStore(dto: ModelIdDto)
+  +ModelStore(dto: ModelInputDto)
+  +ModelStore(dto: ModelMetadataDto)
+  +ModelStore(dto: ModelShallowDto)
+  +ModelStore(dto: ModelFullDto)
+  +toIdDto() ModelIdDto
+  +toInputDto() ModelInputDto
+  +toMetadataDto() ModelMetadataDto
+  +toShallowDto() ModelShallowDto
+  +toFullDto() ModelFullDto
+}
+
+class PortStore {
+  +PortStore(dto: PortIdDto)
+  +PortStore(dto: PortInputDto)
+  +PortStore(dto: PortMetadataDto)
+  +PortStore(dto: PortShallowDto)
+  +PortStore(dto: PortFullDto)
+  +toIdDto() PortIdDto
+  +toInputDto() PortInputDto
+  +toMetadataDto() PortMetadataDto
+  +toShallowDto() PortShallowDto
+  +toFullDto() PortFullDto
+}
+
+class ConnectorStore {
+  +ConnectorStore(dto: ConnectorIdDto)
+  +ConnectorStore(dto: ConnectorInputDto)
+  +ConnectorStore(dto: ConnectorMetadataDto)
+  +ConnectorStore(dto: ConnectorShallowDto)
+  +ConnectorStore(dto: ConnectorFullDto)
+  +toIdDto() ConnectorIdDto
+  +toInputDto() ConnectorInputDto
+  +toMetadataDto() ConnectorMetadataDto
+  +toShallowDto() ConnectorShallowDto
+  +toFullDto() ConnectorFullDto
+}
+
+class PropStore {
+  +PropStore(dto: PropIdDto)
+  +PropStore(dto: PropInputDto)
+  +PropStore(dto: PropMetadataDto)
+  +PropStore(dto: PropShallowDto)
+  +PropStore(dto: PropFullDto)
+  +toIdDto() PropIdDto
+  +toInputDto() PropInputDto
+  +toMetadataDto() PropMetadataDto
+  +toShallowDto() PropShallowDto
+  +toFullDto() PropFullDto
+}
+
+class LayerStore {
+  +LayerStore(dto: LayerIdDto)
+  +LayerStore(dto: LayerInputDto)
+  +LayerStore(dto: LayerMetadataDto)
+  +LayerStore(dto: LayerShallowDto)
+  +LayerStore(dto: LayerFullDto)
+  +toIdDto() LayerIdDto
+  +toInputDto() LayerInputDto
+  +toMetadataDto() LayerMetadataDto
+  +toShallowDto() LayerShallowDto
+  +toFullDto() LayerFullDto
+}
+
+class GroupStore {
+  +GroupStore(dto: GroupIdDto)
+  +GroupStore(dto: GroupInputDto)
+  +GroupStore(dto: GroupMetadataDto)
+  +GroupStore(dto: GroupShallowDto)
+  +GroupStore(dto: GroupFullDto)
+  +toIdDto() GroupIdDto
+  +toInputDto() GroupInputDto
+  +toMetadataDto() GroupMetadataDto
+  +toShallowDto() GroupShallowDto
+  +toFullDto() GroupFullDto
+}
+
+class PieceStore {
+  +PieceStore(dto: PieceIdDto)
+  +PieceStore(dto: PieceInputDto)
+  +PieceStore(dto: PieceMetadataDto)
+  +PieceStore(dto: PieceShallowDto)
+  +PieceStore(dto: PieceFullDto)
+  +toIdDto() PieceIdDto
+  +toInputDto() PieceInputDto
+  +toMetadataDto() PieceMetadataDto
+  +toShallowDto() PieceShallowDto
+  +toFullDto() PieceFullDto
+}
+
+class ConnectionStore {
+  +ConnectionStore(dto: ConnectionIdDto)
+  +ConnectionStore(dto: ConnectionInputDto)
+  +ConnectionStore(dto: ConnectionMetadataDto)
+  +ConnectionStore(dto: ConnectionShallowDto)
+  +ConnectionStore(dto: ConnectionFullDto)
+  +toIdDto() ConnectionIdDto
+  +toInputDto() ConnectionInputDto
+  +toMetadataDto() ConnectionMetadataDto
+  +toShallowDto() ConnectionShallowDto
+  +toFullDto() ConnectionFullDto
+}
+
+class TypeStore {
+  +TypeStore(dto: TypeIdDto)
+  +TypeStore(dto: TypeInputDto)
+  +TypeStore(dto: TypeMetadataDto)
+  +TypeStore(dto: TypeShallowDto)
+  +TypeStore(dto: TypeFullDto)
+  +toIdDto() TypeIdDto
+  +toInputDto() TypeInputDto
+  +toMetadataDto() TypeMetadataDto
+  +toShallowDto() TypeShallowDto
+  +toFullDto() TypeFullDto
+}
+
+class DesignStore {
+  +DesignStore(dto: DesignIdDto)
+  +DesignStore(dto: DesignInputDto)
+  +DesignStore(dto: DesignMetadataDto)
+  +DesignStore(dto: DesignShallowDto)
+  +DesignStore(dto: DesignFullDto)
+  +toIdDto() DesignIdDto
+  +toInputDto() DesignInputDto
+  +toMetadataDto() DesignMetadataDto
+  +toShallowDto() DesignShallowDto
+  +toFullDto() DesignFullDto
+}
+
+class KitStore {
+  +KitStore(dto: KitIdDto)
+  +KitStore(dto: KitInputDto)
+  +KitStore(dto: KitMetadataDto)
+  +KitStore(dto: KitShallowDto)
+  +KitStore(dto: KitFullDto)
+  +toIdDto() KitIdDto
+  +toInputDto() KitInputDto
+  +toMetadataDto() KitMetadataDto
+  +toShallowDto() KitShallowDto
+  +toFullDto() KitFullDto
+}
+
+class AttributeIdDto {
+  +id: String
+}
+class AttributeInputDto {
+  +id: String
+  +key: String
+  +value: String
+  +definition: String
+}
+class AttributeMetadataDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +value: String
+  +definition: String
+}
+class AttributeShallowDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +value: String
+  +definition: String
+}
+class AttributeFullDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +value: String
+  +definition: String
+}
+
+class AuthorIdDto {
+  +id: String
+}
+class AuthorInputDto {
+  +id: String
+  +name: String
+  +email: String
+  +attributes: AttributeInputDto[]
+}
+class AuthorMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +email: String
+}
+class AuthorShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +email: String
+  +attributes: AttributeMetadataDto[]
+}
+class AuthorFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +email: String
+  +attributes: AttributeFullDto[]
+}
+
+class LocationIdDto {
+  +id: String
+}
+class LocationInputDto {
+  +id: String
+  +longitude: Float
+  +latitude: Float
+  +altitude: Float
+  +attributes: AttributeInputDto[]
+}
+class LocationMetadataDto {
+  <<abstract>>
+  +id: String
+  +longitude: Float
+  +latitude: Float
+  +altitude: Float
+}
+class LocationShallowDto {
+  <<abstract>>
+  +id: String
+  +longitude: Float
+  +latitude: Float
+  +altitude: Float
+  +attributes: AttributeMetadataDto[]
+}
+class LocationFullDto {
+  <<abstract>>
+  +id: String
+  +longitude: Float
+  +latitude: Float
+  +altitude: Float
+  +attributes: AttributeFullDto[]
+}
+
+class FolderIdDto {
+  +id: String
+}
+class FolderInputDto {
+  +id: String
+  +name: String
+  +parent: FolderIdDto
+  +description: String
+  +attributes: AttributeInputDto[]
+  +createdAt: DateTime
+  +createdBy: AuthorIdDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorIdDto
+}
+class FolderMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: FolderIdDto
+  +description: String
+  +createdAt: DateTime
+  +createdBy: AuthorIdDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorIdDto
+}
+class FolderShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: FolderIdDto
+  +description: String
+  +attributes: AttributeMetadataDto[]
+  +createdAt: DateTime
+  +createdBy: AuthorMetadataDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorMetadataDto
+}
+class FolderFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: FolderFullDto
+  +description: String
+  +attributes: AttributeFullDto[]
+  +createdAt: DateTime
+  +createdBy: AuthorFullDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorFullDto
+}
+
+class FileIdDto {
+  +id: String
+}
+class FileInputDto {
+  +id: String
+  +name: String
+  +remote: String
+  +folder: FolderIdDto
+  +size: Float
+  +hash: String
+  +blob: String
+  +createdAt: DateTime
+  +createdBy: AuthorIdDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorIdDto
+}
+class FileMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +remote: String
+  +folder: FolderIdDto
+  +size: Float
+  +hash: String
+  +createdAt: DateTime
+  +createdBy: AuthorIdDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorIdDto
+}
+class FileShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +remote: String
+  +folder: FolderMetadataDto
+  +size: Float
+  +hash: String
+  +createdAt: DateTime
+  +createdBy: AuthorMetadataDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorMetadataDto
+}
+class FileFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +remote: String
+  +folder: FolderFullDto
+  +size: Float
+  +hash: String
+  +blob: String
+  +mime: String
+  +createdAt: DateTime
+  +createdBy: AuthorFullDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorFullDto
+}
+
+class ConceptIdDto {
+  +id: String
+}
+class ConceptInputDto {
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeInputDto[]
+}
+class ConceptMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+}
+class ConceptShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeMetadataDto[]
+}
+class ConceptFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeFullDto[]
+}
+
+class QualityIdDto {
+  +id: String
+}
+class QualityInputDto {
+  +id: String
+  +key: String
+  +name: String
+  +description: String
+  +uri: String
+  +kind: Int
+  +folder: String
+  +canScale: Boolean
+  +defaultSiUnit: String
+  +defaultImperialUnit: String
+  +min: Float
+  +isMinExcluded: Boolean
+  +max: Float
+  +isMaxExcluded: Boolean
+  +defaultValue: Float
+  +formula: String
+  +icon: String
+  +image: String
+  +unit: String
+  +benchmarks: BenchmarkInputDto[]
+  +attributes: AttributeInputDto[]
+}
+class QualityMetadataDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +name: String
+  +description: String
+  +uri: String
+  +kind: Int
+  +folder: String
+  +canScale: Boolean
+  +defaultSiUnit: String
+  +defaultImperialUnit: String
+  +min: Float
+  +isMinExcluded: Boolean
+  +max: Float
+  +isMaxExcluded: Boolean
+  +defaultValue: Float
+  +formula: String
+  +icon: String
+  +image: String
+  +unit: String
+}
+class QualityShallowDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +name: String
+  +description: String
+  +uri: String
+  +kind: Int
+  +folder: String
+  +canScale: Boolean
+  +defaultSiUnit: String
+  +defaultImperialUnit: String
+  +min: Float
+  +isMinExcluded: Boolean
+  +max: Float
+  +isMaxExcluded: Boolean
+  +defaultValue: Float
+  +formula: String
+  +icon: String
+  +image: String
+  +unit: String
+  +benchmarks: BenchmarkMetadataDto[]
+  +attributes: AttributeMetadataDto[]
+}
+class QualityFullDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +name: String
+  +description: String
+  +uri: String
+  +kind: Int
+  +folder: String
+  +canScale: Boolean
+  +defaultSiUnit: String
+  +defaultImperialUnit: String
+  +min: Float
+  +isMinExcluded: Boolean
+  +max: Float
+  +isMaxExcluded: Boolean
+  +defaultValue: Float
+  +formula: String
+  +icon: String
+  +image: String
+  +unit: String
+  +benchmarks: BenchmarkFullDto[]
+  +attributes: AttributeFullDto[]
+}
+
+class BenchmarkIdDto {
+  +id: String
+}
+class BenchmarkInputDto {
+  +id: String
+  +name: String
+  +icon: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+  +attributes: AttributeInputDto[]
+}
+class BenchmarkMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +icon: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+}
+class BenchmarkShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +icon: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+  +attributes: AttributeMetadataDto[]
+}
+class BenchmarkFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +icon: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+  +attributes: AttributeFullDto[]
+}
+
+class StatIdDto {
+  +id: String
+}
+class StatInputDto {
+  +id: String
+  +quality: QualityIdDto
+  +unit: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+}
+class StatMetadataDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityIdDto
+  +unit: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+}
+class StatShallowDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityMetadataDto
+  +unit: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+}
+class StatFullDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityFullDto
+  +unit: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+}
+
+class TagIdDto {
+  +id: String
+}
+class TagInputDto {
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeInputDto[]
+}
+class TagMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+}
+class TagShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeMetadataDto[]
+}
+class TagFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeFullDto[]
+}
+
+class ModelIdDto {
+  +id: String
+}
+class ModelInputDto {
+  +id: String
+  +name: String
+  +tags: TagIdDto[]
+  +file: FileIdDto
+  +description: String
+  +attributes: AttributeInputDto[]
+}
+class ModelMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +tags: TagIdDto[]
+  +file: FileIdDto
+  +description: String
+}
+class ModelShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +tags: TagMetadataDto[]
+  +file: FileMetadataDto
+  +description: String
+  +attributes: AttributeMetadataDto[]
+}
+class ModelFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +tags: TagFullDto[]
+  +file: FileFullDto
+  +description: String
+  +attributes: AttributeFullDto[]
+  +fileHash: String
+  +fileMime: String
+}
+
+class PortIdDto {
+  +id: String
+}
+class PortInputDto {
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +compatiblePorts: PortIdDto[]
+  +attributes: AttributeInputDto[]
+}
+class PortMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +maxChildren: Int
+  +compatiblePorts: PortIdDto[]
+}
+class PortShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +maxChildren: Int
+  +compatiblePorts: PortMetadataDto[]
+  +attributes: AttributeMetadataDto[]
+}
+class PortFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +maxChildren: Int
+  +compatiblePorts: PortFullDto[]
+  +attributes: AttributeFullDto[]
+}
+
+class ConnectorIdDto {
+  +id: String
+}
+class ConnectorInputDto {
+  +id: String
+  +name: String
+  +t: Float
+  +point: Point
+  +direction: Vector
+  +description: String
+  +port: PortIdDto
+  +mandatory: Boolean
+  +props: PropInputDto[]
+  +attributes: AttributeInputDto[]
+}
+class ConnectorMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +t: Float
+  +point: Point
+  +direction: Vector
+  +description: String
+  +port: PortIdDto
+  +mandatory: Boolean
+  +maxChildren: Int
+}
+class ConnectorShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +t: Float
+  +point: Point
+  +direction: Vector
+  +description: String
+  +port: PortMetadataDto
+  +mandatory: Boolean
+  +maxChildren: Int
+  +props: PropMetadataDto[]
+  +attributes: AttributeMetadataDto[]
+}
+class ConnectorFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +t: Float
+  +point: Point
+  +direction: Vector
+  +description: String
+  +port: PortFullDto
+  +mandatory: Boolean
+  +maxChildren: Int
+  +props: PropFullDto[]
+  +attributes: AttributeFullDto[]
+}
+
+class PropIdDto {
+  +id: String
+}
+class PropInputDto {
+  +id: String
+  +quality: QualityIdDto
+  +value: String
+  +unit: String
+  +attributes: AttributeInputDto[]
+}
+class PropMetadataDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityIdDto
+  +value: String
+  +unit: String
+}
+class PropShallowDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityMetadataDto
+  +value: String
+  +unit: String
+  +attributes: AttributeMetadataDto[]
+}
+class PropFullDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityFullDto
+  +value: String
+  +unit: String
+  +attributes: AttributeFullDto[]
+}
+
+class LayerIdDto {
+  +id: String
+}
+class LayerInputDto {
+  +id: String
+  +path: String
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +attributes: AttributeInputDto[]
+}
+class LayerMetadataDto {
+  <<abstract>>
+  +id: String
+  +path: String
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+}
+class LayerShallowDto {
+  <<abstract>>
+  +id: String
+  +path: String
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +attributes: AttributeMetadataDto[]
+}
+class LayerFullDto {
+  <<abstract>>
+  +id: String
+  +path: String
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +attributes: AttributeFullDto[]
+}
+
+class GroupIdDto {
+  +id: String
+}
+class GroupInputDto {
+  +id: String
+  +pieces: PieceIdDto[]
+  +color: String
+  +name: String
+  +description: String
+  +attributes: AttributeInputDto[]
+}
+class GroupMetadataDto {
+  <<abstract>>
+  +id: String
+  +pieces: PieceIdDto[]
+  +color: String
+  +name: String
+  +description: String
+}
+class GroupShallowDto {
+  <<abstract>>
+  +id: String
+  +pieces: PieceMetadataDto[]
+  +color: String
+  +name: String
+  +description: String
+  +attributes: AttributeMetadataDto[]
+}
+class GroupFullDto {
+  <<abstract>>
+  +id: String
+  +pieces: PieceFullDto[]
+  +color: String
+  +name: String
+  +description: String
+  +attributes: AttributeFullDto[]
+}
+
+class PieceIdDto {
+  +id: String
+}
+class PieceInputDto {
+  +id: String
+  +name: String
+  +type: TypeIdDto
+  +design: DesignIdDto
+  +plane: Plane
+  +center: Coordinate
+  +scale: Float
+  +mirrorPlane: Plane
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +props: PropInputDto[]
+  +attributes: AttributeInputDto[]
+}
+class PieceMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +type: TypeIdDto
+  +design: DesignIdDto
+  +plane: Plane
+  +center: Coordinate
+  +scale: Float
+  +mirrorPlane: Plane
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+}
+class PieceShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +type: TypeMetadataDto
+  +design: DesignMetadataDto
+  +plane: Plane
+  +center: Coordinate
+  +scale: Float
+  +mirrorPlane: Plane
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +props: PropMetadataDto[]
+  +attributes: AttributeMetadataDto[]
+}
+class PieceFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +type: TypeFullDto
+  +design: DesignMetadataDto
+  +plane: Plane
+  +center: Coordinate
+  +scale: Float
+  +mirrorPlane: Plane
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +props: PropFullDto[]
+  +attributes: AttributeFullDto[]
+  +kind: PieceKind
+}
+
+class ConnectionIdDto {
+  +id: String
+}
+class ConnectionInputDto {
+  +id: String
+  +connected: SideDto
+  +connecting: SideDto
+  +gap: Float
+  +shift: Float
+  +rise: Float
+  +rotation: Float
+  +turn: Float
+  +tilt: Float
+  +u: Float
+  +v: Float
+  +description: String
+  +attributes: AttributeInputDto[]
+}
+class ConnectionMetadataDto {
+  <<abstract>>
+  +id: String
+  +connected: SideDto
+  +connecting: SideDto
+  +gap: Float
+  +shift: Float
+  +rise: Float
+  +rotation: Float
+  +turn: Float
+  +tilt: Float
+  +u: Float
+  +v: Float
+  +description: String
+}
+class ConnectionShallowDto {
+  <<abstract>>
+  +id: String
+  +connected: SideDto
+  +connecting: SideDto
+  +gap: Float
+  +shift: Float
+  +rise: Float
+  +rotation: Float
+  +turn: Float
+  +tilt: Float
+  +u: Float
+  +v: Float
+  +description: String
+  +attributes: AttributeMetadataDto[]
+}
+class ConnectionFullDto {
+  <<abstract>>
+  +id: String
+  +connected: SideDto
+  +connecting: SideDto
+  +gap: Float
+  +shift: Float
+  +rise: Float
+  +rotation: Float
+  +turn: Float
+  +tilt: Float
+  +u: Float
+  +v: Float
+  +description: String
+  +attributes: AttributeFullDto[]
+}
+
+class TypeIdDto {
+  +id: String
+}
+class TypeInputDto {
+  +id: String
+  +name: String
+  +parent: TypeIdDto
+  +isAbstract: Boolean
+  +folder: String
+  +models: ModelInputDto[]
+  +connectors: ConnectorInputDto[]
+  +props: PropInputDto[]
+  +stock: Int
+  +virtual: Boolean
+  +unit: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +location: LocationIdDto
+  +authors: AuthorIdDto[]
+  +concepts: ConceptIdDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeInputDto[]
+}
+class TypeMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: TypeIdDto
+  +isAbstract: Boolean
+  +folder: String
+  +stock: Int
+  +virtual: Boolean
+  +unit: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +location: LocationIdDto
+  +authors: AuthorIdDto[]
+  +concepts: ConceptIdDto[]
+  +icon: String
+  +image: String
+  +description: String
+}
+class TypeShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: TypeMetadataDto
+  +isAbstract: Boolean
+  +folder: String
+  +models: ModelMetadataDto[]
+  +connectors: ConnectorMetadataDto[]
+  +props: PropMetadataDto[]
+  +stock: Int
+  +virtual: Boolean
+  +unit: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +location: LocationMetadataDto
+  +authors: AuthorMetadataDto[]
+  +concepts: ConceptMetadataDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeMetadataDto[]
+}
+class TypeFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: TypeMetadataDto
+  +isAbstract: Boolean
+  +folder: String
+  +models: ModelFullDto[]
+  +connectors: ConnectorFullDto[]
+  +props: PropFullDto[]
+  +stock: Int
+  +virtual: Boolean
+  +unit: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +location: LocationFullDto
+  +authors: AuthorFullDto[]
+  +concepts: ConceptFullDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeFullDto[]
+  +hash: String
+}
+
+class DesignIdDto {
+  +id: String
+}
+class DesignInputDto {
+  +id: String
+  +name: String
+  +parent: DesignIdDto
+  +isAbstract: Boolean
+  +folder: String
+  +pieces: PieceInputDto[]
+  +connections: ConnectionInputDto[]
+  +stats: StatInputDto[]
+  +props: PropInputDto[]
+  +layers: LayerInputDto[]
+  +activeLayer: LayerIdDto
+  +groups: GroupInputDto[]
+  +canScale: Boolean
+  +canMirror: Boolean
+  +unit: String
+  +location: LocationIdDto
+  +authors: AuthorIdDto[]
+  +concepts: ConceptIdDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeInputDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class DesignMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: DesignIdDto
+  +isAbstract: Boolean
+  +folder: String
+  +activeLayer: LayerIdDto
+  +canScale: Boolean
+  +canMirror: Boolean
+  +unit: String
+  +location: LocationIdDto
+  +authors: AuthorIdDto[]
+  +concepts: ConceptIdDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class DesignShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: DesignMetadataDto
+  +isAbstract: Boolean
+  +folder: String
+  +pieces: PieceMetadataDto[]
+  +connections: ConnectionMetadataDto[]
+  +stats: StatMetadataDto[]
+  +props: PropMetadataDto[]
+  +layers: LayerMetadataDto[]
+  +activeLayer: LayerMetadataDto
+  +groups: GroupMetadataDto[]
+  +canScale: Boolean
+  +canMirror: Boolean
+  +unit: String
+  +location: LocationMetadataDto
+  +authors: AuthorMetadataDto[]
+  +concepts: ConceptMetadataDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeMetadataDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class DesignFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: DesignMetadataDto
+  +isAbstract: Boolean
+  +folder: String
+  +pieces: PieceFullDto[]
+  +connections: ConnectionFullDto[]
+  +stats: StatFullDto[]
+  +props: PropFullDto[]
+  +layers: LayerFullDto[]
+  +activeLayer: LayerMetadataDto
+  +groups: GroupFullDto[]
+  +canScale: Boolean
+  +canMirror: Boolean
+  +unit: String
+  +location: LocationFullDto
+  +authors: AuthorFullDto[]
+  +concepts: ConceptFullDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeFullDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +hash: String
+}
+
+class KitIdDto {
+  +id: String
+}
+class KitInputDto {
+  +id: String
+  +name: String
+  +release: String
+  +types: TypeInputDto[]
+  +designs: DesignInputDto[]
+  +tags: TagInputDto[]
+  +concepts: ConceptInputDto[]
+  +ports: PortInputDto[]
+  +qualities: QualityInputDto[]
+  +files: FileInputDto[]
+  +folders: FolderInputDto[]
+  +authors: AuthorInputDto[]
+  +remote: String
+  +homepage: String
+  +license: String
+  +preview: String
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeInputDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class KitMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +release: String
+  +remote: String
+  +homepage: String
+  +license: String
+  +preview: String
+  +icon: String
+  +image: String
+  +description: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class KitShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +release: String
+  +types: TypeMetadataDto[]
+  +designs: DesignMetadataDto[]
+  +tags: TagMetadataDto[]
+  +concepts: ConceptMetadataDto[]
+  +ports: PortMetadataDto[]
+  +qualities: QualityMetadataDto[]
+  +files: FileMetadataDto[]
+  +folders: FolderMetadataDto[]
+  +authors: AuthorMetadataDto[]
+  +remote: String
+  +homepage: String
+  +license: String
+  +preview: String
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeMetadataDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class KitFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +release: String
+  +types: TypeFullDto[]
+  +designs: DesignFullDto[]
+  +tags: TagFullDto[]
+  +concepts: ConceptFullDto[]
+  +ports: PortFullDto[]
+  +qualities: QualityFullDto[]
+  +files: FileFullDto[]
+  +folders: FolderFullDto[]
+  +authors: AuthorFullDto[]
+  +remote: String
+  +homepage: String
+  +license: String
+  +preview: String
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeFullDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +hash: String
+}
+
+IdDto --|> Dto
+InputDto --|> Dto
+MetadataDto --|> Dto
+ShallowDto --|> Dto
+FullDto --|> Dto
+
+AttributeStore --|> Store
+AuthorStore --|> Store
+LocationStore --|> Store
+FolderStore --|> Store
+FileStore --|> Store
+ConceptStore --|> Store
+QualityStore --|> Store
+BenchmarkStore --|> Store
+StatStore --|> Store
+TagStore --|> Store
+ModelStore --|> Store
+PortStore --|> Store
+ConnectorStore --|> Store
+PropStore --|> Store
+LayerStore --|> Store
+GroupStore --|> Store
+PieceStore --|> Store
+ConnectionStore --|> Store
+TypeStore --|> Store
+DesignStore --|> Store
+KitStore --|> Store
+
+AttributeIdDto --|> IdDto
+AttributeInputDto --|> InputDto
+AttributeMetadataDto --|> MetadataDto
+AttributeShallowDto --|> ShallowDto
+AttributeFullDto --|> FullDto
+
+AuthorIdDto --|> IdDto
+AuthorInputDto --|> InputDto
+AuthorMetadataDto --|> MetadataDto
+AuthorShallowDto --|> ShallowDto
+AuthorFullDto --|> FullDto
+
+LocationIdDto --|> IdDto
+LocationInputDto --|> InputDto
+LocationMetadataDto --|> MetadataDto
+LocationShallowDto --|> ShallowDto
+LocationFullDto --|> FullDto
+
+FolderIdDto --|> IdDto
+FolderInputDto --|> InputDto
+FolderMetadataDto --|> MetadataDto
+FolderShallowDto --|> ShallowDto
+FolderFullDto --|> FullDto
+
+FileIdDto --|> IdDto
+FileInputDto --|> InputDto
+FileMetadataDto --|> MetadataDto
+FileShallowDto --|> ShallowDto
+FileFullDto --|> FullDto
+
+ConceptIdDto --|> IdDto
+ConceptInputDto --|> InputDto
+ConceptMetadataDto --|> MetadataDto
+ConceptShallowDto --|> ShallowDto
+ConceptFullDto --|> FullDto
+
+QualityIdDto --|> IdDto
+QualityInputDto --|> InputDto
+QualityMetadataDto --|> MetadataDto
+QualityShallowDto --|> ShallowDto
+QualityFullDto --|> FullDto
+
+BenchmarkIdDto --|> IdDto
+BenchmarkInputDto --|> InputDto
+BenchmarkMetadataDto --|> MetadataDto
+BenchmarkShallowDto --|> ShallowDto
+BenchmarkFullDto --|> FullDto
+
+StatIdDto --|> IdDto
+StatInputDto --|> InputDto
+StatMetadataDto --|> MetadataDto
+StatShallowDto --|> ShallowDto
+StatFullDto --|> FullDto
+
+TagIdDto --|> IdDto
+TagInputDto --|> InputDto
+TagMetadataDto --|> MetadataDto
+TagShallowDto --|> ShallowDto
+TagFullDto --|> FullDto
+
+ModelIdDto --|> IdDto
+ModelInputDto --|> InputDto
+ModelMetadataDto --|> MetadataDto
+ModelShallowDto --|> ShallowDto
+ModelFullDto --|> FullDto
+
+PortIdDto --|> IdDto
+PortInputDto --|> InputDto
+PortMetadataDto --|> MetadataDto
+PortShallowDto --|> ShallowDto
+PortFullDto --|> FullDto
+
+ConnectorIdDto --|> IdDto
+ConnectorInputDto --|> InputDto
+ConnectorMetadataDto --|> MetadataDto
+ConnectorShallowDto --|> ShallowDto
+ConnectorFullDto --|> FullDto
+
+PropIdDto --|> IdDto
+PropInputDto --|> InputDto
+PropMetadataDto --|> MetadataDto
+PropShallowDto --|> ShallowDto
+PropFullDto --|> FullDto
+
+LayerIdDto --|> IdDto
+LayerInputDto --|> InputDto
+LayerMetadataDto --|> MetadataDto
+LayerShallowDto --|> ShallowDto
+LayerFullDto --|> FullDto
+
+GroupIdDto --|> IdDto
+GroupInputDto --|> InputDto
+GroupMetadataDto --|> MetadataDto
+GroupShallowDto --|> ShallowDto
+GroupFullDto --|> FullDto
+
+PieceIdDto --|> IdDto
+PieceInputDto --|> InputDto
+PieceMetadataDto --|> MetadataDto
+PieceShallowDto --|> ShallowDto
+PieceFullDto --|> FullDto
+
+ConnectionIdDto --|> IdDto
+ConnectionInputDto --|> InputDto
+ConnectionMetadataDto --|> MetadataDto
+ConnectionShallowDto --|> ShallowDto
+ConnectionFullDto --|> FullDto
+
+TypeIdDto --|> IdDto
+TypeInputDto --|> InputDto
+TypeMetadataDto --|> MetadataDto
+TypeShallowDto --|> ShallowDto
+TypeFullDto --|> FullDto
+
+DesignIdDto --|> IdDto
+DesignInputDto --|> InputDto
+DesignMetadataDto --|> MetadataDto
+DesignShallowDto --|> ShallowDto
+DesignFullDto --|> FullDto
+
+KitIdDto --|> IdDto
+KitInputDto --|> InputDto
+KitMetadataDto --|> MetadataDto
+KitShallowDto --|> ShallowDto
+KitFullDto --|> FullDto
+
+Plane *-- Point
+Plane *-- Vector
+```
+
 ## 📛 Entities
 
-### 📦 Kit [↑](#-concepts-)
-
-A [`kit`](#-kit-) is a collection of [`types`](#-type-), [`designs`](#%EF%B8%8F-design-), [`authors`](#-author-), [`qualities`](#-quality-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📦
-
-The SQL-schema of `kit.db` is found in [`./semio/sqlite/schema.sql`](./semio/sqlite/schema.sql) 📄
-
-For Inter-Process-Communication (IPC) the JSON-schema in [`./semio/jsonschema/kit.json`](./semio/jsonschema/kit.json) is used 📄
-
-####
-
-A [`kit`](#-kit-) is either _static_ (a special `.zip` file) or _dynamic_ (bound to a runtime) 📦
-
-A _static_ [`kit`](#-kit-) contains a reserved `.semio` folder that contains a `kit.db` sqlite file 💾
-
-### 🏘 Design [↑](#-concepts-)
-
-A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) (nodes) and [`connections`](#-connection-) (edges) with organizational [`layers`](#-layer-), [`groups`](#-group-), [`stats`](#-stat-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📐
-
-A [`design`](#-design-) is _proto_ (a _protodesign_) when it has no _parent_.
-
-_Children_ of a _parent_ are \_subdesigns.
-
-A _flat_ [`design`](#%EF%B8%8F-design-) has no [`connections`](#-connection-) and all [`pieces`](#-piece-) are _fixed_ ◳
-
-The [`pieces`](#-piece-) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _component_ 🌿
-
-Additional [`connections`](#-connection-) which where not used in the _placement_ can be used to validate the computed [`planes`](#-plane-) 🛂
-
-### 🏠 Type [↑](#-concepts-)
-
-A [`type`](#-type-) is a reusable component with different [`models`](#-model-), [`connectors`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
-
-A [`type`](#-type-) is _proto_ (a _prototype_) when it has no _parent_.
-
-_Children_ of a _parent_ are \_subtypes.
-
-A [`type`](#-type-) can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location** 📍
-
-### 🔗 Connection [↑](#-concepts-)
-
-A [`connection`](#-connection-) is a 3D-Link between two [`pieces`](#-piece-) with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **rise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis) 🪢
-
-The _translation_ is applied first, then the _rotation_ 🥈
-
-The two [`pieces`](#-piece-) are called **_connected_** and **_connecting_** but there is no difference between them 🔄
-
-The _direction_ of a [`connection`](#-connection-) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece-) ➡
-
-A [`connection`](#-connection-) can have [`attributes`](#%EF%B8%8F-attribute-) and diagram positioning with **x** and **y** offsets 📍
-
-### ⭕ Piece [↑](#-concepts-)
-
-A [`piece`](#-piece-) is an instance of either a [`type`](#-type-) or a [`design`](#%EF%B8%8F-design-) with **id**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and [`attributes`](#%EF%B8%8F-attribute-) 📐
-
-A [`piece`](#-piece-) is either _fixed_ (with a [`plane`](#-plane-) and a **center**) or _linked_ (with a [`connection`](#-connection-)) 📐
-
-A group of _connected_ [`pieces`](#-piece-) is called a _component_ 🌿
-
-The _hierarchy_ of a [`piece`](#-piece-) is the length of the shortest path to the next _fixed_ [`piece`](#-piece-) 👣
-
-### ⚓ Connector [↑](#-concepts-)
-
-A [`connector`](#-port-) is a conceptual connection **point** with an outwards **direction**, **id**, optional **description**, and **t** value for diagram ring positioning 🤝
-
-A [`connector`](#-port-) can be marked as **mandatory** in which case it is required to be connected to a [`piece`](#-piece-) 💯
-
-A [`connector`](#-port-) can have a connector **port** and a list of **compatible ports** for explicit compatibility control 👨‍👩‍👧‍👦
-
-No **port** means the _default_ port and no **compatible ports** means the connector is compatible with all other connectors 🔑
-
-It is enough for one [`connector`](#-port-) to be compatible with another [`connector`](#-port-) to be compatible with each other ↔
-
-A [`connector`](#-port-) can have [`props`](#-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
-
-### 💾 Model [↑](#-concepts-)
-
-A [`model`](#-model-) is a **[`tagged`](#%EF%B8%8F-tag-)** **[`url`](#-url-)** to a resource with an optional **description** 📄
-
-No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ model 🔑
-
-The similarity of [`models`](#-model-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
-
-### 🏷️ Attribute [↑](#-concepts-)
-
-A [`attribute`](#%EF%B8%8F-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
-
-The **name** is[kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
-
-No **value** is equivalent to the boolean _true_ where the **name** is the category of the attribute 🔑
-
-The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measurement) 🔢
-
-- `mm` for millimeter, `cm` for centimeter, `dm` for decimeter, `m` for meter, `km` for kilometer
-- `m²` for square meter, `m³` for cubic meter, `m⁴` for quartic meter
-- `°` for degree, `rad` for radian
-- `N` for newton, `kN` for kilonewton, `MN` for meganewton
-- `°C` for degree Celsius, `°F` for degree Fahrenheit
-- `W` for watt, `kW` for kilowatt, `MW` for megawatt, `GW` for gigawatt
-- `Wh` for watt-hour, `kWh` for kilowatt-hour, `MWh` for megawatt-hour, `GWh` for gigawatt-hour
-- `J` for joule, `kJ` for kilojoule, `kcal` for kilocalorie
-- `kWh/m²a` for kilowatt-hour per square meter per year
-- `m/s` for meter per second, `m²/s` for square meter per second, `m³/s` for cubic meter per second
-- `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
-- …
-
-A list of [attributes](#%EF%B8%8F-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔
-
-### 🏷️ Tag [↑](#-concepts-)
-
-A [`tag`](#%EF%B8%8F-tag-) is a [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) **name** 🔤
-
-### ◳ Plane [↑](#-concepts-)
-
-A [`plane`](#-plane-) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈
-
-The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis 👈
-
-### 🔗 Url [↑](#-concepts-)
-
-A [`url`](#-url-) is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) string🌐
-
-A _relative_ [`url`](#-url-) is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
-
-### 🔢 Quality [↑](#-concepts-)
-
-A [`quality`](#-quality-) is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Connector), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula** 📏
-
-A [`quality`](#-quality-) can be **scalable** (adjusts with piece scaling) and have multiple **benchmarks** for performance evaluation 🎯
-
-The **kind** determines which entities the quality can be applied to using a bitwise enum system 🔢
-
-### 📊 Benchmark [↑](#-concepts-)
-
-A [`benchmark`](#-benchmark-) is a performance standard within a [`quality`](#-quality-) with a **name**, optional **icon**, and **range** (min/max with exclusion flags) 🏆
-
-Benchmarks provide reference points for evaluating quality measurements against industry or design standards 📈
-
-### 🏷️ Concept [↑](#-concepts-)
-
-A [`concept`](#%EF%B8%8F-concept-) is a **name** and **order** pair that provides semantic grouping for [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) 🧠
-
-Concepts enable hierarchical organization and categorization of design elements beyond simple naming 📂
-
-### 👤 Author [↑](#-concepts-)
-
-An [`author`](#-author-) has a **name** and **email** and can be associated with [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) with a **rank** indicating contribution level 👨‍💻
-
-Authors provide attribution and contact information for design ownership and collaboration 🤝
-
-### 📋 Layer [↑](#-concepts-)
-
-A [`layer`](#-layer-) is an organizational grouping within a [`design`](#%EF%B8%8F-design-) with a **name**, optional **description**, and **color** for visual organization 🎨
-
-Layers provide a way to group and manage pieces logically within complex designs 📑
-
-### 👥 Group [↑](#-concepts-)
-
-A [`group`](#-group-) is a collection of [`pieces`](#-piece-) within a [`design`](#%EF%B8%8F-design-) with optional **name**, **description**, **color**, and **attributes** 👥
-
-Groups enable semantic clustering of pieces that belong together functionally or conceptually 🔗
-
-### ⚙️️ Prop [↑](#-concepts-)
-
-A [`prop`](#-prop-) is a **key-value** pair on a [`connector`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
-
-Props define measurable characteristics of connectors using the quality system for standardized measurement 📐
-
-### 📈 Stat [↑](#-concepts-)
-
-A [`stat`](#-stat-) is a statistical measurement on a [`design`](#%EF%B8%8F-design-) that references a [`quality`](#-quality-) with **range** (min/max) and optional **unit** 📊
-Stats provide computed or measured performance data for entire designs using the quality framework 📈
-
-## Mathematical model
-
-We model the specification as a typed relational structure with geometric data.
-
-### 1. Primitive domains
-
 $$
-\Sigma := \text{the set of finite strings}, \qquad
-\mathbb{B} := \{\mathrm{true}, \mathrm{false}\}, \qquad
-\mathbb{R} := \text{the set of real numbers}.
-$$
-
-$$
-X \rightharpoonup Y
-\text{ denotes a partial function from } X \text{ to } Y.
-$$
-
-$$
-\operatorname{Point} := \mathbb{R}^3,
+\Sigma := \text{finite strings},
 \qquad
-\operatorname{Vector} := \mathbb{R}^3.
+\mathbb{B} := \{\mathrm{true},\mathrm{false}\},
+\qquad
+\mathbb{R} := \text{real numbers}.
 $$
 
-A plane is an origin together with two non-collinear axes:
-
 $$
-\operatorname{Plane}
-:=
-\left\{
-(o,x,y)\in \operatorname{Point}\times\operatorname{Vector}\times\operatorname{Vector}
-\;\middle|\;
-x\neq 0,\; y\neq 0,\; x \not\parallel y
-\right\}.
+X \rightharpoonup Y := \text{partial functions},
+\qquad
+\bot := \text{unspecified optional value},
+\qquad
+\top := \text{present without explicit value}.
 $$
 
-The third axis is derived from the specification's left-handed convention.
+### Guid
 
-Let $\bot$ denote an unspecified or default optional value.
+A guid is an immutable uuid-v7 string of the creation timestamp.
 
----
-
-### 2. Atomic entities
-
-An attribute is metadata:
+### Coordinate
 
 $$
-a = (key, value, unit, definition)
+\operatorname{Point} := \mathbb{R}^2
 $$
 
-with
+### Offset
 
 $$
-key \in \Sigma, \qquad
-value \in \Sigma \cup \{\top,\bot\}, \qquad
-unit \in \Sigma \cup \{\bot\}, \qquad
-definition \in \Sigma \cup \{\bot\}.
+\operatorname{Point} := \mathbb{R}^2
 $$
 
-Here, $value=\top$ means the attribute is present without an explicit value.
-
-A tag is
+### Point
 
 $$
-t = (guid, name, description, icon, attributes).
+\operatorname{Point} := \mathbb{R}^3
 $$
 
-A concept is
+### Vector
 
 $$
-c = (guid, name, description, icon, attributes).
+\operatorname{Vector} := \mathbb{R}^3
 $$
 
-A file is
+### 📦 Kit
 
 $$
-f = (guid, path, remoteUrl, description, attributes).
+K = (T_K, D_K, Q_K, F_K, A_K, C_K, \Gamma_K, Attr_K, description, metadata).
 $$
 
-An author is
-
 $$
-u = (name, email, attributes).
-$$
-
-A benchmark is
-
-$$
-b = (name, icon, min, minExcluded, max, maxExcluded, definition, attributes).
+T_K \subseteq \mathcal{T},
+\qquad
+D_K \subseteq \mathcal{D},
+\qquad
+Q_K = \text{qualities},
+\qquad
+F_K = \text{files},
 $$
 
-A quality kind is a subset of the supported application targets:
+$$
+A_K = \text{authors},
+\qquad
+C_K = \text{concepts},
+\qquad
+\Gamma_K = \text{tags},
+\qquad
+Attr_K = \text{kit-level attributes}.
+$$
+
+### 🏘 Design
 
 $$
-\operatorname{QualityKind}
-\subseteq
-\{\mathrm{General},\mathrm{Design},\mathrm{Type},\mathrm{Piece},\mathrm{Connection},\mathrm{Connector}\}.
-$$
-
-A quality is
-
-$$
-q =
+d =
 (
-key,
 name,
-kind,
-default,
-formula,
-defaultSiUnit,
-defaultImperialUnit,
-min,
-minExcluded,
-max,
-maxExcluded,
+P_d,
+E_d,
+S_d,
+\Pi_d,
+L_d,
+G_d,
 canScale,
-benchmarks,
-definition,
-attributes
+canMirror,
+unit,
+location,
+authors,
+concepts,
+icon,
+image,
+description,
+attributes,
+created,
+updated
 ).
 $$
 
-A prop is
-
 $$
-\pi = (key, value, unit, attributes),
-$$
-
-and a stat is
-
-$$
-s = (key, unit, min, minExcluded, max, maxExcluded).
-$$
-
----
-
-### 3. Connectors, models, types
-
-A model is
-
-$$
-m = (guid, name, tags, file, description, attributes).
-$$
-
-Its tag similarity is the Jaccard index:
-
-$$
-\operatorname{sim}(m_1,m_2)
-=
-\frac{|tags(m_1)\cap tags(m_2)|}{|tags(m_1)\cup tags(m_2)|},
-$$
-
-when the denominator is nonzero.
-
-A connector is
-
-$$
-\kappa =
-(
-id,
-point,
-direction,
-t,
-mandatory,
-port,
-compatiblePorts,
-props,
-description,
-attributes
-),
-$$
-
-where
-
-$$
-point \in \operatorname{Point},
+\mathcal{G}(d) = (P_d, \sim_d),
 \qquad
-direction \in \operatorname{Vector},
-\qquad
-t \in [0,1).
-$$
-
-Define the effective port of a connector by
-
-$$
-\operatorname{port}^{\ast}(\kappa)
-=
-\begin{cases}
-port(\kappa), & \text{if } port(\kappa)\neq \bot,\\
-\bot, & \text{otherwise.}
-\end{cases}
-$$
-
-Connector compatibility is symmetric by allowance from either side:
-
-$$
-\operatorname{compatible}(\kappa_1,\kappa_2)
+p \sim_d q
 \iff
-\Bigl(
-compatiblePorts(\kappa_1)=\varnothing
-\Bigr)
-\lor
-\Bigl(
-compatiblePorts(\kappa_2)=\varnothing
-\Bigr)
-\lor
-\Bigl(
-\operatorname{port}^{\ast}(\kappa_2)\in compatiblePorts(\kappa_1)
-\Bigr)
-\lor
-\Bigl(
-\operatorname{port}^{\ast}(\kappa_1)\in compatiblePorts(\kappa_2)
-\Bigr).
+\exists e \in E_d \text{ joining } p \text{ and } q.
 $$
 
-A type is
+$$
+\operatorname{directlyConnected}_d(p,q) \iff p \sim_d q.
+$$
+
+$$
+\operatorname{connected}_d(p,q)
+\iff
+\exists n \ge 0,\; \exists p_0,\dots,p_n \in P_d:
+\; p_0 = p,\; p_n = q,\; p_i \sim_d p_{i+1}.
+$$
+
+$$
+\operatorname{component}_d(p) = [p]_{\operatorname{connected}_d}.
+$$
+
+$$
+\operatorname{parent}^{\mathrm{design}} : \mathcal{D} \rightharpoonup \mathcal{D},
+\qquad
+\operatorname{proto}(d) \iff \operatorname{parent}^{\mathrm{design}}(d) = \bot.
+$$
+
+### 🏠 Type
 
 $$
 \tau =
@@ -1071,59 +2441,19 @@ updated
 ).
 $$
 
----
-
-### 4. Pieces, connections, designs
-
-A piece is
-
 $$
-p =
-(
-id,
-ref,
-plane,
-center,
-scale,
-mirrorPlane,
-props,
-hidden,
-locked,
-color,
-description,
-attributes
-),
+\operatorname{parent}^{\mathrm{type}} : \mathcal{T} \rightharpoonup \mathcal{T},
+\qquad
+\operatorname{proto}(\tau) \iff \operatorname{parent}^{\mathrm{type}}(\tau) = \bot.
 $$
 
-where
-
-$$
-ref(p) \in \mathcal{T} \sqcup \mathcal{D}.
-$$
-
-That is, a piece instantiates either a type or a design.
-
-A piece is **fixed** iff its plane and center are defined:
-
-$$
-\operatorname{fixed}(p) \iff plane(p)\neq \bot \land center(p)\neq \bot.
-$$
-
-A piece is **linked** iff it is not fixed:
-
-$$
-\operatorname{linked}(p) \iff plane(p)=\bot \land center(p)=\bot.
-$$
-
-A side of a connection is
+### 🔗 Connection
 
 $$
 \sigma = (piece, connector, designPiece^{\ast}),
+\qquad
+designPiece^{\ast} \in P_d \cup \{\bot\}.
 $$
-
-where $designPiece^{\ast}$ is optional.
-
-A connection is
 
 $$
 e =
@@ -1143,360 +2473,280 @@ attributes
 ).
 $$
 
-The labels $\sigma_c$ and $\sigma_g$ may be read as `connected` and `connecting`, but the underlying relation is undirected.
-
-A layer is
-
 $$
-\lambda = (path, isHidden, isLocked, color, description, attributes).
+\operatorname{ends}(e) = \{\sigma_c.piece, \sigma_g.piece\}.
 $$
 
-A group is
+$$
+\operatorname{lower}(e)
+:=
+\arg\min_{p \in \operatorname{ends}(e)} \operatorname{hierarchy}_d(p),
+\qquad
+\operatorname{higher}(e)
+:=
+\arg\max_{p \in \operatorname{ends}(e)} \operatorname{hierarchy}_d(p).
+$$
+
+### ⭕ Piece
 
 $$
-g = (pieces, color, name, description, attributes).
-$$
-
-A design is
-
-$$
-d =
+p =
 (
-name,
-P_d,
-E_d,
-S_d,
-\Pi_d,
-L_d,
-G_d,
-canScale,
-canMirror,
-unit,
-location,
-authors,
-concepts,
-icon,
-image,
+id,
+ref,
+plane,
+center,
+scale,
+mirrorPlane,
+props,
+hidden,
+locked,
+color,
 description,
-attributes,
-created,
-updated
+attributes
 ),
+\qquad
+ref(p) \in \mathcal{T} \sqcup \mathcal{D}.
 $$
 
-where
-
-- $P_d$ is the finite set of pieces of $d$,
-- $E_d$ is the finite set of connections of $d$,
-- $S_d$ is the set of stats,
-- $\Pi_d$ is the set of props,
-- $L_d$ is the set of layers,
-- $G_d$ is the set of groups.
-
-A kit is the top-level aggregate
-
 $$
-K =
-(
-T_K,
-D_K,
-Q_K,
-F_K,
-A_K,
-C_K,
-\Gamma_K,
-Attr_K,
-description,
-metadata
-),
+\operatorname{fixed}(p) \iff plane(p) \neq \bot \land center(p) \neq \bot.
 $$
 
-where
-
-- $T_K$ is the set of types,
-- $D_K$ is the set of designs,
-- $Q_K$ is the set of qualities,
-- $F_K$ is the set of files,
-- $A_K$ is the set of authors,
-- $C_K$ is the set of concepts,
-- $\Gamma_K$ is the set of tags,
-- $Attr_K$ is the set of kit-level attributes.
-
----
-
-### 5. Design graph
-
-Each design induces an undirected graph
-
 $$
-\mathcal{G}(d) = (P_d, \sim_d),
+\operatorname{linked}(p) \iff plane(p) = \bot \land center(p) = \bot.
 $$
 
-where
-
 $$
-p \sim_d q
-\iff
-\exists e\in E_d
-\text{ such that } e \text{ joins } p \text{ and } q.
+F_d := \{p \in P_d \mid \operatorname{fixed}(p)\}.
 $$
-
-Define **directly connected** by
-
-$$
-\operatorname{directlyConnected}_d(p,q) \iff p \sim_d q.
-$$
-
-Define **connected** as graph reachability:
-
-$$
-\operatorname{connected}_d(p,q)
-\iff
-\exists n\ge 0,\;
-\exists p_0,\dots,p_n\in P_d
-\text{ such that }
-p_0=p,\; p_n=q,\; p_i \sim_d p_{i+1}.
-$$
-
-This is an equivalence relation on $P_d$.
-
-A **component** of $d$ is an equivalence class of $\operatorname{connected}_d$.
-
----
-
-### 6. Fixed roots, hierarchy, and placement forest
-
-Let the set of fixed pieces be
-
-$$
-F_d := \{p\in P_d \mid \operatorname{fixed}(p)\}.
-$$
-
-Assuming every non-fixed piece lies in a component containing at least one fixed piece, define the hierarchy of a piece as its shortest graph distance to a fixed piece:
 
 $$
 \operatorname{hierarchy}_d(p)
 :=
-\min_{f\in F_d}
-\operatorname{dist}_{\mathcal{G}(d)}(f,p).
+\min_{f \in F_d} \operatorname{dist}_{\mathcal{G}(d)}(f,p).
 $$
 
-Hence:
-
 $$
-\operatorname{hierarchy}_d(p)=0 \iff \operatorname{fixed}(p).
+\mathcal{F}_d := \text{a breadth-first spanning forest of } \mathcal{G}(d) \text{ rooted at } F_d.
 $$
-
-To obtain parent/child relations, choose a breadth-first spanning forest
-
-$$
-\mathcal{F}_d
-$$
-
-of $\mathcal{G}(d)$ rooted at the fixed pieces $F_d$.
-
-Then the **parent** relation is the predecessor relation in that forest:
 
 $$
 \operatorname{parent}_d : P_d \rightharpoonup P_d.
 $$
 
-It is defined exactly on non-root pieces.
-
-For every non-root piece $p$,
-
-$$
-\operatorname{hierarchy}_d(p)
-=
-\operatorname{hierarchy}_d(\operatorname{parent}_d(p)) + 1.
-$$
-
----
-
-### 7. Path, ancestor, descendant, child, grandchild
-
-The path of a piece is the ordered list of all parent pieces, starting at the fixed root and excluding the piece itself.
-
-Formally, let $[]$ denote the empty list and let $\mathbin{+\!\!+}$ denote list concatenation. Then
-
 $$
 \operatorname{path}_d(p)
 =
 \begin{cases}
-[],
-& \text{if } \operatorname{parent}_d(p)=\bot,\\[4pt]
-\operatorname{path}_d(\operatorname{parent}_d(p))
-\mathbin{+\!\!+}
-[\operatorname{parent}_d(p)],
-& \text{otherwise.}
+[], & \operatorname{parent}_d(p) = \bot,\\[4pt]
+\operatorname{path}_d(\operatorname{parent}_d(p)) \mathbin{+\!\!+} [\operatorname{parent}_d(p)], & \text{otherwise.}
 \end{cases}
 $$
 
-So if $b$ is a fixed root, and
-
 $$
-\operatorname{parent}_d(f_0)=b,\quad
-\operatorname{parent}_d(f_1)=f_0,\quad
-\operatorname{parent}_d(f_2)=f_1,\quad
-\operatorname{parent}_d(c)=f_2,
+\operatorname{ancestor}_d(x,y) \iff x \in \operatorname{path}_d(y).
 $$
 
-then
-
 $$
-\operatorname{path}_d(c) = [b,f_0,f_1,f_2].
+\operatorname{descendant}_d(y,x) \iff x \in \operatorname{path}_d(y).
 $$
 
-A piece $x$ is an **ancestor** of a piece $y$ iff $x$ occurs in the path of $y$:
-
 $$
-\operatorname{ancestor}_d(x,y)
-\iff
-x \in \operatorname{path}_d(y).
+\operatorname{child}_d(c,p) \iff \operatorname{parent}_d(c) = p.
 $$
-
-A piece $y$ is a **descendant** of a piece $x$ iff $x$ is an ancestor of $y$:
-
-$$
-\operatorname{descendant}_d(y,x)
-\iff
-x \in \operatorname{path}_d(y).
-$$
-
-A piece $c$ is a **child** of a piece $p$ iff $p$ is the immediate parent of $c$:
-
-$$
-\operatorname{child}_d(c,p)
-\iff
-\operatorname{parent}_d(c)=p.
-$$
-
-A piece $g$ is a **grandchild** of a piece $p$ iff there exists a child $c$ of $p$ such that $g$ is a child of $c$:
 
 $$
 \operatorname{grandchild}_d(g,p)
 \iff
-\exists c\in P_d:
-\operatorname{child}_d(c,p)\land \operatorname{child}_d(g,c).
+\exists c \in P_d:
+\operatorname{child}_d(c,p) \land \operatorname{child}_d(g,c).
 $$
 
-More generally, the $n$-fold parent iterate defines strict ancestry:
-
 $$
-\operatorname{ancestor}_d(x,y)
-\iff
-\exists n\ge 1:\;
-\operatorname{parent}_d^{\,n}(y)=x.
+\operatorname{root}_d(p) \iff \operatorname{parent}_d(p) = \bot.
 $$
 
----
-
-### 8. Root, leaf, sibling
-
-A piece is a **root** iff it has no parent:
-
 $$
-\operatorname{root}_d(p) \iff \operatorname{parent}_d(p)=\bot.
+\operatorname{leaf}_d(p) \iff \neg \exists c \in P_d : \operatorname{child}_d(c,p).
 $$
-
-A piece is a **leaf** iff it has no children:
-
-$$
-\operatorname{leaf}_d(p)
-\iff
-\neg \exists c\in P_d:\operatorname{child}_d(c,p).
-$$
-
-Two distinct pieces are **siblings** iff they have the same parent:
 
 $$
 \operatorname{sibling}_d(p,q)
 \iff
-p\neq q
-\land
-\operatorname{parent}_d(p)=\operatorname{parent}_d(q)\neq \bot.
+p \neq q \land \operatorname{parent}_d(p) = \operatorname{parent}_d(q) \neq \bot.
 $$
 
----
-
-### 9. Direction convention for a connection
-
-Although a connection is semantically undirected, an orientation can be induced from hierarchy:
+### ⚓ Connector
 
 $$
-\operatorname{lower}(e) :=
-\arg\min_{p\in \operatorname{ends}(e)}
-\operatorname{hierarchy}_d(p),
+\kappa =
+(
+id,
+point,
+direction,
+t,
+mandatory,
+port,
+compatiblePorts,
+props,
+description,
+attributes
+),
+$$
+
+$$
+point \in \operatorname{Point},
 \qquad
-\operatorname{higher}(e) :=
-\arg\max_{p\in \operatorname{ends}(e)}
-\operatorname{hierarchy}_d(p).
-$$
-
-Then the conventional direction is
-
-$$
-\operatorname{lower}(e) \to \operatorname{higher}(e).
-$$
-
-If both endpoints have the same hierarchy, the connection remains undirected for semantic purposes.
-
----
-
-### 10. Proto / parent / child for types and designs
-
-The prose also uses `proto`, `parent`, and `child` for types and designs. Mathematically, this is modeled by optional partial parent maps:
-
-$$
-\operatorname{parent}^{\mathrm{type}} : \mathcal{T} \rightharpoonup \mathcal{T},
+direction \in \operatorname{Vector},
 \qquad
-\operatorname{parent}^{\mathrm{design}} : \mathcal{D} \rightharpoonup \mathcal{D}.
-$$
-
-Then:
-
-A type is **proto** iff
-
-$$
-\operatorname{parent}^{\mathrm{type}}(\tau)=\bot.
-$$
-
-A design is **proto** iff
-
-$$
-\operatorname{parent}^{\mathrm{design}}(d)=\bot.
-$$
-
-Subtype, subdesign, ancestor, descendant, child, and grandchild are defined from these parent maps exactly as above.
-
----
-
-### 11. Summary
-
-The complete structure is therefore:
-
-$$
-K
-\text{ contains types and designs;}
+t \in [0,1).
 $$
 
 $$
-d \in D_K
-\text{ is an undirected graph of pieces and connections;}
+\operatorname{port}^{\ast}(\kappa)
+=
+\begin{cases}
+port(\kappa), & port(\kappa) \neq \bot,\\
+\bot, & \text{otherwise.}
+\end{cases}
 $$
 
 $$
-\operatorname{hierarchy}_d
-\text{ is induced by shortest distance to fixed pieces;}
+\operatorname{compatible}(\kappa_1,\kappa_2)
+\iff
+\bigl(compatiblePorts(\kappa_1)=\varnothing\bigr)
+\lor
+\bigl(compatiblePorts(\kappa_2)=\varnothing\bigr)
+\lor
+\bigl(\operatorname{port}^{\ast}(\kappa_2) \in compatiblePorts(\kappa_1)\bigr)
+\lor
+\bigl(\operatorname{port}^{\ast}(\kappa_1) \in compatiblePorts(\kappa_2)\bigr).
+$$
+
+### 💾 Model
+
+$$
+m = (guid, name, tags, file, description, attributes).
 $$
 
 $$
-\operatorname{parent}_d
-\text{ is induced by a breadth-first placement forest;}
+\operatorname{sim}(m_1,m_2)
+=
+\frac{|tags(m_1) \cap tags(m_2)|}{|tags(m_1) \cup tags(m_2)|},
+\qquad
+|tags(m_1) \cup tags(m_2)| \neq 0.
+$$
+
+### 🏷️ Attribute
+
+$$
+a = (key, value, unit, definition),
 $$
 
 $$
-\operatorname{path}_d,\operatorname{ancestor}_d,\operatorname{descendant}_d,
-\operatorname{child}_d,\operatorname{grandchild}_d
-\text{ are derived from } \operatorname{parent}_d.
+key \in \Sigma,
+\qquad
+value \in \Sigma \cup \{\top,\bot\},
+\qquad
+unit \in \Sigma \cup \{\bot\},
+\qquad
+definition \in \Sigma \cup \{\bot\}.
+$$
+
+### 🏷️ Tag
+
+$$
+t = (guid, name, description, icon, attributes).
+$$
+
+### ◳ Plane
+
+$$
+\operatorname{Plane}
+:=
+\left\{
+(o,x,y) \in \operatorname{Point} \times \operatorname{Vector} \times \operatorname{Vector}
+\;\middle|\;
+ x \neq 0,\; y \neq 0,\; x \not\parallel y
+\right\}.
+$$
+
+### 🔗 Url
+
+$$
+\operatorname{Url} := \Sigma,
+\qquad
+\operatorname{Url} = \operatorname{RelativeUrl} \sqcup \operatorname{RemoteUrl}.
+$$
+
+### 🔢 Quality
+
+$$
+\operatorname{QualityKind}
+\subseteq
+\{\mathrm{General},\mathrm{Design},\mathrm{Type},\mathrm{Piece},\mathrm{Connection},\mathrm{Connector}\}.
+$$
+
+$$
+q =
+(
+key,
+name,
+kind,
+default,
+formula,
+defaultSiUnit,
+defaultImperialUnit,
+min,
+minExcluded,
+max,
+maxExcluded,
+canScale,
+benchmarks,
+definition,
+attributes
+).
+$$
+
+### 📊 Benchmark
+
+$$
+b = (name, icon, min, minExcluded, max, maxExcluded, definition, attributes).
+$$
+
+### 🏷️ Concept
+
+$$
+c = (guid, name, description, icon, attributes).
+$$
+
+### 👤 Author
+
+$$
+u = (name, email, attributes).
+$$
+
+### 📋 Layer
+
+$$
+\lambda = (path, isHidden, isLocked, color, description, attributes).
+$$
+
+### 👥 Group
+
+$$
+g = (pieces, color, name, description, attributes).
+$$
+
+### ⚙️ Prop
+
+$$
+\pi = (key, value, unit, attributes).
+$$
+
+### 📈 Stat
+
+$$
+s = (key, unit, min, minExcluded, max, maxExcluded).
 $$

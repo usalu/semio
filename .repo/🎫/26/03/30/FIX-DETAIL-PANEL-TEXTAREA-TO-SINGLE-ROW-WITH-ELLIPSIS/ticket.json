@@ -1,8 +1,9 @@
 {
   "title": "Fix Detail Panel Textarea to Single Row with Ellipsis",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Fix Detail Panel Textarea to Single Row with Ellipsis",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1170"
   },

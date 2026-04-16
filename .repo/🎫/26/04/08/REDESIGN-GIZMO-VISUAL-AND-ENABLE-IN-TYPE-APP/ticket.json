@@ -1,8 +1,8 @@
 {
   "title": "Redesign Gizmo Visual and Enable in Type App",
-  "status": "open",
+  "status": "closed",
   "description": "Redesign the gizmo to be thinner, less bulky, and more recognizable, with cleaner spacing, slimmer handles, clearer axis readability, and a legible small-size silhouette. Do not remove existing functionality only improve behavior and visual clarity. Make it visible the same way on both design and type app (currently only showing in design app).",
-  "summary": "Fixed gizmo invisibility caused by overly thin axisScale values. Changed axisScale from [0.8, 0.04, 0.04] to [0.9, 0.035, 0.035] for visible but slimmer shafts, and axisHeadScale from 0.9 to 1 for properly visible axis heads. Applied consistently in both elements/ui Gizmo and semio/ui SceneGizmo. TypeApp scene already had showGizmo, projection, and orthographic props from prior change. All 32 tests pass.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1291"
   },

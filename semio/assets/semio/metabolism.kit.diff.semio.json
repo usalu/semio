@@ -1,6 +1,13 @@
 {
   "name": "Metabolism Modified",
   "version": "r25.08-1",
+  "description": "Modified version for comprehensive diff testing",
+  "icon": "modified-icon.svg",
+  "image": "modified-image.png",
+  "remote": "https://modified.example.com/archive.tar.gz",
+  "homepage": "https://modified.example.com",
+  "license": "MIT-Modified",
+  "preview": "modified-preview.png",
   "types": {
     "removed": [
       {
@@ -14,9 +21,12 @@
         },
         "diff": {
           "name": "Base Modified",
+          "stock": 42,
           "virtual": true,
           "unit": "cm",
-          "stock": 42,
+          "icon": "updated-base-icon.svg",
+          "image": "updated-base-image.png",
+          "description": "Updated base type description",
           "models": {
             "removed": [
               {
@@ -41,16 +51,17 @@
             "added": [
               {
                 "guid": "019caa00-0000-7000-a000-000000000001",
-                "file": {
-                  "guid": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
-                },
                 "name": "new-test-model",
                 "tags": [
                   {
                     "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab"
                   }
                 ],
-                "description": "A newly added model"
+                "file": {
+                  "guid": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
+                },
+                "description": "A newly added model",
+                "attributes": []
               }
             ]
           },
@@ -67,6 +78,9 @@
                 },
                 "diff": {
                   "name": "c1-modified",
+                  "description": "Updated connector description",
+                  "mandatory": true,
+                  "t": 0.75,
                   "point": {
                     "x": 28.6,
                     "y": 27.7,
@@ -74,11 +88,9 @@
                   },
                   "direction": {
                     "x": 1,
+                    "y": 0,
                     "z": -1
                   },
-                  "t": 0.75,
-                  "mandatory": true,
-                  "description": "Updated connector description",
                   "attributes": {
                     "added": [
                       {
@@ -96,6 +108,7 @@
               {
                 "guid": "019caa00-0000-7000-a000-000000000003",
                 "name": "new-connector",
+                "t": 0.5,
                 "point": {
                   "x": 1,
                   "y": 1,
@@ -106,18 +119,16 @@
                   "y": 1,
                   "z": 0
                 },
-                "t": 0.5,
-                "mandatory": true,
+                "description": "Newly added connector",
                 "port": {
                   "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
                 },
-                "description": "Newly added connector"
+                "mandatory": true,
+                "props": [],
+                "attributes": []
               }
             ]
           },
-          "icon": "updated-base-icon.svg",
-          "image": "updated-base-image.png",
-          "description": "Updated base type description",
           "attributes": {
             "added": [
               {
@@ -135,29 +146,20 @@
       {
         "guid": "019caa00-0000-7000-a000-000000000005",
         "name": "New Comprehensive Type",
-        "parent": {
-          "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-        },
         "isAbstract": false,
-        "virtual": true,
-        "unit": "mm",
-        "stock": 100,
-        "location": {
-          "guid": "019caa00-0000-7000-a000-000000000006"
-        },
         "folder": "new-type-folder",
         "models": [
           {
             "guid": "019caa00-0000-7000-a000-00000000000b",
-            "file": {
-              "guid": "457d2061-ac4b-4317-8563-ba41afffd149"
-            },
             "name": "new-model",
             "tags": [
               {
                 "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
               }
             ],
+            "file": {
+              "guid": "457d2061-ac4b-4317-8563-ba41afffd149"
+            },
             "description": "New model",
             "attributes": [
               {
@@ -172,6 +174,7 @@
           {
             "guid": "019caa00-0000-7000-a000-000000000007",
             "name": "test-connector",
+            "t": 0,
             "point": {
               "x": 0,
               "y": 0,
@@ -182,21 +185,21 @@
               "y": 0,
               "z": 1
             },
-            "t": 0,
-            "mandatory": false,
+            "description": "Test connector",
             "port": {
               "guid": "019ab243-21f3-7380-93c6-994a9a023448"
             },
+            "mandatory": false,
             "props": [
               {
                 "guid": "019caa00-0000-7000-a000-000000000008",
                 "quality": {
                   "guid": "019caa00-0000-7000-a000-000000000009"
                 },
-                "value": "100"
+                "value": "100",
+                "attributes": []
               }
             ],
-            "description": "Test connector",
             "attributes": [
               {
                 "guid": "019caa00-0000-7000-a000-00000000000a",
@@ -212,9 +215,18 @@
             "quality": {
               "guid": "019caa00-0000-7000-a000-00000000000e"
             },
-            "value": "yes"
+            "value": "yes",
+            "attributes": []
           }
         ],
+        "stock": 100,
+        "virtual": true,
+        "unit": "mm",
+        "createdAt": "2025-12-23T13:40:58.750Z",
+        "updatedAt": "2025-12-23T13:40:58.750Z",
+        "location": {
+          "guid": "019caa00-0000-7000-a000-000000000006"
+        },
         "authors": [
           {
             "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
@@ -235,9 +247,7 @@
             "value": "new-val",
             "definition": "New attribute"
           }
-        ],
-        "createdAt": "2025-12-23T13:40:58.750Z",
-        "updatedAt": "2025-12-23T13:40:58.750Z"
+        ]
       }
     ]
   },
@@ -245,6 +255,30 @@
     "removed": [
       {
         "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
+      },
+      {
+        "guid": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf"
+      },
+      {
+        "guid": "38f0f014-ceba-42df-9339-4aab84bfbc1f"
+      },
+      {
+        "guid": "c3ee87b6-7453-49bc-8d7b-9405892f9452"
+      },
+      {
+        "guid": "d7e12638-9749-471b-937e-a6e5523778ff"
+      },
+      {
+        "guid": "79fa8945-b47d-4896-965f-f921067cbae2"
+      },
+      {
+        "guid": "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf"
+      },
+      {
+        "guid": "019ab4e0-8da8-7217-946f-5b5a83aca0e3"
+      },
+      {
+        "guid": "019ab4e0-cb2a-7613-a16a-ae086e331c95"
       }
     ],
     "updated": [
@@ -255,6 +289,17 @@
         "diff": {
           "name": "Capsule Dream Modified",
           "unit": "cm",
+          "icon": "updated-design-icon.svg",
+          "image": "updated-design-image.png",
+          "description": "Updated design description",
+          "authors": [
+            {
+              "guid": "5c2e7719-dec3-4f21-9c47-b7081410219a"
+            },
+            {
+              "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+            }
+          ],
           "pieces": {
             "removed": [
               {
@@ -278,9 +323,6 @@
               {
                 "guid": "019caa00-0000-7000-a000-000000000010",
                 "name": "new-test-piece",
-                "type": {
-                  "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
-                },
                 "plane": {
                   "origin": {
                     "x": 5,
@@ -320,7 +362,9 @@
                     "z": 0
                   }
                 },
-                "description": "New piece for testing"
+                "description": "New piece for testing",
+                "props": [],
+                "attributes": []
               }
             ]
           },
@@ -357,25 +401,8 @@
             "added": [
               {
                 "guid": "019caa00-0000-7000-a000-000000000011",
-                "connected": {
-                  "piece": {
-                    "guid": "ddd6320b-ae3d-4121-9b28-fc091011f79a"
-                  },
-                  "designPiece": {
-                    "guid": "7389fe65-bc2d-4555-8b20-07d65ab6146a"
-                  },
-                  "connector": {
-                    "guid": "d25a91ed-b124-4e5b-8e7e-af832541c953"
-                  }
-                },
-                "connecting": {
-                  "piece": {
-                    "guid": "019caa00-0000-7000-a000-000000000010"
-                  },
-                  "designPiece": {
-                    "guid": "ddd6320b-ae3d-4121-9b28-fc091011f79a"
-                  }
-                },
+                "connected": {},
+                "connecting": {},
                 "gap": 10,
                 "shift": 5,
                 "rise": 2,
@@ -384,21 +411,11 @@
                 "tilt": 0,
                 "u": 0,
                 "v": 0,
-                "description": "New test connection"
+                "description": "New test connection",
+                "attributes": []
               }
             ]
           },
-          "authors": [
-            {
-              "guid": "5c2e7719-dec3-4f21-9c47-b7081410219a"
-            },
-            {
-              "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
-            }
-          ],
-          "icon": "updated-design-icon.svg",
-          "image": "updated-design-image.png",
-          "description": "Updated design description",
           "attributes": {
             "added": [
               {
@@ -416,18 +433,13 @@
       {
         "guid": "019caa00-0000-7000-a000-000000000016",
         "name": "New Comprehensive Design",
+        "families": [],
         "isAbstract": false,
-        "unit": "mm",
         "folder": "new-design-folder",
-        "canScale": true,
-        "canMirror": false,
         "pieces": [
           {
             "guid": "019caa00-0000-7000-a000-000000000013",
             "name": "new-design-piece-1",
-            "type": {
-              "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-            },
             "plane": {
               "origin": {
                 "x": 0,
@@ -445,14 +457,13 @@
                 "z": 0
               }
             },
-            "scale": 1
+            "scale": 1,
+            "props": [],
+            "attributes": []
           },
           {
             "guid": "019caa00-0000-7000-a000-000000000014",
             "name": "new-design-piece-2",
-            "type": {
-              "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
-            },
             "plane": {
               "origin": {
                 "x": 10,
@@ -470,51 +481,46 @@
                 "z": 0
               }
             },
-            "scale": 1
+            "scale": 1,
+            "props": [],
+            "attributes": []
           }
         ],
-        "connections": [
+        "_connections": [
           {
             "guid": "019caa00-0000-7000-a000-000000000018",
-            "connected": {
-              "piece": {
-                "guid": "019caa00-0000-7000-a000-000000000013"
-              }
-            },
-            "connecting": {
-              "piece": {
-                "guid": "019caa00-0000-7000-a000-000000000014"
-              }
-            },
+            "connected": {},
+            "connecting": {},
             "gap": 0,
-            "shift": 0,
-            "rise": 0,
-            "rotation": 0,
-            "turn": 0,
-            "tilt": 0,
-            "u": 0,
-            "v": 0,
-            "description": "New design connection"
+            "description": "New design connection",
+            "attributes": []
           }
         ],
+        "stats": [],
         "props": [
           {
             "guid": "019caa00-0000-7000-a000-000000000019",
             "quality": {
               "guid": "019caa00-0000-7000-a000-00000000001a"
             },
-            "value": "test"
+            "value": "test",
+            "attributes": []
           }
         ],
         "layers": [
           {
             "guid": "019caa00-0000-7000-a000-000000000015",
-            "path": "default"
+            "path": "default",
+            "attributes": []
           }
         ],
         "activeLayer": {
           "guid": "019caa00-0000-7000-a000-000000000015"
         },
+        "groups": [],
+        "canScale": true,
+        "canMirror": false,
+        "unit": "mm",
         "location": {
           "guid": "019caa00-0000-7000-a000-000000000017"
         },
@@ -596,45 +602,8 @@
         "guid": "019caa00-0000-7000-a000-00000000001e",
         "name": "New Concept",
         "description": "New",
-        "icon": "concept.svg"
-      }
-    ]
-  },
-  "ports": {
-    "removed": [
-      {
-        "guid": "019ab243-21f3-7380-93c6-994a9a023448"
-      }
-    ],
-    "updated": [
-      {
-        "port": {
-          "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
-        },
-        "diff": {
-          "name": "core circular top Modified",
-          "compatiblePorts": [
-            {
-              "guid": "019ab243-21f3-7380-93c6-a04a8b137527"
-            },
-            {
-              "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
-            }
-          ]
-        }
-      }
-    ],
-    "added": [
-      {
-        "guid": "019caa00-0000-7000-a000-00000000001f",
-        "name": "New Port",
-        "description": "New",
-        "icon": "port.svg",
-        "compatiblePorts": [
-          {
-            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
-          }
-        ]
+        "icon": "concept.svg",
+        "attributes": []
       }
     ]
   },
@@ -688,6 +657,7 @@
           "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
         },
         "description": "New folder",
+        "attributes": [],
         "createdAt": "2025-12-23T13:40:58.750Z"
       }
     ]
@@ -708,15 +678,9 @@
       {
         "guid": "019caa00-0000-7000-a000-000000000020",
         "name": "Test Author",
-        "email": "test@example.com"
+        "email": "test@example.com",
+        "attributes": []
       }
     ]
-  },
-  "remote": "https://modified.example.com/archive.tar.gz",
-  "homepage": "https://modified.example.com",
-  "license": "MIT-Modified",
-  "preview": "modified-preview.png",
-  "icon": "modified-icon.svg",
-  "image": "modified-image.png",
-  "description": "Modified version for comprehensive diff testing"
+  }
 }

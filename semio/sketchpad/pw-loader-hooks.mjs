@@ -39,9 +39,17 @@ export async function resolve(specifier, context, nextResolve) {
 function stubViteGlob(source) {
   let result = '';
   let i = 0;
-  const needle = 'import.meta.glob';
+  const needles = ['(import.meta as any).glob', 'import.meta.glob'];
   while (i < source.length) {
-    const idx = source.indexOf(needle, i);
+    let idx = -1;
+    let needle = '';
+    for (const candidate of needles) {
+      const candidateIdx = source.indexOf(candidate, i);
+      if (candidateIdx !== -1 && (idx === -1 || candidateIdx < idx)) {
+        idx = candidateIdx;
+        needle = candidate;
+      }
+    }
     if (idx === -1) {
       result += source.slice(i);
       break;

@@ -1,0 +1,11 @@
+{
+  "title": "Refactor Rust Codebase to Pure OO with Lazy Loading",
+  "status": "open",
+  "description": "Refactor semio/rs/lib.rs to be purely object-oriented with lazy-loading and no free pure functions. Dissolve the flatten module into methods on Design, Piece, and Connection. Add parent/child pointer references. Move all free functions into methods on their owning types.",
+  "summary": "Implemented and verified Rust async kit backbone integration work. Fixed async backbone to use current stateful Kit methods for applying diffs and validating candidates, preserving authoritative kit snapshots and linear ledger persistence. Extended existing Rust test file with async coverage for DevKitBackbone JSON + ledger persistence and consensus, LocalKitBackbone .semio/kit.db + ledger persistence, idle timeout interaction locking, and RemoteKitBackbone websocket session/propose/agreement/vote/commit flow via a local mock hub. Updated stale Rust callers/tests from removed free functions to current method APIs so unit and doctests compile. Verified `cargo test` in semio/rs passes: 83 passed, 1 ignored, doctests passed.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪61801b835ac84f608ff8c41a704b9818",
+    "⚪49d4a71436b04b4289ee9e86050d9961"
+  ]
+}

@@ -61,37 +61,48 @@
       "name": "Capsule",
       "isAbstract": true,
       "createdAt": "2025-11-23T01:10:21.293Z",
-      "updatedAt": "2025-11-23T01:10:21.293Z"
+      "updatedAt": "2025-11-23T01:10:21.293Z",
+      "families": [
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
+      ]
     },
     {
       "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab",
       "name": "Ellipsoid",
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "isAbstract": true,
       "createdAt": "2025-11-23T01:10:21.293Z",
-      "updatedAt": "2025-11-23T01:10:21.293Z"
+      "updatedAt": "2025-11-23T01:10:21.293Z",
+      "families": [
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
+      ]
     },
     {
       "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14",
       "name": "Trapezoid",
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "isAbstract": true,
       "createdAt": "2025-11-23T01:10:21.293Z",
-      "updatedAt": "2025-11-23T01:10:21.293Z"
+      "updatedAt": "2025-11-23T01:10:21.293Z",
+      "families": [
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
+      ]
     },
     {
       "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79",
       "name": "Balcony",
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "isAbstract": true,
       "createdAt": "2025-11-23T01:10:21.293Z",
-      "updatedAt": "2025-11-23T01:10:21.293Z"
+      "updatedAt": "2025-11-23T01:10:21.293Z",
+      "families": [
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
+      ]
     },
     {
       "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73",
@@ -103,14 +114,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.034Z",
-      "updatedAt": "2025-11-23T01:10:21.034Z"
+      "updatedAt": "2025-11-23T01:10:21.034Z",
+      "families": [
+        {
+          "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
+        }
+      ]
     },
     {
       "guid": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
       "name": "Blob",
-      "parent": {
-        "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
-      },
       "description": "🏩 A blobby two storey office building with an entrance hall and access to the staircases and elevators of the round cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
       "icon": "icons/base_blob.svg",
       "image": "images/base_blob.png",
@@ -118,7 +131,12 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.052Z",
-      "updatedAt": "2025-11-23T01:10:21.052Z"
+      "updatedAt": "2025-11-23T01:10:21.052Z",
+      "families": [
+        {
+          "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
+        }
+      ]
     },
     {
       "guid": "0e240cd2-7f98-42b6-af39-34e7ee4fad35",
@@ -130,7 +148,8 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.108Z",
-      "updatedAt": "2025-11-23T01:10:21.108Z"
+      "updatedAt": "2025-11-23T01:10:21.108Z",
+      "families": []
     },
     {
       "guid": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
@@ -142,14 +161,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.111Z",
-      "updatedAt": "2025-11-23T01:10:21.111Z"
+      "updatedAt": "2025-11-23T01:10:21.111Z",
+      "families": [
+        {
+          "guid": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b"
+        }
+      ]
     },
     {
       "guid": "cf1e2cfe-e9b0-41bd-bf69-b6ed0d0016d9",
       "name": "Cylindric Capital",
-      "parent": {
-        "guid": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e"
-      },
       "description": "🏥 A roof that has the skin of a cut extruded cylinder.",
       "icon": "icons/cylindric-capital.svg",
       "image": "images/cylindric-capital.png",
@@ -157,14 +178,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.113Z",
-      "updatedAt": "2025-11-23T01:10:21.113Z"
+      "updatedAt": "2025-11-23T01:10:21.113Z",
+      "families": [
+        {
+          "guid": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b"
+        }
+      ]
     },
     {
       "guid": "cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "name": "\\",
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "description": "🏛 An apartment capsule for one person. It has the entrance on the back and has the view to the front.",
       "icon": "icons/capsule_backslash.svg",
       "image": "images/capsule_backslash.png",
@@ -172,14 +195,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.115Z",
-      "updatedAt": "2025-11-23T01:10:21.115Z"
+      "updatedAt": "2025-11-23T01:10:21.115Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "name": "/",
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "description": "🌉 An apartment capsule for one person. It has the entrance on the back and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/capsule_slash.svg",
       "image": "images/capsule_slash.png",
@@ -187,14 +212,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.117Z",
-      "updatedAt": "2025-11-23T01:10:21.117Z"
+      "updatedAt": "2025-11-23T01:10:21.117Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "e1878572-0fe1-4780-b877-90df9b25d31f",
       "name": "q",
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "description": "🗼 An apartment capsule for one person. It has the entrance on the back and has the view to the side.",
       "icon": "icons/capsule_q.svg",
       "image": "images/capsule_q.png",
@@ -202,14 +229,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.119Z",
-      "updatedAt": "2025-11-23T01:10:21.119Z"
+      "updatedAt": "2025-11-23T01:10:21.119Z",
+      "families": [
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
+      ]
     },
     {
       "guid": "357b841f-b121-463c-88a6-153d7cbf272f",
       "name": "p",
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "description": "🏭 An apartment capsule for one person. It has the entrance on the back and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/capsule_p.svg",
       "image": "images/capsule_p.png",
@@ -217,14 +246,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.121Z",
-      "updatedAt": "2025-11-23T01:10:21.121Z"
+      "updatedAt": "2025-11-23T01:10:21.121Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "818f2a23-569b-47cb-a69c-147694beb815",
       "name": "J",
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "description": "🏬 An apartment capsule for one person. It has the entrance on the side and has the view to the front.",
       "icon": "icons/capsule_J.svg",
       "image": "images/capsule_J.png",
@@ -232,14 +263,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.123Z",
-      "updatedAt": "2025-11-23T01:10:21.123Z"
+      "updatedAt": "2025-11-23T01:10:21.123Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "name": "L",
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "description": "🏨 An apartment capsule for one person. It has the entrance on the side and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/capsule_L.svg",
       "image": "images/capsule_L.png",
@@ -247,14 +280,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.125Z",
-      "updatedAt": "2025-11-23T01:10:21.125Z"
+      "updatedAt": "2025-11-23T01:10:21.125Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "214a30f8-adfc-40de-840b-151d9f7e17dd",
       "name": "s",
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "description": "🏪 An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
       "icon": "icons/capsule_s.svg",
       "image": "images/capsule_s.png",
@@ -262,14 +297,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.128Z",
-      "updatedAt": "2025-11-23T01:10:21.128Z"
+      "updatedAt": "2025-11-23T01:10:21.128Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "cc9a4330-537f-49c2-a70d-5e6383b535f5",
       "name": "z",
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "description": "🏫 An apartment capsule for one person. It has the entrance on the side and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/capsule_z.svg",
       "image": "images/capsule_z.png",
@@ -277,14 +314,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.131Z",
-      "updatedAt": "2025-11-23T01:10:21.131Z"
+      "updatedAt": "2025-11-23T01:10:21.131Z",
+      "families": [
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
+      ]
     },
     {
       "guid": "f1779b1f-2324-4bad-86da-773a1e90b57c",
       "name": "\\",
-      "parent": {
-        "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
-      },
       "description": "🏦 An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front.",
       "icon": "icons/capsule-with-balcony_backslash.svg",
       "image": "images/capsule-with-balcony_backslash.png",
@@ -292,14 +331,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.133Z",
-      "updatedAt": "2025-11-23T01:10:21.133Z"
+      "updatedAt": "2025-11-23T01:10:21.133Z",
+      "families": [
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
+      ]
     },
     {
       "guid": "3697e115-c2e7-4279-b09a-03e1d1e9c21e",
       "name": "/",
-      "parent": {
-        "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
-      },
       "description": "🏣 An apartment capsule of the variant / with a balcony for one person. It has the entrance on theback and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/capsule-with-balcony_slash.svg",
       "image": "images/capsule-with-balcony_slash.png",
@@ -307,14 +348,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.136Z",
-      "updatedAt": "2025-11-23T01:10:21.136Z"
+      "updatedAt": "2025-11-23T01:10:21.136Z",
+      "families": [
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
+      ]
     },
     {
       "guid": "7ca051a6-8752-4ff2-9430-71a80114a88e",
       "name": "q",
-      "parent": {
-        "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
-      },
       "description": "🏤 An apartment capsule of the variant q with a balcony for one person. It has the entrance on theback and has the view to the side.",
       "icon": "icons/capsule-with-balcony_q.svg",
       "image": "images/capsule-with-balcony_q.png",
@@ -322,14 +365,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.139Z",
-      "updatedAt": "2025-11-23T01:10:21.139Z"
+      "updatedAt": "2025-11-23T01:10:21.139Z",
+      "families": [
+        {
+          "guid": "95a75018-ffc5-416b-8aa4-373259aba06e"
+        }
+      ]
     },
     {
       "guid": "6cbd2d9c-5710-452c-af7a-6859cfb0151a",
       "name": "p",
-      "parent": {
-        "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
-      },
       "description": "🏚 An apartment capsule of the variant p with a balcony for one person. It has the entrance on theback and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/capsule-with-balcony_p.svg",
       "image": "images/capsule-with-balcony_p.png",
@@ -337,14 +382,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.144Z",
-      "updatedAt": "2025-11-23T01:10:21.144Z"
+      "updatedAt": "2025-11-23T01:10:21.144Z",
+      "families": [
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
+      ]
     },
     {
       "guid": "af980393-c613-47c2-88a4-461298b0b8f9",
       "name": "J",
-      "parent": {
-        "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
-      },
       "description": "🏘 An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
       "icon": "icons/capsule-with-balcony_J.svg",
       "image": "images/capsule-with-balcony_J.png",
@@ -352,14 +399,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.149Z",
-      "updatedAt": "2025-11-23T01:10:21.149Z"
+      "updatedAt": "2025-11-23T01:10:21.149Z",
+      "families": [
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
+      ]
     },
     {
       "guid": "8ee84149-4198-4223-ae89-3021ad2950c7",
       "name": "L",
-      "parent": {
-        "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
-      },
       "description": "🏙 An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/capsule-with-balcony_L.svg",
       "image": "images/capsule-with-balcony_L.png",
@@ -367,14 +416,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.151Z",
-      "updatedAt": "2025-11-23T01:10:21.151Z"
+      "updatedAt": "2025-11-23T01:10:21.151Z",
+      "families": [
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
+      ]
     },
     {
       "guid": "5aa65d97-778b-4449-be63-7948730d64bc",
       "name": "s",
-      "parent": {
-        "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
-      },
       "description": "🕌 An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
       "icon": "icons/capsule-with-balcony_s.svg",
       "image": "images/capsule-with-balcony_s.png",
@@ -382,14 +433,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.205Z",
-      "updatedAt": "2025-11-23T01:10:21.205Z"
+      "updatedAt": "2025-11-23T01:10:21.205Z",
+      "families": [
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
+      ]
     },
     {
       "guid": "bfb4b43c-8e75-4265-b64a-7ebe4f62e099",
       "name": "z",
-      "parent": {
-        "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
-      },
       "description": "🕍 An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/capsule-with-balcony_z.svg",
       "image": "images/capsule-with-balcony_z.png",
@@ -397,14 +450,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.207Z",
-      "updatedAt": "2025-11-23T01:10:21.207Z"
+      "updatedAt": "2025-11-23T01:10:21.207Z",
+      "families": [
+        {
+          "guid": "95a75018-ffc5-416b-8aa4-373259aba06e"
+        }
+      ]
     },
     {
       "guid": "c90e216d-d899-4709-995b-5abfcce75bcb",
       "name": "\\",
-      "parent": {
-        "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-      },
       "description": "🕋 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "icon": "icons/ellipsoid-capsule_backslash.svg",
       "image": "images/ellipsoid-capsule_backslash.png",
@@ -412,14 +467,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.21Z",
-      "updatedAt": "2025-11-23T01:10:21.21Z"
+      "updatedAt": "2025-11-23T01:10:21.21Z",
+      "families": [
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
+      ]
     },
     {
       "guid": "eefe6d3e-f18d-474e-b82e-04bb406d290f",
       "name": "/",
-      "parent": {
-        "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-      },
       "description": "🛕 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "icon": "icons/ellipsoid-capsule_slash.svg",
       "image": "images/ellipsoid-capsule_slash.png",
@@ -427,14 +484,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.212Z",
-      "updatedAt": "2025-11-23T01:10:21.212Z"
+      "updatedAt": "2025-11-23T01:10:21.212Z",
+      "families": [
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
+      ]
     },
     {
       "guid": "ccb67521-5ca1-42cf-bd81-4058c6c5348d",
       "name": "q",
-      "parent": {
-        "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-      },
       "description": "🏡 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "icon": "icons/ellipsoid-capsule_q.svg",
       "image": "images/ellipsoid-capsule_q.png",
@@ -442,14 +501,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.214Z",
-      "updatedAt": "2025-11-23T01:10:21.214Z"
+      "updatedAt": "2025-11-23T01:10:21.214Z",
+      "families": [
+        {
+          "guid": "3fd42278-1ee8-4bb4-80c6-6d8762740215"
+        }
+      ]
     },
     {
       "guid": "4b8563c5-37ad-49e8-9b6c-d635378bffce",
       "name": "p",
-      "parent": {
-        "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-      },
       "description": "🛖 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "icon": "icons/ellipsoid-capsule_p.svg",
       "image": "images/ellipsoid-capsule_p.png",
@@ -457,14 +518,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.216Z",
-      "updatedAt": "2025-11-23T01:10:21.216Z"
+      "updatedAt": "2025-11-23T01:10:21.216Z",
+      "families": [
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
+      ]
     },
     {
       "guid": "5af2d54e-309c-46a6-8454-c91b957a59f9",
       "name": "J",
-      "parent": {
-        "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-      },
       "description": "🔧 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "icon": "icons/ellipsoid-capsule_J.svg",
       "image": "images/ellipsoid-capsule_J.png",
@@ -472,14 +535,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.218Z",
-      "updatedAt": "2025-11-23T01:10:21.218Z"
+      "updatedAt": "2025-11-23T01:10:21.218Z",
+      "families": [
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
+      ]
     },
     {
       "guid": "a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd",
       "name": "L",
-      "parent": {
-        "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-      },
       "description": "🔨 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "icon": "icons/ellipsoid-capsule_L.svg",
       "image": "images/ellipsoid-capsule_L.png",
@@ -487,14 +552,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.22Z",
-      "updatedAt": "2025-11-23T01:10:21.22Z"
+      "updatedAt": "2025-11-23T01:10:21.22Z",
+      "families": [
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
+      ]
     },
     {
       "guid": "aa34760a-d543-46c8-afa1-d83a38d42f2b",
       "name": "s",
-      "parent": {
-        "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-      },
       "description": "🪛 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "icon": "icons/ellipsoid-capsule_s.svg",
       "image": "images/ellipsoid-capsule_s.png",
@@ -502,14 +569,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.222Z",
-      "updatedAt": "2025-11-23T01:10:21.222Z"
+      "updatedAt": "2025-11-23T01:10:21.222Z",
+      "families": [
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
+      ]
     },
     {
       "guid": "f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364",
       "name": "z",
-      "parent": {
-        "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-      },
       "description": "🪜 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "icon": "icons/ellipsoid-capsule_z.svg",
       "image": "images/ellipsoid-capsule_z.png",
@@ -517,14 +586,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.224Z",
-      "updatedAt": "2025-11-23T01:10:21.224Z"
+      "updatedAt": "2025-11-23T01:10:21.224Z",
+      "families": [
+        {
+          "guid": "3fd42278-1ee8-4bb4-80c6-6d8762740215"
+        }
+      ]
     },
     {
       "guid": "93b1cab5-ad4b-422b-a0e0-8b0de23a8534",
       "name": "\\",
-      "parent": {
-        "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
-      },
       "description": "🧱 An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front.",
       "icon": "icons/trapezoid-capsule_backslash.svg",
       "image": "images/trapezoid-capsule_backslash.png",
@@ -532,14 +603,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.227Z",
-      "updatedAt": "2025-11-23T01:10:21.227Z"
+      "updatedAt": "2025-11-23T01:10:21.227Z",
+      "families": [
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
+      ]
     },
     {
       "guid": "5ee4ad14-091f-42f4-a357-09fc16c3ae39",
       "name": "/",
-      "parent": {
-        "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
-      },
       "description": "🪵 An apartment capsule of the variant / with a balcony for one person. It has the entrance on theback and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/trapezoid-capsule_slash.svg",
       "image": "images/trapezoid-capsule_slash.png",
@@ -547,14 +620,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.228Z",
-      "updatedAt": "2025-11-23T01:10:21.228Z"
+      "updatedAt": "2025-11-23T01:10:21.228Z",
+      "families": [
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
+      ]
     },
     {
       "guid": "34ddd546-4df3-480c-9aa3-880fb51b8016",
       "name": "q",
-      "parent": {
-        "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
-      },
       "description": "🔩 An apartment capsule of the variant q with a balcony for one person. It has the entrance on theback and has the view to the side.",
       "icon": "icons/trapezoid-capsule_q.svg",
       "image": "images/trapezoid-capsule_q.png",
@@ -562,14 +637,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.23Z",
-      "updatedAt": "2025-11-23T01:10:21.23Z"
+      "updatedAt": "2025-11-23T01:10:21.23Z",
+      "families": [
+        {
+          "guid": "e623f97a-cafc-4671-8f01-d6ff67e581d3"
+        }
+      ]
     },
     {
       "guid": "e913ffae-6ae9-44e0-b516-1cc763bfefe7",
       "name": "p",
-      "parent": {
-        "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
-      },
       "description": "🧰 An apartment capsule of the variant p with a balcony for one person. It has the entrance on theback and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/trapezoid-capsule_p.svg",
       "image": "images/trapezoid-capsule_p.png",
@@ -577,14 +654,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.232Z",
-      "updatedAt": "2025-11-23T01:10:21.232Z"
+      "updatedAt": "2025-11-23T01:10:21.232Z",
+      "families": [
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
+      ]
     },
     {
       "guid": "7ec14f29-b730-4000-b66d-aa304767e8c1",
       "name": "J",
-      "parent": {
-        "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
-      },
       "description": "🪓 An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
       "icon": "icons/trapezoid-capsule_J.svg",
       "image": "images/trapezoid-capsule_J.png",
@@ -592,14 +671,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.234Z",
-      "updatedAt": "2025-11-23T01:10:21.234Z"
+      "updatedAt": "2025-11-23T01:10:21.234Z",
+      "families": [
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
+      ]
     },
     {
       "guid": "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5",
       "name": "L",
-      "parent": {
-        "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
-      },
       "description": "🔑 An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/trapezoid-capsule_L.svg",
       "image": "images/trapezoid-capsule_L.png",
@@ -607,14 +688,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.236Z",
-      "updatedAt": "2025-11-23T01:10:21.236Z"
+      "updatedAt": "2025-11-23T01:10:21.236Z",
+      "families": [
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
+      ]
     },
     {
       "guid": "67917609-d54d-4afc-9f9a-6e3abc0d18a4",
       "name": "s",
-      "parent": {
-        "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
-      },
       "description": "🗝 An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
       "icon": "icons/trapezoid-capsule_s.svg",
       "image": "images/trapezoid-capsule_s.png",
@@ -622,14 +705,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.238Z",
-      "updatedAt": "2025-11-23T01:10:21.238Z"
+      "updatedAt": "2025-11-23T01:10:21.238Z",
+      "families": [
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
+      ]
     },
     {
       "guid": "94c31826-ae8e-432a-9a27-73346f49c704",
       "name": "z",
-      "parent": {
-        "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
-      },
       "description": "🚪 An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/trapezoid-capsule_z.svg",
       "image": "images/trapezoid-capsule_z.png",
@@ -637,7 +722,12 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.24Z",
-      "updatedAt": "2025-11-23T01:10:21.24Z"
+      "updatedAt": "2025-11-23T01:10:21.24Z",
+      "families": [
+        {
+          "guid": "e623f97a-cafc-4671-8f01-d6ff67e581d3"
+        }
+      ]
     },
     {
       "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
@@ -649,14 +739,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.247Z",
-      "updatedAt": "2025-11-23T01:10:21.247Z"
+      "updatedAt": "2025-11-23T01:10:21.247Z",
+      "families": [
+        {
+          "guid": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515"
+        }
+      ]
     },
     {
       "guid": "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
       "name": "First Storey",
-      "parent": {
-        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
-      },
       "description": "🪟 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "icon": "icons/tambour_first-storey.svg",
       "image": "images/tambour_first-storey.svg",
@@ -664,14 +756,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.251Z",
-      "updatedAt": "2025-11-23T01:10:21.251Z"
+      "updatedAt": "2025-11-23T01:10:21.251Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "49233ca9-f005-4d15-b515-2a18a94dd7a8",
       "name": "Last Storey",
-      "parent": {
-        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
-      },
       "description": "🛗 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "icon": "icons/tambour_last-storey.svg",
       "image": "images/tambour_last-storey.svg",
@@ -679,14 +773,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.268Z",
-      "updatedAt": "2025-11-23T01:10:21.268Z"
+      "updatedAt": "2025-11-23T01:10:21.268Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "1b1fcf80-0acc-4456-bc16-71f69c5df571",
       "name": "Single Storey",
-      "parent": {
-        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
-      },
       "description": "🪤 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "icon": "icons/tambour_single-storey.svg",
       "image": "images/tambour_single-storey.svg",
@@ -694,14 +790,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.272Z",
-      "updatedAt": "2025-11-23T01:10:21.272Z"
+      "updatedAt": "2025-11-23T01:10:21.272Z",
+      "families": [
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
+      ]
     },
     {
       "guid": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7",
       "name": "Cylindric Tambour",
-      "parent": {
-        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
-      },
       "description": "🛏 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "icon": "icons/cylindric-tambour.svg",
       "image": "images/cylindric-tambour.svg",
@@ -709,14 +807,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.276Z",
-      "updatedAt": "2025-11-23T01:10:21.276Z"
+      "updatedAt": "2025-11-23T01:10:21.276Z",
+      "families": [
+        {
+          "guid": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515"
+        }
+      ]
     },
     {
       "guid": "2951ab00-3891-4d50-b887-26f1d308bfef",
       "name": "First Storey",
-      "parent": {
-        "guid": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7"
-      },
       "description": "🪑 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "icon": "icons/cylindric-tambour_first-storey.svg",
       "image": "images/cylindric-tambour_first-storey.svg",
@@ -724,14 +824,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.28Z",
-      "updatedAt": "2025-11-23T01:10:21.28Z"
+      "updatedAt": "2025-11-23T01:10:21.28Z",
+      "families": [
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
+      ]
     },
     {
       "guid": "0271dcc8-c961-4ecf-8591-9f8027252174",
       "name": "Last Storey",
-      "parent": {
-        "guid": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7"
-      },
       "description": "🚿 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "icon": "icons/cylindric-tambour_last-storey.svg",
       "image": "images/cylindric-tambour_last-storey.svg",
@@ -739,14 +841,16 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.284Z",
-      "updatedAt": "2025-11-23T01:10:21.284Z"
+      "updatedAt": "2025-11-23T01:10:21.284Z",
+      "families": [
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
+      ]
     },
     {
       "guid": "277e1960-c3c8-4186-9a83-8f7eb66bcf28",
       "name": "Single Storey",
-      "parent": {
-        "guid": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7"
-      },
       "description": "🛁 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "icon": "icons/cylindric-tambour_single-storey.svg",
       "image": "images/cylindric-tambour_single-storey.svg",
@@ -754,11 +858,17 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.288Z",
-      "updatedAt": "2025-11-23T01:10:21.288Z"
+      "updatedAt": "2025-11-23T01:10:21.288Z",
+      "families": [
+        {
+          "guid": "95a75018-ffc5-416b-8aa4-373259aba06e"
+        }
+      ]
     },
     {
       "guid": "019d8734-03bb-774e-b52e-68d4f010e939",
-      "name": "semio.sketchpad.app.kit.defaultTypeName"
+      "name": "semio.sketchpad.app.kit.defaultTypeName",
+      "families": []
     }
   ],
   "designs": [
@@ -770,46 +880,57 @@
       "image": "images/nakagin-capsule-tower.png",
       "unit": "m",
       "createdAt": "2025-11-23T01:10:21.335Z",
-      "updatedAt": "2025-11-23T01:10:21.335Z"
+      "updatedAt": "2025-11-23T01:10:21.335Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf",
       "name": "Slanted",
-      "parent": {
-        "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
-      },
       "description": "🚕 A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
       "icon": "icons/nakagin-capsule-tower_slanted.svg",
       "image": "images/nakagin-capsule-tower_slanted.png",
       "unit": "m",
       "createdAt": "2025-11-23T01:10:21.875Z",
-      "updatedAt": "2025-11-23T01:10:21.875Z"
+      "updatedAt": "2025-11-23T01:10:21.875Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "38f0f014-ceba-42df-9339-4aab84bfbc1f",
       "name": "Twisted",
-      "parent": {
-        "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
-      },
       "description": "🚙 A twisted variant of the Nakagin Capsule Tower where the capsules are trapezoids and towers are round with the floors twisting in one direction.",
       "icon": "icons/nakagin-capsule-tower_twisted.svg",
       "image": "images/nakagin-capsule-tower_twisted.png",
       "unit": "m",
       "createdAt": "2025-11-23T01:10:22.324Z",
-      "updatedAt": "2025-11-23T01:10:22.324Z"
+      "updatedAt": "2025-11-23T01:10:22.324Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "c3ee87b6-7453-49bc-8d7b-9405892f9452",
       "name": "Dancing",
-      "parent": {
-        "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
-      },
       "description": "🚓 The expolsion axonometry of a futuristic variant of the Nakagin Capsule Tower where two towers are dancing with each other. The capsules are ellipsoids around a round shaft and a blob base.",
       "icon": "icons/nakagin-capsule-tower_dancing_axonometry_explosion.svg",
       "image": "images/nakagin-capsule-tower_dancing_axonometry_explosion.png",
       "unit": "m",
       "createdAt": "2025-11-23T01:10:22.721Z",
-      "updatedAt": "2025-11-23T01:10:22.721Z"
+      "updatedAt": "2025-11-23T01:10:22.721Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8",
@@ -819,146 +940,87 @@
       "image": "images/capsule-dream.png",
       "unit": "m",
       "createdAt": "2025-11-23T01:10:23.177Z",
-      "updatedAt": "2025-11-23T01:10:23.177Z"
+      "updatedAt": "2025-11-23T01:10:23.177Z",
+      "families": [
+        {
+          "guid": "64c20e73-04e3-482b-8564-d239558c7da0"
+        }
+      ]
     },
     {
       "guid": "d7e12638-9749-471b-937e-a6e5523778ff",
       "name": "Flat",
-      "parent": {
-        "guid": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8"
-      },
       "description": "🚒 A wild dream of capsule towers.",
       "icon": "icons/capsule-dream.svg",
       "image": "images/capsule-dream.png",
       "unit": "m",
       "createdAt": "2025-11-23T01:11:03.4Z",
-      "updatedAt": "2025-11-23T01:11:03.4Z"
+      "updatedAt": "2025-11-23T01:11:03.4Z",
+      "families": [
+        {
+          "guid": "64c20e73-04e3-482b-8564-d239558c7da0"
+        }
+      ]
     },
     {
       "guid": "79fa8945-b47d-4896-965f-f921067cbae2",
       "name": "Flat",
-      "parent": {
-        "guid": "c3ee87b6-7453-49bc-8d7b-9405892f9452"
-      },
       "description": "🛻 The expolsion axonometry of a futuristic variant of the Nakagin Capsule Tower where two towers are dancing with each other. The capsules are ellipsoids around a round shaft and a blob base.",
       "icon": "icons/nakagin-capsule-tower_dancing_axonometry_explosion.svg",
       "image": "images/nakagin-capsule-tower_dancing_axonometry_explosion.png",
       "unit": "m",
       "createdAt": "2025-11-23T01:11:04.468Z",
-      "updatedAt": "2025-11-23T01:11:04.468Z"
+      "updatedAt": "2025-11-23T01:11:04.468Z",
+      "families": [
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
+      ]
     },
     {
       "guid": "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
       "name": "Flat",
-      "parent": {
-        "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
-      },
       "description": "🚑 The digital shadow of the former Nakagin Capsule Tower which was a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan. Completed in 1972, the building was a rare remaining example of Japanese Metabolism, an architectural movement emblematic of Japan's postwar cultural resurgence.",
       "icon": "icons/nakagin-capsule-tower.svg",
       "image": "images/nakagin-capsule-tower.png",
       "unit": "m",
       "createdAt": "2025-11-23T01:11:04.537Z",
-      "updatedAt": "2025-11-23T01:11:04.537Z"
+      "updatedAt": "2025-11-23T01:11:04.537Z",
+      "families": [
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
+      ]
     },
     {
       "guid": "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
       "name": "Flat",
-      "parent": {
-        "guid": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf"
-      },
       "description": "🚚 A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
       "icon": "icons/nakagin-capsule-tower_slanted.svg",
       "image": "images/nakagin-capsule-tower_slanted.png",
       "unit": "m",
       "createdAt": "2025-11-23T01:11:04.613Z",
-      "updatedAt": "2025-11-23T01:11:04.613Z"
+      "updatedAt": "2025-11-23T01:11:04.613Z",
+      "families": [
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
+      ]
     },
     {
       "guid": "019ab4e0-cb2a-7613-a16a-ae086e331c95",
       "name": "Flat",
-      "parent": {
-        "guid": "38f0f014-ceba-42df-9339-4aab84bfbc1f"
-      },
       "description": "🚛 A twisted variant of the Nakagin Capsule Tower where the capsules are trapezoids and towers are round with the floors twisting in one direction.",
       "icon": "icons/nakagin-capsule-tower_twisted.svg",
       "image": "images/nakagin-capsule-tower_twisted.png",
       "unit": "m",
       "createdAt": "2025-11-23T01:11:04.687Z",
-      "updatedAt": "2025-11-23T01:11:04.687Z"
-    }
-  ],
-  "ports": [
-    {
-      "guid": "019ab243-21f3-7380-93c6-994a9a023448",
-      "name": "core circular bottom"
-    },
-    {
-      "guid": "019ab243-21f3-7380-93c6-9e678ad2f321",
-      "name": "core circular top"
-    },
-    {
-      "guid": "019ab243-21f3-7380-93c6-a04a8b137527",
-      "name": "core rectangular bottom"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab",
-      "name": "core rectangular top"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-      "name": "door capsule east"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25",
-      "name": "door capsule west"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-50266f6860b8",
-      "name": "door tambour east"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-57263e420e70",
-      "name": "door tambour west"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-58d90f95991e",
-      "name": "platform east"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
-      "name": "platform west"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-60ea93872506",
-      "name": "roof circular bottom"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb",
-      "name": "roof circular top"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb",
-      "name": "roof rectangular bottom"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6",
-      "name": "roof rectangular top"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c",
-      "name": "tambour circular bottom"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a",
-      "name": "tambour circular top"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
-      "name": "tambour rectangular bottom"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702",
-      "name": "tambour rectangular top"
+      "updatedAt": "2025-11-23T01:11:04.687Z",
+      "families": [
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
+      ]
     }
   ],
   "qualities": [
@@ -3286,6 +3348,226 @@
       "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88",
       "name": "Ueli Saluz",
       "email": "ueli@semio-tech.com"
+    }
+  ],
+  "families": [
+    {
+      "guid": "2df6bbea-349b-4a91-8e12-cb734110e854",
+      "name": "Capsule"
+    },
+    {
+      "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4",
+      "name": "Base"
+    },
+    {
+      "guid": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b",
+      "name": "Capital"
+    },
+    {
+      "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327",
+      "name": "Nakagin Capsule Tower",
+      "ports": [
+        {
+          "guid": "019ab243-21f3-7380-93c6-994a9a023448",
+          "name": "core circular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f3-7380-93c6-9e678ad2f321",
+          "name": "core circular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f3-7380-93c6-994a9a023448"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f3-7380-93c6-a04a8b137527",
+          "name": "core rectangular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab",
+          "name": "core rectangular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f3-7380-93c6-a04a8b137527"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "name": "door capsule east",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25",
+          "name": "door capsule west",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-50266f6860b8",
+          "name": "door tambour east",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25"
+            },
+            {
+              "guid": "019ab243-21f4-73df-8cb4-58d90f95991e"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-57263e420e70",
+          "name": "door tambour west",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
+            },
+            {
+              "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-58d90f95991e",
+          "name": "platform east",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
+          "name": "platform west",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-60ea93872506",
+          "name": "roof circular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb",
+          "name": "roof circular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-60ea93872506"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb",
+          "name": "roof rectangular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6",
+          "name": "roof rectangular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c",
+          "name": "tambour circular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a",
+          "name": "tambour circular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
+          "name": "tambour rectangular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702",
+          "name": "tambour rectangular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "guid": "50812682-1e66-4fe3-8765-618bc654b098",
+      "name": "Slanted"
+    },
+    {
+      "guid": "95a75018-ffc5-416b-8aa4-373259aba06e",
+      "name": "Ellipsoid"
+    },
+    {
+      "guid": "df795386-edf1-4408-84c6-d38c94a222d7",
+      "name": "Dancing"
+    },
+    {
+      "guid": "3fd42278-1ee8-4bb4-80c6-6d8762740215",
+      "name": "Trapezoid"
+    },
+    {
+      "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3",
+      "name": "Twisted"
+    },
+    {
+      "guid": "e623f97a-cafc-4671-8f01-d6ff67e581d3",
+      "name": "Balcony"
+    },
+    {
+      "guid": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515",
+      "name": "Tambour"
+    },
+    {
+      "guid": "64c20e73-04e3-482b-8564-d239558c7da0",
+      "name": "Capsule Dream"
     }
   ]
 }
