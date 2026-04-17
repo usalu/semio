@@ -249,6 +249,8 @@ TODO: Introduce Design/Interpolate algorithm.
 
 semio:
 
+Optimize implementations according benchmarks. Find bottlenecks and fix them. It doesnt matter if you need to reimplement something. Make sure all tets pass and benchmark again.
+
 Optimize the computation of flat piece planes and center.
 Implement an efficient merkle-tree based hashed optimization for flattenDesign to be able to only recompute parts of the tree that need to updated. Plane and center computation need to be computed individually.
 Make sure the hashes only change when inputs change that actually affect the computation.

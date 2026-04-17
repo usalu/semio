@@ -50,7 +50,7 @@ function zodJitlessPlugin(): Plugin {
 // `semio/ui/index.tsx` imports named exports at module scope and an ESM stub
 // that doesn't provide those exact exports can crash the bundle before React mounts.
 // We only stub semio assets and unrelated heavy deps.
-// cytoscape is NOT stubbed: flattenDesign uses cytoscape headless BFS for 2D layout (diagram centers + planes).
+// flattenDesign uses native adjacency BFS (no cytoscape) for 2D layout (diagram centers + planes).
 // 🔧Stubbing it breaks the diagram entirely because cy.elements() returns undefined → TypeError.
 const STUBBED_PREFIXES = ["@semio/assets", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
 

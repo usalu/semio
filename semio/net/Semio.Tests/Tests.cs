@@ -513,6 +513,215 @@ public class Tests
         }
     }
 
+    public class FlattenMerkle
+    {
+        private static JObject LoadCasesDoc() =>
+            JObject.Parse(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, "flatten-merkle.cases.semio.json")));
+
+        private static JObject LoadKitJson(string kitFile) =>
+            JObject.Parse(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, kitFile)));
+
+        private static JObject FindDesignJsonByPath(JObject kitJson, IReadOnlyList<string> designPath)
+        {
+            if (designPath == null || designPath.Count == 0) throw new ArgumentException("designPath must not be empty");
+            JObject? current = null;
+            for (int i = 0; i < designPath.Count; i++)
+            {
+                var name = designPath[i];
+                var parentGuid = (string?)current?["guid"];
+                JObject? match = null;
+                foreach (var d in (JArray?)kitJson["designs"] ?? new JArray())
+                {
+                    if (d is not JObject dObj) continue;
+                    if ((string?)dObj["name"] != name) continue;
+                    var parent = dObj["parent"] as JObject;
+                    if (i == 0)
+                    {
+                        if (parent == null || parent.Type == JTokenType.Null)
+                        {
+                            match = dObj;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (parent != null && (string?)parent["guid"] == parentGuid)
+                        {
+                            match = dObj;
+                            break;
+                        }
+                    }
+                }
+                if (match == null) throw new Exception($"Design path {string.Join(" / ", designPath)} not found at segment {name}");
+                current = match;
+            }
+            return current!;
+        }
+
+        private static void SetDottedPath(JObject target, string path, JToken value)
+        {
+            var keys = path.Split('.');
+            JObject current = target;
+            for (int i = 0; i < keys.Length - 1; i++)
+            {
+                var key = keys[i];
+                var next = current[key] as JObject;
+                if (next == null || next.Type == JTokenType.Null)
+                {
+                    next = new JObject();
+                    current[key] = next;
+                }
+                current = next;
+            }
+            current[keys[keys.Length - 1]] = value;
+        }
+
+        private static JToken ValueFromJson(JToken valueToken) => valueToken.DeepClone();
+
+        private static void ApplyMutations(JObject designJson, JArray mutations)
+        {
+            foreach (var mutToken in mutations)
+            {
+                if (mutToken is not JObject mutation) continue;
+                var kind = (string?)mutation["kind"];
+                var path = (string?)mutation["path"] ?? "";
+                var value = mutation["value"] ?? JValue.CreateNull();
+                if (kind == "pieceField")
+                {
+                    var pieceGuid = (string?)mutation["pieceGuid"];
+                    var piece = ((JArray?)designJson["pieces"] ?? new JArray())
+                        .OfType<JObject>()
+                        .FirstOrDefault(p => (string?)p["guid"] == pieceGuid);
+                    if (piece == null) throw new Exception($"Piece {pieceGuid} not found");
+                    SetDottedPath(piece, path, ValueFromJson(value));
+                }
+                else if (kind == "connectionField")
+                {
+                    var connectionGuid = (string?)mutation["connectionGuid"];
+                    var connection = ((JArray?)designJson["connections"] ?? new JArray())
+                        .OfType<JObject>()
+                        .FirstOrDefault(c => (string?)c["guid"] == connectionGuid);
+                    if (connection == null) throw new Exception($"Connection {connectionGuid} not found");
+                    SetDottedPath(connection, path, ValueFromJson(value));
+                }
+                else
+                {
+                    throw new Exception($"Unknown mutation kind {kind}");
+                }
+            }
+        }
+
+        private static (Kit kit, string designGuid) DeserializeKitAndDesignGuid(JObject kitJson, IReadOnlyList<string> designPath)
+        {
+            var designJson = FindDesignJsonByPath(kitJson, designPath);
+            var designGuid = (string?)designJson["guid"] ?? "";
+            var kit = Utility.Deserialize<Kit>(kitJson.ToString(Formatting.None))
+                      ?? throw new Exception("Failed to deserialize kit");
+            return (kit, designGuid);
+        }
+
+        [Fact]
+        public void SharedAssetMutationCases()
+        {
+            var casesDoc = LoadCasesDoc();
+            foreach (var caseToken in (JArray?)casesDoc["cases"] ?? new JArray())
+            {
+                if (caseToken is not JObject testCase) continue;
+                var name = (string?)testCase["name"] ?? "<unnamed>";
+                var kitFile = (string?)testCase["kit"] ?? throw new Exception($"Case {name}: missing kit");
+                var designPath = ((JArray?)testCase["designPath"] ?? new JArray()).Select(t => (string)t!).ToList();
+                var mutations = (JArray?)testCase["mutations"] ?? new JArray();
+                var expect = (JObject?)testCase["expect"] ?? new JObject();
+
+                var kitJsonBefore = LoadKitJson(kitFile);
+                var (kitBefore, designGuidBefore) = DeserializeKitAndDesignGuid(kitJsonBefore, designPath);
+                var beforeHashes = Kit.ComputeFlatHashes(kitBefore, designGuidBefore);
+
+                var kitJsonAfter = LoadKitJson(kitFile);
+                var designJsonAfter = FindDesignJsonByPath(kitJsonAfter, designPath);
+                ApplyMutations(designJsonAfter, mutations);
+                var (kitAfter, designGuidAfter) = DeserializeKitAndDesignGuid(kitJsonAfter, designPath);
+                var afterHashes = Kit.ComputeFlatHashes(kitAfter, designGuidAfter);
+
+                Assert.True(beforeHashes.Keys.OrderBy(g => g, StringComparer.Ordinal).SequenceEqual(afterHashes.Keys.OrderBy(g => g, StringComparer.Ordinal)),
+                    $"Case {name}: piece set changed");
+
+                var changedPlane = beforeHashes.Keys.Where(g => beforeHashes[g].PlaneHash != afterHashes[g].PlaneHash).ToHashSet();
+                var changedCenter = beforeHashes.Keys.Where(g => beforeHashes[g].CenterHash != afterHashes[g].CenterHash).ToHashSet();
+
+                bool HasBool(string key) => expect[key] != null && expect[key]!.Type == JTokenType.Boolean;
+                bool GetBool(string key) => (bool)expect[key]!;
+
+                if (HasBool("planeHashesChangedAny"))
+                {
+                    if (GetBool("planeHashesChangedAny")) Assert.True(changedPlane.Count > 0, $"Case {name}: expected some planeHash changes, got none");
+                    else Assert.True(changedPlane.Count == 0, $"Case {name}: expected no planeHash changes, got {string.Join(",", changedPlane)}");
+                }
+                if (HasBool("centerHashesChangedAny"))
+                {
+                    if (GetBool("centerHashesChangedAny")) Assert.True(changedCenter.Count > 0, $"Case {name}: expected some centerHash changes, got none");
+                    else Assert.True(changedCenter.Count == 0, $"Case {name}: expected no centerHash changes, got {string.Join(",", changedCenter)}");
+                }
+                if (HasBool("planeHashesChangedAll"))
+                {
+                    if (GetBool("planeHashesChangedAll")) Assert.Equal(beforeHashes.Count, changedPlane.Count);
+                    else Assert.NotEqual(beforeHashes.Count, changedPlane.Count);
+                }
+                if (HasBool("centerHashesChangedAll"))
+                {
+                    if (GetBool("centerHashesChangedAll")) Assert.Equal(beforeHashes.Count, changedCenter.Count);
+                    else Assert.NotEqual(beforeHashes.Count, changedCenter.Count);
+                }
+                foreach (var t in (JArray?)expect["planeHashesChangedIncludes"] ?? new JArray())
+                    Assert.True(changedPlane.Contains((string)t!), $"Case {name}: expected piece {t} to have changed planeHash");
+                foreach (var t in (JArray?)expect["centerHashesChangedIncludes"] ?? new JArray())
+                    Assert.True(changedCenter.Contains((string)t!), $"Case {name}: expected piece {t} to have changed centerHash");
+                foreach (var t in (JArray?)expect["planeHashesStableIncludes"] ?? new JArray())
+                    Assert.False(changedPlane.Contains((string)t!), $"Case {name}: expected piece {t} to keep stable planeHash");
+                foreach (var t in (JArray?)expect["centerHashesStableIncludes"] ?? new JArray())
+                    Assert.False(changedCenter.Contains((string)t!), $"Case {name}: expected piece {t} to keep stable centerHash");
+            }
+        }
+
+        [Fact]
+        public void CrossLanguageParityReferenceHashes()
+        {
+            var casesDoc = LoadCasesDoc();
+            var parity = (JObject?)casesDoc["parity"] ?? throw new Exception("parity block missing");
+            var kitFile = (string?)parity["kit"] ?? throw new Exception("parity.kit missing");
+            var designPath = ((JArray?)parity["designPath"] ?? new JArray()).Select(t => (string)t!).ToList();
+            var kitJson = LoadKitJson(kitFile);
+            var (kit, designGuid) = DeserializeKitAndDesignGuid(kitJson, designPath);
+            var hashes = Kit.ComputeFlatHashes(kit, designGuid);
+            foreach (var expectedToken in (JArray?)parity["expectedHashes"] ?? new JArray())
+            {
+                if (expectedToken is not JObject expected) continue;
+                var guid = (string?)expected["pieceGuid"] ?? throw new Exception("missing pieceGuid");
+                Assert.True(hashes.ContainsKey(guid), $"piece {guid} missing from computed hashes");
+                Assert.Equal((string?)expected["planeHash"], hashes[guid].PlaneHash);
+                Assert.Equal((string?)expected["centerHash"], hashes[guid].CenterHash);
+            }
+        }
+
+        [Fact]
+        public void CachedFlattenReusesValues()
+        {
+            var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
+            var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
+            var (_, firstCache) = Kit.FlattenDesignCached(kit, design.Guid);
+            Assert.True(firstCache.Count > 0);
+            var (_, secondCache) = Kit.FlattenDesignCached(kit, design.Guid, firstCache);
+            foreach (var kvp in firstCache)
+            {
+                Assert.True(secondCache.ContainsKey(kvp.Key), $"piece {kvp.Key} missing from second cache");
+                Assert.Equal(kvp.Value.PlaneHash, secondCache[kvp.Key].PlaneHash);
+                Assert.Equal(kvp.Value.CenterHash, secondCache[kvp.Key].CenterHash);
+                Assert.Equal(Utility.Serialize(kvp.Value.Plane), Utility.Serialize(secondCache[kvp.Key].Plane));
+                Assert.Equal(Utility.Serialize(kvp.Value.Center), Utility.Serialize(secondCache[kvp.Key].Center));
+            }
+        }
+    }
+
     public class Change
     {
         [Fact]

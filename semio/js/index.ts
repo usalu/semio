@@ -14,7 +14,6 @@ import { Accessor as GltfAccessor, Buffer as GltfBuffer, Document as GltfDocumen
 import { default as adjectives } from "@semio/assets/lists/adjectives.json" with { type: "json" };
 import { default as animals } from "@semio/assets/lists/animals.json" with { type: "json" };
 import { ClassValue, clsx } from "clsx";
-import cytoscape from "cytoscape";
 import { twMerge } from "tailwind-merge";
 import * as THREE from "three";
 import { v7 as uuidv7 } from "uuid";
@@ -5436,6 +5435,144 @@ const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, child
 
   return matrixToPlane(finalMatrix);
 };
+
+// #subregion 🧭Flatten placement walk
+/** 🔖Single undirected adjacency entry for flatten BFS (matches Go FlattenDesign traversal order). */
+type FlattenAdjacencyEntry = { neighborGuid: string; connection: Connection };
+
+const flattenPlaneCenterTol = 1e-4;
+const flattenPlanesDiffer = (a?: Plane, b?: Plane): boolean => {
+  if (a == null && b == null) return false;
+  if (a == null || b == null) return true;
+  return (
+    Math.abs(a.origin.x - b.origin.x) >= flattenPlaneCenterTol ||
+    Math.abs(a.origin.y - b.origin.y) >= flattenPlaneCenterTol ||
+    Math.abs(a.origin.z - b.origin.z) >= flattenPlaneCenterTol ||
+    Math.abs(a.xAxis.x - b.xAxis.x) >= flattenPlaneCenterTol ||
+    Math.abs(a.xAxis.y - b.xAxis.y) >= flattenPlaneCenterTol ||
+    Math.abs(a.xAxis.z - b.xAxis.z) >= flattenPlaneCenterTol ||
+    Math.abs(a.yAxis.x - b.yAxis.x) >= flattenPlaneCenterTol ||
+    Math.abs(a.yAxis.y - b.yAxis.y) >= flattenPlaneCenterTol ||
+    Math.abs(a.yAxis.z - b.yAxis.z) >= flattenPlaneCenterTol
+  );
+};
+const flattenCentersDiffer = (a?: Coord, b?: Coord): boolean => {
+  if (a == null && b == null) return false;
+  if (a == null || b == null) return true;
+  return Math.abs(a.u - b.u) >= flattenPlaneCenterTol || Math.abs(a.v - b.v) >= flattenPlaneCenterTol;
+};
+
+const buildFlattenPieceAdjacency = (pieces: Piece[], connections: Connection[]): { pieceMap: { [guid: string]: Piece }; adjacency: Map<string, FlattenAdjacencyEntry[]> } => {
+  const pieceMap: { [guid: string]: Piece } = {};
+  for (const p of pieces) {
+    if (p.guid) pieceMap[p.guid] = p;
+  }
+  const adjacency = new Map<string, FlattenAdjacencyEntry[]>();
+  for (const connection of connections) {
+    const sourceId = connection.connected.piece.guid;
+    const targetId = connection.connecting.piece.guid;
+    if (!pieceMap[sourceId] || !pieceMap[targetId]) continue;
+    const a = adjacency.get(sourceId);
+    if (a) a.push({ neighborGuid: targetId, connection });
+    else adjacency.set(sourceId, [{ neighborGuid: targetId, connection }]);
+    const b = adjacency.get(targetId);
+    if (b) b.push({ neighborGuid: sourceId, connection });
+    else adjacency.set(targetId, [{ neighborGuid: sourceId, connection }]);
+  }
+  return { pieceMap, adjacency };
+};
+
+const collectUndirectedComponentGuids = (startGuid: string, adjacency: Map<string, FlattenAdjacencyEntry[]>): Set<string> => {
+  const comp = new Set<string>();
+  const stack: string[] = [startGuid];
+  comp.add(startGuid);
+  while (stack.length) {
+    const u = stack.pop()!;
+    for (const { neighborGuid } of adjacency.get(u) ?? []) {
+      if (!comp.has(neighborGuid)) {
+        comp.add(neighborGuid);
+        stack.push(neighborGuid);
+      }
+    }
+  }
+  return comp;
+};
+
+type FlattenEdgeVisit = {
+  parentGuid: string;
+  childGuid: string;
+  connection: Connection;
+  depth: number;
+  parentPiece: Piece;
+  childPiece: Piece;
+};
+
+/** 🔖Breadth-first placement walk: one BFS tree per connected component; root = first fixed (plane+center) piece in design.pieces order, else earliest piece in that order (matches .NET QuickGraph connected-component ordering). */
+const flattenPlacementWalkDesignOrderRoots = (
+  pieceMap: { [guid: string]: Piece },
+  adjacency: Map<string, FlattenAdjacencyEntry[]>,
+  pieces: Piece[],
+  handlers: {
+    onComponentDiscovered?: (component: Set<string>, rootGuid: string, pieceMap: { [guid: string]: Piece }) => void;
+    initRoot?: (rootGuid: string, rootPiece: Piece) => void;
+    onTreeEdge?: (ev: FlattenEdgeVisit) => void;
+  },
+): void => {
+  const pieceIndexByGuid = new Map<string, number>();
+  pieces.forEach((p, i) => {
+    if (p.guid) pieceIndexByGuid.set(p.guid, i);
+  });
+  const processed = new Set<string>();
+
+  for (const p of pieces) {
+    const seedGuid = p.guid;
+    if (!seedGuid || processed.has(seedGuid)) continue;
+    const component = collectUndirectedComponentGuids(seedGuid, adjacency);
+    const sortedGuids = [...component].sort((a, b) => (pieceIndexByGuid.get(a) ?? 0) - (pieceIndexByGuid.get(b) ?? 0));
+    for (const id of component) processed.add(id);
+
+    const fixedSorted = sortedGuids.filter((id) => {
+      const piece = pieceMap[id];
+      return piece?.plane !== undefined && piece?.center !== undefined;
+    });
+    const rootGuid = fixedSorted.length > 0 ? fixedSorted[0] : sortedGuids[0];
+    handlers.onComponentDiscovered?.(component, rootGuid, pieceMap);
+
+    const visited = new Set<string>();
+    const queue: string[] = [rootGuid];
+    visited.add(rootGuid);
+    handlers.initRoot?.(rootGuid, pieceMap[rootGuid]);
+
+    const depthByGuid = new Map<string, number>();
+    depthByGuid.set(rootGuid, 0);
+
+    while (queue.length) {
+      const currentGuid = queue.shift()!;
+      const depth = depthByGuid.get(currentGuid) ?? 0;
+      const parentPiece = pieceMap[currentGuid];
+      if (!parentPiece) continue;
+
+      for (const { neighborGuid, connection } of adjacency.get(currentGuid) ?? []) {
+        if (visited.has(neighborGuid)) continue;
+        visited.add(neighborGuid);
+        depthByGuid.set(neighborGuid, depth + 1);
+        const childPiece = pieceMap[neighborGuid];
+        if (!childPiece) continue;
+        handlers.onTreeEdge?.({
+          parentGuid: currentGuid,
+          childGuid: neighborGuid,
+          connection,
+          depth: depth + 1,
+          parentPiece,
+          childPiece,
+        });
+        queue.push(neighborGuid);
+      }
+    }
+  }
+};
+// #endregion 🧭Flatten placement walk
+
 /**
  * Flattens nested Design structure.
  **/
@@ -5455,21 +5592,31 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
 
   const { getType, getConnector } = buildConnectorResolverFromKit(kit);
 
-  const flatDesign: Design = JSON.parse(JSON.stringify(design));
-  if (!flatDesign.pieces) flatDesign.pieces = [];
+  const flatPieces: Piece[] = design.pieces.map((p) => structuredClone(p));
+  const flatDesign: Design = { ...design, pieces: flatPieces, connections: design.connections };
 
   const piecePlanes: { [pieceGuid: string]: Plane } = {};
-  const pieceMap: { [pieceGuid: string]: Piece } = {};
-  flatDesign.pieces!.forEach((p) => {
-    if (p.guid) pieceMap[p.guid] = p;
-  });
+
+  const setAttributes = (piece: Piece, newAttrs: { key: string; value?: string; definition?: string }[]): Piece => {
+    const existingAttrs = piece.attributes || [];
+    const updatedAttrs = [...existingAttrs];
+    newAttrs.forEach((newAttr) => {
+      const existingIndex = updatedAttrs.findIndex((a) => a.key === newAttr.key);
+      if (existingIndex >= 0) {
+        updatedAttrs[existingIndex] = { ...updatedAttrs[existingIndex], ...newAttr, guid: updatedAttrs[existingIndex].guid };
+      } else {
+        updatedAttrs.push({ guid: guid(), ...newAttr });
+      }
+    });
+    return { ...piece, attributes: updatedAttrs };
+  };
 
   const filteredConnections =
     flatDesign.connections?.filter((connection) => {
       const sourceId = connection.connected.piece.guid;
       const targetId = connection.connecting.piece.guid;
-      const sourceExists = pieceMap[sourceId];
-      const targetExists = pieceMap[targetId];
+      const sourceExists = flatPieces.some((x) => x.guid === sourceId);
+      const targetExists = flatPieces.some((x) => x.guid === targetId);
       if (!sourceExists) {
         warnings.push({
           code: "flatten.connection-skipped-missing-endpoint",
@@ -5487,212 +5634,142 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
       return true;
     }) || [];
 
-  const cy = cytoscape({
-    elements: {
-      nodes: flatDesign.pieces!.map((piece) => ({
-        data: { id: piece.guid, label: piece.guid },
-      })),
-      edges: filteredConnections.map((connection, index) => {
-        const sourceId = connection.connected.piece.guid;
-        const targetId = connection.connecting.piece.guid;
-        return {
-          data: {
-            id: connection.guid,
-            source: sourceId,
-            target: targetId,
-            connectionData: connection,
-          },
-        };
-      }),
-    } as any,
-    headless: true,
-  });
-
-  const components = cy.elements().components();
-
-  const setAttributes = (piece: Piece, newAttrs: { key: string; value?: string; definition?: string }[]): Piece => {
-    const existingAttrs = piece.attributes || [];
-    const updatedAttrs = [...existingAttrs];
-    newAttrs.forEach((newAttr) => {
-      const existingIndex = updatedAttrs.findIndex((a) => a.key === newAttr.key);
-      if (existingIndex >= 0) {
-        updatedAttrs[existingIndex] = { ...updatedAttrs[existingIndex], ...newAttr, guid: updatedAttrs[existingIndex].guid };
+  const { pieceMap, adjacency } = buildFlattenPieceAdjacency(flatPieces, filteredConnections);
+  flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, flatPieces, {
+    onComponentDiscovered: (component, rootGuid, pm) => {
+      const fixedInDesignOrder = flatPieces.map((fp) => fp.guid).filter((g): g is string => Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined));
+      if (fixedInDesignOrder.length === 0) {
+        warnings.push({
+          code: "flatten.no-fixed-piece-in-clump",
+          message: `Connected pieces have no fixed root (no piece with both plane and center). Using piece ${rootGuid} as breadth-first root. Each connected set of pieces (clump) should include at least one fixed piece for stable, recommended layout.`,
+        });
+      } else if (fixedInDesignOrder.length > 1) {
+        infos.push({
+          code: "flatten.multiple-fixed-roots",
+          message: `This clump has ${fixedInDesignOrder.length} fixed pieces; using the first (${rootGuid}) as breadth-first root.`,
+        });
+      }
+    },
+    initRoot: (rootGuid, rootPiece) => {
+      if (!rootPiece.guid) return;
+      const updatedRootPiece = setAttributes(rootPiece, [
+        { key: "semio.fixedPieceId", value: rootPiece.guid },
+        { key: "semio.depth", value: "0" },
+        { key: "semio.path", value: rootPiece.guid },
+      ]);
+      pieceMap[rootGuid] = updatedRootPiece;
+      let rootPlane: Plane;
+      if (rootPiece.plane) {
+        rootPlane = rootPiece.plane;
       } else {
-        updatedAttrs.push({ guid: guid(), ...newAttr });
-      }
-    });
-    return { ...piece, attributes: updatedAttrs };
-  };
-
-  components.forEach((component) => {
-    const roots = component.nodes().filter((node) => {
-      const piece = pieceMap[node.id()];
-      return piece?.plane !== undefined && piece?.center !== undefined;
-    });
-    let rootNode = roots.length > 0 ? roots[0] : component.nodes().length > 0 ? component.nodes()[0] : undefined;
-    if (!rootNode) return;
-    if (roots.length === 0) {
-      warnings.push({
-        code: "flatten.no-fixed-piece-in-clump",
-        message: `Connected pieces have no fixed root (no piece with both plane and center). Using piece ${rootNode.id()} as breadth-first root. Each connected set of pieces (clump) should include at least one fixed piece for stable, recommended layout.`,
-      });
-    } else if (roots.length > 1) {
-      infos.push({
-        code: "flatten.multiple-fixed-roots",
-        message: `This clump has ${roots.length} fixed pieces; using the first (${rootNode.id()}) as breadth-first root.`,
-      });
-    }
-    const rootPiece = pieceMap[rootNode.id()];
-    if (!rootPiece || !rootPiece.guid) return;
-    const updatedRootPiece = setAttributes(rootPiece, [
-      { key: "semio.fixedPieceId", value: rootPiece.guid },
-      { key: "semio.depth", value: "0" },
-      { key: "semio.path", value: rootPiece.guid },
-    ]);
-    pieceMap[rootNode.id()] = updatedRootPiece;
-    let rootPlane: Plane;
-    if (rootPiece.plane) {
-      rootPlane = rootPiece.plane;
-    } else {
-      const identityMatrix = new THREE.Matrix4().identity();
-      rootPlane = matrixToPlane(identityMatrix);
-    }
-
-    piecePlanes[rootPiece.guid] = rootPlane;
-    const rootPieceIndex = flatDesign.pieces!.findIndex((p) => p.guid === rootPiece.guid);
-    if (rootPieceIndex !== -1) {
-      flatDesign.pieces![rootPieceIndex].plane = rootPlane;
-
-      if (!flatDesign.pieces![rootPieceIndex].center) {
-        flatDesign.pieces![rootPieceIndex].center = { u: 0, v: 0 };
+        rootPlane = matrixToPlane(new THREE.Matrix4().identity());
       }
 
-      // Keep the computed root plane/center in `pieceMap` as well.
-      // Later we overwrite `flatDesign.pieces` from `pieceMap`, so without this
-      // root-piece plane/center would be lost and `SemioDesign` would render
-      // as diagram-only.
-      pieceMap[rootNode.id()] = {
-        ...(pieceMap[rootNode.id()] ?? updatedRootPiece),
-        plane: rootPlane,
-        center: flatDesign.pieces![rootPieceIndex].center,
-      };
-    }
+      piecePlanes[rootPiece.guid] = rootPlane;
+      const rootPieceIndex = flatDesign.pieces!.findIndex((p) => p.guid === rootPiece.guid);
+      if (rootPieceIndex !== -1) {
+        flatDesign.pieces![rootPieceIndex].plane = rootPlane;
 
-    let visitCount = 0;
-    let skipCount = 0;
-    const bfs = component.bfs({
-      roots: `#${rootNode.id()}`,
-      visit: (v, e, u, i, depth) => {
-        if (!e) return;
-        visitCount++;
-        const edgeData = e.data();
-        const connection: Connection | undefined = edgeData.connectionData;
-        if (!connection) {
-          skipCount++;
-          return;
-        }
-        const parentNode = u;
-        const childNode = v;
-        const parentId = parentNode.id();
-        const childId = childNode.id();
-        const parentPiece = pieceMap[parentId];
-        const childPiece = pieceMap[childId];
-        if (!parentPiece || !childPiece || !parentPiece.guid || !childPiece.guid) {
-          skipCount++;
-          return;
-        }
-        if (piecePlanes[childPiece.guid]) return;
-        const parentPlane = piecePlanes[parentPiece.guid];
-        if (!parentPlane) {
-          placementErrors.push({
-            code: "flatten.parent-plane-missing",
-            message: `Parent piece ${parentPiece.guid} has no plane while flattening edge to child ${childPiece.guid}.`,
-          });
-          skipCount++;
-          return;
-        }
-        const parentSide = connection.connected.piece.guid === parentId ? connection.connected : connection.connecting;
-        const childSide = connection.connecting.piece.guid === childId ? connection.connecting : connection.connected;
-        const parentType = parentPiece.type ? getType(parentPiece.type.guid) : undefined;
-        const childType = childPiece.type ? getType(childPiece.type.guid) : undefined;
-
-        const parentConnectorGuid = parentSide.connector?.guid;
-        const childConnectorGuid = childSide.connector?.guid;
-        const parentConnector = getConnector(parentType, parentConnectorGuid);
-        const childConnector = getConnector(childType, childConnectorGuid);
-
-        if (!parentConnector || !childConnector) {
-          placementErrors.push({
-            code: "flatten.connectors-not-found",
-            message: `Connectors not found for connection between ${parentId} and ${childId}. Parent connector: ${parentConnectorGuid ?? "(default)"}, child connector: ${childConnectorGuid ?? "(default)"}.`,
-          });
-          skipCount++;
-          return;
-        }
-        const childPlane = roundPlane(computeChildPlane(parentPlane, parentConnector, childConnector, connection));
-        piecePlanes[childPiece.guid] = childPlane;
-
-        const radius = 2.697;
-        const verticalVExtra = 1.0;
-        const horizontalScale = 3.0633;
-        const parentCenter = parentPiece.center || { u: 0, v: 0 };
-        const connectionU = connection.u ?? 0;
-        const connectionV = connection.v ?? 0;
-
-        let childU: number;
-        let childV: number;
-
-        if (parentCenter.u === 0 && parentCenter.v === 0) {
-          const angle = 2 * Math.PI * parentConnector.t;
-          childU = radius * Math.sin(angle);
-          childV = radius * Math.cos(angle);
-        } else {
-          const isVerticalConnection = Math.abs(parentConnector.direction?.z ?? 0) > 0.5;
-
-          if (isVerticalConnection) {
-            childU = parentCenter.u + connectionU;
-            childV = parentCenter.v + connectionV + verticalVExtra;
-          } else {
-            childU = parentCenter.u + connectionU * horizontalScale;
-            childV = parentCenter.v + connectionV * horizontalScale;
-          }
+        if (!flatDesign.pieces![rootPieceIndex].center) {
+          flatDesign.pieces![rootPieceIndex].center = { u: 0, v: 0 };
         }
 
-        const computedChildCenter = {
-          u: round(childU),
-          v: round(childV),
+        pieceMap[rootGuid] = {
+          ...(pieceMap[rootGuid] ?? updatedRootPiece),
+          plane: rootPlane,
+          center: flatDesign.pieces![rootPieceIndex].center,
         };
-        const childCenter = childPiece.center ?? computedChildCenter;
+      }
+    },
+    onTreeEdge: ({ parentGuid, childGuid, connection, depth, parentPiece, childPiece }) => {
+      if (!parentPiece.guid || !childPiece.guid) return;
+      const parentPlane = piecePlanes[parentPiece.guid];
+      if (!parentPlane) {
+        placementErrors.push({
+          code: "flatten.parent-plane-missing",
+          message: `Parent piece ${parentPiece.guid} has no plane while flattening edge to child ${childPiece.guid}.`,
+        });
+        return;
+      }
+      const parentSide = connection.connected.piece.guid === parentGuid ? connection.connected : connection.connecting;
+      const childSide = connection.connecting.piece.guid === childGuid ? connection.connecting : connection.connected;
+      const parentType = parentPiece.type ? getType(parentPiece.type.guid) : undefined;
+      const childType = childPiece.type ? getType(childPiece.type.guid) : undefined;
 
-        const flatChildPiece: Piece = setAttributes(
+      const parentConnectorGuid = parentSide.connector?.guid;
+      const childConnectorGuid = childSide.connector?.guid;
+      const parentConnector = getConnector(parentType, parentConnectorGuid);
+      const childConnector = getConnector(childType, childConnectorGuid);
+
+      if (!parentConnector || !childConnector) {
+        placementErrors.push({
+          code: "flatten.connectors-not-found",
+          message: `Connectors not found for connection between ${parentGuid} and ${childGuid}. Parent connector: ${parentConnectorGuid ?? "(default)"}, child connector: ${childConnectorGuid ?? "(default)"}.`,
+        });
+        return;
+      }
+      const childPlane = roundPlane(computeChildPlane(parentPlane, parentConnector, childConnector, connection));
+      piecePlanes[childPiece.guid] = childPlane;
+
+      const radius = 2.697;
+      const verticalVExtra = 1.0;
+      const horizontalScale = 3.0633;
+      const parentCenter = parentPiece.center || { u: 0, v: 0 };
+      const connectionU = connection.u ?? 0;
+      const connectionV = connection.v ?? 0;
+
+      let childU: number;
+      let childV: number;
+
+      if (parentCenter.u === 0 && parentCenter.v === 0) {
+        const angle = 2 * Math.PI * parentConnector.t;
+        childU = radius * Math.sin(angle);
+        childV = radius * Math.cos(angle);
+      } else {
+        const isVerticalConnection = Math.abs(parentConnector.direction?.z ?? 0) > 0.5;
+
+        if (isVerticalConnection) {
+          childU = parentCenter.u + connectionU;
+          childV = parentCenter.v + connectionV + verticalVExtra;
+        } else {
+          childU = parentCenter.u + connectionU * horizontalScale;
+          childV = parentCenter.v + connectionV * horizontalScale;
+        }
+      }
+
+      const computedChildCenter = {
+        u: round(childU),
+        v: round(childV),
+      };
+      const childCenter = childPiece.center ?? computedChildCenter;
+
+      const flatChildPiece: Piece = setAttributes(
+        {
+          ...childPiece,
+          plane: childPlane,
+          center: childCenter,
+        },
+        [
           {
-            ...childPiece,
-            plane: childPlane,
-            center: childCenter,
+            key: "semio.fixedPieceId",
+            value: parentPiece.attributes?.find((q) => q.key === "semio.fixedPieceId")?.value ?? "",
           },
-          [
-            {
-              key: "semio.fixedPieceId",
-              value: parentPiece.attributes?.find((q) => q.key === "semio.fixedPieceId")?.value ?? "",
-            },
-            {
-              key: "semio.parentPieceId",
-              value: parentPiece.guid,
-            },
-            {
-              key: "semio.depth",
-              value: depth.toString(),
-            },
-            {
-              key: "semio.path",
-              value: (parentPiece.attributes?.find((q) => q.key === "semio.path")?.value ?? "") + "," + childPiece.guid,
-            },
-          ],
-        );
-        pieceMap[childId] = flatChildPiece;
-      },
-      directed: false,
-    });
+          {
+            key: "semio.parentPieceId",
+            value: parentPiece.guid,
+          },
+          {
+            key: "semio.depth",
+            value: depth.toString(),
+          },
+          {
+            key: "semio.path",
+            value: (parentPiece.attributes?.find((q) => q.key === "semio.path")?.value ?? "") + "," + childPiece.guid,
+          },
+        ],
+      );
+      pieceMap[childGuid] = flatChildPiece;
+    },
   });
   flatDesign.pieces = flatDesign.pieces?.map((p) => pieceMap[p.guid ?? ""]);
   flatDesign.connections = [];
@@ -5709,14 +5786,14 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
 
       const pieceDiff: PieceDiff = {};
 
-      if (flatPiece.plane && JSON.stringify(flatPiece.plane) !== JSON.stringify(originalPiece.plane)) {
+      if (flatPiece.plane && flattenPlanesDiffer(flatPiece.plane, originalPiece.plane)) {
         pieceDiff.plane = flatPiece.plane;
       }
 
-      if (flatPiece.center && JSON.stringify(flatPiece.center) !== JSON.stringify(originalPiece.center)) {
+      if (flatPiece.center && flattenCentersDiffer(flatPiece.center, originalPiece.center)) {
         pieceDiff.center = flatPiece.center;
       }
-      if (JSON.stringify(flatPiece.attributes) !== JSON.stringify(originalPiece.attributes)) {
+      if (!deepEqual(flatPiece.attributes, originalPiece.attributes)) {
         pieceDiff.attributes = getAttributesDiff(originalPiece.attributes ?? [], flatPiece.attributes ?? []);
       }
 
@@ -5840,66 +5917,31 @@ export const computeFlatHashes = (kit: Kit, designGuid: string): { [pieceGuid: s
   const pieces = design.pieces ?? [];
   if (pieces.length === 0) return {};
   const { getType, getConnector } = buildConnectorResolverFromKit(kit);
-  const pieceMap: { [guid: string]: Piece } = {};
-  pieces.forEach((p) => {
-    if (p.guid) pieceMap[p.guid] = p;
-  });
-  const connections = (design.connections ?? []).filter((c) => pieceMap[c.connected.piece.guid] && pieceMap[c.connecting.piece.guid]);
-  const cy = cytoscape({
-    elements: {
-      nodes: pieces.map((p) => ({ data: { id: p.guid, label: p.guid } })),
-      edges: connections.map((c) => ({
-        data: {
-          id: c.guid,
-          source: c.connected.piece.guid,
-          target: c.connecting.piece.guid,
-          connectionData: c,
-        },
-      })),
-    } as any,
-    headless: true,
-  });
-  const components = cy.elements().components();
+  const connections = (design.connections ?? []).filter((c) => pieces.some((p) => p.guid === c.connected.piece.guid) && pieces.some((p) => p.guid === c.connecting.piece.guid));
   const planeHashes: { [guid: string]: string } = {};
   const centerHashes: { [guid: string]: string } = {};
-  components.forEach((component) => {
-    const roots = component.nodes().filter((node) => {
-      const piece = pieceMap[node.id()];
-      return piece?.plane !== undefined && piece?.center !== undefined;
-    });
-    const rootNode = roots.length > 0 ? roots[0] : component.nodes().length > 0 ? component.nodes()[0] : undefined;
-    if (!rootNode) return;
-    const rootPiece = pieceMap[rootNode.id()];
-    if (!rootPiece?.guid) return;
-    planeHashes[rootPiece.guid] = hashPlaneRoot(rootPiece.guid, rootPiece.plane);
-    centerHashes[rootPiece.guid] = hashCenterRoot(rootPiece.guid, rootPiece.center);
-    component.bfs({
-      roots: `#${rootNode.id()}`,
-      visit: (v, e, u) => {
-        if (!e) return;
-        const connection: Connection | undefined = e.data().connectionData;
-        if (!connection) return;
-        const parentId = u.id();
-        const childId = v.id();
-        const parentPiece = pieceMap[parentId];
-        const childPiece = pieceMap[childId];
-        if (!parentPiece?.guid || !childPiece?.guid) return;
-        if (planeHashes[childPiece.guid]) return;
-        const parentPlaneHash = planeHashes[parentPiece.guid];
-        const parentCenterHash = centerHashes[parentPiece.guid];
-        if (!parentPlaneHash || !parentCenterHash) return;
-        const parentSide = connection.connected.piece.guid === parentId ? connection.connected : connection.connecting;
-        const childSide = connection.connecting.piece.guid === childId ? connection.connecting : connection.connected;
-        const parentType = parentPiece.type ? getType(parentPiece.type.guid) : undefined;
-        const childType = childPiece.type ? getType(childPiece.type.guid) : undefined;
-        const parentConnector = getConnector(parentType, parentSide.connector?.guid);
-        const childConnector = getConnector(childType, childSide.connector?.guid);
-        if (!parentConnector || !childConnector) return;
-        planeHashes[childPiece.guid] = hashPlaneChain(parentPlaneHash, parentConnector, childConnector, connection);
-        centerHashes[childPiece.guid] = hashCenterChain(parentCenterHash, parentConnector, connection);
-      },
-      directed: false,
-    });
+  const { pieceMap, adjacency } = buildFlattenPieceAdjacency(pieces, connections);
+  flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, pieces, {
+    initRoot: (rootGuid, rootPiece) => {
+      if (!rootPiece.guid) return;
+      planeHashes[rootPiece.guid] = hashPlaneRoot(rootPiece.guid, rootPiece.plane);
+      centerHashes[rootPiece.guid] = hashCenterRoot(rootPiece.guid, rootPiece.center);
+    },
+    onTreeEdge: ({ parentGuid, childGuid, connection, parentPiece, childPiece }) => {
+      if (!parentPiece.guid || !childPiece.guid) return;
+      const parentPlaneHash = planeHashes[parentPiece.guid];
+      const parentCenterHash = centerHashes[parentPiece.guid];
+      if (!parentPlaneHash || !parentCenterHash) return;
+      const parentSide = connection.connected.piece.guid === parentGuid ? connection.connected : connection.connecting;
+      const childSide = connection.connecting.piece.guid === childGuid ? connection.connecting : connection.connected;
+      const parentType = parentPiece.type ? getType(parentPiece.type.guid) : undefined;
+      const childType = childPiece.type ? getType(childPiece.type.guid) : undefined;
+      const parentConnector = getConnector(parentType, parentSide.connector?.guid);
+      const childConnector = getConnector(childType, childSide.connector?.guid);
+      if (!parentConnector || !childConnector) return;
+      planeHashes[childPiece.guid] = hashPlaneChain(parentPlaneHash, parentConnector, childConnector, connection);
+      centerHashes[childPiece.guid] = hashCenterChain(parentCenterHash, parentConnector, connection);
+    },
   });
   const result: { [guid: string]: FlatMerkleHashes } = {};
   for (const guid of Object.keys(planeHashes)) {
@@ -5921,11 +5963,7 @@ export type FlatMerkleCacheEntry = {
 /**
  * 🧠Flatten a design while reusing cached plane/center values whenever a piece's merkle hash matches the previous run.
  **/
-export const flattenDesignCached = (
-  kit: Kit,
-  designGuid: string,
-  cache?: { [pieceGuid: string]: FlatMerkleCacheEntry },
-): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } => {
+export const flattenDesignCached = (kit: Kit, designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } => {
   const newHashes = computeFlatHashes(kit, designGuid);
   const result = flattenDesign(kit, designGuid);
   const nextCache: { [guid: string]: FlatMerkleCacheEntry } = {};
@@ -9985,7 +10023,7 @@ const validateGuidCollectionDiff = <TItem extends { guid: string }>(
 };
 
 const validateAttributesDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Attribute[], d: AttributesDiff | undefined): void => {
-  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => { });
+  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => {});
 };
 
 const validatePropsDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Prop[], qualities: Set<string>, d: PropsDiff | undefined): void => {
@@ -10190,13 +10228,13 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
   if (ctx.diff.designs) {
     ctx.diff.designs = validateGuidCollectionDiff(ctx, "designs", "design", kit.designs ?? [], ctx.diff.designs, (item, ddiff, p) => validateDesignDiffNested(ctx, kit, p, item, ddiff as DesignDiff, refs));
   }
-  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => { });
-  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => { });
-  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => { });
+  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => {});
+  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => {});
+  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => {});
   if (ctx.diff.qualities) {
     ctx.diff.qualities = validateGuidCollectionDiff(ctx, "qualities", "quality", kit.qualities ?? [], ctx.diff.qualities, (item, qdiff, p) => validateQualityDiffNested(ctx, p, item, qdiff as QualityDiff));
   }
-  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => { });
+  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => {});
   if (ctx.diff.folders) {
     ctx.diff.folders = validateGuidCollectionDiff(ctx, "folders", "folder", kit.folders ?? [], ctx.diff.folders, (item, fdiff, p) => {
       const par = (fdiff as FolderDiff).parent?.guid ?? item.parent?.guid;
@@ -10204,7 +10242,7 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
       if ((fdiff as FolderDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (fdiff as FolderDiff).attributes);
     });
   }
-  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => { });
+  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => {});
   if (ctx.diff.attributes) validateAttributesDiffNested(ctx, "kit.attributes", kit.attributes ?? [], ctx.diff.attributes);
 
   const ok = ctx.errors.length === 0;
@@ -10895,7 +10933,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
             fixes: [fix],
           });
         }
-      } catch { }
+      } catch {}
     });
   });
   return problems;
@@ -11101,11 +11139,7 @@ export const getSqlJs = async () => {
         const path = await import("path");
         const url = await import("url");
         const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-        const candidatePaths = [
-          path.join(__dirname, "public", "sql-wasm.wasm"),
-          path.join(__dirname, "..", "sketchpad", "public", "sql-wasm.wasm"),
-          path.join(__dirname, "..", "..", "node_modules", "sql.js", "dist", "sql-wasm.wasm"),
-        ];
+        const candidatePaths = [path.join(__dirname, "public", "sql-wasm.wasm"), path.join(__dirname, "..", "sketchpad", "public", "sql-wasm.wasm"), path.join(__dirname, "..", "..", "node_modules", "sql.js", "dist", "sql-wasm.wasm")];
         const wasmPath = candidatePaths.find((candidate) => fs.existsSync(candidate)) ?? candidatePaths[0];
         cachedSqlJs = await initSqlJs({
           locateFile: () => wasmPath,
@@ -12515,20 +12549,20 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-              }
+                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+                }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-              }
+                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+                }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -12643,54 +12677,54 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-        return {
-          guid: row.guid,
-          key: row.key,
-          name: row.name,
-          kind: row.kind || undefined,
-          defaultValue: row.default_value ?? undefined,
-          formula: toUndefined(row.formula),
-          defaultSiUnit: toUndefined(row.default_si_unit),
-          defaultImperialUnit: toUndefined(row.default_imperial_unit),
-          min: row.min_value ?? undefined,
-          minExcluded: row.min_excluded ? true : undefined,
-          max: row.max_value ?? undefined,
-          maxExcluded: row.max_excluded ? true : undefined,
-          canScale: row.can_scale ? true : undefined,
-          uri: toUndefined(row.definition),
-          benchmarks: benchmarks.map((b: any) => {
-            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-            return {
-              guid: b.guid,
-              name: b.name,
-              icon: toUndefined(b.icon),
-              min: b.min_value ?? undefined,
-              minExcluded: b.min_excluded ? true : undefined,
-              max: b.max_value ?? undefined,
-              maxExcluded: b.max_excluded ? true : undefined,
-              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-            };
-          }),
-          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-        };
-      })
+          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+          return {
+            guid: row.guid,
+            key: row.key,
+            name: row.name,
+            kind: row.kind || undefined,
+            defaultValue: row.default_value ?? undefined,
+            formula: toUndefined(row.formula),
+            defaultSiUnit: toUndefined(row.default_si_unit),
+            defaultImperialUnit: toUndefined(row.default_imperial_unit),
+            min: row.min_value ?? undefined,
+            minExcluded: row.min_excluded ? true : undefined,
+            max: row.max_value ?? undefined,
+            maxExcluded: row.max_excluded ? true : undefined,
+            canScale: row.can_scale ? true : undefined,
+            uri: toUndefined(row.definition),
+            benchmarks: benchmarks.map((b: any) => {
+              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+              return {
+                guid: b.guid,
+                name: b.name,
+                icon: toUndefined(b.icon),
+                min: b.min_value ?? undefined,
+                minExcluded: b.min_excluded ? true : undefined,
+                max: b.max_value ?? undefined,
+                maxExcluded: b.max_excluded ? true : undefined,
+                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+              };
+            }),
+            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+          };
+        })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        remote: toUndefined(row.remote_url),
-        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-        size: row.size ?? undefined,
-        hash: toUndefined(row.hash),
-        createdAt: row.created,
-        updatedAt: row.updated,
-      }))
+          guid: row.guid,
+          name: row.name,
+          remote: toUndefined(row.remote_url),
+          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+          size: row.size ?? undefined,
+          hash: toUndefined(row.hash),
+          createdAt: row.created,
+          updatedAt: row.updated,
+        }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -12706,10 +12740,10 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        email: toUndefined(row.email),
-      }))
+          guid: row.guid,
+          name: row.name,
+          email: toUndefined(row.email),
+        }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
@@ -13950,7 +13984,7 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
         if (copiedMeshes.length > 0) {
           typeMeshMap[typeGuid] = copiedMeshes[0];
         }
-      } catch { }
+      } catch {}
     }
   }
 
@@ -14915,9 +14949,7 @@ const shouldRunEmbeddedJsTests =
   (typeof __SEMIO_JS_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_JS_RUN_EMBEDDED_TESTS__) ||
   (typeof __SEMIO_JS_RUN_EMBEDDED_TESTS__ === "undefined" && typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof process !== "undefined" && process.env.SEMIO_JS_RUN_EMBEDDED_TESTS === "1");
 
-const shouldRunJsBenchmarks =
-  (typeof __SEMIO_JS_RUN_BENCHMARKS__ !== "undefined" && __SEMIO_JS_RUN_BENCHMARKS__) ||
-  (typeof __SEMIO_JS_RUN_BENCHMARKS__ === "undefined" && typeof process !== "undefined" && process.argv?.includes("--bench"));
+const shouldRunJsBenchmarks = (typeof __SEMIO_JS_RUN_BENCHMARKS__ !== "undefined" && __SEMIO_JS_RUN_BENCHMARKS__) || (typeof __SEMIO_JS_RUN_BENCHMARKS__ === "undefined" && typeof process !== "undefined" && process.argv?.includes("--bench"));
 
 // #endregion 🧪Runtime Test Flags
 
@@ -17199,9 +17231,9 @@ if (shouldRunEmbeddedJsTests) {
   describe("Sketchpad ControlTree", () => {
     it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
       const controls: ControlDef[] = [
-        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
-        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
-        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
+        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
+        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
+        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
       ];
       const folderSettings = {
         Transform: { path: "Transform", order: 2 },
@@ -19643,7 +19675,6 @@ if (shouldRunEmbeddedJsTests) {
             name: "Wall",
             description: "A wall segment",
             icon: "",
-
           },
         ],
         designs: [],
@@ -19656,7 +19687,6 @@ if (shouldRunEmbeddedJsTests) {
               name: "Column",
               description: "A column",
               icon: "",
-
             },
           ],
           updated: [{ type: { guid: "t1" }, diff: { description: "Modified wall" } }],
@@ -19762,7 +19792,7 @@ async function appendBenchmarkCsv(language: string, name: string, durationSecond
 
 // 🚩Runs all benchmarks. MUST only be called explicitly (e.g. via CLI flag).
 async function runBenchmarks() {
-  const importAtRuntime = async <TModule = any,>(moduleId: string): Promise<TModule> => import(/* @vite-ignore */ moduleId);
+  const importAtRuntime = async <TModule = any>(moduleId: string): Promise<TModule> => import(/* @vite-ignore */ moduleId);
   const DiffForward = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diff.semio.json"].join("/"))).default;
   const DiffInverse = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diff.inverted.semio.json"].join("/"))).default;
   const BenchMetabolismKit = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.semio.json"].join("/"))).default;

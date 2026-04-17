@@ -6551,6 +6551,367 @@ mod flatten_design {
         }
         diff
     }
+
+    // #region 🌳Flatten Merkle Hashes
+    // 🌳Per-piece {plane_hash, center_hash} merkle hashes for cached flatten_design reuse.
+
+    /// <summary>🌳FlatMerkleHashes holds the plane and center merkle hashes for a single piece in a flattened design.</summary>
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct FlatMerkleHashes {
+        pub plane_hash: String,
+        pub center_hash: String,
+    }
+
+    /// <summary>🌳FlatMerkleCacheEntry caches a piece's merkle hashes together with the resolved plane and center from the previous flatten_design run.</summary>
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct FlatMerkleCacheEntry {
+        pub plane_hash: String,
+        pub center_hash: String,
+        pub plane: Option<Plane>,
+        pub center: Option<Coord>,
+    }
+
+    /// <summary>🌱Root plane hash includes only the piece guid and its fixed plane components (identity when absent).</summary>
+    fn hash_plane_root(guid: &str, plane: Option<&Plane>) -> String {
+        let mut w = super::HashWriter::new();
+        match plane {
+            None => {
+                w.write_string("plane.root.identity");
+                w.write_string(guid);
+            }
+            Some(p) => {
+                w.write_string("plane.root");
+                w.write_string(guid);
+                w.write_number(p.origin.x);
+                w.write_number(p.origin.y);
+                w.write_number(p.origin.z);
+                w.write_number(p.x_axis.x);
+                w.write_number(p.x_axis.y);
+                w.write_number(p.x_axis.z);
+                w.write_number(p.y_axis.x);
+                w.write_number(p.y_axis.y);
+                w.write_number(p.y_axis.z);
+            }
+        }
+        w.digest()
+    }
+
+    /// <summary>🔗Chain plane hash depends on the parent plane hash plus every input consumed by compute_child_plane_matrix.</summary>
+    fn hash_plane_chain(
+        parent_hash: &str,
+        parent_connector: &Connector,
+        child_connector: &Connector,
+        conn: &Connection,
+    ) -> String {
+        let mut w = super::HashWriter::new();
+        w.write_string("plane.chain");
+        w.write_hash(parent_hash);
+        w.write_number(parent_connector.point.x);
+        w.write_number(parent_connector.point.y);
+        w.write_number(parent_connector.point.z);
+        w.write_number(parent_connector.direction.x);
+        w.write_number(parent_connector.direction.y);
+        w.write_number(parent_connector.direction.z);
+        w.write_number(child_connector.point.x);
+        w.write_number(child_connector.point.y);
+        w.write_number(child_connector.point.z);
+        w.write_number(child_connector.direction.x);
+        w.write_number(child_connector.direction.y);
+        w.write_number(child_connector.direction.z);
+        w.write_number(conn.gap);
+        w.write_number(conn.shift);
+        w.write_number(conn.rise);
+        w.write_number(conn.rotation);
+        w.write_number(conn.turn);
+        w.write_number(conn.tilt);
+        w.digest()
+    }
+
+    /// <summary>🌱Root center hash includes only the piece guid and its fixed center (identity when absent).</summary>
+    fn hash_center_root(guid: &str, center: Option<&Coord>) -> String {
+        let mut w = super::HashWriter::new();
+        match center {
+            None => {
+                w.write_string("center.root.identity");
+                w.write_string(guid);
+            }
+            Some(c) => {
+                w.write_string("center.root");
+                w.write_string(guid);
+                w.write_number(c.u);
+                w.write_number(c.v);
+            }
+        }
+        w.digest()
+    }
+
+    /// <summary>🔗Chain center hash conservatively includes every potentially-read input of the child center computation.</summary>
+    fn hash_center_chain(parent_hash: &str, parent_connector: &Connector, conn: &Connection) -> String {
+        let mut w = super::HashWriter::new();
+        w.write_string("center.chain");
+        w.write_hash(parent_hash);
+        w.write_number(parent_connector.direction.z);
+        w.write_number(parent_connector.t);
+        w.write_number(conn.u.unwrap_or(0.0));
+        w.write_number(conn.v.unwrap_or(0.0));
+        w.digest()
+    }
+
+    /// <summary>🌳Compute per-piece {plane_hash, center_hash} merkle hashes for the flattened design so callers can cache by chain identity.</summary>
+    pub fn compute_flat_hashes(kit: &Kit, design_guid: &str) -> HashMap<String, FlatMerkleHashes> {
+        let design = match find_design_in_kit(kit, design_guid) {
+            Some(d) => d,
+            None => return HashMap::new(),
+        };
+        let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
+        if pieces.is_empty() {
+            return HashMap::new();
+        }
+        let connections = design
+            .connections
+            .as_ref()
+            .map(|c| c.as_slice())
+            .unwrap_or(&[]);
+        let types_map: HashMap<&str, &Type> = kit
+            .types
+            .as_ref()
+            .map(|types| types.iter().map(|t| (t.guid.as_str(), t)).collect())
+            .unwrap_or_default();
+        let pieces_map: HashMap<&str, &Piece> =
+            pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+
+        // Same adjacency order as flatten_design so the BFS chain selects the same parent for every child.
+        let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
+        for conn in connections {
+            let src = conn.connected.piece.guid.as_str();
+            let tgt = conn.connecting.piece.guid.as_str();
+            if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
+                adjacency.entry(src).or_default().push((tgt, conn, true));
+                adjacency.entry(tgt).or_default().push((src, conn, false));
+            }
+        }
+
+        let mut components: Vec<Vec<&str>> = Vec::new();
+        {
+            let mut component_visited: HashSet<&str> = HashSet::new();
+            for piece in pieces {
+                let guid = piece.guid.as_str();
+                if component_visited.contains(guid) {
+                    continue;
+                }
+                let mut component = Vec::new();
+                let mut queue: VecDeque<&str> = VecDeque::new();
+                queue.push_back(guid);
+                component_visited.insert(guid);
+                while let Some(cur) = queue.pop_front() {
+                    component.push(cur);
+                    if let Some(neighbors) = adjacency.get(cur) {
+                        for &(neigh, _, _) in neighbors {
+                            if !component_visited.contains(neigh) {
+                                component_visited.insert(neigh);
+                                queue.push_back(neigh);
+                            }
+                        }
+                    }
+                }
+                components.push(component);
+            }
+        }
+
+        let mut plane_hashes: HashMap<String, String> = HashMap::new();
+        let mut center_hashes: HashMap<String, String> = HashMap::new();
+
+        for component in &components {
+            let component_set: HashSet<&str> = component.iter().copied().collect();
+
+            // Rule 1: first piece (in slice order) of this component with both plane and center.
+            let mut root: Option<&str> = None;
+            for piece in pieces {
+                let g = piece.guid.as_str();
+                if component_set.contains(g)
+                    && piece.plane.is_some()
+                    && piece.center.is_some()
+                {
+                    root = Some(g);
+                    break;
+                }
+            }
+            // Rule 2: lexicographically smallest guid in the component.
+            if root.is_none() {
+                let mut sorted: Vec<&str> = component.iter().copied().collect();
+                sorted.sort();
+                root = sorted.first().copied();
+            }
+            let root_guid = match root {
+                Some(g) => g,
+                None => continue,
+            };
+            let root_piece = match pieces_map.get(root_guid) {
+                Some(p) => *p,
+                None => continue,
+            };
+            plane_hashes.insert(
+                root_guid.to_string(),
+                hash_plane_root(root_guid, root_piece.plane.as_ref()),
+            );
+            center_hashes.insert(
+                root_guid.to_string(),
+                hash_center_root(root_guid, root_piece.center.as_ref()),
+            );
+
+            let mut bfs_visited: HashSet<&str> = HashSet::new();
+            bfs_visited.insert(root_guid);
+            let mut queue: VecDeque<&str> = VecDeque::new();
+            queue.push_back(root_guid);
+            while let Some(cur) = queue.pop_front() {
+                let parent_plane_hash = match plane_hashes.get(cur).cloned() {
+                    Some(h) => h,
+                    None => continue,
+                };
+                let parent_center_hash = match center_hashes.get(cur).cloned() {
+                    Some(h) => h,
+                    None => continue,
+                };
+                if let Some(neighbors) = adjacency.get(cur) {
+                    for &(neigh, conn, is_connected) in neighbors {
+                        if bfs_visited.contains(neigh) {
+                            continue;
+                        }
+                        let (parent_side, child_side) = if is_connected {
+                            (&conn.connected, &conn.connecting)
+                        } else {
+                            (&conn.connecting, &conn.connected)
+                        };
+                        let parent_connector =
+                            match get_connector_for_side_fast(&types_map, &pieces_map, parent_side) {
+                                Some(c) => c,
+                                None => continue,
+                            };
+                        let child_connector =
+                            match get_connector_for_side_fast(&types_map, &pieces_map, child_side) {
+                                Some(c) => c,
+                                None => continue,
+                            };
+                        plane_hashes.insert(
+                            neigh.to_string(),
+                            hash_plane_chain(
+                                &parent_plane_hash,
+                                &parent_connector,
+                                &child_connector,
+                                conn,
+                            ),
+                        );
+                        center_hashes.insert(
+                            neigh.to_string(),
+                            hash_center_chain(&parent_center_hash, &parent_connector, conn),
+                        );
+                        bfs_visited.insert(neigh);
+                        queue.push_back(neigh);
+                    }
+                }
+            }
+        }
+
+        let mut result: HashMap<String, FlatMerkleHashes> = HashMap::new();
+        for (guid, plane_hash) in plane_hashes {
+            if let Some(center_hash) = center_hashes.get(&guid).cloned() {
+                result.insert(
+                    guid,
+                    FlatMerkleHashes {
+                        plane_hash,
+                        center_hash,
+                    },
+                );
+            }
+        }
+        result
+    }
+
+    /// <summary>🧠Flatten a design reusing cached plane/center values when the per-piece merkle hashes match the previous run.</summary>
+    pub fn flatten_design_cached(
+        kit: &Kit,
+        design_guid: &str,
+        cache: Option<&HashMap<String, FlatMerkleCacheEntry>>,
+    ) -> (DesignChange, HashMap<String, FlatMerkleCacheEntry>) {
+        let new_hashes = compute_flat_hashes(kit, design_guid);
+        let change = flatten_design(kit, design_guid);
+
+        let mut updated_by_id: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
+        if let Some(pieces_diff) = &change.forward.pieces {
+            if let Some(updates) = &pieces_diff.updated {
+                for upd in updates {
+                    let plane = upd.diff.plane.clone().flatten();
+                    let center = upd.diff.center.clone().flatten();
+                    updated_by_id.insert(upd.guid.clone(), (plane, center));
+                }
+            }
+        }
+
+        let mut next_cache: HashMap<String, FlatMerkleCacheEntry> = HashMap::new();
+        match cache {
+            Some(prev_cache) => {
+                for (guid, hashes) in &new_hashes {
+                    let prev = prev_cache.get(guid);
+                    let updated = updated_by_id.get(guid);
+                    match (prev, updated) {
+                        (None, None) => {}
+                        (None, Some((plane, center))) => {
+                            next_cache.insert(
+                                guid.clone(),
+                                FlatMerkleCacheEntry {
+                                    plane_hash: hashes.plane_hash.clone(),
+                                    center_hash: hashes.center_hash.clone(),
+                                    plane: plane.clone(),
+                                    center: center.clone(),
+                                },
+                            );
+                        }
+                        (Some(_), None) => {}
+                        (Some(p), Some((u_plane, u_center))) => {
+                            let plane = if p.plane_hash == hashes.plane_hash {
+                                p.plane.clone()
+                            } else {
+                                u_plane.clone()
+                            };
+                            let center = if p.center_hash == hashes.center_hash {
+                                p.center.clone()
+                            } else {
+                                u_center.clone()
+                            };
+                            next_cache.insert(
+                                guid.clone(),
+                                FlatMerkleCacheEntry {
+                                    plane_hash: hashes.plane_hash.clone(),
+                                    center_hash: hashes.center_hash.clone(),
+                                    plane,
+                                    center,
+                                },
+                            );
+                        }
+                    }
+                }
+            }
+            None => {
+                for (guid, hashes) in &new_hashes {
+                    if let Some((plane, center)) = updated_by_id.get(guid) {
+                        next_cache.insert(
+                            guid.clone(),
+                            FlatMerkleCacheEntry {
+                                plane_hash: hashes.plane_hash.clone(),
+                                center_hash: hashes.center_hash.clone(),
+                                plane: plane.clone(),
+                                center: center.clone(),
+                            },
+                        );
+                    }
+                }
+            }
+        }
+
+        (change, next_cache)
+    }
+
+    // #endregion 🌳Flatten Merkle Hashes
 } // 🕍FlattenDesign
 pub use flatten_design::*;
 
@@ -14886,6 +15247,437 @@ mod tests {
                     }
                 }
             }
+
+            //#region 🌳Flatten Merkle Tests
+            // 🌳Shared-asset driven tests for per-piece merkle {plane_hash, center_hash} and cached flatten_design.
+
+            mod flatten_merkle {
+                use super::*;
+                use serde_json::Value;
+                use std::path::Path;
+
+                #[derive(Debug, Deserialize)]
+                #[serde(rename_all = "camelCase")]
+                struct MerkleCasesAsset {
+                    parity: MerkleParity,
+                    cases: Vec<MerkleCase>,
+                }
+
+                #[derive(Debug, Deserialize)]
+                #[serde(rename_all = "camelCase")]
+                struct MerkleParity {
+                    kit: String,
+                    design_path: Vec<String>,
+                    expected_hashes: Vec<MerkleExpectedHash>,
+                }
+
+                #[derive(Debug, Deserialize)]
+                #[serde(rename_all = "camelCase")]
+                struct MerkleExpectedHash {
+                    piece_guid: String,
+                    plane_hash: String,
+                    center_hash: String,
+                }
+
+                #[derive(Debug, Deserialize)]
+                #[serde(rename_all = "camelCase")]
+                struct MerkleCase {
+                    name: String,
+                    kit: String,
+                    design_path: Vec<String>,
+                    #[serde(default)]
+                    mutations: Vec<MerkleMutation>,
+                    expect: MerkleExpect,
+                }
+
+                #[derive(Debug, Deserialize)]
+                #[serde(rename_all = "camelCase")]
+                struct MerkleMutation {
+                    kind: String,
+                    piece_guid: Option<String>,
+                    connection_guid: Option<String>,
+                    path: String,
+                    value: Value,
+                }
+
+                #[derive(Debug, Deserialize, Default)]
+                #[serde(rename_all = "camelCase")]
+                struct MerkleExpect {
+                    #[serde(default)]
+                    plane_hashes_changed_any: Option<bool>,
+                    #[serde(default)]
+                    center_hashes_changed_any: Option<bool>,
+                    #[serde(default)]
+                    plane_hashes_changed_all: Option<bool>,
+                    #[serde(default)]
+                    center_hashes_changed_all: Option<bool>,
+                    #[serde(default)]
+                    plane_hashes_changed_includes: Vec<String>,
+                    #[serde(default)]
+                    center_hashes_changed_includes: Vec<String>,
+                    #[serde(default)]
+                    plane_hashes_stable_includes: Vec<String>,
+                    #[serde(default)]
+                    center_hashes_stable_includes: Vec<String>,
+                }
+
+                /// <summary>🌳Find a design index inside a serde_json Value-encoded kit by hierarchical name path.</summary>
+                fn find_design_idx_in_value(kit: &Value, design_path: &[String]) -> Option<usize> {
+                    let designs = kit.get("designs")?.as_array()?;
+                    let mut current_guid: Option<String> = None;
+                    let mut current_idx: Option<usize> = None;
+                    for (i, name) in design_path.iter().enumerate() {
+                        let mut found_idx: Option<usize> = None;
+                        for (idx, d) in designs.iter().enumerate() {
+                            if d.get("name").and_then(|n| n.as_str()) != Some(name.as_str()) {
+                                continue;
+                            }
+                            let parent = d.get("parent").filter(|v| !v.is_null());
+                            if i == 0 {
+                                if parent.is_none() {
+                                    found_idx = Some(idx);
+                                    break;
+                                }
+                            } else if let Some(parent_obj) = parent {
+                                if parent_obj.get("guid").and_then(|g| g.as_str())
+                                    == current_guid.as_deref()
+                                {
+                                    found_idx = Some(idx);
+                                    break;
+                                }
+                            }
+                        }
+                        let idx = found_idx?;
+                        current_guid = designs[idx]
+                            .get("guid")
+                            .and_then(|g| g.as_str())
+                            .map(|s| s.to_string());
+                        current_idx = Some(idx);
+                    }
+                    current_idx
+                }
+
+                /// <summary>🌳Assign a JSON value at a dotted path inside an object, creating intermediate objects when missing.</summary>
+                fn set_at_path(obj: &mut Value, path: &str, value: Value) {
+                    let keys: Vec<&str> = path.split('.').collect();
+                    let mut current = obj;
+                    for key in &keys[..keys.len() - 1] {
+                        if !current.is_object() {
+                            *current = Value::Object(serde_json::Map::new());
+                        }
+                        let needs_init = match current.as_object().and_then(|m| m.get(*key)) {
+                            None | Some(Value::Null) => true,
+                            _ => false,
+                        };
+                        if needs_init {
+                            if let Some(map) = current.as_object_mut() {
+                                map.insert(
+                                    (*key).to_string(),
+                                    Value::Object(serde_json::Map::new()),
+                                );
+                            }
+                        }
+                        current = current
+                            .as_object_mut()
+                            .and_then(|m| m.get_mut(*key))
+                            .expect("intermediate object exists");
+                    }
+                    if let Some(map) = current.as_object_mut() {
+                        let last = (*keys.last().unwrap()).to_string();
+                        map.insert(last, value);
+                    }
+                }
+
+                /// <summary>🌳Apply a single shared-asset mutation to a JSON-encoded kit clone prior to recomputing hashes.</summary>
+                fn apply_mutation(
+                    kit: &mut Value,
+                    design_path: &[String],
+                    mutation: &MerkleMutation,
+                ) {
+                    let design_idx = find_design_idx_in_value(kit, design_path)
+                        .expect("design path not found in kit");
+                    let designs = kit
+                        .get_mut("designs")
+                        .and_then(|d| d.as_array_mut())
+                        .expect("kit.designs missing");
+                    let design = &mut designs[design_idx];
+                    match mutation.kind.as_str() {
+                        "pieceField" => {
+                            let pieces = design
+                                .get_mut("pieces")
+                                .and_then(|p| p.as_array_mut())
+                                .expect("design.pieces missing");
+                            let piece_guid = mutation
+                                .piece_guid
+                                .as_deref()
+                                .expect("pieceField mutation missing pieceGuid");
+                            let piece = pieces
+                                .iter_mut()
+                                .find(|p| {
+                                    p.get("guid").and_then(|g| g.as_str()) == Some(piece_guid)
+                                })
+                                .unwrap_or_else(|| panic!("piece {} not found", piece_guid));
+                            set_at_path(piece, &mutation.path, mutation.value.clone());
+                        }
+                        "connectionField" => {
+                            let connections = design
+                                .get_mut("connections")
+                                .and_then(|c| c.as_array_mut())
+                                .expect("design.connections missing");
+                            let connection_guid = mutation
+                                .connection_guid
+                                .as_deref()
+                                .expect("connectionField mutation missing connectionGuid");
+                            let connection = connections
+                                .iter_mut()
+                                .find(|c| {
+                                    c.get("guid").and_then(|g| g.as_str())
+                                        == Some(connection_guid)
+                                })
+                                .unwrap_or_else(|| {
+                                    panic!("connection {} not found", connection_guid)
+                                });
+                            set_at_path(connection, &mutation.path, mutation.value.clone());
+                        }
+                        other => panic!("unknown mutation kind {}", other),
+                    }
+                }
+
+                fn find_design_guid_in_kit(kit: &Kit, design_path: &[String]) -> String {
+                    let designs = kit.designs.as_ref().expect("kit has no designs");
+                    let mut current: Option<&Design> = None;
+                    let mut parent_guid: Option<&str> = None;
+                    for name in design_path {
+                        current = find_design_by_name(designs, name, parent_guid);
+                        assert!(current.is_some(), "design {} not found", name);
+                        parent_guid = current.map(|d| d.guid.as_str());
+                    }
+                    current.expect("design is None").guid.clone()
+                }
+
+                fn load_kit_value(filename: &str) -> Value {
+                    let path = Path::new(ASSETS_DIR).join(filename);
+                    let data = std::fs::read_to_string(&path)
+                        .unwrap_or_else(|e| panic!("failed to read {}: {}", filename, e));
+                    serde_json::from_str(&data)
+                        .unwrap_or_else(|e| panic!("failed to parse {}: {}", filename, e))
+                }
+
+                fn load_cases() -> MerkleCasesAsset {
+                    load_asset("flatten-merkle.cases.semio.json")
+                }
+
+                #[test]
+                pub fn test_flatten_merkle_parity_reference_hashes() {
+                    let cases = load_cases();
+                    let parity = cases.parity;
+                    let kit = load_kit(&parity.kit);
+                    let design_guid = find_design_guid_in_kit(&kit, &parity.design_path);
+                    let hashes = compute_flat_hashes(&kit, &design_guid);
+                    for expected in &parity.expected_hashes {
+                        let actual = hashes.get(&expected.piece_guid).unwrap_or_else(|| {
+                            panic!("piece {} missing from computed hashes", expected.piece_guid)
+                        });
+                        assert_eq!(
+                            actual.plane_hash, expected.plane_hash,
+                            "piece {} planeHash mismatch",
+                            expected.piece_guid
+                        );
+                        assert_eq!(
+                            actual.center_hash, expected.center_hash,
+                            "piece {} centerHash mismatch",
+                            expected.piece_guid
+                        );
+                    }
+                }
+
+                #[test]
+                pub fn test_flatten_merkle_shared_asset_cases() {
+                    let cases_doc = load_cases();
+                    for case in &cases_doc.cases {
+                        let kit_value_before = load_kit_value(&case.kit);
+                        let kit_before: Kit = serde_json::from_value(kit_value_before.clone())
+                            .expect("kit deserialize before");
+                        let design_guid_before =
+                            find_design_guid_in_kit(&kit_before, &case.design_path);
+                        let before_hashes = compute_flat_hashes(&kit_before, &design_guid_before);
+
+                        let mut kit_value_after = kit_value_before.clone();
+                        for mutation in &case.mutations {
+                            apply_mutation(&mut kit_value_after, &case.design_path, mutation);
+                        }
+                        let kit_after: Kit = serde_json::from_value(kit_value_after)
+                            .expect("kit deserialize after");
+                        let design_guid_after =
+                            find_design_guid_in_kit(&kit_after, &case.design_path);
+                        let after_hashes = compute_flat_hashes(&kit_after, &design_guid_after);
+
+                        let before_keys: HashSet<&String> = before_hashes.keys().collect();
+                        let after_keys: HashSet<&String> = after_hashes.keys().collect();
+                        assert_eq!(
+                            before_keys, after_keys,
+                            "case {}: piece set changed",
+                            case.name
+                        );
+
+                        let changed_plane: HashSet<String> = before_hashes
+                            .iter()
+                            .filter_map(|(g, h)| {
+                                after_hashes
+                                    .get(g)
+                                    .filter(|a| a.plane_hash != h.plane_hash)
+                                    .map(|_| g.clone())
+                            })
+                            .collect();
+                        let changed_center: HashSet<String> = before_hashes
+                            .iter()
+                            .filter_map(|(g, h)| {
+                                after_hashes
+                                    .get(g)
+                                    .filter(|a| a.center_hash != h.center_hash)
+                                    .map(|_| g.clone())
+                            })
+                            .collect();
+                        let all_guids: HashSet<String> =
+                            before_hashes.keys().cloned().collect();
+
+                        let expect = &case.expect;
+                        let name = &case.name;
+                        if let Some(any) = expect.plane_hashes_changed_any {
+                            if any {
+                                assert!(
+                                    !changed_plane.is_empty(),
+                                    "case {}: expected some planeHash changes, got none",
+                                    name
+                                );
+                            } else {
+                                assert!(
+                                    changed_plane.is_empty(),
+                                    "case {}: expected no planeHash changes, got {:?}",
+                                    name,
+                                    changed_plane
+                                );
+                            }
+                        }
+                        if let Some(any) = expect.center_hashes_changed_any {
+                            if any {
+                                assert!(
+                                    !changed_center.is_empty(),
+                                    "case {}: expected some centerHash changes, got none",
+                                    name
+                                );
+                            } else {
+                                assert!(
+                                    changed_center.is_empty(),
+                                    "case {}: expected no centerHash changes, got {:?}",
+                                    name,
+                                    changed_center
+                                );
+                            }
+                        }
+                        if let Some(all) = expect.plane_hashes_changed_all {
+                            if all {
+                                assert_eq!(
+                                    changed_plane, all_guids,
+                                    "case {}: expected every planeHash to change",
+                                    name
+                                );
+                            } else {
+                                assert_ne!(
+                                    changed_plane, all_guids,
+                                    "case {}: expected not every planeHash to change",
+                                    name
+                                );
+                            }
+                        }
+                        if let Some(all) = expect.center_hashes_changed_all {
+                            if all {
+                                assert_eq!(
+                                    changed_center, all_guids,
+                                    "case {}: expected every centerHash to change",
+                                    name
+                                );
+                            } else {
+                                assert_ne!(
+                                    changed_center, all_guids,
+                                    "case {}: expected not every centerHash to change",
+                                    name
+                                );
+                            }
+                        }
+                        for guid in &expect.plane_hashes_changed_includes {
+                            assert!(
+                                changed_plane.contains(guid),
+                                "case {}: expected piece {} to have changed planeHash",
+                                name,
+                                guid
+                            );
+                        }
+                        for guid in &expect.center_hashes_changed_includes {
+                            assert!(
+                                changed_center.contains(guid),
+                                "case {}: expected piece {} to have changed centerHash",
+                                name,
+                                guid
+                            );
+                        }
+                        for guid in &expect.plane_hashes_stable_includes {
+                            assert!(
+                                !changed_plane.contains(guid),
+                                "case {}: expected piece {} to keep stable planeHash",
+                                name,
+                                guid
+                            );
+                        }
+                        for guid in &expect.center_hashes_stable_includes {
+                            assert!(
+                                !changed_center.contains(guid),
+                                "case {}: expected piece {} to keep stable centerHash",
+                                name,
+                                guid
+                            );
+                        }
+                    }
+                }
+
+                #[test]
+                pub fn test_flatten_design_cached_reuses_values() {
+                    let kit = load_kit("metabolism.kit.semio.json");
+                    let design_guid =
+                        find_design_guid_in_kit(&kit, &["Nakagin Capsule Tower".to_string()]);
+                    let (_first_change, first_cache) =
+                        flatten_design_cached(&kit, &design_guid, None);
+                    assert!(!first_cache.is_empty(), "first cache must not be empty");
+                    let (_second_change, second_cache) =
+                        flatten_design_cached(&kit, &design_guid, Some(&first_cache));
+                    for (guid, entry) in &first_cache {
+                        let second_entry = second_cache
+                            .get(guid)
+                            .unwrap_or_else(|| panic!("piece {} missing from second cache", guid));
+                        assert_eq!(
+                            entry.plane_hash, second_entry.plane_hash,
+                            "plane_hash mismatch for {}",
+                            guid
+                        );
+                        assert_eq!(
+                            entry.center_hash, second_entry.center_hash,
+                            "center_hash mismatch for {}",
+                            guid
+                        );
+                        assert_eq!(
+                            entry.plane, second_entry.plane,
+                            "plane mismatch for {}",
+                            guid
+                        );
+                        assert_eq!(
+                            entry.center, second_entry.center,
+                            "center mismatch for {}",
+                            guid
+                        );
+                    }
+                }
+            }
+            //#endregion 🌳Flatten Merkle Tests
         } // 📭Flatten Tests
         pub use flatten_tests::*;
 

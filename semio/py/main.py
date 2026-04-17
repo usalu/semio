@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import abc
 import base64
+import collections
 import copy
 import dataclasses
 import datetime
@@ -1705,7 +1706,12 @@ def _append_benchmark_csv(language: str, name: str, duration_seconds: float):
     writer = csv.writer(buffer, lineterminator="\n")
     writer.writerow(["name", *BENCHMARK_CSV_LANGUAGES])
     for row_name in order:
-        writer.writerow([row_name, *[rows[row_name].get(lang, "") for lang in BENCHMARK_CSV_LANGUAGES]])
+        writer.writerow(
+            [
+                row_name,
+                *[rows[row_name].get(lang, "") for lang in BENCHMARK_CSV_LANGUAGES],
+            ]
+        )
     with open(path, "w", encoding="utf-8", newline="") as f:
         f.write(buffer.getvalue())
 
@@ -1722,7 +1728,10 @@ def _bench(name: str, func):
 
 def benchmark_main():
     kit_metabolism = _test_load_json("metabolism.kit.semio.json")
-    kit_original = {**kit_metabolism, "designs": [d for d in kit_metabolism.get("designs", []) if not d.get("parent")]}
+    kit_original = {
+        **kit_metabolism,
+        "designs": [d for d in kit_metabolism.get("designs", []) if not d.get("parent")],
+    }
     kit_invalid = _test_load_kit("invalid.kit.semio.json")
 
     def test_roundtrip():
@@ -2106,25 +2115,52 @@ class PortId(PortNameField, Id):
     pass
 
 
-class PortProps(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Props):
+class PortProps(
+    PortMaxChildrenField,
+    PortCompatiblePortsField,
+    PortIconField,
+    PortDescriptionField,
+    PortNameField,
+    Props,
+):
     """🔖Property fields for a port."""
 
     pass
 
 
-class PortInput(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Input):
+class PortInput(
+    PortMaxChildrenField,
+    PortCompatiblePortsField,
+    PortIconField,
+    PortDescriptionField,
+    PortNameField,
+    Input,
+):
     """🔖Input fields for creating or updating a port."""
 
     attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 
-class PortOutput(PortMaxChildrenField, PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Output):
+class PortOutput(
+    PortMaxChildrenField,
+    PortCompatiblePortsField,
+    PortIconField,
+    PortDescriptionField,
+    PortNameField,
+    Output,
+):
     """🔖Output fields returned when fetching a port."""
 
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 
-class Port(PortMaxChildrenField, PortIconField, PortDescriptionField, PortNameField, TableEntity):
+class Port(
+    PortMaxChildrenField,
+    PortIconField,
+    PortDescriptionField,
+    PortNameField,
+    TableEntity,
+):
     """🔖Port entity defining a named connection interface on a type."""
 
     PLURAL = "ports"
@@ -8227,7 +8263,10 @@ def findReplaceableTypesInDesignsForPiecesInDesignDict(
     def candidate_design_available_port_guids(candidate_design: dict) -> list[str]:
         consumed_connector_keys = set()
         for connection in candidate_design.get("connections") or []:
-            for side in [connection.get("connected") or {}, connection.get("connecting") or {}]:
+            for side in [
+                connection.get("connected") or {},
+                connection.get("connecting") or {},
+            ]:
                 piece_guid = (side.get("piece") or {}).get("guid", "")
                 connector_guid = (side.get("connector") or {}).get("guid", "")
                 if piece_guid and connector_guid:
@@ -9978,7 +10017,12 @@ def _validate_guid_collection_diff(
             continue
         rg = r.get("guid")
         if rg not in base_by:
-            _kitdiff_push(ctx, "warnings", "kitdiff.remove.missing-target", f"{path}: remove references missing {id_key} {rg}")
+            _kitdiff_push(
+                ctx,
+                "warnings",
+                "kitdiff.remove.missing-target",
+                f"{path}: remove references missing {id_key} {rg}",
+            )
             if heal and h_rem is not None:
                 h_rem = [x for x in h_rem if x.get("guid") != rg]
 
@@ -10008,7 +10052,12 @@ def _validate_guid_collection_diff(
             continue
         ag = a.get("guid")
         if ag in seen_add:
-            _kitdiff_push(ctx, "errors", "kitdiff.add.duplicate-in-diff", f"{path}: duplicate added {id_key} guid {ag}")
+            _kitdiff_push(
+                ctx,
+                "errors",
+                "kitdiff.add.duplicate-in-diff",
+                f"{path}: duplicate added {id_key} guid {ag}",
+            )
             if heal and h_add is not None:
                 na = []
                 first_kept = False
@@ -10022,7 +10071,12 @@ def _validate_guid_collection_diff(
                 h_add = na
         seen_add.add(ag)
         if ag in after_remove:
-            _kitdiff_push(ctx, "errors", "kitdiff.add.duplicate-guid", f"{path}: cannot add {id_key} {ag} that still exists after removes")
+            _kitdiff_push(
+                ctx,
+                "errors",
+                "kitdiff.add.duplicate-guid",
+                f"{path}: cannot add {id_key} {ag} that still exists after removes",
+            )
             if heal and h_add is not None:
                 h_add = [x for x in h_add if x.get("guid") != ag]
 
@@ -10037,13 +10091,23 @@ def _validate_guid_collection_diff(
                 h_upd = [x for x in h_upd if (x.get(id_key) or {}).get("guid") != gid]
             continue
         if gid not in after_remove:
-            _kitdiff_push(ctx, "errors", "kitdiff.update.missing-target", f"{p}: update targets {id_key} not present after removes")
+            _kitdiff_push(
+                ctx,
+                "errors",
+                "kitdiff.update.missing-target",
+                f"{p}: update targets {id_key} not present after removes",
+            )
             if heal and h_upd is not None:
                 h_upd = [x for x in h_upd if (x.get(id_key) or {}).get("guid") != gid]
             continue
         item = base_by.get(gid)
         if item is None:
-            _kitdiff_push(ctx, "errors", "kitdiff.update.missing-base", f"{p}: {id_key} not found in base kit")
+            _kitdiff_push(
+                ctx,
+                "errors",
+                "kitdiff.update.missing-base",
+                f"{p}: {id_key} not found in base kit",
+            )
             if heal and h_upd is not None:
                 h_upd = [x for x in h_upd if (x.get(id_key) or {}).get("guid") != gid]
             continue
@@ -10071,16 +10135,31 @@ def _validate_design_diff_nested_py(ctx: dict, kit: dict, path: str, design: dic
     if diff.get("parent") and isinstance(diff["parent"], dict):
         pg = diff["parent"].get("guid")
         if pg and pg not in design_guids:
-            _kitdiff_push(ctx, "errors", "kitdiff.ref.design-parent-missing", f"{path}: parent design {pg} not in kit")
+            _kitdiff_push(
+                ctx,
+                "errors",
+                "kitdiff.ref.design-parent-missing",
+                f"{path}: parent design {pg} not in kit",
+            )
         if pg == design.get("guid"):
-            _kitdiff_push(ctx, "errors", "kitdiff.ref.design-parent-self", f"{path}: design cannot be its own parent")
+            _kitdiff_push(
+                ctx,
+                "errors",
+                "kitdiff.ref.design-parent-self",
+                f"{path}: design cannot be its own parent",
+            )
 
     da = diff.get("authors")
     if da is not None:
         if isinstance(da, list):
             for a in da:
                 if isinstance(a, dict) and a.get("guid") and a["guid"] not in author_guids:
-                    _kitdiff_push(ctx, "errors", "kitdiff.ref.author-missing", f"{path}: author {a['guid']} not in kit")
+                    _kitdiff_push(
+                        ctx,
+                        "errors",
+                        "kitdiff.ref.author-missing",
+                        f"{path}: author {a['guid']} not in kit",
+                    )
         elif isinstance(da, dict):
             _validate_guid_collection_diff(
                 ctx,
@@ -10106,10 +10185,20 @@ def _validate_design_diff_nested_py(ctx: dict, kit: dict, path: str, design: dic
                 continue
             tg = (a.get("type") or {}).get("guid")
             if tg and tg not in type_guids:
-                _kitdiff_push(ctx, "errors", "kitdiff.ref.piece-type-missing", f"{path}.pieces.added: type {tg} not in kit")
+                _kitdiff_push(
+                    ctx,
+                    "errors",
+                    "kitdiff.ref.piece-type-missing",
+                    f"{path}.pieces.added: type {tg} not in kit",
+                )
             dg = (a.get("design") or {}).get("guid") if isinstance(a.get("design"), dict) else None
             if dg and dg not in design_guids:
-                _kitdiff_push(ctx, "errors", "kitdiff.ref.piece-design-missing", f"{path}.pieces.added: subdesign {dg} not in kit")
+                _kitdiff_push(
+                    ctx,
+                    "errors",
+                    "kitdiff.ref.piece-design-missing",
+                    f"{path}.pieces.added: subdesign {dg} not in kit",
+                )
 
 
 def validate_kit_diff_dict(kit: dict, diff: dict, heal: bool) -> dict:
@@ -10168,7 +10257,14 @@ def validate_kit_diff_dict(kit: dict, diff: dict, heal: bool) -> dict:
     run_coll("authors", "author", "authors")
 
     if working.get("attributes"):
-        _validate_guid_collection_diff(ctx, "kit.attributes", "attribute", kit.get("attributes") or [], working["attributes"], None)
+        _validate_guid_collection_diff(
+            ctx,
+            "kit.attributes",
+            "attribute",
+            kit.get("attributes") or [],
+            working["attributes"],
+            None,
+        )
 
     ok = len(ctx["errors"]) == 0
     result: dict = {"ok": ok, "errors": ctx["errors"], "warnings": ctx["warnings"]}
@@ -10820,7 +10916,10 @@ def copyDesignDict(kit: dict, design: dict, pieceGuids: list[str], connectionGui
     flatPieceMap: dict[str, dict] = {}
     for piece in pieces:
         if piece.get("plane"):
-            flatPieceMap[piece["guid"]] = {"plane": piece["plane"], "center": piece.get("center")}
+            flatPieceMap[piece["guid"]] = {
+                "plane": piece["plane"],
+                "center": piece.get("center"),
+            }
     for update in flatResult.get("pieces", {}).get("updated", []):
         guid = update.get("piece", {}).get("guid", update.get("id", ""))
         diff = update.get("diff", {})
@@ -10862,7 +10961,16 @@ def copyDesignDict(kit: dict, design: dict, pieceGuids: list[str], connectionGui
             copied = _deepCopy(piece)
             flatPiece = flatPieceMap.get(pieceGuid, {})
             centerValue = json.dumps(flatPiece.get("center", {"u": 0, "v": 0}))
-            planeValue = json.dumps(flatPiece.get("plane", {"origin": {"x": 0, "y": 0, "z": 0}, "xAxis": {"x": 1, "y": 0, "z": 0}, "yAxis": {"x": 0, "y": 1, "z": 0}}))
+            planeValue = json.dumps(
+                flatPiece.get(
+                    "plane",
+                    {
+                        "origin": {"x": 0, "y": 0, "z": 0},
+                        "xAxis": {"x": 1, "y": 0, "z": 0},
+                        "yAxis": {"x": 0, "y": 1, "z": 0},
+                    },
+                )
+            )
             attrs = copied.setdefault("attributes", [])
             attrs.append({"key": "semio.center", "value": centerValue})
             attrs.append({"key": "semio.plane", "value": planeValue})
@@ -10909,7 +11017,13 @@ def copyDesignDict(kit: dict, design: dict, pieceGuids: list[str], connectionGui
     return {"pieces": copyPieces, "connections": copyConnections}
 
 
-def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord: typing.Optional[dict] = None) -> dict:
+def pasteDesignDict(
+    kit: dict,
+    source: dict,
+    target: dict,
+    anchoring: str,
+    coord: typing.Optional[dict] = None,
+) -> dict:
     """📋Pastes a copied design into a target design, returning a DesignDiff dict.
     Specs: Anchoring determines the reference point within the bounding rectangle of the source.
     Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
@@ -10978,7 +11092,10 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
         anchor = {"u": (minU + maxU) / 2, "v": (minV + maxV) / 2}
     elif anchoring == "centroid":
         n = len(centerCoords)
-        anchor = {"u": sum(c.get("u", 0) for c in centerCoords) / n, "v": sum(c.get("v", 0) for c in centerCoords) / n}
+        anchor = {
+            "u": sum(c.get("u", 0) for c in centerCoords) / n,
+            "v": sum(c.get("v", 0) for c in centerCoords) / n,
+        }
     elif anchoring == "bottomLeft":
         anchor = {"u": minU, "v": minV}
     elif anchoring == "bottomRight":
@@ -11044,9 +11161,15 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
             # Fixed piece: apply -anchor offset, then +coord if given
             copied = _deepCopy(piece)
             center = copied.get("center") or {"u": 0, "v": 0}
-            newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
+            newCenter = {
+                "u": center.get("u", 0) - anchor["u"],
+                "v": center.get("v", 0) - anchor["v"],
+            }
             if coord is not None:
-                newCenter = {"u": newCenter["u"] + coord.get("u", 0), "v": newCenter["v"] + coord.get("v", 0)}
+                newCenter = {
+                    "u": newCenter["u"] + coord.get("u", 0),
+                    "v": newCenter["v"] + coord.get("v", 0),
+                }
             copied["center"] = newCenter
             addedPieces.append(copied)
         elif isConnected:
@@ -11088,9 +11211,15 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
 
                                 copiedConn = _deepCopy(parentConn)
                                 if isParentConnected:
-                                    copiedConn["connected"] = {"piece": {"guid": candidate["guid"]}, "connector": {"guid": matchingConnector["guid"]}}
+                                    copiedConn["connected"] = {
+                                        "piece": {"guid": candidate["guid"]},
+                                        "connector": {"guid": matchingConnector["guid"]},
+                                    }
                                 else:
-                                    copiedConn["connecting"] = {"piece": {"guid": candidate["guid"]}, "connector": {"guid": matchingConnector["guid"]}}
+                                    copiedConn["connecting"] = {
+                                        "piece": {"guid": candidate["guid"]},
+                                        "connector": {"guid": matchingConnector["guid"]},
+                                    }
 
                                 if coord is not None:
                                     connected_guid = parentConn.get("connected", {}).get("piece", {}).get("guid", "")
@@ -11104,14 +11233,20 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                         flatParentCenter = None
                                         c0 = candidate.get("center")
                                         if c0 is not None and isinstance(c0, dict):
-                                            flatParentCenter = {"u": c0.get("u", 0), "v": c0.get("v", 0)}
+                                            flatParentCenter = {
+                                                "u": c0.get("u", 0),
+                                                "v": c0.get("v", 0),
+                                            }
                                         if flatParentCenter is None:
                                             for attr in candidate.get("attributes", []):
                                                 if attr.get("key") == "semio.center" and attr.get("value"):
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except (json.JSONDecodeError, TypeError):
+                                                    except (
+                                                        json.JSONDecodeError,
+                                                        TypeError,
+                                                    ):
                                                         pass
                                         if flatParentCenter is None:
                                             for attr in externalParent.get("attributes", []):
@@ -11119,7 +11254,10 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except (json.JSONDecodeError, TypeError):
+                                                    except (
+                                                        json.JSONDecodeError,
+                                                        TypeError,
+                                                    ):
                                                         pass
                                         if flatParentCenter is None and externalParent.get("center"):
                                             flatParentCenter = externalParent["center"]
@@ -11155,9 +11293,15 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                             except (json.JSONDecodeError, TypeError):
                                 pass
                     center = copied.get("center") or {"u": 0, "v": 0}
-                    newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
+                    newCenter = {
+                        "u": center.get("u", 0) - anchor["u"],
+                        "v": center.get("v", 0) - anchor["v"],
+                    }
                     if coord is not None:
-                        newCenter = {"u": newCenter["u"] + coord.get("u", 0), "v": newCenter["v"] + coord.get("v", 0)}
+                        newCenter = {
+                            "u": newCenter["u"] + coord.get("u", 0),
+                            "v": newCenter["v"] + coord.get("v", 0),
+                        }
                     copied["center"] = newCenter
                     addedPieces.append(copied)
             else:
@@ -12844,81 +12988,110 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
     pieceMap = {p["guid"]: dict(p) for p in pieces}
     piecePlanes: dict[str, dict] = {}
     piecePaths: dict[str, str] = {}
-    G = buildPieceGraph(design)
-    components = list(networkx.connected_components(G))
-    for component in components:
-        rootNode = None
-        for nodeId in component:
-            piece = pieceMap.get(nodeId)
-            if piece and piece.get("plane") is not None and piece.get("center") is not None:
-                rootNode = nodeId
-                break
-        if rootNode is None and component:
-            rootNode = next(iter(component))
-        if rootNode is None:
+    adjacency: dict[str, list[tuple[str, dict]]] = {}
+    for conn in design.get("connections", []):
+        src = conn["connected"]["piece"]["guid"]
+        tgt = conn["connecting"]["piece"]["guid"]
+        if src not in pieceMap or tgt not in pieceMap:
             continue
-        rootPiece = pieceMap[rootNode]
-        piecePaths[rootNode] = rootNode
-        if rootPiece.get("plane") and rootPiece.get("center") is not None:
-            piecePlanes[rootNode] = rootPiece["plane"]
+        adjacency.setdefault(src, []).append((tgt, conn))
+        adjacency.setdefault(tgt, []).append((src, conn))
+    piece_index = {p["guid"]: i for i, p in enumerate(pieces)}
+    processed_components: set[str] = set()
+
+    def collect_component(start: str) -> set[str]:
+        comp: set[str] = {start}
+        stack = [start]
+        while stack:
+            u = stack.pop()
+            for neighbor_guid, _c in adjacency.get(u, []):
+                if neighbor_guid not in comp:
+                    comp.add(neighbor_guid)
+                    stack.append(neighbor_guid)
+        return comp
+
+    def bfs_from_root(root_guid: str) -> None:
+        visited: set[str] = set()
+        q: collections.deque[str] = collections.deque([root_guid])
+        visited.add(root_guid)
+        piecePaths[root_guid] = root_guid
+        root_piece = pieceMap[root_guid]
+        if root_piece.get("plane") is not None and root_piece.get("center") is not None:
+            piecePlanes[root_guid] = root_piece["plane"]
         else:
-            piecePlanes[rootNode] = {
+            piecePlanes[root_guid] = {
                 "origin": {"x": 0, "y": 0, "z": 0},
                 "xAxis": {"x": 1, "y": 0, "z": 0},
                 "yAxis": {"x": 0, "y": 1, "z": 0},
             }
-        for source, target in networkx.bfs_edges(G, rootNode):
-            if target in piecePlanes:
-                continue
-            parentId = source
-            childId = target
-            parentPlane = piecePlanes.get(parentId)
-            if parentPlane is None:
-                continue
-            edgeData = G.get_edge_data(parentId, childId)
-            connection = edgeData.get("connection") if edgeData else None
-            if connection is None:
-                continue
-            parentPiece = pieceMap[parentId]
-            childPiece = pieceMap[childId]
-            parentType = getTypeByGuid(kit, parentPiece.get("type", {}).get("guid", ""))
-            childType = getTypeByGuid(kit, childPiece.get("type", {}).get("guid", ""))
-            parentSide = connection["connected"] if connection["connected"]["piece"]["guid"] == parentId else connection["connecting"]
-            childSide = connection["connecting"] if connection["connecting"]["piece"]["guid"] == childId else connection["connected"]
-            parentConnectorGuid = parentSide.get("connector", {}).get("guid") if parentSide.get("connector") else None
-            childConnectorGuid = childSide.get("connector", {}).get("guid") if childSide.get("connector") else None
-            parentConnector = getConnectorFromType(kit, parentType, parentConnectorGuid)
-            childConnector = getConnectorFromType(kit, childType, childConnectorGuid)
-            if parentConnector is None or childConnector is None:
-                continue
-            childPlane = computeChildPlaneDict(parentPlane, parentConnector, childConnector, connection)
-            piecePlanes[childId] = childPlane
-            radius = 2.697
-            verticalVExtra = 1.0
-            horizontalScale = 3.0633
-            parentCenter = parentPiece.get("center") or {"u": 0, "v": 0}
-            connectionU = connection.get("u", 0) or 0
-            connectionV = connection.get("v", 0) or 0
-            if parentCenter["u"] == 0 and parentCenter["v"] == 0:
-                t = parentConnector.get("t", 0) or 0
-                angle = 2 * numpy.pi * t
-                childU = radius * numpy.sin(angle)
-                childV = radius * numpy.cos(angle)
-            else:
-                parentDirZ = (parentConnector.get("direction") or {}).get("z", 0) or 0
-                isVerticalConnection = abs(parentDirZ) > 0.5
-                if isVerticalConnection:
-                    childU = parentCenter["u"] + connectionU
-                    childV = parentCenter["v"] + connectionV + verticalVExtra
+        while q:
+            current_guid = q.popleft()
+            current_plane = piecePlanes[current_guid]
+            current_piece = pieceMap[current_guid]
+            for neighbor_guid, conn in adjacency.get(current_guid, []):
+                if neighbor_guid in visited:
+                    continue
+                visited.add(neighbor_guid)
+                parent_id = current_guid
+                child_id = neighbor_guid
+                parent_plane = current_plane
+                parent_piece = current_piece
+                child_piece = pieceMap[child_id]
+                if conn["connected"]["piece"]["guid"] == parent_id:
+                    parent_side = conn["connected"]
+                    child_side = conn["connecting"]
                 else:
-                    childU = parentCenter["u"] + connectionU * horizontalScale
-                    childV = parentCenter["v"] + connectionV * horizontalScale
-            childCenter = {
-                "u": round(childU / TOLERANCE) * TOLERANCE,
-                "v": round(childV / TOLERANCE) * TOLERANCE,
-            }
-            pieceMap[childId]["center"] = childCenter
-            piecePaths[childId] = piecePaths.get(parentId, parentId) + "," + childId
+                    parent_side = conn["connecting"]
+                    child_side = conn["connected"]
+                parent_type = getTypeByGuid(kit, parent_piece.get("type", {}).get("guid", ""))
+                child_type = getTypeByGuid(kit, child_piece.get("type", {}).get("guid", ""))
+                parent_connector_guid = parent_side.get("connector", {}).get("guid") if parent_side.get("connector") else None
+                child_connector_guid = child_side.get("connector", {}).get("guid") if child_side.get("connector") else None
+                parent_connector = getConnectorFromType(kit, parent_type, parent_connector_guid)
+                child_connector = getConnectorFromType(kit, child_type, child_connector_guid)
+                if parent_connector is None or child_connector is None:
+                    continue
+                child_plane = computeChildPlaneDict(parent_plane, parent_connector, child_connector, conn)
+                piecePlanes[child_id] = child_plane
+                radius = 2.697
+                verticalVExtra = 1.0
+                horizontalScale = 3.0633
+                parent_center = parent_piece.get("center") or {"u": 0, "v": 0}
+                connection_u = conn.get("u", 0) or 0
+                connection_v = conn.get("v", 0) or 0
+                if parent_center["u"] == 0 and parent_center["v"] == 0:
+                    t = parent_connector.get("t", 0) or 0
+                    angle = 2 * numpy.pi * t
+                    child_u = radius * numpy.sin(angle)
+                    child_v = radius * numpy.cos(angle)
+                else:
+                    parent_dir_z = (parent_connector.get("direction") or {}).get("z", 0) or 0
+                    is_vertical_connection = abs(parent_dir_z) > 0.5
+                    if is_vertical_connection:
+                        child_u = parent_center["u"] + connection_u
+                        child_v = parent_center["v"] + connection_v + verticalVExtra
+                    else:
+                        child_u = parent_center["u"] + connection_u * horizontalScale
+                        child_v = parent_center["v"] + connection_v * horizontalScale
+                child_center = {
+                    "u": round(child_u / TOLERANCE) * TOLERANCE,
+                    "v": round(child_v / TOLERANCE) * TOLERANCE,
+                }
+                pieceMap[child_id]["center"] = child_center
+                piecePaths[child_id] = piecePaths.get(parent_id, parent_id) + "," + child_id
+                q.append(neighbor_guid)
+
+    for p in pieces:
+        g = p.get("guid")
+        if not g or g in processed_components:
+            continue
+        comp = collect_component(g)
+        for x in comp:
+            processed_components.add(x)
+        sorted_guids = sorted(comp, key=lambda x: piece_index.get(x, 0))
+        fixed_sorted = [x for x in sorted_guids if pieceMap[x].get("plane") is not None and pieceMap[x].get("center") is not None]
+        root_guid = fixed_sorted[0] if fixed_sorted else sorted_guids[0]
+        bfs_from_root(root_guid)
     updatedPieces = []
     for piece in pieces:
         newPiece = dict(piece)
@@ -17139,13 +17312,19 @@ def _flatten_merkle_apply_mutations(kit: dict, design: dict, mutations: list[dic
         value = mutation.get("value")
         if kind == "pieceField":
             pieceGuid = mutation.get("pieceGuid")
-            piece = next((p for p in design.get("pieces", []) if p.get("guid") == pieceGuid), None)
+            piece = next(
+                (p for p in design.get("pieces", []) if p.get("guid") == pieceGuid),
+                None,
+            )
             if piece is None:
                 raise ValueError(f"Piece {pieceGuid} not found in design {design.get('guid')}")
             _flatten_merkle_set_path(piece, path, value)
         elif kind == "connectionField":
             connectionGuid = mutation.get("connectionGuid")
-            connection = next((c for c in design.get("connections", []) if c.get("guid") == connectionGuid), None)
+            connection = next(
+                (c for c in design.get("connections", []) if c.get("guid") == connectionGuid),
+                None,
+            )
             if connection is None:
                 raise ValueError(f"Connection {connectionGuid} not found in design {design.get('guid')}")
             _flatten_merkle_set_path(connection, path, value)
@@ -17168,12 +17347,8 @@ class TestFlattenMerkle:
 
             assert set(before_hashes.keys()) == set(after_hashes.keys()), f"Case {case['name']}: piece set changed"
 
-            changed_plane = {
-                g for g in before_hashes if before_hashes[g]["planeHash"] != after_hashes[g]["planeHash"]
-            }
-            changed_center = {
-                g for g in before_hashes if before_hashes[g]["centerHash"] != after_hashes[g]["centerHash"]
-            }
+            changed_plane = {g for g in before_hashes if before_hashes[g]["planeHash"] != after_hashes[g]["planeHash"]}
+            changed_center = {g for g in before_hashes if before_hashes[g]["centerHash"] != after_hashes[g]["centerHash"]}
             expect = case.get("expect", {})
             name = case["name"]
 
@@ -17564,7 +17739,9 @@ class TestKitFilterDesign:
 # #region 🔍Find Replaceable Types In Designs Tests
 class TestFindReplaceableTypesInDesigns:
     class TestNakaginCapsuleTower:
-        def test_synthetic_selection_enforces_distinct_connectors_and_free_design_connectors(self):
+        def test_synthetic_selection_enforces_distinct_connectors_and_free_design_connectors(
+            self,
+        ):
             def make_connector(guid: str, port_guid: str) -> dict:
                 return {
                     "guid": guid,
@@ -17584,17 +17761,35 @@ class TestFindReplaceableTypesInDesigns:
             def make_piece(guid: str, type_guid: str) -> dict:
                 return {"guid": guid, "type": {"guid": type_guid}}
 
-            def make_connection(guid: str, connected_piece_guid: str, connected_connector_guid: str, connecting_piece_guid: str, connecting_connector_guid: str) -> dict:
+            def make_connection(
+                guid: str,
+                connected_piece_guid: str,
+                connected_connector_guid: str,
+                connecting_piece_guid: str,
+                connecting_connector_guid: str,
+            ) -> dict:
                 return {
                     "guid": guid,
-                    "connected": {"piece": {"guid": connected_piece_guid}, "connector": {"guid": connected_connector_guid}},
-                    "connecting": {"piece": {"guid": connecting_piece_guid}, "connector": {"guid": connecting_connector_guid}},
+                    "connected": {
+                        "piece": {"guid": connected_piece_guid},
+                        "connector": {"guid": connected_connector_guid},
+                    },
+                    "connecting": {
+                        "piece": {"guid": connecting_piece_guid},
+                        "connector": {"guid": connecting_connector_guid},
+                    },
                 }
 
             kit = {
                 "ports": [
-                    {"guid": "port-L", "compatiblePorts": [{"guid": "port-L-compatible"}]},
-                    {"guid": "port-L-compatible", "compatiblePorts": [{"guid": "port-L"}]},
+                    {
+                        "guid": "port-L",
+                        "compatiblePorts": [{"guid": "port-L-compatible"}],
+                    },
+                    {
+                        "guid": "port-L-compatible",
+                        "compatiblePorts": [{"guid": "port-L"}],
+                    },
                     {"guid": "port-G"},
                 ],
                 "types": [
@@ -17605,7 +17800,10 @@ class TestFindReplaceableTypesInDesigns:
                     make_type("neighbor-g", ["port-G"]),
                     make_type("candidate-l", ["port-L"]),
                     make_type("candidate-lg", ["port-L-compatible", "port-G"]),
-                    make_type("candidate-lg-lg", ["port-L-compatible", "port-G", "port-L", "port-G"]),
+                    make_type(
+                        "candidate-lg-lg",
+                        ["port-L-compatible", "port-G", "port-L", "port-G"],
+                    ),
                     make_type("candidate-ll", ["port-L", "port-L-compatible"]),
                     make_type("candidate-g", ["port-G"]),
                 ],
@@ -17623,10 +17821,34 @@ class TestFindReplaceableTypesInDesigns:
                             make_piece("neighbor-piece-l-b", "neighbor-l"),
                         ],
                         "connections": [
-                            make_connection("external-lg-l", "piece-external-lg", "selected-external-lg-connector-0", "neighbor-piece-l", "neighbor-l-connector-0"),
-                            make_connection("external-lg-g", "piece-external-lg", "selected-external-lg-connector-1", "neighbor-piece-g", "neighbor-g-connector-0"),
-                            make_connection("external-ll-a", "piece-external-ll", "selected-external-ll-connector-0", "neighbor-piece-l-a", "neighbor-l-connector-0"),
-                            make_connection("external-ll-b", "piece-external-ll", "selected-external-ll-connector-1", "neighbor-piece-l-b", "neighbor-l-connector-0"),
+                            make_connection(
+                                "external-lg-l",
+                                "piece-external-lg",
+                                "selected-external-lg-connector-0",
+                                "neighbor-piece-l",
+                                "neighbor-l-connector-0",
+                            ),
+                            make_connection(
+                                "external-lg-g",
+                                "piece-external-lg",
+                                "selected-external-lg-connector-1",
+                                "neighbor-piece-g",
+                                "neighbor-g-connector-0",
+                            ),
+                            make_connection(
+                                "external-ll-a",
+                                "piece-external-ll",
+                                "selected-external-ll-connector-0",
+                                "neighbor-piece-l-a",
+                                "neighbor-l-connector-0",
+                            ),
+                            make_connection(
+                                "external-ll-b",
+                                "piece-external-ll",
+                                "selected-external-ll-connector-1",
+                                "neighbor-piece-l-b",
+                                "neighbor-l-connector-0",
+                            ),
                         ],
                     },
                     {
@@ -17642,7 +17864,13 @@ class TestFindReplaceableTypesInDesigns:
                             make_piece("candidate-design-consumed-b", "candidate-l"),
                         ],
                         "connections": [
-                            make_connection("candidate-design-consumed-link", "candidate-design-consumed-a", "candidate-lg-connector-0", "candidate-design-consumed-b", "candidate-l-connector-0"),
+                            make_connection(
+                                "candidate-design-consumed-link",
+                                "candidate-design-consumed-a",
+                                "candidate-lg-connector-0",
+                                "candidate-design-consumed-b",
+                                "candidate-l-connector-0",
+                            ),
                         ],
                     },
                 ],
@@ -17672,7 +17900,9 @@ class TestFindReplaceableTypesInDesigns:
             assert "candidate-lg" in multiple_piece_type_guids
             assert "candidate-l" not in multiple_piece_type_guids
 
-        def test_connector_level_boundary_matching_shrinks_candidates_as_demand_grows(self):
+        def test_connector_level_boundary_matching_shrinks_candidates_as_demand_grows(
+            self,
+        ):
             kit = _test_load_json("metabolism.kit.semio.json")
             design = next(d for d in kit.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
             name_to_guid = {piece.get("name"): piece.get("guid") for piece in design.get("pieces", [])}
@@ -17688,8 +17918,26 @@ class TestFindReplaceableTypesInDesigns:
 
             single_capsule_names = type_names_for_selection(["cs_sl2_d0_t_f9_b_c1"])
             two_capsule_names = type_names_for_selection(["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"])
-            four_capsule_names = type_names_for_selection(["cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"])
-            eight_capsule_names = type_names_for_selection(["cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"])
+            four_capsule_names = type_names_for_selection(
+                [
+                    "cs_sl1_d0_t_f9_b_c1",
+                    "cs_sl1_d1_t_f9_b_c1",
+                    "cs_sl2_d0_t_f9_b_c1",
+                    "cs_sl2_d1_t_f9_b_c1",
+                ]
+            )
+            eight_capsule_names = type_names_for_selection(
+                [
+                    "cs_sl0_d0_t_f0_b_c0",
+                    "cs_sl0_d1_t_f0_b_c0",
+                    "cs_sl0_d2_t_f0_b_c0",
+                    "cs_sl0_d3_t_f0_b_c0",
+                    "cs_sl1_d0_t_f0_b_c0",
+                    "cs_sl1_d1_t_f0_b_c0",
+                    "cs_sl2_d0_t_f0_b_c0",
+                    "cs_sl2_d1_t_f0_b_c0",
+                ]
+            )
             tambour_result = findReplaceableTypesInDesignsForPiecesInDesignDict(kit, design["guid"], [name_to_guid["t_f9_b_c1"]])
 
             assert len(single_capsule_names) > len(two_capsule_names)
@@ -17711,14 +17959,32 @@ class TestFindReplaceableTypesInDesigns:
                 "Single Storey",
                 "Tambour",
             ]
-            assert unique_type_names_for_selection(["cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"]) == [
+            assert unique_type_names_for_selection(
+                [
+                    "cs_sl1_d0_t_f9_b_c1",
+                    "cs_sl1_d1_t_f9_b_c1",
+                    "cs_sl2_d0_t_f9_b_c1",
+                    "cs_sl2_d1_t_f9_b_c1",
+                ]
+            ) == [
                 "Cylindric Tambour",
                 "First Storey",
                 "Last Storey",
                 "Single Storey",
                 "Tambour",
             ]
-            assert unique_type_names_for_selection(["cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"]) == [
+            assert unique_type_names_for_selection(
+                [
+                    "cs_sl0_d0_t_f0_b_c0",
+                    "cs_sl0_d1_t_f0_b_c0",
+                    "cs_sl0_d2_t_f0_b_c0",
+                    "cs_sl0_d3_t_f0_b_c0",
+                    "cs_sl1_d0_t_f0_b_c0",
+                    "cs_sl1_d1_t_f0_b_c0",
+                    "cs_sl2_d0_t_f0_b_c0",
+                    "cs_sl2_d1_t_f0_b_c0",
+                ]
+            ) == [
                 "Cylindric Tambour",
                 "First Storey",
                 "Last Storey",
@@ -17744,7 +18010,9 @@ class TestFindReplaceableTypesInDesigns:
                 "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
             ]
 
-        def test_isolated_piece_with_no_connections_suggests_types_with_compatible_ports(self):
+        def test_isolated_piece_with_no_connections_suggests_types_with_compatible_ports(
+            self,
+        ):
             kit = _test_load_json("metabolism.kit.semio.json")
             flat_design = next(d for d in kit.get("designs", []) if d.get("name") == "Flat" and (d.get("parent") or {}).get("guid") == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
             piece = flat_design["pieces"][0]
@@ -18253,7 +18521,16 @@ class TestValidateKitDiffDict:
 
     def test_validate_kit_diff_heal_drops_bad_design_update(self):
         tiny = _test_load_json("validate-kit-diff.cases.semio.json")["tinyKit"]
-        bad = {"designs": {"updated": [{"design": {"guid": "99999999-9999-9999-9999-999999999999"}, "diff": {"name": "X"}}]}}
+        bad = {
+            "designs": {
+                "updated": [
+                    {
+                        "design": {"guid": "99999999-9999-9999-9999-999999999999"},
+                        "diff": {"name": "X"},
+                    }
+                ]
+            }
+        }
         r = validate_kit_diff_dict(tiny, bad, True)
         assert r.get("diff", {}).get("designs", {}).get("updated", []) == []
 

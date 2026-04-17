@@ -13556,6 +13556,320 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 	return diff
 }
 
+// #region 🌳Flatten Merkle Hashes
+// 💾Per-piece merkle hashes for plane and center computations so subsequent flatten calls can skip unchanged chains.
+
+// 🌳FlatMerkleHashes bundles the per-piece merkle hashes computed for a flattened design.
+type FlatMerkleHashes struct {
+	PlaneHash  string `json:"planeHash"`
+	CenterHash string `json:"centerHash"`
+}
+
+// 🧠FlatMerkleCacheEntry pairs the hashes with the last resolved plane/center so callers can reuse values across flatten runs.
+type FlatMerkleCacheEntry struct {
+	PlaneHash  string `json:"planeHash"`
+	CenterHash string `json:"centerHash"`
+	Plane      *Plane `json:"plane,omitempty"`
+	Center     *Coord `json:"center,omitempty"`
+}
+
+// 🌱hashPlaneRoot computes the root plane hash from only the piece guid and its fixed plane components.
+func hashPlaneRoot(guid string, plane *Plane) string {
+	w := &hashWriter{}
+	if plane == nil {
+		w.writeString("plane.root.identity")
+		w.writeString(guid)
+		return w.digest()
+	}
+	w.writeString("plane.root")
+	w.writeString(guid)
+	w.writeNumber(plane.Origin.X)
+	w.writeNumber(plane.Origin.Y)
+	w.writeNumber(plane.Origin.Z)
+	w.writeNumber(plane.XAxis.X)
+	w.writeNumber(plane.XAxis.Y)
+	w.writeNumber(plane.XAxis.Z)
+	w.writeNumber(plane.YAxis.X)
+	w.writeNumber(plane.YAxis.Y)
+	w.writeNumber(plane.YAxis.Z)
+	return w.digest()
+}
+
+// 🔗hashPlaneChain computes a child plane hash from the parent hash and all inputs consumed by computeChildPlane.
+func hashPlaneChain(parentHash string, parentConnector, childConnector Connector, connection Connection) string {
+	w := &hashWriter{}
+	w.writeString("plane.chain")
+	w.writeHash(parentHash)
+	w.writeNumber(parentConnector.Point.X)
+	w.writeNumber(parentConnector.Point.Y)
+	w.writeNumber(parentConnector.Point.Z)
+	w.writeNumber(parentConnector.Direction.X)
+	w.writeNumber(parentConnector.Direction.Y)
+	w.writeNumber(parentConnector.Direction.Z)
+	w.writeNumber(childConnector.Point.X)
+	w.writeNumber(childConnector.Point.Y)
+	w.writeNumber(childConnector.Point.Z)
+	w.writeNumber(childConnector.Direction.X)
+	w.writeNumber(childConnector.Direction.Y)
+	w.writeNumber(childConnector.Direction.Z)
+	w.writeNumber(connection.Gap)
+	w.writeNumber(connection.Shift)
+	w.writeNumber(connection.Rise)
+	w.writeNumber(connection.Rotation)
+	w.writeNumber(connection.Turn)
+	w.writeNumber(connection.Tilt)
+	return w.digest()
+}
+
+// 🌱hashCenterRoot computes the root center hash from only the piece guid and its fixed center (identity when absent).
+func hashCenterRoot(guid string, center *Coord) string {
+	w := &hashWriter{}
+	if center == nil {
+		w.writeString("center.root.identity")
+		w.writeString(guid)
+		return w.digest()
+	}
+	w.writeString("center.root")
+	w.writeString(guid)
+	w.writeNumber(center.U)
+	w.writeNumber(center.V)
+	return w.digest()
+}
+
+// 🔗hashCenterChain computes a child center hash from the parent hash plus the inputs consumed by the child center computation.
+func hashCenterChain(parentHash string, parentConnector Connector, connection Connection) string {
+	w := &hashWriter{}
+	w.writeString("center.chain")
+	w.writeHash(parentHash)
+	w.writeNumber(parentConnector.Direction.Z)
+	w.writeNumber(parentConnector.T)
+	w.writeNumber(connection.U)
+	w.writeNumber(connection.V)
+	return w.digest()
+}
+
+// 🌳ComputeFlatHashes returns {planeHash, centerHash} for every piece reachable from a root in each connected component of the design.
+func ComputeFlatHashes(kit *Kit, designGuid string) map[string]FlatMerkleHashes {
+	design := FindDesignInKit(kit, designGuid)
+	if design == nil || len(design.Pieces) == 0 {
+		return map[string]FlatMerkleHashes{}
+	}
+	typesDict := make(map[string]*Type)
+	for i := range kit.Types {
+		typesDict[kit.Types[i].Guid] = &kit.Types[i]
+	}
+	pieceMap := make(map[string]*Piece)
+	pieceIndex := make(map[string]int)
+	for i := range design.Pieces {
+		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
+		pieceIndex[design.Pieces[i].Guid] = i
+	}
+	adjacency := make(map[string][]struct {
+		neighborGuid string
+		connection   *Connection
+	})
+	for i := range design.Connections {
+		conn := &design.Connections[i]
+		srcGuid := conn.Connected.Piece.Guid
+		tgtGuid := conn.Connecting.Piece.Guid
+		if pieceMap[srcGuid] == nil || pieceMap[tgtGuid] == nil {
+			continue
+		}
+		adjacency[srcGuid] = append(adjacency[srcGuid], struct {
+			neighborGuid string
+			connection   *Connection
+		}{tgtGuid, conn})
+		adjacency[tgtGuid] = append(adjacency[tgtGuid], struct {
+			neighborGuid string
+			connection   *Connection
+		}{srcGuid, conn})
+	}
+
+	componentOf := make(map[string]int)
+	var components [][]string
+	for i := range design.Pieces {
+		guid := design.Pieces[i].Guid
+		if _, ok := componentOf[guid]; ok {
+			continue
+		}
+		idx := len(components)
+		queue := []string{guid}
+		componentOf[guid] = idx
+		members := []string{guid}
+		for len(queue) > 0 {
+			cur := queue[0]
+			queue = queue[1:]
+			for _, nb := range adjacency[cur] {
+				if _, seen := componentOf[nb.neighborGuid]; seen {
+					continue
+				}
+				componentOf[nb.neighborGuid] = idx
+				members = append(members, nb.neighborGuid)
+				queue = append(queue, nb.neighborGuid)
+			}
+		}
+		components = append(components, members)
+	}
+
+	planeHashes := make(map[string]string)
+	centerHashes := make(map[string]string)
+
+	for _, members := range components {
+		memberSet := make(map[string]bool, len(members))
+		for _, g := range members {
+			memberSet[g] = true
+		}
+		var rootGuid string
+		for i := range design.Pieces {
+			p := &design.Pieces[i]
+			if !memberSet[p.Guid] {
+				continue
+			}
+			if p.Plane != nil && p.Center != nil {
+				rootGuid = p.Guid
+				break
+			}
+		}
+		if rootGuid == "" {
+			sorted := make([]string, len(members))
+			copy(sorted, members)
+			sort.Strings(sorted)
+			if len(sorted) == 0 {
+				continue
+			}
+			rootGuid = sorted[0]
+		}
+		rootPiece := pieceMap[rootGuid]
+		planeHashes[rootGuid] = hashPlaneRoot(rootGuid, rootPiece.Plane)
+		centerHashes[rootGuid] = hashCenterRoot(rootGuid, rootPiece.Center)
+
+		visited := map[string]bool{rootGuid: true}
+		queue := []string{rootGuid}
+		for len(queue) > 0 {
+			current := queue[0]
+			queue = queue[1:]
+			currentPiece := pieceMap[current]
+			for _, nb := range adjacency[current] {
+				if visited[nb.neighborGuid] {
+					continue
+				}
+				visited[nb.neighborGuid] = true
+				childId := nb.neighborGuid
+				conn := nb.connection
+				var parentSide, childSide *Side
+				if conn.Connected.Piece.Guid == current {
+					parentSide = &conn.Connected
+					childSide = &conn.Connecting
+				} else {
+					parentSide = &conn.Connecting
+					childSide = &conn.Connected
+				}
+				childPiece := pieceMap[childId]
+				var parentType, childType *Type
+				if currentPiece != nil && currentPiece.Type != nil {
+					parentType = typesDict[currentPiece.Type.Guid]
+				}
+				if childPiece != nil && childPiece.Type != nil {
+					childType = typesDict[childPiece.Type.Guid]
+				}
+				var parentConnectorGuid, childConnectorGuid *string
+				if parentSide.Connector != nil {
+					parentConnectorGuid = &parentSide.Connector.Guid
+				}
+				if childSide.Connector != nil {
+					childConnectorGuid = &childSide.Connector.Guid
+				}
+				parentConnector := getConnector(typesDict, parentType, parentConnectorGuid)
+				childConnector := getConnector(typesDict, childType, childConnectorGuid)
+				if parentConnector == nil || childConnector == nil {
+					continue
+				}
+				planeHashes[childId] = hashPlaneChain(planeHashes[current], *parentConnector, *childConnector, *conn)
+				centerHashes[childId] = hashCenterChain(centerHashes[current], *parentConnector, *conn)
+				queue = append(queue, childId)
+			}
+		}
+	}
+
+	result := make(map[string]FlatMerkleHashes, len(planeHashes))
+	for guid, ph := range planeHashes {
+		result[guid] = FlatMerkleHashes{PlaneHash: ph, CenterHash: centerHashes[guid]}
+	}
+	return result
+}
+
+// 🧠FlattenDesignCached runs FlattenDesign but reuses cached plane/center values whenever the merkle hash for a piece is unchanged.
+func FlattenDesignCached(kit *Kit, designGuid string, cache map[string]FlatMerkleCacheEntry) (DesignDiff, map[string]FlatMerkleCacheEntry) {
+	newHashes := ComputeFlatHashes(kit, designGuid)
+	diff := FlattenDesign(kit, designGuid)
+	updatedById := make(map[string]PieceDiff)
+	if diff.Pieces != nil {
+		for _, entry := range diff.Pieces.Updated {
+			updatedById[entry.Piece.Guid] = entry.Diff
+		}
+	}
+	extractPlane := func(pd PieceDiff) *Plane {
+		if pd.Plane == nil || pd.Plane.Origin == nil || pd.Plane.XAxis == nil || pd.Plane.YAxis == nil {
+			return nil
+		}
+		if pd.Plane.Origin.X == nil || pd.Plane.Origin.Y == nil || pd.Plane.Origin.Z == nil ||
+			pd.Plane.XAxis.X == nil || pd.Plane.XAxis.Y == nil || pd.Plane.XAxis.Z == nil ||
+			pd.Plane.YAxis.X == nil || pd.Plane.YAxis.Y == nil || pd.Plane.YAxis.Z == nil {
+			return nil
+		}
+		return &Plane{
+			Origin: Point{X: *pd.Plane.Origin.X, Y: *pd.Plane.Origin.Y, Z: *pd.Plane.Origin.Z},
+			XAxis:  Vector{X: *pd.Plane.XAxis.X, Y: *pd.Plane.XAxis.Y, Z: *pd.Plane.XAxis.Z},
+			YAxis:  Vector{X: *pd.Plane.YAxis.X, Y: *pd.Plane.YAxis.Y, Z: *pd.Plane.YAxis.Z},
+		}
+	}
+	extractCenter := func(pd PieceDiff) *Coord {
+		if pd.Center == nil || pd.Center.U == nil || pd.Center.V == nil {
+			return nil
+		}
+		return &Coord{U: *pd.Center.U, V: *pd.Center.V}
+	}
+	nextCache := make(map[string]FlatMerkleCacheEntry, len(newHashes))
+	for guid, hashes := range newHashes {
+		updated, hasUpdated := updatedById[guid]
+		var prev *FlatMerkleCacheEntry
+		if cache != nil {
+			if v, ok := cache[guid]; ok {
+				pv := v
+				prev = &pv
+			}
+		}
+		if prev == nil || !hasUpdated {
+			if hasUpdated {
+				nextCache[guid] = FlatMerkleCacheEntry{
+					PlaneHash:  hashes.PlaneHash,
+					CenterHash: hashes.CenterHash,
+					Plane:      extractPlane(updated),
+					Center:     extractCenter(updated),
+				}
+			}
+			continue
+		}
+		reusedPlane := extractPlane(updated)
+		if prev.PlaneHash == hashes.PlaneHash {
+			reusedPlane = prev.Plane
+		}
+		reusedCenter := extractCenter(updated)
+		if prev.CenterHash == hashes.CenterHash {
+			reusedCenter = prev.Center
+		}
+		nextCache[guid] = FlatMerkleCacheEntry{
+			PlaneHash:  hashes.PlaneHash,
+			CenterHash: hashes.CenterHash,
+			Plane:      reusedPlane,
+			Center:     reusedCenter,
+		}
+	}
+	return diff, nextCache
+}
+
+// #endregion 🌳Flatten Merkle Hashes
+
 // #endregion 🌤️Flatten Design
 
 // #region 🔩Kit Model Export

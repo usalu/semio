@@ -4421,7 +4421,7 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
       connecting: { piece: { guid: p.points.find((q) => q.u === l.targetU && q.v === l.targetV)?.guid ?? "" } },
     })),
   } as unknown as Design;
-  // Prefer JS-flattened design (correct cytoscape BFS centers) over raw Python-enriched design, over points fallback.
+  // Prefer JS-flattened design (correct BFS placement centers) over raw Python-enriched design, over points fallback.
   // If the chosen design has no pieces with centers, fall back to the pre-computed points/lines
   // 🔷which always have coordinates (hosts may truncate the design or flatten may fail).
   const candidateDesign = (designFlat ?? design) as Design | undefined;

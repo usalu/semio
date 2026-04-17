@@ -45,6 +45,16 @@ export { default as TambourShallowType } from "./semio/tambour.shallow.type.semi
 export { default as InvalidKitValidation } from "./semio/validation.semio.json";
 export { default as ValidateKitDiffCases } from "./semio/validate-kit-diff.cases.semio.json";
 export { default as FlattenMerkleCases } from "./semio/flatten-merkle.cases.semio.json";
+export { default as HashCases } from "./semio/hash.cases.semio.json";
+export { default as QualitySumCases } from "./semio/quality-sum.cases.semio.json";
+export { default as DesignWithDiffCases } from "./semio/design-with-diff.cases.semio.json";
+export { default as FilterKitCases } from "./semio/filter-kit.cases.semio.json";
+export { default as FindReplaceableTypesCases } from "./semio/find-replaceable-types.cases.semio.json";
+export { default as FlattenCases } from "./semio/flatten.cases.semio.json";
+export { default as SyntheticFindReplaceableKit } from "./semio/synthetic-find-replaceable.kit.semio.json";
+export { default as ExportDesignModelCases } from "./semio/export-design-model.cases.semio.json";
+export { default as DeleteCases } from "./semio/delete.cases.semio.json";
+export { default as CopyPasteCases } from "./semio/copy-paste.cases.semio.json";
 export { MetabolismKitData as MetabolismKit };
 
 /**

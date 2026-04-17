@@ -684,6 +684,386 @@ func TestFlatten(t *testing.T) {
 	}
 }
 
+// #region 🌳Flatten Merkle Hash Tests
+
+// 🌳flattenMerkleMutation models a single kit mutation described by the shared merkle cases asset.
+type flattenMerkleMutation struct {
+	Kind           string          `json:"kind"`
+	PieceGuid      string          `json:"pieceGuid"`
+	ConnectionGuid string          `json:"connectionGuid"`
+	Path           string          `json:"path"`
+	Value          json.RawMessage `json:"value"`
+}
+
+// 🌳flattenMerkleExpect captures the optional assertions bundled with each merkle case.
+type flattenMerkleExpect struct {
+	PlaneHashesChangedAny       *bool    `json:"planeHashesChangedAny,omitempty"`
+	CenterHashesChangedAny      *bool    `json:"centerHashesChangedAny,omitempty"`
+	PlaneHashesChangedAll       *bool    `json:"planeHashesChangedAll,omitempty"`
+	CenterHashesChangedAll      *bool    `json:"centerHashesChangedAll,omitempty"`
+	PlaneHashesChangedIncludes  []string `json:"planeHashesChangedIncludes,omitempty"`
+	CenterHashesChangedIncludes []string `json:"centerHashesChangedIncludes,omitempty"`
+	PlaneHashesStableIncludes   []string `json:"planeHashesStableIncludes,omitempty"`
+	CenterHashesStableIncludes  []string `json:"centerHashesStableIncludes,omitempty"`
+}
+
+// 🌳flattenMerkleCase represents a single entry in flatten-merkle.cases.semio.json.
+type flattenMerkleCase struct {
+	Name       string                  `json:"name"`
+	Kit        string                  `json:"kit"`
+	DesignPath []string                `json:"designPath"`
+	Mutations  []flattenMerkleMutation `json:"mutations"`
+	Expect     flattenMerkleExpect     `json:"expect"`
+}
+
+// 🌳flattenMerkleParity captures the cross-language reference hashes block.
+type flattenMerkleParity struct {
+	Kit             string   `json:"kit"`
+	DesignPath      []string `json:"designPath"`
+	ExpectedHashes  []struct {
+		PieceGuid  string `json:"pieceGuid"`
+		PlaneHash  string `json:"planeHash"`
+		CenterHash string `json:"centerHash"`
+	} `json:"expectedHashes"`
+}
+
+// 🌳flattenMerkleAsset mirrors the shared flatten-merkle cases asset.
+type flattenMerkleAsset struct {
+	Parity flattenMerkleParity `json:"parity"`
+	Cases  []flattenMerkleCase `json:"cases"`
+}
+
+// 🌳flattenMerkleFindDesignByPath walks the kit to resolve a design by its ordered name path.
+func flattenMerkleFindDesignByPath(kit map[string]interface{}, designPath []string) map[string]interface{} {
+	if len(designPath) == 0 {
+		return nil
+	}
+	designs, _ := kit["designs"].([]interface{})
+	var current map[string]interface{}
+	for i, name := range designPath {
+		var parentGuid string
+		if current != nil {
+			parentGuid, _ = current["guid"].(string)
+		}
+		var match map[string]interface{}
+		for _, d := range designs {
+			dm, ok := d.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			dn, _ := dm["name"].(string)
+			if dn != name {
+				continue
+			}
+			parent, _ := dm["parent"].(map[string]interface{})
+			if i == 0 {
+				if parent == nil {
+					match = dm
+					break
+				}
+			} else {
+				if parent != nil {
+					pg, _ := parent["guid"].(string)
+					if pg == parentGuid {
+						match = dm
+						break
+					}
+				}
+			}
+		}
+		if match == nil {
+			return nil
+		}
+		current = match
+	}
+	return current
+}
+
+// 🌳flattenMerkleSetPath assigns a value inside a nested JSON map using a dotted path, creating intermediate maps as needed.
+func flattenMerkleSetPath(obj map[string]interface{}, path string, value interface{}) {
+	keys := strings.Split(path, ".")
+	current := obj
+	for _, k := range keys[:len(keys)-1] {
+		next, ok := current[k].(map[string]interface{})
+		if !ok || next == nil {
+			next = map[string]interface{}{}
+			current[k] = next
+		}
+		current = next
+	}
+	current[keys[len(keys)-1]] = value
+}
+
+// 🌳flattenMerkleApplyMutations applies the mutation list in-place on a kit map prior to rehashing.
+func flattenMerkleApplyMutations(t *testing.T, design map[string]interface{}, mutations []flattenMerkleMutation) {
+	for _, m := range mutations {
+		var value interface{}
+		if err := json.Unmarshal(m.Value, &value); err != nil {
+			t.Fatalf("decode mutation value %q: %v", string(m.Value), err)
+		}
+		switch m.Kind {
+		case "pieceField":
+			pieces, _ := design["pieces"].([]interface{})
+			var target map[string]interface{}
+			for _, p := range pieces {
+				pm, ok := p.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				if g, _ := pm["guid"].(string); g == m.PieceGuid {
+					target = pm
+					break
+				}
+			}
+			if target == nil {
+				t.Fatalf("piece %s not found", m.PieceGuid)
+			}
+			flattenMerkleSetPath(target, m.Path, value)
+		case "connectionField":
+			conns, _ := design["connections"].([]interface{})
+			var target map[string]interface{}
+			for _, c := range conns {
+				cm, ok := c.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				if g, _ := cm["guid"].(string); g == m.ConnectionGuid {
+					target = cm
+					break
+				}
+			}
+			if target == nil {
+				t.Fatalf("connection %s not found", m.ConnectionGuid)
+			}
+			flattenMerkleSetPath(target, m.Path, value)
+		default:
+			t.Fatalf("unknown mutation kind %q", m.Kind)
+		}
+	}
+}
+
+// 🌳flattenMerkleLoadKitAsMap reads a kit asset into a generic JSON map so mutations can touch arbitrary nested fields.
+func flattenMerkleLoadKitAsMap(t *testing.T, filename string) map[string]interface{} {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(AssetsPath, filename))
+	if err != nil {
+		t.Fatalf("read %s: %v", filename, err)
+	}
+	var m map[string]interface{}
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("parse %s: %v", filename, err)
+	}
+	return m
+}
+
+// 🌳flattenMerkleKitFromMap remarshals a JSON map back through the typed Kit structs for hashing.
+func flattenMerkleKitFromMap(t *testing.T, m map[string]interface{}) Kit {
+	t.Helper()
+	data, err := json.Marshal(m)
+	if err != nil {
+		t.Fatalf("marshal kit map: %v", err)
+	}
+	var kit Kit
+	if err := json.Unmarshal(data, &kit); err != nil {
+		t.Fatalf("unmarshal into Kit: %v", err)
+	}
+	return kit
+}
+
+// 🌳flattenMerkleDesignGuid resolves the design guid by path from a typed kit.
+func flattenMerkleDesignGuid(t *testing.T, kit Kit, designPath []string) string {
+	t.Helper()
+	var current *Design
+	var parentGuid *string
+	for _, name := range designPath {
+		current = findDesignByName(kit.Designs, name, parentGuid)
+		if current == nil {
+			t.Fatalf("design path %v not found at %q", designPath, name)
+		}
+		g := current.Guid
+		parentGuid = &g
+	}
+	if current == nil {
+		t.Fatalf("design path %v resolved to nil", designPath)
+	}
+	return current.Guid
+}
+
+// 🌳flattenMerkleChangedSets returns the piece guids whose plane/center hash differs between two runs.
+func flattenMerkleChangedSets(before, after map[string]FlatMerkleHashes) (changedPlane, changedCenter map[string]bool) {
+	changedPlane = map[string]bool{}
+	changedCenter = map[string]bool{}
+	for guid, b := range before {
+		a, ok := after[guid]
+		if !ok {
+			changedPlane[guid] = true
+			changedCenter[guid] = true
+			continue
+		}
+		if a.PlaneHash != b.PlaneHash {
+			changedPlane[guid] = true
+		}
+		if a.CenterHash != b.CenterHash {
+			changedCenter[guid] = true
+		}
+	}
+	return
+}
+
+func TestFlattenMerkle(t *testing.T) {
+	var asset flattenMerkleAsset
+	loadJSON(t, "flatten-merkle.cases.semio.json", &asset)
+
+	t.Run("SharedAssetMutationCases", func(t *testing.T) {
+		for _, tc := range asset.Cases {
+			tc := tc
+			t.Run(tc.Name, func(t *testing.T) {
+				kitMapBefore := flattenMerkleLoadKitAsMap(t, tc.Kit)
+				kitBefore := flattenMerkleKitFromMap(t, kitMapBefore)
+				designGuidBefore := flattenMerkleDesignGuid(t, kitBefore, tc.DesignPath)
+				before := ComputeFlatHashes(&kitBefore, designGuidBefore)
+
+				kitMapAfter := flattenMerkleLoadKitAsMap(t, tc.Kit)
+				designAfterMap := flattenMerkleFindDesignByPath(kitMapAfter, tc.DesignPath)
+				if designAfterMap == nil {
+					t.Fatalf("design path %v not found in mutable kit", tc.DesignPath)
+				}
+				flattenMerkleApplyMutations(t, designAfterMap, tc.Mutations)
+				kitAfter := flattenMerkleKitFromMap(t, kitMapAfter)
+				designGuidAfter := flattenMerkleDesignGuid(t, kitAfter, tc.DesignPath)
+				after := ComputeFlatHashes(&kitAfter, designGuidAfter)
+
+				if len(before) != len(after) {
+					t.Fatalf("piece set size changed: %d -> %d", len(before), len(after))
+				}
+				for guid := range before {
+					if _, ok := after[guid]; !ok {
+						t.Fatalf("piece %s missing after mutation", guid)
+					}
+				}
+
+				changedPlane, changedCenter := flattenMerkleChangedSets(before, after)
+
+				if tc.Expect.PlaneHashesChangedAny != nil {
+					if *tc.Expect.PlaneHashesChangedAny && len(changedPlane) == 0 {
+						t.Fatalf("expected some planeHash changes, got none")
+					}
+					if !*tc.Expect.PlaneHashesChangedAny && len(changedPlane) != 0 {
+						t.Fatalf("expected no planeHash changes, got %v", sortedKeys(changedPlane))
+					}
+				}
+				if tc.Expect.CenterHashesChangedAny != nil {
+					if *tc.Expect.CenterHashesChangedAny && len(changedCenter) == 0 {
+						t.Fatalf("expected some centerHash changes, got none")
+					}
+					if !*tc.Expect.CenterHashesChangedAny && len(changedCenter) != 0 {
+						t.Fatalf("expected no centerHash changes, got %v", sortedKeys(changedCenter))
+					}
+				}
+				if tc.Expect.PlaneHashesChangedAll != nil {
+					if *tc.Expect.PlaneHashesChangedAll && len(changedPlane) != len(before) {
+						t.Fatalf("expected every planeHash to change, got %d/%d", len(changedPlane), len(before))
+					}
+					if !*tc.Expect.PlaneHashesChangedAll && len(changedPlane) == len(before) {
+						t.Fatalf("expected not every planeHash to change, but all did")
+					}
+				}
+				if tc.Expect.CenterHashesChangedAll != nil {
+					if *tc.Expect.CenterHashesChangedAll && len(changedCenter) != len(before) {
+						t.Fatalf("expected every centerHash to change, got %d/%d", len(changedCenter), len(before))
+					}
+					if !*tc.Expect.CenterHashesChangedAll && len(changedCenter) == len(before) {
+						t.Fatalf("expected not every centerHash to change, but all did")
+					}
+				}
+				for _, guid := range tc.Expect.PlaneHashesChangedIncludes {
+					if !changedPlane[guid] {
+						t.Fatalf("expected piece %s to have changed planeHash", guid)
+					}
+				}
+				for _, guid := range tc.Expect.CenterHashesChangedIncludes {
+					if !changedCenter[guid] {
+						t.Fatalf("expected piece %s to have changed centerHash", guid)
+					}
+				}
+				for _, guid := range tc.Expect.PlaneHashesStableIncludes {
+					if changedPlane[guid] {
+						t.Fatalf("expected piece %s to keep stable planeHash", guid)
+					}
+				}
+				for _, guid := range tc.Expect.CenterHashesStableIncludes {
+					if changedCenter[guid] {
+						t.Fatalf("expected piece %s to keep stable centerHash", guid)
+					}
+				}
+			})
+		}
+	})
+
+	t.Run("CrossLanguageParityReferenceHashes", func(t *testing.T) {
+		if asset.Parity.Kit == "" {
+			t.Fatal("parity block missing")
+		}
+		var kit Kit
+		loadJSON(t, asset.Parity.Kit, &kit)
+		designGuid := flattenMerkleDesignGuid(t, kit, asset.Parity.DesignPath)
+		hashes := ComputeFlatHashes(&kit, designGuid)
+		for _, expected := range asset.Parity.ExpectedHashes {
+			got, ok := hashes[expected.PieceGuid]
+			if !ok {
+				t.Fatalf("piece %s missing from computed hashes", expected.PieceGuid)
+			}
+			if got.PlaneHash != expected.PlaneHash {
+				t.Fatalf("piece %s planeHash mismatch: got %s want %s", expected.PieceGuid, got.PlaneHash, expected.PlaneHash)
+			}
+			if got.CenterHash != expected.CenterHash {
+				t.Fatalf("piece %s centerHash mismatch: got %s want %s", expected.PieceGuid, got.CenterHash, expected.CenterHash)
+			}
+		}
+	})
+
+	t.Run("CachedFlattenReusesValues", func(t *testing.T) {
+		var kit Kit
+		loadJSON(t, "metabolism.kit.semio.json", &kit)
+		designGuid := flattenMerkleDesignGuid(t, kit, []string{"Nakagin Capsule Tower"})
+		_, firstCache := FlattenDesignCached(&kit, designGuid, nil)
+		if len(firstCache) == 0 {
+			t.Fatal("first cache is empty")
+		}
+		_, secondCache := FlattenDesignCached(&kit, designGuid, firstCache)
+		for guid, entry := range firstCache {
+			second, ok := secondCache[guid]
+			if !ok {
+				t.Fatalf("piece %s missing from second cache", guid)
+			}
+			if entry.PlaneHash != second.PlaneHash {
+				t.Fatalf("piece %s planeHash mismatch %s vs %s", guid, entry.PlaneHash, second.PlaneHash)
+			}
+			if entry.CenterHash != second.CenterHash {
+				t.Fatalf("piece %s centerHash mismatch %s vs %s", guid, entry.CenterHash, second.CenterHash)
+			}
+			if !reflect.DeepEqual(entry.Plane, second.Plane) {
+				t.Fatalf("piece %s plane mismatch: %#v vs %#v", guid, entry.Plane, second.Plane)
+			}
+			if !reflect.DeepEqual(entry.Center, second.Center) {
+				t.Fatalf("piece %s center mismatch: %#v vs %#v", guid, entry.Center, second.Center)
+			}
+		}
+	})
+}
+
+// 🌳sortedKeys returns a deterministic sorted slice of map keys for readable error messages.
+func sortedKeys(m map[string]bool) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// #endregion 🌳Flatten Merkle Hash Tests
+
 func TestChange(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
 		t.Run("Kit + Change.Forward = DiffedKit & DiffedKit + Change.Backward = Kit", func(t *testing.T) {

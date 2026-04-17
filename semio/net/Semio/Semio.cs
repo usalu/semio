@@ -11090,6 +11090,88 @@ public static class Hashing
     // #endregion ⚗️Hash Diff Entities
 
     // #endregion 🔗Hash Diffs
+
+    // #region 🌳Flatten Merkle Hashes
+    // Per-piece merkle hashes for plane/center so cached flatten calls can reuse unchanged chains.
+
+    internal static string HashFlatPlaneRoot(string guid, Plane? plane)
+    {
+        var w = new HashWriter();
+        if (plane == null)
+        {
+            w.WriteString("plane.root.identity");
+            w.WriteString(guid);
+            return w.Digest();
+        }
+        w.WriteString("plane.root");
+        w.WriteString(guid);
+        w.WriteNumber(plane.Origin?.X ?? 0);
+        w.WriteNumber(plane.Origin?.Y ?? 0);
+        w.WriteNumber(plane.Origin?.Z ?? 0);
+        w.WriteNumber(plane.XAxis?.X ?? 0);
+        w.WriteNumber(plane.XAxis?.Y ?? 0);
+        w.WriteNumber(plane.XAxis?.Z ?? 0);
+        w.WriteNumber(plane.YAxis?.X ?? 0);
+        w.WriteNumber(plane.YAxis?.Y ?? 0);
+        w.WriteNumber(plane.YAxis?.Z ?? 0);
+        return w.Digest();
+    }
+
+    internal static string HashFlatPlaneChain(string parentHash, Connector parentConnector, Connector childConnector, Connection connection)
+    {
+        var w = new HashWriter();
+        w.WriteString("plane.chain");
+        w.WriteHash(parentHash);
+        w.WriteNumber(parentConnector.Point?.X ?? 0);
+        w.WriteNumber(parentConnector.Point?.Y ?? 0);
+        w.WriteNumber(parentConnector.Point?.Z ?? 0);
+        w.WriteNumber(parentConnector.Direction?.X ?? 0);
+        w.WriteNumber(parentConnector.Direction?.Y ?? 0);
+        w.WriteNumber(parentConnector.Direction?.Z ?? 0);
+        w.WriteNumber(childConnector.Point?.X ?? 0);
+        w.WriteNumber(childConnector.Point?.Y ?? 0);
+        w.WriteNumber(childConnector.Point?.Z ?? 0);
+        w.WriteNumber(childConnector.Direction?.X ?? 0);
+        w.WriteNumber(childConnector.Direction?.Y ?? 0);
+        w.WriteNumber(childConnector.Direction?.Z ?? 0);
+        w.WriteNumber(connection.Gap);
+        w.WriteNumber(connection.Shift);
+        w.WriteNumber(connection.Rise);
+        w.WriteNumber(connection.Rotation);
+        w.WriteNumber(connection.Turn);
+        w.WriteNumber(connection.Tilt);
+        return w.Digest();
+    }
+
+    internal static string HashFlatCenterRoot(string guid, Coord? center)
+    {
+        var w = new HashWriter();
+        if (center == null)
+        {
+            w.WriteString("center.root.identity");
+            w.WriteString(guid);
+            return w.Digest();
+        }
+        w.WriteString("center.root");
+        w.WriteString(guid);
+        w.WriteNumber(center.U);
+        w.WriteNumber(center.V);
+        return w.Digest();
+    }
+
+    internal static string HashFlatCenterChain(string parentHash, Connector parentConnector, Connection connection)
+    {
+        var w = new HashWriter();
+        w.WriteString("center.chain");
+        w.WriteHash(parentHash);
+        w.WriteNumber(parentConnector.Direction?.Z ?? 0);
+        w.WriteNumber(parentConnector.T);
+        w.WriteNumber(connection.U ?? 0);
+        w.WriteNumber(connection.V ?? 0);
+        return w.Digest();
+    }
+
+    // #endregion 🌳Flatten Merkle Hashes
 }
 
 #endregion 🖥️Hash
@@ -11465,6 +11547,22 @@ public partial class Kit
 #region 🌤️Flatten Design
 // Callers MUST use FlattenDesign to compute a DesignDiff that assigns world-space planes to all pieces.
 
+/// <summary>🌳Per-piece merkle hash pair used to cache flattenDesign results and skip recomputation when inputs are unchanged.</summary>
+public sealed class FlatMerkleHashes
+{
+    public string PlaneHash { get; set; } = "";
+    public string CenterHash { get; set; } = "";
+}
+
+/// <summary>🧠FlatMerkleCacheEntry bundles a piece's merkle hashes with its cached plane/center so incremental flatten calls can reuse unchanged values.</summary>
+public sealed class FlatMerkleCacheEntry
+{
+    public string PlaneHash { get; set; } = "";
+    public string CenterHash { get; set; } = "";
+    public Plane? Plane { get; set; }
+    public Coord? Center { get; set; }
+}
+
 public partial class Kit
 {
 
@@ -11529,6 +11627,17 @@ public partial class Kit
             var targetId = connection.Connecting.Piece.Guid;
             return pieceMap.ContainsKey(sourceId) && pieceMap.ContainsKey(targetId);
         }).ToList();
+
+        static (string, string) NormalizeEdgeEndpoints(string a, string b) =>
+            string.CompareOrdinal(a, b) <= 0 ? (a, b) : (b, a);
+
+        var connectionByEndpoints = new Dictionary<(string, string), Connection>();
+        foreach (var c in filteredConnections)
+        {
+            var a = c.Connected.Piece.Guid;
+            var b = c.Connecting.Piece.Guid;
+            connectionByEndpoints[NormalizeEdgeEndpoints(a, b)] = c;
+        }
 
         var graph = new UndirectedGraph<string, Edge<string>>();
         foreach (var p in flatDesign.Pieces) graph.AddVertex(p.Guid);
@@ -11608,10 +11717,7 @@ public partial class Kit
                 if (piecePlanes.ContainsKey(childPiece.Guid)) return;
                 if (!piecePlanes.TryGetValue(parentPiece.Guid, out var parentPlane)) return;
 
-                var connection = filteredConnections.FirstOrDefault(c =>
-                    (c.Connected.Piece.Guid == parentId && c.Connecting.Piece.Guid == childId) ||
-                    (c.Connecting.Piece.Guid == parentId && c.Connected.Piece.Guid == childId));
-                if (connection == null) return;
+                if (!connectionByEndpoints.TryGetValue(NormalizeEdgeEndpoints(parentId, childId), out var connection)) return;
 
                 var parentSide = connection.Connected.Piece.Guid == parentId ? connection.Connected : connection.Connecting;
                 var childSide = connection.Connecting.Piece.Guid == childId ? connection.Connecting : connection.Connected;
@@ -11727,6 +11833,209 @@ public partial class Kit
 
         return designDiff;
     }
+
+    #region 🌳Flatten Merkle Hashes
+    // Per-piece {PlaneHash, CenterHash} merkle hashes so incremental FlattenDesign calls can reuse cached planes/centers when the chain inputs are unchanged.
+
+    public static Dictionary<string, FlatMerkleHashes> ComputeFlatHashes(Kit kit, string designGuid)
+    {
+        var design = FindDesign(kit, designGuid);
+        if (design.Pieces == null || design.Pieces.Count == 0) return new Dictionary<string, FlatMerkleHashes>();
+
+        var typesDict = (kit.Types ?? new List<Type>()).ToDictionary(t => t.Guid);
+
+        Type? GetConnectorType(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
+
+        Connector? GetConnector(Type? type, string? connectorGuid)
+        {
+            if (type == null) return null;
+            if (string.IsNullOrEmpty(connectorGuid))
+            {
+                if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
+                if (!string.IsNullOrEmpty(type.Parent?.Guid)) return GetConnector(GetConnectorType(type.Parent.Guid), connectorGuid);
+                return null;
+            }
+            if (type.Connectors != null && type.Connectors.Count > 0)
+            {
+                var connector = type.Connectors.FirstOrDefault(p => p.Guid == connectorGuid);
+                if (connector != null) return connector;
+            }
+            if (!string.IsNullOrEmpty(type.Parent?.Guid))
+            {
+                var connector = GetConnector(GetConnectorType(type.Parent.Guid), connectorGuid);
+                if (connector != null) return connector;
+            }
+            if (type.Connectors != null && type.Connectors.Count > 0) return type.Connectors[0];
+            return null;
+        }
+
+        var pieceMap = new Dictionary<string, Piece>();
+        var pieceOrder = new Dictionary<string, int>();
+        for (int i = 0; i < design.Pieces.Count; i++)
+        {
+            var piece = design.Pieces[i];
+            if (!string.IsNullOrEmpty(piece.Guid))
+            {
+                pieceMap[piece.Guid] = piece;
+                pieceOrder[piece.Guid] = i;
+            }
+        }
+
+        var filteredConnections = (design.Connections ?? new List<Connection>())
+            .Where(c => pieceMap.ContainsKey(c.Connected.Piece.Guid) && pieceMap.ContainsKey(c.Connecting.Piece.Guid))
+            .ToList();
+
+        var graph = new UndirectedGraph<string, Edge<string>>();
+        foreach (var piece in design.Pieces)
+            if (!string.IsNullOrEmpty(piece.Guid)) graph.AddVertex(piece.Guid);
+        foreach (var c in filteredConnections)
+            graph.AddEdge(new Edge<string>(c.Connected.Piece.Guid, c.Connecting.Piece.Guid));
+
+        var ccAlg = new ConnectedComponentsAlgorithm<string, Edge<string>>(graph);
+        ccAlg.Compute();
+        var components = ccAlg.Components;
+        var componentDict = new Dictionary<int, List<string>>();
+        foreach (var kvp in components)
+        {
+            if (!componentDict.TryGetValue(kvp.Value, out var list))
+            {
+                list = new List<string>();
+                componentDict[kvp.Value] = list;
+            }
+            list.Add(kvp.Key);
+        }
+
+        var planeHashes = new Dictionary<string, string>();
+        var centerHashes = new Dictionary<string, string>();
+
+        foreach (var component in componentDict.Values)
+        {
+            var ordered = component.OrderBy(g => pieceOrder.TryGetValue(g, out var idx) ? idx : int.MaxValue).ToList();
+            string? rootNode = null;
+            foreach (var guid in ordered)
+            {
+                if (pieceMap.TryGetValue(guid, out var piece) && piece.Plane != null && piece.Center != null)
+                {
+                    rootNode = guid;
+                    break;
+                }
+            }
+            if (string.IsNullOrEmpty(rootNode))
+                rootNode = component.OrderBy(g => g, StringComparer.Ordinal).FirstOrDefault();
+            if (string.IsNullOrEmpty(rootNode)) continue;
+
+            var rootPiece = pieceMap[rootNode];
+            planeHashes[rootNode] = Hashing.HashFlatPlaneRoot(rootNode, rootPiece.Plane);
+            centerHashes[rootNode] = Hashing.HashFlatCenterRoot(rootNode, rootPiece.Center);
+
+            var bfs = new UndirectedBreadthFirstSearchAlgorithm<string, Edge<string>>(graph);
+            bfs.TreeEdge += (sender, e) =>
+            {
+                var parentId = planeHashes.ContainsKey(e.Source) ? e.Source : e.Target;
+                var childId = parentId == e.Source ? e.Target : e.Source;
+                if (planeHashes.ContainsKey(childId)) return;
+                if (!planeHashes.TryGetValue(parentId, out var parentPlaneHash)) return;
+                if (!centerHashes.TryGetValue(parentId, out var parentCenterHash)) return;
+
+                var parentPiece = pieceMap.TryGetValue(parentId, out var pp) ? pp : null;
+                var childPiece = pieceMap.TryGetValue(childId, out var cp) ? cp : null;
+                if (parentPiece == null || childPiece == null) return;
+
+                var connection = filteredConnections.FirstOrDefault(c =>
+                    (c.Connected.Piece.Guid == parentId && c.Connecting.Piece.Guid == childId) ||
+                    (c.Connecting.Piece.Guid == parentId && c.Connected.Piece.Guid == childId));
+                if (connection == null) return;
+
+                var parentSide = connection.Connected.Piece.Guid == parentId ? connection.Connected : connection.Connecting;
+                var childSide = connection.Connecting.Piece.Guid == childId ? connection.Connecting : connection.Connected;
+
+                var parentType = parentPiece.Type != null ? GetConnectorType(parentPiece.Type.Guid) : null;
+                var childType = childPiece.Type != null ? GetConnectorType(childPiece.Type.Guid) : null;
+                var parentConnector = GetConnector(parentType, parentSide.Connector?.Guid) ?? new Connector();
+                var childConnector = GetConnector(childType, childSide.Connector?.Guid) ?? new Connector();
+
+                planeHashes[childId] = Hashing.HashFlatPlaneChain(parentPlaneHash, parentConnector, childConnector, connection);
+                centerHashes[childId] = Hashing.HashFlatCenterChain(parentCenterHash, parentConnector, connection);
+            };
+            bfs.Compute(rootNode);
+        }
+
+        var result = new Dictionary<string, FlatMerkleHashes>();
+        foreach (var guid in planeHashes.Keys)
+        {
+            result[guid] = new FlatMerkleHashes
+            {
+                PlaneHash = planeHashes[guid],
+                CenterHash = centerHashes.TryGetValue(guid, out var ch) ? ch : "",
+            };
+        }
+        return result;
+    }
+
+    public static (DesignDiff diff, Dictionary<string, FlatMerkleCacheEntry> cache) FlattenDesignCached(Kit kit, string designGuid, Dictionary<string, FlatMerkleCacheEntry>? cache = null)
+    {
+        var newHashes = ComputeFlatHashes(kit, designGuid);
+        var diff = FlattenDesign(kit, designGuid);
+        var updatedById = new Dictionary<string, PieceDiff>();
+        foreach (var entry in diff.Pieces?.Updated ?? new List<PieceDiffUpdate>())
+        {
+            if (entry.Piece != null && !string.IsNullOrEmpty(entry.Piece.Guid) && entry.Diff != null)
+                updatedById[entry.Piece.Guid] = entry.Diff;
+        }
+        var nextCache = new Dictionary<string, FlatMerkleCacheEntry>();
+        if (cache != null)
+        {
+            foreach (var kvp in newHashes)
+            {
+                var guid = kvp.Key;
+                var hashes = kvp.Value;
+                cache.TryGetValue(guid, out var prev);
+                updatedById.TryGetValue(guid, out var updated);
+                if (prev == null || updated == null)
+                {
+                    if (updated != null)
+                    {
+                        nextCache[guid] = new FlatMerkleCacheEntry
+                        {
+                            PlaneHash = hashes.PlaneHash,
+                            CenterHash = hashes.CenterHash,
+                            Plane = updated.Plane,
+                            Center = updated.Center,
+                        };
+                    }
+                    continue;
+                }
+                var reusedPlane = prev.PlaneHash == hashes.PlaneHash ? prev.Plane : updated.Plane;
+                var reusedCenter = prev.CenterHash == hashes.CenterHash ? prev.Center : updated.Center;
+                nextCache[guid] = new FlatMerkleCacheEntry
+                {
+                    PlaneHash = hashes.PlaneHash,
+                    CenterHash = hashes.CenterHash,
+                    Plane = reusedPlane,
+                    Center = reusedCenter,
+                };
+            }
+        }
+        else
+        {
+            foreach (var kvp in newHashes)
+            {
+                var guid = kvp.Key;
+                var hashes = kvp.Value;
+                if (!updatedById.TryGetValue(guid, out var updated)) continue;
+                nextCache[guid] = new FlatMerkleCacheEntry
+                {
+                    PlaneHash = hashes.PlaneHash,
+                    CenterHash = hashes.CenterHash,
+                    Plane = updated.Plane,
+                    Center = updated.Center,
+                };
+            }
+        }
+        return (diff, nextCache);
+    }
+
+    #endregion 🌳Flatten Merkle Hashes
 
     public static DesignDiff ReplaceClusterWithDesign(Design originalDesign, List<string> clusterPieceIds, Design clusteredDesign, List<Connection> externalConnections)
     {
