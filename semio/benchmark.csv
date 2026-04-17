@@ -1,64 +1,10 @@
-language,name,durationSeconds
-go,"Roundtrip/Metabolism",2.332157400
-typescript,"Roundtrip/Metabolism",1.120565100
-go,"Diff/Metabolism",0.146695300
-typescript,"Diff/Metabolism",0.265248567
-typescript,"Flatten Design/Nakagin Capsule Tower",0.070477700
-typescript,"Flatten Design/Nakagin Capsule Tower/Slanted",0.031177667
-go,"Flatten Design/Nakagin Capsule Tower",0.026187300
-typescript,"Flatten Design/Nakagin Capsule Tower/Twisted",0.035525467
-typescript,"Flatten Design/Nakagin Capsule Tower/Dancing",0.037113367
-go,"Flatten Design/Nakagin Capsule Tower/Slanted",0.008605700
-go,"Flatten Design/Nakagin Capsule Tower/Twisted",0.005547200
-typescript,"Flatten Design/Capsule Dream",0.844097300
-typescript,"Validation/Invalid Kit",0.007274567
-typescript,"Validation/Metabolism",0.005983733
-go,"Flatten Design/Nakagin Capsule Tower/Dancing",0.009509500
-go,"Flatten Design/Capsule Dream",0.041879200
-go,"Validation/Invalid Kit",0.004663000
-python,"Roundtrip/Metabolism",2.519839800
-go,"Validation/Metabolism",0.005929500
-csharp,"Roundtrip/Metabolism",1.130370267
-csharp,"Diff/Metabolism",2.040460267
-csharp,"Flatten Design/Nakagin Capsule Tower",0.029444933
-csharp,"Flatten Design/Nakagin Capsule Tower/Slanted",0.015697533
-csharp,"Flatten Design/Nakagin Capsule Tower/Twisted",0.017819367
-csharp,"Flatten Design/Nakagin Capsule Tower/Dancing",0.014904333
-csharp,"Flatten Design/Capsule Dream",0.694939867
-csharp,"Validation/Invalid Kit",0.003100567
-csharp,"Validation/Metabolism",0.005485000
-python,"Diff/Metabolism",3.453381967
-python,"Flatten Design/Nakagin Capsule Tower",0.076088100
-python,"Flatten Design/Nakagin Capsule Tower/Slanted",0.076794233
-python,"Flatten Design/Nakagin Capsule Tower/Twisted",0.075142933
-python,"Flatten Design/Nakagin Capsule Tower/Dancing",0.065608700
-python,"Flatten Design/Capsule Dream",1.014445533
-python,"Validation/Invalid Kit",0.000176600
-python,"Validation/Metabolism",0.012493467
-rust,"Roundtrip/Metabolism",4.182270633
-rust,"Diff/Metabolism",1.363315333
-rust,"Flatten Design/Nakagin Capsule Tower",0.028934867
-rust,"Flatten Design/Nakagin Capsule Tower/Slanted",0.027447467
-rust,"Flatten Design/Nakagin Capsule Tower/Twisted",0.044149900
-rust,"Flatten Design/Nakagin Capsule Tower/Dancing",0.031284900
-rust,"Flatten Design/Capsule Dream",0.471079967
-rust,"Validation/Invalid Kit",0.000348033
-rust,"Validation/Metabolism",0.045000800
-rust,"Roundtrip/Metabolism",3.248062433
-rust,"Diff/Metabolism",1.069463867
-rust,"Flatten Design/Nakagin Capsule Tower",0.015362300
-rust,"Flatten Design/Nakagin Capsule Tower/Slanted",0.020553867
-rust,"Flatten Design/Nakagin Capsule Tower/Twisted",0.015143067
-rust,"Flatten Design/Nakagin Capsule Tower/Dancing",0.015677533
-rust,"Flatten Design/Capsule Dream",0.309384967
-rust,"Validation/Invalid Kit",0.000193133
-rust,"Validation/Metabolism",0.037408633
-rust,"Roundtrip/Metabolism",3.572262467
-rust,"Diff/Metabolism",1.124342167
-rust,"Flatten Design/Nakagin Capsule Tower",0.023554500
-rust,"Flatten Design/Nakagin Capsule Tower/Slanted",0.027378967
-rust,"Flatten Design/Nakagin Capsule Tower/Twisted",0.020628567
-rust,"Flatten Design/Nakagin Capsule Tower/Dancing",0.018280333
-rust,"Flatten Design/Capsule Dream",0.388271500
-rust,"Validation/Invalid Kit",0.000194333
-rust,"Validation/Metabolism",0.042347900
+name,go,typescript,python,rust,csharp
+"Roundtrip/Metabolism",1493.802900,869.584433,2406.941400,3670.156267,1196.790367
+"Diff/Metabolism",123.496600,247.781567,3755.367233,1368.444900,2392.202367
+"Flatten Design/Nakagin Capsule Tower",3.519200,75.222500,51.824733,17.320367,45.610833
+"Flatten Design/Nakagin Capsule Tower/Slanted",,33.402000,66.456400,18.485633,14.236567
+"Flatten Design/Nakagin Capsule Tower/Twisted",1.810300,32.710433,70.450500,29.843333,14.704733
+"Flatten Design/Nakagin Capsule Tower/Dancing",2.000700,40.436100,86.806167,21.526700,14.186233
+"Flatten Design/Capsule Dream",39.620300,880.773600,1096.406667,370.598367,744.873133
+"Validation/Invalid Kit",2.903400,10.478067,0.171833,0.289700,3.049800
+"Validation/Metabolism",9.591400,9.778067,12.255000,61.029667,4.433333

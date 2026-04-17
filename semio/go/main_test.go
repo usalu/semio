@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const benchmarkCsvHeader = "language,name,durationSeconds\n"
+var benchmarkCsvLanguages = []string{"go", "typescript", "python", "rust", "csharp"}
 
 func benchmarkCsvPath() string {
 	if _, err := os.Stat(filepath.Join("..", "benchmark.csv")); err == nil {
@@ -33,18 +33,86 @@ func benchmarkCsvPath() string {
 	return filepath.Join("..", "benchmark.csv")
 }
 
+func parseCsvLine(line string) []string {
+	var values []string
+	var current strings.Builder
+	inQuotes := false
+	for i := 0; i < len(line); i++ {
+		ch := line[i]
+		if ch == '"' {
+			if inQuotes && i+1 < len(line) && line[i+1] == '"' {
+				current.WriteByte('"')
+				i++
+				continue
+			}
+			inQuotes = !inQuotes
+			continue
+		}
+		if ch == ',' && !inQuotes {
+			values = append(values, current.String())
+			current.Reset()
+			continue
+		}
+		current.WriteByte(ch)
+	}
+	values = append(values, current.String())
+	return values
+}
+
+func csvValue(value string) string {
+	return `"` + strings.ReplaceAll(value, `"`, `""`) + `"`
+}
+
 func appendBenchmarkCsv(language string, name string, durationSeconds float64) {
 	path := benchmarkCsvPath()
-	if info, err := os.Stat(path); err != nil || info.Size() == 0 {
-		_ = os.WriteFile(path, []byte(benchmarkCsvHeader), 0644)
+	rows := map[string]map[string]string{}
+	order := []string{}
+	if data, err := os.ReadFile(path); err == nil {
+		lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+		if len(lines) > 0 && strings.HasPrefix(lines[0], "name,") {
+			headers := parseCsvLine(lines[0])
+			for _, line := range lines[1:] {
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
+				values := parseCsvLine(line)
+				if len(values) == 0 {
+					continue
+				}
+				rowName := values[0]
+				if _, ok := rows[rowName]; !ok {
+					rows[rowName] = map[string]string{}
+					order = append(order, rowName)
+				}
+				for i := 1; i < len(values) && i < len(headers); i++ {
+					if values[i] != "" {
+						rows[rowName][headers[i]] = values[i]
+					}
+				}
+			}
+		}
 	}
-	row := fmt.Sprintf("%s,%q,%.9f\n", language, name, durationSeconds)
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		return
+	if _, ok := rows[name]; !ok {
+		rows[name] = map[string]string{}
+		order = append(order, name)
 	}
-	defer f.Close()
-	_, _ = f.WriteString(row)
+	rows[name][language] = fmt.Sprintf("%.6f", durationSeconds*1000)
+	var out strings.Builder
+	out.WriteString("name")
+	for _, lang := range benchmarkCsvLanguages {
+		out.WriteString(",")
+		out.WriteString(lang)
+	}
+	out.WriteString("\n")
+	for _, rowName := range order {
+		out.WriteString(csvValue(rowName))
+		for _, lang := range benchmarkCsvLanguages {
+			out.WriteString(",")
+			out.WriteString(rows[rowName][lang])
+		}
+		out.WriteString("\n")
+	}
+	_ = os.WriteFile(path, []byte(out.String()), 0644)
 }
 
 type modelSelectionAsset struct {

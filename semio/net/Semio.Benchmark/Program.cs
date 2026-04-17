@@ -20,7 +20,7 @@ class Program
 {
     const string AssetsPath = "../assets/semio";
     const int Iterations = 3;
-    const string BenchmarkCsvHeader = "language,name,durationSeconds\n";
+    static readonly string[] BenchmarkCsvLanguages = { "go", "typescript", "python", "rust", "csharp" };
 
     static string ResolveAssetPath(string filename)
     {
@@ -65,15 +65,85 @@ class Program
 
     static string CsvValue(string value) => "\"" + value.Replace("\"", "\"\"") + "\"";
 
+    static List<string> ParseCsvLine(string line)
+    {
+        var values = new List<string>();
+        var current = "";
+        var inQuotes = false;
+        for (var i = 0; i < line.Length; i++)
+        {
+            var ch = line[i];
+            if (ch == '"')
+            {
+                if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                {
+                    current += '"';
+                    i++;
+                }
+                else
+                {
+                    inQuotes = !inQuotes;
+                }
+            }
+            else if (ch == ',' && !inQuotes)
+            {
+                values.Add(current);
+                current = "";
+            }
+            else
+            {
+                current += ch;
+            }
+        }
+        values.Add(current);
+        return values;
+    }
+
     static void AppendBenchmarkCsv(string language, string name, double durationSeconds)
     {
         var path = ResolveBenchmarkCsvPath();
-        if (!System.IO.File.Exists(path) || new FileInfo(path).Length == 0)
+        var rows = new Dictionary<string, Dictionary<string, string>>();
+        var order = new List<string>();
+        if (System.IO.File.Exists(path))
         {
-            System.IO.File.WriteAllText(path, BenchmarkCsvHeader);
+            var lines = System.IO.File.ReadAllLines(path).Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+            if (lines.Count > 0 && lines[0].StartsWith("name,", StringComparison.Ordinal))
+            {
+                var headers = ParseCsvLine(lines[0]);
+                foreach (var line in lines.Skip(1))
+                {
+                    var values = ParseCsvLine(line);
+                    if (values.Count == 0 || string.IsNullOrEmpty(values[0])) continue;
+                    if (!rows.ContainsKey(values[0]))
+                    {
+                        rows[values[0]] = new Dictionary<string, string>();
+                        order.Add(values[0]);
+                    }
+                    for (var i = 1; i < values.Count && i < headers.Count; i++)
+                    {
+                        if (!string.IsNullOrEmpty(values[i])) rows[values[0]][headers[i]] = values[i];
+                    }
+                }
+            }
         }
-        var row = $"{language},{CsvValue(name)},{durationSeconds.ToString("F9", CultureInfo.InvariantCulture)}\n";
-        System.IO.File.AppendAllText(path, row);
+        if (!rows.ContainsKey(name))
+        {
+            rows[name] = new Dictionary<string, string>();
+            order.Add(name);
+        }
+        rows[name][language] = (durationSeconds * 1000).ToString("F6", CultureInfo.InvariantCulture);
+        var output = "name," + string.Join(",", BenchmarkCsvLanguages) + "\n";
+        foreach (var rowName in order)
+        {
+            output += CsvValue(rowName);
+            foreach (var lang in BenchmarkCsvLanguages)
+            {
+                output += ",";
+                if (rows[rowName].TryGetValue(lang, out var value)) output += value;
+            }
+            output += "\n";
+        }
+        System.IO.File.WriteAllText(path, output);
     }
 
     static void Bench(string name, Action action)

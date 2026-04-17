@@ -44,6 +44,7 @@ export { default as TambourMetaType } from "./semio/tambour.meta.type.semio.json
 export { default as TambourShallowType } from "./semio/tambour.shallow.type.semio.json";
 export { default as InvalidKitValidation } from "./semio/validation.semio.json";
 export { default as ValidateKitDiffCases } from "./semio/validate-kit-diff.cases.semio.json";
+export { default as FlattenMerkleCases } from "./semio/flatten-merkle.cases.semio.json";
 export { MetabolismKitData as MetabolismKit };
 
 /**

@@ -5755,6 +5755,213 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
   return operationOk({ forward, backward }, warnings, infos);
 };
 
+// #region 🌳Flatten Merkle Hashes
+/**
+ * Per-piece merkle hash pair used to cache flattenDesign results and skip recomputation when inputs are unchanged.
+ **/
+export type FlatMerkleHashes = { planeHash: string; centerHash: string };
+
+const hashPlaneRoot = (guid: string, plane: Plane | undefined): string => {
+  const w = new HashWriter();
+  if (!plane) {
+    w.writeString("plane.root.identity");
+    w.writeString(guid);
+    return w.digest();
+  }
+  w.writeString("plane.root");
+  w.writeString(guid);
+  w.writeNumber(plane.origin?.x ?? 0);
+  w.writeNumber(plane.origin?.y ?? 0);
+  w.writeNumber(plane.origin?.z ?? 0);
+  w.writeNumber(plane.xAxis?.x ?? 0);
+  w.writeNumber(plane.xAxis?.y ?? 0);
+  w.writeNumber(plane.xAxis?.z ?? 0);
+  w.writeNumber(plane.yAxis?.x ?? 0);
+  w.writeNumber(plane.yAxis?.y ?? 0);
+  w.writeNumber(plane.yAxis?.z ?? 0);
+  return w.digest();
+};
+
+const hashPlaneChain = (parentHash: string, parentConnector: Connector, childConnector: Connector, connection: Connection): string => {
+  const w = new HashWriter();
+  w.writeString("plane.chain");
+  w.writeHash(parentHash);
+  w.writeNumber(parentConnector.point?.x ?? 0);
+  w.writeNumber(parentConnector.point?.y ?? 0);
+  w.writeNumber(parentConnector.point?.z ?? 0);
+  w.writeNumber(parentConnector.direction?.x ?? 0);
+  w.writeNumber(parentConnector.direction?.y ?? 0);
+  w.writeNumber(parentConnector.direction?.z ?? 0);
+  w.writeNumber(childConnector.point?.x ?? 0);
+  w.writeNumber(childConnector.point?.y ?? 0);
+  w.writeNumber(childConnector.point?.z ?? 0);
+  w.writeNumber(childConnector.direction?.x ?? 0);
+  w.writeNumber(childConnector.direction?.y ?? 0);
+  w.writeNumber(childConnector.direction?.z ?? 0);
+  w.writeNumber(connection.gap ?? 0);
+  w.writeNumber(connection.shift ?? 0);
+  w.writeNumber(connection.rise ?? 0);
+  w.writeNumber(connection.rotation ?? 0);
+  w.writeNumber(connection.turn ?? 0);
+  w.writeNumber(connection.tilt ?? 0);
+  return w.digest();
+};
+
+const hashCenterRoot = (guid: string, center: Coord | undefined): string => {
+  const w = new HashWriter();
+  if (!center) {
+    w.writeString("center.root.identity");
+    w.writeString(guid);
+    return w.digest();
+  }
+  w.writeString("center.root");
+  w.writeString(guid);
+  w.writeNumber(center.u ?? 0);
+  w.writeNumber(center.v ?? 0);
+  return w.digest();
+};
+
+const hashCenterChain = (parentHash: string, parentConnector: Connector, connection: Connection): string => {
+  const w = new HashWriter();
+  w.writeString("center.chain");
+  w.writeHash(parentHash);
+  w.writeNumber(parentConnector.direction?.z ?? 0);
+  w.writeNumber(parentConnector.t ?? 0);
+  w.writeNumber(connection.u ?? 0);
+  w.writeNumber(connection.v ?? 0);
+  return w.digest();
+};
+
+/**
+ * 🌳Compute per-piece {planeHash, centerHash} merkle hashes for the flattened design so subsequent flattenDesign calls can reuse cached planes/centers whose chain identity is unchanged.
+ **/
+export const computeFlatHashes = (kit: Kit, designGuid: string): { [pieceGuid: string]: FlatMerkleHashes } => {
+  const design = findDesignInKit(kit, designGuid);
+  const pieces = design.pieces ?? [];
+  if (pieces.length === 0) return {};
+  const { getType, getConnector } = buildConnectorResolverFromKit(kit);
+  const pieceMap: { [guid: string]: Piece } = {};
+  pieces.forEach((p) => {
+    if (p.guid) pieceMap[p.guid] = p;
+  });
+  const connections = (design.connections ?? []).filter((c) => pieceMap[c.connected.piece.guid] && pieceMap[c.connecting.piece.guid]);
+  const cy = cytoscape({
+    elements: {
+      nodes: pieces.map((p) => ({ data: { id: p.guid, label: p.guid } })),
+      edges: connections.map((c) => ({
+        data: {
+          id: c.guid,
+          source: c.connected.piece.guid,
+          target: c.connecting.piece.guid,
+          connectionData: c,
+        },
+      })),
+    } as any,
+    headless: true,
+  });
+  const components = cy.elements().components();
+  const planeHashes: { [guid: string]: string } = {};
+  const centerHashes: { [guid: string]: string } = {};
+  components.forEach((component) => {
+    const roots = component.nodes().filter((node) => {
+      const piece = pieceMap[node.id()];
+      return piece?.plane !== undefined && piece?.center !== undefined;
+    });
+    const rootNode = roots.length > 0 ? roots[0] : component.nodes().length > 0 ? component.nodes()[0] : undefined;
+    if (!rootNode) return;
+    const rootPiece = pieceMap[rootNode.id()];
+    if (!rootPiece?.guid) return;
+    planeHashes[rootPiece.guid] = hashPlaneRoot(rootPiece.guid, rootPiece.plane);
+    centerHashes[rootPiece.guid] = hashCenterRoot(rootPiece.guid, rootPiece.center);
+    component.bfs({
+      roots: `#${rootNode.id()}`,
+      visit: (v, e, u) => {
+        if (!e) return;
+        const connection: Connection | undefined = e.data().connectionData;
+        if (!connection) return;
+        const parentId = u.id();
+        const childId = v.id();
+        const parentPiece = pieceMap[parentId];
+        const childPiece = pieceMap[childId];
+        if (!parentPiece?.guid || !childPiece?.guid) return;
+        if (planeHashes[childPiece.guid]) return;
+        const parentPlaneHash = planeHashes[parentPiece.guid];
+        const parentCenterHash = centerHashes[parentPiece.guid];
+        if (!parentPlaneHash || !parentCenterHash) return;
+        const parentSide = connection.connected.piece.guid === parentId ? connection.connected : connection.connecting;
+        const childSide = connection.connecting.piece.guid === childId ? connection.connecting : connection.connected;
+        const parentType = parentPiece.type ? getType(parentPiece.type.guid) : undefined;
+        const childType = childPiece.type ? getType(childPiece.type.guid) : undefined;
+        const parentConnector = getConnector(parentType, parentSide.connector?.guid);
+        const childConnector = getConnector(childType, childSide.connector?.guid);
+        if (!parentConnector || !childConnector) return;
+        planeHashes[childPiece.guid] = hashPlaneChain(parentPlaneHash, parentConnector, childConnector, connection);
+        centerHashes[childPiece.guid] = hashCenterChain(parentCenterHash, parentConnector, connection);
+      },
+      directed: false,
+    });
+  });
+  const result: { [guid: string]: FlatMerkleHashes } = {};
+  for (const guid of Object.keys(planeHashes)) {
+    result[guid] = { planeHash: planeHashes[guid], centerHash: centerHashes[guid] };
+  }
+  return result;
+};
+
+/**
+ * 🧠FlatMerkleCacheEntry bundles a piece's merkle hashes with its cached plane/center so incremental flatten calls can reuse unchanged values.
+ **/
+export type FlatMerkleCacheEntry = {
+  planeHash: string;
+  centerHash: string;
+  plane?: Plane;
+  center?: Coord;
+};
+
+/**
+ * 🧠Flatten a design while reusing cached plane/center values whenever a piece's merkle hash matches the previous run.
+ **/
+export const flattenDesignCached = (
+  kit: Kit,
+  designGuid: string,
+  cache?: { [pieceGuid: string]: FlatMerkleCacheEntry },
+): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } => {
+  const newHashes = computeFlatHashes(kit, designGuid);
+  const result = flattenDesign(kit, designGuid);
+  const nextCache: { [guid: string]: FlatMerkleCacheEntry } = {};
+  if (!result.ok) return { result, cache: nextCache };
+  const updatedById: { [guid: string]: PieceDiff } = {};
+  for (const entry of result.change.forward.pieces?.updated ?? []) {
+    updatedById[entry.piece.guid] = entry.diff;
+  }
+  for (const guid of Object.keys(newHashes)) {
+    const hashes = newHashes[guid];
+    const prev = cache?.[guid];
+    const updated = updatedById[guid];
+    if (!prev || !updated) {
+      if (updated) {
+        nextCache[guid] = {
+          planeHash: hashes.planeHash,
+          centerHash: hashes.centerHash,
+          plane: updated.plane,
+          center: updated.center,
+        };
+      }
+      continue;
+    }
+    const reusedPlane = prev.planeHash === hashes.planeHash ? prev.plane : updated.plane;
+    const reusedCenter = prev.centerHash === hashes.centerHash ? prev.center : updated.center;
+    nextCache[guid] = {
+      planeHash: hashes.planeHash,
+      centerHash: hashes.centerHash,
+      plane: reusedPlane,
+      center: reusedCenter,
+    };
+  }
+  return { result, cache: nextCache };
+};
+// #endregion 🌳Flatten Merkle Hashes
+
 /**
  **/
 export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: string[], designName: string): { clusteredDesign: Design; externalConnections: Connection[] } => {
@@ -14757,6 +14964,7 @@ if (shouldRunEmbeddedJsTests) {
     NakaginCapsuleTowerDiffDesign,
     NakaginCapsuleTowerWithDiffDesign,
     ValidateKitDiffCases,
+    FlattenMerkleCases,
   } = await import("@semio/assets");
   const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/sketchpad");
   type KitFolderAdapter = import("@semio/sketchpad").KitFolderAdapter;
@@ -15545,6 +15753,116 @@ if (shouldRunEmbeddedJsTests) {
       expect(op.ok).toBe(true);
       if (!op.ok) return;
       expect(op.warnings.some((w) => w.code === "flatten.no-fixed-piece-in-clump")).toBe(true);
+    });
+  });
+
+  describe("FlattenMerkle", () => {
+    const setPath = (obj: any, path: string, value: unknown) => {
+      const keys = path.split(".");
+      let current = obj;
+      for (let i = 0; i < keys.length - 1; i++) {
+        const key = keys[i];
+        if (current[key] === undefined || current[key] === null) current[key] = {};
+        current = current[key];
+      }
+      current[keys[keys.length - 1]] = value;
+    };
+    const findDesignByPath = (kit: any, designPath: string[]) => {
+      let current: any | undefined;
+      for (let i = 0; i < designPath.length; i++) {
+        const name = designPath[i];
+        const parentGuid = current?.guid;
+        const match = (kit.designs ?? []).find((d: any) => {
+          if (d.name !== name) return false;
+          if (i === 0) return !d.parent;
+          return d.parent?.guid === parentGuid;
+        });
+        if (!match) throw new Error(`Design path ${designPath.join(" / ")} not found at ${name}`);
+        current = match;
+      }
+      return current;
+    };
+    const applyMutations = (design: any, mutations: any[]) => {
+      for (const mutation of mutations) {
+        if (mutation.kind === "pieceField") {
+          const piece = design.pieces?.find((p: any) => p.guid === mutation.pieceGuid);
+          if (!piece) throw new Error(`Piece ${mutation.pieceGuid} not found`);
+          setPath(piece, mutation.path, mutation.value);
+        } else if (mutation.kind === "connectionField") {
+          const conn = design.connections?.find((c: any) => c.guid === mutation.connectionGuid);
+          if (!conn) throw new Error(`Connection ${mutation.connectionGuid} not found`);
+          setPath(conn, mutation.path, mutation.value);
+        } else {
+          throw new Error(`Unknown mutation kind ${mutation.kind}`);
+        }
+      }
+    };
+
+    it("shared asset mutation cases produce expected hash changes", () => {
+      const cases = (FlattenMerkleCases as any).cases as any[];
+      for (const testCase of cases) {
+        const kitBefore = JSON.parse(JSON.stringify(MetabolismKit)) as Kit;
+        const designBefore = findDesignByPath(kitBefore, testCase.designPath);
+        const beforeHashes = computeFlatHashes(kitBefore, designBefore.guid);
+
+        const kitAfter = JSON.parse(JSON.stringify(kitBefore)) as Kit;
+        const designAfter = findDesignByPath(kitAfter, testCase.designPath);
+        applyMutations(designAfter, testCase.mutations ?? []);
+        const afterHashes = computeFlatHashes(kitAfter, designAfter.guid);
+
+        const beforeGuids = Object.keys(beforeHashes).sort();
+        const afterGuids = Object.keys(afterHashes).sort();
+        expect(afterGuids, `case ${testCase.name}: piece set changed`).toEqual(beforeGuids);
+
+        const changedPlane = new Set(beforeGuids.filter((g) => beforeHashes[g].planeHash !== afterHashes[g].planeHash));
+        const changedCenter = new Set(beforeGuids.filter((g) => beforeHashes[g].centerHash !== afterHashes[g].centerHash));
+        const expectSpec = testCase.expect ?? {};
+
+        if (Object.prototype.hasOwnProperty.call(expectSpec, "planeHashesChangedAny")) {
+          if (expectSpec.planeHashesChangedAny) expect(changedPlane.size, `case ${testCase.name}`).toBeGreaterThan(0);
+          else expect(changedPlane.size, `case ${testCase.name}: unexpected planeHash changes`).toBe(0);
+        }
+        if (Object.prototype.hasOwnProperty.call(expectSpec, "centerHashesChangedAny")) {
+          if (expectSpec.centerHashesChangedAny) expect(changedCenter.size, `case ${testCase.name}`).toBeGreaterThan(0);
+          else expect(changedCenter.size, `case ${testCase.name}: unexpected centerHash changes`).toBe(0);
+        }
+        if (expectSpec.planeHashesChangedAll === true) expect(changedPlane.size, `case ${testCase.name}`).toBe(beforeGuids.length);
+        if (expectSpec.planeHashesChangedAll === false) expect(changedPlane.size, `case ${testCase.name}`).not.toBe(beforeGuids.length);
+        if (expectSpec.centerHashesChangedAll === true) expect(changedCenter.size, `case ${testCase.name}`).toBe(beforeGuids.length);
+        if (expectSpec.centerHashesChangedAll === false) expect(changedCenter.size, `case ${testCase.name}`).not.toBe(beforeGuids.length);
+        for (const guid of expectSpec.planeHashesChangedIncludes ?? []) expect(changedPlane.has(guid), `case ${testCase.name}: planeHash should change for ${guid}`).toBe(true);
+        for (const guid of expectSpec.centerHashesChangedIncludes ?? []) expect(changedCenter.has(guid), `case ${testCase.name}: centerHash should change for ${guid}`).toBe(true);
+        for (const guid of expectSpec.planeHashesStableIncludes ?? []) expect(changedPlane.has(guid), `case ${testCase.name}: planeHash should be stable for ${guid}`).toBe(false);
+        for (const guid of expectSpec.centerHashesStableIncludes ?? []) expect(changedCenter.has(guid), `case ${testCase.name}: centerHash should be stable for ${guid}`).toBe(false);
+      }
+    });
+
+    it("cross-language parity reference hashes", () => {
+      const parity = (FlattenMerkleCases as any).parity;
+      expect(parity).toBeDefined();
+      const kit = JSON.parse(JSON.stringify(MetabolismKit)) as Kit;
+      const design = findDesignByPath(kit, parity.designPath);
+      const hashes = computeFlatHashes(kit, design.guid);
+      for (const expected of parity.expectedHashes) {
+        const entry = hashes[expected.pieceGuid];
+        expect(entry, `piece ${expected.pieceGuid} missing`).toBeDefined();
+        expect(entry.planeHash, `piece ${expected.pieceGuid} planeHash`).toBe(expected.planeHash);
+        expect(entry.centerHash, `piece ${expected.pieceGuid} centerHash`).toBe(expected.centerHash);
+      }
+    });
+
+    it("cached flatten reuses cached plane/center when hashes match", () => {
+      const kit = MetabolismKit as Kit;
+      const design = findDesignByPath(kit, ["Nakagin Capsule Tower"]);
+      const first = flattenDesignCached(kit, design.guid);
+      expect(Object.keys(first.cache).length).toBeGreaterThan(0);
+      const second = flattenDesignCached(kit, design.guid, first.cache);
+      for (const guid of Object.keys(first.cache)) {
+        expect(second.cache[guid].planeHash).toBe(first.cache[guid].planeHash);
+        expect(second.cache[guid].centerHash).toBe(first.cache[guid].centerHash);
+        expect(JSON.stringify(second.cache[guid].plane)).toBe(JSON.stringify(first.cache[guid].plane));
+        expect(JSON.stringify(second.cache[guid].center)).toBe(JSON.stringify(first.cache[guid].center));
+      }
     });
   });
 
@@ -19387,10 +19705,59 @@ async function appendBenchmarkCsv(language: string, name: string, durationSecond
   const { fileURLToPath } = await import("node:url");
   const sourceDir = path.dirname(fileURLToPath(import.meta.url));
   const csvPath = path.resolve(sourceDir, "../benchmark.csv");
-  if (!fs.existsSync(csvPath) || fs.statSync(csvPath).size === 0) {
-    fs.writeFileSync(csvPath, "language,name,durationSeconds\n");
+  const languages = ["go", "typescript", "python", "rust", "csharp"];
+  const rows = new Map<string, Record<string, string>>();
+  const order: string[] = [];
+  const parseCsvLine = (line: string) => {
+    const values: string[] = [];
+    let current = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === "," && !inQuotes) {
+        values.push(current);
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+    values.push(current);
+    return values;
+  };
+  if (fs.existsSync(csvPath)) {
+    const lines = fs.readFileSync(csvPath, "utf8").trim().split(/\r?\n/).filter(Boolean);
+    if (lines.length > 0 && lines[0].startsWith("name,")) {
+      const headers = parseCsvLine(lines[0]);
+      for (const line of lines.slice(1)) {
+        const values = parseCsvLine(line);
+        const rowName = values[0];
+        if (!rowName) continue;
+        if (!rows.has(rowName)) {
+          rows.set(rowName, {});
+          order.push(rowName);
+        }
+        const row = rows.get(rowName)!;
+        for (let i = 1; i < values.length && i < headers.length; i++) {
+          if (values[i]) row[headers[i]] = values[i];
+        }
+      }
+    }
   }
-  fs.appendFileSync(csvPath, `${language},${JSON.stringify(name)},${durationSeconds.toFixed(9)}\n`);
+  if (!rows.has(name)) {
+    rows.set(name, {});
+    order.push(name);
+  }
+  rows.get(name)![language] = (durationSeconds * 1000).toFixed(6);
+  const csvValue = (value: string) => `"${value.replaceAll('"', '""')}"`;
+  const output = [`name,${languages.join(",")}`, ...order.map((rowName) => [csvValue(rowName), ...languages.map((lang) => rows.get(rowName)?.[lang] ?? "")].join(","))].join("\n") + "\n";
+  fs.writeFileSync(csvPath, output);
 }
 
 // 🚩Runs all benchmarks. MUST only be called explicitly (e.g. via CLI flag).

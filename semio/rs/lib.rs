@@ -17227,14 +17227,13 @@ mod benchmark {
     #[cfg(test)]
     pub mod benchmark {
         use super::*;
-        use std::fs::{self, OpenOptions};
-        use std::io::Write;
+        use std::fs;
         use std::path::Path;
         use std::time::Instant;
 
         pub const ASSETS_DIR: &str = "../assets/semio";
         pub const ITERATIONS: u32 = 3;
-        pub const BENCHMARK_CSV_HEADER: &str = "language,name,durationSeconds\n";
+        pub const BENCHMARK_CSV_LANGUAGES: [&str; 5] = ["go", "typescript", "python", "rust", "csharp"];
 
         pub fn load_kit(filename: &str) -> Kit {
             let path = Path::new(ASSETS_DIR).join(filename);
@@ -17260,17 +17259,84 @@ mod benchmark {
 
         pub fn append_benchmark_csv(language: &str, name: &str, duration_seconds: f64) {
             let path = benchmark_csv_path();
-            if !path.exists() || fs::metadata(&path).map(|m| m.len()).unwrap_or(0) == 0 {
-                let _ = fs::write(&path, BENCHMARK_CSV_HEADER);
+            let mut rows: std::collections::BTreeMap<String, std::collections::BTreeMap<String, String>> =
+                std::collections::BTreeMap::new();
+            let mut order: Vec<String> = Vec::new();
+            if let Ok(data) = fs::read_to_string(&path) {
+                let lines: Vec<&str> = data.lines().filter(|line| !line.trim().is_empty()).collect();
+                if !lines.is_empty() && lines[0].starts_with("name,") {
+                    let headers = parse_csv_line(lines[0]);
+                    for line in lines.iter().skip(1) {
+                        let values = parse_csv_line(line);
+                        if values.is_empty() || values[0].is_empty() {
+                            continue;
+                        }
+                        if !rows.contains_key(&values[0]) {
+                            rows.insert(values[0].clone(), std::collections::BTreeMap::new());
+                            order.push(values[0].clone());
+                        }
+                        if let Some(row) = rows.get_mut(&values[0]) {
+                            for index in 1..values.len().min(headers.len()) {
+                                if !values[index].is_empty() {
+                                    row.insert(headers[index].clone(), values[index].clone());
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            if let Ok(mut file) = OpenOptions::new().append(true).create(true).open(&path) {
-                let escaped_name = name.replace('"', "\"\"");
-                let _ = writeln!(
-                    file,
-                    "{},\"{}\",{:.9}",
-                    language, escaped_name, duration_seconds
-                );
+            if !rows.contains_key(name) {
+                rows.insert(name.to_string(), std::collections::BTreeMap::new());
+                order.push(name.to_string());
             }
+            if let Some(row) = rows.get_mut(name) {
+                row.insert(language.to_string(), format!("{:.6}", duration_seconds * 1000.0));
+            }
+            let mut output = String::from("name");
+            for lang in BENCHMARK_CSV_LANGUAGES {
+                output.push(',');
+                output.push_str(lang);
+            }
+            output.push('\n');
+            for row_name in order {
+                output.push_str(&csv_value(&row_name));
+                if let Some(row) = rows.get(&row_name) {
+                    for lang in BENCHMARK_CSV_LANGUAGES {
+                        output.push(',');
+                        output.push_str(row.get(lang).map(String::as_str).unwrap_or(""));
+                    }
+                }
+                output.push('\n');
+            }
+            let _ = fs::write(&path, output);
+        }
+
+        pub fn parse_csv_line(line: &str) -> Vec<String> {
+            let mut values = Vec::new();
+            let mut current = String::new();
+            let mut chars = line.chars().peekable();
+            let mut in_quotes = false;
+            while let Some(ch) = chars.next() {
+                if ch == '"' {
+                    if in_quotes && chars.peek() == Some(&'"') {
+                        current.push('"');
+                        chars.next();
+                    } else {
+                        in_quotes = !in_quotes;
+                    }
+                } else if ch == ',' && !in_quotes {
+                    values.push(current);
+                    current = String::new();
+                } else {
+                    current.push(ch);
+                }
+            }
+            values.push(current);
+            values
+        }
+
+        pub fn csv_value(value: &str) -> String {
+            format!("\"{}\"", value.replace('"', "\"\""))
         }
 
         pub fn bench<F: Fn()>(name: &str, f: F) {

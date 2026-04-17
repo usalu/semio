@@ -1673,7 +1673,7 @@ class Benchmark(
 
 
 BENCHMARK_ITERATIONS = 3
-BENCHMARK_CSV_HEADER = "language,name,durationSeconds\n"
+BENCHMARK_CSV_LANGUAGES = ["go", "typescript", "python", "rust", "csharp"]
 
 
 def _benchmark_csv_path() -> str:
@@ -1681,13 +1681,33 @@ def _benchmark_csv_path() -> str:
 
 
 def _append_benchmark_csv(language: str, name: str, duration_seconds: float):
+    import csv
+    import io
+
     path = _benchmark_csv_path()
-    if not os.path.exists(path) or os.path.getsize(path) == 0:
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(BENCHMARK_CSV_HEADER)
-    escaped_name = json.dumps(name)
-    with open(path, "a", encoding="utf-8") as f:
-        f.write(f"{language},{escaped_name},{duration_seconds:.9f}\n")
+    rows: dict[str, dict[str, str]] = {}
+    order: list[str] = []
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            if reader.fieldnames and reader.fieldnames[0] == "name":
+                for record in reader:
+                    row_name = record.get("name") or ""
+                    if not row_name:
+                        continue
+                    rows[row_name] = {lang: record.get(lang, "") or "" for lang in BENCHMARK_CSV_LANGUAGES}
+                    order.append(row_name)
+    if name not in rows:
+        rows[name] = {}
+        order.append(name)
+    rows[name][language] = f"{duration_seconds * 1000:.6f}"
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, lineterminator="\n")
+    writer.writerow(["name", *BENCHMARK_CSV_LANGUAGES])
+    for row_name in order:
+        writer.writerow([row_name, *[rows[row_name].get(lang, "") for lang in BENCHMARK_CSV_LANGUAGES]])
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        f.write(buffer.getvalue())
 
 
 def _bench(name: str, func):
