@@ -1,15 +1,15 @@
 # #region 🔖Header
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 # AGPL-3.0
-# Kubernetes manifests for semio-session only: Namespace, PostgreSQL StatefulSet, semio-session Deployment, Services, Ingress. The session binary applies DB migrations on startup; Postgres starts with an empty database.
-# Specs: kubectl apply -f k8s.yaml after replacing Secret placeholders. DATABASE_URL in the Secret must use the same credentials as POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB in ConfigMap + Secret. Session is single-replica by default (in-process SessionDirectory).
+# Kubernetes manifests for semio-hub only: Namespace, PostgreSQL StatefulSet, semio-hub Deployment, Services, Ingress. The hub binary applies DB migrations on startup; Postgres starts with an empty database.
+# Specs: kubectl apply -f k8s.yaml after replacing Secret placeholders. DATABASE_URL in the Secret must use the same credentials as POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB in ConfigMap + Secret. Hub is single-replica by default (in-process SessionDirectory).
 # #endregion 🔖Header
 
 # #region 🔖Namespace
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: semio-session
+  name: semio-hub
 # #endregion 🔖Namespace
 
 ---
@@ -17,14 +17,14 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: semio-session-secrets
-  namespace: semio-session
+  name: semio-hub-secrets
+  namespace: semio-hub
 type: Opaque
 stringData:
   # Must match POSTGRES_PASSWORD below inside DATABASE_URL (same string in both places).
   POSTGRES_PASSWORD: "REPLACE_ME_postgres_password"
   SEMIO_ADMIN_TOKEN: "REPLACE_ME_admin_token"
-  DATABASE_URL: "postgresql://semio:REPLACE_ME_postgres_password@postgres:5432/semio_session"
+  DATABASE_URL: "postgresql://semio:REPLACE_ME_postgres_password@postgres:5432/semio_hub"
 # #endregion 🔖Secrets
 
 ---
@@ -32,12 +32,12 @@ stringData:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: semio-session-config
-  namespace: semio-session
+  name: semio-hub-config
+  namespace: semio-hub
 data:
-  POSTGRES_DB: semio_session
+  POSTGRES_DB: semio_hub
   POSTGRES_USER: semio
-  RUST_LOG: "semio_session=info,tower_http=info"
+  RUST_LOG: "semio_hub=info,tower_http=info"
 # #endregion 🔖Config
 
 ---
@@ -46,7 +46,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres
-  namespace: semio-session
+  namespace: semio-hub
 spec:
   clusterIP: None
   selector:
@@ -63,7 +63,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: semio-session
+  namespace: semio-hub
 spec:
   serviceName: postgres
   replicas: 1
@@ -84,17 +84,17 @@ spec:
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
-                  name: semio-session-config
+                  name: semio-hub-config
                   key: POSTGRES_DB
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
-                  name: semio-session-config
+                  name: semio-hub-config
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: semio-session-secrets
+                  name: semio-hub-secrets
                   key: POSTGRES_PASSWORD
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
@@ -103,12 +103,12 @@ spec:
               mountPath: /var/lib/postgresql/data
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "semio", "-d", "semio_session"]
+              command: ["pg_isready", "-U", "semio", "-d", "semio_hub"]
             initialDelaySeconds: 5
             periodSeconds: 5
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "semio", "-d", "semio_session"]
+              command: ["pg_isready", "-U", "semio", "-d", "semio_hub"]
             initialDelaySeconds: 30
             periodSeconds: 20
   volumeClaimTemplates:
@@ -122,43 +122,43 @@ spec:
 # #endregion 🔖PostgresStatefulSet
 
 ---
-# #region 🔖SessionService
+# #region 🔖HubService
 apiVersion: v1
 kind: Service
 metadata:
-  name: session
-  namespace: semio-session
+  name: hub
+  namespace: semio-hub
 spec:
   selector:
-    app: session
+    app: hub
   ports:
     - name: http
       port: 8788
       targetPort: 8788
-# #endregion 🔖SessionService
+# #endregion 🔖HubService
 
 ---
-# #region 🔖SessionDeployment
+# #region 🔖HubDeployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: session
-  namespace: semio-session
+  name: hub
+  namespace: semio-hub
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: session
+      app: hub
   template:
     metadata:
       labels:
-        app: session
+        app: hub
     spec:
       containers:
-        - name: session
-          image: semio/semio-session:latest
+        - name: hub
+          image: semio/semio-hub:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8788
@@ -168,17 +168,17 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: semio-session-secrets
+                  name: semio-hub-secrets
                   key: DATABASE_URL
             - name: SEMIO_ADMIN_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: semio-session-secrets
+                  name: semio-hub-secrets
                   key: SEMIO_ADMIN_TOKEN
             - name: RUST_LOG
               valueFrom:
                 configMapKeyRef:
-                  name: semio-session-config
+                  name: semio-hub-config
                   key: RUST_LOG
           readinessProbe:
             tcpSocket:
@@ -197,16 +197,16 @@ spec:
             limits:
               cpu: "2"
               memory: "1Gi"
-# #endregion 🔖SessionDeployment
+# #endregion 🔖HubDeployment
 
 ---
 # #region 🔖Ingress
-# Specs: Terminates HTTP for semio-session (HTTP API, WebSocket, embedded /admin). Requires an ingress controller (e.g. nginx). Replace host with your cluster DNS name.
+# Specs: Terminates HTTP for semio-hub (HTTP API, WebSocket, embedded /admin). Requires an ingress controller (e.g. nginx). Replace host with your cluster DNS name.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: semio-session
-  namespace: semio-session
+  name: semio-hub
+  namespace: semio-hub
   annotations:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
@@ -214,14 +214,14 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: semio-session.example.com
+    - host: semio-hub.example.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: session
+                name: hub
                 port:
                   number: 8788
 # #endregion 🔖Ingress

@@ -181,8 +181,9 @@ class Program
         kitOriginal.Designs = kitOriginal.Designs.Where(d => d.Parent == null).ToList();
         var kitDiffed = LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
         var kitInvalid = LoadAsset<Kit>("invalid.kit.semio.json");
-        var diffForward = LoadAsset<KitDiff>("metabolism.kit.diff.semio.json");
-        var diffInverse = LoadAsset<KitDiff>("metabolism.kit.diff.inverted.semio.json");
+        var metabolismChange = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
+        var diffForward = metabolismChange.Forward;
+        var diffInverse = metabolismChange.Backward;
 
         Bench("Roundtrip/Metabolism", () =>
         {

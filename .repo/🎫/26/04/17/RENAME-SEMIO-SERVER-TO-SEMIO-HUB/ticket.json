@@ -1,0 +1,13 @@
+{
+  "title": "Rename Semio Server to Semio Hub",
+  "status": "closed",
+  "description": "Rename the semio server technology/module to semio hub across the semio/ codebase. The hub directory already exists (Cargo.toml, bin.rs, compose.yml, k8s.yaml); the old semio/server directory is empty. Update all references (paths, identifiers, comments, configs) in semio/ to use \"hub\" instead of \"server\" where they refer to the semio server subsystem. Do not touch repo/ (different technology). Remove the stale empty semio/server directory at the end.",
+  "summary": "Refactored centralized logging to clean architecture with ONE central gate instead of scattered logging calls.\n\nArchitecture:\n- `SketchpadStore.logInteraction()` is the single central log method (interactionLog[] with 500-entry rolling buffer)\n- Three infrastructure gates feed into it automatically:\n  1. **Actor proxy** in `setActor()` — wraps `actor.send` so ALL XState events are logged at the source, zero manual calls needed in any hook\n  2. **`SketchpadStore.executeCommand()`** — logs sketchpad-level commands (createKit, openKit, etc.)\n  3. **Per-store `logCommand()`** in KitAppStoreImpl, DesignStore, QualityAppStore — forwards store command logs to centralized log\n\nReverted all 37 scattered `store.logInteraction()` calls that were manually added in hooks (useTheme, useLanguage, useDevice, useMode, useExpertise, useFullscreen, useSketchpadActions, useXStateField, useXStateFieldWithScope, useXStateAction, useHomeCommands). Hooks are now clean — they just call `actor.send()` which is automatically intercepted by the proxy.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1349"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪2240ccd43be04ca6b378c86c16d966cf"
+  ]
+}

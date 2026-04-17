@@ -1,16 +1,16 @@
 # #region 🔖Header
 # 2026 Ueli Saluz <ueli@semio-tech.de>
 # AGPL-3.0
-# Session backend service Cargo manifest.
+# Hub backend service Cargo manifest.
 # #endregion 🔖Header
 
 [package]
-name = "semio-session"
+name = "semio-hub"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "semio-session"
+name = "semio-hub"
 path = "bin.rs"
 
 [dependencies]

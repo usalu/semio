@@ -1734,9 +1734,10 @@ def benchmark_main():
 
     _bench("Roundtrip/Metabolism", test_roundtrip)
 
-    diff_forward = _test_load_json("metabolism.kit.diff.semio.json")
-    diff_inverse = _test_load_json("metabolism.kit.diff.inverted.semio.json")
     kit_diffed = _test_load_json("metabolism.kit.diffed.semio.json")
+    _metabolism_change = getKitChange(kit_original, kit_diffed)
+    diff_forward = _metabolism_change.forward
+    diff_inverse = _metabolism_change.backward
 
     def test_diff_metabolism():
         k2 = applyKitDiffDict(kit_original, diff_forward)

@@ -18666,7 +18666,7 @@ if (shouldRunEmbeddedJsTests) {
   // #region 🚪Open Synchronized Kit E2E Tests
   // End-to-end tests for opening synchronized kits across all three supported source kinds:
   // file (*.kit.semio.json with embedded base64 blobs), folder (.semio/kit.db + binary files on disk),
-  // and remote (SessionKitStore over HTTP + WebSocket against semio/server).
+  // and remote (SessionKitStore over HTTP + WebSocket against semio/hub).
   // Specs: These tests MUST verify the full open → mutate → save/sync → reload cycle using real file
   // system access or mocked server transport to guarantee the desktop/vscode/web entry points work.
 
@@ -20074,8 +20074,6 @@ async function appendBenchmarkCsv(language: string, name: string, durationSecond
 // 🚩Runs all benchmarks. MUST only be called explicitly (e.g. via CLI flag).
 async function runBenchmarks() {
   const importAtRuntime = async <TModule = any,>(moduleId: string): Promise<TModule> => import(/* @vite-ignore */ moduleId);
-  const DiffForward = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diff.semio.json"].join("/"))).default;
-  const DiffInverse = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diff.inverted.semio.json"].join("/"))).default;
   const BenchMetabolismKit = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.semio.json"].join("/"))).default;
   const BenchKitDiffed = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diffed.semio.json"].join("/"))).default;
   const BenchInvalidKit = (await importAtRuntime<any>(["@semio/assets", "semio/invalid.kit.semio.json"].join("/"))).default;
@@ -20084,8 +20082,9 @@ async function runBenchmarks() {
   const kitOriginal = { ...kitMetabolism, designs: kitMetabolism.designs?.filter((d) => !d.parent) };
   const kitDiffed = BenchKitDiffed as unknown as Kit;
   const kitInvalid = BenchInvalidKit as unknown as Kit;
-  const diffForward = DiffForward as unknown as KitDiff;
-  const diffInverse = DiffInverse as unknown as KitDiff;
+  const metabolismChange = getKitChange(kitOriginal, kitDiffed);
+  const diffForward = metabolismChange.forward;
+  const diffInverse = metabolismChange.backward;
   const benchJsonNullToUndefined = (_key: string, value: unknown) => (value === null ? undefined : value);
 
   const findBenchDesign = (kit: Kit, name: string, parentName?: string) => {

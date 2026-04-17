@@ -720,8 +720,8 @@ def getAuthStatus(serverUrl: str) -> dict:
 
 
 class RemoteStore(Store):
-    """🖥️REST-backed store that proxies kit operations to a remote semio server.
-    Callers MUST call login() first to authenticate with the remote server.
+    """🖥️REST-backed store that proxies kit operations to a remote semio hub.
+    Callers MUST call login() first to authenticate with the remote hub.
     """
 
     serverUrl: str
@@ -2357,7 +2357,7 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> Ca
 
 
 def mcp_login(serverUrl: str, email: str, password: str) -> dict:
-    """🎟️Login to a remote semio server and store the auth token for subsequent remote kit operations."""
+    """🎟️Login to a remote semio hub and store the auth token for subsequent remote kit operations."""
     try:
         return login(serverUrl, email, password)
     except Exception as e:
@@ -2365,7 +2365,7 @@ def mcp_login(serverUrl: str, email: str, password: str) -> dict:
 
 
 def mcp_logout(serverUrl: str) -> dict:
-    """➖Logout from a remote semio server and remove the stored token."""
+    """➖Logout from a remote semio hub and remove the stored token."""
     try:
         return logout(serverUrl)
     except Exception as e:
@@ -2373,7 +2373,7 @@ def mcp_logout(serverUrl: str) -> dict:
 
 
 def mcp_auth_status(serverUrl: str) -> dict:
-    """🟣Get the authentication status for a remote semio server."""
+    """🟣Get the authentication status for a remote semio hub."""
     try:
         return getAuthStatus(serverUrl)
     except Exception as e:

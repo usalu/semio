@@ -1,0 +1,40 @@
+{
+  "id": "857fe68e-3016-4aba-ac85-f4cbdfa2fe6c",
+  "uri": "repo://session/857fe68e-3016-4aba-ac85-f4cbdfa2fe6c",
+  "client": "claude-code",
+  "second": "2026-04-17T11:13:43Z",
+  "checkpoint": "c6b44a6773dd5881c2d2dd871eea95d2b1232f3b",
+  "contributor": "unknown",
+  "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\857fe68e-3016-4aba-ac85-f4cbdfa2fe6c.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "c6b44a6773dd5881c2d2dd871eea95d2b1232f3b",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-04-17T11:13:43Z",
+        "session": "857fe68e-3016-4aba-ac85-f4cbdfa2fe6c",
+        "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\857fe68e-3016-4aba-ac85-f4cbdfa2fe6c.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "857fe68e-3016-4aba-ac85-f4cbdfa2fe6c",
+          "transcript_path": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\857fe68e-3016-4aba-ac85-f4cbdfa2fe6c.jsonl",
+          "cwd": "C:\\git\\semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "PermissionRequest",
+          "tool_name": "Edit",
+          "tool_input": {
+            "file_path": "c:\\git\\semio\\.vscode\\launch.json",
+            "old_string": "      \"name\": \"🛠️dev👤semio📚server\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"cargo run -p semio-session\",",
+            "new_string": "      \"name\": \"🛠️dev👤semio📚hub\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"cargo run -p semio-hub\",",
+            "replace_all": false
+          },
+          "permission_suggestions": []
+        }
+      },
+      "response": {}
+    }
+  ]
+}

@@ -3351,19 +3351,6 @@ func benchLoadKitFile(b *testing.B, filename string) Kit {
 	return kit
 }
 
-func benchLoadKitDiffFile(b *testing.B, filename string) KitDiff {
-	b.Helper()
-	data, err := os.ReadFile(AssetsPath + "/" + filename)
-	if err != nil {
-		b.Fatal(err)
-	}
-	var diff KitDiff
-	if err := json.Unmarshal(data, &diff); err != nil {
-		b.Fatal(err)
-	}
-	return diff
-}
-
 func benchFindDesign(kit Kit, name string, parentName string) Design {
 	var parentGuid string
 	if parentName != "" {
@@ -3425,8 +3412,9 @@ func BenchmarkDiffMetabolism(b *testing.B) {
 		}
 	}
 	kitDiffed := benchLoadKitFile(b, "metabolism.kit.diffed.semio.json")
-	diffForward := benchLoadKitDiffFile(b, "metabolism.kit.diff.semio.json")
-	diffInverse := benchLoadKitDiffFile(b, "metabolism.kit.diff.inverted.semio.json")
+	change := GetKitChange(kitOriginal, kitDiffed, nil, nil)
+	diffForward := change.Forward
+	diffInverse := change.Backward
 	b.ResetTimer()
 	start := time.Now()
 	for range b.N {

@@ -18188,8 +18188,9 @@ mod benchmark {
             });
             let kit_diffed = load_kit("metabolism.kit.diffed.semio.json");
             let kit_invalid = load_kit("invalid.kit.semio.json");
-            let diff_forward = load_kit_diff("metabolism.kit.diff.semio.json");
-            let diff_inverse = load_kit_diff("metabolism.kit.diff.inverted.semio.json");
+            let metabolism_change = get_kit_change(&kit_original, &kit_diffed);
+            let diff_forward = metabolism_change.forward;
+            let diff_inverse = metabolism_change.backward;
 
             bench("Roundtrip/Metabolism", || {
                 let serialized = serialize_kit(&kit_metabolism).unwrap();
