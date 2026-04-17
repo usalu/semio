@@ -242,8 +242,31 @@ TODO: Rename version to release
 TODO: Introduce activity to kit
 TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
-S
+
 semio:
+
+Currently everything uses mostly functional style programming.
+We are rewriting everythingy to be stateful in order to avoid expensive copy of memory.
+Rewrite everything object with classes and methods.
+Get rid of all cloning and only pass pointers around.
+Start with typescript.
+
+Currently everything uses mostly functional style programming.
+Rewrite everything to be stateful in order to avoid expensive copy of memory.
+
+There are five different kind of kits:
+
+- DevKit (a synchronized json file)
+- LocalKit (a synchronized folder with a .semio/kit.db with files and folders)
+- TransportKit (a static json string)
+- ArchiveKit (a static zipped local kit)
+- RemoteKit (a synchronized websocket connection to a semio/hub which uses postgres for kit data and buckets for files)
+
+All synchronized kits MUST have the same API. They MUST support the import and export of static kits.
+
+All cruds on synchronized kits MUST use exclusively diffs.
+
+You MUST implement it for every programming language.
 
 Optimize implementations according benchmarks. Find bottlenecks and fix them. It doesnt matter if you need to reimplement something. Make sure all tets pass and benchmark again.
 

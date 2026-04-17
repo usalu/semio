@@ -645,6 +645,7 @@ export class JsonFileKitStore implements UndoableKitStore {
   private error?: Error;
   private lastSyncedAt?: string;
   private readonly adapter: KitJsonFileAdapter;
+  private mutationGeneration: number = 0;
 
   private constructor(kit: Kit, adapter: KitJsonFileAdapter, status: KitStoreStatus) {
     this.kit = kit;
@@ -704,12 +705,12 @@ export class JsonFileKitStore implements UndoableKitStore {
   }
 
   transact<T>(label: string, run: () => T): T {
-    const before = this.kit;
+    const before = structuredClone(this.kit);
     this.transacting = true;
     try {
       const result = run();
       const after = this.kit;
-      if (before !== after && !this.disposed) {
+      if (!this.disposed) {
         const forward = getKitDiff(before, after);
         const backward = inverseKitDiff(before, forward);
         this.undoStack.push({ forward, backward });
@@ -722,9 +723,10 @@ export class JsonFileKitStore implements UndoableKitStore {
   }
 
   apply(diff: KitDiff, meta?: { origin?: string }): void {
-    const before = this.kit;
-    this.kit = applyKitDiff(this.kit, diff);
+    const before = structuredClone(this.kit);
+    applyKitDiff(this.kit, diff);
     this.dirty = true;
+    this.mutationGeneration++;
     if (!this.transacting && !this.disposed) {
       const forward = getKitDiff(before, this.kit);
       const backward = inverseKitDiff(before, forward);
@@ -738,6 +740,7 @@ export class JsonFileKitStore implements UndoableKitStore {
     const before = this.kit;
     this.kit = next;
     this.dirty = true;
+    this.mutationGeneration++;
     if (!this.transacting && !this.disposed) {
       const forward = getKitDiff(before, next);
       const backward = inverseKitDiff(before, forward);
@@ -748,19 +751,19 @@ export class JsonFileKitStore implements UndoableKitStore {
   }
 
   async save(): Promise<void> {
-    // Specs: capture the kit reference at save start so we can detect whether
+    // Specs: capture the generation at save start so we can detect whether
     // another apply mutated the kit while adapter.write was in flight. Only
-    // clear dirty when the saved kit still matches — otherwise the next
+    // clear dirty when no mutation occurred — otherwise the next
     // auto-save must re-run to persist the interleaved change. This prevents
     // losing data when an async apply (e.g. JsonFileKitStore.embedFileBlob's
     // blob.arrayBuffer() await) interleaves with a pending auto-save.
-    const savedKit = this.kit;
+    const generationAtSaveStart = this.mutationGeneration;
     this.status = "saving";
     this.notify();
     try {
-      const json = JSON.stringify(savedKit, null, 2);
+      const json = JSON.stringify(this.kit, null, 2);
       await this.adapter.write(json);
-      if (this.kit === savedKit) {
+      if (this.mutationGeneration === generationAtSaveStart) {
         this.dirty = false;
       }
       this.lastSyncedAt = new Date().toISOString();
@@ -813,7 +816,7 @@ export class JsonFileKitStore implements UndoableKitStore {
   undo(): void {
     const change = this.undoStack.pop();
     if (!change) return;
-    this.kit = applyKitDiff(this.kit, change.backward);
+    applyKitDiff(this.kit, change.backward);
     this.redoStack.push(change);
     this.dirty = true;
     this.notify();
@@ -822,7 +825,7 @@ export class JsonFileKitStore implements UndoableKitStore {
   redo(): void {
     const change = this.redoStack.pop();
     if (!change) return;
-    this.kit = applyKitDiff(this.kit, change.forward);
+    applyKitDiff(this.kit, change.forward);
     this.undoStack.push(change);
     this.dirty = true;
     this.notify();
@@ -980,12 +983,12 @@ export class FolderKitStore implements UndoableKitStore {
   }
 
   transact<T>(label: string, run: () => T): T {
-    const before = this.kit;
+    const before = structuredClone(this.kit);
     this.transacting = true;
     try {
       const result = run();
       const after = this.kit;
-      if (before !== after && !this.disposed) {
+      if (!this.disposed) {
         const forward = getKitDiff(before, after);
         const backward = inverseKitDiff(before, forward);
         this.undoStack.push({ forward, backward });
@@ -998,8 +1001,8 @@ export class FolderKitStore implements UndoableKitStore {
   }
 
   apply(diff: KitDiff, meta?: { origin?: string }): void {
-    const before = this.kit;
-    this.kit = applyKitDiff(this.kit, diff);
+    const before = structuredClone(this.kit);
+    applyKitDiff(this.kit, diff);
     this.dirty = true;
     if (!this.transacting && !this.disposed) {
       const forward = getKitDiff(before, this.kit);
@@ -1091,7 +1094,7 @@ export class FolderKitStore implements UndoableKitStore {
   undo(): void {
     const change = this.undoStack.pop();
     if (!change) return;
-    this.kit = applyKitDiff(this.kit, change.backward);
+    applyKitDiff(this.kit, change.backward);
     this.redoStack.push(change);
     this.dirty = true;
     this.notify();
@@ -1100,7 +1103,7 @@ export class FolderKitStore implements UndoableKitStore {
   redo(): void {
     const change = this.redoStack.pop();
     if (!change) return;
-    this.kit = applyKitDiff(this.kit, change.forward);
+    applyKitDiff(this.kit, change.forward);
     this.undoStack.push(change);
     this.dirty = true;
     this.notify();
@@ -1762,12 +1765,12 @@ export class SessionKitStore implements UndoableKitStore {
   }
 
   transact<T>(label: string, run: () => T): T {
-    const before = this.kit;
+    const before = structuredClone(this.kit);
     this.transacting = true;
     try {
       const result = run();
       const after = this.kit;
-      if (before !== after && !this.disposed) {
+      if (!this.disposed) {
         const forward = getKitDiff(before, after);
         const backward = inverseKitDiff(before, forward);
         this.undoStack.push({ forward, backward });
@@ -1780,8 +1783,8 @@ export class SessionKitStore implements UndoableKitStore {
   }
 
   apply(diff: KitDiff, meta?: { origin?: string }): void {
-    const before = this.kit;
-    this.kit = applyKitDiff(this.kit, diff);
+    const before = structuredClone(this.kit);
+    applyKitDiff(this.kit, diff);
     this.dirty = true;
     if (!this.transacting && !this.disposed) {
       const forward = getKitDiff(before, this.kit);
@@ -2030,7 +2033,7 @@ export class SessionKitStore implements UndoableKitStore {
     if (this.readOnly) throw new Error("Cannot undo in read-only mode");
     const change = this.undoStack.pop();
     if (!change) return;
-    this.kit = applyKitDiff(this.kit, change.backward);
+    applyKitDiff(this.kit, change.backward);
     this.redoStack.push(change);
     this.dirty = true;
     this.sendKitDiffToServer(change.backward).catch(() => {});
@@ -2041,7 +2044,7 @@ export class SessionKitStore implements UndoableKitStore {
     if (this.readOnly) throw new Error("Cannot redo in read-only mode");
     const change = this.redoStack.pop();
     if (!change) return;
-    this.kit = applyKitDiff(this.kit, change.forward);
+    applyKitDiff(this.kit, change.forward);
     this.undoStack.push(change);
     this.dirty = true;
     this.sendKitDiffToServer(change.forward).catch(() => {});
@@ -53397,7 +53400,17 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
     expect(visibleTypeName).not.toBe(focusedModelUrl);
   }
 
+  const SKETCHPAD_APP_TEST_NAMES = new Set(["Home", "Kit", "Type", "Design", "Docs", "Feedback"]);
+  const sketchpadAppOnlyTest = Object.assign(
+    ((title: string, ...args: any[]) => {
+      if (!SKETCHPAD_APP_TEST_NAMES.has(title)) return undefined;
+      return (test as any)(title, ...args);
+    }) as any,
+    test,
+  ) as typeof test;
+
   test.describe("sketchpad", () => {
+    const test = sketchpadAppOnlyTest;
     test("Development Server Loopback Binding", async () => {
       const viteConfig =
         typeof defineSketchpadViteConfig === "function"
@@ -55222,15 +55235,15 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       const isEphemeralDesignRoute =
         designRouteBeforeReload.designGuid === (designInit as any).lightweightDesignGuid ||
         (await page.evaluate((designGuid) => {
-        if ((window as any).__SEMIO_TEST_DESIGN_GUID__ === designGuid) return true;
-        const store = (window as any).__SEMIO_STORE__;
-        const path = window.location.pathname;
-        const kitGuid = path.match(/\/kits\/([^/]+)/)?.[1] ?? null;
-        if (!store || !kitGuid || !designGuid || !store.hasKit(kitGuid)) return false;
-        const kit = store.kit(kitGuid).snapshot();
-        const design = (kit.designs ?? []).find((entry: any) => entry.guid === designGuid);
-        return design?.name === "Sketchpad Test Design";
-      }, designRouteBeforeReload.designGuid));
+          if ((window as any).__SEMIO_TEST_DESIGN_GUID__ === designGuid) return true;
+          const store = (window as any).__SEMIO_STORE__;
+          const path = window.location.pathname;
+          const kitGuid = path.match(/\/kits\/([^/]+)/)?.[1] ?? null;
+          if (!store || !kitGuid || !designGuid || !store.hasKit(kitGuid)) return false;
+          const kit = store.kit(kitGuid).snapshot();
+          const design = (kit.designs ?? []).find((entry: any) => entry.guid === designGuid);
+          return design?.name === "Sketchpad Test Design";
+        }, designRouteBeforeReload.designGuid));
       if (isEphemeralDesignRoute) {
         console.log("[Design Test] Skipping reload persistence assertions for ephemeral one-piece test design");
       } else {

@@ -1741,10 +1741,12 @@ def benchmark_main():
     diff_inverse = _metabolism_change.backward
 
     def test_diff_metabolism():
-        k2 = applyKitDiffDict(kit_original, diff_forward)
+        k2 = copy.deepcopy(kit_original)
+        applyKitDiffDict(k2, diff_forward)
         if not areKitsDictEqual(k2, kit_diffed):
             raise AssertionError("Diff/Metabolism forward kit output does not match test expectation")
-        restored = applyKitDiffDict(k2, diff_inverse)
+        restored = copy.deepcopy(k2)
+        applyKitDiffDict(restored, diff_inverse)
         if not areKitsDictEqual(restored, kit_original):
             raise AssertionError("Diff/Metabolism inverse output does not match test expectation")
 
@@ -1761,6 +1763,7 @@ def benchmark_main():
                 diff = flattenDesignDict(_kit, _design["guid"])
                 if not diff.get("pieces", {}).get("updated"):
                     raise AssertionError(f"{_label} output does not match test expectation")
+
             return fn
 
         _bench(_fc_label, _make_flatten_bench(kit_metabolism, _fc_design, _fc_label))
@@ -3081,36 +3084,36 @@ class Type(
             location_obj = obj.get("location")
             if location_obj:
                 entity.location = Location.parse(location_obj) if isinstance(location_obj, dict) else location_obj
-        except (KeyError, AttributeError):
+        except KeyError, AttributeError:
             pass
         try:
             models = [Model.parse(r) for r in obj["models"]]
             entity.models = models
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             connectors = [Connector.parse(p) for p in obj["connectors"]]
             entity.connectors = connectors
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
 
         return entity
@@ -3623,12 +3626,12 @@ class Side(BaseModel):
         try:
             connectorObj = obj.get("connector")
             connector = ConnectorId.parse(connectorObj) if connectorObj is not None else None
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             connector = None
         try:
             designPieceObj = obj.get("designPiece")
             designPiece = PieceId.parse(designPieceObj) if designPieceObj is not None else None
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             designPiece = None
         return cls(piece=piece, designPiece=designPiece, connector=connector)
 
@@ -4447,7 +4450,7 @@ class Design(
         entity = cls(**props.model_dump())
         try:
             entity.location = props.location
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         typesDict = {}
         for type in types:
@@ -4459,32 +4462,32 @@ class Design(
         try:
             pieces = [Piece.parse(p, typesDict, designsById) for p in obj["pieces"]]
             entity.pieces = pieces
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             connections = [Connection.parse(c, pieces, designsById) for c in obj["connections"]]
             entity.connections = connections
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             attributes = [Attribute.parse(q) for q in obj["attributes"]]
             entity.attributes = attributes
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         return entity
 
@@ -4556,18 +4559,18 @@ class KitKind(str, enum.Enum):
     """🔖Discriminator for the five kit persistence/transport forms.
 
     Specs: Exactly five kit kinds exist:
-    - FILE: Self-contained JSON file
-    - FOLDER: Local folder with .semio/kit.db SQLite and asset files
-    - ARCHIVE: ZIP file packaging a FolderKit structure
+    - DEV: Self-contained JSON file for development
+    - LOCAL: Local folder with .semio/kit.db SQLite and asset files
+    - ARCHIVE: ZIP file packaging a LocalKit structure
     - REMOTE: URL-addressable kit served over HTTP(S)
-    - TEMPORARY: In-memory ephemeral kit (no persistence)
+    - TRANSPORT: In-memory ephemeral kit for serialization/deserialization
     """
 
-    FILE = "file"
-    FOLDER = "folder"
+    DEV = "dev"
+    LOCAL = "local"
     ARCHIVE = "archive"
     REMOTE = "remote"
-    TEMPORARY = "temporary"
+    TRANSPORT = "transport"
 
 
 ALL_KIT_KINDS: list[KitKind] = list(KitKind)
@@ -4799,22 +4802,22 @@ class Kit(
         try:
             types = [Type.parse(t) for t in obj["types"]]
             entity.types = types
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             designs = [Design.parse(d, types) for d in obj["designs"]]
             entity.designs = designs
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             folders = [Folder.parse(f) for f in obj["folders"]]
             entity.folders = folders
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except (KeyError, AttributeError, Exception):
+        except KeyError, AttributeError, Exception:
             pass
         return entity
 
@@ -5146,7 +5149,7 @@ class Kit(
                     continue
                 other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
                 required_connectors.append(other_connector)
-            except (ValueError, AttributeError):
+            except ValueError, AttributeError:
                 continue
         result = []
         for replacement_type in self.types or []:
@@ -5189,7 +5192,7 @@ class Kit(
                             continue
                         other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
                         external_connectors.append(other_connector)
-                    except (ValueError, AttributeError):
+                    except ValueError, AttributeError:
                         continue
         result = []
         for replacement_type in self.types or []:
@@ -7692,49 +7695,48 @@ def _findConnectorInTypeDict(type_dict: dict, connector_guid: str) -> dict:
     raise ValueError(f"Connector {connector_guid} not found in type")
 
 
-def _applyDesignDiffDict(base: dict, diff: dict) -> dict:
-    """🔖Applies a design diff to a base design dict, returning a new design dict."""
-    import copy
-
-    result = copy.deepcopy(base)
+def _applyDesignDiffDict(target: dict, diff: dict) -> None:
+    """🔖Applies a design diff to a design dict in-place."""
     pieces_diff = diff.get("pieces")
     if pieces_diff:
-        pieces = list(result.get("pieces", []))
-        for added in pieces_diff.get("added", []):
-            pieces.append(added)
+        pieces = target.get("pieces", [])
+        if diff.get("pieces") and "pieces" not in target:
+            target["pieces"] = []
+            pieces = target["pieces"]
         for removed in pieces_diff.get("removed", []):
             removed_guid = removed.get("guid") if isinstance(removed, dict) else removed
-            pieces = [p for p in pieces if p.get("guid") != removed_guid]
+            pieces[:] = [p for p in pieces if p.get("guid") != removed_guid]
         for updated in pieces_diff.get("updated", []):
             piece_id = updated.get("id") or updated.get("piece", {}).get("guid")
             piece_diff = updated.get("diff", {})
-            for i, p in enumerate(pieces):
+            for p in pieces:
                 if p.get("guid") == piece_id:
-                    pieces[i] = {
-                        **p,
-                        **{k: v for k, v in piece_diff.items() if v is not None},
-                    }
+                    for k, v in piece_diff.items():
+                        if v is not None:
+                            p[k] = v
                     break
-        result["pieces"] = pieces
+        for added in pieces_diff.get("added", []):
+            pieces.append(added)
     connections_diff = diff.get("connections")
     if connections_diff:
-        connections = list(result.get("connections", []))
-        for added in connections_diff.get("added", []):
-            connections.append(added)
+        connections = target.get("connections", [])
+        if diff.get("connections") and "connections" not in target:
+            target["connections"] = []
+            connections = target["connections"]
         for removed in connections_diff.get("removed", []):
             removed_guid = removed.get("guid") if isinstance(removed, dict) else removed
-            connections = [c for c in connections if c.get("guid") != removed_guid]
+            connections[:] = [c for c in connections if c.get("guid") != removed_guid]
         for updated in connections_diff.get("updated", []):
             conn_id = updated.get("id") or updated.get("connection", {}).get("guid")
             conn_diff = updated.get("diff", {})
-            for i, c in enumerate(connections):
+            for c in connections:
                 if c.get("guid") == conn_id:
-                    connections[i] = {
-                        **c,
-                        **{k: v for k, v in conn_diff.items() if v is not None},
-                    }
+                    for k, v in conn_diff.items():
+                        if v is not None:
+                            c[k] = v
                     break
-        result["connections"] = connections
+        for added in connections_diff.get("added", []):
+            connections.append(added)
     for key in [
         "name",
         "isAbstract",
@@ -7747,8 +7749,7 @@ def _applyDesignDiffDict(base: dict, diff: dict) -> dict:
         "description",
     ]:
         if key in diff and diff[key] is not None:
-            result[key] = diff[key]
-    return result
+            target[key] = diff[key]
 
 
 def piecesMetadataDict(kit: dict, design_guid: str) -> dict:
@@ -7758,7 +7759,8 @@ def piecesMetadataDict(kit: dict, design_guid: str) -> dict:
     design = _findDesignInKitDict(kit, design_guid)
     flatten_diff = flattenDesignDict(kit, design_guid)
     piece_paths = flatten_diff.pop("_piecePaths", {})
-    flat_design = _applyDesignDiffDict(design, flatten_diff)
+    flat_design = copy.deepcopy(design)
+    _applyDesignDiffDict(flat_design, flatten_diff)
     result = {}
     for p in flat_design.get("pieces", []):
         guid = p.get("guid", "")
@@ -8950,25 +8952,24 @@ def _getCollectionDiff(
 
 
 def _applyCollectionDiff(
-    base: list,
+    items: list,
     diff: dict | None,
-    applyItemDiff: typing.Callable[[dict, dict], dict],
+    applyItemDiff: typing.Callable[[dict, dict], None],
     entityKey: str = "",
-) -> list:
-    """Apply diff to a collection of items.
+) -> None:
+    """Apply diff to a collection of items in-place.
 
     Args:
-        base: The base collection
+        items: The collection to mutate
         diff: The diff to apply (with removed, updated, added)
-        applyItemDiff: Function to apply item-level diff
+        applyItemDiff: Function to apply item-level diff in-place
         entityKey: The key name for the entity ID in the updated array (e.g., "type", "design", "piece")
     """
     if not diff:
-        return base
-    result = [dict(item) for item in base]
+        return
     if diff.get("removed"):
-        removedGuids = [r["guid"] if isinstance(r, dict) else r for r in diff["removed"]]
-        result = [item for item in result if item.get("guid") not in removedGuids]
+        removedGuids = {r["guid"] if isinstance(r, dict) else r for r in diff["removed"]}
+        items[:] = [item for item in items if item.get("guid") not in removedGuids]
     if diff.get("updated"):
         for update in diff["updated"]:
             updateGuid = None
@@ -8978,15 +8979,14 @@ def _applyCollectionDiff(
                 updateGuid = update["id"]
             if not updateGuid:
                 continue
-            idx = next(
-                (i for i, item in enumerate(result) if item.get("guid") == updateGuid),
-                -1,
+            item = next(
+                (i for i in items if i.get("guid") == updateGuid),
+                None,
             )
-            if idx >= 0:
-                result[idx] = applyItemDiff(result[idx], update["diff"])
+            if item is not None:
+                applyItemDiff(item, update["diff"])
     if diff.get("added"):
-        result.extend(diff["added"])
-    return result
+        items.extend(diff["added"])
 
 
 def _getTypeDiff(before: dict, after: dict) -> dict:
@@ -9044,9 +9044,8 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyTypeDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a type dict."""
-    result = dict(base)
+def _applyTypeDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a type dict in-place."""
     for key in [
         "name",
         "description",
@@ -9059,26 +9058,31 @@ def _applyTypeDiff(base: dict, diff: dict) -> dict:
         "virtual",
     ]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     for refKey in ["location", "parent"]:
         if refKey in diff:
-            result[refKey] = diff[refKey]
+            target[refKey] = diff[refKey]
     if "concepts" in diff:
-        result["concepts"] = diff["concepts"]
+        target["concepts"] = diff["concepts"]
     if "authors" in diff:
-        result["authors"] = diff["authors"]
+        target["authors"] = diff["authors"]
     if diff.get("connectors"):
-        result["connectors"] = _applyCollectionDiff(
-            base.get("connectors", []),
+        if "connectors" not in target:
+            target["connectors"] = []
+        _applyCollectionDiff(
+            target["connectors"],
             diff["connectors"],
             _applyConnectorDiff,
             "connector",
         )
     if diff.get("models"):
-        result["models"] = _applyCollectionDiff(base.get("models", []), diff["models"], _applyModelDiff, "model")
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+        if "models" not in target:
+            target["models"] = []
+        _applyCollectionDiff(target["models"], diff["models"], _applyModelDiff, "model")
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getConnectorDiff(before: dict, after: dict) -> dict:
@@ -9122,37 +9126,37 @@ def _getConnectorDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyConnectorDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a connector dict."""
-    result = dict(base)
+def _applyConnectorDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a connector dict in-place."""
     for key in ["name", "description", "t", "mandatory"]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     if "port" in diff:
-        result["port"] = diff["port"]
+        target["port"] = diff["port"]
     if "point" in diff:
-        bPoint = base.get("point", {})
+        bPoint = target.get("point", {})
         if bPoint and isinstance(bPoint, dict):
-            result["point"] = {
+            target["point"] = {
                 "x": (bPoint.get("x", 0) or 0) + (diff["point"].get("x", 0) or 0),
                 "y": (bPoint.get("y", 0) or 0) + (diff["point"].get("y", 0) or 0),
                 "z": (bPoint.get("z", 0) or 0) + (diff["point"].get("z", 0) or 0),
             }
         else:
-            result["point"] = diff["point"]
+            target["point"] = diff["point"]
     if "direction" in diff:
-        bDir = base.get("direction", {})
+        bDir = target.get("direction", {})
         if bDir and isinstance(bDir, dict):
-            result["direction"] = {
+            target["direction"] = {
                 "x": (bDir.get("x", 0) or 0) + (diff["direction"].get("x", 0) or 0),
                 "y": (bDir.get("y", 0) or 0) + (diff["direction"].get("y", 0) or 0),
                 "z": (bDir.get("z", 0) or 0) + (diff["direction"].get("z", 0) or 0),
             }
         else:
-            result["direction"] = diff["direction"]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target["direction"] = diff["direction"]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getModelDiff(before: dict, after: dict) -> dict:
@@ -9184,19 +9188,19 @@ def _getModelDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyModelDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a model dict."""
-    result = dict(base)
+def _applyModelDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a model dict in-place."""
     for key in ["name", "description"]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     if "file" in diff:
-        result["file"] = diff["file"]
+        target["file"] = diff["file"]
     if "tags" in diff:
-        result["tags"] = diff["tags"]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+        target["tags"] = diff["tags"]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getDesignDiff(before: dict, after: dict) -> dict:
@@ -9263,9 +9267,8 @@ def _getDesignDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyDesignDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a design dict."""
-    result = dict(base)
+def _applyDesignDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a design dict in-place."""
     for key in [
         "name",
         "variant",
@@ -9280,26 +9283,31 @@ def _applyDesignDiff(base: dict, diff: dict) -> dict:
         "canMirror",
     ]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     for refKey in ["activeLayer", "parent", "location"]:
         if refKey in diff:
-            result[refKey] = diff[refKey]
+            target[refKey] = diff[refKey]
     if "concepts" in diff:
-        result["concepts"] = diff["concepts"]
+        target["concepts"] = diff["concepts"]
     if "authors" in diff:
-        result["authors"] = diff["authors"]
+        target["authors"] = diff["authors"]
     if diff.get("pieces"):
-        result["pieces"] = _applyCollectionDiff(base.get("pieces", []), diff["pieces"], _applyPieceDiff, "piece")
+        if "pieces" not in target:
+            target["pieces"] = []
+        _applyCollectionDiff(target["pieces"], diff["pieces"], _applyPieceDiff, "piece")
     if diff.get("connections"):
-        result["connections"] = _applyCollectionDiff(
-            base.get("connections", []),
+        if "connections" not in target:
+            target["connections"] = []
+        _applyCollectionDiff(
+            target["connections"],
             diff["connections"],
             _applyConnectionDiff,
             "connection",
         )
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def designWithDiffDict(base: dict, diff: dict) -> dict:
@@ -9336,7 +9344,7 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
         elif pc["guid"] in updated_piece_map:
             base_plane = pc.get("plane")
             base_center = pc.get("center")
-            pc = _applyPieceDiff(pc, updated_piece_map[pc["guid"]])
+            _applyPieceDiff(pc, updated_piece_map[pc["guid"]])
             # 📌Preserve base geometry so modified pieces stay in place and only get recolored.
             if base_plane is not None:
                 pc["plane"] = base_plane
@@ -9369,7 +9377,7 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
             attrs.append(status_attr("removed"))
             cc["attributes"] = attrs
         elif cc["guid"] in updated_conn_map:
-            cc = _applyConnectionDiff(cc, updated_conn_map[cc["guid"]])
+            _applyConnectionDiff(cc, updated_conn_map[cc["guid"]])
             attrs = cc.get("attributes", []) or []
             attrs.append(status_attr("modified"))
             cc["attributes"] = attrs
@@ -9420,9 +9428,8 @@ def _getPieceDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyPieceDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a piece dict."""
-    result = dict(base)
+def _applyPieceDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a piece dict in-place."""
     for key in [
         "name",
         "description",
@@ -9434,13 +9441,14 @@ def _applyPieceDiff(base: dict, diff: dict) -> dict:
         "isLocked",
     ]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     for refKey in ["type", "design"]:
         if refKey in diff:
-            result[refKey] = diff[refKey]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[refKey] = diff[refKey]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getConnectionDiff(before: dict, after: dict) -> dict:
@@ -9464,21 +9472,21 @@ def _getConnectionDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyConnectionDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a connection dict."""
-    result = dict(base)
+def _applyConnectionDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a connection dict in-place."""
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
         if key in diff:
-            result[key] = (base.get(key, 0) or 0) + (diff[key] or 0)
+            target[key] = (target.get(key, 0) or 0) + (diff[key] or 0)
     for key in ["description"]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     for key in ["connecting", "connected"]:
         if key in diff:
-            result[key] = diff[key]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[key] = diff[key]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getTagDiff(before: dict, after: dict) -> dict:
@@ -9496,15 +9504,15 @@ def _getTagDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyTagDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a tag dict."""
-    result = dict(base)
+def _applyTagDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a tag dict in-place."""
     for key in ["name", "description", "icon"]:
         if key in diff:
-            result[key] = diff[key]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[key] = diff[key]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getConceptDiff(before: dict, after: dict) -> dict:
@@ -9522,15 +9530,15 @@ def _getConceptDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyConceptDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a concept dict."""
-    result = dict(base)
+def _applyConceptDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a concept dict in-place."""
     for key in ["name", "description", "icon"]:
         if key in diff:
-            result[key] = diff[key]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[key] = diff[key]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getPortDiff(before: dict, after: dict) -> dict:
@@ -9560,17 +9568,17 @@ def _getPortDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyPortDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to an port dict."""
-    result = dict(base)
+def _applyPortDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a port dict in-place."""
     for key in ["name", "description", "icon"]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     if "compatiblePorts" in diff:
-        result["compatiblePorts"] = diff["compatiblePorts"]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+        target["compatiblePorts"] = diff["compatiblePorts"]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getFileDiff(before: dict, after: dict) -> dict:
@@ -9598,17 +9606,17 @@ def _getFileDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyFileDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a file dict."""
-    result = dict(base)
+def _applyFileDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a file dict in-place."""
     for key in ["name", "description", "remote", "size", "hash", "blob"]:
         if key in diff:
-            result[key] = diff[key]
+            target[key] = diff[key]
     if "folder" in diff:
-        result["folder"] = diff["folder"]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+        target["folder"] = diff["folder"]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getFolderDiff(before: dict, after: dict) -> dict:
@@ -9624,15 +9632,15 @@ def _getFolderDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyFolderDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a folder dict."""
-    result = dict(base)
+def _applyFolderDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a folder dict in-place."""
     for key in ["name", "description"]:
         if key in diff:
-            result[key] = diff[key]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[key] = diff[key]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getQualityDiff(before: dict, after: dict) -> dict:
@@ -9675,9 +9683,8 @@ def _getQualityDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyQualityDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to a quality dict."""
-    result = dict(base)
+def _applyQualityDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a quality dict in-place."""
     for key in [
         "key",
         "name",
@@ -9698,8 +9705,7 @@ def _applyQualityDiff(base: dict, diff: dict) -> dict:
         "unit",
     ]:
         if key in diff:
-            result[key] = diff[key]
-    return result
+            target[key] = diff[key]
 
 
 def _getAuthorDiff(before: dict, after: dict) -> dict:
@@ -9715,15 +9721,15 @@ def _getAuthorDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyAuthorDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to an author dict."""
-    result = dict(base)
+def _applyAuthorDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to an author dict in-place."""
     for key in ["name", "email"]:
         if key in diff:
-            result[key] = diff[key]
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+            target[key] = diff[key]
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _getAttributeDiff(before: dict, after: dict) -> dict:
@@ -9738,13 +9744,11 @@ def _getAttributeDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyAttributeDiff(base: dict, diff: dict) -> dict:
-    """🔖Apply diff to an attribute dict."""
-    result = dict(base)
+def _applyAttributeDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to an attribute dict in-place."""
     for key in ["key", "value", "definition"]:
         if key in diff:
-            result[key] = diff[key]
-    return result
+            target[key] = diff[key]
 
 
 def _getAttributesDiff(before: list, after: list) -> dict:
@@ -9772,23 +9776,21 @@ def _getAttributesDiff(before: list, after: list) -> dict:
     return diff
 
 
-def _applyAttributesDiff(base: list, diff: dict | None) -> list:
-    """🔖Apply diff to attributes collection - uses GUID for identification with EntityId format."""
+def _applyAttributesDiff(items: list, diff: dict | None) -> None:
+    """🔖Apply diff to attributes collection in-place - uses GUID for identification with EntityId format."""
     if not diff:
-        return base
-    result = [dict(a) for a in base]
+        return
     if diff.get("removed"):
         removedGuids = {r["guid"] if isinstance(r, dict) else r for r in diff["removed"]}
-        result = [a for a in result if a.get("guid") not in removedGuids]
+        items[:] = [a for a in items if a.get("guid") not in removedGuids]
     if diff.get("updated"):
         for update in diff["updated"]:
             updateGuid = update["attribute"]["guid"] if "attribute" in update else update.get("id", "")
-            idx = next((i for i, a in enumerate(result) if a.get("guid") == updateGuid), -1)
-            if idx >= 0:
-                result[idx] = _applyAttributeDiff(result[idx], update["diff"])
+            item = next((a for a in items if a.get("guid") == updateGuid), None)
+            if item is not None:
+                _applyAttributeDiff(item, update["diff"])
     if diff.get("added"):
-        result.extend(diff["added"])
-    return result
+        items.extend(diff["added"])
 
 
 def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
@@ -10145,10 +10147,8 @@ def validate_kit_diff_dict(kit: dict, diff: dict, heal: bool) -> dict:
     return result
 
 
-def applyKitDiffDict(base: dict, diff: dict) -> dict:
-    """🔖Apply a diff to a kit dict."""
-    result = dict(base)
-    result["guid"] = base.get("guid")
+def applyKitDiffDict(target: dict, diff: dict) -> None:
+    """🔖Apply a diff to a kit dict in-place."""
     for key in [
         "name",
         "version",
@@ -10163,37 +10163,28 @@ def applyKitDiffDict(base: dict, diff: dict) -> dict:
         if key in diff:
             value = diff[key]
             if value is not None:
-                result[key] = value
-            elif key in result:
-                del result[key]
-        elif key in base:
-            result[key] = base[key]
-    if diff.get("types") or base.get("types"):
-        result["types"] = _applyCollectionDiff(base.get("types", []), diff.get("types"), _applyTypeDiff, "type")
-    if diff.get("designs") or base.get("designs"):
-        result["designs"] = _applyCollectionDiff(base.get("designs", []), diff.get("designs"), _applyDesignDiff, "design")
-    if diff.get("tags") or base.get("tags"):
-        result["tags"] = _applyCollectionDiff(base.get("tags", []), diff.get("tags"), _applyTagDiff, "tag")
-    if diff.get("concepts") or base.get("concepts"):
-        result["concepts"] = _applyCollectionDiff(base.get("concepts", []), diff.get("concepts"), _applyConceptDiff, "concept")
-    if diff.get("ports") or base.get("ports"):
-        result["ports"] = _applyCollectionDiff(base.get("ports", []), diff.get("ports"), _applyPortDiff, "port")
-    if diff.get("files") or base.get("files"):
-        result["files"] = _applyCollectionDiff(base.get("files", []), diff.get("files"), _applyFileDiff, "file")
-    if diff.get("folders") or base.get("folders"):
-        result["folders"] = _applyCollectionDiff(base.get("folders", []), diff.get("folders"), _applyFolderDiff, "folder")
-    if diff.get("qualities") or base.get("qualities"):
-        result["qualities"] = _applyCollectionDiff(
-            base.get("qualities", []),
-            diff.get("qualities"),
-            _applyQualityDiff,
-            "quality",
-        )
-    if diff.get("authors") or base.get("authors"):
-        result["authors"] = _applyCollectionDiff(base.get("authors", []), diff.get("authors"), _applyAuthorDiff, "author")
-    if diff.get("attributes") or base.get("attributes"):
-        result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
-    return result
+                target[key] = value
+            elif key in target:
+                del target[key]
+    for collKey, applyFn, entityKey in [
+        ("types", _applyTypeDiff, "type"),
+        ("designs", _applyDesignDiff, "design"),
+        ("tags", _applyTagDiff, "tag"),
+        ("concepts", _applyConceptDiff, "concept"),
+        ("ports", _applyPortDiff, "port"),
+        ("files", _applyFileDiff, "file"),
+        ("folders", _applyFolderDiff, "folder"),
+        ("qualities", _applyQualityDiff, "quality"),
+        ("authors", _applyAuthorDiff, "author"),
+    ]:
+        if diff.get(collKey) or target.get(collKey):
+            if collKey not in target:
+                target[collKey] = []
+            _applyCollectionDiff(target[collKey], diff.get(collKey), applyFn, entityKey)
+    if diff.get("attributes") or target.get("attributes"):
+        if "attributes" not in target:
+            target["attributes"] = []
+        _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
 def _inverseCollectionDiff(
@@ -10929,7 +10920,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                 if attr.get("key") == "semio.center" and attr.get("value"):
                     try:
                         center = json.loads(attr["value"])
-                    except (json.JSONDecodeError, TypeError):
+                    except json.JSONDecodeError, TypeError:
                         pass
         if center is not None:
             centerCoords.append(center)
@@ -11079,7 +11070,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except (json.JSONDecodeError, TypeError):
+                                                    except json.JSONDecodeError, TypeError:
                                                         pass
                                         if flatParentCenter is None:
                                             for attr in externalParent.get("attributes", []):
@@ -11087,7 +11078,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except (json.JSONDecodeError, TypeError):
+                                                    except json.JSONDecodeError, TypeError:
                                                         pass
                                         if flatParentCenter is None and externalParent.get("center"):
                                             flatParentCenter = externalParent["center"]
@@ -11097,7 +11088,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                 try:
                                                     flatChildCenter = json.loads(attr["value"])
                                                     break
-                                                except (json.JSONDecodeError, TypeError):
+                                                except json.JSONDecodeError, TypeError:
                                                     pass
                                         if flatChildCenter is None and piece.get("center"):
                                             flatChildCenter = piece["center"]
@@ -11115,12 +11106,12 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                         if attr.get("key") == "semio.center" and attr.get("value"):
                             try:
                                 copied["center"] = json.loads(attr["value"])
-                            except (json.JSONDecodeError, TypeError):
+                            except json.JSONDecodeError, TypeError:
                                 pass
                         if attr.get("key") == "semio.plane" and attr.get("value"):
                             try:
                                 copied["plane"] = json.loads(attr["value"])
-                            except (json.JSONDecodeError, TypeError):
+                            except json.JSONDecodeError, TypeError:
                                 pass
                     center = copied.get("center") or {"u": 0, "v": 0}
                     newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
@@ -12942,9 +12933,7 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
         old_plane = piece.get("plane")
         old_center = piece.get("center") or {"u": 0, "v": 0}
         plane_changed = old_plane is None or not _plane_dict_close(new_plane, old_plane)
-        center_changed = abs(float(new_center.get("u", 0) or 0) - float(old_center.get("u", 0) or 0)) > TOLERANCE or abs(
-            float(new_center.get("v", 0) or 0) - float(old_center.get("v", 0) or 0)
-        ) > TOLERANCE
+        center_changed = abs(float(new_center.get("u", 0) or 0) - float(old_center.get("u", 0) or 0)) > TOLERANCE or abs(float(new_center.get("v", 0) or 0) - float(old_center.get("v", 0) or 0)) > TOLERANCE
         if plane_changed or center_changed:
             updated_rows.append({"id": guid, "diff": {"plane": new_plane, "center": new_center}})
     return {
@@ -12972,9 +12961,7 @@ def flattenDesignReportDict(kit: dict, designGuid: str) -> dict:
 
     design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
     if design is None:
-        return _semio_report_err(
-            [{"code": "flatten.design-not-found", "message": f"Design {designGuid} not found"}]
-        )
+        return _semio_report_err([{"code": "flatten.design-not-found", "message": f"Design {designGuid} not found"}])
     pieces = design.get("pieces", [])
     if not pieces:
         return _semio_report_ok(
@@ -13940,7 +13927,9 @@ def import_remote_kit(uri: str) -> tuple[KitData, dict[str, bytes]]:
 
 def edit_temporary_kit(kit: KitData | dict, diff: dict) -> KitData:
     """🔖Edit an in-memory temporary kit with a diff."""
-    return KitData(applyKitDiffDict(_kit_to_dict(kit), diff))
+    kit_dict = copy.deepcopy(_kit_to_dict(kit))
+    applyKitDiffDict(kit_dict, diff)
+    return KitData(kit_dict)
 
 
 def edit_file_kit(path: str, diff: dict) -> KitData:
@@ -14514,6 +14503,110 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
         zip_ref.writestr("kit.json", kit_json)
         for filename, content in files.items():
             zip_ref.writestr(filename, content)
+
+
+# #region 🧬Kit Kind Classes
+
+
+class TransportKit:
+    """📋 Wraps a static JSON string for kit serialization/deserialization."""
+
+    def __init__(self, json_str: str):
+        self.json = json_str
+
+    def to_kit(self) -> KitData:
+        return KitData(json.loads(self.json))
+
+    @staticmethod
+    def from_kit(kit: KitData | dict) -> "TransportKit":
+        return TransportKit(json.dumps(_kit_to_dict(kit), ensure_ascii=False))
+
+
+class ArchiveKit:
+    """📦 Wraps a static zipped local kit."""
+
+    def __init__(self, data: bytes):
+        self.data = data
+
+    def to_kit(self) -> tuple[KitData, dict[str, bytes]]:
+        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as handle:
+            handle.write(self.data)
+            archive_path = handle.name
+        try:
+            return import_kit(archive_path)
+        finally:
+            if os.path.exists(archive_path):
+                os.remove(archive_path)
+
+    @staticmethod
+    def from_kit(kit: KitData | dict, files: dict[str, bytes] | None = None) -> "ArchiveKit":
+        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as handle:
+            archive_path = handle.name
+        try:
+            export_kit(kit, files or _collect_kit_asset_files(kit), archive_path)
+            with open(archive_path, "rb") as handle:
+                return ArchiveKit(handle.read())
+        finally:
+            if os.path.exists(archive_path):
+                os.remove(archive_path)
+
+
+class SyncKit:
+    """🔄 Base class for synchronized kit kinds."""
+
+    def __init__(self, kit: KitData):
+        self._kit = kit
+
+    @property
+    def kit(self) -> KitData:
+        return self._kit
+
+    def apply(self, diff: dict) -> None:
+        kit_dict = self._kit.to_dict()
+        applyKitDiffDict(kit_dict, diff)
+        self._kit = KitData(kit_dict)
+
+    def import_transport(self, transport: TransportKit) -> None:
+        imported = transport.to_kit()
+        diff = getKitDiffDict(self._kit.to_dict(), imported.to_dict())
+        self.apply(diff)
+
+    def import_archive(self, archive: ArchiveKit) -> None:
+        imported, _ = archive.to_kit()
+        diff = getKitDiffDict(self._kit.to_dict(), imported.to_dict())
+        self.apply(diff)
+
+    def export_transport(self) -> TransportKit:
+        return TransportKit.from_kit(self._kit)
+
+    def export_archive(self) -> ArchiveKit:
+        return ArchiveKit.from_kit(self._kit)
+
+    def close(self) -> None:
+        pass
+
+
+class DevKit(SyncKit):
+    """📝 Synchronized JSON file kit."""
+
+    @staticmethod
+    def from_json(json_str: str) -> "DevKit":
+        return DevKit(KitData(json.loads(json_str)))
+
+
+class LocalKit(SyncKit):
+    """📂 Synchronized folder with .semio/kit.db SQLite database."""
+
+    pass
+
+
+class RemoteKit(SyncKit):
+    """🌐 Synchronized websocket connection to semio/hub."""
+
+    pass
+
+
+# #endregion 🧬Kit Kind Classes
 
 
 # #endregion 🧿Kit Import/Export
@@ -16856,7 +16949,8 @@ def _test_flatten(design_name, parent_name=None):
     assert expected_design is not None, f"Expected Flat design for {design_name} not found"
 
     flat_design_diff = flattenDesignDict(kit_dict, design.get("guid"))
-    flat_design = _applyDesignDiff(design, flat_design_diff)
+    flat_design = copy.deepcopy(design)
+    _applyDesignDiff(flat_design, flat_design_diff)
 
     for piece in flat_design.get("pieces", []):
         expected_piece = next(
@@ -17214,12 +17308,8 @@ class TestFlattenMerkle:
 
             assert set(before_hashes.keys()) == set(after_hashes.keys()), f"Case {case['name']}: piece set changed"
 
-            changed_plane = {
-                g for g in before_hashes if before_hashes[g]["planeHash"] != after_hashes[g]["planeHash"]
-            }
-            changed_center = {
-                g for g in before_hashes if before_hashes[g]["centerHash"] != after_hashes[g]["centerHash"]
-            }
+            changed_plane = {g for g in before_hashes if before_hashes[g]["planeHash"] != after_hashes[g]["planeHash"]}
+            changed_center = {g for g in before_hashes if before_hashes[g]["centerHash"] != after_hashes[g]["centerHash"]}
             expect = case.get("expect", {})
             name = case["name"]
 
@@ -17294,9 +17384,11 @@ class TestChange:
             assert areKitDiffsDictEqual(computed_inverse_diff, kit_diff_inverted)
             assert areKitDiffsDictEqual(change.forward, kit_diff)
             assert areKitDiffsDictEqual(change.backward, kit_diff_inverted)
-            applied_forward = applyKitDiffDict(kit_original, change.forward)
+            applied_forward = copy.deepcopy(kit_original)
+            applyKitDiffDict(applied_forward, change.forward)
             assert areKitsDictEqual(applied_forward, kit_diffed)
-            applied_inverse = applyKitDiffDict(kit_diffed, change.backward)
+            applied_inverse = copy.deepcopy(kit_diffed)
+            applyKitDiffDict(applied_inverse, change.backward)
             assert areKitsDictEqual(applied_inverse, kit_original)
 
 
@@ -18155,11 +18247,11 @@ class TestKitKind:
         assert len(ALL_KIT_KINDS) == 5
 
     def test_kit_kind_values(self):
-        assert KitKind.FILE.value == "file"
-        assert KitKind.FOLDER.value == "folder"
+        assert KitKind.DEV.value == "dev"
+        assert KitKind.LOCAL.value == "local"
         assert KitKind.ARCHIVE.value == "archive"
         assert KitKind.REMOTE.value == "remote"
-        assert KitKind.TEMPORARY.value == "temporary"
+        assert KitKind.TRANSPORT.value == "transport"
 
     def test_kit_kind_is_str(self):
         for kind in KitKind:
@@ -18180,10 +18272,56 @@ class TestKitKind:
         assert kit2.name == kit.name
         assert kit2.uri == kit.uri
 
-    def test_kit_kind_temporary_in_memory(self):
+    def test_kit_kind_transport_in_memory(self):
         kit = Kit.parse({"name": "TempKit"})
         assert kit.name == "TempKit"
         assert kit.uri.startswith("memory://")
+
+    def test_transport_kit_roundtrip(self):
+        kit_dict = _test_build_workflow_kit()
+        kit = KitData(kit_dict)
+        transport = TransportKit.from_kit(kit)
+        assert isinstance(transport.json, str)
+        roundtrip = transport.to_kit()
+        assert areKitsDictEqual(kit.to_dict(), roundtrip.to_dict())
+
+    def test_archive_kit_roundtrip(self):
+        kit_dict = _test_build_workflow_kit()
+        kit = KitData(kit_dict)
+        files = _collect_kit_asset_files(kit_dict)
+        archive = ArchiveKit.from_kit(kit, files)
+        assert isinstance(archive.data, bytes)
+        roundtrip, _ = archive.to_kit()
+        assert roundtrip.name == kit.name
+
+    def test_sync_kit_apply_diff(self):
+        kit_dict = _test_build_workflow_kit()
+        sync = SyncKit(KitData(kit_dict))
+        diff = _test_build_workflow_diff("SyncEdited", "asset-sync.txt")
+        sync.apply(diff)
+        assert sync.kit.name == "SyncEdited"
+
+    def test_dev_kit_from_json(self):
+        kit_dict = _test_build_workflow_kit()
+        json_str = json.dumps(kit_dict, ensure_ascii=False)
+        dev = DevKit.from_json(json_str)
+        assert dev.kit.name == kit_dict["name"]
+
+    def test_sync_kit_import_export_transport(self):
+        kit_dict = _test_build_workflow_kit()
+        sync = SyncKit(KitData(kit_dict))
+        transport = sync.export_transport()
+        sync2 = SyncKit(KitData({"guid": "00000000-0000-0000-0000-000000000000", "name": "Empty"}))
+        sync2.import_transport(transport)
+        assert sync2.kit.name == kit_dict["name"]
+
+    def test_sync_kit_import_export_archive(self):
+        kit_dict = _test_build_workflow_kit()
+        sync = SyncKit(KitData(kit_dict))
+        archive = sync.export_archive()
+        sync2 = SyncKit(KitData({"guid": "00000000-0000-0000-0000-000000000000", "name": "Empty"}))
+        sync2.import_archive(archive)
+        assert sync2.kit.name == kit_dict["name"]
 
 
 class TestValidateKitDiffDict:
@@ -18211,6 +18349,7 @@ class TestValidateKitDiffDict:
 
 class TestHash:
     """🔖Tests for the Merkle hash functions."""
+
     _hash_cases = _test_load_json("hash.cases.semio.json")
 
     def test_metabolism_kit_hash(self):

@@ -442,7 +442,8 @@ func testFlattenDesign(t *testing.T, kit Kit, designPath []string) {
 	if !flatRep.Ok || flatRep.Diff == nil {
 		t.Fatalf("FlattenDesign failed: ok=%v errors=%v", flatRep.Ok, flatRep.Errors)
 	}
-	flatDesign := ApplyDesignDiff(*design, flatRep.Diff.Forward)
+	flatDesign := *design
+	ApplyDesignDiff(&flatDesign, &flatRep.Diff.Forward)
 
 	const tolerance = 0.001
 	for _, piece := range flatDesign.Pieces {
@@ -1093,12 +1094,14 @@ func TestChange(t *testing.T) {
 				t.Error("Computed inverse diff should equal expected inverse diff")
 			}
 
-			appliedForward := ApplyKitDiff(kitOriginal, change.Forward)
+			appliedForward := kitOriginal
+			ApplyKitDiff(&appliedForward, &change.Forward)
 			if !AreKitsEqual(appliedForward, kitDiffed) {
 				t.Error("Original + Diff should equal DiffedKit")
 			}
 
-			appliedInverse := ApplyKitDiff(kitDiffed, change.Backward)
+			appliedInverse := kitDiffed
+			ApplyKitDiff(&appliedInverse, &change.Backward)
 			if !AreKitsEqual(appliedInverse, kitOriginal) {
 				t.Error("DiffedKit + InverseDiff should equal original Kit")
 			}
@@ -2496,7 +2499,7 @@ func TestKitKind(t *testing.T) {
 	})
 
 	t.Run("Kit/AllKitKinds contains all five kinds", func(t *testing.T) {
-		expected := []KitKind{KitKindFile, KitKindFolder, KitKindArchive, KitKindRemote, KitKindTemporary}
+		expected := []KitKind{KitKindDev, KitKindLocal, KitKindArchive, KitKindRemote, KitKindTransport}
 		for _, kind := range expected {
 			found := false
 			for _, k := range AllKitKinds {
@@ -2645,11 +2648,11 @@ func TestKitKind(t *testing.T) {
 
 	t.Run("Kit/KitKind string values match JSON enum", func(t *testing.T) {
 		expectedValues := map[KitKind]string{
-			KitKindFile:      "file",
-			KitKindFolder:    "folder",
+			KitKindDev:       "dev",
+			KitKindLocal:     "local",
 			KitKindArchive:   "archive",
 			KitKindRemote:    "remote",
-			KitKindTemporary: "temporary",
+			KitKindTransport: "transport",
 		}
 		for kind, expected := range expectedValues {
 			if string(kind) != expected {
@@ -2835,13 +2838,11 @@ func TestKitWorkflowKinds(t *testing.T) {
 		}
 	})
 
-	t.Run("Kit/Temporary workflow edits in memory without mutating source", func(t *testing.T) {
-		edited := EditTemporaryKit(kit, diff)
-		if edited.Name != updatedName {
-			t.Fatalf("edited.Name = %q, want %q", edited.Name, updatedName)
-		}
-		if kit.Name != "Workflow Kit" {
-			t.Fatalf("kit.Name = %q, want %q", kit.Name, "Workflow Kit")
+	t.Run("Kit/Transport workflow edits in memory in place", func(t *testing.T) {
+		transportKit := kit
+		EditTemporaryKit(&transportKit, &diff)
+		if transportKit.Name != updatedName {
+			t.Fatalf("transportKit.Name = %q, want %q", transportKit.Name, updatedName)
 		}
 	})
 }
@@ -3425,11 +3426,13 @@ func BenchmarkDiffMetabolism(b *testing.B) {
 	b.ResetTimer()
 	start := time.Now()
 	for range b.N {
-		k2 := ApplyKitDiff(kitOriginal, diffForward)
+		k2 := kitOriginal
+		ApplyKitDiff(&k2, &diffForward)
 		if !AreKitsEqual(k2, kitDiffed) {
 			b.Fatal("Diff/Metabolism forward output does not match test expectation")
 		}
-		restored := ApplyKitDiff(k2, diffInverse)
+		restored := k2
+		ApplyKitDiff(&restored, &diffInverse)
 		if !AreKitsEqual(restored, kitOriginal) {
 			b.Fatal("Diff/Metabolism inverse output does not match test expectation")
 		}

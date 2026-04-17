@@ -674,13 +674,9 @@ export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff =>
 /**
  * Diff type for tracking applyCoord changes.
  **/
-export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
-  const u = diff.u ?? 0;
-  const v = diff.v ?? 0;
-  return {
-    u: base.u + u,
-    v: base.v + v,
-  };
+export const applyCoordDiff = (target: Coord, diff: CoordDiff): void => {
+  if (diff.u !== undefined) target.u += diff.u;
+  if (diff.v !== undefined) target.v += diff.v;
 };
 
 // #endregion 📺Coord
@@ -744,13 +740,9 @@ export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
 /**
  * Diff type for tracking applyVec changes.
  **/
-export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
-  const u = diff.u ?? 0;
-  const v = diff.v ?? 0;
-  return {
-    u: base.u + u,
-    v: base.v + v,
-  };
+export const applyVecDiff = (target: Vec, diff: VecDiff): void => {
+  if (diff.u !== undefined) target.u += diff.u;
+  if (diff.v !== undefined) target.v += diff.v;
 };
 
 // #endregion ➡️Vec
@@ -822,15 +814,10 @@ export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff =>
 /**
  * Diff type for tracking applyPoint changes.
  **/
-export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
-  const x = diff.x ?? 0;
-  const y = diff.y ?? 0;
-  const z = diff.z ?? 0;
-  return {
-    x: base.x + x,
-    y: base.y + y,
-    z: base.z + z,
-  };
+export const applyPointDiff = (target: Point, diff: PointDiff): void => {
+  if (diff.x !== undefined) target.x += diff.x;
+  if (diff.y !== undefined) target.y += diff.y;
+  if (diff.z !== undefined) target.z += diff.z;
 };
 
 // #endregion ✖️Point
@@ -902,15 +889,10 @@ export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDif
 /**
  * Diff type for tracking applyVector changes.
  **/
-export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
-  const x = diff.x ?? 0;
-  const y = diff.y ?? 0;
-  const z = diff.z ?? 0;
-  return {
-    x: base.x + x,
-    y: base.y + y,
-    z: base.z + z,
-  };
+export const applyVectorDiff = (target: Vector, diff: VectorDiff): void => {
+  if (diff.x !== undefined) target.x += diff.x;
+  if (diff.y !== undefined) target.y += diff.y;
+  if (diff.z !== undefined) target.z += diff.z;
 };
 
 // #endregion ↗️Vector
@@ -1057,12 +1039,10 @@ export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff =>
 /**
  * Diff type for tracking applyPlane changes.
  **/
-export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
-  return {
-    origin: diff.origin ? applyPointDiff(base.origin, diff.origin) : base.origin,
-    xAxis: diff.xAxis ? applyVectorDiff(base.xAxis, diff.xAxis) : base.xAxis,
-    yAxis: diff.yAxis ? applyVectorDiff(base.yAxis, diff.yAxis) : base.yAxis,
-  };
+export const applyPlaneDiff = (target: Plane, diff: PlaneDiff): void => {
+  if (diff.origin) applyPointDiff(target.origin, diff.origin);
+  if (diff.xAxis) applyVectorDiff(target.xAxis, diff.xAxis);
+  if (diff.yAxis) applyVectorDiff(target.yAxis, diff.yAxis);
 };
 
 // #endregion ◻️Plane
@@ -1139,12 +1119,10 @@ export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDif
  * Diff type for tracking applyCamera changes.
  *
  **/
-export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
-  return {
-    position: diff.position ? applyPointDiff(base.position, diff.position) : base.position,
-    forward: diff.forward ? applyVectorDiff(base.forward, diff.forward) : base.forward,
-    up: diff.up ? applyVectorDiff(base.up, diff.up) : base.up,
-  };
+export const applyCameraDiff = (target: Camera, diff: CameraDiff): void => {
+  if (diff.position) applyPointDiff(target.position, diff.position);
+  if (diff.forward) applyVectorDiff(target.forward, diff.forward);
+  if (diff.up) applyVectorDiff(target.up, diff.up);
 };
 
 // #endregion 🎥Camera
@@ -1249,8 +1227,10 @@ export const mergeAttributeDiff = (diff1: AttributeDiff, diff2: AttributeDiff): 
 /**
  * Diff type for tracking applyAttribute changes.
  **/
-export const applyAttributeDiff = (base: Attribute, diff: AttributeDiff): Attribute => {
-  return { ...base, ...diff };
+export const applyAttributeDiff = (target: Attribute, diff: AttributeDiff): void => {
+  if (diff.key !== undefined) target.key = diff.key;
+  if (diff.value !== undefined) target.value = diff.value;
+  if (diff.definition !== undefined) target.definition = diff.definition;
 };
 
 /**
@@ -1314,24 +1294,22 @@ export const mergeAttributesDiff = (first: AttributesDiff, second: AttributesDif
 /**
  * Diff type for tracking applyAttributes changes.
  **/
-export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): Attribute[] => {
-  let result = [...base];
+export const applyAttributesDiff = (items: Attribute[], diff: AttributesDiff): void => {
   if (diff.removed) {
     const removedGuids = new Set(diff.removed.map((r) => r.guid));
-    result = result.filter((attr) => !removedGuids.has(attr.guid));
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (removedGuids.has(items[i].guid)) items.splice(i, 1);
+    }
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((attr) => attr.guid === update.attribute.guid);
-      if (index !== -1) {
-        result[index] = applyAttributeDiff(result[index], update.diff);
-      }
+      const item = items.find((attr) => attr.guid === update.attribute.guid);
+      if (item) applyAttributeDiff(item, update.diff);
     }
   }
   if (diff.added) {
-    result.push(...diff.added);
+    items.push(...diff.added);
   }
-  return result;
 };
 
 // #endregion 💎Attribute
@@ -1402,17 +1380,14 @@ export const mergeLocationDiff = (diff1: LocationDiff, diff2: LocationDiff): Loc
 /**
  * Diff type for tracking applyLocation changes.
  **/
-export const applyLocationDiff = (base: Location, diff: LocationDiff): Location => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Location = {
-    guid: base.guid,
-    longitude: diff.longitude ?? base.longitude,
-    latitude: diff.latitude ?? base.latitude,
-    altitude: diff.altitude ?? base.altitude,
-  };
-
-  return result;
+export const applyLocationDiff = (target: Location, diff: LocationDiff): void => {
+  if (diff.longitude !== undefined) target.longitude = diff.longitude;
+  if (diff.latitude !== undefined) target.latitude = diff.latitude;
+  if (diff.altitude !== undefined) target.altitude = diff.altitude;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 // #endregion 📍Location
@@ -1506,18 +1481,13 @@ export const mergeAuthorDiff = (diff1: AuthorDiff, diff2: AuthorDiff): AuthorDif
 /**
  * Diff type for tracking applyAuthor changes.
  **/
-export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Author = {
-    guid: base.guid,
-    name: diff.name ?? base.name,
-    email: diff.email ?? base.email,
-  };
-
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+export const applyAuthorDiff = (target: Author, diff: AuthorDiff): void => {
+  if (diff.name !== undefined) target.name = diff.name;
+  if (diff.email !== undefined) target.email = diff.email;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -1651,24 +1621,18 @@ export const mergeFileDiff = (diff1: FileDiff, diff2: FileDiff): FileDiff => {
 /**
  * Diff type for tracking applyFile changes.
  **/
-export const applyFileDiff = (base: File, diff: FileDiff): File => {
-  const result: File = {
-    guid: base.guid,
-    name: diff.name ?? base.name,
-  };
-
-  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
-  if (diff.remote !== undefined || base.remote !== undefined) result.remote = diff.remote ?? base.remote;
-  if (diff.size !== undefined || base.size !== undefined) result.size = diff.size ?? base.size;
-  if (diff.hash !== undefined || base.hash !== undefined) result.hash = diff.hash ?? base.hash;
-  if (diff.createdAt !== undefined || base.createdAt !== undefined) result.createdAt = diff.createdAt ?? base.createdAt;
-  if (diff.createdBy !== undefined || base.createdBy !== undefined) result.createdBy = diff.createdBy ?? base.createdBy;
-  if (diff.updatedAt !== undefined || base.updatedAt !== undefined) result.updatedAt = diff.updatedAt ?? base.updatedAt;
-  if (diff.updatedBy !== undefined || base.updatedBy !== undefined) result.updatedBy = diff.updatedBy ?? base.updatedBy;
-  if (diff.folder !== undefined || base.folder !== undefined) result.folder = diff.folder ?? base.folder;
-  if (diff.blob !== undefined || base.blob !== undefined) result.blob = diff.blob ?? base.blob;
-
-  return result;
+export const applyFileDiff = (target: File, diff: FileDiff): void => {
+  if (diff.name !== undefined) target.name = diff.name;
+  if (diff.description !== undefined) target.description = diff.description;
+  if (diff.remote !== undefined) target.remote = diff.remote;
+  if (diff.size !== undefined) target.size = diff.size;
+  if (diff.hash !== undefined) target.hash = diff.hash;
+  if (diff.createdAt !== undefined) target.createdAt = diff.createdAt;
+  if (diff.createdBy !== undefined) target.createdBy = diff.createdBy;
+  if (diff.updatedAt !== undefined) target.updatedAt = diff.updatedAt;
+  if (diff.updatedBy !== undefined) target.updatedBy = diff.updatedBy;
+  if (diff.folder !== undefined) target.folder = diff.folder;
+  if (diff.blob !== undefined) target.blob = diff.blob;
 };
 
 /**
@@ -1795,23 +1759,18 @@ export const mergeFolderDiff = (diff1: FolderDiff, diff2: FolderDiff): FolderDif
 /**
  * Diff type for tracking applyFolder changes.
  **/
-export const applyFolderDiff = (base: Folder, diff: FolderDiff): Folder => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Folder = {
-    guid: base.guid,
-    name: diff.name ?? base.name,
-  };
-
-  if (diff.parent !== undefined || base.parent !== undefined) result.parent = diff.parent ?? base.parent;
-  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-  if (diff.createdAt !== undefined || base.createdAt !== undefined) result.createdAt = diff.createdAt ?? base.createdAt;
-  if (diff.createdBy !== undefined || base.createdBy !== undefined) result.createdBy = diff.createdBy ?? base.createdBy;
-  if (diff.updatedAt !== undefined || base.updatedAt !== undefined) result.updatedAt = diff.updatedAt ?? base.updatedAt;
-  if (diff.updatedBy !== undefined || base.updatedBy !== undefined) result.updatedBy = diff.updatedBy ?? base.updatedBy;
-
-  return result;
+export const applyFolderDiff = (target: Folder, diff: FolderDiff): void => {
+  if (diff.name !== undefined) target.name = diff.name;
+  if (diff.parent !== undefined) target.parent = diff.parent;
+  if (diff.description !== undefined) target.description = diff.description;
+  if (diff.createdAt !== undefined) target.createdAt = diff.createdAt;
+  if (diff.createdBy !== undefined) target.createdBy = diff.createdBy;
+  if (diff.updatedAt !== undefined) target.updatedAt = diff.updatedAt;
+  if (diff.updatedBy !== undefined) target.updatedBy = diff.updatedBy;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -1870,21 +1829,16 @@ export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
 /**
  * Diff type for tracking applyBenchmark changes.
  **/
-export const applyBenchmarkDiff = (base: Benchmark, diff: BenchmarkDiff): Benchmark => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Benchmark = {
-    guid: base.guid,
-    name: diff.name ?? base.name,
-  };
-
-  if (diff.icon !== undefined || base.icon !== undefined) result.icon = diff.icon ?? base.icon;
-  if (diff.min !== undefined || base.min !== undefined) result.min = diff.min ?? base.min;
-  if (diff.minExcluded !== undefined || base.minExcluded !== undefined) result.minExcluded = diff.minExcluded ?? base.minExcluded;
-  if (diff.maxExcluded !== undefined || base.maxExcluded !== undefined) result.maxExcluded = diff.maxExcluded ?? base.maxExcluded;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+export const applyBenchmarkDiff = (target: Benchmark, diff: BenchmarkDiff): void => {
+  if (diff.name !== undefined) target.name = diff.name;
+  if (diff.icon !== undefined) target.icon = diff.icon;
+  if (diff.min !== undefined) target.min = diff.min;
+  if (diff.minExcluded !== undefined) target.minExcluded = diff.minExcluded;
+  if (diff.maxExcluded !== undefined) target.maxExcluded = diff.maxExcluded;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 /**
  * Retrieves the BenchmarkDiff value.
@@ -1975,26 +1929,22 @@ const mergeBenchmarksDiff = (first: BenchmarksDiff, second: BenchmarksDiff): Ben
 };
 
 // 📏applyBenchmarksDiff applies a benchmark diff to a collection.
-const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark[] => {
-  let result = [...base];
+const applyBenchmarksDiff = (items: Benchmark[], diff: BenchmarksDiff): void => {
   if (diff.removed) {
     const removedGuids = new Set(diff.removed.map((r) => r.guid));
-    result = result.filter((benchmark) => !removedGuids.has(benchmark.guid));
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (removedGuids.has(items[i].guid)) items.splice(i, 1);
+    }
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((benchmark) => benchmark.guid === update.benchmark.guid);
-      if (index !== -1) {
-        result[index] = applyBenchmarkDiff(result[index], update.diff);
-      }
+      const item = items.find((b) => b.guid === update.benchmark.guid);
+      if (item) applyBenchmarkDiff(item, update.diff);
     }
   }
-
   if (diff.added) {
-    result.push(...diff.added);
+    items.push(...diff.added);
   }
-
-  return result;
 };
 
 // #endregion 📏Benchmark
@@ -2147,36 +2097,33 @@ export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): Qualit
 /**
  * Diff type for tracking applyQuality changes.
  **/
-export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
-  const benchmarks = diff.benchmarks ? applyBenchmarksDiff(base.benchmarks ?? [], diff.benchmarks) : base.benchmarks;
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Quality = {
-    guid: base.guid,
-    key: diff.key ?? base.key,
-    name: diff.name ?? base.name,
-  };
-
-  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
-  if (diff.uri !== undefined || base.uri !== undefined) result.uri = diff.uri ?? base.uri;
-  if (diff.kind !== undefined || base.kind !== undefined) result.kind = diff.kind ?? base.kind;
-  if (diff.folder !== undefined || base.folder !== undefined) result.folder = diff.folder ?? base.folder;
-  if (diff.canScale !== undefined || base.canScale !== undefined) result.canScale = diff.canScale ?? base.canScale;
-  if (diff.defaultSiUnit !== undefined || base.defaultSiUnit !== undefined) result.defaultSiUnit = diff.defaultSiUnit ?? base.defaultSiUnit;
-  if (diff.defaultImperialUnit !== undefined || base.defaultImperialUnit !== undefined) result.defaultImperialUnit = diff.defaultImperialUnit ?? base.defaultImperialUnit;
-  if (diff.min !== undefined || base.min !== undefined) result.min = diff.min ?? base.min;
-  if (diff.isMinExcluded !== undefined || base.isMinExcluded !== undefined) result.isMinExcluded = diff.isMinExcluded ?? base.isMinExcluded;
-  if (diff.max !== undefined || base.max !== undefined) result.max = diff.max ?? base.max;
-  if (diff.isMaxExcluded !== undefined || base.isMaxExcluded !== undefined) result.isMaxExcluded = diff.isMaxExcluded ?? base.isMaxExcluded;
-  if (diff.defaultValue !== undefined || base.defaultValue !== undefined) result.defaultValue = diff.defaultValue ?? base.defaultValue;
-  if (diff.formula !== undefined || base.formula !== undefined) result.formula = diff.formula ?? base.formula;
-  if (diff.icon !== undefined || base.icon !== undefined) result.icon = diff.icon ?? base.icon;
-  if (diff.image !== undefined || base.image !== undefined) result.image = diff.image ?? base.image;
-  if (diff.unit !== undefined || base.unit !== undefined) result.unit = diff.unit ?? base.unit;
-  if (benchmarks && benchmarks.length > 0) result.benchmarks = benchmarks;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+export const applyQualityDiff = (target: Quality, diff: QualityDiff): void => {
+  if (diff.key !== undefined) target.key = diff.key;
+  if (diff.name !== undefined) target.name = diff.name;
+  if (diff.description !== undefined) target.description = diff.description;
+  if (diff.uri !== undefined) target.uri = diff.uri;
+  if (diff.kind !== undefined) target.kind = diff.kind;
+  if (diff.folder !== undefined) target.folder = diff.folder;
+  if (diff.canScale !== undefined) target.canScale = diff.canScale;
+  if (diff.defaultSiUnit !== undefined) target.defaultSiUnit = diff.defaultSiUnit;
+  if (diff.defaultImperialUnit !== undefined) target.defaultImperialUnit = diff.defaultImperialUnit;
+  if (diff.min !== undefined) target.min = diff.min;
+  if (diff.isMinExcluded !== undefined) target.isMinExcluded = diff.isMinExcluded;
+  if (diff.max !== undefined) target.max = diff.max;
+  if (diff.isMaxExcluded !== undefined) target.isMaxExcluded = diff.isMaxExcluded;
+  if (diff.defaultValue !== undefined) target.defaultValue = diff.defaultValue;
+  if (diff.formula !== undefined) target.formula = diff.formula;
+  if (diff.icon !== undefined) target.icon = diff.icon;
+  if (diff.image !== undefined) target.image = diff.image;
+  if (diff.unit !== undefined) target.unit = diff.unit;
+  if (diff.benchmarks) {
+    if (!target.benchmarks) target.benchmarks = [];
+    applyBenchmarksDiff(target.benchmarks, diff.benchmarks);
+  }
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -2304,33 +2251,22 @@ export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
 /**
  * Diff type for tracking applyPort changes.
  **/
-export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Port = {
-    guid: base.guid,
-    name: diff.name ?? base.name,
-  };
-
+export const applyPortDiff = (target: Port, diff: PortDiff): void => {
+  if (diff.name !== undefined) target.name = diff.name;
   if ("description" in diff) {
-    if (diff.description !== null) result.description = diff.description;
-  } else if (base.description !== undefined) {
-    result.description = base.description;
+    target.description = diff.description !== null ? diff.description : undefined;
   }
   if ("icon" in diff) {
-    if (diff.icon !== null) result.icon = diff.icon;
-  } else if (base.icon !== undefined) {
-    result.icon = base.icon;
+    target.icon = diff.icon !== null ? diff.icon : undefined;
   }
   if ("maxChildren" in diff) {
-    if (diff.maxChildren !== null) result.maxChildren = diff.maxChildren;
-  } else if (base.maxChildren !== undefined) {
-    result.maxChildren = base.maxChildren;
+    target.maxChildren = diff.maxChildren !== null ? diff.maxChildren : undefined;
   }
-  if (diff.compatiblePorts !== undefined || base.compatiblePorts !== undefined) result.compatiblePorts = diff.compatiblePorts ?? base.compatiblePorts;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+  if (diff.compatiblePorts !== undefined) target.compatiblePorts = diff.compatiblePorts;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -2396,24 +2332,22 @@ export const mergePortsDiff = (diff1: PortsDiff, diff2: PortsDiff): PortsDiff =>
 /**
  * Diff type for tracking applyPorts changes.
  **/
-export const applyPortsDiff = (base: Port[], diff: PortsDiff): Port[] => {
-  let result = [...base];
+export const applyPortsDiff = (items: Port[], diff: PortsDiff): void => {
   if (diff.removed) {
     const removedGuids = new Set(diff.removed.map((r) => r.guid));
-    result = result.filter((i) => !removedGuids.has(i.guid));
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (removedGuids.has(items[i].guid)) items.splice(i, 1);
+    }
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((i) => i.guid === update.port.guid);
-      if (index !== -1) {
-        result[index] = applyPortDiff(result[index], update.diff);
-      }
+      const item = items.find((i) => i.guid === update.port.guid);
+      if (item) applyPortDiff(item, update.diff);
     }
   }
   if (diff.added) {
-    result.push(...diff.added);
+    items.push(...diff.added);
   }
-  return result;
 };
 
 /**
@@ -2528,19 +2462,14 @@ export const mergePropDiff = (diff1: PropDiff, diff2: PropDiff): PropDiff => {
 /**
  * Diff type for tracking applyProp changes.
  **/
-export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Prop = {
-    guid: base.guid,
-    quality: diff.quality ?? base.quality,
-    value: diff.value ?? base.value,
-  };
-
-  if (diff.unit !== undefined || base.unit !== undefined) result.unit = diff.unit ?? base.unit;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+export const applyPropDiff = (target: Prop, diff: PropDiff): void => {
+  if (diff.quality !== undefined) target.quality = diff.quality;
+  if (diff.value !== undefined) target.value = diff.value;
+  if (diff.unit !== undefined) target.unit = diff.unit;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -2595,24 +2524,22 @@ const mergePropsDiff = (first: PropsDiff, second: PropsDiff): PropsDiff => {
   return { ...first, ...second };
 };
 // 📊applyPropsDiff applies a prop diff to a collection.
-const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
-  let result = [...base];
+const applyPropsDiff = (items: Prop[], diff: PropsDiff): void => {
   if (diff.removed) {
     const removedGuids = new Set(diff.removed.map((r) => r.guid));
-    result = result.filter((prop) => !removedGuids.has(prop.guid));
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (removedGuids.has(items[i].guid)) items.splice(i, 1);
+    }
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((prop) => prop.guid === update.prop.guid);
-      if (index !== -1) {
-        result[index] = applyPropDiff(result[index], update.diff);
-      }
+      const item = items.find((p) => p.guid === update.prop.guid);
+      if (item) applyPropDiff(item, update.diff);
     }
   }
   if (diff.added) {
-    result.push(...diff.added);
+    items.push(...diff.added);
   }
-  return result;
 };
 
 // #endregion 📊Prop
@@ -2716,29 +2643,18 @@ export const mergeTagDiff = (diff1: TagDiff, diff2: TagDiff): TagDiff => {
 /**
  * Diff type for tracking applyTag changes.
  **/
-export const applyTagDiff = (base: Tag, diff: TagDiff): Tag => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Tag = {
-    guid: base.guid,
-    name: "name" in diff && diff.name !== undefined ? diff.name : base.name,
-  };
-
+export const applyTagDiff = (target: Tag, diff: TagDiff): void => {
+  if ("name" in diff && diff.name !== undefined) target.name = diff.name;
   if ("description" in diff) {
-    const value = diff.description ?? undefined;
-    if (value !== undefined) result.description = value;
-  } else if (base.description !== undefined) {
-    result.description = base.description;
+    target.description = diff.description ?? undefined;
   }
   if ("icon" in diff) {
-    const value = diff.icon ?? undefined;
-    if (value !== undefined) result.icon = value;
-  } else if (base.icon !== undefined) {
-    result.icon = base.icon;
+    target.icon = diff.icon ?? undefined;
   }
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -2813,24 +2729,22 @@ export const mergeTagsDiff = (diff1: TagsDiff, diff2: TagsDiff): TagsDiff => {
 /**
  * Diff type for tracking applyTags changes.
  **/
-export const applyTagsDiff = (base: Tag[], diff: TagsDiff): Tag[] => {
-  let result = [...base];
+export const applyTagsDiff = (items: Tag[], diff: TagsDiff): void => {
   if (diff.removed) {
     const removedGuids = new Set(diff.removed.map((r) => r.guid));
-    result = result.filter((t) => !removedGuids.has(t.guid));
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (removedGuids.has(items[i].guid)) items.splice(i, 1);
+    }
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((t) => t.guid === update.tag.guid);
-      if (index !== -1) {
-        result[index] = applyTagDiff(result[index], update.diff);
-      }
+      const item = items.find((t) => t.guid === update.tag.guid);
+      if (item) applyTagDiff(item, update.diff);
     }
   }
   if (diff.added) {
-    result.push(...diff.added);
+    items.push(...diff.added);
   }
-  return result;
 };
 
 /**
@@ -2943,29 +2857,18 @@ export const mergeConceptDiff = (diff1: ConceptDiff, diff2: ConceptDiff): Concep
 /**
  * Diff type for tracking applyConcept changes.
  **/
-export const applyConceptDiff = (base: Concept, diff: ConceptDiff): Concept => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Concept = {
-    guid: base.guid,
-    name: "name" in diff && diff.name !== undefined ? diff.name : base.name,
-  };
-
+export const applyConceptDiff = (target: Concept, diff: ConceptDiff): void => {
+  if ("name" in diff && diff.name !== undefined) target.name = diff.name;
   if ("description" in diff) {
-    const value = diff.description ?? undefined;
-    if (value !== undefined) result.description = value;
-  } else if (base.description !== undefined) {
-    result.description = base.description;
+    target.description = diff.description ?? undefined;
   }
   if ("icon" in diff) {
-    const value = diff.icon ?? undefined;
-    if (value !== undefined) result.icon = value;
-  } else if (base.icon !== undefined) {
-    result.icon = base.icon;
+    target.icon = diff.icon ?? undefined;
   }
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -3040,24 +2943,22 @@ export const mergeConceptsDiff = (diff1: ConceptsDiff, diff2: ConceptsDiff): Con
 /**
  * Diff type for tracking applyConcepts changes.
  **/
-export const applyConceptsDiff = (base: Concept[], diff: ConceptsDiff): Concept[] => {
-  let result = [...base];
+export const applyConceptsDiff = (items: Concept[], diff: ConceptsDiff): void => {
   if (diff.removed) {
     const removedGuids = new Set(diff.removed.map((r) => r.guid));
-    result = result.filter((c) => !removedGuids.has(c.guid));
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (removedGuids.has(items[i].guid)) items.splice(i, 1);
+    }
   }
   if (diff.updated) {
     for (const update of diff.updated) {
-      const index = result.findIndex((c) => c.guid === update.concept.guid);
-      if (index !== -1) {
-        result[index] = applyConceptDiff(result[index], update.diff);
-      }
+      const item = items.find((c) => c.guid === update.concept.guid);
+      if (item) applyConceptDiff(item, update.diff);
     }
   }
   if (diff.added) {
-    result.push(...diff.added);
+    items.push(...diff.added);
   }
-  return result;
 };
 
 /**
@@ -3171,20 +3072,15 @@ export const mergeModelDiff = (diff1: ModelDiff, diff2: ModelDiff): ModelDiff =>
 /**
  * Diff type for tracking applyModel changes.
  **/
-export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Model = {
-    guid: base.guid,
-    file: diff.file ?? base.file,
-  };
-
-  if (diff.name !== undefined || base.name !== undefined) result.name = diff.name ?? base.name;
-  if (diff.tags !== undefined || base.tags !== undefined) result.tags = diff.tags ?? base.tags;
-  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+export const applyModelDiff = (target: Model, diff: ModelDiff): void => {
+  if (diff.file !== undefined) target.file = diff.file;
+  if (diff.name !== undefined) target.name = diff.name;
+  if (diff.tags !== undefined) target.tags = diff.tags;
+  if (diff.description !== undefined) target.description = diff.description;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -3491,30 +3387,25 @@ export const inverseConnectorDiff = (original: Connector, appliedDiff: Connector
 /**
  * Diff type for tracking applyConnector changes.
  **/
-export const applyConnectorDiff = (base: Connector, diff: ConnectorDiff): Connector => {
-  const props = diff.props ? applyPropsDiff(base.props ?? [], diff.props) : base.props;
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Connector = {
-    guid: base.guid,
-    t: diff.t ?? base.t,
-    point: diff.point ? applyPointDiff(base.point, diff.point) : base.point,
-    direction: diff.direction ? applyVectorDiff(base.direction, diff.direction) : base.direction,
-  };
-
-  if (diff.name !== undefined || base.name !== undefined) result.name = diff.name ?? base.name;
-  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
-  if (diff.port !== undefined || base.port !== undefined) result.port = diff.port ?? base.port;
-  if (diff.mandatory !== undefined || base.mandatory !== undefined) result.mandatory = diff.mandatory ?? base.mandatory;
+export const applyConnectorDiff = (target: Connector, diff: ConnectorDiff): void => {
+  if (diff.t !== undefined) target.t = diff.t;
+  if (diff.point) applyPointDiff(target.point, diff.point);
+  if (diff.direction) applyVectorDiff(target.direction, diff.direction);
+  if (diff.name !== undefined) target.name = diff.name;
+  if (diff.description !== undefined) target.description = diff.description;
+  if (diff.port !== undefined) target.port = diff.port;
+  if (diff.mandatory !== undefined) target.mandatory = diff.mandatory;
   if ("maxChildren" in diff) {
-    if (diff.maxChildren !== null) result.maxChildren = diff.maxChildren;
-  } else if (base.maxChildren !== undefined) {
-    result.maxChildren = base.maxChildren;
+    target.maxChildren = diff.maxChildren !== null ? diff.maxChildren : undefined;
   }
-  if (props && props.length > 0) result.props = props;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+  if (diff.props) {
+    if (!target.props) target.props = [];
+    applyPropsDiff(target.props, diff.props);
+  }
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -3702,38 +3593,38 @@ export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
 /**
  * Diff type for tracking applyType changes.
  **/
-export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => {
-  const models = diff.models || base.models ? applyCollectionDiff("model", base.models ?? [], diff.models, applyModelDiff) : undefined;
-  const connectors = diff.connectors || base.connectors ? applyCollectionDiff("connector", base.connectors ?? [], diff.connectors, applyConnectorDiff) : undefined;
-  const props = diff.props || base.props ? applyCollectionDiff("prop", base.props ?? [], diff.props, applyPropDiff) : undefined;
-  const attributes = diff.attributes || base.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}) : undefined;
-
-  const result: Type = {
-    guid: base.guid,
-    name: diff.name ?? base.name,
-    isAbstract: diff.isAbstract ?? base.isAbstract,
-    createdAt: diff.createdAt ?? base.createdAt,
-    updatedAt: diff.updatedAt ?? base.updatedAt,
-  };
-
-  if (diff.parent !== undefined ? (diff.parent ?? undefined) : base.parent) result.parent = diff.parent !== undefined ? (diff.parent ?? undefined) : base.parent;
-  if (diff.folder !== undefined ? (diff.folder ?? undefined) : base.folder) result.folder = diff.folder !== undefined ? (diff.folder ?? undefined) : base.folder;
-  if (diff.stock !== undefined ? diff.stock : base.stock) result.stock = diff.stock !== undefined ? diff.stock : base.stock;
-  if (diff.virtual ?? base.virtual) result.virtual = diff.virtual ?? base.virtual;
-  if (diff.unit !== undefined ? diff.unit : base.unit) result.unit = diff.unit !== undefined ? diff.unit : base.unit;
-  if (diff.location !== undefined ? (diff.location ?? undefined) : base.location) result.location = diff.location !== undefined ? (diff.location ?? undefined) : base.location;
-  if (diff.icon !== undefined ? (diff.icon ?? undefined) : base.icon) result.icon = diff.icon !== undefined ? (diff.icon ?? undefined) : base.icon;
-  if (diff.image !== undefined ? (diff.image ?? undefined) : base.image) result.image = diff.image !== undefined ? (diff.image ?? undefined) : base.image;
-  if (diff.description !== undefined ? (diff.description ?? undefined) : base.description) result.description = diff.description !== undefined ? (diff.description ?? undefined) : base.description;
-  if (diff.authors !== undefined ? (diff.authors ?? undefined) : base.authors) result.authors = diff.authors !== undefined ? (diff.authors ?? undefined) : base.authors;
-  if (diff.concepts !== undefined ? (diff.concepts ?? undefined) : base.concepts) result.concepts = diff.concepts !== undefined ? (diff.concepts ?? undefined) : base.concepts;
-
-  if (models && models.length > 0) result.models = models;
-  if (connectors && connectors.length > 0) result.connectors = connectors;
-  if (props && props.length > 0) result.props = props;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+export const applyTypeDiff = (target: Type, diff: TypeDiff): void => {
+  if (diff.name !== undefined) target.name = diff.name;
+  if (diff.isAbstract !== undefined) target.isAbstract = diff.isAbstract;
+  if (diff.createdAt !== undefined) target.createdAt = diff.createdAt;
+  if (diff.updatedAt !== undefined) target.updatedAt = diff.updatedAt;
+  if (diff.parent !== undefined) target.parent = diff.parent ?? undefined;
+  if (diff.folder !== undefined) target.folder = diff.folder ?? undefined;
+  if (diff.stock !== undefined) target.stock = diff.stock;
+  if (diff.virtual !== undefined) target.virtual = diff.virtual;
+  if (diff.unit !== undefined) target.unit = diff.unit;
+  if (diff.location !== undefined) target.location = diff.location ?? undefined;
+  if (diff.icon !== undefined) target.icon = diff.icon ?? undefined;
+  if (diff.image !== undefined) target.image = diff.image ?? undefined;
+  if (diff.description !== undefined) target.description = diff.description ?? undefined;
+  if (diff.authors !== undefined) target.authors = diff.authors ?? undefined;
+  if (diff.concepts !== undefined) target.concepts = diff.concepts ?? undefined;
+  if (diff.models) {
+    if (!target.models) target.models = [];
+    applyCollectionDiff("model", target.models, diff.models, applyModelDiff);
+  }
+  if (diff.connectors) {
+    if (!target.connectors) target.connectors = [];
+    applyCollectionDiff("connector", target.connectors, diff.connectors, applyConnectorDiff);
+  }
+  if (diff.props) {
+    if (!target.props) target.props = [];
+    applyCollectionDiff("prop", target.props, diff.props, applyPropDiff);
+  }
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -3896,21 +3787,16 @@ export const mergeLayerDiff = (diff1: LayerDiff, diff2: LayerDiff): LayerDiff =>
 /**
  * Diff type for tracking applyLayer changes.
  **/
-export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Layer = {
-    guid: base.guid,
-    path: diff.path ?? base.path,
-  };
-
-  if (diff.isHidden !== undefined || base.isHidden !== undefined) result.isHidden = diff.isHidden ?? base.isHidden;
-  if (diff.isLocked !== undefined || base.isLocked !== undefined) result.isLocked = diff.isLocked ?? base.isLocked;
-  if (diff.color !== undefined || base.color !== undefined) result.color = diff.color ?? base.color;
-  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+export const applyLayerDiff = (target: Layer, diff: LayerDiff): void => {
+  if (diff.path !== undefined) target.path = diff.path;
+  if (diff.isHidden !== undefined) target.isHidden = diff.isHidden;
+  if (diff.isLocked !== undefined) target.isLocked = diff.isLocked;
+  if (diff.color !== undefined) target.color = diff.color;
+  if (diff.description !== undefined) target.description = diff.description;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -4059,38 +3945,34 @@ export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff =>
 /**
  * Diff type for tracking applyPiece changes.
  **/
-export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
-  let newPlane = base.plane;
+export const applyPieceDiff = (target: Piece, diff: PieceDiff): void => {
   if (diff.plane) {
     const diffPlane = diff.plane as any;
     if (diffPlane.origin && diffPlane.xAxis && diffPlane.yAxis) {
-      newPlane = diffPlane as Plane;
+      target.plane = diffPlane as Plane;
     } else {
-      newPlane = applyPlaneDiff(base.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } }, diff.plane);
+      if (!target.plane) target.plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+      applyPlaneDiff(target.plane, diff.plane);
     }
   }
-  const props = diff.props ? applyPropsDiff(base.props ?? [], diff.props) : base.props;
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Piece = {
-    guid: base.guid,
-    name: diff.name ?? base.name,
-    type: diff.type ?? base.type,
-  };
-
-  if (diff.design !== undefined || base.design !== undefined) result.design = diff.design ?? base.design;
-  if (newPlane) result.plane = newPlane;
-  if (diff.center !== undefined || base.center !== undefined) result.center = diff.center ?? base.center;
-  if (diff.scale !== undefined || base.scale !== undefined) result.scale = diff.scale ?? base.scale;
-  if (diff.mirrorPlane !== undefined || base.mirrorPlane !== undefined) result.mirrorPlane = diff.mirrorPlane ?? base.mirrorPlane;
-  if (diff.isHidden !== undefined || base.isHidden !== undefined) result.isHidden = diff.isHidden ?? base.isHidden;
-  if (diff.isLocked !== undefined || base.isLocked !== undefined) result.isLocked = diff.isLocked ?? base.isLocked;
-  if (diff.color !== undefined || base.color !== undefined) result.color = diff.color ?? base.color;
-  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
-  if (props && props.length > 0) result.props = props;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+  if (diff.name !== undefined) target.name = diff.name;
+  if (diff.type !== undefined) target.type = diff.type;
+  if (diff.design !== undefined) target.design = diff.design;
+  if (diff.center !== undefined) target.center = diff.center;
+  if (diff.scale !== undefined) target.scale = diff.scale;
+  if (diff.mirrorPlane !== undefined) target.mirrorPlane = diff.mirrorPlane;
+  if (diff.isHidden !== undefined) target.isHidden = diff.isHidden;
+  if (diff.isLocked !== undefined) target.isLocked = diff.isLocked;
+  if (diff.color !== undefined) target.color = diff.color;
+  if (diff.description !== undefined) target.description = diff.description;
+  if (diff.props) {
+    if (!target.props) target.props = [];
+    applyPropsDiff(target.props, diff.props);
+  }
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -4239,20 +4121,15 @@ export const inverseGroupDiff = (original: Group, appliedDiff: GroupDiff): Group
 /**
  * Diff type for tracking applyGroup changes.
  **/
-export const applyGroupDiff = (base: Group, diff: GroupDiff): Group => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Group = {
-    guid: base.guid,
-    pieces: diff.pieces ?? base.pieces,
-  };
-
-  if (diff.color !== undefined || base.color !== undefined) result.color = diff.color ?? base.color;
-  if (diff.name !== undefined || base.name !== undefined) result.name = diff.name ?? base.name;
-  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+export const applyGroupDiff = (target: Group, diff: GroupDiff): void => {
+  if (diff.pieces !== undefined) target.pieces = diff.pieces;
+  if (diff.color !== undefined) target.color = diff.color;
+  if (diff.name !== undefined) target.name = diff.name;
+  if (diff.description !== undefined) target.description = diff.description;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 /**
  * Diff type for tracking mergeGroup changes.
@@ -4386,15 +4263,10 @@ export const mergeSideDiff = (diff1: SideDiff, diff2: SideDiff): SideDiff => {
 /**
  * Diff type for tracking applySide changes.
  **/
-export const applySideDiff = (base: Side, diff: SideDiff): Side => {
-  const result: Side = {
-    piece: diff.piece ?? base.piece,
-  };
-
-  if (diff.designPiece !== undefined || base.designPiece !== undefined) result.designPiece = diff.designPiece ?? base.designPiece;
-  if (diff.connector !== undefined || base.connector !== undefined) result.connector = diff.connector ?? base.connector;
-
-  return result;
+export const applySideDiff = (target: Side, diff: SideDiff): void => {
+  if (diff.piece !== undefined) target.piece = diff.piece;
+  if (diff.designPiece !== undefined) target.designPiece = diff.designPiece;
+  if (diff.connector !== undefined) target.connector = diff.connector;
 };
 /**
  * Serializes Side for transport.
@@ -4470,27 +4342,22 @@ export const getConnectionDiff = (before: Connection, after: Connection): Connec
 /**
  * Diff type for tracking applyConnection changes.
  **/
-export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Connection => {
-  const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : base.attributes;
-
-  const result: Connection = {
-    guid: base.guid,
-    connected: diff.connected ? applySideDiff(base.connected, diff.connected) : base.connected,
-    connecting: diff.connecting ? applySideDiff(base.connecting, diff.connecting) : base.connecting,
-  };
-
-  if (diff.gap !== undefined || base.gap !== undefined) result.gap = diff.gap !== undefined && base.gap !== undefined ? base.gap + diff.gap : (diff.gap ?? base.gap);
-  if (diff.shift !== undefined || base.shift !== undefined) result.shift = diff.shift !== undefined && base.shift !== undefined ? base.shift + diff.shift : (diff.shift ?? base.shift);
-  if (diff.rise !== undefined || base.rise !== undefined) result.rise = diff.rise !== undefined && base.rise !== undefined ? base.rise + diff.rise : (diff.rise ?? base.rise);
-  if (diff.rotation !== undefined || base.rotation !== undefined) result.rotation = diff.rotation !== undefined && base.rotation !== undefined ? base.rotation + diff.rotation : (diff.rotation ?? base.rotation);
-  if (diff.turn !== undefined || base.turn !== undefined) result.turn = diff.turn !== undefined && base.turn !== undefined ? base.turn + diff.turn : (diff.turn ?? base.turn);
-  if (diff.tilt !== undefined || base.tilt !== undefined) result.tilt = diff.tilt !== undefined && base.tilt !== undefined ? base.tilt + diff.tilt : (diff.tilt ?? base.tilt);
-  if (diff.u !== undefined || base.u !== undefined) result.u = diff.u !== undefined && base.u !== undefined ? base.u + diff.u : (diff.u ?? base.u);
-  if (diff.v !== undefined || base.v !== undefined) result.v = diff.v !== undefined && base.v !== undefined ? base.v + diff.v : (diff.v ?? base.v);
-  if (diff.description !== undefined || base.description !== undefined) result.description = diff.description ?? base.description;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+export const applyConnectionDiff = (target: Connection, diff: ConnectionDiff): void => {
+  if (diff.connected) applySideDiff(target.connected, diff.connected);
+  if (diff.connecting) applySideDiff(target.connecting, diff.connecting);
+  if (diff.gap !== undefined) target.gap = target.gap !== undefined ? target.gap + diff.gap : diff.gap;
+  if (diff.shift !== undefined) target.shift = target.shift !== undefined ? target.shift + diff.shift : diff.shift;
+  if (diff.rise !== undefined) target.rise = target.rise !== undefined ? target.rise + diff.rise : diff.rise;
+  if (diff.rotation !== undefined) target.rotation = target.rotation !== undefined ? target.rotation + diff.rotation : diff.rotation;
+  if (diff.turn !== undefined) target.turn = target.turn !== undefined ? target.turn + diff.turn : diff.turn;
+  if (diff.tilt !== undefined) target.tilt = target.tilt !== undefined ? target.tilt + diff.tilt : diff.tilt;
+  if (diff.u !== undefined) target.u = target.u !== undefined ? target.u + diff.u : diff.u;
+  if (diff.v !== undefined) target.v = target.v !== undefined ? target.v + diff.v : diff.v;
+  if (diff.description !== undefined) target.description = diff.description;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -4522,7 +4389,11 @@ export const inverseConnectionDiff = (original: Connection, appliedDiff: Connect
   if (appliedDiff.u !== undefined) inverse.u = original.u !== undefined && appliedDiff.u !== undefined ? -appliedDiff.u : original.u;
   if (appliedDiff.v !== undefined) inverse.v = original.v !== undefined && appliedDiff.v !== undefined ? -appliedDiff.v : original.v;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.attributes !== undefined) inverse.attributes = getAttributesDiff(appliedDiff.attributes ? applyAttributesDiff([], appliedDiff.attributes) : [], original.attributes ?? []);
+  if (appliedDiff.attributes !== undefined) {
+    const appliedAttrs: Attribute[] = [];
+    if (appliedDiff.attributes) applyAttributesDiff(appliedAttrs, appliedDiff.attributes);
+    inverse.attributes = getAttributesDiff(appliedAttrs, original.attributes ?? []);
+  }
   return inverse;
 };
 
@@ -4678,19 +4549,13 @@ export const inverseStatDiff = (original: Stat, appliedDiff: StatDiff): StatDiff
 /**
  * Diff type for tracking applyStat changes.
  **/
-export const applyStatDiff = (base: Stat, diff: StatDiff): Stat => {
-  const result: Stat = {
-    guid: base.guid,
-    quality: diff.quality ?? base.quality,
-  };
-
-  if (diff.unit !== undefined || base.unit !== undefined) result.unit = diff.unit ?? base.unit;
-  if (diff.min !== undefined || base.min !== undefined) result.min = diff.min ?? base.min;
-  if (diff.minExcluded !== undefined || base.minExcluded !== undefined) result.minExcluded = diff.minExcluded ?? base.minExcluded;
-  if (diff.max !== undefined || base.max !== undefined) result.max = diff.max ?? base.max;
-  if (diff.maxExcluded !== undefined || base.maxExcluded !== undefined) result.maxExcluded = diff.maxExcluded ?? base.maxExcluded;
-
-  return result;
+export const applyStatDiff = (target: Stat, diff: StatDiff): void => {
+  if (diff.quality !== undefined) target.quality = diff.quality;
+  if (diff.unit !== undefined) target.unit = diff.unit;
+  if (diff.min !== undefined) target.min = diff.min;
+  if (diff.minExcluded !== undefined) target.minExcluded = diff.minExcluded;
+  if (diff.max !== undefined) target.max = diff.max;
+  if (diff.maxExcluded !== undefined) target.maxExcluded = diff.maxExcluded;
 };
 /**
  * Diff type for tracking mergeStat changes.
@@ -5090,45 +4955,51 @@ export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: 
 /**
  * Diff type for tracking applyDesign changes.
  **/
-export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
-  const pieces = diff.pieces || base.pieces ? applyCollectionDiff("piece", base.pieces ?? [], diff.pieces, applyPieceDiff) : undefined;
-  const connections = diff.connections || base.connections ? applyCollectionDiff("connection", base.connections ?? [], diff.connections, applyConnectionDiff) : undefined;
-  const stats = diff.stats || base.stats ? applyCollectionDiff("stat", base.stats ?? [], diff.stats, applyStatDiff) : undefined;
-  const props = diff.props || base.props ? applyCollectionDiff("prop", base.props ?? [], diff.props, applyPropDiff) : undefined;
-  const layers = diff.layers || base.layers ? applyCollectionDiff("layer", base.layers ?? [], diff.layers, applyLayerDiff) : undefined;
-  const groups = diff.groups || base.groups ? applyCollectionDiff("group", base.groups ?? [], diff.groups, applyGroupDiff) : undefined;
-  const attributes = diff.attributes || base.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {}) : undefined;
-
-  const result: Design = {
-    guid: base.guid,
-    name: diff.name ?? base.name,
-    isAbstract: diff.isAbstract ?? base.isAbstract,
-    createdAt: diff.createdAt ?? base.createdAt,
-    updatedAt: diff.updatedAt ?? base.updatedAt,
-  };
-
-  if (diff.parent !== undefined ? diff.parent : base.parent) result.parent = diff.parent !== undefined ? diff.parent : base.parent;
-  if (diff.folder ?? base.folder) result.folder = diff.folder ?? base.folder;
-  if (diff.canScale ?? base.canScale) result.canScale = diff.canScale ?? base.canScale;
-  if (diff.canMirror ?? base.canMirror) result.canMirror = diff.canMirror ?? base.canMirror;
-  if (diff.unit !== undefined ? diff.unit : base.unit) result.unit = diff.unit !== undefined ? diff.unit : base.unit;
-  if (diff.activeLayer !== undefined ? diff.activeLayer : base.activeLayer) result.activeLayer = diff.activeLayer !== undefined ? diff.activeLayer : base.activeLayer;
-  if (diff.location !== undefined ? diff.location : base.location) result.location = diff.location !== undefined ? diff.location : base.location;
-  if (diff.icon !== undefined ? diff.icon : base.icon) result.icon = diff.icon !== undefined ? diff.icon : base.icon;
-  if (diff.image !== undefined ? diff.image : base.image) result.image = diff.image !== undefined ? diff.image : base.image;
-  if (diff.description !== undefined ? diff.description : base.description) result.description = diff.description !== undefined ? diff.description : base.description;
-  if (diff.authors !== undefined ? (diff.authors as any) : base.authors) result.authors = diff.authors !== undefined ? (diff.authors as any) : base.authors;
-  if (diff.concepts !== undefined ? diff.concepts : base.concepts) result.concepts = diff.concepts !== undefined ? diff.concepts : base.concepts;
-
-  if (pieces && pieces.length > 0) result.pieces = pieces;
-  if (connections && connections.length > 0) result.connections = connections;
-  if (stats && stats.length > 0) result.stats = stats;
-  if (props && props.length > 0) result.props = props;
-  if (layers && layers.length > 0) result.layers = layers;
-  if (groups && groups.length > 0) result.groups = groups;
-  if (attributes && attributes.length > 0) result.attributes = attributes;
-
-  return result;
+export const applyDesignDiff = (target: Design, diff: DesignDiff): void => {
+  if (diff.name !== undefined) target.name = diff.name;
+  if (diff.isAbstract !== undefined) target.isAbstract = diff.isAbstract;
+  if (diff.createdAt !== undefined) target.createdAt = diff.createdAt;
+  if (diff.updatedAt !== undefined) target.updatedAt = diff.updatedAt;
+  if (diff.parent !== undefined) target.parent = diff.parent;
+  if (diff.folder !== undefined) target.folder = diff.folder;
+  if (diff.canScale !== undefined) target.canScale = diff.canScale;
+  if (diff.canMirror !== undefined) target.canMirror = diff.canMirror;
+  if (diff.unit !== undefined) target.unit = diff.unit;
+  if (diff.activeLayer !== undefined) target.activeLayer = diff.activeLayer;
+  if (diff.location !== undefined) target.location = diff.location;
+  if (diff.icon !== undefined) target.icon = diff.icon;
+  if (diff.image !== undefined) target.image = diff.image;
+  if (diff.description !== undefined) target.description = diff.description;
+  if (diff.authors !== undefined) target.authors = diff.authors as any;
+  if (diff.concepts !== undefined) target.concepts = diff.concepts;
+  if (diff.pieces) {
+    if (!target.pieces) target.pieces = [];
+    applyCollectionDiff("piece", target.pieces, diff.pieces, applyPieceDiff);
+  }
+  if (diff.connections) {
+    if (!target.connections) target.connections = [];
+    applyCollectionDiff("connection", target.connections, diff.connections, applyConnectionDiff);
+  }
+  if (diff.stats) {
+    if (!target.stats) target.stats = [];
+    applyCollectionDiff("stat", target.stats, diff.stats, applyStatDiff);
+  }
+  if (diff.props) {
+    if (!target.props) target.props = [];
+    applyCollectionDiff("prop", target.props, diff.props, applyPropDiff);
+  }
+  if (diff.layers) {
+    if (!target.layers) target.layers = [];
+    applyCollectionDiff("layer", target.layers, diff.layers, applyLayerDiff);
+  }
+  if (diff.groups) {
+    if (!target.groups) target.groups = [];
+    applyCollectionDiff("group", target.groups, diff.groups, applyGroupDiff);
+  }
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
+  }
 };
 
 /**
@@ -5155,7 +5026,8 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
   const resultPieces: Piece[] = (base.pieces ?? []).map((p) => {
     if (removedPieceGuids.has(p.guid)) return { ...p, attributes: setStatus(p.attributes, DiffStatus.Removed) };
     if (updatedPieceMap.has(p.guid)) {
-      const applied = applyPieceDiff(p, updatedPieceMap.get(p.guid)!);
+      const applied = structuredClone(p);
+      applyPieceDiff(applied, updatedPieceMap.get(p.guid)!);
       // 📌Preserve base geometry so modified pieces stay in place and only get recolored.
       const preserved: Piece = { ...applied };
       if (p.plane !== undefined) preserved.plane = p.plane;
@@ -5173,7 +5045,8 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
   const resultConns: Connection[] = (base.connections ?? []).map((c) => {
     if (removedConnGuids.has(c.guid)) return { ...c, attributes: setStatus(c.attributes, DiffStatus.Removed) };
     if (updatedConnMap.has(c.guid)) {
-      const applied = applyConnectionDiff(c, updatedConnMap.get(c.guid)!);
+      const applied = structuredClone(c);
+      applyConnectionDiff(applied, updatedConnMap.get(c.guid)!);
       return { ...applied, attributes: setStatus(applied.attributes, DiffStatus.Modified) };
     }
     return { ...c, attributes: setStatus(c.attributes, DiffStatus.Unchanged) };
@@ -5469,10 +5342,7 @@ const FLATTEN_IDENTITY_PLANE: Plane = {
   yAxis: { x: 0, y: 1, z: 0 },
 };
 
-const buildFlattenPieceAdjacency = (
-  pieces: Piece[],
-  connections: Connection[],
-): { pieceMap: { [guid: string]: Piece }; adjacency: Map<string, FlattenAdjacencyEntry[]> } => {
+const buildFlattenPieceAdjacency = (pieces: Piece[], connections: Connection[]): { pieceMap: { [guid: string]: Piece }; adjacency: Map<string, FlattenAdjacencyEntry[]> } => {
   const pieceMap: { [guid: string]: Piece } = {};
   for (const p of pieces) {
     if (p.guid) pieceMap[p.guid] = p;
@@ -5650,12 +5520,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
   const { pieceMap, adjacency } = buildFlattenPieceAdjacency(flatPieces, filteredConnections);
   flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, flatPieces, {
     onComponentDiscovered: (component, rootGuid, pm) => {
-      const fixedInDesignOrder = flatPieces
-        .map((fp) => fp.guid)
-        .filter(
-          (g): g is string =>
-            Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined),
-        );
+      const fixedInDesignOrder = flatPieces.map((fp) => fp.guid).filter((g): g is string => Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined));
       if (fixedInDesignOrder.length === 0) {
         warnings.push({
           code: "flatten.no-fixed-piece-in-clump",
@@ -5935,9 +5800,7 @@ export const computeFlatHashes = (kit: Kit, designGuid: string): { [pieceGuid: s
   const pieces = design.pieces ?? [];
   if (pieces.length === 0) return {};
   const { getType, getConnector } = buildConnectorResolverFromKit(kit);
-  const connections = (design.connections ?? []).filter(
-    (c) => pieces.some((p) => p.guid === c.connected.piece.guid) && pieces.some((p) => p.guid === c.connecting.piece.guid),
-  );
+  const connections = (design.connections ?? []).filter((c) => pieces.some((p) => p.guid === c.connected.piece.guid) && pieces.some((p) => p.guid === c.connecting.piece.guid));
   const planeHashes: { [guid: string]: string } = {};
   const centerHashes: { [guid: string]: string } = {};
   const { pieceMap, adjacency } = buildFlattenPieceAdjacency(pieces, connections);
@@ -5984,11 +5847,7 @@ export type FlatMerkleCacheEntry = {
 /**
  * 🧠Flatten a design incrementally: walks pieces in BFS order, computes per-piece merkle hashes on the fly, and for each piece whose hash matches the prior cache reuses the cached flat piece (plane, center, attributes) without rerunning computeChildPlane/roundPlane/setAttributes. Only descendants of mutated inputs redo their matrix math.
  **/
-export const flattenDesignCached = (
-  kit: Kit,
-  designGuid: string,
-  cache?: { [pieceGuid: string]: FlatMerkleCacheEntry },
-): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } => {
+export const flattenDesignCached = (kit: Kit, designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } => {
   const design = findDesignInKit(kit, designGuid);
   if (!design) {
     return {
@@ -6048,11 +5907,12 @@ export const flattenDesignCached = (
 
   flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, flatPieces, {
     onComponentDiscovered: (component, rootGuid, pm) => {
-      const fixedInDesignOrder = flatPieces
-        .map((fp) => fp.guid)
-        .filter((g): g is string => Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined));
+      const fixedInDesignOrder = flatPieces.map((fp) => fp.guid).filter((g): g is string => Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined));
       if (fixedInDesignOrder.length === 0) {
-        warnings.push({ code: "flatten.no-fixed-piece-in-clump", message: `Connected pieces have no fixed root (no piece with both plane and center). Using piece ${rootGuid} as breadth-first root. Each connected set of pieces (clump) should include at least one fixed piece for stable, recommended layout.` });
+        warnings.push({
+          code: "flatten.no-fixed-piece-in-clump",
+          message: `Connected pieces have no fixed root (no piece with both plane and center). Using piece ${rootGuid} as breadth-first root. Each connected set of pieces (clump) should include at least one fixed piece for stable, recommended layout.`,
+        });
       } else if (fixedInDesignOrder.length > 1) {
         infos.push({ code: "flatten.multiple-fixed-roots", message: `This clump has ${fixedInDesignOrder.length} fixed pieces; using the first (${rootGuid}) as breadth-first root.` });
       }
@@ -6076,8 +5936,8 @@ export const flattenDesignCached = (
         rootPlane = cached.plane ?? flatPiece.plane!;
         rootCenter = cached.center ?? flatPiece.center!;
       } else {
-        rootPlane = planeMatches && cached?.plane ? cached.plane : rootPiece.plane ?? matrixToPlane(new THREE.Matrix4().identity());
-        rootCenter = centerMatches && cached?.center ? cached.center : rootPiece.center ?? { u: 0, v: 0 };
+        rootPlane = planeMatches && cached?.plane ? cached.plane : (rootPiece.plane ?? matrixToPlane(new THREE.Matrix4().identity()));
+        rootCenter = centerMatches && cached?.center ? cached.center : (rootPiece.center ?? { u: 0, v: 0 });
         flatPiece = setAttributes({ ...rootPiece, plane: rootPlane, center: rootCenter }, [
           { key: "semio.fixedPieceId", value: rootPiece.guid },
           { key: "semio.depth", value: "0" },
@@ -6107,7 +5967,10 @@ export const flattenDesignCached = (
       const parentConnector = getConnector(parentType, parentSide.connector?.guid);
       const childConnector = getConnector(childType, childSide.connector?.guid);
       if (!parentConnector || !childConnector) {
-        placementErrors.push({ code: "flatten.connectors-not-found", message: `Connectors not found for connection between ${parentGuid} and ${childGuid}. Parent connector: ${parentSide.connector?.guid ?? "(default)"}, child connector: ${childSide.connector?.guid ?? "(default)"}.` });
+        placementErrors.push({
+          code: "flatten.connectors-not-found",
+          message: `Connectors not found for connection between ${parentGuid} and ${childGuid}. Parent connector: ${parentSide.connector?.guid ?? "(default)"}, child connector: ${childSide.connector?.guid ?? "(default)"}.`,
+        });
         return;
       }
       const planeHash = hashPlaneChain(parentPlaneHash, parentConnector, childConnector, connection);
@@ -6835,7 +6698,8 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
     return { ok: false, errors: flatRes.errors };
   }
   const flatChange = flatRes.diff;
-  const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatChange.forward);
+  const flatDesign = structuredClone(design);
+  applyDesignDiff(flatDesign, flatChange.forward);
   const flatPieceMap = new Map<string, Piece>();
   for (const p of flatDesign.pieces ?? []) {
     flatPieceMap.set(p.guid, p);
@@ -7402,7 +7266,7 @@ export const findReplaceableTypesInDesignsForPiecesInDesign = (design: Design, d
  * - remote: URL-addressable kit served over HTTP(S)
  * - temporary: In-memory ephemeral kit (no persistence)
  **/
-export const KitKindSchema = z.enum(["file", "folder", "archive", "remote", "temporary"]);
+export const KitKindSchema = z.enum(["dev", "local", "archive", "remote", "transport"]);
 /**
  * Discriminator for the five kit persistence/transport forms.
  **/
@@ -7441,16 +7305,53 @@ export const KitSchema = z.object({
   updatedAt: DateProperty(),
 });
 /**
- * Type alias for Kit.
+ * Plain JSON shape of a kit (Zod-validated).
  **/
-export type Kit = z.infer<typeof KitSchema>;
+export type KitPlain = z.infer<typeof KitSchema>;
+
+/**
+ * Mutable kit document. Pass this instance by reference; edits mutate in place.
+ **/
+export class Kit {
+  guid!: string;
+  name!: string;
+  version?: string;
+  types?: Type[];
+  designs?: Design[];
+  tags?: Tag[];
+  concepts?: Concept[];
+  ports?: Port[];
+  qualities?: Quality[];
+  files?: File[];
+  folders?: Folder[];
+  authors?: Author[];
+  remote?: string;
+  homepage?: string;
+  license?: string;
+  preview?: string;
+  icon?: string;
+  image?: string;
+  description?: string;
+  attributes?: Attribute[];
+  createdAt!: string;
+  updatedAt!: string;
+
+  constructor(plain: KitPlain) {
+    Object.assign(this, KitSchema.parse(plain));
+  }
+
+  /** Validates and wraps a plain kit object. */
+  static fromPlain(plain: KitPlain): Kit {
+    return new Kit(plain);
+  }
+}
 /**
  * Serializes Kit for transport.
  **/
-export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
+export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit as KitPlain));
 /**
  **/
-export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json, (_key, value) => (value === null ? undefined : value)));
+export const deserializeKit = (json: string): Kit => new Kit(KitSchema.parse(JSON.parse(json, (_key, value) => (value === null ? undefined : value))));
 
 /**
  * Definition of KitMetaSchema.
@@ -7622,26 +7523,24 @@ const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(
   return inverse;
 };
 // 🔀applyCollectionDiff applies a collection diff to produce an updated collection.
-const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, base: T[], diff: CollectionDiff<K, T, D> | undefined, applyItemDiff: (base: T, diff: D) => T): T[] => {
-  if (!diff) return base;
-  let result = [...base];
+const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, items: T[], diff: CollectionDiff<K, T, D> | undefined, applyItemDiff: (target: T, diff: D) => void): void => {
+  if (!diff) return;
   if (diff.removed) {
     const removedGuids = new Set(diff.removed.map((r) => r.guid));
-    result = result.filter((i) => !removedGuids.has(i.guid));
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (removedGuids.has(items[i].guid)) items.splice(i, 1);
+    }
   }
   if (diff.updated) {
     for (const update of diff.updated) {
       const entityId = (update as any)[entityKey] as EntityIdType;
-      const index = result.findIndex((i) => i.guid === entityId.guid);
-      if (index !== -1) {
-        result[index] = applyItemDiff(result[index], update.diff);
-      }
+      const item = items.find((i) => i.guid === entityId.guid);
+      if (item) applyItemDiff(item, update.diff);
     }
   }
   if (diff.added) {
-    result.push(...diff.added);
+    items.push(...diff.added);
   }
-  return result;
 };
 
 // 🔀mergeCollectionDiff merges two collection diffs into one.
@@ -7748,68 +7647,74 @@ export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
 /**
  * Diff type for tracking applyKit changes.
  **/
-export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
-  const result: any = {
-    guid: base.guid,
-    name: "name" in diff ? diff.name! : base.name,
-    version: "version" in diff ? diff.version! : base.version,
-    createdAt: base.createdAt,
-    updatedAt: diff.updatedAt ?? base.updatedAt,
-  };
+export const applyKitDiff = (target: Kit, diff: KitDiff): void => {
+  if ("name" in diff) target.name = diff.name!;
+  if ("version" in diff) target.version = diff.version!;
+  if (diff.updatedAt !== undefined) target.updatedAt = diff.updatedAt;
 
   const optionalScalars = ["description", "icon", "image", "remote", "homepage", "license", "preview"] as const;
   for (const key of optionalScalars) {
     if (key in diff) {
-      const value = diff[key] ?? undefined;
-      if (value !== undefined) result[key] = value;
-    } else if (key in base && base[key] !== undefined) {
-      result[key] = base[key];
+      (target as any)[key] = diff[key] ?? undefined;
     }
   }
 
-  if (diff.types || base.types) {
-    const types = applyCollectionDiff("type", base.types ?? [], diff.types, applyTypeDiff);
-    if (types.length > 0) result.types = types;
+  if (diff.types) {
+    if (!target.types) target.types = [];
+    applyCollectionDiff("type", target.types, diff.types, applyTypeDiff);
   }
-  if (diff.designs || base.designs) {
-    const designs = applyCollectionDiff("design", base.designs ?? [], diff.designs, applyDesignDiff);
-    if (designs.length > 0) result.designs = designs;
+  if (diff.designs) {
+    if (!target.designs) target.designs = [];
+    applyCollectionDiff("design", target.designs, diff.designs, applyDesignDiff);
   }
-  if (diff.tags || base.tags) {
-    const tags = applyTagsDiff(base.tags ?? [], diff.tags ?? {});
-    if (tags.length > 0) result.tags = tags;
+  if (diff.tags) {
+    if (!target.tags) target.tags = [];
+    applyTagsDiff(target.tags, diff.tags);
   }
-  if (diff.concepts || base.concepts) {
-    const concepts = applyConceptsDiff(base.concepts ?? [], diff.concepts ?? {});
-    if (concepts.length > 0) result.concepts = concepts;
+  if (diff.concepts) {
+    if (!target.concepts) target.concepts = [];
+    applyConceptsDiff(target.concepts, diff.concepts);
   }
-  if (diff.ports || base.ports) {
-    const ports = applyPortsDiff(base.ports ?? [], diff.ports ?? {});
-    if (ports.length > 0) result.ports = ports;
+  if (diff.ports) {
+    if (!target.ports) target.ports = [];
+    applyPortsDiff(target.ports, diff.ports);
   }
-  if (diff.qualities || base.qualities) {
-    const qualities = applyCollectionDiff("quality", base.qualities ?? [], diff.qualities, applyQualityDiff);
-    if (qualities.length > 0) result.qualities = qualities;
+  if (diff.qualities) {
+    if (!target.qualities) target.qualities = [];
+    applyCollectionDiff("quality", target.qualities, diff.qualities, applyQualityDiff);
   }
-  if (diff.files || base.files) {
-    const files = applyCollectionDiff("file", base.files ?? [], diff.files, applyFileDiff);
-    if (files.length > 0) result.files = files;
+  if (diff.files) {
+    if (!target.files) target.files = [];
+    applyCollectionDiff("file", target.files, diff.files, applyFileDiff);
   }
-  if (diff.folders || base.folders) {
-    const folders = applyCollectionDiff("folder", base.folders ?? [], diff.folders, applyFolderDiff);
-    if (folders.length > 0) result.folders = folders;
+  if (diff.folders) {
+    if (!target.folders) target.folders = [];
+    applyCollectionDiff("folder", target.folders, diff.folders, applyFolderDiff);
   }
-  if (diff.authors || base.authors) {
-    const authors = applyCollectionDiff("author", base.authors ?? [], diff.authors, applyAuthorDiff);
-    if (authors.length > 0) result.authors = authors;
+  if (diff.authors) {
+    if (!target.authors) target.authors = [];
+    applyCollectionDiff("author", target.authors, diff.authors, applyAuthorDiff);
   }
-  if (diff.attributes || base.attributes) {
-    const attributes = applyAttributesDiff(base.attributes ?? [], diff.attributes ?? {});
-    if (attributes.length > 0) result.attributes = attributes;
+  if (diff.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiff(target.attributes, diff.attributes);
   }
-
-  return result as Kit;
 };
+
+/**
+ * Mutable kit document: holds a single Kit graph and applies diffs in place.
+ * Prefer passing this (or the underlying `Kit`) by reference instead of cloning.
+ **/
+export class KitDocument {
+  constructor(public readonly root: Kit) {}
+  apply(diff: KitDiff): void {
+    applyKitDiff(this.root, diff);
+  }
+  /** Computes the diff from another kit snapshot to this document's current state. */
+  diffSince(other: Kit): KitDiff {
+    return getKitDiff(other, this.root);
+  }
+}
 
 // #endregion ⏱️Kit
 
@@ -10128,6 +10033,10 @@ export interface KitChange {
   forward: KitDiff;
   backward: KitDiff;
 }
+
+/** One undo step, or a transaction batch (undo applies `backward` in reverse order). */
+export type KitUndoEntry = KitChange | { batch: KitChange[] };
+
 /**
  * Computes the forward and backward diffs between two kit states.
  **/
@@ -10266,7 +10175,7 @@ const validateGuidCollectionDiff = <TItem extends { guid: string }>(
 };
 
 const validateAttributesDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Attribute[], d: AttributesDiff | undefined): void => {
-  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => { });
+  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => {});
 };
 
 const validatePropsDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Prop[], qualities: Set<string>, d: PropsDiff | undefined): void => {
@@ -10334,7 +10243,9 @@ const validateQualityDiffNested = (ctx: KitDiffValidationCtx, path: string, item
 
 const simulatePiecesForDesign = (base: Design, d?: PiecesDiff): Piece[] => {
   if (!d) return base.pieces ?? [];
-  return applyCollectionDiff("piece", base.pieces ?? [], d, applyPieceDiff);
+  const result = structuredClone(base.pieces ?? []);
+  applyCollectionDiff("piece", result, d, applyPieceDiff);
+  return result;
 };
 
 const validateDesignDiffNested = (
@@ -10398,7 +10309,8 @@ const validateDesignDiffNested = (
     }
     for (const u of diff.connections.updated ?? []) {
       const conn = design.connections?.find((c) => c.guid === (u as any).connection.guid);
-      const merged = conn ? applyConnectionDiff(conn, u.diff as ConnectionDiff) : undefined;
+      const merged = conn ? structuredClone(conn) : undefined;
+      if (merged) applyConnectionDiff(merged, u.diff as ConnectionDiff);
       const cp = `${path}.connections.updated[${(u as any).connection.guid}]`;
       if (merged) {
         checkSide(merged.connected, "connected", cp);
@@ -10415,12 +10327,13 @@ const validateDesignDiffNested = (
   }
   if (diff.props) validatePropsDiffNested(ctx, `${path}.props`, design.props ?? [], refs.qualityGuids, diff.props);
 
-  let simLayers = design.layers ?? [];
+  let simLayers = [...(design.layers ?? [])];
   if (diff.layers) {
     validateGuidCollectionDiff(ctx, `${path}.layers`, "layer", design.layers ?? [], diff.layers, (item, ldiff, p) => {
       if ((ldiff as LayerDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (ldiff as LayerDiff).attributes);
     });
-    simLayers = applyCollectionDiff("layer", design.layers ?? [], diff.layers, applyLayerDiff);
+    simLayers = structuredClone(simLayers);
+    applyCollectionDiff("layer", simLayers, diff.layers, applyLayerDiff);
   }
   const layerGuids = new Set(simLayers.map((l) => l.guid));
   const active = diff.activeLayer ?? design.activeLayer;
@@ -10439,7 +10352,8 @@ const validateDesignDiffNested = (
     for (const u of diff.groups.updated ?? []) {
       const g = design.groups?.find((x) => x.guid === (u as any).group.guid);
       if (g) {
-        const ng = applyGroupDiff(g, u.diff as GroupDiff);
+        const ng = structuredClone(g);
+        applyGroupDiff(ng, u.diff as GroupDiff);
         checkGroupPieces(ng, `${path}.groups.updated[${(u as any).group.guid}]`);
       }
     }
@@ -10471,13 +10385,13 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
   if (ctx.diff.designs) {
     ctx.diff.designs = validateGuidCollectionDiff(ctx, "designs", "design", kit.designs ?? [], ctx.diff.designs, (item, ddiff, p) => validateDesignDiffNested(ctx, kit, p, item, ddiff as DesignDiff, refs));
   }
-  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => { });
-  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => { });
-  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => { });
+  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => {});
+  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => {});
+  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => {});
   if (ctx.diff.qualities) {
     ctx.diff.qualities = validateGuidCollectionDiff(ctx, "qualities", "quality", kit.qualities ?? [], ctx.diff.qualities, (item, qdiff, p) => validateQualityDiffNested(ctx, p, item, qdiff as QualityDiff));
   }
-  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => { });
+  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => {});
   if (ctx.diff.folders) {
     ctx.diff.folders = validateGuidCollectionDiff(ctx, "folders", "folder", kit.folders ?? [], ctx.diff.folders, (item, fdiff, p) => {
       const par = (fdiff as FolderDiff).parent?.guid ?? item.parent?.guid;
@@ -10485,7 +10399,7 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
       if ((fdiff as FolderDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (fdiff as FolderDiff).attributes);
     });
   }
-  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => { });
+  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => {});
   if (ctx.diff.attributes) validateAttributesDiffNested(ctx, "kit.attributes", kit.attributes ?? [], ctx.diff.attributes);
 
   const ok = ctx.errors.length === 0;
@@ -10615,48 +10529,13 @@ export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationRes
 
 /**
  **/
-export const semioMakeFix = (ctx: ValidationContext, title: string, mutate: (clone: Kit) => void): Fix => {
-  const clone = JSON.parse(serializeKit(ctx.kit)) as Kit;
-  mutate(clone);
-  const diff = getKitDiff(ctx.kit, clone);
-  return { title, diff };
-};
+export const semioMakeFix = (ctx: ValidationContext, title: string, buildDiff: (kit: Kit) => KitDiff): Fix => ({
+  title,
+  diff: buildDiff(ctx.kit),
+});
 
 // #endregion 📡Fix Helper
 
-// #region 🔑GUID Update Helper
-// GUID regeneration helper functions MUST be defined here.
-
-// 🔑updateGuidEverywhere replaces an old GUID with a new GUID across all kit entities.
-const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
-  const update = (obj: any) => {
-    if (!obj || typeof obj !== "object") return;
-    if (obj.guid === oldGuid) obj.guid = newGuid;
-    if (obj.parent?.guid === oldGuid) obj.parent = createTypeId(newGuid);
-    if (obj.type?.guid === oldGuid) obj.type = createTypeId(newGuid);
-    if (obj.design?.guid === oldGuid) obj.design = createDesignId(newGuid);
-    if (obj.port?.guid === oldGuid) obj.port = createPortId(newGuid);
-    if (obj.quality?.guid === oldGuid) obj.quality = createQualityId(newGuid);
-    if (obj.piece?.guid === oldGuid) obj.piece = createPieceId(newGuid);
-    if (obj.connector?.guid === oldGuid) obj.connector = createConnectorId(newGuid);
-    if (Array.isArray(obj.compatiblePorts)) {
-      obj.compatiblePorts = obj.compatiblePorts.map((iid: PortId) => (iid.guid === oldGuid ? createPortId(newGuid) : iid));
-    }
-    if (Array.isArray(obj.pieces)) {
-      obj.pieces = obj.pieces.map((p: PieceId) => (p.guid === oldGuid ? createPieceId(newGuid) : p));
-    }
-    for (const key in obj) {
-      if (Array.isArray(obj[key])) {
-        obj[key].forEach(update);
-      } else if (typeof obj[key] === "object") {
-        update(obj[key]);
-      }
-    }
-  };
-  update(kit);
-};
-
-// #endregion 🔑GUID Update Helper
 
 // #region 🔑Constraint: GUID Uniqueness
 // GUID uniqueness constraint MUST be enforced here.
@@ -10675,15 +10554,10 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
     }
     const problem: Problem = {
       constraintId: "guid-unique",
-      message: `Duplicate GUID "${entityGuid}". First occurrence kept.`,
+      message: `Duplicate GUID "${entityGuid}". Entity GUIDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).`,
       location: { entityKind, entityGuid, field: "guid" },
       relatedGuids: [entityGuid],
-      fixes: [
-        semioMakeFix(ctx, "Regenerate GUID", (clone) => {
-          const newGuid = guid();
-          updateGuidEverywhere(clone, entityGuid, newGuid);
-        }),
-      ],
+      fixes: [],
     };
     problems.push(problem);
   };
@@ -10730,12 +10604,11 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
       const [first, ...rest] = group;
       const siblingNames = siblings.map((s) => s.name ?? "");
       rest.forEach((type) => {
-        const fix = semioMakeFix(ctx, `Rename "${name}"`, (clone) => {
-          const ct = toArray(clone.types).find((x) => x.guid === type.guid);
-          if (!ct) return;
-          const newName = generateUniqueName(name, siblingNames);
-          ct.name = newName;
-        });
+        const fix = semioMakeFix(ctx, `Rename "${name}"`, () => ({
+          types: {
+            updated: [{ type: { guid: type.guid }, diff: { name: generateUniqueName(name, siblingNames) } }],
+          },
+        }));
         problems.push({
           constraintId: "type-name-unique",
           message: `Duplicate type name "${name}" among siblings.`,
@@ -10777,12 +10650,11 @@ export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
       const [first, ...rest] = group;
       const siblingNames = siblings.map((s) => s.name ?? "");
       rest.forEach((design) => {
-        const fix = semioMakeFix(ctx, `Rename "${name}"`, (clone) => {
-          const cd = toArray(clone.designs).find((x) => x.guid === design.guid);
-          if (!cd) return;
-          const newName = generateUniqueName(name, siblingNames);
-          cd.name = newName;
-        });
+        const fix = semioMakeFix(ctx, `Rename "${name}"`, () => ({
+          designs: {
+            updated: [{ design: { guid: design.guid }, diff: { name: generateUniqueName(name, siblingNames) } }],
+          },
+        }));
         problems.push({
           constraintId: "design-name-unique",
           message: `Duplicate design name "${name}" among siblings.`,
@@ -10820,14 +10692,20 @@ export const semioPieceNameUniquenessConstraint: Constraint = (ctx) => {
       const [first, ...rest] = list;
       const allNames = pieces.map((p) => p.name ?? "");
       rest.forEach((piece) => {
-        const fix = semioMakeFix(ctx, `Rename piece "${name}"`, (clone) => {
-          const cd = toArray(clone.designs).find((d) => d.guid === design.guid);
-          if (!cd) return;
-          const cpieces = toArray(cd.pieces);
-          const cp = cpieces.find((p) => p.guid === piece.guid);
-          if (!cp) return;
-          cp.name = generateUniqueName(name, allNames);
-        });
+        const fix = semioMakeFix(ctx, `Rename piece "${name}"`, () => ({
+          designs: {
+            updated: [
+              {
+                design: { guid: design.guid },
+                diff: {
+                  pieces: {
+                    updated: [{ piece: { guid: piece.guid }, diff: { name: generateUniqueName(name, allNames) } }],
+                  },
+                },
+              },
+            ],
+          },
+        }));
         problems.push({
           constraintId: "piece-name-unique",
           message: `Duplicate piece name "${name}" inside design "${design.name}".`,
@@ -10863,11 +10741,11 @@ export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
     const [first, ...rest] = list;
     const allNames = qualities.map((q) => q.name ?? "");
     rest.forEach((quality) => {
-      const fix = semioMakeFix(ctx, `Rename quality "${name}"`, (clone) => {
-        const cq = toArray(clone.qualities).find((q) => q.guid === quality.guid);
-        if (!cq) return;
-        cq.name = generateUniqueName(name, allNames);
-      });
+      const fix = semioMakeFix(ctx, `Rename quality "${name}"`, () => ({
+        qualities: {
+          updated: [{ quality: { guid: quality.guid }, diff: { name: generateUniqueName(name, allNames) } }],
+        },
+      }));
       problems.push({
         constraintId: "quality-name-unique",
         message: `Duplicate quality name "${name}".`,
@@ -10902,11 +10780,11 @@ export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
     const [first, ...rest] = list;
     const allNames = ports.map((i) => i.name ?? "");
     rest.forEach((iface) => {
-      const fix = semioMakeFix(ctx, `Rename port "${name}"`, (clone) => {
-        const ci = toArray(clone.ports).find((i) => i.guid === iface.guid);
-        if (!ci) return;
-        ci.name = generateUniqueName(name, allNames);
-      });
+      const fix = semioMakeFix(ctx, `Rename port "${name}"`, () => ({
+        ports: {
+          updated: [{ port: { guid: iface.guid }, diff: { name: generateUniqueName(name, allNames) } }],
+        },
+      }));
       problems.push({
         constraintId: "port-name-unique",
         message: `Duplicate port name "${name}".`,
@@ -10941,11 +10819,11 @@ export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
     const [first, ...rest] = list;
     const allNames = files.map((f) => f.name ?? "");
     rest.forEach((file) => {
-      const fix = semioMakeFix(ctx, `Rename file "${name}"`, (clone) => {
-        const cf = toArray(clone.files).find((f) => f.guid === file.guid);
-        if (!cf) return;
-        cf.name = generateUniqueName(name, allNames);
-      });
+      const fix = semioMakeFix(ctx, `Rename file "${name}"`, () => ({
+        files: {
+          updated: [{ file: { guid: file.guid }, diff: { name: generateUniqueName(name, allNames) } }],
+        },
+      }));
       problems.push({
         constraintId: "file-name-unique",
         message: `Duplicate file name "${name}".`,
@@ -10987,11 +10865,11 @@ export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
       const [first, ...rest] = list;
       const allNames = siblings.map((f) => f.name ?? "");
       rest.forEach((folder) => {
-        const fix = semioMakeFix(ctx, `Rename folder "${name}"`, (clone) => {
-          const cf = toArray(clone.folders).find((f) => f.guid === folder.guid);
-          if (!cf) return;
-          cf.name = generateUniqueName(name, allNames);
-        });
+        const fix = semioMakeFix(ctx, `Rename folder "${name}"`, () => ({
+          folders: {
+            updated: [{ folder: { guid: folder.guid }, diff: { name: generateUniqueName(name, allNames) } }],
+          },
+        }));
         problems.push({
           constraintId: "folder-name-unique",
           message: `Duplicate folder name "${name}" among siblings.`,
@@ -11029,14 +10907,20 @@ export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
       const allNames = connectors.map((p) => p.name ?? "");
       const type = ctx.typesByGuid.get(typeGuid);
       rest.forEach((connector) => {
-        const fix = semioMakeFix(ctx, `Rename connector "${name}"`, (clone) => {
-          const ct = toArray(clone.types).find((t) => t.guid === typeGuid);
-          if (!ct) return;
-          const cconnectors = toArray(ct.connectors);
-          const cp = cconnectors.find((p) => p.guid === connector.guid);
-          if (!cp) return;
-          cp.name = generateUniqueName(name, allNames);
-        });
+        const fix = semioMakeFix(ctx, `Rename connector "${name}"`, () => ({
+          types: {
+            updated: [
+              {
+                type: { guid: typeGuid },
+                diff: {
+                  connectors: {
+                    updated: [{ connector: { guid: connector.guid }, diff: { name: generateUniqueName(name, allNames) } }],
+                  },
+                },
+              },
+            ],
+          },
+        }));
         problems.push({
           constraintId: "connector-name-unique",
           message: `Duplicate connector name "${name}" inside type "${type?.name}".`,
@@ -11074,14 +10958,20 @@ export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
       const allNames = models.map((m) => m.name ?? "");
       const type = ctx.typesByGuid.get(typeGuid);
       rest.forEach((model) => {
-        const fix = semioMakeFix(ctx, `Rename model "${name}"`, (clone) => {
-          const ct = toArray(clone.types).find((t) => t.guid === typeGuid);
-          if (!ct) return;
-          const cmodels = toArray(ct.models);
-          const cm = cmodels.find((m) => m.guid === model.guid);
-          if (!cm) return;
-          cm.name = generateUniqueName(name, allNames);
-        });
+        const fix = semioMakeFix(ctx, `Rename model "${name}"`, () => ({
+          types: {
+            updated: [
+              {
+                type: { guid: typeGuid },
+                diff: {
+                  models: {
+                    updated: [{ model: { guid: model.guid }, diff: { name: generateUniqueName(name, allNames) } }],
+                  },
+                },
+              },
+            ],
+          },
+        }));
         problems.push({
           constraintId: "model-name-unique",
           message: `Duplicate model name "${name}" inside type "${type?.name}".`,
@@ -11119,14 +11009,20 @@ export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
       const [first, ...rest] = list;
       const allPaths = layers.map((l) => l.path ?? "");
       rest.forEach((layer) => {
-        const fix = semioMakeFix(ctx, `Rename layer "${path}"`, (clone) => {
-          const cd = toArray(clone.designs).find((d) => d.guid === design.guid);
-          if (!cd) return;
-          const clayers = toArray(cd.layers);
-          const cl = clayers.find((l) => l.path === layer.path);
-          if (!cl) return;
-          cl.path = generateUniqueName(path, allPaths);
-        });
+        const fix = semioMakeFix(ctx, `Rename layer "${path}"`, () => ({
+          designs: {
+            updated: [
+              {
+                design: { guid: design.guid },
+                diff: {
+                  layers: {
+                    updated: [{ layer: { guid: layer.guid }, diff: { path: generateUniqueName(path, allPaths) } }],
+                  },
+                },
+              },
+            ],
+          },
+        }));
         problems.push({
           constraintId: "layer-path-unique",
           message: `Duplicate layer path "${path}" inside design "${design.name}".`,
@@ -11161,13 +11057,23 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
         const piecePrimitive = getPrimitiveDesignFromContext(ctx, piece.design.guid);
 
         if (containerPrimitive === piecePrimitive) {
-          const fix = semioMakeFix(ctx, `Remove design piece "${piece.name || piece.guid}"`, (clone) => {
-            const cd = toArray(clone.designs).find((d) => d.guid === design.guid);
-            if (!cd) return;
-            cd.pieces = toArray(cd.pieces).filter((p) => p.guid !== piece.guid);
-
-            cd.connections = toArray(cd.connections).filter((c) => c.connected.piece.guid !== piece.guid && c.connecting.piece.guid !== piece.guid);
-          });
+          const conns = toArray(design.connections);
+          const removedConnGuids = conns
+            .filter((c) => c.connected.piece.guid === piece.guid || c.connecting.piece.guid === piece.guid)
+            .map((c) => ({ guid: c.guid }));
+          const fix = semioMakeFix(ctx, `Remove design piece "${piece.name || piece.guid}"`, () => ({
+            designs: {
+              updated: [
+                {
+                  design: { guid: design.guid },
+                  diff: {
+                    pieces: { removed: [{ guid: piece.guid }] },
+                    ...(removedConnGuids.length > 0 ? { connections: { removed: removedConnGuids } } : {}),
+                  },
+                },
+              ],
+            },
+          }));
           problems.push({
             constraintId: "design-piece-same-family",
             message: `Design piece "${piece.name || piece.guid}" references design "${pieceDesign.name}" which is in the same design family as container design "${design.name}". A design cannot contain design pieces from the same family.`,
@@ -11176,7 +11082,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
             fixes: [fix],
           });
         }
-      } catch { }
+      } catch {}
     });
   });
   return problems;
@@ -11382,11 +11288,7 @@ export const getSqlJs = async () => {
         const path = await import("path");
         const url = await import("url");
         const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-        const candidatePaths = [
-          path.join(__dirname, "public", "sql-wasm.wasm"),
-          path.join(__dirname, "..", "sketchpad", "public", "sql-wasm.wasm"),
-          path.join(__dirname, "..", "..", "node_modules", "sql.js", "dist", "sql-wasm.wasm"),
-        ];
+        const candidatePaths = [path.join(__dirname, "public", "sql-wasm.wasm"), path.join(__dirname, "..", "sketchpad", "public", "sql-wasm.wasm"), path.join(__dirname, "..", "..", "node_modules", "sql.js", "dist", "sql-wasm.wasm")];
         const wasmPath = candidatePaths.find((candidate) => fs.existsSync(candidate)) ?? candidatePaths[0];
         cachedSqlJs = await initSqlJs({
           locateFile: () => wasmPath,
@@ -11460,7 +11362,7 @@ export const importFileKit = async (source: string | ArrayBuffer | Buffer | Blob
   } else {
     json = bytesToUtf8(new Uint8Array(source));
   }
-  return { kind: "file", kit: deserializeKit(json), files: {} };
+  return { kind: "dev", kit: deserializeKit(json), files: {} };
 };
 export const exportFileKit = (kit: Kit): string => serializeKit(kit);
 export const importArchiveKit = async (source: string | ArrayBuffer | Buffer | Blob): Promise<KitImportResult> => {
@@ -11561,7 +11463,77 @@ export const importRemoteKit = async (url: string): Promise<KitImportResult> => 
   const archive = await importArchiveKit(new Blob([text]));
   return { ...archive, kind: "remote" };
 };
-export const editTemporaryKit = (kit: Kit, diff: KitDiff): Kit => applyKitDiff(kit, diff);
+/**
+ * Applies `diff` to `kit` in place and returns the same kit reference.
+ * Callers that need an immutable snapshot should copy explicitly (e.g. serialize/deserialize).
+ **/
+export const editTemporaryKit = (kit: Kit, diff: KitDiff): Kit => {
+  applyKitDiff(kit, diff);
+  return kit;
+};
+
+// #region 🏷️Kit Kind Classes
+// Typed Kit wrappers scoped by KitKind. Each class carries a `kind` discriminator and
+// wraps a plain Kit value. SyncKit is an interface for kits that support bi-directional sync.
+
+/**
+ * 🚚 Transport kit – ephemeral, in-memory only, never persisted.
+ **/
+export class TransportKit {
+  readonly kind = "transport" as const;
+  constructor(public kit: Kit) {}
+}
+
+/**
+ * 📦 Archive kit – read-only snapshot loaded from an archive file.
+ **/
+export class ArchiveKit {
+  readonly kind = "archive" as const;
+  constructor(public kit: Kit) {}
+}
+
+/**
+ * 🔄 SyncKit – interface for kits that support bi-directional sync.
+ **/
+export interface SyncKit {
+  readonly kind: KitKind;
+  kit: Kit;
+  apply(diff: KitDiff): void;
+}
+
+/**
+ * 💻 Dev kit – local dev workspace backed by a file-system directory.
+ **/
+export class DevKit implements SyncKit {
+  readonly kind = "dev" as const;
+  constructor(public kit: Kit) {}
+  apply(diff: KitDiff): void {
+    applyKitDiff(this.kit, diff);
+  }
+}
+
+/**
+ * 📁 Local kit – local SQLite-backed kit.
+ **/
+export class LocalKit implements SyncKit {
+  readonly kind = "local" as const;
+  constructor(public kit: Kit) {}
+  apply(diff: KitDiff): void {
+    applyKitDiff(this.kit, diff);
+  }
+}
+
+/**
+ * 🌐 Remote kit – kit synced with a remote server.
+ **/
+export class RemoteKit implements SyncKit {
+  readonly kind = "remote" as const;
+  constructor(public kit: Kit) {}
+  apply(diff: KitDiff): void {
+    applyKitDiff(this.kit, diff);
+  }
+}
+// #endregion 🏷️Kit Kind Classes
 
 /**
  * Imports Kit from external source.
@@ -12796,20 +12768,20 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-              }
+                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+                }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-              }
+                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+                }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -12924,54 +12896,54 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-        return {
-          guid: row.guid,
-          key: row.key,
-          name: row.name,
-          kind: row.kind || undefined,
-          defaultValue: row.default_value ?? undefined,
-          formula: toUndefined(row.formula),
-          defaultSiUnit: toUndefined(row.default_si_unit),
-          defaultImperialUnit: toUndefined(row.default_imperial_unit),
-          min: row.min_value ?? undefined,
-          minExcluded: row.min_excluded ? true : undefined,
-          max: row.max_value ?? undefined,
-          maxExcluded: row.max_excluded ? true : undefined,
-          canScale: row.can_scale ? true : undefined,
-          uri: toUndefined(row.definition),
-          benchmarks: benchmarks.map((b: any) => {
-            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-            return {
-              guid: b.guid,
-              name: b.name,
-              icon: toUndefined(b.icon),
-              min: b.min_value ?? undefined,
-              minExcluded: b.min_excluded ? true : undefined,
-              max: b.max_value ?? undefined,
-              maxExcluded: b.max_excluded ? true : undefined,
-              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-            };
-          }),
-          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-        };
-      })
+          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+          return {
+            guid: row.guid,
+            key: row.key,
+            name: row.name,
+            kind: row.kind || undefined,
+            defaultValue: row.default_value ?? undefined,
+            formula: toUndefined(row.formula),
+            defaultSiUnit: toUndefined(row.default_si_unit),
+            defaultImperialUnit: toUndefined(row.default_imperial_unit),
+            min: row.min_value ?? undefined,
+            minExcluded: row.min_excluded ? true : undefined,
+            max: row.max_value ?? undefined,
+            maxExcluded: row.max_excluded ? true : undefined,
+            canScale: row.can_scale ? true : undefined,
+            uri: toUndefined(row.definition),
+            benchmarks: benchmarks.map((b: any) => {
+              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+              return {
+                guid: b.guid,
+                name: b.name,
+                icon: toUndefined(b.icon),
+                min: b.min_value ?? undefined,
+                minExcluded: b.min_excluded ? true : undefined,
+                max: b.max_value ?? undefined,
+                maxExcluded: b.max_excluded ? true : undefined,
+                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+              };
+            }),
+            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+          };
+        })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        remote: toUndefined(row.remote_url),
-        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-        size: row.size ?? undefined,
-        hash: toUndefined(row.hash),
-        createdAt: row.created,
-        updatedAt: row.updated,
-      }))
+          guid: row.guid,
+          name: row.name,
+          remote: toUndefined(row.remote_url),
+          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+          size: row.size ?? undefined,
+          hash: toUndefined(row.hash),
+          createdAt: row.created,
+          updatedAt: row.updated,
+        }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -12987,10 +12959,10 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-        guid: row.guid,
-        name: row.name,
-        email: toUndefined(row.email),
-      }))
+          guid: row.guid,
+          name: row.name,
+          email: toUndefined(row.email),
+        }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
@@ -14231,7 +14203,7 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
         if (copiedMeshes.length > 0) {
           typeMeshMap[typeGuid] = copiedMeshes[0];
         }
-      } catch { }
+      } catch {}
     }
   }
 
@@ -14622,13 +14594,13 @@ export interface ObservablePathStore {
 export class InMemoryKitStore implements UndoableKitStore {
   private kit: Kit;
   private listeners: Set<() => void> = new Set();
-  private undoStack: KitChange[] = [];
-  private redoStack: KitChange[] = [];
+  private undoStack: KitUndoEntry[] = [];
+  private redoStack: KitUndoEntry[] = [];
   private dirty: boolean = false;
   private disposed: boolean = false;
   private status: KitStoreStatus = "ready";
   private transacting: boolean = false;
-  private transactionDiffs: KitDiff[] = [];
+  private transactionBuffer: KitChange[] = [];
 
   constructor(kit: Kit) {
     this.kit = kit;
@@ -14653,35 +14625,37 @@ export class InMemoryKitStore implements UndoableKitStore {
   }
 
   transact<T>(label: string, run: () => T): T {
-    const before = this.kit;
     this.transacting = true;
-    this.transactionDiffs = [];
+    this.transactionBuffer = [];
     try {
       const result = run();
-      const after = this.kit;
-      if (before !== after) {
-        const forward = getKitDiff(before, after);
-        const backward = inverseKitDiff(before, forward);
-        this.undoStack.push({ forward, backward });
+      if (!this.disposed && this.transactionBuffer.length > 0) {
+        if (this.transactionBuffer.length === 1) {
+          this.undoStack.push(this.transactionBuffer[0]);
+        } else {
+          this.undoStack.push({ batch: this.transactionBuffer });
+        }
         this.redoStack = [];
       }
       return result;
     } finally {
       this.transacting = false;
-      this.transactionDiffs = [];
+      this.transactionBuffer = [];
     }
   }
 
   apply(diff: KitDiff, meta?: { origin?: string }): void {
-    const before = this.kit;
-    this.kit = applyKitDiff(this.kit, diff);
-    this.dirty = true;
-    if (!this.transacting && !this.disposed) {
-      const forward = getKitDiff(before, this.kit);
-      const backward = inverseKitDiff(before, forward);
-      this.undoStack.push({ forward, backward });
+    if (this.disposed) return;
+    const backward = inverseKitDiff(this.kit, diff);
+    applyKitDiff(this.kit, diff);
+    const entry: KitChange = { forward: diff, backward };
+    if (this.transacting) {
+      this.transactionBuffer.push(entry);
+    } else {
+      this.undoStack.push(entry);
       this.redoStack = [];
     }
+    this.dirty = true;
     this.notify();
   }
 
@@ -14689,10 +14663,17 @@ export class InMemoryKitStore implements UndoableKitStore {
     const before = this.kit;
     this.kit = next;
     this.dirty = true;
-    if (!this.transacting && !this.disposed) {
-      const forward = getKitDiff(before, next);
-      const backward = inverseKitDiff(before, forward);
-      this.undoStack.push({ forward, backward });
+    if (this.disposed) {
+      this.notify();
+      return;
+    }
+    const forward = getKitDiff(before, next);
+    const backward = inverseKitDiff(before, forward);
+    const entry: KitChange = { forward, backward };
+    if (this.transacting) {
+      this.transactionBuffer.push(entry);
+    } else {
+      this.undoStack.push(entry);
       this.redoStack = [];
     }
     this.notify();
@@ -14725,7 +14706,13 @@ export class InMemoryKitStore implements UndoableKitStore {
   undo(): void {
     const change = this.undoStack.pop();
     if (!change) return;
-    this.kit = applyKitDiff(this.kit, change.backward);
+    if ("batch" in change) {
+      for (let i = change.batch.length - 1; i >= 0; i--) {
+        applyKitDiff(this.kit, change.batch[i].backward);
+      }
+    } else {
+      applyKitDiff(this.kit, change.backward);
+    }
     this.redoStack.push(change);
     this.dirty = true;
     this.notify();
@@ -14734,7 +14721,13 @@ export class InMemoryKitStore implements UndoableKitStore {
   redo(): void {
     const change = this.redoStack.pop();
     if (!change) return;
-    this.kit = applyKitDiff(this.kit, change.forward);
+    if ("batch" in change) {
+      for (const c of change.batch) {
+        applyKitDiff(this.kit, c.forward);
+      }
+    } else {
+      applyKitDiff(this.kit, change.forward);
+    }
     this.undoStack.push(change);
     this.dirty = true;
     this.notify();
@@ -14953,7 +14946,8 @@ export const piecesMetadata = (kit: Kit, designGuid: string): OperationResult<Ma
   if (!flattenChange.ok) {
     return { ok: false, errors: flattenChange.errors };
   }
-  const flatDesign = applyDesignDiff(design, flattenChange.diff.forward);
+  const flatDesign = structuredClone(design);
+  applyDesignDiff(flatDesign, flattenChange.diff.forward);
   const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid);
   const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
   const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
@@ -14984,11 +14978,7 @@ export const piecesMetadata = (kit: Kit, designGuid: string): OperationResult<Ma
 /**
  * 🧠Incremental version of {@link piecesMetadata}: reuses an optional {@link FlatMerkleCacheEntry} cache across calls so sketchpad renders (and any other host holding piece placement data) only pay the matrix-math + attribute bookkeeping cost for pieces whose merkle inputs actually changed. Returns both the metadata map (same shape as {@link piecesMetadata}) and the new cache to thread into the next call.
  **/
-export const piecesMetadataCached = (
-  kit: Kit,
-  designGuid: string,
-  cache?: { [pieceGuid: string]: FlatMerkleCacheEntry },
-): { result: OperationResult<Map<string, PiecePlacementMetadata>>; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } => {
+export const piecesMetadataCached = (kit: Kit, designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: OperationResult<Map<string, PiecePlacementMetadata>>; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } => {
   const design = findDesignInKit(kit, designGuid);
   if (!design) {
     return {
@@ -15000,7 +14990,8 @@ export const piecesMetadataCached = (
   if (!cached.result.ok) {
     return { result: { ok: false, errors: cached.result.errors }, cache: cached.cache };
   }
-  const flatDesign = applyDesignDiff(design, cached.result.diff.forward);
+  const flatDesign = structuredClone(design);
+  applyDesignDiff(flatDesign, cached.result.diff.forward);
   const metadata = new Map<string, PiecePlacementMetadata>();
   for (const p of flatDesign.pieces ?? []) {
     if (!p.guid) continue;
@@ -15237,9 +15228,7 @@ const shouldRunEmbeddedJsTests =
   (typeof __SEMIO_JS_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_JS_RUN_EMBEDDED_TESTS__) ||
   (typeof __SEMIO_JS_RUN_EMBEDDED_TESTS__ === "undefined" && typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof process !== "undefined" && process.env.SEMIO_JS_RUN_EMBEDDED_TESTS === "1");
 
-const shouldRunJsBenchmarks =
-  (typeof __SEMIO_JS_RUN_BENCHMARKS__ !== "undefined" && __SEMIO_JS_RUN_BENCHMARKS__) ||
-  (typeof __SEMIO_JS_RUN_BENCHMARKS__ === "undefined" && typeof process !== "undefined" && process.argv?.includes("--bench"));
+const shouldRunJsBenchmarks = (typeof __SEMIO_JS_RUN_BENCHMARKS__ !== "undefined" && __SEMIO_JS_RUN_BENCHMARKS__) || (typeof __SEMIO_JS_RUN_BENCHMARKS__ === "undefined" && typeof process !== "undefined" && process.argv?.includes("--bench"));
 
 // #endregion 🧪Runtime Test Flags
 
@@ -15304,7 +15293,17 @@ if (shouldRunEmbeddedJsTests) {
 
   const NAKAGIN_DESIGN_NAME = (HashCases as any).designName as string;
   const deleteCasesData = (DeleteCases as any).cases as Array<{ name: string; designName: string; designParent: string | null; selectionAsset: string; expectedDiffAsset: string }>;
-  const copyPasteCasesData = (CopyPasteCases as any).cases as Array<{ name: string; designName: string; designParent: string | null; selectionAsset: string; expectedCopyAsset: string; pasteTargetAsset: string; expectedPasteDiffAsset: string; pasteCoord: { u: number; v: number }; expectedPasteWithCoordDiffAsset: string }>;
+  const copyPasteCasesData = (CopyPasteCases as any).cases as Array<{
+    name: string;
+    designName: string;
+    designParent: string | null;
+    selectionAsset: string;
+    expectedCopyAsset: string;
+    pasteTargetAsset: string;
+    expectedPasteDiffAsset: string;
+    pasteCoord: { u: number; v: number };
+    expectedPasteWithCoordDiffAsset: string;
+  }>;
   const filterKitCasesData = FilterKitCases as any;
 
   const TEST_TOLERANCE = 0.001;
@@ -15549,9 +15548,11 @@ if (shouldRunEmbeddedJsTests) {
         expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);
         expect(areKitDiffsEqual(change.forward, kitDiff)).toBe(true);
         expect(areKitDiffsEqual(change.backward, kitDiffInverted)).toBe(true);
-        const appliedForward = applyKitDiff(kitOriginal, change.forward);
+        const appliedForward = structuredClone(kitOriginal);
+        applyKitDiff(appliedForward, change.forward);
         expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);
-        const appliedInverse = applyKitDiff(kitDiffed, change.backward);
+        const appliedInverse = structuredClone(kitDiffed);
+        applyKitDiff(appliedInverse, change.backward);
         expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);
       });
 
@@ -15638,8 +15639,12 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("Kit/Filter/Glob", () => {
     const filterKitGlobCases = (FilterKitCases as any).globCases as Array<{
-      name: string; typeInclude?: string[]; typeExclude?: string[];
-      designInclude?: string[]; designName?: string; designParent?: string | null;
+      name: string;
+      typeInclude?: string[];
+      typeExclude?: string[];
+      designInclude?: string[];
+      designName?: string;
+      designParent?: string | null;
     }>;
     const globMatchAssetCases = filterKitCasesData.globMatchCases as Array<{ input: string; pattern: string; expected: boolean }>;
     const globMatchCaseInsensitiveCases = filterKitCasesData.globMatchCaseInsensitiveCases as Array<{ input: string; pattern: string; expected: boolean }>;
@@ -15719,7 +15724,7 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("KitKind", () => {
     it("KitKindSchema accepts all five valid kinds", () => {
-      const kinds = ["file", "folder", "archive", "remote", "temporary"] as const;
+      const kinds = ["dev", "local", "archive", "remote", "transport"] as const;
       for (const kind of kinds) {
         expect(KitKindSchema.parse(kind)).toBe(kind);
       }
@@ -15734,20 +15739,20 @@ if (shouldRunEmbeddedJsTests) {
 
     it("ALL_KIT_KINDS contains exactly five entries", () => {
       expect(ALL_KIT_KINDS).toHaveLength(5);
-      expect(ALL_KIT_KINDS).toContain("file");
-      expect(ALL_KIT_KINDS).toContain("folder");
+      expect(ALL_KIT_KINDS).toContain("dev");
+      expect(ALL_KIT_KINDS).toContain("local");
       expect(ALL_KIT_KINDS).toContain("archive");
       expect(ALL_KIT_KINDS).toContain("remote");
-      expect(ALL_KIT_KINDS).toContain("temporary");
+      expect(ALL_KIT_KINDS).toContain("transport");
     });
 
     it("KitKind type is assignable from literal strings", () => {
-      const file: KitKind = "file";
-      const folder: KitKind = "folder";
+      const dev: KitKind = "dev";
+      const local: KitKind = "local";
       const archive: KitKind = "archive";
       const remote: KitKind = "remote";
-      const temporary: KitKind = "temporary";
-      expect([file, folder, archive, remote, temporary]).toEqual(["file", "folder", "archive", "remote", "temporary"]);
+      const transport: KitKind = "transport";
+      expect([dev, local, archive, remote, transport]).toEqual(["dev", "local", "archive", "remote", "transport"]);
     });
 
     it("Kit/File: roundtrips through JSON serialize/deserialize", () => {
@@ -15772,11 +15777,12 @@ if (shouldRunEmbeddedJsTests) {
       };
       const exported = exportFileKit(kit);
       const imported = await importFileKit(exported);
-      expect(imported.kind).toBe("file");
+      expect(imported.kind).toBe("dev");
       expect(imported.kit.guid).toBe(kit.guid);
       const edited = editTemporaryKit(imported.kit, { name: "FileKit Helper Edited" });
       expect(edited.name).toBe("FileKit Helper Edited");
-      expect(imported.kit.name).toBe("FileKit Helper Test");
+      expect(imported.kit.name).toBe("FileKit Helper Edited");
+      expect(edited).toBe(imported.kit);
     });
 
     it("Kit/Folder: roundtrips through SQLite via FolderKitStore adapter", async () => {
@@ -15889,7 +15895,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(store.getSnapshot().kit.name).toBe("TemporaryKit Test");
     });
 
-    it("Kit/Temporary: editTemporaryKit applies a diff without mutating the source", () => {
+    it("Kit/Temporary: editTemporaryKit applies a diff in place and returns the same reference", () => {
       const kit: Kit = {
         guid: "temp-edit-kit-guid",
         name: "Temporary Editable Kit",
@@ -15898,7 +15904,8 @@ if (shouldRunEmbeddedJsTests) {
       };
       const edited = editTemporaryKit(kit, { name: "Temporary Editable Kit Edited" });
       expect(edited.name).toBe("Temporary Editable Kit Edited");
-      expect(kit.name).toBe("Temporary Editable Kit");
+      expect(kit.name).toBe("Temporary Editable Kit Edited");
+      expect(edited).toBe(kit);
     });
   });
 
@@ -15981,7 +15988,8 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp = flattenDesign(kit, design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const flatDesign = applyDesignDiff(design, flatOp.diff.forward);
+      const flatDesign = structuredClone(design);
+      applyDesignDiff(flatDesign, flatOp.diff.forward);
 
       flatDesign!.pieces?.forEach((p) => {
         const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
@@ -16014,7 +16022,8 @@ if (shouldRunEmbeddedJsTests) {
       for (const c of design.connections ?? []) {
         expect(removedSet.has(c.guid)).toBe(true);
       }
-      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.diff.forward);
+      const flatDesign = structuredClone(design);
+      applyDesignDiff(flatDesign, flatOp.diff.forward);
       expect(flatDesign.connections?.length ?? 0).toBe(0);
     });
 
@@ -16359,7 +16368,8 @@ if (shouldRunEmbeddedJsTests) {
 
       const { clusteredDesign, externalConnections } = createClusteredDesign(design, ["piece-a", "piece-b"], "Cluster");
       const change = replaceClusterWithDesign(design, ["piece-a", "piece-b"], clusteredDesign, externalConnections);
-      const updatedDesign = applyDesignDiff(design, change.forward);
+      const updatedDesign = structuredClone(design);
+      applyDesignDiff(updatedDesign, change.forward);
 
       const clusterConnection = updatedDesign.connections?.find((c) => c.guid === "conn-bc");
       expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);
@@ -16403,7 +16413,8 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp = flattenDesign(kit, design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.diff.forward);
+      const flatDesign = structuredClone(design);
+      applyDesignDiff(flatDesign, flatOp.diff.forward);
       expect((flatDesign.connections ?? []).length).toBe(0);
       const pieceGuid = "9d18882e-d90b-40de-a171-47cb4564ffa6";
       const flatPiece = flatDesign.pieces!.find((p) => p.guid === pieceGuid)!;
@@ -16491,7 +16502,8 @@ if (shouldRunEmbeddedJsTests) {
       expect(dragDiff.connections?.updated?.length ?? 0).toBe(0);
 
       // Step 5: Apply the diff to the raw design (sketchpad calls updatePieces + updateConnections)
-      const updatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), dragDiff);
+      const updatedDesign = structuredClone(design);
+      applyDesignDiff(updatedDesign, dragDiff);
 
       // Step 6: Recompute metadata (simulates reactive chain: store update -> re-flatten)
       const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
@@ -16607,7 +16619,8 @@ if (shouldRunEmbeddedJsTests) {
       }
 
       // Step 6: Apply kitDiff to kit (same as InMemoryKitStore.apply)
-      const storeKit = applyKitDiff(kit, kitDiff);
+      const storeKit = structuredClone(kit);
+      applyKitDiff(storeKit, kitDiff);
 
       // Step 7: Recompute metadata (same as usePiecesMetadataMap)
       const postMetaResult = piecesMetadata(storeKit, design.guid);
@@ -16633,7 +16646,8 @@ if (shouldRunEmbeddedJsTests) {
 
       // Step 10: Verify local re-flatten (visualPositions) matches store re-flatten
       // This is the key test — if these differ, the useEffect overwrites with wrong positions
-      const localUpdatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), dragDiff);
+      const localUpdatedDesign = structuredClone(design);
+      applyDesignDiff(localUpdatedDesign, dragDiff);
       const localUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? localUpdatedDesign : d)) };
       const localMetaResult = piecesMetadata(localUpdatedKit, design.guid);
       expect(localMetaResult.ok).toBe(true);
@@ -16704,7 +16718,8 @@ if (shouldRunEmbeddedJsTests) {
       const fc = flattenDesign(kit, design.guid);
       expect(fc.ok).toBe(true);
       if (!fc.ok) return;
-      const nativeFlatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), { pieces: fc.diff.forward.pieces });
+      const nativeFlatDesign = structuredClone(design);
+      applyDesignDiff(nativeFlatDesign, { pieces: fc.diff.forward.pieces });
       const nativePiecesDesign: Design = { guid: nativeFlatDesign.guid, name: nativeFlatDesign.name, pieces: (nativeFlatDesign.pieces ?? []).filter((p) => p.guid === leafGuid) };
       const nativeDragDiff = dragPiecesInDesign(nativeFlatDesign, nativePiecesDesign, offset);
 
@@ -16716,14 +16731,16 @@ if (shouldRunEmbeddedJsTests) {
       expect(sketchpadDragDiff.connections!.updated![0].diff.v).toBeCloseTo(nativeDragDiff.connections!.updated![0].diff.v!, 6);
 
       // Step 5a: Sketchpad re-flatten
-      const sketchpadUpdatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), sketchpadDragDiff);
+      const sketchpadUpdatedDesign = structuredClone(design);
+      applyDesignDiff(sketchpadUpdatedDesign, sketchpadDragDiff);
       const sketchpadUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? sketchpadUpdatedDesign : d)) };
       const sketchpadPostMeta = piecesMetadata(sketchpadUpdatedKit, design.guid);
       expect(sketchpadPostMeta.ok).toBe(true);
       if (!sketchpadPostMeta.ok) return;
 
       // Step 5b: nativeDragPieces re-flatten
-      const nativeUpdatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), nativeDragDiff);
+      const nativeUpdatedDesign = structuredClone(design);
+      applyDesignDiff(nativeUpdatedDesign, nativeDragDiff);
       const nativeUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? nativeUpdatedDesign : d)) };
       const nativePostMeta = piecesMetadata(nativeUpdatedKit, design.guid);
       expect(nativePostMeta.ok).toBe(true);
@@ -16750,7 +16767,8 @@ if (shouldRunEmbeddedJsTests) {
           updated: [{ design: { guid: design.guid }, diff: { connections: { updated: connectionDiffUpdates } } }],
         },
       };
-      const storeKit = applyKitDiff(kit, kitDiff);
+      const storeKit = structuredClone(kit);
+      applyKitDiff(storeKit, kitDiff);
       const storeMetaResult = piecesMetadata(storeKit, design.guid);
       expect(storeMetaResult.ok).toBe(true);
       if (!storeMetaResult.ok) return;
@@ -16838,7 +16856,8 @@ if (shouldRunEmbeddedJsTests) {
       const scaledDragDiff: DesignDiff = {
         connections: { updated: [{ connection: { guid: conn.guid }, diff: scaledConnDiff }] },
       };
-      const updatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), scaledDragDiff);
+      const updatedDesign = structuredClone(design);
+      applyDesignDiff(updatedDesign, scaledDragDiff);
       const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
       const postMeta = piecesMetadata(updatedKit, design.guid);
       expect(postMeta.ok).toBe(true);
@@ -16856,7 +16875,8 @@ if (shouldRunEmbeddedJsTests) {
         const unscaledDragDiff: DesignDiff = {
           connections: { updated: [{ connection: { guid: conn.guid }, diff: { u: centerOffsetU, v: centerOffsetV } }] },
         };
-        const unscaledDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), unscaledDragDiff);
+        const unscaledDesign = structuredClone(design);
+        applyDesignDiff(unscaledDesign, unscaledDragDiff);
         const unscaledKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? unscaledDesign : d)) };
         const unscaledMeta = piecesMetadata(unscaledKit, design.guid);
         expect(unscaledMeta.ok).toBe(true);
@@ -17117,7 +17137,8 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp = flattenDesign(kit, design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.diff.forward);
+      const flatDesign = structuredClone(design);
+      applyDesignDiff(flatDesign, flatOp.diff.forward);
       const t5 = "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9";
       const br = "5feebbf8-33d9-41ad-a13a-24c271a1860b";
       const connInternal = "eb8ce9ce-091c-4495-a651-fa703748dfef";
@@ -17146,7 +17167,8 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp3 = flattenDesign(kit, design.guid);
       expect(flatOp3.ok).toBe(true);
       if (!flatOp3.ok) return;
-      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp3.diff.forward);
+      const flatDesign = structuredClone(design);
+      applyDesignDiff(flatDesign, flatOp3.diff.forward);
       const sel = NakaginCapsuleTowerCopySelection as any;
       const t1 = "31be08e1-e75c-4024-86b4-c3c6d3939fbb";
       const t2t1Conn = "ddf9e0e4-40e1-4079-aa40-c86cf699788b";
@@ -17448,7 +17470,9 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("Design/WithDiff", () => {
     const designWithDiffCases = (DesignWithDiffCases as any).cases as Array<{
-      name: string; designName: string; designParent: string | null;
+      name: string;
+      designName: string;
+      designParent: string | null;
       expectedPieceCounts: { unchanged: number; modified: number; removed: number; added: number };
       expectedConnectionCounts: { unchanged: number; modified: number; removed: number; added: number };
     }>;
@@ -17536,9 +17560,9 @@ if (shouldRunEmbeddedJsTests) {
   describe("Sketchpad ControlTree", () => {
     it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
       const controls: ControlDef[] = [
-        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
-        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
-        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
+        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
+        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
+        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
       ];
       const folderSettings = {
         Transform: { path: "Transform", order: 2 },
@@ -19533,14 +19557,16 @@ if (shouldRunEmbeddedJsTests) {
       it("Port apply diff sets maxChildren", () => {
         const base: Port = { guid: "p1", name: "TestPort" };
         const diff: PortDiff = { maxChildren: 4 };
-        const result = applyPortDiff(base, diff);
+        const result = structuredClone(base);
+        applyPortDiff(result, diff);
         expect(result.maxChildren).toBe(4);
       });
 
       it("Port apply diff removes maxChildren with null", () => {
         const base: Port = { guid: "p1", name: "TestPort", maxChildren: 3 };
         const diff: PortDiff = { maxChildren: null };
-        const result = applyPortDiff(base, diff);
+        const result = structuredClone(base);
+        applyPortDiff(result, diff);
         expect(result.maxChildren).toBeUndefined();
       });
 
@@ -19582,14 +19608,16 @@ if (shouldRunEmbeddedJsTests) {
       it("Connector apply diff sets maxChildren", () => {
         const base: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 } };
         const diff: ConnectorDiff = { maxChildren: 4 };
-        const result = applyConnectorDiff(base, diff);
+        const result = structuredClone(base);
+        applyConnectorDiff(result, diff);
         expect(result.maxChildren).toBe(4);
       });
 
       it("Connector apply diff removes maxChildren with null", () => {
         const base: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 3 };
         const diff: ConnectorDiff = { maxChildren: null };
-        const result = applyConnectorDiff(base, diff);
+        const result = structuredClone(base);
+        applyConnectorDiff(result, diff);
         expect(result.maxChildren).toBeUndefined();
       });
 
@@ -19673,7 +19701,8 @@ if (shouldRunEmbeddedJsTests) {
         const diff = getKitDiff(before, after);
         expect(diff.ports?.updated?.[0]?.diff.maxChildren).toBe(10);
         expect(diff.types?.updated?.[0]?.diff.connectors?.updated?.[0]?.diff.maxChildren).toBe(20);
-        const applied = applyKitDiff(before, diff);
+        const applied = structuredClone(before);
+        applyKitDiff(applied, diff);
         expect(applied.ports![0].maxChildren).toBe(10);
         expect(applied.types![0].connectors![0].maxChildren).toBe(20);
       });
@@ -19999,7 +20028,6 @@ if (shouldRunEmbeddedJsTests) {
             name: "Wall",
             description: "A wall segment",
             icon: "",
-
           },
         ],
         designs: [],
@@ -20012,17 +20040,18 @@ if (shouldRunEmbeddedJsTests) {
               name: "Column",
               description: "A column",
               icon: "",
-
             },
           ],
           updated: [{ type: { guid: "t1" }, diff: { description: "Modified wall" } }],
         },
       };
-      const afterForward = applyKitDiff(original, diff);
+      const afterForward = structuredClone(original);
+      applyKitDiff(afterForward, diff);
       expect(afterForward.types).toHaveLength(2);
       expect(afterForward.types![0].description).toBe("Modified wall");
       const inverseDiff = inverseKitDiff(original, diff);
-      const afterBackward = applyKitDiff(afterForward, inverseDiff);
+      const afterBackward = structuredClone(afterForward);
+      applyKitDiff(afterBackward, inverseDiff);
       expect(afterBackward.types).toHaveLength(1);
       expect(afterBackward.types![0].description).toBe("A wall segment");
       expect(afterBackward.types![0].guid).toBe("t1");
@@ -20118,7 +20147,7 @@ async function appendBenchmarkCsv(language: string, name: string, durationSecond
 
 // 🚩Runs all benchmarks. MUST only be called explicitly (e.g. via CLI flag).
 async function runBenchmarks() {
-  const importAtRuntime = async <TModule = any,>(moduleId: string): Promise<TModule> => import(/* @vite-ignore */ moduleId);
+  const importAtRuntime = async <TModule = any>(moduleId: string): Promise<TModule> => import(/* @vite-ignore */ moduleId);
   const BenchMetabolismKit = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.semio.json"].join("/"))).default;
   const BenchKitDiffed = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diffed.semio.json"].join("/"))).default;
   const BenchInvalidKit = (await importAtRuntime<any>(["@semio/assets", "semio/invalid.kit.semio.json"].join("/"))).default;
@@ -20151,9 +20180,11 @@ async function runBenchmarks() {
   });
 
   await bench("Diff/Metabolism", () => {
-    const k2 = applyKitDiff(kitOriginal, diffForward);
+    const k2 = structuredClone(kitOriginal);
+    applyKitDiff(k2, diffForward);
     if (!areKitsEqual(k2, kitDiffed)) throw new Error("Diff/Metabolism forward output does not match test expectation");
-    const restored = applyKitDiff(k2, diffInverse);
+    const restored = structuredClone(k2);
+    applyKitDiff(restored, diffInverse);
     if (!areKitsEqual(restored, kitOriginal)) throw new Error("Diff/Metabolism inverse output does not match test expectation");
   });
 

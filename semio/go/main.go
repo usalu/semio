@@ -1735,28 +1735,28 @@ type DesignShallow struct {
 
 // 🧬KitKind represents the five persistence/transport forms of a kit.
 // Specs: Exactly five kit kinds exist:
-//   - KitKindFile: Self-contained JSON file (.kit.json)
-//   - KitKindFolder: Local folder with .semio/kit.db SQLite file and asset files
-//   - KitKindArchive: ZIP file packaging a FolderKit structure
+//   - KitKindDev: Self-contained JSON file (.kit.json)
+//   - KitKindLocal: Local folder with .semio/kit.db SQLite file and asset files
+//   - KitKindArchive: ZIP file packaging a LocalKit structure
 //   - KitKindRemote: URL-addressable kit served over HTTP(S)
-//   - KitKindTemporary: In-memory ephemeral kit (no persistence)
+//   - KitKindTransport: Static JSON string for serialization/deserialization
 type KitKind string
 
 const (
-	// KitKindFile is a self-contained JSON file (.kit.json).
-	KitKindFile KitKind = "file"
-	// KitKindFolder is a local folder with .semio/kit.db SQLite file.
-	KitKindFolder KitKind = "folder"
-	// KitKindArchive is a ZIP file packaging a FolderKit structure.
+	// KitKindDev is a self-contained JSON file (.kit.json).
+	KitKindDev KitKind = "dev"
+	// KitKindLocal is a local folder with .semio/kit.db SQLite file.
+	KitKindLocal KitKind = "local"
+	// KitKindArchive is a ZIP file packaging a LocalKit structure.
 	KitKindArchive KitKind = "archive"
 	// KitKindRemote is a URL-addressable kit served over HTTP(S).
 	KitKindRemote KitKind = "remote"
-	// KitKindTemporary is an in-memory ephemeral kit (no persistence).
-	KitKindTemporary KitKind = "temporary"
+	// KitKindTransport is a static JSON string for serialization/deserialization.
+	KitKindTransport KitKind = "transport"
 )
 
 // 📜AllKitKinds contains the complete list of valid KitKind values.
-var AllKitKinds = []KitKind{KitKindFile, KitKindFolder, KitKindArchive, KitKindRemote, KitKindTemporary}
+var AllKitKinds = []KitKind{KitKindDev, KitKindLocal, KitKindArchive, KitKindRemote, KitKindTransport}
 
 // ✔️IsValidKitKind checks if a KitKind value is one of the five valid kinds.
 func IsValidKitKind(kind KitKind) bool {
@@ -1769,6 +1769,136 @@ func IsValidKitKind(kind KitKind) bool {
 }
 
 // #endregion 🧬KitKind
+
+// #region 🧳Kit Kind Types
+
+// 🚚TransportKit wraps a static JSON string for kit serialization/deserialization.
+type TransportKit struct {
+	JSON string
+}
+
+// 📥ToKit deserializes the JSON string into a Kit.
+func (t *TransportKit) ToKit() (Kit, error) {
+	return DeserializeKit([]byte(t.JSON))
+}
+
+// 📤TransportKitFromKit creates a TransportKit from a Kit.
+func TransportKitFromKit(kit Kit) (*TransportKit, error) {
+	data, err := SerializeKit(kit)
+	if err != nil {
+		return nil, err
+	}
+	return &TransportKit{JSON: string(data)}, nil
+}
+
+// 📦ArchiveKit wraps a static zipped local kit.
+type ArchiveKit struct {
+	Data []byte
+}
+
+// 🔄SyncKit interface for synchronized kit kinds.
+type SyncKit interface {
+	Kit() *Kit
+	Apply(diff *KitDiff)
+	ImportTransport(transport *TransportKit) error
+	ExportTransport() (*TransportKit, error)
+	Close()
+}
+
+// 💻DevKit is a synchronized JSON file kit.
+type DevKit struct {
+	kit Kit
+}
+
+// 🏗️NewDevKit creates a new DevKit from a Kit.
+func NewDevKit(kit Kit) *DevKit { return &DevKit{kit: kit} }
+
+// 📦Kit returns a pointer to the underlying Kit.
+func (d *DevKit) Kit() *Kit { return &d.kit }
+
+// ▶️Apply applies a KitDiff to the underlying Kit in place.
+func (d *DevKit) Apply(diff *KitDiff) { ApplyKitDiff(&d.kit, diff) }
+
+// 📥ImportTransport imports a TransportKit by computing and applying the diff.
+func (d *DevKit) ImportTransport(t *TransportKit) error {
+	imported, err := t.ToKit()
+	if err != nil {
+		return err
+	}
+	diff := GetKitDiff(d.kit, imported)
+	ApplyKitDiff(&d.kit, &diff)
+	return nil
+}
+
+// 📤ExportTransport exports the Kit as a TransportKit.
+func (d *DevKit) ExportTransport() (*TransportKit, error) { return TransportKitFromKit(d.kit) }
+
+// 🔒Close is a no-op for DevKit.
+func (d *DevKit) Close() {}
+
+// 📂LocalKit is a synchronized folder with .semio/kit.db SQLite database.
+type LocalKit struct {
+	kit Kit
+}
+
+// 🏗️NewLocalKit creates a new LocalKit from a Kit.
+func NewLocalKit(kit Kit) *LocalKit { return &LocalKit{kit: kit} }
+
+// 📦Kit returns a pointer to the underlying Kit.
+func (l *LocalKit) Kit() *Kit { return &l.kit }
+
+// ▶️Apply applies a KitDiff to the underlying Kit in place.
+func (l *LocalKit) Apply(diff *KitDiff) { ApplyKitDiff(&l.kit, diff) }
+
+// 📥ImportTransport imports a TransportKit by computing and applying the diff.
+func (l *LocalKit) ImportTransport(t *TransportKit) error {
+	imported, err := t.ToKit()
+	if err != nil {
+		return err
+	}
+	diff := GetKitDiff(l.kit, imported)
+	ApplyKitDiff(&l.kit, &diff)
+	return nil
+}
+
+// 📤ExportTransport exports the Kit as a TransportKit.
+func (l *LocalKit) ExportTransport() (*TransportKit, error) { return TransportKitFromKit(l.kit) }
+
+// 🔒Close is a no-op for LocalKit.
+func (l *LocalKit) Close() {}
+
+// 🌐RemoteKit is a synchronized websocket connection to semio/hub.
+type RemoteKit struct {
+	kit Kit
+}
+
+// 🏗️NewRemoteKit creates a new RemoteKit from a Kit.
+func NewRemoteKit(kit Kit) *RemoteKit { return &RemoteKit{kit: kit} }
+
+// 📦Kit returns a pointer to the underlying Kit.
+func (r *RemoteKit) Kit() *Kit { return &r.kit }
+
+// ▶️Apply applies a KitDiff to the underlying Kit in place.
+func (r *RemoteKit) Apply(diff *KitDiff) { ApplyKitDiff(&r.kit, diff) }
+
+// 📥ImportTransport imports a TransportKit by computing and applying the diff.
+func (r *RemoteKit) ImportTransport(t *TransportKit) error {
+	imported, err := t.ToKit()
+	if err != nil {
+		return err
+	}
+	diff := GetKitDiff(r.kit, imported)
+	ApplyKitDiff(&r.kit, &diff)
+	return nil
+}
+
+// 📤ExportTransport exports the Kit as a TransportKit.
+func (r *RemoteKit) ExportTransport() (*TransportKit, error) { return TransportKitFromKit(r.kit) }
+
+// 🔒Close is a no-op for RemoteKit.
+func (r *RemoteKit) Close() {}
+
+// #endregion 🧳Kit Kind Types
 
 // 📦Kit represents the root container for all domain entities.
 type Kit struct {
@@ -2022,7 +2152,8 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []st
 		return semioReportErr[DesignDiff](flatRep.Errors)
 	}
 	flatDiff := flatRep.Diff.Forward
-	flatDesign := ApplyDesignDiff(design, flatDiff)
+	flatDesign := deepCloneDesign(design)
+	ApplyDesignDiff(&flatDesign, &flatDiff)
 	flatPieceMap := make(map[string]*Piece)
 	for i := range flatDesign.Pieces {
 		flatPieceMap[flatDesign.Pieces[i].Guid] = &flatDesign.Pieces[i]
@@ -7602,218 +7733,233 @@ func isGroupDiffEmpty(diff GroupDiff) bool {
 	return diff.Pieces == nil && diff.Name == nil && diff.Color == nil && diff.Description == nil && diff.Attributes == nil
 }
 
-func applyAttributeDiff(base Attribute, diff AttributeDiff) Attribute {
-	result := base
+func applyAttributeDiff(item *Attribute, diff *AttributeDiff) {
 	if diff.Key != nil {
-		result.Key = *diff.Key
+		item.Key = *diff.Key
 	}
 	if diff.Value != nil {
-		result.Value = diff.Value
+		item.Value = diff.Value
 	}
 	if diff.Definition != nil {
-		result.Definition = diff.Definition
+		item.Definition = diff.Definition
 	}
-	return result
 }
 
-func applyAttributesDiff(base []Attribute, diff AttributesDiff) []Attribute {
-	result := make([]Attribute, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]AttributeDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Attribute.Guid] = u.Diff
-	}
-	for _, a := range base {
-		if removedGuids[a.Guid] {
-			continue
+func applyAttributesDiff(items *[]Attribute, diff *AttributesDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[a.Guid]; ok {
-			result = append(result, applyAttributeDiff(a, d))
-		} else {
-			result = append(result, a)
+		filtered := (*items)[:0]
+		for _, a := range *items {
+			if !removedGuids[a.Guid] {
+				filtered = append(filtered, a)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Attribute.Guid {
+					applyAttributeDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyPropsDiff(base []Prop, diff PropsDiff) []Prop {
-	result := make([]Prop, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]PropDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Prop.Guid] = u.Diff
-	}
-	for _, p := range base {
-		if removedGuids[p.Guid] {
-			continue
+func applyPropsDiff(items *[]Prop, diff *PropsDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[p.Guid]; ok {
-			result = append(result, applyPropDiff(p, d))
-		} else {
-			result = append(result, p)
+		filtered := (*items)[:0]
+		for _, p := range *items {
+			if !removedGuids[p.Guid] {
+				filtered = append(filtered, p)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Prop.Guid {
+					applyPropDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyPropDiff(base Prop, diff PropDiff) Prop {
-	result := base
+func applyPropDiff(item *Prop, diff *PropDiff) {
 	if diff.Quality != nil {
-		result.Quality = *diff.Quality
+		item.Quality = *diff.Quality
 	}
 	if diff.Value != nil {
-		result.Value = *diff.Value
+		item.Value = *diff.Value
 	}
 	if diff.Unit != nil {
-		result.Unit = diff.Unit
+		item.Unit = diff.Unit
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyStatsDiff(base []Stat, diff StatsDiff) []Stat {
-	result := make([]Stat, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]StatDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Stat.Guid] = u.Diff
-	}
-	for _, s := range base {
-		if removedGuids[s.Guid] {
-			continue
+func applyStatsDiff(items *[]Stat, diff *StatsDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[s.Guid]; ok {
-			result = append(result, applyStatDiff(s, d))
-		} else {
-			result = append(result, s)
+		filtered := (*items)[:0]
+		for _, s := range *items {
+			if !removedGuids[s.Guid] {
+				filtered = append(filtered, s)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Stat.Guid {
+					applyStatDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyStatDiff(base Stat, diff StatDiff) Stat {
-	result := base
+func applyStatDiff(item *Stat, diff *StatDiff) {
 	if diff.Quality != nil {
-		result.Quality = *diff.Quality
+		item.Quality = *diff.Quality
 	}
 	if diff.Min != nil {
-		result.Min = diff.Min
+		item.Min = diff.Min
 	}
 	if diff.Max != nil {
-		result.Max = diff.Max
+		item.Max = diff.Max
 	}
 	if diff.Unit != nil {
-		result.Unit = diff.Unit
+		item.Unit = diff.Unit
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyLayersDiff(base []Layer, diff LayersDiff) []Layer {
-	result := make([]Layer, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]LayerDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Layer.Guid] = u.Diff
-	}
-	for _, l := range base {
-		if removedGuids[l.Guid] {
-			continue
+func applyLayersDiff(items *[]Layer, diff *LayersDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[l.Guid]; ok {
-			result = append(result, applyLayerDiff(l, d))
-		} else {
-			result = append(result, l)
+		filtered := (*items)[:0]
+		for _, l := range *items {
+			if !removedGuids[l.Guid] {
+				filtered = append(filtered, l)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Layer.Guid {
+					applyLayerDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyLayerDiff(base Layer, diff LayerDiff) Layer {
-	result := base
+func applyLayerDiff(item *Layer, diff *LayerDiff) {
 	if diff.Path != nil {
-		result.Path = *diff.Path
+		item.Path = *diff.Path
 	}
 	if diff.IsHidden != nil {
-		result.IsHidden = diff.IsHidden
+		item.IsHidden = diff.IsHidden
 	}
 	if diff.IsLocked != nil {
-		result.IsLocked = diff.IsLocked
+		item.IsLocked = diff.IsLocked
 	}
 	if diff.Color != nil {
-		result.Color = diff.Color
+		item.Color = diff.Color
 	}
 	if diff.Description != nil {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyGroupsDiff(base []Group, diff GroupsDiff) []Group {
-	result := make([]Group, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]GroupDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Group.Guid] = u.Diff
-	}
-	for _, g := range base {
-		if removedGuids[g.Guid] {
-			continue
+func applyGroupsDiff(items *[]Group, diff *GroupsDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[g.Guid]; ok {
-			result = append(result, applyGroupDiff(g, d))
-		} else {
-			result = append(result, g)
+		filtered := (*items)[:0]
+		for _, g := range *items {
+			if !removedGuids[g.Guid] {
+				filtered = append(filtered, g)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Group.Guid {
+					applyGroupDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyGroupDiff(base Group, diff GroupDiff) Group {
-	result := base
+func applyGroupDiff(item *Group, diff *GroupDiff) {
 	if diff.Pieces != nil {
-		result.Pieces = diff.Pieces
+		item.Pieces = diff.Pieces
 	}
 	if diff.Name != nil {
-		result.Name = diff.Name
+		item.Name = diff.Name
 	}
 	if diff.Color != nil {
-		result.Color = diff.Color
+		item.Color = diff.Color
 	}
 	if diff.Description != nil {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
 func getConnectorsDiff(before, after []Connector) ConnectorsDiff {
@@ -8768,64 +8914,62 @@ func areGroupsEqual(a, b []Group) bool {
 	return true
 }
 
-// ▶️ApplyKitDiff applies a forward diff to a base kit producing the updated kit.
-func ApplyKitDiff(base Kit, diff KitDiff) Kit {
-	result := base
+// ▶️ApplyKitDiff applies a forward diff to a kit, mutating it in place.
+func ApplyKitDiff(kit *Kit, diff *KitDiff) {
 	if diff.Name != nil {
-		result.Name = *diff.Name
+		kit.Name = *diff.Name
 	}
 	if diff.Version != nil {
-		result.Version = *diff.Version
+		kit.Version = *diff.Version
 	}
 	if diff.Description != nil {
-		result.Description = diff.Description
+		kit.Description = diff.Description
 	}
 	if diff.Icon != nil {
-		result.Icon = diff.Icon
+		kit.Icon = diff.Icon
 	}
 	if diff.Image != nil {
-		result.Image = diff.Image
+		kit.Image = diff.Image
 	}
 	if diff.Remote != nil {
-		result.Remote = diff.Remote
+		kit.Remote = diff.Remote
 	}
 	if diff.Homepage != nil {
-		result.Homepage = diff.Homepage
+		kit.Homepage = diff.Homepage
 	}
 	if diff.License != nil {
-		result.License = diff.License
+		kit.License = diff.License
 	}
 	if diff.Preview != nil {
-		result.Preview = diff.Preview
+		kit.Preview = diff.Preview
 	}
 	if diff.Types != nil {
-		result.Types = applyTypesDiff(base.Types, *diff.Types)
+		applyTypesDiff(&kit.Types, diff.Types)
 	}
 	if diff.Designs != nil {
-		result.Designs = applyDesignsDiff(base.Designs, *diff.Designs)
+		applyDesignsDiff(&kit.Designs, diff.Designs)
 	}
 	if diff.Tags != nil {
-		result.Tags = applyTagsDiff(base.Tags, *diff.Tags)
+		applyTagsDiff(&kit.Tags, diff.Tags)
 	}
 	if diff.Concepts != nil {
-		result.Concepts = applyConceptsDiff(base.Concepts, *diff.Concepts)
+		applyConceptsDiff(&kit.Concepts, diff.Concepts)
 	}
 	if diff.Ports != nil {
-		result.Ports = applyPortsDiff(base.Ports, *diff.Ports)
+		applyPortsDiff(&kit.Ports, diff.Ports)
 	}
 	if diff.Files != nil {
-		result.Files = applyFilesDiff(base.Files, *diff.Files)
+		applyFilesDiff(&kit.Files, diff.Files)
 	}
 	if diff.Folders != nil {
-		result.Folders = applyFoldersDiff(base.Folders, *diff.Folders)
+		applyFoldersDiff(&kit.Folders, diff.Folders)
 	}
 	if diff.Authors != nil {
-		result.Authors = applyAuthorsDiff(base.Authors, *diff.Authors)
+		applyAuthorsDiff(&kit.Authors, diff.Authors)
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&kit.Attributes, diff.Attributes)
 	}
-	return result
 }
 
 // KitDiffValidationNote is one machine-addressable validation message.
@@ -9254,292 +9398,304 @@ func ValidateKitDiff(kit Kit, diff KitDiff, heal bool) KitDiffValidationResult {
 	return res
 }
 
-func applyTypesDiff(base []Type, diff TypesDiff) []Type {
-	result := make([]Type, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]TypeDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Type.Guid] = u.Diff
-	}
-	for _, t := range base {
-		if removedGuids[t.Guid] {
-			continue
+func applyTypesDiff(items *[]Type, diff *TypesDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[t.Guid]; ok {
-			result = append(result, applyTypeDiff(t, d))
-		} else {
-			result = append(result, t)
+		filtered := (*items)[:0]
+		for _, t := range *items {
+			if !removedGuids[t.Guid] {
+				filtered = append(filtered, t)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Type.Guid {
+					applyTypeDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyTypeDiff(base Type, diff TypeDiff) Type {
-	result := base
+func applyTypeDiff(item *Type, diff *TypeDiff) {
 	if diff.Name != nil {
-		result.Name = *diff.Name
+		item.Name = *diff.Name
 	}
 	if diff.Parent != nil {
-		result.Parent = diff.Parent
+		item.Parent = diff.Parent
 	}
 	if diff.IsAbstract != nil {
-		result.IsAbstract = diff.IsAbstract
+		item.IsAbstract = diff.IsAbstract
 	}
 	if diff.HasField("virtual") {
-		result.Virtual = diff.Virtual
+		item.Virtual = diff.Virtual
 	}
 	if diff.HasField("unit") {
-		result.Unit = diff.Unit
+		item.Unit = diff.Unit
 	}
 	if diff.Stock != nil {
-		result.Stock = diff.Stock
+		item.Stock = diff.Stock
 	}
 	if diff.Location != nil {
-		result.Location = diff.Location
+		item.Location = diff.Location
 	}
 	if diff.Folder != nil {
-		result.Folder = diff.Folder
+		item.Folder = diff.Folder
 	}
 	if diff.Icon != nil {
-		result.Icon = diff.Icon
+		item.Icon = diff.Icon
 	}
 	if diff.Image != nil {
-		result.Image = diff.Image
+		item.Image = diff.Image
 	}
 	if diff.HasField("description") {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.Authors != nil {
-		result.Authors = diff.Authors
+		item.Authors = diff.Authors
 	}
 	if diff.Concepts != nil {
-		result.Concepts = diff.Concepts
+		item.Concepts = diff.Concepts
 	}
 	if diff.Models != nil {
-		result.Models = applyModelsDiff(base.Models, *diff.Models)
+		applyModelsDiff(&item.Models, diff.Models)
 	}
 	if diff.Connectors != nil {
-		result.Connectors = applyConnectorsDiff(base.Connectors, *diff.Connectors)
+		applyConnectorsDiff(&item.Connectors, diff.Connectors)
 	}
 	if diff.Props != nil {
-		result.Props = applyPropsDiff(base.Props, *diff.Props)
+		applyPropsDiff(&item.Props, diff.Props)
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyConnectorsDiff(base []Connector, diff ConnectorsDiff) []Connector {
-	result := make([]Connector, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]ConnectorDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Connector.Guid] = u.Diff
-	}
-	for _, c := range base {
-		if removedGuids[c.Guid] {
-			continue
+func applyConnectorsDiff(items *[]Connector, diff *ConnectorsDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[c.Guid]; ok {
-			result = append(result, applyConnectorDiff(c, d))
-		} else {
-			result = append(result, c)
+		filtered := (*items)[:0]
+		for _, c := range *items {
+			if !removedGuids[c.Guid] {
+				filtered = append(filtered, c)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Connector.Guid {
+					applyConnectorDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyConnectorDiff(base Connector, diff ConnectorDiff) Connector {
-	result := base
+func applyConnectorDiff(item *Connector, diff *ConnectorDiff) {
 	if diff.Name != nil {
-		result.Name = diff.Name
+		item.Name = diff.Name
 	}
 	if diff.T != nil {
-		result.T = *diff.T
+		item.T = *diff.T
 	}
 	if diff.Point != nil {
 		if diff.Point.X != nil {
-			result.Point.X += *diff.Point.X
+			item.Point.X += *diff.Point.X
 		}
 		if diff.Point.Y != nil {
-			result.Point.Y += *diff.Point.Y
+			item.Point.Y += *diff.Point.Y
 		}
 		if diff.Point.Z != nil {
-			result.Point.Z += *diff.Point.Z
+			item.Point.Z += *diff.Point.Z
 		}
 	}
 	if diff.Direction != nil {
 		if diff.Direction.X != nil {
-			result.Direction.X += *diff.Direction.X
+			item.Direction.X += *diff.Direction.X
 		}
 		if diff.Direction.Y != nil {
-			result.Direction.Y += *diff.Direction.Y
+			item.Direction.Y += *diff.Direction.Y
 		}
 		if diff.Direction.Z != nil {
-			result.Direction.Z += *diff.Direction.Z
+			item.Direction.Z += *diff.Direction.Z
 		}
 	}
 	if diff.Description != nil {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.Port != nil {
-		result.Port = diff.Port
+		item.Port = diff.Port
 	}
 	if diff.Mandatory != nil {
-		result.Mandatory = diff.Mandatory
+		item.Mandatory = diff.Mandatory
 	}
 	if diff.Props != nil {
-		result.Props = applyPropsDiff(base.Props, *diff.Props)
+		applyPropsDiff(&item.Props, diff.Props)
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyModelsDiff(base []Model, diff ModelsDiff) []Model {
-	result := make([]Model, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]ModelDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Model.Guid] = u.Diff
-	}
-	for _, m := range base {
-		if removedGuids[m.Guid] {
-			continue
+func applyModelsDiff(items *[]Model, diff *ModelsDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[m.Guid]; ok {
-			result = append(result, applyModelDiff(m, d))
-		} else {
-			result = append(result, m)
+		filtered := (*items)[:0]
+		for _, m := range *items {
+			if !removedGuids[m.Guid] {
+				filtered = append(filtered, m)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Model.Guid {
+					applyModelDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyModelDiff(base Model, diff ModelDiff) Model {
-	result := base
+func applyModelDiff(item *Model, diff *ModelDiff) {
 	if diff.Name != nil {
-		result.Name = diff.Name
+		item.Name = diff.Name
 	}
 	if diff.File != nil {
-		result.File = *diff.File
+		item.File = *diff.File
 	}
 	if diff.Tags != nil {
-		result.Tags = diff.Tags
+		item.Tags = diff.Tags
 	}
 	if diff.Description != nil {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyDesignsDiff(base []Design, diff DesignsDiff) []Design {
-	result := make([]Design, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]DesignDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Design.Guid] = u.Diff
-	}
-	for _, d := range base {
-		if removedGuids[d.Guid] {
-			continue
+func applyDesignsDiff(items *[]Design, diff *DesignsDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if df, ok := updatedDiffs[d.Guid]; ok {
-			result = append(result, applyDesignDiff(d, df))
-		} else {
-			result = append(result, d)
+		filtered := (*items)[:0]
+		for _, d := range *items {
+			if !removedGuids[d.Guid] {
+				filtered = append(filtered, d)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Design.Guid {
+					applyDesignDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyDesignDiff(base Design, diff DesignDiff) Design {
-	result := base
+func applyDesignDiff(item *Design, diff *DesignDiff) {
 	if diff.Name != nil {
-		result.Name = *diff.Name
+		item.Name = *diff.Name
 	}
 	if diff.Parent != nil {
-		result.Parent = diff.Parent
+		item.Parent = diff.Parent
 	}
 	if diff.IsAbstract != nil {
-		result.IsAbstract = diff.IsAbstract
+		item.IsAbstract = diff.IsAbstract
 	}
 	if diff.Unit != nil {
-		result.Unit = diff.Unit
+		item.Unit = diff.Unit
 	}
 	if diff.Folder != nil {
-		result.Folder = diff.Folder
+		item.Folder = diff.Folder
 	}
 	if diff.CanScale != nil {
-		result.CanScale = diff.CanScale
+		item.CanScale = diff.CanScale
 	}
 	if diff.CanMirror != nil {
-		result.CanMirror = diff.CanMirror
+		item.CanMirror = diff.CanMirror
 	}
 	if diff.ActiveLayer != nil {
-		result.ActiveLayer = diff.ActiveLayer
+		item.ActiveLayer = diff.ActiveLayer
 	}
 	if diff.Location != nil {
-		result.Location = diff.Location
+		item.Location = diff.Location
 	}
 	if diff.Icon != nil {
-		result.Icon = diff.Icon
+		item.Icon = diff.Icon
 	}
 	if diff.Image != nil {
-		result.Image = diff.Image
+		item.Image = diff.Image
 	}
 	if diff.Description != nil {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.Authors != nil {
-		result.Authors = diff.Authors
+		item.Authors = diff.Authors
 	}
 	if diff.Concepts != nil {
-		result.Concepts = diff.Concepts
+		item.Concepts = diff.Concepts
 	}
 	if diff.Pieces != nil {
-		result.Pieces = applyPiecesDiff(base.Pieces, *diff.Pieces)
+		applyPiecesDiff(&item.Pieces, diff.Pieces)
 	}
 	if diff.Connections != nil {
-		result.Connections = applyConnectionsDiff(base.Connections, *diff.Connections)
+		applyConnectionsDiff(&item.Connections, diff.Connections)
 	}
 	if diff.Stats != nil {
-		result.Stats = applyStatsDiff(base.Stats, *diff.Stats)
+		applyStatsDiff(&item.Stats, diff.Stats)
 	}
 	if diff.Props != nil {
-		result.Props = applyPropsDiff(base.Props, *diff.Props)
+		applyPropsDiff(&item.Props, diff.Props)
 	}
 	if diff.Layers != nil {
-		result.Layers = applyLayersDiff(base.Layers, *diff.Layers)
+		applyLayersDiff(&item.Layers, diff.Layers)
 	}
 	if diff.Groups != nil {
-		result.Groups = applyGroupsDiff(base.Groups, *diff.Groups)
+		applyGroupsDiff(&item.Groups, diff.Groups)
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
 // 📌DesignWithDiff creates a mixed design keeping old entities with diff status annotations.
@@ -9586,7 +9742,7 @@ func DesignWithDiff(base Design, diff DesignDiff) Design {
 		} else if pDiff, ok := updatedPieceMap[pc.Guid]; ok {
 			basePlane := pc.Plane
 			baseCenter := pc.Center
-			pc = applyPieceDiff(pc, pDiff)
+			applyPieceDiff(&pc, &pDiff)
 			// 📌Preserve base geometry so modified pieces stay in place and only get recolored.
 			pc.Plane = basePlane
 			pc.Center = baseCenter
@@ -9618,7 +9774,7 @@ func DesignWithDiff(base Design, diff DesignDiff) Design {
 			attrs = append(attrs, statusAttr("removed"))
 			cc.Attributes = attrs
 		} else if cDiff, ok := updatedConnMap[cc.Guid]; ok {
-			cc = applyConnectionDiff(cc, cDiff)
+			applyConnectionDiff(&cc, &cDiff)
 			attrs := append([]Attribute{}, cc.Attributes...)
 			attrs = append(attrs, statusAttr("modified"))
 			cc.Attributes = attrs
@@ -9645,487 +9801,509 @@ func DesignWithDiff(base Design, diff DesignDiff) Design {
 	return result
 }
 
-func applyPiecesDiff(base []Piece, diff PiecesDiff) []Piece {
-	result := make([]Piece, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]PieceDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Piece.Guid] = u.Diff
-	}
-	for _, p := range base {
-		if removedGuids[p.Guid] {
-			continue
+func applyPiecesDiff(items *[]Piece, diff *PiecesDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[p.Guid]; ok {
-			result = append(result, applyPieceDiff(p, d))
-		} else {
-			result = append(result, p)
+		filtered := (*items)[:0]
+		for _, p := range *items {
+			if !removedGuids[p.Guid] {
+				filtered = append(filtered, p)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Piece.Guid {
+					applyPieceDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyPieceDiff(base Piece, diff PieceDiff) Piece {
-	result := base
+func applyPieceDiff(item *Piece, diff *PieceDiff) {
 	if diff.Name != nil {
-		result.Name = diff.Name
+		item.Name = diff.Name
 	}
 	if diff.Type != nil {
-		result.Type = diff.Type
+		item.Type = diff.Type
 	}
 	if diff.Design != nil {
-		result.Design = diff.Design
+		item.Design = diff.Design
 	}
 	if diff.Scale != nil {
-		result.Scale = diff.Scale
+		item.Scale = diff.Scale
 	}
 	if diff.Plane != nil {
-		if result.Plane == nil {
-			result.Plane = &Plane{}
+		if item.Plane == nil {
+			item.Plane = &Plane{}
 		}
 		if diff.Plane.Origin != nil {
 			if diff.Plane.Origin.X != nil {
-				result.Plane.Origin.X = *diff.Plane.Origin.X
+				item.Plane.Origin.X = *diff.Plane.Origin.X
 			}
 			if diff.Plane.Origin.Y != nil {
-				result.Plane.Origin.Y = *diff.Plane.Origin.Y
+				item.Plane.Origin.Y = *diff.Plane.Origin.Y
 			}
 			if diff.Plane.Origin.Z != nil {
-				result.Plane.Origin.Z = *diff.Plane.Origin.Z
+				item.Plane.Origin.Z = *diff.Plane.Origin.Z
 			}
 		}
 		if diff.Plane.XAxis != nil {
 			if diff.Plane.XAxis.X != nil {
-				result.Plane.XAxis.X = *diff.Plane.XAxis.X
+				item.Plane.XAxis.X = *diff.Plane.XAxis.X
 			}
 			if diff.Plane.XAxis.Y != nil {
-				result.Plane.XAxis.Y = *diff.Plane.XAxis.Y
+				item.Plane.XAxis.Y = *diff.Plane.XAxis.Y
 			}
 			if diff.Plane.XAxis.Z != nil {
-				result.Plane.XAxis.Z = *diff.Plane.XAxis.Z
+				item.Plane.XAxis.Z = *diff.Plane.XAxis.Z
 			}
 		}
 		if diff.Plane.YAxis != nil {
 			if diff.Plane.YAxis.X != nil {
-				result.Plane.YAxis.X = *diff.Plane.YAxis.X
+				item.Plane.YAxis.X = *diff.Plane.YAxis.X
 			}
 			if diff.Plane.YAxis.Y != nil {
-				result.Plane.YAxis.Y = *diff.Plane.YAxis.Y
+				item.Plane.YAxis.Y = *diff.Plane.YAxis.Y
 			}
 			if diff.Plane.YAxis.Z != nil {
-				result.Plane.YAxis.Z = *diff.Plane.YAxis.Z
+				item.Plane.YAxis.Z = *diff.Plane.YAxis.Z
 			}
 		}
 	}
 	if diff.Center != nil {
-		if result.Center == nil {
-			result.Center = &Coord{}
+		if item.Center == nil {
+			item.Center = &Coord{}
 		}
 		if diff.Center.U != nil {
-			result.Center.U = *diff.Center.U
+			item.Center.U = *diff.Center.U
 		}
 		if diff.Center.V != nil {
-			result.Center.V = *diff.Center.V
+			item.Center.V = *diff.Center.V
 		}
 	}
 	if diff.MirrorPlane != nil {
-		if result.MirrorPlane == nil {
-			result.MirrorPlane = &Plane{}
+		if item.MirrorPlane == nil {
+			item.MirrorPlane = &Plane{}
 		}
 		if diff.MirrorPlane.Origin != nil {
 			if diff.MirrorPlane.Origin.X != nil {
-				result.MirrorPlane.Origin.X = *diff.MirrorPlane.Origin.X
+				item.MirrorPlane.Origin.X = *diff.MirrorPlane.Origin.X
 			}
 			if diff.MirrorPlane.Origin.Y != nil {
-				result.MirrorPlane.Origin.Y = *diff.MirrorPlane.Origin.Y
+				item.MirrorPlane.Origin.Y = *diff.MirrorPlane.Origin.Y
 			}
 			if diff.MirrorPlane.Origin.Z != nil {
-				result.MirrorPlane.Origin.Z = *diff.MirrorPlane.Origin.Z
+				item.MirrorPlane.Origin.Z = *diff.MirrorPlane.Origin.Z
 			}
 		}
 		if diff.MirrorPlane.XAxis != nil {
 			if diff.MirrorPlane.XAxis.X != nil {
-				result.MirrorPlane.XAxis.X = *diff.MirrorPlane.XAxis.X
+				item.MirrorPlane.XAxis.X = *diff.MirrorPlane.XAxis.X
 			}
 			if diff.MirrorPlane.XAxis.Y != nil {
-				result.MirrorPlane.XAxis.Y = *diff.MirrorPlane.XAxis.Y
+				item.MirrorPlane.XAxis.Y = *diff.MirrorPlane.XAxis.Y
 			}
 			if diff.MirrorPlane.XAxis.Z != nil {
-				result.MirrorPlane.XAxis.Z = *diff.MirrorPlane.XAxis.Z
+				item.MirrorPlane.XAxis.Z = *diff.MirrorPlane.XAxis.Z
 			}
 		}
 		if diff.MirrorPlane.YAxis != nil {
 			if diff.MirrorPlane.YAxis.X != nil {
-				result.MirrorPlane.YAxis.X = *diff.MirrorPlane.YAxis.X
+				item.MirrorPlane.YAxis.X = *diff.MirrorPlane.YAxis.X
 			}
 			if diff.MirrorPlane.YAxis.Y != nil {
-				result.MirrorPlane.YAxis.Y = *diff.MirrorPlane.YAxis.Y
+				item.MirrorPlane.YAxis.Y = *diff.MirrorPlane.YAxis.Y
 			}
 			if diff.MirrorPlane.YAxis.Z != nil {
-				result.MirrorPlane.YAxis.Z = *diff.MirrorPlane.YAxis.Z
+				item.MirrorPlane.YAxis.Z = *diff.MirrorPlane.YAxis.Z
 			}
 		}
 	}
 	if diff.IsHidden != nil {
-		result.IsHidden = diff.IsHidden
+		item.IsHidden = diff.IsHidden
 	}
 	if diff.IsLocked != nil {
-		result.IsLocked = diff.IsLocked
+		item.IsLocked = diff.IsLocked
 	}
 	if diff.Color != nil {
-		result.Color = diff.Color
+		item.Color = diff.Color
 	}
 	if diff.Description != nil {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.Props != nil {
-		result.Props = applyPropsDiff(base.Props, *diff.Props)
+		applyPropsDiff(&item.Props, diff.Props)
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyConnectionsDiff(base []Connection, diff ConnectionsDiff) []Connection {
-	result := make([]Connection, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]ConnectionDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Connection.Guid] = u.Diff
-	}
-	for _, c := range base {
-		if removedGuids[c.Guid] {
-			continue
+func applyConnectionsDiff(items *[]Connection, diff *ConnectionsDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[c.Guid]; ok {
-			result = append(result, applyConnectionDiff(c, d))
-		} else {
-			result = append(result, c)
+		filtered := (*items)[:0]
+		for _, c := range *items {
+			if !removedGuids[c.Guid] {
+				filtered = append(filtered, c)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Connection.Guid {
+					applyConnectionDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyConnectionDiff(base Connection, diff ConnectionDiff) Connection {
-	result := base
+func applyConnectionDiff(item *Connection, diff *ConnectionDiff) {
 	if diff.Connected != nil {
-		result.Connected = applySideDiff(base.Connected, *diff.Connected)
+		applySideDiff(&item.Connected, diff.Connected)
 	}
 	if diff.Connecting != nil {
-		result.Connecting = applySideDiff(base.Connecting, *diff.Connecting)
+		applySideDiff(&item.Connecting, diff.Connecting)
 	}
 	if diff.Gap != nil {
-		result.Gap = base.Gap + *diff.Gap
+		item.Gap = item.Gap + *diff.Gap
 	}
 	if diff.Shift != nil {
-		result.Shift = base.Shift + *diff.Shift
+		item.Shift = item.Shift + *diff.Shift
 	}
 	if diff.Rise != nil {
-		result.Rise = base.Rise + *diff.Rise
+		item.Rise = item.Rise + *diff.Rise
 	}
 	if diff.Rotation != nil {
-		result.Rotation = base.Rotation + *diff.Rotation
+		item.Rotation = item.Rotation + *diff.Rotation
 	}
 	if diff.Turn != nil {
-		result.Turn = base.Turn + *diff.Turn
+		item.Turn = item.Turn + *diff.Turn
 	}
 	if diff.Tilt != nil {
-		result.Tilt = base.Tilt + *diff.Tilt
+		item.Tilt = item.Tilt + *diff.Tilt
 	}
 	if diff.U != nil {
-		result.U = base.U + *diff.U
+		item.U = item.U + *diff.U
 	}
 	if diff.V != nil {
-		result.V = base.V + *diff.V
+		item.V = item.V + *diff.V
 	}
 	if diff.Description != nil {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applySideDiff(base Side, diff SideDiff) Side {
-	result := base
+func applySideDiff(item *Side, diff *SideDiff) {
 	if diff.Piece != nil {
-		result.Piece = *diff.Piece
+		item.Piece = *diff.Piece
 	}
 	if diff.DesignPiece != nil {
-		result.DesignPiece = diff.DesignPiece
+		item.DesignPiece = diff.DesignPiece
 	}
 	if diff.Connector != nil {
-		result.Connector = diff.Connector
+		item.Connector = diff.Connector
 	}
-	return result
 }
 
-func applyTagsDiff(base []Tag, diff TagsDiff) []Tag {
-	result := make([]Tag, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]TagDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Tag.Guid] = u.Diff
-	}
-	for _, t := range base {
-		if removedGuids[t.Guid] {
-			continue
+func applyTagsDiff(items *[]Tag, diff *TagsDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[t.Guid]; ok {
-			result = append(result, applyTagDiff(t, d))
-		} else {
-			result = append(result, t)
+		filtered := (*items)[:0]
+		for _, t := range *items {
+			if !removedGuids[t.Guid] {
+				filtered = append(filtered, t)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Tag.Guid {
+					applyTagDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyTagDiff(base Tag, diff TagDiff) Tag {
-	result := base
+func applyTagDiff(item *Tag, diff *TagDiff) {
 	if diff.Name != nil {
-		result.Name = *diff.Name
+		item.Name = *diff.Name
 	}
 	if diff.HasField("description") {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.HasField("icon") {
-		result.Icon = diff.Icon
+		item.Icon = diff.Icon
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyConceptsDiff(base []Concept, diff ConceptsDiff) []Concept {
-	result := make([]Concept, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]ConceptDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Concept.Guid] = u.Diff
-	}
-	for _, c := range base {
-		if removedGuids[c.Guid] {
-			continue
+func applyConceptsDiff(items *[]Concept, diff *ConceptsDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[c.Guid]; ok {
-			result = append(result, applyConceptDiff(c, d))
-		} else {
-			result = append(result, c)
+		filtered := (*items)[:0]
+		for _, c := range *items {
+			if !removedGuids[c.Guid] {
+				filtered = append(filtered, c)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Concept.Guid {
+					applyConceptDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyConceptDiff(base Concept, diff ConceptDiff) Concept {
-	result := base
+func applyConceptDiff(item *Concept, diff *ConceptDiff) {
 	if diff.Name != nil {
-		result.Name = *diff.Name
+		item.Name = *diff.Name
 	}
 	if diff.HasField("description") {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.HasField("icon") {
-		result.Icon = diff.Icon
+		item.Icon = diff.Icon
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyPortsDiff(base []Port, diff PortsDiff) []Port {
-	result := make([]Port, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]PortDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Port.Guid] = u.Diff
-	}
-	for _, i := range base {
-		if removedGuids[i.Guid] {
-			continue
+func applyPortsDiff(items *[]Port, diff *PortsDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[i.Guid]; ok {
-			result = append(result, applyPortDiff(i, d))
-		} else {
-			result = append(result, i)
+		filtered := (*items)[:0]
+		for _, i := range *items {
+			if !removedGuids[i.Guid] {
+				filtered = append(filtered, i)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Port.Guid {
+					applyPortDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyPortDiff(base Port, diff PortDiff) Port {
-	result := base
+func applyPortDiff(item *Port, diff *PortDiff) {
 	if diff.Name != nil {
-		result.Name = *diff.Name
+		item.Name = *diff.Name
 	}
 	if diff.HasField("description") {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.HasField("icon") {
-		result.Icon = diff.Icon
+		item.Icon = diff.Icon
 	}
 	if diff.CompatiblePorts != nil {
-		result.CompatiblePorts = diff.CompatiblePorts
+		item.CompatiblePorts = diff.CompatiblePorts
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyFilesDiff(base []File, diff FilesDiff) []File {
-	result := make([]File, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]FileDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.File.Guid] = u.Diff
-	}
-	for _, f := range base {
-		if removedGuids[f.Guid] {
-			continue
+func applyFilesDiff(items *[]File, diff *FilesDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[f.Guid]; ok {
-			result = append(result, applyFileDiff(f, d))
-		} else {
-			result = append(result, f)
+		filtered := (*items)[:0]
+		for _, f := range *items {
+			if !removedGuids[f.Guid] {
+				filtered = append(filtered, f)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.File.Guid {
+					applyFileDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyFileDiff(base File, diff FileDiff) File {
-	result := base
+func applyFileDiff(item *File, diff *FileDiff) {
 	if diff.Name != nil {
-		result.Name = *diff.Name
+		item.Name = *diff.Name
 	}
 	if diff.Remote != nil {
-		result.Remote = diff.Remote
+		item.Remote = diff.Remote
 	}
 	if diff.Folder != nil {
-		result.Folder = diff.Folder
+		item.Folder = diff.Folder
 	}
 	if diff.Size != nil {
-		result.Size = diff.Size
+		item.Size = diff.Size
 	}
 	if diff.Hash != nil {
-		result.Hash = diff.Hash
+		item.Hash = diff.Hash
 	}
 	if diff.Blob != nil {
-		result.Blob = diff.Blob
+		item.Blob = diff.Blob
 	}
 	if diff.Description != nil {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyFoldersDiff(base []Folder, diff FoldersDiff) []Folder {
-	result := make([]Folder, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]FolderDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Folder.Guid] = u.Diff
-	}
-	for _, f := range base {
-		if removedGuids[f.Guid] {
-			continue
+func applyFoldersDiff(items *[]Folder, diff *FoldersDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[f.Guid]; ok {
-			result = append(result, applyFolderDiff(f, d))
-		} else {
-			result = append(result, f)
+		filtered := (*items)[:0]
+		for _, f := range *items {
+			if !removedGuids[f.Guid] {
+				filtered = append(filtered, f)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Folder.Guid {
+					applyFolderDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyFolderDiff(base Folder, diff FolderDiff) Folder {
-	result := base
+func applyFolderDiff(item *Folder, diff *FolderDiff) {
 	if diff.Name != nil {
-		result.Name = *diff.Name
+		item.Name = *diff.Name
 	}
 	if diff.Parent != nil {
-		result.Parent = diff.Parent
+		item.Parent = diff.Parent
 	}
 	if diff.Description != nil {
-		result.Description = diff.Description
+		item.Description = diff.Description
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
-func applyAuthorsDiff(base []Author, diff AuthorsDiff) []Author {
-	result := make([]Author, 0)
-	removedGuids := make(map[string]bool)
-	for _, r := range diff.Removed {
-		removedGuids[r.Guid] = true
-	}
-	updatedDiffs := make(map[string]AuthorDiff)
-	for _, u := range diff.Updated {
-		updatedDiffs[u.Author.Guid] = u.Diff
-	}
-	for _, a := range base {
-		if removedGuids[a.Guid] {
-			continue
+func applyAuthorsDiff(items *[]Author, diff *AuthorsDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
 		}
-		if d, ok := updatedDiffs[a.Guid]; ok {
-			result = append(result, applyAuthorDiff(a, d))
-		} else {
-			result = append(result, a)
+		filtered := (*items)[:0]
+		for _, a := range *items {
+			if !removedGuids[a.Guid] {
+				filtered = append(filtered, a)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Author.Guid {
+					applyAuthorDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
 		}
 	}
-	result = append(result, diff.Added...)
-	return result
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
 }
 
-func applyAuthorDiff(base Author, diff AuthorDiff) Author {
-	result := base
+func applyAuthorDiff(item *Author, diff *AuthorDiff) {
 	if diff.Name != nil {
-		result.Name = *diff.Name
+		item.Name = *diff.Name
 	}
 	if diff.Email != nil {
-		result.Email = diff.Email
+		item.Email = diff.Email
 	}
 	if diff.Attributes != nil {
-		result.Attributes = applyAttributesDiff(base.Attributes, *diff.Attributes)
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
 	}
-	return result
 }
 
 // 🧹FilterDesignsWithoutParent returns only root-level designs with no parent.
@@ -10665,7 +10843,8 @@ func AddTypeToKit(kit Kit, typ Type) KitChange {
 			Added: []Type{typ},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -10677,7 +10856,8 @@ func RemoveTypeFromKit(kit Kit, typeGuid string) KitChange {
 			Removed: []TypeId{{Guid: typeGuid}},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -10689,7 +10869,8 @@ func AddDesignToKit(kit Kit, design Design) KitChange {
 			Added: []Design{design},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -10701,7 +10882,8 @@ func RemoveDesignFromKit(kit Kit, designGuid string) KitChange {
 			Removed: []DesignId{{Guid: designGuid}},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -10713,7 +10895,8 @@ func AddFileToKit(kit Kit, file File) KitChange {
 			Added: []File{file},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -10725,7 +10908,8 @@ func RemoveFileFromKit(kit Kit, fileGuid string) KitChange {
 			Removed: []FileId{{Guid: fileGuid}},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -10737,7 +10921,8 @@ func AddPortToKit(kit Kit, iface Port) KitChange {
 			Added: []Port{iface},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -10749,7 +10934,8 @@ func RemovePortFromKit(kit Kit, interfaceGuid string) KitChange {
 			Removed: []PortId{{Guid: interfaceGuid}},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -10761,7 +10947,8 @@ func AddTagToKit(kit Kit, tag Tag) KitChange {
 			Added: []Tag{tag},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -10773,7 +10960,8 @@ func RemoveTagFromKit(kit Kit, tagGuid string) KitChange {
 			Removed: []TagId{{Guid: tagGuid}},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -10785,7 +10973,8 @@ func AddConceptToKit(kit Kit, concept Concept) KitChange {
 			Added: []Concept{concept},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -10797,7 +10986,8 @@ func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
 			Removed: []ConceptId{{Guid: conceptGuid}},
 		},
 	}
-	after := ApplyKitDiff(kit, forward)
+	after := deepCloneKit(kit)
+	ApplyKitDiff(&after, &forward)
 	backward := InverseKitDiff(kit, forward)
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
@@ -11103,6 +11293,14 @@ func deepCloneDesign(d Design) Design {
 	return cloned
 }
 
+// deepCloneKit deep-clones a Kit via JSON marshal/unmarshal.
+func deepCloneKit(k Kit) Kit {
+	data, _ := json.Marshal(k)
+	var cloned Kit
+	json.Unmarshal(data, &cloned)
+	return cloned
+}
+
 // 📋CopyDesign extracts selected pieces and connections from a design into a new Design.
 // Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
 // Internal pieces are copied as-is. Parent-piece-exclusive parent-connection-inclusive pieces get semio.center and semio.plane attributes.
@@ -11129,7 +11327,8 @@ func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []
 
 	// Flatten the design to get absolute planes/centers
 	flatDiff := FlattenDesignDiff(kit, design.Guid)
-	flatDesign := ApplyDesignDiff(design, flatDiff)
+	flatDesign := deepCloneDesign(design)
+	ApplyDesignDiff(&flatDesign, &flatDiff)
 	flatPieceMap := make(map[string]*Piece)
 	for i := range flatDesign.Pieces {
 		flatPieceMap[flatDesign.Pieces[i].Guid] = &flatDesign.Pieces[i]
@@ -13119,9 +13318,9 @@ func planesEqualApprox(a, b Plane) bool {
 		math.Abs(a.YAxis.Z-b.YAxis.Z) < tol
 }
 
-// ✒️ApplyDesignDiff applies a design diff to a base design.
-func ApplyDesignDiff(base Design, diff DesignDiff) Design {
-	return applyDesignDiff(base, diff)
+// ✒️ApplyDesignDiff applies a design diff to a design, mutating it in place.
+func ApplyDesignDiff(design *Design, diff *DesignDiff) {
+	applyDesignDiff(design, diff)
 }
 
 // MoveVector carries gap/shift/rise deltas in the piece plane frame (gap along yAxis, shift along xAxis, rise along normal).
@@ -15862,9 +16061,9 @@ func ImportRemoteKit(rawURL string) (*Kit, map[string][]byte, error) {
 	return nil, nil, fmt.Errorf("remote kit %s is neither JSON nor ZIP", rawURL)
 }
 
-// 📦EditTemporaryKit applies a diff to an in-memory kit value and returns the edited kit.
-func EditTemporaryKit(kit Kit, diff KitDiff) Kit {
-	return ApplyKitDiff(kit, diff)
+// 📦EditTemporaryKit applies a diff to an in-memory kit value, mutating it in place.
+func EditTemporaryKit(kit *Kit, diff *KitDiff) {
+	ApplyKitDiff(kit, diff)
 }
 
 // 📦EditFileKit edits a file kit in place and returns the edited kit.
@@ -15873,11 +16072,11 @@ func EditFileKit(path string, diff KitDiff) (*Kit, error) {
 	if err != nil {
 		return nil, err
 	}
-	edited := EditTemporaryKit(*kit, diff)
-	if err := ExportFileKit(edited, path); err != nil {
+	EditTemporaryKit(kit, &diff)
+	if err := ExportFileKit(*kit, path); err != nil {
 		return nil, err
 	}
-	return &edited, nil
+	return kit, nil
 }
 
 // 📦EditFolderKit edits a folder kit in place and returns the edited kit.
@@ -15886,11 +16085,11 @@ func EditFolderKit(folderPath string, diff KitDiff) (*Kit, error) {
 	if err != nil {
 		return nil, err
 	}
-	edited := EditTemporaryKit(*kit, diff)
-	if err := ExportFolderKit(&edited, files, folderPath); err != nil {
+	EditTemporaryKit(kit, &diff)
+	if err := ExportFolderKit(kit, files, folderPath); err != nil {
 		return nil, err
 	}
-	return &edited, nil
+	return kit, nil
 }
 
 // 📦EditArchiveKit edits an archive kit in place and returns the edited kit.
@@ -15899,11 +16098,11 @@ func EditArchiveKit(path string, diff KitDiff) (*Kit, error) {
 	if err != nil {
 		return nil, err
 	}
-	edited := EditTemporaryKit(*kit, diff)
-	if err := ExportArchiveKit(&edited, files, path); err != nil {
+	EditTemporaryKit(kit, &diff)
+	if err := ExportArchiveKit(kit, files, path); err != nil {
 		return nil, err
 	}
-	return &edited, nil
+	return kit, nil
 }
 
 // 📦EditRemoteKit imports a remote kit and applies a diff in memory.
@@ -15912,8 +16111,8 @@ func EditRemoteKit(rawURL string, diff KitDiff) (*Kit, error) {
 	if err != nil {
 		return nil, err
 	}
-	edited := EditTemporaryKit(*kit, diff)
-	return &edited, nil
+	EditTemporaryKit(kit, &diff)
+	return kit, nil
 }
 
 func ensureKitFiles(kit *Kit, files map[string][]byte) map[string][]byte {
