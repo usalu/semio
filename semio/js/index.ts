@@ -5262,7 +5262,7 @@ export const deletePiecesAndConnectionsInDesign = (kit: Kit, design: Design, pie
   if (!flatRes.ok) {
     return { ok: false, errors: flatRes.errors };
   }
-  const flatChange = flatRes.change;
+  const flatChange = flatRes.diff;
   const flatPieceMap: { [guid: string]: { plane?: Plane; center?: Coord } } = {};
   for (const piece of design.pieces ?? []) {
     if (piece.plane) flatPieceMap[piece.guid] = { plane: piece.plane, center: piece.center };
@@ -5310,8 +5310,8 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string,
   if (!delRes.ok) {
     return { ok: false, errors: delRes.errors };
   }
-  const backward = inverseDesignDiff(design, delRes.change);
-  return operationOk({ forward: delRes.change, backward }, delRes.warnings, delRes.infos);
+  const backward = inverseDesignDiff(design, delRes.diff);
+  return operationOk({ forward: delRes.diff, backward }, delRes.warnings, delRes.infos);
 };
 
 /**
@@ -5462,6 +5462,13 @@ const flattenCentersDiffer = (a?: Coord, b?: Coord): boolean => {
   return Math.abs(a.u - b.u) >= flattenPlaneCenterTol || Math.abs(a.v - b.v) >= flattenPlaneCenterTol;
 };
 
+/** Same plane as {@link matrixToPlane} on an identity matrix; avoids per-call THREE allocations in flatten. */
+const FLATTEN_IDENTITY_PLANE: Plane = {
+  origin: { x: 0, y: 0, z: 0 },
+  xAxis: { x: 1, y: 0, z: 0 },
+  yAxis: { x: 0, y: 1, z: 0 },
+};
+
 const buildFlattenPieceAdjacency = (
   pieces: Piece[],
   connections: Connection[],
@@ -5595,7 +5602,10 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
 
   const { getType, getConnector } = buildConnectorResolverFromKit(kit);
 
-  const flatPieces: Piece[] = design.pieces.map((p) => structuredClone(p));
+  const flatPieces: Piece[] = design.pieces.map((p) => ({
+    ...p,
+    attributes: p.attributes?.map((a) => ({ ...a })),
+  }));
   const flatDesign: Design = { ...design, pieces: flatPieces, connections: design.connections };
 
   const piecePlanes: { [pieceGuid: string]: Plane } = {};
@@ -5670,7 +5680,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
       if (rootPiece.plane) {
         rootPlane = rootPiece.plane;
       } else {
-        rootPlane = matrixToPlane(new THREE.Matrix4().identity());
+        rootPlane = FLATTEN_IDENTITY_PLANE;
       }
 
       piecePlanes[rootPiece.guid] = rootPlane;
@@ -6824,7 +6834,7 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
   if (!flatRes.ok) {
     return { ok: false, errors: flatRes.errors };
   }
-  const flatChange = flatRes.change;
+  const flatChange = flatRes.diff;
   const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatChange.forward);
   const flatPieceMap = new Map<string, Piece>();
   for (const p of flatDesign.pieces ?? []) {
@@ -9991,9 +10001,9 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
 
 // #endregion 🧊Type Family Helpers
 
-// #region 🎯OperationResult
+// #region 🎯SemioReport
 /**
- * Human-readable note attached to an algorithm {@link OperationResult} (warning, info, or error).
+ * Human-readable note attached to a {@link SemioReport} (warning, info, or error).
  **/
 export interface OperationNote {
   /** Stable machine id e.g. flatten.no-fixed-piece-in-clump */
@@ -10002,79 +10012,114 @@ export interface OperationNote {
 }
 
 /**
- * Successful operation: produced change plus non-fatal warnings and informational notes.
+ * 📋Canonical semio algorithm output: always exposes diff, warnings, infos, and errors (tool-friendly).
+ * When `ok` is true, `diff` is non-null; when false, `diff` is null and `errors` is non-empty.
  **/
-export interface OperationOk<Change> {
-  ok: true;
-  change: Change;
+export interface SemioReport<TDiff = unknown> {
+  ok: boolean;
+  diff: TDiff | null;
   warnings: OperationNote[];
   infos: OperationNote[];
-}
-
-/**
- * Failed operation: no change; carries one or more errors.
- **/
-export interface OperationErr {
-  ok: false;
   errors: OperationNote[];
 }
 
-/**
- * Discriminated union returned by semio algorithms: either ok with change or failed with errors.
- **/
-export type OperationResult<Change> = OperationOk<Change> | OperationErr;
+/** @deprecated Use {@link SemioReport}; kept as alias for existing type names. */
+export type OperationResult<TDiff> = SemioReport<TDiff>;
 
-/** {@link OperationResult} specialized for {@link DesignChange} (flatten, etc.). */
-export type DesignOperationResult = OperationResult<DesignChange>;
-
-/** {@link OperationResult} specialized for {@link DesignDiff}. */
-export type DesignDiffOperationResult = OperationResult<DesignDiff>;
+export type DesignOperationResult = SemioReport<DesignChange>;
+export type DesignDiffOperationResult = SemioReport<DesignDiff>;
 
 /**
- * Builds a successful {@link OperationResult}.
+ * Successful report: `diff` set, `errors` empty.
  **/
-export const operationOk = <Change>(change: Change, warnings: OperationNote[] = [], infos: OperationNote[] = []): OperationOk<Change> => ({
+export const operationOk = <TDiff>(diff: TDiff, warnings: OperationNote[] = [], infos: OperationNote[] = []): SemioReport<TDiff> => ({
   ok: true,
-  change,
+  diff,
   warnings,
   infos,
+  errors: [],
 });
 
 /**
- * Builds a failed {@link OperationResult}.
+ * Failed report: `diff` null, `errors` populated; warnings/infos empty unless caller merges.
  **/
-export const operationErr = (errors: OperationNote[]): OperationErr => ({ ok: false, errors });
+export const operationErr = <TDiff = unknown>(errors: OperationNote[]): SemioReport<TDiff> => ({
+  ok: false,
+  diff: null,
+  warnings: [],
+  infos: [],
+  errors,
+});
 
 /**
- * Wraps a native/REST payload that may still be a bare change object into {@link DesignOperationResult}.
+ * Wraps a native/REST payload into {@link DesignOperationResult} (supports legacy `change` key).
  **/
 export const normalizeDesignFlattenResult = (raw: unknown): DesignOperationResult => {
   if (raw !== null && typeof raw === "object" && "ok" in raw) {
-    return raw as DesignOperationResult;
+    const o = raw as Record<string, unknown>;
+    if ("diff" in o) return raw as DesignOperationResult;
+    if ("change" in o) {
+      return {
+        ok: !!o.ok,
+        diff: (o.change ?? null) as DesignChange | null,
+        warnings: (o.warnings as OperationNote[]) ?? [],
+        infos: (o.infos as OperationNote[]) ?? [],
+        errors: (o.errors as OperationNote[]) ?? [],
+      };
+    }
+    if (o.ok === false && "errors" in o) {
+      return operationErr<DesignChange>(o.errors as OperationNote[]);
+    }
   }
   return operationOk(raw as DesignChange, [], []);
 };
 
 /**
- * Wraps a native/REST payload that may still be a bare {@link DesignDiff} into {@link DesignDiffOperationResult}.
+ * Wraps a native/REST payload into {@link DesignDiffOperationResult}.
  **/
 export const normalizeDesignDiffResult = (raw: unknown): DesignDiffOperationResult => {
   if (raw !== null && typeof raw === "object" && "ok" in raw) {
-    return raw as DesignDiffOperationResult;
+    const o = raw as Record<string, unknown>;
+    if ("diff" in o) return raw as DesignDiffOperationResult;
+    if ("change" in o) {
+      return {
+        ok: !!o.ok,
+        diff: (o.change ?? null) as DesignDiff | null,
+        warnings: (o.warnings as OperationNote[]) ?? [],
+        infos: (o.infos as OperationNote[]) ?? [],
+        errors: (o.errors as OperationNote[]) ?? [],
+      };
+    }
+    if (o.ok === false && "errors" in o) {
+      return operationErr<DesignDiff>(o.errors as OperationNote[]);
+    }
   }
   return operationOk(raw as DesignDiff, [], []);
 };
 
 /**
- * Wraps a native/REST payload that may still be a bare {@link Design} into {@link OperationResult}<{@link Design}>.
+ * Wraps a native/REST payload into {@link SemioReport}<{@link Design}>.
  **/
-export const normalizeDesignCopyResult = (raw: unknown): OperationResult<Design> => {
+export const normalizeDesignCopyResult = (raw: unknown): SemioReport<Design> => {
   if (raw !== null && typeof raw === "object" && "ok" in raw) {
-    return raw as OperationResult<Design>;
+    const o = raw as Record<string, unknown>;
+    if ("diff" in o) return raw as SemioReport<Design>;
+    if ("change" in o) {
+      return {
+        ok: !!o.ok,
+        diff: (o.change ?? null) as Design | null,
+        warnings: (o.warnings as OperationNote[]) ?? [],
+        infos: (o.infos as OperationNote[]) ?? [],
+        errors: (o.errors as OperationNote[]) ?? [],
+      };
+    }
+    if (o.ok === false && "errors" in o) {
+      return operationErr<Design>(o.errors as OperationNote[]);
+    }
   }
   return operationOk(raw as Design, [], []);
 };
-// #endregion 🎯OperationResult
+// #endregion 🎯SemioReport
 
 /**
  * Represents a bidirectional change between two Kit states.
@@ -14730,7 +14775,7 @@ export const findPieceTypeInDesign = (kit: Kit, designGuid: string, pieceGuid: s
 export const findParentPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece => {
   const meta = piecesMetadata(kit, designGuid);
   if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
-  const parentPieceId = meta.change.get(pieceGuid)?.parentPieceId;
+  const parentPieceId = meta.diff.get(pieceGuid)?.parentPieceId;
   if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece`);
   return findPieceInDesign(findDesignInKit(kit, designGuid), parentPieceId);
 };
@@ -14743,7 +14788,7 @@ export const findParentPieceInDesign = (kit: Kit, designGuid: string, pieceGuid:
 export const findParentConnectionForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Connection => {
   const meta = piecesMetadata(kit, designGuid);
   if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
-  const parentPieceId = meta.change.get(pieceGuid)?.parentPieceId;
+  const parentPieceId = meta.diff.get(pieceGuid)?.parentPieceId;
   if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece and connection`);
   const design = findDesignInKit(kit, designGuid);
   const incident = findPieceConnectionsInDesign(design, pieceGuid);
@@ -14764,7 +14809,7 @@ export const findChildrenPiecesInDesign = (kit: Kit, designGuid: string, pieceGu
   const design = findDesignInKit(kit, designGuid);
   const meta = piecesMetadata(kit, designGuid);
   if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
-  const metadata = meta.change;
+  const metadata = meta.diff;
   const children: Piece[] = [];
   for (const [id, data] of Array.from(metadata)) {
     if (data.parentPieceId === pieceGuid) {
@@ -14908,7 +14953,7 @@ export const piecesMetadata = (kit: Kit, designGuid: string): OperationResult<Ma
   if (!flattenChange.ok) {
     return { ok: false, errors: flattenChange.errors };
   }
-  const flatDesign = applyDesignDiff(design, flattenChange.change.forward);
+  const flatDesign = applyDesignDiff(design, flattenChange.diff.forward);
   const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid);
   const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
   const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
@@ -14955,7 +15000,7 @@ export const piecesMetadataCached = (
   if (!cached.result.ok) {
     return { result: { ok: false, errors: cached.result.errors }, cache: cached.cache };
   }
-  const flatDesign = applyDesignDiff(design, cached.result.change.forward);
+  const flatDesign = applyDesignDiff(design, cached.result.diff.forward);
   const metadata = new Map<string, PiecePlacementMetadata>();
   for (const p of flatDesign.pieces ?? []) {
     if (!p.guid) continue;
@@ -15936,7 +15981,7 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp = flattenDesign(kit, design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const flatDesign = applyDesignDiff(design, flatOp.change.forward);
+      const flatDesign = applyDesignDiff(design, flatOp.diff.forward);
 
       flatDesign!.pieces?.forEach((p) => {
         const expectedPiece = expectedDesign!.pieces?.find((ep) => ep.name === p.name);
@@ -15963,13 +16008,13 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp = flattenDesign(kit, design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const removed = flatOp.change.forward.connections?.removed ?? [];
+      const removed = flatOp.diff.forward.connections?.removed ?? [];
       expect(removed.length).toBe(origConnCount);
       const removedSet = new Set(removed.map((r) => r.guid));
       for (const c of design.connections ?? []) {
         expect(removedSet.has(c.guid)).toBe(true);
       }
-      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.change.forward);
+      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.diff.forward);
       expect(flatDesign.connections?.length ?? 0).toBe(0);
     });
 
@@ -16145,12 +16190,12 @@ if (shouldRunEmbeddedJsTests) {
       const cached = flattenDesignCached(kit, design.guid);
       expect(cached.result.ok).toBe(fresh.ok);
       if (!fresh.ok || !cached.result.ok) return;
-      expect(JSON.stringify(stripAttrGuids(cached.result.change.forward))).toBe(JSON.stringify(stripAttrGuids(fresh.change.forward)));
+      expect(JSON.stringify(stripAttrGuids(cached.result.diff.forward))).toBe(JSON.stringify(stripAttrGuids(fresh.diff.forward)));
       const secondFresh = flattenDesign(kit, design.guid);
       const secondCached = flattenDesignCached(kit, design.guid, cached.cache);
       expect(secondCached.result.ok).toBe(true);
       if (!secondFresh.ok || !secondCached.result.ok) return;
-      expect(JSON.stringify(stripAttrGuids(secondCached.result.change.forward))).toBe(JSON.stringify(stripAttrGuids(secondFresh.change.forward)));
+      expect(JSON.stringify(stripAttrGuids(secondCached.result.diff.forward))).toBe(JSON.stringify(stripAttrGuids(secondFresh.diff.forward)));
     });
 
     it("cached flatten preserves exact Piece object reference when merkle hash is unchanged", () => {
@@ -16358,7 +16403,7 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp = flattenDesign(kit, design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.change.forward);
+      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.diff.forward);
       expect((flatDesign.connections ?? []).length).toBe(0);
       const pieceGuid = "9d18882e-d90b-40de-a171-47cb4564ffa6";
       const flatPiece = flatDesign.pieces!.find((p) => p.guid === pieceGuid)!;
@@ -16383,7 +16428,7 @@ if (shouldRunEmbeddedJsTests) {
       const metaResult = piecesMetadata(kit, design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
-      const metadata = metaResult.change;
+      const metadata = metaResult.diff;
       expect(metadata.size).toBeGreaterThan(0);
 
       // Step 2: Find a root piece (no parentPieceId) and its descendants
@@ -16453,7 +16498,7 @@ if (shouldRunEmbeddedJsTests) {
       const postMetaResult = piecesMetadata(updatedKit, design.guid);
       expect(postMetaResult.ok).toBe(true);
       if (!postMetaResult.ok) return;
-      const postMetadata = postMetaResult.change;
+      const postMetadata = postMetaResult.diff;
 
       // Step 7: Verify root moved by exactly offset
       const postRootCenter = postMetadata.get(rootGuid!)!.center;
@@ -16485,7 +16530,7 @@ if (shouldRunEmbeddedJsTests) {
       const metaResult = piecesMetadata(kit, design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
-      const metadata = metaResult.change;
+      const metadata = metaResult.diff;
 
       // Step 2: Find root and descendants
       let rootGuid: string | undefined;
@@ -16571,7 +16616,7 @@ if (shouldRunEmbeddedJsTests) {
         console.error("piecesMetadata failed:", postMetaResult.errors);
         return;
       }
-      const postMetadata = postMetaResult.change;
+      const postMetadata = postMetaResult.diff;
 
       // Step 8: Verify root moved
       const postRootCenter = postMetadata.get(rootGuid!)!.center;
@@ -16593,7 +16638,7 @@ if (shouldRunEmbeddedJsTests) {
       const localMetaResult = piecesMetadata(localUpdatedKit, design.guid);
       expect(localMetaResult.ok).toBe(true);
       if (!localMetaResult.ok) return;
-      const localMetadata = localMetaResult.change;
+      const localMetadata = localMetaResult.diff;
 
       // Compare ALL piece centers between local and store re-flatten
       for (const [pieceGuid, localMeta] of localMetadata) {
@@ -16613,7 +16658,7 @@ if (shouldRunEmbeddedJsTests) {
       const metaResult = piecesMetadata(kit, design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
-      const metadata = metaResult.change;
+      const metadata = metaResult.diff;
 
       // Step 2: Find a LEAF node (has parentPieceId but no children)
       const childrenMap = new Map<string, string[]>();
@@ -16659,7 +16704,7 @@ if (shouldRunEmbeddedJsTests) {
       const fc = flattenDesign(kit, design.guid);
       expect(fc.ok).toBe(true);
       if (!fc.ok) return;
-      const nativeFlatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), { pieces: fc.change.forward.pieces });
+      const nativeFlatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), { pieces: fc.diff.forward.pieces });
       const nativePiecesDesign: Design = { guid: nativeFlatDesign.guid, name: nativeFlatDesign.name, pieces: (nativeFlatDesign.pieces ?? []).filter((p) => p.guid === leafGuid) };
       const nativeDragDiff = dragPiecesInDesign(nativeFlatDesign, nativePiecesDesign, offset);
 
@@ -16685,13 +16730,13 @@ if (shouldRunEmbeddedJsTests) {
       if (!nativePostMeta.ok) return;
 
       // Step 6: Leaf must have moved from its pre-drag position
-      const sketchpadLeafPost = sketchpadPostMeta.change.get(leafGuid!)!;
-      const nativeLeafPost = nativePostMeta.change.get(leafGuid!)!;
+      const sketchpadLeafPost = sketchpadPostMeta.diff.get(leafGuid!)!;
+      const nativeLeafPost = nativePostMeta.diff.get(leafGuid!)!;
       expect(Math.abs(sketchpadLeafPost.center.u - preDragCenter.u) > 0.001 || Math.abs(sketchpadLeafPost.center.v - preDragCenter.v) > 0.001).toBe(true);
 
       // Step 7: Sketchpad and native must produce identical results for ALL pieces
-      for (const [pieceGuid, skMeta] of sketchpadPostMeta.change) {
-        const natMeta = nativePostMeta.change.get(pieceGuid);
+      for (const [pieceGuid, skMeta] of sketchpadPostMeta.diff) {
+        const natMeta = nativePostMeta.diff.get(pieceGuid);
         expect(natMeta).toBeDefined();
         expect(skMeta.center.u).toBeCloseTo(natMeta!.center.u, 6);
         expect(skMeta.center.v).toBeCloseTo(natMeta!.center.v, 6);
@@ -16710,8 +16755,8 @@ if (shouldRunEmbeddedJsTests) {
       expect(storeMetaResult.ok).toBe(true);
       if (!storeMetaResult.ok) return;
       // Store re-flatten must match local re-flatten
-      for (const [pieceGuid, storeMeta] of storeMetaResult.change) {
-        const localMeta = sketchpadPostMeta.change.get(pieceGuid);
+      for (const [pieceGuid, storeMeta] of storeMetaResult.diff) {
+        const localMeta = sketchpadPostMeta.diff.get(pieceGuid);
         expect(localMeta).toBeDefined();
         expect(storeMeta.center.u).toBeCloseTo(localMeta!.center.u, 6);
         expect(storeMeta.center.v).toBeCloseTo(localMeta!.center.v, 6);
@@ -16724,7 +16769,7 @@ if (shouldRunEmbeddedJsTests) {
       const metaResult = piecesMetadata(kit, design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
-      const metadata = metaResult.change;
+      const metadata = metaResult.diff;
 
       // Find a leaf node (has parent, no children)
       const childrenMap = new Map<string, string[]>();
@@ -16800,7 +16845,7 @@ if (shouldRunEmbeddedJsTests) {
       if (!postMeta.ok) return;
 
       // The re-flattened leaf center should match the INTENDED visual offset (pre-drag center + center offset)
-      const leafPost = postMeta.change.get(leafGuid!)!;
+      const leafPost = postMeta.diff.get(leafGuid!)!;
       const expectedU = preDragCenter.u + centerOffsetU;
       const expectedV = preDragCenter.v + centerOffsetV;
       expect(leafPost.center.u).toBeCloseTo(expectedU, 2);
@@ -16816,7 +16861,7 @@ if (shouldRunEmbeddedJsTests) {
         const unscaledMeta = piecesMetadata(unscaledKit, design.guid);
         expect(unscaledMeta.ok).toBe(true);
         if (!unscaledMeta.ok) return;
-        const unscaledLeaf = unscaledMeta.change.get(leafGuid!)!;
+        const unscaledLeaf = unscaledMeta.diff.get(leafGuid!)!;
         // Without scaling, the visual offset is amplified by horizontalScale — the "jump" bug
         expect(unscaledLeaf.center.u).toBeCloseTo(preDragCenter.u + centerOffsetU * horizontalScale, 2);
         expect(unscaledLeaf.center.v).toBeCloseTo(preDragCenter.v + centerOffsetV * horizontalScale, 2);
@@ -16829,7 +16874,7 @@ if (shouldRunEmbeddedJsTests) {
       const metaResult = piecesMetadata(kit, design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
-      const metadata = metaResult.change;
+      const metadata = metaResult.diff;
       let childGuid: string | undefined;
       let parentPieceId: string | undefined;
       for (const [guid, meta] of metadata) {
@@ -16923,7 +16968,7 @@ if (shouldRunEmbeddedJsTests) {
       const delOp = deletePiecesAndConnectionsInDesign(kit, design, pieceGuids, connectionGuids);
       expect(delOp.ok).toBe(true);
       if (!delOp.ok) return;
-      const computedDiff = delOp.change;
+      const computedDiff = delOp.diff;
 
       // 🚚Verify removed pieces
       const computedRemovedPieces = (computedDiff.pieces?.removed ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
@@ -16969,7 +17014,7 @@ if (shouldRunEmbeddedJsTests) {
       const copyOp = copyDesign(kit, design, pieceGuids, connectionGuids);
       expect(copyOp.ok).toBe(true);
       if (!copyOp.ok) return;
-      const computedCopy = copyOp.change;
+      const computedCopy = copyOp.diff;
 
       // 🧩Verify piece and connection counts
       expect((computedCopy.pieces ?? []).length).toBe((expectedCopy.pieces ?? []).length);
@@ -17072,7 +17117,7 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp = flattenDesign(kit, design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.change.forward);
+      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp.diff.forward);
       const t5 = "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9";
       const br = "5feebbf8-33d9-41ad-a13a-24c271a1860b";
       const connInternal = "eb8ce9ce-091c-4495-a651-fa703748dfef";
@@ -17080,7 +17125,7 @@ if (shouldRunEmbeddedJsTests) {
       const copyOp2 = copyDesign(kit, flatDesign, [t5, br], [connInternal, connParent]);
       expect(copyOp2.ok).toBe(true);
       if (!copyOp2.ok) return;
-      const copied = copyOp2.change;
+      const copied = copyOp2.diff;
       const srcConn = copied.connections!.find((c) => c.guid === connInternal)!;
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const withoutCoord = pasteDesign(kit, copied, pasteTarget, "original");
@@ -17101,7 +17146,7 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp3 = flattenDesign(kit, design.guid);
       expect(flatOp3.ok).toBe(true);
       if (!flatOp3.ok) return;
-      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp3.change.forward);
+      const flatDesign = applyDesignDiff(JSON.parse(JSON.stringify(design)), flatOp3.diff.forward);
       const sel = NakaginCapsuleTowerCopySelection as any;
       const t1 = "31be08e1-e75c-4024-86b4-c3c6d3939fbb";
       const t2t1Conn = "ddf9e0e4-40e1-4079-aa40-c86cf699788b";
@@ -17112,7 +17157,7 @@ if (shouldRunEmbeddedJsTests) {
       const copyOp3 = copyDesign(kit, flatDesign, pieceGuids, connectionGuids);
       expect(copyOp3.ok).toBe(true);
       if (!copyOp3.ok) return;
-      const copied = copyOp3.change;
+      const copied = copyOp3.diff;
       const stubT1 = copied.pieces!.find((p) => p.guid === t1);
       expect(stubT1 && (stubT1.attributes ?? []).some((a) => a.key === "semio.piece.origin" && a.value === "external")).toBe(true);
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
@@ -17182,7 +17227,7 @@ if (shouldRunEmbeddedJsTests) {
       const copyOp = copyDesign(kit, design, [tF0BC0], []);
       expect(copyOp.ok).toBe(true);
       if (!copyOp.ok) return;
-      const copied = copyOp.change;
+      const copied = copyOp.diff;
       expect((copied.pieces ?? []).length).toBe(1 + expectedDescPieces.size);
       expect((copied.connections ?? []).length).toBe(expectedDescConns.size);
 

@@ -6144,7 +6144,7 @@ mod flatten_design {
 
         let mut after_design = before_design.clone();
         apply_design_diff(&mut after_design, &forward);
-        let backward = inverse_design_diff(&before_design, &forward);
+        let backward = get_design_diff(&after_design, &before_design);
 
         DesignChange {
             forward,

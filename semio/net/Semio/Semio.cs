@@ -11788,6 +11788,44 @@ public partial class Kit
         flatDesign.Pieces = flatDesign.Pieces.Select(p => pieceMap.TryGetValue(p.Guid ?? "", out var mapped) ? mapped : p).ToList();
         flatDesign.Connections = new List<Connection>();
 
+        static bool FlattenPlanesApproxEqual(Plane? a, Plane? b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+            const double tol = 0.0001;
+            bool Pt(Point? p, Point? q) =>
+                p != null && q != null
+                && Math.Abs(p.X - q.X) < tol && Math.Abs(p.Y - q.Y) < tol && Math.Abs(p.Z - q.Z) < tol;
+            bool Vt(Vector? v, Vector? w) =>
+                v != null && w != null
+                && Math.Abs(v.X - w.X) < tol && Math.Abs(v.Y - w.Y) < tol && Math.Abs(v.Z - w.Z) < tol;
+            return Pt(a.Origin, b.Origin) && Vt(a.XAxis, b.XAxis) && Vt(a.YAxis, b.YAxis);
+        }
+
+        static bool FlattenCoordsApproxEqual(Coord? a, Coord? b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+            return Math.Abs(a.U - b.U) < 0.0001 && Math.Abs(a.V - b.V) < 0.0001;
+        }
+
+        static bool FlattenAttributesListsEqual(List<Attribute>? a, List<Attribute>? b)
+        {
+            static string? NormAttr(string? value) => string.IsNullOrEmpty(value) ? null : value;
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+            if (a.Count != b.Count) return false;
+            var byGuid = a.ToDictionary(x => x.Guid ?? "", x => x);
+            foreach (var bb in b)
+            {
+                if (bb.Guid == null || !byGuid.TryGetValue(bb.Guid, out var aa)) return false;
+                if (aa.Key != bb.Key) return false;
+                if (NormAttr(aa.Value) != NormAttr(bb.Value)) return false;
+                if (NormAttr(aa.Definition) != NormAttr(bb.Definition)) return false;
+            }
+            return true;
+        }
+
         var updatedPieces = flatDesign.Pieces.Select(flatPiece =>
         {
             var originalPiece = design.Pieces?.FirstOrDefault(p => p.Guid == flatPiece.Guid);
@@ -11796,19 +11834,19 @@ public partial class Kit
             var pieceDiff = new PieceDiff();
             bool hasChanges = false;
 
-            if (flatPiece.Plane != null && Utility.Serialize(flatPiece.Plane) != Utility.Serialize(originalPiece.Plane))
+            if (flatPiece.Plane != null && !FlattenPlanesApproxEqual(flatPiece.Plane, originalPiece.Plane))
             {
                 pieceDiff.Plane = flatPiece.Plane;
                 hasChanges = true;
             }
 
-            if (flatPiece.Center != null && Utility.Serialize(flatPiece.Center) != Utility.Serialize(originalPiece.Center))
+            if (flatPiece.Center != null && !FlattenCoordsApproxEqual(flatPiece.Center, originalPiece.Center))
             {
                 pieceDiff.Center = flatPiece.Center;
                 hasChanges = true;
             }
 
-            if (Utility.Serialize(flatPiece.Attributes) != Utility.Serialize(originalPiece.Attributes))
+            if (!FlattenAttributesListsEqual(flatPiece.Attributes, originalPiece.Attributes))
             {
                 pieceDiff.Attributes = flatPiece.Attributes.ToList();
                 hasChanges = true;

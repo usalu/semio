@@ -49,8 +49,8 @@ func main() {
 
 	switch req.Op {
 	case "flatten":
-		diff := semio.FlattenDesign(&kit, req.DesignGuid)
-		out, err := json.Marshal(diff)
+		rep := semio.FlattenDesign(&kit, req.DesignGuid)
+		out, err := json.Marshal(rep)
 		if err != nil {
 			writeErr("marshal flatten: " + err.Error())
 			return

@@ -438,8 +438,11 @@ func testFlattenDesign(t *testing.T, kit Kit, designPath []string) {
 		t.Fatalf("Expected flat design not found for %q", design.Name)
 	}
 
-	flatDesignDiff := FlattenDesign(&kit, design.Guid)
-	flatDesign := ApplyDesignDiff(*design, flatDesignDiff)
+	flatRep := FlattenDesign(&kit, design.Guid)
+	if !flatRep.Ok || flatRep.Diff == nil {
+		t.Fatalf("FlattenDesign failed: ok=%v errors=%v", flatRep.Ok, flatRep.Errors)
+	}
+	flatDesign := ApplyDesignDiff(*design, flatRep.Diff.Forward)
 
 	const tolerance = 0.001
 	for _, piece := range flatDesign.Pieces {
@@ -3437,7 +3440,7 @@ func BenchmarkFlattenDesign_NakaginCapsuleTower(b *testing.B) {
 	b.ResetTimer()
 	start := time.Now()
 	for range b.N {
-		diff := FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesignDiff(&kit, d.Guid)
 		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
 			b.Fatal("Flatten Design/Nakagin Capsule Tower output does not match test expectation")
 		}
@@ -3452,7 +3455,7 @@ func BenchmarkFlattenDesign_Nakagin_Slanted(b *testing.B) {
 	b.ResetTimer()
 	start := time.Now()
 	for range b.N {
-		diff := FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesignDiff(&kit, d.Guid)
 		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
 			b.Fatal("Flatten Design/Nakagin Capsule Tower/Slanted output does not match test expectation")
 		}
@@ -3467,7 +3470,7 @@ func BenchmarkFlattenDesign_Nakagin_Twisted(b *testing.B) {
 	b.ResetTimer()
 	start := time.Now()
 	for range b.N {
-		diff := FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesignDiff(&kit, d.Guid)
 		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
 			b.Fatal("Flatten Design/Nakagin Capsule Tower/Twisted output does not match test expectation")
 		}
@@ -3482,7 +3485,7 @@ func BenchmarkFlattenDesign_Nakagin_Dancing(b *testing.B) {
 	b.ResetTimer()
 	start := time.Now()
 	for range b.N {
-		diff := FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesignDiff(&kit, d.Guid)
 		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
 			b.Fatal("Flatten Design/Nakagin Capsule Tower/Dancing output does not match test expectation")
 		}
@@ -3497,7 +3500,7 @@ func BenchmarkFlattenDesign_CapsuleDream(b *testing.B) {
 	b.ResetTimer()
 	start := time.Now()
 	for range b.N {
-		diff := FlattenDesign(&kit, d.Guid)
+		diff := FlattenDesignDiff(&kit, d.Guid)
 		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
 			b.Fatal("Flatten Design/Capsule Dream output does not match test expectation")
 		}

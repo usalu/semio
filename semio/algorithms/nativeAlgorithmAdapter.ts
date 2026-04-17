@@ -144,7 +144,7 @@ export async function nativeFlatDesign(kit: Kit, designGuid: string, language: N
   if (!result.ok) return null;
   const design = (kit.designs ?? []).find((d) => d.guid === designGuid);
   if (!design) return null;
-  return applyDesignDiff(JSON.parse(JSON.stringify(design)), { pieces: result.change.forward.pieces });
+  return applyDesignDiff(JSON.parse(JSON.stringify(design)), { pieces: result.diff.forward.pieces });
 }
 
 /**
@@ -158,7 +158,7 @@ export async function nativeFlattenedDesign(kit: Kit, designGuid: string, langua
   if (!result.ok) return null;
   const design = (kit.designs ?? []).find((d) => d.guid === designGuid);
   if (!design) return null;
-  return applyDesignDiff(JSON.parse(JSON.stringify(design)), result.change.forward);
+  return applyDesignDiff(JSON.parse(JSON.stringify(design)), result.diff.forward);
 }
 
 /**
@@ -175,7 +175,7 @@ export async function nativeDragPieces(kit: Kit, rawDesign: Design, pieceGuids: 
     throw new Error(preFlat.result.errors.map((e) => e.message).join("; "));
   }
   setFlatMerkleCache(designGuid, preFlat.cache);
-  const flatDesign = apply(JSON.parse(JSON.stringify(rawDesign)), { pieces: preFlat.result.change.forward.pieces });
+  const flatDesign = apply(JSON.parse(JSON.stringify(rawDesign)), { pieces: preFlat.result.diff.forward.pieces });
   const piecesDesign: Design = { guid: flatDesign.guid, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
   const dragDiff = dragPiecesInDesign(flatDesign, piecesDesign, offset);
   const updatedRaw = apply(rawDesign, dragDiff);
@@ -185,7 +185,7 @@ export async function nativeDragPieces(kit: Kit, rawDesign: Design, pieceGuids: 
     throw new Error(postFlat.result.errors.map((e) => e.message).join("; "));
   }
   setFlatMerkleCache(designGuid, postFlat.cache);
-  const output = apply(updatedRaw, { pieces: postFlat.result.change.forward.pieces });
+  const output = apply(updatedRaw, { pieces: postFlat.result.diff.forward.pieces });
   return { inputDesign: flatDesign, output, dragDiff };
 }
 
@@ -203,7 +203,7 @@ export async function nativeMovePieces(kit: Kit, rawDesign: Design, pieceGuids: 
     throw new Error(preFlat.result.errors.map((e) => e.message).join("; "));
   }
   setFlatMerkleCache(designGuid, preFlat.cache);
-  const flatDesign = apply(JSON.parse(JSON.stringify(rawDesign)), { pieces: preFlat.result.change.forward.pieces });
+  const flatDesign = apply(JSON.parse(JSON.stringify(rawDesign)), { pieces: preFlat.result.diff.forward.pieces });
   const piecesDesign: Design = { guid: flatDesign.guid, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
   const moveDiff = movePiecesInDesign(kit, flatDesign, piecesDesign, vector);
   const updatedRaw = apply(rawDesign, moveDiff);
@@ -213,7 +213,7 @@ export async function nativeMovePieces(kit: Kit, rawDesign: Design, pieceGuids: 
     throw new Error(postFlat.result.errors.map((e) => e.message).join("; "));
   }
   setFlatMerkleCache(designGuid, postFlat.cache);
-  const output = apply(updatedRaw, { pieces: postFlat.result.change.forward.pieces });
+  const output = apply(updatedRaw, { pieces: postFlat.result.diff.forward.pieces });
   return { inputDesign: flatDesign, output, moveDiff };
 }
 

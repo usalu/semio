@@ -30,6 +30,7 @@ import enum
 import fnmatch
 import hashlib
 import json
+import math
 import os
 import pathlib
 import shutil
@@ -12578,8 +12579,20 @@ def getTypeByGuid(kit: dict, guid: str) -> dict | None:
     return None
 
 
-def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | None) -> dict | None:
+def getConnectorFromType(
+    kit: dict,
+    typeData: dict | None,
+    connectorGuid: str | None,
+    *,
+    types_by_guid: dict[str, dict] | None = None,
+) -> dict | None:
     """🔖Look up a connector by name from a type dictionary."""
+
+    def _resolve_type(guid: str) -> dict | None:
+        if types_by_guid is not None:
+            return types_by_guid.get(guid)
+        return getTypeByGuid(kit, guid)
+
     if typeData is None:
         return None
     if connectorGuid is None:
@@ -12588,16 +12601,16 @@ def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | 
             return connectors[0]
         parent = typeData.get("parent")
         if parent:
-            parentType = getTypeByGuid(kit, parent.get("guid", ""))
-            return getConnectorFromType(kit, parentType, connectorGuid)
+            parentType = _resolve_type(parent.get("guid", ""))
+            return getConnectorFromType(kit, parentType, connectorGuid, types_by_guid=types_by_guid)
         return None
     for connector in typeData.get("connectors", []):
         if connector.get("guid") == connectorGuid:
             return connector
     parent = typeData.get("parent")
     if parent:
-        parentType = getTypeByGuid(kit, parent.get("guid", ""))
-        return getConnectorFromType(kit, parentType, connectorGuid)
+        parentType = _resolve_type(parent.get("guid", ""))
+        return getConnectorFromType(kit, parentType, connectorGuid, types_by_guid=types_by_guid)
     connectors = typeData.get("connectors", [])
     if connectors:
         return connectors[0]
@@ -12808,6 +12821,7 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
     pieces = design.get("pieces", [])
     if not pieces:
         return {}
+    types_by_guid: dict[str, dict] = {t["guid"]: t for t in kit.get("types", []) if t.get("guid")}
     pieceMap = {p["guid"]: dict(p) for p in pieces}
     piecePlanes: dict[str, dict] = {}
     piecePaths: dict[str, str] = {}
@@ -12853,12 +12867,12 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
                 else:
                     parent_side = conn["connecting"]
                     child_side = conn["connected"]
-                parent_type = getTypeByGuid(kit, parent_piece.get("type", {}).get("guid", ""))
-                child_type = getTypeByGuid(kit, child_piece.get("type", {}).get("guid", ""))
+                parent_type = types_by_guid.get(parent_piece.get("type", {}).get("guid", ""))
+                child_type = types_by_guid.get(child_piece.get("type", {}).get("guid", ""))
                 parent_connector_guid = parent_side.get("connector", {}).get("guid") if parent_side.get("connector") else None
                 child_connector_guid = child_side.get("connector", {}).get("guid") if child_side.get("connector") else None
-                parent_connector = getConnectorFromType(kit, parent_type, parent_connector_guid)
-                child_connector = getConnectorFromType(kit, child_type, child_connector_guid)
+                parent_connector = getConnectorFromType(kit, parent_type, parent_connector_guid, types_by_guid=types_by_guid)
+                child_connector = getConnectorFromType(kit, child_type, child_connector_guid, types_by_guid=types_by_guid)
                 if parent_connector is None or child_connector is None:
                     continue
                 child_plane = computeChildPlaneDict(parent_plane, parent_connector, child_connector, conn)
@@ -12871,9 +12885,9 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
                 connection_v = conn.get("v", 0) or 0
                 if parent_center["u"] == 0 and parent_center["v"] == 0:
                     t = parent_connector.get("t", 0) or 0
-                    angle = 2 * numpy.pi * t
-                    child_u = radius * numpy.sin(angle)
-                    child_v = radius * numpy.cos(angle)
+                    angle = 2 * math.pi * t
+                    child_u = radius * math.sin(angle)
+                    child_v = radius * math.cos(angle)
                 else:
                     parent_dir_z = (parent_connector.get("direction") or {}).get("z", 0) or 0
                     is_vertical_connection = abs(parent_dir_z) > 0.5
@@ -12895,26 +12909,44 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
         g = p.get("guid")
         if g and g not in visited:
             bfs(g)
-    updatedPieces = []
+
+    def _plane_dict_close(ap: dict | None, bp: dict | None, tol: float = 1e-4) -> bool:
+        if ap is bp:
+            return True
+        if not ap or not bp:
+            return False
+
+        def _pt(d: dict, *keys: str) -> tuple[float, float, float]:
+            o = d or {}
+            return (float(o.get("x", 0) or 0), float(o.get("y", 0) or 0), float(o.get("z", 0) or 0))
+
+        ao, ax, ay = ap.get("origin") or {}, ap.get("xAxis") or {}, ap.get("yAxis") or {}
+        bo, bx, by = bp.get("origin") or {}, bp.get("xAxis") or {}, bp.get("yAxis") or {}
+        for a3, b3 in ((_pt(ao, "x", "y", "z"), _pt(bo, "x", "y", "z")), (_pt(ax, "x", "y", "z"), _pt(bx, "x", "y", "z")), (_pt(ay, "x", "y", "z"), _pt(by, "x", "y", "z"))):
+            if any(abs(a3[i] - b3[i]) >= tol for i in range(3)):
+                return False
+        return True
+
+    updated_rows: list[dict] = []
     for piece in pieces:
-        newPiece = dict(piece)
-        if piece["guid"] in piecePlanes:
-            newPiece["plane"] = piecePlanes[piece["guid"]]
-        if piece["guid"] in pieceMap and pieceMap[piece["guid"]].get("center"):
-            newPiece["center"] = pieceMap[piece["guid"]]["center"]
-        elif newPiece.get("center") is None:
-            newPiece["center"] = {"u": 0, "v": 0}
-        updatedPieces.append(newPiece)
+        guid = piece.get("guid")
+        if not guid or guid not in piecePlanes:
+            continue
+        new_plane = piecePlanes[guid]
+        new_center = pieceMap[guid].get("center") if guid in pieceMap else piece.get("center")
+        if new_center is None:
+            new_center = {"u": 0, "v": 0}
+        old_plane = piece.get("plane")
+        old_center = piece.get("center") or {"u": 0, "v": 0}
+        plane_changed = old_plane is None or not _plane_dict_close(new_plane, old_plane)
+        center_changed = abs(float(new_center.get("u", 0) or 0) - float(old_center.get("u", 0) or 0)) > TOLERANCE or abs(
+            float(new_center.get("v", 0) or 0) - float(old_center.get("v", 0) or 0)
+        ) > TOLERANCE
+        if plane_changed or center_changed:
+            updated_rows.append({"id": guid, "diff": {"plane": new_plane, "center": new_center}})
     return {
         "pieces": {
-            "updated": [
-                {
-                    "id": p["guid"],
-                    "diff": {"plane": p.get("plane"), "center": p.get("center")},
-                }
-                for p in updatedPieces
-                if p["guid"] in piecePlanes
-            ]
+            "updated": updated_rows,
         },
         "_piecePaths": piecePaths,
     }

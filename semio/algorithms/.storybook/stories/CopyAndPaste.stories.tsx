@@ -199,7 +199,7 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
       const copyRes = await nativeCopyDesign(kit, flatSourceDesign, selectedPieceGuids, selectedConnectionGuids, language);
       if (cancelled) return;
       if (!copyRes.ok) return;
-      const copied = copyRes.change;
+      const copied = copyRes.diff;
       const coord = mode === "with" ? { u: vec.u, v: vec.v } : undefined;
       const diff = await nativePasteDesign(kit, copied, pasteTargetDesign, pasteAnchoring, coord, language);
       if (!cancelled) setDesignDiff(diff);

@@ -45,7 +45,7 @@ function FlattenFrame() {
       if (cancelled) return;
       setFlatDesign(flatResult);
       setFlattenedDesign(flattenedResult);
-      setFlattenDiff(flattenResult.ok ? flattenResult.change.forward : undefined);
+      setFlattenDiff(flattenResult.ok ? flattenResult.diff.forward : undefined);
     })();
     return () => {
       cancelled = true;

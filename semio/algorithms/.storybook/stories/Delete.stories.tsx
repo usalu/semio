@@ -63,7 +63,7 @@ function DeleteFrame() {
       }
       setDesignDiff(undefined);
       const diffRes = await nativeDeletePieces(kit, flatInputDesign, selectedPieceGuids, selectedConnectionGuids, language);
-      if (!cancelled) setDesignDiff(diffRes.ok ? diffRes.change : undefined);
+      if (!cancelled) setDesignDiff(diffRes.ok ? diffRes.diff : undefined);
     })();
     return () => {
       cancelled = true;

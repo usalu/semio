@@ -700,6 +700,8 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 semio/sketchpad:
 
+Every single interation (every hover, every mouse click, every unfold, etc) MUST be dispatched over a single store. In there it MUST be logged. This goes through all the apps (home, kit, design, type, etc)
+
 Refactor state managment completly.
 Every UI element MUST only call commands of a store.
 Add central logging to the store where all executed commands which the resulting KitChanges are logged.

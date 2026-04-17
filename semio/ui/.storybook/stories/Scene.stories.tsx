@@ -17,7 +17,7 @@ import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.
 const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as Design;
 const flatOp = flattenDesign(metabolismKit as unknown as Kit, rawDesign.guid);
 if (!flatOp.ok) throw new Error(flatOp.errors.map((e) => e.message).join("; "));
-const flattenChange = flatOp.change;
+const flattenChange = flatOp.diff;
 const nakaginDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward.pieces });
 const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
 const designDiff = nakaginDiff as any;

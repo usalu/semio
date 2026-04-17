@@ -1607,6 +1607,46 @@ type DesignDiff struct {
 	Attributes  *AttributesDiff  `json:"attributes,omitempty"`
 }
 
+// #region 🎯SemioReport
+
+// 📋OperationNote is a human-readable remark on a SemioReport (warning, info, or error).
+type OperationNote struct {
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message"`
+}
+
+// 📋SemioReport is the canonical algorithm output: ok, diff, warnings, infos, errors (tool-friendly JSON).
+type SemioReport[T any] struct {
+	Ok       bool            `json:"ok"`
+	Diff     *T              `json:"diff"`
+	Warnings []OperationNote `json:"warnings"`
+	Infos    []OperationNote `json:"infos"`
+	Errors   []OperationNote `json:"errors"`
+}
+
+func semioReportOk[T any](diff T) SemioReport[T] {
+	d := diff
+	return SemioReport[T]{
+		Ok:       true,
+		Diff:     &d,
+		Warnings: []OperationNote{},
+		Infos:    []OperationNote{},
+		Errors:   []OperationNote{},
+	}
+}
+
+func semioReportErr[T any](errs []OperationNote) SemioReport[T] {
+	return SemioReport[T]{
+		Ok:       false,
+		Diff:     nil,
+		Warnings: []OperationNote{},
+		Infos:    []OperationNote{},
+		Errors:   errs,
+	}
+}
+
+// #endregion 🎯SemioReport
+
 // 🏛️DesignsDiff represents batched design additions, removals and per-design updates.
 type DesignsDiff struct {
 	Removed []DesignId `json:"removed,omitempty"`
@@ -1959,7 +1999,7 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []st
 	// Flatten the design to get absolute plane and center for each piece.
 	// FlattenDesign modifies Center in-place but stores Plane only in the diff,
 	// so we apply the diff to get a fully correct flattened design.
-	flatDiff := FlattenDesign(kit, design.Guid)
+	flatDiff := FlattenDesignDiff(kit, design.Guid)
 	flatDesign := ApplyDesignDiff(design, flatDiff)
 	flatPieceMap := make(map[string]*Piece)
 	for i := range flatDesign.Pieces {
@@ -11033,6 +11073,14 @@ func deepCloneConnection(c Connection) Connection {
 	return cloned
 }
 
+// deepCloneDesign deep-clones a Design via JSON marshal/unmarshal (snapshot before in-place flatten).
+func deepCloneDesign(d Design) Design {
+	data, _ := json.Marshal(d)
+	var cloned Design
+	json.Unmarshal(data, &cloned)
+	return cloned
+}
+
 // 📋CopyDesign extracts selected pieces and connections from a design into a new Design.
 // Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
 // Internal pieces are copied as-is. Parent-piece-exclusive parent-connection-inclusive pieces get semio.center and semio.plane attributes.
@@ -11058,7 +11106,7 @@ func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []
 	}
 
 	// Flatten the design to get absolute planes/centers
-	flatDiff := FlattenDesign(kit, design.Guid)
+	flatDiff := FlattenDesignDiff(kit, design.Guid)
 	flatDesign := ApplyDesignDiff(design, flatDiff)
 	flatPieceMap := make(map[string]*Piece)
 	for i := range flatDesign.Pieces {
@@ -12793,8 +12841,8 @@ func getConnector(typesDict map[string]*Type, typ *Type, connectorGuid *string) 
 	return nil
 }
 
-// 🌤️FlattenDesign computes absolute planes and centers for all pieces in a design.
-func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
+// 🌤️FlattenDesignDiff computes absolute planes and centers for all pieces in a design (hot path; no report wrapper).
+func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
 	design := FindDesignInKit(kit, designGuid)
 	if design == nil || len(design.Pieces) == 0 {
 		return DesignDiff{}
@@ -13012,6 +13060,28 @@ func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 		result.Connections = &ConnectionsDiff{Removed: removedConnList}
 	}
 	return result
+}
+
+// 🌤️FlattenDesign returns the canonical SemioReport with forward/backward DesignChange (matches TypeScript flattenDesign).
+func FlattenDesign(kit *Kit, designGuid string) SemioReport[DesignChange] {
+	design := FindDesignInKit(kit, designGuid)
+	if design == nil {
+		return semioReportErr[DesignChange]([]OperationNote{{Code: "flatten.design-not-found", Message: fmt.Sprintf("Design %q not found in kit", designGuid)}})
+	}
+	if len(design.Pieces) == 0 {
+		z := DesignChange{Forward: DesignDiff{}, Backward: DesignDiff{}}
+		return SemioReport[DesignChange]{
+			Ok:       true,
+			Diff:     &z,
+			Warnings: []OperationNote{},
+			Infos:    []OperationNote{{Code: "flatten.empty-pieces", Message: "No pieces to flatten; returning empty forward and backward diffs."}},
+			Errors:   []OperationNote{},
+		}
+	}
+	before := deepCloneDesign(*design)
+	forward := FlattenDesignDiff(kit, designGuid)
+	backward := inverseDesignDiff(before, forward)
+	return semioReportOk(DesignChange{Forward: forward, Backward: backward})
 }
 
 func planesEqualApprox(a, b Plane) bool {
@@ -13798,10 +13868,20 @@ func ComputeFlatHashes(kit *Kit, designGuid string) map[string]FlatMerkleHashes 
 	return result
 }
 
-// 🧠FlattenDesignCached runs FlattenDesign but reuses cached plane/center values whenever the merkle hash for a piece is unchanged.
-func FlattenDesignCached(kit *Kit, designGuid string, cache map[string]FlatMerkleCacheEntry) (DesignDiff, map[string]FlatMerkleCacheEntry) {
+// 🧠FlattenDesignCached runs FlattenDesignDiff but reuses cached plane/center values whenever the merkle hash for a piece is unchanged.
+func FlattenDesignCached(kit *Kit, designGuid string, cache map[string]FlatMerkleCacheEntry) (SemioReport[DesignChange], map[string]FlatMerkleCacheEntry) {
+	design := FindDesignInKit(kit, designGuid)
+	var before Design
+	hasBefore := design != nil && len(design.Pieces) > 0
+	if hasBefore {
+		before = deepCloneDesign(*design)
+	}
 	newHashes := ComputeFlatHashes(kit, designGuid)
-	diff := FlattenDesign(kit, designGuid)
+	diff := FlattenDesignDiff(kit, designGuid)
+	var backward DesignDiff
+	if hasBefore {
+		backward = inverseDesignDiff(before, diff)
+	}
 	updatedById := make(map[string]PieceDiff)
 	if diff.Pieces != nil {
 		for _, entry := range diff.Pieces.Updated {
@@ -13865,7 +13945,7 @@ func FlattenDesignCached(kit *Kit, designGuid string, cache map[string]FlatMerkl
 			Center:     reusedCenter,
 		}
 	}
-	return diff, nextCache
+	return semioReportOk(DesignChange{Forward: diff, Backward: backward}), nextCache
 }
 
 // #endregion 🌳Flatten Merkle Hashes
