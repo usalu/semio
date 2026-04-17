@@ -1,8 +1,9 @@
 {
   "title": "Optimize Sketchpad Hover Selection Performance Across Linked Views",
   "emoji": "✏️",
-  "status": "open",
+  "status": "closed",
   "description": "Optimize Sketchpad Hover Selection Performance Across Linked Views",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1125"
   },

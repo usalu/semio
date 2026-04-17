@@ -1,7 +1,8 @@
 {
   "title": "Fix C# GetKitChange Forward Diff Test Failure",
-  "status": "open",
+  "status": "closed",
   "description": "Fix C# GetKitChange Forward Diff Test Failure",
+  "summary": "Bulk close",
   "goal": "🎯r2603🎯runningnet",
   "sessions": [
     "⚪e178ae1c5e004346a171181575187149"

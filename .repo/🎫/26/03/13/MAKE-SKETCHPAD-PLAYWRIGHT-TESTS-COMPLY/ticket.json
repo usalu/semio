@@ -1,8 +1,9 @@
 {
   "title": "Make Sketchpad Playwright Tests Comply",
   "emoji": "✏️",
-  "status": "open",
+  "status": "closed",
   "description": "Get all semio sketchpad Playwright tests complying without removing functionality. Investigate failures, implement root-cause fixes, and verify by running the suite.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/867"
   },

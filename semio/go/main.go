@@ -12015,7 +12015,7 @@ func GuidUniquenessConstraint(ctx *ValidationContext) []Problem {
 			problem := Problem{
 				ConstraintId: "guid-unique",
 				Severity:     SeverityError,
-				Message:      fmt.Sprintf("Duplicate GUID \"%s\". First occurrence kept.", entityGuid),
+				Message:      fmt.Sprintf("Duplicate GUID \"%s\". Entity GUIDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).", entityGuid),
 				Location:     DomainLocation{EntityKind: entityKind, EntityGuid: entityGuid, Field: "guid"},
 				RelatedGuids: []string{entityGuid},
 				Fixes: []Fix{

@@ -1,8 +1,9 @@
 {
   "title": "Fix Sketchpad Playwright Tests",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Get all sketchpad playwright tests passing without removing functionality from the tests. Fix any compilation or runtime failures.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/891"
   },

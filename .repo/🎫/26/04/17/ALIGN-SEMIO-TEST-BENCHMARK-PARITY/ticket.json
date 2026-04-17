@@ -1,7 +1,8 @@
 {
   "title": "Align Semio Test Benchmark Parity",
-  "status": "open",
+  "status": "closed",
   "description": "Ensure semio has 100% parity between benchmarks and tests across all programming languages. For every test there must be exactly one benchmark. Benchmarks must exercise pure function execution time with the same inputs and expected outputs from assets as tests. Extend or refactor existing test and benchmark files only; do not create new test files. Run relevant tests and benchmarks until passing.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1344"
   },

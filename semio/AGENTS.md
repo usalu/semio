@@ -675,6 +675,10 @@ X \rightharpoonup Y := \text{partial functions},
 \top := \text{present without explicit value}.
 $$
 
+### Guid
+
+A guid is an immutable uuid-v7 string of the creation timestamp.
+
 ### Coordinate
 
 $$

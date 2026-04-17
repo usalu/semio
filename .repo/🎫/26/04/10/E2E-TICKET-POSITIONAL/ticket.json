@@ -1,7 +1,8 @@
 {
   "title": "E2E Ticket Positional",
-  "status": "open",
+  "status": "closed",
   "description": "E2E prompt positional",
+  "summary": "Bulk close",
   "goal": "🎯testgoal",
   "sessions": [
     "⚪bdbdbae48ef4452f83b076a6341fd38c"

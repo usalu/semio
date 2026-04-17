@@ -113,110 +113,10 @@
     },
     {
       "constraintId": "guid-unique",
-      "message": "Duplicate GUID \"019ab664-3333-3333-3333-333333333333\". First occurrence kept.",
+      "message": "Duplicate GUID \"019ab664-3333-3333-3333-333333333333\". Entity GUIDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).",
       "entityKind": "Connection",
       "entityGuid": "019ab664-3333-3333-3333-333333333333",
-      "fixes": [
-        {
-          "title": "Regenerate GUID",
-          "diff": {
-            "designs": {
-              "removed": [
-                {
-                  "guid": "019ab664-3333-3333-3333-333333333333"
-                }
-              ],
-              "added": [
-                {
-                  "guid": "019bdcdf-1100-74c9-aaf6-40e1a0d74def",
-                  "name": "Duplicate Design Name",
-                  "pieces": [
-                    {
-                      "guid": "019ab664-4444-4444-4444-444444444444",
-                      "name": "Duplicate Piece Name",
-                      "type": {
-                        "guid": "019ab664-1111-1111-1111-111111111111"
-                      },
-                      "plane": {
-                        "origin": {
-                          "x": 0,
-                          "y": 0,
-                          "z": 0
-                        },
-                        "xAxis": {
-                          "x": 1,
-                          "y": 0,
-                          "z": 0
-                        },
-                        "yAxis": {
-                          "x": 0,
-                          "y": 1,
-                          "z": 0
-                        }
-                      }
-                    },
-                    {
-                      "guid": "019ab664-5555-5555-5555-555555555555",
-                      "name": "Duplicate Piece Name",
-                      "type": {
-                        "guid": "019ab664-2222-2222-2222-222222222222"
-                      },
-                      "plane": {
-                        "origin": {
-                          "x": 5,
-                          "y": 0,
-                          "z": 0
-                        },
-                        "xAxis": {
-                          "x": 1,
-                          "y": 0,
-                          "z": 0
-                        },
-                        "yAxis": {
-                          "x": 0,
-                          "y": 1,
-                          "z": 0
-                        }
-                      }
-                    }
-                  ],
-                  "connections": [
-                    {
-                      "guid": "019bdcdf-1100-74c9-aaf6-40e1a0d74def",
-                      "connected": {
-                        "piece": {
-                          "guid": "019ab664-4444-4444-4444-444444444444"
-                        },
-                        "connector": {
-                          "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
-                        }
-                      },
-                      "connecting": {
-                        "piece": {
-                          "guid": "019ab664-5555-5555-5555-555555555555"
-                        },
-                        "connector": {
-                          "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
-                        }
-                      }
-                    }
-                  ],
-                  "layers": [
-                    {
-                      "guid": "019ab664-3333-3333-3333-333333330001",
-                      "path": "Duplicate.Layer.Path"
-                    },
-                    {
-                      "guid": "019ab664-3333-3333-3333-333333330002",
-                      "path": "Duplicate.Layer.Path"
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      ]
+      "fixes": []
     },
     {
       "constraintId": "layer-path-unique",
@@ -238,7 +138,7 @@
                       "updated": [
                         {
                           "layer": {
-                            "guid": "019ab664-3333-3333-3333-333333330001"
+                            "guid": "019ab664-3333-3333-3333-333333330002"
                           },
                           "diff": {
                             "path": "Duplicate.Layer.Path 2"

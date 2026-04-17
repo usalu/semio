@@ -625,7 +625,18 @@ export const CoordSchema = z.object({ u: z.number(), v: z.number() });
 /**
  * Type alias for Coord.
  **/
-export type Coord = z.infer<typeof CoordSchema>;
+export type CoordPlain = z.infer<typeof CoordSchema>;
+export class Coord {
+  constructor(plain: CoordPlain) {
+    Object.assign(this, CoordSchema.parse(plain));
+  }
+  static from(plain: CoordPlain): Coord {
+    return new Coord(plain);
+  }
+  toPlain(): CoordPlain {
+    return CoordSchema.parse(this as unknown as CoordPlain);
+  }
+}
 /**
  * Serializes Coord for transport.
  **/
@@ -691,7 +702,18 @@ export const VecSchema = z.object({ u: z.number(), v: z.number() });
 /**
  * Type alias for Vec.
  **/
-export type Vec = z.infer<typeof VecSchema>;
+export type VecPlain = z.infer<typeof VecSchema>;
+export class Vec {
+  constructor(plain: VecPlain) {
+    Object.assign(this, VecSchema.parse(plain));
+  }
+  static from(plain: VecPlain): Vec {
+    return new Vec(plain);
+  }
+  toPlain(): VecPlain {
+    return VecSchema.parse(this as unknown as VecPlain);
+  }
+}
 /**
  * Serializes Vec for transport.
  **/
@@ -761,7 +783,18 @@ export const PointSchema = z.object({
 /**
  * Type alias for Point.
  **/
-export type Point = z.infer<typeof PointSchema>;
+export type PointPlain = z.infer<typeof PointSchema>;
+export class Point {
+  constructor(plain: PointPlain) {
+    Object.assign(this, PointSchema.parse(plain));
+  }
+  static from(plain: PointPlain): Point {
+    return new Point(plain);
+  }
+  toPlain(): PointPlain {
+    return PointSchema.parse(this as unknown as PointPlain);
+  }
+}
 /**
  * Serializes Point for transport.
  **/
@@ -836,7 +869,18 @@ export const VectorSchema = z.object({
 /**
  * Type alias for Vector.
  **/
-export type Vector = z.infer<typeof VectorSchema>;
+export type VectorPlain = z.infer<typeof VectorSchema>;
+export class Vector {
+  constructor(plain: VectorPlain) {
+    Object.assign(this, VectorSchema.parse(plain));
+  }
+  static from(plain: VectorPlain): Vector {
+    return new Vector(plain);
+  }
+  toPlain(): VectorPlain {
+    return VectorSchema.parse(this as unknown as VectorPlain);
+  }
+}
 /**
  * Serializes Vector for transport.
  **/
@@ -911,14 +955,31 @@ export const PlaneSchema = z.object({
 /**
  * Type alias for Plane.
  **/
-export type Plane = z.infer<typeof PlaneSchema>;
+export type PlanePlain = z.infer<typeof PlaneSchema>;
+export class Plane {
+  origin!: Point;
+  xAxis!: Vector;
+  yAxis!: Vector;
+  constructor(plain: PlanePlain) {
+    const p = PlaneSchema.parse(plain);
+    this.origin = new Point(p.origin);
+    this.xAxis = new Vector(p.xAxis);
+    this.yAxis = new Vector(p.yAxis);
+  }
+  static from(plain: PlanePlain): Plane {
+    return new Plane(plain);
+  }
+  toPlain(): PlanePlain {
+    return PlaneSchema.parse(this as unknown as PlanePlain);
+  }
+}
 /**
  * Serializes Plane for transport.
  **/
 export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane));
 /**
  **/
-export const deserializePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
+export const deserializePlane = (json: string): Plane => new Plane(PlaneSchema.parse(JSON.parse(json)));
 /**
  **/
 export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
@@ -939,11 +1000,11 @@ export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
   const zAxis = new THREE.Vector3();
   matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3());
   matrix.extractBasis(xAxis, yAxis, zAxis);
-  return {
+  return new Plane({
     origin: { x: origin.x, y: origin.y, z: origin.z },
     xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
     yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
-  };
+  });
 };
 
 /**
@@ -964,30 +1025,31 @@ export const averagePlane = (planes: Plane[]): Plane | null => {
   const baseXAxis = planes[0].xAxis;
   const baseYAxis = planes[0].yAxis;
 
-  return {
+  return new Plane({
     origin: avgOrigin,
     xAxis: baseXAxis,
     yAxis: baseYAxis,
-  };
+  });
 };
 // ◻️roundPlane rounds plane components to a specified number of decimal places.
-const roundPlane = (plane: Plane): Plane => ({
-  origin: {
-    x: round(plane.origin.x),
-    y: round(plane.origin.y),
-    z: round(plane.origin.z),
-  },
-  xAxis: {
-    x: round(plane.xAxis.x),
-    y: round(plane.xAxis.y),
-    z: round(plane.xAxis.z),
-  },
-  yAxis: {
-    x: round(plane.yAxis.x),
-    y: round(plane.yAxis.y),
-    z: round(plane.yAxis.z),
-  },
-});
+const roundPlane = (plane: Plane): Plane =>
+  new Plane({
+    origin: {
+      x: round(plane.origin.x),
+      y: round(plane.origin.y),
+      z: round(plane.origin.z),
+    },
+    xAxis: {
+      x: round(plane.xAxis.x),
+      y: round(plane.xAxis.y),
+      z: round(plane.xAxis.z),
+    },
+    yAxis: {
+      x: round(plane.yAxis.x),
+      y: round(plane.yAxis.y),
+      z: round(plane.yAxis.z),
+    },
+  });
 
 /**
  * Zod schema for Plane diff validation.
@@ -1062,14 +1124,31 @@ export const CameraSchema = z.object({
 /**
  * Type alias for Camera.
  **/
-export type Camera = z.infer<typeof CameraSchema>;
+export type CameraPlain = z.infer<typeof CameraSchema>;
+export class Camera {
+  position!: Point;
+  forward!: Vector;
+  up!: Vector;
+  constructor(plain: CameraPlain) {
+    const p = CameraSchema.parse(plain);
+    this.position = new Point(p.position);
+    this.forward = new Vector(p.forward);
+    this.up = new Vector(p.up);
+  }
+  static from(plain: CameraPlain): Camera {
+    return new Camera(plain);
+  }
+  toPlain(): CameraPlain {
+    return CameraSchema.parse(this as unknown as CameraPlain);
+  }
+}
 /**
  * Serializes Camera for transport.
  **/
 export const serializeCamera = (camera: Camera): string => JSON.stringify(CameraSchema.parse(camera));
 /**
  **/
-export const deserializeCamera = (json: string): Camera => CameraSchema.parse(JSON.parse(json));
+export const deserializeCamera = (json: string): Camera => new Camera(CameraSchema.parse(JSON.parse(json)));
 
 /**
  * Zod schema for Camera diff validation.
@@ -1146,7 +1225,18 @@ export const AttributeSchema = z.object({
 /**
  * Type alias for Attribute.
  **/
-export type Attribute = z.infer<typeof AttributeSchema>;
+export type AttributePlain = z.infer<typeof AttributeSchema>;
+export class Attribute {
+  constructor(plain: AttributePlain) {
+    Object.assign(this, AttributeSchema.parse(plain));
+  }
+  static from(plain: AttributePlain): Attribute {
+    return new Attribute(plain);
+  }
+  toPlain(): AttributePlain {
+    return AttributeSchema.parse(this as unknown as AttributePlain);
+  }
+}
 /**
  * Serializes Attribute for transport.
  **/
@@ -1308,7 +1398,7 @@ export const applyAttributesDiff = (items: Attribute[], diff: AttributesDiff): v
     }
   }
   if (diff.added) {
-    items.push(...diff.added);
+    items.push(...diff.added.map((a) => new Attribute(a as AttributePlain)));
   }
 };
 
@@ -1330,14 +1420,27 @@ export const LocationSchema = z.object({
 /**
  * Type alias for Location.
  **/
-export type Location = z.infer<typeof LocationSchema>;
+export type LocationPlain = z.infer<typeof LocationSchema>;
+export class Location {
+  constructor(plain: LocationPlain) {
+    const p = LocationSchema.parse(plain);
+    Object.assign(this, p);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: LocationPlain): Location {
+    return new Location(plain);
+  }
+  toPlain(): LocationPlain {
+    return LocationSchema.parse(this as unknown as LocationPlain);
+  }
+}
 /**
  * Serializes Location for transport.
  **/
 export const serializeLocation = (location: Location): string => JSON.stringify(LocationSchema.parse(location));
 /**
  **/
-export const deserializeLocation = (json: string): Location => LocationSchema.parse(JSON.parse(json));
+export const deserializeLocation = (json: string): Location => new Location(LocationSchema.parse(JSON.parse(json)));
 
 /**
  * Zod schema for Location diff validation.
@@ -1402,14 +1505,27 @@ export const AuthorSchema = z.object({ guid: z.string(), name: z.string(), email
 /**
  * Type alias for Author.
  **/
-export type Author = z.infer<typeof AuthorSchema>;
+export type AuthorPlain = z.infer<typeof AuthorSchema>;
+export class Author {
+  constructor(plain: AuthorPlain) {
+    const p = AuthorSchema.parse(plain);
+    Object.assign(this, p);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: AuthorPlain): Author {
+    return new Author(plain);
+  }
+  toPlain(): AuthorPlain {
+    return AuthorSchema.parse(this as unknown as AuthorPlain);
+  }
+}
 /**
  * Serializes Author for transport.
  **/
 export const serializeAuthor = (author: Author): string => JSON.stringify(AuthorSchema.parse(author));
 /**
  **/
-export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
+export const deserializeAuthor = (json: string): Author => new Author(AuthorSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of AuthorMetaSchema.
@@ -1528,7 +1644,18 @@ export const FileSchema = z.object({
 /**
  * Type alias for File.
  **/
-export type File = z.infer<typeof FileSchema>;
+export type FilePlain = z.infer<typeof FileSchema>;
+export class File {
+  constructor(plain: FilePlain) {
+    Object.assign(this, FileSchema.parse(plain));
+  }
+  static from(plain: FilePlain): File {
+    return new File(plain);
+  }
+  toPlain(): FilePlain {
+    return FileSchema.parse(this as unknown as FilePlain);
+  }
+}
 /**
  * Serializes File for transport.
  **/
@@ -1670,14 +1797,27 @@ export const FolderSchema = z.object({
 /**
  * Type alias for Folder.
  **/
-export type Folder = z.infer<typeof FolderSchema>;
+export type FolderPlain = z.infer<typeof FolderSchema>;
+export class Folder {
+  constructor(plain: FolderPlain) {
+    const p = FolderSchema.parse(plain);
+    Object.assign(this, p);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: FolderPlain): Folder {
+    return new Folder(plain);
+  }
+  toPlain(): FolderPlain {
+    return FolderSchema.parse(this as unknown as FolderPlain);
+  }
+}
 /**
  * Serializes Folder for transport.
  **/
 export const serializeFolder = (folder: Folder): string => JSON.stringify(FolderSchema.parse(folder));
 /**
  **/
-export const deserializeFolder = (json: string): Folder => FolderSchema.parse(JSON.parse(json));
+export const deserializeFolder = (json: string): Folder => new Folder(FolderSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of FolderMetaSchema.
@@ -1807,14 +1947,27 @@ export const BenchmarkSchema = z.object({
 /**
  * Type alias for Benchmark.
  **/
-export type Benchmark = z.infer<typeof BenchmarkSchema>;
+export type BenchmarkPlain = z.infer<typeof BenchmarkSchema>;
+export class Benchmark {
+  constructor(plain: BenchmarkPlain) {
+    const p = BenchmarkSchema.parse(plain);
+    Object.assign(this, p);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: BenchmarkPlain): Benchmark {
+    return new Benchmark(plain);
+  }
+  toPlain(): BenchmarkPlain {
+    return BenchmarkSchema.parse(this as unknown as BenchmarkPlain);
+  }
+}
 /**
  * Serializes Benchmark for transport.
  **/
 export const serializeBenchmark = (benchmark: Benchmark): string => JSON.stringify(BenchmarkSchema.parse(benchmark));
 /**
  **/
-export const deserializeBenchmark = (json: string): Benchmark => BenchmarkSchema.parse(JSON.parse(json));
+export const deserializeBenchmark = (json: string): Benchmark => new Benchmark(BenchmarkSchema.parse(JSON.parse(json)));
 
 /**
  * Zod schema for Benchmark diff validation.
@@ -1943,7 +2096,7 @@ const applyBenchmarksDiff = (items: Benchmark[], diff: BenchmarksDiff): void => 
     }
   }
   if (diff.added) {
-    items.push(...diff.added);
+    items.push(...diff.added.map((b) => new Benchmark(b as BenchmarkPlain)));
   }
 };
 
@@ -1981,14 +2134,28 @@ export const QualitySchema = z.object({
 /**
  * Type alias for Quality.
  **/
-export type Quality = z.infer<typeof QualitySchema>;
+export type QualityPlain = z.infer<typeof QualitySchema>;
+export class Quality {
+  constructor(plain: QualityPlain) {
+    const p = QualitySchema.parse(plain);
+    Object.assign(this, p);
+    this.benchmarks = p.benchmarks?.map((b) => new Benchmark(b));
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: QualityPlain): Quality {
+    return new Quality(plain);
+  }
+  toPlain(): QualityPlain {
+    return QualitySchema.parse(this as unknown as QualityPlain);
+  }
+}
 /**
  * Serializes Quality for transport.
  **/
 export const serializeQuality = (quality: Quality): string => JSON.stringify(QualitySchema.parse(quality));
 /**
  **/
-export const deserializeQuality = (json: string): Quality => QualitySchema.parse(JSON.parse(json));
+export const deserializeQuality = (json: string): Quality => new Quality(QualitySchema.parse(JSON.parse(json)));
 
 /**
  * Definition of QualityMetaSchema.
@@ -2156,7 +2323,20 @@ export const PortSchema = z.object({
 /**
  * Type alias for Port.
  **/
-export type Port = z.infer<typeof PortSchema>;
+export type PortPlain = z.infer<typeof PortSchema>;
+export class Port {
+  constructor(plain: PortPlain) {
+    const p = PortSchema.parse(plain);
+    Object.assign(this, p);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: PortPlain): Port {
+    return new Port(plain);
+  }
+  toPlain(): PortPlain {
+    return PortSchema.parse(this as unknown as PortPlain);
+  }
+}
 /**
  * Serializes Port for transport.
  **/
@@ -2346,7 +2526,7 @@ export const applyPortsDiff = (items: Port[], diff: PortsDiff): void => {
     }
   }
   if (diff.added) {
-    items.push(...diff.added);
+    items.push(...diff.added.map((x) => new Port(x as PortPlain)));
   }
 };
 
@@ -2381,14 +2561,27 @@ export const PropSchema = z.object({
 /**
  * Type alias for Prop.
  **/
-export type Prop = z.infer<typeof PropSchema>;
+export type PropPlain = z.infer<typeof PropSchema>;
+export class Prop {
+  constructor(plain: PropPlain) {
+    const p = PropSchema.parse(plain);
+    Object.assign(this, p);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: PropPlain): Prop {
+    return new Prop(plain);
+  }
+  toPlain(): PropPlain {
+    return PropSchema.parse(this as unknown as PropPlain);
+  }
+}
 /**
  * Serializes Prop for transport.
  **/
 export const serializeProp = (prop: Prop): string => JSON.stringify(PropSchema.parse(prop));
 /**
  **/
-export const deserializeProp = (json: string): Prop => PropSchema.parse(JSON.parse(json));
+export const deserializeProp = (json: string): Prop => new Prop(PropSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of PropMetaSchema.
@@ -2538,7 +2731,7 @@ const applyPropsDiff = (items: Prop[], diff: PropsDiff): void => {
     }
   }
   if (diff.added) {
-    items.push(...diff.added);
+    items.push(...diff.added.map((x) => new Prop(x as PropPlain)));
   }
 };
 
@@ -2560,14 +2753,27 @@ export const TagSchema = z.object({
 /**
  * Type alias for Tag.
  **/
-export type Tag = z.infer<typeof TagSchema>;
+export type TagPlain = z.infer<typeof TagSchema>;
+export class Tag {
+  constructor(plain: TagPlain) {
+    const p = TagSchema.parse(plain);
+    Object.assign(this, p);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: TagPlain): Tag {
+    return new Tag(plain);
+  }
+  toPlain(): TagPlain {
+    return TagSchema.parse(this as unknown as TagPlain);
+  }
+}
 /**
  * Serializes Tag for transport.
  **/
 export const serializeTag = (tag: Tag): string => JSON.stringify(TagSchema.parse(tag));
 /**
  **/
-export const deserializeTag = (json: string): Tag => TagSchema.parse(JSON.parse(json));
+export const deserializeTag = (json: string): Tag => new Tag(TagSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of TagMetaSchema.
@@ -2743,7 +2949,7 @@ export const applyTagsDiff = (items: Tag[], diff: TagsDiff): void => {
     }
   }
   if (diff.added) {
-    items.push(...diff.added);
+    items.push(...diff.added.map((t) => new Tag(t as TagPlain)));
   }
 };
 
@@ -2774,14 +2980,27 @@ export const ConceptSchema = z.object({
 /**
  * Type alias for Concept.
  **/
-export type Concept = z.infer<typeof ConceptSchema>;
+export type ConceptPlain = z.infer<typeof ConceptSchema>;
+export class Concept {
+  constructor(plain: ConceptPlain) {
+    const p = ConceptSchema.parse(plain);
+    Object.assign(this, p);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: ConceptPlain): Concept {
+    return new Concept(plain);
+  }
+  toPlain(): ConceptPlain {
+    return ConceptSchema.parse(this as unknown as ConceptPlain);
+  }
+}
 /**
  * Serializes Concept for transport.
  **/
 export const serializeConcept = (concept: Concept): string => JSON.stringify(ConceptSchema.parse(concept));
 /**
  **/
-export const deserializeConcept = (json: string): Concept => ConceptSchema.parse(JSON.parse(json));
+export const deserializeConcept = (json: string): Concept => new Concept(ConceptSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of ConceptMetaSchema.
@@ -2957,7 +3176,7 @@ export const applyConceptsDiff = (items: Concept[], diff: ConceptsDiff): void =>
     }
   }
   if (diff.added) {
-    items.push(...diff.added);
+    items.push(...diff.added.map((c) => new Concept(c as ConceptPlain)));
   }
 };
 
@@ -2989,14 +3208,27 @@ export const ModelSchema = z.object({
 /**
  * Type alias for Model.
  **/
-export type Model = z.infer<typeof ModelSchema>;
+export type ModelPlain = z.infer<typeof ModelSchema>;
+export class Model {
+  constructor(plain: ModelPlain) {
+    const p = ModelSchema.parse(plain);
+    Object.assign(this, p);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: ModelPlain): Model {
+    return new Model(plain);
+  }
+  toPlain(): ModelPlain {
+    return ModelSchema.parse(this as unknown as ModelPlain);
+  }
+}
 /**
  * Serializes Model for transport.
  **/
 export const serializeModel = (model: Model): string => JSON.stringify(ModelSchema.parse(model));
 /**
  **/
-export const deserializeModel = (json: string): Model => ModelSchema.parse(JSON.parse(json));
+export const deserializeModel = (json: string): Model => new Model(ModelSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of ModelMetaSchema.
@@ -3283,14 +3515,30 @@ export const ConnectorSchema = z.object({
 /**
  * Type alias for Connector.
  **/
-export type Connector = z.infer<typeof ConnectorSchema>;
+export type ConnectorPlain = z.infer<typeof ConnectorSchema>;
+export class Connector {
+  constructor(plain: ConnectorPlain) {
+    const p = ConnectorSchema.parse(plain);
+    Object.assign(this, p);
+    this.point = new Point(p.point);
+    this.direction = new Vector(p.direction);
+    this.props = p.props?.map((x) => new Prop(x));
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: ConnectorPlain): Connector {
+    return new Connector(plain);
+  }
+  toPlain(): ConnectorPlain {
+    return ConnectorSchema.parse(this as unknown as ConnectorPlain);
+  }
+}
 /**
  * Serializes Connector for transport.
  **/
 export const serializeConnector = (connector: Connector): string => JSON.stringify(ConnectorSchema.parse(connector));
 /**
  **/
-export const deserializeConnector = (json: string): Connector => ConnectorSchema.parse(JSON.parse(json));
+export const deserializeConnector = (json: string): Connector => new Connector(ConnectorSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of ConnectorMetaSchema.
@@ -3495,14 +3743,30 @@ export const TypeSchema = z.object({
 /**
  * Type alias for Type.
  **/
-export type Type = z.infer<typeof TypeSchema>;
+export type TypePlain = z.infer<typeof TypeSchema>;
+export class Type {
+  constructor(plain: TypePlain) {
+    const p = TypeSchema.parse(plain);
+    Object.assign(this, p);
+    this.models = p.models?.map((m) => new Model(m));
+    this.connectors = p.connectors?.map((c) => new Connector(c));
+    this.props = p.props?.map((x) => new Prop(x));
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: TypePlain): Type {
+    return new Type(plain);
+  }
+  toPlain(): TypePlain {
+    return TypeSchema.parse(this as unknown as TypePlain);
+  }
+}
 /**
  * Serializes Type for transport.
  **/
 export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type));
 /**
  **/
-export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
+export const deserializeType = (json: string): Type => new Type(TypeSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of TypeMetaSchema.
@@ -3611,15 +3875,15 @@ export const applyTypeDiff = (target: Type, diff: TypeDiff): void => {
   if (diff.concepts !== undefined) target.concepts = diff.concepts ?? undefined;
   if (diff.models) {
     if (!target.models) target.models = [];
-    applyCollectionDiff("model", target.models, diff.models, applyModelDiff);
+    applyCollectionDiff("model", target.models, diff.models, applyModelDiff, (raw) => new Model(raw as ModelPlain));
   }
   if (diff.connectors) {
     if (!target.connectors) target.connectors = [];
-    applyCollectionDiff("connector", target.connectors, diff.connectors, applyConnectorDiff);
+    applyCollectionDiff("connector", target.connectors, diff.connectors, applyConnectorDiff, (raw) => new Connector(raw as ConnectorPlain));
   }
   if (diff.props) {
     if (!target.props) target.props = [];
-    applyCollectionDiff("prop", target.props, diff.props, applyPropDiff);
+    applyCollectionDiff("prop", target.props, diff.props, applyPropDiff, (raw) => new Prop(raw as PropPlain));
   }
   if (diff.attributes) {
     if (!target.attributes) target.attributes = [];
@@ -3701,14 +3965,27 @@ export const LayerSchema = z.object({
 /**
  * Type alias for Layer.
  **/
-export type Layer = z.infer<typeof LayerSchema>;
+export type LayerPlain = z.infer<typeof LayerSchema>;
+export class Layer {
+  constructor(plain: LayerPlain) {
+    const p = LayerSchema.parse(plain);
+    Object.assign(this, p);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: LayerPlain): Layer {
+    return new Layer(plain);
+  }
+  toPlain(): LayerPlain {
+    return LayerSchema.parse(this as unknown as LayerPlain);
+  }
+}
 /**
  * Serializes Layer for transport.
  **/
 export const serializeLayer = (layer: Layer): string => JSON.stringify(LayerSchema.parse(layer));
 /**
  **/
-export const deserializeLayer = (json: string): Layer => LayerSchema.parse(JSON.parse(json));
+export const deserializeLayer = (json: string): Layer => new Layer(LayerSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of LayerMetaSchema.
@@ -3839,14 +4116,31 @@ export const PieceSchema = z.object({
 /**
  * Type alias for Piece.
  **/
-export type Piece = z.infer<typeof PieceSchema>;
+export type PiecePlain = z.infer<typeof PieceSchema>;
+export class Piece {
+  constructor(plain: PiecePlain) {
+    const p = PieceSchema.parse(plain);
+    Object.assign(this, p);
+    this.plane = p.plane ? new Plane(p.plane) : undefined;
+    this.center = p.center ? new Coord(p.center) : undefined;
+    this.mirrorPlane = p.mirrorPlane ? new Plane(p.mirrorPlane) : undefined;
+    this.props = p.props?.map((x) => new Prop(x));
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: PiecePlain): Piece {
+    return new Piece(plain);
+  }
+  toPlain(): PiecePlain {
+    return PieceSchema.parse(this as unknown as PiecePlain);
+  }
+}
 /**
  * Serializes Piece for transport.
  **/
 export const serializePiece = (piece: Piece): string => JSON.stringify(PieceSchema.parse(piece));
 /**
  **/
-export const deserializePiece = (json: string): Piece => PieceSchema.parse(JSON.parse(json));
+export const deserializePiece = (json: string): Piece => new Piece(PieceSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of PieceMetaSchema.
@@ -3948,19 +4242,34 @@ export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff =>
 export const applyPieceDiff = (target: Piece, diff: PieceDiff): void => {
   if (diff.plane) {
     const diffPlane = diff.plane as any;
-    if (diffPlane.origin && diffPlane.xAxis && diffPlane.yAxis) {
-      target.plane = diffPlane as Plane;
+    const looksLikeFullPlane =
+      diffPlane.origin &&
+      diffPlane.xAxis &&
+      diffPlane.yAxis &&
+      typeof diffPlane.origin.x === "number" &&
+      typeof diffPlane.xAxis.x === "number" &&
+      typeof diffPlane.yAxis.x === "number";
+    if (looksLikeFullPlane) {
+      target.plane = new Plane(PlaneSchema.parse(diffPlane));
     } else {
-      if (!target.plane) target.plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+      if (!target.plane)
+        target.plane = new Plane({
+          origin: { x: 0, y: 0, z: 0 },
+          xAxis: { x: 1, y: 0, z: 0 },
+          yAxis: { x: 0, y: 1, z: 0 },
+        });
       applyPlaneDiff(target.plane, diff.plane);
     }
   }
   if (diff.name !== undefined) target.name = diff.name;
   if (diff.type !== undefined) target.type = diff.type;
   if (diff.design !== undefined) target.design = diff.design;
-  if (diff.center !== undefined) target.center = diff.center;
+  if (diff.center !== undefined)
+    target.center = diff.center instanceof Coord ? diff.center : new Coord(CoordSchema.parse(diff.center as CoordPlain));
   if (diff.scale !== undefined) target.scale = diff.scale;
-  if (diff.mirrorPlane !== undefined) target.mirrorPlane = diff.mirrorPlane;
+  if (diff.mirrorPlane !== undefined)
+    target.mirrorPlane =
+      diff.mirrorPlane instanceof Plane ? diff.mirrorPlane : new Plane(PlaneSchema.parse(diff.mirrorPlane as PlanePlain));
   if (diff.isHidden !== undefined) target.isHidden = diff.isHidden;
   if (diff.isLocked !== undefined) target.isLocked = diff.isLocked;
   if (diff.color !== undefined) target.color = diff.color;
@@ -4082,7 +4391,20 @@ export const GroupSchema = z.object({
 /**
  * Type alias for Group.
  **/
-export type Group = z.infer<typeof GroupSchema>;
+export type GroupPlain = z.infer<typeof GroupSchema>;
+export class Group {
+  constructor(plain: GroupPlain) {
+    const p = GroupSchema.parse(plain);
+    Object.assign(this, p);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: GroupPlain): Group {
+    return new Group(plain);
+  }
+  toPlain(): GroupPlain {
+    return GroupSchema.parse(this as unknown as GroupPlain);
+  }
+}
 /**
  * Zod schema for Group diff validation.
  **/
@@ -4205,7 +4527,18 @@ export const SideSchema = z.object({
 /**
  * Type alias for Side.
  **/
-export type Side = z.infer<typeof SideSchema>;
+export type SidePlain = z.infer<typeof SideSchema>;
+export class Side {
+  constructor(plain: SidePlain) {
+    Object.assign(this, SideSchema.parse(plain));
+  }
+  static from(plain: SidePlain): Side {
+    return new Side(plain);
+  }
+  toPlain(): SidePlain {
+    return SideSchema.parse(this as unknown as SidePlain);
+  }
+}
 /**
  * Zod schema for Side diff validation.
  **/
@@ -4221,7 +4554,18 @@ export const SideIdSchema = z.object({ piece: PieceIdSchema, designPiece: PieceI
 /**
  * Identifier type for Side entities.
  **/
-export type SideId = z.infer<typeof SideIdSchema>;
+export type SideIdPlain = z.infer<typeof SideIdSchema>;
+export class SideId {
+  constructor(plain: SideIdPlain) {
+    Object.assign(this, SideIdSchema.parse(plain));
+  }
+  static from(plain: SideIdPlain): SideId {
+    return new SideId(plain);
+  }
+  toPlain(): SideIdPlain {
+    return SideIdSchema.parse(this as unknown as SideIdPlain);
+  }
+}
 /**
  * Zod schema for Sides diff validation.
  **/
@@ -4306,7 +4650,22 @@ export const ConnectionSchema = z.object({
 /**
  * Type alias for Connection.
  **/
-export type Connection = z.infer<typeof ConnectionSchema>;
+export type ConnectionPlain = z.infer<typeof ConnectionSchema>;
+export class Connection {
+  constructor(plain: ConnectionPlain) {
+    const p = ConnectionSchema.parse(plain);
+    Object.assign(this, p);
+    this.connected = new Side(p.connected);
+    this.connecting = new Side(p.connecting);
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: ConnectionPlain): Connection {
+    return new Connection(plain);
+  }
+  toPlain(): ConnectionPlain {
+    return ConnectionSchema.parse(this as unknown as ConnectionPlain);
+  }
+}
 /**
  * Zod schema for Connection diff validation.
  **/
@@ -4415,7 +4774,7 @@ export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
 export const serializeConnection = (connection: Connection): string => JSON.stringify(ConnectionSchema.parse(connection));
 /**
  **/
-export const deserializeConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
+export const deserializeConnection = (json: string): Connection => new Connection(ConnectionSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of ConnectionMetaSchema.
@@ -4511,7 +4870,18 @@ export const StatSchema = z.object({
 /**
  * Type alias for Stat.
  **/
-export type Stat = z.infer<typeof StatSchema>;
+export type StatPlain = z.infer<typeof StatSchema>;
+export class Stat {
+  constructor(plain: StatPlain) {
+    Object.assign(this, StatSchema.parse(plain));
+  }
+  static from(plain: StatPlain): Stat {
+    return new Stat(plain);
+  }
+  toPlain(): StatPlain {
+    return StatSchema.parse(this as unknown as StatPlain);
+  }
+}
 /**
  * Zod schema for Stat diff validation.
  **/
@@ -4648,14 +5018,33 @@ export const DesignSchema = z.object({
 /**
  * Type alias for Design.
  **/
-export type Design = z.infer<typeof DesignSchema>;
+export type DesignPlain = z.infer<typeof DesignSchema>;
+export class Design {
+  constructor(plain: DesignPlain) {
+    const p = DesignSchema.parse(plain);
+    Object.assign(this, p);
+    this.pieces = p.pieces?.map((x) => new Piece(x));
+    this.connections = p.connections?.map((x) => new Connection(x));
+    this.stats = p.stats?.map((x) => new Stat(x));
+    this.props = p.props?.map((x) => new Prop(x));
+    this.layers = p.layers?.map((x) => new Layer(x));
+    this.groups = p.groups?.map((x) => new Group(x));
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: DesignPlain): Design {
+    return new Design(plain);
+  }
+  toPlain(): DesignPlain {
+    return DesignSchema.parse(this as unknown as DesignPlain);
+  }
+}
 /**
  * Serializes Design for transport.
  **/
 export const serializeDesign = (design: Design): string => JSON.stringify(DesignSchema.parse(design));
 /**
  **/
-export const deserializeDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
+export const deserializeDesign = (json: string): Design => new Design(DesignSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of DesignMetaSchema.
@@ -4713,6 +5102,12 @@ export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: t
  * Diff type for tracking Design changes.
  **/
 export type DesignDiff = z.infer<typeof DesignDiffSchema>;
+
+/**
+ * Deep duplicate of a design diff (e.g. tests that strip or mutate entries).
+ **/
+export const duplicateDesignDiffForIsolation = (diff: DesignDiff): DesignDiff => DesignDiffSchema.parse(JSON.parse(JSON.stringify(diff)));
+
 /**
  * Retrieves the DesignDiff value.
  **/
@@ -4974,33 +5369,94 @@ export const applyDesignDiff = (target: Design, diff: DesignDiff): void => {
   if (diff.concepts !== undefined) target.concepts = diff.concepts;
   if (diff.pieces) {
     if (!target.pieces) target.pieces = [];
-    applyCollectionDiff("piece", target.pieces, diff.pieces, applyPieceDiff);
+    applyCollectionDiff("piece", target.pieces, diff.pieces, applyPieceDiff, (raw) => new Piece(raw as PiecePlain));
   }
   if (diff.connections) {
     if (!target.connections) target.connections = [];
-    applyCollectionDiff("connection", target.connections, diff.connections, applyConnectionDiff);
+    applyCollectionDiff("connection", target.connections, diff.connections, applyConnectionDiff, (raw) => new Connection(raw as ConnectionPlain));
   }
   if (diff.stats) {
     if (!target.stats) target.stats = [];
-    applyCollectionDiff("stat", target.stats, diff.stats, applyStatDiff);
+    applyCollectionDiff("stat", target.stats, diff.stats, applyStatDiff, (raw) => new Stat(raw as StatPlain));
   }
   if (diff.props) {
     if (!target.props) target.props = [];
-    applyCollectionDiff("prop", target.props, diff.props, applyPropDiff);
+    applyCollectionDiff("prop", target.props, diff.props, applyPropDiff, (raw) => new Prop(raw as PropPlain));
   }
   if (diff.layers) {
     if (!target.layers) target.layers = [];
-    applyCollectionDiff("layer", target.layers, diff.layers, applyLayerDiff);
+    applyCollectionDiff("layer", target.layers, diff.layers, applyLayerDiff, (raw) => new Layer(raw as LayerPlain));
   }
   if (diff.groups) {
     if (!target.groups) target.groups = [];
-    applyCollectionDiff("group", target.groups, diff.groups, applyGroupDiff);
+    applyCollectionDiff("group", target.groups, diff.groups, applyGroupDiff, (raw) => new Group(raw as GroupPlain));
   }
   if (diff.attributes) {
     if (!target.attributes) target.attributes = [];
     applyAttributesDiff(target.attributes, diff.attributes);
   }
 };
+
+// #region 🧷Local detach (no structuredClone)
+// Algorithms that must not mutate the live kit graph allocate detached copies via these helpers.
+
+const detachPieceForLocalMutation = (p: Piece): Piece =>
+  new Piece({
+    ...PieceSchema.parse(p as unknown as PiecePlain),
+    plane: p.plane
+      ? {
+          origin: { ...p.plane.origin },
+          xAxis: { ...p.plane.xAxis },
+          yAxis: { ...p.plane.yAxis },
+        }
+      : undefined,
+    center: p.center ? { ...p.center } : undefined,
+    mirrorPlane: p.mirrorPlane
+      ? {
+          origin: { ...p.mirrorPlane.origin },
+          xAxis: { ...p.mirrorPlane.xAxis },
+          yAxis: { ...p.mirrorPlane.yAxis },
+        }
+      : undefined,
+    props: p.props?.map((x) => ({ ...PropSchema.parse(x as unknown as PropPlain) })),
+    attributes: p.attributes?.map((a) => ({ ...AttributeSchema.parse(a as unknown as AttributePlain) })),
+  });
+
+const detachConnectionForLocalMutation = (c: Connection): Connection =>
+  new Connection({
+    ...ConnectionSchema.parse(c as unknown as ConnectionPlain),
+    connected: new Side({
+      piece: { ...c.connected.piece },
+      designPiece: c.connected.designPiece ? { ...c.connected.designPiece } : undefined,
+      connector: c.connected.connector ? { ...c.connected.connector } : undefined,
+    }),
+    connecting: new Side({
+      piece: { ...c.connecting.piece },
+      designPiece: c.connecting.designPiece ? { ...c.connecting.designPiece } : undefined,
+      connector: c.connecting.connector ? { ...c.connecting.connector } : undefined,
+    }),
+    attributes: c.attributes?.map((a) => ({ ...AttributeSchema.parse(a as unknown as AttributePlain) })),
+  });
+
+const detachDesignForLocalMutation = (d: Design): Design =>
+  new Design({
+    ...DesignSchema.parse(d as unknown as DesignPlain),
+    pieces: d.pieces?.map(detachPieceForLocalMutation),
+    connections: d.connections?.map(detachConnectionForLocalMutation),
+    stats: d.stats?.map((s) => ({ ...StatSchema.parse(s as unknown as StatPlain) })),
+    props: d.props?.map((x) => ({ ...PropSchema.parse(x as unknown as PropPlain) })),
+    layers: d.layers?.map((l) => ({
+      ...LayerSchema.parse(l as unknown as LayerPlain),
+      attributes: l.attributes?.map((a) => ({ ...AttributeSchema.parse(a as unknown as AttributePlain) })),
+    })),
+    groups: d.groups?.map((g) => ({
+      ...GroupSchema.parse(g as unknown as GroupPlain),
+      pieces: g.pieces?.map((pid) => ({ ...pid })),
+      attributes: g.attributes?.map((a) => ({ ...AttributeSchema.parse(a as unknown as AttributePlain) })),
+    })),
+    attributes: d.attributes?.map((a) => ({ ...AttributeSchema.parse(a as unknown as AttributePlain) })),
+  });
+// #endregion 🧷Local detach
 
 /**
  * Creates a mixed design for visualization, annotating entities with diff status.
@@ -5014,7 +5470,7 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
   const DIFF_STATUS_KEY = "semio.diffStatus";
   const setStatus = (attrs: Attribute[] | undefined, status: DiffStatus): Attribute[] => {
     const result = [...(attrs ?? [])];
-    result.push({ guid: `${DIFF_STATUS_KEY}.${status}`, key: DIFF_STATUS_KEY, value: status });
+    result.push(new Attribute({ guid: `${DIFF_STATUS_KEY}.${status}`, key: DIFF_STATUS_KEY, value: status }));
     return result;
   };
 
@@ -5026,7 +5482,7 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
   const resultPieces: Piece[] = (base.pieces ?? []).map((p) => {
     if (removedPieceGuids.has(p.guid)) return { ...p, attributes: setStatus(p.attributes, DiffStatus.Removed) };
     if (updatedPieceMap.has(p.guid)) {
-      const applied = structuredClone(p);
+      const applied = detachPieceForLocalMutation(p);
       applyPieceDiff(applied, updatedPieceMap.get(p.guid)!);
       // 📌Preserve base geometry so modified pieces stay in place and only get recolored.
       const preserved: Piece = { ...applied };
@@ -5045,7 +5501,7 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
   const resultConns: Connection[] = (base.connections ?? []).map((c) => {
     if (removedConnGuids.has(c.guid)) return { ...c, attributes: setStatus(c.attributes, DiffStatus.Removed) };
     if (updatedConnMap.has(c.guid)) {
-      const applied = structuredClone(c);
+      const applied = detachConnectionForLocalMutation(c);
       applyConnectionDiff(applied, updatedConnMap.get(c.guid)!);
       return { ...applied, attributes: setStatus(applied.attributes, DiffStatus.Modified) };
     }
@@ -5055,10 +5511,13 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
     resultConns.push({ ...added, attributes: setStatus(added.attributes, DiffStatus.Added) });
   }
 
-  const result: Design = { ...base };
-  result.pieces = resultPieces;
-  result.connections = resultConns;
-  return result;
+  return new Design(
+    DesignSchema.parse({
+      ...DesignSchema.parse(base as unknown as DesignPlain),
+      pieces: resultPieces as PiecePlain[],
+      connections: resultConns as ConnectionPlain[],
+    }),
+  );
 };
 
 /**
@@ -5868,7 +6327,7 @@ export const flattenDesignCached = (kit: Kit, designGuid: string, cache?: { [pie
   const { getType, getConnector } = buildConnectorResolverFromKit(kit);
 
   const pieces = design.pieces;
-  const flatPieces: Piece[] = pieces.map((p) => structuredClone(p));
+  const flatPieces: Piece[] = pieces.map((p) => detachPieceForLocalMutation(p));
   const filteredConnections = (design.connections ?? []).filter((connection) => {
     const sourceId = connection.connected.piece.guid;
     const targetId = connection.connecting.piece.guid;
@@ -6698,7 +7157,7 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
     return { ok: false, errors: flatRes.errors };
   }
   const flatChange = flatRes.diff;
-  const flatDesign = structuredClone(design);
+  const flatDesign = detachDesignForLocalMutation(design);
   applyDesignDiff(flatDesign, flatChange.forward);
   const flatPieceMap = new Map<string, Piece>();
   for (const p of flatDesign.pieces ?? []) {
@@ -6730,10 +7189,10 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
     }
 
     if (isInternalFixed || isInternalConnected) {
-      copyPieces.push(JSON.parse(JSON.stringify(piece)));
+      copyPieces.push(detachPieceForLocalMutation(piece));
       addedPieceGuids.add(pieceGuid);
     } else if (isPpExclPcIncl) {
-      const copied: Piece = JSON.parse(JSON.stringify(piece));
+      const copied: Piece = detachPieceForLocalMutation(piece);
       const flatPiece = flatPieceMap.get(pieceGuid);
       if (flatPiece) {
         const centerValue = flatPiece.center ? JSON.stringify(flatPiece.center) : JSON.stringify({ u: 0, v: 0 });
@@ -6746,11 +7205,16 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
       // Specs: Selected piece without an internal parent edge (parent piece or parent connection unselected, and not pp-excl-pc-incl)
       // becomes a free fixed root in the clipboard at its flat absolute position. Its source descendant subtree (children
       // and their parent connections, recursively) is auto-pulled in unchanged so the subtree appears exactly as in the source.
-      const copied: Piece = JSON.parse(JSON.stringify(piece));
+      const copied: Piece = detachPieceForLocalMutation(piece);
       const flatPiece = flatPieceMap.get(pieceGuid);
       if (flatPiece) {
         if (flatPiece.center) copied.center = { u: flatPiece.center.u, v: flatPiece.center.v };
-        if (flatPiece.plane) copied.plane = JSON.parse(JSON.stringify(flatPiece.plane));
+        if (flatPiece.plane)
+          copied.plane = {
+            origin: { ...flatPiece.plane.origin },
+            xAxis: { ...flatPiece.plane.xAxis },
+            yAxis: { ...flatPiece.plane.yAxis },
+          };
         const centerValue = flatPiece.center ? JSON.stringify(flatPiece.center) : JSON.stringify({ u: 0, v: 0 });
         const planeValue = flatPiece.plane ? JSON.stringify(flatPiece.plane) : JSON.stringify({ origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } });
         copied.attributes = [...(copied.attributes ?? []), { guid: "", key: "semio.center", value: centerValue }, { guid: "", key: "semio.plane", value: planeValue }];
@@ -6770,12 +7234,12 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
           if (!addedPieceGuids.has(childGuid)) {
             const childPiece = pieces.find((p) => p.guid === childGuid);
             if (childPiece) {
-              copyPieces.push(JSON.parse(JSON.stringify(childPiece)));
+              copyPieces.push(detachPieceForLocalMutation(childPiece));
               addedPieceGuids.add(childGuid);
             }
           }
           if (!addedConnGuids.has(connection.guid)) {
-            copyConnections.push(JSON.parse(JSON.stringify(connection)));
+            copyConnections.push(detachConnectionForLocalMutation(connection));
             addedConnGuids.add(connection.guid);
           }
           subtreeQueue.push(childGuid);
@@ -6797,9 +7261,9 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
     const isInternal = connectedSelected && connectingSelected;
 
     if (isInternal) {
-      copyConnections.push(JSON.parse(JSON.stringify(conn)));
+      copyConnections.push(detachConnectionForLocalMutation(conn));
     } else {
-      copyConnections.push(JSON.parse(JSON.stringify(conn)));
+      copyConnections.push(detachConnectionForLocalMutation(conn));
 
       const externalGuids: string[] = [];
       if (!connectedSelected) externalGuids.push(connectedGuid);
@@ -6809,7 +7273,7 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
         if (!addedPieceGuids.has(extGuid)) {
           const extPiece = pieces.find((p) => p.guid === extGuid);
           if (extPiece) {
-            const cloned: Piece = JSON.parse(JSON.stringify(extPiece));
+            const cloned: Piece = detachPieceForLocalMutation(extPiece);
             const extAttrs: Attribute[] = [...(cloned.attributes ?? []), { guid: "", key: "semio.piece.origin", value: "external" }];
             const flatExtPiece = flatPieceMap.get(extGuid);
             if (flatExtPiece) {
@@ -7024,9 +7488,9 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
             const matchingConnector = findMatchingConnector(candidate.type.guid, sourceParentConnector);
             if (matchingConnector) {
               matched = true;
-              addedPieces.push(JSON.parse(JSON.stringify(piece)));
+              addedPieces.push(detachPieceForLocalMutation(piece));
 
-              const copiedConn: Connection = JSON.parse(JSON.stringify(parentConn));
+              const copiedConn: Connection = detachConnectionForLocalMutation(parentConn);
               if (isParentConnected) {
                 copiedConn.connected = { piece: { guid: candidate.guid }, connector: { guid: matchingConnector.guid } };
               } else {
@@ -7073,7 +7537,7 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
       }
 
       if (!matched) {
-        const copied: Piece = JSON.parse(JSON.stringify(piece));
+        const copied: Piece = detachPieceForLocalMutation(piece);
         const attrs = piece.attributes ?? [];
         const centerAttr = attrs.find((a) => a.key === "semio.center");
         const planeAttr = attrs.find((a) => a.key === "semio.plane");
@@ -7084,7 +7548,7 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
         addedPieces.push(copied);
       }
     } else if (isFixed) {
-      const copied: Piece = JSON.parse(JSON.stringify(piece));
+      const copied: Piece = detachPieceForLocalMutation(piece);
       let cu = 0;
       let cv = 0;
       if (copied.center) {
@@ -7101,7 +7565,7 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
       copied.center = { u: cu - anchor.u + (coord?.u ?? 0), v: cv - anchor.v + (coord?.v ?? 0) };
       addedPieces.push(copied);
     } else if (isConnected && pInfo) {
-      addedPieces.push(JSON.parse(JSON.stringify(piece)));
+      addedPieces.push(detachPieceForLocalMutation(piece));
     }
   }
 
@@ -7110,7 +7574,7 @@ export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring:
   for (const conn of sourceConnections) {
     if (externalOriginGuids.has(conn.connected.piece.guid) || externalOriginGuids.has(conn.connecting.piece.guid)) continue;
     if (!addedPieceGuids.has(conn.connected.piece.guid) || !addedPieceGuids.has(conn.connecting.piece.guid)) continue;
-    addedConnections.push(JSON.parse(JSON.stringify(conn)));
+    addedConnections.push(detachConnectionForLocalMutation(conn));
   }
 
   const diff: DesignDiff = {};
@@ -7337,12 +7801,32 @@ export class Kit {
   updatedAt!: string;
 
   constructor(plain: KitPlain) {
-    Object.assign(this, KitSchema.parse(plain));
+    const p = KitSchema.parse(plain);
+    Object.assign(this, p);
+    this.types = p.types?.map((t) => new Type(t));
+    this.designs = p.designs?.map((d) => new Design(d));
+    this.tags = p.tags?.map((t) => new Tag(t));
+    this.concepts = p.concepts?.map((c) => new Concept(c));
+    this.ports = p.ports?.map((x) => new Port(x));
+    this.qualities = p.qualities?.map((q) => new Quality(q));
+    this.files = p.files?.map((f) => new File(f));
+    this.folders = p.folders?.map((f) => new Folder(f));
+    this.authors = p.authors?.map((a) => new Author(a));
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
   }
 
   /** Validates and wraps a plain kit object. */
   static fromPlain(plain: KitPlain): Kit {
     return new Kit(plain);
+  }
+
+  /** Applies a kit diff in place (same as `applyKitDiff(this, diff)`). */
+  applyDiff(diff: KitDiff): void {
+    applyKitDiff(this, diff);
+  }
+
+  toPlain(): KitPlain {
+    return KitSchema.parse(this as unknown as KitPlain);
   }
 }
 /**
@@ -7352,6 +7836,11 @@ export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse
 /**
  **/
 export const deserializeKit = (json: string): Kit => new Kit(KitSchema.parse(JSON.parse(json, (_key, value) => (value === null ? undefined : value))));
+
+/**
+ * Round-trips a kit through JSON so tests (or callers) can mutate without touching shared fixtures.
+ **/
+export const duplicateKitForIsolation = (kit: Kit): Kit => deserializeKit(serializeKit(kit));
 
 /**
  * Definition of KitMetaSchema.
@@ -7474,6 +7963,12 @@ export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: tr
  * Diff type for tracking Kit changes.
  **/
 export type KitDiff = z.infer<typeof KitDiffSchema>;
+
+/**
+ * Deep duplicate of a kit diff for tests / isolated apply simulation.
+ **/
+export const duplicateKitDiffForIsolation = (diff: KitDiff): KitDiff => KitDiffSchema.parse(JSON.parse(JSON.stringify(diff)));
+
 // 🧬EntityIdType maps entity kind names to their ID interface types.
 type EntityIdType = { guid: string };
 // 🔀CollectionDiff represents added, removed, and changed items in a collection.
@@ -7523,7 +8018,13 @@ const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(
   return inverse;
 };
 // 🔀applyCollectionDiff applies a collection diff to produce an updated collection.
-const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, items: T[], diff: CollectionDiff<K, T, D> | undefined, applyItemDiff: (target: T, diff: D) => void): void => {
+const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(
+  entityKey: K,
+  items: T[],
+  diff: CollectionDiff<K, T, D> | undefined,
+  applyItemDiff: (target: T, diff: D) => void,
+  hydrateAdded: (raw: unknown) => T,
+): void => {
   if (!diff) return;
   if (diff.removed) {
     const removedGuids = new Set(diff.removed.map((r) => r.guid));
@@ -7539,7 +8040,7 @@ const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(en
     }
   }
   if (diff.added) {
-    items.push(...diff.added);
+    items.push(...diff.added.map(hydrateAdded));
   }
 };
 
@@ -7661,11 +8162,11 @@ export const applyKitDiff = (target: Kit, diff: KitDiff): void => {
 
   if (diff.types) {
     if (!target.types) target.types = [];
-    applyCollectionDiff("type", target.types, diff.types, applyTypeDiff);
+    applyCollectionDiff("type", target.types, diff.types, applyTypeDiff, (raw) => new Type(raw as TypePlain));
   }
   if (diff.designs) {
     if (!target.designs) target.designs = [];
-    applyCollectionDiff("design", target.designs, diff.designs, applyDesignDiff);
+    applyCollectionDiff("design", target.designs, diff.designs, applyDesignDiff, (raw) => new Design(raw as DesignPlain));
   }
   if (diff.tags) {
     if (!target.tags) target.tags = [];
@@ -7681,19 +8182,19 @@ export const applyKitDiff = (target: Kit, diff: KitDiff): void => {
   }
   if (diff.qualities) {
     if (!target.qualities) target.qualities = [];
-    applyCollectionDiff("quality", target.qualities, diff.qualities, applyQualityDiff);
+    applyCollectionDiff("quality", target.qualities, diff.qualities, applyQualityDiff, (raw) => new Quality(raw as QualityPlain));
   }
   if (diff.files) {
     if (!target.files) target.files = [];
-    applyCollectionDiff("file", target.files, diff.files, applyFileDiff);
+    applyCollectionDiff("file", target.files, diff.files, applyFileDiff, (raw) => new File(raw as FilePlain));
   }
   if (diff.folders) {
     if (!target.folders) target.folders = [];
-    applyCollectionDiff("folder", target.folders, diff.folders, applyFolderDiff);
+    applyCollectionDiff("folder", target.folders, diff.folders, applyFolderDiff, (raw) => new Folder(raw as FolderPlain));
   }
   if (diff.authors) {
     if (!target.authors) target.authors = [];
-    applyCollectionDiff("author", target.authors, diff.authors, applyAuthorDiff);
+    applyCollectionDiff("author", target.authors, diff.authors, applyAuthorDiff, (raw) => new Author(raw as AuthorPlain));
   }
   if (diff.attributes) {
     if (!target.attributes) target.attributes = [];
@@ -10064,7 +10565,7 @@ export interface KitDiffValidationResult {
   ok: boolean;
   errors: OperationNote[];
   warnings: OperationNote[];
-  /** When `heal` was true, a copy of the diff with fixable operations removed. */
+  /** When `heal` was true, the same diff reference after in-place healing. */
   diff?: KitDiff;
 }
 
@@ -10241,11 +10742,30 @@ const validateQualityDiffNested = (ctx: KitDiffValidationCtx, path: string, item
   if (diff.attributes) validateAttributesDiffNested(ctx, `${path}.attributes`, item.attributes ?? [], diff.attributes);
 };
 
-const simulatePiecesForDesign = (base: Design, d?: PiecesDiff): Piece[] => {
-  if (!d) return base.pieces ?? [];
-  const result = structuredClone(base.pieces ?? []);
-  applyCollectionDiff("piece", result, d, applyPieceDiff);
-  return result;
+/** Piece GUIDs after applying a pieces diff, without cloning piece objects. */
+const simulatePieceGuidSetForDesign = (base: Design, d?: PiecesDiff): Set<string> => {
+  const guids = new Set((base.pieces ?? []).map((p) => p.guid));
+  if (!d) return guids;
+  for (const r of d.removed ?? []) guids.delete(r.guid);
+  for (const a of d.added ?? []) guids.add(a.guid);
+  return guids;
+};
+
+/** Layer GUIDs after applying a layers diff, without cloning layer objects. */
+const simulateLayerGuidSetForDesign = (base: Design, d?: LayersDiff): Set<string> => {
+  const guids = new Set((base.layers ?? []).map((l) => l.guid));
+  if (!d) return guids;
+  for (const r of d.removed ?? []) guids.delete(r.guid);
+  for (const a of d.added ?? []) guids.add(a.guid);
+  return guids;
+};
+
+const previewConnectionSidesAfterDiff = (conn: Connection, d: ConnectionDiff): { connected: Side; connecting: Side } => {
+  const connected: Side = { ...conn.connected };
+  const connecting: Side = { ...conn.connecting };
+  if (d.connected) applySideDiff(connected, d.connected);
+  if (d.connecting) applySideDiff(connecting, d.connecting);
+  return { connected, connecting };
 };
 
 const validateDesignDiffNested = (
@@ -10291,8 +10811,7 @@ const validateDesignDiffNested = (
     }
   }
 
-  const simPieces = simulatePiecesForDesign(design, diff.pieces);
-  const pieceGuids = new Set(simPieces.map((p) => p.guid));
+  const pieceGuids = simulatePieceGuidSetForDesign(design, diff.pieces);
 
   if (diff.connections) {
     validateGuidCollectionDiff(ctx, `${path}.connections`, "connection", design.connections ?? [], diff.connections, (item, cDiff, p) => {
@@ -10309,12 +10828,11 @@ const validateDesignDiffNested = (
     }
     for (const u of diff.connections.updated ?? []) {
       const conn = design.connections?.find((c) => c.guid === (u as any).connection.guid);
-      const merged = conn ? structuredClone(conn) : undefined;
-      if (merged) applyConnectionDiff(merged, u.diff as ConnectionDiff);
       const cp = `${path}.connections.updated[${(u as any).connection.guid}]`;
-      if (merged) {
-        checkSide(merged.connected, "connected", cp);
-        checkSide(merged.connecting, "connecting", cp);
+      if (conn) {
+        const { connected, connecting } = previewConnectionSidesAfterDiff(conn, u.diff as ConnectionDiff);
+        checkSide(connected, "connected", cp);
+        checkSide(connecting, "connecting", cp);
       }
     }
   }
@@ -10327,15 +10845,12 @@ const validateDesignDiffNested = (
   }
   if (diff.props) validatePropsDiffNested(ctx, `${path}.props`, design.props ?? [], refs.qualityGuids, diff.props);
 
-  let simLayers = [...(design.layers ?? [])];
   if (diff.layers) {
     validateGuidCollectionDiff(ctx, `${path}.layers`, "layer", design.layers ?? [], diff.layers, (item, ldiff, p) => {
       if ((ldiff as LayerDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (ldiff as LayerDiff).attributes);
     });
-    simLayers = structuredClone(simLayers);
-    applyCollectionDiff("layer", simLayers, diff.layers, applyLayerDiff);
   }
-  const layerGuids = new Set(simLayers.map((l) => l.guid));
+  const layerGuids = simulateLayerGuidSetForDesign(design, diff.layers);
   const active = diff.activeLayer ?? design.activeLayer;
   if (active?.guid && !layerGuids.has(active.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.active-layer-missing", `${path}: activeLayer ${active.guid} not in layers after diff`);
 
@@ -10352,9 +10867,9 @@ const validateDesignDiffNested = (
     for (const u of diff.groups.updated ?? []) {
       const g = design.groups?.find((x) => x.guid === (u as any).group.guid);
       if (g) {
-        const ng = structuredClone(g);
-        applyGroupDiff(ng, u.diff as GroupDiff);
-        checkGroupPieces(ng, `${path}.groups.updated[${(u as any).group.guid}]`);
+        const gd = u.diff as GroupDiff;
+        const virtual: Group = { ...g, pieces: gd.pieces !== undefined ? gd.pieces : g.pieces };
+        checkGroupPieces(virtual, `${path}.groups.updated[${(u as any).group.guid}]`);
       }
     }
   }
@@ -10364,10 +10879,10 @@ const validateDesignDiffNested = (
 
 /**
  * Validates a {@link KitDiff} against a base {@link Kit}. Errors mean apply would skip or mis-apply operations; warnings flag redundant or suspicious edits.
- * With `heal`, returns a scrubbed diff copy with invalid operations removed where possible.
+ * With `heal`, trims invalid operations on the provided `diff` **in place** (same object reference) and returns it in `result.diff`.
  **/
 export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiffValidationResult => {
-  const working: KitDiff = heal ? (JSON.parse(JSON.stringify(diff)) as KitDiff) : diff;
+  const working: KitDiff = diff;
   const ctx: KitDiffValidationCtx = { errors: [], warnings: [], heal, diff: working };
 
   const typeGuids = new Set((kit.types ?? []).map((t) => t.guid));
@@ -14946,7 +15461,7 @@ export const piecesMetadata = (kit: Kit, designGuid: string): OperationResult<Ma
   if (!flattenChange.ok) {
     return { ok: false, errors: flattenChange.errors };
   }
-  const flatDesign = structuredClone(design);
+  const flatDesign = detachDesignForLocalMutation(design);
   applyDesignDiff(flatDesign, flattenChange.diff.forward);
   const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid);
   const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
@@ -14990,7 +15505,7 @@ export const piecesMetadataCached = (kit: Kit, designGuid: string, cache?: { [pi
   if (!cached.result.ok) {
     return { result: { ok: false, errors: cached.result.errors }, cache: cached.cache };
   }
-  const flatDesign = structuredClone(design);
+  const flatDesign = detachDesignForLocalMutation(design);
   applyDesignDiff(flatDesign, cached.result.diff.forward);
   const metadata = new Map<string, PiecePlacementMetadata>();
   for (const p of flatDesign.pieces ?? []) {
@@ -15504,7 +16019,7 @@ if (shouldRunEmbeddedJsTests) {
         warningCodes: string[];
       }>;
     };
-    const tinyKit = KitSchema.parse(cases.tinyKit);
+    const tinyKit = new Kit(KitSchema.parse(cases.tinyKit) as KitPlain);
     for (const tc of cases.cases) {
       it(`asset case ${tc.id}`, () => {
         const r = validateKitDiff(tinyKit, tc.diff as KitDiff, false);
@@ -15535,10 +16050,13 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("Change", () => {
     describe("Metabolism", () => {
-      const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) => !d.parent) };
+      const kitOriginal = new Kit({
+        ...(MetabolismKit as any),
+        designs: (MetabolismKit as any).designs?.filter((d: any) => !d.parent),
+      } as KitPlain);
       const kitDiff = MetabolismKitDiff as any;
       const kitDiffInverted = MetabolismKitDiffInverted as any;
-      const kitDiffed = MetabolismKitDiffed as any;
+      const kitDiffed = new Kit(MetabolismKitDiffed as KitPlain);
 
       it("Kit + Change.Forward = DiffedKit & DiffedKit + Change.Backward = Kit", () => {
         const change = getKitChange(kitOriginal, kitDiffed);
@@ -15548,10 +16066,10 @@ if (shouldRunEmbeddedJsTests) {
         expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);
         expect(areKitDiffsEqual(change.forward, kitDiff)).toBe(true);
         expect(areKitDiffsEqual(change.backward, kitDiffInverted)).toBe(true);
-        const appliedForward = structuredClone(kitOriginal);
+        const appliedForward = duplicateKitForIsolation(kitOriginal);
         applyKitDiff(appliedForward, change.forward);
         expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);
-        const appliedInverse = structuredClone(kitDiffed);
+        const appliedInverse = duplicateKitForIsolation(kitDiffed);
         applyKitDiff(appliedInverse, change.backward);
         expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);
       });
@@ -15988,7 +16506,7 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp = flattenDesign(kit, design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const flatDesign = structuredClone(design);
+      const flatDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(flatDesign, flatOp.diff.forward);
 
       flatDesign!.pieces?.forEach((p) => {
@@ -16022,7 +16540,7 @@ if (shouldRunEmbeddedJsTests) {
       for (const c of design.connections ?? []) {
         expect(removedSet.has(c.guid)).toBe(true);
       }
-      const flatDesign = structuredClone(design);
+      const flatDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(flatDesign, flatOp.diff.forward);
       expect(flatDesign.connections?.length ?? 0).toBe(0);
     });
@@ -16117,11 +16635,11 @@ if (shouldRunEmbeddedJsTests) {
     it("shared asset mutation cases produce expected hash changes", () => {
       const cases = (FlattenMerkleCases as any).cases as any[];
       for (const testCase of cases) {
-        const kitBefore = JSON.parse(JSON.stringify(MetabolismKit)) as Kit;
+        const kitBefore = duplicateKitForIsolation(new Kit(MetabolismKit as KitPlain));
         const designBefore = findDesignByPath(kitBefore, testCase.designPath);
         const beforeHashes = computeFlatHashes(kitBefore, designBefore.guid);
 
-        const kitAfter = JSON.parse(JSON.stringify(kitBefore)) as Kit;
+        const kitAfter = duplicateKitForIsolation(kitBefore);
         const designAfter = findDesignByPath(kitAfter, testCase.designPath);
         applyMutations(designAfter, testCase.mutations ?? []);
         const afterHashes = computeFlatHashes(kitAfter, designAfter.guid);
@@ -16156,7 +16674,7 @@ if (shouldRunEmbeddedJsTests) {
     it("cross-language parity reference hashes", () => {
       const parity = (FlattenMerkleCases as any).parity;
       expect(parity).toBeDefined();
-      const kit = JSON.parse(JSON.stringify(MetabolismKit)) as Kit;
+      const kit = duplicateKitForIsolation(new Kit(MetabolismKit as KitPlain));
       const design = findDesignByPath(kit, parity.designPath);
       const hashes = computeFlatHashes(kit, design.guid);
       for (const expected of parity.expectedHashes) {
@@ -16188,7 +16706,7 @@ if (shouldRunEmbeddedJsTests) {
       // we strip those guids before comparing to focus on the geometric/attribute values that
       // the cache is actually preserving.
       const stripAttrGuids = (forward: DesignDiff): unknown => {
-        const copy = JSON.parse(JSON.stringify(forward));
+        const copy = duplicateDesignDiffForIsolation(forward) as any;
         for (const pu of copy.pieces?.updated ?? []) {
           for (const a of pu.diff?.attributes?.added ?? []) delete a.guid;
           for (const a of pu.diff?.attributes?.updated ?? []) delete a.guid;
@@ -16225,14 +16743,14 @@ if (shouldRunEmbeddedJsTests) {
       const parity = (FlattenMerkleCases as any).parity;
       const rootGuid: string = parity.expectedHashes[0].pieceGuid;
       const childGuid: string = parity.expectedHashes[1].pieceGuid;
-      const kit = JSON.parse(JSON.stringify(MetabolismKit)) as Kit;
+      const kit = duplicateKitForIsolation(new Kit(MetabolismKit as KitPlain));
       const design = findDesignByPath(kit, parity.designPath);
       const first = flattenDesignCached(kit, design.guid);
       expect(first.cache[rootGuid]).toBeDefined();
       expect(first.cache[childGuid]).toBeDefined();
 
       // Mutate the root piece plane — must invalidate every descendant's planeHash but keep centerHash stable
-      const mutatedKit = JSON.parse(JSON.stringify(kit)) as Kit;
+      const mutatedKit = duplicateKitForIsolation(kit);
       const mutatedDesign = findDesignByPath(mutatedKit, parity.designPath);
       const mutatedRoot = mutatedDesign.pieces!.find((p: Piece) => p.guid === rootGuid)!;
       mutatedRoot.plane = { ...mutatedRoot.plane!, origin: { ...mutatedRoot.plane!.origin, x: (mutatedRoot.plane!.origin.x ?? 0) + 13.25 } };
@@ -16254,14 +16772,14 @@ if (shouldRunEmbeddedJsTests) {
 
     it("on connection center mutation only the affected subtree's centers are recomputed", () => {
       const parity = (FlattenMerkleCases as any).parity;
-      const kit = JSON.parse(JSON.stringify(MetabolismKit)) as Kit;
+      const kit = duplicateKitForIsolation(new Kit(MetabolismKit as KitPlain));
       const design = findDesignByPath(kit, parity.designPath);
       const first = flattenDesignCached(kit, design.guid);
 
       // Mutate one connection's u (center-only). All plane hashes stay stable; only centers on
       // the child connection's downstream subtree change. This is the "drag only recomputes children"
       // scenario: dragging a piece nudges its parent connection u/v → only its subtree rehydrates.
-      const mutatedKit = JSON.parse(JSON.stringify(kit)) as Kit;
+      const mutatedKit = duplicateKitForIsolation(kit);
       const mutatedDesign = findDesignByPath(mutatedKit, parity.designPath);
       const firstConn = mutatedDesign.connections?.[0];
       expect(firstConn).toBeDefined();
@@ -16325,7 +16843,7 @@ if (shouldRunEmbeddedJsTests) {
       });
 
       it("Plain descriptions do not create emoji validation problems", () => {
-        const kit = structuredClone(MetabolismKit) as Kit;
+        const kit = duplicateKitForIsolation(new Kit(MetabolismKit as KitPlain));
         kit.description = "Plain kit summary";
         kit.types = (kit.types ?? []).map((entry, index) => ({
           ...entry,
@@ -16368,7 +16886,7 @@ if (shouldRunEmbeddedJsTests) {
 
       const { clusteredDesign, externalConnections } = createClusteredDesign(design, ["piece-a", "piece-b"], "Cluster");
       const change = replaceClusterWithDesign(design, ["piece-a", "piece-b"], clusteredDesign, externalConnections);
-      const updatedDesign = structuredClone(design);
+      const updatedDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(updatedDesign, change.forward);
 
       const clusterConnection = updatedDesign.connections?.find((c) => c.guid === "conn-bc");
@@ -16413,7 +16931,7 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp = flattenDesign(kit, design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const flatDesign = structuredClone(design);
+      const flatDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(flatDesign, flatOp.diff.forward);
       expect((flatDesign.connections ?? []).length).toBe(0);
       const pieceGuid = "9d18882e-d90b-40de-a171-47cb4564ffa6";
@@ -16502,7 +17020,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(dragDiff.connections?.updated?.length ?? 0).toBe(0);
 
       // Step 5: Apply the diff to the raw design (sketchpad calls updatePieces + updateConnections)
-      const updatedDesign = structuredClone(design);
+      const updatedDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(updatedDesign, dragDiff);
 
       // Step 6: Recompute metadata (simulates reactive chain: store update -> re-flatten)
@@ -16619,7 +17137,7 @@ if (shouldRunEmbeddedJsTests) {
       }
 
       // Step 6: Apply kitDiff to kit (same as InMemoryKitStore.apply)
-      const storeKit = structuredClone(kit);
+      const storeKit = duplicateKitForIsolation(kit);
       applyKitDiff(storeKit, kitDiff);
 
       // Step 7: Recompute metadata (same as usePiecesMetadataMap)
@@ -16646,7 +17164,7 @@ if (shouldRunEmbeddedJsTests) {
 
       // Step 10: Verify local re-flatten (visualPositions) matches store re-flatten
       // This is the key test — if these differ, the useEffect overwrites with wrong positions
-      const localUpdatedDesign = structuredClone(design);
+      const localUpdatedDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(localUpdatedDesign, dragDiff);
       const localUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? localUpdatedDesign : d)) };
       const localMetaResult = piecesMetadata(localUpdatedKit, design.guid);
@@ -16718,7 +17236,7 @@ if (shouldRunEmbeddedJsTests) {
       const fc = flattenDesign(kit, design.guid);
       expect(fc.ok).toBe(true);
       if (!fc.ok) return;
-      const nativeFlatDesign = structuredClone(design);
+      const nativeFlatDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(nativeFlatDesign, { pieces: fc.diff.forward.pieces });
       const nativePiecesDesign: Design = { guid: nativeFlatDesign.guid, name: nativeFlatDesign.name, pieces: (nativeFlatDesign.pieces ?? []).filter((p) => p.guid === leafGuid) };
       const nativeDragDiff = dragPiecesInDesign(nativeFlatDesign, nativePiecesDesign, offset);
@@ -16731,7 +17249,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(sketchpadDragDiff.connections!.updated![0].diff.v).toBeCloseTo(nativeDragDiff.connections!.updated![0].diff.v!, 6);
 
       // Step 5a: Sketchpad re-flatten
-      const sketchpadUpdatedDesign = structuredClone(design);
+      const sketchpadUpdatedDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(sketchpadUpdatedDesign, sketchpadDragDiff);
       const sketchpadUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? sketchpadUpdatedDesign : d)) };
       const sketchpadPostMeta = piecesMetadata(sketchpadUpdatedKit, design.guid);
@@ -16739,7 +17257,7 @@ if (shouldRunEmbeddedJsTests) {
       if (!sketchpadPostMeta.ok) return;
 
       // Step 5b: nativeDragPieces re-flatten
-      const nativeUpdatedDesign = structuredClone(design);
+      const nativeUpdatedDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(nativeUpdatedDesign, nativeDragDiff);
       const nativeUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? nativeUpdatedDesign : d)) };
       const nativePostMeta = piecesMetadata(nativeUpdatedKit, design.guid);
@@ -16767,7 +17285,7 @@ if (shouldRunEmbeddedJsTests) {
           updated: [{ design: { guid: design.guid }, diff: { connections: { updated: connectionDiffUpdates } } }],
         },
       };
-      const storeKit = structuredClone(kit);
+      const storeKit = duplicateKitForIsolation(kit);
       applyKitDiff(storeKit, kitDiff);
       const storeMetaResult = piecesMetadata(storeKit, design.guid);
       expect(storeMetaResult.ok).toBe(true);
@@ -16856,7 +17374,7 @@ if (shouldRunEmbeddedJsTests) {
       const scaledDragDiff: DesignDiff = {
         connections: { updated: [{ connection: { guid: conn.guid }, diff: scaledConnDiff }] },
       };
-      const updatedDesign = structuredClone(design);
+      const updatedDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(updatedDesign, scaledDragDiff);
       const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
       const postMeta = piecesMetadata(updatedKit, design.guid);
@@ -16875,7 +17393,7 @@ if (shouldRunEmbeddedJsTests) {
         const unscaledDragDiff: DesignDiff = {
           connections: { updated: [{ connection: { guid: conn.guid }, diff: { u: centerOffsetU, v: centerOffsetV } }] },
         };
-        const unscaledDesign = structuredClone(design);
+        const unscaledDesign = detachDesignForLocalMutation(design);
         applyDesignDiff(unscaledDesign, unscaledDragDiff);
         const unscaledKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? unscaledDesign : d)) };
         const unscaledMeta = piecesMetadata(unscaledKit, design.guid);
@@ -17137,7 +17655,7 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp = flattenDesign(kit, design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const flatDesign = structuredClone(design);
+      const flatDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(flatDesign, flatOp.diff.forward);
       const t5 = "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9";
       const br = "5feebbf8-33d9-41ad-a13a-24c271a1860b";
@@ -17167,7 +17685,7 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp3 = flattenDesign(kit, design.guid);
       expect(flatOp3.ok).toBe(true);
       if (!flatOp3.ok) return;
-      const flatDesign = structuredClone(design);
+      const flatDesign = detachDesignForLocalMutation(design);
       applyDesignDiff(flatDesign, flatOp3.diff.forward);
       const sel = NakaginCapsuleTowerCopySelection as any;
       const t1 = "31be08e1-e75c-4024-86b4-c3c6d3939fbb";
@@ -19326,8 +19844,8 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashKit is deterministic (same input produces same output)", () => {
-      const kitA = JSON.parse(JSON.stringify(MetabolismKit)) as Kit;
-      const kitB = JSON.parse(JSON.stringify(MetabolismKit)) as Kit;
+      const kitA = duplicateKitForIsolation(new Kit(MetabolismKit as KitPlain));
+      const kitB = duplicateKitForIsolation(new Kit(MetabolismKit as KitPlain));
       expect(hashKit(kitA)).toBe(hashKit(kitB));
     });
 
@@ -19557,7 +20075,7 @@ if (shouldRunEmbeddedJsTests) {
       it("Port apply diff sets maxChildren", () => {
         const base: Port = { guid: "p1", name: "TestPort" };
         const diff: PortDiff = { maxChildren: 4 };
-        const result = structuredClone(base);
+        const result = { ...base };
         applyPortDiff(result, diff);
         expect(result.maxChildren).toBe(4);
       });
@@ -19565,7 +20083,7 @@ if (shouldRunEmbeddedJsTests) {
       it("Port apply diff removes maxChildren with null", () => {
         const base: Port = { guid: "p1", name: "TestPort", maxChildren: 3 };
         const diff: PortDiff = { maxChildren: null };
-        const result = structuredClone(base);
+        const result = { ...base };
         applyPortDiff(result, diff);
         expect(result.maxChildren).toBeUndefined();
       });
@@ -19608,7 +20126,7 @@ if (shouldRunEmbeddedJsTests) {
       it("Connector apply diff sets maxChildren", () => {
         const base: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 } };
         const diff: ConnectorDiff = { maxChildren: 4 };
-        const result = structuredClone(base);
+        const result = { ...base };
         applyConnectorDiff(result, diff);
         expect(result.maxChildren).toBe(4);
       });
@@ -19616,7 +20134,7 @@ if (shouldRunEmbeddedJsTests) {
       it("Connector apply diff removes maxChildren with null", () => {
         const base: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 3 };
         const diff: ConnectorDiff = { maxChildren: null };
-        const result = structuredClone(base);
+        const result = { ...base };
         applyConnectorDiff(result, diff);
         expect(result.maxChildren).toBeUndefined();
       });
@@ -19701,7 +20219,7 @@ if (shouldRunEmbeddedJsTests) {
         const diff = getKitDiff(before, after);
         expect(diff.ports?.updated?.[0]?.diff.maxChildren).toBe(10);
         expect(diff.types?.updated?.[0]?.diff.connectors?.updated?.[0]?.diff.maxChildren).toBe(20);
-        const applied = structuredClone(before);
+        const applied = duplicateKitForIsolation(new Kit(before as KitPlain));
         applyKitDiff(applied, diff);
         expect(applied.ports![0].maxChildren).toBe(10);
         expect(applied.types![0].connectors![0].maxChildren).toBe(20);
@@ -20045,12 +20563,12 @@ if (shouldRunEmbeddedJsTests) {
           updated: [{ type: { guid: "t1" }, diff: { description: "Modified wall" } }],
         },
       };
-      const afterForward = structuredClone(original);
+      const afterForward = duplicateKitForIsolation(new Kit(original as KitPlain));
       applyKitDiff(afterForward, diff);
       expect(afterForward.types).toHaveLength(2);
       expect(afterForward.types![0].description).toBe("Modified wall");
       const inverseDiff = inverseKitDiff(original, diff);
-      const afterBackward = structuredClone(afterForward);
+      const afterBackward = duplicateKitForIsolation(afterForward);
       applyKitDiff(afterBackward, inverseDiff);
       expect(afterBackward.types).toHaveLength(1);
       expect(afterBackward.types![0].description).toBe("A wall segment");
@@ -20180,10 +20698,10 @@ async function runBenchmarks() {
   });
 
   await bench("Diff/Metabolism", () => {
-    const k2 = structuredClone(kitOriginal);
+    const k2 = duplicateKitForIsolation(new Kit(kitOriginal as KitPlain));
     applyKitDiff(k2, diffForward);
     if (!areKitsEqual(k2, kitDiffed)) throw new Error("Diff/Metabolism forward output does not match test expectation");
-    const restored = structuredClone(k2);
+    const restored = duplicateKitForIsolation(k2);
     applyKitDiff(restored, diffInverse);
     if (!areKitsEqual(restored, kitOriginal)) throw new Error("Diff/Metabolism inverse output does not match test expectation");
   });

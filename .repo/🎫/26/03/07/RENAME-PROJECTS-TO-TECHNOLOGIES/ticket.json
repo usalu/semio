@@ -1,8 +1,9 @@
 {
   "title": "Rename Projects to Technologies",
   "emoji": "🏷️",
-  "status": "open",
+  "status": "closed",
   "description": "Rename the Project entity to Technology throughout the repo codebase including GraphQL schema, SQLite schema, Go code, tests, and documentation",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/791"
   },

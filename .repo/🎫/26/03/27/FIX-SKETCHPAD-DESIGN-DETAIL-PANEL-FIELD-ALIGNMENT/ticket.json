@@ -1,8 +1,9 @@
 {
   "title": "Fix Sketchpad Design Detail Panel Field Alignment",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Fix the sketchpad design detail panel so selected piece rows render labels on the same vertical level as their input controls. The broken area includes piece attributes and nested plane/origin/x-axis/y-axis controls in semio/sketchpad/index.tsx. Patch the existing files only, extend existing tests in place if needed, and verify with targeted checks.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1142"
   },

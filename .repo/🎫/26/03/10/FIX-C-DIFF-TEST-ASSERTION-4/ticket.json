@@ -1,8 +1,9 @@
 {
   "title": "Fix C# Diff Test Assertion 4",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Fix the remaining C# diff test failure for ApplyKitDiff inverse. The float tolerance fix was applied but the test still fails. Need to diagnose additional differences and fix the static Apply functions.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/821"
   },

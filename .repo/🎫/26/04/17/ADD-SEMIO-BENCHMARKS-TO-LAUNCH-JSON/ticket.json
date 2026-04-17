@@ -1,7 +1,8 @@
 {
   "title": "Add Semio Benchmarks To Launch Json",
-  "status": "open",
+  "status": "closed",
   "description": "add semio benchmarks to launch.json",
+  "summary": "Bulk close",
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension",
   "sessions": [
     "⚪9c924fbb31464d7da17fd80431381025"

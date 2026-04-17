@@ -442,7 +442,7 @@ func testFlattenDesign(t *testing.T, kit Kit, designPath []string) {
 	if !flatRep.Ok || flatRep.Diff == nil {
 		t.Fatalf("FlattenDesign failed: ok=%v errors=%v", flatRep.Ok, flatRep.Errors)
 	}
-	flatDesign := *design
+	flatDesign := deepCloneDesign(*design)
 	ApplyDesignDiff(&flatDesign, &flatRep.Diff.Forward)
 
 	const tolerance = 0.001
@@ -722,9 +722,9 @@ type flattenMerkleCase struct {
 
 // 🌳flattenMerkleParity captures the cross-language reference hashes block.
 type flattenMerkleParity struct {
-	Kit             string   `json:"kit"`
-	DesignPath      []string `json:"designPath"`
-	ExpectedHashes  []struct {
+	Kit            string   `json:"kit"`
+	DesignPath     []string `json:"designPath"`
+	ExpectedHashes []struct {
 		PieceGuid  string `json:"pieceGuid"`
 		PlaneHash  string `json:"planeHash"`
 		CenterHash string `json:"centerHash"`
@@ -1094,13 +1094,13 @@ func TestChange(t *testing.T) {
 				t.Error("Computed inverse diff should equal expected inverse diff")
 			}
 
-			appliedForward := kitOriginal
+			appliedForward := deepCloneKit(kitOriginal)
 			ApplyKitDiff(&appliedForward, &change.Forward)
 			if !AreKitsEqual(appliedForward, kitDiffed) {
 				t.Error("Original + Diff should equal DiffedKit")
 			}
 
-			appliedInverse := kitDiffed
+			appliedInverse := deepCloneKit(kitDiffed)
 			ApplyKitDiff(&appliedInverse, &change.Backward)
 			if !AreKitsEqual(appliedInverse, kitOriginal) {
 				t.Error("DiffedKit + InverseDiff should equal original Kit")
@@ -2839,7 +2839,7 @@ func TestKitWorkflowKinds(t *testing.T) {
 	})
 
 	t.Run("Kit/Transport workflow edits in memory in place", func(t *testing.T) {
-		transportKit := kit
+		transportKit := deepCloneKit(kit)
 		EditTemporaryKit(&transportKit, &diff)
 		if transportKit.Name != updatedName {
 			t.Fatalf("transportKit.Name = %q, want %q", transportKit.Name, updatedName)
@@ -3426,12 +3426,12 @@ func BenchmarkDiffMetabolism(b *testing.B) {
 	b.ResetTimer()
 	start := time.Now()
 	for range b.N {
-		k2 := kitOriginal
+		k2 := deepCloneKit(kitOriginal)
 		ApplyKitDiff(&k2, &diffForward)
 		if !AreKitsEqual(k2, kitDiffed) {
 			b.Fatal("Diff/Metabolism forward output does not match test expectation")
 		}
-		restored := k2
+		restored := deepCloneKit(k2)
 		ApplyKitDiff(&restored, &diffInverse)
 		if !AreKitsEqual(restored, kitOriginal) {
 			b.Fatal("Diff/Metabolism inverse output does not match test expectation")

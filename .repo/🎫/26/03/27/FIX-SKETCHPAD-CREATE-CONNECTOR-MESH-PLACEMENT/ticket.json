@@ -1,8 +1,9 @@
 {
   "title": "Fix Sketchpad Create Connector Mesh Placement",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Fix the sketchpad Type app so selecting create-connector from the toolbar allows applying a new connector by clicking on the mesh. Update existing implementation and extend existing tests only; do not add new test files.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1135"
   },

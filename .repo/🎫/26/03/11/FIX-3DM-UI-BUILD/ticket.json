@@ -1,8 +1,9 @@
 {
   "title": "Fix 3dm UI Build",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Fix vite build errors in 3dm ui",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/838"
   },

@@ -1,8 +1,9 @@
 {
   "title": "Remove Redundant Agent Event Files",
   "emoji": "🗑️",
-  "status": "open",
+  "status": "closed",
   "description": "The agent events are logged twice - once as files and once inside the session.json. Remove the redundant single files while keeping the session.json logging.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/942"
   },

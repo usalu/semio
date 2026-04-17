@@ -1562,30 +1562,30 @@ mod model_types_kit {
         /// Discriminator for the five kit persistence/transport forms.
         ///
         /// Specs: Exactly five kit kinds exist:
-        /// - File: Self-contained JSON file (.kit.json)
-        /// - Folder: Local folder with .semio/kit.db SQLite file and asset files
-        /// - Archive: ZIP file packaging a FolderKit structure
+        /// - Dev: Self-contained JSON file (.kit.json)
+        /// - Local: Local folder with .semio/kit.db SQLite file and asset files
+        /// - Archive: ZIP file packaging a LocalKit structure
         /// - Remote: URL-addressable kit served over HTTP(S)
-        /// - Temporary: In-memory ephemeral kit (no persistence)
+        /// - Transport: In-memory ephemeral kit (no persistence)
         use super::*;
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
         #[serde(rename_all = "lowercase")]
         pub enum KitKind {
-            File,
-            Folder,
+            Dev,
+            Local,
             Archive,
             Remote,
-            Temporary,
+            Transport,
         }
 
         /// 📦All valid KitKind values.
         pub const ALL_KIT_KINDS: [KitKind; 5] = [
-            KitKind::File,
-            KitKind::Folder,
+            KitKind::Dev,
+            KitKind::Local,
             KitKind::Archive,
             KitKind::Remote,
-            KitKind::Temporary,
+            KitKind::Transport,
         ];
     } // 🥁KitKind
     pub use kit_kind::*;
@@ -6733,7 +6733,11 @@ mod flatten_design {
     }
 
     /// <summary>🔗Chain center hash conservatively includes every potentially-read input of the child center computation.</summary>
-    fn hash_center_chain(parent_hash: &str, parent_connector: &Connector, conn: &Connection) -> String {
+    fn hash_center_chain(
+        parent_hash: &str,
+        parent_connector: &Connector,
+        conn: &Connection,
+    ) -> String {
         let mut w = super::HashWriter::new();
         w.write_string("center.chain");
         w.write_hash(parent_hash);
@@ -6815,10 +6819,7 @@ mod flatten_design {
             let mut root: Option<&str> = None;
             for piece in pieces {
                 let g = piece.guid.as_str();
-                if component_set.contains(g)
-                    && piece.plane.is_some()
-                    && piece.center.is_some()
-                {
+                if component_set.contains(g) && piece.plane.is_some() && piece.center.is_some() {
                     root = Some(g);
                     break;
                 }
@@ -6870,15 +6871,19 @@ mod flatten_design {
                             (&conn.connecting, &conn.connected)
                         };
                         let parent_connector =
-                            match get_connector_for_side_fast(&types_map, &pieces_map, parent_side) {
+                            match get_connector_for_side_fast(&types_map, &pieces_map, parent_side)
+                            {
                                 Some(c) => c,
                                 None => continue,
                             };
-                        let child_connector =
-                            match get_connector_for_side_fast(&types_map, &pieces_map, child_side) {
-                                Some(c) => c,
-                                None => continue,
-                            };
+                        let child_connector = match get_connector_for_side_fast(
+                            &types_map,
+                            &pieces_map,
+                            child_side,
+                        ) {
+                            Some(c) => c,
+                            None => continue,
+                        };
                         plane_hashes.insert(
                             neigh.to_string(),
                             hash_plane_chain(
@@ -6919,7 +6924,10 @@ mod flatten_design {
         kit: &Kit,
         design_guid: &str,
         cache: Option<&HashMap<String, FlatMerkleCacheEntry>>,
-    ) -> (SemioReport<DesignChange>, HashMap<String, FlatMerkleCacheEntry>) {
+    ) -> (
+        SemioReport<DesignChange>,
+        HashMap<String, FlatMerkleCacheEntry>,
+    ) {
         let new_hashes = compute_flat_hashes(kit, design_guid);
         let change = flatten_design_change(kit, design_guid);
         let report = if find_design_in_kit(kit, design_guid).is_none() {
@@ -10714,15 +10722,15 @@ pub use zip_import_export::*;
 
 mod kit_workflow {
     // 📭Kit Workflow
-    // Kit Workflow MUST provide cohesive file, folder, archive, remote, and temporary kit operations.
+    // Kit Workflow MUST provide cohesive dev, local, archive, remote, and transport kit operations.
 
     use super::*;
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub const KIT_FOLDER_METADATA_DIRECTORY: &str = ".semio";
+    pub const KIT_LOCAL_METADATA_DIRECTORY: &str = ".semio";
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub const KIT_FOLDER_DATABASE_FILENAME: &str = "kit.db";
+    pub const KIT_LOCAL_DATABASE_FILENAME: &str = "kit.db";
 
     #[cfg(not(target_arch = "wasm32"))]
     pub fn io_semio_error(context: &str, error: impl std::fmt::Display) -> SemioError {
@@ -10732,10 +10740,10 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn build_folder_database_path(folder_path: &str) -> std::path::PathBuf {
+    pub fn build_local_database_path(folder_path: &str) -> std::path::PathBuf {
         std::path::Path::new(folder_path)
-            .join(KIT_FOLDER_METADATA_DIRECTORY)
-            .join(KIT_FOLDER_DATABASE_FILENAME)
+            .join(KIT_LOCAL_METADATA_DIRECTORY)
+            .join(KIT_LOCAL_DATABASE_FILENAME)
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -10838,7 +10846,7 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn remove_stale_folder_assets(
+    pub fn remove_stale_local_assets(
         folder_path: &str,
         previous_files: &HashMap<String, Vec<u8>>,
         next_files: &HashMap<String, Vec<u8>>,
@@ -10853,7 +10861,7 @@ mod kit_workflow {
             let asset_path = root_path.join(old_path);
             if asset_path.exists() {
                 std::fs::remove_file(&asset_path).map_err(|error| {
-                    io_semio_error("Failed to remove stale folder asset", error)
+                    io_semio_error("Failed to remove stale local asset", error)
                 })?;
             }
 
@@ -10870,7 +10878,7 @@ mod kit_workflow {
                     }
                     Err(error) => {
                         return Err(io_semio_error(
-                            "Failed to remove empty folder asset directory",
+                            "Failed to remove empty local asset directory",
                             error,
                         ))
                     }
@@ -10912,27 +10920,27 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 📥<summary>🔖import_file_kit holds the data fields for a import_file_kit record.</summary>
-    pub fn import_file_kit(path: &str) -> Result<Kit> {
+    /// 📥<summary>🔖import_dev_kit holds the data fields for a import_dev_kit record.</summary>
+    pub fn import_dev_kit(path: &str) -> Result<Kit> {
         let content = std::fs::read_to_string(path)
             .map_err(|error| io_semio_error("Failed to read kit file", error))?;
         deserialize_kit(&content)
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 📤<summary>🔖export_file_kit holds the data fields for a export_file_kit record.</summary>
-    pub fn export_file_kit(kit: &Kit, path: &str) -> Result<()> {
+    /// 📤<summary>🔖export_dev_kit holds the data fields for a export_dev_kit record.</summary>
+    pub fn export_dev_kit(kit: &Kit, path: &str) -> Result<()> {
         let json = serialize_kit(kit)?;
         std::fs::write(path, json)
             .map_err(|error| io_semio_error("Failed to write kit file", error))
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖import_folder_kit holds the data fields for a import_folder_kit record.</summary>
-    pub fn import_folder_kit(folder_path: &str) -> Result<zip_roundtrip::KitImportResult> {
-        let database_path = build_folder_database_path(folder_path);
+    /// 🔖<summary>🔖import_local_kit holds the data fields for a import_local_kit record.</summary>
+    pub fn import_local_kit(folder_path: &str) -> Result<zip_roundtrip::KitImportResult> {
+        let database_path = build_local_database_path(folder_path);
         let database_path_str = database_path.to_str().ok_or(SemioError::InvalidOperation {
-            message: "Folder kit database path is not valid UTF-8".to_string(),
+            message: "Local kit database path is not valid UTF-8".to_string(),
         })?;
 
         let mut kit = sqlite::import_kit_from_sqlite(database_path_str)?;
@@ -10949,7 +10957,7 @@ mod kit_workflow {
                     Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
                     Err(error) => {
                         return Err(io_semio_error(
-                            "Failed to read folder kit asset file",
+                            "Failed to read local kit asset file",
                             error,
                         ))
                     }
@@ -10963,29 +10971,29 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖export_folder_kit holds the data fields for a export_folder_kit record.</summary>
-    pub fn export_folder_kit(
+    /// 🔖<summary>🔖export_local_kit holds the data fields for a export_local_kit record.</summary>
+    pub fn export_local_kit(
         kit: &Kit,
         files: &HashMap<String, Vec<u8>>,
         folder_path: &str,
     ) -> Result<()> {
         let root_path = std::path::Path::new(folder_path);
         std::fs::create_dir_all(root_path)
-            .map_err(|error| io_semio_error("Failed to create folder kit root", error))?;
+            .map_err(|error| io_semio_error("Failed to create local kit root", error))?;
 
-        let metadata_path = root_path.join(KIT_FOLDER_METADATA_DIRECTORY);
+        let metadata_path = root_path.join(KIT_LOCAL_METADATA_DIRECTORY);
         std::fs::create_dir_all(&metadata_path).map_err(|error| {
-            io_semio_error("Failed to create folder kit metadata directory", error)
+            io_semio_error("Failed to create local kit metadata directory", error)
         })?;
 
-        let database_path = metadata_path.join(KIT_FOLDER_DATABASE_FILENAME);
+        let database_path = metadata_path.join(KIT_LOCAL_DATABASE_FILENAME);
         if database_path.exists() {
             std::fs::remove_file(&database_path).map_err(|error| {
-                io_semio_error("Failed to replace existing folder kit database", error)
+                io_semio_error("Failed to replace existing local kit database", error)
             })?;
         }
         let database_path_str = database_path.to_str().ok_or(SemioError::InvalidOperation {
-            message: "Folder kit database path is not valid UTF-8".to_string(),
+            message: "Local kit database path is not valid UTF-8".to_string(),
         })?;
         sqlite::export_kit_to_sqlite(kit, database_path_str)?;
 
@@ -10994,11 +11002,11 @@ mod kit_workflow {
             let asset_path = root_path.join(&relative_path);
             if let Some(parent) = asset_path.parent() {
                 std::fs::create_dir_all(parent).map_err(|error| {
-                    io_semio_error("Failed to create folder kit asset directory", error)
+                    io_semio_error("Failed to create local kit asset directory", error)
                 })?;
             }
             std::fs::write(&asset_path, data)
-                .map_err(|error| io_semio_error("Failed to write folder kit asset file", error))?;
+                .map_err(|error| io_semio_error("Failed to write local kit asset file", error))?;
         }
 
         Ok(())
@@ -11040,30 +11048,30 @@ mod kit_workflow {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖edit_temporary_kit holds the data fields for a edit_temporary_kit record.</summary>
-    pub fn edit_temporary_kit(kit: &Kit, diff: &KitDiff) -> Kit {
+    /// 🔖<summary>🔖edit_transport_kit holds the data fields for a edit_transport_kit record.</summary>
+    pub fn edit_transport_kit(kit: &Kit, diff: &KitDiff) -> Kit {
         let mut edited = kit.clone();
         apply_kit_diff(&mut edited, diff);
         edited
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖edit_file_kit holds the data fields for a edit_file_kit record.</summary>
-    pub fn edit_file_kit(path: &str, diff: &KitDiff) -> Result<Kit> {
-        let kit = import_file_kit(path)?;
-        let edited = edit_temporary_kit(&kit, diff);
-        export_file_kit(&edited, path)?;
+    /// 🔖<summary>🔖edit_dev_kit holds the data fields for a edit_dev_kit record.</summary>
+    pub fn edit_dev_kit(path: &str, diff: &KitDiff) -> Result<Kit> {
+        let kit = import_dev_kit(path)?;
+        let edited = edit_transport_kit(&kit, diff);
+        export_dev_kit(&edited, path)?;
         Ok(edited)
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// 🔖<summary>🔖edit_folder_kit holds the data fields for a edit_folder_kit record.</summary>
-    pub fn edit_folder_kit(folder_path: &str, diff: &KitDiff) -> Result<Kit> {
-        let imported = import_folder_kit(folder_path)?;
-        let edited = edit_temporary_kit(&imported.kit, diff);
+    /// 🔖<summary>🔖edit_local_kit holds the data fields for a edit_local_kit record.</summary>
+    pub fn edit_local_kit(folder_path: &str, diff: &KitDiff) -> Result<Kit> {
+        let imported = import_local_kit(folder_path)?;
+        let edited = edit_transport_kit(&imported.kit, diff);
         let edited_files = remap_kit_file_bytes(&imported.kit, &edited, &imported.files)?;
-        remove_stale_folder_assets(folder_path, &imported.files, &edited_files)?;
-        export_folder_kit(&edited, &edited_files, folder_path)?;
+        remove_stale_local_assets(folder_path, &imported.files, &edited_files)?;
+        export_local_kit(&edited, &edited_files, folder_path)?;
         Ok(edited)
     }
 
@@ -11071,7 +11079,7 @@ mod kit_workflow {
     /// 🔖<summary>🔖edit_archive_kit holds the data fields for a edit_archive_kit record.</summary>
     pub fn edit_archive_kit(path: &str, diff: &KitDiff) -> Result<Kit> {
         let imported = zip_roundtrip::import_kit_from_zip(path)?;
-        let edited = edit_temporary_kit(&imported.kit, diff);
+        let edited = edit_transport_kit(&imported.kit, diff);
         let edited_files = remap_kit_file_bytes(&imported.kit, &edited, &imported.files)?;
         zip_roundtrip::export_kit_to_zip(&edited, &edited_files, path)?;
         Ok(edited)
@@ -11081,10 +11089,114 @@ mod kit_workflow {
     /// 🔖<summary>🔖edit_remote_kit holds the data fields for a edit_remote_kit record.</summary>
     pub fn edit_remote_kit(url: &str, diff: &KitDiff) -> Result<Kit> {
         let imported = import_remote_kit(url)?;
-        Ok(edit_temporary_kit(&imported.kit, diff))
+        Ok(edit_transport_kit(&imported.kit, diff))
     }
 } // 🚣Kit Workflow
 pub use kit_workflow::*;
+
+mod kit_kind_types {
+    // 📋Kit Kind Types
+    // Kit Kind Types MUST provide typed wrappers for each kit persistence form.
+
+    use super::*;
+
+    /// 📋 Wraps a static JSON string for kit serialization/deserialization.
+    pub struct TransportKit {
+        pub json: String,
+    }
+
+    impl TransportKit {
+        pub fn new(json: String) -> Self {
+            Self { json }
+        }
+        pub fn to_kit(&self) -> Result<Kit> {
+            deserialize_kit(&self.json)
+        }
+        pub fn from_kit(kit: &Kit) -> Result<Self> {
+            Ok(Self {
+                json: serialize_kit(kit)?,
+            })
+        }
+    }
+
+    /// 📦 Wraps a static zipped local kit.
+    pub struct ArchiveKit {
+        pub data: Vec<u8>,
+    }
+
+    /// 🔄 Trait for synchronized kit kinds.
+    pub trait SyncKit {
+        fn kit(&self) -> &Kit;
+        fn kit_mut(&mut self) -> &mut Kit;
+        fn apply(&mut self, diff: &KitDiff) {
+            apply_kit_diff(self.kit_mut(), diff);
+        }
+        fn import_transport(&mut self, transport: &TransportKit) -> Result<()> {
+            let imported = transport.to_kit()?;
+            let diff = get_kit_diff(self.kit(), &imported);
+            apply_kit_diff(self.kit_mut(), &diff);
+            Ok(())
+        }
+        fn export_transport(&self) -> Result<TransportKit> {
+            TransportKit::from_kit(self.kit())
+        }
+    }
+
+    /// 📝 Synchronized JSON file kit.
+    pub struct DevKit {
+        kit: Kit,
+    }
+    impl DevKit {
+        pub fn new(kit: Kit) -> Self {
+            Self { kit }
+        }
+    }
+    impl SyncKit for DevKit {
+        fn kit(&self) -> &Kit {
+            &self.kit
+        }
+        fn kit_mut(&mut self) -> &mut Kit {
+            &mut self.kit
+        }
+    }
+
+    /// 📂 Synchronized folder with .semio/kit.db SQLite database.
+    pub struct LocalKit {
+        kit: Kit,
+    }
+    impl LocalKit {
+        pub fn new(kit: Kit) -> Self {
+            Self { kit }
+        }
+    }
+    impl SyncKit for LocalKit {
+        fn kit(&self) -> &Kit {
+            &self.kit
+        }
+        fn kit_mut(&mut self) -> &mut Kit {
+            &mut self.kit
+        }
+    }
+
+    /// 🌐 Synchronized websocket connection to semio/hub.
+    pub struct RemoteKit {
+        kit: Kit,
+    }
+    impl RemoteKit {
+        pub fn new(kit: Kit) -> Self {
+            Self { kit }
+        }
+    }
+    impl SyncKit for RemoteKit {
+        fn kit(&self) -> &Kit {
+            &self.kit
+        }
+        fn kit_mut(&mut self) -> &mut Kit {
+            &mut self.kit
+        }
+    }
+} // 📋Kit Kind Types
+pub use kit_kind_types::*;
 
 mod wasm_bindings {
     // 🥈WASM Bindings
@@ -11183,7 +11295,9 @@ mod wasm_bindings {
                     let rep = flatten_design(&kit, design_guid);
                     to_js_value(WasmResult::success(rep))
                 }
-                Err(e) => to_js_value(WasmResult::<SemioReport<DesignChange>>::failure(e.to_string())),
+                Err(e) => to_js_value(WasmResult::<SemioReport<DesignChange>>::failure(
+                    e.to_string(),
+                )),
             }
         }
 
@@ -15528,8 +15642,7 @@ mod tests {
                             let connection = connections
                                 .iter_mut()
                                 .find(|c| {
-                                    c.get("guid").and_then(|g| g.as_str())
-                                        == Some(connection_guid)
+                                    c.get("guid").and_then(|g| g.as_str()) == Some(connection_guid)
                                 })
                                 .unwrap_or_else(|| {
                                     panic!("connection {} not found", connection_guid)
@@ -15603,8 +15716,8 @@ mod tests {
                         for mutation in &case.mutations {
                             apply_mutation(&mut kit_value_after, &case.design_path, mutation);
                         }
-                        let kit_after: Kit = serde_json::from_value(kit_value_after)
-                            .expect("kit deserialize after");
+                        let kit_after: Kit =
+                            serde_json::from_value(kit_value_after).expect("kit deserialize after");
                         let design_guid_after =
                             find_design_guid_in_kit(&kit_after, &case.design_path);
                         let after_hashes = compute_flat_hashes(&kit_after, &design_guid_after);
@@ -15635,8 +15748,7 @@ mod tests {
                                     .map(|_| g.clone())
                             })
                             .collect();
-                        let all_guids: HashSet<String> =
-                            before_hashes.keys().cloned().collect();
+                        let all_guids: HashSet<String> = before_hashes.keys().cloned().collect();
 
                         let expect = &case.expect;
                         let name = &case.name;
@@ -15742,8 +15854,7 @@ mod tests {
                     let kit = load_kit("metabolism.kit.semio.json");
                     let design_guid =
                         find_design_guid_in_kit(&kit, &["Nakagin Capsule Tower".to_string()]);
-                    let (_first_rep, first_cache) =
-                        flatten_design_cached(&kit, &design_guid, None);
+                    let (_first_rep, first_cache) = flatten_design_cached(&kit, &design_guid, None);
                     assert!(!first_cache.is_empty(), "first cache must not be empty");
                     let (_second_rep, second_cache) =
                         flatten_design_cached(&kit, &design_guid, Some(&first_cache));
@@ -15885,9 +15996,7 @@ mod tests {
                         "delete failed: {:?}",
                         computed_report.errors
                     );
-                    let computed_diff = computed_report
-                        .diff
-                        .expect("delete ok implies diff");
+                    let computed_diff = computed_report.diff.expect("delete ok implies diff");
 
                     // Serialize computed diff to JSON for comparison
                     let computed_json: serde_json::Value = serde_json::to_value(&computed_diff)
@@ -16450,8 +16559,11 @@ mod tests {
                         unique_type_names
                     };
 
-                    let single_refs: Vec<&str> =
-                        bc.single_capsule_pieces.iter().map(|s| s.as_str()).collect();
+                    let single_refs: Vec<&str> = bc
+                        .single_capsule_pieces
+                        .iter()
+                        .map(|s| s.as_str())
+                        .collect();
                     let two_refs: Vec<&str> =
                         bc.two_capsule_pieces.iter().map(|s| s.as_str()).collect();
                     let four_refs: Vec<&str> =
@@ -16480,21 +16592,15 @@ mod tests {
                     assert!(four_capsule_names.len() >= eight_capsule_names.len());
 
                     for forbidden_family in &bc.forbidden_families {
-                        assert!(
-                            !two_capsule_names
-                                .iter()
-                                .any(|name| name == forbidden_family)
-                        );
-                        assert!(
-                            !four_capsule_names
-                                .iter()
-                                .any(|name| name == forbidden_family)
-                        );
-                        assert!(
-                            !eight_capsule_names
-                                .iter()
-                                .any(|name| name == forbidden_family)
-                        );
+                        assert!(!two_capsule_names
+                            .iter()
+                            .any(|name| name == forbidden_family));
+                        assert!(!four_capsule_names
+                            .iter()
+                            .any(|name| name == forbidden_family));
+                        assert!(!eight_capsule_names
+                            .iter()
+                            .any(|name| name == forbidden_family));
                     }
                     assert!(!four_capsule_names.iter().any(|name| name == "Bridge"));
                     assert!(!eight_capsule_names.iter().any(|name| name == "Bridge"));
@@ -16511,7 +16617,10 @@ mod tests {
                         unique_type_names_for_selection(&eight_refs),
                         bc.expected_large_families
                     );
-                    assert_eq!(tambour_type_guids.len(), bc.expected_tambour_type_guid_count);
+                    assert_eq!(
+                        tambour_type_guids.len(),
+                        bc.expected_tambour_type_guid_count
+                    );
                     assert_eq!(
                         tambour_design_guids.len(),
                         bc.expected_tambour_design_guid_count
@@ -16535,8 +16644,8 @@ mod tests {
                         .expect("Design not found");
                     let pieces = design.pieces.as_ref().unwrap();
                     let piece_names = case.piece_names.as_ref().expect("pieceNames missing");
-                    let piece = find_piece_by_name(pieces, &piece_names[0])
-                        .expect("Piece not found");
+                    let piece =
+                        find_piece_by_name(pieces, &piece_names[0]).expect("Piece not found");
 
                     let (type_guids, design_guids) =
                         find_replaceable_types_in_designs_for_pieces_in_design(
@@ -16549,10 +16658,7 @@ mod tests {
                         .expected_design_guids
                         .as_ref()
                         .expect("expectedDesignGuids missing");
-                    assert_eq!(
-                        case.expected_type_guid_count.unwrap_or(0),
-                        type_guids.len()
-                    );
+                    assert_eq!(case.expected_type_guid_count.unwrap_or(0), type_guids.len());
                     assert_eq!(design_guids, *expected_design_guids);
                 }
 
@@ -16708,10 +16814,7 @@ mod tests {
                         .expected_design_guids
                         .as_ref()
                         .expect("expectedDesignGuids missing");
-                    assert_eq!(
-                        case.expected_type_guid_count.unwrap_or(0),
-                        type_guids.len()
-                    );
+                    assert_eq!(case.expected_type_guid_count.unwrap_or(0), type_guids.len());
                     assert_eq!(design_guids, *expected_design_guids);
                 }
 
@@ -17627,25 +17730,25 @@ mod tests {
                 }
 
                 #[test]
-                pub fn file_workflow_roundtrips_and_persists_edits() {
+                pub fn dev_workflow_roundtrips_and_persists_edits() {
                     let (kit, _) = workflow_kit_fixture();
                     let diff = workflow_diff();
                     let temp_dir = tempfile::tempdir().unwrap();
                     let path = temp_dir.path().join("workflow.kit.semio.json");
                     let path_str = path.to_str().unwrap();
 
-                    export_file_kit(&kit, path_str).unwrap();
-                    let imported = import_file_kit(path_str).unwrap();
+                    export_dev_kit(&kit, path_str).unwrap();
+                    let imported = import_dev_kit(path_str).unwrap();
                     assert!(are_kits_equal(&kit, &imported));
 
-                    let edited = edit_file_kit(path_str, &diff).unwrap();
-                    let persisted = import_file_kit(path_str).unwrap();
+                    let edited = edit_dev_kit(path_str, &diff).unwrap();
+                    let persisted = import_dev_kit(path_str).unwrap();
                     assert_eq!(edited.name, "Workflow Kit Edited");
                     assert!(are_kits_equal(&edited, &persisted));
                 }
 
                 #[test]
-                pub fn folder_workflow_roundtrips_and_moves_assets_on_edit() {
+                pub fn local_workflow_roundtrips_and_moves_assets_on_edit() {
                     let (kit, files) = workflow_kit_fixture();
                     let diff = workflow_diff();
                     let (old_path, new_path) = workflow_expected_paths();
@@ -17653,13 +17756,13 @@ mod tests {
                     let folder_path = temp_dir.path().join("workflow-folder-kit");
                     let folder_path_str = folder_path.to_str().unwrap();
 
-                    export_folder_kit(&kit, &files, folder_path_str).unwrap();
-                    let imported = import_folder_kit(folder_path_str).unwrap();
+                    export_local_kit(&kit, &files, folder_path_str).unwrap();
+                    let imported = import_local_kit(folder_path_str).unwrap();
                     assert!(are_kits_equal(&kit, &imported.kit));
                     assert_eq!(imported.files, files);
 
-                    let edited = edit_folder_kit(folder_path_str, &diff).unwrap();
-                    let reloaded = import_folder_kit(folder_path_str).unwrap();
+                    let edited = edit_local_kit(folder_path_str, &diff).unwrap();
+                    let reloaded = import_local_kit(folder_path_str).unwrap();
                     assert_eq!(edited.name, "Workflow Kit Edited");
                     assert!(are_kits_equal(&edited, &reloaded.kit));
                     assert!(!folder_path.join(old_path).exists());
@@ -17733,11 +17836,11 @@ mod tests {
                 }
 
                 #[test]
-                pub fn temporary_workflow_applies_diff_without_mutating_source() {
+                pub fn transport_workflow_applies_diff_without_mutating_source() {
                     let (kit, _) = workflow_kit_fixture();
                     let diff = workflow_diff();
 
-                    let edited = edit_temporary_kit(&kit, &diff);
+                    let edited = edit_transport_kit(&kit, &diff);
                     assert_eq!(edited.name, "Workflow Kit Edited");
                     assert_eq!(edited.files.as_ref().unwrap()[0].name, "renamed.txt");
                     assert_eq!(edited.folders.as_ref().unwrap()[0].name, "renamed-assets");
@@ -17758,20 +17861,17 @@ mod tests {
             #[test]
             pub fn test_kit_kind_all_values_exist() {
                 assert_eq!(ALL_KIT_KINDS.len(), 5);
-                assert!(ALL_KIT_KINDS.contains(&KitKind::File));
-                assert!(ALL_KIT_KINDS.contains(&KitKind::Folder));
+                assert!(ALL_KIT_KINDS.contains(&KitKind::Dev));
+                assert!(ALL_KIT_KINDS.contains(&KitKind::Local));
                 assert!(ALL_KIT_KINDS.contains(&KitKind::Archive));
                 assert!(ALL_KIT_KINDS.contains(&KitKind::Remote));
-                assert!(ALL_KIT_KINDS.contains(&KitKind::Temporary));
+                assert!(ALL_KIT_KINDS.contains(&KitKind::Transport));
             }
 
             #[test]
             pub fn test_kit_kind_serialization() {
-                assert_eq!(serde_json::to_string(&KitKind::File).unwrap(), "\"file\"");
-                assert_eq!(
-                    serde_json::to_string(&KitKind::Folder).unwrap(),
-                    "\"folder\""
-                );
+                assert_eq!(serde_json::to_string(&KitKind::Dev).unwrap(), "\"dev\"");
+                assert_eq!(serde_json::to_string(&KitKind::Local).unwrap(), "\"local\"");
                 assert_eq!(
                     serde_json::to_string(&KitKind::Archive).unwrap(),
                     "\"archive\""
@@ -17781,20 +17881,20 @@ mod tests {
                     "\"remote\""
                 );
                 assert_eq!(
-                    serde_json::to_string(&KitKind::Temporary).unwrap(),
-                    "\"temporary\""
+                    serde_json::to_string(&KitKind::Transport).unwrap(),
+                    "\"transport\""
                 );
             }
 
             #[test]
             pub fn test_kit_kind_deserialization() {
                 assert_eq!(
-                    serde_json::from_str::<KitKind>("\"file\"").unwrap(),
-                    KitKind::File
+                    serde_json::from_str::<KitKind>("\"dev\"").unwrap(),
+                    KitKind::Dev
                 );
                 assert_eq!(
-                    serde_json::from_str::<KitKind>("\"folder\"").unwrap(),
-                    KitKind::Folder
+                    serde_json::from_str::<KitKind>("\"local\"").unwrap(),
+                    KitKind::Local
                 );
                 assert_eq!(
                     serde_json::from_str::<KitKind>("\"archive\"").unwrap(),
@@ -17805,18 +17905,18 @@ mod tests {
                     KitKind::Remote
                 );
                 assert_eq!(
-                    serde_json::from_str::<KitKind>("\"temporary\"").unwrap(),
-                    KitKind::Temporary
+                    serde_json::from_str::<KitKind>("\"transport\"").unwrap(),
+                    KitKind::Transport
                 );
             }
 
             #[test]
-            pub fn test_kit_kind_file_roundtrip() {
+            pub fn test_kit_kind_dev_roundtrip() {
                 let kit = Kit {
-                    guid: "test-guid-file".to_string(),
-                    name: "TestFileKit".to_string(),
+                    guid: "test-guid-dev".to_string(),
+                    name: "TestDevKit".to_string(),
                     version: Some("1.0.0".to_string()),
-                    description: Some("A file kit".to_string()),
+                    description: Some("A dev kit".to_string()),
                     icon: None,
                     image: None,
                     preview: None,
@@ -17842,10 +17942,10 @@ mod tests {
             }
 
             #[test]
-            pub fn test_kit_kind_temporary_in_memory() {
+            pub fn test_kit_kind_transport_in_memory() {
                 let mut kit = Kit {
-                    guid: "temp-guid".to_string(),
-                    name: "TempKit".to_string(),
+                    guid: "transport-guid".to_string(),
+                    name: "TransportKit".to_string(),
                     version: None,
                     description: None,
                     icon: None,
@@ -17867,12 +17967,229 @@ mod tests {
                     created_at: None,
                     updated_at: None,
                 };
-                let kind = KitKind::Temporary;
-                assert_eq!(kind, KitKind::Temporary);
-                kit.name = "ModifiedTempKit".to_string();
+                let kind = KitKind::Transport;
+                assert_eq!(kind, KitKind::Transport);
+                kit.name = "ModifiedTransportKit".to_string();
                 kit.description = Some("Modified in memory".to_string());
-                assert_eq!(kit.name, "ModifiedTempKit");
+                assert_eq!(kit.name, "ModifiedTransportKit");
                 assert_eq!(kit.description, Some("Modified in memory".to_string()));
+            }
+
+            #[test]
+            pub fn test_sync_kit_dev_apply_and_export() {
+                let kit = Kit {
+                    guid: "sync-dev-guid".to_string(),
+                    name: "SyncDevKit".to_string(),
+                    version: None,
+                    description: None,
+                    icon: None,
+                    image: None,
+                    preview: None,
+                    remote: None,
+                    homepage: None,
+                    license: None,
+                    concepts: None,
+                    tags: None,
+                    types: None,
+                    designs: None,
+                    ports: None,
+                    qualities: None,
+                    files: None,
+                    folders: None,
+                    authors: None,
+                    attributes: None,
+                    created_at: None,
+                    updated_at: None,
+                };
+                let mut dev = DevKit::new(kit);
+                assert_eq!(dev.kit().name, "SyncDevKit");
+
+                let diff = KitDiff {
+                    guid: "sync-dev-guid".to_string(),
+                    name: Some("SyncDevKitEdited".to_string()),
+                    ..Default::default()
+                };
+                dev.apply(&diff);
+                assert_eq!(dev.kit().name, "SyncDevKitEdited");
+
+                let transport = dev.export_transport().unwrap();
+                let roundtripped = transport.to_kit().unwrap();
+                assert_eq!(roundtripped.name, "SyncDevKitEdited");
+            }
+
+            #[test]
+            pub fn test_sync_kit_local_apply_and_export() {
+                let kit = Kit {
+                    guid: "sync-local-guid".to_string(),
+                    name: "SyncLocalKit".to_string(),
+                    version: None,
+                    description: None,
+                    icon: None,
+                    image: None,
+                    preview: None,
+                    remote: None,
+                    homepage: None,
+                    license: None,
+                    concepts: None,
+                    tags: None,
+                    types: None,
+                    designs: None,
+                    ports: None,
+                    qualities: None,
+                    files: None,
+                    folders: None,
+                    authors: None,
+                    attributes: None,
+                    created_at: None,
+                    updated_at: None,
+                };
+                let mut local = LocalKit::new(kit);
+                assert_eq!(local.kit().name, "SyncLocalKit");
+
+                let diff = KitDiff {
+                    guid: "sync-local-guid".to_string(),
+                    name: Some("SyncLocalKitEdited".to_string()),
+                    ..Default::default()
+                };
+                local.apply(&diff);
+                assert_eq!(local.kit().name, "SyncLocalKitEdited");
+
+                let transport = local.export_transport().unwrap();
+                let roundtripped = transport.to_kit().unwrap();
+                assert_eq!(roundtripped.name, "SyncLocalKitEdited");
+            }
+
+            #[test]
+            pub fn test_sync_kit_remote_apply_and_export() {
+                let kit = Kit {
+                    guid: "sync-remote-guid".to_string(),
+                    name: "SyncRemoteKit".to_string(),
+                    version: None,
+                    description: None,
+                    icon: None,
+                    image: None,
+                    preview: None,
+                    remote: None,
+                    homepage: None,
+                    license: None,
+                    concepts: None,
+                    tags: None,
+                    types: None,
+                    designs: None,
+                    ports: None,
+                    qualities: None,
+                    files: None,
+                    folders: None,
+                    authors: None,
+                    attributes: None,
+                    created_at: None,
+                    updated_at: None,
+                };
+                let mut remote = RemoteKit::new(kit);
+                assert_eq!(remote.kit().name, "SyncRemoteKit");
+
+                let diff = KitDiff {
+                    guid: "sync-remote-guid".to_string(),
+                    name: Some("SyncRemoteKitEdited".to_string()),
+                    ..Default::default()
+                };
+                remote.apply(&diff);
+                assert_eq!(remote.kit().name, "SyncRemoteKitEdited");
+
+                let transport = remote.export_transport().unwrap();
+                let roundtripped = transport.to_kit().unwrap();
+                assert_eq!(roundtripped.name, "SyncRemoteKitEdited");
+            }
+
+            #[test]
+            pub fn test_transport_kit_roundtrip() {
+                let kit = Kit {
+                    guid: "transport-rt-guid".to_string(),
+                    name: "TransportRoundtrip".to_string(),
+                    version: Some("2.0.0".to_string()),
+                    description: Some("Transport roundtrip test".to_string()),
+                    icon: None,
+                    image: None,
+                    preview: None,
+                    remote: None,
+                    homepage: None,
+                    license: None,
+                    concepts: None,
+                    tags: None,
+                    types: None,
+                    designs: None,
+                    ports: None,
+                    qualities: None,
+                    files: None,
+                    folders: None,
+                    authors: None,
+                    attributes: None,
+                    created_at: None,
+                    updated_at: None,
+                };
+                let transport = TransportKit::from_kit(&kit).unwrap();
+                assert!(!transport.json.is_empty());
+                let roundtripped = transport.to_kit().unwrap();
+                assert_eq!(roundtripped.name, "TransportRoundtrip");
+                assert_eq!(roundtripped.version, Some("2.0.0".to_string()));
+            }
+
+            #[test]
+            pub fn test_sync_kit_import_transport() {
+                let source_kit = Kit {
+                    guid: "import-source-guid".to_string(),
+                    name: "SourceKit".to_string(),
+                    version: Some("1.0.0".to_string()),
+                    description: Some("Source".to_string()),
+                    icon: None,
+                    image: None,
+                    preview: None,
+                    remote: None,
+                    homepage: None,
+                    license: None,
+                    concepts: None,
+                    tags: None,
+                    types: None,
+                    designs: None,
+                    ports: None,
+                    qualities: None,
+                    files: None,
+                    folders: None,
+                    authors: None,
+                    attributes: None,
+                    created_at: None,
+                    updated_at: None,
+                };
+                let transport = TransportKit::from_kit(&source_kit).unwrap();
+
+                let target_kit = Kit {
+                    guid: "import-source-guid".to_string(),
+                    name: "OldName".to_string(),
+                    version: None,
+                    description: None,
+                    icon: None,
+                    image: None,
+                    preview: None,
+                    remote: None,
+                    homepage: None,
+                    license: None,
+                    concepts: None,
+                    tags: None,
+                    types: None,
+                    designs: None,
+                    ports: None,
+                    qualities: None,
+                    files: None,
+                    folders: None,
+                    authors: None,
+                    attributes: None,
+                    created_at: None,
+                    updated_at: None,
+                };
+                let mut dev = DevKit::new(target_kit);
+                dev.import_transport(&transport).unwrap();
+                assert_eq!(dev.kit().name, "SourceKit");
+                assert_eq!(dev.kit().version, Some("1.0.0".to_string()));
             }
         } // 🧶KitKind Tests
         pub use kit_kind_tests::*;
@@ -18130,7 +18447,8 @@ mod benchmark {
 
         pub const ASSETS_DIR: &str = "../assets/semio";
         pub const ITERATIONS: u32 = 3;
-        pub const BENCHMARK_CSV_LANGUAGES: [&str; 5] = ["go", "typescript", "python", "rust", "csharp"];
+        pub const BENCHMARK_CSV_LANGUAGES: [&str; 5] =
+            ["go", "typescript", "python", "rust", "csharp"];
 
         pub fn load_kit(filename: &str) -> Kit {
             let path = Path::new(ASSETS_DIR).join(filename);
@@ -18156,11 +18474,16 @@ mod benchmark {
 
         pub fn append_benchmark_csv(language: &str, name: &str, duration_seconds: f64) {
             let path = benchmark_csv_path();
-            let mut rows: std::collections::BTreeMap<String, std::collections::BTreeMap<String, String>> =
-                std::collections::BTreeMap::new();
+            let mut rows: std::collections::BTreeMap<
+                String,
+                std::collections::BTreeMap<String, String>,
+            > = std::collections::BTreeMap::new();
             let mut order: Vec<String> = Vec::new();
             if let Ok(data) = fs::read_to_string(&path) {
-                let lines: Vec<&str> = data.lines().filter(|line| !line.trim().is_empty()).collect();
+                let lines: Vec<&str> = data
+                    .lines()
+                    .filter(|line| !line.trim().is_empty())
+                    .collect();
                 if !lines.is_empty() && lines[0].starts_with("name,") {
                     let headers = parse_csv_line(lines[0]);
                     for line in lines.iter().skip(1) {
@@ -18187,7 +18510,10 @@ mod benchmark {
                 order.push(name.to_string());
             }
             if let Some(row) = rows.get_mut(name) {
-                row.insert(language.to_string(), format!("{:.6}", duration_seconds * 1000.0));
+                row.insert(
+                    language.to_string(),
+                    format!("{:.6}", duration_seconds * 1000.0),
+                );
             }
             let mut output = String::from("name");
             for lang in BENCHMARK_CSV_LANGUAGES {

@@ -1,7 +1,8 @@
 {
   "title": "Fix Diagram Diff Coloring to Match Drag Algorithm",
-  "status": "open",
+  "status": "closed",
   "description": "Fix the diagram diff coloring behavior to correctly match the drag algorithm output. Connections should be colored as modified when they appear in the diff, and all piece/connection status classifications should be consistent between the drag algorithm output and the diagram rendering.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1323"
   },

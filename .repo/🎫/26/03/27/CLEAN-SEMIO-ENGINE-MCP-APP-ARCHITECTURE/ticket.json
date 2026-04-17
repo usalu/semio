@@ -1,8 +1,9 @@
 {
   "title": "Clean Semio Engine Mcp App Architecture",
   "emoji": "🧹",
-  "status": "open",
+  "status": "closed",
   "description": "Clean Semio Engine Mcp App Architecture",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1133"
   },

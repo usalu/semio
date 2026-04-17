@@ -1,8 +1,9 @@
 {
   "title": "Fix Settings in Detail Panel in All Apps",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Fix settings panel in detail panel across all sketchpad apps. Issues: SketchpadSettingsContent (Kit app) is missing expertise/setExpertise/canSetExpertise hooks and languageDeLabel, TypeSettingsContent is missing languageDeLabel in SelectContent, Docs settings is a placeholder instead of real settings. All settings panels should be consistent and fully functional.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1174"
   },

@@ -1,8 +1,9 @@
 {
   "title": "Engine MCP Shallow Entity Returns",
   "emoji": "🔌",
-  "status": "open",
+  "status": "closed",
   "description": "Make all MCP tool return values use shallow entities instead of full entities. Ensure consistency across all platforms/APIs.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1068"
   },
