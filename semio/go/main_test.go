@@ -1214,7 +1214,11 @@ func TestDelete(t *testing.T) {
 			loadJSON(t, "nakagin-capsule-tower.deleted.design.diff.semio.json", &expectedDiff)
 
 			// Compute diff
-			computedDiff := DeletePiecesAndConnectionsInDesign(&kit, *design, pieceGuids, connectionGuids)
+			computedReport := DeletePiecesAndConnectionsInDesign(&kit, *design, pieceGuids, connectionGuids)
+			if !computedReport.Ok || computedReport.Diff == nil {
+				t.Fatalf("DeletePiecesAndConnectionsInDesign failed: ok=%v errors=%v", computedReport.Ok, computedReport.Errors)
+			}
+			computedDiff := *computedReport.Diff
 
 			// Verify removed pieces
 			if computedDiff.Pieces == nil {

@@ -2828,6 +2828,51 @@ mod diff_types {
     pub type DesignChange = Change<Design, DesignDiff>;
     /// <summary>📦KitChange represents tracks kit-level modifications.</summary>
     pub type KitChange = Change<Kit, KitDiff>;
+
+    // #region 🎯SemioReport
+    /// 📋Human-readable note attached to a SemioReport (warning, info, or error).
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    pub struct OperationNote {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub code: Option<String>,
+        pub message: String,
+    }
+
+    /// 📋Canonical semio algorithm output: ok, diff, warnings, infos, errors (tool-friendly JSON).
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    pub struct SemioReport<T> {
+        pub ok: bool,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub diff: Option<T>,
+        #[serde(default)]
+        pub warnings: Vec<OperationNote>,
+        #[serde(default)]
+        pub infos: Vec<OperationNote>,
+        #[serde(default)]
+        pub errors: Vec<OperationNote>,
+    }
+
+    impl<T> SemioReport<T> {
+        pub fn ok_with(diff: T, warnings: Vec<OperationNote>, infos: Vec<OperationNote>) -> Self {
+            Self {
+                ok: true,
+                diff: Some(diff),
+                warnings,
+                infos,
+                errors: vec![],
+            }
+        }
+        pub fn err(errors: Vec<OperationNote>) -> Self {
+            Self {
+                ok: false,
+                diff: None,
+                warnings: vec![],
+                infos: vec![],
+                errors,
+            }
+        }
+    }
+    // #endregion 🎯SemioReport
 } // ✂️Diff Types
 pub use diff_types::*;
 
@@ -5159,7 +5204,7 @@ mod kit_change_helpers {
         get_design_diff(&after, original)
     }
 
-    /// 🗑️Deletes pieces and connections from a design, returning a DesignDiff.
+    /// 🗑️Deletes pieces and connections from a design, returning a canonical `SemioReport<DesignDiff>`.
     /// Removes stale connections referencing deleted pieces.
     /// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
     pub fn delete_pieces_and_connections_in_design(
@@ -5167,7 +5212,7 @@ mod kit_change_helpers {
         design: &Design,
         piece_guids: &[String],
         connection_guids: &[String],
-    ) -> DesignDiff {
+    ) -> SemioReport<DesignDiff> {
         let deleted_piece_set: HashSet<&str> = piece_guids.iter().map(|s| s.as_str()).collect();
         let connections = design.connections.as_deref().unwrap_or(&[]);
 
@@ -5211,7 +5256,11 @@ mod kit_change_helpers {
         }
 
         // Build the diff - flatten the design to get absolute plane and center for each piece
-        let flat_change = flatten_design(kit, &design.guid);
+        let flat_rep = flatten_design(kit, &design.guid);
+        if !flat_rep.ok {
+            return SemioReport::err(flat_rep.errors);
+        }
+        let flat_change = flat_rep.diff.expect("flatten ok implies diff");
         let mut flat_piece_map: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
         if let Some(pieces) = &design.pieces {
             for piece in pieces {
@@ -5299,7 +5348,7 @@ mod kit_change_helpers {
             });
         }
 
-        diff
+        SemioReport::ok_with(diff, flat_rep.warnings, flat_rep.infos)
     }
 
     /// 🔖Computes a reversible KitChange from two kit states.
@@ -5896,10 +5945,8 @@ mod flatten_design {
         pub path: Vec<String>,
     }
 
-    /// 🔖<summary>🔖flatten_design holds the data fields for a flatten_design record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn flatten_design(kit: &Kit, design_guid: &str) -> DesignChange {
+    /// 🔖Computes forward/backward DesignChange for flatten (hot path; no SemioReport wrapper).
+    pub fn flatten_design_change(kit: &Kit, design_guid: &str) -> DesignChange {
         let design = match find_design_in_kit(kit, design_guid) {
             Some(d) => d,
             None => {
@@ -6155,6 +6202,43 @@ mod flatten_design {
             after: Some(after_design),
         }
     }
+
+    fn flatten_design_report_from_change(
+        kit: &Kit,
+        design_guid: &str,
+        change: DesignChange,
+    ) -> SemioReport<DesignChange> {
+        let pieces_empty = find_design_in_kit(kit, design_guid)
+            .and_then(|d| d.pieces.as_ref())
+            .map(|p| p.is_empty())
+            .unwrap_or(true);
+        if pieces_empty {
+            SemioReport::ok_with(
+                change,
+                vec![],
+                vec![OperationNote {
+                    code: Some("flatten.empty-pieces".into()),
+                    message: "No pieces to flatten; returning empty forward and backward diffs."
+                        .into(),
+                }],
+            )
+        } else {
+            SemioReport::ok_with(change, vec![], vec![])
+        }
+    }
+
+    /// 🌤️Canonical flatten report (matches TypeScript flattenDesign).
+    pub fn flatten_design(kit: &Kit, design_guid: &str) -> SemioReport<DesignChange> {
+        if find_design_in_kit(kit, design_guid).is_none() {
+            return SemioReport::err(vec![OperationNote {
+                code: Some("flatten.design-not-found".into()),
+                message: format!("Design {design_guid} not found in kit"),
+            }]);
+        }
+        let change = flatten_design_change(kit, design_guid);
+        flatten_design_report_from_change(kit, design_guid, change)
+    }
+
     /// 🔖<summary>🔖planes_equal_approx holds the data fields for a planes_equal_approx record.</summary>
     /// <remarks>
     /// </remarks>
@@ -6835,9 +6919,17 @@ mod flatten_design {
         kit: &Kit,
         design_guid: &str,
         cache: Option<&HashMap<String, FlatMerkleCacheEntry>>,
-    ) -> (DesignChange, HashMap<String, FlatMerkleCacheEntry>) {
+    ) -> (SemioReport<DesignChange>, HashMap<String, FlatMerkleCacheEntry>) {
         let new_hashes = compute_flat_hashes(kit, design_guid);
-        let change = flatten_design(kit, design_guid);
+        let change = flatten_design_change(kit, design_guid);
+        let report = if find_design_in_kit(kit, design_guid).is_none() {
+            SemioReport::err(vec![OperationNote {
+                code: Some("flatten.design-not-found".into()),
+                message: format!("Design {design_guid} not found in kit"),
+            }])
+        } else {
+            flatten_design_report_from_change(kit, design_guid, change.clone())
+        };
 
         let mut updated_by_id: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
         if let Some(pieces_diff) = &change.forward.pieces {
@@ -6911,7 +7003,7 @@ mod flatten_design {
             }
         }
 
-        (change, next_cache)
+        (report, next_cache)
     }
 
     // #endregion 🌳Flatten Merkle Hashes
@@ -7295,7 +7387,7 @@ mod copy_paste_design {
         }
 
         // Flatten the design to get absolute planes/centers
-        let flat_change = flatten_design(kit, &design.guid);
+        let flat_change = flatten_design_change(kit, &design.guid);
         let mut flat_design = design.clone();
         apply_design_diff(&mut flat_design, &flat_change.forward);
         let flat_piece_map: HashMap<&str, &Piece> = flat_design
@@ -11088,10 +11180,10 @@ mod wasm_bindings {
         pub fn wasm_flatten_design(kit_json: &str, design_guid: &str) -> JsValue {
             match deserialize_kit(kit_json) {
                 Ok(kit) => {
-                    let change = flatten_design(&kit, design_guid);
-                    to_js_value(WasmResult::success(change))
+                    let rep = flatten_design(&kit, design_guid);
+                    to_js_value(WasmResult::success(rep))
                 }
-                Err(e) => to_js_value(WasmResult::<DesignChange>::failure(e.to_string())),
+                Err(e) => to_js_value(WasmResult::<SemioReport<DesignChange>>::failure(e.to_string())),
             }
         }
 
@@ -14454,7 +14546,9 @@ mod tests {
             let expected_design = find_design_by_name(designs, "Flat", Some(&design.guid))
                 .expect("Expected Flat design not found");
 
-            let flat_design_change = flatten_design(kit, &design.guid);
+            let flat_rep = flatten_design(kit, &design.guid);
+            assert!(flat_rep.ok, "flatten_design failed: {:?}", flat_rep.errors);
+            let flat_design_change = flat_rep.diff.expect("flatten ok implies diff");
             let mut flat_design = design.clone();
             apply_design_diff(&mut flat_design, &flat_design_change.forward);
 
@@ -15648,10 +15742,10 @@ mod tests {
                     let kit = load_kit("metabolism.kit.semio.json");
                     let design_guid =
                         find_design_guid_in_kit(&kit, &["Nakagin Capsule Tower".to_string()]);
-                    let (_first_change, first_cache) =
+                    let (_first_rep, first_cache) =
                         flatten_design_cached(&kit, &design_guid, None);
                     assert!(!first_cache.is_empty(), "first cache must not be empty");
-                    let (_second_change, second_cache) =
+                    let (_second_rep, second_cache) =
                         flatten_design_cached(&kit, &design_guid, Some(&first_cache));
                     for (guid, entry) in &first_cache {
                         let second_entry = second_cache
@@ -15780,12 +15874,20 @@ mod tests {
                         serde_json::from_str(&diff_data).expect("Failed to parse expected diff");
 
                     // Compute diff
-                    let computed_diff = delete_pieces_and_connections_in_design(
+                    let computed_report = delete_pieces_and_connections_in_design(
                         &kit,
                         design,
                         &piece_guids,
                         &connection_guids,
                     );
+                    assert!(
+                        computed_report.ok,
+                        "delete failed: {:?}",
+                        computed_report.errors
+                    );
+                    let computed_diff = computed_report
+                        .diff
+                        .expect("delete ok implies diff");
 
                     // Serialize computed diff to JSON for comparison
                     let computed_json: serde_json::Value = serde_json::to_value(&computed_diff)
@@ -18215,7 +18317,7 @@ mod benchmark {
             let d1 = find_design(&kit_metabolism, "Nakagin Capsule Tower", None);
             let d1_guid = d1.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower", || {
-                let diff = flatten_design(&kit_metabolism, &d1_guid);
+                let diff = flatten_design_change(&kit_metabolism, &d1_guid);
                 if diff
                     .forward
                     .pieces
@@ -18231,7 +18333,7 @@ mod benchmark {
             let d2 = find_design(&kit_metabolism, "Slanted", Some("Nakagin Capsule Tower"));
             let d2_guid = d2.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Slanted", || {
-                let diff = flatten_design(&kit_metabolism, &d2_guid);
+                let diff = flatten_design_change(&kit_metabolism, &d2_guid);
                 if diff
                     .forward
                     .pieces
@@ -18247,7 +18349,7 @@ mod benchmark {
             let d3 = find_design(&kit_metabolism, "Twisted", Some("Nakagin Capsule Tower"));
             let d3_guid = d3.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Twisted", || {
-                let diff = flatten_design(&kit_metabolism, &d3_guid);
+                let diff = flatten_design_change(&kit_metabolism, &d3_guid);
                 if diff
                     .forward
                     .pieces
@@ -18263,7 +18365,7 @@ mod benchmark {
             let d4 = find_design(&kit_metabolism, "Dancing", Some("Nakagin Capsule Tower"));
             let d4_guid = d4.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Dancing", || {
-                let diff = flatten_design(&kit_metabolism, &d4_guid);
+                let diff = flatten_design_change(&kit_metabolism, &d4_guid);
                 if diff
                     .forward
                     .pieces
@@ -18279,7 +18381,7 @@ mod benchmark {
             let d5 = find_design(&kit_metabolism, "Capsule Dream", None);
             let d5_guid = d5.guid.clone();
             bench("Flatten Design/Capsule Dream", || {
-                let diff = flatten_design(&kit_metabolism, &d5_guid);
+                let diff = flatten_design_change(&kit_metabolism, &d5_guid);
                 if diff
                     .forward
                     .pieces

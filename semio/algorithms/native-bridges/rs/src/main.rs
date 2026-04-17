@@ -65,13 +65,13 @@ fn main() {
                     return;
                 }
             };
-            let diff = delete_pieces_and_connections_in_design(
+            let rep = delete_pieces_and_connections_in_design(
                 &req.kit,
                 &design,
                 &req.piece_guids,
                 &req.connection_guids,
             );
-            match serde_json::to_value(&diff) {
+            match serde_json::to_value(&rep) {
                 Ok(v) => write_ok(v),
                 Err(e) => write_err(format!("marshal delete: {e}")),
             }

@@ -2148,6 +2148,40 @@ public class StatChange : Change<Stat, StatDiff> { }
 public class DesignChange : Change<Design, DesignDiff> { }
 public class KitChange : Change<Kit, KitDiff> { }
 
+#region 🎯SemioReport
+
+/// <summary>📋Human-readable note on a SemioReport.</summary>
+public sealed class OperationNote
+{
+    [JsonProperty("code")]
+    public string? Code { get; set; }
+    [JsonProperty("message")]
+    public string Message { get; set; } = "";
+}
+
+/// <summary>📋Canonical algorithm output: ok, diff, warnings, infos, errors.</summary>
+public sealed class SemioReport<TDiff>
+{
+    [JsonProperty("ok")]
+    public bool Ok { get; set; }
+    [JsonProperty("diff")]
+    public TDiff? Diff { get; set; }
+    [JsonProperty("warnings")]
+    public List<OperationNote> Warnings { get; set; } = new();
+    [JsonProperty("infos")]
+    public List<OperationNote> Infos { get; set; } = new();
+    [JsonProperty("errors")]
+    public List<OperationNote> Errors { get; set; } = new();
+
+    public static SemioReport<TDiff> Success(TDiff diff, List<OperationNote>? warnings = null, List<OperationNote>? infos = null) =>
+        new() { Ok = true, Diff = diff, Warnings = warnings ?? new List<OperationNote>(), Infos = infos ?? new List<OperationNote>(), Errors = new List<OperationNote>() };
+
+    public static SemioReport<TDiff> Failure(List<OperationNote> errors) =>
+        new() { Ok = false, Diff = default, Warnings = new List<OperationNote>(), Infos = new List<OperationNote>(), Errors = errors };
+}
+
+#endregion 🎯SemioReport
+
 #region 💎Attribute
 // Implementations MUST provide key-value metadata for annotating entities.
 
@@ -6590,11 +6624,11 @@ text {
     }
 
     /// <summary>
-    /// Deletes pieces and connections from a design, returning a DesignDiff.
+    /// Deletes pieces and connections from a design, returning a canonical SemioReport of DesignDiff.
     /// Removes stale connections referencing deleted pieces.
     /// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
     /// </summary>
-    public static DesignDiff DeletePiecesAndConnectionsInDesign(Kit kit, Design design, List<string> pieceGuids, List<string> connectionGuids)
+    public static SemioReport<DesignDiff> DeletePiecesAndConnectionsInDesign(Kit kit, Design design, List<string> pieceGuids, List<string> connectionGuids)
     {
         var deletedPieceSet = new HashSet<string>(pieceGuids);
 
@@ -6636,7 +6670,10 @@ text {
         var piecesRemoved = pieceGuids.Select(g => new PieceId { Guid = g }).ToList();
 
         // Flatten the design to get absolute plane and center for each piece
-        var flatResult = Kit.FlattenDesign(kit, design.Guid);
+        var flatRep = Kit.FlattenDesign(kit, design.Guid);
+        if (!flatRep.Ok)
+            return SemioReport<DesignDiff>.Failure(flatRep.Errors);
+        var flatResult = flatRep.Diff!.Forward;
         var flatPieceMap = new Dictionary<string, (Plane? Plane, Coord? Center)>();
         foreach (var piece in design.Pieces)
         {
@@ -6679,7 +6716,7 @@ text {
             diff.Pieces = new PiecesDiff { Removed = piecesRemoved, Updated = piecesUpdated };
         if (connectionsRemoved.Count > 0)
             diff.Connections = new ConnectionsDiff { Removed = connectionsRemoved };
-        return diff;
+        return SemioReport<DesignDiff>.Success(diff, flatRep.Warnings, flatRep.Infos);
     }
 
     /// <summary>
@@ -6707,7 +6744,7 @@ text {
         }
 
         // Flatten the design to get absolute planes/centers
-        var flatDiff = Kit.FlattenDesign(kit, design.Guid);
+        var flatDiff = Kit.FlattenDesignDiff(kit, design.Guid);
         var flatDesign = Design.ApplyDiff(Entity<Design>.DeepClone(design)!, flatDiff);
         var flatPieceMap = flatDesign.Pieces.ToDictionary(p => p.Guid);
 
@@ -11566,7 +11603,7 @@ public sealed class FlatMerkleCacheEntry
 public partial class Kit
 {
 
-    public static DesignDiff FlattenDesign(Kit kit, string designId)
+    public static DesignDiff FlattenDesignDiff(Kit kit, string designId)
     {
         var design = FindDesign(kit, designId);
         if (design.Pieces == null || design.Pieces.Count == 0) return new DesignDiff();
@@ -11872,6 +11909,31 @@ public partial class Kit
         return designDiff;
     }
 
+    /// <summary>🌤️Canonical flatten report (forward/backward DesignChange).</summary>
+    public static SemioReport<DesignChange> FlattenDesign(Kit kit, string designId)
+    {
+        var design = kit.Designs?.FirstOrDefault(d => d.Guid == designId);
+        if (design == null)
+            return SemioReport<DesignChange>.Failure(new List<OperationNote>
+            {
+                new() { Code = "flatten.design-not-found", Message = $"Design {designId} not found in kit {kit.Name}" }
+            });
+        if (design.Pieces == null || design.Pieces.Count == 0)
+        {
+            var emptyChange = new DesignChange { Forward = new DesignDiff(), Backward = new DesignDiff() };
+            return SemioReport<DesignChange>.Success(emptyChange, new List<OperationNote>(), new List<OperationNote>
+            {
+                new() { Code = "flatten.empty-pieces", Message = "No pieces to flatten; returning empty forward and backward diffs." }
+            });
+        }
+        var before = Entity<Design>.DeepClone(design) ?? design;
+        var forward = FlattenDesignDiff(kit, designId);
+        var after = Design.ApplyDiff(Entity<Design>.DeepClone(before)!, forward);
+        var backward = Design.GetDesignDiff(after, before);
+        var change = new DesignChange { Forward = forward, Backward = backward, Before = before, After = after };
+        return SemioReport<DesignChange>.Success(change, new List<OperationNote>(), new List<OperationNote>());
+    }
+
     #region 🌳Flatten Merkle Hashes
     // Per-piece {PlaneHash, CenterHash} merkle hashes so incremental FlattenDesign calls can reuse cached planes/centers when the chain inputs are unchanged.
 
@@ -12010,10 +12072,13 @@ public partial class Kit
         return result;
     }
 
-    public static (DesignDiff diff, Dictionary<string, FlatMerkleCacheEntry> cache) FlattenDesignCached(Kit kit, string designGuid, Dictionary<string, FlatMerkleCacheEntry>? cache = null)
+    public static (SemioReport<DesignChange> report, Dictionary<string, FlatMerkleCacheEntry> cache) FlattenDesignCached(Kit kit, string designGuid, Dictionary<string, FlatMerkleCacheEntry>? cache = null)
     {
         var newHashes = ComputeFlatHashes(kit, designGuid);
-        var diff = FlattenDesign(kit, designGuid);
+        var report = FlattenDesign(kit, designGuid);
+        if (!report.Ok || report.Diff == null)
+            return (report, new Dictionary<string, FlatMerkleCacheEntry>());
+        var diff = report.Diff.Forward;
         var updatedById = new Dictionary<string, PieceDiff>();
         foreach (var entry in diff.Pieces?.Updated ?? new List<PieceDiffUpdate>())
         {
@@ -12070,7 +12135,7 @@ public partial class Kit
                 };
             }
         }
-        return (diff, nextCache);
+        return (report, nextCache);
     }
 
     #endregion 🌳Flatten Merkle Hashes

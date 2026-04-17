@@ -52,6 +52,13 @@
         "uriFormat": "%s"
       }
     },
+    {
+      "name": "🚀benchmark",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "go run ./repo/cli benchmark",
+      "cwd": "${workspaceFolder}"
+    },
     // #endregion
     // #region 🛠️ Dev
     {

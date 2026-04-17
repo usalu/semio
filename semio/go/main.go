@@ -1645,6 +1645,26 @@ func semioReportErr[T any](errs []OperationNote) SemioReport[T] {
 	}
 }
 
+// 📋semioReportOkWithNotes is a successful report carrying merged flatten warnings/infos.
+func semioReportOkWithNotes[T any](diff T, warnings []OperationNote, infos []OperationNote) SemioReport[T] {
+	d := diff
+	w := warnings
+	i := infos
+	if w == nil {
+		w = []OperationNote{}
+	}
+	if i == nil {
+		i = []OperationNote{}
+	}
+	return SemioReport[T]{
+		Ok:       true,
+		Diff:     &d,
+		Warnings: w,
+		Infos:    i,
+		Errors:   []OperationNote{},
+	}
+}
+
 // #endregion 🎯SemioReport
 
 // 🏛️DesignsDiff represents batched design additions, removals and per-design updates.
@@ -1932,10 +1952,10 @@ type DesignChange = Change[Design, DesignDiff]
 
 type KitChange = Change[Kit, KitDiff]
 
-// 🔌DeletePiecesAndConnectionsInDesign deletes pieces and connections from a design, returning a DesignDiff.
+// 🔌DeletePiecesAndConnectionsInDesign deletes pieces and connections from a design, returning a canonical SemioReport of DesignDiff.
 // Removes stale connections referencing deleted pieces.
 // 🔧Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
-func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []string) DesignDiff {
+func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []string) SemioReport[DesignDiff] {
 	deletedPieceSet := make(map[string]bool)
 	for _, g := range pieceGuids {
 		deletedPieceSet[g] = true
@@ -1996,10 +2016,12 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []st
 		piecesRemoved = append(piecesRemoved, PieceId{Guid: g})
 	}
 
-	// Flatten the design to get absolute plane and center for each piece.
-	// FlattenDesign modifies Center in-place but stores Plane only in the diff,
-	// so we apply the diff to get a fully correct flattened design.
-	flatDiff := FlattenDesignDiff(kit, design.Guid)
+	// Flatten the design to get absolute plane and center for each piece (canonical report merges warnings/infos).
+	flatRep := FlattenDesign(kit, design.Guid)
+	if !flatRep.Ok {
+		return semioReportErr[DesignDiff](flatRep.Errors)
+	}
+	flatDiff := flatRep.Diff.Forward
 	flatDesign := ApplyDesignDiff(design, flatDiff)
 	flatPieceMap := make(map[string]*Piece)
 	for i := range flatDesign.Pieces {
@@ -2074,7 +2096,7 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []st
 		}
 	}
 
-	return diff
+	return semioReportOkWithNotes(diff, flatRep.Warnings, flatRep.Infos)
 }
 
 func GetDesignChange(before, after Design, author *string, time *string) DesignChange {

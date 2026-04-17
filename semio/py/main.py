@@ -11158,7 +11158,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
 
 
 def deletePiecesAndConnectionsInDesignDict(kit: dict, design: dict, pieceGuids: list[str], connectionGuids: list[str]) -> dict:
-    """🔖Deletes pieces and connections from a design dict, returning a DesignDiff dict.
+    """🔖Deletes pieces and connections from a design dict, returning a canonical SemioReport with DesignDiff.
     Removes stale connections referencing deleted pieces.
     Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
     """
@@ -11198,7 +11198,10 @@ def deletePiecesAndConnectionsInDesignDict(kit: dict, design: dict, pieceGuids: 
     zeroCenter = {"u": 0, "v": 0}
 
     # Flatten the design to get absolute plane and center for each piece
-    flatResult = flattenDesignDict(kit, design.get("guid", ""))
+    flatRep = flattenDesignReportDict(kit, design.get("guid", ""))
+    if not flatRep["ok"]:
+        return flatRep
+    flatResult = flatRep["diff"]["forward"]
     flatPieceMap: dict[str, dict] = {}
     for piece in design.get("pieces", []):
         if piece.get("plane"):
@@ -11243,7 +11246,7 @@ def deletePiecesAndConnectionsInDesignDict(kit: dict, design: dict, pieceGuids: 
     if connectionsRemoved:
         diff["connections"] = {"removed": connectionsRemoved}
 
-    return diff
+    return _semio_report_ok(diff, flatRep["warnings"], flatRep["infos"])
 
 
 def getDesignChange(
@@ -12952,6 +12955,50 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
     }
 
 
+# #region 🎯SemioReport
+def _semio_report_ok(diff, warnings=None, infos=None):
+    """📋Successful semio algorithm payload (tool-friendly JSON)."""
+    return {"ok": True, "diff": diff, "warnings": warnings or [], "infos": infos or [], "errors": []}
+
+
+def _semio_report_err(errors: list):
+    """📋Failed semio algorithm payload."""
+    return {"ok": False, "diff": None, "warnings": [], "infos": [], "errors": errors}
+
+
+def flattenDesignReportDict(kit: dict, designGuid: str) -> dict:
+    """📋Canonical flatten report matching TypeScript flattenDesign (forward/backward + notes)."""
+    import copy
+
+    design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
+    if design is None:
+        return _semio_report_err(
+            [{"code": "flatten.design-not-found", "message": f"Design {designGuid} not found"}]
+        )
+    pieces = design.get("pieces", [])
+    if not pieces:
+        return _semio_report_ok(
+            {"forward": {}, "backward": {}},
+            [],
+            [
+                {
+                    "code": "flatten.empty-pieces",
+                    "message": "No pieces to flatten; returning empty forward and backward diffs.",
+                }
+            ],
+        )
+    before = copy.deepcopy(design)
+    try:
+        forward = flattenDesignDict(kit, designGuid)
+    except ValueError as e:
+        return _semio_report_err([{"code": "flatten.error", "message": str(e)}])
+    backward = _inverseDesignDiff(before, forward)
+    return _semio_report_ok({"forward": forward, "backward": backward}, [], [])
+
+
+# #endregion 🎯SemioReport
+
+
 # #region 🌳Flatten Merkle Hashes
 # Per-piece merkle hashes for plane and center computations so subsequent flatten calls can skip unchanged chains.
 
@@ -13095,10 +13142,14 @@ def computeFlatHashesDict(kit: dict, designGuid: str) -> dict[str, dict]:
 def flattenDesignCachedDict(kit: dict, designGuid: str, cache: dict[str, dict] | None = None) -> tuple[dict, dict[str, dict]]:
     """🧠Flatten a design reusing cached plane/center values when the per-piece merkle hashes match the previous run."""
     newHashes = computeFlatHashesDict(kit, designGuid)
-    diff = flattenDesignDict(kit, designGuid)
+    rep = flattenDesignReportDict(kit, designGuid)
+    if not rep["ok"]:
+        return rep, {}
+    diff = rep["diff"]["forward"]
     updatedById: dict[str, dict] = {}
     for entry in diff.get("pieces", {}).get("updated", []) if isinstance(diff.get("pieces"), dict) else []:
-        updatedById[entry["id"]] = entry["diff"]
+        guid_key = entry.get("piece", {}).get("guid", entry.get("id", ""))
+        updatedById[guid_key] = entry["diff"]
     nextCache: dict[str, dict] = {}
     if cache:
         for guid, hashes in newHashes.items():
@@ -13132,7 +13183,7 @@ def flattenDesignCachedDict(kit: dict, designGuid: str, cache: dict[str, dict] |
                 "plane": updated.get("plane"),
                 "center": updated.get("center"),
             }
-    return diff, nextCache
+    return rep, nextCache
 
 
 # #endregion 🌳Flatten Merkle Hashes
@@ -17262,7 +17313,9 @@ class TestDelete:
         piece_guids = [p["guid"] for p in selection.get("pieces", [])]
         connection_guids = [c["guid"] for c in selection.get("connections", [])]
 
-        computed_diff = deletePiecesAndConnectionsInDesignDict(kit, design, piece_guids, connection_guids)
+        computed_report = deletePiecesAndConnectionsInDesignDict(kit, design, piece_guids, connection_guids)
+        assert computed_report.get("ok"), computed_report.get("errors", [])
+        computed_diff = computed_report["diff"]
 
         # Verify removed pieces
         computed_removed = computed_diff.get("pieces", {}).get("removed", [])

@@ -2618,7 +2618,8 @@
                         "enum": [
                             "python",
                             "go",
-                            "rust"
+                            "rust",
+                            "csharp"
                         ],
                         "title": "Language"
                     },

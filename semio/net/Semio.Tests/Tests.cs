@@ -932,7 +932,9 @@ public class Tests
 
             var pieceGuids = selection.Pieces.Select(p => p.Guid).ToList();
             var connectionGuids = selection.Connections.Select(c => c.Guid).ToList();
-            var computedDiff = Design.DeletePiecesAndConnectionsInDesign(kit, design, pieceGuids, connectionGuids);
+            var computedReport = Design.DeletePiecesAndConnectionsInDesign(kit, design, pieceGuids, connectionGuids);
+            Assert.True(computedReport.Ok, computedReport.Errors.Count > 0 ? computedReport.Errors[0].Message : "delete failed");
+            var computedDiff = computedReport.Diff!;
 
             // Verify removed pieces
             Assert.NotNull(computedDiff.Pieces);

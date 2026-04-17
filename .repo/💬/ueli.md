@@ -230,10 +230,6 @@ Keep the renderer isolated from native details
 
 ## 👤semio
 
-semio sketchpad:
-The drag is increadibly unperformant.
-Make sure the drag and the rerender with flatten etc is not using any unnecessary file blobs, or recomputed unnecessary.
-
 ###
 
 TODO: Rename tilt to slope, Add rotation to piece node
@@ -699,6 +695,9 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 ### ✏️sketchpad
 
 semio/sketchpad:
+
+The drag is increadibly unperformant.
+Make sure the drag and the rerender with flatten etc is not using any unnecessary file blobs, or recomputed unnecessary.
 
 Every single interation (every hover, every mouse click, every unfold, etc) MUST be dispatched over a single store. In there it MUST be logged. This goes through all the apps (home, kit, design, type, etc)
 

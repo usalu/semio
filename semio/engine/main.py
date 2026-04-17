@@ -137,6 +137,7 @@ from semio_core import (
     createClusteredDesignDict,
     decode,
     deletePiecesAndConnectionsInDesignDict,
+    flattenDesignReportDict,
     encode,
     expandDesignPiecesDict,
     findAttributeValueDict,
@@ -1442,7 +1443,7 @@ class NativeAlgorithmExecuteBody(pydantic.BaseModel):
     """🔺Request body for POST /api/native-algorithms/execute.
     """
 
-    language: typing.Literal["python", "go", "rust"]
+    language: typing.Literal["python", "go", "rust", "csharp"]
     operation: typing.Literal["flatten", "delete"]
     kit: dict[str, typing.Any]
     design: dict[str, typing.Any]
@@ -1457,51 +1458,47 @@ def _semio_repo_root() -> pathlib.Path:
     return pathlib.Path(__file__).resolve().parent.parent
 
 
-def _python_native_flatten_to_design_change(kit: dict[str, typing.Any], design_guid: str) -> dict[str, typing.Any]:
-    """♻️Map flattenDesignDict output to a DesignChange-shaped dict for the algorithms adapter.
+def _normalize_csharp_json_keys(value: typing.Any) -> typing.Any:
+    """🔠Match Storybook: first character of each object key lowercased for C# Newtonsoft payloads.
     """
-    raw = flattenDesignDict(kit, design_guid)
-    updates: list[dict[str, typing.Any]] = []
-    for u in raw.get("pieces", {}).get("updated", []):
-        pid = u.get("id")
-        diff = u.get("diff", {})
-        if pid:
-            updates.append({"piece": {"guid": pid}, "diff": diff})
-    forward: dict[str, typing.Any] = {}
-    if updates:
-        forward["pieces"] = {"updated": updates}
-    return {"forward": forward, "backward": {}}
+    if isinstance(value, list):
+        return [_normalize_csharp_json_keys(v) for v in value]
+    if not isinstance(value, dict):
+        return value
+    out: dict[str, typing.Any] = {}
+    for k, v in value.items():
+        nk = (k[0].lower() + k[1:]) if k else k
+        out[nk] = _normalize_csharp_json_keys(v)
+    return out
 
 
-def _go_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
-    """🔬Run semio/go/cmd/nativebridge and return parsed JSON result.
+def _go_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
+    """🔬Run semio/algorithms/native-bridges/go and return parsed JSON result.
     """
-    go_root = _semio_repo_root() / "go"
+    go_root = _semio_repo_root() / "algorithms" / "native-bridges" / "go"
     proc = subprocess.run(
-        ["go", "run", "./cmd/nativebridge"],
+        ["go", "run", "-mod=mod", "."],
         cwd=str(go_root),
         input=json.dumps(payload).encode("utf-8"),
         capture_output=True,
         timeout=300,
         check=False,
+        env={**os.environ, "GOWORK": "off"},
     )
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "go native bridge failed")
     out = json.loads(proc.stdout.decode("utf-8"))
     if not out.get("ok"):
         raise RuntimeError(out.get("error", "go native bridge error"))
-    result = out.get("result")
-    if operation == "flatten":
-        return {"forward": result, "backward": {}}
-    return result
+    return out.get("result")
 
 
-def _rust_native_bridge(payload: dict[str, typing.Any], operation: str) -> typing.Any:
-    """⬛Run semio/rs native_bridge and return parsed JSON result.
+def _rust_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
+    """⬛Run semio/algorithms/native-bridges/rs and return parsed JSON result.
     """
-    rs_root = _semio_repo_root() / "rs"
+    rs_root = _semio_repo_root() / "algorithms" / "native-bridges" / "rs"
     proc = subprocess.run(
-        ["cargo", "run", "-q", "--bin", "native_bridge"],
+        ["cargo", "run", "-q"],
         cwd=str(rs_root),
         input=json.dumps(payload).encode("utf-8"),
         capture_output=True,
@@ -1514,6 +1511,30 @@ def _rust_native_bridge(payload: dict[str, typing.Any], operation: str) -> typin
     if not out.get("ok"):
         raise RuntimeError(out.get("error", "rust native bridge error"))
     return out.get("result")
+
+
+def _csharp_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
+    """🔷Run semio/algorithms/native-bridges/csharp and return parsed JSON result.
+    """
+    cs_root = _semio_repo_root() / "algorithms" / "native-bridges" / "csharp"
+    proc = subprocess.run(
+        ["dotnet", "run", "--project", "./csharp-native-bridge.csproj", "-q"],
+        cwd=str(cs_root),
+        input=json.dumps(payload).encode("utf-8"),
+        capture_output=True,
+        timeout=600,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.decode("utf-8", errors="replace") or "csharp native bridge failed")
+    text = proc.stdout.decode("utf-8", errors="replace")
+    json_line = next((ln for ln in reversed(text.splitlines()) if ln.strip().startswith("{")), None)
+    if not json_line:
+        raise RuntimeError("csharp native bridge: no JSON line on stdout")
+    out = json.loads(json_line)
+    if not out.get("ok"):
+        raise RuntimeError(out.get("error", "csharp native bridge error"))
+    return _normalize_csharp_json_keys(out.get("result"))
 
 
 def _dispatch_native_algorithm(body: NativeAlgorithmExecuteBody) -> typing.Any:
@@ -1534,12 +1555,17 @@ def _dispatch_native_algorithm(body: NativeAlgorithmExecuteBody) -> typing.Any:
     }
     if lang == "python":
         if op == "flatten":
-            return _python_native_flatten_to_design_change(kit, dg)
-        return deletePiecesAndConnectionsInDesignDict(design, list(body.pieceGuids), list(body.connectionGuids))
+            return flattenDesignReportDict(kit, dg)
+        return deletePiecesAndConnectionsInDesignDict(kit, design, list(body.pieceGuids), list(body.connectionGuids))
     if lang == "go":
-        return _go_native_bridge(bridge_payload, op)
+        return _go_native_bridge(bridge_payload)
     if lang == "rust":
-        return _rust_native_bridge(bridge_payload, op)
+        bridge_in = dict(bridge_payload)
+        if op != "delete":
+            bridge_in["design"] = None
+        return _rust_native_bridge(bridge_in)
+    if lang == "csharp":
+        return _csharp_native_bridge(bridge_payload)
     raise RuntimeError(f"unsupported native language: {lang}")
 
 

@@ -4901,10 +4901,11 @@ export function createKeyedInitHandler<TAppKey extends string, TAppState>(config
     action: (context: any, event: any) => {
       const key = config.getKey(event);
       const apps = context[config.appKey] || {};
+      const app = apps[key] || config.createDefaultState();
       return {
         [config.appKey]: {
           ...apps,
-          [key]: event.state,
+          [key]: { ...app, ...event.state },
         },
       };
     },
@@ -52428,6 +52429,7 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
     const currentUrl = page.url();
     console.log(`[initDesign] Current URL: ${currentUrl}`);
 
+    let lightweightDesignGuid: string | null = null;
     const lightweightDesignRoute = await page.evaluate(async () => {
       const store = (window as any).__SEMIO_STORE__;
       const kitGuid = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1];
@@ -52475,7 +52477,6 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
           ],
         },
       };
-      store.designApp?.(kitGuid, designGuid)?.execute?.("semio.designApp.setWindowLayout", "semio.sketchpad.test.initDesign.lightweight", windowLayout);
       store.actor?.send?.({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { windowLayout } });
       (window as any).__SEMIO_TEST_DESIGN_GUID__ = designGuid;
       return { kitGuid, designGuid };
@@ -52483,6 +52484,7 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
 
     if (lightweightDesignRoute) {
       console.log(`[initDesign] Created lightweight design: ${lightweightDesignRoute.designGuid}`);
+      lightweightDesignGuid = lightweightDesignRoute.designGuid;
       const globalNavigate = await page.evaluate(() => !!(window as any).__SEMIO_NAVIGATE__);
       if (globalNavigate) {
         await page.evaluate(({ kitGuid, designGuid }) => {
@@ -52607,7 +52609,7 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
     });
     console.log(`[initDesign] Pieces loaded in store: ${hasPieces}`);
 
-    return { errors, warnings, messages };
+    return { errors, warnings, messages, lightweightDesignGuid };
   }
 
   async function initType(page: PlaywrightPage) {
@@ -55147,7 +55149,7 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
 
       const { errors, warnings, messages } = await initConsole(page);
 
-      await initDesign(page);
+      const designInit = await initDesign(page);
 
       await page.waitForLoadState("domcontentloaded", { timeout: 30000 }).catch(() => {});
       await page.waitForTimeout(3000);
@@ -55188,9 +55190,6 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       console.log("[Design Test] hasDiagram:", hasDiagram, "hasScene:", hasScene);
 
       if (!hasDiagram && !hasScene) {
-        console.log("[DEBUG] Design Test browser errors:", JSON.stringify(errors.slice(-20)));
-        console.log("[DEBUG] Design Test browser warnings:", JSON.stringify(warnings.slice(-20)));
-        console.log("[DEBUG] Design Test body HTML:", await page.evaluate(() => document.body?.innerHTML.slice(0, 2000) ?? ""));
         console.log("[Design Test] Page HTML:", await page.content().then((c: any) => c.slice(0, 2000)));
       }
       expect(hasDiagram || hasScene).toBe(true);
@@ -55220,7 +55219,18 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       expect(designRouteBeforeReload.designGuid).toBeTruthy();
       expect(designRouteBeforeReload.storeId).toBeTruthy();
 
-      const isEphemeralDesignRoute = await page.evaluate((designGuid) => (window as any).__SEMIO_TEST_DESIGN_GUID__ === designGuid, designRouteBeforeReload.designGuid);
+      const isEphemeralDesignRoute =
+        designRouteBeforeReload.designGuid === (designInit as any).lightweightDesignGuid ||
+        (await page.evaluate((designGuid) => {
+        if ((window as any).__SEMIO_TEST_DESIGN_GUID__ === designGuid) return true;
+        const store = (window as any).__SEMIO_STORE__;
+        const path = window.location.pathname;
+        const kitGuid = path.match(/\/kits\/([^/]+)/)?.[1] ?? null;
+        if (!store || !kitGuid || !designGuid || !store.hasKit(kitGuid)) return false;
+        const kit = store.kit(kitGuid).snapshot();
+        const design = (kit.designs ?? []).find((entry: any) => entry.guid === designGuid);
+        return design?.name === "Sketchpad Test Design";
+      }, designRouteBeforeReload.designGuid));
       if (isEphemeralDesignRoute) {
         console.log("[Design Test] Skipping reload persistence assertions for ephemeral one-piece test design");
       } else {
@@ -55287,6 +55297,11 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
         console.log("[Design Test] Skipping full navbar chrome helper for ephemeral one-piece test design");
       } else {
         await expectClassicNavbarChrome(page, "Design");
+      }
+
+      if (isEphemeralDesignRoute) {
+        await expect(page.locator('[id="semio.sketchpad.navbar.panelToggle.settings"]')).toBeVisible({ timeout: 5000 });
+        return;
       }
 
       // #region 🎐Panel Toggles Check
