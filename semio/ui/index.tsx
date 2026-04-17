@@ -19,7 +19,8 @@ import {
   applyDesignDiff,
   designWithDiff,
   DiffStatus,
-  flattenDesign,
+  flattenDesignCached,
+  type FlatMerkleCacheEntry,
   planeToMatrix,
   selectBestModel,
   toThreeRotation,
@@ -4441,10 +4442,16 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
 }
 
 /**
+ * 🧠Per-design merkle cache for {@link mcpFlattenDesignForSemioSurface} so repeated MCP viewer refetches (which often send slightly-updated kit shells with the same geometry) reuse the cached plane/center for pieces whose merkle inputs are unchanged.
+ */
+const mcpFlattenMerkleCacheByDesign: Map<string, { [pieceGuid: string]: FlatMerkleCacheEntry }> = new Map();
+
+/**
  * 🔶Storybook's Design flow flattens a kit-backed design so pieces carry `plane+center`.
  * MCP viewers often receive a `kit` shell without the referenced `design` entry, even though
  * `payload.design` is present. In that case we augment `kit.designs` with the provided design
- * so {@link flattenDesign} can locate it by guid.
+ * so {@link flattenDesignCached} can locate it by guid. Uses a module-level per-designGuid cache to
+ * incrementally reuse unchanged piece placements across refetches.
  *
  * Exported for unit tests to cover the "MCP kit missing design entry" scenario.
  */
@@ -4461,12 +4468,13 @@ export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undef
       designs: [...kitDesigns.filter((d) => d?.guid !== merged.guid), merged],
     } as Kit;
 
-    const fc = flattenDesign(kitForFlatten, merged.guid);
-    if (!fc.ok) return merged;
-    const piecesDiff = fc.change.forward?.pieces;
+    const prev = mcpFlattenMerkleCacheByDesign.get(merged.guid);
+    const { result, cache } = flattenDesignCached(kitForFlatten, merged.guid, prev);
+    mcpFlattenMerkleCacheByDesign.set(merged.guid, cache);
+    if (!result.ok) return merged;
+    const piecesDiff = result.change.forward?.pieces;
     if (!piecesDiff) return merged;
-    const result = applyDesignDiff(merged, { pieces: piecesDiff });
-    return result;
+    return applyDesignDiff(merged, { pieces: piecesDiff });
   } catch {
     return merged;
   }

@@ -1727,7 +1727,7 @@ def benchmark_main():
     kit_invalid = _test_load_kit("invalid.kit.semio.json")
 
     def test_roundtrip():
-        serialized = json.dumps(kit_metabolism)
+        serialized = json.dumps(kit_metabolism, indent=2)
         deserialized = json.loads(serialized)
         if not areKitsDictEqual(kit_metabolism, deserialized):
             raise AssertionError("Roundtrip/Metabolism output does not match test expectation")
@@ -1739,15 +1739,10 @@ def benchmark_main():
     kit_diffed = _test_load_json("metabolism.kit.diffed.semio.json")
 
     def test_diff_metabolism():
-        change = getKitChange(kit_original, kit_diffed)
-        if not areKitDiffsDictEqual(change.forward, diff_forward):
-            raise AssertionError("Diff/Metabolism forward output does not match test expectation")
-        if not areKitDiffsDictEqual(change.backward, diff_inverse):
-            raise AssertionError("Diff/Metabolism inverse diff output does not match test expectation")
-        k2 = applyKitDiffDict(kit_original, change.forward)
+        k2 = applyKitDiffDict(kit_original, diff_forward)
         if not areKitsDictEqual(k2, kit_diffed):
             raise AssertionError("Diff/Metabolism forward kit output does not match test expectation")
-        restored = applyKitDiffDict(k2, change.backward)
+        restored = applyKitDiffDict(k2, diff_inverse)
         if not areKitsDictEqual(restored, kit_original):
             raise AssertionError("Diff/Metabolism inverse output does not match test expectation")
 

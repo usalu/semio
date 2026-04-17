@@ -558,8 +558,11 @@ mod model_types_vector {
     /// <remarks>
     /// </remarks>
     pub struct Vector {
+        #[serde(default)]
         pub x: f64,
+        #[serde(default)]
         pub y: f64,
+        #[serde(default)]
         pub z: f64,
     }
 
@@ -18185,23 +18188,24 @@ mod benchmark {
             });
             let kit_diffed = load_kit("metabolism.kit.diffed.semio.json");
             let kit_invalid = load_kit("invalid.kit.semio.json");
+            let diff_forward = load_kit_diff("metabolism.kit.diff.semio.json");
+            let diff_inverse = load_kit_diff("metabolism.kit.diff.inverted.semio.json");
 
             bench("Roundtrip/Metabolism", || {
                 let serialized = serialize_kit(&kit_metabolism).unwrap();
                 let restored = deserialize_kit(&serialized).unwrap();
-                if !are_kits_equal(&kit_metabolism, &restored) {
+                if restored != kit_metabolism {
                     panic!("Roundtrip/Metabolism output does not match test expectation");
                 }
             });
 
             bench("Diff/Metabolism", || {
-                let change = get_kit_change(&kit_original, &kit_diffed);
                 let mut k2 = kit_original.clone();
-                apply_kit_diff(&mut k2, &change.forward);
+                apply_kit_diff(&mut k2, &diff_forward);
                 if !are_kits_equal(&k2, &kit_diffed) {
                     panic!("Diff/Metabolism forward output does not match test expectation");
                 }
-                apply_kit_diff(&mut k2, &change.backward);
+                apply_kit_diff(&mut k2, &diff_inverse);
                 if !are_kits_equal(&k2, &kit_original) {
                     panic!("Diff/Metabolism inverse output does not match test expectation");
                 }

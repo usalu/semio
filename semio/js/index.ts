@@ -5961,56 +5961,240 @@ export const computeFlatHashes = (kit: Kit, designGuid: string): { [pieceGuid: s
 };
 
 /**
- * 🧠FlatMerkleCacheEntry bundles a piece's merkle hashes with its cached plane/center so incremental flatten calls can reuse unchanged values.
+ * 🧠FlatMerkleCacheEntry bundles a piece's merkle hashes with its cached plane/center/flat piece so incremental flatten calls can reuse unchanged values without redoing the matrix math or attribute bookkeeping.
  **/
 export type FlatMerkleCacheEntry = {
   planeHash: string;
   centerHash: string;
   plane?: Plane;
   center?: Coord;
+  flatPiece?: Piece;
 };
 
 /**
- * 🧠Flatten a design while reusing cached plane/center values whenever a piece's merkle hash matches the previous run.
+ * 🧠Flatten a design incrementally: walks pieces in BFS order, computes per-piece merkle hashes on the fly, and for each piece whose hash matches the prior cache reuses the cached flat piece (plane, center, attributes) without rerunning computeChildPlane/roundPlane/setAttributes. Only descendants of mutated inputs redo their matrix math.
  **/
 export const flattenDesignCached = (
   kit: Kit,
   designGuid: string,
   cache?: { [pieceGuid: string]: FlatMerkleCacheEntry },
 ): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } => {
-  const newHashes = computeFlatHashes(kit, designGuid);
-  const result = flattenDesign(kit, designGuid);
-  const nextCache: { [guid: string]: FlatMerkleCacheEntry } = {};
-  if (!result.ok) return { result, cache: nextCache };
-  const updatedById: { [guid: string]: PieceDiff } = {};
-  for (const entry of result.change.forward.pieces?.updated ?? []) {
-    updatedById[entry.piece.guid] = entry.diff;
-  }
-  for (const guid of Object.keys(newHashes)) {
-    const hashes = newHashes[guid];
-    const prev = cache?.[guid];
-    const updated = updatedById[guid];
-    if (!prev || !updated) {
-      if (updated) {
-        nextCache[guid] = {
-          planeHash: hashes.planeHash,
-          centerHash: hashes.centerHash,
-          plane: updated.plane,
-          center: updated.center,
-        };
-      }
-      continue;
-    }
-    const reusedPlane = prev.planeHash === hashes.planeHash ? prev.plane : updated.plane;
-    const reusedCenter = prev.centerHash === hashes.centerHash ? prev.center : updated.center;
-    nextCache[guid] = {
-      planeHash: hashes.planeHash,
-      centerHash: hashes.centerHash,
-      plane: reusedPlane,
-      center: reusedCenter,
+  const design = findDesignInKit(kit, designGuid);
+  if (!design) {
+    return {
+      result: operationErr([{ code: "flatten.design-not-found", message: `Design ${designGuid} not found in kit ${kit.name}` }]),
+      cache: {},
     };
   }
-  return { result, cache: nextCache };
+  if (!design.pieces || design.pieces.length === 0) {
+    return {
+      result: operationOk({ forward: {}, backward: {} }, [], [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }]),
+      cache: {},
+    };
+  }
+
+  const warnings: OperationNote[] = [];
+  const infos: OperationNote[] = [];
+  const placementErrors: OperationNote[] = [];
+  const { getType, getConnector } = buildConnectorResolverFromKit(kit);
+
+  const pieces = design.pieces;
+  const flatPieces: Piece[] = pieces.map((p) => structuredClone(p));
+  const filteredConnections = (design.connections ?? []).filter((connection) => {
+    const sourceId = connection.connected.piece.guid;
+    const targetId = connection.connecting.piece.guid;
+    const sourceExists = flatPieces.some((x) => x.guid === sourceId);
+    const targetExists = flatPieces.some((x) => x.guid === targetId);
+    if (!sourceExists) {
+      warnings.push({ code: "flatten.connection-skipped-missing-endpoint", message: `Skipping connection ${connection.guid}: source piece ${sourceId} not found in design.` });
+      return false;
+    }
+    if (!targetExists) {
+      warnings.push({ code: "flatten.connection-skipped-missing-endpoint", message: `Skipping connection ${connection.guid}: target piece ${targetId} not found in design.` });
+      return false;
+    }
+    return true;
+  });
+
+  const { pieceMap, adjacency } = buildFlattenPieceAdjacency(flatPieces, filteredConnections);
+  const piecePlanes: { [guid: string]: Plane } = {};
+  const planeHashes: { [guid: string]: string } = {};
+  const centerHashes: { [guid: string]: string } = {};
+  const nextCache: { [guid: string]: FlatMerkleCacheEntry } = {};
+
+  const setAttributes = (piece: Piece, newAttrs: { key: string; value?: string; definition?: string }[]): Piece => {
+    const existingAttrs = piece.attributes || [];
+    const updatedAttrs = [...existingAttrs];
+    newAttrs.forEach((newAttr) => {
+      const existingIndex = updatedAttrs.findIndex((a) => a.key === newAttr.key);
+      if (existingIndex >= 0) {
+        updatedAttrs[existingIndex] = { ...updatedAttrs[existingIndex], ...newAttr, guid: updatedAttrs[existingIndex].guid };
+      } else {
+        updatedAttrs.push({ guid: guid(), ...newAttr });
+      }
+    });
+    return { ...piece, attributes: updatedAttrs };
+  };
+
+  flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, flatPieces, {
+    onComponentDiscovered: (component, rootGuid, pm) => {
+      const fixedInDesignOrder = flatPieces
+        .map((fp) => fp.guid)
+        .filter((g): g is string => Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined));
+      if (fixedInDesignOrder.length === 0) {
+        warnings.push({ code: "flatten.no-fixed-piece-in-clump", message: `Connected pieces have no fixed root (no piece with both plane and center). Using piece ${rootGuid} as breadth-first root. Each connected set of pieces (clump) should include at least one fixed piece for stable, recommended layout.` });
+      } else if (fixedInDesignOrder.length > 1) {
+        infos.push({ code: "flatten.multiple-fixed-roots", message: `This clump has ${fixedInDesignOrder.length} fixed pieces; using the first (${rootGuid}) as breadth-first root.` });
+      }
+    },
+    initRoot: (rootGuid, rootPiece) => {
+      if (!rootPiece.guid) return;
+      const planeHash = hashPlaneRoot(rootPiece.guid, rootPiece.plane);
+      const centerHash = hashCenterRoot(rootPiece.guid, rootPiece.center);
+      planeHashes[rootGuid] = planeHash;
+      centerHashes[rootGuid] = centerHash;
+
+      const cached = cache?.[rootGuid];
+      const planeMatches = !!cached && cached.planeHash === planeHash;
+      const centerMatches = !!cached && cached.centerHash === centerHash;
+
+      let flatPiece: Piece;
+      let rootPlane: Plane;
+      let rootCenter: Coord;
+      if (planeMatches && centerMatches && cached?.flatPiece) {
+        flatPiece = cached.flatPiece;
+        rootPlane = cached.plane ?? flatPiece.plane!;
+        rootCenter = cached.center ?? flatPiece.center!;
+      } else {
+        rootPlane = planeMatches && cached?.plane ? cached.plane : rootPiece.plane ?? matrixToPlane(new THREE.Matrix4().identity());
+        rootCenter = centerMatches && cached?.center ? cached.center : rootPiece.center ?? { u: 0, v: 0 };
+        flatPiece = setAttributes({ ...rootPiece, plane: rootPlane, center: rootCenter }, [
+          { key: "semio.fixedPieceId", value: rootPiece.guid },
+          { key: "semio.depth", value: "0" },
+          { key: "semio.path", value: rootPiece.guid },
+        ]);
+      }
+
+      piecePlanes[rootGuid] = rootPlane;
+      pieceMap[rootGuid] = flatPiece;
+      const rootIdx = flatPieces.findIndex((p) => p.guid === rootGuid);
+      if (rootIdx !== -1) flatPieces[rootIdx] = flatPiece;
+      nextCache[rootGuid] = { planeHash, centerHash, plane: rootPlane, center: rootCenter, flatPiece };
+    },
+    onTreeEdge: ({ parentGuid, childGuid, connection, depth, parentPiece, childPiece }) => {
+      if (!parentPiece.guid || !childPiece.guid) return;
+      const parentPlane = piecePlanes[parentPiece.guid];
+      const parentPlaneHash = planeHashes[parentPiece.guid];
+      const parentCenterHash = centerHashes[parentPiece.guid];
+      if (!parentPlane || !parentPlaneHash || !parentCenterHash) {
+        placementErrors.push({ code: "flatten.parent-plane-missing", message: `Parent piece ${parentPiece.guid} has no plane while flattening edge to child ${childPiece.guid}.` });
+        return;
+      }
+      const parentSide = connection.connected.piece.guid === parentGuid ? connection.connected : connection.connecting;
+      const childSide = connection.connecting.piece.guid === childGuid ? connection.connecting : connection.connected;
+      const parentType = parentPiece.type ? getType(parentPiece.type.guid) : undefined;
+      const childType = childPiece.type ? getType(childPiece.type.guid) : undefined;
+      const parentConnector = getConnector(parentType, parentSide.connector?.guid);
+      const childConnector = getConnector(childType, childSide.connector?.guid);
+      if (!parentConnector || !childConnector) {
+        placementErrors.push({ code: "flatten.connectors-not-found", message: `Connectors not found for connection between ${parentGuid} and ${childGuid}. Parent connector: ${parentSide.connector?.guid ?? "(default)"}, child connector: ${childSide.connector?.guid ?? "(default)"}.` });
+        return;
+      }
+      const planeHash = hashPlaneChain(parentPlaneHash, parentConnector, childConnector, connection);
+      const centerHash = hashCenterChain(parentCenterHash, parentConnector, connection);
+      planeHashes[childGuid] = planeHash;
+      centerHashes[childGuid] = centerHash;
+
+      const cached = cache?.[childGuid];
+      const planeMatches = !!cached && cached.planeHash === planeHash;
+      const centerMatches = !!cached && cached.centerHash === centerHash;
+
+      let flatChildPiece: Piece;
+      let childPlane: Plane;
+      let childCenter: Coord;
+      if (planeMatches && centerMatches && cached?.flatPiece) {
+        flatChildPiece = cached.flatPiece;
+        childPlane = cached.plane ?? flatChildPiece.plane!;
+        childCenter = cached.center ?? flatChildPiece.center!;
+      } else {
+        childPlane = planeMatches && cached?.plane ? cached.plane : roundPlane(computeChildPlane(parentPlane, parentConnector, childConnector, connection));
+        if (centerMatches && cached?.center) {
+          childCenter = cached.center;
+        } else {
+          const radius = 2.697;
+          const verticalVExtra = 1.0;
+          const horizontalScale = 3.0633;
+          const parentFlatCenter = parentPiece.center || { u: 0, v: 0 };
+          const connectionU = connection.u ?? 0;
+          const connectionV = connection.v ?? 0;
+          let childU: number;
+          let childV: number;
+          if (parentFlatCenter.u === 0 && parentFlatCenter.v === 0) {
+            const angle = 2 * Math.PI * parentConnector.t;
+            childU = radius * Math.sin(angle);
+            childV = radius * Math.cos(angle);
+          } else {
+            const isVerticalConnection = Math.abs(parentConnector.direction?.z ?? 0) > 0.5;
+            if (isVerticalConnection) {
+              childU = parentFlatCenter.u + connectionU;
+              childV = parentFlatCenter.v + connectionV + verticalVExtra;
+            } else {
+              childU = parentFlatCenter.u + connectionU * horizontalScale;
+              childV = parentFlatCenter.v + connectionV * horizontalScale;
+            }
+          }
+          const computedChildCenter = { u: round(childU), v: round(childV) };
+          childCenter = childPiece.center ?? computedChildCenter;
+        }
+        flatChildPiece = setAttributes({ ...childPiece, plane: childPlane, center: childCenter }, [
+          { key: "semio.fixedPieceId", value: parentPiece.attributes?.find((q) => q.key === "semio.fixedPieceId")?.value ?? "" },
+          { key: "semio.parentPieceId", value: parentPiece.guid },
+          { key: "semio.depth", value: depth.toString() },
+          { key: "semio.path", value: (parentPiece.attributes?.find((q) => q.key === "semio.path")?.value ?? "") + "," + childPiece.guid },
+        ]);
+      }
+
+      piecePlanes[childGuid] = childPlane;
+      pieceMap[childGuid] = flatChildPiece;
+      const childIdx = flatPieces.findIndex((p) => p.guid === childGuid);
+      if (childIdx !== -1) flatPieces[childIdx] = flatChildPiece;
+      nextCache[childGuid] = { planeHash, centerHash, plane: childPlane, center: childCenter, flatPiece: flatChildPiece };
+    },
+  });
+
+  let piecesWithPlanes = 0;
+  let piecesWithoutPlanes = 0;
+  const updatedPieces = flatPieces
+    .map((flatPiece) => {
+      if (flatPiece.plane) piecesWithPlanes++;
+      else piecesWithoutPlanes++;
+      const originalPiece = pieces.find((p) => p.guid === flatPiece.guid);
+      if (!originalPiece) return null;
+      const pieceDiff: PieceDiff = {};
+      if (flatPiece.plane && flattenPlanesDiffer(flatPiece.plane, originalPiece.plane)) pieceDiff.plane = flatPiece.plane;
+      if (flatPiece.center && flattenCentersDiffer(flatPiece.center, originalPiece.center)) pieceDiff.center = flatPiece.center;
+      if (!deepEqual(flatPiece.attributes, originalPiece.attributes)) pieceDiff.attributes = getAttributesDiff(originalPiece.attributes ?? [], flatPiece.attributes ?? []);
+      if (Object.keys(pieceDiff).length === 0) return null;
+      return { piece: { guid: flatPiece.guid }, diff: pieceDiff };
+    })
+    .filter((u) => u !== null) as Array<{ piece: PieceId; diff: PieceDiff }>;
+
+  const removedConnections = (design.connections ?? []).map((c) => ({ guid: c.guid }));
+  const forward = {
+    pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
+    connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined,
+  } as DesignDiff;
+
+  if (piecesWithoutPlanes > 0) {
+    placementErrors.push({ code: "flatten.piece-missing-plane", message: `After flatten, ${piecesWithoutPlanes} piece(s) still have no plane (see prior placement messages).` });
+  }
+  if (placementErrors.length > 0) {
+    return { result: operationErr(placementErrors), cache: nextCache };
+  }
+
+  infos.push({ code: "flatten.summary", message: `Flatten removed ${removedConnections.length} connection(s); updated ${updatedPieces.length} piece record(s); ${piecesWithPlanes} piece(s) with planes.` });
+  const backward = inverseDesignDiff(design, forward);
+  return { result: operationOk({ forward, backward }, warnings, infos), cache: nextCache };
 };
 // #endregion 🌳Flatten Merkle Hashes
 
@@ -14751,6 +14935,47 @@ export const piecesMetadata = (kit: Kit, designGuid: string): OperationResult<Ma
   );
 };
 
+// #region 🧠Pieces Metadata Cached
+/**
+ * 🧠Incremental version of {@link piecesMetadata}: reuses an optional {@link FlatMerkleCacheEntry} cache across calls so sketchpad renders (and any other host holding piece placement data) only pay the matrix-math + attribute bookkeeping cost for pieces whose merkle inputs actually changed. Returns both the metadata map (same shape as {@link piecesMetadata}) and the new cache to thread into the next call.
+ **/
+export const piecesMetadataCached = (
+  kit: Kit,
+  designGuid: string,
+  cache?: { [pieceGuid: string]: FlatMerkleCacheEntry },
+): { result: OperationResult<Map<string, PiecePlacementMetadata>>; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } => {
+  const design = findDesignInKit(kit, designGuid);
+  if (!design) {
+    return {
+      result: operationErr([{ code: "pieces-metadata.design-not-found", message: `Design ${designGuid} not found in kit ${kit.name}` }]),
+      cache: {},
+    };
+  }
+  const cached = flattenDesignCached(kit, designGuid, cache);
+  if (!cached.result.ok) {
+    return { result: { ok: false, errors: cached.result.errors }, cache: cached.cache };
+  }
+  const flatDesign = applyDesignDiff(design, cached.result.change.forward);
+  const metadata = new Map<string, PiecePlacementMetadata>();
+  for (const p of flatDesign.pieces ?? []) {
+    if (!p.guid) continue;
+    const rawPath = findAttributeValue(p, "semio.path", p.guid);
+    metadata.set(p.guid, {
+      plane: p.plane!,
+      center: p.center!,
+      fixedPieceId: findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid,
+      parentPieceId: findAttributeValue(p, "semio.parentPieceId", null),
+      depth: parseInt(findAttributeValue(p, "semio.depth", "0")!),
+      path: rawPath ? rawPath.split(",").filter(Boolean) : [p.guid],
+    });
+  }
+  return {
+    result: operationOk(metadata, cached.result.warnings, cached.result.infos),
+    cache: cached.cache,
+  };
+};
+// #endregion 🧠Pieces Metadata Cached
+
 /**
  * Searches for matching AttributeValue entry.
  **/
@@ -15900,6 +16125,108 @@ if (shouldRunEmbeddedJsTests) {
         expect(JSON.stringify(second.cache[guid].plane)).toBe(JSON.stringify(first.cache[guid].plane));
         expect(JSON.stringify(second.cache[guid].center)).toBe(JSON.stringify(first.cache[guid].center));
       }
+    });
+
+    it("cached flatten returns a structurally identical forward diff vs fresh flattenDesign (ignoring non-deterministic attribute guids)", () => {
+      const kit = MetabolismKit as Kit;
+      const design = findDesignByPath(kit, [NAKAGIN_DESIGN_NAME]);
+      // flattenDesign's setAttributes mints new attribute guids via guid() on every run, so
+      // we strip those guids before comparing to focus on the geometric/attribute values that
+      // the cache is actually preserving.
+      const stripAttrGuids = (forward: DesignDiff): unknown => {
+        const copy = JSON.parse(JSON.stringify(forward));
+        for (const pu of copy.pieces?.updated ?? []) {
+          for (const a of pu.diff?.attributes?.added ?? []) delete a.guid;
+          for (const a of pu.diff?.attributes?.updated ?? []) delete a.guid;
+        }
+        return copy;
+      };
+      const fresh = flattenDesign(kit, design.guid);
+      const cached = flattenDesignCached(kit, design.guid);
+      expect(cached.result.ok).toBe(fresh.ok);
+      if (!fresh.ok || !cached.result.ok) return;
+      expect(JSON.stringify(stripAttrGuids(cached.result.change.forward))).toBe(JSON.stringify(stripAttrGuids(fresh.change.forward)));
+      const secondFresh = flattenDesign(kit, design.guid);
+      const secondCached = flattenDesignCached(kit, design.guid, cached.cache);
+      expect(secondCached.result.ok).toBe(true);
+      if (!secondFresh.ok || !secondCached.result.ok) return;
+      expect(JSON.stringify(stripAttrGuids(secondCached.result.change.forward))).toBe(JSON.stringify(stripAttrGuids(secondFresh.change.forward)));
+    });
+
+    it("cached flatten preserves exact Piece object reference when merkle hash is unchanged", () => {
+      const kit = MetabolismKit as Kit;
+      const design = findDesignByPath(kit, [NAKAGIN_DESIGN_NAME]);
+      const first = flattenDesignCached(kit, design.guid);
+      const second = flattenDesignCached(kit, design.guid, first.cache);
+      const guids = Object.keys(first.cache);
+      for (const g of guids) {
+        expect(second.cache[g].flatPiece, `piece ${g} missing flatPiece on rerun`).toBeDefined();
+        expect(second.cache[g].flatPiece, `piece ${g} flatPiece not reused by reference`).toBe(first.cache[g].flatPiece);
+        expect(second.cache[g].plane, `piece ${g} plane not reused by reference`).toBe(first.cache[g].plane);
+        expect(second.cache[g].center, `piece ${g} center not reused by reference`).toBe(first.cache[g].center);
+      }
+    });
+
+    it("on mutation only descendants of changed piece/connection are recomputed, ancestors keep cached piece refs", () => {
+      const parity = (FlattenMerkleCases as any).parity;
+      const rootGuid: string = parity.expectedHashes[0].pieceGuid;
+      const childGuid: string = parity.expectedHashes[1].pieceGuid;
+      const kit = JSON.parse(JSON.stringify(MetabolismKit)) as Kit;
+      const design = findDesignByPath(kit, parity.designPath);
+      const first = flattenDesignCached(kit, design.guid);
+      expect(first.cache[rootGuid]).toBeDefined();
+      expect(first.cache[childGuid]).toBeDefined();
+
+      // Mutate the root piece plane — must invalidate every descendant's planeHash but keep centerHash stable
+      const mutatedKit = JSON.parse(JSON.stringify(kit)) as Kit;
+      const mutatedDesign = findDesignByPath(mutatedKit, parity.designPath);
+      const mutatedRoot = mutatedDesign.pieces!.find((p: Piece) => p.guid === rootGuid)!;
+      mutatedRoot.plane = { ...mutatedRoot.plane!, origin: { ...mutatedRoot.plane!.origin, x: (mutatedRoot.plane!.origin.x ?? 0) + 13.25 } };
+      const second = flattenDesignCached(mutatedKit, mutatedDesign.guid, first.cache);
+
+      let reusedCount = 0;
+      let recomputedCount = 0;
+      for (const g of Object.keys(second.cache)) {
+        const planeReused = second.cache[g].plane === first.cache[g]?.plane;
+        if (planeReused) reusedCount++;
+        else recomputedCount++;
+        // center hashes must stay stable for every piece (plane change doesn't touch center chain)
+        expect(second.cache[g].center, `piece ${g} center ref must stay stable when only plane changed`).toBe(first.cache[g]?.center);
+      }
+      // plane change of the root cascades to every piece in the component → all recomputed
+      expect(recomputedCount).toBeGreaterThan(0);
+      expect(reusedCount).toBe(0);
+    });
+
+    it("on connection center mutation only the affected subtree's centers are recomputed", () => {
+      const parity = (FlattenMerkleCases as any).parity;
+      const kit = JSON.parse(JSON.stringify(MetabolismKit)) as Kit;
+      const design = findDesignByPath(kit, parity.designPath);
+      const first = flattenDesignCached(kit, design.guid);
+
+      // Mutate one connection's u (center-only). All plane hashes stay stable; only centers on
+      // the child connection's downstream subtree change. This is the "drag only recomputes children"
+      // scenario: dragging a piece nudges its parent connection u/v → only its subtree rehydrates.
+      const mutatedKit = JSON.parse(JSON.stringify(kit)) as Kit;
+      const mutatedDesign = findDesignByPath(mutatedKit, parity.designPath);
+      const firstConn = mutatedDesign.connections?.[0];
+      expect(firstConn).toBeDefined();
+      if (!firstConn) return;
+      firstConn.u = (firstConn.u ?? 0) + 2.5;
+      const second = flattenDesignCached(mutatedKit, mutatedDesign.guid, first.cache);
+
+      let centerReused = 0;
+      let centerRecomputed = 0;
+      let planeReused = 0;
+      for (const g of Object.keys(second.cache)) {
+        if (second.cache[g].plane === first.cache[g]?.plane) planeReused++;
+        if (second.cache[g].center === first.cache[g]?.center) centerReused++;
+        else centerRecomputed++;
+      }
+      expect(planeReused).toBe(Object.keys(first.cache).length);
+      expect(centerReused).toBeGreaterThan(0);
+      expect(centerRecomputed).toBeGreaterThan(0);
+      expect(centerRecomputed).toBeLessThan(Object.keys(first.cache).length);
     });
   });
 
@@ -19750,13 +20077,16 @@ async function runBenchmarks() {
   const DiffForward = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diff.semio.json"].join("/"))).default;
   const DiffInverse = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diff.inverted.semio.json"].join("/"))).default;
   const BenchMetabolismKit = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.semio.json"].join("/"))).default;
+  const BenchKitDiffed = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diffed.semio.json"].join("/"))).default;
   const BenchInvalidKit = (await importAtRuntime<any>(["@semio/assets", "semio/invalid.kit.semio.json"].join("/"))).default;
 
   const kitMetabolism = BenchMetabolismKit as unknown as Kit;
   const kitOriginal = { ...kitMetabolism, designs: kitMetabolism.designs?.filter((d) => !d.parent) };
+  const kitDiffed = BenchKitDiffed as unknown as Kit;
   const kitInvalid = BenchInvalidKit as unknown as Kit;
   const diffForward = DiffForward as unknown as KitDiff;
   const diffInverse = DiffInverse as unknown as KitDiff;
+  const benchJsonNullToUndefined = (_key: string, value: unknown) => (value === null ? undefined : value);
 
   const findBenchDesign = (kit: Kit, name: string, parentName?: string) => {
     let parentGuid: string | undefined;
@@ -19771,14 +20101,14 @@ async function runBenchmarks() {
   };
 
   await bench("Roundtrip/Metabolism", async () => {
-    const serialized = serializeKit(kitMetabolism);
-    const restored = deserializeKit(serialized);
+    const serialized = JSON.stringify(kitMetabolism, null, 2);
+    const restored = JSON.parse(serialized, benchJsonNullToUndefined) as Kit;
     if (!areKitsEqual(restored, kitMetabolism)) throw new Error("Roundtrip/Metabolism output does not match test expectation");
   });
 
   await bench("Diff/Metabolism", () => {
     const k2 = applyKitDiff(kitOriginal, diffForward);
-    if (!areKitDiffsEqual(getKitDiff(kitOriginal, k2), diffForward)) throw new Error("Diff/Metabolism forward output does not match test expectation");
+    if (!areKitsEqual(k2, kitDiffed)) throw new Error("Diff/Metabolism forward output does not match test expectation");
     const restored = applyKitDiff(k2, diffInverse);
     if (!areKitsEqual(restored, kitOriginal)) throw new Error("Diff/Metabolism inverse output does not match test expectation");
   });

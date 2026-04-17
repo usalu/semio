@@ -80,6 +80,8 @@ import {
   PieceDiff,
   PieceId,
   piecesMetadata,
+  piecesMetadataCached,
+  type FlatMerkleCacheEntry,
   Plane,
   planeToMatrix,
   Point,
@@ -9477,15 +9479,24 @@ export type PieceMetadata = {
   path: string[];
 };
 
+/**
+ * 🧠Cache of per-piece merkle flatten entries, keyed by designGuid, held across renders so piecesMetadataCached can skip recomputing plane/center/attributes for pieces whose merkle inputs are unchanged. On design switch we fall back to an empty cache for that designGuid; prior designs stay cached.
+ */
+const flatMerkleCacheByDesignRef: { current: Map<string, { [pieceGuid: string]: FlatMerkleCacheEntry }> } = {
+  current: new Map(),
+};
+
 export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
   const kit = useKitSnapshot();
   const designScope = useDesignScope();
   return useMemo(() => {
     if (!kit || !designScope) return new Map<string, PieceMetadata>();
     try {
-      const result = piecesMetadata(kit, designScope.guid);
+      const prevCache = flatMerkleCacheByDesignRef.current.get(designScope.guid);
+      const { result, cache } = piecesMetadataCached(kit, designScope.guid, prevCache);
+      flatMerkleCacheByDesignRef.current.set(designScope.guid, cache);
       if (!result.ok) {
-        console.error("[PiecesMetadata] piecesMetadata failed:", result.errors);
+        console.error("[PiecesMetadata] piecesMetadataCached failed:", result.errors);
         return new Map<string, PieceMetadata>();
       }
       const metadata = result.change;
@@ -11205,8 +11216,18 @@ function readSketchpadKitsFromLocalStorage(id: string): InitialStateKit[] | unde
     if (!raw) return undefined;
     const parsed = JSON.parse(raw) as InitialStateKit[];
     if (!Array.isArray(parsed)) return undefined;
-    return parsed.filter((entry) => entry && typeof entry === "object" && entry.kit && typeof entry.kit === "object" && typeof entry.kit.guid === "string" && entry.kit.guid.length > 0);
+    return filterPersistableInitialStateKits(parsed);
   } catch {}
+}
+
+/**
+ * 🧰 Keeps only durable kit snapshots; temporary kits are session-only and must not be restored or written.
+ **/
+function filterPersistableInitialStateKits(kits: InitialStateKit[]): InitialStateKit[] {
+  return kits.filter((entry) => {
+    if (!entry || typeof entry !== "object" || !entry.kit || typeof entry.kit !== "object" || typeof entry.kit.guid !== "string" || entry.kit.guid.length === 0) return false;
+    return entry.kind === "file" || entry.kind === "folder" || entry.kind === "remote";
+  });
 }
 
 /**
@@ -11223,7 +11244,7 @@ function clearSketchpadKitSnapshotsInBrowserStorage(id: string): void {
 function writeSketchpadKitsToLocalStorage(id: string, kits: InitialStateKit[]): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(`semio.sketchpad.kits.${id}`, JSON.stringify(kits));
+    window.localStorage.setItem(`semio.sketchpad.kits.${id}`, JSON.stringify(filterPersistableInitialStateKits(kits)));
   } catch {}
 }
 
@@ -11269,7 +11290,7 @@ async function readSketchpadKitsFromIndexedDb(id: string): Promise<InitialStateK
           resolve(undefined);
           return;
         }
-        resolve(result as InitialStateKit[]);
+        resolve(filterPersistableInitialStateKits(result as InitialStateKit[]));
       };
       request.onerror = () => resolve(undefined);
       transaction.oncomplete = () => database.close();
@@ -11288,11 +11309,12 @@ async function readSketchpadKitsFromIndexedDb(id: string): Promise<InitialStateK
 async function writeSketchpadKitsToIndexedDb(id: string, kits: InitialStateKit[]): Promise<void> {
   const database = await openSketchpadKitSnapshotDatabase();
   if (!database) return;
+  const durableKits = filterPersistableInitialStateKits(kits);
   await new Promise<void>((resolve) => {
     try {
       const transaction = database.transaction(sketchpadKitSnapshotStoreName, "readwrite");
       const store = transaction.objectStore(sketchpadKitSnapshotStoreName);
-      store.put(kits, id);
+      store.put(durableKits, id);
       transaction.oncomplete = () => {
         database.close();
         resolve();
@@ -20864,6 +20886,8 @@ export class SketchpadStore {
     SketchpadStore._modulesLoaded = true;
     // All modules are now consolidated in this file, no dynamic imports needed
   }
+  private static readonly MAX_INTERACTION_LOG_SIZE = 500;
+  readonly interactionLog: InteractionLogEntry[] = [];
   private readonly id: string | undefined;
   private readonly remote: RemoteProviders | undefined;
   private readonly syncDoc: SyncDoc;
@@ -21077,6 +21101,14 @@ export class SketchpadStore {
         const inferredKitKind = this.inferKitPersistenceKind(this.injectedKitStore);
         this.registerKitStore(this.injectedKitStore, inferredKitKind);
       }
+    }
+  }
+
+  logInteraction(action: string, source: string, detail?: Record<string, any>): void {
+    const entry: InteractionLogEntry = { action, source, detail, timestamp: Date.now() };
+    this.interactionLog.push(entry);
+    if (this.interactionLog.length > SketchpadStore.MAX_INTERACTION_LOG_SIZE) {
+      this.interactionLog.splice(0, this.interactionLog.length - SketchpadStore.MAX_INTERACTION_LOG_SIZE);
     }
   }
 
@@ -21596,6 +21628,8 @@ export class SketchpadStore {
         data: { command, origin, args: rest },
       });
     }
+
+    this.logInteraction(command, origin ?? "sketchpad", { args: rest });
 
     if (command === "semio.sketchpad.createKit") {
       const kit = rest[0] as Kit;
@@ -22404,13 +22438,17 @@ export function getAppTypeFromPath(path: string): AppKind {
  **/
 export function useTheme(): HookResult<Theme> {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
   const value = useSelector(actor, (snapshot) => selectTheme(snapshot.context));
   const canSetEvent = useMemo(() => ({ type: "SET_THEME" as const, theme: Theme.LIGHT }), []);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
-    return (theme: Theme) => actor.send({ type: "SET_THEME", theme });
-  }, [actor, canSet]);
+    return (theme: Theme) => {
+      store.logInteraction("SET_THEME", "useTheme", { theme });
+      actor.send({ type: "SET_THEME", theme });
+    };
+  }, [actor, store, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -22419,13 +22457,17 @@ export function useTheme(): HookResult<Theme> {
  **/
 export function useLanguage(): HookResult<string> {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
   const value = useSelector(actor, (snapshot) => selectLanguage(snapshot.context));
   const canSetEvent = useMemo(() => ({ type: "SET_LANGUAGE" as const, language: "en" }), []);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
-    return (language: string) => actor.send({ type: "SET_LANGUAGE", language });
-  }, [actor, canSet]);
+    return (language: string) => {
+      store.logInteraction("SET_LANGUAGE", "useLanguage", { language });
+      actor.send({ type: "SET_LANGUAGE", language });
+    };
+  }, [actor, store, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -22434,13 +22476,17 @@ export function useLanguage(): HookResult<string> {
  **/
 export function useDevice(): HookResult<Device> {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
   const value = useSelector(actor, (snapshot) => selectDevice(snapshot.context));
   const canSetEvent = useMemo(() => ({ type: "SET_DEVICE" as const, device: "desktop" as Device }), []);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
-    return (device: Device) => actor.send({ type: "SET_DEVICE", device });
-  }, [actor, canSet]);
+    return (device: Device) => {
+      store.logInteraction("SET_DEVICE", "useDevice", { device });
+      actor.send({ type: "SET_DEVICE", device });
+    };
+  }, [actor, store, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -22449,13 +22495,17 @@ export function useDevice(): HookResult<Device> {
  **/
 export function useMode(): HookResult<Mode> {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
   const value = useSelector(actor, (snapshot) => selectMode(snapshot.context));
   const canSetEvent = useMemo(() => ({ type: "SET_MODE" as const, mode: Mode.USER }), []);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
-    return (mode: Mode) => actor.send({ type: "SET_MODE", mode });
-  }, [actor, canSet]);
+    return (mode: Mode) => {
+      store.logInteraction("SET_MODE", "useMode", { mode });
+      actor.send({ type: "SET_MODE", mode });
+    };
+  }, [actor, store, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -22464,13 +22514,17 @@ export function useMode(): HookResult<Mode> {
  **/
 export function useExpertise(): HookResult<Expertise> {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
   const value = useSelector(actor, (snapshot) => selectExpertise(snapshot.context));
   const canSetEvent = useMemo(() => ({ type: "SET_EXPERTISE" as const, expertise: Expertise.NORMAL }), []);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
-    return (expertise: Expertise) => actor.send({ type: "SET_EXPERTISE", expertise });
-  }, [actor, canSet]);
+    return (expertise: Expertise) => {
+      store.logInteraction("SET_EXPERTISE", "useExpertise", { expertise });
+      actor.send({ type: "SET_EXPERTISE", expertise });
+    };
+  }, [actor, store, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -22482,10 +22536,14 @@ export function useFullscreen(): HookResult<boolean> {
   const value = useSelector(actor, (snapshot) => selectIsFullscreen(snapshot.context));
   const canSetEvent = useMemo(() => ({ type: "TOGGLE_FULLSCREEN" as const }), []);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const store = useSketchpadStore();
   const setter = useMemo(() => {
     if (!canSet) return undefined;
-    return (_value: boolean) => actor.send({ type: "TOGGLE_FULLSCREEN" });
-  }, [actor, canSet]);
+    return (_value: boolean) => {
+      store.logInteraction("TOGGLE_FULLSCREEN", "useFullscreen");
+      actor.send({ type: "TOGGLE_FULLSCREEN" });
+    };
+  }, [actor, store, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -22676,22 +22734,23 @@ export function usePanelSizesXState(): PanelSizes {
  **/
 export function useSketchpadActions() {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
 
   return useMemo(
     () => ({
-      navigate: (path: string) => actor.send({ type: "NAVIGATE", path }),
-      navigateBack: () => actor.send({ type: "NAVIGATE_BACK" }),
-      navigateForward: () => actor.send({ type: "NAVIGATE_FORWARD" }),
-      setTheme: (theme: Theme) => actor.send({ type: "SET_THEME", theme }),
-      setLanguage: (language: string) => actor.send({ type: "SET_LANGUAGE", language }),
-      setExpertise: (expertise: Expertise) => actor.send({ type: "SET_EXPERTISE", expertise }),
-      setMode: (mode: Mode) => actor.send({ type: "SET_MODE", mode }),
-      setDevice: (device: Device) => actor.send({ type: "SET_DEVICE", device }),
-      toggleFullscreen: () => actor.send({ type: "TOGGLE_FULLSCREEN" }),
-      setPanelSize: (panel: keyof PanelSizes, size: number) => actor.send({ type: "SET_PANEL_SIZE", panel, size }),
-      change: (diff: SketchpadDiff) => actor.send({ type: "CHANGE", diff }),
+      navigate: (path: string) => { store.logInteraction("NAVIGATE", "sketchpadActions", { path }); actor.send({ type: "NAVIGATE", path }); },
+      navigateBack: () => { store.logInteraction("NAVIGATE_BACK", "sketchpadActions"); actor.send({ type: "NAVIGATE_BACK" }); },
+      navigateForward: () => { store.logInteraction("NAVIGATE_FORWARD", "sketchpadActions"); actor.send({ type: "NAVIGATE_FORWARD" }); },
+      setTheme: (theme: Theme) => { store.logInteraction("SET_THEME", "sketchpadActions", { theme }); actor.send({ type: "SET_THEME", theme }); },
+      setLanguage: (language: string) => { store.logInteraction("SET_LANGUAGE", "sketchpadActions", { language }); actor.send({ type: "SET_LANGUAGE", language }); },
+      setExpertise: (expertise: Expertise) => { store.logInteraction("SET_EXPERTISE", "sketchpadActions", { expertise }); actor.send({ type: "SET_EXPERTISE", expertise }); },
+      setMode: (mode: Mode) => { store.logInteraction("SET_MODE", "sketchpadActions", { mode }); actor.send({ type: "SET_MODE", mode }); },
+      setDevice: (device: Device) => { store.logInteraction("SET_DEVICE", "sketchpadActions", { device }); actor.send({ type: "SET_DEVICE", device }); },
+      toggleFullscreen: () => { store.logInteraction("TOGGLE_FULLSCREEN", "sketchpadActions"); actor.send({ type: "TOGGLE_FULLSCREEN" }); },
+      setPanelSize: (panel: keyof PanelSizes, size: number) => { store.logInteraction("SET_PANEL_SIZE", "sketchpadActions", { panel, size }); actor.send({ type: "SET_PANEL_SIZE", panel, size }); },
+      change: (diff: SketchpadDiff) => { store.logInteraction("CHANGE", "sketchpadActions"); actor.send({ type: "CHANGE", diff }); },
     }),
-    [actor],
+    [actor, store],
   );
 }
 
@@ -22700,8 +22759,9 @@ export function useSketchpadActions() {
  **/
 export function useXStateField<T, TEvent extends { type: string }>(value: T, canEvent: TEvent, createEvent: (next: T) => TEvent): Field<T> {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
-  return useMemo(() => createField(value, (next: T) => actor.send(createEvent(next) as Parameters<typeof actor.send>[0]), canSet), [value, actor, createEvent, canSet]);
+  return useMemo(() => createField(value, (next: T) => { const event = createEvent(next); store.logInteraction(event.type, "xStateField", { value: next }); actor.send(event as Parameters<typeof actor.send>[0]); }, canSet), [value, actor, store, createEvent, canSet]);
 }
 
 /**
@@ -22709,9 +22769,10 @@ export function useXStateField<T, TEvent extends { type: string }>(value: T, can
  **/
 export function useXStateFieldWithScope<T, TEvent extends { type: string }>(value: T, canEvent: TEvent, createEvent: (next: T) => TEvent, hasScope: boolean): Field<T> {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
   const canSetFromSnapshot = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
   const canSet = canSetFromSnapshot || hasScope;
-  return useMemo(() => createField(value, (next: T) => actor.send(createEvent(next) as Parameters<typeof actor.send>[0]), canSet), [value, actor, createEvent, canSet]);
+  return useMemo(() => createField(value, (next: T) => { const event = createEvent(next); store.logInteraction(event.type, "xStateFieldWithScope", { value: next }); actor.send(event as Parameters<typeof actor.send>[0]); }, canSet), [value, actor, store, createEvent, canSet]);
 }
 
 /**
@@ -22719,8 +22780,9 @@ export function useXStateFieldWithScope<T, TEvent extends { type: string }>(valu
  **/
 export function useXStateAction<TEvent extends { type: string }>(canEvent: TEvent, event: TEvent): ActionField {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
   const canExecute = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
-  return useMemo(() => createActionValue(() => actor.send(event as Parameters<typeof actor.send>[0]), canExecute), [actor, event, canExecute]);
+  return useMemo(() => createActionValue(() => { store.logInteraction(event.type, "xStateAction"); actor.send(event as Parameters<typeof actor.send>[0]); }, canExecute), [actor, store, event, canExecute]);
 }
 
 // #endregion 🛒XState Hooks
@@ -22826,35 +22888,75 @@ export function useKitImportOperations(): Array<{
  **/
 export function useHomeCommands() {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
   return useMemo(
     () => ({
       selectKit: (origin: string, kitGuid: Guid) => {
+        store.logInteraction("HOME.SELECT_KIT", origin, { kitGuid });
         actor.send({ type: "HOME.CLEAR_SELECTION" } as any);
         actor.send({ type: "HOME.SELECT_KIT", guid: kitGuid } as any);
       },
       selectKits: (origin: string, kitGuids: Guid[]) => {
+        store.logInteraction("HOME.SELECT_KITS", origin, { kitGuids });
         actor.send({ type: "HOME.CLEAR_SELECTION" } as any);
         for (const guid of kitGuids) {
           actor.send({ type: "HOME.SELECT_KIT", guid } as any);
         }
       },
-      deselectKit: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.DESELECT_KIT", guid: kitGuid } as any),
-      addKitToSelection: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.SELECT_KIT", guid: kitGuid } as any),
-      removeKitFromSelection: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.DESELECT_KIT", guid: kitGuid } as any),
-      clearSelection: () => actor.send({ type: "HOME.CLEAR_SELECTION" } as any),
-      deselectAll: (origin: string) => actor.send({ type: "HOME.CLEAR_SELECTION" } as any),
-      hoverKit: (origin: string, kitGuid: Guid) => actor.send({ type: "HOME.SET_HOVER", kits: [kitGuid] } as any),
-      clearHover: (origin: string) => actor.send({ type: "HOME.CLEAR_HOVER", origin } as any),
-      setSortColumn: (origin: string, column: string) => actor.send({ type: "HOME.SET_SORT_COLUMN", column } as any),
-      setSortDirection: (origin: string, direction: "asc" | "desc") => actor.send({ type: "HOME.SET_SORT_DIRECTION", direction } as any),
-      toggleSort: (origin: string, column: string) => {
+      deselectKit: (origin: string, kitGuid: Guid) => {
+        store.logInteraction("HOME.DESELECT_KIT", origin, { kitGuid });
+        actor.send({ type: "HOME.DESELECT_KIT", guid: kitGuid } as any);
+      },
+      addKitToSelection: (origin: string, kitGuid: Guid) => {
+        store.logInteraction("HOME.ADD_KIT_TO_SELECTION", origin, { kitGuid });
+        actor.send({ type: "HOME.SELECT_KIT", guid: kitGuid } as any);
+      },
+      removeKitFromSelection: (origin: string, kitGuid: Guid) => {
+        store.logInteraction("HOME.REMOVE_KIT_FROM_SELECTION", origin, { kitGuid });
+        actor.send({ type: "HOME.DESELECT_KIT", guid: kitGuid } as any);
+      },
+      clearSelection: () => {
+        store.logInteraction("HOME.CLEAR_SELECTION", "home");
+        actor.send({ type: "HOME.CLEAR_SELECTION" } as any);
+      },
+      deselectAll: (origin: string) => {
+        store.logInteraction("HOME.DESELECT_ALL", origin);
+        actor.send({ type: "HOME.CLEAR_SELECTION" } as any);
+      },
+      hoverKit: (origin: string, kitGuid: Guid) => {
+        store.logInteraction("HOME.HOVER_KIT", origin, { kitGuid });
+        actor.send({ type: "HOME.SET_HOVER", kits: [kitGuid] } as any);
+      },
+      clearHover: (origin: string) => {
+        store.logInteraction("HOME.CLEAR_HOVER", origin);
+        actor.send({ type: "HOME.CLEAR_HOVER", origin } as any);
+      },
+      setSortColumn: (origin: string, column: string) => {
+        store.logInteraction("HOME.SET_SORT_COLUMN", origin, { column });
         actor.send({ type: "HOME.SET_SORT_COLUMN", column } as any);
       },
-      togglePanel: (_origin: string, panel: keyof PanelVisibility) => actor.send({ type: "HOME.TOGGLE_PANEL", panel } as any),
-      addLoadingKit: (tempGuid: string, name: string) => actor.send({ type: "HOME.ADD_LOADING_KIT", tempGuid, name } as any),
-      removeLoadingKit: (tempGuid: string) => actor.send({ type: "HOME.REMOVE_LOADING_KIT", tempGuid } as any),
+      setSortDirection: (origin: string, direction: "asc" | "desc") => {
+        store.logInteraction("HOME.SET_SORT_DIRECTION", origin, { direction });
+        actor.send({ type: "HOME.SET_SORT_DIRECTION", direction } as any);
+      },
+      toggleSort: (origin: string, column: string) => {
+        store.logInteraction("HOME.TOGGLE_SORT", origin, { column });
+        actor.send({ type: "HOME.SET_SORT_COLUMN", column } as any);
+      },
+      togglePanel: (_origin: string, panel: keyof PanelVisibility) => {
+        store.logInteraction("HOME.TOGGLE_PANEL", _origin, { panel });
+        actor.send({ type: "HOME.TOGGLE_PANEL", panel } as any);
+      },
+      addLoadingKit: (tempGuid: string, name: string) => {
+        store.logInteraction("HOME.ADD_LOADING_KIT", "home", { tempGuid, name });
+        actor.send({ type: "HOME.ADD_LOADING_KIT", tempGuid, name } as any);
+      },
+      removeLoadingKit: (tempGuid: string) => {
+        store.logInteraction("HOME.REMOVE_LOADING_KIT", "home", { tempGuid });
+        actor.send({ type: "HOME.REMOVE_LOADING_KIT", tempGuid } as any);
+      },
     }),
-    [actor],
+    [actor, store],
   );
 }
 
@@ -23061,7 +23163,8 @@ export function useAppCommands() {
         return {
           togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
             if (kitGuid && itemGuid) {
-              actor.send({ type: "DESIGN.TOGGLE_PANEL", kitGuid, designGuid: itemGuid, panel: panelKey } as any);
+              const app = store.designApp(kitGuid, itemGuid);
+              app?.execute("semio.designApp.togglePanel", panelKey);
             }
           },
           execute: (origin: string, command: string, ...args: any[]) => {
@@ -23076,7 +23179,8 @@ export function useAppCommands() {
         return {
           togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
             if (kitGuid && itemGuid) {
-              actor.send({ type: "TYPE.TOGGLE_PANEL", kitGuid, typeGuid: itemGuid, panel: panelKey } as any);
+              const app = store.typeApp(kitGuid, itemGuid);
+              app?.execute("semio.typeApp.togglePanel", panelKey);
             }
           },
           execute: (origin: string, command: string, ...args: any[]) => {
@@ -23091,7 +23195,8 @@ export function useAppCommands() {
         return {
           togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
             if (kitGuid && itemGuid) {
-              actor.send({ type: "QUALITY.TOGGLE_PANEL", kitGuid, qualityGuid: itemGuid, panel: panelKey } as any);
+              const app = store.qualityApp(kitGuid, itemGuid);
+              app?.execute("semio.qualityApp.togglePanel", panelKey);
             }
           },
           execute: (origin: string, command: string, ...args: any[]) => {
@@ -27935,6 +28040,16 @@ export interface CommandLogEntry {
   timestamp: number;
 }
 
+/**
+ * 📊 Centralized log entry for any UI interaction, dispatched through stores or actor events.
+ **/
+export interface InteractionLogEntry {
+  action: string;
+  source: string;
+  detail?: Record<string, any>;
+  timestamp: number;
+}
+
 class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
   readonly commandLog: CommandLogEntry[] = [];
   private static readonly MAX_LOG_SIZE = 200;
@@ -28451,6 +28566,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     if (this.commandLog.length > KitAppStoreImpl.MAX_LOG_SIZE) {
       this.commandLog.splice(0, this.commandLog.length - KitAppStoreImpl.MAX_LOG_SIZE);
     }
+    this.parent.logInteraction(entry.command, entry.origin ?? "kitApp", { args: entry.args, diff: entry.diff, kitDiff: entry.kitDiff });
   }
 
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
@@ -30999,6 +31115,7 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
     if (this.commandLog.length > DesignStore.MAX_LOG_SIZE) {
       this.commandLog.splice(0, this.commandLog.length - DesignStore.MAX_LOG_SIZE);
     }
+    this.parentStore.logInteraction(entry.command, entry.origin ?? "designApp", { args: entry.args, diff: entry.diff, kitDiff: entry.kitDiff });
   }
 
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
@@ -41720,6 +41837,7 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
  **/
 export function useTypeAppSelection(): HookResult<TypeAppSelection> {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -41731,9 +41849,10 @@ export function useTypeAppSelection(): HookResult<TypeAppSelection> {
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (selection: TypeAppSelection) => {
-      actor.send({ type: "TYPE.SET_SELECTION", kitGuid, typeGuid, selection });
+      const app = store.typeApp(kitGuid, typeGuid);
+      app?.execute("semio.typeApp.setSelection", selection);
     };
-  }, [actor, kitGuid, typeGuid, canSet]);
+  }, [store, kitGuid, typeGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -41743,6 +41862,7 @@ export function useTypeAppSelection(): HookResult<TypeAppSelection> {
  **/
 export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
   const actor = useSketchpadActor();
+  const store = useSketchpadStore();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -41754,9 +41874,10 @@ export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (visibility: PanelVisibility) => {
-      actor.send({ type: "TYPE.SET_PANEL_VISIBILITY", kitGuid, typeGuid, panelVisibility: visibility });
+      const app = store.typeApp(kitGuid, typeGuid);
+      app?.execute("semio.typeApp.setPanelVisibility", visibility);
     };
-  }, [actor, kitGuid, typeGuid, canSet]);
+  }, [store, kitGuid, typeGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
 }
 
@@ -41901,6 +42022,7 @@ export function useTypeAppTransaction(_id?: TypeAppId): Transaction {
  **/
 export function useTypeAppCommands(id?: TypeAppId) {
   const actor = useSketchpadActor();
+  const sketchpadStore = useSketchpadStore();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? id?.kit ?? "";
@@ -41938,36 +42060,36 @@ export function useTypeAppCommands(id?: TypeAppId) {
       };
     }
 
+    const app = sketchpadStore.typeApp(kitGuid, typeGuid);
+    const exec = (cmd: string, ...args: any[]) => app?.execute(cmd, ...args);
     return {
-      startTransaction: () => actor.send({ type: "TYPE.TRANSACTION.START", kitGuid, typeGuid }),
-      finalizeTransaction: () => actor.send({ type: "TYPE.TRANSACTION.COMMIT", kitGuid, typeGuid }),
-      abortTransaction: () => actor.send({ type: "TYPE.TRANSACTION.ABORT", kitGuid, typeGuid }),
-      undo: () => actor.send({ type: "TYPE.TRANSACTION.UNDO", kitGuid, typeGuid }),
-      redo: () => actor.send({ type: "TYPE.TRANSACTION.REDO", kitGuid, typeGuid }),
-      selectAll: () => actor.send({ type: "TYPE.SELECT_ALL", kitGuid, typeGuid }),
-      deselectAll: () => actor.send({ type: "TYPE.DESELECT_ALL", kitGuid, typeGuid }),
-      togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => actor.send({ type: "TYPE.TOGGLE_PANEL", kitGuid, typeGuid, panel: panelKey }),
-      setCamera: (camera: Camera) => actor.send({ type: "TYPE.SET_CAMERA", kitGuid, typeGuid, camera }),
-      focusPort: (connectorGuid: Guid) => actor.send({ type: "TYPE.FOCUS_CONNECTOR", kitGuid, typeGuid, connectorGuid }),
-      clearFocus: () => actor.send({ type: "TYPE.CLEAR_FOCUS", kitGuid, typeGuid }),
-      setActiveTool: (tool: ToolKind) => actor.send({ type: "TYPE.SET_ACTIVE_TOOL", kitGuid, typeGuid, tool }),
-      selectConnector: (connectorGuid: Guid) => actor.send({ type: "TYPE.SELECT_CONNECTOR", kitGuid, typeGuid, connectorGuid }),
-      deselectConnector: (connectorGuid: Guid) => actor.send({ type: "TYPE.DESELECT_CONNECTOR", kitGuid, typeGuid, connectorGuid }),
-      selectModel: (modelGuid: Guid) => actor.send({ type: "TYPE.SELECT_MODEL", kitGuid, typeGuid, modelGuid }),
-      deselectModel: (modelGuid: Guid) => actor.send({ type: "TYPE.DESELECT_MODEL", kitGuid, typeGuid, modelGuid }),
-      hoverPort: (connectorGuid: Guid) => actor.send({ type: "TYPE.HOVER_CONNECTOR", kitGuid, typeGuid, connectorGuid }),
-      hoverModel: (modelGuid: Guid) => actor.send({ type: "TYPE.HOVER_MODEL", kitGuid, typeGuid, modelGuid }),
-      clearHover: () => actor.send({ type: "TYPE.CLEAR_HOVER", kitGuid, typeGuid }),
-      setSelectedModel: (modelGuid: Guid) => actor.send({ type: "TYPE.SET_SELECTED_MODEL", kitGuid, typeGuid, modelGuid }),
-      addModelTag: (tag: string) => actor.send({ type: "TYPE.ADD_MODEL_TAG", kitGuid, typeGuid, tag }),
-      removeModelTag: (tag: string) => actor.send({ type: "TYPE.REMOVE_MODEL_TAG", kitGuid, typeGuid, tag }),
-      clearModelTags: () => actor.send({ type: "TYPE.CLEAR_MODEL_TAGS", kitGuid, typeGuid }),
-      setModelTags: (tags: string[]) => actor.send({ type: "TYPE.SET_MODEL_TAGS", kitGuid, typeGuid, tags }),
-      execute: (command: string, ..._args: any[]) => {
-        console.warn(`Type app execute not yet migrated for command: ${command}`);
-      },
+      startTransaction: () => exec("semio.typeApp.startTransaction"),
+      finalizeTransaction: () => exec("semio.typeApp.finalizeTransaction"),
+      abortTransaction: () => exec("semio.typeApp.abortTransaction"),
+      undo: () => exec("semio.typeApp.undo"),
+      redo: () => exec("semio.typeApp.redo"),
+      selectAll: () => exec("semio.typeApp.selectAll"),
+      deselectAll: () => exec("semio.typeApp.deselectAll"),
+      togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => exec("semio.typeApp.togglePanel", panelKey),
+      setCamera: (camera: Camera) => exec("semio.typeApp.setCamera", camera),
+      focusPort: (connectorGuid: Guid) => exec("semio.typeApp.focusPort", connectorGuid),
+      clearFocus: () => exec("semio.typeApp.clearFocus"),
+      setActiveTool: (tool: ToolKind) => exec("semio.typeApp.setActiveTool", tool),
+      selectConnector: (connectorGuid: Guid) => exec("semio.typeApp.selectConnector", connectorGuid),
+      deselectConnector: (connectorGuid: Guid) => exec("semio.typeApp.deselectConnector", connectorGuid),
+      selectModel: (modelGuid: Guid) => exec("semio.typeApp.selectModel", modelGuid),
+      deselectModel: (modelGuid: Guid) => exec("semio.typeApp.deselectModel", modelGuid),
+      hoverPort: (connectorGuid: Guid) => exec("semio.typeApp.hoverPort", connectorGuid),
+      hoverModel: (modelGuid: Guid) => exec("semio.typeApp.hoverModel", modelGuid),
+      clearHover: () => exec("semio.typeApp.clearHover"),
+      setSelectedModel: (modelGuid: Guid) => exec("semio.typeApp.selectModel", modelGuid),
+      addModelTag: (tag: string) => exec("semio.typeApp.addModelTag", tag),
+      removeModelTag: (tag: string) => exec("semio.typeApp.removeModelTag", tag),
+      clearModelTags: () => exec("semio.typeApp.clearModelTags"),
+      setModelTags: (tags: string[]) => exec("semio.typeApp.setModelTags", tags),
+      execute: (command: string, ...args: any[]) => exec(command, ...args),
     };
-  }, [actor, kitGuid, typeGuid]);
+  }, [sketchpadStore, kitGuid, typeGuid]);
 }
 
 /**
@@ -42482,6 +42604,20 @@ export const typeAppCommands = {
     return {
       diff: {
         selectedModelTags: tags,
+      },
+    };
+  },
+  "semio.typeApp.setSelection": (_context: TypeAppCommandContext, selection: TypeAppSelection): TypeAppCommandResult => {
+    return {
+      diff: {
+        selection,
+      },
+    };
+  },
+  "semio.typeApp.setPanelVisibility": (_context: TypeAppCommandContext, panelVisibility: PanelVisibility): TypeAppCommandResult => {
+    return {
+      diff: {
+        panelVisibility,
       },
     };
   },
@@ -45930,6 +46066,7 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
     if (this.commandLog.length > QualityAppStore.MAX_LOG_SIZE) {
       this.commandLog.splice(0, this.commandLog.length - QualityAppStore.MAX_LOG_SIZE);
     }
+    this.parentStore.logInteraction(entry.command, entry.origin ?? "qualityApp", { args: entry.args, diff: entry.diff, kitDiff: entry.kitDiff });
   }
 
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
@@ -60493,6 +60630,46 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       } finally {
         if (prev !== null) {
           localStorage.setItem(storageKey, prev);
+        } else {
+          localStorage.removeItem(storageKey);
+        }
+      }
+    });
+
+    test("temporary kits stay out of browser kit snapshot persistence and restore filtering", async () => {
+      if (typeof localStorage === "undefined") {
+        return;
+      }
+      const scopeId = `temporary-kit-snapshots-${guid()}`;
+      const storageKey = `semio.sketchpad.kits.${scopeId}`;
+      const previous = localStorage.getItem(storageKey);
+      localStorage.removeItem(storageKey);
+      try {
+        const temporaryGuid = guid();
+        const fileGuid = guid();
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify([
+            { kit: { guid: temporaryGuid, name: "Legacy Temporary Kit", types: [], designs: [] }, kind: "temporary" },
+            { kit: { guid: fileGuid, name: "Durable File Kit", types: [], designs: [] }, kind: "file" },
+          ] satisfies InitialStateKit[]),
+        );
+
+        const restoredKits = readSketchpadKitsFromLocalStorage(scopeId);
+        expect(restoredKits?.map((entry) => entry.kit.guid)).toEqual([fileGuid]);
+
+        localStorage.removeItem(storageKey);
+        const store = new SketchpadStore(scopeId, undefined, undefined, undefined, undefined, async (kit) => new InMemoryKitStore(kit));
+        await store.createKit({ guid: temporaryGuid, name: "Session Temporary Kit", types: [], designs: [] }, "temporary");
+        store.kit(temporaryGuid).apply({ description: "Edited session-only kit" });
+        await new Promise((resolve) => setTimeout(resolve, 700));
+
+        const raw = localStorage.getItem(storageKey);
+        expect(raw).toBeTruthy();
+        expect(JSON.parse(raw!)).toEqual([]);
+      } finally {
+        if (previous !== null) {
+          localStorage.setItem(storageKey, previous);
         } else {
           localStorage.removeItem(storageKey);
         }

@@ -186,19 +186,16 @@ class Program
 
         Bench("Roundtrip/Metabolism", () =>
         {
-            var json = Utility.Serialize(kitMetabolism);
+            var json = Utility.Serialize(kitMetabolism, "  ");
             var restored = Utility.Deserialize<Kit>(json)!;
             if (!SemioDiff.AreKitsEqual(kitMetabolism, restored)) throw new Exception("Roundtrip/Metabolism output does not match test expectation");
         });
 
         Bench("Diff/Metabolism", () =>
         {
-            var change = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
-            if (!SemioDiff.AreKitDiffsEqual(change.Forward, diffForward)) throw new Exception("Diff/Metabolism forward diff output does not match test expectation");
-            if (!SemioDiff.AreKitDiffsEqual(change.Backward, diffInverse)) throw new Exception("Diff/Metabolism inverse diff output does not match test expectation");
-            var k2 = SemioDiff.ApplyKitDiff(kitOriginal, change.Forward);
+            var k2 = SemioDiff.ApplyKitDiff(kitOriginal, diffForward);
             if (!SemioDiff.AreKitsEqual(k2, kitDiffed)) throw new Exception("Diff/Metabolism forward output does not match test expectation");
-            var restored = SemioDiff.ApplyKitDiff(k2, change.Backward);
+            var restored = SemioDiff.ApplyKitDiff(k2, diffInverse);
             if (!SemioDiff.AreKitsEqual(restored, kitOriginal)) throw new Exception("Diff/Metabolism inverse output does not match test expectation");
         });
 

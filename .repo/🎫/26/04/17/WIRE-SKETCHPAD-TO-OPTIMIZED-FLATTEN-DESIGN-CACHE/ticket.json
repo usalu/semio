@@ -1,0 +1,10 @@
+{
+  "title": "Wire Sketchpad To Optimized Flatten Design Cache",
+  "status": "open",
+  "description": "Refactor semio sketchpad so the flat piece plane/center recomputation uses the new merkle-hash-backed flattenDesignCached API. Drag, move, delete, paste, undo/redo, and every other kit mutation currently trigger a full flattenDesign in usePiecesMetadataMap → piecesMetadata. With the cache, only pieces whose merkle hash changed (i.e. actual downstream children of a mutated piece/connection) should rerun matrix math and attribute recomputation; everything else reuses the cached plane/center. Also make nativeDragPieces/nativeMovePieces/nativeFlatDesign and mcpFlattenDesignForSemioSurface use the cache, so repeated pre/post-flatten calls and MCP viewer refetches reuse unchanged piece outputs. Step 1 is to make the TS flattenDesignCached truly incremental (today it still calls the full flattenDesign underneath; only output object references get reused). Step 2 is to thread the cache through piecesMetadata → usePiecesMetadataMap and the native adapter so sketchpad benefits.",
+  "summary": "Reopened after an accidental close call from the Stop Temporary Kit Persistence ticket. No code changes for this ticket were made in that turn.",
+  "goal": "🎯aioptimizedrepo🎯runningsketchpad",
+  "sessions": [
+    "⚪184a7d025e714eca90c0c344cfe52d27"
+  ]
+}
