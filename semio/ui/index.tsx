@@ -17,6 +17,7 @@ import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
 import { Canvas as ThreeCanvas, useFrame, useThree } from "@react-three/fiber";
 import {
   applyDesignDiff,
+  Design as DesignEntity,
   designWithDiff,
   DiffStatus,
   flattenDesignCached,
@@ -29,12 +30,14 @@ import {
   type Connection,
   type Connector,
   type Coord,
-  type Design,
   type DesignDiff,
+  type DesignPlain,
+  type Design,
   type Kit,
   type MoveVector,
   type Piece,
   type Plane,
+  type Port as SemioPort,
   type File as SemioFile,
   type Type as SemioKind,
   type Vector as SemioVector,
@@ -228,7 +231,7 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
     image: t.image,
     parent: t.parent ? { guid: t.parent.guid } : undefined,
   }));
-  const ports: KitPortArtifact[] = (kit.ports ?? []).map((p) => ({
+  const ports: KitPortArtifact[] = (kit.ports ?? []).map((p: SemioPort) => ({
     guid: p.guid,
     name: p.name,
     description: p.description,
@@ -641,7 +644,7 @@ const kitDesignDataToShellDesign = (d: KitDesignData): Design =>
     image: d.image,
     pieces: [],
     connections: [],
-  }) as Design;
+  }) as unknown as Design;
 
 const kitKindDataToShellKind = (k: KitKindData): SemioKind =>
   ({
@@ -654,7 +657,7 @@ const kitKindDataToShellKind = (k: KitKindData): SemioKind =>
     image: k.image,
     models: [],
     connectors: [],
-  }) as SemioKind;
+  }) as unknown as SemioKind;
 
 const resolveKitArtifactDesignForPreview = (design: Design, kit: Kit | undefined): Design => {
   if (!kit) return design;
@@ -1323,9 +1326,15 @@ const centersFromLayoutDiff = (layoutDiff?: DesignDiff): Map<string, { u: number
   return m;
 };
 
+const cloneDesignApplyDiff = (d: Design, diff: DesignDiff): Design => {
+  const copy = new DesignEntity(JSON.parse(JSON.stringify(d.toPlain()), (_k, v) => (v === null ? undefined : v)) as DesignPlain);
+  applyDesignDiff(copy, diff);
+  return copy;
+};
+
 const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: DesignDiff, layoutDiff?: DesignDiff): DiagramSnapshot => {
   const merged = designDiff ? designWithDiff(design, designDiff) : design;
-  const layoutGeometry = designDiff ? applyDesignDiff(design, designDiff) : design;
+  const layoutGeometry = designDiff ? cloneDesignApplyDiff(design, designDiff) : design;
   const layoutCenters = centersFromLayoutDiff(layoutDiff);
   const geometryCentersByGuid = new Map((layoutGeometry.pieces ?? []).filter((p): p is Piece & { guid: string } => typeof p.guid === "string" && p.guid.length > 0).map((p) => [p.guid, p.center] as const));
 
@@ -2000,7 +2009,7 @@ export const buildDesignClipboardData = (design: Design, designDiff: DesignDiff 
         ...design,
         pieces: pieces.length > 0 ? pieces : undefined,
         connections: connections.length > 0 ? connections : undefined,
-      },
+      } as unknown as Design,
     };
   }
 
@@ -2542,7 +2551,9 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
     if (!piece.guid) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
     const existing = pieceMap.get(piece.guid);
-    const resolvedPiece = piece.plane && piece.center ? piece : existing?.piece?.plane && existing?.piece?.center ? { ...piece, plane: existing.piece.plane, center: existing.piece.center } : piece;
+    const resolvedPiece = (
+      piece.plane && piece.center ? piece : existing?.piece?.plane && existing?.piece?.center ? { ...piece, plane: existing.piece.plane, center: existing.piece.center } : piece
+    ) as Piece;
     if (!resolvedPiece.plane || !resolvedPiece.center) return;
     pieceMap.set(piece.guid, { piece: resolvedPiece, status: existing ? (status !== "default" ? status : existing.status) : status });
   });
@@ -3211,7 +3222,7 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
       position: { x: position.x, y: position.y, z: position.z },
       forward: { x: forward.x, y: forward.y, z: forward.z },
       up: { x: up.x, y: up.y, z: up.z },
-    });
+    } as unknown as Camera);
     invalidate();
   }, [invalidate, onCameraChange, onOrbitEnd, threeCamera]);
 
@@ -4410,7 +4421,12 @@ export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
   const kit = p.kit;
   const design = p.design as Design | undefined;
   const isDiff = mode === "show-diff" || mode === "show-diagram-diff";
-  const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface, isDiff ? p.designDiff : undefined) : isDiff && design && p.designDiff ? applyDesignDiff(design, p.designDiff) : undefined;
+  const designFlat =
+    design && kit
+      ? mcpFlattenDesignForSemioSurface(design, kit as Kit, surface, isDiff ? p.designDiff : undefined)
+      : isDiff && design && p.designDiff
+        ? cloneDesignApplyDiff(design, p.designDiff)
+        : undefined;
   const designGuid = design && typeof design === "object" && "guid" in design && typeof (design as { guid?: unknown }).guid === "string" ? (design as { guid: string }).guid : undefined;
   const hasDiagramPoints = (p.points?.length ?? 0) > 0;
   const fallbackDesign: Design = {
@@ -4456,9 +4472,13 @@ const mcpFlattenMerkleCacheByDesign: Map<string, { [pieceGuid: string]: FlatMerk
  * Exported for unit tests to cover the "MCP kit missing design entry" scenario.
  */
 export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undefined, surface: "design" | "scene" | "diagram", diff?: DesignDiff): Design {
-  if (!kit) return diff ? applyDesignDiff(design, diff) : design;
+  if (!kit) {
+    if (diff) applyDesignDiff(design, diff);
+    return design;
+  }
 
-  const merged = diff ? applyDesignDiff(design, diff) : design;
+  const merged = design;
+  if (diff) applyDesignDiff(merged, diff);
   if (!merged?.guid) return merged;
 
   try {
@@ -4472,9 +4492,10 @@ export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undef
     const { result, cache } = flattenDesignCached(kitForFlatten, merged.guid, prev);
     mcpFlattenMerkleCacheByDesign.set(merged.guid, cache);
     if (!result.ok) return merged;
-    const piecesDiff = result.diff.forward?.pieces;
+    const piecesDiff = result.diff?.forward?.pieces;
     if (!piecesDiff) return merged;
-    return applyDesignDiff(merged, { pieces: piecesDiff });
+    applyDesignDiff(merged, { pieces: piecesDiff });
+    return merged;
   } catch {
     return merged;
   }
@@ -5876,12 +5897,12 @@ if ((import.meta as any).vitest) {
     });
   });
 
-  const testPlane: Plane = {
+  const testPlane = {
     origin: { x: 0, y: 0, z: 0 },
     xAxis: { x: 1, y: 0, z: 0 },
     yAxis: { x: 0, y: 1, z: 0 },
-  };
-  const testCenter: Coord = { u: 0, v: 0 };
+  } as unknown as Plane;
+  const testCenter = { u: 0, v: 0 } as unknown as Coord;
 
   describe("buildKitDataFromKit", () => {
     it("normalizes connector port references into string labels instead of raw guid objects", () => {
@@ -6836,7 +6857,7 @@ if ((import.meta as any).vitest) {
   });
 
   describe("buildDesignClipboardData", () => {
-    const baseDesign: Design = {
+    const baseDesign = {
       guid: "design-1",
       name: "TestDesign",
       createdAt: "2026-01-01",
@@ -6850,7 +6871,7 @@ if ((import.meta as any).vitest) {
         { guid: "c1", connected: { piece: { guid: "p1" } }, connecting: { piece: { guid: "p2" } } } as unknown as Connection,
         { guid: "c2", connected: { piece: { guid: "p2" } }, connecting: { piece: { guid: "p3" } } } as unknown as Connection,
       ],
-    };
+    } as unknown as Design;
 
     const baseDiff: DesignDiff = {
       pieces: {
@@ -8081,11 +8102,11 @@ if (algorithmVitest) {
       const pan = { x: 24, y: -18 };
       const zoom = 2.5;
       const runtimeContext: AlgorithmRuntimeContextValue = {
-        kit: { guid: "kit", name: "Kit", version: "1", designs: [], types: [] } as Kit,
-        design: { guid: "design", name: "", pieces: [], connections: [] } as Design,
+        kit: { guid: "kit", name: "Kit", version: "1", designs: [], types: [] } as unknown as Kit,
+        design: { guid: "design", name: "", pieces: [], connections: [] } as unknown as Design,
         selectedPieceGuids: [],
         selectedConnectionGuids: [],
-        outputDesign: { guid: "output", name: "", pieces: [], connections: [] } as Design,
+        outputDesign: { guid: "output", name: "", pieces: [], connections: [] } as unknown as Design,
         diagramViewport: { pan, zoom, sourceKind: WindowKind.DESIGN_INPUT },
         onDiagramViewportPanChange: () => undefined,
         onDiagramViewportZoomChange: () => undefined,
@@ -8202,12 +8223,12 @@ if (algorithmVitest) {
     });
 
     it("filters unchecked diff entries before wiring the diff output window", () => {
-      const design: Design = {
+      const design = {
         guid: "design-1",
         name: "Design",
         pieces: [{ guid: "piece-a", name: "Piece A", type: { guid: "type-a" }, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "piece-b", name: "Piece B", type: { guid: "type-a" }, center: { u: 1, v: 0 } } as unknown as Piece],
         connections: [{ guid: "connection-a", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection],
-      };
+      } as unknown as Design;
       const diff: DesignDiff = {
         pieces: {
           added: [{ guid: "piece-c", name: "Piece C", type: { guid: "type-a" }, center: { u: 2, v: 0 } } as unknown as Piece],

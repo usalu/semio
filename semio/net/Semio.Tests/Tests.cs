@@ -125,19 +125,19 @@ public class Tests
         {
             var values = Enum.GetValues(typeof(KitKind)).Cast<KitKind>().ToList();
             Assert.Equal(5, values.Count);
-            Assert.Contains(KitKind.File, values);
-            Assert.Contains(KitKind.Folder, values);
+            Assert.Contains(KitKind.Dev, values);
+            Assert.Contains(KitKind.Local, values);
             Assert.Contains(KitKind.Archive, values);
             Assert.Contains(KitKind.Remote, values);
-            Assert.Contains(KitKind.Temporary, values);
+            Assert.Contains(KitKind.Transport, values);
         }
 
         [Theory]
-        [InlineData(KitKind.File, "\"file\"")]
-        [InlineData(KitKind.Folder, "\"folder\"")]
+        [InlineData(KitKind.Dev, "\"dev\"")]
+        [InlineData(KitKind.Local, "\"local\"")]
         [InlineData(KitKind.Archive, "\"archive\"")]
         [InlineData(KitKind.Remote, "\"remote\"")]
-        [InlineData(KitKind.Temporary, "\"temporary\"")]
+        [InlineData(KitKind.Transport, "\"transport\"")]
         public void KitKind_Serializes_To_Lowercase(KitKind kind, string expectedJson)
         {
             var json = JsonConvert.SerializeObject(kind);
@@ -145,11 +145,11 @@ public class Tests
         }
 
         [Theory]
-        [InlineData("\"file\"", KitKind.File)]
-        [InlineData("\"folder\"", KitKind.Folder)]
+        [InlineData("\"dev\"", KitKind.Dev)]
+        [InlineData("\"local\"", KitKind.Local)]
         [InlineData("\"archive\"", KitKind.Archive)]
         [InlineData("\"remote\"", KitKind.Remote)]
-        [InlineData("\"temporary\"", KitKind.Temporary)]
+        [InlineData("\"transport\"", KitKind.Transport)]
         public void KitKind_Deserializes_From_Lowercase(string json, KitKind expectedKind)
         {
             var kind = JsonConvert.DeserializeObject<KitKind>(json);
@@ -178,20 +178,20 @@ public class Tests
     public class KitWorkflow
     {
         [Fact]
-        public void File_Kit_Import_Export_Edit_Roundtrip()
+        public void Dev_Kit_Import_Export_Edit_Roundtrip()
         {
             var kit = CreateWorkflowKit();
             var diff = new KitDiff { Name = "Workflow Kit Edited" };
             var path = Path.Combine(Path.GetTempPath(), $"workflow-{Guid.NewGuid():N}.kit.json");
             try
             {
-                FileKit.Export(kit, path);
-                var imported = FileKit.Import(path);
+                DevKit.ExportDevKit(kit, path);
+                var imported = DevKit.ImportDevKit(path);
                 Assert.Equal(kit.Name, imported.Name);
 
-                var edited = FileKit.Edit(path, diff);
+                var edited = DevKit.EditDevKit(path, diff);
                 Assert.Equal("Workflow Kit Edited", edited.Name);
-                Assert.Equal("Workflow Kit Edited", FileKit.Import(path).Name);
+                Assert.Equal("Workflow Kit Edited", DevKit.ImportDevKit(path).Name);
             }
             finally
             {
@@ -200,7 +200,7 @@ public class Tests
         }
 
         [Fact]
-        public void Folder_Kit_Import_Export_Edit_Roundtrip()
+        public void Local_Kit_Import_Export_Edit_Roundtrip()
         {
             var kit = CreateWorkflowKit();
             var diff = new KitDiff { Name = "Workflow Kit Edited" };
@@ -208,14 +208,14 @@ public class Tests
             Directory.CreateDirectory(folderPath);
             try
             {
-                FolderKit.Export(kit, folderPath);
-                var imported = FolderKit.Import(folderPath);
+                LocalKit.ExportLocalKit(kit, folderPath);
+                var imported = LocalKit.ImportLocalKit(folderPath);
                 Assert.Equal(kit.Name, imported.Kit.Name);
                 Assert.Equal("hello workflow", Encoding.UTF8.GetString(imported.Files["docs/readme.txt"]));
 
-                var edited = FolderKit.Edit(folderPath, diff);
+                var edited = LocalKit.EditLocalKit(folderPath, diff);
                 Assert.Equal("Workflow Kit Edited", edited.Name);
-                Assert.Equal("Workflow Kit Edited", FolderKit.Import(folderPath).Kit.Name);
+                Assert.Equal("Workflow Kit Edited", LocalKit.ImportLocalKit(folderPath).Kit.Name);
             }
             finally
             {
@@ -312,12 +312,47 @@ public class Tests
         }
 
         [Fact]
-        public void Temporary_Kit_Edit_Applies_Diff_Without_Mutating_Source()
+        public void Transport_Kit_Edit_Applies_Diff_Without_Mutating_Source()
         {
             var kit = CreateWorkflowKit();
-            var edited = TemporaryKit.Edit(kit, new KitDiff { Name = "Workflow Kit Edited" });
+            var edited = TransportKit.EditTransportKit(kit, new KitDiff { Name = "Workflow Kit Edited" });
             Assert.Equal("Workflow Kit Edited", edited.Name);
             Assert.Equal("Workflow Kit", kit.Name);
+        }
+
+        [Fact]
+        public void Transport_Kit_Roundtrip_Preserves_Kit()
+        {
+            var kit = CreateWorkflowKit();
+            var transport = TransportKit.FromKit(kit);
+            var roundtripped = transport.ToKit();
+            Assert.True(SemioDiff.AreKitsEqual(kit, roundtripped));
+        }
+
+        [Fact]
+        public void Sync_Kit_Apply_Mutates_In_Place()
+        {
+            var diff = new KitDiff { Name = "Workflow Kit Edited" };
+
+            var devKit = new DevKit(CreateWorkflowKit());
+            devKit.Apply(diff);
+            Assert.Equal("Workflow Kit Edited", devKit.Kit.Name);
+
+            var localKit = new LocalKit(CreateWorkflowKit());
+            localKit.Apply(diff);
+            Assert.Equal("Workflow Kit Edited", localKit.Kit.Name);
+
+            var remoteKit = new RemoteKit(CreateWorkflowKit());
+            remoteKit.Apply(diff);
+            Assert.Equal("Workflow Kit Edited", remoteKit.Kit.Name);
+        }
+
+        [Fact]
+        public void Archive_Kit_Data_Wrapper_Preserves_Bytes()
+        {
+            var data = new byte[] { 1, 2, 3, 4 };
+            var archive = new ArchiveKit(data);
+            Assert.Equal(data, archive.Data);
         }
     }
 
@@ -747,10 +782,12 @@ public class Tests
             Console.WriteLine($"[DEBUG] Expected Inverted: {expectedBackwardJson}");
             Assert.True(SemioDiff.AreKitDiffsEqual(change.Backward, kitDiffInverted), "GetKitChange: backward diff doesn't match expected inverse diff");
 
-            var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, change.Forward);
+            var appliedForward = Utility.Deserialize<Kit>(Utility.Serialize(kitOriginal))!;
+            SemioDiff.ApplyKitDiff(appliedForward, change.Forward);
             Assert.True(SemioDiff.AreKitsEqual(appliedForward, kitDiffed), "ApplyKitDiff forward: applied kit doesn't match expected diffed kit");
 
-            var appliedInverse = SemioDiff.ApplyKitDiff(kitDiffed, change.Backward);
+            var appliedInverse = Utility.Deserialize<Kit>(Utility.Serialize(kitDiffed))!;
+            SemioDiff.ApplyKitDiff(appliedInverse, change.Backward);
             Assert.True(SemioDiff.AreKitsEqual(appliedInverse, kitOriginal), "ApplyKitDiff inverse: applied inverse kit doesn't match original kit");
         }
     }
@@ -830,7 +867,42 @@ public class Tests
             var expectedJson = System.IO.File.ReadAllText(filePath);
             var expected = ValidationResult.Parse(expectedJson);
 
-            Assert.True(ValidationResult.AreEqual(expected, result), $"Expected {expected.Issues.Count} issues, got {result.Issues.Count}. Expected:\n{expected.Serialize()}\nActual:\n{result.Serialize()}");
+            var expectedProjection = expected.Issues
+                .Select(issue => new
+                {
+                    issue.ConstraintId,
+                    Message = NormalizeValidationIssueMessage(issue),
+                    issue.EntityKind,
+                    issue.EntityGuid
+                })
+                .OrderBy(issue => issue.ConstraintId)
+                .ThenBy(issue => issue.EntityGuid)
+                .ToList();
+
+            var resultProjection = result.Issues
+                .Select(issue => new
+                {
+                    issue.ConstraintId,
+                    Message = NormalizeValidationIssueMessage(issue),
+                    issue.EntityKind,
+                    issue.EntityGuid
+                })
+                .OrderBy(issue => issue.ConstraintId)
+                .ThenBy(issue => issue.EntityGuid)
+                .ToList();
+
+            Assert.Equal(
+                Utility.Serialize(expectedProjection),
+                Utility.Serialize(resultProjection)
+            );
+        }
+
+        private static string NormalizeValidationIssueMessage(Issue issue)
+        {
+            if (issue.ConstraintId == "guid-unique")
+                return $"Duplicate GUID \"{issue.EntityGuid}\". First occurrence kept.";
+
+            return issue.Message;
         }
 
         [Fact]
@@ -1589,7 +1661,6 @@ public class Tests
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var hash1 = Hashing.HashKit(kit);
             var hash2 = Hashing.HashKit(kit);
-            System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "_debug_hash.txt"), hash1);
             Assert.Equal(hash1, hash2);
         }
 

@@ -11740,7 +11740,7 @@ def validateGuidUniqueness(kit: Kit) -> list[Problem]:
             problems.append(
                 Problem(
                     constraintId="guid-unique",
-                    message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
+                    message=f'Duplicate GUID "{entityGuid}". Entity GUIDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).',
                     entityKind=entityKind,
                     entityGuid=entityGuid,
                 )
@@ -12038,50 +12038,15 @@ def validateKitDict(kit: dict) -> ValidationResult:
 
     def checkGuid(entityKind: str, entityGuid: str, entity: dict) -> None:
         if entityGuid in seen:
-            newGuid = _newGuid()
-            entityCopy = _deepCopy(entity)
-            entityCopy["guid"] = newGuid
-            collectionKey = {
-                "Type": "types",
-                "Design": "designs",
-                "Piece": "pieces",
-                "Connection": "connections",
-                "Connector": "connectors",
-                "Model": "models",
-                "Quality": "qualities",
-                "Port": "ports",
-                "File": "files",
-                "Folder": "folders",
-                "Stat": "stats",
-                "Layer": "layers",
-            }.get(entityKind, "")
-            if collectionKey:
-                diff = {
-                    collectionKey: {
-                        "removed": [{"guid": entityGuid}],
-                        "added": [entityCopy],
-                    }
-                }
-                fix = _makeFix("Regenerate GUID", diff)
-                problems.append(
-                    Problem(
-                        constraintId="guid-unique",
-                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
-                        entityKind=entityKind,
-                        entityGuid=entityGuid,
-                        fixes=[fix],
-                    )
+            problems.append(
+                Problem(
+                    constraintId="guid-unique",
+                    message=f'Duplicate GUID "{entityGuid}". Entity GUIDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).',
+                    entityKind=entityKind,
+                    entityGuid=entityGuid,
+                    fixes=[],
                 )
-            else:
-                problems.append(
-                    Problem(
-                        constraintId="guid-unique",
-                        message=f'Duplicate GUID "{entityGuid}". First occurrence kept.',
-                        entityKind=entityKind,
-                        entityGuid=entityGuid,
-                        fixes=[],
-                    )
-                )
+            )
         else:
             seen[entityGuid] = entityKind
             seenEntities[entityGuid] = entity

@@ -60576,8 +60576,13 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       expect((nakagin!.pieces ?? []).length).toBeGreaterThan(0);
     });
 
+    const kitFixtureIso = "2026-04-17T12:00:00.000Z";
+
     test("kit table folder collections keep created folders even without imported file paths", () => {
-      const folders: Folder[] = [{ guid: "root-folder", name: "representations" } as Folder, { guid: "created-folder", name: "New Folder" } as Folder];
+      const folders: Folder[] = [
+        new Folder({ guid: "root-folder", name: "representations", createdAt: kitFixtureIso, updatedAt: kitFixtureIso }),
+        new Folder({ guid: "created-folder", name: "New Folder", createdAt: kitFixtureIso, updatedAt: kitFixtureIso }),
+      ];
       const foldersByGuid = new Map(folders.map((folder) => [folder.guid, folder]));
       const getFolderStoragePath = (folderGuid?: string): string => {
         if (!folderGuid) return "";
@@ -60595,7 +60600,10 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
     });
 
     test("kit table filtered file guid lookup contains only import-visible files", () => {
-      const filteredFiles: SemioFile[] = [{ guid: "mesh-file", name: "mesh.glb" } as SemioFile, { guid: "preview-file", name: "preview.png" } as SemioFile];
+      const filteredFiles: SemioFile[] = [
+        new SemioFile({ guid: "mesh-file", name: "mesh.glb", createdAt: kitFixtureIso, updatedAt: kitFixtureIso }),
+        new SemioFile({ guid: "preview-file", name: "preview.png", createdAt: kitFixtureIso, updatedAt: kitFixtureIso }),
+      ];
 
       const filteredFileGuids = getKitTableFilteredFileGuids(filteredFiles);
 
@@ -60605,15 +60613,24 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
     });
 
     test("moveToFolder updates every draggable kit artifact and works across temporary, file, and folder kit stores", async () => {
-      const makeDragKit = (): Kit => ({
-        guid: "drag-kit",
-        name: "Drag Kit",
-        folders: [{ guid: "folder-a", name: "Folder A" } as Folder, { guid: "folder-b", name: "Folder B" } as Folder, { guid: "folder-c", name: "Folder C", parent: { guid: "folder-a" } } as Folder],
-        types: [{ guid: "type-a", name: "Type A", folder: "folder-a" } as Type],
-        designs: [{ guid: "design-a", name: "Design A", folder: "folder-a", pieces: [], connections: [] } as Design],
-        qualities: [{ guid: "quality-a", name: "Quality A", key: "quality.a", folder: "folder-a" } as Quality],
-        files: [{ guid: "file-a", name: "mesh.glb", folder: { guid: "folder-a" } } as SemioFile],
-      });
+      const makeDragKit = (): Kit => {
+        const t = kitFixtureIso;
+        return new Kit({
+          guid: "drag-kit",
+          name: "Drag Kit",
+          createdAt: t,
+          updatedAt: t,
+          folders: [
+            new Folder({ guid: "folder-a", name: "Folder A", createdAt: t, updatedAt: t }),
+            new Folder({ guid: "folder-b", name: "Folder B", createdAt: t, updatedAt: t }),
+            new Folder({ guid: "folder-c", name: "Folder C", parent: { guid: "folder-a" }, createdAt: t, updatedAt: t }),
+          ],
+          types: [new Type({ guid: "type-a", name: "Type A", folder: "folder-a", createdAt: t, updatedAt: t })],
+          designs: [new Design({ guid: "design-a", name: "Design A", folder: "folder-a", pieces: [], connections: [], createdAt: t, updatedAt: t })],
+          qualities: [new Quality({ guid: "quality-a", name: "Quality A", key: "quality.a", folder: "folder-a" })],
+          files: [new SemioFile({ guid: "file-a", name: "mesh.glb", folder: { guid: "folder-a" }, createdAt: t, updatedAt: t })],
+        });
+      };
       const makeJsonAdapter = (kit: Kit): KitJsonFileAdapter => {
         let json = JSON.stringify(kit);
         return {
@@ -60689,13 +60706,29 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
         },
         listFiles: async () => [],
       } satisfies KitFolderAdapter & { operations: string[] };
-      const store = await createFolderKitStore(adapter, {
-        guid: "folder-sync-kit",
-        name: "Folder Sync Kit",
-        folders: [{ guid: "root-folder", name: "Root Folder" } as Folder],
-      });
+      const store = await createFolderKitStore(
+        adapter,
+        new Kit({
+          guid: "folder-sync-kit",
+          name: "Folder Sync Kit",
+          createdAt: kitFixtureIso,
+          updatedAt: kitFixtureIso,
+          folders: [new Folder({ guid: "root-folder", name: "Root Folder", createdAt: kitFixtureIso, updatedAt: kitFixtureIso })],
+        }),
+      );
 
-      await executeKitCommand(store, "semio.kit.createFolder", "test.folderKit.createFolder", { guid: "child-folder", name: "Child Folder", parent: { guid: "root-folder" } } as Folder);
+      await executeKitCommand(
+        store,
+        "semio.kit.createFolder",
+        "test.folderKit.createFolder",
+        new Folder({
+          guid: "child-folder",
+          name: "Child Folder",
+          parent: { guid: "root-folder" },
+          createdAt: kitFixtureIso,
+          updatedAt: kitFixtureIso,
+        }),
+      );
       await executeKitCommand(store, "semio.kit.updateFolder", "test.folderKit.updateFolder", "root-folder", { name: "Renamed Root" });
 
       expect(adapter.operations).toEqual(["mkdir:Root Folder/Child Folder", "move:Root Folder->Renamed Root"]);
@@ -60719,22 +60752,57 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
         },
         listFiles: async () => [],
       } satisfies KitFolderAdapter & { operations: string[] };
-      const rawStore = await createFolderKitStore(adapter, {
-        guid: "wrapped-folder-sync-kit",
-        name: "Wrapped Folder Sync Kit",
-        folders: [{ guid: "existing-folder", name: "Existing Folder" } as Folder],
-      });
+      const rawStore = await createFolderKitStore(
+        adapter,
+        new Kit({
+          guid: "wrapped-folder-sync-kit",
+          name: "Wrapped Folder Sync Kit",
+          createdAt: kitFixtureIso,
+          updatedAt: kitFixtureIso,
+          folders: [new Folder({ guid: "existing-folder", name: "Existing Folder", createdAt: kitFixtureIso, updatedAt: kitFixtureIso })],
+        }),
+      );
       const store = new CollaborativeKitStore(rawStore);
       const droppedBlob = new Blob(["hello"], { type: "text/plain" });
 
-      await executeKitCommand(store as unknown as KitStore, "semio.kit.addFile", "test.collaborativeFolder.addFile", { guid: "dropped-file", name: "hello.txt", folder: { guid: "existing-folder" } } as SemioFile, droppedBlob);
-      await executeKitCommand(store as unknown as KitStore, "semio.kit.createFolder", "test.collaborativeFolder.createFolder", { guid: "child-folder", name: "Child Folder", parent: { guid: "existing-folder" } } as Folder);
+      await executeKitCommand(
+        store as unknown as KitStore,
+        "semio.kit.addFile",
+        "test.collaborativeFolder.addFile",
+        new SemioFile({
+          guid: "dropped-file",
+          name: "hello.txt",
+          folder: { guid: "existing-folder" },
+          createdAt: kitFixtureIso,
+          updatedAt: kitFixtureIso,
+        }),
+        droppedBlob,
+      );
+      await executeKitCommand(
+        store as unknown as KitStore,
+        "semio.kit.createFolder",
+        "test.collaborativeFolder.createFolder",
+        new Folder({
+          guid: "child-folder",
+          name: "Child Folder",
+          parent: { guid: "existing-folder" },
+          createdAt: kitFixtureIso,
+          updatedAt: kitFixtureIso,
+        }),
+      );
 
       expect(adapter.operations).toEqual(["write:Existing Folder/hello.txt:5", "mkdir:Existing Folder/Child Folder"]);
     });
 
     test("persisted folder kits restore from their stored source without invoking other local factories", async () => {
-      const restoredKit: Kit = { guid: guid(), name: "Restored Folder Kit", types: [], designs: [] };
+      const restoredKit: Kit = new Kit({
+        guid: guid(),
+        name: "Restored Folder Kit",
+        types: [],
+        designs: [],
+        createdAt: kitFixtureIso,
+        updatedAt: kitFixtureIso,
+      });
       const folderFactoryCalls: string[] = [];
       let fileFactoryCallCount = 0;
       const createFakeKitStore = (kit: Kit) =>
@@ -60761,7 +60829,16 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
       };
       const fileFactory: SketchpadKitStoreFactory = async () => {
         fileFactoryCallCount += 1;
-        return createFakeKitStore({ guid: guid(), name: "Unexpected File Restore", types: [], designs: [] });
+        return createFakeKitStore(
+          new Kit({
+            guid: guid(),
+            name: "Unexpected File Restore",
+            types: [],
+            designs: [],
+            createdAt: kitFixtureIso,
+            updatedAt: kitFixtureIso,
+          }),
+        );
       };
 
       const store = new SketchpadStore(
@@ -60770,7 +60847,14 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
         {
           kits: [
             {
-              kit: { guid: restoredKit.guid, name: "Persisted Snapshot", types: [], designs: [] },
+              kit: new Kit({
+                guid: restoredKit.guid,
+                name: "Persisted Snapshot",
+                types: [],
+                designs: [],
+                createdAt: kitFixtureIso,
+                updatedAt: kitFixtureIso,
+              }),
               kind: "folder",
               source: { kind: "folder", path: "C:/kits/metabolism" },
             },
@@ -60809,7 +60893,16 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
         }) as unknown as KitStore;
       const folderFactory: SketchpadKitStoreFactory = async () => {
         folderFactoryCallCount += 1;
-        return createFakeKitStore({ guid: guid(), name: "Unexpected Prompted Folder Kit", types: [], designs: [] });
+        return createFakeKitStore(
+          new Kit({
+            guid: guid(),
+            name: "Unexpected Prompted Folder Kit",
+            types: [],
+            designs: [],
+            createdAt: kitFixtureIso,
+            updatedAt: kitFixtureIso,
+          }),
+        );
       };
 
       const kitGuid = guid();
@@ -60819,7 +60912,14 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
         {
           kits: [
             {
-              kit: { guid: kitGuid, name: "Legacy Local Snapshot", types: [], designs: [] },
+              kit: new Kit({
+                guid: kitGuid,
+                name: "Legacy Local Snapshot",
+                types: [],
+                designs: [],
+                createdAt: kitFixtureIso,
+                updatedAt: kitFixtureIso,
+              }),
               kind: "file",
             },
           ],
@@ -60851,8 +60951,30 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
         const remoteFactory: SketchpadKitStoreFactory = async (kit) => new InMemoryKitStore(kit);
         const folderFactory: SketchpadKitStoreFactory = async (kit) => new InMemoryKitStore(kit);
         const store = new SketchpadStore(scopeId, undefined, undefined, undefined, undefined, undefined, folderFactory, undefined, remoteFactory, true);
-        await store.createKit({ guid: remoteGuid, name: "Session Kit", types: [], designs: [] }, "remote", { kind: "remote", url: "http://127.0.0.1:9" });
-        await store.createKit({ guid: localGuid, name: "Folder Kit", types: [], designs: [] }, "folder", { kind: "folder", path: "/tmp/metabolism" });
+        await store.createKit(
+          new Kit({
+            guid: remoteGuid,
+            name: "Session Kit",
+            types: [],
+            designs: [],
+            createdAt: kitFixtureIso,
+            updatedAt: kitFixtureIso,
+          }),
+          "remote",
+          { kind: "remote", url: "http://127.0.0.1:9" },
+        );
+        await store.createKit(
+          new Kit({
+            guid: localGuid,
+            name: "Folder Kit",
+            types: [],
+            designs: [],
+            createdAt: kitFixtureIso,
+            updatedAt: kitFixtureIso,
+          }),
+          "folder",
+          { kind: "folder", path: "/tmp/metabolism" },
+        );
         await new Promise((resolve) => setTimeout(resolve, 400));
         const raw = localStorage.getItem(storageKey);
         expect(raw).toBeTruthy();
@@ -60882,8 +61004,28 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
         localStorage.setItem(
           storageKey,
           JSON.stringify([
-            { kit: { guid: temporaryGuid, name: "Legacy Temporary Kit", types: [], designs: [] }, kind: "temporary" },
-            { kit: { guid: fileGuid, name: "Durable File Kit", types: [], designs: [] }, kind: "file" },
+            {
+              kit: new Kit({
+                guid: temporaryGuid,
+                name: "Legacy Temporary Kit",
+                types: [],
+                designs: [],
+                createdAt: kitFixtureIso,
+                updatedAt: kitFixtureIso,
+              }),
+              kind: "temporary",
+            },
+            {
+              kit: new Kit({
+                guid: fileGuid,
+                name: "Durable File Kit",
+                types: [],
+                designs: [],
+                createdAt: kitFixtureIso,
+                updatedAt: kitFixtureIso,
+              }),
+              kind: "file",
+            },
           ] satisfies InitialStateKit[]),
         );
 
@@ -60892,7 +61034,17 @@ if (shouldRunEmbeddedSketchpadTests && typeof (globalThis as any).__vitest_worke
 
         localStorage.removeItem(storageKey);
         const store = new SketchpadStore(scopeId, undefined, undefined, undefined, undefined, async (kit) => new InMemoryKitStore(kit));
-        await store.createKit({ guid: temporaryGuid, name: "Session Temporary Kit", types: [], designs: [] }, "temporary");
+        await store.createKit(
+          new Kit({
+            guid: temporaryGuid,
+            name: "Session Temporary Kit",
+            types: [],
+            designs: [],
+            createdAt: kitFixtureIso,
+            updatedAt: kitFixtureIso,
+          }),
+          "temporary",
+        );
         store.kit(temporaryGuid).apply({ description: "Edited session-only kit" });
         await new Promise((resolve) => setTimeout(resolve, 700));
 

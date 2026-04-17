@@ -626,7 +626,9 @@ export const CoordSchema = z.object({ u: z.number(), v: z.number() });
  * Type alias for Coord.
  **/
 export type CoordPlain = z.infer<typeof CoordSchema>;
-export class Coord {
+export class Coord implements CoordPlain {
+  u!: number;
+  v!: number;
   constructor(plain: CoordPlain) {
     Object.assign(this, CoordSchema.parse(plain));
   }
@@ -643,7 +645,7 @@ export class Coord {
 export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord));
 /**
  **/
-export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
+export const deserializeCoord = (json: string): Coord => new Coord(CoordSchema.parse(JSON.parse(json)));
 
 /**
  * Zod schema for Coord diff validation.
@@ -703,7 +705,9 @@ export const VecSchema = z.object({ u: z.number(), v: z.number() });
  * Type alias for Vec.
  **/
 export type VecPlain = z.infer<typeof VecSchema>;
-export class Vec {
+export class Vec implements VecPlain {
+  u!: number;
+  v!: number;
   constructor(plain: VecPlain) {
     Object.assign(this, VecSchema.parse(plain));
   }
@@ -720,7 +724,7 @@ export class Vec {
 export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse(vec));
 /**
  **/
-export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
+export const deserializeVec = (json: string): Vec => new Vec(VecSchema.parse(JSON.parse(json)));
 
 /**
  * Zod schema for Vec diff validation.
@@ -784,7 +788,10 @@ export const PointSchema = z.object({
  * Type alias for Point.
  **/
 export type PointPlain = z.infer<typeof PointSchema>;
-export class Point {
+export class Point implements PointPlain {
+  x!: number;
+  y!: number;
+  z!: number;
   constructor(plain: PointPlain) {
     Object.assign(this, PointSchema.parse(plain));
   }
@@ -801,7 +808,7 @@ export class Point {
 export const serializePoint = (point: Point): string => JSON.stringify(PointSchema.parse(point));
 /**
  **/
-export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
+export const deserializePoint = (json: string): Point => new Point(PointSchema.parse(JSON.parse(json)));
 
 /**
  * Zod schema for Point diff validation.
@@ -870,7 +877,10 @@ export const VectorSchema = z.object({
  * Type alias for Vector.
  **/
 export type VectorPlain = z.infer<typeof VectorSchema>;
-export class Vector {
+export class Vector implements VectorPlain {
+  x!: number;
+  y!: number;
+  z!: number;
   constructor(plain: VectorPlain) {
     Object.assign(this, VectorSchema.parse(plain));
   }
@@ -887,7 +897,7 @@ export class Vector {
 export const serializeVector = (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector));
 /**
  **/
-export const deserializeVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
+export const deserializeVector = (json: string): Vector => new Vector(VectorSchema.parse(JSON.parse(json)));
 
 /**
  * Zod schema for Vector diff validation.
@@ -956,7 +966,7 @@ export const PlaneSchema = z.object({
  * Type alias for Plane.
  **/
 export type PlanePlain = z.infer<typeof PlaneSchema>;
-export class Plane {
+export class Plane implements PlanePlain {
   origin!: Point;
   xAxis!: Vector;
   yAxis!: Vector;
@@ -1125,7 +1135,7 @@ export const CameraSchema = z.object({
  * Type alias for Camera.
  **/
 export type CameraPlain = z.infer<typeof CameraSchema>;
-export class Camera {
+export class Camera implements CameraPlain {
   position!: Point;
   forward!: Vector;
   up!: Vector;
@@ -1226,7 +1236,11 @@ export const AttributeSchema = z.object({
  * Type alias for Attribute.
  **/
 export type AttributePlain = z.infer<typeof AttributeSchema>;
-export class Attribute {
+export class Attribute implements AttributePlain {
+  guid!: string;
+  key!: string;
+  value?: string;
+  definition?: string;
   constructor(plain: AttributePlain) {
     Object.assign(this, AttributeSchema.parse(plain));
   }
@@ -1243,7 +1257,7 @@ export class Attribute {
 export const serializeAttribute = (attribute: Attribute): string => JSON.stringify(AttributeSchema.parse(attribute));
 /**
  **/
-export const deserializeAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
+export const deserializeAttribute = (json: string): Attribute => new Attribute(AttributeSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of AttributeMetaSchema.
@@ -1329,7 +1343,7 @@ export const applyAttributeDiff = (target: Attribute, diff: AttributeDiff): void
 export const AttributesDiffSchema = z.object({
   removed: z.array(AttributeIdSchema).optional(),
   updated: z.array(z.object({ attribute: AttributeIdSchema, diff: AttributeDiffSchema })).optional(),
-  added: z.array(AttributeSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Attributes changes.
@@ -1421,7 +1435,12 @@ export const LocationSchema = z.object({
  * Type alias for Location.
  **/
 export type LocationPlain = z.infer<typeof LocationSchema>;
-export class Location {
+export class Location implements LocationPlain {
+  guid!: string;
+  longitude!: number;
+  latitude!: number;
+  altitude?: number;
+  attributes?: Attribute[];
   constructor(plain: LocationPlain) {
     const p = LocationSchema.parse(plain);
     Object.assign(this, p);
@@ -1506,7 +1525,11 @@ export const AuthorSchema = z.object({ guid: z.string(), name: z.string(), email
  * Type alias for Author.
  **/
 export type AuthorPlain = z.infer<typeof AuthorSchema>;
-export class Author {
+export class Author implements AuthorPlain {
+  guid!: string;
+  name!: string;
+  email!: string;
+  attributes?: Attribute[];
   constructor(plain: AuthorPlain) {
     const p = AuthorSchema.parse(plain);
     Object.assign(this, p);
@@ -1612,7 +1635,7 @@ export const applyAuthorDiff = (target: Author, diff: AuthorDiff): void => {
 export const AuthorsDiffSchema = z.object({
   removed: z.array(AuthorIdSchema).optional(),
   updated: z.array(z.object({ author: AuthorIdSchema, diff: AuthorDiffSchema })).optional(),
-  added: z.array(AuthorSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Authors changes.
@@ -1645,7 +1668,19 @@ export const FileSchema = z.object({
  * Type alias for File.
  **/
 export type FilePlain = z.infer<typeof FileSchema>;
-export class File {
+export class File implements FilePlain {
+  guid!: string;
+  name!: string;
+  description?: string;
+  remote?: string;
+  folder?: FolderId;
+  size?: number;
+  hash?: string;
+  blob?: string;
+  createdAt?: string;
+  createdBy?: string;
+  updatedAt?: string;
+  updatedBy?: string;
   constructor(plain: FilePlain) {
     Object.assign(this, FileSchema.parse(plain));
   }
@@ -1662,7 +1697,7 @@ export class File {
 export const serializeFile = (file: File): string => JSON.stringify(FileSchema.parse(file));
 /**
  **/
-export const deserializeFile = (json: string): File => FileSchema.parse(JSON.parse(json));
+export const deserializeFile = (json: string): File => new File(FileSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of FileMetaSchema.
@@ -1768,7 +1803,7 @@ export const applyFileDiff = (target: File, diff: FileDiff): void => {
 export const FilesDiffSchema = z.object({
   removed: z.array(FileIdSchema).optional(),
   updated: z.array(z.object({ file: FileIdSchema, diff: FileDiffSchema })).optional(),
-  added: z.array(FileSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Files changes.
@@ -1798,7 +1833,16 @@ export const FolderSchema = z.object({
  * Type alias for Folder.
  **/
 export type FolderPlain = z.infer<typeof FolderSchema>;
-export class Folder {
+export class Folder implements FolderPlain {
+  guid!: string;
+  name!: string;
+  parent?: FolderId;
+  description?: string;
+  attributes?: Attribute[];
+  createdAt?: string;
+  createdBy?: string;
+  updatedAt?: string;
+  updatedBy?: string;
   constructor(plain: FolderPlain) {
     const p = FolderSchema.parse(plain);
     Object.assign(this, p);
@@ -1919,7 +1963,7 @@ export const applyFolderDiff = (target: Folder, diff: FolderDiff): void => {
 export const FoldersDiffSchema = z.object({
   removed: z.array(FolderIdSchema).optional(),
   updated: z.array(z.object({ folder: FolderIdSchema, diff: FolderDiffSchema })).optional(),
-  added: z.array(FolderSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Folders changes.
@@ -1948,7 +1992,15 @@ export const BenchmarkSchema = z.object({
  * Type alias for Benchmark.
  **/
 export type BenchmarkPlain = z.infer<typeof BenchmarkSchema>;
-export class Benchmark {
+export class Benchmark implements BenchmarkPlain {
+  guid!: string;
+  name!: string;
+  icon?: string;
+  min?: number;
+  minExcluded?: boolean;
+  max?: number;
+  maxExcluded?: boolean;
+  attributes?: Attribute[];
   constructor(plain: BenchmarkPlain) {
     const p = BenchmarkSchema.parse(plain);
     Object.assign(this, p);
@@ -2034,7 +2086,7 @@ export const mergeBenchmarkDiff = (diff1: BenchmarkDiff, diff2: BenchmarkDiff): 
 export const BenchmarksDiffSchema = z.object({
   removed: z.array(BenchmarkIdSchema).optional(),
   updated: z.array(z.object({ benchmark: BenchmarkIdSchema, diff: BenchmarkDiffSchema })).optional(),
-  added: z.array(BenchmarkSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Benchmarks changes.
@@ -2135,7 +2187,28 @@ export const QualitySchema = z.object({
  * Type alias for Quality.
  **/
 export type QualityPlain = z.infer<typeof QualitySchema>;
-export class Quality {
+export class Quality implements QualityPlain {
+  guid!: string;
+  key!: string;
+  name!: string;
+  description?: string;
+  uri?: string;
+  kind?: number;
+  folder?: string;
+  canScale?: boolean;
+  defaultSiUnit?: string;
+  defaultImperialUnit?: string;
+  min?: number;
+  isMinExcluded?: boolean;
+  max?: number;
+  isMaxExcluded?: boolean;
+  defaultValue?: number;
+  formula?: string;
+  icon?: string;
+  image?: string;
+  unit?: string;
+  benchmarks?: Benchmark[];
+  attributes?: Attribute[];
   constructor(plain: QualityPlain) {
     const p = QualitySchema.parse(plain);
     Object.assign(this, p);
@@ -2299,7 +2372,7 @@ export const applyQualityDiff = (target: Quality, diff: QualityDiff): void => {
 export const QualitiesDiffSchema = z.object({
   removed: z.array(QualityIdSchema).optional(),
   updated: z.array(z.object({ quality: QualityIdSchema, diff: QualityDiffSchema })).optional(),
-  added: z.array(QualitySchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>;
 
@@ -2324,7 +2397,14 @@ export const PortSchema = z.object({
  * Type alias for Port.
  **/
 export type PortPlain = z.infer<typeof PortSchema>;
-export class Port {
+export class Port implements PortPlain {
+  guid!: string;
+  name!: string;
+  description?: string;
+  icon?: string;
+  maxChildren?: number;
+  compatiblePorts?: PortId[];
+  attributes?: Attribute[];
   constructor(plain: PortPlain) {
     const p = PortSchema.parse(plain);
     Object.assign(this, p);
@@ -2343,7 +2423,7 @@ export class Port {
 export const serializePort = (iface: Port): string => JSON.stringify(PortSchema.parse(iface));
 /**
  **/
-export const deserializePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
+export const deserializePort = (json: string): Port => new Port(PortSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of PortMetaSchema.
@@ -2455,7 +2535,7 @@ export const applyPortDiff = (target: Port, diff: PortDiff): void => {
 export const PortsDiffSchema = z.object({
   removed: z.array(PortIdSchema).optional(),
   updated: z.array(z.object({ port: PortIdSchema, diff: PortDiffSchema })).optional(),
-  added: z.array(PortSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Ports changes.
@@ -2562,7 +2642,12 @@ export const PropSchema = z.object({
  * Type alias for Prop.
  **/
 export type PropPlain = z.infer<typeof PropSchema>;
-export class Prop {
+export class Prop implements PropPlain {
+  guid!: string;
+  quality!: QualityId;
+  value!: string;
+  unit?: string;
+  attributes?: Attribute[];
   constructor(plain: PropPlain) {
     const p = PropSchema.parse(plain);
     Object.assign(this, p);
@@ -2671,7 +2756,7 @@ export const applyPropDiff = (target: Prop, diff: PropDiff): void => {
 export const PropsDiffSchema = z.object({
   removed: z.array(PropIdSchema).optional(),
   updated: z.array(z.object({ prop: PropIdSchema, diff: PropDiffSchema })).optional(),
-  added: z.array(PropSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Props changes.
@@ -2754,7 +2839,12 @@ export const TagSchema = z.object({
  * Type alias for Tag.
  **/
 export type TagPlain = z.infer<typeof TagSchema>;
-export class Tag {
+export class Tag implements TagPlain {
+  guid!: string;
+  name!: string;
+  description?: string;
+  icon?: string;
+  attributes?: Attribute[];
   constructor(plain: TagPlain) {
     const p = TagSchema.parse(plain);
     Object.assign(this, p);
@@ -2869,7 +2959,7 @@ export const applyTagDiff = (target: Tag, diff: TagDiff): void => {
 export const TagsDiffSchema = z.object({
   removed: z.array(TagIdSchema).optional(),
   updated: z.array(z.object({ tag: TagIdSchema, diff: TagDiffSchema })).optional(),
-  added: z.array(TagSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Tags changes.
@@ -2981,7 +3071,12 @@ export const ConceptSchema = z.object({
  * Type alias for Concept.
  **/
 export type ConceptPlain = z.infer<typeof ConceptSchema>;
-export class Concept {
+export class Concept implements ConceptPlain {
+  guid!: string;
+  name!: string;
+  description?: string;
+  icon?: string;
+  attributes?: Attribute[];
   constructor(plain: ConceptPlain) {
     const p = ConceptSchema.parse(plain);
     Object.assign(this, p);
@@ -3096,7 +3191,7 @@ export const applyConceptDiff = (target: Concept, diff: ConceptDiff): void => {
 export const ConceptsDiffSchema = z.object({
   removed: z.array(ConceptIdSchema).optional(),
   updated: z.array(z.object({ concept: ConceptIdSchema, diff: ConceptDiffSchema })).optional(),
-  added: z.array(ConceptSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Concepts changes.
@@ -3209,7 +3304,13 @@ export const ModelSchema = z.object({
  * Type alias for Model.
  **/
 export type ModelPlain = z.infer<typeof ModelSchema>;
-export class Model {
+export class Model implements ModelPlain {
+  guid!: string;
+  name?: string;
+  tags?: TagId[];
+  file!: FileId;
+  description?: string;
+  attributes?: Attribute[];
   constructor(plain: ModelPlain) {
     const p = ModelSchema.parse(plain);
     Object.assign(this, p);
@@ -3321,7 +3422,7 @@ export const applyModelDiff = (target: Model, diff: ModelDiff): void => {
 export const ModelsDiffSchema = z.object({
   removed: z.array(ModelIdSchema).optional(),
   updated: z.array(z.object({ model: ModelIdSchema, diff: ModelDiffSchema })).optional(),
-  added: z.array(ModelSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 export type ModelsDiff = z.infer<typeof ModelsDiffSchema>;
 
@@ -3516,7 +3617,18 @@ export const ConnectorSchema = z.object({
  * Type alias for Connector.
  **/
 export type ConnectorPlain = z.infer<typeof ConnectorSchema>;
-export class Connector {
+export class Connector implements ConnectorPlain {
+  guid!: string;
+  name?: string;
+  t!: number;
+  point!: Point;
+  direction!: Vector;
+  description?: string;
+  port?: PortId;
+  mandatory?: boolean;
+  maxChildren?: number;
+  props?: Prop[];
+  attributes?: Attribute[];
   constructor(plain: ConnectorPlain) {
     const p = ConnectorSchema.parse(plain);
     Object.assign(this, p);
@@ -3662,7 +3774,7 @@ export const applyConnectorDiff = (target: Connector, diff: ConnectorDiff): void
 export const ConnectorsDiffSchema = z.object({
   removed: z.array(ConnectorIdSchema).optional(),
   updated: z.array(z.object({ connector: ConnectorIdSchema, diff: ConnectorDiffSchema })).optional(),
-  added: z.array(ConnectorSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Connectors changes.
@@ -3744,7 +3856,27 @@ export const TypeSchema = z.object({
  * Type alias for Type.
  **/
 export type TypePlain = z.infer<typeof TypeSchema>;
-export class Type {
+export class Type implements TypePlain {
+  guid!: string;
+  name!: string;
+  parent?: TypeId;
+  isAbstract?: boolean;
+  folder?: string;
+  models?: Model[];
+  connectors?: Connector[];
+  props?: Prop[];
+  stock?: number;
+  virtual?: boolean;
+  unit?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  location?: LocationId;
+  authors?: AuthorId[];
+  concepts?: ConceptId[];
+  icon?: string;
+  image?: string;
+  description?: string;
+  attributes?: Attribute[];
   constructor(plain: TypePlain) {
     const p = TypeSchema.parse(plain);
     Object.assign(this, p);
@@ -3933,7 +4065,7 @@ export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff
 export const TypesDiffSchema = z.object({
   removed: z.array(TypeIdSchema).optional(),
   updated: z.array(z.object({ type: TypeIdSchema, diff: TypeDiffSchema })).optional(),
-  added: z.array(TypeSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Types changes.
@@ -3966,7 +4098,14 @@ export const LayerSchema = z.object({
  * Type alias for Layer.
  **/
 export type LayerPlain = z.infer<typeof LayerSchema>;
-export class Layer {
+export class Layer implements LayerPlain {
+  guid!: string;
+  path!: string;
+  isHidden?: boolean;
+  isLocked?: boolean;
+  color?: string;
+  description?: string;
+  attributes?: Attribute[];
   constructor(plain: LayerPlain) {
     const p = LayerSchema.parse(plain);
     Object.assign(this, p);
@@ -4082,7 +4221,7 @@ export const applyLayerDiff = (target: Layer, diff: LayerDiff): void => {
 export const LayersDiffSchema = z.object({
   removed: z.array(LayerIdSchema).optional(),
   updated: z.array(z.object({ layer: LayerIdSchema, diff: LayerDiffSchema })).optional(),
-  added: z.array(LayerSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Layers changes.
@@ -4117,7 +4256,21 @@ export const PieceSchema = z.object({
  * Type alias for Piece.
  **/
 export type PiecePlain = z.infer<typeof PieceSchema>;
-export class Piece {
+export class Piece implements PiecePlain {
+  guid!: string;
+  name?: string;
+  type?: TypeId;
+  design?: DesignId;
+  plane?: Plane;
+  center?: Coord;
+  scale?: number;
+  mirrorPlane?: Plane;
+  isHidden?: boolean;
+  isLocked?: boolean;
+  color?: string;
+  description?: string;
+  props?: Prop[];
+  attributes?: Attribute[];
   constructor(plain: PiecePlain) {
     const p = PieceSchema.parse(plain);
     Object.assign(this, p);
@@ -4193,7 +4346,13 @@ export const getPieceDiff = (before: Piece, after: Piece): PieceDiff => {
   if (before.name !== after.name) diff.name = after.name;
   if (before.type?.guid !== after.type?.guid) diff.type = after.type;
   if (before.design?.guid !== after.design?.guid) diff.design = after.design;
-  if (!deepEqual(before.plane, after.plane)) diff.plane = after.plane ? getPlaneDiff(before.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } }, after.plane) : undefined;
+  if (!deepEqual(before.plane, after.plane))
+    diff.plane = after.plane
+      ? getPlaneDiff(
+          before.plane ?? new Plane({ origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } }),
+          after.plane,
+        )
+      : undefined;
   if (!deepEqual(before.center, after.center)) diff.center = after.center;
   if (before.scale !== after.scale) diff.scale = after.scale;
   if (!deepEqual(before.mirrorPlane, after.mirrorPlane)) diff.mirrorPlane = after.mirrorPlane;
@@ -4290,7 +4449,7 @@ export const applyPieceDiff = (target: Piece, diff: PieceDiff): void => {
 export const PiecesDiffSchema = z.object({
   removed: z.array(PieceIdSchema).optional(),
   updated: z.array(z.object({ piece: PieceIdSchema, diff: PieceDiffSchema })).optional(),
-  added: z.array(PieceSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Pieces changes.
@@ -4392,7 +4551,13 @@ export const GroupSchema = z.object({
  * Type alias for Group.
  **/
 export type GroupPlain = z.infer<typeof GroupSchema>;
-export class Group {
+export class Group implements GroupPlain {
+  guid!: string;
+  pieces!: PieceId[];
+  color?: string;
+  name?: string;
+  description?: string;
+  attributes?: Attribute[];
   constructor(plain: GroupPlain) {
     const p = GroupSchema.parse(plain);
     Object.assign(this, p);
@@ -4469,7 +4634,7 @@ export const mergeGroupDiff = (diff1: GroupDiff, diff2: GroupDiff): GroupDiff =>
 export const GroupsDiffSchema = z.object({
   removed: z.array(GroupIdSchema).optional(),
   updated: z.array(z.object({ group: GroupIdSchema, diff: GroupDiffSchema })).optional(),
-  added: z.array(GroupSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 export type GroupsDiff = z.infer<typeof GroupsDiffSchema>;
 /**
@@ -4478,7 +4643,7 @@ export type GroupsDiff = z.infer<typeof GroupsDiffSchema>;
 export const serializeGroup = (group: Group): string => JSON.stringify(GroupSchema.parse(group));
 /**
  **/
-export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.parse(json));
+export const deserializeGroup = (json: string): Group => new Group(GroupSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of GroupMetaSchema.
@@ -4528,7 +4693,10 @@ export const SideSchema = z.object({
  * Type alias for Side.
  **/
 export type SidePlain = z.infer<typeof SideSchema>;
-export class Side {
+export class Side implements SidePlain {
+  piece!: PieceId;
+  designPiece?: PieceId;
+  connector?: ConnectorId;
   constructor(plain: SidePlain) {
     Object.assign(this, SideSchema.parse(plain));
   }
@@ -4555,7 +4723,10 @@ export const SideIdSchema = z.object({ piece: PieceIdSchema, designPiece: PieceI
  * Identifier type for Side entities.
  **/
 export type SideIdPlain = z.infer<typeof SideIdSchema>;
-export class SideId {
+export class SideId implements SideIdPlain {
+  piece!: PieceId;
+  designPiece?: PieceId;
+  connector?: ConnectorId;
   constructor(plain: SideIdPlain) {
     Object.assign(this, SideIdSchema.parse(plain));
   }
@@ -4572,7 +4743,7 @@ export class SideId {
 export const SidesDiffSchema = z.object({
   removed: z.array(SideIdSchema).optional(),
   updated: z.array(z.object({ side: SideIdSchema, diff: SideDiffSchema })).optional(),
-  added: z.array(SideSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Sides changes.
@@ -4618,7 +4789,7 @@ export const applySideDiff = (target: Side, diff: SideDiff): void => {
 export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.parse(side));
 /**
  **/
-export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
+export const deserializeSide = (json: string): Side => new Side(SideSchema.parse(JSON.parse(json)));
 /**
  * Equality check for Side values.
  **/
@@ -4651,7 +4822,20 @@ export const ConnectionSchema = z.object({
  * Type alias for Connection.
  **/
 export type ConnectionPlain = z.infer<typeof ConnectionSchema>;
-export class Connection {
+export class Connection implements ConnectionPlain {
+  guid!: string;
+  connected!: Side;
+  connecting!: Side;
+  gap?: number;
+  shift?: number;
+  rise?: number;
+  rotation?: number;
+  turn?: number;
+  tilt?: number;
+  u?: number;
+  v?: number;
+  description?: string;
+  attributes?: Attribute[];
   constructor(plain: ConnectionPlain) {
     const p = ConnectionSchema.parse(plain);
     Object.assign(this, p);
@@ -4762,7 +4946,7 @@ export const inverseConnectionDiff = (original: Connection, appliedDiff: Connect
 export const ConnectionsDiffSchema = z.object({
   removed: z.array(ConnectionIdSchema).optional(),
   updated: z.array(z.object({ connection: ConnectionIdSchema, diff: ConnectionDiffSchema })).optional(),
-  added: z.array(ConnectionSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Connections changes.
@@ -4871,7 +5055,14 @@ export const StatSchema = z.object({
  * Type alias for Stat.
  **/
 export type StatPlain = z.infer<typeof StatSchema>;
-export class Stat {
+export class Stat implements StatPlain {
+  guid!: string;
+  quality!: QualityId;
+  unit?: string;
+  min?: number;
+  minExcluded?: boolean;
+  max?: number;
+  maxExcluded?: boolean;
   constructor(plain: StatPlain) {
     Object.assign(this, StatSchema.parse(plain));
   }
@@ -4939,7 +5130,7 @@ export const mergeStatDiff = (diff1: StatDiff, diff2: StatDiff): StatDiff => {
 export const StatsDiffSchema = z.object({
   removed: z.array(StatIdSchema).optional(),
   updated: z.array(z.object({ stat: StatIdSchema, diff: StatDiffSchema })).optional(),
-  added: z.array(StatSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 export type StatsDiff = z.infer<typeof StatsDiffSchema>;
 /**
@@ -4948,7 +5139,7 @@ export type StatsDiff = z.infer<typeof StatsDiffSchema>;
 export const serializeStat = (stat: Stat): string => JSON.stringify(StatSchema.parse(stat));
 /**
  **/
-export const deserializeStat = (json: string): Stat => StatSchema.parse(JSON.parse(json));
+export const deserializeStat = (json: string): Stat => new Stat(StatSchema.parse(JSON.parse(json)));
 
 /**
  * Definition of StatMetaSchema.
@@ -5019,7 +5210,31 @@ export const DesignSchema = z.object({
  * Type alias for Design.
  **/
 export type DesignPlain = z.infer<typeof DesignSchema>;
-export class Design {
+export class Design implements DesignPlain {
+  guid!: string;
+  name!: string;
+  parent?: DesignId;
+  isAbstract?: boolean;
+  folder?: string;
+  pieces?: Piece[];
+  connections?: Connection[];
+  stats?: Stat[];
+  props?: Prop[];
+  layers?: Layer[];
+  activeLayer?: LayerId;
+  groups?: Group[];
+  canScale?: boolean;
+  canMirror?: boolean;
+  unit?: string;
+  location?: LocationId;
+  authors?: AuthorId[];
+  concepts?: ConceptId[];
+  icon?: string;
+  image?: string;
+  description?: string;
+  attributes?: Attribute[];
+  createdAt?: string;
+  updatedAt?: string;
   constructor(plain: DesignPlain) {
     const p = DesignSchema.parse(plain);
     Object.assign(this, p);
@@ -5400,9 +5615,11 @@ export const applyDesignDiff = (target: Design, diff: DesignDiff): void => {
 // #region 🧷Local detach (no structuredClone)
 // Algorithms that must not mutate the live kit graph allocate detached copies via these helpers.
 
+const stripNullsJsonClone = <T>(x: T): T => JSON.parse(JSON.stringify(x), (_k, v) => (v === null ? undefined : v));
+
 const detachPieceForLocalMutation = (p: Piece): Piece =>
   new Piece({
-    ...PieceSchema.parse(p as unknown as PiecePlain),
+    ...PieceSchema.parse(stripNullsJsonClone(p) as PiecePlain),
     plane: p.plane
       ? {
           origin: { ...p.plane.origin },
@@ -5418,13 +5635,13 @@ const detachPieceForLocalMutation = (p: Piece): Piece =>
           yAxis: { ...p.mirrorPlane.yAxis },
         }
       : undefined,
-    props: p.props?.map((x) => ({ ...PropSchema.parse(x as unknown as PropPlain) })),
-    attributes: p.attributes?.map((a) => ({ ...AttributeSchema.parse(a as unknown as AttributePlain) })),
+    props: p.props?.map((x) => ({ ...PropSchema.parse(stripNullsJsonClone(x) as PropPlain) })),
+    attributes: p.attributes?.map((a) => ({ ...AttributeSchema.parse(stripNullsJsonClone(a) as AttributePlain) })),
   });
 
 const detachConnectionForLocalMutation = (c: Connection): Connection =>
   new Connection({
-    ...ConnectionSchema.parse(c as unknown as ConnectionPlain),
+    ...ConnectionSchema.parse(stripNullsJsonClone(c) as ConnectionPlain),
     connected: new Side({
       piece: { ...c.connected.piece },
       designPiece: c.connected.designPiece ? { ...c.connected.designPiece } : undefined,
@@ -5435,28 +5652,37 @@ const detachConnectionForLocalMutation = (c: Connection): Connection =>
       designPiece: c.connecting.designPiece ? { ...c.connecting.designPiece } : undefined,
       connector: c.connecting.connector ? { ...c.connecting.connector } : undefined,
     }),
-    attributes: c.attributes?.map((a) => ({ ...AttributeSchema.parse(a as unknown as AttributePlain) })),
+    attributes: c.attributes?.map((a) => ({ ...AttributeSchema.parse(stripNullsJsonClone(a) as AttributePlain) })),
   });
 
 const detachDesignForLocalMutation = (d: Design): Design =>
   new Design({
-    ...DesignSchema.parse(d as unknown as DesignPlain),
+    ...DesignSchema.parse(stripNullsJsonClone(d) as DesignPlain),
     pieces: d.pieces?.map(detachPieceForLocalMutation),
     connections: d.connections?.map(detachConnectionForLocalMutation),
-    stats: d.stats?.map((s) => ({ ...StatSchema.parse(s as unknown as StatPlain) })),
-    props: d.props?.map((x) => ({ ...PropSchema.parse(x as unknown as PropPlain) })),
+    stats: d.stats?.map((s) => ({ ...StatSchema.parse(stripNullsJsonClone(s) as StatPlain) })),
+    props: d.props?.map((x) => ({ ...PropSchema.parse(stripNullsJsonClone(x) as PropPlain) })),
     layers: d.layers?.map((l) => ({
-      ...LayerSchema.parse(l as unknown as LayerPlain),
-      attributes: l.attributes?.map((a) => ({ ...AttributeSchema.parse(a as unknown as AttributePlain) })),
+      ...LayerSchema.parse(stripNullsJsonClone(l) as LayerPlain),
+      attributes: l.attributes?.map((a) => ({ ...AttributeSchema.parse(stripNullsJsonClone(a) as AttributePlain) })),
     })),
     groups: d.groups?.map((g) => ({
-      ...GroupSchema.parse(g as unknown as GroupPlain),
+      ...GroupSchema.parse(stripNullsJsonClone(g) as GroupPlain),
       pieces: g.pieces?.map((pid) => ({ ...pid })),
-      attributes: g.attributes?.map((a) => ({ ...AttributeSchema.parse(a as unknown as AttributePlain) })),
+      attributes: g.attributes?.map((a) => ({ ...AttributeSchema.parse(stripNullsJsonClone(a) as AttributePlain) })),
     })),
-    attributes: d.attributes?.map((a) => ({ ...AttributeSchema.parse(a as unknown as AttributePlain) })),
+    attributes: d.attributes?.map((a) => ({ ...AttributeSchema.parse(stripNullsJsonClone(a) as AttributePlain) })),
   });
 // #endregion 🧷Local detach
+
+const entityAttributePlain = (a: Attribute | AttributePlain): AttributePlain =>
+  typeof (a as Attribute).toPlain === "function" ? (a as Attribute).toPlain() : AttributeSchema.parse(a as unknown);
+const entityPiecePlain = (p: Piece | PiecePlain): PiecePlain =>
+  typeof (p as Piece).toPlain === "function" ? (p as Piece).toPlain() : PieceSchema.parse(p as unknown);
+const entityConnectionPlain = (c: Connection | ConnectionPlain): ConnectionPlain =>
+  typeof (c as Connection).toPlain === "function" ? (c as Connection).toPlain() : ConnectionSchema.parse(c as unknown);
+const entityDesignPlain = (d: Design | DesignPlain): DesignPlain =>
+  typeof (d as Design).toPlain === "function" ? (d as Design).toPlain() : DesignSchema.parse(d as unknown);
 
 /**
  * Creates a mixed design for visualization, annotating entities with diff status.
@@ -5468,9 +5694,9 @@ const detachDesignForLocalMutation = (d: Design): Design =>
  **/
 export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
   const DIFF_STATUS_KEY = "semio.diffStatus";
-  const setStatus = (attrs: Attribute[] | undefined, status: DiffStatus): Attribute[] => {
-    const result = [...(attrs ?? [])];
-    result.push(new Attribute({ guid: `${DIFF_STATUS_KEY}.${status}`, key: DIFF_STATUS_KEY, value: status }));
+  const setStatus = (attrs: Attribute[] | undefined, status: DiffStatus): AttributePlain[] => {
+    const result = [...(attrs ?? [])].map((a) => entityAttributePlain(a));
+    result.push(new Attribute({ guid: `${DIFF_STATUS_KEY}.${status}`, key: DIFF_STATUS_KEY, value: status }).toPlain());
     return result;
   };
 
@@ -5480,42 +5706,60 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
   const updatedConnMap = new Map((diff.connections?.updated ?? []).map((u) => [(u as any).connection.guid, u.diff]));
 
   const resultPieces: Piece[] = (base.pieces ?? []).map((p) => {
-    if (removedPieceGuids.has(p.guid)) return { ...p, attributes: setStatus(p.attributes, DiffStatus.Removed) };
+    if (removedPieceGuids.has(p.guid)) {
+      return new Piece({ ...entityPiecePlain(p), attributes: setStatus(p.attributes, DiffStatus.Removed) });
+    }
     if (updatedPieceMap.has(p.guid)) {
       const applied = detachPieceForLocalMutation(p);
       applyPieceDiff(applied, updatedPieceMap.get(p.guid)!);
-      // 📌Preserve base geometry so modified pieces stay in place and only get recolored.
-      const preserved: Piece = { ...applied };
-      if (p.plane !== undefined) preserved.plane = p.plane;
+      const preserved = { ...applied.toPlain() };
+      if (p.plane !== undefined) preserved.plane = PlaneSchema.parse(p.plane as unknown);
       else delete preserved.plane;
-      if (p.center !== undefined) preserved.center = p.center;
+      if (p.center !== undefined) preserved.center = CoordSchema.parse(p.center as unknown);
       else delete preserved.center;
-      return { ...preserved, attributes: setStatus(preserved.attributes, DiffStatus.Modified) };
+      preserved.attributes = setStatus(applied.attributes, DiffStatus.Modified);
+      return new Piece(preserved);
     }
-    return { ...p, attributes: setStatus(p.attributes, DiffStatus.Unchanged) };
+    return new Piece({ ...entityPiecePlain(p), attributes: setStatus(p.attributes, DiffStatus.Unchanged) });
   });
   for (const added of diff.pieces?.added ?? []) {
-    resultPieces.push({ ...added, attributes: setStatus(added.attributes, DiffStatus.Added) });
+    const raw = added as PiecePlain;
+    const attrsForStatus = raw.attributes?.map((a) => new Attribute(a)) ?? undefined;
+    resultPieces.push(
+      new Piece({
+        ...raw,
+        attributes: setStatus(attrsForStatus, DiffStatus.Added),
+      }),
+    );
   }
 
   const resultConns: Connection[] = (base.connections ?? []).map((c) => {
-    if (removedConnGuids.has(c.guid)) return { ...c, attributes: setStatus(c.attributes, DiffStatus.Removed) };
+    if (removedConnGuids.has(c.guid)) {
+      return new Connection({ ...entityConnectionPlain(c), attributes: setStatus(c.attributes, DiffStatus.Removed) });
+    }
     if (updatedConnMap.has(c.guid)) {
       const applied = detachConnectionForLocalMutation(c);
       applyConnectionDiff(applied, updatedConnMap.get(c.guid)!);
-      return { ...applied, attributes: setStatus(applied.attributes, DiffStatus.Modified) };
+      return new Connection({ ...applied.toPlain(), attributes: setStatus(applied.attributes, DiffStatus.Modified) });
     }
-    return { ...c, attributes: setStatus(c.attributes, DiffStatus.Unchanged) };
+    return new Connection({ ...entityConnectionPlain(c), attributes: setStatus(c.attributes, DiffStatus.Unchanged) });
   });
   for (const added of diff.connections?.added ?? []) {
-    resultConns.push({ ...added, attributes: setStatus(added.attributes, DiffStatus.Added) });
+    const raw = added as ConnectionPlain;
+    const attrsForStatus = raw.attributes?.map((a) => new Attribute(a)) ?? undefined;
+    resultConns.push(
+      new Connection({
+        ...raw,
+        attributes: setStatus(attrsForStatus, DiffStatus.Added),
+      }),
+    );
   }
 
   return new Design(
     DesignSchema.parse({
-      ...DesignSchema.parse(base as unknown as DesignPlain),
-      pieces: resultPieces as PiecePlain[],
-      connections: resultConns as ConnectionPlain[],
+      ...DesignSchema.parse(entityDesignPlain(base)),
+      pieces: resultPieces.map((x) => x.toPlain()),
+      connections: resultConns.map((x) => x.toPlain()),
     }),
   );
 };
@@ -5526,7 +5770,7 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
 export const DesignsDiffSchema = z.object({
   removed: z.array(DesignIdSchema).optional(),
   updated: z.array(z.object({ design: DesignIdSchema, diff: DesignDiffSchema })).optional(),
-  added: z.array(DesignSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 /**
  * Diff type for tracking Designs changes.
@@ -5592,9 +5836,9 @@ export const deletePiecesAndConnectionsInDesign = (kit: Kit, design: Design, pie
   // ♻️Flatten the design to get absolute plane and center for each piece
   const flatRes = flattenDesign(kit, design.guid);
   if (!flatRes.ok) {
-    return { ok: false, errors: flatRes.errors };
+    return operationErr(flatRes.errors);
   }
-  const flatChange = flatRes.diff;
+  const flatChange = flatRes.diff!;
   const flatPieceMap: { [guid: string]: { plane?: Plane; center?: Coord } } = {};
   for (const piece of design.pieces ?? []) {
     if (piece.plane) flatPieceMap[piece.guid] = { plane: piece.plane, center: piece.center };
@@ -5606,8 +5850,8 @@ export const deletePiecesAndConnectionsInDesign = (kit: Kit, design: Design, pie
     flatPieceMap[update.piece.guid] = existing;
   }
 
-  const identityPlane: Plane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
-  const zeroCenter: Coord = { u: 0, v: 0 };
+  const identityPlane = new Plane({ origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } });
+  const zeroCenter = new Coord({ u: 0, v: 0 });
 
   const diff: DesignDiff = {};
 
@@ -5640,10 +5884,11 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string,
   const design = findDesignInKit(kit, designId);
   const delRes = deletePiecesAndConnectionsInDesign(kit, design, pieceIds, connectionIds);
   if (!delRes.ok) {
-    return { ok: false, errors: delRes.errors };
+    return operationErr(delRes.errors);
   }
-  const backward = inverseDesignDiff(design, delRes.diff);
-  return operationOk({ forward: delRes.diff, backward }, delRes.warnings, delRes.infos);
+  const forward = delRes.diff!;
+  const backward = inverseDesignDiff(design, forward);
+  return operationOk({ forward, backward }, delRes.warnings, delRes.infos);
 };
 
 /**
@@ -5795,11 +6040,11 @@ const flattenCentersDiffer = (a?: Coord, b?: Coord): boolean => {
 };
 
 /** Same plane as {@link matrixToPlane} on an identity matrix; avoids per-call THREE allocations in flatten. */
-const FLATTEN_IDENTITY_PLANE: Plane = {
+const FLATTEN_IDENTITY_PLANE: Plane = new Plane({
   origin: { x: 0, y: 0, z: 0 },
   xAxis: { x: 1, y: 0, z: 0 },
   yAxis: { x: 0, y: 1, z: 0 },
-};
+});
 
 const buildFlattenPieceAdjacency = (pieces: Piece[], connections: Connection[]): { pieceMap: { [guid: string]: Piece }; adjacency: Map<string, FlattenAdjacencyEntry[]> } => {
   const pieceMap: { [guid: string]: Piece } = {};
@@ -5931,11 +6176,18 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
 
   const { getType, getConnector } = buildConnectorResolverFromKit(kit);
 
-  const flatPieces: Piece[] = design.pieces.map((p) => ({
-    ...p,
-    attributes: p.attributes?.map((a) => ({ ...a })),
-  }));
-  const flatDesign: Design = { ...design, pieces: flatPieces, connections: design.connections };
+  const flatPieces: Piece[] = design.pieces.map(
+    (p) =>
+      new Piece({
+        ...entityPiecePlain(p),
+        attributes: p.attributes?.map((a) => entityAttributePlain(a)),
+      }),
+  );
+  const flatDesign = new Design({
+    ...entityDesignPlain(design),
+    pieces: flatPieces.map((x) => x.toPlain()),
+    connections: design.connections?.map((c) => entityConnectionPlain(c)),
+  });
 
   const piecePlanes: { [pieceGuid: string]: Plane } = {};
 
@@ -5945,12 +6197,16 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
     newAttrs.forEach((newAttr) => {
       const existingIndex = updatedAttrs.findIndex((a) => a.key === newAttr.key);
       if (existingIndex >= 0) {
-        updatedAttrs[existingIndex] = { ...updatedAttrs[existingIndex], ...newAttr, guid: updatedAttrs[existingIndex].guid };
+        updatedAttrs[existingIndex] = new Attribute({
+          ...updatedAttrs[existingIndex].toPlain(),
+          ...newAttr,
+          guid: updatedAttrs[existingIndex].guid,
+        });
       } else {
-        updatedAttrs.push({ guid: guid(), ...newAttr });
+        updatedAttrs.push(new Attribute({ guid: guid(), ...newAttr }));
       }
     });
-    return { ...piece, attributes: updatedAttrs };
+    return new Piece({ ...piece.toPlain(), attributes: updatedAttrs.map((a) => entityAttributePlain(a)) });
   };
 
   const filteredConnections =
@@ -6013,14 +6269,15 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
         flatDesign.pieces![rootPieceIndex].plane = rootPlane;
 
         if (!flatDesign.pieces![rootPieceIndex].center) {
-          flatDesign.pieces![rootPieceIndex].center = { u: 0, v: 0 };
+          flatDesign.pieces![rootPieceIndex].center = new Coord({ u: 0, v: 0 });
         }
 
-        pieceMap[rootGuid] = {
-          ...(pieceMap[rootGuid] ?? updatedRootPiece),
-          plane: rootPlane,
-          center: flatDesign.pieces![rootPieceIndex].center,
-        };
+        const cur = pieceMap[rootGuid] ?? updatedRootPiece;
+        pieceMap[rootGuid] = new Piece({
+          ...entityPiecePlain(cur),
+          plane: PlaneSchema.parse(rootPlane as unknown),
+          center: CoordSchema.parse(flatDesign.pieces![rootPieceIndex].center as unknown),
+        });
       }
     },
     onTreeEdge: ({ parentGuid, childGuid, connection, depth, parentPiece, childPiece }) => {
@@ -6056,7 +6313,7 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
       const radius = 2.697;
       const verticalVExtra = 1.0;
       const horizontalScale = 3.0633;
-      const parentCenter = parentPiece.center || { u: 0, v: 0 };
+      const parentCenter = parentPiece.center || new Coord({ u: 0, v: 0 });
       const connectionU = connection.u ?? 0;
       const connectionV = connection.v ?? 0;
 
@@ -6079,18 +6336,18 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
         }
       }
 
-      const computedChildCenter = {
+      const computedChildCenter = new Coord({
         u: round(childU),
         v: round(childV),
-      };
-      const childCenter = childPiece.center ?? computedChildCenter;
+      });
+      const childCenter: Coord = childPiece.center ?? computedChildCenter;
 
       const flatChildPiece: Piece = setAttributes(
-        {
-          ...childPiece,
-          plane: childPlane,
-          center: childCenter,
-        },
+        new Piece({
+          ...entityPiecePlain(childPiece),
+          plane: PlaneSchema.parse(childPlane as unknown),
+          center: CoordSchema.parse((childPiece.center ?? computedChildCenter) as unknown),
+        }),
         [
           {
             key: "semio.fixedPieceId",
@@ -7069,11 +7326,11 @@ export const movePiecesInDesign = (kit: Kit, design: Design, pieces: Design, vec
     const base = pieceMap.get(guid)?.plane;
     if (base === undefined) continue;
     const t = moveTranslationWorldFromPiecePlane(base, vector);
-    const newPlane: Plane = {
+    const newPlane: Plane = new Plane({
       origin: { x: base.origin.x + t.x, y: base.origin.y + t.y, z: base.origin.z + t.z },
-      xAxis: { ...base.xAxis },
-      yAxis: { ...base.yAxis },
-    };
+      xAxis: VectorSchema.parse(base.xAxis as unknown),
+      yAxis: VectorSchema.parse(base.yAxis as unknown),
+    });
     pieceUpdates.push({ piece: { guid }, diff: { plane: newPlane } });
   }
   const connectionUpdates: { connection: { guid: string }; diff: ConnectionDiff }[] = [];
@@ -7154,9 +7411,9 @@ export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], conne
   // Flatten the design to get absolute planes/centers
   const flatRes = flattenDesign(kit, design.guid);
   if (!flatRes.ok) {
-    return { ok: false, errors: flatRes.errors };
+    return operationErr(flatRes.errors);
   }
-  const flatChange = flatRes.diff;
+  const flatChange = flatRes.diff!;
   const flatDesign = detachDesignForLocalMutation(design);
   applyDesignDiff(flatDesign, flatChange.forward);
   const flatPieceMap = new Map<string, Piece>();
@@ -7776,7 +8033,7 @@ export type KitPlain = z.infer<typeof KitSchema>;
 /**
  * Mutable kit document. Pass this instance by reference; edits mutate in place.
  **/
-export class Kit {
+export class Kit implements KitPlain {
   guid!: string;
   name!: string;
   version?: string;
@@ -7972,10 +8229,12 @@ export const duplicateKitDiffForIsolation = (diff: KitDiff): KitDiff => KitDiffS
 // 🧬EntityIdType maps entity kind names to their ID interface types.
 type EntityIdType = { guid: string };
 // 🔀CollectionDiff represents added, removed, and changed items in a collection.
+// `added` is intentionally `unknown[]`: Zod-inferred kit/design diffs carry plain JSON shapes;
+// `applyCollectionDiff` hydrates entries via `hydrateAdded`.
 type CollectionDiff<K extends string, T extends { guid: string }, D> = {
   removed?: EntityIdType[];
   updated?: Array<{ [key in K]: EntityIdType } & { diff: D }>;
-  added?: T[];
+  added?: unknown[];
 };
 // 🔀getCollectionDiff computes the diff between two collections by key.
 const getCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, before: T[], after: T[], getItemDiff: (before: T, after: T) => D): CollectionDiff<K, T, D> => {
@@ -8002,7 +8261,7 @@ const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(
   const inverse: CollectionDiff<K, T, D> = {};
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
   if (appliedDiff.removed) inverse.added = original.filter((i) => removedGuids.includes(i.guid));
-  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((i) => ({ guid: i.guid }));
+  if (appliedDiff.added) inverse.removed = appliedDiff.added.map((i) => ({ guid: (i as T).guid }));
   if (appliedDiff.updated) {
     inverse.updated = appliedDiff.updated
       .filter((u) => {
@@ -9846,7 +10105,7 @@ export const getDesignChange = (before: Design, after: Design): DesignChange => 
 export const KitsDiffSchema = z.object({
   removed: z.array(KitIdSchema).optional(),
   updated: z.array(z.object({ kit: KitIdSchema, diff: KitDiffSchema })).optional(),
-  added: z.array(KitSchema).optional(),
+  added: z.array(z.any()).optional(),
 });
 
 /**
@@ -10617,10 +10876,11 @@ const validateGuidCollectionDiff = <TItem extends { guid: string }>(
   const noopAddedByGuid = new Map<string, { guid: string }>();
   for (const a of raw.added ?? []) noopAddedByGuid.set(a.guid, a);
 
+  const jsonNormForDiffCompare = (x: unknown) => JSON.parse(JSON.stringify(x), (_k, v) => (v === null ? undefined : v));
   for (const r of raw.removed ?? []) {
     const orig = baseByGuid.get(r.guid);
     const add = noopAddedByGuid.get(r.guid);
-    if (orig && add && deepEqual(orig, add)) {
+    if (orig && add && deepEqual(jsonNormForDiffCompare(orig), jsonNormForDiffCompare(add))) {
       kitDiffPush(ctx, "warnings", "kitdiff.cycle.noop-restore", `${path}: removed and re-added ${idKey} ${r.guid} are deeply equal (no effective change)`);
       if (ctx.heal) {
         if (healedRemoved) healedRemoved = healedRemoved.filter((x) => x.guid !== r.guid);

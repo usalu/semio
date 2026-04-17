@@ -7233,25 +7233,25 @@ text {
 /// </summary>
 /// <remarks>
 /// Specs: Exactly five kit kinds exist:
-/// - File: Self-contained JSON file
-/// - Folder: Local folder with .semio/kit.db SQLite and asset files
-/// - Archive: ZIP file packaging a FolderKit structure
+/// - Dev: Self-contained JSON file
+/// - Local: Local folder with .semio/kit.db SQLite and asset files
+/// - Archive: ZIP file packaging a LocalKit structure
 /// - Remote: URL-addressable kit served over HTTP(S)
-/// - Temporary: In-memory ephemeral kit (no persistence)
+/// - Transport: In-memory ephemeral kit transport payload
 /// </remarks>
 [JsonConverter(typeof(StringEnumConverter))]
 public enum KitKind
 {
-    [EnumMember(Value = "file")]
-    File,
-    [EnumMember(Value = "folder")]
-    Folder,
+    [EnumMember(Value = "dev")]
+    Dev,
+    [EnumMember(Value = "local")]
+    Local,
     [EnumMember(Value = "archive")]
     Archive,
     [EnumMember(Value = "remote")]
     Remote,
-    [EnumMember(Value = "temporary")]
-    Temporary
+    [EnumMember(Value = "transport")]
+    Transport
 }
 
 /// <summary>🔷Helpers for KitKind.</summary>
@@ -14694,7 +14694,8 @@ public static class KitSqlite
     public static KitChange ApplyKitDiff(string kitDirectory, KitDiff diff)
     {
         var before = LoadKit(kitDirectory);
-        var after = SemioDiff.ApplyKitDiff(before, diff);
+        var after = Entity<Kit>.DeepClone(before)!;
+        SemioDiff.ApplyKitDiff(after, diff);
         SaveKit(kitDirectory, after);
         var backward = SemioDiff.InverseKitDiff(before, diff);
         return new KitChange { Forward = diff, Backward = backward, Before = before, After = after };
@@ -14824,6 +14825,159 @@ public static class KitSqlite
 
 
 
+#region 📋TransportKit
+// Callers MUST use TransportKit to wrap serialized kit payloads for transport.
+
+/// <summary>📋 Wraps static JSON kit payloads for serialization and deserialization.</summary>
+public class TransportKit
+{
+    public string Json { get; }
+
+    public TransportKit(string json)
+    {
+        Json = json;
+    }
+
+    public Kit ToKit() => Utility.Deserialize<Kit>(Json)!;
+
+    public static TransportKit FromKit(Kit kit) => new(Utility.Serialize(kit));
+
+    public static Kit EditTransportKit(Kit kit, KitDiff diff)
+    {
+        var clone = Utility.Deserialize<Kit>(Utility.Serialize(kit))!;
+        SemioDiff.ApplyKitDiff(clone, diff);
+        return clone;
+    }
+}
+
+#endregion 📋TransportKit
+
+
+
+
+
+#region 🔄ISyncKit
+// Callers MUST implement ISyncKit for synchronized kit workflows.
+
+/// <summary>🔄 Contract for synchronized kit workflows.</summary>
+public interface ISyncKit
+{
+    Kit Kit { get; }
+    void Apply(KitDiff diff);
+    void ImportTransport(TransportKit transport);
+    TransportKit ExportTransport();
+    void Close();
+}
+
+#endregion 🔄ISyncKit
+
+
+
+
+
+#region 🧪DevKit
+// Callers MUST use DevKit for synchronized JSON file kit workflows.
+
+/// <summary>📝 Synchronized JSON file kit.</summary>
+public class DevKit : ISyncKit
+{
+    private readonly Kit _kit;
+
+    public DevKit(Kit kit)
+    {
+        _kit = kit;
+    }
+
+    public Kit Kit => _kit;
+
+    public void Apply(KitDiff diff)
+    {
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public void ImportTransport(TransportKit transport)
+    {
+        var imported = transport.ToKit();
+        var diff = SemioDiff.GetKitDiff(_kit, imported);
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public TransportKit ExportTransport() => TransportKit.FromKit(_kit);
+
+    public void Close() { }
+
+    public static DevKit FromJson(string json) => new(Utility.Deserialize<Kit>(json)!);
+
+    public static Kit Import(string path) => FileKit.Import(path);
+
+    public static void Export(Kit kit, string path) => FileKit.Export(kit, path);
+
+    public static Kit Edit(string path, KitDiff diff) => FileKit.Edit(path, diff);
+
+    public static Kit ImportDevKit(string path) => Import(path);
+
+    public static void ExportDevKit(Kit kit, string path) => Export(kit, path);
+
+    public static Kit EditDevKit(string path, KitDiff diff) => Edit(path, diff);
+}
+
+#endregion 🧪DevKit
+
+
+
+
+
+#region 🏡LocalKit
+// Callers MUST use LocalKit for synchronized local folder kit workflows.
+
+/// <summary>📂 Synchronized folder with .semio/kit.db SQLite database.</summary>
+public class LocalKit : ISyncKit
+{
+    private readonly Kit _kit;
+
+    public LocalKit(Kit kit)
+    {
+        _kit = kit;
+    }
+
+    public Kit Kit => _kit;
+
+    public void Apply(KitDiff diff)
+    {
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public void ImportTransport(TransportKit transport)
+    {
+        var imported = transport.ToKit();
+        var diff = SemioDiff.GetKitDiff(_kit, imported);
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public TransportKit ExportTransport() => TransportKit.FromKit(_kit);
+
+    public void Close() { }
+
+    public static KitImportResult Import(string folderPath) => FolderKit.Import(folderPath);
+
+    public static void Export(Kit kit, string folderPath) => FolderKit.Export(kit, folderPath);
+
+    public static Kit Edit(string folderPath, KitDiff diff) => FolderKit.Edit(folderPath, diff);
+
+    public static KitImportResult ImportLocalKit(string folderPath) => Import(folderPath);
+
+    public static void ExportLocalKit(Kit kit, string folderPath) => Export(kit, folderPath);
+
+    public static Kit EditLocalKit(string folderPath, KitDiff diff) => Edit(folderPath, diff);
+}
+
+#endregion 🏡LocalKit
+
+
+
+
+
+
 #region 📷FileKit
 // Callers MUST use FileKit for JSON file kit import, export, and edit operations.
 
@@ -14842,7 +14996,7 @@ public static class FileKit
 
     public static Kit Edit(string path, KitDiff diff)
     {
-        var edited = TemporaryKit.Edit(Import(path), diff);
+        var edited = TransportKit.EditTransportKit(Import(path), diff);
         Export(edited, path);
         return edited;
     }
@@ -14944,7 +15098,7 @@ public static class FolderKit
     public static Kit Edit(string folderPath, KitDiff diff)
     {
         var imported = Import(folderPath);
-        var edited = TemporaryKit.Edit(imported.Kit, diff);
+        var edited = TransportKit.EditTransportKit(imported.Kit, diff);
         Export(edited, folderPath);
         return edited;
     }
@@ -14960,8 +15114,15 @@ public static class FolderKit
 #region 📐ArchiveKit
 // Callers MUST use ArchiveKit for ZIP archive import, export, and edit operations.
 
-public static class ArchiveKit
+public class ArchiveKit
 {
+    public byte[] Data { get; }
+
+    public ArchiveKit(byte[] data)
+    {
+        Data = data;
+    }
+
     public static KitImportResult Import(string zipPath) => ZipRoundtrip.ImportKit(zipPath);
 
     public static void Export(Kit kit, string zipPath) => ZipRoundtrip.ExportKit(kit, zipPath);
@@ -14969,7 +15130,7 @@ public static class ArchiveKit
     public static Kit Edit(string zipPath, KitDiff diff)
     {
         var imported = Import(zipPath);
-        var edited = TemporaryKit.Edit(imported.Kit, diff);
+        var edited = TransportKit.EditTransportKit(imported.Kit, diff);
         Export(edited, zipPath);
         return edited;
     }
@@ -14985,8 +15146,33 @@ public static class ArchiveKit
 #region 🎆RemoteKit
 // Callers MUST use RemoteKit for HTTP-based JSON and ZIP kit import and in-memory edits.
 
-public static class RemoteKit
+public class RemoteKit : ISyncKit
 {
+    private readonly Kit _kit;
+
+    public RemoteKit(Kit kit)
+    {
+        _kit = kit;
+    }
+
+    public Kit Kit => _kit;
+
+    public void Apply(KitDiff diff)
+    {
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public void ImportTransport(TransportKit transport)
+    {
+        var imported = transport.ToKit();
+        var diff = SemioDiff.GetKitDiff(_kit, imported);
+        SemioDiff.ApplyKitDiff(_kit, diff);
+    }
+
+    public TransportKit ExportTransport() => TransportKit.FromKit(_kit);
+
+    public void Close() { }
+
     public static KitImportResult Import(string url)
     {
         using var client = new HttpClient();
@@ -15016,7 +15202,7 @@ public static class RemoteKit
     public static Kit Edit(string url, KitDiff diff)
     {
         var imported = Import(url);
-        return TemporaryKit.Edit(imported.Kit, diff);
+        return TransportKit.EditTransportKit(imported.Kit, diff);
     }
 }
 
@@ -15035,8 +15221,11 @@ public static class TemporaryKit
     public static Kit Edit(Kit kit, KitDiff diff)
     {
         var clone = Utility.Deserialize<Kit>(Utility.Serialize(kit))!;
-        return SemioDiff.ApplyKitDiff(clone, diff);
+        SemioDiff.ApplyKitDiff(clone, diff);
+        return clone;
     }
+
+    public static Kit EditTemporaryKit(Kit kit, KitDiff diff) => Edit(kit, diff);
 }
 
 #endregion 🔤TemporaryKit
@@ -16539,64 +16728,85 @@ public static class SemioDiff
     }
 
 
-    public static Kit ApplyKitDiff(Kit baseKit, KitDiff diff)
+    public static void ApplyKitDiff(Kit kit, KitDiff diff)
     {
-        var result = Entity<Kit>.DeepClone(baseKit)!;
-
-        if (diff.ShouldSerializeName()) result.Name = diff.Name ?? "";
-        if (diff.ShouldSerializeVersion()) result.Version = diff.Version ?? "";
-        if (diff.ShouldSerializeDescription()) result.Description = diff.Description;
-        if (diff.ShouldSerializeIcon()) result.Icon = diff.Icon;
-        if (diff.ShouldSerializeImage()) result.Image = diff.Image;
-        if (diff.ShouldSerializePreview()) result.Preview = diff.Preview;
-        if (diff.ShouldSerializeRemote()) result.Remote = diff.Remote;
-        if (diff.ShouldSerializeHomepage()) result.Homepage = diff.Homepage;
-        if (diff.ShouldSerializeLicense()) result.License = diff.License;
-        if (diff.ShouldSerializeCreatedAt()) result.CreatedAt = diff.CreatedAt;
-        if (diff.ShouldSerializeUpdatedAt()) result.UpdatedAt = diff.UpdatedAt;
+        if (diff.ShouldSerializeName()) kit.Name = diff.Name ?? "";
+        if (diff.ShouldSerializeVersion()) kit.Version = diff.Version ?? "";
+        if (diff.ShouldSerializeDescription()) kit.Description = diff.Description;
+        if (diff.ShouldSerializeIcon()) kit.Icon = diff.Icon;
+        if (diff.ShouldSerializeImage()) kit.Image = diff.Image;
+        if (diff.ShouldSerializePreview()) kit.Preview = diff.Preview;
+        if (diff.ShouldSerializeRemote()) kit.Remote = diff.Remote;
+        if (diff.ShouldSerializeHomepage()) kit.Homepage = diff.Homepage;
+        if (diff.ShouldSerializeLicense()) kit.License = diff.License;
+        if (diff.ShouldSerializeCreatedAt()) kit.CreatedAt = diff.CreatedAt;
+        if (diff.ShouldSerializeUpdatedAt()) kit.UpdatedAt = diff.UpdatedAt;
 
         if (diff.Types != null)
-            result.Types = ApplyTypesDiff(result.Types ?? new List<Type>(), diff.Types);
+        {
+            kit.Types ??= new List<Type>();
+            ApplyTypesDiff(kit.Types, diff.Types);
+        }
 
         if (diff.Designs != null)
-            result.Designs = ApplyDesignsDiff(result.Designs ?? new List<Design>(), diff.Designs);
+        {
+            kit.Designs ??= new List<Design>();
+            ApplyDesignsDiff(kit.Designs, diff.Designs);
+        }
 
         if (diff.Tags != null)
-            result.Tags = ApplyTagsDiff(result.Tags ?? new List<Tag>(), diff.Tags);
+        {
+            kit.Tags ??= new List<Tag>();
+            ApplyTagsDiff(kit.Tags, diff.Tags);
+        }
 
         if (diff.Folders != null)
-            result.Folders = ApplyFoldersDiff(result.Folders ?? new List<Folder>(), diff.Folders);
+        {
+            kit.Folders ??= new List<Folder>();
+            ApplyFoldersDiff(kit.Folders, diff.Folders);
+        }
 
         if (diff.Ports != null)
-            result.Ports = ApplyPortsDiff(result.Ports ?? new List<Port>(), diff.Ports);
+        {
+            kit.Ports ??= new List<Port>();
+            ApplyPortsDiff(kit.Ports, diff.Ports);
+        }
 
         if (diff.Concepts != null)
-            result.Concepts = ApplyConceptsDiff(result.Concepts ?? new List<Concept>(), diff.Concepts);
+        {
+            kit.Concepts ??= new List<Concept>();
+            ApplyConceptsDiff(kit.Concepts, diff.Concepts);
+        }
 
         if (diff.Files != null)
-            result.Files = ApplyFilesDiff(result.Files ?? new List<File>(), diff.Files);
+        {
+            kit.Files ??= new List<File>();
+            ApplyFilesDiff(kit.Files, diff.Files);
+        }
 
         if (diff.Authors != null)
-            result.Authors = ApplyAuthorsDiff(result.Authors ?? new List<Author>(), diff.Authors);
+        {
+            kit.Authors ??= new List<Author>();
+            ApplyAuthorsDiff(kit.Authors, diff.Authors);
+        }
 
         if (diff.Attributes != null)
-            result.Attributes = ApplyAttributesDiff(result.Attributes ?? new List<Attribute>(), diff.Attributes);
-
-        return result;
+        {
+            kit.Attributes ??= new List<Attribute>();
+            ApplyAttributesDiff(kit.Attributes, diff.Attributes);
+        }
     }
 
-    private static List<Tag> ApplyTagsDiff(List<Tag> baseTags, TagsDiff diff)
+    private static void ApplyTagsDiff(List<Tag> tags, TagsDiff diff)
     {
-        var result = new List<Tag>(baseTags);
-
         if (diff.Removed != null)
-            result.RemoveAll(t => diff.Removed.Any(r => r.Guid == t.Guid));
+            tags.RemoveAll(t => diff.Removed.Any(r => r.Guid == t.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var tag = result.FirstOrDefault(t => t.Guid == update.Tag.Guid);
+                var tag = tags.FirstOrDefault(t => t.Guid == update.Tag.Guid);
                 if (tag != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) tag.Name = update.Diff.Name ?? "";
@@ -16607,23 +16817,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            tags.AddRange(diff.Added);
     }
 
-    private static List<Folder> ApplyFoldersDiff(List<Folder> baseFolders, FoldersDiff diff)
+    private static void ApplyFoldersDiff(List<Folder> folders, FoldersDiff diff)
     {
-        var result = new List<Folder>(baseFolders);
-
         if (diff.Removed != null)
-            result.RemoveAll(f => diff.Removed.Any(r => r.Guid == f.Guid));
+            folders.RemoveAll(f => diff.Removed.Any(r => r.Guid == f.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var folder = result.FirstOrDefault(f => f.Guid == update.Folder.Guid);
+                var folder = folders.FirstOrDefault(f => f.Guid == update.Folder.Guid);
                 if (folder != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) folder.Name = update.Diff.Name ?? "";
@@ -16634,23 +16840,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            folders.AddRange(diff.Added);
     }
 
-    private static List<Port> ApplyPortsDiff(List<Port> basePorts, PortsDiff diff)
+    private static void ApplyPortsDiff(List<Port> ports, PortsDiff diff)
     {
-        var result = new List<Port>(basePorts);
-
         if (diff.Removed != null)
-            result.RemoveAll(p => diff.Removed.Any(r => r.Guid == p.Guid));
+            ports.RemoveAll(p => diff.Removed.Any(r => r.Guid == p.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var port = result.FirstOrDefault(p => p.Guid == update.Port.Guid);
+                var port = ports.FirstOrDefault(p => p.Guid == update.Port.Guid);
                 if (port != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) port.Name = update.Diff.Name ?? "";
@@ -16662,23 +16864,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            ports.AddRange(diff.Added);
     }
 
-    private static List<Concept> ApplyConceptsDiff(List<Concept> baseConcepts, ConceptsDiff diff)
+    private static void ApplyConceptsDiff(List<Concept> concepts, ConceptsDiff diff)
     {
-        var result = new List<Concept>(baseConcepts);
-
         if (diff.Removed != null)
-            result.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
+            concepts.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var concept = result.FirstOrDefault(c => c.Guid == update.Concept.Guid);
+                var concept = concepts.FirstOrDefault(c => c.Guid == update.Concept.Guid);
                 if (concept != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) concept.Name = update.Diff.Name ?? "";
@@ -16689,23 +16887,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            concepts.AddRange(diff.Added);
     }
 
-    private static List<File> ApplyFilesDiff(List<File> baseFiles, FilesDiff diff)
+    private static void ApplyFilesDiff(List<File> files, FilesDiff diff)
     {
-        var result = new List<File>(baseFiles);
-
         if (diff.Removed != null)
-            result.RemoveAll(f => diff.Removed.Any(r => r.Guid == f.Guid));
+            files.RemoveAll(f => diff.Removed.Any(r => r.Guid == f.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var file = result.FirstOrDefault(f => f.Guid == update.File.Guid);
+                var file = files.FirstOrDefault(f => f.Guid == update.File.Guid);
                 if (file != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) file.Name = update.Diff.Name ?? "";
@@ -16716,23 +16910,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            files.AddRange(diff.Added);
     }
 
-    private static List<Author> ApplyAuthorsDiff(List<Author> baseAuthors, AuthorsDiff diff)
+    private static void ApplyAuthorsDiff(List<Author> authors, AuthorsDiff diff)
     {
-        var result = new List<Author>(baseAuthors);
-
         if (diff.Removed != null)
-            result.RemoveAll(a => diff.Removed.Any(r => r.Guid == a.Guid));
+            authors.RemoveAll(a => diff.Removed.Any(r => r.Guid == a.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var author = result.FirstOrDefault(a => a.Guid == update.Author.Guid);
+                var author = authors.FirstOrDefault(a => a.Guid == update.Author.Guid);
                 if (author != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) author.Name = update.Diff.Name ?? "";
@@ -16742,23 +16932,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            authors.AddRange(diff.Added);
     }
 
-    private static List<Attribute> ApplyAttributesDiff(List<Attribute> baseAttributes, AttributesDiff diff)
+    private static void ApplyAttributesDiff(List<Attribute> attributes, AttributesDiff diff)
     {
-        var result = new List<Attribute>(baseAttributes);
-
         if (diff.Removed != null)
-            result.RemoveAll(a => diff.Removed.Any(r => r.Guid == a.Guid));
+            attributes.RemoveAll(a => diff.Removed.Any(r => r.Guid == a.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var attr = result.FirstOrDefault(a => a.Guid == update.Attribute.Guid);
+                var attr = attributes.FirstOrDefault(a => a.Guid == update.Attribute.Guid);
                 if (attr != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeValue()) attr.Value = update.Diff.Value;
@@ -16768,23 +16954,19 @@ public static class SemioDiff
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            attributes.AddRange(diff.Added);
     }
 
-    private static List<Type> ApplyTypesDiff(List<Type> baseTypes, TypesDiff diff)
+    private static void ApplyTypesDiff(List<Type> types, TypesDiff diff)
     {
-        var result = new List<Type>(baseTypes);
-
         if (diff.Removed != null)
-            result.RemoveAll(t => diff.Removed.Any(r => r.Guid == t.Guid));
+            types.RemoveAll(t => diff.Removed.Any(r => r.Guid == t.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var type = result.FirstOrDefault(t => t.Guid == update.Type.Guid);
+                var type = types.FirstOrDefault(t => t.Guid == update.Type.Guid);
                 if (type != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) type.Name = update.Diff.Name ?? "";
@@ -16801,33 +16983,38 @@ public static class SemioDiff
                     if (update.Diff.ShouldSerializeAuthors()) type.Authors = update.Diff.Authors?.Select(a => new AuthorId { Guid = a.Guid }).ToList();
                     if (update.Diff.ShouldSerializeConcepts()) type.Concepts = update.Diff.Concepts?.Select(c => new ConceptId { Guid = c.Guid }).ToList();
                     if (update.Diff.Connectors != null)
-                        type.Connectors = ApplyConnectorsDiff(type.Connectors ?? new List<Connector>(), update.Diff.Connectors);
+                    {
+                        type.Connectors ??= new List<Connector>();
+                        ApplyConnectorsDiff(type.Connectors, update.Diff.Connectors);
+                    }
                     if (update.Diff.Models != null)
-                        type.Models = ApplyModelsDiff(type.Models ?? new List<Model>(), update.Diff.Models);
+                    {
+                        type.Models ??= new List<Model>();
+                        ApplyModelsDiff(type.Models, update.Diff.Models);
+                    }
                     if (update.Diff.Attributes != null)
-                        type.Attributes = ApplyAttributesDiff(type.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        type.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(type.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            types.AddRange(diff.Added);
     }
 
-    private static List<Connector> ApplyConnectorsDiff(List<Connector> baseConnectors, ConnectorsDiff diff)
+    private static void ApplyConnectorsDiff(List<Connector> connectors, ConnectorsDiff diff)
     {
-        var result = new List<Connector>(baseConnectors);
-
         if (diff.Removed != null)
-            result.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
+            connectors.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var connector = result.FirstOrDefault(c => c.Guid == update.Connector.Guid);
+                var connector = connectors.FirstOrDefault(c => c.Guid == update.Connector.Guid);
                 if (connector != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) connector.Name = update.Diff.Name;
@@ -16848,29 +17035,28 @@ public static class SemioDiff
                         connector.Direction = new Vector { X = bd.X + (dd?.X ?? 0), Y = bd.Y + (dd?.Y ?? 0), Z = bd.Z + (dd?.Z ?? 0) };
                     }
                     if (update.Diff.Attributes != null)
-                        connector.Attributes = ApplyAttributesDiff(connector.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        connector.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(connector.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            connectors.AddRange(diff.Added);
     }
 
-    private static List<Model> ApplyModelsDiff(List<Model> baseModels, ModelsDiff diff)
+    private static void ApplyModelsDiff(List<Model> models, ModelsDiff diff)
     {
-        var result = new List<Model>(baseModels);
-
         if (diff.Removed != null)
-            result.RemoveAll(m => diff.Removed.Any(r => r.Guid == m.Guid));
+            models.RemoveAll(m => diff.Removed.Any(r => r.Guid == m.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var model = result.FirstOrDefault(m => m.Guid == update.Model.Guid);
+                var model = models.FirstOrDefault(m => m.Guid == update.Model.Guid);
                 if (model != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) model.Name = update.Diff.Name;
@@ -16878,29 +17064,28 @@ public static class SemioDiff
                     if (update.Diff.ShouldSerializeFile()) model.File = update.Diff.File;
                     if (update.Diff.ShouldSerializeTags()) model.Tags = update.Diff.Tags;
                     if (update.Diff.Attributes != null)
-                        model.Attributes = ApplyAttributesDiff(model.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        model.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(model.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            models.AddRange(diff.Added);
     }
 
-    private static List<Design> ApplyDesignsDiff(List<Design> baseDesigns, DesignsDiff diff)
+    private static void ApplyDesignsDiff(List<Design> designs, DesignsDiff diff)
     {
-        var result = new List<Design>(baseDesigns);
-
         if (diff.Removed != null)
-            result.RemoveAll(d => diff.Removed.Any(r => r.Guid == d.Guid));
+            designs.RemoveAll(d => diff.Removed.Any(r => r.Guid == d.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var design = result.FirstOrDefault(d => d.Guid == update.Design.Guid);
+                var design = designs.FirstOrDefault(d => d.Guid == update.Design.Guid);
                 if (design != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) design.Name = update.Diff.Name ?? "";
@@ -16918,33 +17103,38 @@ public static class SemioDiff
                     if (update.Diff.ShouldSerializeAuthors()) design.Authors = update.Diff.Authors?.Select(a => new AuthorId { Guid = a.Guid }).ToList();
                     if (update.Diff.ShouldSerializeConcepts()) design.Concepts = update.Diff.Concepts?.Select(c => new ConceptId { Guid = c.Guid }).ToList();
                     if (update.Diff.Pieces != null)
-                        design.Pieces = ApplyPiecesDiff(design.Pieces ?? new List<Piece>(), update.Diff.Pieces);
+                    {
+                        design.Pieces ??= new List<Piece>();
+                        ApplyPiecesDiff(design.Pieces, update.Diff.Pieces);
+                    }
                     if (update.Diff.Connections != null)
-                        design.Connections = ApplyConnectionsDiff(design.Connections ?? new List<Connection>(), update.Diff.Connections);
+                    {
+                        design.Connections ??= new List<Connection>();
+                        ApplyConnectionsDiff(design.Connections, update.Diff.Connections);
+                    }
                     if (update.Diff.Attributes != null)
-                        design.Attributes = ApplyAttributesDiff(design.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        design.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(design.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            designs.AddRange(diff.Added);
     }
 
-    private static List<Piece> ApplyPiecesDiff(List<Piece> basePieces, PiecesDiff diff)
+    private static void ApplyPiecesDiff(List<Piece> pieces, PiecesDiff diff)
     {
-        var result = new List<Piece>(basePieces);
-
         if (diff.Removed != null)
-            result.RemoveAll(p => diff.Removed.Any(r => r.Guid == p.Guid));
+            pieces.RemoveAll(p => diff.Removed.Any(r => r.Guid == p.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var piece = result.FirstOrDefault(p => p.Guid == update.Piece.Guid);
+                var piece = pieces.FirstOrDefault(p => p.Guid == update.Piece.Guid);
                 if (piece != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeName()) piece.Name = update.Diff.Name;
@@ -16959,29 +17149,28 @@ public static class SemioDiff
                     if (update.Diff.ShouldSerializeIsLocked()) piece.IsLocked = update.Diff.IsLocked;
                     if (update.Diff.ShouldSerializeColor()) piece.Color = update.Diff.Color;
                     if (update.Diff.Attributes != null)
-                        piece.Attributes = ApplyAttributesDiff(piece.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        piece.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(piece.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            pieces.AddRange(diff.Added);
     }
 
-    private static List<Connection> ApplyConnectionsDiff(List<Connection> baseConnections, ConnectionsDiff diff)
+    private static void ApplyConnectionsDiff(List<Connection> connections, ConnectionsDiff diff)
     {
-        var result = new List<Connection>(baseConnections);
-
         if (diff.Removed != null)
-            result.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
+            connections.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var connection = result.FirstOrDefault(c => c.Guid == update.Connection.Guid);
+                var connection = connections.FirstOrDefault(c => c.Guid == update.Connection.Guid);
                 if (connection != null && update.Diff != null)
                 {
                     if (update.Diff.ShouldSerializeConnected() && update.Diff.Connected != null)
@@ -17010,15 +17199,16 @@ public static class SemioDiff
                     if (update.Diff.ShouldSerializeU()) connection.U = (connection.U ?? 0f) + (update.Diff.U ?? 0f);
                     if (update.Diff.ShouldSerializeV()) connection.V = (connection.V ?? 0f) + (update.Diff.V ?? 0f);
                     if (update.Diff.Attributes != null)
-                        connection.Attributes = ApplyAttributesDiff(connection.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    {
+                        connection.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(connection.Attributes, update.Diff.Attributes);
+                    }
                 }
             }
         }
 
         if (diff.Added != null)
-            result.AddRange(diff.Added);
-
-        return result;
+            connections.AddRange(diff.Added);
     }
 
     public static bool AreKitsEqual(Kit a, Kit b)
