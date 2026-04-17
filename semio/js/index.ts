@@ -19378,6 +19378,19 @@ async function bench(name: string, fn: () => Promise<void> | void) {
   const end = performance.now();
   const durationSec = (end - start) / 1000 / BENCH_ITERATIONS;
   console.log(`${name},${durationSec.toFixed(6)}`);
+  await appendBenchmarkCsv("typescript", name, durationSec);
+}
+
+async function appendBenchmarkCsv(language: string, name: string, durationSeconds: number) {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const sourceDir = path.dirname(fileURLToPath(import.meta.url));
+  const csvPath = path.resolve(sourceDir, "../benchmark.csv");
+  if (!fs.existsSync(csvPath) || fs.statSync(csvPath).size === 0) {
+    fs.writeFileSync(csvPath, "language,name,durationSeconds\n");
+  }
+  fs.appendFileSync(csvPath, `${language},${JSON.stringify(name)},${durationSeconds.toFixed(9)}\n`);
 }
 
 // 🚩Runs all benchmarks. MUST only be called explicitly (e.g. via CLI flag).

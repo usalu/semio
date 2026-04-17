@@ -38747,66 +38747,50 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       }
       dragPositionRef.current = { x: draggedX, y: draggedY };
       pendingPieceUpdatesRef.current = updatedPieces;
-      // Don't set dragging pieces here — wait for the preview path below
-      // which computes dragDiff and marks only the actually-affected pieces/connections.
+      // Drag is a pure translation: every affected piece shifts by the same (dx, dy) in
+      // pixel space. Skip JSON.parse/stringify clone, applyDesignDiff, and piecesMetadata
+      // (which re-flattens the whole design). Compute new visual positions from the
+      // baseline captured at drag start. dragPiecesInDesign is cheap (O(pieces+connections))
+      // and still needed to produce the diff recorded into the transaction stack.
       const previewBaseDesign = dragPreviewBaseDesignRef.current;
-      const previewFlatDesign = dragPreviewFlatDesignRef.current;
       const previewPieceIds = dragPreviewPieceIdsRef.current;
       const startPos = dragStartPositionRef.current;
-      if (design && previewBaseDesign && previewFlatDesign && startPos && previewPieceIds.length > 0) {
-        const offsetU = (draggedX - startPos.x) / ICON_WIDTH;
-        const offsetV = -(draggedY - startPos.y) / ICON_WIDTH;
+      const baseline = dragAffectedBaselinePositionsRef.current;
+      if (design && previewBaseDesign && startPos && previewPieceIds.length > 0 && baseline.size > 0) {
+        const deltaX = draggedX - startPos.x;
+        const deltaY = draggedY - startPos.y;
+        const offsetU = deltaX / ICON_WIDTH;
+        const offsetV = -deltaY / ICON_WIDTH;
         const piecesDesign = { guid: "", name: "", pieces: previewPieceIds.map((g) => ({ guid: g })) } as Design;
-        const dragDiff = dragPiecesInDesign(previewFlatDesign, piecesDesign, { u: offsetU, v: offsetV });
-        const connectionDiffUpdates = scaleConnectionDiffsForDrag(dragDiff.connections?.updated ?? [], previewBaseDesign);
+        const dragDiff = dragPiecesInDesign(previewBaseDesign, piecesDesign, { u: offsetU, v: offsetV });
+        const scaledConnectionDiffs = scaleConnectionDiffsForDrag(dragDiff.connections?.updated ?? [], previewBaseDesign);
         if (dragDiff.connections?.updated) {
-          dragDiff.connections.updated = connectionDiffUpdates;
+          dragDiff.connections.updated = scaledConnectionDiffs;
         }
-        const updatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(previewBaseDesign)), dragDiff);
-        const kitDesigns = kit.designs ?? [];
-        const updatedKit: Kit = {
-          ...kit,
-          designs: kitDesigns.some((d) => d.guid === updatedDesign.guid) ? kitDesigns.map((d) => (d.guid === updatedDesign.guid ? updatedDesign : d)) : [...kitDesigns, updatedDesign],
-        };
-        const newMetaResult = piecesMetadata(updatedKit, updatedDesign.guid);
-        if (newMetaResult.ok) {
-          const visualPositions = new Map<string, { x: number; y: number }>();
-          for (const [pieceGuid, meta] of newMetaResult.change) {
-            visualPositions.set(pieceGuid, {
-              x: (meta.center.u ?? 0) * ICON_WIDTH,
-              y: -((meta.center.v ?? 0) * ICON_WIDTH),
-            });
-          }
-          if (visualPositions.size > 0) {
-            applyDragPreviewPositions(visualPositions);
-            // Only mark pieces that were actually changed by the drag diff as dragging.
-            // dragDiff.pieces.updated contains fixed pieces whose centers moved.
-            // dragDiff.connections.updated contains connections whose u/v changed.
-            // Do NOT mark connection endpoint pieces — that is handled by the
-            // diagram/scene propagation (one-hop) in buildDiagramSnapshot/buildSceneSnapshot.
-            if (designStore) {
-              const draggedPieceGuids = new Set<string>();
-              for (const pu of dragDiff.pieces?.updated ?? []) {
-                if (pu.piece?.guid) draggedPieceGuids.add(pu.piece.guid);
-              }
-              const draggedConnectionGuids = new Set<string>();
-              for (const cu of dragDiff.connections?.updated ?? []) {
-                const connGuid = (cu as any).connection?.guid;
-                if (connGuid) draggedConnectionGuids.add(connGuid);
-              }
-              designStore.setDraggingPiecesAndConnections(draggedPieceGuids, draggedConnectionGuids);
-              // Record drag diff into the transaction stack on each tick.
-              // The kit is never mutated during the transaction — each tick's diff is
-              // relative to the original kit state.  At finalize the stack is squashed
-              // (first.undo + last.do) giving one clean history entry.
-              const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
-              const connectionDiffUpdates = (dragDiff.connections?.updated ?? []).map((cu: any) => ({
-                connection: { guid: cu.connection.guid },
-                diff: cu.diff,
-              }));
-              if (pieceDiffUpdates.length > 0 || connectionDiffUpdates.length > 0) {
-                designStore.execute("semio.designApp.dragUpdate", "semio.sketchpad.drag.onNodeDrag", pieceDiffUpdates, connectionDiffUpdates);
-              }
+        const visualPositions = new Map<string, { x: number; y: number }>();
+        for (const [pieceGuid, base] of baseline) {
+          visualPositions.set(pieceGuid, { x: base.x + deltaX, y: base.y + deltaY });
+        }
+        if (visualPositions.size > 0) {
+          applyDragPreviewPositions(visualPositions);
+          if (designStore) {
+            const draggedPieceGuids = new Set<string>();
+            for (const pu of dragDiff.pieces?.updated ?? []) {
+              if (pu.piece?.guid) draggedPieceGuids.add(pu.piece.guid);
+            }
+            const draggedConnectionGuids = new Set<string>();
+            for (const cu of dragDiff.connections?.updated ?? []) {
+              const connGuid = (cu as any).connection?.guid;
+              if (connGuid) draggedConnectionGuids.add(connGuid);
+            }
+            designStore.setDraggingPiecesAndConnections(draggedPieceGuids, draggedConnectionGuids);
+            const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
+            const connectionDiffUpdates = (dragDiff.connections?.updated ?? []).map((cu: any) => ({
+              connection: { guid: cu.connection.guid },
+              diff: cu.diff,
+            }));
+            if (pieceDiffUpdates.length > 0 || connectionDiffUpdates.length > 0) {
+              designStore.execute("semio.designApp.dragUpdate", "semio.sketchpad.drag.onNodeDrag", pieceDiffUpdates, connectionDiffUpdates);
             }
           }
         }
@@ -38836,13 +38820,13 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       designStore?.clearDraggingPieces();
       // Capture refs before clearing them — needed for final diff computation.
       const previewBaseDesign = dragPreviewBaseDesignRef.current;
-      const previewFlatDesign = dragPreviewFlatDesignRef.current;
       const previewPieceIds = dragPreviewPieceIdsRef.current;
+      const baseline = dragAffectedBaselinePositionsRef.current;
       dragPreviewPieceIdsRef.current = [];
       dragPreviewBaseDesignRef.current = null;
-      dragPreviewFlatDesignRef.current = null;
       dragPreviewLastPositionsRef.current = new Map();
       dragPreviewNodeIdMapRef.current = new Map();
+      dragAffectedBaselinePositionsRef.current = new Map();
       const finalX = node.position.x;
       const finalY = node.position.y;
       const draggedPieceId = getPieceIdFromNode(node);
@@ -38851,41 +38835,32 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       const startPos = dragStartPositionRef.current;
       dragStartPositionRef.current = null;
       const visualPositions = new Map<string, { x: number; y: number }>();
-      // Record one final diff using the ORIGINAL flat design captured at drag start.
+      // Record one final diff using the ORIGINAL design captured at drag start.
       // This ensures the last frame is always captured even if the throttle skipped it.
-      if (previewBaseDesign && previewFlatDesign && startPos && previewPieceIds.length > 0) {
-        const offsetU = (finalX - startPos.x) / ICON_WIDTH;
-        const offsetV = -(finalY - startPos.y) / ICON_WIDTH;
+      if (previewBaseDesign && startPos && previewPieceIds.length > 0) {
+        const deltaX = finalX - startPos.x;
+        const deltaY = finalY - startPos.y;
+        const offsetU = deltaX / ICON_WIDTH;
+        const offsetV = -deltaY / ICON_WIDTH;
         const piecesDesign = { guid: "", name: "", pieces: previewPieceIds.map((g) => ({ guid: g })) } as Design;
-        const dragDiff = dragPiecesInDesign(previewFlatDesign, piecesDesign, { u: offsetU, v: offsetV });
+        const dragDiff = dragPiecesInDesign(previewBaseDesign, piecesDesign, { u: offsetU, v: offsetV });
         const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
-        const connectionDiffUpdates = scaleConnectionDiffsForDrag(dragDiff.connections?.updated ?? [], previewBaseDesign);
+        const scaledConnectionDiffs = scaleConnectionDiffsForDrag(dragDiff.connections?.updated ?? [], previewBaseDesign);
         if (dragDiff.connections?.updated) {
-          dragDiff.connections.updated = connectionDiffUpdates;
+          dragDiff.connections.updated = scaledConnectionDiffs;
         }
-        // Record the final drag diff to capture the exact release position.
-        // Intermediate diffs were already recorded during drag ticks.
-        // The kit is still at the pre-drag state — inverse is computed correctly.
-        // At finalize, all entries (tick diffs + final diff) are squashed into one history entry.
-        if (designStore && (pieceDiffUpdates.length > 0 || connectionDiffUpdates.length > 0)) {
+        if (designStore && (pieceDiffUpdates.length > 0 || scaledConnectionDiffs.length > 0)) {
           designStore.execute(
             "semio.designApp.dragUpdate",
             "semio.sketchpad.drag.onNodeDragStop",
             pieceDiffUpdates,
-            connectionDiffUpdates.map((cu: any) => ({ connection: { guid: cu.connection.guid }, diff: cu.diff })),
+            scaledConnectionDiffs.map((cu: any) => ({ connection: { guid: cu.connection.guid }, diff: cu.diff })),
           );
         }
-        // Compute visual positions for React Flow node sync.
-        const updatedDesign = applyDesignDiff(JSON.parse(JSON.stringify(previewBaseDesign)), dragDiff);
-        const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === previewBaseDesign.guid ? updatedDesign : d)) };
-        const newMetaResult = piecesMetadata(updatedKit, previewBaseDesign.guid);
-        if (newMetaResult.ok) {
-          for (const [pieceGuid, meta] of newMetaResult.change) {
-            visualPositions.set(pieceGuid, {
-              x: (meta.center.u ?? 0) * ICON_WIDTH,
-              y: -((meta.center.v ?? 0) * ICON_WIDTH),
-            });
-          }
+        // Compute visual positions for React Flow node sync using the baseline captured
+        // at drag start — no re-flatten needed since drag is a pure translation.
+        for (const [pieceGuid, base] of baseline) {
+          visualPositions.set(pieceGuid, { x: base.x + deltaX, y: base.y + deltaY });
         }
       }
       if (visualPositions.size > 0) {

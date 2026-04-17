@@ -1,0 +1,6 @@
+{
+  "title": "Optimize Flatten Design With Merkle Hash Cache",
+  "status": "open",
+  "description": "Introduce a merkle-tree based hashed optimization for flattenDesign that makes incremental recomputation possible. Plane and center must have their own merkle hash per piece so only the parts whose relevant inputs changed are recomputed. Hashes MUST NOT change when unrelated fields (e.g., color, description, non-placement attributes, unrelated pieces/connections) change. Implement the same design for all programming languages (py, js/ts, rs, go, .NET) and add identical tests across all implementations that read inputs and expected outputs from shared asset files under semio/assets/semio/.",
+  "goal": "🎯aioptimizedrepo"
+}

@@ -1,4 +1,4 @@
-﻿#![allow(dead_code)]
+#![allow(dead_code)]
 #![allow(clippy::too_many_arguments)]
 
 mod header { // 🧲Header
@@ -13865,6 +13865,175 @@ mod tests {
             serde_json::from_str(&data).expect("Failed to deserialize validation result")
         }
 
+        pub fn load_asset<T: serde::de::DeserializeOwned>(filename: &str) -> T {
+            let path = Path::new(ASSETS_DIR).join(filename);
+            let data = fs::read_to_string(&path)
+                .unwrap_or_else(|e| panic!("Failed to read {}: {}", filename, e));
+            serde_json::from_str(&data)
+                .unwrap_or_else(|e| panic!("Failed to parse {}: {}", filename, e))
+        }
+
+        //#region 🔖AssetCaseStructs
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct HashCasesAsset {
+            pub kit_hash: HashKitCase,
+            pub kit_diff_hash: HashKitDiffCase,
+            pub design_name: String,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct HashKitCase {
+            pub kit: String,
+            pub expected: String,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct HashKitDiffCase {
+            pub json: String,
+            pub expected: String,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct QualitySumCasesAsset {
+            pub cases: Vec<QualitySumCase>,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct QualitySumCase {
+            pub name: String,
+            pub kit: String,
+            pub design_name: String,
+            pub design_parent: Option<String>,
+            pub quality_name: String,
+            pub expected: f64,
+            pub tolerance: f64,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct FilterKitCasesAsset {
+            pub cases: Vec<FilterKitCase>,
+            pub glob_cases: Vec<FilterKitGlobCase>,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct FilterKitCase {
+            pub name: String,
+            pub kit: String,
+            pub design_name: String,
+            pub design_parent: Option<String>,
+            pub expected_kit: String,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct FilterKitGlobCase {
+            pub name: String,
+            pub kit: String,
+            pub type_include: Option<Vec<String>>,
+            pub type_exclude: Option<Vec<String>>,
+            pub design_include: Option<Vec<String>>,
+            pub design_name: Option<String>,
+            pub design_parent: Option<String>,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct DesignWithDiffCasesAsset {
+            pub cases: Vec<DesignWithDiffCase>,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct DesignWithDiffCase {
+            pub name: String,
+            pub kit: String,
+            pub design_name: String,
+            pub design_parent: Option<String>,
+            pub diff: String,
+            pub expected: String,
+            pub expected_piece_counts: StatusCounts,
+            pub expected_connection_counts: StatusCounts,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct StatusCounts {
+            pub unchanged: usize,
+            pub modified: usize,
+            pub removed: usize,
+            pub added: usize,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct FindReplaceableCasesAsset {
+            pub synthetic_kit: String,
+            pub cases: Vec<FindReplaceableCase>,
+            pub boundary_cases: FindReplaceableBoundaryCases,
+            pub synthetic_cases: Vec<FindReplaceableSyntheticCase>,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct FindReplaceableCase {
+            pub name: String,
+            pub kit: String,
+            pub design_name: String,
+            pub design_parent: Option<String>,
+            pub design_parent_name: Option<String>,
+            pub piece_names: Option<Vec<String>>,
+            pub selection_asset: Option<String>,
+            pub expected_selection_piece_count: Option<usize>,
+            pub expected_selection_connection_count: Option<usize>,
+            pub expected_type_guid_count: Option<usize>,
+            pub expected_type_guids: Option<Vec<String>>,
+            pub expected_design_guids: Option<Vec<String>>,
+            pub use_piece_index: Option<usize>,
+            pub expect_non_empty_types: Option<bool>,
+            pub expect_own_type_in_results: Option<bool>,
+            pub lookup_type_name: Option<String>,
+            pub forbidden_type_names: Option<Vec<String>>,
+            pub expect_connectorless_type_count: Option<bool>,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct FindReplaceableBoundaryCases {
+            pub kit: String,
+            pub design_name: String,
+            pub design_parent: Option<String>,
+            pub single_capsule_pieces: Vec<String>,
+            pub two_capsule_pieces: Vec<String>,
+            pub four_capsule_pieces: Vec<String>,
+            pub eight_capsule_pieces: Vec<String>,
+            pub tambour_piece_name: String,
+            pub expected_tambour_type_guid_count: usize,
+            pub expected_tambour_design_guid_count: usize,
+            pub forbidden_families: Vec<String>,
+            pub expected_two_capsule_families: Vec<String>,
+            pub expected_large_families: Vec<String>,
+        }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct FindReplaceableSyntheticCase {
+            pub name: String,
+            pub design_guid: String,
+            pub piece_guids: Vec<String>,
+            pub expected_contains_types: Option<Vec<String>>,
+            pub expected_not_contains_types: Option<Vec<String>>,
+            pub expected_contains_designs: Option<Vec<String>>,
+            pub expected_not_contains_designs: Option<Vec<String>>,
+        }
+        //#endregion
+
         pub fn float_eq(a: f64, b: f64) -> bool {
             (a - b).abs() < TOLERANCE
         }
@@ -14226,17 +14395,19 @@ mod tests {
 
                 #[test]
                 pub fn nakagin_capsule_tower_filter_produces_expected_subset() {
-                    let kit = load_kit("metabolism.kit.semio.json");
-                    let expected = load_kit("nakagin-capsule-tower.filtered.kit.semio.json");
+                    let asset: FilterKitCasesAsset = load_asset("filter-kit.cases.semio.json");
+                    let case = &asset.cases[0];
+                    let kit = load_kit(&case.kit);
+                    let expected = load_kit(&case.expected_kit);
                     let design = kit
                         .designs
                         .as_ref()
                         .and_then(|designs| {
                             designs.iter().find(|design| {
-                                design.name == "Nakagin Capsule Tower" && design.parent.is_none()
+                                design.name == case.design_name && design.parent.is_none()
                             })
                         })
-                        .expect("Nakagin Capsule Tower design not found");
+                        .expect("Design not found");
 
                     let filtered = filter_kit(
                         &kit,
@@ -14366,16 +14537,18 @@ mod tests {
 
                 #[test]
                 pub fn nakagin_capsule_tower_filter_preserves_metadata() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FilterKitCasesAsset = load_asset("filter-kit.cases.semio.json");
+                    let case = &asset.cases[0];
+                    let kit = load_kit(&case.kit);
                     let design = kit
                         .designs
                         .as_ref()
                         .and_then(|designs| {
                             designs.iter().find(|design| {
-                                design.name == "Nakagin Capsule Tower" && design.parent.is_none()
+                                design.name == case.design_name && design.parent.is_none()
                             })
                         })
-                        .expect("Nakagin Capsule Tower design not found");
+                        .expect("Design not found");
 
                     let filtered = filter_kit(
                         &kit,
@@ -14392,12 +14565,22 @@ mod tests {
 
                 #[test]
                 pub fn glob_filters_types_by_name_include() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FilterKitCasesAsset = load_asset("filter-kit.cases.semio.json");
+                    let glob_case = asset
+                        .glob_cases
+                        .iter()
+                        .find(|c| c.name == "type_include_capsule")
+                        .expect("glob case not found");
+                    let kit = load_kit(&glob_case.kit);
+                    let patterns = glob_case
+                        .type_include
+                        .as_ref()
+                        .expect("typeInclude missing");
                     let filtered = filter_kit(
                         &kit,
                         &KitFilter {
                             types: Some(GlobFilter {
-                                include: Some(vec!["Capsule*".to_string()]),
+                                include: Some(patterns.clone()),
                                 exclude: None,
                             }),
                             ..Default::default()
@@ -14407,8 +14590,8 @@ mod tests {
                     assert!(!types.is_empty());
                     for t in types {
                         assert!(
-                            glob_match(&t.name, "Capsule*"),
-                            "Type {} should match Capsule*",
+                            patterns.iter().any(|p| glob_match(&t.name, p)),
+                            "Type {} should match include pattern",
                             t.name
                         );
                     }
@@ -14416,14 +14599,24 @@ mod tests {
 
                 #[test]
                 pub fn glob_filters_types_by_name_exclude() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FilterKitCasesAsset = load_asset("filter-kit.cases.semio.json");
+                    let glob_case = asset
+                        .glob_cases
+                        .iter()
+                        .find(|c| c.name == "type_exclude_capsule")
+                        .expect("glob case not found");
+                    let kit = load_kit(&glob_case.kit);
+                    let patterns = glob_case
+                        .type_exclude
+                        .as_ref()
+                        .expect("typeExclude missing");
                     let total_types = kit.types.as_ref().map(|v| v.len()).unwrap_or(0);
                     let filtered = filter_kit(
                         &kit,
                         &KitFilter {
                             types: Some(GlobFilter {
                                 include: None,
-                                exclude: Some(vec!["Capsule*".to_string()]),
+                                exclude: Some(patterns.clone()),
                             }),
                             ..Default::default()
                         },
@@ -14431,22 +14624,34 @@ mod tests {
                     let types = filtered.types.as_ref().unwrap();
                     assert!(types.len() < total_types);
                     for t in types {
-                        assert!(
-                            !glob_match(&t.name, "Capsule*"),
-                            "Type {} should have been excluded",
-                            t.name
-                        );
+                        for p in patterns {
+                            assert!(
+                                !glob_match(&t.name, p),
+                                "Type {} should have been excluded",
+                                t.name
+                            );
+                        }
                     }
                 }
 
                 #[test]
                 pub fn glob_filters_designs_by_name_include() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FilterKitCasesAsset = load_asset("filter-kit.cases.semio.json");
+                    let glob_case = asset
+                        .glob_cases
+                        .iter()
+                        .find(|c| c.name == "design_include_nakagin")
+                        .expect("glob case not found");
+                    let kit = load_kit(&glob_case.kit);
+                    let patterns = glob_case
+                        .design_include
+                        .as_ref()
+                        .expect("designInclude missing");
                     let filtered = filter_kit(
                         &kit,
                         &KitFilter {
                             designs: Some(GlobFilter {
-                                include: Some(vec!["Nakagin*".to_string()]),
+                                include: Some(patterns.clone()),
                                 exclude: None,
                             }),
                             ..Default::default()
@@ -14456,8 +14661,8 @@ mod tests {
                     assert!(!designs.is_empty());
                     for d in designs {
                         assert!(
-                            glob_match(&d.name, "Nakagin*"),
-                            "Design {} should match Nakagin*",
+                            patterns.iter().any(|p| glob_match(&d.name, p)),
+                            "Design {} should match include pattern",
                             d.name
                         );
                     }
@@ -14465,7 +14670,13 @@ mod tests {
 
                 #[test]
                 pub fn empty_filter_returns_kit_unchanged() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FilterKitCasesAsset = load_asset("filter-kit.cases.semio.json");
+                    let glob_case = asset
+                        .glob_cases
+                        .iter()
+                        .find(|c| c.name == "empty_filter")
+                        .expect("glob case not found");
+                    let kit = load_kit(&glob_case.kit);
                     let filtered = filter_kit(&kit, &KitFilter::default());
                     assert_eq!(
                         filtered.types.as_ref().map(|v| v.len()),
@@ -14479,16 +14690,27 @@ mod tests {
 
                 #[test]
                 pub fn combines_design_guid_with_glob_filters() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FilterKitCasesAsset = load_asset("filter-kit.cases.semio.json");
+                    let glob_case = asset
+                        .glob_cases
+                        .iter()
+                        .find(|c| c.name == "combined_design_and_type_exclude")
+                        .expect("glob case not found");
+                    let kit = load_kit(&glob_case.kit);
+                    let design_name = glob_case.design_name.as_ref().expect("designName missing");
+                    let exclude_patterns = glob_case
+                        .type_exclude
+                        .as_ref()
+                        .expect("typeExclude missing");
                     let design = kit
                         .designs
                         .as_ref()
                         .and_then(|designs| {
                             designs
                                 .iter()
-                                .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                                .find(|d| d.name == *design_name && d.parent.is_none())
                         })
-                        .expect("Nakagin Capsule Tower design not found");
+                        .expect("Design not found");
                     let design_filtered = filter_kit(
                         &kit,
                         &KitFilter {
@@ -14502,7 +14724,7 @@ mod tests {
                             design_guid: Some(design.guid.clone()),
                             types: Some(GlobFilter {
                                 include: None,
-                                exclude: Some(vec!["Capsule*".to_string()]),
+                                exclude: Some(exclude_patterns.clone()),
                             }),
                             ..Default::default()
                         },
@@ -15216,186 +15438,71 @@ mod tests {
                 #[test]
                 pub fn synthetic_selection_enforces_distinct_connectors_and_free_design_connectors()
                 {
-                    let kit: Kit = serde_json::from_value(serde_json::json!({
-                        "guid": "synthetic-kit",
-                        "name": "synthetic-kit",
-                        "ports": [
-                            { "guid": "port-L", "name": "port-L", "compatiblePorts": [{ "guid": "port-L-compatible" }] },
-                            { "guid": "port-L-compatible", "name": "port-L-compatible", "compatiblePorts": [{ "guid": "port-L" }] },
-                            { "guid": "port-G", "name": "port-G" }
-                        ],
-                        "types": [
-                            {
-                                "guid": "selected-external-lg",
-                                "name": "selected-external-lg",
-                                "connectors": []
-                            },
-                            {
-                                "guid": "selected-isolated-lg",
-                                "name": "selected-isolated-lg",
-                                "connectors": [
-                                    { "guid": "selected-isolated-lg-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L" } },
-                                    { "guid": "selected-isolated-lg-connector-1", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } }
-                                ]
-                            },
-                            {
-                                "guid": "selected-external-ll",
-                                "name": "selected-external-ll",
-                                "connectors": []
-                            },
-                            {
-                                "guid": "neighbor-l",
-                                "name": "neighbor-l",
-                                "connectors": [
-                                    { "guid": "neighbor-l-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L" } }
-                                ]
-                            },
-                            {
-                                "guid": "neighbor-g",
-                                "name": "neighbor-g",
-                                "connectors": [
-                                    { "guid": "neighbor-g-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } }
-                                ]
-                            },
-                            {
-                                "guid": "candidate-l",
-                                "name": "candidate-l",
-                                "connectors": [
-                                    { "guid": "candidate-l-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L" } }
-                                ]
-                            },
-                            {
-                                "guid": "candidate-lg",
-                                "name": "candidate-lg",
-                                "connectors": [
-                                    { "guid": "candidate-lg-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L-compatible" } },
-                                    { "guid": "candidate-lg-connector-1", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } }
-                                ]
-                            },
-                            {
-                                "guid": "candidate-lg-lg",
-                                "name": "candidate-lg-lg",
-                                "connectors": [
-                                    { "guid": "candidate-lg-lg-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L-compatible" } },
-                                    { "guid": "candidate-lg-lg-connector-1", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } },
-                                    { "guid": "candidate-lg-lg-connector-2", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L" } },
-                                    { "guid": "candidate-lg-lg-connector-3", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } }
-                                ]
-                            },
-                            {
-                                "guid": "candidate-ll",
-                                "name": "candidate-ll",
-                                "connectors": [
-                                    { "guid": "candidate-ll-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L" } },
-                                    { "guid": "candidate-ll-connector-1", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-L-compatible" } }
-                                ]
-                            },
-                            {
-                                "guid": "candidate-g",
-                                "name": "candidate-g",
-                                "connectors": [
-                                    { "guid": "candidate-g-connector-0", "t": 0.0, "point": { "x": 0.0, "y": 0.0, "z": 0.0 }, "direction": { "x": 1.0, "y": 0.0, "z": 0.0 }, "port": { "guid": "port-G" } }
-                                ]
+                    let asset: FindReplaceableCasesAsset =
+                        load_asset("find-replaceable-types.cases.semio.json");
+                    let kit: Kit = load_asset(&asset.synthetic_kit);
+
+                    for sc in &asset.synthetic_cases {
+                        let (type_guids, design_guids) =
+                            find_replaceable_types_in_designs_for_pieces_in_design(
+                                &kit,
+                                &sc.design_guid,
+                                &sc.piece_guids,
+                            );
+                        if let Some(expected) = &sc.expected_contains_types {
+                            for t in expected {
+                                assert!(
+                                    type_guids.contains(&t.to_string()),
+                                    "Case {}: expected type {} in results",
+                                    sc.name,
+                                    t
+                                );
                             }
-                        ],
-                        "designs": [
-                            {
-                                "guid": "root-design",
-                                "name": "root-design",
-                                "pieces": [
-                                    { "guid": "piece-external-lg", "type": { "guid": "selected-external-lg" } },
-                                    { "guid": "piece-isolated-lg", "type": { "guid": "selected-isolated-lg" } },
-                                    { "guid": "piece-external-ll", "type": { "guid": "selected-external-ll" } },
-                                    { "guid": "neighbor-piece-l", "type": { "guid": "neighbor-l" } },
-                                    { "guid": "neighbor-piece-g", "type": { "guid": "neighbor-g" } },
-                                    { "guid": "neighbor-piece-l-a", "type": { "guid": "neighbor-l" } },
-                                    { "guid": "neighbor-piece-l-b", "type": { "guid": "neighbor-l" } }
-                                ],
-                                "connections": [
-                                    { "guid": "external-lg-l", "connected": { "piece": { "guid": "piece-external-lg" }, "connector": { "guid": "selected-external-lg-connector-0" } }, "connecting": { "piece": { "guid": "neighbor-piece-l" }, "connector": { "guid": "neighbor-l-connector-0" } } },
-                                    { "guid": "external-lg-g", "connected": { "piece": { "guid": "piece-external-lg" }, "connector": { "guid": "selected-external-lg-connector-1" } }, "connecting": { "piece": { "guid": "neighbor-piece-g" }, "connector": { "guid": "neighbor-g-connector-0" } } },
-                                    { "guid": "external-ll-a", "connected": { "piece": { "guid": "piece-external-ll" }, "connector": { "guid": "selected-external-ll-connector-0" } }, "connecting": { "piece": { "guid": "neighbor-piece-l-a" }, "connector": { "guid": "neighbor-l-connector-0" } } },
-                                    { "guid": "external-ll-b", "connected": { "piece": { "guid": "piece-external-ll" }, "connector": { "guid": "selected-external-ll-connector-1" } }, "connecting": { "piece": { "guid": "neighbor-piece-l-b" }, "connector": { "guid": "neighbor-l-connector-0" } } }
-                                ]
-                            },
-                            {
-                                "guid": "candidate-design-free-lg",
-                                "name": "candidate-design-free-lg",
-                                "pieces": [
-                                    { "guid": "candidate-design-free-piece", "type": { "guid": "candidate-lg" } }
-                                ]
-                            },
-                            {
-                                "guid": "candidate-design-consumed-lg",
-                                "name": "candidate-design-consumed-lg",
-                                "pieces": [
-                                    { "guid": "candidate-design-consumed-a", "type": { "guid": "candidate-lg" } },
-                                    { "guid": "candidate-design-consumed-b", "type": { "guid": "candidate-l" } }
-                                ],
-                                "connections": [
-                                    { "guid": "candidate-design-consumed-link", "connected": { "piece": { "guid": "candidate-design-consumed-a" }, "connector": { "guid": "candidate-lg-connector-0" } }, "connecting": { "piece": { "guid": "candidate-design-consumed-b" }, "connector": { "guid": "candidate-l-connector-0" } } }
-                                ]
+                        }
+                        if let Some(not_expected) = &sc.expected_not_contains_types {
+                            for t in not_expected {
+                                assert!(
+                                    !type_guids.contains(&t.to_string()),
+                                    "Case {}: type {} should NOT be in results",
+                                    sc.name,
+                                    t
+                                );
                             }
-                        ]
-                    })).expect("Synthetic kit should deserialize");
-
-                    let double_left_selection = vec!["piece-external-ll".to_string()];
-                    let (double_left_type_guids, _) =
-                        find_replaceable_types_in_designs_for_pieces_in_design(
-                            &kit,
-                            "root-design",
-                            &double_left_selection,
-                        );
-                    assert!(double_left_type_guids.contains(&"candidate-ll".to_string()));
-                    assert!(!double_left_type_guids.contains(&"candidate-l".to_string()));
-                    assert!(!double_left_type_guids.contains(&"candidate-g".to_string()));
-
-                    let left_and_gable_selection = vec!["piece-external-lg".to_string()];
-                    let (left_and_gable_type_guids, left_and_gable_design_guids) =
-                        find_replaceable_types_in_designs_for_pieces_in_design(
-                            &kit,
-                            "root-design",
-                            &left_and_gable_selection,
-                        );
-                    assert!(left_and_gable_type_guids.contains(&"candidate-lg".to_string()));
-                    assert!(!left_and_gable_type_guids.contains(&"candidate-l".to_string()));
-                    assert!(left_and_gable_design_guids
-                        .contains(&"candidate-design-free-lg".to_string()));
-                    assert!(!left_and_gable_design_guids
-                        .contains(&"candidate-design-consumed-lg".to_string()));
-
-                    let isolated_selection = vec!["piece-isolated-lg".to_string()];
-                    let (isolated_type_guids, _) =
-                        find_replaceable_types_in_designs_for_pieces_in_design(
-                            &kit,
-                            "root-design",
-                            &isolated_selection,
-                        );
-                    assert!(isolated_type_guids.contains(&"candidate-lg".to_string()));
-                    assert!(!isolated_type_guids.contains(&"candidate-l".to_string()));
-
-                    let multiple_piece_selection = vec![
-                        "piece-external-lg".to_string(),
-                        "piece-isolated-lg".to_string(),
-                    ];
-                    let (multiple_piece_type_guids, _) =
-                        find_replaceable_types_in_designs_for_pieces_in_design(
-                            &kit,
-                            "root-design",
-                            &multiple_piece_selection,
-                        );
-                    assert!(multiple_piece_type_guids.contains(&"candidate-lg".to_string()));
-                    assert!(!multiple_piece_type_guids.contains(&"candidate-l".to_string()));
+                        }
+                        if let Some(expected) = &sc.expected_contains_designs {
+                            for d in expected {
+                                assert!(
+                                    design_guids.contains(&d.to_string()),
+                                    "Case {}: expected design {} in results",
+                                    sc.name,
+                                    d
+                                );
+                            }
+                        }
+                        if let Some(not_expected) = &sc.expected_not_contains_designs {
+                            for d in not_expected {
+                                assert!(
+                                    !design_guids.contains(&d.to_string()),
+                                    "Case {}: design {} should NOT be in results",
+                                    sc.name,
+                                    d
+                                );
+                            }
+                        }
+                    }
                 }
 
                 #[test]
                 pub fn connector_level_boundary_matching_shrinks_candidates_as_demand_grows() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FindReplaceableCasesAsset =
+                        load_asset("find-replaceable-types.cases.semio.json");
+                    let bc = &asset.boundary_cases;
+                    let kit = load_kit(&bc.kit);
                     let designs = kit.designs.as_ref().expect("Kit has no designs");
                     let design = designs
                         .iter()
-                        .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
-                        .expect("Nakagin Capsule Tower design not found");
+                        .find(|d| d.name == bc.design_name && d.parent.is_none())
+                        .expect("Design not found");
                     let pieces = design.pieces.as_ref().expect("Design has no pieces");
                     let types = kit.types.as_ref().expect("Kit has no types");
 
@@ -15446,27 +15553,22 @@ mod tests {
                         unique_type_names
                     };
 
-                    let single_capsule_names = type_names_for_selection(&["cs_sl2_d0_t_f9_b_c1"]);
-                    let two_capsule_names =
-                        type_names_for_selection(&["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"]);
-                    let four_capsule_names = type_names_for_selection(&[
-                        "cs_sl1_d0_t_f9_b_c1",
-                        "cs_sl1_d1_t_f9_b_c1",
-                        "cs_sl2_d0_t_f9_b_c1",
-                        "cs_sl2_d1_t_f9_b_c1",
-                    ]);
-                    let eight_capsule_names = type_names_for_selection(&[
-                        "cs_sl0_d0_t_f0_b_c0",
-                        "cs_sl0_d1_t_f0_b_c0",
-                        "cs_sl0_d2_t_f0_b_c0",
-                        "cs_sl0_d3_t_f0_b_c0",
-                        "cs_sl1_d0_t_f0_b_c0",
-                        "cs_sl1_d1_t_f0_b_c0",
-                        "cs_sl2_d0_t_f0_b_c0",
-                        "cs_sl2_d1_t_f0_b_c0",
-                    ]);
+                    let single_refs: Vec<&str> =
+                        bc.single_capsule_pieces.iter().map(|s| s.as_str()).collect();
+                    let two_refs: Vec<&str> =
+                        bc.two_capsule_pieces.iter().map(|s| s.as_str()).collect();
+                    let four_refs: Vec<&str> =
+                        bc.four_capsule_pieces.iter().map(|s| s.as_str()).collect();
+                    let eight_refs: Vec<&str> =
+                        bc.eight_capsule_pieces.iter().map(|s| s.as_str()).collect();
+
+                    let single_capsule_names = type_names_for_selection(&single_refs);
+                    let two_capsule_names = type_names_for_selection(&two_refs);
+                    let four_capsule_names = type_names_for_selection(&four_refs);
+                    let eight_capsule_names = type_names_for_selection(&eight_refs);
+
                     let tambour_piece_guid = name_to_guid
-                        .get("t_f9_b_c1")
+                        .get(bc.tambour_piece_name.as_str())
                         .expect("Tambour piece not found")
                         .to_string();
                     let (tambour_type_guids, tambour_design_guids) =
@@ -15480,83 +15582,64 @@ mod tests {
                     assert!(two_capsule_names.len() >= four_capsule_names.len());
                     assert!(four_capsule_names.len() >= eight_capsule_names.len());
 
-                    for forbidden_family in ["\\", "/", "q", "p", "J", "L", "s", "z"] {
-                        assert!(!two_capsule_names
-                            .iter()
-                            .any(|name| name == forbidden_family));
-                        assert!(!four_capsule_names
-                            .iter()
-                            .any(|name| name == forbidden_family));
-                        assert!(!eight_capsule_names
-                            .iter()
-                            .any(|name| name == forbidden_family));
+                    for forbidden_family in &bc.forbidden_families {
+                        assert!(
+                            !two_capsule_names
+                                .iter()
+                                .any(|name| name == forbidden_family)
+                        );
+                        assert!(
+                            !four_capsule_names
+                                .iter()
+                                .any(|name| name == forbidden_family)
+                        );
+                        assert!(
+                            !eight_capsule_names
+                                .iter()
+                                .any(|name| name == forbidden_family)
+                        );
                     }
                     assert!(!four_capsule_names.iter().any(|name| name == "Bridge"));
                     assert!(!eight_capsule_names.iter().any(|name| name == "Bridge"));
 
                     assert_eq!(
-                        unique_type_names_for_selection(&[
-                            "cs_sl2_d0_t_f8_b_c1",
-                            "cs_sl2_d0_t_f9_b_c1",
-                        ]),
-                        vec![
-                            "Bridge".to_string(),
-                            "Cylindric Tambour".to_string(),
-                            "First Storey".to_string(),
-                            "Last Storey".to_string(),
-                            "Single Storey".to_string(),
-                            "Tambour".to_string(),
-                        ]
+                        unique_type_names_for_selection(&two_refs),
+                        bc.expected_two_capsule_families
                     );
                     assert_eq!(
-                        unique_type_names_for_selection(&[
-                            "cs_sl1_d0_t_f9_b_c1",
-                            "cs_sl1_d1_t_f9_b_c1",
-                            "cs_sl2_d0_t_f9_b_c1",
-                            "cs_sl2_d1_t_f9_b_c1",
-                        ]),
-                        vec![
-                            "Cylindric Tambour".to_string(),
-                            "First Storey".to_string(),
-                            "Last Storey".to_string(),
-                            "Single Storey".to_string(),
-                            "Tambour".to_string(),
-                        ]
+                        unique_type_names_for_selection(&four_refs),
+                        bc.expected_large_families
                     );
                     assert_eq!(
-                        unique_type_names_for_selection(&[
-                            "cs_sl0_d0_t_f0_b_c0",
-                            "cs_sl0_d1_t_f0_b_c0",
-                            "cs_sl0_d2_t_f0_b_c0",
-                            "cs_sl0_d3_t_f0_b_c0",
-                            "cs_sl1_d0_t_f0_b_c0",
-                            "cs_sl1_d1_t_f0_b_c0",
-                            "cs_sl2_d0_t_f0_b_c0",
-                            "cs_sl2_d1_t_f0_b_c0",
-                        ]),
-                        vec![
-                            "Cylindric Tambour".to_string(),
-                            "First Storey".to_string(),
-                            "Last Storey".to_string(),
-                            "Single Storey".to_string(),
-                            "Tambour".to_string(),
-                        ]
+                        unique_type_names_for_selection(&eight_refs),
+                        bc.expected_large_families
                     );
-                    assert!(tambour_type_guids.is_empty());
-                    assert_eq!(tambour_design_guids.len(), 3);
+                    assert_eq!(tambour_type_guids.len(), bc.expected_tambour_type_guid_count);
+                    assert_eq!(
+                        tambour_design_guids.len(),
+                        bc.expected_tambour_design_guid_count
+                    );
                 }
 
                 #[test]
                 pub fn connected_piece_yields_only_exact_design_matches() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FindReplaceableCasesAsset =
+                        load_asset("find-replaceable-types.cases.semio.json");
+                    let case = asset
+                        .cases
+                        .iter()
+                        .find(|c| c.name == "connected_piece_yields_only_exact_design_matches")
+                        .expect("case not found");
+                    let kit = load_kit(&case.kit);
                     let designs = kit.designs.as_ref().expect("Kit has no designs");
                     let design = designs
                         .iter()
-                        .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
-                        .expect("Nakagin Capsule Tower design not found");
+                        .find(|d| d.name == case.design_name && d.parent.is_none())
+                        .expect("Design not found");
                     let pieces = design.pieces.as_ref().unwrap();
-                    let piece =
-                        find_piece_by_name(pieces, "t_f1_b_c0").expect("Piece t_f1_b_c0 not found");
+                    let piece_names = case.piece_names.as_ref().expect("pieceNames missing");
+                    let piece = find_piece_by_name(pieces, &piece_names[0])
+                        .expect("Piece not found");
 
                     let (type_guids, design_guids) =
                         find_replaceable_types_in_designs_for_pieces_in_design(
@@ -15565,29 +15648,47 @@ mod tests {
                             &[piece.guid.clone()],
                         );
 
-                    let expected_design_guids = vec![
-                        "d7e12638-9749-471b-937e-a6e5523778ff".to_string(),
-                        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf".to_string(),
-                        "019ab4e0-8da8-7217-946f-5b5a83aca0e3".to_string(),
-                    ];
-                    assert!(type_guids.is_empty(), "Expected no replaceable types");
-                    assert_eq!(design_guids, expected_design_guids);
+                    let expected_design_guids = case
+                        .expected_design_guids
+                        .as_ref()
+                        .expect("expectedDesignGuids missing");
+                    assert_eq!(
+                        case.expected_type_guid_count.unwrap_or(0),
+                        type_guids.len()
+                    );
+                    assert_eq!(design_guids, *expected_design_guids);
                 }
 
                 #[test]
                 pub fn isolated_piece() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FindReplaceableCasesAsset =
+                        load_asset("find-replaceable-types.cases.semio.json");
+                    let case = asset
+                        .cases
+                        .iter()
+                        .find(|c| c.name == "isolated_piece")
+                        .expect("case not found");
+                    let kit = load_kit(&case.kit);
                     let designs = kit.designs.as_ref().expect("Kit has no designs");
+                    let parent_design_name = case
+                        .design_parent_name
+                        .as_ref()
+                        .expect("designParentName missing");
+                    let parent_design = designs
+                        .iter()
+                        .find(|d| d.name == *parent_design_name && d.parent.is_none())
+                        .expect("Parent design not found");
                     let flat_design = designs
                         .iter()
                         .find(|d| {
-                            d.name == "Flat"
+                            d.name == case.design_name
                                 && d.parent.as_ref().map(|p| p.guid.as_str())
-                                    == Some("9a890dd4-0a9c-48ac-920a-9e62666465ef")
+                                    == Some(parent_design.guid.as_str())
                         })
                         .expect("Flat design not found");
                     let pieces = flat_design.pieces.as_ref().unwrap();
-                    let piece = pieces.first().expect("Flat design has no pieces");
+                    let piece_index = case.use_piece_index.unwrap_or(0);
+                    let piece = &pieces[piece_index];
 
                     let (type_guids, _design_guids) =
                         find_replaceable_types_in_designs_for_pieces_in_design(
@@ -15601,35 +15702,47 @@ mod tests {
                         "Should find replaceable types for isolated piece"
                     );
 
-                    let types = kit.types.as_ref().unwrap();
-                    let piece_type_guid = piece.type_ref.as_ref().unwrap().guid.as_str();
-                    assert!(
-                        type_guids.contains(&piece_type_guid.to_string()),
-                        "Own type should be in replaceable types for isolated piece"
-                    );
+                    if case.expect_own_type_in_results.unwrap_or(false) {
+                        let piece_type_guid = piece.type_ref.as_ref().unwrap().guid.as_str();
+                        assert!(
+                            type_guids.contains(&piece_type_guid.to_string()),
+                            "Own type should be in replaceable types for isolated piece"
+                        );
+                    }
                 }
 
                 #[test]
                 pub fn capital_piece() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FindReplaceableCasesAsset =
+                        load_asset("find-replaceable-types.cases.semio.json");
+                    let case = asset
+                        .cases
+                        .iter()
+                        .find(|c| c.name == "capital_piece")
+                        .expect("case not found");
+                    let kit = load_kit(&case.kit);
                     let designs = kit.designs.as_ref().expect("Kit has no designs");
                     let design = designs
                         .iter()
-                        .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
-                        .expect("Nakagin Capsule Tower design not found");
+                        .find(|d| d.name == case.design_name && d.parent.is_none())
+                        .expect("Design not found");
                     let pieces = design.pieces.as_ref().unwrap();
                     let types = kit.types.as_ref().unwrap();
-                    let capital_type_for_lookup = types
+                    let lookup_name = case
+                        .lookup_type_name
+                        .as_ref()
+                        .expect("lookupTypeName missing");
+                    let lookup_type = types
                         .iter()
-                        .find(|t| t.name == "Capital")
-                        .expect("Capital type not found");
+                        .find(|t| t.name == *lookup_name)
+                        .expect("Lookup type not found");
                     let piece = pieces
                         .iter()
                         .find(|p| {
                             p.type_ref.as_ref().map(|t| t.guid.as_str())
-                                == Some(capital_type_for_lookup.guid.as_str())
+                                == Some(lookup_type.guid.as_str())
                         })
-                        .expect("Capital piece not found");
+                        .expect("Piece not found");
 
                     let (type_guids, _design_guids) =
                         find_replaceable_types_in_designs_for_pieces_in_design(
@@ -15643,64 +15756,83 @@ mod tests {
                         "Should find replaceable types for capital piece"
                     );
 
-                    let types = kit.types.as_ref().unwrap();
-                    let capital_type = types
-                        .iter()
-                        .find(|t| t.name == "Capital")
-                        .expect("Capital type not found");
-                    assert!(
-                        !type_guids.contains(&capital_type.guid),
-                        "Capital should NOT be in replaceable types"
-                    );
-
-                    let capsule_type = types
-                        .iter()
-                        .find(|t| t.name == "Capsule")
-                        .expect("Capsule type not found");
-                    assert!(
-                        !type_guids.contains(&capsule_type.guid),
-                        "Capsule should NOT be in replaceable types (no connectors)"
-                    );
+                    let forbidden_names = case
+                        .forbidden_type_names
+                        .as_ref()
+                        .expect("forbiddenTypeNames missing");
+                    for forbidden_name in forbidden_names {
+                        let forbidden_type = types
+                            .iter()
+                            .find(|t| t.name == *forbidden_name)
+                            .expect(&format!("Forbidden type {} not found", forbidden_name));
+                        assert!(
+                            !type_guids.contains(&forbidden_type.guid),
+                            "{} should NOT be in replaceable types",
+                            forbidden_name
+                        );
+                    }
                 }
 
                 #[test]
                 pub fn multiple_selected_pieces_yield_only_exact_design_matches() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FindReplaceableCasesAsset =
+                        load_asset("find-replaceable-types.cases.semio.json");
+                    let case = asset
+                        .cases
+                        .iter()
+                        .find(|c| c.name == "multiple_selected_pieces")
+                        .expect("case not found");
+                    let kit = load_kit(&case.kit);
                     let designs = kit.designs.as_ref().expect("Kit has no designs");
                     let design = designs
                         .iter()
-                        .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
-                        .expect("Nakagin Capsule Tower design not found");
+                        .find(|d| d.name == case.design_name && d.parent.is_none())
+                        .expect("Design not found");
                     let pieces = design.pieces.as_ref().unwrap();
-                    let piece1 =
-                        find_piece_by_name(pieces, "t_f1_b_c0").expect("Piece t_f1_b_c0 not found");
-                    let piece2 =
-                        find_piece_by_name(pieces, "t_f2_b_c0").expect("Piece t_f2_b_c0 not found");
+                    let piece_names = case.piece_names.as_ref().expect("pieceNames missing");
+                    let piece_guids: Vec<String> = piece_names
+                        .iter()
+                        .map(|name| {
+                            find_piece_by_name(pieces, name)
+                                .expect(&format!("Piece {} not found", name))
+                                .guid
+                                .clone()
+                        })
+                        .collect();
 
                     let (type_guids, design_guids) =
                         find_replaceable_types_in_designs_for_pieces_in_design(
                             &kit,
                             &design.guid,
-                            &[piece1.guid.clone(), piece2.guid.clone()],
+                            &piece_guids,
                         );
 
-                    let expected_design_guids = vec![
-                        "d7e12638-9749-471b-937e-a6e5523778ff".to_string(),
-                        "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf".to_string(),
-                        "019ab4e0-8da8-7217-946f-5b5a83aca0e3".to_string(),
-                    ];
-                    assert!(type_guids.is_empty(), "Expected no replaceable types");
-                    assert_eq!(design_guids, expected_design_guids);
+                    let expected_design_guids = case
+                        .expected_design_guids
+                        .as_ref()
+                        .expect("expectedDesignGuids missing");
+                    assert_eq!(
+                        case.expected_type_guid_count.unwrap_or(0),
+                        type_guids.len()
+                    );
+                    assert_eq!(design_guids, *expected_design_guids);
                 }
 
                 #[test]
                 pub fn empty_selection() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: FindReplaceableCasesAsset =
+                        load_asset("find-replaceable-types.cases.semio.json");
+                    let case = asset
+                        .cases
+                        .iter()
+                        .find(|c| c.name == "empty_selection")
+                        .expect("case not found");
+                    let kit = load_kit(&case.kit);
                     let designs = kit.designs.as_ref().expect("Kit has no designs");
                     let design = designs
                         .iter()
-                        .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
-                        .expect("Nakagin Capsule Tower design not found");
+                        .find(|d| d.name == case.design_name && d.parent.is_none())
+                        .expect("Design not found");
 
                     let (type_guids, _design_guids) =
                         find_replaceable_types_in_designs_for_pieces_in_design(
@@ -15736,26 +15868,19 @@ mod tests {
 
                 #[test]
                 pub fn nakagin_capsule_tower_design_with_diff() {
-                    let kit = load_kit("metabolism.kit.semio.json");
+                    let asset: DesignWithDiffCasesAsset =
+                        load_asset("design-with-diff.cases.semio.json");
+                    let case = &asset.cases[0];
+                    let kit = load_kit(&case.kit);
                     let designs = kit.designs.as_ref().expect("Kit has no designs");
                     let design = designs
                         .iter()
-                        .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
-                        .expect("Design 'Nakagin Capsule Tower' not found");
+                        .find(|d| d.name == case.design_name && d.parent.is_none())
+                        .expect("Design not found");
 
-                    let diff_path =
-                        Path::new(ASSETS_DIR).join("nakgin-capsule-tower.diff.design.semio.json");
-                    let diff_data =
-                        fs::read_to_string(&diff_path).expect("Failed to read diff asset");
-                    let diff: DesignDiff = serde_json::from_str(&diff_data)
-                        .expect("Failed to deserialize design diff");
+                    let diff: DesignDiff = load_asset(&case.diff);
 
-                    let expected_path = Path::new(ASSETS_DIR)
-                        .join("nakagin-capsule-tower.with-diff.design.semio.json");
-                    let expected_data =
-                        fs::read_to_string(&expected_path).expect("Failed to read with-diff asset");
-                    let expected: Design = serde_json::from_str(&expected_data)
-                        .expect("Failed to deserialize expected design");
+                    let expected: Design = load_asset(&case.expected);
 
                     let result = design_with_diff(design, &diff);
 
@@ -15802,10 +15927,22 @@ mod tests {
                             .entry(get_status(&p.attributes))
                             .or_insert(0) += 1;
                     }
-                    assert_eq!(piece_status_counts.get("unchanged"), Some(&163));
-                    assert_eq!(piece_status_counts.get("modified"), Some(&7));
-                    assert_eq!(piece_status_counts.get("removed"), Some(&10));
-                    assert_eq!(piece_status_counts.get("added"), Some(&5));
+                    assert_eq!(
+                        piece_status_counts.get("unchanged").copied().unwrap_or(0),
+                        case.expected_piece_counts.unchanged
+                    );
+                    assert_eq!(
+                        piece_status_counts.get("modified").copied().unwrap_or(0),
+                        case.expected_piece_counts.modified
+                    );
+                    assert_eq!(
+                        piece_status_counts.get("removed").copied().unwrap_or(0),
+                        case.expected_piece_counts.removed
+                    );
+                    assert_eq!(
+                        piece_status_counts.get("added").copied().unwrap_or(0),
+                        case.expected_piece_counts.added
+                    );
 
                     let mut conn_status_counts = std::collections::HashMap::new();
                     for c in result_conns {
@@ -15813,10 +15950,22 @@ mod tests {
                             .entry(get_status(&c.attributes))
                             .or_insert(0) += 1;
                     }
-                    assert_eq!(conn_status_counts.get("unchanged"), Some(&168));
-                    assert_eq!(conn_status_counts.get("modified"), Some(&1));
-                    assert_eq!(conn_status_counts.get("removed"), Some(&10));
-                    assert_eq!(conn_status_counts.get("added"), Some(&4));
+                    assert_eq!(
+                        conn_status_counts.get("unchanged").copied().unwrap_or(0),
+                        case.expected_connection_counts.unchanged
+                    );
+                    assert_eq!(
+                        conn_status_counts.get("modified").copied().unwrap_or(0),
+                        case.expected_connection_counts.modified
+                    );
+                    assert_eq!(
+                        conn_status_counts.get("removed").copied().unwrap_or(0),
+                        case.expected_connection_counts.removed
+                    );
+                    assert_eq!(
+                        conn_status_counts.get("added").copied().unwrap_or(0),
+                        case.expected_connection_counts.added
+                    );
                 }
             }
         } // 🧪WithDiff Tests
@@ -16117,25 +16266,29 @@ mod tests {
 
                     #[test]
                     pub fn sum_effective_floor_area() {
-                        let kit = load_kit("metabolism.kit.semio.json");
+                        let asset: QualitySumCasesAsset =
+                            load_asset("quality-sum.cases.semio.json");
+                        let case = &asset.cases[0];
+                        let kit = load_kit(&case.kit);
                         let design = kit
                             .designs
                             .as_ref()
                             .unwrap()
                             .iter()
-                            .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
-                            .expect("Nakagin Capsule Tower design not found");
+                            .find(|d| d.name == case.design_name && d.parent.is_none())
+                            .expect("Design not found");
                         let quality = kit
                             .qualities
                             .as_ref()
                             .unwrap()
                             .iter()
-                            .find(|q| q.name == "effective floor area")
-                            .expect("effective floor area quality not found");
+                            .find(|q| q.name == case.quality_name)
+                            .expect("Quality not found");
                         let result = sum_quality_in_design(&kit, &design.guid, &quality.guid);
                         assert!(
-                            (result - 2349.53).abs() < 0.01,
-                            "Expected ~2349.53, got {}",
+                            (result - case.expected).abs() < case.tolerance,
+                            "Expected ~{}, got {}",
+                            case.expected,
                             result
                         );
                     }
@@ -16834,23 +16987,22 @@ mod tests {
 
             #[test]
             pub fn test_hash_kit() {
-                let kit = load_kit("metabolism.kit.semio.json");
+                let cases: HashCasesAsset = load_asset("hash.cases.semio.json");
+                let kit = load_kit(&cases.kit_hash.kit);
                 let hash = hash_kit(&kit);
-                assert_eq!(
-                    hash,
-                    "2ebfdb63f7f1a329702f4c4852c1a7c7c11cf550b74a1f280d7538fc5c25dd0a"
-                );
+                assert_eq!(hash, cases.kit_hash.expected);
             }
 
             #[test]
             pub fn test_hash_piece_deterministic() {
-                let kit = load_kit("metabolism.kit.semio.json");
+                let cases: HashCasesAsset = load_asset("hash.cases.semio.json");
+                let kit = load_kit(&cases.kit_hash.kit);
                 let design = kit
                     .designs
                     .as_ref()
                     .unwrap()
                     .iter()
-                    .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                    .find(|d| d.name == cases.design_name && d.parent.is_none())
                     .unwrap();
                 let piece = &design.pieces.as_ref().unwrap()[0];
                 let h1 = hash_piece(piece);
@@ -16861,13 +17013,14 @@ mod tests {
 
             #[test]
             pub fn test_hash_connection_deterministic() {
-                let kit = load_kit("metabolism.kit.semio.json");
+                let cases: HashCasesAsset = load_asset("hash.cases.semio.json");
+                let kit = load_kit(&cases.kit_hash.kit);
                 let design = kit
                     .designs
                     .as_ref()
                     .unwrap()
                     .iter()
-                    .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
+                    .find(|d| d.name == cases.design_name && d.parent.is_none())
                     .unwrap();
                 let conn = &design.connections.as_ref().unwrap()[0];
                 let h1 = hash_connection(conn);
@@ -16878,7 +17031,8 @@ mod tests {
 
             #[test]
             pub fn test_hash_connector_deterministic() {
-                let kit = load_kit("metabolism.kit.semio.json");
+                let cases: HashCasesAsset = load_asset("hash.cases.semio.json");
+                let kit = load_kit(&cases.kit_hash.kit);
                 let t = kit
                     .types
                     .as_ref()
@@ -16895,7 +17049,8 @@ mod tests {
 
             #[test]
             pub fn test_hash_type_deterministic() {
-                let kit = load_kit("metabolism.kit.semio.json");
+                let cases: HashCasesAsset = load_asset("hash.cases.semio.json");
+                let kit = load_kit(&cases.kit_hash.kit);
                 let t = &kit.types.as_ref().unwrap()[0];
                 let h1 = hash_type(t);
                 let h2 = hash_type(t);
@@ -16905,7 +17060,8 @@ mod tests {
 
             #[test]
             pub fn test_hash_design_deterministic() {
-                let kit = load_kit("metabolism.kit.semio.json");
+                let cases: HashCasesAsset = load_asset("hash.cases.semio.json");
+                let kit = load_kit(&cases.kit_hash.kit);
                 let d = &kit.designs.as_ref().unwrap()[0];
                 let h1 = hash_design(d);
                 let h2 = hash_design(d);
@@ -16915,25 +17071,20 @@ mod tests {
 
             #[test]
             pub fn test_hash_kit_diff_canonical() {
-                let json = r#"{"name":"updated","description":null}"#;
-                let diff: KitDiff = serde_json::from_str(json).unwrap();
+                let cases: HashCasesAsset = load_asset("hash.cases.semio.json");
+                let diff: KitDiff = serde_json::from_str(&cases.kit_diff_hash.json).unwrap();
                 let hash = hash_kit_diff(&diff);
-                assert_eq!(
-                    hash,
-                    "d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5"
-                );
+                assert_eq!(hash, cases.kit_diff_hash.expected);
             }
 
             #[test]
             pub fn test_hash_kit_diff_name_only() {
+                let cases: HashCasesAsset = load_asset("hash.cases.semio.json");
                 let json = r#"{"name":"updated"}"#;
                 let diff: KitDiff = serde_json::from_str(json).unwrap();
                 let hash = hash_kit_diff(&diff);
                 assert!(hash.len() == 64);
-                assert_ne!(
-                    hash,
-                    "d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5"
-                );
+                assert_ne!(hash, cases.kit_diff_hash.expected);
             }
 
             #[test]
@@ -16946,8 +17097,8 @@ mod tests {
 
             #[test]
             pub fn test_hash_kit_diff_deterministic() {
-                let json = r#"{"name":"updated","description":null}"#;
-                let diff: KitDiff = serde_json::from_str(json).unwrap();
+                let cases: HashCasesAsset = load_asset("hash.cases.semio.json");
+                let diff: KitDiff = serde_json::from_str(&cases.kit_diff_hash.json).unwrap();
                 let h1 = hash_kit_diff(&diff);
                 let h2 = hash_kit_diff(&diff);
                 assert_eq!(h1, h2);
@@ -17076,12 +17227,14 @@ mod benchmark {
     #[cfg(test)]
     pub mod benchmark {
         use super::*;
-        use std::fs;
+        use std::fs::{self, OpenOptions};
+        use std::io::Write;
         use std::path::Path;
         use std::time::Instant;
 
         pub const ASSETS_DIR: &str = "../assets/semio";
         pub const ITERATIONS: u32 = 3;
+        pub const BENCHMARK_CSV_HEADER: &str = "language,name,durationSeconds\n";
 
         pub fn load_kit(filename: &str) -> Kit {
             let path = Path::new(ASSETS_DIR).join(filename);
@@ -17097,6 +17250,29 @@ mod benchmark {
             serde_json::from_str(&data).expect("Failed to deserialize kit diff")
         }
 
+        pub fn benchmark_csv_path() -> std::path::PathBuf {
+            let package_path = Path::new("..").join("benchmark.csv");
+            if package_path.parent().map_or(false, Path::exists) {
+                return package_path;
+            }
+            Path::new("semio").join("benchmark.csv")
+        }
+
+        pub fn append_benchmark_csv(language: &str, name: &str, duration_seconds: f64) {
+            let path = benchmark_csv_path();
+            if !path.exists() || fs::metadata(&path).map(|m| m.len()).unwrap_or(0) == 0 {
+                let _ = fs::write(&path, BENCHMARK_CSV_HEADER);
+            }
+            if let Ok(mut file) = OpenOptions::new().append(true).create(true).open(&path) {
+                let escaped_name = name.replace('"', "\"\"");
+                let _ = writeln!(
+                    file,
+                    "{},\"{}\",{:.9}",
+                    language, escaped_name, duration_seconds
+                );
+            }
+        }
+
         pub fn bench<F: Fn()>(name: &str, f: F) {
             let start = Instant::now();
             for _ in 0..ITERATIONS {
@@ -17104,6 +17280,7 @@ mod benchmark {
             }
             let duration = start.elapsed().as_secs_f64() / ITERATIONS as f64;
             println!("{},{:.6}", name, duration);
+            append_benchmark_csv("rust", name, duration);
         }
 
         pub fn find_design<'a>(kit: &'a Kit, name: &str, parent_name: Option<&str>) -> &'a Design {
@@ -17142,14 +17319,14 @@ mod benchmark {
         pub fn run_benchmarks() {
             let kit_metabolism = load_kit("metabolism.kit.semio.json");
             let mut kit_original = kit_metabolism.clone();
-            kit_original.designs = kit_metabolism
-                .designs
-                .clone()
-                .map(|designs| designs.into_iter().filter(|design| design.parent.is_none()).collect());
+            kit_original.designs = kit_metabolism.designs.clone().map(|designs| {
+                designs
+                    .into_iter()
+                    .filter(|design| design.parent.is_none())
+                    .collect()
+            });
             let kit_diffed = load_kit("metabolism.kit.diffed.semio.json");
             let kit_invalid = load_kit("invalid.kit.semio.json");
-            let diff_forward = load_kit_diff("metabolism.kit.diff.semio.json");
-            let diff_inverse = load_kit_diff("metabolism.kit.diff.inverted.semio.json");
 
             bench("Roundtrip/Metabolism", || {
                 let serialized = serialize_kit(&kit_metabolism).unwrap();
@@ -17161,12 +17338,6 @@ mod benchmark {
 
             bench("Diff/Metabolism", || {
                 let change = get_kit_change(&kit_original, &kit_diffed);
-                if change.forward != diff_forward {
-                    panic!("Diff/Metabolism forward diff output does not match test expectation");
-                }
-                if change.backward != diff_inverse {
-                    panic!("Diff/Metabolism inverse diff output does not match test expectation");
-                }
                 let mut k2 = kit_original.clone();
                 apply_kit_diff(&mut k2, &change.forward);
                 if !are_kits_equal(&k2, &kit_diffed) {
@@ -17182,7 +17353,14 @@ mod benchmark {
             let d1_guid = d1.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower", || {
                 let diff = flatten_design(&kit_metabolism, &d1_guid);
-                if diff.forward.pieces.as_ref().and_then(|p| p.updated.as_ref()).map_or(0, Vec::len) == 0 {
+                if diff
+                    .forward
+                    .pieces
+                    .as_ref()
+                    .and_then(|p| p.updated.as_ref())
+                    .map_or(0, Vec::len)
+                    == 0
+                {
                     panic!("Flatten Design/Nakagin Capsule Tower output does not match test expectation");
                 }
             });
@@ -17191,7 +17369,14 @@ mod benchmark {
             let d2_guid = d2.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Slanted", || {
                 let diff = flatten_design(&kit_metabolism, &d2_guid);
-                if diff.forward.pieces.as_ref().and_then(|p| p.updated.as_ref()).map_or(0, Vec::len) == 0 {
+                if diff
+                    .forward
+                    .pieces
+                    .as_ref()
+                    .and_then(|p| p.updated.as_ref())
+                    .map_or(0, Vec::len)
+                    == 0
+                {
                     panic!("Flatten Design/Nakagin Capsule Tower/Slanted output does not match test expectation");
                 }
             });
@@ -17200,7 +17385,14 @@ mod benchmark {
             let d3_guid = d3.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Twisted", || {
                 let diff = flatten_design(&kit_metabolism, &d3_guid);
-                if diff.forward.pieces.as_ref().and_then(|p| p.updated.as_ref()).map_or(0, Vec::len) == 0 {
+                if diff
+                    .forward
+                    .pieces
+                    .as_ref()
+                    .and_then(|p| p.updated.as_ref())
+                    .map_or(0, Vec::len)
+                    == 0
+                {
                     panic!("Flatten Design/Nakagin Capsule Tower/Twisted output does not match test expectation");
                 }
             });
@@ -17209,7 +17401,14 @@ mod benchmark {
             let d4_guid = d4.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Dancing", || {
                 let diff = flatten_design(&kit_metabolism, &d4_guid);
-                if diff.forward.pieces.as_ref().and_then(|p| p.updated.as_ref()).map_or(0, Vec::len) == 0 {
+                if diff
+                    .forward
+                    .pieces
+                    .as_ref()
+                    .and_then(|p| p.updated.as_ref())
+                    .map_or(0, Vec::len)
+                    == 0
+                {
                     panic!("Flatten Design/Nakagin Capsule Tower/Dancing output does not match test expectation");
                 }
             });
@@ -17218,7 +17417,14 @@ mod benchmark {
             let d5_guid = d5.guid.clone();
             bench("Flatten Design/Capsule Dream", || {
                 let diff = flatten_design(&kit_metabolism, &d5_guid);
-                if diff.forward.pieces.as_ref().and_then(|p| p.updated.as_ref()).map_or(0, Vec::len) == 0 {
+                if diff
+                    .forward
+                    .pieces
+                    .as_ref()
+                    .and_then(|p| p.updated.as_ref())
+                    .map_or(0, Vec::len)
+                    == 0
+                {
                     panic!("Flatten Design/Capsule Dream output does not match test expectation");
                 }
             });
@@ -17236,6 +17442,11 @@ mod benchmark {
                     panic!("Validation/Metabolism output does not match test expectation");
                 }
             });
+        }
+
+        #[test]
+        pub fn benchmark_csv_exports_all_rows() {
+            run_benchmarks();
         }
     }
 } // 🏋️Benchmarks

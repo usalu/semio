@@ -20,6 +20,7 @@ class Program
 {
     const string AssetsPath = "../assets/semio";
     const int Iterations = 3;
+    const string BenchmarkCsvHeader = "language,name,durationSeconds\n";
 
     static string ResolveAssetPath(string filename)
     {
@@ -46,6 +47,35 @@ class Program
         return Utility.Deserialize<T>(json)!;
     }
 
+    static string ResolveBenchmarkCsvPath()
+    {
+        var candidates = new[]
+        {
+            Path.Combine("semio", "benchmark.csv"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "benchmark.csv"),
+        };
+        foreach (var candidate in candidates)
+        {
+            var fullPath = Path.GetFullPath(candidate);
+            var directory = Path.GetDirectoryName(fullPath);
+            if (directory != null && Directory.Exists(directory)) return fullPath;
+        }
+        return Path.GetFullPath(candidates[0]);
+    }
+
+    static string CsvValue(string value) => "\"" + value.Replace("\"", "\"\"") + "\"";
+
+    static void AppendBenchmarkCsv(string language, string name, double durationSeconds)
+    {
+        var path = ResolveBenchmarkCsvPath();
+        if (!System.IO.File.Exists(path) || new FileInfo(path).Length == 0)
+        {
+            System.IO.File.WriteAllText(path, BenchmarkCsvHeader);
+        }
+        var row = $"{language},{CsvValue(name)},{durationSeconds.ToString("F9", CultureInfo.InvariantCulture)}\n";
+        System.IO.File.AppendAllText(path, row);
+    }
+
     static void Bench(string name, Action action)
     {
         var sw = Stopwatch.StartNew();
@@ -56,6 +86,7 @@ class Program
         sw.Stop();
         double duration = sw.Elapsed.TotalSeconds / Iterations;
         Console.WriteLine($"{name},{duration.ToString("F6", CultureInfo.InvariantCulture)}");
+        AppendBenchmarkCsv("csharp", name, duration);
     }
 
     static Design FindDesign(Kit kit, string name, string? parentName = null)

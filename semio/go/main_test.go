@@ -21,6 +21,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 )
 
 const benchmarkCsvHeader = "language,name,durationSeconds\n"
@@ -2947,8 +2948,8 @@ func benchFindDesign(kit Kit, name string, parentName string) Design {
 
 func BenchmarkRoundtripMetabolism(b *testing.B) {
 	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
-	start := time.Now()
 	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
 		data, err := SerializeKit(kit)
 		if err != nil {
@@ -2979,6 +2980,7 @@ func BenchmarkDiffMetabolism(b *testing.B) {
 	diffForward := benchLoadKitDiffFile(b, "metabolism.kit.diff.semio.json")
 	diffInverse := benchLoadKitDiffFile(b, "metabolism.kit.diff.inverted.semio.json")
 	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
 		k2 := ApplyKitDiff(kitOriginal, diffForward)
 		if !AreKitsEqual(k2, kitDiffed) {
@@ -2989,83 +2991,111 @@ func BenchmarkDiffMetabolism(b *testing.B) {
 			b.Fatal("Diff/Metabolism inverse output does not match test expectation")
 		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Diff/Metabolism", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkFlattenDesign_NakaginCapsuleTower(b *testing.B) {
 	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
 	d := benchFindDesign(kit, "Nakagin Capsule Tower", "")
+	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
 		diff := FlattenDesign(&kit, d.Guid)
 		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
 			b.Fatal("Flatten Design/Nakagin Capsule Tower output does not match test expectation")
 		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Flatten Design/Nakagin Capsule Tower", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkFlattenDesign_Nakagin_Slanted(b *testing.B) {
 	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
 	d := benchFindDesign(kit, "Slanted", "Nakagin Capsule Tower")
+	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
 		diff := FlattenDesign(&kit, d.Guid)
 		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
 			b.Fatal("Flatten Design/Nakagin Capsule Tower/Slanted output does not match test expectation")
 		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Flatten Design/Nakagin Capsule Tower/Slanted", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkFlattenDesign_Nakagin_Twisted(b *testing.B) {
 	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
 	d := benchFindDesign(kit, "Twisted", "Nakagin Capsule Tower")
+	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
 		diff := FlattenDesign(&kit, d.Guid)
 		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
 			b.Fatal("Flatten Design/Nakagin Capsule Tower/Twisted output does not match test expectation")
 		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Flatten Design/Nakagin Capsule Tower/Twisted", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkFlattenDesign_Nakagin_Dancing(b *testing.B) {
 	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
 	d := benchFindDesign(kit, "Dancing", "Nakagin Capsule Tower")
+	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
 		diff := FlattenDesign(&kit, d.Guid)
 		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
 			b.Fatal("Flatten Design/Nakagin Capsule Tower/Dancing output does not match test expectation")
 		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Flatten Design/Nakagin Capsule Tower/Dancing", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkFlattenDesign_CapsuleDream(b *testing.B) {
 	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
 	d := benchFindDesign(kit, "Capsule Dream", "")
+	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
 		diff := FlattenDesign(&kit, d.Guid)
 		if diff.Pieces == nil || len(diff.Pieces.Updated) == 0 {
 			b.Fatal("Flatten Design/Capsule Dream output does not match test expectation")
 		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Flatten Design/Capsule Dream", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkValidateKit_Invalid(b *testing.B) {
 	kit := benchLoadKitFile(b, "invalid.kit.semio.json")
 	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
 		result := ValidateKit(kit)
 		if len(result.Problems) == 0 {
 			b.Fatal("Validation/Invalid Kit output does not match test expectation")
 		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Validation/Invalid Kit", time.Since(start).Seconds()/float64(b.N))
 }
 
 func BenchmarkValidateKit_Metabolism(b *testing.B) {
 	kit := benchLoadKitFile(b, "metabolism.kit.semio.json")
 	b.ResetTimer()
+	start := time.Now()
 	for range b.N {
 		result := ValidateKit(kit)
 		if len(result.Problems) != 0 {
 			b.Fatal("Validation/Metabolism output does not match test expectation")
 		}
 	}
+	b.StopTimer()
+	appendBenchmarkCsv("go", "Validation/Metabolism", time.Since(start).Seconds()/float64(b.N))
 }
 
 // #endregion 🎑Performance Benchmarks

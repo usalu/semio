@@ -1673,6 +1673,21 @@ class Benchmark(
 
 
 BENCHMARK_ITERATIONS = 3
+BENCHMARK_CSV_HEADER = "language,name,durationSeconds\n"
+
+
+def _benchmark_csv_path() -> str:
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "benchmark.csv"))
+
+
+def _append_benchmark_csv(language: str, name: str, duration_seconds: float):
+    path = _benchmark_csv_path()
+    if not os.path.exists(path) or os.path.getsize(path) == 0:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(BENCHMARK_CSV_HEADER)
+    escaped_name = json.dumps(name)
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(f"{language},{escaped_name},{duration_seconds:.9f}\n")
 
 
 def _bench(name: str, func):
@@ -1682,6 +1697,7 @@ def _bench(name: str, func):
     end = time.perf_counter()
     duration = (end - start) / BENCHMARK_ITERATIONS
     print(f"{name},{duration:.6f}")
+    _append_benchmark_csv("python", name, duration)
 
 
 def benchmark_main():
@@ -3077,36 +3093,36 @@ class Type(
             location_obj = obj.get("location")
             if location_obj:
                 entity.location = Location.parse(location_obj) if isinstance(location_obj, dict) else location_obj
-        except KeyError, AttributeError:
+        except (KeyError, AttributeError):
             pass
         try:
             models = [Model.parse(r) for r in obj["models"]]
             entity.models = models
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             connectors = [Connector.parse(p) for p in obj["connectors"]]
             entity.connectors = connectors
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
 
         return entity
@@ -3619,12 +3635,12 @@ class Side(BaseModel):
         try:
             connectorObj = obj.get("connector")
             connector = ConnectorId.parse(connectorObj) if connectorObj is not None else None
-        except KeyError, TypeError:
+        except (KeyError, TypeError):
             connector = None
         try:
             designPieceObj = obj.get("designPiece")
             designPiece = PieceId.parse(designPieceObj) if designPieceObj is not None else None
-        except KeyError, TypeError:
+        except (KeyError, TypeError):
             designPiece = None
         return cls(piece=piece, designPiece=designPiece, connector=connector)
 
@@ -4443,7 +4459,7 @@ class Design(
         entity = cls(**props.model_dump())
         try:
             entity.location = props.location
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         typesDict = {}
         for type in types:
@@ -4455,32 +4471,32 @@ class Design(
         try:
             pieces = [Piece.parse(p, typesDict, designsById) for p in obj["pieces"]]
             entity.pieces = pieces
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             connections = [Connection.parse(c, pieces, designsById) for c in obj["connections"]]
             entity.connections = connections
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             props = [Prop.parse(p) for p in obj["props"]]
             entity.props = props
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             attributes = [Attribute.parse(q) for q in obj["attributes"]]
             entity.attributes = attributes
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             author_emails = obj["authors"]
             entity.authors = author_emails
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         return entity
 
@@ -4795,22 +4811,22 @@ class Kit(
         try:
             types = [Type.parse(t) for t in obj["types"]]
             entity.types = types
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             designs = [Design.parse(d, types) for d in obj["designs"]]
             entity.designs = designs
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             folders = [Folder.parse(f) for f in obj["folders"]]
             entity.folders = folders
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         try:
             concepts = obj["concepts"]
             entity.concepts = concepts
-        except KeyError, AttributeError, Exception:
+        except (KeyError, AttributeError, Exception):
             pass
         return entity
 
@@ -5142,7 +5158,7 @@ class Kit(
                     continue
                 other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
                 required_connectors.append(other_connector)
-            except ValueError, AttributeError:
+            except (ValueError, AttributeError):
                 continue
         result = []
         for replacement_type in self.types or []:
@@ -5185,7 +5201,7 @@ class Kit(
                             continue
                         other_connector = self.find_connector_in_type(other_piece.type.guid, other_connector_guid)
                         external_connectors.append(other_connector)
-                    except ValueError, AttributeError:
+                    except (ValueError, AttributeError):
                         continue
         result = []
         for replacement_type in self.types or []:
@@ -10925,7 +10941,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                 if attr.get("key") == "semio.center" and attr.get("value"):
                     try:
                         center = json.loads(attr["value"])
-                    except json.JSONDecodeError, TypeError:
+                    except (json.JSONDecodeError, TypeError):
                         pass
         if center is not None:
             centerCoords.append(center)
@@ -11075,7 +11091,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except json.JSONDecodeError, TypeError:
+                                                    except (json.JSONDecodeError, TypeError):
                                                         pass
                                         if flatParentCenter is None:
                                             for attr in externalParent.get("attributes", []):
@@ -11083,7 +11099,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                     try:
                                                         flatParentCenter = json.loads(attr["value"])
                                                         break
-                                                    except json.JSONDecodeError, TypeError:
+                                                    except (json.JSONDecodeError, TypeError):
                                                         pass
                                         if flatParentCenter is None and externalParent.get("center"):
                                             flatParentCenter = externalParent["center"]
@@ -11093,7 +11109,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                                 try:
                                                     flatChildCenter = json.loads(attr["value"])
                                                     break
-                                                except json.JSONDecodeError, TypeError:
+                                                except (json.JSONDecodeError, TypeError):
                                                     pass
                                         if flatChildCenter is None and piece.get("center"):
                                             flatChildCenter = piece["center"]
@@ -11111,12 +11127,12 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                         if attr.get("key") == "semio.center" and attr.get("value"):
                             try:
                                 copied["center"] = json.loads(attr["value"])
-                            except json.JSONDecodeError, TypeError:
+                            except (json.JSONDecodeError, TypeError):
                                 pass
                         if attr.get("key") == "semio.plane" and attr.get("value"):
                             try:
                                 copied["plane"] = json.loads(attr["value"])
-                            except json.JSONDecodeError, TypeError:
+                            except (json.JSONDecodeError, TypeError):
                                 pass
                     center = copied.get("center") or {"u": 0, "v": 0}
                     newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
@@ -12906,6 +12922,192 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
         },
         "_piecePaths": piecePaths,
     }
+
+
+# #region 🌳Flatten Merkle Hashes
+# Per-piece merkle hashes for plane and center computations so subsequent flatten calls can skip unchanged chains.
+
+
+def _hash_plane_root(guid: str, plane: dict | None) -> str:
+    """🌱Root plane hash includes only the piece guid and its fixed plane components (identity when absent)."""
+    w = HashWriter()
+    if plane is None:
+        w.writeString("plane.root.identity")
+        w.writeString(guid)
+        return w.digest()
+    w.writeString("plane.root")
+    w.writeString(guid)
+    origin = plane.get("origin") or {}
+    xAxis = plane.get("xAxis") or {}
+    yAxis = plane.get("yAxis") or {}
+    w.writeNumber(origin.get("x", 0) or 0)
+    w.writeNumber(origin.get("y", 0) or 0)
+    w.writeNumber(origin.get("z", 0) or 0)
+    w.writeNumber(xAxis.get("x", 0) or 0)
+    w.writeNumber(xAxis.get("y", 0) or 0)
+    w.writeNumber(xAxis.get("z", 0) or 0)
+    w.writeNumber(yAxis.get("x", 0) or 0)
+    w.writeNumber(yAxis.get("y", 0) or 0)
+    w.writeNumber(yAxis.get("z", 0) or 0)
+    return w.digest()
+
+
+def _hash_plane_chain(parent_hash: str, parent_connector: dict, child_connector: dict, connection: dict) -> str:
+    """🔗Chain plane hash depends on parent plane hash plus the inputs consumed by computeChildPlane."""
+    w = HashWriter()
+    w.writeString("plane.chain")
+    w.writeHash(parent_hash)
+    pPoint = parent_connector.get("point") or {}
+    pDir = parent_connector.get("direction") or {}
+    cPoint = child_connector.get("point") or {}
+    cDir = child_connector.get("direction") or {}
+    w.writeNumber(pPoint.get("x", 0) or 0)
+    w.writeNumber(pPoint.get("y", 0) or 0)
+    w.writeNumber(pPoint.get("z", 0) or 0)
+    w.writeNumber(pDir.get("x", 0) or 0)
+    w.writeNumber(pDir.get("y", 0) or 0)
+    w.writeNumber(pDir.get("z", 0) or 0)
+    w.writeNumber(cPoint.get("x", 0) or 0)
+    w.writeNumber(cPoint.get("y", 0) or 0)
+    w.writeNumber(cPoint.get("z", 0) or 0)
+    w.writeNumber(cDir.get("x", 0) or 0)
+    w.writeNumber(cDir.get("y", 0) or 0)
+    w.writeNumber(cDir.get("z", 0) or 0)
+    w.writeNumber(connection.get("gap", 0) or 0)
+    w.writeNumber(connection.get("shift", 0) or 0)
+    w.writeNumber(connection.get("rise", 0) or 0)
+    w.writeNumber(connection.get("rotation", 0) or 0)
+    w.writeNumber(connection.get("turn", 0) or 0)
+    w.writeNumber(connection.get("tilt", 0) or 0)
+    return w.digest()
+
+
+def _hash_center_root(guid: str, center: dict | None) -> str:
+    """🌱Root center hash includes only the piece guid and its fixed center (identity when absent)."""
+    w = HashWriter()
+    if center is None:
+        w.writeString("center.root.identity")
+        w.writeString(guid)
+        return w.digest()
+    w.writeString("center.root")
+    w.writeString(guid)
+    w.writeNumber(center.get("u", 0) or 0)
+    w.writeNumber(center.get("v", 0) or 0)
+    return w.digest()
+
+
+def _hash_center_chain(parent_hash: str, parent_connector: dict, connection: dict) -> str:
+    """🔗Chain center hash conservatively includes every potentially-read input of the child center computation."""
+    w = HashWriter()
+    w.writeString("center.chain")
+    w.writeHash(parent_hash)
+    pDir = parent_connector.get("direction") or {}
+    w.writeNumber(pDir.get("z", 0) or 0)
+    w.writeNumber(parent_connector.get("t", 0) or 0)
+    w.writeNumber(connection.get("u", 0) or 0)
+    w.writeNumber(connection.get("v", 0) or 0)
+    return w.digest()
+
+
+def computeFlatHashesDict(kit: dict, designGuid: str) -> dict[str, dict]:
+    """🌳Compute per-piece {planeHash, centerHash} merkle hashes for the flattened design so callers can cache by chain identity."""
+    design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
+    if design is None:
+        raise ValueError(f"Design {designGuid} not found")
+    pieces = design.get("pieces", [])
+    if not pieces:
+        return {}
+    pieceMap = {p["guid"]: p for p in pieces}
+    planeHashes: dict[str, str] = {}
+    centerHashes: dict[str, str] = {}
+    G = buildPieceGraph(design)
+    components = list(networkx.connected_components(G))
+    for component in components:
+        rootNode = None
+        for nodeId in component:
+            piece = pieceMap.get(nodeId)
+            if piece and piece.get("plane") is not None and piece.get("center") is not None:
+                rootNode = nodeId
+                break
+        if rootNode is None and component:
+            rootNode = next(iter(sorted(component)))
+        if rootNode is None:
+            continue
+        rootPiece = pieceMap[rootNode]
+        planeHashes[rootNode] = _hash_plane_root(rootNode, rootPiece.get("plane"))
+        centerHashes[rootNode] = _hash_center_root(rootNode, rootPiece.get("center"))
+        for source, target in networkx.bfs_edges(G, rootNode):
+            if target in planeHashes:
+                continue
+            parentId = source
+            childId = target
+            parentPlaneHash = planeHashes.get(parentId)
+            parentCenterHash = centerHashes.get(parentId)
+            if parentPlaneHash is None or parentCenterHash is None:
+                continue
+            edgeData = G.get_edge_data(parentId, childId)
+            connection = edgeData.get("connection") if edgeData else None
+            if connection is None:
+                continue
+            parentPiece = pieceMap[parentId]
+            childPiece = pieceMap[childId]
+            parentType = getTypeByGuid(kit, parentPiece.get("type", {}).get("guid", ""))
+            childType = getTypeByGuid(kit, childPiece.get("type", {}).get("guid", ""))
+            parentSide = connection["connected"] if connection["connected"]["piece"]["guid"] == parentId else connection["connecting"]
+            childSide = connection["connecting"] if connection["connecting"]["piece"]["guid"] == childId else connection["connected"]
+            parentConnectorGuid = parentSide.get("connector", {}).get("guid") if parentSide.get("connector") else None
+            childConnectorGuid = childSide.get("connector", {}).get("guid") if childSide.get("connector") else None
+            parentConnector = getConnectorFromType(kit, parentType, parentConnectorGuid) or {}
+            childConnector = getConnectorFromType(kit, childType, childConnectorGuid) or {}
+            planeHashes[childId] = _hash_plane_chain(parentPlaneHash, parentConnector, childConnector, connection)
+            centerHashes[childId] = _hash_center_chain(parentCenterHash, parentConnector, connection)
+    return {guid: {"planeHash": planeHashes[guid], "centerHash": centerHashes[guid]} for guid in planeHashes}
+
+
+def flattenDesignCachedDict(kit: dict, designGuid: str, cache: dict[str, dict] | None = None) -> tuple[dict, dict[str, dict]]:
+    """🧠Flatten a design reusing cached plane/center values when the per-piece merkle hashes match the previous run."""
+    newHashes = computeFlatHashesDict(kit, designGuid)
+    diff = flattenDesignDict(kit, designGuid)
+    updatedById: dict[str, dict] = {}
+    for entry in diff.get("pieces", {}).get("updated", []) if isinstance(diff.get("pieces"), dict) else []:
+        updatedById[entry["id"]] = entry["diff"]
+    nextCache: dict[str, dict] = {}
+    if cache:
+        for guid, hashes in newHashes.items():
+            prev = cache.get(guid)
+            updated = updatedById.get(guid)
+            if prev is None or updated is None:
+                if updated is not None:
+                    nextCache[guid] = {
+                        "planeHash": hashes["planeHash"],
+                        "centerHash": hashes["centerHash"],
+                        "plane": updated.get("plane"),
+                        "center": updated.get("center"),
+                    }
+                continue
+            reusedPlane = prev.get("plane") if prev.get("planeHash") == hashes["planeHash"] else updated.get("plane")
+            reusedCenter = prev.get("center") if prev.get("centerHash") == hashes["centerHash"] else updated.get("center")
+            nextCache[guid] = {
+                "planeHash": hashes["planeHash"],
+                "centerHash": hashes["centerHash"],
+                "plane": reusedPlane,
+                "center": reusedCenter,
+            }
+    else:
+        for guid, hashes in newHashes.items():
+            updated = updatedById.get(guid)
+            if updated is None:
+                continue
+            nextCache[guid] = {
+                "planeHash": hashes["planeHash"],
+                "centerHash": hashes["centerHash"],
+                "plane": updated.get("plane"),
+                "center": updated.get("center"),
+            }
+    return diff, nextCache
+
+
+# #endregion 🌳Flatten Merkle Hashes
 
 
 # #endregion 🌤️Flatten Design
@@ -16869,6 +17071,143 @@ class TestFlatten:
     class TestCapsuleDream:
         def test_kit_flatten_diff_apply_flat(self):
             _test_flatten("Capsule Dream")
+
+
+def _flatten_merkle_set_path(obj: dict, path: str, value) -> None:
+    """🌳Assign a value inside a nested dict structure using a dotted path (creating intermediate dicts when missing)."""
+    keys = path.split(".")
+    current = obj
+    for key in keys[:-1]:
+        if key not in current or current[key] is None:
+            current[key] = {}
+        current = current[key]
+    current[keys[-1]] = value
+
+
+def _flatten_merkle_find_design_by_path(kit: dict, design_path: list[str]) -> dict:
+    """🌳Resolve a design by its hierarchical name path (root, then successive parents)."""
+    if not design_path:
+        raise ValueError("designPath must not be empty")
+    current = None
+    for i, name in enumerate(design_path):
+        parent_guid = current.get("guid") if current is not None else None
+        match = None
+        for d in kit.get("designs", []):
+            if d.get("name") != name:
+                continue
+            parent = d.get("parent")
+            if i == 0:
+                if not parent:
+                    match = d
+                    break
+            else:
+                if parent and parent.get("guid") == parent_guid:
+                    match = d
+                    break
+        if match is None:
+            raise ValueError(f"Design path {design_path} not found at segment {name!r}")
+        current = match
+    assert current is not None
+    return current
+
+
+def _flatten_merkle_apply_mutations(kit: dict, design: dict, mutations: list[dict]) -> None:
+    """🌳Apply the asset-described mutations in-place on a kit clone prior to recomputing hashes."""
+    for mutation in mutations:
+        kind = mutation.get("kind")
+        path = mutation.get("path")
+        value = mutation.get("value")
+        if kind == "pieceField":
+            pieceGuid = mutation.get("pieceGuid")
+            piece = next((p for p in design.get("pieces", []) if p.get("guid") == pieceGuid), None)
+            if piece is None:
+                raise ValueError(f"Piece {pieceGuid} not found in design {design.get('guid')}")
+            _flatten_merkle_set_path(piece, path, value)
+        elif kind == "connectionField":
+            connectionGuid = mutation.get("connectionGuid")
+            connection = next((c for c in design.get("connections", []) if c.get("guid") == connectionGuid), None)
+            if connection is None:
+                raise ValueError(f"Connection {connectionGuid} not found in design {design.get('guid')}")
+            _flatten_merkle_set_path(connection, path, value)
+        else:
+            raise ValueError(f"Unknown mutation kind {kind!r}")
+
+
+class TestFlattenMerkle:
+    def test_shared_asset_mutation_cases(self):
+        cases_doc = _test_load_json("flatten-merkle.cases.semio.json")
+        for case in cases_doc.get("cases", []):
+            kit_before = _test_load_json(case["kit"])
+            design_before = _flatten_merkle_find_design_by_path(kit_before, case["designPath"])
+            before_hashes = computeFlatHashesDict(kit_before, design_before["guid"])
+
+            kit_after = json.loads(json.dumps(kit_before))
+            design_after = _flatten_merkle_find_design_by_path(kit_after, case["designPath"])
+            _flatten_merkle_apply_mutations(kit_after, design_after, case.get("mutations", []))
+            after_hashes = computeFlatHashesDict(kit_after, design_after["guid"])
+
+            assert set(before_hashes.keys()) == set(after_hashes.keys()), f"Case {case['name']}: piece set changed"
+
+            changed_plane = {
+                g for g in before_hashes if before_hashes[g]["planeHash"] != after_hashes[g]["planeHash"]
+            }
+            changed_center = {
+                g for g in before_hashes if before_hashes[g]["centerHash"] != after_hashes[g]["centerHash"]
+            }
+            expect = case.get("expect", {})
+            name = case["name"]
+
+            if "planeHashesChangedAny" in expect:
+                if expect["planeHashesChangedAny"]:
+                    assert len(changed_plane) > 0, f"Case {name}: expected some planeHash changes, got none"
+                else:
+                    assert len(changed_plane) == 0, f"Case {name}: expected no planeHash changes, got {changed_plane}"
+            if "centerHashesChangedAny" in expect:
+                if expect["centerHashesChangedAny"]:
+                    assert len(changed_center) > 0, f"Case {name}: expected some centerHash changes, got none"
+                else:
+                    assert len(changed_center) == 0, f"Case {name}: expected no centerHash changes, got {changed_center}"
+            if expect.get("planeHashesChangedAll") is True:
+                assert changed_plane == set(before_hashes.keys()), f"Case {name}: expected every planeHash to change"
+            if expect.get("planeHashesChangedAll") is False:
+                assert changed_plane != set(before_hashes.keys()), f"Case {name}: expected not every planeHash to change"
+            if expect.get("centerHashesChangedAll") is True:
+                assert changed_center == set(before_hashes.keys()), f"Case {name}: expected every centerHash to change"
+            if expect.get("centerHashesChangedAll") is False:
+                assert changed_center != set(before_hashes.keys()), f"Case {name}: expected not every centerHash to change"
+            for guid in expect.get("planeHashesChangedIncludes", []):
+                assert guid in changed_plane, f"Case {name}: expected piece {guid} to have changed planeHash"
+            for guid in expect.get("centerHashesChangedIncludes", []):
+                assert guid in changed_center, f"Case {name}: expected piece {guid} to have changed centerHash"
+            for guid in expect.get("planeHashesStableIncludes", []):
+                assert guid not in changed_plane, f"Case {name}: expected piece {guid} to keep stable planeHash"
+            for guid in expect.get("centerHashesStableIncludes", []):
+                assert guid not in changed_center, f"Case {name}: expected piece {guid} to keep stable centerHash"
+
+    def test_cross_language_parity_reference_hashes(self):
+        cases_doc = _test_load_json("flatten-merkle.cases.semio.json")
+        parity = cases_doc.get("parity")
+        assert parity is not None, "parity block missing"
+        kit = _test_load_json(parity["kit"])
+        design = _flatten_merkle_find_design_by_path(kit, parity["designPath"])
+        hashes = computeFlatHashesDict(kit, design["guid"])
+        for expected in parity.get("expectedHashes", []):
+            guid = expected["pieceGuid"]
+            assert guid in hashes, f"piece {guid} missing from computed hashes"
+            assert hashes[guid]["planeHash"] == expected["planeHash"], f"piece {guid} planeHash mismatch: got {hashes[guid]['planeHash']}"
+            assert hashes[guid]["centerHash"] == expected["centerHash"], f"piece {guid} centerHash mismatch: got {hashes[guid]['centerHash']}"
+
+    def test_cached_flatten_reuses_values_when_hashes_match(self):
+        kit = _test_load_json("metabolism.kit.semio.json")
+        design = _flatten_merkle_find_design_by_path(kit, ["Nakagin Capsule Tower"])
+        _, first_cache = flattenDesignCachedDict(kit, design["guid"])
+        assert len(first_cache) > 0
+        _, second_cache = flattenDesignCachedDict(kit, design["guid"], first_cache)
+        for guid, entry in first_cache.items():
+            assert entry["planeHash"] == second_cache[guid]["planeHash"]
+            assert entry["centerHash"] == second_cache[guid]["centerHash"]
+            assert entry["plane"] == second_cache[guid]["plane"]
+            assert entry["center"] == second_cache[guid]["center"]
 
 
 class TestChange:

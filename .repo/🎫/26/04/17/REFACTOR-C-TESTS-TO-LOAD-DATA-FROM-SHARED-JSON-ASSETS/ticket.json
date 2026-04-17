@@ -1,0 +1,9 @@
+{
+  "title": "Refactor C# Tests to Load Data from Shared JSON Assets",
+  "status": "open",
+  "description": "Refactor the C# test file at semio/net/Semio.Tests/Tests.cs to load hardcoded test data (GUIDs, design names, expected values, hash strings, glob patterns) from shared JSON asset files in semio/assets/semio/. Test behavior stays in C#, only data moves to assets. Affects: HashTests, DesignQualitySum, KitFilterDesign, FindReplaceableTypesInDesignsTests, Flatten classes.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪1197d9f2008341dcbbc7e489262f622c"
+  ]
+}
