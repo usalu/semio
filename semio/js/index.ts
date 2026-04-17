@@ -5462,7 +5462,10 @@ const flattenCentersDiffer = (a?: Coord, b?: Coord): boolean => {
   return Math.abs(a.u - b.u) >= flattenPlaneCenterTol || Math.abs(a.v - b.v) >= flattenPlaneCenterTol;
 };
 
-const buildFlattenPieceAdjacency = (pieces: Piece[], connections: Connection[]): { pieceMap: { [guid: string]: Piece }; adjacency: Map<string, FlattenAdjacencyEntry[]> } => {
+const buildFlattenPieceAdjacency = (
+  pieces: Piece[],
+  connections: Connection[],
+): { pieceMap: { [guid: string]: Piece }; adjacency: Map<string, FlattenAdjacencyEntry[]> } => {
   const pieceMap: { [guid: string]: Piece } = {};
   for (const p of pieces) {
     if (p.guid) pieceMap[p.guid] = p;
@@ -5637,7 +5640,12 @@ export const flattenDesign = (kit: Kit, designId: string): DesignOperationResult
   const { pieceMap, adjacency } = buildFlattenPieceAdjacency(flatPieces, filteredConnections);
   flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, flatPieces, {
     onComponentDiscovered: (component, rootGuid, pm) => {
-      const fixedInDesignOrder = flatPieces.map((fp) => fp.guid).filter((g): g is string => Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined));
+      const fixedInDesignOrder = flatPieces
+        .map((fp) => fp.guid)
+        .filter(
+          (g): g is string =>
+            Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined),
+        );
       if (fixedInDesignOrder.length === 0) {
         warnings.push({
           code: "flatten.no-fixed-piece-in-clump",
@@ -5917,7 +5925,9 @@ export const computeFlatHashes = (kit: Kit, designGuid: string): { [pieceGuid: s
   const pieces = design.pieces ?? [];
   if (pieces.length === 0) return {};
   const { getType, getConnector } = buildConnectorResolverFromKit(kit);
-  const connections = (design.connections ?? []).filter((c) => pieces.some((p) => p.guid === c.connected.piece.guid) && pieces.some((p) => p.guid === c.connecting.piece.guid));
+  const connections = (design.connections ?? []).filter(
+    (c) => pieces.some((p) => p.guid === c.connected.piece.guid) && pieces.some((p) => p.guid === c.connecting.piece.guid),
+  );
   const planeHashes: { [guid: string]: string } = {};
   const centerHashes: { [guid: string]: string } = {};
   const { pieceMap, adjacency } = buildFlattenPieceAdjacency(pieces, connections);
@@ -5963,7 +5973,11 @@ export type FlatMerkleCacheEntry = {
 /**
  * 🧠Flatten a design while reusing cached plane/center values whenever a piece's merkle hash matches the previous run.
  **/
-export const flattenDesignCached = (kit: Kit, designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } => {
+export const flattenDesignCached = (
+  kit: Kit,
+  designGuid: string,
+  cache?: { [pieceGuid: string]: FlatMerkleCacheEntry },
+): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } => {
   const newHashes = computeFlatHashes(kit, designGuid);
   const result = flattenDesign(kit, designGuid);
   const nextCache: { [guid: string]: FlatMerkleCacheEntry } = {};
@@ -10023,7 +10037,7 @@ const validateGuidCollectionDiff = <TItem extends { guid: string }>(
 };
 
 const validateAttributesDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Attribute[], d: AttributesDiff | undefined): void => {
-  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => {});
+  validateGuidCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => { });
 };
 
 const validatePropsDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Prop[], qualities: Set<string>, d: PropsDiff | undefined): void => {
@@ -10228,13 +10242,13 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
   if (ctx.diff.designs) {
     ctx.diff.designs = validateGuidCollectionDiff(ctx, "designs", "design", kit.designs ?? [], ctx.diff.designs, (item, ddiff, p) => validateDesignDiffNested(ctx, kit, p, item, ddiff as DesignDiff, refs));
   }
-  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => {});
-  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => {});
-  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => {});
+  if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => { });
+  if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => { });
+  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => { });
   if (ctx.diff.qualities) {
     ctx.diff.qualities = validateGuidCollectionDiff(ctx, "qualities", "quality", kit.qualities ?? [], ctx.diff.qualities, (item, qdiff, p) => validateQualityDiffNested(ctx, p, item, qdiff as QualityDiff));
   }
-  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => {});
+  if (ctx.diff.files) ctx.diff.files = validateGuidCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => { });
   if (ctx.diff.folders) {
     ctx.diff.folders = validateGuidCollectionDiff(ctx, "folders", "folder", kit.folders ?? [], ctx.diff.folders, (item, fdiff, p) => {
       const par = (fdiff as FolderDiff).parent?.guid ?? item.parent?.guid;
@@ -10242,7 +10256,7 @@ export const validateKitDiff = (kit: Kit, diff: KitDiff, heal: boolean): KitDiff
       if ((fdiff as FolderDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (fdiff as FolderDiff).attributes);
     });
   }
-  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => {});
+  if (ctx.diff.authors) ctx.diff.authors = validateGuidCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => { });
   if (ctx.diff.attributes) validateAttributesDiffNested(ctx, "kit.attributes", kit.attributes ?? [], ctx.diff.attributes);
 
   const ok = ctx.errors.length === 0;
@@ -10933,7 +10947,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
             fixes: [fix],
           });
         }
-      } catch {}
+      } catch { }
     });
   });
   return problems;
@@ -11139,7 +11153,11 @@ export const getSqlJs = async () => {
         const path = await import("path");
         const url = await import("url");
         const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-        const candidatePaths = [path.join(__dirname, "public", "sql-wasm.wasm"), path.join(__dirname, "..", "sketchpad", "public", "sql-wasm.wasm"), path.join(__dirname, "..", "..", "node_modules", "sql.js", "dist", "sql-wasm.wasm")];
+        const candidatePaths = [
+          path.join(__dirname, "public", "sql-wasm.wasm"),
+          path.join(__dirname, "..", "sketchpad", "public", "sql-wasm.wasm"),
+          path.join(__dirname, "..", "..", "node_modules", "sql.js", "dist", "sql-wasm.wasm"),
+        ];
         const wasmPath = candidatePaths.find((candidate) => fs.existsSync(candidate)) ?? candidatePaths[0];
         cachedSqlJs = await initSqlJs({
           locateFile: () => wasmPath,
@@ -12549,20 +12567,20 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-                }
+                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+              }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-                }
+                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+              }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -12677,54 +12695,54 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-          return {
-            guid: row.guid,
-            key: row.key,
-            name: row.name,
-            kind: row.kind || undefined,
-            defaultValue: row.default_value ?? undefined,
-            formula: toUndefined(row.formula),
-            defaultSiUnit: toUndefined(row.default_si_unit),
-            defaultImperialUnit: toUndefined(row.default_imperial_unit),
-            min: row.min_value ?? undefined,
-            minExcluded: row.min_excluded ? true : undefined,
-            max: row.max_value ?? undefined,
-            maxExcluded: row.max_excluded ? true : undefined,
-            canScale: row.can_scale ? true : undefined,
-            uri: toUndefined(row.definition),
-            benchmarks: benchmarks.map((b: any) => {
-              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-              return {
-                guid: b.guid,
-                name: b.name,
-                icon: toUndefined(b.icon),
-                min: b.min_value ?? undefined,
-                minExcluded: b.min_excluded ? true : undefined,
-                max: b.max_value ?? undefined,
-                maxExcluded: b.max_excluded ? true : undefined,
-                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-              };
-            }),
-            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-          };
-        })
+        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+        return {
+          guid: row.guid,
+          key: row.key,
+          name: row.name,
+          kind: row.kind || undefined,
+          defaultValue: row.default_value ?? undefined,
+          formula: toUndefined(row.formula),
+          defaultSiUnit: toUndefined(row.default_si_unit),
+          defaultImperialUnit: toUndefined(row.default_imperial_unit),
+          min: row.min_value ?? undefined,
+          minExcluded: row.min_excluded ? true : undefined,
+          max: row.max_value ?? undefined,
+          maxExcluded: row.max_excluded ? true : undefined,
+          canScale: row.can_scale ? true : undefined,
+          uri: toUndefined(row.definition),
+          benchmarks: benchmarks.map((b: any) => {
+            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+            return {
+              guid: b.guid,
+              name: b.name,
+              icon: toUndefined(b.icon),
+              min: b.min_value ?? undefined,
+              minExcluded: b.min_excluded ? true : undefined,
+              max: b.max_value ?? undefined,
+              maxExcluded: b.max_excluded ? true : undefined,
+              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+            };
+          }),
+          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+        };
+      })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          remote: toUndefined(row.remote_url),
-          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-          size: row.size ?? undefined,
-          hash: toUndefined(row.hash),
-          createdAt: row.created,
-          updatedAt: row.updated,
-        }))
+        guid: row.guid,
+        name: row.name,
+        remote: toUndefined(row.remote_url),
+        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+        size: row.size ?? undefined,
+        hash: toUndefined(row.hash),
+        createdAt: row.created,
+        updatedAt: row.updated,
+      }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -12740,10 +12758,10 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          email: toUndefined(row.email),
-        }))
+        guid: row.guid,
+        name: row.name,
+        email: toUndefined(row.email),
+      }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);
@@ -13984,7 +14002,7 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
         if (copiedMeshes.length > 0) {
           typeMeshMap[typeGuid] = copiedMeshes[0];
         }
-      } catch {}
+      } catch { }
     }
   }
 
@@ -14949,7 +14967,9 @@ const shouldRunEmbeddedJsTests =
   (typeof __SEMIO_JS_RUN_EMBEDDED_TESTS__ !== "undefined" && __SEMIO_JS_RUN_EMBEDDED_TESTS__) ||
   (typeof __SEMIO_JS_RUN_EMBEDDED_TESTS__ === "undefined" && typeof (globalThis as any).__vitest_worker__ !== "undefined" && typeof process !== "undefined" && process.env.SEMIO_JS_RUN_EMBEDDED_TESTS === "1");
 
-const shouldRunJsBenchmarks = (typeof __SEMIO_JS_RUN_BENCHMARKS__ !== "undefined" && __SEMIO_JS_RUN_BENCHMARKS__) || (typeof __SEMIO_JS_RUN_BENCHMARKS__ === "undefined" && typeof process !== "undefined" && process.argv?.includes("--bench"));
+const shouldRunJsBenchmarks =
+  (typeof __SEMIO_JS_RUN_BENCHMARKS__ !== "undefined" && __SEMIO_JS_RUN_BENCHMARKS__) ||
+  (typeof __SEMIO_JS_RUN_BENCHMARKS__ === "undefined" && typeof process !== "undefined" && process.argv?.includes("--bench"));
 
 // #endregion 🧪Runtime Test Flags
 
@@ -14997,10 +15017,25 @@ if (shouldRunEmbeddedJsTests) {
     NakaginCapsuleTowerWithDiffDesign,
     ValidateKitDiffCases,
     FlattenMerkleCases,
+    HashCases,
+    QualitySumCases,
+    DesignWithDiffCases,
+    FilterKitCases,
+    FindReplaceableTypesCases,
+    FlattenCases,
+    SyntheticFindReplaceableKit,
+    ExportDesignModelCases,
+    DeleteCases,
+    CopyPasteCases,
   } = await import("@semio/assets");
   const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/sketchpad");
   type KitFolderAdapter = import("@semio/sketchpad").KitFolderAdapter;
   type KitJsonFileAdapter = import("@semio/sketchpad").KitJsonFileAdapter;
+
+  const NAKAGIN_DESIGN_NAME = (HashCases as any).designName as string;
+  const deleteCasesData = (DeleteCases as any).cases as Array<{ name: string; designName: string; designParent: string | null; selectionAsset: string; expectedDiffAsset: string }>;
+  const copyPasteCasesData = (CopyPasteCases as any).cases as Array<{ name: string; designName: string; designParent: string | null; selectionAsset: string; expectedCopyAsset: string; pasteTargetAsset: string; expectedPasteDiffAsset: string; pasteCoord: { u: number; v: number }; expectedPasteWithCoordDiffAsset: string }>;
+  const filterKitCasesData = FilterKitCases as any;
 
   const TEST_TOLERANCE = 0.001;
 
@@ -15216,9 +15251,12 @@ if (shouldRunEmbeddedJsTests) {
       });
     }
     it("heal drops invalid design update", () => {
+      const healCase = cases.cases.find((c: any) => c.id === "update-missing-design")!;
+      const healDiff = healCase.diff as Record<string, unknown>;
+      const healGuid = ((healDiff.designs as any).updated[0] as any).design.guid as string;
       const bad: KitDiff = {
         designs: {
-          updated: [{ design: { guid: "99999999-9999-9999-9999-999999999999" }, diff: { name: "X" } }],
+          updated: [{ design: { guid: healGuid }, diff: { name: "X" } }],
         },
       };
       const r = validateKitDiff(tinyKit, bad, true);
@@ -15275,9 +15313,10 @@ if (shouldRunEmbeddedJsTests) {
   // Tests for filterKit MUST verify correct subset extraction with design-based and glob-based filters.
 
   describe("Kit/Filter/Design", () => {
+    const filterDesignCase0 = ((FilterKitCases as any).cases as Array<{ designName: string }>)[0];
     const kit = MetabolismKit as Kit;
     const expected = NakaginCapsuleTowerFilteredKit as any;
-    const nakaginDesign = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent);
+    const nakaginDesign = kit.designs?.find((d) => d.name === filterDesignCase0.designName && !d.parent);
 
     it("filters kit to only contain entities related to Nakagin Capsule Tower design", () => {
       expect(nakaginDesign).toBeDefined();
@@ -15328,97 +15367,79 @@ if (shouldRunEmbeddedJsTests) {
   });
 
   describe("Kit/Filter/Glob", () => {
+    const filterKitGlobCases = (FilterKitCases as any).globCases as Array<{
+      name: string; typeInclude?: string[]; typeExclude?: string[];
+      designInclude?: string[]; designName?: string; designParent?: string | null;
+    }>;
+    const globMatchAssetCases = filterKitCasesData.globMatchCases as Array<{ input: string; pattern: string; expected: boolean }>;
+    const globMatchCaseInsensitiveCases = filterKitCasesData.globMatchCaseInsensitiveCases as Array<{ input: string; pattern: string; expected: boolean }>;
+    const matchesGlobFilterAssetCases = filterKitCasesData.matchesGlobFilterCases as Array<{ name: string; input: string; filter?: { include?: string[]; exclude?: string[] }; expected: boolean }>;
+
     it("globMatch matches wildcard patterns", () => {
-      expect(globMatch("Nakagin Capsule Tower", "Nakagin*")).toBe(true);
-      expect(globMatch("Nakagin Capsule Tower", "*Tower")).toBe(true);
-      expect(globMatch("Nakagin Capsule Tower", "*Capsule*")).toBe(true);
-      expect(globMatch("Nakagin Capsule Tower", "Nakagin Capsule Tower")).toBe(true);
-      expect(globMatch("Nakagin Capsule Tower", "Other*")).toBe(false);
-      expect(globMatch("Wall", "W?ll")).toBe(true);
-      expect(globMatch("Wall", "W??l")).toBe(true);
-      expect(globMatch("Wall", "W????")).toBe(false);
+      for (const tc of globMatchAssetCases) {
+        expect(globMatch(tc.input, tc.pattern)).toBe(tc.expected);
+      }
     });
 
     it("globMatch is case-insensitive", () => {
-      expect(globMatch("Wall", "wall")).toBe(true);
-      expect(globMatch("wall", "WALL")).toBe(true);
-      expect(globMatch("Nakagin Capsule Tower", "nakagin*")).toBe(true);
-    });
-
-    it("matchesGlobFilter with include only", () => {
-      expect(matchesGlobFilter("Wall", { include: ["Wall"] })).toBe(true);
-      expect(matchesGlobFilter("Column", { include: ["Wall"] })).toBe(false);
-      expect(matchesGlobFilter("Wall", { include: ["W*", "C*"] })).toBe(true);
-      expect(matchesGlobFilter("Column", { include: ["W*", "C*"] })).toBe(true);
-      expect(matchesGlobFilter("Beam", { include: ["W*", "C*"] })).toBe(false);
-    });
-
-    it("matchesGlobFilter with exclude only", () => {
-      expect(matchesGlobFilter("Wall", { exclude: ["Wall"] })).toBe(false);
-      expect(matchesGlobFilter("Column", { exclude: ["Wall"] })).toBe(true);
-      expect(matchesGlobFilter("Wall", { exclude: ["*all"] })).toBe(false);
-    });
-
-    it("matchesGlobFilter with include and exclude", () => {
-      expect(matchesGlobFilter("Wall", { include: ["W*"], exclude: ["Wall"] })).toBe(false);
-      expect(matchesGlobFilter("Window", { include: ["W*"], exclude: ["Wall"] })).toBe(true);
-    });
-
-    it("matchesGlobFilter with no filter returns true", () => {
-      expect(matchesGlobFilter("anything")).toBe(true);
-      expect(matchesGlobFilter("anything", undefined)).toBe(true);
-    });
-
-    it("filterKit with type glob include filters types by name", () => {
-      const kit = MetabolismKit as Kit;
-      const totalTypes = kit.types?.length ?? 0;
-      expect(totalTypes).toBeGreaterThan(0);
-      const filtered = filterKit(kit, { types: { include: ["Capsule*"] } });
-      expect(filtered.types?.length ?? 0).toBeGreaterThan(0);
-      expect(filtered.types?.length ?? 0).toBeLessThan(totalTypes);
-      for (const t of filtered.types ?? []) {
-        expect(t.name.toLowerCase().startsWith("capsule")).toBe(true);
+      for (const tc of globMatchCaseInsensitiveCases) {
+        expect(globMatch(tc.input, tc.pattern)).toBe(tc.expected);
       }
     });
 
-    it("filterKit with type glob exclude filters out matching types", () => {
-      const kit = MetabolismKit as Kit;
-      const totalTypes = kit.types?.length ?? 0;
-      const filtered = filterKit(kit, { types: { exclude: ["Capsule*"] } });
-      expect(filtered.types?.length ?? 0).toBeLessThan(totalTypes);
-      for (const t of filtered.types ?? []) {
-        expect(t.name.toLowerCase().startsWith("capsule")).toBe(false);
-      }
-    });
+    for (const tc of matchesGlobFilterAssetCases) {
+      it(`matchesGlobFilter: ${tc.name}`, () => {
+        expect(matchesGlobFilter(tc.input, tc.filter)).toBe(tc.expected);
+      });
+    }
 
-    it("filterKit with design glob include filters designs by name", () => {
-      const kit = MetabolismKit as Kit;
-      const filtered = filterKit(kit, { designs: { include: ["Nakagin*"] } });
-      expect(filtered.designs?.length ?? 0).toBeGreaterThan(0);
-      for (const d of filtered.designs ?? []) {
-        expect(globMatch(d.name, "Nakagin*")).toBe(true);
-      }
-    });
-
-    it("filterKit with no filter returns kit unchanged", () => {
-      const kit = MetabolismKit as Kit;
-      const filtered = filterKit(kit, {});
-      expect(filtered.types?.length).toBe(kit.types?.length);
-      expect(filtered.designs?.length).toBe(kit.designs?.length);
-      expect(filtered.ports?.length).toBe(kit.ports?.length);
-    });
-
-    it("filterKit combines designGuid with glob filters", () => {
-      const kit = MetabolismKit as Kit;
-      const nakaginDesign = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent);
-      expect(nakaginDesign).toBeDefined();
-      const designFiltered = filterKit(kit, { designGuid: nakaginDesign!.guid });
-      const combinedFiltered = filterKit(kit, { designGuid: nakaginDesign!.guid, types: { exclude: ["Capsule*"] } });
-      expect(combinedFiltered.types?.length ?? 0).toBeLessThan(designFiltered.types?.length ?? 0);
-      for (const t of combinedFiltered.types ?? []) {
-        expect(t.name.toLowerCase().startsWith("capsule")).toBe(false);
-      }
-    });
+    for (const gc of filterKitGlobCases) {
+      it(`filterKit glob case: ${gc.name}`, () => {
+        const kit = MetabolismKit as Kit;
+        const totalTypes = kit.types?.length ?? 0;
+        const filter: any = {};
+        if (gc.typeInclude) filter.types = { ...filter.types, include: gc.typeInclude };
+        if (gc.typeExclude) filter.types = { ...filter.types, exclude: gc.typeExclude };
+        if (gc.designInclude) filter.designs = { include: gc.designInclude };
+        if (gc.designName) {
+          const nakaginDesign = kit.designs?.find((d) => d.name === gc.designName && !d.parent);
+          expect(nakaginDesign).toBeDefined();
+          filter.designGuid = nakaginDesign!.guid;
+        }
+        const filtered = filterKit(kit, filter);
+        if (gc.typeInclude) {
+          expect(filtered.types?.length ?? 0).toBeGreaterThan(0);
+          expect(filtered.types?.length ?? 0).toBeLessThan(totalTypes);
+          for (const t of filtered.types ?? []) {
+            expect(gc.typeInclude.some((pat) => globMatch(t.name, pat))).toBe(true);
+          }
+        }
+        if (gc.typeExclude && !gc.designName) {
+          expect(filtered.types?.length ?? 0).toBeLessThan(totalTypes);
+          for (const t of filtered.types ?? []) {
+            expect(gc.typeExclude.some((pat) => globMatch(t.name, pat))).toBe(false);
+          }
+        }
+        if (gc.designInclude) {
+          expect(filtered.designs?.length ?? 0).toBeGreaterThan(0);
+          for (const d of filtered.designs ?? []) {
+            expect(gc.designInclude.some((pat) => globMatch(d.name, pat))).toBe(true);
+          }
+        }
+        if (!gc.typeInclude && !gc.typeExclude && !gc.designInclude && !gc.designName) {
+          expect(filtered.types?.length).toBe(kit.types?.length);
+          expect(filtered.designs?.length).toBe(kit.designs?.length);
+          expect(filtered.ports?.length).toBe(kit.ports?.length);
+        }
+        if (gc.designName && gc.typeExclude) {
+          const designOnlyFiltered = filterKit(kit, { designGuid: filter.designGuid });
+          expect(filtered.types?.length ?? 0).toBeLessThan(designOnlyFiltered.types?.length ?? 0);
+          for (const t of filtered.types ?? []) {
+            expect(gc.typeExclude.some((pat) => globMatch(t.name, pat))).toBe(false);
+          }
+        }
+      });
+    }
   });
 
   // #endregion 🏰Kit Filter Tests
@@ -15617,9 +15638,11 @@ if (shouldRunEmbeddedJsTests) {
   // Tests for filterKit MUST verify correct subset extraction with design-based and glob-based filters.
 
   describe("Kit/Filter/Design", () => {
+    const filterDesignCases = (FilterKitCases as any).cases as Array<{ name: string; designName: string; designParent: string | null }>;
     const kit = MetabolismKit as Kit;
     const expected = MetabolismKitFilteredNakaginCapsuleTower as any;
-    const nakaginDesign = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent);
+    const filterDesignCase = filterDesignCases[0];
+    const nakaginDesign = kit.designs?.find((d) => d.name === filterDesignCase.designName && !d.parent);
 
     it("filters kit to only contain entities related to Nakagin Capsule Tower design", () => {
       expect(nakaginDesign).toBeDefined();
@@ -15679,6 +15702,7 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("Flatten", () => {
     const kit = MetabolismKit as Kit;
+    const flattenCasesData = (FlattenCases as any).cases as Array<{ name: string; designPath: string[] }>;
 
     const testFlatten = (designName: string, parentName?: string) => {
       const design = findDesign(kit, designName, parentName);
@@ -15699,35 +15723,16 @@ if (shouldRunEmbeddedJsTests) {
       });
     };
 
-    describe("Nakagin Capsule Tower", () => {
-      it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
-        testFlatten("Nakagin Capsule Tower");
+    for (const fc of flattenCasesData) {
+      it(`${fc.name}: Kit -> Flatten -> Diff -> Apply = Flat`, () => {
+        const designName = fc.designPath[fc.designPath.length - 1];
+        const parentName = fc.designPath.length > 1 ? fc.designPath[fc.designPath.length - 2] : undefined;
+        testFlatten(designName, parentName);
       });
-      describe("Slanted", () => {
-        it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
-          testFlatten("Slanted", "Nakagin Capsule Tower");
-        });
-      });
-      describe("Twisted", () => {
-        it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
-          testFlatten("Twisted", "Nakagin Capsule Tower");
-        });
-      });
-      describe("Dancing", () => {
-        it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
-          testFlatten("Dancing", "Nakagin Capsule Tower");
-        });
-      });
-    });
-
-    describe("Capsule Dream", () => {
-      it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
-        testFlatten("Capsule Dream");
-      });
-    });
+    }
 
     it("forward diff lists every connection removal by guid and apply clears connections", () => {
-      const design = findDesign(kit, "Nakagin Capsule Tower");
+      const design = findDesign(kit, flattenCasesData[0].designPath[0]);
       const origConnCount = design.connections?.length ?? 0;
       expect(origConnCount).toBeGreaterThan(0);
       const flatOp = flattenDesign(kit, design.guid);
@@ -15885,7 +15890,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("cached flatten reuses cached plane/center when hashes match", () => {
       const kit = MetabolismKit as Kit;
-      const design = findDesignByPath(kit, ["Nakagin Capsule Tower"]);
+      const design = findDesignByPath(kit, [NAKAGIN_DESIGN_NAME]);
       const first = flattenDesignCached(kit, design.guid);
       expect(Object.keys(first.cache).length).toBeGreaterThan(0);
       const second = flattenDesignCached(kit, design.guid, first.cache);
@@ -16022,7 +16027,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower flattened piece drag uses piece center diff (flat design has no connections)", () => {
       const kit = MetabolismKit as unknown as Kit;
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
       const flatOp = flattenDesign(kit, design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
@@ -16044,7 +16049,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin sketchpad flow: drag root piece with connections preserved moves all descendants", () => {
       const kit = MetabolismKit as unknown as Kit;
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
       expect((design.connections ?? []).length).toBeGreaterThan(0);
 
       // Step 1: Compute metadata (simulates usePiecesMetadataMap)
@@ -16902,103 +16907,35 @@ if (shouldRunEmbeddedJsTests) {
 
   // #region 🔍Find Replaceable Types In Designs Tests
   describe("FindReplaceableTypesInDesigns", () => {
+    const findReplCases = FindReplaceableTypesCases as any;
+    const syntheticKit = SyntheticFindReplaceableKit as any;
+
     it("Synthetic selection enforces distinct compatible connectors and ignores consumed design connectors", () => {
-      const makeConnector = (guid: string, portGuid: string) =>
-        ({
-          guid,
-          t: 0,
-          point: { x: 0, y: 0, z: 0 },
-          direction: { x: 1, y: 0, z: 0 },
-          port: { guid: portGuid },
-        }) as Connector;
-      const makeType = (guid: string, connectorPortGuids: string[]) =>
-        ({
-          guid,
-          name: guid,
-          connectors: connectorPortGuids.map((connectorPortGuid, connectorIndex) => makeConnector(`${guid}-connector-${connectorIndex}`, connectorPortGuid)),
-        }) as Type;
-      const makePiece = (guid: string, typeGuid: string) => ({ guid, type: { guid: typeGuid } }) as Piece;
-      const makeConnection = (guid: string, connectedPieceGuid: string, connectedConnectorGuid: string, connectingPieceGuid: string, connectingConnectorGuid: string) =>
-        ({
-          guid,
-          connected: { piece: { guid: connectedPieceGuid }, connector: { guid: connectedConnectorGuid } },
-          connecting: { piece: { guid: connectingPieceGuid }, connector: { guid: connectingConnectorGuid } },
-        }) as Connection;
+      const ports = syntheticKit.ports as Port[];
+      const types = syntheticKit.types as Type[];
+      const syntheticRootDesignGuid = (findReplCases.syntheticCases as Array<{ designGuid: string }>)?.[0]?.designGuid;
+      expect(syntheticRootDesignGuid).toBeDefined();
+      const designs = (syntheticKit.designs as Design[]).filter((d: Design) => d.guid !== syntheticRootDesignGuid);
+      const design = (syntheticKit.designs as Design[]).find((d: Design) => d.guid === syntheticRootDesignGuid)!;
 
-      const ports = [{ guid: "port-L", compatiblePorts: [{ guid: "port-L-compatible" }] }, { guid: "port-L-compatible", compatiblePorts: [{ guid: "port-L" }] }, { guid: "port-G" }] as Port[];
-      const types = [
-        makeType("selected-external-lg", []),
-        makeType("selected-isolated-lg", ["port-L", "port-G"]),
-        makeType("selected-external-ll", []),
-        makeType("neighbor-l", ["port-L"]),
-        makeType("neighbor-g", ["port-G"]),
-        makeType("candidate-l", ["port-L"]),
-        makeType("candidate-lg", ["port-L-compatible", "port-G"]),
-        makeType("candidate-lg-lg", ["port-L-compatible", "port-G", "port-L", "port-G"]),
-        makeType("candidate-ll", ["port-L", "port-L-compatible"]),
-        makeType("candidate-g", ["port-G"]),
-      ];
-      const designs = [
-        {
-          guid: "candidate-design-free-lg",
-          name: "candidate-design-free-lg",
-          pieces: [makePiece("candidate-design-free-piece", "candidate-lg")],
-        },
-        {
-          guid: "candidate-design-consumed-lg",
-          name: "candidate-design-consumed-lg",
-          pieces: [makePiece("candidate-design-consumed-a", "candidate-lg"), makePiece("candidate-design-consumed-b", "candidate-l")],
-          connections: [makeConnection("candidate-design-consumed-link", "candidate-design-consumed-a", "candidate-lg-connector-0", "candidate-design-consumed-b", "candidate-l-connector-0")],
-        },
-      ] as Design[];
-      const design = {
-        guid: "root-design",
-        name: "root-design",
-        pieces: [
-          makePiece("piece-external-lg", "selected-external-lg"),
-          makePiece("piece-isolated-lg", "selected-isolated-lg"),
-          makePiece("piece-external-ll", "selected-external-ll"),
-          makePiece("neighbor-piece-l", "neighbor-l"),
-          makePiece("neighbor-piece-g", "neighbor-g"),
-          makePiece("neighbor-piece-l-a", "neighbor-l"),
-          makePiece("neighbor-piece-l-b", "neighbor-l"),
-        ],
-        connections: [
-          makeConnection("external-lg-l", "piece-external-lg", "selected-external-lg-connector-0", "neighbor-piece-l", "neighbor-l-connector-0"),
-          makeConnection("external-lg-g", "piece-external-lg", "selected-external-lg-connector-1", "neighbor-piece-g", "neighbor-g-connector-0"),
-          makeConnection("external-ll-a", "piece-external-ll", "selected-external-ll-connector-0", "neighbor-piece-l-a", "neighbor-l-connector-0"),
-          makeConnection("external-ll-b", "piece-external-ll", "selected-external-ll-connector-1", "neighbor-piece-l-b", "neighbor-l-connector-0"),
-        ],
-      } as Design;
-
-      const doubleLeftResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-external-ll"] });
-      expect(doubleLeftResult.types).toContain("candidate-ll");
-      expect(doubleLeftResult.types).not.toContain("candidate-l");
-      expect(doubleLeftResult.types).not.toContain("candidate-g");
-
-      const leftAndGableResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-external-lg"] });
-      expect(leftAndGableResult.types).toContain("candidate-lg");
-      expect(leftAndGableResult.types).not.toContain("candidate-l");
-      expect(leftAndGableResult.designs).toContain("candidate-design-free-lg");
-      expect(leftAndGableResult.designs).not.toContain("candidate-design-consumed-lg");
-
-      const isolatedResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-isolated-lg"] });
-      expect(isolatedResult.types).toContain("candidate-lg");
-      expect(isolatedResult.types).not.toContain("candidate-l");
-
-      const multiplePieceResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: ["piece-external-lg", "piece-isolated-lg"] });
-      expect(multiplePieceResult.types).toContain("candidate-lg");
-      expect(multiplePieceResult.types).not.toContain("candidate-l");
+      for (const sc of findReplCases.syntheticCases) {
+        const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: sc.pieceGuids });
+        for (const t of sc.expectedContainsTypes ?? []) expect(result.types, `${sc.name}: types should contain ${t}`).toContain(t);
+        for (const t of sc.expectedNotContainsTypes ?? []) expect(result.types, `${sc.name}: types should not contain ${t}`).not.toContain(t);
+        for (const d of sc.expectedContainsDesigns ?? []) expect(result.designs, `${sc.name}: designs should contain ${d}`).toContain(d);
+        for (const d of sc.expectedNotContainsDesigns ?? []) expect(result.designs, `${sc.name}: designs should not contain ${d}`).not.toContain(d);
+      }
     });
 
     it("Nakagin Capsule Tower: connector-level boundary matching shrinks candidates as demand grows", () => {
+      const bc = findReplCases.boundaryCases;
       const kit = MetabolismKit as unknown as Kit;
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === bc.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
       const nameToGuid = new Map((design.pieces ?? []).map((piece) => [piece.name, piece.guid]));
-      const forbiddenSingleConnectorFamilies = new Set(["\\", "/", "q", "p", "J", "L", "s", "z"]);
+      const forbiddenSingleConnectorFamilies = new Set(bc.forbiddenFamilies as string[]);
       const typeNamesForSelection = (pieceNames: string[]): string[] => {
         const pieceGuids = pieceNames.map((pieceName) => nameToGuid.get(pieceName) ?? "");
         const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: pieceGuids });
@@ -17006,11 +16943,11 @@ if (shouldRunEmbeddedJsTests) {
       };
       const uniqueTypeNamesForSelection = (pieceNames: string[]): string[] => [...new Set(typeNamesForSelection(pieceNames))].sort((leftName, rightName) => leftName.localeCompare(rightName));
 
-      const singleCapsuleNames = typeNamesForSelection(["cs_sl2_d0_t_f9_b_c1"]);
-      const twoCapsuleNames = typeNamesForSelection(["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"]);
-      const fourCapsuleNames = typeNamesForSelection(["cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"]);
-      const eightCapsuleNames = typeNamesForSelection(["cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"]);
-      const tambourPieceGuid = nameToGuid.get("t_f9_b_c1")!;
+      const singleCapsuleNames = typeNamesForSelection(bc.singleCapsulePieces);
+      const twoCapsuleNames = typeNamesForSelection(bc.twoCapsulePieces);
+      const fourCapsuleNames = typeNamesForSelection(bc.fourCapsulePieces);
+      const eightCapsuleNames = typeNamesForSelection(bc.eightCapsulePieces);
+      const tambourPieceGuid = nameToGuid.get(bc.tambourPieceName)!;
       const tambourResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [tambourPieceGuid] });
 
       expect(singleCapsuleNames.length).toBeGreaterThan(twoCapsuleNames.length);
@@ -17022,24 +16959,24 @@ if (shouldRunEmbeddedJsTests) {
         expect(fourCapsuleNames).not.toContain(forbiddenFamily);
         expect(eightCapsuleNames).not.toContain(forbiddenFamily);
       }
-      expect(fourCapsuleNames).not.toContain("Bridge");
-      expect(eightCapsuleNames).not.toContain("Bridge");
-      expect(uniqueTypeNamesForSelection(["cs_sl2_d0_t_f8_b_c1", "cs_sl2_d0_t_f9_b_c1"])).toEqual(["Bridge", "Cylindric Tambour", "First Storey", "Last Storey", "Single Storey", "Tambour"]);
-      expect(uniqueTypeNamesForSelection(["cs_sl1_d0_t_f9_b_c1", "cs_sl1_d1_t_f9_b_c1", "cs_sl2_d0_t_f9_b_c1", "cs_sl2_d1_t_f9_b_c1"])).toEqual(["Cylindric Tambour", "First Storey", "Last Storey", "Single Storey", "Tambour"]);
-      expect(uniqueTypeNamesForSelection(["cs_sl0_d0_t_f0_b_c0", "cs_sl0_d1_t_f0_b_c0", "cs_sl0_d2_t_f0_b_c0", "cs_sl0_d3_t_f0_b_c0", "cs_sl1_d0_t_f0_b_c0", "cs_sl1_d1_t_f0_b_c0", "cs_sl2_d0_t_f0_b_c0", "cs_sl2_d1_t_f0_b_c0"])).toEqual([
-        "Cylindric Tambour",
-        "First Storey",
-        "Last Storey",
-        "Single Storey",
-        "Tambour",
-      ]);
-      expect(tambourResult.types).toEqual([]);
-      expect(tambourResult.designs.length).toBe(3);
+      const expectedTwoCapsuleFamilies = bc.expectedTwoCapsuleFamilies as string[];
+      const expectedLargeFamilies = bc.expectedLargeFamilies as string[];
+      const excludedAsDemandGrows = expectedTwoCapsuleFamilies.filter((family) => !expectedLargeFamilies.includes(family));
+      for (const family of excludedAsDemandGrows) {
+        expect(fourCapsuleNames).not.toContain(family);
+        expect(eightCapsuleNames).not.toContain(family);
+      }
+      expect(uniqueTypeNamesForSelection(bc.twoCapsulePieces)).toEqual(bc.expectedTwoCapsuleFamilies);
+      expect(uniqueTypeNamesForSelection(bc.fourCapsulePieces)).toEqual(bc.expectedLargeFamilies);
+      expect(uniqueTypeNamesForSelection(bc.eightCapsulePieces)).toEqual(bc.expectedLargeFamilies);
+      expect(tambourResult.types.length).toBe(bc.expectedTambourTypeGuidCount);
+      expect(tambourResult.designs.length).toBe(bc.expectedTambourDesignGuidCount);
     });
 
     it("Nakagin Capsule Tower: selection asset yields only exact design matches", () => {
+      const selAssetCase = findReplCases.cases.find((c: any) => c.name === "selection_asset_returns_compatible_guids");
       const kit = MetabolismKit as unknown as Kit;
-      const rootPlan = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const rootPlan = kit.designs!.find((d) => d.name === selAssetCase.designName && !d.parent)!;
       const kindItems = kit.types ?? [];
       const linkItems = kit.ports ?? [];
       const allPlans = kit.designs ?? [];
@@ -17050,98 +16987,87 @@ if (shouldRunEmbeddedJsTests) {
 
       const result = findReplaceableTypesInDesignsForPiecesInDesign(rootPlan, allPlans, kindItems, linkItems, { pieces: pieceGuids });
 
-      expect(result.types).toEqual([]);
-      expect(result.designs).toEqual(["d7e12638-9749-471b-937e-a6e5523778ff", "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf", "019ab4e0-8da8-7217-946f-5b5a83aca0e3"]);
+      expect(result.types).toEqual(selAssetCase.expectedTypeGuids);
+      expect(result.designs).toEqual(selAssetCase.expectedDesignGuids);
     });
 
     it("Nakagin Capsule Tower: connected piece yields only exact design matches", () => {
+      const connCase = findReplCases.cases.find((c: any) => c.name === "connected_piece_yields_only_exact_design_matches");
       const kit = MetabolismKit as unknown as Kit;
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === connCase.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
 
-      // Select a Tambour piece that has connections (e.g. t_f1_b_c0)
-      const tambourPiece = design.pieces!.find((p) => p.name === "t_f1_b_c0")!;
+      const tambourPiece = design.pieces!.find((p) => p.name === connCase.pieceNames[0])!;
       const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [tambourPiece.guid] });
 
-      expect(result.types).toEqual([]);
-      expect(result.designs).toEqual(["d7e12638-9749-471b-937e-a6e5523778ff", "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf", "019ab4e0-8da8-7217-946f-5b5a83aca0e3"]);
+      expect(result.types.length).toBe(connCase.expectedTypeGuidCount);
+      expect(result.designs).toEqual(connCase.expectedDesignGuids);
     });
 
     it("Nakagin Capsule Tower: isolated piece with no connections suggests types with compatible ports", () => {
+      const isoCase = findReplCases.cases.find((c: any) => c.name === "isolated_piece");
       const kit = MetabolismKit as unknown as Kit;
-      // Use the Flat design (parent=Nakagin) which has no connections
-      const flatDesign = kit.designs!.find((d) => d.name === "Flat" && d.parent?.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")!;
+      const parentDesign = kit.designs!.find((d) => d.name === isoCase.designParentName && !d.parent)!;
+      const flatDesign = kit.designs!.find((d) => d.name === isoCase.designName && d.parent?.guid === parentDesign.guid)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
 
-      // Select a piece from flat (no connections)
-      const piece = flatDesign.pieces![0];
+      const piece = flatDesign.pieces![isoCase.usePieceIndex];
       const result = findReplaceableTypesInDesignsForPiecesInDesign(flatDesign, designs, types, ports, { pieces: [piece.guid] });
 
-      // Should suggest types with compatible ports
       expect(result.types.length).toBeGreaterThan(0);
-
-      // The piece's own type should be in results
-      if (piece.type?.guid) {
+      if (isoCase.expectOwnTypeInResults && piece.type?.guid) {
         expect(result.types).toContain(piece.type.guid);
       }
     });
 
     it("Nakagin Capsule Tower: Capital piece with single connection", () => {
+      const capCase = findReplCases.cases.find((c: any) => c.name === "capital_piece");
       const kit = MetabolismKit as unknown as Kit;
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === capCase.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
 
-      // Capital type has 1 connector (roof rectangular top) → connected to Last Storey
-      // Last Storey connectors use different ports (circular variants)
-      // So Capital type is NOT in the results due to shape incompatibility
-      const capitalType = types.find((t) => t.name === "Capital")!;
+      const capitalType = types.find((t) => t.name === capCase.lookupTypeName)!;
       const capitalPiece = design.pieces!.find((p) => p.type?.guid === capitalType.guid)!;
       const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [capitalPiece.guid] });
 
-      // Should have results (types with compatible ports to Last Storey's connectors)
       expect(result.types.length).toBeGreaterThan(0);
-
-      // Capital uses roof rectangular top, but Last Storey uses roof circular bottom (incompatible)
-      // So Capital type is NOT in the results
-      expect(result.types).not.toContain(capitalType.guid);
-
-      // Types with no connectors should NOT be in the results
-      const capsuleType = types.find((t) => t.name === "Capsule")!;
-      expect(result.types).not.toContain(capsuleType.guid);
+      for (const forbidden of capCase.forbiddenTypeNames) {
+        const forbiddenType = types.find((t) => t.name === forbidden);
+        if (forbiddenType) expect(result.types).not.toContain(forbiddenType.guid);
+      }
     });
 
     it("Nakagin Capsule Tower: multiple selected pieces yield only exact design matches", () => {
+      const multiCase = findReplCases.cases.find((c: any) => c.name === "multiple_selected_pieces");
       const kit = MetabolismKit as unknown as Kit;
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === multiCase.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
 
-      // Select two adjacent tambours (internal connections between them, but also external)
-      const t1 = design.pieces!.find((p) => p.name === "t_f1_b_c0")!;
-      const t2 = design.pieces!.find((p) => p.name === "t_f2_b_c0")!;
-      const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [t1.guid, t2.guid] });
+      const pieceGuids = (multiCase.pieceNames as string[]).map((n) => design.pieces!.find((p) => p.name === n)!.guid);
+      const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: pieceGuids });
 
-      expect(result.types).toEqual([]);
-      expect(result.designs).toEqual(["d7e12638-9749-471b-937e-a6e5523778ff", "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf", "019ab4e0-8da8-7217-946f-5b5a83aca0e3"]);
+      expect(result.types.length).toBe(multiCase.expectedTypeGuidCount);
+      expect(result.designs).toEqual(multiCase.expectedDesignGuids);
     });
 
     it("Returns empty when no pieces selected", () => {
+      const emptyCase = findReplCases.cases.find((c: any) => c.name === "empty_selection");
       const kit = MetabolismKit as unknown as Kit;
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === emptyCase.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
 
       const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [] });
 
-      // No pieces selected → no connections → no ports → only types with no connectors
       const typesWithNoConnectors = types.filter((t) => (t.connectors ?? []).length === 0);
       expect(result.types.length).toBe(typesWithNoConnectors.length);
     });
@@ -17149,59 +17075,66 @@ if (shouldRunEmbeddedJsTests) {
   // #endregion 🔍Find Replaceable Types In Designs Tests
 
   describe("Design/WithDiff", () => {
-    it("Nakagin Capsule Tower with-diff preserves old entities and annotates status", () => {
-      const kit = MetabolismKit as unknown as Kit;
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
-      const diff = NakaginCapsuleTowerDiffDesign as unknown as DesignDiff;
-      const expected = NakaginCapsuleTowerWithDiffDesign as unknown as Design;
-      const computed = designWithDiff(design, diff);
+    const designWithDiffCases = (DesignWithDiffCases as any).cases as Array<{
+      name: string; designName: string; designParent: string | null;
+      expectedPieceCounts: { unchanged: number; modified: number; removed: number; added: number };
+      expectedConnectionCounts: { unchanged: number; modified: number; removed: number; added: number };
+    }>;
+    for (const tc of designWithDiffCases) {
+      it(`${tc.name} with-diff preserves old entities and annotates status`, () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const design = kit.designs!.find((d) => d.name === tc.designName && !d.parent)!;
+        const diff = NakaginCapsuleTowerDiffDesign as unknown as DesignDiff;
+        const expected = NakaginCapsuleTowerWithDiffDesign as unknown as Design;
+        const computed = designWithDiff(design, diff);
 
-      expect(computed.pieces!.length).toBe(expected.pieces!.length);
-      expect(computed.connections!.length).toBe(expected.connections!.length);
+        expect(computed.pieces!.length).toBe(expected.pieces!.length);
+        expect(computed.connections!.length).toBe(expected.connections!.length);
 
-      const getStatus = (attrs?: Attribute[]) => (attrs ?? []).find((a) => a.key === "semio.diffStatus")?.value;
+        const getStatus = (attrs?: Attribute[]) => (attrs ?? []).find((a) => a.key === "semio.diffStatus")?.value;
 
-      // 🧩Verify piece status counts
-      const pieceStatuses = computed.pieces!.map((p) => getStatus(p.attributes));
-      expect(pieceStatuses.filter((s) => s === "unchanged").length).toBe(163);
-      expect(pieceStatuses.filter((s) => s === "modified").length).toBe(7);
-      expect(pieceStatuses.filter((s) => s === "removed").length).toBe(10);
-      expect(pieceStatuses.filter((s) => s === "added").length).toBe(5);
+        // 🧩Verify piece status counts
+        const pieceStatuses = computed.pieces!.map((p) => getStatus(p.attributes));
+        expect(pieceStatuses.filter((s) => s === "unchanged").length).toBe(tc.expectedPieceCounts.unchanged);
+        expect(pieceStatuses.filter((s) => s === "modified").length).toBe(tc.expectedPieceCounts.modified);
+        expect(pieceStatuses.filter((s) => s === "removed").length).toBe(tc.expectedPieceCounts.removed);
+        expect(pieceStatuses.filter((s) => s === "added").length).toBe(tc.expectedPieceCounts.added);
 
-      // 🔗Verify connection status counts
-      const connStatuses = computed.connections!.map((c) => getStatus(c.attributes));
-      expect(connStatuses.filter((s) => s === "unchanged").length).toBe(168);
-      expect(connStatuses.filter((s) => s === "modified").length).toBe(1);
-      expect(connStatuses.filter((s) => s === "removed").length).toBe(10);
-      expect(connStatuses.filter((s) => s === "added").length).toBe(4);
+        // 🔗Verify connection status counts
+        const connStatuses = computed.connections!.map((c) => getStatus(c.attributes));
+        expect(connStatuses.filter((s) => s === "unchanged").length).toBe(tc.expectedConnectionCounts.unchanged);
+        expect(connStatuses.filter((s) => s === "modified").length).toBe(tc.expectedConnectionCounts.modified);
+        expect(connStatuses.filter((s) => s === "removed").length).toBe(tc.expectedConnectionCounts.removed);
+        expect(connStatuses.filter((s) => s === "added").length).toBe(tc.expectedConnectionCounts.added);
 
-      // ➖Verify removed/unchanged pieces keep their original parameters
-      for (const piece of computed.pieces!) {
-        if (getStatus(piece.attributes) === "removed" || getStatus(piece.attributes) === "unchanged") {
-          const originalPiece = design.pieces!.find((p) => p.guid === piece.guid);
-          expect(originalPiece).toBeDefined();
-          expect(piece.name).toBe(originalPiece!.name);
-          expect(piece.description).toBe(originalPiece!.description);
+        // ➖Verify removed/unchanged pieces keep their original parameters
+        for (const piece of computed.pieces!) {
+          if (getStatus(piece.attributes) === "removed" || getStatus(piece.attributes) === "unchanged") {
+            const originalPiece = design.pieces!.find((p) => p.guid === piece.guid);
+            expect(originalPiece).toBeDefined();
+            expect(piece.name).toBe(originalPiece!.name);
+            expect(piece.description).toBe(originalPiece!.description);
+          }
         }
-      }
 
-      // 🔧Verify modified pieces have non-geometric diff applied but keep base plane/center
-      const updatedPieceMap = new Map((diff.pieces?.updated ?? []).map((u) => [(u as any).piece.guid, u.diff]));
-      for (const piece of computed.pieces!) {
-        if (getStatus(piece.attributes) === "modified") {
-          const pieceDiff = updatedPieceMap.get(piece.guid);
-          const originalPiece = design.pieces!.find((p) => p.guid === piece.guid);
-          expect(originalPiece).toBeDefined();
-          if (pieceDiff?.name) expect(piece.name).toBe(pieceDiff.name);
-          else expect(piece.name).toBe(originalPiece!.name);
-          if (pieceDiff?.description !== undefined) expect(piece.description).toBe(pieceDiff.description);
-          else expect(piece.description).toBe(originalPiece!.description);
-          // 📌Modified pieces MUST keep base geometry so they only get recolored, not moved.
-          expect(piece.plane).toEqual(originalPiece!.plane);
-          expect(piece.center).toEqual(originalPiece!.center);
+        // 🔧Verify modified pieces have non-geometric diff applied but keep base plane/center
+        const updatedPieceMap = new Map((diff.pieces?.updated ?? []).map((u) => [(u as any).piece.guid, u.diff]));
+        for (const piece of computed.pieces!) {
+          if (getStatus(piece.attributes) === "modified") {
+            const pieceDiff = updatedPieceMap.get(piece.guid);
+            const originalPiece = design.pieces!.find((p) => p.guid === piece.guid);
+            expect(originalPiece).toBeDefined();
+            if (pieceDiff?.name) expect(piece.name).toBe(pieceDiff.name);
+            else expect(piece.name).toBe(originalPiece!.name);
+            if (pieceDiff?.description !== undefined) expect(piece.description).toBe(pieceDiff.description);
+            else expect(piece.description).toBe(originalPiece!.description);
+            // 📌Modified pieces MUST keep base geometry so they only get recolored, not moved.
+            expect(piece.plane).toEqual(originalPiece!.plane);
+            expect(piece.center).toEqual(originalPiece!.center);
+          }
         }
-      }
-    });
+      });
+    }
 
     it("modified pieces keep base plane and center even when diff specifies new geometry", () => {
       const basePiece: Piece = {
@@ -17231,9 +17164,9 @@ if (shouldRunEmbeddedJsTests) {
   describe("Sketchpad ControlTree", () => {
     it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
       const controls: ControlDef[] = [
-        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
-        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
-        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
+        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
+        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
+        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
       ];
       const folderSettings = {
         Transform: { path: "Transform", order: 2 },
@@ -17367,21 +17300,24 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("Design/Quality/Sum", () => {
     const kit = MetabolismKit as Kit;
-    describe("Nakagin Capsule Tower", () => {
-      it("sums effective floor area to ~2349.53", () => {
-        const design = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent);
+    const qualitySumCases = (QualitySumCases as any).cases as Array<{ name: string; designName: string; designParent: string | null; qualityName: string; expected: number; tolerance: number }>;
+    for (const tc of qualitySumCases) {
+      it(`${tc.name}: sums ${tc.qualityName} to ~${tc.expected}`, () => {
+        const design = kit.designs?.find((d) => d.name === tc.designName && (tc.designParent ? d.parent?.guid === kit.designs?.find((p) => p.name === tc.designParent)?.guid : !d.parent));
         expect(design).toBeDefined();
-        const quality = kit.qualities?.find((q) => q.name === "effective floor area");
+        const quality = kit.qualities?.find((q) => q.name === tc.qualityName);
         expect(quality).toBeDefined();
         const result = sumQualityInDesign(kit, design!.guid, quality!.guid);
-        expect(Math.abs(result - 2349.53)).toBeLessThan(0.01);
+        expect(Math.abs(result - tc.expected)).toBeLessThan(tc.tolerance);
       });
-    });
+    }
   });
 
   describe("ExportDesignModel", () => {
+    const exportCases = (ExportDesignModelCases as any).cases as Array<{ name: string; designName: string }>;
+    const exportCase = exportCases[0];
     const kit = MetabolismKit as Kit;
-    const design = kit.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+    const design = kit.designs?.find((d) => d.name === exportCase.designName && !d.parent)!;
 
     it("exports .glb format with valid GLB header", async () => {
       const result = await exportDesignModel(kit, design.guid, ".glb");
@@ -18931,16 +18867,19 @@ if (shouldRunEmbeddedJsTests) {
     describe("Design/Meta", () => {
       it("parses nakagin-capsule-tower.meta.design.semio.json with DesignMetaSchema", () => {
         const parsed = DesignMetaSchema.parse(NakaginCapsuleTowerMetaDesign);
-        expect(parsed.name).toBe("Nakagin Capsule Tower");
-        expect(parsed.guid).toBe("9a890dd4-0a9c-48ac-920a-9e62666465ef");
+        const kit = MetabolismKit as unknown as Kit;
+        const expectedGuid = kit.designs?.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)?.guid;
+        expect(parsed.name).toBe(NAKAGIN_DESIGN_NAME);
+        expect(expectedGuid).toBeDefined();
+        expect(parsed.guid).toBe(expectedGuid);
         expect((parsed as any).pieces).toBeUndefined();
         expect((parsed as any).connections).toBeUndefined();
       });
       it("toDesignMeta strips collections from full design", () => {
         const kit = MetabolismKit as unknown as Kit;
-        const nct = kit.designs!.find((d: Design) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+        const nct = kit.designs!.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
         const meta = toDesignMeta(nct);
-        expect(meta.name).toBe("Nakagin Capsule Tower");
+        expect(meta.name).toBe(NAKAGIN_DESIGN_NAME);
         expect((meta as any).pieces).toBeUndefined();
         expect((meta as any).connections).toBeUndefined();
       });
@@ -18949,7 +18888,7 @@ if (shouldRunEmbeddedJsTests) {
     describe("Design/Shallow", () => {
       it("parses nakagin-capsule-tower.shallow.design.semio.json with DesignShallowSchema", () => {
         const parsed = DesignShallowSchema.parse(NakaginCapsuleTowerShallowDesign);
-        expect(parsed.name).toBe("Nakagin Capsule Tower");
+        expect(parsed.name).toBe(NAKAGIN_DESIGN_NAME);
         if (parsed.pieces) {
           const firstPiece = parsed.pieces[0] as any;
           expect(firstPiece.attributes).toBeUndefined();
@@ -18957,9 +18896,9 @@ if (shouldRunEmbeddedJsTests) {
       });
       it("toDesignShallow converts full design to shallow with meta children", () => {
         const kit = MetabolismKit as unknown as Kit;
-        const nct = kit.designs!.find((d: Design) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+        const nct = kit.designs!.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
         const shallow = toDesignShallow(nct);
-        expect(shallow.name).toBe("Nakagin Capsule Tower");
+        expect(shallow.name).toBe(NAKAGIN_DESIGN_NAME);
         if (shallow.pieces) {
           const firstPiece = shallow.pieces[0] as any;
           expect(firstPiece.attributes).toBeUndefined();
@@ -18971,10 +18910,23 @@ if (shouldRunEmbeddedJsTests) {
 
   // #region 🗝️Hash Tests
   describe("Kit/Hash", () => {
+    const hashCases = HashCases as {
+      kitHash: { expected: string };
+      kitDiffHash: { json: string; expected: string };
+      designName: string;
+      sha256Known: { emptyInputUtf8: string; emptyExpected: string; abcInputUtf8: string; abcExpected: string };
+      kitDiffTypeAddition: { newTypeGuid: string; newTypeName: string };
+    };
+
     it("hashKit produces a 64-char lowercase hex string", () => {
       const kit = MetabolismKit as unknown as Kit;
       const h = hashKit(kit);
       expect(h).toMatch(/^[0-9a-f]{64}$/);
+    });
+
+    it("hashKit matches expected canonical value from shared asset", () => {
+      const kit = MetabolismKit as unknown as Kit;
+      expect(hashKit(kit)).toBe(hashCases.kitHash.expected);
     });
 
     it("hashKit is deterministic (same input produces same output)", () => {
@@ -18985,7 +18937,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("hashDesign produces a 64-char lowercase hex string", () => {
       const kit = MetabolismKit as unknown as Kit;
-      const nct = kit.designs!.find((d: Design) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
       const h = hashDesign(nct);
       expect(h).toMatch(/^[0-9a-f]{64}$/);
     });
@@ -19004,18 +18956,18 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("sha256 of empty input matches known value", () => {
-      const h = sha256bytes(new Uint8Array(0));
-      expect(h).toBe("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+      const h = sha256bytes(new TextEncoder().encode(hashCases.sha256Known.emptyInputUtf8));
+      expect(h).toBe(hashCases.sha256Known.emptyExpected);
     });
 
     it("sha256 of 'abc' matches known value", () => {
-      const h = sha256bytes(new TextEncoder().encode("abc"));
-      expect(h).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+      const h = sha256bytes(new TextEncoder().encode(hashCases.sha256Known.abcInputUtf8));
+      expect(h).toBe(hashCases.sha256Known.abcExpected);
     });
 
     it("hashPiece is deterministic", () => {
       const kit = MetabolismKit as unknown as Kit;
-      const nct = kit.designs!.find((d: Design) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
       const piece = nct.pieces![0];
       const h1 = hashPiece(piece);
       const h2 = hashPiece(piece);
@@ -19025,7 +18977,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("hashConnection is deterministic", () => {
       const kit = MetabolismKit as unknown as Kit;
-      const nct = kit.designs!.find((d: Design) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
       const conn = nct.connections![0];
       const h1 = hashConnection(conn);
       const h2 = hashConnection(conn);
@@ -19156,7 +19108,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("hashKitDiff with type addition produces valid hash", () => {
       const kit = MetabolismKit as unknown as Kit;
-      const newType: Type = { guid: "new-type-guid", name: "NewType" };
+      const newType: Type = { guid: hashCases.kitDiffTypeAddition.newTypeGuid, name: hashCases.kitDiffTypeAddition.newTypeName };
       const modified = { ...kit, types: [...(kit.types ?? []), newType] };
       const diff = getKitDiff(kit, modified);
       const h = hashKitDiff(diff);
@@ -19164,9 +19116,9 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashKitDiff matches expected canonical value", () => {
-      const diff: KitDiff = { name: "updated", description: null };
+      const diff = JSON.parse(hashCases.kitDiffHash.json) as KitDiff;
       const h = hashKitDiff(diff);
-      expect(h).toBe("d9ee3052111fec2e0fe08119eee6b8d5b6f5578a940f6d5c6bb1806e6e0f36a5");
+      expect(h).toBe(hashCases.kitDiffHash.expected);
     });
   });
   // #endregion 🗝️Hash Tests
@@ -19675,6 +19627,7 @@ if (shouldRunEmbeddedJsTests) {
             name: "Wall",
             description: "A wall segment",
             icon: "",
+
           },
         ],
         designs: [],
@@ -19687,6 +19640,7 @@ if (shouldRunEmbeddedJsTests) {
               name: "Column",
               description: "A column",
               icon: "",
+
             },
           ],
           updated: [{ type: { guid: "t1" }, diff: { description: "Modified wall" } }],
@@ -19792,7 +19746,7 @@ async function appendBenchmarkCsv(language: string, name: string, durationSecond
 
 // 🚩Runs all benchmarks. MUST only be called explicitly (e.g. via CLI flag).
 async function runBenchmarks() {
-  const importAtRuntime = async <TModule = any>(moduleId: string): Promise<TModule> => import(/* @vite-ignore */ moduleId);
+  const importAtRuntime = async <TModule = any,>(moduleId: string): Promise<TModule> => import(/* @vite-ignore */ moduleId);
   const DiffForward = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diff.semio.json"].join("/"))).default;
   const DiffInverse = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diff.inverted.semio.json"].join("/"))).default;
   const BenchMetabolismKit = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.semio.json"].join("/"))).default;

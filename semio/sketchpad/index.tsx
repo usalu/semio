@@ -13235,14 +13235,15 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
  **/
 export function useKitAppSetFilter(): ActionHookResult<[search: string]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SET_FILTER" as const, kitGuid, search: "" }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return (search: string) => actor.send({ type: "KIT.SET_FILTER", kitGuid, search });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return (search: string) => controller.execute("semio.kitApp.setFilterSearch", search);
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -13252,14 +13253,15 @@ export function useKitAppSetFilter(): ActionHookResult<[search: string]> {
  **/
 export function useKitAppToggleRow(): ActionHookResult<[rowId: string]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.TOGGLE_ROW" as const, kitGuid, rowId: "" }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return (rowId: string) => actor.send({ type: "KIT.TOGGLE_ROW", kitGuid, rowId });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return (rowId: string) => controller.execute("semio.kitApp.toggleExpandedRow", rowId);
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -13269,14 +13271,15 @@ export function useKitAppToggleRow(): ActionHookResult<[rowId: string]> {
  **/
 export function useKitAppSetSort(): ActionHookResult<[column: string, direction: "asc" | "desc"]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SET_SORT" as const, kitGuid, column: "", direction: "asc" as const }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return (column: string, direction: "asc" | "desc") => actor.send({ type: "KIT.SET_SORT", kitGuid, column, direction });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return (column: string, direction: "asc" | "desc") => controller.execute("semio.kitApp.setSort", column, direction);
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -13286,21 +13289,16 @@ export function useKitAppSetSort(): ActionHookResult<[column: string, direction:
  **/
 export function useKitAppToggleSort(): ActionHookResult<[column: KitAppSortColumn]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const [selection] = useKitAppSelection();
-  const kitApp = useKitAppXState(kitGuid);
-  const sortColumn = kitApp?.sortColumn;
-  const sortDirection = kitApp?.sortDirection;
   const canActEvent = useMemo(() => ({ type: "KIT.SET_SORT" as const, kitGuid, column: "", direction: "asc" as const }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return (column: KitAppSortColumn) => {
-      const newDirection = sortColumn === column && sortDirection === "asc" ? "desc" : "asc";
-      actor.send({ type: "KIT.SET_SORT", kitGuid, column, direction: newDirection });
-    };
-  }, [actor, kitGuid, canAct, sortColumn, sortDirection]);
+    if (!canAct || !controller) return undefined;
+    return (column: KitAppSortColumn) => controller.execute("semio.kitApp.toggleSort", column);
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -13324,14 +13322,15 @@ export function useKitAppHover(): HookNoSetResult<KitAppHover | undefined> {
  **/
 export function useKitAppSetHover(): ActionHookResult<[hover: KitAppHover]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SET_HOVER" as const, kitGuid, hover: {} as KitAppHover }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return (hover: KitAppHover) => actor.send({ type: "KIT.SET_HOVER", kitGuid, hover });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return (hover: KitAppHover) => controller.execute("semio.kitApp.setHover", hover);
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -13341,14 +13340,15 @@ export function useKitAppSetHover(): ActionHookResult<[hover: KitAppHover]> {
  **/
 export function useKitAppClearHover(): ActionHookResult<[]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.CLEAR_HOVER" as const, kitGuid }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return () => actor.send({ type: "KIT.CLEAR_HOVER", kitGuid });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return () => controller.execute("semio.kitApp.clearHover");
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -13358,14 +13358,15 @@ export function useKitAppClearHover(): ActionHookResult<[]> {
  **/
 export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisibility]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.TOGGLE_PANEL" as const, kitGuid, panel: "toolbar" as keyof PanelVisibility }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return (panel: keyof PanelVisibility) => actor.send({ type: "KIT.TOGGLE_PANEL", kitGuid, panel });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return (panel: keyof PanelVisibility) => controller.execute("semio.kitApp.togglePanel", panel);
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -14268,6 +14269,87 @@ export const kitAppCommands = {
       diff: {
         sortColumn: column,
         sortDirection: "asc",
+      },
+    };
+  },
+  "semio.kitApp.togglePanel": (context: KitAppCommandContext, panelKey: keyof PanelVisibility): KitAppCommandResult => {
+    const current = context.kitApp.panelVisibility || {};
+    return {
+      diff: {
+        panelVisibility: {
+          [panelKey]: !current[panelKey],
+        },
+      },
+    };
+  },
+  "semio.kitApp.setPanelVisibility": (context: KitAppCommandContext, panelVisibility: Partial<PanelVisibility>): KitAppCommandResult => {
+    return {
+      diff: {
+        panelVisibility,
+      },
+    };
+  },
+  "semio.kitApp.setWindowLayout": (_context: KitAppCommandContext, windowLayout: any): KitAppCommandResult => {
+    return {
+      diff: {
+        windowLayout,
+      },
+    };
+  },
+  "semio.kitApp.setHover": (_context: KitAppCommandContext, hover: KitAppHover): KitAppCommandResult => {
+    return {
+      diff: {
+        hover,
+      },
+    };
+  },
+  "semio.kitApp.clearHover": (_context: KitAppCommandContext): KitAppCommandResult => {
+    return {
+      diff: {
+        hover: undefined,
+      },
+    };
+  },
+  "semio.kitApp.setDiagramForce": (_context: KitAppCommandContext, diagramForce: Partial<DiagramForceSettings>): KitAppCommandResult => {
+    return {
+      diff: {
+        diagramForce,
+      },
+    };
+  },
+  "semio.kitApp.setActiveTool": (_context: KitAppCommandContext, tool: ToolKind): KitAppCommandResult => {
+    return {
+      diff: {
+        activeTool: tool,
+      },
+    };
+  },
+  "semio.kitApp.setFullscreenWindow": (_context: KitAppCommandContext, fullscreenWindow: KitAppFullscreenWindow): KitAppCommandResult => {
+    return {
+      diff: {
+        fullscreenWindow,
+      },
+    };
+  },
+  "semio.kitApp.setSort": (_context: KitAppCommandContext, column: KitAppSortColumn, direction: KitAppSortDirection): KitAppCommandResult => {
+    return {
+      diff: {
+        sortColumn: column,
+        sortDirection: direction,
+      },
+    };
+  },
+  "semio.kitApp.setSelection": (_context: KitAppCommandContext, selection: KitAppSelection): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: { types: selection.types, designs: selection.designs, qualities: selection.qualities, ports: selection.ports, tags: selection.tags, concepts: selection.concepts },
+      },
+    };
+  },
+  "semio.kitApp.clearSelection": (_context: KitAppCommandContext): KitAppCommandResult => {
+    return {
+      diff: {
+        selection: { types: [], designs: [], qualities: [], ports: [], tags: [], concepts: [] },
       },
     };
   },
@@ -17635,9 +17717,9 @@ const KitDiagramInner: FC = () => {
         }
       });
 
-      actor.send({ type: "KIT.SET_SELECTION", kitGuid, selection: newSelection });
+      kitCommands.setSelection(newSelection);
     },
-    [actor, kitGuid],
+    [kitCommands],
   );
 
   const handlePaneClick = useCallback(() => {
@@ -18200,8 +18282,8 @@ const MultiWindowApp: FC = () => {
 
   const handleLayoutChange = useCallback(
     (config: any) => {
-      if (store && typeof store.change === "function") {
-        store.change({ windowLayout: config });
+      if (store && typeof store.execute === "function") {
+        store.execute("semio.kitApp.setWindowLayout", config);
       }
     },
     [store],
@@ -22963,7 +23045,8 @@ export function useAppCommands() {
         return {
           togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
             if (kitGuid) {
-              actor.send({ type: "KIT.TOGGLE_PANEL", kitGuid, panel: panelKey } as any);
+              const app = store.kitApp(kitGuid);
+              app?.execute("semio.kitApp.togglePanel", panelKey);
             }
           },
           execute: (origin: string, command: string, ...args: any[]) => {
@@ -23042,7 +23125,7 @@ export function useUpdateRecentSearches() {
   const store = useSketchpadStore();
   return useCallback(
     (searches: string[]) => {
-      store.change({ recentSearches: searches });
+      store.execute("semio.sketchpad.setRecentSearches", searches);
     },
     [store],
   );
@@ -23054,8 +23137,8 @@ export function useUpdateRecentSearches() {
 export function useUpdateRecentFocusItems() {
   const store = useSketchpadStore();
   return useCallback(
-    (appType: string, items: string[]) => {
-      store.change({ recentFocusItems: { [appType]: items } });
+    (appKind: string, items: string[]) => {
+      store.execute("semio.sketchpad.setRecentFocusItems", appKind, items);
     },
     [store],
   );
@@ -23440,6 +23523,16 @@ export const sketchpadDevCommands = {
   },
   "semio.sketchpad.timetravel": (context: SketchpadCommandContext): SketchpadCommandResult => {
     return {};
+  },
+  "semio.sketchpad.setRecentSearches": (_context: SketchpadCommandContext, searches: string[]): SketchpadCommandResult => {
+    return {
+      diff: { recentSearches: searches },
+    };
+  },
+  "semio.sketchpad.setRecentFocusItems": (_context: SketchpadCommandContext, appKind: string, items: string[]): SketchpadCommandResult => {
+    return {
+      diff: { recentFocusItems: { [appKind]: items } },
+    };
   },
 };
 
@@ -27830,7 +27923,26 @@ export const hasSameKitApp = (kitApp: KitAppId, others: KitAppId[]): boolean => 
 /**
  * KitStore holds the data fields for a KitStore record.
  **/
+/**
+ * 📋 Log entry for a command execution, capturing the command name, origin, args, and resulting diffs.
+ **/
+export interface CommandLogEntry {
+  command: string;
+  origin?: string;
+  args: any[];
+  diff?: any;
+  kitDiff?: KitDiff;
+  timestamp: number;
+}
+
 class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
+  readonly commandLog: CommandLogEntry[] = [];
+  private static readonly MAX_LOG_SIZE = 200;
+
+  get kitGuid(): Guid {
+    return this.syncMap.get("kit") as string;
+  }
+
   constructor(parent: SketchpadStore, syncMap: SyncKitApp, transact: (fn: () => void) => void, id: KitAppId, state?: KitAppState) {
     super(parent, syncMap, transact);
 
@@ -28334,6 +28446,13 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     }
   }
 
+  private logCommand(entry: CommandLogEntry): void {
+    this.commandLog.push(entry);
+    if (this.commandLog.length > KitAppStoreImpl.MAX_LOG_SIZE) {
+      this.commandLog.splice(0, this.commandLog.length - KitAppStoreImpl.MAX_LOG_SIZE);
+    }
+  }
+
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
     let origin: string | undefined;
     let rest: any[];
@@ -28348,22 +28467,27 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
 
     if (command === "semio.kitApp.startTransaction") {
       this.startTransaction();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.kitApp.finalizeTransaction") {
       this.finalizeTransaction();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.kitApp.abortTransaction") {
       this.abortTransaction();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.kitApp.undo") {
       this.undo();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.kitApp.redo") {
       this.redo();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
 
@@ -28386,6 +28510,47 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     this.recordEdit(result);
     if (result.kitDiff) {
       kitData.change(result.kitDiff);
+    }
+    this.logCommand({ command, origin, args: rest, diff: result.diff, kitDiff: result.kitDiff, timestamp: Date.now() });
+    // Sync diff to XState actor for cross-tab synchronization
+    const actor = this.parent.actor;
+    if (actor && result.diff) {
+      const kitGuid = this.kitGuid;
+      if (result.diff.selection) {
+        actor.send({ type: "KIT.SET_SELECTION", kitGuid, selection: this.selection } as any);
+      }
+      if (result.diff.hover !== undefined) {
+        const nextHover = this.hover;
+        if (nextHover && Object.values(nextHover).some((v) => v !== undefined)) {
+          actor.send({ type: "KIT.SET_HOVER", kitGuid, hover: nextHover } as any);
+        } else {
+          actor.send({ type: "KIT.CLEAR_HOVER", kitGuid } as any);
+        }
+      }
+      if (result.diff.fullscreenWindow !== undefined) {
+        actor.send({ type: "KIT.SET_FULLSCREEN", kitGuid, window: this.fullscreenWindow } as any);
+      }
+      if (result.diff.panelVisibility !== undefined) {
+        actor.send({ type: "KIT.TOGGLE_PANEL", kitGuid, panel: "__sync__", panelVisibility: this.panelVisibility } as any);
+      }
+      if (result.diff.filterSearch !== undefined) {
+        actor.send({ type: "KIT.SET_FILTER", kitGuid, search: this.filterSearch } as any);
+      }
+      if (result.diff.expandedRows !== undefined) {
+        actor.send({ type: "KIT.SET_EXPANDED_ROWS", kitGuid, expandedRows: this.expandedRows } as any);
+      }
+      if (result.diff.sortColumn !== undefined || result.diff.sortDirection !== undefined) {
+        actor.send({ type: "KIT.SET_SORT", kitGuid, column: this.sortColumn, direction: this.sortDirection } as any);
+      }
+      if (result.diff.diagramForce !== undefined) {
+        actor.send({ type: "KIT.SET_DIAGRAM_FORCE", kitGuid, diagramForce: this.diagramForce } as any);
+      }
+      if (result.diff.activeTool !== undefined) {
+        actor.send({ type: "KIT.SET_ACTIVE_TOOL", kitGuid, tool: this.activeTool } as any);
+      }
+      if (Object.prototype.hasOwnProperty.call(result.diff, "windowLayout")) {
+        actor.send({ type: "KIT.SET_WINDOW_LAYOUT", kitGuid, windowLayout: this.windowLayout } as any);
+      }
     }
     return result as T;
   }
@@ -28610,17 +28775,18 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
 export function useKitAppSelection(): HookResult<KitAppSelection> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitGuid = kitScope?.guid ?? "";
   const selector = useMemo(() => createKitSelectionSelector(kitGuid), [kitGuid]);
   const selection = useSelector(actor, selector) ?? EMPTY_KIT_SELECTION;
   const canSetEvent = useMemo(() => ({ type: "KIT.SET_SELECTION" as const, kitGuid, selection: {} as KitAppSelection }), [kitGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setSelection = useMemo(() => {
-    if (!canSet) return undefined;
+    if (!canSet || !controller) return undefined;
     return (value: KitAppSelection) => {
-      actor.send({ type: "KIT.SET_SELECTION", kitGuid, selection: value });
+      controller.execute("semio.kitApp.setSelection", value);
     };
-  }, [actor, kitGuid, canSet]);
+  }, [controller, canSet]);
   return conditionalHookResult(canSet, selection, setSelection);
 }
 
@@ -28632,16 +28798,17 @@ export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const selector = useMemo(() => createKitFullscreenSelector(kitGuid), [kitGuid]);
   const fullscreen = useSelector(actor, selector) ?? KitAppFullscreenWindow.None;
   const canSetEvent = useMemo(() => ({ type: "KIT.SET_FULLSCREEN" as const, kitGuid, window: KitAppFullscreenWindow.None }), [kitGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setFullscreen = useMemo(() => {
-    if (!canSet) return undefined;
+    if (!canSet || !controller) return undefined;
     return (value: KitAppFullscreenWindow) => {
-      actor.send({ type: "KIT.SET_FULLSCREEN", kitGuid, window: value });
+      controller.execute("semio.kitApp.setFullscreenWindow", value);
     };
-  }, [actor, kitGuid, canSet]);
+  }, [controller, canSet]);
   return conditionalHookResult(canSet, fullscreen, setFullscreen);
 }
 
@@ -28671,12 +28838,13 @@ export function useKitAppWindowLayout(): HookResult<any> {
   const windowLayout = useSelector(actor, selector);
   const canSetEvent = useMemo(() => ({ type: "KIT.SET_WINDOW_LAYOUT" as const, kitGuid, windowLayout: {} }), [kitGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const controller = useKitAppStore(undefined) as KitAppStoreImpl | null;
   const setWindowLayout = useMemo(() => {
-    if (!canSet) return undefined;
+    if (!canSet || !controller) return undefined;
     return (value: any) => {
-      actor.send({ type: "KIT.SET_WINDOW_LAYOUT", kitGuid, windowLayout: value });
+      controller.execute("semio.kitApp.setWindowLayout", value);
     };
-  }, [actor, kitGuid, canSet]);
+  }, [controller, canSet]);
   return conditionalHookResult(canSet, windowLayout, setWindowLayout);
 }
 
@@ -28692,12 +28860,13 @@ export function useKitAppDiagramForce(): readonly [DiagramForceSettings, ((value
   const force = useSelector(actor, selector) as DiagramForceSettings | undefined;
   const resolvedForce = force ?? kitDefaultDiagramForceSettings;
   const canSet = !!kitGuid && !!actor;
+  const controller = useKitAppStore(undefined) as KitAppStoreImpl | null;
   const setForce = useMemo(() => {
-    if (!canSet || !kitGuid) return undefined;
+    if (!canSet || !kitGuid || !controller) return undefined;
     return (value: Partial<DiagramForceSettings>) => {
-      actor.send({ type: "KIT.SET_DIAGRAM_FORCE", kitGuid, diagramForce: value } as any);
+      controller.execute("semio.kitApp.setDiagramForce", value);
     };
-  }, [kitGuid, canSet, actor]);
+  }, [kitGuid, canSet, controller]);
   return [resolvedForce, canSet ? setForce : undefined, canSet] as const;
 }
 
@@ -28720,10 +28889,11 @@ export function useKitAppActiveTool(): HookResult<ToolKind> {
     return snapshot.context.kitApps?.[kitGuid]?.activeTool ?? ToolKind.SELECTION_NORMAL;
   });
 
+  const controller = useKitAppStore(undefined) as KitAppStoreImpl | null;
   const setActiveTool = useMemo(() => {
-    if (!canSet || !kitGuid) return undefined;
-    return (tool: ToolKind) => actor.send({ type: "KIT.SET_ACTIVE_TOOL", kitGuid, tool } as any);
-  }, [actor, canSet, kitGuid]);
+    if (!canSet || !kitGuid || !controller) return undefined;
+    return (tool: ToolKind) => controller.execute("semio.kitApp.setActiveTool", tool);
+  }, [controller, canSet, kitGuid]);
 
   return conditionalHookResult(canSet, activeTool, setActiveTool);
 }
@@ -28784,17 +28954,17 @@ export function useKitAppExpandedRows(): HookNoSetResult<Set<string>> {
  *MUST provide transaction actions dispatching to the XState actor.
  **/
 export function useKitAppTransaction(): Transaction {
-  const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
 
-  if (!kitGuid) {
+  if (!kitGuid || !controller) {
     return {};
   }
   return {
-    start: () => actor.send({ type: "KIT.TRANSACTION.START", kitGuid }),
-    finalize: () => actor.send({ type: "KIT.TRANSACTION.COMMIT", kitGuid }),
-    abort: () => actor.send({ type: "KIT.TRANSACTION.ABORT", kitGuid }),
+    start: () => controller.execute("semio.kitApp.startTransaction"),
+    finalize: () => controller.execute("semio.kitApp.finalizeTransaction"),
+    abort: () => controller.execute("semio.kitApp.abortTransaction"),
   };
 }
 
@@ -28865,12 +29035,22 @@ export function useKitAppCommands(id?: KitAppId) {
       updateDesign: noOp,
       updateDesigns: noOp,
       togglePanel: noOp,
+      setPanelVisibility: noOp,
+      setWindowLayout: noOp,
+      setHover: noOp,
+      clearHover: noOp,
+      setDiagramForce: noOp,
+      setActiveTool: noOp,
+      setFullscreenWindow: noOp,
       setFilterSearch: noOp,
       setExpandedRows: noOp,
       toggleExpandedRow: noOp,
       setSortColumn: noOp,
       setSortDirection: noOp,
       toggleSort: noOp,
+      setSort: noOp,
+      setSelection: noOp,
+      clearSelection: noOp,
       execute: noOp,
     };
   }
@@ -28931,20 +29111,23 @@ export function useKitAppCommands(id?: KitAppId) {
     updateTypes: (updates: { type: { guid: Guid }; diff: TypeDiff }[]) => controller.execute("semio.kitApp.updateTypes", getOrigin(), updates),
     updateDesign: (guid: Guid, designDiff: DesignDiff) => controller.execute("semio.kitApp.updateDesign", getOrigin(), guid, designDiff),
     updateDesigns: (updates: { design: { guid: Guid }; diff: DesignDiff }[]) => controller.execute("semio.kitApp.updateDesigns", getOrigin(), updates),
-    togglePanel: (panelKey: string) => {
-      const current = controller.snapshot().panelVisibility || {};
-      controller.change({
-        panelVisibility: {
-          [panelKey]: !current[panelKey],
-        },
-      });
-    },
+    togglePanel: (panelKey: string) => controller.execute("semio.kitApp.togglePanel", getOrigin(), panelKey),
+    setPanelVisibility: (panelVisibility: Partial<PanelVisibility>) => controller.execute("semio.kitApp.setPanelVisibility", getOrigin(), panelVisibility),
+    setWindowLayout: (windowLayout: any) => controller.execute("semio.kitApp.setWindowLayout", getOrigin(), windowLayout),
+    setHover: (hover: KitAppHover) => controller.execute("semio.kitApp.setHover", getOrigin(), hover),
+    clearHover: () => controller.execute("semio.kitApp.clearHover", getOrigin()),
+    setDiagramForce: (diagramForce: Partial<DiagramForceSettings>) => controller.execute("semio.kitApp.setDiagramForce", getOrigin(), diagramForce),
+    setActiveTool: (tool: ToolKind) => controller.execute("semio.kitApp.setActiveTool", getOrigin(), tool),
+    setFullscreenWindow: (fullscreenWindow: KitAppFullscreenWindow) => controller.execute("semio.kitApp.setFullscreenWindow", getOrigin(), fullscreenWindow),
     setFilterSearch: (search: string) => controller.execute("semio.kitApp.setFilterSearch", getOrigin(), search),
     setExpandedRows: (rows: string[]) => controller.execute("semio.kitApp.setExpandedRows", getOrigin(), rows),
     toggleExpandedRow: (rowId: string) => controller.execute("semio.kitApp.toggleExpandedRow", getOrigin(), rowId),
     setSortColumn: (column: KitAppSortColumn) => controller.execute("semio.kitApp.setSortColumn", getOrigin(), column),
     setSortDirection: (direction: KitAppSortDirection) => controller.execute("semio.kitApp.setSortDirection", getOrigin(), direction),
     toggleSort: (column: KitAppSortColumn) => controller.execute("semio.kitApp.toggleSort", getOrigin(), column),
+    setSort: (column: KitAppSortColumn, direction: KitAppSortDirection) => controller.execute("semio.kitApp.setSort", getOrigin(), column, direction),
+    setSelection: (selection: KitAppSelection) => controller.execute("semio.kitApp.setSelection", getOrigin(), selection),
+    clearSelection: () => controller.execute("semio.kitApp.clearSelection", getOrigin()),
     execute: (command: string, ...args: any[]) => controller.execute(command, getOrigin(), ...args),
   };
 }
@@ -28963,14 +29146,15 @@ export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args:
  **/
 export function useKitAppSelectType(): ActionHookResult<[typeGuid: Guid]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SELECT_TYPE" as const, kitGuid, typeGuid: "" }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return (typeGuid: Guid) => actor.send({ type: "KIT.SELECT_TYPE", kitGuid, typeGuid });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return (typeGuid: Guid) => controller.execute("semio.kitApp.addTypeToSelection", typeGuid);
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -28980,14 +29164,15 @@ export function useKitAppSelectType(): ActionHookResult<[typeGuid: Guid]> {
  **/
 export function useKitAppDeselectType(): ActionHookResult<[typeGuid: Guid]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.DESELECT_TYPE" as const, kitGuid, typeGuid: "" }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return (typeGuid: Guid) => actor.send({ type: "KIT.DESELECT_TYPE", kitGuid, typeGuid });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return (typeGuid: Guid) => controller.execute("semio.kitApp.removeTypeFromSelection", typeGuid);
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -28997,14 +29182,15 @@ export function useKitAppDeselectType(): ActionHookResult<[typeGuid: Guid]> {
  **/
 export function useKitAppSelectDesign(): ActionHookResult<[designGuid: Guid]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SELECT_DESIGN" as const, kitGuid, designGuid: "" }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return (designGuid: Guid) => actor.send({ type: "KIT.SELECT_DESIGN", kitGuid, designGuid });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return (designGuid: Guid) => controller.execute("semio.kitApp.addDesignToSelection", designGuid);
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -29014,14 +29200,15 @@ export function useKitAppSelectDesign(): ActionHookResult<[designGuid: Guid]> {
  **/
 export function useKitAppDeselectDesign(): ActionHookResult<[designGuid: Guid]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.DESELECT_DESIGN" as const, kitGuid, designGuid: "" }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return (designGuid: Guid) => actor.send({ type: "KIT.DESELECT_DESIGN", kitGuid, designGuid });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return (designGuid: Guid) => controller.execute("semio.kitApp.removeDesignFromSelection", designGuid);
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -29031,14 +29218,15 @@ export function useKitAppDeselectDesign(): ActionHookResult<[designGuid: Guid]> 
  **/
 export function useKitAppSetSelection(): ActionHookResult<[selection: KitAppSelection]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SET_SELECTION" as const, kitGuid, selection: {} as KitAppSelection }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return (selection: KitAppSelection) => actor.send({ type: "KIT.SET_SELECTION", kitGuid, selection });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return (selection: KitAppSelection) => controller.execute("semio.kitApp.setSelection", selection);
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -29047,14 +29235,15 @@ export function useKitAppSetSelection(): ActionHookResult<[selection: KitAppSele
  **/
 export function useKitAppClearSelection(): ActionHookResult<[]> {
   const actor = useSketchpadActor();
+  const controller = useKitAppStore();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.CLEAR_SELECTION" as const, kitGuid }), [kitGuid]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
   const action = useMemo(() => {
-    if (!canAct) return undefined;
-    return () => actor.send({ type: "KIT.CLEAR_SELECTION", kitGuid });
-  }, [actor, kitGuid, canAct]);
+    if (!canAct || !controller) return undefined;
+    return () => controller.execute("semio.kitApp.clearSelection");
+  }, [controller, canAct]);
   return [action, canAct];
 }
 
@@ -29965,6 +30154,17 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
       },
     };
   },
+  "semio.designApp.togglePanel": (context: DesignAppCommandContext, panelKey: keyof PanelVisibility): DesignAppCommandResult => {
+    const current = context.designApp.panelVisibility || {};
+    return {
+      diff: {
+        panelVisibility: {
+          ...current,
+          [panelKey]: !current[panelKey],
+        },
+      },
+    };
+  },
   "semio.designApp.setActiveTool": (context: DesignAppCommandContext, tool: ToolKind): DesignAppCommandResult => {
     if (context.designApp.activeTool === tool) {
       return { diff: {} };
@@ -30582,6 +30782,13 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
       },
     };
   },
+  "semio.designApp.setWindowLayout": (_context: DesignAppCommandContext, windowLayout: any): DesignAppCommandResult => {
+    return {
+      diff: {
+        windowLayout,
+      },
+    };
+  },
 };
 
 // #endregion 💧Commands
@@ -30640,6 +30847,8 @@ export const hasSameDesignApp = (designApp: DesignAppId, others: DesignAppId[]):
  *MUST extend PlainKitDiffAppStore and synchronize state with the Y.js shared document.
  **/
 export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
+  readonly commandLog: CommandLogEntry[] = [];
+  private static readonly MAX_LOG_SIZE = 200;
   private readonly kitGuid: Guid;
   private _draggingPieceIds: Set<string> = new Set();
   private _draggingConnectionIds: Set<string> = new Set();
@@ -30785,6 +30994,13 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
     this.notify();
   }
 
+  private logCommand(entry: CommandLogEntry): void {
+    this.commandLog.push(entry);
+    if (this.commandLog.length > DesignStore.MAX_LOG_SIZE) {
+      this.commandLog.splice(0, this.commandLog.length - DesignStore.MAX_LOG_SIZE);
+    }
+  }
+
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
     let origin: string | undefined;
     let rest: any[];
@@ -30799,22 +31015,27 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
 
     if (command === "semio.designApp.startTransaction") {
       this.startTransaction();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.designApp.finalizeTransaction") {
       this.finalizeTransaction();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.designApp.abortTransaction") {
       this.abortTransaction();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.designApp.undo") {
       this.undo();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.designApp.redo") {
       this.redo();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
 
@@ -30903,6 +31124,7 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
         actor.send({ type: "DESIGN.SYNC", kitGuid: this.kitGuid, designGuid: this.designGuid, state: statePatch } as any);
       }
     }
+    this.logCommand({ command, origin, args: rest, diff: result.diff, kitDiff: result.kitDiff, timestamp: Date.now() });
     return result as T;
   }
 
@@ -40301,7 +40523,7 @@ const DesignWindowApp: FC<AppProps> = () => {
     if (!store || !storedWindowLayout) return;
     if (windowLayout === undefined) {
       try {
-        store.change({ windowLayout: undefined });
+        store.execute("semio.designApp.setWindowLayout", undefined);
       } catch (error) {
         console.error("[DesignApp] Failed to clear layout:", error);
       }
@@ -40309,7 +40531,7 @@ const DesignWindowApp: FC<AppProps> = () => {
     }
     if (windowLayoutHash !== storedWindowLayoutHash) {
       try {
-        store.change({ windowLayout });
+        store.execute("semio.designApp.setWindowLayout", windowLayout);
       } catch (error) {
         console.error("[DesignApp] Failed to migrate layout:", error);
       }
@@ -40336,8 +40558,8 @@ const DesignWindowApp: FC<AppProps> = () => {
 
   const handleLayoutChange = useCallback(
     (config: any) => {
-      if (store && typeof store.change === "function") {
-        store.change({ windowLayout: config });
+      if (store && typeof store.execute === "function") {
+        store.execute("semio.designApp.setWindowLayout", config);
       }
     },
     [store],
@@ -45590,6 +45812,24 @@ const qualityAppCommands = {
       },
     };
   },
+  "semio.qualityApp.togglePanel": (context: QualityAppCommandContext, panelKey: keyof PanelVisibility): QualityAppCommandResult => {
+    const current = context.qualityApp.panelVisibility || {};
+    return {
+      diff: {
+        panelVisibility: {
+          ...current,
+          [panelKey]: !current[panelKey],
+        },
+      },
+    };
+  },
+  "semio.qualityApp.setWindowLayout": (_context: QualityAppCommandContext, windowLayout: any): QualityAppCommandResult => {
+    return {
+      diff: {
+        windowLayout,
+      },
+    };
+  },
 };
 
 // #endregion 💧Commands
@@ -45602,6 +45842,8 @@ const qualityAppCommands = {
  * QualityAppStore holds the data fields for a QualityAppStore record.
  **/
 class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDiff, QualityAppSelectionDiff, QualityAppEdit, QualityAppCommandContext, QualityAppCommandResult> {
+  readonly commandLog: CommandLogEntry[] = [];
+  private static readonly MAX_LOG_SIZE = 200;
   private readonly Guid: QualityAppId;
 
   constructor(parent: SketchpadStore, id: QualityAppId) {
@@ -45683,6 +45925,13 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
     this.notify();
   }
 
+  private logCommand(entry: CommandLogEntry): void {
+    this.commandLog.push(entry);
+    if (this.commandLog.length > QualityAppStore.MAX_LOG_SIZE) {
+      this.commandLog.splice(0, this.commandLog.length - QualityAppStore.MAX_LOG_SIZE);
+    }
+  }
+
   async executeCommand<T>(command: string, ...args: any[]): Promise<T> {
     let origin: string | undefined;
     let rest: any[];
@@ -45697,22 +45946,27 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
 
     if (command === "semio.qualityApp.startTransaction") {
       this.startTransaction();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.qualityApp.finalizeTransaction") {
       this.finalizeTransaction();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.qualityApp.abortTransaction") {
       this.abortTransaction();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.qualityApp.undo") {
       this.undo();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
     if (command === "semio.qualityApp.redo") {
       this.redo();
+      this.logCommand({ command, origin, args: rest, timestamp: Date.now() });
       return {} as T;
     }
 
@@ -45749,6 +46003,7 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
     if (qualityKitDiff) {
       kitStore.change(qualityKitDiff);
     }
+    this.logCommand({ command, origin, args: rest, diff: result.diff, kitDiff: (result as any).kitDiff, timestamp: Date.now() });
     return result as T;
   }
 }
@@ -46003,7 +46258,7 @@ export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
   const canSet = qualityScope !== null && store !== null;
   const setPanelVisibility = useCallback(
     (value: PanelVisibility) => {
-      if (store) store.change({ panelVisibility: value });
+      if (store) store.execute("semio.qualityApp.setPanelVisibility", value);
     },
     [store],
   );
@@ -46020,7 +46275,7 @@ export function useQualityAppWindowLayout(): HookResult<any> {
   const canSet = qualityScope !== null && store !== null;
   const setWindowLayout = useCallback(
     (value: any) => {
-      if (store) store.change({ windowLayout: value });
+      if (store) store.execute("semio.qualityApp.setWindowLayout", value);
     },
     [store],
   );
@@ -47191,8 +47446,8 @@ const QualityApp: FC<QualityAppProps> = () => {
 
   const handleLayoutChange = useCallback(
     (config: any) => {
-      if (store && typeof store.change === "function") {
-        store.change({ windowLayout: config });
+      if (store && typeof store.execute === "function") {
+        store.execute("semio.qualityApp.setWindowLayout", config);
       }
     },
     [store],

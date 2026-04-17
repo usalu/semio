@@ -246,7 +246,7 @@ TODO: Rename version to release
 TODO: Introduce activity to kit
 TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
-
+S
 semio:
 
 Optimize implementations according benchmarks. Find bottlenecks and fix them. It doesnt matter if you need to reimplement something. Make sure all tets pass and benchmark again.
@@ -700,7 +700,10 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 semio/sketchpad:
 
-semio sketchpad:
+Refactor state managment completly.
+Every UI element MUST only call commands of a store.
+Add central logging to the store where all executed commands which the resulting KitChanges are logged.
+Remove every direct mutation of the store. The UI element only fetches the input of the command and doesnt know about any business logic.
 
 Reorder the toolbar to consistent across all apps.
 Select, Create, Open, Filter

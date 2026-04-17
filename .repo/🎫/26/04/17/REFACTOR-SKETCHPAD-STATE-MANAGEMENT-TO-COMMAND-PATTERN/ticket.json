@@ -1,0 +1,12 @@
+{
+  "title": "Refactor Sketchpad State Management to Command Pattern",
+  "status": "open",
+  "description": "Refactor state management in the semio sketchpad completely. Every UI element MUST only call commands of a store. Add central logging to the store where all executed commands with the resulting KitChanges are logged. Remove every direct mutation of the store. The UI element only fetches the input of the command and doesn't know about any business logic.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1347"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp",
+  "sessions": [
+    "⚪1efb1784588c4d10ab666068458289d0"
+  ]
+}
