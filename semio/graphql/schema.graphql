@@ -7,12 +7,12 @@ enum DiffStatus {
   modified
 }
 
-type Coord {
+type Coordinate {
   u: Float!
   v: Float!
 }
 
-type Vec {
+type Offset {
   u: Float!
   v: Float!
 }
@@ -42,28 +42,14 @@ type Camera {
 }
 
 type Attribute {
-  guid: String!
-  key: String!
-  value: String
-  definition: String
-}
-
-type AttributeMeta {
-  guid: String!
-  key: String!
-  value: String
-  definition: String
-}
-
-type AttributeShallow {
-  guid: String!
+  id: ID!
   key: String!
   value: String
   definition: String
 }
 
 type AttributeDiff {
-  guid: String
+  id: String
   key: String
   value: String
   definition: String
@@ -75,97 +61,7 @@ type AttributesDiff {
   added: [Attribute!]
 }
 
-type AttributeUpdate {
-  attribute: AttributeId!
-  diff: AttributeDiff!
-}
-
-type AttributeId {
-  guid: String!
-}
-
-type LocationId {
-  guid: String!
-}
-
-type AuthorId {
-  guid: String!
-}
-
-type FileId {
-  guid: String!
-}
-
-type FolderId {
-  guid: String!
-}
-
-type BenchmarkId {
-  guid: String!
-}
-
-type QualityId {
-  guid: String!
-}
-
-type PortId {
-  guid: String!
-}
-
-type PropId {
-  guid: String!
-}
-
-type ModelId {
-  guid: String!
-}
-
-type ConnectorId {
-  guid: String!
-}
-
-type TypeId {
-  guid: String!
-}
-
-type LayerId {
-  guid: String!
-}
-
-type PieceId {
-  guid: String!
-}
-
-type GroupId {
-  guid: String!
-}
-
-type ConnectionId {
-  guid: String!
-}
-
-type StatId {
-  guid: String!
-}
-
-type DesignId {
-  guid: String!
-}
-
-type KitId {
-  guid: String!
-}
-
-type TagId {
-  guid: String!
-}
-
-type ConceptId {
-  guid: String!
-}
-
 type Location {
-  guid: String!
   longitude: Float!
   latitude: Float!
   altitude: Float
@@ -173,7 +69,6 @@ type Location {
 }
 
 type LocationDiff {
-  guid: String
   longitude: Float
   latitude: Float
   altitude: Float
@@ -181,27 +76,14 @@ type LocationDiff {
 }
 
 type Author {
-  guid: String!
-  name: String!
-  email: String!
-  attributes: [Attribute!]
-}
-
-type AuthorMeta {
-  guid: String!
-  name: String!
-  email: String!
-}
-
-type AuthorShallow {
-  guid: String!
+  id: ID!
   name: String!
   email: String!
   attributes: [Attribute!]
 }
 
 type AuthorDiff {
-  guid: String
+  id: String
   name: String
   email: String
   attributes: AttributesDiff
@@ -218,49 +100,23 @@ type AuthorUpdate {
   diff: AuthorDiff!
 }
 
-type File {
-  guid: String!
+type FileSnapshot {
+  id: ID!
   name: String!
   remote: String
-  folder: FolderId
+  folder: Folder
   size: Float
   hash: String
   blob: String
+  mime: String
   createdAt: DateTime
-  createdBy: String
+  createdBy: Author
   updatedAt: DateTime
-  updatedBy: String
-}
-
-type FileMeta {
-  guid: String!
-  name: String!
-  remote: String
-  folder: FolderId
-  size: Float
-  hash: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-type FileShallow {
-  guid: String!
-  name: String!
-  remote: String
-  folder: FolderId
-  size: Float
-  hash: String
-  blob: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
+  updatedBy: Author
 }
 
 type FileDiff {
-  guid: String
+  id: String
   name: String
   remote: String
   folder: FolderId
@@ -285,30 +141,7 @@ type FileUpdate {
 }
 
 type Folder {
-  guid: String!
-  name: String!
-  parent: FolderId
-  description: String
-  attributes: [Attribute!]
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-type FolderMeta {
-  guid: String!
-  name: String!
-  parent: FolderId
-  description: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-type FolderShallow {
-  guid: String!
+  id: ID!
   name: String!
   parent: FolderId
   description: String
@@ -320,7 +153,7 @@ type FolderShallow {
 }
 
 type FolderDiff {
-  guid: String
+  id: String
   name: String
   parent: FolderId
   description: String
@@ -343,7 +176,7 @@ type FolderUpdate {
 }
 
 type Benchmark {
-  guid: String!
+  id: ID!
   name: String!
   icon: String
   min: Float
@@ -354,7 +187,7 @@ type Benchmark {
 }
 
 type BenchmarkDiff {
-  guid: String
+  id: String
   name: String
   icon: String
   min: Float
@@ -376,7 +209,7 @@ type BenchmarkUpdate {
 }
 
 type Quality {
-  guid: String!
+  id: ID!
   key: String!
   name: String!
   description: String
@@ -399,54 +232,8 @@ type Quality {
   attributes: [Attribute!]
 }
 
-type QualityMeta {
-  guid: String!
-  key: String!
-  name: String!
-  description: String
-  uri: String
-  kind: Int
-  folder: String
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-}
-
-type QualityShallow {
-  guid: String!
-  key: String!
-  name: String!
-  description: String
-  uri: String
-  kind: Int
-  folder: String
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-  benchmarks: [Benchmark!]
-  attributes: [AttributeMeta!]
-}
-
 type QualityDiff {
-  guid: String
+  id: String
   key: String
   name: String
   description: String
@@ -481,25 +268,7 @@ type QualityUpdate {
 }
 
 type Port {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  maxChildren: Int
-  compatiblePorts: [PortId!]
-  attributes: [Attribute!]
-}
-
-type PortMeta {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  maxChildren: Int
-}
-
-type PortShallow {
-  guid: String!
+  id: ID!
   name: String!
   description: String
   icon: String
@@ -509,7 +278,7 @@ type PortShallow {
 }
 
 type PortDiff {
-  guid: String
+  id: String
   name: String
   description: String
   icon: String
@@ -530,22 +299,7 @@ type PortUpdate {
 }
 
 type Prop {
-  guid: String!
-  quality: QualityId!
-  value: String!
-  unit: String
-  attributes: [Attribute!]
-}
-
-type PropMeta {
-  guid: String!
-  quality: QualityId!
-  value: String!
-  unit: String
-}
-
-type PropShallow {
-  guid: String!
+  id: ID!
   quality: QualityId!
   value: String!
   unit: String
@@ -553,7 +307,7 @@ type PropShallow {
 }
 
 type PropDiff {
-  guid: String
+  id: String
   quality: QualityId
   value: String
   unit: String
@@ -572,22 +326,7 @@ type PropUpdate {
 }
 
 type Tag {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  attributes: [Attribute!]
-}
-
-type TagMeta {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-}
-
-type TagShallow {
-  guid: String!
+  id: ID!
   name: String!
   description: String
   icon: String
@@ -595,7 +334,7 @@ type TagShallow {
 }
 
 type TagDiff {
-  guid: String
+  id: String
   name: String
   description: String
   icon: String
@@ -614,22 +353,7 @@ type TagUpdate {
 }
 
 type Concept {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-  attributes: [Attribute!]
-}
-
-type ConceptMeta {
-  guid: String!
-  name: String!
-  description: String
-  icon: String
-}
-
-type ConceptShallow {
-  guid: String!
+  id: ID!
   name: String!
   description: String
   icon: String
@@ -637,7 +361,7 @@ type ConceptShallow {
 }
 
 type ConceptDiff {
-  guid: String
+  id: String
   name: String
   description: String
   icon: String
@@ -656,23 +380,7 @@ type ConceptUpdate {
 }
 
 type Model {
-  guid: String!
-  name: String
-  tags: [TagId!]
-  file: FileId!
-  description: String
-  attributes: [Attribute!]
-}
-
-type ModelMeta {
-  guid: String!
-  name: String
-  file: FileId!
-  description: String
-}
-
-type ModelShallow {
-  guid: String!
+  id: ID!
   name: String
   tags: [TagId!]
   file: FileId!
@@ -681,7 +389,7 @@ type ModelShallow {
 }
 
 type ModelDiff {
-  guid: String
+  id: String
   name: String
   tags: [TagId!]
   file: FileId
@@ -701,7 +409,7 @@ type ModelUpdate {
 }
 
 type Connector {
-  guid: String!
+  id: ID!
   name: String
   t: Float!
   point: Point!
@@ -714,34 +422,8 @@ type Connector {
   attributes: [Attribute!]
 }
 
-type ConnectorMeta {
-  guid: String!
-  name: String
-  t: Float!
-  point: Point!
-  direction: Vector!
-  description: String
-  port: PortId
-  mandatory: Boolean
-  maxChildren: Int
-}
-
-type ConnectorShallow {
-  guid: String!
-  name: String
-  t: Float!
-  point: Point!
-  direction: Vector!
-  description: String
-  port: PortId
-  mandatory: Boolean
-  maxChildren: Int
-  props: [PropMeta!]
-  attributes: [AttributeMeta!]
-}
-
 type ConnectorDiff {
-  guid: String
+  id: String
   name: String
   t: Float
   point: PointDiff
@@ -765,7 +447,7 @@ type ConnectorUpdate {
   diff: ConnectorDiff!
 }
 
-type CoordDiff {
+type CoordinateDiff {
   u: Float
   v: Float
 }
@@ -800,7 +482,7 @@ type CameraDiff {
 }
 
 type Type {
-  guid: String!
+  id: ID!
   name: String!
   parent: TypeId
   isAbstract: Boolean
@@ -820,46 +502,6 @@ type Type {
   image: String
   description: String
   attributes: [Attribute!]
-}
-
-type TypeMeta {
-  guid: String!
-  name: String!
-  parent: TypeId
-  isAbstract: Boolean
-  folder: String
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationId
-  icon: String
-  image: String
-  description: String
-}
-
-type TypeShallow {
-  guid: String!
-  name: String!
-  parent: TypeId
-  isAbstract: Boolean
-  folder: String
-  models: [ModelMeta!]
-  connectors: [ConnectorMeta!]
-  props: [PropMeta!]
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationId
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeMeta!]
 }
 
 type TypeDiff {
@@ -896,7 +538,7 @@ type TypeUpdate {
 }
 
 type Layer {
-  guid: String!
+  id: ID!
   path: String!
   isHidden: Boolean
   isLocked: Boolean
@@ -905,27 +547,8 @@ type Layer {
   attributes: [Attribute!]
 }
 
-type LayerMeta {
-  guid: String!
-  path: String!
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-}
-
-type LayerShallow {
-  guid: String!
-  path: String!
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  attributes: [AttributeMeta!]
-}
-
 type LayerDiff {
-  guid: String
+  id: String
   path: String
   isHidden: Boolean
   isLocked: Boolean
@@ -946,12 +569,12 @@ type LayerUpdate {
 }
 
 type Piece {
-  guid: String!
+  id: ID!
   name: String
   type: TypeId
   design: DesignId
   plane: Plane
-  center: Coord
+  center: Coordinate
   scale: Float
   mirrorPlane: Plane
   isHidden: Boolean
@@ -962,44 +585,12 @@ type Piece {
   attributes: [Attribute!]
 }
 
-type PieceMeta {
-  guid: String!
-  name: String
-  type: TypeId
-  design: DesignId
-  plane: Plane
-  center: Coord
-  scale: Float
-  mirrorPlane: Plane
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-}
-
-type PieceShallow {
-  guid: String!
-  name: String
-  type: TypeId
-  design: DesignId
-  plane: Plane
-  center: Coord
-  scale: Float
-  mirrorPlane: Plane
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  props: [PropMeta!]
-  attributes: [AttributeMeta!]
-}
-
 type PieceDiff {
   name: String
   type: TypeId
   design: DesignId
   plane: PlaneDiff
-  center: Coord
+  center: Coordinate
   scale: Float
   mirrorPlane: Plane
   isHidden: Boolean
@@ -1022,33 +613,16 @@ type PieceUpdate {
 }
 
 type Group {
-  guid: String!
+  id: ID!
   pieces: [PieceId!]!
   color: String
   name: String
   description: String
   attributes: [Attribute!]
 }
-
-type GroupMeta {
-  guid: String!
-  pieces: [PieceId!]!
-  color: String
-  name: String
-  description: String
-}
-
-type GroupShallow {
-  guid: String!
-  pieces: [PieceId!]!
-  color: String
-  name: String
-  description: String
-  attributes: [AttributeMeta!]
-}
-
+  
 type GroupDiff {
-  guid: String
+  id: String
   pieces: [PieceId!]
   color: String
   name: String
@@ -1097,7 +671,7 @@ type SideUpdate {
 }
 
 type Connection {
-  guid: String!
+  id: ID!
   connected: Side!
   connecting: Side!
   gap: Float
@@ -1110,37 +684,6 @@ type Connection {
   v: Float
   description: String
   attributes: [Attribute!]
-}
-
-type ConnectionMeta {
-  guid: String!
-  connected: Side!
-  connecting: Side!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-}
-
-type ConnectionShallow {
-  guid: String!
-  connected: Side!
-  connecting: Side!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: [AttributeMeta!]
 }
 
 type ConnectionDiff {
@@ -1170,27 +713,7 @@ type ConnectionUpdate {
 }
 
 type Stat {
-  guid: String!
-  quality: QualityId!
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-}
-
-type StatMeta {
-  guid: String!
-  quality: QualityId!
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-}
-
-type StatShallow {
-  guid: String!
+  id: ID!
   quality: QualityId!
   unit: String
   min: Float
@@ -1200,7 +723,7 @@ type StatShallow {
 }
 
 type StatDiff {
-  guid: String
+  id: String
   quality: QualityId
   unit: String
   min: Float
@@ -1221,7 +744,7 @@ type StatUpdate {
 }
 
 type Design {
-  guid: String!
+  id: ID!
   name: String!
   parent: DesignId
   isAbstract: Boolean
@@ -1243,51 +766,6 @@ type Design {
   image: String
   description: String
   attributes: [Attribute!]
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-type DesignMeta {
-  guid: String!
-  name: String!
-  parent: DesignId
-  isAbstract: Boolean
-  folder: String
-  activeLayer: LayerId
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationId
-  icon: String
-  image: String
-  description: String
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-type DesignShallow {
-  guid: String!
-  name: String!
-  parent: DesignId
-  isAbstract: Boolean
-  folder: String
-  pieces: [PieceMeta!]
-  connections: [ConnectionMeta!]
-  stats: [StatMeta!]
-  props: [PropMeta!]
-  layers: [LayerMeta!]
-  activeLayer: LayerId
-  groups: [GroupMeta!]
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationId
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeMeta!]
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -1333,70 +811,98 @@ type DesignChange {
   backward: DesignDiff!
 }
 
+type KitDiff {
+  hash: String!
+  last: KitDiff
+  name: String
+  version: String
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  types: TypesDiff
+  designs: DesignsDiff
+  tags: TagsDiff
+  concepts: ConceptsDiff
+  ports: PortsDiff
+  qualities: QualitiesDiff
+  authors: AuthorsDiffInput
+  files: FilesDiff
+  folders: FoldersDiff
+  attributes: AttributesDiff
+}
+
+type KitChange {
+  forward: KitDiff!
+  backward: KitDiff!
+  author: Author!
+  hash: String!
+  parent: 
+  timestamp: DateTime!
+  attributes: Attributes!
+}
+
+input KitInput {
+  id: ID!
+  name: String!
+  release: String
+  types: [TypeInput!]
+  designs: [DesignInput!]
+  tags: [TagInput!]
+  concepts: [ConceptInput!]
+  ports: [PortInput!]
+  qualities: [QualityInput!]
+  files: [FileInput!]
+  folders: [FolderInput!]
+  authors: [AuthorInput!]
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type KitSnapshot {
+  id: ID!
+  name: String!
+  description: String
+  release: String
+  remote: String
+  homepage: String
+  preview: String
+  icon: String
+  image: String
+  license: LicenseSnapshot!
+  attributes: [AttributeSnapshot!]
+  createdAt: DateTime
+  createdBy: AuthorSnapshot!
+  updatedAt: DateTime
+  tags: [TagSnapshot!]
+  concepts: [ConceptSnapshot!]
+  ports: [PortSnapshot!]
+  qualities: [QualitySnapshot!]
+  authors: [AuthorSnapshot!]
+  folders: [FolderSnapshot!]
+  files: [FileSnapshot!]
+  types: [TypeSnapshot!]
+  designs: [DesignSnapshot!]
+}
+
 type Kit {
-  guid: String!
-  name: String!
-  version: String
-  types: [Type!]
-  designs: [Design!]
-  tags: [Tag!]
-  concepts: [Concept!]
-  ports: [Port!]
-  qualities: [Quality!]
-  files: [File!]
-  folders: [Folder!]
-  authors: [Author!]
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  attributes: [Attribute!]
-  createdAt: DateTime
-  updatedAt: DateTime
+  id: ID!
+  snapshot: KitSnapshot!
 }
 
-type KitMeta {
-  guid: String!
-  name: String!
-  version: String
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-type KitShallow {
-  guid: String!
-  name: String!
-  version: String
-  types: [TypeMeta!]
-  designs: [DesignMeta!]
-  tags: [TagMeta!]
-  concepts: [ConceptMeta!]
-  ports: [PortMeta!]
-  qualities: [QualityMeta!]
-  files: [FileMeta!]
-  folders: [FolderMeta!]
-  authors: [AuthorMeta!]
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeMeta!]
-  createdAt: DateTime
-  updatedAt: DateTime
-}
 
 type KitDiff {
   name: String
@@ -1439,14 +945,14 @@ type KitChange {
 }
 
 type Query {
-  kit(guid: String!): Kit
+  kit(id: ID!): Kit
 }
 
 type Mutation {
-  applyKitDiff(guid: String!, diff: KitDiffInput!): Kit
+  applyKitDiff(id: ID!, diff: KitDiffInput!): Kit
 }
 
-input CoordInput {
+input CoordinateInput {
   u: Float!
   v: Float!
 }
@@ -1481,94 +987,94 @@ input CameraInput {
 }
 
 input AttributeInput {
-  guid: String!
+  id: ID!
   key: String!
   value: String
   definition: String
 }
 
 input AttributeIdInput {
-  guid: String!
+  id: ID!
 }
 
 input LocationIdInput {
-  guid: String!
+  id: ID!
 }
 
 input AuthorIdInput {
-  guid: String!
+  id: ID!
 }
 
 input FileIdInput {
-  guid: String!
+  id: ID!
 }
 
 input FolderIdInput {
-  guid: String!
+  id: ID!
 }
 
 input BenchmarkIdInput {
-  guid: String!
+  id: ID!
 }
 
 input QualityIdInput {
-  guid: String!
+  id: ID!
 }
 
 input PortIdInput {
-  guid: String!
+  id: ID!
 }
 
 input PropIdInput {
-  guid: String!
+  id: ID!
 }
 
 input ModelIdInput {
-  guid: String!
+  id: ID!
 }
 
 input ConnectorIdInput {
-  guid: String!
+  id: ID!
 }
 
 input TypeIdInput {
-  guid: String!
+  id: ID!
 }
 
 input LayerIdInput {
-  guid: String!
+  id: ID!
 }
 
 input PieceIdInput {
-  guid: String!
+  id: ID!
 }
 
 input GroupIdInput {
-  guid: String!
+  id: ID!
 }
 
 input ConnectionIdInput {
-  guid: String!
+  id: ID!
 }
 
 input StatIdInput {
-  guid: String!
+  id: ID!
 }
 
 input DesignIdInput {
-  guid: String!
+  id: ID!
 }
 
 input KitIdInput {
-  guid: String!
+  id: ID!
 }
 
 input TagIdInput {
-  guid: String!
+  id: ID!
 }
 
 input ConceptIdInput {
-  guid: String!
+  id: ID!
 }
 
 input AttributesDiffInput {
@@ -1583,21 +1089,21 @@ input AttributeUpdateInput {
 }
 
 input AttributeDiffInput {
-  guid: String
+  id: String
   key: String
   value: String
   definition: String
 }
 
 input AuthorInput {
-  guid: String!
+  id: ID!
   name: String!
   email: String!
   attributes: [AttributeInput!]
 }
 
 input AuthorDiffInput {
-  guid: String
+  id: String
   name: String
   email: String
   attributes: AttributesDiffInput
@@ -1615,7 +1121,7 @@ input AuthorUpdateInput {
 }
 
 input FileInput {
-  guid: String!
+  id: ID!
   name: String!
   remote: String
   folder: FolderIdInput
@@ -1629,7 +1135,7 @@ input FileInput {
 }
 
 input FileDiffInput {
-  guid: String
+  id: String
   name: String
   remote: String
   folder: FolderIdInput
@@ -1654,7 +1160,7 @@ input FileUpdateInput {
 }
 
 input FolderInput {
-  guid: String!
+  id: ID!
   name: String!
   parent: FolderIdInput
   description: String
@@ -1666,7 +1172,7 @@ input FolderInput {
 }
 
 input FolderDiffInput {
-  guid: String
+  id: String
   name: String
   parent: FolderIdInput
   description: String
@@ -1689,7 +1195,7 @@ input FolderUpdateInput {
 }
 
 input BenchmarkInput {
-  guid: String!
+  id: ID!
   name: String!
   icon: String
   min: Float
@@ -1700,7 +1206,7 @@ input BenchmarkInput {
 }
 
 input BenchmarkDiffInput {
-  guid: String
+  id: String
   name: String
   icon: String
   min: Float
@@ -1722,7 +1228,7 @@ input BenchmarkUpdateInput {
 }
 
 input QualityInput {
-  guid: String!
+  id: ID!
   key: String!
   name: String!
   description: String
@@ -1746,7 +1252,7 @@ input QualityInput {
 }
 
 input QualityDiffInput {
-  guid: String
+  id: String
   key: String
   name: String
   description: String
@@ -1781,7 +1287,7 @@ input QualityUpdateInput {
 }
 
 input PortInput {
-  guid: String!
+  id: ID!
   name: String!
   description: String
   icon: String
@@ -1790,7 +1296,7 @@ input PortInput {
 }
 
 input PortDiffInput {
-  guid: String
+  id: String
   name: String
   description: String
   icon: String
@@ -1810,7 +1316,7 @@ input PortUpdateInput {
 }
 
 input PropInput {
-  guid: String!
+  id: ID!
   quality: QualityIdInput!
   value: String!
   unit: String
@@ -1818,7 +1324,7 @@ input PropInput {
 }
 
 input PropDiffInput {
-  guid: String
+  id: String
   quality: QualityIdInput
   value: String
   unit: String
@@ -1837,7 +1343,7 @@ input PropUpdateInput {
 }
 
 input TagInput {
-  guid: String!
+  id: ID!
   name: String!
   description: String
   icon: String
@@ -1845,7 +1351,7 @@ input TagInput {
 }
 
 input TagDiffInput {
-  guid: String
+  id: String
   name: String
   description: String
   icon: String
@@ -1864,7 +1370,7 @@ input TagUpdateInput {
 }
 
 input ConceptInput {
-  guid: String!
+  id: ID!
   name: String!
   description: String
   icon: String
@@ -1872,7 +1378,7 @@ input ConceptInput {
 }
 
 input ConceptDiffInput {
-  guid: String
+  id: String
   name: String
   description: String
   icon: String
@@ -1891,7 +1397,7 @@ input ConceptUpdateInput {
 }
 
 input ModelInput {
-  guid: String!
+  id: ID!
   name: String
   tags: [TagIdInput!]
   file: FileIdInput!
@@ -1900,7 +1406,7 @@ input ModelInput {
 }
 
 input ModelDiffInput {
-  guid: String
+  id: String
   name: String
   tags: [TagIdInput!]
   file: FileIdInput
@@ -1920,7 +1426,7 @@ input ModelUpdateInput {
 }
 
 input ConnectorInput {
-  guid: String!
+  id: ID!
   name: String
   t: Float!
   point: PointInput!
@@ -1933,7 +1439,7 @@ input ConnectorInput {
 }
 
 input ConnectorDiffInput {
-  guid: String
+  id: String
   name: String
   t: Float
   point: PointInput
@@ -1957,7 +1463,7 @@ input ConnectorUpdateInput {
 }
 
 input TypeInput {
-  guid: String!
+  id: ID!
   name: String!
   parent: TypeIdInput
   isAbstract: Boolean
@@ -2013,7 +1519,7 @@ input TypeUpdateInput {
 }
 
 input LayerInput {
-  guid: String!
+  id: ID!
   path: String!
   isHidden: Boolean
   isLocked: Boolean
@@ -2023,7 +1529,7 @@ input LayerInput {
 }
 
 input LayerDiffInput {
-  guid: String
+  id: String
   path: String
   isHidden: Boolean
   isLocked: Boolean
@@ -2044,12 +1550,12 @@ input LayerUpdateInput {
 }
 
 input PieceInput {
-  guid: String!
+  id: ID!
   name: String
   type: TypeIdInput
   design: DesignIdInput
   plane: PlaneInput
-  center: CoordInput
+  center: CoordinateInput
   scale: Float
   mirrorPlane: PlaneInput
   isHidden: Boolean
@@ -2065,7 +1571,7 @@ input PieceDiffInput {
   type: TypeIdInput
   design: DesignIdInput
   plane: PlaneInput
-  center: CoordInput
+  center: CoordinateInput
   scale: Float
   mirrorPlane: PlaneInput
   isHidden: Boolean
@@ -2088,7 +1594,7 @@ input PieceUpdateInput {
 }
 
 input GroupInput {
-  guid: String!
+  id: ID!
   pieces: [PieceIdInput!]!
   color: String
   name: String
@@ -2097,7 +1603,7 @@ input GroupInput {
 }
 
 input GroupDiffInput {
-  guid: String
+  id: String
   pieces: [PieceIdInput!]
   color: String
   name: String
@@ -2123,7 +1629,7 @@ input SideInput {
 }
 
 input ConnectionInput {
-  guid: String!
+  id: ID!
   connected: SideInput!
   connecting: SideInput!
   gap: Float
@@ -2171,7 +1677,7 @@ input ConnectionUpdateInput {
 }
 
 input StatInput {
-  guid: String!
+  id: ID!
   quality: QualityIdInput!
   unit: String
   min: Float
@@ -2181,7 +1687,7 @@ input StatInput {
 }
 
 input StatDiffInput {
-  guid: String
+  id: String
   quality: QualityIdInput
   unit: String
   min: Float
@@ -2202,7 +1708,7 @@ input StatUpdateInput {
 }
 
 input DesignInput {
-  guid: String!
+  id: ID!
   name: String!
   parent: DesignIdInput
   isAbstract: Boolean
@@ -2262,31 +1768,6 @@ input DesignsDiffInput {
 input DesignUpdateInput {
   design: DesignIdInput!
   diff: DesignDiffInput!
-}
-
-input KitInput {
-  guid: String!
-  name: String!
-  version: String
-  types: [TypeInput!]
-  designs: [DesignInput!]
-  tags: [TagInput!]
-  concepts: [ConceptInput!]
-  ports: [PortInput!]
-  qualities: [QualityInput!]
-  files: [FileInput!]
-  folders: [FolderInput!]
-  authors: [AuthorInput!]
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  updatedAt: DateTime
 }
 
 input KitDiffInput {

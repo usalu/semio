@@ -4221,6 +4221,9 @@ export const findConnector = (connectors: Connector[], connectorGuid: string): C
 // #region 🧱Type
 // Type entity types, schemas, and helpers MUST be defined here.
 
+/** Lifecycle for tombstones and collaborative conflict detection. */
+export type EntityLifecycle = "active" | "deleted";
+
 /**
  * Zod schema for Type validation.
  **/
@@ -4245,6 +4248,11 @@ export const TypeSchema = z.object({
   image: z.string().optional(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
+  lifecycle: z.enum(["active", "deleted"]).optional(),
+  deletedByUserId: z.string().optional(),
+  deletedByDisplayName: z.string().optional(),
+  deletedAt: z.string().optional(),
+  deletedInChangeId: z.string().optional(),
 });
 /**
  * Type alias for Type.
@@ -4270,6 +4278,11 @@ export class Type {
   image?: string;
   description?: string;
   attributes?: Attribute[];
+  lifecycle?: EntityLifecycle;
+  deletedByUserId?: string;
+  deletedByDisplayName?: string;
+  deletedAt?: string;
+  deletedInChangeId?: string;
 
   /** Wire ID only; object graph uses {@link Type.parent}. */
   #parentGuid?: string;
@@ -4322,6 +4335,12 @@ export class Type {
       },
     };
     return this.#kit._applyDiff(diff);
+  }
+
+  /** Semantic restore of a tombstoned type (first-class command). */
+  restore(opts?: KitChangeOptions): KitGraphChange {
+    if (!this.#kit) throw new Error("Type not attached to a KitImpl");
+    return this.#kit.restoreType(this, opts);
   }
 
   /**
@@ -4427,6 +4446,11 @@ export class Type {
     if (this.icon !== after.icon) diff.icon = after.icon ?? null;
     if (this.image !== after.image) diff.image = after.image ?? null;
     if (this.description !== after.description) diff.description = after.description ?? null;
+    if ((this.lifecycle ?? "active") !== (after.lifecycle ?? "active")) diff.lifecycle = after.lifecycle ?? "active";
+    if (this.deletedByUserId !== after.deletedByUserId) diff.deletedByUserId = after.deletedByUserId ?? null;
+    if (this.deletedByDisplayName !== after.deletedByDisplayName) diff.deletedByDisplayName = after.deletedByDisplayName ?? null;
+    if (this.deletedAt !== after.deletedAt) diff.deletedAt = after.deletedAt ?? null;
+    if (this.deletedInChangeId !== after.deletedInChangeId) diff.deletedInChangeId = after.deletedInChangeId ?? null;
     if (JSON.stringify(this.authors) !== JSON.stringify(after.authors)) diff.authors = after.authors ?? null;
     if (JSON.stringify(this.concepts) !== JSON.stringify(after.concepts)) diff.concepts = after.concepts ?? null;
     if (!deepEqual(this.models, after.models)) diff.models = getCollectionDiff("model", this.models ?? [], after.models ?? [], getModelDiff);
@@ -4452,6 +4476,11 @@ export class Type {
     if (appliedDiff.icon !== undefined) inverse.icon = this.icon ?? null;
     if (appliedDiff.image !== undefined) inverse.image = this.image ?? null;
     if (appliedDiff.description !== undefined) inverse.description = this.description ?? null;
+    if (appliedDiff.lifecycle !== undefined) inverse.lifecycle = this.lifecycle ?? "active";
+    if (appliedDiff.deletedByUserId !== undefined) inverse.deletedByUserId = this.deletedByUserId ?? null;
+    if (appliedDiff.deletedByDisplayName !== undefined) inverse.deletedByDisplayName = this.deletedByDisplayName ?? null;
+    if (appliedDiff.deletedAt !== undefined) inverse.deletedAt = this.deletedAt ?? null;
+    if (appliedDiff.deletedInChangeId !== undefined) inverse.deletedInChangeId = this.deletedInChangeId ?? null;
     if (appliedDiff.authors !== undefined) inverse.authors = this.authors ?? null;
     if (appliedDiff.concepts !== undefined) inverse.concepts = this.concepts ?? null;
     if (appliedDiff.models) inverse.models = inverseCollectionDiff("model", this.models ?? [], appliedDiff.models, inverseModelDiff);
@@ -4485,6 +4514,11 @@ export class Type {
     if (diff.icon !== undefined) this.icon = diff.icon ?? undefined;
     if (diff.image !== undefined) this.image = diff.image ?? undefined;
     if (diff.description !== undefined) this.description = diff.description ?? undefined;
+    if (diff.lifecycle !== undefined) this.lifecycle = diff.lifecycle;
+    if (diff.deletedByUserId !== undefined) this.deletedByUserId = diff.deletedByUserId ?? undefined;
+    if (diff.deletedByDisplayName !== undefined) this.deletedByDisplayName = diff.deletedByDisplayName ?? undefined;
+    if (diff.deletedAt !== undefined) this.deletedAt = diff.deletedAt ?? undefined;
+    if (diff.deletedInChangeId !== undefined) this.deletedInChangeId = diff.deletedInChangeId ?? undefined;
     if (diff.authors !== undefined) this.authors = diff.authors ?? undefined;
     if (diff.concepts !== undefined) this.concepts = diff.concepts ?? undefined;
     if (diff.models) {
@@ -4566,6 +4600,11 @@ export const TypeDiffSchema = TypeSchema.partial()
     concepts: z.array(ConceptIdSchema).nullable().optional(),
     authors: z.array(AuthorIdSchema).nullable().optional(),
     parent: TypeIdSchema.nullable().optional(),
+    lifecycle: z.enum(["active", "deleted"]).optional(),
+    deletedByUserId: z.string().nullable().optional(),
+    deletedByDisplayName: z.string().nullable().optional(),
+    deletedAt: z.string().nullable().optional(),
+    deletedInChangeId: z.string().nullable().optional(),
   });
 /**
  **/
@@ -8258,7 +8297,21 @@ export interface KitGraphChange {
   backward: KitDiff;
   /** Result of {@link validateKitGraphDiff} for {@link forward} (before apply). */
   validation: KitDiffValidationResult;
+  preconditions?: ChangePrecondition[];
 }
+
+export type ConcurrentDeleteConflict = {
+  id: string;
+  entityKind: "Type";
+  entityId: string;
+  localInteractionId: string;
+  localPendingChanges: KitGraphChange[];
+  deletedByUserId?: string;
+  deletedByDisplayName?: string;
+  deletedAt?: string;
+  deleteChangeId?: string;
+  proposedResolutions: readonly ConcurrentDeleteProposedResolution[];
+};
 
 /** Options for {@link KitImpl._applyDiff} (internal / kit-store pipeline). Prefer semantic entity methods for domain edits. */
 export type KitChangeOptions = {
@@ -8271,6 +8324,7 @@ export type KitChangeOptions = {
   skipGlobalHistory?: boolean;
   /** Inbound backbone: committed external change — not part of local history; clears redo. */
   inboundCommitted?: boolean;
+  inboundActor?: { changeId?: string; actorId?: string; actorDisplayName?: string };
 };
 
 export type ConflictKind =
@@ -8303,10 +8357,14 @@ export type HistoryInfo = {
 
 export type TransactionStatus = "open" | "finalized" | "aborted";
 
+export type InteractionWorkspaceStatus = "clean" | "conflicted";
+
 export type TransactionView = {
   id: string;
   status: TransactionStatus;
   label?: string;
+  workspaceStatus?: InteractionWorkspaceStatus;
+  conflicts?: readonly ConcurrentDeleteConflict[];
 };
 
 // #region 🪪KitEntity wire DTOs & ledger KitChange
@@ -8317,6 +8375,16 @@ export type KitEntityDesignId = string;
 export type KitEntityPieceId = string;
 export type InteractionId = string;
 export type ChangeId = string;
+
+/** Optimistic precondition on an interaction step (see collaboration model). */
+export type ChangePrecondition = {
+  entityKind: "Type" | string;
+  entityId: string;
+  expectedLifecycle: EntityLifecycle;
+  expectedVersionHash: string;
+};
+
+export type ConcurrentDeleteProposedResolution = "discardLocalChanges" | "restoreEntityAndReplayLocalChanges";
 
 export interface KitWireType {
   id: KitEntityTypeId;
@@ -8401,6 +8469,9 @@ export interface KitChange {
   report: ValidationReport;
   createdAt: string;
   metadata?: Record<string, string>;
+  actorId?: string;
+  actorDisplayName?: string;
+  affectedEntities?: ReadonlyArray<{ kind: string; id: string }>;
 }
 
 export interface HistoryEntry {
@@ -8450,6 +8521,8 @@ type KitRuntimeTransaction = {
   baseRevision: number;
   touchedEntities: Set<string>;
   touchedVersions: Map<string, string>;
+  workspaceStatus: InteractionWorkspaceStatus;
+  conflicts: ConcurrentDeleteConflict[];
 };
 
 /**
@@ -8547,14 +8620,24 @@ export class KitImpl {
   #deferredInboundQueue: KitDiff[] = [];
   /** When set, {@link _applyDiff} records steps on this open transaction unless `transactionId` is passed explicitly. */
   #activeTransactionId?: string;
+  /**
+   * Backbone-synced committed kit (no open interaction overlays).
+   * The live graph is the effective view: {@link #reprojectEffectiveView} = committed + composed {@link #openTransactions} nets.
+   */
+  #committedPlain!: KitData;
   // #endregion 🔖Private State
 
   /**
    * Applies a {@link KitDiff} in place with no validation — undo/redo replay, document hydration, and tests only.
    * Domain edits must use semantic methods / {@link KitImpl._applyDiff} (internal pipeline).
+   * Not allowed while interactions are open (would break committed vs overlay invariant).
    */
   replayChangeUnchecked(diff: KitDiff): void {
+    if (this.#openTransactions.size > 0) {
+      throw new Error("replayChangeUnchecked is not allowed while interactions are open; abort or finalize them first.");
+    }
     this.#applyRawKitDiff(diff);
+    this.#committedPlain = KitSchema.parse(stripNullsJsonClone(kitGraphToPlainData(this)));
   }
 
   #applyRawKitDiff(diff: KitDiff): void {
@@ -8718,6 +8801,20 @@ export class KitImpl {
     this.ops = new KitOps(this);
     this.transactions = new KitTransactionsCoordinator(this);
     this.transaction = new KitActiveTransactionSurface(this);
+    this.#committedPlain = KitSchema.parse(stripNullsJsonClone(kitGraphToPlainData(this)));
+  }
+
+  /** Committed (synced) snapshot without interaction overlays. */
+  getCommittedPlain(): KitData {
+    return KitSchema.parse(stripNullsJsonClone(this.#committedPlain));
+  }
+
+  /** Align committed snapshot with the current effective graph when no interactions are open. */
+  syncCommittedPlainFromGraph(): void {
+    if (this.#openTransactions.size > 0) {
+      throw new Error("syncCommittedPlainFromGraph requires all interactions to be closed.");
+    }
+    this.#committedPlain = KitSchema.parse(stripNullsJsonClone(kitGraphToPlainData(this)));
   }
 
   get activeTransactionId(): string | undefined {
@@ -8767,9 +8864,9 @@ export class KitImpl {
     const text = await fs.readFile(resolved, "utf8");
     const { kit: loaded } = await importFileKit(text);
     const diff = computeKitGraphDiffBetween(this, loaded);
-    this.replayChangeUnchecked(diff);
     this.#openTransactions.clear();
     this.#activeTransactionId = undefined;
+    this.replayChangeUnchecked(diff);
     this.#historyDone.length = 0;
     this.#historyUndone.length = 0;
     this.#flattenMerkleByDesign.clear();
@@ -9822,6 +9919,75 @@ export class KitImpl {
     return "";
   }
 
+  #normalizeInboundTypeRemovalsToTombstones(diff: KitDiff, meta?: { deletedByUserId?: string; deletedByDisplayName?: string; deletedInChangeId?: string }): KitDiff {
+    if (!diff.types?.removed?.length) return diff;
+    const now = new Date().toISOString();
+    const extraUpdated =
+      diff.types.removed?.map((r) => ({
+        type: { guid: r.guid },
+        diff: {
+          lifecycle: "deleted" as const,
+          deletedAt: now,
+          deletedByUserId: meta?.deletedByUserId,
+          deletedByDisplayName: meta?.deletedByDisplayName,
+          deletedInChangeId: meta?.deletedInChangeId,
+        },
+      })) ?? [];
+    const prevUpdated = diff.types.updated ?? [];
+    const { removed: _r, ...restTypes } = diff.types;
+    const next: KitDiff = {
+      ...diff,
+      types: {
+        ...restTypes,
+        updated: [...prevUpdated, ...extraUpdated],
+      },
+    };
+    delete (next.types as { removed?: unknown }).removed;
+    if (next.types && Object.keys(next.types).length === 0) delete next.types;
+    return next;
+  }
+
+  #extractTypesDeletedByDiff(diff: KitDiff): Set<string> {
+    const out = new Set<string>();
+    if (diff.types?.updated) {
+      for (const u of diff.types.updated) {
+        const ld = u.diff as TypeDiff;
+        if (ld.lifecycle === "deleted") out.add(u.type.guid);
+      }
+    }
+    if (diff.types?.removed) {
+      for (const r of diff.types.removed) out.add(r.guid);
+    }
+    return out;
+  }
+
+  #detectConcurrentDeleteConflicts(appliedDiff: KitDiff, inbound?: { changeId?: string; actorId?: string; actorDisplayName?: string }): void {
+    const deleted = this.#extractTypesDeletedByDiff(appliedDiff);
+    if (deleted.size === 0) return;
+    for (const typeGuid of deleted) {
+      const t = this.findType(typeGuid);
+      if (!t || (t.lifecycle ?? "active") !== "deleted") continue;
+      for (const [txId, tx] of this.#openTransactions) {
+        if (tx.status !== "open" || !tx.touchedEntities.has(typeGuid)) continue;
+        if (tx.conflicts.some((c) => c.entityId === typeGuid)) continue;
+        const c: ConcurrentDeleteConflict = {
+          id: guid(),
+          entityKind: "Type",
+          entityId: typeGuid,
+          localInteractionId: txId,
+          localPendingChanges: [...tx.done],
+          deletedByUserId: inbound?.actorId,
+          deletedByDisplayName: inbound?.actorDisplayName,
+          deletedAt: t.deletedAt,
+          deleteChangeId: inbound?.changeId ?? t.deletedInChangeId,
+          proposedResolutions: ["discardLocalChanges", "restoreEntityAndReplayLocalChanges"],
+        };
+        tx.conflicts.push(c);
+        tx.workspaceStatus = "conflicted";
+      }
+    }
+  }
+
   #flushBackboneOutboundSoon(): void {
     const bb = this.backbone;
     if (!bb || this.#phase === "frozen") return;
@@ -9836,6 +10002,48 @@ export class KitImpl {
     });
   }
 
+  /** Replace live graph from a scratch {@link KitImpl} (same scalar + entity wiring as constructor). */
+  #adoptGraphFrom(source: KitImpl): void {
+    const p = KitSchema.parse(stripNullsJsonClone(kitGraphToPlainData(source)));
+    this.guid = p.guid;
+    this.name = p.name;
+    this.version = p.version;
+    this.remote = p.remote;
+    this.homepage = p.homepage;
+    this.license = p.license;
+    this.preview = p.preview;
+    this.icon = p.icon;
+    this.image = p.image;
+    this.description = p.description;
+    this.createdAt = p.createdAt;
+    this.updatedAt = p.updatedAt;
+    this.types = p.types?.map((t) => new Type(t, this));
+    this.designs = p.designs?.map((d) => new Design(d, this));
+    this.tags = p.tags?.map((t) => new Tag(t));
+    this.concepts = p.concepts?.map((c) => new Concept(c));
+    this.ports = p.ports?.map((x) => new Port(x));
+    this.qualities = p.qualities?.map((q) => new Quality(q));
+    this.files = p.files?.map((f) => new File(f));
+    this.folders = p.folders?.map((f) => new Folder(f));
+    this.authors = p.authors?.map((a) => new Author(a));
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+    this.#flattenMerkleByDesign.clear();
+  }
+
+  /**
+   * Effective kit graph = {@link #committedPlain} + each open interaction’s squashed net forward (Map insertion order).
+   */
+  #reprojectEffectiveView(): void {
+    const base = KitSchema.parse(stripNullsJsonClone(this.#committedPlain));
+    const shell = new KitImpl(base, undefined);
+    for (const [, tx] of this.#openTransactions) {
+      if (tx.status !== "open" || tx.done.length === 0) continue;
+      const nf = DiffComposer.normalize(tx.netForward);
+      if (nf && Object.keys(nf).length > 0) shell.replayChangeUnchecked(nf);
+    }
+    this.#adoptGraphFrom(shell);
+  }
+
   /**
    * Opens a named transaction context (multiple may be open). Steps use {@link KitImpl._applyDiff}(…, { transactionId: tx.id }).
    */
@@ -9847,7 +10055,7 @@ export class KitImpl {
     this.#openTransactions.set(id, {
       label,
       status: "open",
-      startPlain: KitSchema.parse(this.toData() as unknown as KitData),
+      startPlain: KitSchema.parse(stripNullsJsonClone(this.#committedPlain)),
       done: [],
       undone: [],
       netForward: {},
@@ -9855,6 +10063,8 @@ export class KitImpl {
       baseRevision: this.#revision,
       touchedEntities: new Set(),
       touchedVersions: new Map(),
+      workspaceStatus: "clean",
+      conflicts: [],
     });
     return new Transaction(this, id, label);
   }
@@ -9874,13 +10084,18 @@ export class KitImpl {
     if (this.#phase === "frozen" || this.#conflicted) {
       throw new Error("KitImpl is conflicted; call resolveConflict() before finalizing a transaction.");
     }
+    if (tx.workspaceStatus === "conflicted") {
+      throw new Error("Resolve concurrent delete conflicts on this interaction before finalizing.");
+    }
     if (tx.done.length === 0) {
       tx.status = "finalized";
       this.#openTransactions.delete(transactionId);
+      if (this.#activeTransactionId === transactionId) this.#activeTransactionId = undefined;
+      this.#reprojectEffectiveView();
       this.notify();
       return undefined;
     }
-    const sk = new KitImpl(tx.startPlain);
+    const sk = new KitImpl(KitSchema.parse(stripNullsJsonClone(this.#committedPlain)), undefined);
     const validation = validateKitGraphDiff(sk, tx.netForward, false);
     if (!validation.ok || validation.errors.length > 0) {
       this.#freezeConflict("LocalChange", validation, { txId: transactionId, diff: tx.netForward });
@@ -9892,13 +10107,17 @@ export class KitImpl {
     }
     const diffToApply = validation.diff ?? tx.netForward;
     const backward = sk.inverseDiffFromPreApplyState(diffToApply);
+    sk.replayChangeUnchecked(diffToApply);
+    this.#committedPlain = KitSchema.parse(stripNullsJsonClone(kitGraphToPlainData(sk)));
     const squashed: KitGraphChange = { forward: diffToApply, backward, validation };
     tx.status = "finalized";
     this.#openTransactions.delete(transactionId);
+    if (this.#activeTransactionId === transactionId) this.#activeTransactionId = undefined;
     this.#historyDone.push(squashed);
     this.#historyUndone.length = 0;
     this.#appendAudit("TransactionFinalized", squashed);
     this.#scheduleBackboneNotify(squashed);
+    this.#reprojectEffectiveView();
     this.notify();
     return squashed;
   }
@@ -9909,27 +10128,10 @@ export class KitImpl {
     if (this.#phase === "frozen" || this.#conflicted) {
       throw new Error("KitImpl is conflicted; call resolveConflict() before aborting a transaction.");
     }
-    if (tx.done.length === 0) {
-      tx.status = "aborted";
-      this.#openTransactions.delete(transactionId);
-      this.notify();
-      return;
-    }
-    const validation = validateKitGraphDiff(this, tx.netBackward, false);
-    if (!validation.ok || validation.errors.length > 0) {
-      this.#freezeConflict("TxAbort", validation, { txId: transactionId, diff: tx.netBackward });
-      throw new Error(`Transaction abort validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
-    }
-    if (this.strictMode && validation.warnings.length > 0) {
-      this.#freezeConflict("TxAbort", validation, { txId: transactionId, diff: tx.netBackward });
-      throw new Error(`Transaction abort warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
-    }
-    const roll = validation.diff ?? tx.netBackward;
-    this.#applyRawKitDiff(roll);
-    this.#revision++;
-    this.#invalidateCachesTouchedByDiff(roll);
     tx.status = "aborted";
     this.#openTransactions.delete(transactionId);
+    if (this.#activeTransactionId === transactionId) this.#activeTransactionId = undefined;
+    this.#reprojectEffectiveView();
     this.#appendAudit("TransactionAborted");
     this.validationState = { ok: true, errors: [], warnings: [], infos: [] };
     this.notify();
@@ -9940,23 +10142,10 @@ export class KitImpl {
     if (!tx || tx.done.length === 0) return;
     if (this.#phase === "frozen" || this.#conflicted) throw new Error("KitImpl is conflicted.");
     const ch = tx.done.pop()!;
-    const validation = validateKitGraphDiff(this, ch.backward, false);
-    if (!validation.ok || validation.errors.length > 0) {
-      tx.done.push(ch);
-      this.#freezeConflict("TxUndo", validation, { txId: transactionId, diff: ch.backward });
-      throw new Error(`Transaction undo validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
-    }
-    if (this.strictMode && validation.warnings.length > 0) {
-      tx.done.push(ch);
-      this.#freezeConflict("TxUndo", validation, { txId: transactionId, diff: ch.backward });
-      throw new Error(`Transaction undo warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
-    }
-    const diffBack = validation.diff ?? ch.backward;
-    this.#applyRawKitDiff(diffBack);
-    this.#revision++;
-    this.#invalidateCachesTouchedByDiff(diffBack);
     tx.undone.push(ch);
     recomputeTxNet(tx);
+    this.#reprojectEffectiveView();
+    this.#revision++;
     this.#appendAudit("TxUndoApplied", ch);
     this.notify();
   }
@@ -9978,13 +10167,12 @@ export class KitImpl {
       throw new Error(`Transaction redo warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
     }
     const diffToApply = validation.diff ?? ch.forward;
-    const backward2 = this.inverseDiffFromPreApplyState(diffToApply);
-    this.#applyRawKitDiff(diffToApply);
-    this.#revision++;
-    this.#invalidateCachesTouchedByDiff(diffToApply);
-    const ch2: KitGraphChange = { forward: diffToApply, backward: backward2, validation };
+    const backward = this.inverseDiffFromPreApplyState(diffToApply);
+    const ch2: KitGraphChange = { forward: diffToApply, backward, validation, preconditions: ch.preconditions };
     tx.done.push(ch2);
     recomputeTxNet(tx);
+    this.#reprojectEffectiveView();
+    this.#revision++;
     this.#appendAudit("TxRedoApplied", ch2);
     this.notify();
   }
@@ -10016,9 +10204,71 @@ export class KitImpl {
   getOpenTransactions(): TransactionView[] {
     const out: TransactionView[] = [];
     for (const [id, tx] of this.#openTransactions) {
-      out.push({ id, status: tx.status, label: tx.label });
+      out.push({
+        id,
+        status: tx.status,
+        label: tx.label,
+        workspaceStatus: tx.workspaceStatus,
+        conflicts: tx.conflicts.length > 0 ? [...tx.conflicts] : undefined,
+      });
     }
     return out;
+  }
+
+  resolveConcurrentDeleteConflict(interactionId: string, conflictId: string, resolution: ConcurrentDeleteProposedResolution): void {
+    const tx = this.#openTransactions.get(interactionId);
+    if (!tx) throw new Error(`Unknown interaction ${interactionId}`);
+    const c = tx.conflicts.find((x) => x.id === conflictId);
+    if (!c) throw new Error(`Unknown conflict ${conflictId}`);
+    if (resolution === "discardLocalChanges") {
+      const touch = c.entityId;
+      tx.done = tx.done.filter((ch) => !collectEntityGuidsFromKitDiff(ch.forward).has(touch));
+      tx.undone.length = 0;
+      tx.conflicts = tx.conflicts.filter((x) => x.id !== conflictId);
+      if (tx.conflicts.length === 0) tx.workspaceStatus = "clean";
+      recomputeTxNet(tx);
+      this.#reprojectEffectiveView();
+      this.#revision++;
+      this.notify();
+      return;
+    }
+    const restoreDiff: KitDiff = {
+      types: {
+        updated: [
+          {
+            type: { guid: c.entityId },
+            diff: {
+              lifecycle: "active",
+              deletedAt: null,
+              deletedByUserId: null,
+              deletedByDisplayName: null,
+              deletedInChangeId: null,
+            },
+          },
+        ],
+      },
+    };
+    const validation = validateKitGraphDiff(this, restoreDiff, false);
+    if (!validation.ok || validation.errors.length > 0) {
+      throw new Error(`RestoreType validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+    }
+    const diffToApply = validation.diff ?? restoreDiff;
+    const backward = this.inverseDiffFromPreApplyState(diffToApply);
+    const restoreChange: KitGraphChange = {
+      forward: diffToApply,
+      backward,
+      validation,
+      preconditions: [],
+    };
+    tx.done.unshift(restoreChange);
+    tx.undone.length = 0;
+    tx.conflicts = tx.conflicts.filter((x) => x.id !== conflictId);
+    if (tx.conflicts.length === 0) tx.workspaceStatus = "clean";
+    recomputeTxNet(tx);
+    this.#reprojectEffectiveView();
+    this.#revision++;
+    this.#invalidateCachesTouchedByDiff(diffToApply);
+    this.notify();
   }
 
   getHistoryInfo(): HistoryInfo {
@@ -10043,7 +10293,8 @@ export class KitImpl {
     if (this.#conflicted) throw new Error("KitImpl is conflicted.");
     const ch = this.#historyDone.pop();
     if (!ch) return;
-    const validation = validateKitGraphDiff(this, ch.backward, false);
+    const sk = new KitImpl(KitSchema.parse(stripNullsJsonClone(this.#committedPlain)), undefined);
+    const validation = validateKitGraphDiff(sk, ch.backward, false);
     if (!validation.ok || validation.errors.length > 0) {
       this.#historyDone.push(ch);
       this.#freezeConflict("HistoryUndo", validation, { diff: ch.backward });
@@ -10055,13 +10306,15 @@ export class KitImpl {
       throw new Error(`History undo warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
     }
     const diffBack = validation.diff ?? ch.backward;
-    this.#applyRawKitDiff(diffBack);
+    sk.replayChangeUnchecked(diffBack);
+    this.#committedPlain = KitSchema.parse(stripNullsJsonClone(kitGraphToPlainData(sk)));
     this.#revision++;
     this.#invalidateCachesTouchedByDiff(diffBack);
     this.#historyUndone.push(ch);
     const outbound: KitGraphChange = { forward: diffBack, backward: ch.forward, validation };
     this.#scheduleBackboneNotify(outbound);
     this.#appendAudit("HistoryUndoApplied", ch);
+    this.#reprojectEffectiveView();
     this.notify();
   }
 
@@ -10069,7 +10322,8 @@ export class KitImpl {
     if (this.#conflicted) throw new Error("KitImpl is conflicted.");
     const ch = this.#historyUndone.pop();
     if (!ch) return;
-    const validation = validateKitGraphDiff(this, ch.forward, false);
+    const sk = new KitImpl(KitSchema.parse(stripNullsJsonClone(this.#committedPlain)), undefined);
+    const validation = validateKitGraphDiff(sk, ch.forward, false);
     if (!validation.ok || validation.errors.length > 0) {
       this.#historyUndone.push(ch);
       this.#freezeConflict("HistoryRedo", validation, { diff: ch.forward });
@@ -10081,14 +10335,16 @@ export class KitImpl {
       throw new Error(`History redo warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
     }
     const diffToApply = validation.diff ?? ch.forward;
-    const backward2 = this.inverseDiffFromPreApplyState(diffToApply);
-    this.#applyRawKitDiff(diffToApply);
+    const backward2 = sk.inverseDiffFromPreApplyState(diffToApply);
+    sk.replayChangeUnchecked(diffToApply);
+    this.#committedPlain = KitSchema.parse(stripNullsJsonClone(kitGraphToPlainData(sk)));
     this.#revision++;
     this.#invalidateCachesTouchedByDiff(diffToApply);
     const ch2: KitGraphChange = { forward: diffToApply, backward: backward2, validation };
     this.#historyDone.push(ch2);
     this.#scheduleBackboneNotify(ch2);
     this.#appendAudit("HistoryRedoApplied", ch2);
+    this.#reprojectEffectiveView();
     this.notify();
   }
 
@@ -10104,7 +10360,8 @@ export class KitImpl {
    * Runs `fn` with a new transaction id; finalizes on success or aborts on throw.
    */
   transactFinalized<T>(fn: (transactionId: string) => T): T {
-    const id = this.startTransaction();
+    const id = this.beginTransaction().id;
+    this.setActiveTransaction(id);
     try {
       const out = fn(id);
       this.finalizeTransaction(id);
@@ -10130,66 +10387,135 @@ export class KitImpl {
       throw new Error("KitImpl has unresolved validation conflicts; call resolveConflict() before applying further changes.");
     }
 
-    const normalized = DiffComposer.normalize(diff);
-    const validation = this.validate(normalized);
+    const rawIn = opts.inboundCommitted
+      ? this.#normalizeInboundTypeRemovalsToTombstones(diff, {
+          deletedByUserId: opts.inboundActor?.actorId,
+          deletedByDisplayName: opts.inboundActor?.actorDisplayName,
+          deletedInChangeId: opts.inboundActor?.changeId,
+        })
+      : diff;
+    const normalized = DiffComposer.normalize(rawIn);
 
-    if (!validation.ok || validation.errors.length > 0) {
-      this.#freezeConflict("LocalChange", validation, { diff: normalized });
-      throw new Error(`KitImpl validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+    if (opts.inboundCommitted) {
+      const sk = new KitImpl(KitSchema.parse(stripNullsJsonClone(this.#committedPlain)), undefined);
+      const validation = validateKitGraphDiff(sk, normalized, false);
+      if (!validation.ok || validation.errors.length > 0) {
+        this.#freezeConflict("LocalChange", validation, { diff: normalized });
+        throw new Error(`KitImpl validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+      }
+      if (this.strictMode && validation.warnings.length > 0) {
+        this.#freezeConflict("LocalChange", validation, { diff: normalized });
+        throw new Error(`KitImpl validation warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
+      }
+      const diffToApply = validation.diff ?? normalized;
+      const backward = sk.inverseDiffFromPreApplyState(diffToApply);
+      sk.replayChangeUnchecked(diffToApply);
+      this.#committedPlain = KitSchema.parse(stripNullsJsonClone(kitGraphToPlainData(sk)));
+      const change: KitGraphChange = { forward: diffToApply, backward, validation };
+      this.#reprojectEffectiveView();
+      this.#detectConcurrentDeleteConflicts(diffToApply, opts.inboundActor);
+      this.#revision++;
+      this.#invalidateCachesTouchedByDiff(diffToApply);
+      this.#historyUndone.length = 0;
+      this.#appendAudit("BackboneInbound", change);
+      this.#phase = "ready";
+      this.#conflicted = false;
+      this.#conflict = undefined;
+      this.validationState = { ok: true, errors: [], warnings: [], infos: [] };
+      this.notify();
+      return change;
     }
-
-    if (this.strictMode && validation.warnings.length > 0) {
-      this.#freezeConflict("LocalChange", validation, { diff: normalized });
-      throw new Error(`KitImpl validation warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
-    }
-
-    const diffToApply = validation.diff ?? normalized;
-    const backward = this.inverseDiffFromPreApplyState(diffToApply);
-
-    this.#applyRawKitDiff(diffToApply);
-    this.#revision++;
-    this.#invalidateCachesTouchedByDiff(diffToApply);
-
-    const change: KitGraphChange = { forward: diffToApply, backward, validation };
 
     const resolvedTxId = opts.transactionId ?? this.#activeTransactionId;
+    if (resolvedTxId && this.#activeTransactionId && this.#activeTransactionId !== resolvedTxId) {
+      throw new Error("transactionId does not match setActiveTransaction; align active transaction with the interaction receiving this change.");
+    }
+
     if (resolvedTxId) {
+      const validation = validateKitGraphDiff(this, normalized, false);
+      if (!validation.ok || validation.errors.length > 0) {
+        this.#freezeConflict("LocalChange", validation, { diff: normalized });
+        throw new Error(`KitImpl validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+      }
+      if (this.strictMode && validation.warnings.length > 0) {
+        this.#freezeConflict("LocalChange", validation, { diff: normalized });
+        throw new Error(`KitImpl validation warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
+      }
+      const diffToApply = validation.diff ?? normalized;
+      const backward = this.inverseDiffFromPreApplyState(diffToApply);
+      const preconditions: ChangePrecondition[] = [];
+      for (const g of collectEntityGuidsFromKitDiff(diffToApply)) {
+        const t = this.findType(g);
+        if (t) {
+          preconditions.push({
+            entityKind: "Type",
+            entityId: g,
+            expectedLifecycle: (t.lifecycle ?? "active") as EntityLifecycle,
+            expectedVersionHash: this.#entityVersionHashFor(g),
+          });
+        }
+      }
+      const change: KitGraphChange = { forward: diffToApply, backward, validation, preconditions: preconditions.length > 0 ? preconditions : undefined };
       const tx = this.#openTransactions.get(resolvedTxId);
       if (!tx) throw new Error(`Unknown transaction ${resolvedTxId}`);
+      if (tx.workspaceStatus === "conflicted") {
+        throw new Error("Interaction workspace has unresolved concurrent delete conflicts; resolve them before editing.");
+      }
       tx.done.push(change);
       tx.undone.length = 0;
-      tx.netForward = mergeKitGraphDiff(tx.netForward, change.forward);
-      tx.netBackward = mergeKitGraphDiff(change.backward, tx.netBackward);
+      recomputeTxNet(tx);
       for (const g of collectEntityGuidsFromKitDiff(change.forward)) {
         tx.touchedEntities.add(g);
         if (!tx.touchedVersions.has(g)) tx.touchedVersions.set(g, this.#entityVersionHashFor(g));
       }
+      this.#reprojectEffectiveView();
+      this.#revision++;
+      this.#invalidateCachesTouchedByDiff(diffToApply);
       this.#appendAudit("TxStep", change);
-    } else {
-      if (opts.inboundCommitted) {
-        this.#historyUndone.length = 0;
-        this.#appendAudit("BackboneInbound", change);
-      } else if (!opts.skipGlobalHistory) {
-        this.#historyDone.push(change);
-        this.#historyUndone.length = 0;
-        this.#appendAudit("CommittedLocal", change);
-      } else {
-        this.#appendAudit("CommittedNoHistory", change);
-      }
+      this.#phase = "ready";
+      this.#conflicted = false;
+      this.#conflict = undefined;
+      this.validationState = { ok: true, errors: [], warnings: [], infos: [] };
+      this.notify();
+      return change;
     }
 
-    const notifyBackbone = opts.notifyBackbone !== false && !resolvedTxId;
+    if (this.#openTransactions.size > 0) {
+      throw new Error("Cannot apply committed changes while interaction workspaces are open; finalize or abort them first.");
+    }
+
+    const validation = validateKitGraphDiff(this, normalized, false);
+    if (!validation.ok || validation.errors.length > 0) {
+      this.#freezeConflict("LocalChange", validation, { diff: normalized });
+      throw new Error(`KitImpl validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+    }
+    if (this.strictMode && validation.warnings.length > 0) {
+      this.#freezeConflict("LocalChange", validation, { diff: normalized });
+      throw new Error(`KitImpl validation warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
+    }
+    const diffToApply = validation.diff ?? normalized;
+    const backward = this.inverseDiffFromPreApplyState(diffToApply);
+    this.#applyRawKitDiff(diffToApply);
+    this.#committedPlain = KitSchema.parse(stripNullsJsonClone(kitGraphToPlainData(this)));
+    const change: KitGraphChange = { forward: diffToApply, backward, validation };
+    this.#revision++;
+    this.#invalidateCachesTouchedByDiff(diffToApply);
+    if (!opts.skipGlobalHistory) {
+      this.#historyDone.push(change);
+      this.#historyUndone.length = 0;
+      this.#appendAudit("CommittedLocal", change);
+    } else {
+      this.#appendAudit("CommittedNoHistory", change);
+    }
+    const notifyBackbone = opts.notifyBackbone !== false;
     if (notifyBackbone) {
       this.#scheduleBackboneNotify(change);
     }
-
     this.#phase = "ready";
     this.#conflicted = false;
     this.#conflict = undefined;
     this.validationState = { ok: true, errors: [], warnings: [], infos: [] };
-
     this.notify();
-
     return change;
   }
 
@@ -10368,8 +10694,56 @@ export class KitImpl {
   setType(type: Type, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ types: { added: [type] } }, opts ?? {});
   }
-  removeType(type: Type, opts?: KitChangeOptions): KitGraphChange {
-    return this.#applyDiff({ types: { removed: [{ guid: type.guid }] } }, opts ?? {});
+  removeType(
+    type: Type,
+    opts?: KitChangeOptions & {
+      deletedByUserId?: string;
+      deletedByDisplayName?: string;
+      deletedInChangeId?: string;
+    },
+  ): KitGraphChange {
+    const now = new Date().toISOString();
+    return this.#applyDiff(
+      {
+        types: {
+          updated: [
+            {
+              type: { guid: type.guid },
+              diff: {
+                lifecycle: "deleted",
+                deletedAt: now,
+                deletedByUserId: opts?.deletedByUserId,
+                deletedByDisplayName: opts?.deletedByDisplayName,
+                deletedInChangeId: opts?.deletedInChangeId,
+              },
+            },
+          ],
+        },
+      },
+      opts ?? {},
+    );
+  }
+
+  restoreType(type: Type, opts?: KitChangeOptions): KitGraphChange {
+    return this.#applyDiff(
+      {
+        types: {
+          updated: [
+            {
+              type: { guid: type.guid },
+              diff: {
+                lifecycle: "active",
+                deletedAt: null,
+                deletedByUserId: null,
+                deletedByDisplayName: null,
+                deletedInChangeId: null,
+              },
+            },
+          ],
+        },
+      },
+      opts ?? {},
+    );
   }
 
   addDesign(design: Design, opts?: KitChangeOptions): KitGraphChange {
@@ -11977,7 +12351,12 @@ export class KitEntity implements SynchronizedKit {
       return;
     }
     const diffToApply = v.diff ?? normalized;
-    this.#inner._applyDiff(diffToApply, { notifyBackbone: false, skipGlobalHistory: true, inboundCommitted: true });
+    this.#inner._applyDiff(diffToApply, {
+      notifyBackbone: false,
+      skipGlobalHistory: true,
+      inboundCommitted: true,
+      inboundActor: { changeId: change.id, actorId: change.actorId, actorDisplayName: change.actorDisplayName },
+    });
     this._seenLedgerIds.add(change.id);
     this._indexes.rebuild(this);
   }
@@ -12269,6 +12648,8 @@ const mergeCollectionDiff = <K extends string, T extends { guid: string }, D>(en
   };
 };
 
+const typesActiveForStructuralDiff = (types: Type[] | undefined): Type[] => (types ?? []).filter((t) => (t.lifecycle ?? "active") !== "deleted");
+
 /**
  * Computes the structural diff from `before` to `after` (both kit graphs).
  */
@@ -12285,7 +12666,7 @@ function computeKitGraphDiffBetween(before: KitImpl, after: KitImpl): KitDiff {
   if (before.homepage !== after.homepage) diff.homepage = after.homepage;
   if (before.license !== after.license) diff.license = after.license;
   if (before.preview !== after.preview) diff.preview = after.preview;
-  const typesDiff = getCollectionDiff("type", before.types ?? [], after.types ?? [], getTypeDiff);
+  const typesDiff = getCollectionDiff("type", typesActiveForStructuralDiff(before.types), typesActiveForStructuralDiff(after.types), getTypeDiff);
   if (Object.keys(typesDiff).length > 0) diff.types = typesDiff;
   const designsDiff = getCollectionDiff("design", before.designs ?? [], after.designs ?? [], getDesignDiff);
   if (Object.keys(designsDiff).length > 0) diff.designs = designsDiff;
@@ -13100,6 +13481,26 @@ export const hashType = (t: Type): string => {
   }
   w.writeString("guid");
   w.writeString(t.guid);
+  if (t.lifecycle === "deleted") {
+    w.writeString("lifecycle");
+    w.writeString("deleted");
+    if (t.deletedByUserId != null) {
+      w.writeString("deletedByUserId");
+      w.writeString(t.deletedByUserId);
+    }
+    if (t.deletedByDisplayName != null) {
+      w.writeString("deletedByDisplayName");
+      w.writeString(t.deletedByDisplayName);
+    }
+    if (t.deletedAt != null) {
+      w.writeString("deletedAt");
+      w.writeString(t.deletedAt);
+    }
+    if (t.deletedInChangeId != null) {
+      w.writeString("deletedInChangeId");
+      w.writeString(t.deletedInChangeId);
+    }
+  }
   if (t.icon != null) {
     w.writeString("icon");
     w.writeString(t.icon);
@@ -15001,6 +15402,7 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const byParent = new Map<Guid | undefined, Type[]>();
   toArray(ctx.kit.types).forEach((t) => {
+    if ((t.lifecycle ?? "active") === "deleted") return;
     const pid = t.parent?.guid as Guid | undefined;
     if (!byParent.has(pid)) byParent.set(pid, []);
     byParent.get(pid)!.push(t);
