@@ -1,13 +1,16 @@
 scalar DateTime
 
-enum DiffStatus {
-  unchanged
-  added
-  removed
-  modified
+input CoordinateInput {
+  u: Float!
+  v: Float!
 }
 
 type Coordinate {
+  u: Float!
+  v: Float!
+}
+
+input OffsetInput {
   u: Float!
   v: Float!
 }
@@ -17,7 +20,25 @@ type Offset {
   v: Float!
 }
 
+input PointInput {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+type PointDiff {
+  x: Float
+  y: Float
+  z: Float
+}
+
 type Point {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+input VectorInput {
   x: Float!
   y: Float!
   z: Float!
@@ -29,10 +50,22 @@ type Vector {
   z: Float!
 }
 
+input PlaneInput {
+  origin: PointInput!
+  xAxis: VectorInput!
+  yAxis: VectorInput!
+}
+
 type Plane {
   origin: Point!
   xAxis: Vector!
   yAxis: Vector!
+}
+
+input CameraInput {
+  position: PointInput!
+  forward: VectorInput!
+  up: VectorInput!
 }
 
 type Camera {
@@ -41,11 +74,15 @@ type Camera {
   up: Vector!
 }
 
-type Attribute {
+input AttributeInput {
   id: ID!
   key: String!
   value: String
   definition: String
+}
+
+input AttributeIdInput {
+  id: ID!
 }
 
 type AttributeDiff {
@@ -61,11 +98,19 @@ type AttributesDiff {
   added: [Attribute!]
 }
 
-type Location {
-  longitude: Float!
-  latitude: Float!
-  altitude: Float
-  attributes: [Attribute!]
+input AttributeUpdateInput {
+  attribute: AttributeIdInput!
+}
+
+type Attribute {
+  id: ID!
+  key: String!
+  value: String
+  definition: String
+}
+
+input LocationIdInput {
+  id: ID!
 }
 
 type LocationDiff {
@@ -75,11 +120,22 @@ type LocationDiff {
   attributes: AttributesDiff
 }
 
-type Author {
+type Location {
+  longitude: Float!
+  latitude: Float!
+  altitude: Float
+  attributes: [Attribute!]
+}
+
+input AuthorIdInput {
+  id: ID!
+}
+
+input AuthorInput {
   id: ID!
   name: String!
   email: String!
-  attributes: [Attribute!]
+  attributes: [AttributeInput!]
 }
 
 type AuthorDiff {
@@ -100,19 +156,33 @@ type AuthorUpdate {
   diff: AuthorDiff!
 }
 
-type FileSnapshot {
+input AuthorUpdateInput {
+  author: AuthorIdInput!
+}
+
+type Author {
+  id: ID!
+  name: String!
+  email: String!
+  attributes: [Attribute!]
+}
+
+input FileIdInput {
+  id: ID!
+}
+
+input FileInput {
   id: ID!
   name: String!
   remote: String
-  folder: Folder
+  folder: FolderIdInput
   size: Float
   hash: String
   blob: String
-  mime: String
   createdAt: DateTime
-  createdBy: Author
+  createdBy: String
   updatedAt: DateTime
-  updatedBy: Author
+  updatedBy: String
 }
 
 type FileDiff {
@@ -140,12 +210,35 @@ type FileUpdate {
   diff: FileDiff!
 }
 
-type Folder {
+input FileUpdateInput {
+  file: FileIdInput!
+}
+
+type FileSnapshot {
   id: ID!
   name: String!
-  parent: FolderId
+  remote: String
+  folder: Folder
+  size: Float
+  hash: String
+  blob: String
+  mime: String
+  createdAt: DateTime
+  createdBy: Author
+  updatedAt: DateTime
+  updatedBy: Author
+}
+
+input FolderIdInput {
+  id: ID!
+}
+
+input FolderInput {
+  id: ID!
+  name: String!
+  parent: FolderIdInput
   description: String
-  attributes: [Attribute!]
+  attributes: [AttributeInput!]
   createdAt: DateTime
   createdBy: String
   updatedAt: DateTime
@@ -175,7 +268,27 @@ type FolderUpdate {
   diff: FolderDiff!
 }
 
-type Benchmark {
+input FolderUpdateInput {
+  folder: FolderIdInput!
+}
+
+type Folder {
+  id: ID!
+  name: String!
+  parent: FolderId
+  description: String
+  attributes: [Attribute!]
+  createdAt: DateTime
+  createdBy: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+input BenchmarkIdInput {
+  id: ID!
+}
+
+input BenchmarkInput {
   id: ID!
   name: String!
   icon: String
@@ -183,7 +296,7 @@ type Benchmark {
   minExcluded: Boolean
   max: Float
   maxExcluded: Boolean
-  attributes: [Attribute!]
+  attributes: [AttributeInput!]
 }
 
 type BenchmarkDiff {
@@ -208,7 +321,26 @@ type BenchmarkUpdate {
   diff: BenchmarkDiff!
 }
 
-type Quality {
+input BenchmarkUpdateInput {
+  benchmark: BenchmarkIdInput!
+}
+
+type Benchmark {
+  id: ID!
+  name: String!
+  icon: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+  attributes: [Attribute!]
+}
+
+input QualityIdInput {
+  id: ID!
+}
+
+input QualityInput {
   id: ID!
   key: String!
   name: String!
@@ -228,8 +360,8 @@ type Quality {
   icon: String
   image: String
   unit: String
-  benchmarks: [Benchmark!]
-  attributes: [Attribute!]
+  benchmarks: [BenchmarkInput!]
+  attributes: [AttributeInput!]
 }
 
 type QualityDiff {
@@ -267,14 +399,45 @@ type QualityUpdate {
   diff: QualityDiff!
 }
 
-type Port {
+input QualityUpdateInput {
+  quality: QualityIdInput!
+}
+
+type Quality {
+  id: ID!
+  key: String!
+  name: String!
+  description: String
+  uri: String
+  kind: Int
+  folder: String
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
+  benchmarks: [Benchmark!]
+  attributes: [Attribute!]
+}
+
+input PortIdInput {
+  id: ID!
+}
+
+input PortInput {
   id: ID!
   name: String!
   description: String
   icon: String
-  maxChildren: Int
-  compatiblePorts: [PortId!]
-  attributes: [Attribute!]
+  compatiblePorts: [PortIdInput!]
+  attributes: [AttributeInput!]
 }
 
 type PortDiff {
@@ -298,12 +461,30 @@ type PortUpdate {
   diff: PortDiff!
 }
 
-type Prop {
+input PortUpdateInput {
+  port: PortIdInput!
+}
+
+type Port {
   id: ID!
-  quality: QualityId!
+  name: String!
+  description: String
+  icon: String
+  maxChildren: Int
+  compatiblePorts: [PortId!]
+  attributes: [Attribute!]
+}
+
+input PropIdInput {
+  id: ID!
+}
+
+input PropInput {
+  id: ID!
+  quality: QualityIdInput!
   value: String!
   unit: String
-  attributes: [Attribute!]
+  attributes: [AttributeInput!]
 }
 
 type PropDiff {
@@ -325,12 +506,28 @@ type PropUpdate {
   diff: PropDiff!
 }
 
-type Tag {
+input PropUpdateInput {
+  prop: PropIdInput!
+}
+
+type Prop {
+  id: ID!
+  quality: QualityId!
+  value: String!
+  unit: String
+  attributes: [Attribute!]
+}
+
+input TagIdInput {
+  id: ID!
+}
+
+input TagInput {
   id: ID!
   name: String!
   description: String
   icon: String
-  attributes: [Attribute!]
+  attributes: [AttributeInput!]
 }
 
 type TagDiff {
@@ -352,12 +549,28 @@ type TagUpdate {
   diff: TagDiff!
 }
 
-type Concept {
+input TagUpdateInput {
+  tag: TagIdInput!
+}
+
+type Tag {
   id: ID!
   name: String!
   description: String
   icon: String
   attributes: [Attribute!]
+}
+
+input ConceptIdInput {
+  id: ID!
+}
+
+input ConceptInput {
+  id: ID!
+  name: String!
+  description: String
+  icon: String
+  attributes: [AttributeInput!]
 }
 
 type ConceptDiff {
@@ -379,13 +592,29 @@ type ConceptUpdate {
   diff: ConceptDiff!
 }
 
-type Model {
+input ConceptUpdateInput {
+  concept: ConceptIdInput!
+}
+
+type Concept {
+  id: ID!
+  name: String!
+  description: String
+  icon: String
+  attributes: [Attribute!]
+}
+
+input ModelIdInput {
+  id: ID!
+}
+
+input ModelInput {
   id: ID!
   name: String
-  tags: [TagId!]
-  file: FileId!
+  tags: [TagIdInput!]
+  file: FileIdInput!
   description: String
-  attributes: [Attribute!]
+  attributes: [AttributeInput!]
 }
 
 type ModelDiff {
@@ -408,18 +637,34 @@ type ModelUpdate {
   diff: ModelDiff!
 }
 
-type Connector {
+input ModelUpdateInput {
+  model: ModelIdInput!
+}
+
+type Model {
+  id: ID!
+  name: String
+  tags: [TagId!]
+  file: FileId!
+  description: String
+  attributes: [Attribute!]
+}
+
+input ConnectorIdInput {
+  id: ID!
+}
+
+input ConnectorInput {
   id: ID!
   name: String
   t: Float!
-  point: Point!
-  direction: Vector!
+  point: PointInput!
+  direction: VectorInput!
   description: String
-  port: PortId
+  port: PortIdInput
   mandatory: Boolean
-  maxChildren: Int
-  props: [Prop!]
-  attributes: [Attribute!]
+  props: [PropInput!]
+  attributes: [AttributeInput!]
 }
 
 type ConnectorDiff {
@@ -447,9 +692,27 @@ type ConnectorUpdate {
   diff: ConnectorDiff!
 }
 
-type CoordinateDiff {
-  u: Float
-  v: Float
+input ConnectorUpdateInput {
+  connector: ConnectorIdInput!
+}
+
+type Connector {
+  id: ID!
+  name: String
+  t: Float!
+  point: Point!
+  direction: Vector!
+  description: String
+  port: PortId
+  mandatory: Boolean
+  maxChildren: Int
+  props: [Prop!]
+  attributes: [Attribute!]
+}
+
+input VecInput {
+  u: Float!
+  v: Float!
 }
 
 type VecDiff {
@@ -457,51 +720,31 @@ type VecDiff {
   v: Float
 }
 
-type PointDiff {
-  x: Float
-  y: Float
-  z: Float
+input TypeIdInput {
+  id: ID!
 }
 
-type VectorDiff {
-  x: Float
-  y: Float
-  z: Float
-}
-
-type PlaneDiff {
-  origin: PointDiff
-  xAxis: VectorDiff
-  yAxis: VectorDiff
-}
-
-type CameraDiff {
-  position: PointDiff
-  forward: VectorDiff
-  up: VectorDiff
-}
-
-type Type {
+input TypeInput {
   id: ID!
   name: String!
-  parent: TypeId
+  parent: TypeIdInput
   isAbstract: Boolean
   folder: String
-  models: [Model!]
-  connectors: [Connector!]
-  props: [Prop!]
+  models: [ModelInput!]
+  connectors: [ConnectorInput!]
+  props: [PropInput!]
   stock: Int
   virtual: Boolean
   unit: String
   createdAt: DateTime
   updatedAt: DateTime
-  location: LocationId
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
+  location: LocationIdInput
+  authors: [AuthorIdInput!]
+  concepts: [ConceptIdInput!]
   icon: String
   image: String
   description: String
-  attributes: [Attribute!]
+  attributes: [AttributeInput!]
 }
 
 type TypeDiff {
@@ -537,14 +780,45 @@ type TypeUpdate {
   diff: TypeDiff!
 }
 
-type Layer {
+input TypeUpdateInput {
+  type: TypeIdInput!
+}
+
+type Type {
+  id: ID!
+  name: String!
+  parent: TypeId
+  isAbstract: Boolean
+  folder: String
+  models: [Model!]
+  connectors: [Connector!]
+  props: [Prop!]
+  stock: Int
+  virtual: Boolean
+  unit: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  location: LocationId
+  authors: [AuthorId!]
+  concepts: [ConceptId!]
+  icon: String
+  image: String
+  description: String
+  attributes: [Attribute!]
+}
+
+input LayerIdInput {
+  id: ID!
+}
+
+input LayerInput {
   id: ID!
   path: String!
   isHidden: Boolean
   isLocked: Boolean
   color: String
   description: String
-  attributes: [Attribute!]
+  attributes: [AttributeInput!]
 }
 
 type LayerDiff {
@@ -568,21 +842,39 @@ type LayerUpdate {
   diff: LayerDiff!
 }
 
-type Piece {
+input LayerUpdateInput {
+  layer: LayerIdInput!
+}
+
+type Layer {
   id: ID!
-  name: String
-  type: TypeId
-  design: DesignId
-  plane: Plane
-  center: Coordinate
-  scale: Float
-  mirrorPlane: Plane
+  path: String!
   isHidden: Boolean
   isLocked: Boolean
   color: String
   description: String
-  props: [Prop!]
   attributes: [Attribute!]
+}
+
+input PieceIdInput {
+  id: ID!
+}
+
+input PieceInput {
+  id: ID!
+  name: String
+  type: TypeIdInput
+  design: DesignIdInput
+  plane: PlaneInput
+  center: CoordinateInput
+  scale: Float
+  mirrorPlane: PlaneInput
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  props: [PropInput!]
+  attributes: [AttributeInput!]
 }
 
 type PieceDiff {
@@ -612,15 +904,40 @@ type PieceUpdate {
   diff: PieceDiff!
 }
 
-type Group {
+input PieceUpdateInput {
+  piece: PieceIdInput!
+}
+
+type Piece {
   id: ID!
-  pieces: [PieceId!]!
+  name: String
+  type: TypeId
+  design: DesignId
+  plane: Plane
+  center: Coordinate
+  scale: Float
+  mirrorPlane: Plane
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  props: [Prop!]
+  attributes: [Attribute!]
+}
+
+input GroupIdInput {
+  id: ID!
+}
+
+input GroupInput {
+  id: ID!
+  pieces: [PieceIdInput!]!
   color: String
   name: String
   description: String
-  attributes: [Attribute!]
+  attributes: [AttributeInput!]
 }
-  
+
 type GroupDiff {
   id: String
   pieces: [PieceId!]
@@ -641,20 +958,27 @@ type GroupUpdate {
   diff: GroupDiff!
 }
 
-type Side {
-  piece: PieceId!
-  designPiece: PieceId
-  connector: ConnectorId
+input GroupUpdateInput {
+  group: GroupIdInput!
+}
+
+type Group {
+  id: ID!
+  pieces: [PieceId!]!
+  color: String
+  name: String
+  description: String
+  attributes: [Attribute!]
+}
+
+input SideInput {
+  piece: PieceIdInput!
+  designPiece: PieceIdInput
+  connector: ConnectorIdInput
 }
 
 type SideDiff {
   piece: PieceId
-  designPiece: PieceId
-  connector: ConnectorId
-}
-
-type SideId {
-  piece: PieceId!
   designPiece: PieceId
   connector: ConnectorId
 }
@@ -670,10 +994,26 @@ type SideUpdate {
   diff: SideDiff!
 }
 
-type Connection {
+type Side {
+  piece: PieceId!
+  designPiece: PieceId
+  connector: ConnectorId
+}
+
+type SideId {
+  piece: PieceId!
+  designPiece: PieceId
+  connector: ConnectorId
+}
+
+input ConnectionIdInput {
   id: ID!
-  connected: Side!
-  connecting: Side!
+}
+
+input ConnectionInput {
+  id: ID!
+  connected: SideInput!
+  connecting: SideInput!
   gap: Float
   shift: Float
   rise: Float
@@ -683,7 +1023,7 @@ type Connection {
   u: Float
   v: Float
   description: String
-  attributes: [Attribute!]
+  attributes: [AttributeInput!]
 }
 
 type ConnectionDiff {
@@ -712,9 +1052,33 @@ type ConnectionUpdate {
   diff: ConnectionDiff!
 }
 
-type Stat {
+input ConnectionUpdateInput {
+  connection: ConnectionIdInput!
+}
+
+type Connection {
   id: ID!
-  quality: QualityId!
+  connected: Side!
+  connecting: Side!
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  description: String
+  attributes: [Attribute!]
+}
+
+input StatIdInput {
+  id: ID!
+}
+
+input StatInput {
+  id: ID!
+  quality: QualityIdInput!
   unit: String
   min: Float
   minExcluded: Boolean
@@ -743,29 +1107,47 @@ type StatUpdate {
   diff: StatDiff!
 }
 
-type Design {
+input StatUpdateInput {
+  stat: StatIdInput!
+}
+
+type Stat {
+  id: ID!
+  quality: QualityId!
+  unit: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+}
+
+input DesignIdInput {
+  id: ID!
+}
+
+input DesignInput {
   id: ID!
   name: String!
-  parent: DesignId
+  parent: DesignIdInput
   isAbstract: Boolean
   folder: String
-  pieces: [Piece!]
-  connections: [Connection!]
-  stats: [Stat!]
-  props: [Prop!]
-  layers: [Layer!]
-  activeLayer: LayerId
-  groups: [Group!]
+  pieces: [PieceInput!]
+  connections: [ConnectionInput!]
+  stats: [StatInput!]
+  props: [PropInput!]
+  layers: [LayerInput!]
+  activeLayer: LayerIdInput
+  groups: [GroupInput!]
   canScale: Boolean
   canMirror: Boolean
   unit: String
-  location: LocationId
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
+  location: LocationIdInput
+  authors: [AuthorIdInput!]
+  concepts: [ConceptIdInput!]
   icon: String
   image: String
   description: String
-  attributes: [Attribute!]
+  attributes: [AttributeInput!]
   createdAt: DateTime
   updatedAt: DateTime
 }
@@ -806,45 +1188,35 @@ type DesignUpdate {
   diff: DesignDiff!
 }
 
-type DesignChange {
-  forward: DesignDiff!
-  backward: DesignDiff!
+input DesignUpdateInput {
+  design: DesignIdInput!
 }
 
-type KitDiff {
-  hash: String!
-  last: KitDiff
-  name: String
-  version: String
-  remote: String
-  homepage: String
-  license: String
-  preview: String
+type Design {
+  id: ID!
+  name: String!
+  parent: DesignId
+  isAbstract: Boolean
+  folder: String
+  pieces: [Piece!]
+  connections: [Connection!]
+  stats: [Stat!]
+  props: [Prop!]
+  layers: [Layer!]
+  activeLayer: LayerId
+  groups: [Group!]
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: LocationId
+  authors: [AuthorId!]
+  concepts: [ConceptId!]
   icon: String
   image: String
   description: String
+  attributes: [Attribute!]
   createdAt: DateTime
   updatedAt: DateTime
-  types: TypesDiff
-  designs: DesignsDiff
-  tags: TagsDiff
-  concepts: ConceptsDiff
-  ports: PortsDiff
-  qualities: QualitiesDiff
-  authors: AuthorsDiffInput
-  files: FilesDiff
-  folders: FoldersDiff
-  attributes: AttributesDiff
-}
-
-type KitChange {
-  forward: KitDiff!
-  backward: KitDiff!
-  author: Author!
-  hash: String!
-  parent: 
-  timestamp: DateTime!
-  attributes: Attributes!
 }
 
 input KitInput {
@@ -872,8 +1244,118 @@ input KitInput {
   updatedAt: DateTime
 }
 
+input KitIdInput {
+  id: ID!
+}
+
+type KitDiff {
+  hash: String!
+  last: KitDiff
+  name: String
+  version: String
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  types: TypesDiff
+  designs: DesignsDiff
+  tags: TagsDiff
+  concepts: ConceptsDiff
+  ports: PortsDiff
+  qualities: QualitiesDiff
+  files: FilesDiff
+  folders: FoldersDiff
+  attributes: AttributesDiff
+}
+
+enum KitOperationKind {
+  START_SESSION
+  END_SESSION
+  UNDO
+  REDO
+  NEW_INTERACTION
+  SET_ACTIVE_INTERACTION
+  SELECT_
+  ACTIVE_INTERACTION_UNDO
+  ACTIVE_INTERACTION_REDO
+  CREATE_FIXED_PIECE
+  CREATE_FIXED_PIECES
+  CREATE_CONNECTED_PIECE
+  CREATE_HANGING_PIECES
+  DELETE_FIXED_PIECE
+  DELETE_CONNECTED_PIECE
+  DELETE_FIXED_PIECES
+  DELETE_CONNECTED_PIECES
+  DELETE_PIECES
+  RENAME_PIECE
+  UPDATE_PIECE_DESCRIPTION
+  DRAG_PIECE
+  DRAG_PIECES
+  MOVE_CONNECTED_PIECE
+  MOVE_CONNECTED_PIECES
+  MOVE_FIXED_PIECE
+  MOVE_FIXED_PIECES
+  MOVE_PIECE
+  MOVE_PIECES
+  FIX_PIECE
+  CHANGE_PIECE_TO_TYPE
+  CHANGE_PIECES_TO_TYPE
+  FLATTEN_DESIGN
+}
+
+interface KitOperatio {
+  client: String!
+  timestamp: DateTime!
+}
+
+input StartSessionInput {
+
+}
+
+type StartSessionOperation implements KitOperation {
+  timeout: Float!
+  author: Author!
+  timestamp: DateTime!
+  input: StartSessionInput!
+}
+
+interface KitChange implements KitOperation {
+  hash: String!
+  forward: KitDiff!
+  backward: KitDiff!
+  author: Author!
+  timestamp: DateTime!
+  attributes: Attributes!
+}
+
+input CreateFixedPieceInput {
+  name: String
+  description: String
+  type: TypeIdInput
+  center: CoordinateInput
+  plane: PlaneInput
+  designPiece: DesignIdInput
+  attributes: [AttributeInput!]
+}
+
+type CreateFixedPieceOperation implements KitOperation {
+  hash: String!
+  forward: KitDiff!
+  backward: KitDiff!
+  author: Author!
+  timestamp: DateTime!
+  attributes: Attributes!
+  input: CreateFixedPieceInput!
+}
+
 type KitSnapshot {
   id: ID!
+  hash: String!
   name: String!
   description: String
   release: String
@@ -898,50 +1380,18 @@ type KitSnapshot {
   designs: [DesignSnapshot!]
 }
 
+type KitSession {
+  id: ID!
+  started: DateTime!
+  lastActivity: DateTime!
+  operations: [KitOperation!]
+}
+
 type Kit {
   id: ID!
   snapshot: KitSnapshot!
-}
-
-
-type KitDiff {
-  name: String
-  version: String
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  types: TypesDiff
-  designs: DesignsDiff
-  tags: TagsDiff
-  concepts: ConceptsDiff
-  ports: PortsDiff
-  qualities: QualitiesDiff
-  authors: AuthorsDiff
-  files: FilesDiff
-  folders: FoldersDiff
-  attributes: AttributesDiff
-}
-
-type KitsDiff {
-  removed: [KitId!]
-  updated: [KitUpdate!]
-  added: [Kit!]
-}
-
-type KitUpdate {
-  kit: KitId!
-  diff: KitDiff!
-}
-
-type KitChange {
-  forward: KitDiff!
-  backward: KitDiff!
+  operations: [KitOperation!]
+  sessions: [KitSession!]
 }
 
 type Query {
@@ -949,847 +1399,6 @@ type Query {
 }
 
 type Mutation {
-  applyKitDiff(id: ID!, diff: KitDiffInput!): Kit
-}
-
-input CoordinateInput {
-  u: Float!
-  v: Float!
-}
-
-input VecInput {
-  u: Float!
-  v: Float!
-}
-
-input PointInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input VectorInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input PlaneInput {
-  origin: PointInput!
-  xAxis: VectorInput!
-  yAxis: VectorInput!
-}
-
-input CameraInput {
-  position: PointInput!
-  forward: VectorInput!
-  up: VectorInput!
-}
-
-input AttributeInput {
-  id: ID!
-  key: String!
-  value: String
-  definition: String
-}
-
-input AttributeIdInput {
-  id: ID!
-}
-
-input LocationIdInput {
-  id: ID!
-}
-
-input AuthorIdInput {
-  id: ID!
-}
-
-input FileIdInput {
-  id: ID!
-}
-
-input FolderIdInput {
-  id: ID!
-}
-
-input BenchmarkIdInput {
-  id: ID!
-}
-
-input QualityIdInput {
-  id: ID!
-}
-
-input PortIdInput {
-  id: ID!
-}
-
-input PropIdInput {
-  id: ID!
-}
-
-input ModelIdInput {
-  id: ID!
-}
-
-input ConnectorIdInput {
-  id: ID!
-}
-
-input TypeIdInput {
-  id: ID!
-}
-
-input LayerIdInput {
-  id: ID!
-}
-
-input PieceIdInput {
-  id: ID!
-}
-
-input GroupIdInput {
-  id: ID!
-}
-
-input ConnectionIdInput {
-  id: ID!
-}
-
-input StatIdInput {
-  id: ID!
-}
-
-input DesignIdInput {
-  id: ID!
-}
-
-input KitIdInput {
-  id: ID!
-}
-
-input TagIdInput {
-  id: ID!
-}
-
-input ConceptIdInput {
-  id: ID!
-}
-
-input AttributesDiffInput {
-  removed: [AttributeIdInput!]
-  updated: [AttributeUpdateInput!]
-  added: [AttributeInput!]
-}
-
-input AttributeUpdateInput {
-  attribute: AttributeIdInput!
-  diff: AttributeDiffInput!
-}
-
-input AttributeDiffInput {
-  id: String
-  key: String
-  value: String
-  definition: String
-}
-
-input AuthorInput {
-  id: ID!
-  name: String!
-  email: String!
-  attributes: [AttributeInput!]
-}
-
-input AuthorDiffInput {
-  id: String
-  name: String
-  email: String
-  attributes: AttributesDiffInput
-}
-
-input AuthorsDiffInput {
-  removed: [AuthorIdInput!]
-  updated: [AuthorUpdateInput!]
-  added: [AuthorInput!]
-}
-
-input AuthorUpdateInput {
-  author: AuthorIdInput!
-  diff: AuthorDiffInput!
-}
-
-input FileInput {
-  id: ID!
-  name: String!
-  remote: String
-  folder: FolderIdInput
-  size: Float
-  hash: String
-  blob: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-input FileDiffInput {
-  id: String
-  name: String
-  remote: String
-  folder: FolderIdInput
-  size: Float
-  hash: String
-  blob: String
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-input FilesDiffInput {
-  removed: [FileIdInput!]
-  updated: [FileUpdateInput!]
-  added: [FileInput!]
-}
-
-input FileUpdateInput {
-  file: FileIdInput!
-  diff: FileDiffInput!
-}
-
-input FolderInput {
-  id: ID!
-  name: String!
-  parent: FolderIdInput
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-input FolderDiffInput {
-  id: String
-  name: String
-  parent: FolderIdInput
-  description: String
-  attributes: AttributesDiffInput
-  createdAt: DateTime
-  createdBy: String
-  updatedAt: DateTime
-  updatedBy: String
-}
-
-input FoldersDiffInput {
-  removed: [FolderIdInput!]
-  updated: [FolderUpdateInput!]
-  added: [FolderInput!]
-}
-
-input FolderUpdateInput {
-  folder: FolderIdInput!
-  diff: FolderDiffInput!
-}
-
-input BenchmarkInput {
-  id: ID!
-  name: String!
-  icon: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-  attributes: [AttributeInput!]
-}
-
-input BenchmarkDiffInput {
-  id: String
-  name: String
-  icon: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-  attributes: AttributesDiffInput
-}
-
-input BenchmarksDiffInput {
-  removed: [BenchmarkIdInput!]
-  updated: [BenchmarkUpdateInput!]
-  added: [BenchmarkInput!]
-}
-
-input BenchmarkUpdateInput {
-  benchmark: BenchmarkIdInput!
-  diff: BenchmarkDiffInput!
-}
-
-input QualityInput {
-  id: ID!
-  key: String!
-  name: String!
-  description: String
-  uri: String
-  kind: Int
-  folder: String
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-  benchmarks: [BenchmarkInput!]
-  attributes: [AttributeInput!]
-}
-
-input QualityDiffInput {
-  id: String
-  key: String
-  name: String
-  description: String
-  uri: String
-  kind: Int
-  folder: String
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-  benchmarks: BenchmarksDiffInput
-  attributes: AttributesDiffInput
-}
-
-input QualitiesDiffInput {
-  removed: [QualityIdInput!]
-  updated: [QualityUpdateInput!]
-  added: [QualityInput!]
-}
-
-input QualityUpdateInput {
-  quality: QualityIdInput!
-  diff: QualityDiffInput!
-}
-
-input PortInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  compatiblePorts: [PortIdInput!]
-  attributes: [AttributeInput!]
-}
-
-input PortDiffInput {
-  id: String
-  name: String
-  description: String
-  icon: String
-  compatiblePorts: [PortIdInput!]
-  attributes: AttributesDiffInput
-}
-
-input PortsDiffInput {
-  removed: [PortIdInput!]
-  updated: [PortUpdateInput!]
-  added: [PortInput!]
-}
-
-input PortUpdateInput {
-  port: PortIdInput!
-  diff: PortDiffInput!
-}
-
-input PropInput {
-  id: ID!
-  quality: QualityIdInput!
-  value: String!
-  unit: String
-  attributes: [AttributeInput!]
-}
-
-input PropDiffInput {
-  id: String
-  quality: QualityIdInput
-  value: String
-  unit: String
-  attributes: AttributesDiffInput
-}
-
-input PropsDiffInput {
-  removed: [PropIdInput!]
-  updated: [PropUpdateInput!]
-  added: [PropInput!]
-}
-
-input PropUpdateInput {
-  prop: PropIdInput!
-  diff: PropDiffInput!
-}
-
-input TagInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  attributes: [AttributeInput!]
-}
-
-input TagDiffInput {
-  id: String
-  name: String
-  description: String
-  icon: String
-  attributes: AttributesDiffInput
-}
-
-input TagsDiffInput {
-  removed: [TagIdInput!]
-  updated: [TagUpdateInput!]
-  added: [TagInput!]
-}
-
-input TagUpdateInput {
-  tag: TagIdInput!
-  diff: TagDiffInput!
-}
-
-input ConceptInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  attributes: [AttributeInput!]
-}
-
-input ConceptDiffInput {
-  id: String
-  name: String
-  description: String
-  icon: String
-  attributes: AttributesDiffInput
-}
-
-input ConceptsDiffInput {
-  removed: [ConceptIdInput!]
-  updated: [ConceptUpdateInput!]
-  added: [ConceptInput!]
-}
-
-input ConceptUpdateInput {
-  concept: ConceptIdInput!
-  diff: ConceptDiffInput!
-}
-
-input ModelInput {
-  id: ID!
-  name: String
-  tags: [TagIdInput!]
-  file: FileIdInput!
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input ModelDiffInput {
-  id: String
-  name: String
-  tags: [TagIdInput!]
-  file: FileIdInput
-  description: String
-  attributes: AttributesDiffInput
-}
-
-input ModelsDiffInput {
-  removed: [ModelIdInput!]
-  updated: [ModelUpdateInput!]
-  added: [ModelInput!]
-}
-
-input ModelUpdateInput {
-  model: ModelIdInput!
-  diff: ModelDiffInput!
-}
-
-input ConnectorInput {
-  id: ID!
-  name: String
-  t: Float!
-  point: PointInput!
-  direction: VectorInput!
-  description: String
-  port: PortIdInput
-  mandatory: Boolean
-  props: [PropInput!]
-  attributes: [AttributeInput!]
-}
-
-input ConnectorDiffInput {
-  id: String
-  name: String
-  t: Float
-  point: PointInput
-  direction: VectorInput
-  description: String
-  port: PortIdInput
-  mandatory: Boolean
-  props: PropsDiffInput
-  attributes: AttributesDiffInput
-}
-
-input ConnectorsDiffInput {
-  removed: [ConnectorIdInput!]
-  updated: [ConnectorUpdateInput!]
-  added: [ConnectorInput!]
-}
-
-input ConnectorUpdateInput {
-  connector: ConnectorIdInput!
-  diff: ConnectorDiffInput!
-}
-
-input TypeInput {
-  id: ID!
-  name: String!
-  parent: TypeIdInput
-  isAbstract: Boolean
-  folder: String
-  models: [ModelInput!]
-  connectors: [ConnectorInput!]
-  props: [PropInput!]
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationIdInput
-  authors: [AuthorIdInput!]
-  concepts: [ConceptIdInput!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input TypeDiffInput {
-  name: String
-  parent: TypeIdInput
-  isAbstract: Boolean
-  folder: String
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationIdInput
-  icon: String
-  image: String
-  description: String
-  authors: [AuthorIdInput!]
-  concepts: [ConceptIdInput!]
-  models: ModelsDiffInput
-  connectors: ConnectorsDiffInput
-  props: PropsDiffInput
-  attributes: AttributesDiffInput
-}
-
-input TypesDiffInput {
-  removed: [TypeIdInput!]
-  updated: [TypeUpdateInput!]
-  added: [TypeInput!]
-}
-
-input TypeUpdateInput {
-  type: TypeIdInput!
-  diff: TypeDiffInput!
-}
-
-input LayerInput {
-  id: ID!
-  path: String!
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input LayerDiffInput {
-  id: String
-  path: String
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  attributes: AttributesDiffInput
-}
-
-input LayersDiffInput {
-  removed: [LayerIdInput!]
-  updated: [LayerUpdateInput!]
-  added: [LayerInput!]
-}
-
-input LayerUpdateInput {
-  layer: LayerIdInput!
-  diff: LayerDiffInput!
-}
-
-input PieceInput {
-  id: ID!
-  name: String
-  type: TypeIdInput
-  design: DesignIdInput
-  plane: PlaneInput
-  center: CoordinateInput
-  scale: Float
-  mirrorPlane: PlaneInput
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  props: [PropInput!]
-  attributes: [AttributeInput!]
-}
-
-input PieceDiffInput {
-  name: String
-  type: TypeIdInput
-  design: DesignIdInput
-  plane: PlaneInput
-  center: CoordinateInput
-  scale: Float
-  mirrorPlane: PlaneInput
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  props: PropsDiffInput
-  attributes: AttributesDiffInput
-}
-
-input PiecesDiffInput {
-  removed: [PieceIdInput!]
-  updated: [PieceUpdateInput!]
-  added: [PieceInput!]
-}
-
-input PieceUpdateInput {
-  piece: PieceIdInput!
-  diff: PieceDiffInput!
-}
-
-input GroupInput {
-  id: ID!
-  pieces: [PieceIdInput!]!
-  color: String
-  name: String
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input GroupDiffInput {
-  id: String
-  pieces: [PieceIdInput!]
-  color: String
-  name: String
-  description: String
-  attributes: AttributesDiffInput
-}
-
-input GroupsDiffInput {
-  removed: [GroupIdInput!]
-  updated: [GroupUpdateInput!]
-  added: [GroupInput!]
-}
-
-input GroupUpdateInput {
-  group: GroupIdInput!
-  diff: GroupDiffInput!
-}
-
-input SideInput {
-  piece: PieceIdInput!
-  designPiece: PieceIdInput
-  connector: ConnectorIdInput
-}
-
-input ConnectionInput {
-  id: ID!
-  connected: SideInput!
-  connecting: SideInput!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input SideDiffInput {
-  piece: PieceIdInput
-  designPiece: PieceIdInput
-  connector: ConnectorIdInput
-}
-
-input ConnectionDiffInput {
-  connected: SideDiffInput
-  connecting: SideDiffInput
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: AttributesDiffInput
-}
-
-input ConnectionsDiffInput {
-  removed: [ConnectionIdInput!]
-  updated: [ConnectionUpdateInput!]
-  added: [ConnectionInput!]
-}
-
-input ConnectionUpdateInput {
-  connection: ConnectionIdInput!
-  diff: ConnectionDiffInput!
-}
-
-input StatInput {
-  id: ID!
-  quality: QualityIdInput!
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-}
-
-input StatDiffInput {
-  id: String
-  quality: QualityIdInput
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-}
-
-input StatsDiffInput {
-  removed: [StatIdInput!]
-  updated: [StatUpdateInput!]
-  added: [StatInput!]
-}
-
-input StatUpdateInput {
-  stat: StatIdInput!
-  diff: StatDiffInput!
-}
-
-input DesignInput {
-  id: ID!
-  name: String!
-  parent: DesignIdInput
-  isAbstract: Boolean
-  folder: String
-  pieces: [PieceInput!]
-  connections: [ConnectionInput!]
-  stats: [StatInput!]
-  props: [PropInput!]
-  layers: [LayerInput!]
-  activeLayer: LayerIdInput
-  groups: [GroupInput!]
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationIdInput
-  authors: [AuthorIdInput!]
-  concepts: [ConceptIdInput!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input DesignDiffInput {
-  name: String
-  parent: DesignIdInput
-  isAbstract: Boolean
-  folder: String
-  activeLayer: LayerIdInput
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationIdInput
-  icon: String
-  image: String
-  description: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  pieces: PiecesDiffInput
-  connections: ConnectionsDiffInput
-  stats: StatsDiffInput
-  props: PropsDiffInput
-  layers: LayersDiffInput
-  groups: GroupsDiffInput
-  authors: AuthorsDiffInput
-  attributes: AttributesDiffInput
-}
-
-input DesignsDiffInput {
-  removed: [DesignIdInput!]
-  updated: [DesignUpdateInput!]
-  added: [DesignInput!]
-}
-
-input DesignUpdateInput {
-  design: DesignIdInput!
-  diff: DesignDiffInput!
-}
-
-input KitDiffInput {
-  name: String
-  version: String
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  types: TypesDiffInput
-  designs: DesignsDiffInput
-  tags: TagsDiffInput
-  concepts: ConceptsDiffInput
-  ports: PortsDiffInput
-  qualities: QualitiesDiffInput
-  authors: AuthorsDiffInput
-  files: FilesDiffInput
-  folders: FoldersDiffInput
-  attributes: AttributesDiffInput
+  newInteraction(input: NewInteractionInput!): NewInteractionOperation!
+  createFixedPiece(input: CreateFixedPieceInput!): CreateFixedPieceOperation!
 }
