@@ -14394,6 +14394,13 @@ mod kit_diff_validation {
 } // 📦Kit Diff Validation
 pub use kit_diff_validation::*;
 
+mod kit_graph {
+    // 📇Kit Graph Session
+    // Parallel to TypeScript `commitKitGraphChange`: `KitGraphChange`, backbone hook, mutex-backed session, transactions, undo stacks.
+    include!("kit_graph.inc.rs");
+}
+pub use kit_graph::*;
+
 mod tests {
     // 🧪Tests
     // 🏘️Tests

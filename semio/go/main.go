@@ -28,6 +28,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"archive/zip"
 	"database/sql"
@@ -1817,7 +1818,12 @@ func NewDevKit(kit Kit) *DevKit { return &DevKit{kit: kit} }
 func (d *DevKit) Kit() *Kit { return &d.kit }
 
 // ▶️Apply applies a KitDiff to the underlying Kit in place.
-func (d *DevKit) Apply(diff *KitDiff) { ApplyKitDiff(&d.kit, diff) }
+func (d *DevKit) Apply(diff *KitDiff) {
+	if diff == nil {
+		return
+	}
+	_, _ = CommitKitGraphChange(&d.kit, *diff, &KitCommitOptions{SkipGlobalHistory: true, NotifyBackbone: KitNotifyDisable()})
+}
 
 // 📥ImportTransport imports a TransportKit by computing and applying the diff.
 func (d *DevKit) ImportTransport(t *TransportKit) error {
@@ -1848,7 +1854,12 @@ func NewLocalKit(kit Kit) *LocalKit { return &LocalKit{kit: kit} }
 func (l *LocalKit) Kit() *Kit { return &l.kit }
 
 // ▶️Apply applies a KitDiff to the underlying Kit in place.
-func (l *LocalKit) Apply(diff *KitDiff) { ApplyKitDiff(&l.kit, diff) }
+func (l *LocalKit) Apply(diff *KitDiff) {
+	if diff == nil {
+		return
+	}
+	_, _ = CommitKitGraphChange(&l.kit, *diff, &KitCommitOptions{SkipGlobalHistory: true, NotifyBackbone: KitNotifyDisable()})
+}
 
 // 📥ImportTransport imports a TransportKit by computing and applying the diff.
 func (l *LocalKit) ImportTransport(t *TransportKit) error {
@@ -1879,7 +1890,12 @@ func NewRemoteKit(kit Kit) *RemoteKit { return &RemoteKit{kit: kit} }
 func (r *RemoteKit) Kit() *Kit { return &r.kit }
 
 // ▶️Apply applies a KitDiff to the underlying Kit in place.
-func (r *RemoteKit) Apply(diff *KitDiff) { ApplyKitDiff(&r.kit, diff) }
+func (r *RemoteKit) Apply(diff *KitDiff) {
+	if diff == nil {
+		return
+	}
+	_, _ = CommitKitGraphChange(&r.kit, *diff, &KitCommitOptions{SkipGlobalHistory: true, NotifyBackbone: KitNotifyDisable()})
+}
 
 // 📥ImportTransport imports a TransportKit by computing and applying the diff.
 func (r *RemoteKit) ImportTransport(t *TransportKit) error {
@@ -1924,6 +1940,18 @@ type Kit struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 	CreatedAt   string      `json:"createdAt,omitempty"`
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
+
+	// Runtime session (json:"-"). Graph mutation APIs use *Kit.
+	graphMu            sync.Mutex                                 `json:"-"`
+	backbone           Backbone                                   `json:"-"`
+	strictMode         bool                                       `json:"-"`
+	conflicted         bool                                       `json:"-"`
+	conflictErrors     []KitDiffValidationNote                    `json:"-"`
+	conflictWarnings   []KitDiffValidationNote                    `json:"-"`
+	openTransactions   map[string]*kitOpenTransaction             `json:"-"`
+	historyPast        []KitGraphChange                           `json:"-"`
+	historyFuture      []KitGraphChange                           `json:"-"`
+	flattenMerkle      map[string]map[string]FlatMerkleCacheEntry `json:"-"`
 }
 
 // 🔏KitDiff represents a partial update to a kit's name, version, entities or metadata.
@@ -13283,8 +13311,11 @@ func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
 	return result
 }
 
-// 🌤️FlattenDesign returns the canonical SemioReport with forward/backward DesignChange (matches TypeScript flattenDesign).
+// 🌤️FlattenDesign returns the canonical SemioReport with forward/backward DesignChange (merkle-cached on *Kit).
 func FlattenDesign(kit *Kit, designGuid string) SemioReport[DesignChange] {
+	if kit == nil {
+		return semioReportErr[DesignChange]([]OperationNote{{Message: "nil kit"}})
+	}
 	design := FindDesignInKit(kit, designGuid)
 	if design == nil {
 		return semioReportErr[DesignChange]([]OperationNote{{Code: "flatten.design-not-found", Message: fmt.Sprintf("Design %q not found in kit", designGuid)}})
@@ -13299,10 +13330,13 @@ func FlattenDesign(kit *Kit, designGuid string) SemioReport[DesignChange] {
 			Errors:   []OperationNote{},
 		}
 	}
-	before := deepCloneDesign(*design)
-	forward := FlattenDesignDiff(kit, designGuid)
-	backward := inverseDesignDiff(before, forward)
-	return semioReportOk(DesignChange{Forward: forward, Backward: backward})
+	kit.graphMu.Lock()
+	kit.ensureGraphMaps()
+	prev := kit.flattenMerkle[designGuid]
+	rep, next := FlattenDesignCached(kit, designGuid, prev)
+	kit.flattenMerkle[designGuid] = next
+	kit.graphMu.Unlock()
+	return rep
 }
 
 func planesEqualApprox(a, b Plane) bool {

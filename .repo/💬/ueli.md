@@ -262,6 +262,18 @@ There are five different kind of kits:
 - ArchiveKit (a static zipped local kit)
 - RemoteKit (a synchronized websocket connection to a semio/hub which uses postgres for kit data and buckets for files)
 
+There MUST be an in-memory `Kit` class which has everything. It is non-blocking, non-parallel.
+A `Kit` can optionally have an optional synchronized `Backbone` (LocalKitBackbone, DevKitBackbone, RemoteKitBackbone).
+A `Backbone` is a unified API where `changed(change:KitChange)` is a callback than can happen anytime.
+All CRUDs happen centrally `change(diff:KitDiff)`. Every change computes the inverse `KitDiff` and bundles it to a `KitChange` from the current state and the diff. Then the diff is applied instantly, and when a backbone is present, it is queued to be applied in the backbone (non-blocking).
+When the backbone is changing (e.g. by other process, user, ai, etc) then it is applied to in-memory kit.
+Before a `KitDiff` is applied to the kit, it is validated. The validation has access to the kit and the diff and produces errors, warnings and infos. If an error is present, then the in-memory kit is immutable until the conflict is resolved. If strict mode is enabled, then warnings also need conflict resolution.
+Clients of the class `Kit` (such as front-end or backend code) have no access to directly call `change(diff:KitDiff)` but they MUST use the tested functions that semio provides (e.g. piece.delete() which automatically deletes itself but also fixes then child pieces and deletes all stale connections - currently algorithm deletePiecesAndConnectionInDesign)
+You MUST migrate all semio functions into methods of the according classes.
+Add transaction support. A kit can not just have one active transaction but multiple at the same time. A transaction can be started, aborted or finalized. Use a transaction stack of `KitChange`. A transaction has undo/redo support. When a transaction is finalized all changes are squashed into a single change and added ontop of the history stack. When aborted then all backward diffs from all changes are squashed and the backward diff is applied to effectively revert the forward diffs.
+Add history stack with undo/redo of finalized transactions.
+Inbuilt maximum optimization (e.g. hashing for computing fixed planes and centers)
+
 All synchronized kits MUST have the same API. They MUST support the import and export of static kits.
 
 All cruds on synchronized kits MUST use exclusively diffs.

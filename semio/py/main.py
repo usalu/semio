@@ -37,6 +37,7 @@ import shutil
 import struct
 import sys
 import tempfile
+import threading
 import time
 import typing
 import urllib
@@ -4733,6 +4734,24 @@ class KitOutput(
     concepts: list[str] = pydantic.Field(default_factory=list)
 
 
+@dataclasses.dataclass
+class KitGraphChange:
+    """🔄Bidirectional kit graph mutation with validation snapshot (TypeScript KitChange parity)."""
+
+    forward: dict
+    backward: dict
+    validation: dict
+
+
+@dataclasses.dataclass
+class _KitGraphTxn:
+    """Open transaction: snapshot at start plus undo/redo stacks."""
+
+    start_snapshot: dict
+    steps: list[KitGraphChange] = dataclasses.field(default_factory=list)
+    redo: list[KitGraphChange] = dataclasses.field(default_factory=list)
+
+
 class Kit(
     KitNameField,
     KitVersionField,
@@ -4760,6 +4779,17 @@ class Kit(
     designs: list[Design] = pydantic.Field(default_factory=list)
     qualities: list[Quality] = pydantic.Field(default_factory=list)
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
+
+    _graph_lock: threading.Lock = pydantic.PrivateAttr(default_factory=threading.Lock)
+    _backbone: typing.Callable[..., typing.Any] | None = pydantic.PrivateAttr(default=None)
+    _strict_mode: bool = pydantic.PrivateAttr(default=False)
+    _conflicted: bool = pydantic.PrivateAttr(default=False)
+    _conflict_errors: list[typing.Any] = pydantic.PrivateAttr(default_factory=list)
+    _conflict_warnings: list[typing.Any] = pydantic.PrivateAttr(default_factory=list)
+    _open_transactions: dict[str, _KitGraphTxn] = pydantic.PrivateAttr(default_factory=dict)
+    _history_past: list[KitGraphChange] = pydantic.PrivateAttr(default_factory=list)
+    _history_future: list[KitGraphChange] = pydantic.PrivateAttr(default_factory=list)
+    _flatten_merkle: dict[str, dict[str, dict]] = pydantic.PrivateAttr(default_factory=dict)
 
     @property
     def concepts(self: "Kit") -> list[str]:
@@ -5442,6 +5472,137 @@ class Kit(
         return result
 
     # #endregion 🎠Filter
+
+    # #region 🔄Kit graph mutations (TypeScript Kit parity)
+
+    def set_backbone(self: "Kit", backbone: typing.Callable[..., typing.Any] | None) -> None:
+        """📎Attach optional backbone notified after committed graph changes."""
+        self._backbone = backbone
+
+    def set_strict_mode(self: "Kit", strict: bool) -> None:
+        """When true, validation warnings are treated like errors on commit/finalize."""
+        self._strict_mode = strict
+
+    def clear_conflict(self: "Kit") -> None:
+        """Clears conflict lock after handling validation errors; does not mutate kit data."""
+        self._conflicted = False
+        self._conflict_errors.clear()
+        self._conflict_warnings.clear()
+
+    def start_transaction(self: "Kit") -> str:
+        """Opens a transaction; record steps via commit_kit_graph_change with transaction_id."""
+        with self._graph_lock:
+            if self._conflicted:
+                raise ValueError("Kit has unresolved validation conflicts; call clear_conflict() before starting a transaction.")
+            tid = str(uuid.uuid4())
+            self._open_transactions[tid] = _KitGraphTxn(start_snapshot=copy.deepcopy(_kit_graph_plain_dict(self)))
+            return tid
+
+    def abort_transaction(self: "Kit", transaction_id: str) -> None:
+        """Undo all steps in transaction order (reverse) and remove the transaction."""
+        with self._graph_lock:
+            tx = self._open_transactions.get(transaction_id)
+            if tx is None:
+                raise ValueError(f"Unknown transaction {transaction_id}")
+            if self._conflicted:
+                raise ValueError("Kit is conflicted; call clear_conflict() before aborting a transaction.")
+            for i in range(len(tx.steps) - 1, -1, -1):
+                _apply_kit_graph_diff_to_model(self, tx.steps[i].backward)
+            del self._open_transactions[transaction_id]
+            self._conflicted = False
+            self._conflict_errors.clear()
+            self._conflict_warnings.clear()
+
+    def finalize_transaction(self: "Kit", transaction_id: str) -> KitGraphChange:
+        """Squash net diff from transaction start to current kit; push one change onto global history."""
+        with self._graph_lock:
+            if self._conflicted:
+                raise ValueError("Kit is conflicted; call clear_conflict() before finalizing a transaction.")
+            tx = self._open_transactions.get(transaction_id)
+            if tx is None:
+                raise ValueError(f"Unknown transaction {transaction_id}")
+            start = copy.deepcopy(tx.start_snapshot)
+            current = copy.deepcopy(_kit_graph_plain_dict(self))
+            forward_raw = getKitDiffDict(start, current)
+            validation = validate_kit_diff_dict(start, forward_raw, False)
+            if not validation.get("ok") or validation.get("errors"):
+                msg = "; ".join(str(e.get("message", e)) for e in (validation.get("errors") or []))
+                raise ValueError(f"Transaction finalize validation failed: {msg}")
+            if self._strict_mode and validation.get("warnings"):
+                msg = "; ".join(str(w.get("message", w)) for w in (validation.get("warnings") or []))
+                raise ValueError(f"Transaction finalize warnings (strict): {msg}")
+            diff_to_apply = forward_raw
+            backward = inverseKitDiffDict(start, diff_to_apply)
+            squashed = KitGraphChange(forward=diff_to_apply, backward=backward, validation=dict(validation))
+            del self._open_transactions[transaction_id]
+            self._history_past.append(squashed)
+            self._history_future.clear()
+            _notify_kit_backbone_optional(self._backbone, squashed)
+            return squashed
+
+    def undo_within_transaction(self: "Kit", transaction_id: str) -> None:
+        with self._graph_lock:
+            tx = self._open_transactions.get(transaction_id)
+            if not tx or not tx.steps:
+                return
+            if self._conflicted:
+                raise ValueError("Kit is conflicted.")
+            ch = tx.steps.pop()
+            _apply_kit_graph_diff_to_model(self, ch.backward)
+            tx.redo.append(ch)
+
+    def redo_within_transaction(self: "Kit", transaction_id: str) -> None:
+        with self._graph_lock:
+            tx = self._open_transactions.get(transaction_id)
+            if not tx or not tx.redo:
+                return
+            if self._conflicted:
+                raise ValueError("Kit is conflicted.")
+            ch = tx.redo.pop()
+            _apply_kit_graph_diff_to_model(self, ch.forward)
+            tx.steps.append(ch)
+
+    def undo_history(self: "Kit") -> None:
+        with self._graph_lock:
+            if self._conflicted:
+                raise ValueError("Kit is conflicted.")
+            if not self._history_past:
+                return
+            ch = self._history_past.pop()
+            _apply_kit_graph_diff_to_model(self, ch.backward)
+            self._history_future.append(ch)
+
+    def redo_history(self: "Kit") -> None:
+        with self._graph_lock:
+            if self._conflicted:
+                raise ValueError("Kit is conflicted.")
+            if not self._history_future:
+                return
+            ch = self._history_future.pop()
+            _apply_kit_graph_diff_to_model(self, ch.forward)
+            self._history_past.append(ch)
+
+    def transact_finalized(self: "Kit", fn: typing.Callable[[str], typing.Any]) -> typing.Any:
+        """Runs fn with a new transaction id; finalizes on success or aborts on failure."""
+        tid = self.start_transaction()
+        try:
+            out = fn(tid)
+            self.finalize_transaction(tid)
+            return out
+        except BaseException:
+            if tid in self._open_transactions:
+                self.abort_transaction(tid)
+            raise
+
+    def flatten_design_merkle(self: "Kit", design_guid: str) -> dict:
+        """Flatten using per-piece merkle cache (flattenDesignCachedDict); updates cache on this kit."""
+        plain = _kit_graph_plain_dict(self)
+        prev = self._flatten_merkle.get(design_guid)
+        rep, cache = flattenDesignCachedDict(plain, design_guid, prev)
+        self._flatten_merkle[design_guid] = cache
+        return rep
+
+    # #endregion 🔄Kit graph mutations (TypeScript Kit parity)
 
 
 # #endregion ⏱️Kit
@@ -10589,6 +10750,87 @@ def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
     if appliedDiff.get("attributes"):
         inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
+
+
+def _kit_graph_plain_dict(kit: Kit) -> dict:
+    """JSON-shaped kit dict aligned with validate/apply kit diff helpers."""
+    return kit.model_dump(mode="json")
+
+
+def _assign_validated_kit_to(target: Kit, data: dict) -> None:
+    parsed = Kit.model_validate(data)
+    for fname in Kit.model_fields:
+        setattr(target, fname, getattr(parsed, fname))
+
+
+def _apply_kit_graph_diff_to_model(kit: Kit, diff: dict) -> None:
+    d = copy.deepcopy(_kit_graph_plain_dict(kit))
+    applyKitDiffDict(d, diff)
+    _assign_validated_kit_to(kit, d)
+
+
+def _notify_kit_backbone_optional(
+    backbone: typing.Callable[[KitGraphChange], typing.Any] | None, change: KitGraphChange
+) -> None:
+    if backbone is None:
+        return
+
+    def run() -> None:
+        try:
+            backbone(change)
+        except Exception:
+            loguru.logger.exception("Kit backbone notification failed")
+
+    threading.Thread(target=run, daemon=True).start()
+
+
+def commit_kit_graph_change(
+    kit: Kit,
+    diff: dict,
+    *,
+    transaction_id: str | None = None,
+    notify_backbone: bool = True,
+    skip_global_history: bool = False,
+) -> KitGraphChange:
+    """Validate, invert, apply diff to Kit in-place; record transaction/history and optionally notify backbone."""
+    with kit._graph_lock:
+        if kit._conflicted:
+            raise ValueError("Kit has unresolved validation conflicts; call clear_conflict() before applying further changes.")
+        kit_dict = copy.deepcopy(_kit_graph_plain_dict(kit))
+        validation = validate_kit_diff_dict(kit_dict, diff, False)
+        if not validation.get("ok") or validation.get("errors"):
+            kit._conflicted = True
+            kit._conflict_errors = list(validation.get("errors", []))
+            kit._conflict_warnings = list(validation.get("warnings", []))
+            msg = "; ".join(str(e.get("message", e)) for e in kit._conflict_errors)
+            raise ValueError(f"Kit validation failed: {msg}")
+        if kit._strict_mode and validation.get("warnings"):
+            kit._conflicted = True
+            kit._conflict_errors = []
+            kit._conflict_warnings = list(validation.get("warnings", []))
+            wmsg = "; ".join(str(w.get("message", w)) for w in kit._conflict_warnings)
+            raise ValueError(f"Kit validation warnings (strict): {wmsg}")
+        diff_to_apply = diff
+        backward = inverseKitDiffDict(kit_dict, diff_to_apply)
+        applyKitDiffDict(kit_dict, diff_to_apply)
+        _assign_validated_kit_to(kit, kit_dict)
+        change = KitGraphChange(forward=diff_to_apply, backward=backward, validation=dict(validation))
+        if transaction_id is not None:
+            tx = kit._open_transactions.get(transaction_id)
+            if tx is None:
+                raise ValueError(f"Unknown transaction {transaction_id}")
+            tx.steps.append(change)
+            tx.redo.clear()
+        elif not skip_global_history:
+            kit._history_past.append(change)
+            kit._history_future.clear()
+        notify = notify_backbone and transaction_id is None
+        if notify:
+            _notify_kit_backbone_optional(kit._backbone, change)
+        kit._conflicted = False
+        kit._conflict_errors.clear()
+        kit._conflict_warnings.clear()
+        return change
 
 
 @dataclasses.dataclass
