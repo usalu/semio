@@ -20,6 +20,7 @@ import type { Connector, Port } from "@semio/js";
 import {
   applyKitDiff,
   areDesignsInSameFamily,
+  asKitInstance,
   arePortsCompatible,
   areSameConnection,
   Attribute,
@@ -45,10 +46,8 @@ import {
   expandDesignPieces,
   exportKit,
   FileDiff,
-  findDesignInKit,
   findModel,
   findPieceInDesign,
-  findTypeInKit,
   fixPieceInDesign,
   flattenFileTree,
   Folder,
@@ -10422,7 +10421,7 @@ export const kitCommands = {
               diff: {
                 pieces: {
                   added: [
-                    piece.plane || (findDesignInKit(context.kit, guid)?.connections ?? []).some((connection) => connection.connected.piece.guid === piece.guid || connection.connecting.piece.guid === piece.guid)
+                    piece.plane || (asKitInstance(context.kit).requireDesign( guid)?.connections ?? []).some((connection) => connection.connected.piece.guid === piece.guid || connection.connecting.piece.guid === piece.guid)
                       ? piece
                       : {
                           ...piece,
@@ -10442,7 +10441,7 @@ export const kitCommands = {
     };
   },
   "semio.kit.addPieces": (context: KitCommandContext, guid: Guid, pieces: Piece[]): KitCommandResult => {
-    const design = findDesignInKit(context.kit, guid);
+    const design = asKitInstance(context.kit).requireDesign( guid);
     return {
       diff: {
         designs: {
@@ -10528,7 +10527,7 @@ export const kitCommands = {
     };
   },
   "semio.kit.removeConnection": (context: KitCommandContext, guid: Guid, connectionGuid: Guid): KitCommandResult => {
-    const design = findDesignInKit(context.kit, guid);
+    const design = asKitInstance(context.kit).requireDesign( guid);
     const connection = design?.connections?.find((c) => c.guid === connectionGuid);
     if (!connection) return { diff: {} };
     return {

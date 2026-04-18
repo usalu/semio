@@ -639,14 +639,39 @@ export class Coord implements CoordPlain {
   toPlain(): CoordPlain {
     return CoordSchema.parse(this as unknown as CoordPlain);
   }
+  /** 📺Serialize this coord for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** 📺Deserialize a coord from transport JSON. */
+  static deserialize(json: string): Coord {
+    return new Coord(CoordSchema.parse(JSON.parse(json)));
+  }
+  /** 📺Compute a coordinate delta from this coordinate to another coordinate. */
+  diffTo(after: Coord): CoordDiff {
+    return { u: after.u - this.u, v: after.v - this.v };
+  }
+  /** 📺Build the reverse coordinate delta for an already-applied delta. */
+  inverseDiff(appliedDiff: CoordDiff): CoordDiff {
+    return { u: this.u - (appliedDiff.u ?? 0), v: this.v - (appliedDiff.v ?? 0) };
+  }
+  /** 📺Merge two coordinate deltas. */
+  static mergeDiff(first: CoordDiff, second: CoordDiff): CoordDiff {
+    return { u: (first.u ?? 0) + (second.u ?? 0), v: (first.v ?? 0) + (second.v ?? 0) };
+  }
+  /** 📺Apply a coordinate delta to this coordinate. */
+  applyDiff(diff: CoordDiff): void {
+    if (diff.u !== undefined) this.u += diff.u;
+    if (diff.v !== undefined) this.v += diff.v;
+  }
 }
 /**
  * Serializes Coord for transport.
  **/
-export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord));
+export const serializeCoord = (coord: Coord): string => coord.serialize();
 /**
  **/
-export const deserializeCoord = (json: string): Coord => new Coord(CoordSchema.parse(JSON.parse(json)));
+export const deserializeCoord = (json: string): Coord => Coord.deserialize(json);
 
 /**
  * Zod schema for Coord diff validation.
@@ -660,37 +685,25 @@ export type CoordDiff = z.infer<typeof CoordDiffSchema>;
  * Retrieves the CoordDiff value.
  **/
 export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => {
-  return {
-    u: after.u - before.u,
-    v: after.v - before.v,
-  };
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inverseCoord changes.
  **/
 export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => {
-  const u = appliedDiff.u ?? 0;
-  const v = appliedDiff.v ?? 0;
-  return {
-    u: original.u - u,
-    v: original.v - v,
-  };
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergeCoord changes.
  **/
 export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => {
-  return {
-    u: (diff1.u ?? 0) + (diff2.u ?? 0),
-    v: (diff1.v ?? 0) + (diff2.v ?? 0),
-  };
+  return Coord.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyCoord changes.
  **/
 export const applyCoordDiff = (target: Coord, diff: CoordDiff): void => {
-  if (diff.u !== undefined) target.u += diff.u;
-  if (diff.v !== undefined) target.v += diff.v;
+  target.applyDiff(diff);
 };
 
 // #endregion 📺Coord
@@ -718,14 +731,39 @@ export class Vec implements VecPlain {
   toPlain(): VecPlain {
     return VecSchema.parse(this as unknown as VecPlain);
   }
+  /** ➡️Serialize this vector coordinate for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** ➡️Deserialize a vector coordinate from transport JSON. */
+  static deserialize(json: string): Vec {
+    return new Vec(VecSchema.parse(JSON.parse(json)));
+  }
+  /** ➡️Compute a vector-coordinate delta. */
+  diffTo(after: Vec): VecDiff {
+    return { u: after.u - this.u, v: after.v - this.v };
+  }
+  /** ➡️Build the reverse vector-coordinate delta for an already-applied delta. */
+  inverseDiff(appliedDiff: VecDiff): VecDiff {
+    return { u: this.u - (appliedDiff.u ?? 0), v: this.v - (appliedDiff.v ?? 0) };
+  }
+  /** ➡️Merge two vector-coordinate deltas. */
+  static mergeDiff(first: VecDiff, second: VecDiff): VecDiff {
+    return { u: (first.u ?? 0) + (second.u ?? 0), v: (first.v ?? 0) + (second.v ?? 0) };
+  }
+  /** ➡️Apply a vector-coordinate delta to this vector coordinate. */
+  applyDiff(diff: VecDiff): void {
+    if (diff.u !== undefined) this.u += diff.u;
+    if (diff.v !== undefined) this.v += diff.v;
+  }
 }
 /**
  * Serializes Vec for transport.
  **/
-export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse(vec));
+export const serializeVec = (vec: Vec): string => vec.serialize();
 /**
  **/
-export const deserializeVec = (json: string): Vec => new Vec(VecSchema.parse(JSON.parse(json)));
+export const deserializeVec = (json: string): Vec => Vec.deserialize(json);
 
 /**
  * Zod schema for Vec diff validation.
@@ -739,37 +777,25 @@ export type VecDiff = z.infer<typeof VecDiffSchema>;
  * Retrieves the VecDiff value.
  **/
 export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
-  return {
-    u: after.u - before.u,
-    v: after.v - before.v,
-  };
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inverseVec changes.
  **/
 export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => {
-  const u = appliedDiff.u ?? 0;
-  const v = appliedDiff.v ?? 0;
-  return {
-    u: original.u - u,
-    v: original.v - v,
-  };
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergeVec changes.
  **/
 export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
-  return {
-    u: (diff1.u ?? 0) + (diff2.u ?? 0),
-    v: (diff1.v ?? 0) + (diff2.v ?? 0),
-  };
+  return Vec.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyVec changes.
  **/
 export const applyVecDiff = (target: Vec, diff: VecDiff): void => {
-  if (diff.u !== undefined) target.u += diff.u;
-  if (diff.v !== undefined) target.v += diff.v;
+  target.applyDiff(diff);
 };
 
 // #endregion ➡️Vec
@@ -802,14 +828,40 @@ export class Point implements PointPlain {
   toPlain(): PointPlain {
     return PointSchema.parse(this as unknown as PointPlain);
   }
+  /** ✖️Serialize this point for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** ✖️Deserialize a point from transport JSON. */
+  static deserialize(json: string): Point {
+    return new Point(PointSchema.parse(JSON.parse(json)));
+  }
+  /** ✖️Compute a point delta from this point to another point. */
+  diffTo(after: Point): PointDiff {
+    return { x: after.x - this.x, y: after.y - this.y, z: after.z - this.z };
+  }
+  /** ✖️Build the reverse point delta for an already-applied delta. */
+  inverseDiff(appliedDiff: PointDiff): PointDiff {
+    return { x: -(appliedDiff.x ?? 0), y: -(appliedDiff.y ?? 0), z: -(appliedDiff.z ?? 0) };
+  }
+  /** ✖️Merge two point deltas. */
+  static mergeDiff(first: PointDiff, second: PointDiff): PointDiff {
+    return { x: (first.x ?? 0) + (second.x ?? 0), y: (first.y ?? 0) + (second.y ?? 0), z: (first.z ?? 0) + (second.z ?? 0) };
+  }
+  /** ✖️Apply a point delta to this point. */
+  applyDiff(diff: PointDiff): void {
+    if (diff.x !== undefined) this.x += diff.x;
+    if (diff.y !== undefined) this.y += diff.y;
+    if (diff.z !== undefined) this.z += diff.z;
+  }
 }
 /**
  * Serializes Point for transport.
  **/
-export const serializePoint = (point: Point): string => JSON.stringify(PointSchema.parse(point));
+export const serializePoint = (point: Point): string => point.serialize();
 /**
  **/
-export const deserializePoint = (json: string): Point => new Point(PointSchema.parse(JSON.parse(json)));
+export const deserializePoint = (json: string): Point => Point.deserialize(json);
 
 /**
  * Zod schema for Point diff validation.
@@ -823,42 +875,25 @@ export type PointDiff = z.infer<typeof PointDiffSchema>;
  * Retrieves the PointDiff value.
  **/
 export const getPointDiff = (before: Point, after: Point): PointDiff => {
-  return {
-    x: after.x - before.x,
-    y: after.y - before.y,
-    z: after.z - before.z,
-  };
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inversePoint changes.
  **/
 export const inversePointDiff = (original: Point, appliedDiff: PointDiff): PointDiff => {
-  const x = appliedDiff.x ?? 0;
-  const y = appliedDiff.y ?? 0;
-  const z = appliedDiff.z ?? 0;
-  return {
-    x: -x,
-    y: -y,
-    z: -z,
-  };
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergePoint changes.
  **/
 export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff => {
-  return {
-    x: (diff1.x ?? 0) + (diff2.x ?? 0),
-    y: (diff1.y ?? 0) + (diff2.y ?? 0),
-    z: (diff1.z ?? 0) + (diff2.z ?? 0),
-  };
+  return Point.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyPoint changes.
  **/
 export const applyPointDiff = (target: Point, diff: PointDiff): void => {
-  if (diff.x !== undefined) target.x += diff.x;
-  if (diff.y !== undefined) target.y += diff.y;
-  if (diff.z !== undefined) target.z += diff.z;
+  target.applyDiff(diff);
 };
 
 // #endregion ✖️Point
@@ -891,14 +926,40 @@ export class Vector implements VectorPlain {
   toPlain(): VectorPlain {
     return VectorSchema.parse(this as unknown as VectorPlain);
   }
+  /** ↗️Serialize this vector for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** ↗️Deserialize a vector from transport JSON. */
+  static deserialize(json: string): Vector {
+    return new Vector(VectorSchema.parse(JSON.parse(json)));
+  }
+  /** ↗️Compute a vector delta from this vector to another vector. */
+  diffTo(after: Vector): VectorDiff {
+    return { x: after.x - this.x, y: after.y - this.y, z: after.z - this.z };
+  }
+  /** ↗️Build the reverse vector delta for an already-applied delta. */
+  inverseDiff(appliedDiff: VectorDiff): VectorDiff {
+    return { x: -(appliedDiff.x ?? 0), y: -(appliedDiff.y ?? 0), z: -(appliedDiff.z ?? 0) };
+  }
+  /** ↗️Merge two vector deltas. */
+  static mergeDiff(first: VectorDiff, second: VectorDiff): VectorDiff {
+    return { x: (first.x ?? 0) + (second.x ?? 0), y: (first.y ?? 0) + (second.y ?? 0), z: (first.z ?? 0) + (second.z ?? 0) };
+  }
+  /** ↗️Apply a vector delta to this vector. */
+  applyDiff(diff: VectorDiff): void {
+    if (diff.x !== undefined) this.x += diff.x;
+    if (diff.y !== undefined) this.y += diff.y;
+    if (diff.z !== undefined) this.z += diff.z;
+  }
 }
 /**
  * Serializes Vector for transport.
  **/
-export const serializeVector = (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector));
+export const serializeVector = (vector: Vector): string => vector.serialize();
 /**
  **/
-export const deserializeVector = (json: string): Vector => new Vector(VectorSchema.parse(JSON.parse(json)));
+export const deserializeVector = (json: string): Vector => Vector.deserialize(json);
 
 /**
  * Zod schema for Vector diff validation.
@@ -912,42 +973,25 @@ export type VectorDiff = z.infer<typeof VectorDiffSchema>;
  * Retrieves the VectorDiff value.
  **/
 export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => {
-  return {
-    x: after.x - before.x,
-    y: after.y - before.y,
-    z: after.z - before.z,
-  };
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inverseVector changes.
  **/
 export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): VectorDiff => {
-  const x = appliedDiff.x ?? 0;
-  const y = appliedDiff.y ?? 0;
-  const z = appliedDiff.z ?? 0;
-  return {
-    x: -x,
-    y: -y,
-    z: -z,
-  };
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergeVector changes.
  **/
 export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDiff => {
-  return {
-    x: (diff1.x ?? 0) + (diff2.x ?? 0),
-    y: (diff1.y ?? 0) + (diff2.y ?? 0),
-    z: (diff1.z ?? 0) + (diff2.z ?? 0),
-  };
+  return Vector.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyVector changes.
  **/
 export const applyVectorDiff = (target: Vector, diff: VectorDiff): void => {
-  if (diff.x !== undefined) target.x += diff.x;
-  if (diff.y !== undefined) target.y += diff.y;
-  if (diff.z !== undefined) target.z += diff.z;
+  target.applyDiff(diff);
 };
 
 // #endregion ↗️Vector
@@ -983,84 +1027,115 @@ export class Plane implements PlanePlain {
   toPlain(): PlanePlain {
     return PlaneSchema.parse(this as unknown as PlanePlain);
   }
+  /** ◻️Serialize this plane for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** ◻️Deserialize a plane from transport JSON. */
+  static deserialize(json: string): Plane {
+    return new Plane(PlaneSchema.parse(JSON.parse(json)));
+  }
+  /** ◻️Convert this plane to a three.js matrix. */
+  toMatrix(): THREE.Matrix4 {
+    const origin = new THREE.Vector3(this.origin.x, this.origin.y, this.origin.z);
+    const xAxis = new THREE.Vector3(this.xAxis.x, this.xAxis.y, this.xAxis.z);
+    const yAxis = new THREE.Vector3(this.yAxis.x, this.yAxis.y, this.yAxis.z);
+    const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
+    const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
+    return new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin);
+  }
+  /** ◻️Create a plane from a three.js matrix. */
+  static fromMatrix(matrix: THREE.Matrix4): Plane {
+    const origin = new THREE.Vector3();
+    const xAxis = new THREE.Vector3();
+    const yAxis = new THREE.Vector3();
+    const zAxis = new THREE.Vector3();
+    matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3());
+    matrix.extractBasis(xAxis, yAxis, zAxis);
+    return new Plane({
+      origin: { x: origin.x, y: origin.y, z: origin.z },
+      xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
+      yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
+    });
+  }
+  /** ◻️Average this plane with other planes while preserving the first orientation. */
+  averageWith(planes: Plane[]): Plane {
+    return Plane.average([this, ...planes]) ?? this;
+  }
+  /** ◻️Average a plane collection. */
+  static average(planes: Plane[]): Plane | null {
+    if (planes.length === 0) return null;
+    if (planes.length === 1) return planes[0];
+    const avgOrigin = planes.reduce(
+      (acc, plane) => ({
+        x: acc.x + plane.origin.x / planes.length,
+        y: acc.y + plane.origin.y / planes.length,
+        z: acc.z + plane.origin.z / planes.length,
+      }),
+      { x: 0, y: 0, z: 0 },
+    );
+    return new Plane({ origin: avgOrigin, xAxis: planes[0].xAxis, yAxis: planes[0].yAxis });
+  }
+  /** ◻️Round plane components to tolerance. */
+  rounded(): Plane {
+    return new Plane({
+      origin: { x: round(this.origin.x), y: round(this.origin.y), z: round(this.origin.z) },
+      xAxis: { x: round(this.xAxis.x), y: round(this.xAxis.y), z: round(this.xAxis.z) },
+      yAxis: { x: round(this.yAxis.x), y: round(this.yAxis.y), z: round(this.yAxis.z) },
+    });
+  }
+  /** ◻️Compute a plane delta from this plane to another plane. */
+  diffTo(after: Plane): PlaneDiff {
+    return { origin: this.origin.diffTo(after.origin), xAxis: this.xAxis.diffTo(after.xAxis), yAxis: this.yAxis.diffTo(after.yAxis) };
+  }
+  /** ◻️Build the reverse plane delta for an already-applied delta. */
+  inverseDiff(appliedDiff: PlaneDiff): PlaneDiff {
+    return {
+      origin: this.origin.inverseDiff(appliedDiff.origin ?? { x: 0, y: 0, z: 0 }),
+      xAxis: this.xAxis.inverseDiff(appliedDiff.xAxis ?? { x: 0, y: 0, z: 0 }),
+      yAxis: this.yAxis.inverseDiff(appliedDiff.yAxis ?? { x: 0, y: 0, z: 0 }),
+    };
+  }
+  /** ◻️Merge two plane deltas. */
+  static mergeDiff(first: PlaneDiff, second: PlaneDiff): PlaneDiff {
+    return {
+      origin: first.origin && second.origin ? Point.mergeDiff(first.origin, second.origin) : (second.origin ?? first.origin),
+      xAxis: first.xAxis && second.xAxis ? Vector.mergeDiff(first.xAxis, second.xAxis) : (second.xAxis ?? first.xAxis),
+      yAxis: first.yAxis && second.yAxis ? Vector.mergeDiff(first.yAxis, second.yAxis) : (second.yAxis ?? first.yAxis),
+    };
+  }
+  /** ◻️Apply a plane delta to this plane. */
+  applyDiff(diff: PlaneDiff): void {
+    if (diff.origin) this.origin.applyDiff(diff.origin);
+    if (diff.xAxis) this.xAxis.applyDiff(diff.xAxis);
+    if (diff.yAxis) this.yAxis.applyDiff(diff.yAxis);
+  }
 }
 /**
  * Serializes Plane for transport.
  **/
-export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane));
+export const serializePlane = (plane: Plane): string => plane.serialize();
 /**
  **/
-export const deserializePlane = (json: string): Plane => new Plane(PlaneSchema.parse(JSON.parse(json)));
+export const deserializePlane = (json: string): Plane => Plane.deserialize(json);
 /**
  **/
 export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
-  const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
-  const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
-  const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
-  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
-  const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
-  const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin);
-  return matrix;
+  return plane.toMatrix();
 };
 /**
  **/
 export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
-  const origin = new THREE.Vector3();
-  const xAxis = new THREE.Vector3();
-  const yAxis = new THREE.Vector3();
-  const zAxis = new THREE.Vector3();
-  matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3());
-  matrix.extractBasis(xAxis, yAxis, zAxis);
-  return new Plane({
-    origin: { x: origin.x, y: origin.y, z: origin.z },
-    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
-    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
-  });
+  return Plane.fromMatrix(matrix);
 };
 
 /**
  **/
 export const averagePlane = (planes: Plane[]): Plane | null => {
-  if (planes.length === 0) return null;
-  if (planes.length === 1) return planes[0];
-
-  const avgOrigin = planes.reduce(
-    (acc, plane) => ({
-      x: acc.x + plane.origin.x / planes.length,
-      y: acc.y + plane.origin.y / planes.length,
-      z: acc.z + plane.origin.z / planes.length,
-    }),
-    { x: 0, y: 0, z: 0 },
-  );
-
-  const baseXAxis = planes[0].xAxis;
-  const baseYAxis = planes[0].yAxis;
-
-  return new Plane({
-    origin: avgOrigin,
-    xAxis: baseXAxis,
-    yAxis: baseYAxis,
-  });
+  return Plane.average(planes);
 };
 // ◻️roundPlane rounds plane components to a specified number of decimal places.
-const roundPlane = (plane: Plane): Plane =>
-  new Plane({
-    origin: {
-      x: round(plane.origin.x),
-      y: round(plane.origin.y),
-      z: round(plane.origin.z),
-    },
-    xAxis: {
-      x: round(plane.xAxis.x),
-      y: round(plane.xAxis.y),
-      z: round(plane.xAxis.z),
-    },
-    yAxis: {
-      x: round(plane.yAxis.x),
-      y: round(plane.yAxis.y),
-      z: round(plane.yAxis.z),
-    },
-  });
+const roundPlane = (plane: Plane): Plane => plane.rounded();
 
 /**
  * Zod schema for Plane diff validation.
@@ -1080,42 +1155,25 @@ export type PlaneDiff = z.infer<typeof PlaneDiffSchema>;
  * Retrieves the PlaneDiff value.
  **/
 export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => {
-  return {
-    origin: getPointDiff(before.origin, after.origin),
-    xAxis: getVectorDiff(before.xAxis, after.xAxis),
-    yAxis: getVectorDiff(before.yAxis, after.yAxis),
-  };
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inversePlane changes.
  **/
 export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): PlaneDiff => {
-  const origin = appliedDiff.origin ?? { x: 0, y: 0, z: 0 };
-  const xAxis = appliedDiff.xAxis ?? { x: 0, y: 0, z: 0 };
-  const yAxis = appliedDiff.yAxis ?? { x: 0, y: 0, z: 0 };
-  return {
-    origin: inversePointDiff(original.origin, origin),
-    xAxis: inverseVectorDiff(original.xAxis, xAxis),
-    yAxis: inverseVectorDiff(original.yAxis, yAxis),
-  };
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergePlane changes.
  **/
 export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff => {
-  return {
-    origin: diff1.origin ?? diff2.origin ?? mergePointDiff(diff1.origin!, diff2.origin!),
-    xAxis: diff1.xAxis ?? diff2.xAxis ?? mergeVectorDiff(diff1.xAxis!, diff2.xAxis!),
-    yAxis: diff1.yAxis ?? diff2.yAxis ?? mergeVectorDiff(diff1.yAxis!, diff2.yAxis!),
-  };
+  return Plane.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyPlane changes.
  **/
 export const applyPlaneDiff = (target: Plane, diff: PlaneDiff): void => {
-  if (diff.origin) applyPointDiff(target.origin, diff.origin);
-  if (diff.xAxis) applyVectorDiff(target.xAxis, diff.xAxis);
-  if (diff.yAxis) applyVectorDiff(target.yAxis, diff.yAxis);
+  target.applyDiff(diff);
 };
 
 // #endregion ◻️Plane
@@ -2191,6 +2249,7 @@ export class Benchmark implements BenchmarkPlain {
     if (diff.icon !== undefined) target.icon = diff.icon;
     if (diff.min !== undefined) target.min = diff.min;
     if (diff.minExcluded !== undefined) target.minExcluded = diff.minExcluded;
+    if (diff.max !== undefined) target.max = diff.max;
     if (diff.maxExcluded !== undefined) target.maxExcluded = diff.maxExcluded;
     if (diff.attributes) {
       if (!target.attributes) target.attributes = [];
@@ -2226,49 +2285,25 @@ export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
  * Diff type for tracking applyBenchmark changes.
  **/
 export const applyBenchmarkDiff = (target: Benchmark, diff: BenchmarkDiff): void => {
-  if (diff.name !== undefined) target.name = diff.name;
-  if (diff.icon !== undefined) target.icon = diff.icon;
-  if (diff.min !== undefined) target.min = diff.min;
-  if (diff.minExcluded !== undefined) target.minExcluded = diff.minExcluded;
-  if (diff.maxExcluded !== undefined) target.maxExcluded = diff.maxExcluded;
-  if (diff.attributes) {
-    if (!target.attributes) target.attributes = [];
-    applyAttributesDiff(target.attributes, diff.attributes);
-  }
+  target.applyDiff(diff);
 };
 /**
  * Retrieves the BenchmarkDiff value.
  **/
 export const getBenchmarkDiff = (before: Benchmark, after: Benchmark): BenchmarkDiff => {
-  const diff: BenchmarkDiff = {};
-  if (before.name !== after.name) diff.name = after.name;
-  if (before.icon !== after.icon) diff.icon = after.icon;
-  if (before.min !== after.min) diff.min = after.min !== undefined && before.min !== undefined ? after.min - before.min : after.min;
-  if (before.minExcluded !== after.minExcluded) diff.minExcluded = after.minExcluded;
-  if (before.max !== after.max) diff.max = after.max !== undefined && before.max !== undefined ? after.max - before.max : after.max;
-  if (before.maxExcluded !== after.maxExcluded) diff.maxExcluded = after.maxExcluded;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  return diff;
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inverseBenchmark changes.
  **/
 export const inverseBenchmarkDiff = (original: Benchmark, appliedDiff: BenchmarkDiff): BenchmarkDiff => {
-  const inverse: BenchmarkDiff = {};
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
-  if (appliedDiff.min !== undefined) inverse.min = original.min;
-  if (appliedDiff.minExcluded !== undefined) inverse.minExcluded = original.minExcluded;
-  if (appliedDiff.max !== undefined) inverse.max = original.max;
-  if (appliedDiff.maxExcluded !== undefined) inverse.maxExcluded = original.maxExcluded;
-  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergeBenchmark changes.
  **/
 export const mergeBenchmarkDiff = (diff1: BenchmarkDiff, diff2: BenchmarkDiff): BenchmarkDiff => {
-  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
+  return Benchmark.mergeDiff(diff1, diff2);
 };
 
 /**
@@ -2412,14 +2447,108 @@ export class Quality implements QualityPlain {
   toPlain(): QualityPlain {
     return QualitySchema.parse(this as unknown as QualityPlain);
   }
+  /** 🔬Serialize this quality for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** 🔬Deserialize a quality from transport JSON. */
+  static deserialize(json: string): Quality {
+    return new Quality(QualitySchema.parse(JSON.parse(json)));
+  }
+  /** 🔬Compute a quality delta from this quality to another quality. */
+  diffTo(after: Quality): QualityDiff {
+    const diff: QualityDiff = {};
+    if (this.key !== after.key) diff.key = after.key;
+    if (this.name !== after.name) diff.name = after.name;
+    if (this.description !== after.description) diff.description = after.description;
+    if (this.uri !== after.uri) diff.uri = after.uri;
+    if (this.kind !== after.kind) diff.kind = after.kind !== undefined && this.kind !== undefined ? after.kind - this.kind : after.kind;
+    if (this.canScale !== after.canScale) diff.canScale = after.canScale;
+    if (this.defaultSiUnit !== after.defaultSiUnit) diff.defaultSiUnit = after.defaultSiUnit;
+    if (this.defaultImperialUnit !== after.defaultImperialUnit) diff.defaultImperialUnit = after.defaultImperialUnit;
+    if (this.min !== after.min) diff.min = after.min !== undefined && this.min !== undefined ? after.min - this.min : after.min;
+    if (this.isMinExcluded !== after.isMinExcluded) diff.isMinExcluded = after.isMinExcluded;
+    if (this.max !== after.max) diff.max = after.max !== undefined && this.max !== undefined ? after.max - this.max : after.max;
+    if (this.isMaxExcluded !== after.isMaxExcluded) diff.isMaxExcluded = after.isMaxExcluded;
+    if (this.defaultValue !== after.defaultValue) diff.defaultValue = after.defaultValue !== undefined && this.defaultValue !== undefined ? after.defaultValue - this.defaultValue : after.defaultValue;
+    if (this.formula !== after.formula) diff.formula = after.formula;
+    if (this.icon !== after.icon) diff.icon = after.icon;
+    if (this.image !== after.image) diff.image = after.image;
+    if (this.unit !== after.unit) diff.unit = after.unit;
+    if (!deepEqual(this.benchmarks, after.benchmarks)) diff.benchmarks = getBenchmarksDiff(this.benchmarks ?? [], after.benchmarks ?? []);
+    if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
+    return diff;
+  }
+  /** 🔬Build the reverse quality delta for an already-applied delta. */
+  inverseDiff(appliedDiff: QualityDiff): QualityDiff {
+    const inverse: QualityDiff = {};
+    if (appliedDiff.key !== undefined) inverse.key = this.key;
+    if (appliedDiff.name !== undefined) inverse.name = this.name;
+    if (appliedDiff.description !== undefined) inverse.description = this.description;
+    if (appliedDiff.uri !== undefined) inverse.uri = this.uri;
+    if (appliedDiff.kind !== undefined) inverse.kind = this.kind;
+    if (appliedDiff.canScale !== undefined) inverse.canScale = this.canScale;
+    if (appliedDiff.defaultSiUnit !== undefined) inverse.defaultSiUnit = this.defaultSiUnit;
+    if (appliedDiff.defaultImperialUnit !== undefined) inverse.defaultImperialUnit = this.defaultImperialUnit;
+    if (appliedDiff.min !== undefined) inverse.min = this.min;
+    if (appliedDiff.isMinExcluded !== undefined) inverse.isMinExcluded = this.isMinExcluded;
+    if (appliedDiff.max !== undefined) inverse.max = this.max;
+    if (appliedDiff.isMaxExcluded !== undefined) inverse.isMaxExcluded = this.isMaxExcluded;
+    if (appliedDiff.defaultValue !== undefined) inverse.defaultValue = this.defaultValue;
+    if (appliedDiff.formula !== undefined) inverse.formula = this.formula;
+    if (appliedDiff.icon !== undefined) inverse.icon = this.icon;
+    if (appliedDiff.image !== undefined) inverse.image = this.image;
+    if (appliedDiff.unit !== undefined) inverse.unit = this.unit;
+    if (appliedDiff.benchmarks !== undefined) inverse.benchmarks = inverseBenchmarksDiff(this.benchmarks ?? [], appliedDiff.benchmarks);
+    if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+  /** 🔬Merge two quality deltas. */
+  static mergeDiff(first: QualityDiff, second: QualityDiff): QualityDiff {
+    return {
+      ...first,
+      ...second,
+      benchmarks: first.benchmarks && second.benchmarks ? mergeBenchmarksDiff(first.benchmarks, second.benchmarks) : (second.benchmarks ?? first.benchmarks),
+      attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes),
+    };
+  }
+  /** 🔬Apply a quality delta to this quality. */
+  applyDiff(diff: QualityDiff): void {
+    if (diff.key !== undefined) this.key = diff.key;
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.uri !== undefined) this.uri = diff.uri;
+    if (diff.kind !== undefined) this.kind = diff.kind;
+    if (diff.folder !== undefined) this.folder = diff.folder;
+    if (diff.canScale !== undefined) this.canScale = diff.canScale;
+    if (diff.defaultSiUnit !== undefined) this.defaultSiUnit = diff.defaultSiUnit;
+    if (diff.defaultImperialUnit !== undefined) this.defaultImperialUnit = diff.defaultImperialUnit;
+    if (diff.min !== undefined) this.min = diff.min;
+    if (diff.isMinExcluded !== undefined) this.isMinExcluded = diff.isMinExcluded;
+    if (diff.max !== undefined) this.max = diff.max;
+    if (diff.isMaxExcluded !== undefined) this.isMaxExcluded = diff.isMaxExcluded;
+    if (diff.defaultValue !== undefined) this.defaultValue = diff.defaultValue;
+    if (diff.formula !== undefined) this.formula = diff.formula;
+    if (diff.icon !== undefined) this.icon = diff.icon;
+    if (diff.image !== undefined) this.image = diff.image;
+    if (diff.unit !== undefined) this.unit = diff.unit;
+    if (diff.benchmarks) {
+      if (!this.benchmarks) this.benchmarks = [];
+      applyBenchmarksDiff(this.benchmarks, diff.benchmarks);
+    }
+    if (diff.attributes) {
+      if (!this.attributes) this.attributes = [];
+      applyAttributesDiff(this.attributes, diff.attributes);
+    }
+  }
 }
 /**
  * Serializes Quality for transport.
  **/
-export const serializeQuality = (quality: Quality): string => JSON.stringify(QualitySchema.parse(quality));
+export const serializeQuality = (quality: Quality): string => quality.serialize();
 /**
  **/
-export const deserializeQuality = (json: string): Quality => new Quality(QualitySchema.parse(JSON.parse(json)));
+export const deserializeQuality = (json: string): Quality => Quality.deserialize(json);
 
 /**
  * Definition of QualityMetaSchema.
@@ -2466,95 +2595,25 @@ export type QualityDiff = z.infer<typeof QualityDiffSchema>;
  * Retrieves the QualityDiff value.
  **/
 export const getQualityDiff = (before: Quality, after: Quality): QualityDiff => {
-  const diff: QualityDiff = {};
-  if (before.key !== after.key) diff.key = after.key;
-  if (before.name !== after.name) diff.name = after.name;
-  if (before.description !== after.description) diff.description = after.description;
-  if (before.uri !== after.uri) diff.uri = after.uri;
-  if (before.kind !== after.kind) diff.kind = after.kind !== undefined && before.kind !== undefined ? after.kind - before.kind : after.kind;
-  if (before.canScale !== after.canScale) diff.canScale = after.canScale;
-  if (before.defaultSiUnit !== after.defaultSiUnit) diff.defaultSiUnit = after.defaultSiUnit;
-  if (before.defaultImperialUnit !== after.defaultImperialUnit) diff.defaultImperialUnit = after.defaultImperialUnit;
-  if (before.min !== after.min) diff.min = after.min !== undefined && before.min !== undefined ? after.min - before.min : after.min;
-  if (before.isMinExcluded !== after.isMinExcluded) diff.isMinExcluded = after.isMinExcluded;
-  if (before.max !== after.max) diff.max = after.max !== undefined && before.max !== undefined ? after.max - before.max : after.max;
-  if (before.isMaxExcluded !== after.isMaxExcluded) diff.isMaxExcluded = after.isMaxExcluded;
-  if (before.defaultValue !== after.defaultValue) diff.defaultValue = after.defaultValue !== undefined && before.defaultValue !== undefined ? after.defaultValue - before.defaultValue : after.defaultValue;
-  if (before.formula !== after.formula) diff.formula = after.formula;
-  if (before.icon !== after.icon) diff.icon = after.icon;
-  if (before.image !== after.image) diff.image = after.image;
-  if (before.unit !== after.unit) diff.unit = after.unit;
-  if (!deepEqual(before.benchmarks, after.benchmarks)) diff.benchmarks = getBenchmarksDiff(before.benchmarks ?? [], after.benchmarks ?? []);
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  return diff;
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inverseQuality changes.
  **/
 export const inverseQualityDiff = (original: Quality, appliedDiff: QualityDiff): QualityDiff => {
-  const inverse: QualityDiff = {};
-  if (appliedDiff.key !== undefined) inverse.key = original.key;
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.uri !== undefined) inverse.uri = original.uri;
-  if (appliedDiff.kind !== undefined) inverse.kind = original.kind;
-  if (appliedDiff.canScale !== undefined) inverse.canScale = original.canScale;
-  if (appliedDiff.defaultSiUnit !== undefined) inverse.defaultSiUnit = original.defaultSiUnit;
-  if (appliedDiff.defaultImperialUnit !== undefined) inverse.defaultImperialUnit = original.defaultImperialUnit;
-  if (appliedDiff.min !== undefined) inverse.min = original.min;
-  if (appliedDiff.isMinExcluded !== undefined) inverse.isMinExcluded = original.isMinExcluded;
-  if (appliedDiff.max !== undefined) inverse.max = original.max;
-  if (appliedDiff.isMaxExcluded !== undefined) inverse.isMaxExcluded = original.isMaxExcluded;
-  if (appliedDiff.defaultValue !== undefined) inverse.defaultValue = original.defaultValue;
-  if (appliedDiff.formula !== undefined) inverse.formula = original.formula;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
-  if (appliedDiff.image !== undefined) inverse.image = original.image;
-  if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
-  if (appliedDiff.benchmarks !== undefined) inverse.benchmarks = inverseBenchmarksDiff(original.benchmarks ?? [], appliedDiff.benchmarks);
-  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergeQuality changes.
  **/
 export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): QualityDiff => {
-  return {
-    ...diff1,
-    ...diff2,
-    benchmarks: diff1.benchmarks && diff2.benchmarks ? mergeBenchmarksDiff(diff1.benchmarks, diff2.benchmarks) : (diff2.benchmarks ?? diff1.benchmarks),
-    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
-  };
+  return Quality.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyQuality changes.
  **/
 export const applyQualityDiff = (target: Quality, diff: QualityDiff): void => {
-  if (diff.key !== undefined) target.key = diff.key;
-  if (diff.name !== undefined) target.name = diff.name;
-  if (diff.description !== undefined) target.description = diff.description;
-  if (diff.uri !== undefined) target.uri = diff.uri;
-  if (diff.kind !== undefined) target.kind = diff.kind;
-  if (diff.folder !== undefined) target.folder = diff.folder;
-  if (diff.canScale !== undefined) target.canScale = diff.canScale;
-  if (diff.defaultSiUnit !== undefined) target.defaultSiUnit = diff.defaultSiUnit;
-  if (diff.defaultImperialUnit !== undefined) target.defaultImperialUnit = diff.defaultImperialUnit;
-  if (diff.min !== undefined) target.min = diff.min;
-  if (diff.isMinExcluded !== undefined) target.isMinExcluded = diff.isMinExcluded;
-  if (diff.max !== undefined) target.max = diff.max;
-  if (diff.isMaxExcluded !== undefined) target.isMaxExcluded = diff.isMaxExcluded;
-  if (diff.defaultValue !== undefined) target.defaultValue = diff.defaultValue;
-  if (diff.formula !== undefined) target.formula = diff.formula;
-  if (diff.icon !== undefined) target.icon = diff.icon;
-  if (diff.image !== undefined) target.image = diff.image;
-  if (diff.unit !== undefined) target.unit = diff.unit;
-  if (diff.benchmarks) {
-    if (!target.benchmarks) target.benchmarks = [];
-    applyBenchmarksDiff(target.benchmarks, diff.benchmarks);
-  }
-  if (diff.attributes) {
-    if (!target.attributes) target.attributes = [];
-    applyAttributesDiff(target.attributes, diff.attributes);
-  }
+  target.applyDiff(diff);
 };
 
 /**
@@ -2607,14 +2666,70 @@ export class Port implements PortPlain {
   toPlain(): PortPlain {
     return PortSchema.parse(this as unknown as PortPlain);
   }
+  /** ⚓Serialize this port for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** ⚓Deserialize a port from transport JSON. */
+  static deserialize(json: string): Port {
+    return new Port(PortSchema.parse(JSON.parse(json)));
+  }
+  /** ⚓Compute a port delta from this port to another port. */
+  diffTo(after: Port): PortDiff {
+    const diff: PortDiff = {};
+    if (this.name !== after.name) diff.name = after.name;
+    if (this.description !== after.description) diff.description = after.description ?? null;
+    if (this.icon !== after.icon) diff.icon = after.icon ?? null;
+    if (this.maxChildren !== after.maxChildren) diff.maxChildren = after.maxChildren ?? null;
+    if (JSON.stringify(this.compatiblePorts) !== JSON.stringify(after.compatiblePorts)) diff.compatiblePorts = after.compatiblePorts;
+    if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
+    return diff;
+  }
+  /** ⚓Build the reverse port delta for an already-applied delta. */
+  inverseDiff(appliedDiff: PortDiff): PortDiff {
+    const inverse: PortDiff = {};
+    if (appliedDiff.name !== undefined) inverse.name = this.name;
+    if (appliedDiff.description !== undefined) inverse.description = this.description ?? null;
+    if (appliedDiff.icon !== undefined) inverse.icon = this.icon ?? null;
+    if (appliedDiff.maxChildren !== undefined) inverse.maxChildren = this.maxChildren ?? null;
+    if (appliedDiff.compatiblePorts !== undefined) inverse.compatiblePorts = this.compatiblePorts;
+    if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+  /** ⚓Merge two port deltas. */
+  static mergeDiff(first: PortDiff, second: PortDiff): PortDiff {
+    return {
+      ...first,
+      ...second,
+      attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes),
+    };
+  }
+  /** ⚓Apply a port delta to this port. */
+  applyDiff(diff: PortDiff): void {
+    if (diff.name !== undefined) this.name = diff.name;
+    if ("description" in diff) {
+      this.description = diff.description !== null ? diff.description : undefined;
+    }
+    if ("icon" in diff) {
+      this.icon = diff.icon !== null ? diff.icon : undefined;
+    }
+    if ("maxChildren" in diff) {
+      this.maxChildren = diff.maxChildren !== null ? diff.maxChildren : undefined;
+    }
+    if (diff.compatiblePorts !== undefined) this.compatiblePorts = diff.compatiblePorts;
+    if (diff.attributes) {
+      if (!this.attributes) this.attributes = [];
+      applyAttributesDiff(this.attributes, diff.attributes);
+    }
+  }
 }
 /**
  * Serializes Port for transport.
  **/
-export const serializePort = (iface: Port): string => JSON.stringify(PortSchema.parse(iface));
+export const serializePort = (iface: Port): string => iface.serialize();
 /**
  **/
-export const deserializePort = (json: string): Port => new Port(PortSchema.parse(JSON.parse(json)));
+export const deserializePort = (json: string): Port => Port.deserialize(json);
 
 /**
  * Definition of PortMetaSchema.
@@ -2667,57 +2782,25 @@ export type PortDiff = z.infer<typeof PortDiffSchema>;
  * Retrieves the PortDiff value.
  **/
 export const getPortDiff = (before: Port, after: Port): PortDiff => {
-  const diff: PortDiff = {};
-  if (before.name !== after.name) diff.name = after.name;
-  if (before.description !== after.description) diff.description = after.description ?? null;
-  if (before.icon !== after.icon) diff.icon = after.icon ?? null;
-  if (before.maxChildren !== after.maxChildren) diff.maxChildren = after.maxChildren ?? null;
-  if (JSON.stringify(before.compatiblePorts) !== JSON.stringify(after.compatiblePorts)) diff.compatiblePorts = after.compatiblePorts;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  return diff;
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inversePort changes.
  **/
 export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => {
-  const inverse: PortDiff = {};
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon ?? null;
-  if (appliedDiff.maxChildren !== undefined) inverse.maxChildren = original.maxChildren ?? null;
-  if (appliedDiff.compatiblePorts !== undefined) inverse.compatiblePorts = original.compatiblePorts;
-  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergePort changes.
  **/
 export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
-  return {
-    ...diff1,
-    ...diff2,
-    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
-  };
+  return Port.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyPort changes.
  **/
 export const applyPortDiff = (target: Port, diff: PortDiff): void => {
-  if (diff.name !== undefined) target.name = diff.name;
-  if ("description" in diff) {
-    target.description = diff.description !== null ? diff.description : undefined;
-  }
-  if ("icon" in diff) {
-    target.icon = diff.icon !== null ? diff.icon : undefined;
-  }
-  if ("maxChildren" in diff) {
-    target.maxChildren = diff.maxChildren !== null ? diff.maxChildren : undefined;
-  }
-  if (diff.compatiblePorts !== undefined) target.compatiblePorts = diff.compatiblePorts;
-  if (diff.attributes) {
-    if (!target.attributes) target.attributes = [];
-    applyAttributesDiff(target.attributes, diff.attributes);
-  }
+  target.applyDiff(diff);
 };
 
 /**
@@ -3071,14 +3154,58 @@ export class Tag implements TagPlain {
   toPlain(): TagPlain {
     return TagSchema.parse(this as unknown as TagPlain);
   }
+  /** 🏷️Serialize this tag for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** 🏷️Deserialize a tag from transport JSON. */
+  static deserialize(json: string): Tag {
+    return new Tag(TagSchema.parse(JSON.parse(json)));
+  }
+  /** 🏷️Compute a tag delta from this tag to another tag. */
+  diffTo(after: Tag): TagDiff {
+    const diff: TagDiff = {};
+    if (this.name !== after.name) diff.name = after.name;
+    if (this.description !== after.description) diff.description = after.description ?? null;
+    if (this.icon !== after.icon) diff.icon = after.icon ?? null;
+    if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
+    return diff;
+  }
+  /** 🏷️Build the reverse tag delta for an already-applied delta. */
+  inverseDiff(appliedDiff: TagDiff): TagDiff {
+    const inverse: TagDiff = {};
+    if (appliedDiff.name !== undefined) inverse.name = this.name;
+    if (appliedDiff.description !== undefined) inverse.description = this.description ?? null;
+    if (appliedDiff.icon !== undefined) inverse.icon = this.icon ?? null;
+    if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+  /** 🏷️Merge two tag deltas. */
+  static mergeDiff(first: TagDiff, second: TagDiff): TagDiff {
+    return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
+  }
+  /** 🏷️Apply a tag delta to this tag. */
+  applyDiff(diff: TagDiff): void {
+    if ("name" in diff && diff.name !== undefined) this.name = diff.name;
+    if ("description" in diff) {
+      this.description = diff.description ?? undefined;
+    }
+    if ("icon" in diff) {
+      this.icon = diff.icon ?? undefined;
+    }
+    if (diff.attributes) {
+      if (!this.attributes) this.attributes = [];
+      applyAttributesDiff(this.attributes, diff.attributes);
+    }
+  }
 }
 /**
  * Serializes Tag for transport.
  **/
-export const serializeTag = (tag: Tag): string => JSON.stringify(TagSchema.parse(tag));
+export const serializeTag = (tag: Tag): string => tag.serialize();
 /**
  **/
-export const deserializeTag = (json: string): Tag => new Tag(TagSchema.parse(JSON.parse(json)));
+export const deserializeTag = (json: string): Tag => Tag.deserialize(json);
 
 /**
  * Definition of TagMetaSchema.
@@ -3127,45 +3254,25 @@ export type TagDiff = z.infer<typeof TagDiffSchema>;
  * Retrieves the TagDiff value.
  **/
 export const getTagDiff = (before: Tag, after: Tag): TagDiff => {
-  const diff: TagDiff = {};
-  if (before.name !== after.name) diff.name = after.name;
-  if (before.description !== after.description) diff.description = after.description ?? null;
-  if (before.icon !== after.icon) diff.icon = after.icon ?? null;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  return diff;
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inverseTag changes.
  **/
 export const inverseTagDiff = (original: Tag, appliedDiff: TagDiff): TagDiff => {
-  const inverse: TagDiff = {};
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon ?? null;
-  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergeTag changes.
  **/
 export const mergeTagDiff = (diff1: TagDiff, diff2: TagDiff): TagDiff => {
-  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
+  return Tag.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyTag changes.
  **/
 export const applyTagDiff = (target: Tag, diff: TagDiff): void => {
-  if ("name" in diff && diff.name !== undefined) target.name = diff.name;
-  if ("description" in diff) {
-    target.description = diff.description ?? undefined;
-  }
-  if ("icon" in diff) {
-    target.icon = diff.icon ?? undefined;
-  }
-  if (diff.attributes) {
-    if (!target.attributes) target.attributes = [];
-    applyAttributesDiff(target.attributes, diff.attributes);
-  }
+  target.applyDiff(diff);
 };
 
 /**
@@ -3303,14 +3410,58 @@ export class Concept implements ConceptPlain {
   toPlain(): ConceptPlain {
     return ConceptSchema.parse(this as unknown as ConceptPlain);
   }
+  /** 💡Serialize this concept for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** 💡Deserialize a concept from transport JSON. */
+  static deserialize(json: string): Concept {
+    return new Concept(ConceptSchema.parse(JSON.parse(json)));
+  }
+  /** 💡Compute a concept delta from this concept to another concept. */
+  diffTo(after: Concept): ConceptDiff {
+    const diff: ConceptDiff = {};
+    if (this.name !== after.name) diff.name = after.name;
+    if (this.description !== after.description) diff.description = after.description ?? null;
+    if (this.icon !== after.icon) diff.icon = after.icon ?? null;
+    if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
+    return diff;
+  }
+  /** 💡Build the reverse concept delta for an already-applied delta. */
+  inverseDiff(appliedDiff: ConceptDiff): ConceptDiff {
+    const inverse: ConceptDiff = {};
+    if (appliedDiff.name !== undefined) inverse.name = this.name;
+    if (appliedDiff.description !== undefined) inverse.description = this.description ?? null;
+    if (appliedDiff.icon !== undefined) inverse.icon = this.icon ?? null;
+    if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+  /** 💡Merge two concept deltas. */
+  static mergeDiff(first: ConceptDiff, second: ConceptDiff): ConceptDiff {
+    return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
+  }
+  /** 💡Apply a concept delta to this concept. */
+  applyDiff(diff: ConceptDiff): void {
+    if ("name" in diff && diff.name !== undefined) this.name = diff.name;
+    if ("description" in diff) {
+      this.description = diff.description ?? undefined;
+    }
+    if ("icon" in diff) {
+      this.icon = diff.icon ?? undefined;
+    }
+    if (diff.attributes) {
+      if (!this.attributes) this.attributes = [];
+      applyAttributesDiff(this.attributes, diff.attributes);
+    }
+  }
 }
 /**
  * Serializes Concept for transport.
  **/
-export const serializeConcept = (concept: Concept): string => JSON.stringify(ConceptSchema.parse(concept));
+export const serializeConcept = (concept: Concept): string => concept.serialize();
 /**
  **/
-export const deserializeConcept = (json: string): Concept => new Concept(ConceptSchema.parse(JSON.parse(json)));
+export const deserializeConcept = (json: string): Concept => Concept.deserialize(json);
 
 /**
  * Definition of ConceptMetaSchema.
@@ -3359,45 +3510,25 @@ export type ConceptDiff = z.infer<typeof ConceptDiffSchema>;
  * Retrieves the ConceptDiff value.
  **/
 export const getConceptDiff = (before: Concept, after: Concept): ConceptDiff => {
-  const diff: ConceptDiff = {};
-  if (before.name !== after.name) diff.name = after.name;
-  if (before.description !== after.description) diff.description = after.description ?? null;
-  if (before.icon !== after.icon) diff.icon = after.icon ?? null;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  return diff;
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inverseConcept changes.
  **/
 export const inverseConceptDiff = (original: Concept, appliedDiff: ConceptDiff): ConceptDiff => {
-  const inverse: ConceptDiff = {};
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon ?? null;
-  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergeConcept changes.
  **/
 export const mergeConceptDiff = (diff1: ConceptDiff, diff2: ConceptDiff): ConceptDiff => {
-  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
+  return Concept.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyConcept changes.
  **/
 export const applyConceptDiff = (target: Concept, diff: ConceptDiff): void => {
-  if ("name" in diff && diff.name !== undefined) target.name = diff.name;
-  if ("description" in diff) {
-    target.description = diff.description ?? undefined;
-  }
-  if ("icon" in diff) {
-    target.icon = diff.icon ?? undefined;
-  }
-  if (diff.attributes) {
-    if (!target.attributes) target.attributes = [];
-    applyAttributesDiff(target.attributes, diff.attributes);
-  }
+  target.applyDiff(diff);
 };
 
 /**
@@ -3537,14 +3668,57 @@ export class Model implements ModelPlain {
   toPlain(): ModelPlain {
     return ModelSchema.parse(this as unknown as ModelPlain);
   }
+  /** 🗿Serialize this model for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** 🗿Deserialize a model from transport JSON. */
+  static deserialize(json: string): Model {
+    return new Model(ModelSchema.parse(JSON.parse(json)));
+  }
+  /** 🗿Compute a model delta from this model to another model. */
+  diffTo(after: Model): ModelDiff {
+    const diff: ModelDiff = {};
+    if (this.name !== after.name) diff.name = after.name;
+    if (JSON.stringify(this.tags) !== JSON.stringify(after.tags)) diff.tags = after.tags;
+    if (this.file.guid !== after.file.guid) diff.file = after.file;
+    if (this.description !== after.description) diff.description = after.description;
+    if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
+    return diff;
+  }
+  /** 🗿Build the reverse model delta for an already-applied delta. */
+  inverseDiff(appliedDiff: ModelDiff): ModelDiff {
+    const inverse: ModelDiff = {};
+    if (appliedDiff.name !== undefined) inverse.name = this.name;
+    if (appliedDiff.tags !== undefined) inverse.tags = this.tags;
+    if (appliedDiff.file !== undefined) inverse.file = this.file;
+    if (appliedDiff.description !== undefined) inverse.description = this.description;
+    if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+  /** 🗿Merge two model deltas. */
+  static mergeDiff(first: ModelDiff, second: ModelDiff): ModelDiff {
+    return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
+  }
+  /** 🗿Apply a model delta to this model. */
+  applyDiff(diff: ModelDiff): void {
+    if (diff.file !== undefined) this.file = diff.file;
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.tags !== undefined) this.tags = diff.tags;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.attributes) {
+      if (!this.attributes) this.attributes = [];
+      applyAttributesDiff(this.attributes, diff.attributes);
+    }
+  }
 }
 /**
  * Serializes Model for transport.
  **/
-export const serializeModel = (model: Model): string => JSON.stringify(ModelSchema.parse(model));
+export const serializeModel = (model: Model): string => model.serialize();
 /**
  **/
-export const deserializeModel = (json: string): Model => new Model(ModelSchema.parse(JSON.parse(json)));
+export const deserializeModel = (json: string): Model => Model.deserialize(json);
 
 /**
  * Definition of ModelMetaSchema.
@@ -3591,44 +3765,25 @@ export type ModelDiff = z.infer<typeof ModelDiffSchema>;
  * Retrieves the ModelDiff value.
  **/
 export const getModelDiff = (before: Model, after: Model): ModelDiff => {
-  const diff: ModelDiff = {};
-  if (before.name !== after.name) diff.name = after.name;
-  if (JSON.stringify(before.tags) !== JSON.stringify(after.tags)) diff.tags = after.tags;
-  if (before.file.guid !== after.file.guid) diff.file = after.file;
-  if (before.description !== after.description) diff.description = after.description;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  return diff;
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inverseModel changes.
  **/
 export const inverseModelDiff = (original: Model, appliedDiff: ModelDiff): ModelDiff => {
-  const inverse: ModelDiff = {};
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.tags !== undefined) inverse.tags = original.tags;
-  if (appliedDiff.file !== undefined) inverse.file = original.file;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergeModel changes.
  **/
 export const mergeModelDiff = (diff1: ModelDiff, diff2: ModelDiff): ModelDiff => {
-  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
+  return Model.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyModel changes.
  **/
 export const applyModelDiff = (target: Model, diff: ModelDiff): void => {
-  if (diff.file !== undefined) target.file = diff.file;
-  if (diff.name !== undefined) target.name = diff.name;
-  if (diff.tags !== undefined) target.tags = diff.tags;
-  if (diff.description !== undefined) target.description = diff.description;
-  if (diff.attributes) {
-    if (!target.attributes) target.attributes = [];
-    applyAttributesDiff(target.attributes, diff.attributes);
-  }
+  target.applyDiff(diff);
 };
 
 /**
@@ -3858,14 +4013,84 @@ export class Connector implements ConnectorPlain {
   toPlain(): ConnectorPlain {
     return ConnectorSchema.parse(this as unknown as ConnectorPlain);
   }
+  /** 🔌Serialize this connector for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** 🔌Deserialize a connector from transport JSON. */
+  static deserialize(json: string): Connector {
+    return new Connector(ConnectorSchema.parse(JSON.parse(json)));
+  }
+  /** 🔌Compute a connector delta from this connector to another connector. */
+  diffTo(after: Connector): ConnectorDiff {
+    const diff: ConnectorDiff = {};
+    if (this.name !== after.name) diff.name = after.name;
+    if (this.description !== after.description) diff.description = after.description;
+    if (this.port?.guid !== after.port?.guid) diff.port = after.port;
+    if (this.mandatory !== after.mandatory) diff.mandatory = after.mandatory;
+    if (this.maxChildren !== after.maxChildren) diff.maxChildren = after.maxChildren ?? null;
+    if (this.t !== after.t) diff.t = after.t;
+    if (!deepEqual(this.point, after.point)) diff.point = this.point.diffTo(after.point);
+    if (!deepEqual(this.direction, after.direction)) diff.direction = this.direction.diffTo(after.direction);
+    if (!deepEqual(this.props, after.props)) diff.props = getPropsDiff(this.props ?? [], after.props ?? []);
+    if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
+    return diff;
+  }
+  /** 🔌Build the reverse connector delta for an already-applied delta. */
+  inverseDiff(appliedDiff: ConnectorDiff): ConnectorDiff {
+    const inverse: ConnectorDiff = {};
+    if (appliedDiff.name !== undefined) inverse.name = this.name;
+    if (appliedDiff.description !== undefined) inverse.description = this.description;
+    if (appliedDiff.port !== undefined) inverse.port = this.port;
+    if (appliedDiff.mandatory !== undefined) inverse.mandatory = this.mandatory;
+    if (appliedDiff.maxChildren !== undefined) inverse.maxChildren = this.maxChildren ?? null;
+    if (appliedDiff.t !== undefined) inverse.t = this.t;
+    if (appliedDiff.point !== undefined) inverse.point = this.point.inverseDiff(appliedDiff.point);
+    if (appliedDiff.direction !== undefined) inverse.direction = this.direction.inverseDiff(appliedDiff.direction);
+    if (appliedDiff.props !== undefined) inverse.props = inversePropsDiff(this.props ?? [], appliedDiff.props);
+    if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+  /** 🔌Merge two connector deltas. */
+  static mergeDiff(first: ConnectorDiff, second: ConnectorDiff): ConnectorDiff {
+    return {
+      ...first,
+      ...second,
+      point: second.point ?? first.point,
+      direction: second.direction ?? first.direction,
+      props: first.props && second.props ? mergePropsDiff(first.props, second.props) : (second.props ?? first.props),
+      attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes),
+    };
+  }
+  /** 🔌Apply a connector delta to this connector. */
+  applyDiff(diff: ConnectorDiff): void {
+    if (diff.t !== undefined) this.t = diff.t;
+    if (diff.point) this.point.applyDiff(diff.point);
+    if (diff.direction) this.direction.applyDiff(diff.direction);
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.port !== undefined) this.port = diff.port;
+    if (diff.mandatory !== undefined) this.mandatory = diff.mandatory;
+    if ("maxChildren" in diff) {
+      this.maxChildren = diff.maxChildren !== null ? diff.maxChildren : undefined;
+    }
+    if (diff.props) {
+      if (!this.props) this.props = [];
+      applyPropsDiff(this.props, diff.props);
+    }
+    if (diff.attributes) {
+      if (!this.attributes) this.attributes = [];
+      applyAttributesDiff(this.attributes, diff.attributes);
+    }
+  }
 }
 /**
  * Serializes Connector for transport.
  **/
-export const serializeConnector = (connector: Connector): string => JSON.stringify(ConnectorSchema.parse(connector));
+export const serializeConnector = (connector: Connector): string => connector.serialize();
 /**
  **/
-export const deserializeConnector = (json: string): Connector => new Connector(ConnectorSchema.parse(JSON.parse(json)));
+export const deserializeConnector = (json: string): Connector => Connector.deserialize(json);
 
 /**
  * Definition of ConnectorMetaSchema.
@@ -3916,71 +4141,25 @@ export type ConnectorDiff = z.infer<typeof ConnectorDiffSchema>;
  * Retrieves the ConnectorDiff value.
  **/
 export const getConnectorDiff = (before: Connector, after: Connector): ConnectorDiff => {
-  const diff: ConnectorDiff = {};
-  if (before.name !== after.name) diff.name = after.name;
-  if (before.description !== after.description) diff.description = after.description;
-  if (before.port?.guid !== after.port?.guid) diff.port = after.port;
-  if (before.mandatory !== after.mandatory) diff.mandatory = after.mandatory;
-  if (before.maxChildren !== after.maxChildren) diff.maxChildren = after.maxChildren ?? null;
-  if (before.t !== after.t) diff.t = after.t;
-  if (!deepEqual(before.point, after.point)) diff.point = getPointDiff(before.point, after.point);
-  if (!deepEqual(before.direction, after.direction)) diff.direction = getVectorDiff(before.direction, after.direction);
-  if (!deepEqual(before.props, after.props)) diff.props = getPropsDiff(before.props ?? [], after.props ?? []);
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  return diff;
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking mergeConnector changes.
  **/
 export const mergeConnectorDiff = (diff1: ConnectorDiff, diff2: ConnectorDiff): ConnectorDiff => {
-  return {
-    ...diff1,
-    ...diff2,
-    point: diff2.point ?? diff1.point,
-    direction: diff2.direction ?? diff1.direction,
-    props: diff1.props && diff2.props ? mergePropsDiff(diff1.props, diff2.props) : (diff2.props ?? diff1.props),
-    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
-  };
+  return Connector.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking inverseConnector changes.
  **/
 export const inverseConnectorDiff = (original: Connector, appliedDiff: ConnectorDiff): ConnectorDiff => {
-  const inverse: ConnectorDiff = {};
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.port !== undefined) inverse.port = original.port;
-  if (appliedDiff.mandatory !== undefined) inverse.mandatory = original.mandatory;
-  if (appliedDiff.maxChildren !== undefined) inverse.maxChildren = original.maxChildren ?? null;
-  if (appliedDiff.t !== undefined) inverse.t = original.t;
-  if (appliedDiff.point !== undefined) inverse.point = inversePointDiff(original.point, appliedDiff.point);
-  if (appliedDiff.direction !== undefined) inverse.direction = inverseVectorDiff(original.direction, appliedDiff.direction);
-  if (appliedDiff.props !== undefined) inverse.props = inversePropsDiff(original.props ?? [], appliedDiff.props);
-  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking applyConnector changes.
  **/
 export const applyConnectorDiff = (target: Connector, diff: ConnectorDiff): void => {
-  if (diff.t !== undefined) target.t = diff.t;
-  if (diff.point) applyPointDiff(target.point, diff.point);
-  if (diff.direction) applyVectorDiff(target.direction, diff.direction);
-  if (diff.name !== undefined) target.name = diff.name;
-  if (diff.description !== undefined) target.description = diff.description;
-  if (diff.port !== undefined) target.port = diff.port;
-  if (diff.mandatory !== undefined) target.mandatory = diff.mandatory;
-  if ("maxChildren" in diff) {
-    target.maxChildren = diff.maxChildren !== null ? diff.maxChildren : undefined;
-  }
-  if (diff.props) {
-    if (!target.props) target.props = [];
-    applyPropsDiff(target.props, diff.props);
-  }
-  if (diff.attributes) {
-    if (!target.attributes) target.attributes = [];
-    applyAttributesDiff(target.attributes, diff.attributes);
-  }
+  target.applyDiff(diff);
 };
 
 /**
@@ -4137,15 +4316,15 @@ export class Type {
         ],
       },
     };
-    return this.#kit.change(diff);
+    return this.#kit._applyDiff(diff);
   }
 
   /**
    * 🗑️Delete this type via the kit graph pipeline
    */
-  delete(): KitChange {
+  delete(opts?: KitChangeOptions): KitChange {
     if (!this.#kit) throw new Error("Type not attached to a Kit");
-    return this.#kit.removeType(this);
+    return this.#kit.removeType(this, opts);
   }
 
   /**
@@ -4225,6 +4404,100 @@ export class Type {
       props: this.props?.map((p) => PropMetaSchema.parse(p.toPlain())),
       attributes: this.attributes?.map((a) => AttributeMetaSchema.parse(a.toPlain())),
     });
+  }
+
+  /** 🧱Compute a type delta from this type to another type. */
+  diffTo(after: Type): TypeDiff {
+    const diff: TypeDiff = {};
+    if (this.name !== after.name) diff.name = after.name;
+    if (this.wireParentId()?.guid !== after.wireParentId()?.guid) diff.parent = after.wireParentId() ?? null;
+    if (this.isAbstract !== after.isAbstract) diff.isAbstract = after.isAbstract;
+    if (this.folder !== after.folder) diff.folder = after.folder ?? null;
+    if (this.stock !== after.stock) diff.stock = after.stock;
+    if (this.virtual !== after.virtual) diff.virtual = after.virtual;
+    if (this.unit !== after.unit) diff.unit = after.unit;
+    if (this.createdAt !== after.createdAt) diff.createdAt = after.createdAt;
+    if (this.updatedAt !== after.updatedAt) diff.updatedAt = after.updatedAt;
+    if (this.location?.guid !== after.location?.guid) diff.location = after.location ?? null;
+    if (this.icon !== after.icon) diff.icon = after.icon ?? null;
+    if (this.image !== after.image) diff.image = after.image ?? null;
+    if (this.description !== after.description) diff.description = after.description ?? null;
+    if (JSON.stringify(this.authors) !== JSON.stringify(after.authors)) diff.authors = after.authors ?? null;
+    if (JSON.stringify(this.concepts) !== JSON.stringify(after.concepts)) diff.concepts = after.concepts ?? null;
+    if (!deepEqual(this.models, after.models)) diff.models = getCollectionDiff("model", this.models ?? [], after.models ?? [], getModelDiff);
+    if (!deepEqual(this.connectors, after.connectors)) diff.connectors = getCollectionDiff("connector", this.connectors ?? [], after.connectors ?? [], getConnectorDiff);
+    if (!deepEqual(this.props, after.props)) diff.props = getPropsDiff(this.props ?? [], after.props ?? []);
+    if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
+    return diff;
+  }
+
+  /** 🧱Build the reverse type delta for an already-applied delta. */
+  inverseDiff(appliedDiff: TypeDiff): TypeDiff {
+    const inverse: TypeDiff = {};
+    if (appliedDiff.name !== undefined) inverse.name = this.name;
+    if (appliedDiff.parent !== undefined) inverse.parent = this.wireParentId() ?? null;
+    if (appliedDiff.isAbstract !== undefined) inverse.isAbstract = this.isAbstract;
+    if (appliedDiff.folder !== undefined) inverse.folder = this.folder ?? null;
+    if (appliedDiff.stock !== undefined) inverse.stock = this.stock;
+    if (appliedDiff.virtual !== undefined) inverse.virtual = this.virtual;
+    if (appliedDiff.unit !== undefined) inverse.unit = this.unit;
+    if (appliedDiff.createdAt !== undefined) inverse.createdAt = this.createdAt;
+    if (appliedDiff.updatedAt !== undefined) inverse.updatedAt = this.updatedAt;
+    if (appliedDiff.location !== undefined) inverse.location = this.location ?? null;
+    if (appliedDiff.icon !== undefined) inverse.icon = this.icon ?? null;
+    if (appliedDiff.image !== undefined) inverse.image = this.image ?? null;
+    if (appliedDiff.description !== undefined) inverse.description = this.description ?? null;
+    if (appliedDiff.authors !== undefined) inverse.authors = this.authors ?? null;
+    if (appliedDiff.concepts !== undefined) inverse.concepts = this.concepts ?? null;
+    if (appliedDiff.models) inverse.models = inverseCollectionDiff("model", this.models ?? [], appliedDiff.models, inverseModelDiff);
+    if (appliedDiff.connectors) inverse.connectors = inverseCollectionDiff("connector", this.connectors ?? [], appliedDiff.connectors, inverseConnectorDiff);
+    if (appliedDiff.props) inverse.props = inversePropsDiff(this.props ?? [], appliedDiff.props);
+    if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+
+  /** 🧱Merge two type deltas. */
+  static mergeDiff(first: TypeDiff, second: TypeDiff): TypeDiff {
+    return {
+      ...first,
+      ...second,
+      attributes: first.attributes || second.attributes ? mergeAttributesDiff(first.attributes ?? {}, second.attributes ?? {}) : undefined,
+    };
+  }
+
+  /** 🧱Apply a type delta to this type. */
+  applyDiff(diff: TypeDiff): void {
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.isAbstract !== undefined) this.isAbstract = diff.isAbstract;
+    if (diff.createdAt !== undefined) this.createdAt = diff.createdAt;
+    if (diff.updatedAt !== undefined) this.updatedAt = diff.updatedAt;
+    if (diff.parent !== undefined) this.setParentWireRef(diff.parent);
+    if (diff.folder !== undefined) this.folder = diff.folder ?? undefined;
+    if (diff.stock !== undefined) this.stock = diff.stock;
+    if (diff.virtual !== undefined) this.virtual = diff.virtual;
+    if (diff.unit !== undefined) this.unit = diff.unit;
+    if (diff.location !== undefined) this.location = diff.location ?? undefined;
+    if (diff.icon !== undefined) this.icon = diff.icon ?? undefined;
+    if (diff.image !== undefined) this.image = diff.image ?? undefined;
+    if (diff.description !== undefined) this.description = diff.description ?? undefined;
+    if (diff.authors !== undefined) this.authors = diff.authors ?? undefined;
+    if (diff.concepts !== undefined) this.concepts = diff.concepts ?? undefined;
+    if (diff.models) {
+      if (!this.models) this.models = [];
+      applyCollectionDiff("model", this.models, diff.models, applyModelDiff, (raw) => new Model(raw as ModelPlain));
+    }
+    if (diff.connectors) {
+      if (!this.connectors) this.connectors = [];
+      applyCollectionDiff("connector", this.connectors, diff.connectors, applyConnectorDiff, (raw) => new Connector(raw as ConnectorPlain));
+    }
+    if (diff.props) {
+      if (!this.props) this.props = [];
+      applyCollectionDiff("prop", this.props, diff.props, applyPropDiff, (raw) => new Prop(raw as PropPlain));
+    }
+    if (diff.attributes) {
+      if (!this.attributes) this.attributes = [];
+      applyAttributesDiff(this.attributes, diff.attributes);
+    }
   }
 }
 /**
@@ -4311,73 +4584,21 @@ export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
  * Diff type for tracking applyType changes.
  **/
 export const applyTypeDiff = (target: Type, diff: TypeDiff): void => {
-  if (diff.name !== undefined) target.name = diff.name;
-  if (diff.isAbstract !== undefined) target.isAbstract = diff.isAbstract;
-  if (diff.createdAt !== undefined) target.createdAt = diff.createdAt;
-  if (diff.updatedAt !== undefined) target.updatedAt = diff.updatedAt;
-  if (diff.parent !== undefined) target.setParentWireRef(diff.parent);
-  if (diff.folder !== undefined) target.folder = diff.folder ?? undefined;
-  if (diff.stock !== undefined) target.stock = diff.stock;
-  if (diff.virtual !== undefined) target.virtual = diff.virtual;
-  if (diff.unit !== undefined) target.unit = diff.unit;
-  if (diff.location !== undefined) target.location = diff.location ?? undefined;
-  if (diff.icon !== undefined) target.icon = diff.icon ?? undefined;
-  if (diff.image !== undefined) target.image = diff.image ?? undefined;
-  if (diff.description !== undefined) target.description = diff.description ?? undefined;
-  if (diff.authors !== undefined) target.authors = diff.authors ?? undefined;
-  if (diff.concepts !== undefined) target.concepts = diff.concepts ?? undefined;
-  if (diff.models) {
-    if (!target.models) target.models = [];
-    applyCollectionDiff("model", target.models, diff.models, applyModelDiff, (raw) => new Model(raw as ModelPlain));
-  }
-  if (diff.connectors) {
-    if (!target.connectors) target.connectors = [];
-    applyCollectionDiff("connector", target.connectors, diff.connectors, applyConnectorDiff, (raw) => new Connector(raw as ConnectorPlain));
-  }
-  if (diff.props) {
-    if (!target.props) target.props = [];
-    applyCollectionDiff("prop", target.props, diff.props, applyPropDiff, (raw) => new Prop(raw as PropPlain));
-  }
-  if (diff.attributes) {
-    if (!target.attributes) target.attributes = [];
-    applyAttributesDiff(target.attributes, diff.attributes);
-  }
+  target.applyDiff(diff);
 };
 
 /**
  * Diff type for tracking mergeType changes.
  **/
 export const mergeTypeDiff = (diff1: TypeDiff, diff2: TypeDiff): TypeDiff => {
-  return {
-    ...diff1,
-    ...diff2,
-    attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
-  };
+  return Type.mergeDiff(diff1, diff2);
 };
 
 /**
  * Diff type for tracking inverseType changes.
  **/
 export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff => {
-  const inverse: TypeDiff = {};
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.parent !== undefined) inverse.parent = original.wireParentId() ?? null;
-  if (appliedDiff.isAbstract !== undefined) inverse.isAbstract = original.isAbstract;
-  if (appliedDiff.folder !== undefined) inverse.folder = original.folder ?? null;
-  if (appliedDiff.stock !== undefined) inverse.stock = original.stock;
-  if (appliedDiff.virtual !== undefined) inverse.virtual = original.virtual;
-  if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
-  if (appliedDiff.location !== undefined) inverse.location = original.location ?? null;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon ?? null;
-  if (appliedDiff.image !== undefined) inverse.image = original.image ?? null;
-  if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
-  if (appliedDiff.authors !== undefined) inverse.authors = original.authors ?? null;
-  if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts ?? null;
-  if (appliedDiff.models) inverse.models = inverseCollectionDiff("model", original.models ?? [], appliedDiff.models, inverseModelDiff);
-  if (appliedDiff.connectors) inverse.connectors = inverseCollectionDiff("connector", original.connectors ?? [], appliedDiff.connectors, inverseConnectorDiff);
-  if (appliedDiff.props) inverse.props = inverseCollectionDiff("prop", original.props ?? [], appliedDiff.props, inversePropDiff);
-  if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 
 /**
@@ -4438,14 +4659,60 @@ export class Layer implements LayerPlain {
   toPlain(): LayerPlain {
     return LayerSchema.parse(this as unknown as LayerPlain);
   }
+  /** 🎨Serialize this layer for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** 🎨Deserialize a layer from transport JSON. */
+  static deserialize(json: string): Layer {
+    return new Layer(LayerSchema.parse(JSON.parse(json)));
+  }
+  /** 🎨Compute a layer delta from this layer to another layer. */
+  diffTo(after: Layer): LayerDiff {
+    const diff: LayerDiff = {};
+    if (this.path !== after.path) diff.path = after.path;
+    if (this.isHidden !== after.isHidden) diff.isHidden = after.isHidden;
+    if (this.isLocked !== after.isLocked) diff.isLocked = after.isLocked;
+    if (this.color !== after.color) diff.color = after.color;
+    if (this.description !== after.description) diff.description = after.description;
+    if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
+    return diff;
+  }
+  /** 🎨Build the reverse layer delta for an already-applied delta. */
+  inverseDiff(appliedDiff: LayerDiff): LayerDiff {
+    const inverse: LayerDiff = {};
+    if (appliedDiff.path !== undefined) inverse.path = this.path;
+    if (appliedDiff.isHidden !== undefined) inverse.isHidden = this.isHidden;
+    if (appliedDiff.isLocked !== undefined) inverse.isLocked = this.isLocked;
+    if (appliedDiff.color !== undefined) inverse.color = this.color;
+    if (appliedDiff.description !== undefined) inverse.description = this.description;
+    if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+  /** 🎨Merge two layer deltas. */
+  static mergeDiff(first: LayerDiff, second: LayerDiff): LayerDiff {
+    return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
+  }
+  /** 🎨Apply a layer delta to this layer. */
+  applyDiff(diff: LayerDiff): void {
+    if (diff.path !== undefined) this.path = diff.path;
+    if (diff.isHidden !== undefined) this.isHidden = diff.isHidden;
+    if (diff.isLocked !== undefined) this.isLocked = diff.isLocked;
+    if (diff.color !== undefined) this.color = diff.color;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.attributes) {
+      if (!this.attributes) this.attributes = [];
+      applyAttributesDiff(this.attributes, diff.attributes);
+    }
+  }
 }
 /**
  * Serializes Layer for transport.
  **/
-export const serializeLayer = (layer: Layer): string => JSON.stringify(LayerSchema.parse(layer));
+export const serializeLayer = (layer: Layer): string => layer.serialize();
 /**
  **/
-export const deserializeLayer = (json: string): Layer => new Layer(LayerSchema.parse(JSON.parse(json)));
+export const deserializeLayer = (json: string): Layer => Layer.deserialize(json);
 
 /**
  * Definition of LayerMetaSchema.
@@ -4493,47 +4760,25 @@ export type LayerDiff = z.infer<typeof LayerDiffSchema>;
  * Retrieves the LayerDiff value.
  **/
 export const getLayerDiff = (before: Layer, after: Layer): LayerDiff => {
-  const diff: LayerDiff = {};
-  if (before.path !== after.path) diff.path = after.path;
-  if (before.isHidden !== after.isHidden) diff.isHidden = after.isHidden;
-  if (before.isLocked !== after.isLocked) diff.isLocked = after.isLocked;
-  if (before.color !== after.color) diff.color = after.color;
-  if (before.description !== after.description) diff.description = after.description;
-  if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  return diff;
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inverseLayer changes.
  **/
 export const inverseLayerDiff = (original: Layer, appliedDiff: LayerDiff): LayerDiff => {
-  const inverse: LayerDiff = {};
-  if (appliedDiff.path !== undefined) inverse.path = original.path;
-  if (appliedDiff.isHidden !== undefined) inverse.isHidden = original.isHidden;
-  if (appliedDiff.isLocked !== undefined) inverse.isLocked = original.isLocked;
-  if (appliedDiff.color !== undefined) inverse.color = original.color;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergeLayer changes.
  **/
 export const mergeLayerDiff = (diff1: LayerDiff, diff2: LayerDiff): LayerDiff => {
-  return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
+  return Layer.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyLayer changes.
  **/
 export const applyLayerDiff = (target: Layer, diff: LayerDiff): void => {
-  if (diff.path !== undefined) target.path = diff.path;
-  if (diff.isHidden !== undefined) target.isHidden = diff.isHidden;
-  if (diff.isLocked !== undefined) target.isLocked = diff.isLocked;
-  if (diff.color !== undefined) target.color = diff.color;
-  if (diff.description !== undefined) target.description = diff.description;
-  if (diff.attributes) {
-    if (!target.attributes) target.attributes = [];
-    applyAttributesDiff(target.attributes, diff.attributes);
-  }
+  target.applyDiff(diff);
 };
 
 /**
@@ -4742,12 +4987,68 @@ export class Piece {
 
   /** ↩️Compute the inverse piece delta for an already-applied delta. */
   inverseDiff(appliedDiff: PieceDiff): PieceDiff {
-    return inversePieceDiff(this, appliedDiff);
+    const inverse: PieceDiff = {};
+    if (appliedDiff.name !== undefined) inverse.name = this.name;
+    if (appliedDiff.type !== undefined) inverse.type = this.wireTypeId();
+    if (appliedDiff.design !== undefined) inverse.design = this.wireDesignAsPieceId();
+    if (appliedDiff.plane !== undefined) inverse.plane = this.plane;
+    if (appliedDiff.center !== undefined) inverse.center = this.center;
+    if (appliedDiff.scale !== undefined) inverse.scale = this.scale;
+    if (appliedDiff.mirrorPlane !== undefined) inverse.mirrorPlane = this.mirrorPlane;
+    if (appliedDiff.isHidden !== undefined) inverse.isHidden = this.isHidden;
+    if (appliedDiff.isLocked !== undefined) inverse.isLocked = this.isLocked;
+    if (appliedDiff.color !== undefined) inverse.color = this.color;
+    if (appliedDiff.description !== undefined) inverse.description = this.description;
+    if (appliedDiff.props !== undefined) inverse.props = inversePropsDiff(this.props ?? [], appliedDiff.props);
+    if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+
+  /** 🧮Merge two piece deltas. */
+  static mergeDiff(first: PieceDiff, second: PieceDiff): PieceDiff {
+    return {
+      ...first,
+      ...second,
+      props: first.props && second.props ? mergePropsDiff(first.props, second.props) : (second.props ?? first.props),
+      attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes),
+    };
   }
 
   /** ✍️Apply a piece delta in place. */
   applyDiff(diff: PieceDiff): void {
-    applyPieceDiff(this, diff);
+    if (diff.plane) {
+      const diffPlane = diff.plane as any;
+      const looksLikeFullPlane = diffPlane.origin && diffPlane.xAxis && diffPlane.yAxis && typeof diffPlane.origin.x === "number" && typeof diffPlane.xAxis.x === "number" && typeof diffPlane.yAxis.x === "number";
+      if (looksLikeFullPlane) {
+        this.plane = new Plane(PlaneSchema.parse(diffPlane));
+      } else {
+        if (!this.plane)
+          this.plane = new Plane({
+            origin: { x: 0, y: 0, z: 0 },
+            xAxis: { x: 1, y: 0, z: 0 },
+            yAxis: { x: 0, y: 1, z: 0 },
+          });
+        this.plane.applyDiff(diff.plane);
+      }
+    }
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.type !== undefined) this.syncTypeFromWire(diff.type);
+    if (diff.design !== undefined) this.syncDesignAsPieceFromWire(diff.design);
+    if (diff.center !== undefined) this.center = diff.center instanceof Coord ? diff.center : new Coord(CoordSchema.parse(diff.center as CoordPlain));
+    if (diff.scale !== undefined) this.scale = diff.scale;
+    if (diff.mirrorPlane !== undefined) this.mirrorPlane = diff.mirrorPlane instanceof Plane ? diff.mirrorPlane : new Plane(PlaneSchema.parse(diff.mirrorPlane as PlanePlain));
+    if (diff.isHidden !== undefined) this.isHidden = diff.isHidden;
+    if (diff.isLocked !== undefined) this.isLocked = diff.isLocked;
+    if (diff.color !== undefined) this.color = diff.color;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.props) {
+      if (!this.props) this.props = [];
+      applyPropsDiff(this.props, diff.props);
+    }
+    if (diff.attributes) {
+      if (!this.attributes) this.attributes = [];
+      applyAttributesDiff(this.attributes, diff.attributes);
+    }
   }
 
   /** 📦Serialize this piece for wire transport. */
@@ -4837,70 +5138,19 @@ export const getPieceDiff = (before: Piece, after: Piece): PieceDiff => {
  * Diff type for tracking inversePiece changes.
  **/
 export const inversePieceDiff = (original: Piece, appliedDiff: PieceDiff): PieceDiff => {
-  const inverse: PieceDiff = {};
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.type !== undefined) inverse.type = original.wireTypeId();
-  if (appliedDiff.design !== undefined) inverse.design = original.wireDesignAsPieceId();
-  if (appliedDiff.plane !== undefined) inverse.plane = original.plane;
-  if (appliedDiff.center !== undefined) inverse.center = original.center;
-  if (appliedDiff.scale !== undefined) inverse.scale = original.scale;
-  if (appliedDiff.mirrorPlane !== undefined) inverse.mirrorPlane = original.mirrorPlane;
-  if (appliedDiff.isHidden !== undefined) inverse.isHidden = original.isHidden;
-  if (appliedDiff.isLocked !== undefined) inverse.isLocked = original.isLocked;
-  if (appliedDiff.color !== undefined) inverse.color = original.color;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.props !== undefined) inverse.props = inversePropsDiff(original.props ?? [], appliedDiff.props);
-  if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergePiece changes.
  **/
 export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff => {
-  return {
-    ...diff1,
-    ...diff2,
-    props: diff1.props && diff2.props ? mergePropsDiff(diff1.props, diff2.props) : (diff2.props ?? diff1.props),
-    attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
-  };
+  return Piece.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking applyPiece changes.
  **/
 export const applyPieceDiff = (target: Piece, diff: PieceDiff): void => {
-  if (diff.plane) {
-    const diffPlane = diff.plane as any;
-    const looksLikeFullPlane = diffPlane.origin && diffPlane.xAxis && diffPlane.yAxis && typeof diffPlane.origin.x === "number" && typeof diffPlane.xAxis.x === "number" && typeof diffPlane.yAxis.x === "number";
-    if (looksLikeFullPlane) {
-      target.plane = new Plane(PlaneSchema.parse(diffPlane));
-    } else {
-      if (!target.plane)
-        target.plane = new Plane({
-          origin: { x: 0, y: 0, z: 0 },
-          xAxis: { x: 1, y: 0, z: 0 },
-          yAxis: { x: 0, y: 1, z: 0 },
-        });
-      applyPlaneDiff(target.plane, diff.plane);
-    }
-  }
-  if (diff.name !== undefined) target.name = diff.name;
-  if (diff.type !== undefined) target.syncTypeFromWire(diff.type);
-  if (diff.design !== undefined) target.syncDesignAsPieceFromWire(diff.design);
-  if (diff.center !== undefined) target.center = diff.center instanceof Coord ? diff.center : new Coord(CoordSchema.parse(diff.center as CoordPlain));
-  if (diff.scale !== undefined) target.scale = diff.scale;
-  if (diff.mirrorPlane !== undefined) target.mirrorPlane = diff.mirrorPlane instanceof Plane ? diff.mirrorPlane : new Plane(PlaneSchema.parse(diff.mirrorPlane as PlanePlain));
-  if (diff.isHidden !== undefined) target.isHidden = diff.isHidden;
-  if (diff.isLocked !== undefined) target.isLocked = diff.isLocked;
-  if (diff.color !== undefined) target.color = diff.color;
-  if (diff.description !== undefined) target.description = diff.description;
-  if (diff.props) {
-    if (!target.props) target.props = [];
-    applyPropsDiff(target.props, diff.props);
-  }
-  if (diff.attributes) {
-    if (!target.attributes) target.attributes = [];
-    applyAttributesDiff(target.attributes, diff.attributes);
-  }
+  target.applyDiff(diff);
 };
 
 /**
@@ -4951,29 +5201,11 @@ export const getPieceModelUrls = (design: Design, types: Type[], files: File[], 
 };
 /**
  **/
-export const fixPieceInDesign = (kit: Kit, designId: string, pieceId: string): DesignDiff => asKitInstance(kit).fixPieceInDesignDiff(designId, pieceId);
-
-function fixPieceInDesignFromKit(kit: Kit, designId: string, pieceId: string): DesignDiff {
-  const parentConnection = findParentConnectionForPieceInDesignFromKit(kit, designId, pieceId);
-  return {
-    connections: {
-      removed: [{ guid: parentConnection.guid }],
-    },
-  };
-}
+export const fixPieceInDesign = (kit: KitLike, designId: string, pieceId: string): DesignDiff => asKitInstance(kit).fixPieceInDesignDiff(designId, pieceId);
 
 /**
  **/
-export const fixPiecesInDesign = (kit: Kit, designId: string, pieceIds: string[]): DesignDiff => asKitInstance(kit).fixPiecesInDesignDiff(designId, pieceIds);
-
-function fixPiecesInDesignFromKit(kit: Kit, designId: string, pieceIds: string[]): DesignDiff {
-  const parentConnections = pieceIds.map((pieceId) => findParentConnectionForPieceInDesignFromKit(kit, designId, pieceId));
-  return {
-    connections: {
-      removed: parentConnections.map((c) => ({ guid: c.guid })),
-    },
-  };
-}
+export const fixPiecesInDesign = (kit: KitLike, designId: string, pieceIds: string[]): DesignDiff => asKitInstance(kit).fixPiecesInDesignDiff(designId, pieceIds);
 
 /**
  **/
@@ -5033,6 +5265,54 @@ export class Group implements GroupPlain {
   toPlain(): GroupPlain {
     return GroupSchema.parse(this as unknown as GroupPlain);
   }
+  /** 👥Serialize this group for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** 👥Deserialize a group from transport JSON. */
+  static deserialize(json: string): Group {
+    return new Group(GroupSchema.parse(JSON.parse(json)));
+  }
+  /** 👥Compute a group delta from this group to another group. */
+  diffTo(after: Group): GroupDiff {
+    const diff: GroupDiff = {};
+    if (!arraysEqual(this.pieces, after.pieces)) diff.pieces = after.pieces;
+    if (this.color !== after.color) diff.color = after.color;
+    if (this.name !== after.name) diff.name = after.name;
+    if (this.description !== after.description) diff.description = after.description;
+    const attributesDiff = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
+    if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
+    return diff;
+  }
+  /** 👥Build the reverse group delta for an already-applied delta. */
+  inverseDiff(appliedDiff: GroupDiff): GroupDiff {
+    const inverse: GroupDiff = {};
+    if (appliedDiff.pieces !== undefined) inverse.pieces = this.pieces;
+    if (appliedDiff.color !== undefined) inverse.color = this.color;
+    if (appliedDiff.name !== undefined) inverse.name = this.name;
+    if (appliedDiff.description !== undefined) inverse.description = this.description;
+    if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+  /** 👥Merge two group deltas. */
+  static mergeDiff(first: GroupDiff, second: GroupDiff): GroupDiff {
+    return {
+      ...first,
+      ...second,
+      attributes: first.attributes || second.attributes ? mergeAttributesDiff(first.attributes ?? {}, second.attributes ?? {}) : undefined,
+    };
+  }
+  /** 👥Apply a group delta to this group. */
+  applyDiff(diff: GroupDiff): void {
+    if (diff.pieces !== undefined) this.pieces = diff.pieces;
+    if (diff.color !== undefined) this.color = diff.color;
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.attributes) {
+      if (!this.attributes) this.attributes = [];
+      applyAttributesDiff(this.attributes, diff.attributes);
+    }
+  }
 }
 /**
  * Zod schema for Group diff validation.
@@ -5048,49 +5328,25 @@ export type GroupDiff = z.infer<typeof GroupDiffSchema>;
  * Retrieves the GroupDiff value.
  **/
 export const getGroupDiff = (before: Group, after: Group): GroupDiff => {
-  const diff: GroupDiff = {};
-  if (!arraysEqual(before.pieces, after.pieces)) diff.pieces = after.pieces;
-  if (before.color !== after.color) diff.color = after.color;
-  if (before.name !== after.name) diff.name = after.name;
-  if (before.description !== after.description) diff.description = after.description;
-  const attributesDiff = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
-  return diff;
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inverseGroup changes.
  **/
 export const inverseGroupDiff = (original: Group, appliedDiff: GroupDiff): GroupDiff => {
-  const inverse: GroupDiff = {};
-  if (appliedDiff.pieces !== undefined) inverse.pieces = original.pieces;
-  if (appliedDiff.color !== undefined) inverse.color = original.color;
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking applyGroup changes.
  **/
 export const applyGroupDiff = (target: Group, diff: GroupDiff): void => {
-  if (diff.pieces !== undefined) target.pieces = diff.pieces;
-  if (diff.color !== undefined) target.color = diff.color;
-  if (diff.name !== undefined) target.name = diff.name;
-  if (diff.description !== undefined) target.description = diff.description;
-  if (diff.attributes) {
-    if (!target.attributes) target.attributes = [];
-    applyAttributesDiff(target.attributes, diff.attributes);
-  }
+  target.applyDiff(diff);
 };
 /**
  * Diff type for tracking mergeGroup changes.
  **/
 export const mergeGroupDiff = (diff1: GroupDiff, diff2: GroupDiff): GroupDiff => {
-  return {
-    ...diff1,
-    ...diff2,
-    attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
-  };
+  return Group.mergeDiff(diff1, diff2);
 };
 /**
  * Zod schema for Groups diff validation.
@@ -5104,10 +5360,10 @@ export type GroupsDiff = z.infer<typeof GroupsDiffSchema>;
 /**
  * Serializes Group for transport.
  **/
-export const serializeGroup = (group: Group): string => JSON.stringify(GroupSchema.parse(group));
+export const serializeGroup = (group: Group): string => group.serialize();
 /**
  **/
-export const deserializeGroup = (json: string): Group => new Group(GroupSchema.parse(JSON.parse(json)));
+export const deserializeGroup = (json: string): Group => Group.deserialize(json);
 
 /**
  * Definition of GroupMetaSchema.
@@ -5675,6 +5931,49 @@ export class Stat implements StatPlain {
   toPlain(): StatPlain {
     return StatSchema.parse(this as unknown as StatPlain);
   }
+  /** 📈Serialize this stat for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** 📈Deserialize a stat from transport JSON. */
+  static deserialize(json: string): Stat {
+    return new Stat(StatSchema.parse(JSON.parse(json)));
+  }
+  /** 📈Compute a stat delta from this stat to another stat. */
+  diffTo(after: Stat): StatDiff {
+    const diff: StatDiff = {};
+    if (this.quality?.guid !== after.quality?.guid) diff.quality = after.quality;
+    if (this.unit !== after.unit) diff.unit = after.unit;
+    if (this.min !== after.min) diff.min = after.min;
+    if (this.minExcluded !== after.minExcluded) diff.minExcluded = after.minExcluded;
+    if (this.max !== after.max) diff.max = after.max;
+    if (this.maxExcluded !== after.maxExcluded) diff.maxExcluded = after.maxExcluded;
+    return diff;
+  }
+  /** 📈Build the reverse stat delta for an already-applied delta. */
+  inverseDiff(appliedDiff: StatDiff): StatDiff {
+    const inverse: StatDiff = {};
+    if (appliedDiff.quality !== undefined) inverse.quality = this.quality;
+    if (appliedDiff.unit !== undefined) inverse.unit = this.unit;
+    if (appliedDiff.min !== undefined) inverse.min = this.min;
+    if (appliedDiff.minExcluded !== undefined) inverse.minExcluded = this.minExcluded;
+    if (appliedDiff.max !== undefined) inverse.max = this.max;
+    if (appliedDiff.maxExcluded !== undefined) inverse.maxExcluded = this.maxExcluded;
+    return inverse;
+  }
+  /** 📈Merge two stat deltas. */
+  static mergeDiff(first: StatDiff, second: StatDiff): StatDiff {
+    return { ...first, ...second };
+  }
+  /** 📈Apply a stat delta to this stat. */
+  applyDiff(diff: StatDiff): void {
+    if (diff.quality !== undefined) this.quality = diff.quality;
+    if (diff.unit !== undefined) this.unit = diff.unit;
+    if (diff.min !== undefined) this.min = diff.min;
+    if (diff.minExcluded !== undefined) this.minExcluded = diff.minExcluded;
+    if (diff.max !== undefined) this.max = diff.max;
+    if (diff.maxExcluded !== undefined) this.maxExcluded = diff.maxExcluded;
+  }
 }
 /**
  * Zod schema for Stat diff validation.
@@ -5688,44 +5987,25 @@ export type StatDiff = z.infer<typeof StatDiffSchema>;
  * Retrieves the StatDiff value.
  **/
 export const getStatDiff = (before: Stat, after: Stat): StatDiff => {
-  const diff: StatDiff = {};
-  if (before.quality?.guid !== after.quality?.guid) diff.quality = after.quality;
-  if (before.unit !== after.unit) diff.unit = after.unit;
-  if (before.min !== after.min) diff.min = after.min;
-  if (before.minExcluded !== after.minExcluded) diff.minExcluded = after.minExcluded;
-  if (before.max !== after.max) diff.max = after.max;
-  if (before.maxExcluded !== after.maxExcluded) diff.maxExcluded = after.maxExcluded;
-  return diff;
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking inverseStat changes.
  **/
 export const inverseStatDiff = (original: Stat, appliedDiff: StatDiff): StatDiff => {
-  const inverse: StatDiff = {};
-  if (appliedDiff.quality !== undefined) inverse.quality = original.quality;
-  if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
-  if (appliedDiff.min !== undefined) inverse.min = original.min;
-  if (appliedDiff.minExcluded !== undefined) inverse.minExcluded = original.minExcluded;
-  if (appliedDiff.max !== undefined) inverse.max = original.max;
-  if (appliedDiff.maxExcluded !== undefined) inverse.maxExcluded = original.maxExcluded;
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking applyStat changes.
  **/
 export const applyStatDiff = (target: Stat, diff: StatDiff): void => {
-  if (diff.quality !== undefined) target.quality = diff.quality;
-  if (diff.unit !== undefined) target.unit = diff.unit;
-  if (diff.min !== undefined) target.min = diff.min;
-  if (diff.minExcluded !== undefined) target.minExcluded = diff.minExcluded;
-  if (diff.max !== undefined) target.max = diff.max;
-  if (diff.maxExcluded !== undefined) target.maxExcluded = diff.maxExcluded;
+  target.applyDiff(diff);
 };
 /**
  * Diff type for tracking mergeStat changes.
  **/
 export const mergeStatDiff = (diff1: StatDiff, diff2: StatDiff): StatDiff => {
-  return { ...diff1, ...diff2 };
+  return Stat.mergeDiff(diff1, diff2);
 };
 /**
  * Zod schema for Stats diff validation.
@@ -5739,10 +6019,10 @@ export type StatsDiff = z.infer<typeof StatsDiffSchema>;
 /**
  * Serializes Stat for transport.
  **/
-export const serializeStat = (stat: Stat): string => JSON.stringify(StatSchema.parse(stat));
+export const serializeStat = (stat: Stat): string => stat.serialize();
 /**
  **/
-export const deserializeStat = (json: string): Stat => new Stat(StatSchema.parse(JSON.parse(json)));
+export const deserializeStat = (json: string): Stat => Stat.deserialize(json);
 
 /**
  * Definition of StatMetaSchema.
@@ -5886,7 +6166,15 @@ export class Design {
         ],
       },
     };
-    return this.#kit.change(diff);
+    return this.#kit._applyDiff(diff);
+  }
+
+  /**
+   * 🗑️Remove this design from the kit graph (validated pipeline).
+   */
+  delete(opts?: KitChangeOptions): KitChange {
+    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    return this.#kit.removeDesign(this, opts);
   }
 
   getKit(): Kit | undefined {
@@ -5899,6 +6187,83 @@ export class Design {
   applyDiff(diff: DesignDiff): this {
     applyDesignDiffCore(this, diff);
     return this;
+  }
+
+  /** 📐Compute a design delta from this design to another design. */
+  diffTo(after: Design): DesignDiff {
+    const diff: DesignDiff = {};
+    if (this.name !== after.name) diff.name = after.name;
+    if (wireParentGuidOf(this) !== wireParentGuidOf(after)) diff.parent = wireParentIdOf(after);
+    if (this.isAbstract !== after.isAbstract) diff.isAbstract = after.isAbstract;
+    if (this.folder !== after.folder) diff.folder = after.folder;
+    if (this.canScale !== after.canScale) diff.canScale = after.canScale;
+    if (this.canMirror !== after.canMirror) diff.canMirror = after.canMirror;
+    if (this.unit !== after.unit) diff.unit = after.unit;
+    if (this.activeLayer?.guid !== after.activeLayer?.guid) diff.activeLayer = after.activeLayer;
+    if (this.location?.guid !== after.location?.guid) diff.location = after.location;
+    if (this.icon !== after.icon) diff.icon = after.icon;
+    if (this.image !== after.image) diff.image = after.image;
+    if (this.description !== after.description) diff.description = after.description;
+    if (!arraysEqual(this.authors, after.authors)) diff.authors = after.authors as any;
+    if (!arraysEqual(this.concepts, after.concepts)) diff.concepts = after.concepts;
+    const piecesDiff = getCollectionDiff("piece", this.pieces ?? [], after.pieces ?? [], getPieceDiff);
+    if (Object.keys(piecesDiff).length > 0) diff.pieces = piecesDiff;
+    const connectionsDiff = getCollectionDiff("connection", this.connections ?? [], after.connections ?? [], getConnectionDiff);
+    if (Object.keys(connectionsDiff).length > 0) diff.connections = connectionsDiff;
+    const statsDiff = getCollectionDiff("stat", this.stats ?? [], after.stats ?? [], getStatDiff);
+    if (Object.keys(statsDiff).length > 0) diff.stats = statsDiff;
+    const propsDiff = getCollectionDiff("prop", this.props ?? [], after.props ?? [], getPropDiff);
+    if (Object.keys(propsDiff).length > 0) diff.props = propsDiff;
+    const layersDiff = getCollectionDiff("layer", this.layers ?? [], after.layers ?? [], getLayerDiff);
+    if (Object.keys(layersDiff).length > 0) diff.layers = layersDiff;
+    const groupsDiff = getCollectionDiff("group", this.groups ?? [], after.groups ?? [], getGroupDiff);
+    if (Object.keys(groupsDiff).length > 0) diff.groups = groupsDiff;
+    const attributesDiff = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
+    if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
+    return diff;
+  }
+
+  /** 📐Build the reverse design delta for an already-applied delta. */
+  inverseDiff(appliedDiff: DesignDiff): DesignDiff {
+    const inverse: DesignDiff = {};
+    if (appliedDiff.name !== undefined) inverse.name = this.name;
+    if (appliedDiff.parent !== undefined) inverse.parent = this.wireParentId() ?? undefined;
+    if (appliedDiff.isAbstract !== undefined) inverse.isAbstract = this.isAbstract;
+    if (appliedDiff.folder !== undefined) inverse.folder = this.folder;
+    if (appliedDiff.canScale !== undefined) inverse.canScale = this.canScale;
+    if (appliedDiff.canMirror !== undefined) inverse.canMirror = this.canMirror;
+    if (appliedDiff.unit !== undefined) inverse.unit = this.unit;
+    if (appliedDiff.activeLayer !== undefined) inverse.activeLayer = this.activeLayer;
+    if (appliedDiff.location !== undefined) inverse.location = this.location;
+    if (appliedDiff.icon !== undefined) inverse.icon = this.icon;
+    if (appliedDiff.image !== undefined) inverse.image = this.image;
+    if (appliedDiff.description !== undefined) inverse.description = this.description;
+    if (appliedDiff.authors !== undefined) inverse.authors = this.authors as any;
+    if (appliedDiff.concepts !== undefined) inverse.concepts = this.concepts;
+    if (appliedDiff.pieces) inverse.pieces = inverseCollectionDiff("piece", this.pieces ?? [], appliedDiff.pieces, inversePieceDiff);
+    if (appliedDiff.connections) inverse.connections = inverseCollectionDiff("connection", this.connections ?? [], appliedDiff.connections, inverseConnectionDiff);
+    if (appliedDiff.stats) inverse.stats = inverseCollectionDiff("stat", this.stats ?? [], appliedDiff.stats, inverseStatDiff);
+    if (appliedDiff.props) inverse.props = inverseCollectionDiff("prop", this.props ?? [], appliedDiff.props, inversePropDiff);
+    if (appliedDiff.layers) inverse.layers = inverseCollectionDiff("layer", this.layers ?? [], appliedDiff.layers, inverseLayerDiff);
+    if (appliedDiff.groups) inverse.groups = inverseCollectionDiff("group", this.groups ?? [], appliedDiff.groups, inverseGroupDiff);
+    if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+
+  /** 📐Merge two design deltas. */
+  static mergeDiff(first: DesignDiff, second: DesignDiff): DesignDiff {
+    return {
+      ...first,
+      ...second,
+      pieces: first.pieces || second.pieces ? mergeCollectionDiff("piece", first.pieces ?? {}, second.pieces ?? {}, mergePieceDiff) : undefined,
+      connections: first.connections || second.connections ? mergeCollectionDiff("connection", first.connections ?? {}, second.connections ?? {}, mergeConnectionDiff) : undefined,
+      stats: first.stats || second.stats ? mergeCollectionDiff("stat", first.stats ?? {}, second.stats ?? {}, mergeStatDiff) : undefined,
+      props: first.props || second.props ? mergeCollectionDiff("prop", first.props ?? {}, second.props ?? {}, mergePropDiff) : undefined,
+      layers: first.layers || second.layers ? mergeCollectionDiff("layer", first.layers ?? {}, second.layers ?? {}, mergeLayerDiff) : undefined,
+      groups: first.groups || second.groups ? mergeCollectionDiff("group", first.groups ?? {}, second.groups ?? {}, mergeGroupDiff) : undefined,
+      authors: second.authors ?? first.authors,
+      attributes: first.attributes || second.attributes ? mergeAttributesDiff(first.attributes ?? {}, second.attributes ?? {}) : undefined,
+    };
   }
 
   /**
@@ -5917,7 +6282,7 @@ export class Design {
         updated: [{ design: { guid: this.guid }, diff: result.diff }],
       },
     };
-    return this.#kit.change(kitDiff);
+    return this.#kit._applyDiff(kitDiff);
   }
 
   /**
@@ -6082,7 +6447,7 @@ export class Design {
 
   previewRemovePiecesAndConnections(pieceIds: string[], connectionIds: string[]): DesignOperationResult {
     if (!this.#kit) throw new Error("Design not attached to a Kit");
-    return removePiecesAndConnectionsFromKit(asKitInstance(this.#kit), this.guid, pieceIds, connectionIds);
+    return asKitInstance(this.#kit).previewRemovePiecesAndConnections(this.guid, pieceIds, connectionIds);
   }
 
   fixPieceDiff(pieceId: string): DesignDiff {
@@ -6112,7 +6477,7 @@ export class Design {
 
   piecesMetadata(): OperationResult<Map<string, PiecePlacementMetadata>> {
     if (!this.#kit) throw new Error("Design not attached to a Kit");
-    return piecesMetadataFromKit(asKitInstance(this.#kit), this.guid);
+    return asKitInstance(this.#kit).piecesMetadataFor(this.guid);
   }
 
   piecesMetadataCached(cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): {
@@ -6297,81 +6662,19 @@ export const duplicateDesignDiffForIsolation = (diff: DesignDiff): DesignDiff =>
  * Retrieves the DesignDiff value.
  **/
 export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
-  const diff: DesignDiff = {};
-  if (before.name !== after.name) diff.name = after.name;
-  if (wireParentGuidOf(before) !== wireParentGuidOf(after)) diff.parent = wireParentIdOf(after);
-  if (before.isAbstract !== after.isAbstract) diff.isAbstract = after.isAbstract;
-  if (before.folder !== after.folder) diff.folder = after.folder;
-  if (before.canScale !== after.canScale) diff.canScale = after.canScale;
-  if (before.canMirror !== after.canMirror) diff.canMirror = after.canMirror;
-  if (before.unit !== after.unit) diff.unit = after.unit;
-  if (before.activeLayer?.guid !== after.activeLayer?.guid) diff.activeLayer = after.activeLayer;
-  if (before.location?.guid !== after.location?.guid) diff.location = after.location;
-  if (before.icon !== after.icon) diff.icon = after.icon;
-  if (before.image !== after.image) diff.image = after.image;
-  if (before.description !== after.description) diff.description = after.description;
-  if (!arraysEqual(before.authors, after.authors)) diff.authors = after.authors as any;
-  if (!arraysEqual(before.concepts, after.concepts)) diff.concepts = after.concepts;
-  const piecesDiff = getCollectionDiff("piece", before.pieces ?? [], after.pieces ?? [], getPieceDiff);
-  if (Object.keys(piecesDiff).length > 0) diff.pieces = piecesDiff;
-  const connectionsDiff = getCollectionDiff("connection", before.connections ?? [], after.connections ?? [], getConnectionDiff);
-  if (Object.keys(connectionsDiff).length > 0) diff.connections = connectionsDiff;
-  const statsDiff = getCollectionDiff("stat", before.stats ?? [], after.stats ?? [], getStatDiff);
-  if (Object.keys(statsDiff).length > 0) diff.stats = statsDiff;
-  const propsDiff = getCollectionDiff("prop", before.props ?? [], after.props ?? [], getPropDiff);
-  if (Object.keys(propsDiff).length > 0) diff.props = propsDiff;
-  const layersDiff = getCollectionDiff("layer", before.layers ?? [], after.layers ?? [], getLayerDiff);
-  if (Object.keys(layersDiff).length > 0) diff.layers = layersDiff;
-  const groupsDiff = getCollectionDiff("group", before.groups ?? [], after.groups ?? [], getGroupDiff);
-  if (Object.keys(groupsDiff).length > 0) diff.groups = groupsDiff;
-  const attributesDiff = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
-  if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
-  return diff;
+  return before.diffTo(after);
 };
 /**
  * Diff type for tracking mergeDesign changes.
  **/
 export const mergeDesignDiff = (diff1: DesignDiff, diff2: DesignDiff): DesignDiff => {
-  return {
-    ...diff1,
-    ...diff2,
-    pieces: diff1.pieces || diff2.pieces ? mergeCollectionDiff("piece", diff1.pieces ?? {}, diff2.pieces ?? {}, mergePieceDiff) : undefined,
-    connections: diff1.connections || diff2.connections ? mergeCollectionDiff("connection", diff1.connections ?? {}, diff2.connections ?? {}, mergeConnectionDiff) : undefined,
-    stats: diff1.stats || diff2.stats ? mergeCollectionDiff("stat", diff1.stats ?? {}, diff2.stats ?? {}, mergeStatDiff) : undefined,
-    props: diff1.props || diff2.props ? mergeCollectionDiff("prop", diff1.props ?? {}, diff2.props ?? {}, mergePropDiff) : undefined,
-    layers: diff1.layers || diff2.layers ? mergeCollectionDiff("layer", diff1.layers ?? {}, diff2.layers ?? {}, mergeLayerDiff) : undefined,
-    groups: diff1.groups || diff2.groups ? mergeCollectionDiff("group", diff1.groups ?? {}, diff2.groups ?? {}, mergeGroupDiff) : undefined,
-    authors: diff2.authors ?? diff1.authors,
-    attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
-  };
+  return Design.mergeDiff(diff1, diff2);
 };
 /**
  * Diff type for tracking inverseDesign changes.
  **/
 export const inverseDesignDiff = (original: Design, appliedDiff: DesignDiff): DesignDiff => {
-  const inverse: DesignDiff = {};
-  if (appliedDiff.name !== undefined) inverse.name = original.name;
-  if (appliedDiff.parent !== undefined) inverse.parent = original.wireParentId() ?? undefined;
-  if (appliedDiff.isAbstract !== undefined) inverse.isAbstract = original.isAbstract;
-  if (appliedDiff.folder !== undefined) inverse.folder = original.folder;
-  if (appliedDiff.canScale !== undefined) inverse.canScale = original.canScale;
-  if (appliedDiff.canMirror !== undefined) inverse.canMirror = original.canMirror;
-  if (appliedDiff.unit !== undefined) inverse.unit = original.unit;
-  if (appliedDiff.activeLayer !== undefined) inverse.activeLayer = original.activeLayer;
-  if (appliedDiff.location !== undefined) inverse.location = original.location;
-  if (appliedDiff.icon !== undefined) inverse.icon = original.icon;
-  if (appliedDiff.image !== undefined) inverse.image = original.image;
-  if (appliedDiff.description !== undefined) inverse.description = original.description;
-  if (appliedDiff.authors !== undefined) inverse.authors = original.authors as any;
-  if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts;
-  if (appliedDiff.pieces) inverse.pieces = inverseCollectionDiff("piece", original.pieces ?? [], appliedDiff.pieces, inversePieceDiff);
-  if (appliedDiff.connections) inverse.connections = inverseCollectionDiff("connection", original.connections ?? [], appliedDiff.connections, inverseConnectionDiff);
-  if (appliedDiff.stats) inverse.stats = inverseCollectionDiff("stat", original.stats ?? [], appliedDiff.stats, inverseStatDiff);
-  if (appliedDiff.props) inverse.props = inverseCollectionDiff("prop", original.props ?? [], appliedDiff.props, inversePropDiff);
-  if (appliedDiff.layers) inverse.layers = inverseCollectionDiff("layer", original.layers ?? [], appliedDiff.layers, inverseLayerDiff);
-  if (appliedDiff.groups) inverse.groups = inverseCollectionDiff("group", original.groups ?? [], appliedDiff.groups, inverseGroupDiff);
-  if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
-  return inverse;
+  return original.inverseDiff(appliedDiff);
 };
 
 /**
@@ -6717,29 +7020,12 @@ export const deletePiecesAndConnectionsInDesign = (kit: Kit, design: Design, pie
   return d.deletePiecesAndConnectionsDiff(pieceGuids, connectionGuids);
 };
 
-/**
- * Removes a PiecesAndConnectionsFromDesign element.
- **/
-function removePiecesAndConnectionsFromKit(kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignOperationResult {
-  const design = findDesignInKit(kit, designId);
-  const delRes = design.deletePiecesAndConnectionsDiff(pieceIds, connectionIds);
-  if (!delRes.ok) {
-    return operationErr(delRes.errors);
-  }
-  const forward = delRes.diff!;
-  const backward = inverseDesignDiff(design, forward);
-  return operationOk({ forward, backward }, delRes.warnings, delRes.infos);
-}
+/** @see {@link Kit.removePiecesAndConnectionsFromDesignOp} */
+export const removePiecesAndConnectionsFromDesign = (kit: KitLike, designId: string, pieceIds: string[], connectionIds: string[]): DesignOperationResult => asKitInstance(kit).removePiecesAndConnectionsFromDesignOp(designId, pieceIds, connectionIds);
 
-/** @see {@link removePiecesAndConnectionsFromKit} */
-export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignOperationResult => asKitInstance(kit).removePiecesAndConnectionsFromDesignOp(designId, pieceIds, connectionIds);
-
-/**
- * Resolves {@link Type} and {@link Connector} from a kit the same way {@link flattenDesign} does.
- * Specs: Used when move needs parent connector frames from kit types.
- **/
 /**
  * Parent-connector rotation and unit world axes for gap (local +Y), shift (+X), rise (+Z) before child orientation, matching {@link computeChildPlane}.
+ * Used by flatten / move paths that need connector frames from kit types (see {@link Kit.buildConnectorResolver}).
  **/
 const connectionPlacementTranslationBasis = (parentConnector: Connector): { gap: THREE.Vector3; shift: THREE.Vector3; raise: THREE.Vector3; parentRotationT: THREE.Matrix4 } => {
   const parentDirection = vectorToThree(parentConnector.direction).normalize();
@@ -6959,281 +7245,6 @@ const flattenPlacementWalkDesignOrderRoots = (
 };
 // #endregion 🧭Flatten placement walk
 
-/**
- * Flattens nested Design structure.
- **/
-function flattenDesignCore(kit: Kit, designId: string): DesignOperationResult {
-  kit = asKitInstance(kit);
-  const design = findDesignInKit(kit, designId);
-  if (!design) {
-    return operationErr([{ code: "flatten.design-not-found", message: `Design ${designId} not found in kit ${kit.name}` }]);
-  }
-
-  if (!design.pieces || design.pieces.length === 0) {
-    return operationOk({ forward: {}, backward: {} }, [], [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }]);
-  }
-
-  const warnings: OperationNote[] = [];
-  const infos: OperationNote[] = [];
-  const placementErrors: OperationNote[] = [];
-
-  const { getType, getConnector } = kit.buildConnectorResolver();
-
-  const flatPieces: Piece[] = design.pieces.map(
-    (p) =>
-      new Piece({
-        ...PieceSchema.parse(stripNullsJsonClone(p.toPlain()) as unknown),
-        attributes: p.attributes?.map((a) => a.toPlain()),
-      }),
-  );
-  const flatDesign = new Design({
-    ...DesignSchema.parse(stripNullsJsonClone(design.toPlain()) as unknown),
-    pieces: flatPieces.map((x) => x.toPlain()),
-    connections: design.connections?.map((c) => ConnectionSchema.parse(stripNullsJsonClone(c.toPlain()) as unknown)),
-  });
-
-  const piecePlanes: { [pieceGuid: string]: Plane } = {};
-
-  const setAttributes = (piece: Piece, newAttrs: { key: string; value?: string; definition?: string }[]): Piece => {
-    const existingAttrs = piece.attributes || [];
-    const updatedAttrs = [...existingAttrs];
-    newAttrs.forEach((newAttr) => {
-      const existingIndex = updatedAttrs.findIndex((a) => a.key === newAttr.key);
-      if (existingIndex >= 0) {
-        updatedAttrs[existingIndex] = new Attribute({
-          ...updatedAttrs[existingIndex].toPlain(),
-          ...newAttr,
-          guid: updatedAttrs[existingIndex].guid,
-        });
-      } else {
-        updatedAttrs.push(new Attribute({ guid: guid(), ...newAttr }));
-      }
-    });
-    return new Piece({ ...piece.toPlain(), attributes: updatedAttrs.map((a) => a.toPlain()) });
-  };
-
-  const filteredConnections =
-    flatDesign.connections?.filter((connection) => {
-      const sourceId = connection.connected.piece.guid;
-      const targetId = connection.connecting.piece.guid;
-      const sourceExists = flatPieces.some((x) => x.guid === sourceId);
-      const targetExists = flatPieces.some((x) => x.guid === targetId);
-      if (!sourceExists) {
-        warnings.push({
-          code: "flatten.connection-skipped-missing-endpoint",
-          message: `Skipping connection ${connection.guid}: source piece ${sourceId} not found in design.`,
-        });
-        return false;
-      }
-      if (!targetExists) {
-        warnings.push({
-          code: "flatten.connection-skipped-missing-endpoint",
-          message: `Skipping connection ${connection.guid}: target piece ${targetId} not found in design.`,
-        });
-        return false;
-      }
-      return true;
-    }) || [];
-
-  const { pieceMap, adjacency } = buildFlattenPieceAdjacency(flatPieces, filteredConnections);
-  flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, flatPieces, {
-    onComponentDiscovered: (component, rootGuid, pm) => {
-      const fixedInDesignOrder = flatPieces.map((fp) => fp.guid).filter((g): g is string => Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined));
-      if (fixedInDesignOrder.length === 0) {
-        warnings.push({
-          code: "flatten.no-fixed-piece-in-clump",
-          message: `Connected pieces have no fixed root (no piece with both plane and center). Using piece ${rootGuid} as breadth-first root. Each connected set of pieces (clump) should include at least one fixed piece for stable, recommended layout.`,
-        });
-      } else if (fixedInDesignOrder.length > 1) {
-        infos.push({
-          code: "flatten.multiple-fixed-roots",
-          message: `This clump has ${fixedInDesignOrder.length} fixed pieces; using the first (${rootGuid}) as breadth-first root.`,
-        });
-      }
-    },
-    initRoot: (rootGuid, rootPiece) => {
-      if (!rootPiece.guid) return;
-      const updatedRootPiece = setAttributes(rootPiece, [
-        { key: "semio.fixedPieceId", value: rootPiece.guid },
-        { key: "semio.depth", value: "0" },
-        { key: "semio.path", value: rootPiece.guid },
-      ]);
-      pieceMap[rootGuid] = updatedRootPiece;
-      let rootPlane: Plane;
-      if (rootPiece.plane) {
-        rootPlane = rootPiece.plane;
-      } else {
-        rootPlane = FLATTEN_IDENTITY_PLANE;
-      }
-
-      piecePlanes[rootPiece.guid] = rootPlane;
-      const rootPieceIndex = flatDesign.pieces!.findIndex((p) => p.guid === rootPiece.guid);
-      if (rootPieceIndex !== -1) {
-        flatDesign.pieces![rootPieceIndex].plane = rootPlane;
-
-        if (!flatDesign.pieces![rootPieceIndex].center) {
-          flatDesign.pieces![rootPieceIndex].center = new Coord({ u: 0, v: 0 });
-        }
-
-        const cur = pieceMap[rootGuid] ?? updatedRootPiece;
-        pieceMap[rootGuid] = new Piece({
-          ...PieceSchema.parse(stripNullsJsonClone(cur.toPlain()) as unknown),
-          plane: PlaneSchema.parse(rootPlane as unknown),
-          center: CoordSchema.parse(flatDesign.pieces![rootPieceIndex].center as unknown),
-        });
-      }
-    },
-    onTreeEdge: ({ parentGuid, childGuid, connection, depth, parentPiece, childPiece }) => {
-      if (!parentPiece.guid || !childPiece.guid) return;
-      const parentPlane = piecePlanes[parentPiece.guid];
-      if (!parentPlane) {
-        placementErrors.push({
-          code: "flatten.parent-plane-missing",
-          message: `Parent piece ${parentPiece.guid} has no plane while flattening edge to child ${childPiece.guid}.`,
-        });
-        return;
-      }
-      const parentSide = connection.connected.piece.guid === parentGuid ? connection.connected : connection.connecting;
-      const childSide = connection.connecting.piece.guid === childGuid ? connection.connecting : connection.connected;
-      const parentType = resolvePieceTypeForFlatten(parentPiece, getType);
-      const childType = resolvePieceTypeForFlatten(childPiece, getType);
-
-      const parentConnectorGuid = parentSide.connector?.guid;
-      const childConnectorGuid = childSide.connector?.guid;
-      const parentConnector = getConnector(parentType, parentConnectorGuid);
-      const childConnector = getConnector(childType, childConnectorGuid);
-
-      if (!parentConnector || !childConnector) {
-        placementErrors.push({
-          code: "flatten.connectors-not-found",
-          message: `Connectors not found for connection between ${parentGuid} and ${childGuid}. Parent connector: ${parentConnectorGuid ?? "(default)"}, child connector: ${childConnectorGuid ?? "(default)"}.`,
-        });
-        return;
-      }
-      const childPlane = roundPlane(computeChildPlane(parentPlane, parentConnector, childConnector, connection));
-      piecePlanes[childPiece.guid] = childPlane;
-
-      const radius = 2.697;
-      const verticalVExtra = 1.0;
-      const horizontalScale = 3.0633;
-      const parentCenter = parentPiece.center || new Coord({ u: 0, v: 0 });
-      const connectionU = connection.u ?? 0;
-      const connectionV = connection.v ?? 0;
-
-      let childU: number;
-      let childV: number;
-
-      if (parentCenter.u === 0 && parentCenter.v === 0) {
-        const angle = 2 * Math.PI * parentConnector.t;
-        childU = radius * Math.sin(angle);
-        childV = radius * Math.cos(angle);
-      } else {
-        const isVerticalConnection = Math.abs(parentConnector.direction?.z ?? 0) > 0.5;
-
-        if (isVerticalConnection) {
-          childU = parentCenter.u + connectionU;
-          childV = parentCenter.v + connectionV + verticalVExtra;
-        } else {
-          childU = parentCenter.u + connectionU * horizontalScale;
-          childV = parentCenter.v + connectionV * horizontalScale;
-        }
-      }
-
-      const computedChildCenter = new Coord({
-        u: round(childU),
-        v: round(childV),
-      });
-      const childCenter: Coord = childPiece.center ?? computedChildCenter;
-
-      const flatChildPiece: Piece = setAttributes(
-        new Piece({
-          ...PieceSchema.parse(stripNullsJsonClone(childPiece.toPlain()) as unknown),
-          plane: PlaneSchema.parse(childPlane as unknown),
-          center: CoordSchema.parse((childPiece.center ?? computedChildCenter) as unknown),
-        }),
-        [
-          {
-            key: "semio.fixedPieceId",
-            value: parentPiece.attributes?.find((q) => q.key === "semio.fixedPieceId")?.value ?? "",
-          },
-          {
-            key: "semio.parentPieceId",
-            value: parentPiece.guid,
-          },
-          {
-            key: "semio.depth",
-            value: depth.toString(),
-          },
-          {
-            key: "semio.path",
-            value: (parentPiece.attributes?.find((q) => q.key === "semio.path")?.value ?? "") + "," + childPiece.guid,
-          },
-        ],
-      );
-      pieceMap[childGuid] = flatChildPiece;
-    },
-  });
-  flatDesign.pieces = flatDesign.pieces?.map((p) => pieceMap[p.guid ?? ""]);
-  flatDesign.connections = [];
-
-  let piecesWithPlanes = 0;
-  let piecesWithoutPlanes = 0;
-  const updatedPieces = flatDesign.pieces
-    ?.map((flatPiece) => {
-      if (flatPiece.plane) piecesWithPlanes++;
-      else piecesWithoutPlanes++;
-
-      const originalPiece = design.pieces?.find((p) => p.guid === flatPiece.guid);
-      if (!originalPiece) return null;
-
-      const pieceDiff: PieceDiff = {};
-
-      if (flatPiece.plane && flattenPlanesDiffer(flatPiece.plane, originalPiece.plane)) {
-        pieceDiff.plane = flatPiece.plane;
-      }
-
-      if (flatPiece.center && flattenCentersDiffer(flatPiece.center, originalPiece.center)) {
-        pieceDiff.center = flatPiece.center;
-      }
-      if (!deepEqual(flatPiece.attributes, originalPiece.attributes)) {
-        pieceDiff.attributes = getAttributesDiff(originalPiece.attributes ?? [], flatPiece.attributes ?? []);
-      }
-
-      if (Object.keys(pieceDiff).length === 0) return null;
-
-      return {
-        piece: { guid: flatPiece.guid },
-        diff: pieceDiff,
-      };
-    })
-    .filter((update) => update !== null) as Array<{ piece: PieceId; diff: PieceDiff }>;
-
-  const removedConnections = design.connections?.map((c) => ({ guid: c.guid })) || [];
-
-  const forward = {
-    pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
-    connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined,
-  } as DesignDiff;
-
-  if (piecesWithoutPlanes > 0) {
-    placementErrors.push({
-      code: "flatten.piece-missing-plane",
-      message: `After flatten, ${piecesWithoutPlanes} piece(s) still have no plane (see prior placement messages).`,
-    });
-  }
-  if (placementErrors.length > 0) {
-    return operationErr(placementErrors);
-  }
-
-  infos.push({
-    code: "flatten.summary",
-    message: `Flatten removed ${removedConnections.length} connection(s); updated ${updatedPieces.length} piece record(s); ${piecesWithPlanes} piece(s) with planes.`,
-  });
-
-  const backward = inverseDesignDiff(design, forward);
-  return operationOk({ forward, backward }, warnings, infos);
-}
-
 // #region 🌳Flatten Merkle Hashes
 /**
  * Per-piece merkle hash pair used to cache flattenDesign results and skip recomputation when inputs are unchanged.
@@ -7312,48 +7323,6 @@ const hashCenterChain = (parentHash: string, parentConnector: Connector, connect
 };
 
 /**
- * 🌳Compute per-piece {planeHash, centerHash} merkle hashes for the flattened design so subsequent flattenDesign calls can reuse cached planes/centers whose chain identity is unchanged.
- **/
-function computeFlatHashesCore(kit: Kit, designGuid: string): { [pieceGuid: string]: FlatMerkleHashes } {
-  kit = asKitInstance(kit);
-  const design = findDesignInKit(kit, designGuid);
-  const pieces = design.pieces ?? [];
-  if (pieces.length === 0) return {};
-  const { getType, getConnector } = buildConnectorResolverFromKit(kit);
-  const connections = (design.connections ?? []).filter((c) => pieces.some((p) => p.guid === c.connected.piece.guid) && pieces.some((p) => p.guid === c.connecting.piece.guid));
-  const planeHashes: { [guid: string]: string } = {};
-  const centerHashes: { [guid: string]: string } = {};
-  const { pieceMap, adjacency } = buildFlattenPieceAdjacency(pieces, connections);
-  flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, pieces, {
-    initRoot: (rootGuid, rootPiece) => {
-      if (!rootPiece.guid) return;
-      planeHashes[rootPiece.guid] = hashPlaneRoot(rootPiece.guid, rootPiece.plane);
-      centerHashes[rootPiece.guid] = hashCenterRoot(rootPiece.guid, rootPiece.center);
-    },
-    onTreeEdge: ({ parentGuid, childGuid, connection, parentPiece, childPiece }) => {
-      if (!parentPiece.guid || !childPiece.guid) return;
-      const parentPlaneHash = planeHashes[parentPiece.guid];
-      const parentCenterHash = centerHashes[parentPiece.guid];
-      if (!parentPlaneHash || !parentCenterHash) return;
-      const parentSide = connection.connected.piece.guid === parentGuid ? connection.connected : connection.connecting;
-      const childSide = connection.connecting.piece.guid === childGuid ? connection.connecting : connection.connected;
-      const parentType = resolvePieceTypeForFlatten(parentPiece, getType);
-      const childType = resolvePieceTypeForFlatten(childPiece, getType);
-      const parentConnector = getConnector(parentType, parentSide.connector?.guid);
-      const childConnector = getConnector(childType, childSide.connector?.guid);
-      if (!parentConnector || !childConnector) return;
-      planeHashes[childPiece.guid] = hashPlaneChain(parentPlaneHash, parentConnector, childConnector, connection);
-      centerHashes[childPiece.guid] = hashCenterChain(parentCenterHash, parentConnector, connection);
-    },
-  });
-  const result: { [guid: string]: FlatMerkleHashes } = {};
-  for (const guid of Object.keys(planeHashes)) {
-    result[guid] = { planeHash: planeHashes[guid], centerHash: centerHashes[guid] };
-  }
-  return result;
-}
-
-/**
  * 🧠FlatMerkleCacheEntry bundles a piece's merkle hashes with its cached plane/center/flat piece so incremental flatten calls can reuse unchanged values without redoing the matrix math or attribute bookkeeping.
  **/
 export type FlatMerkleCacheEntry = {
@@ -7364,257 +7333,6 @@ export type FlatMerkleCacheEntry = {
   flatPiece?: Piece;
 };
 
-/**
- * 🧠Flatten a design incrementally: walks pieces in BFS order, computes per-piece merkle hashes on the fly, and for each piece whose hash matches the prior cache reuses the cached flat piece (plane, center, attributes) without rerunning computeChildPlane/roundPlane/setAttributes. Only descendants of mutated inputs redo their matrix math.
- **/
-function flattenDesignCachedCore(kit: Kit, designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } {
-  kit = asKitInstance(kit);
-  const design = findDesignInKit(kit, designGuid);
-  if (!design) {
-    return {
-      result: operationErr([{ code: "flatten.design-not-found", message: `Design ${designGuid} not found in kit ${kit.name}` }]),
-      cache: {},
-    };
-  }
-  if (!design.pieces || design.pieces.length === 0) {
-    return {
-      result: operationOk({ forward: {}, backward: {} }, [], [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }]),
-      cache: {},
-    };
-  }
-
-  const warnings: OperationNote[] = [];
-  const infos: OperationNote[] = [];
-  const placementErrors: OperationNote[] = [];
-  const { getType, getConnector } = buildConnectorResolverFromKit(kit);
-
-  const pieces = design.pieces;
-  const flatPieces: Piece[] = pieces.map((p) => detachPieceForLocalMutation(p));
-  const filteredConnections = (design.connections ?? []).filter((connection) => {
-    const sourceId = connection.connected.piece.guid;
-    const targetId = connection.connecting.piece.guid;
-    const sourceExists = flatPieces.some((x) => x.guid === sourceId);
-    const targetExists = flatPieces.some((x) => x.guid === targetId);
-    if (!sourceExists) {
-      warnings.push({ code: "flatten.connection-skipped-missing-endpoint", message: `Skipping connection ${connection.guid}: source piece ${sourceId} not found in design.` });
-      return false;
-    }
-    if (!targetExists) {
-      warnings.push({ code: "flatten.connection-skipped-missing-endpoint", message: `Skipping connection ${connection.guid}: target piece ${targetId} not found in design.` });
-      return false;
-    }
-    return true;
-  });
-
-  const { pieceMap, adjacency } = buildFlattenPieceAdjacency(flatPieces, filteredConnections);
-  const piecePlanes: { [guid: string]: Plane } = {};
-  const planeHashes: { [guid: string]: string } = {};
-  const centerHashes: { [guid: string]: string } = {};
-  const nextCache: { [guid: string]: FlatMerkleCacheEntry } = {};
-
-  const setAttributes = (piece: Piece, newAttrs: { key: string; value?: string; definition?: string }[]): Piece => {
-    const existingAttrs = piece.attributes || [];
-    const updatedAttrs: Attribute[] = [...existingAttrs];
-    newAttrs.forEach((newAttr) => {
-      const existingIndex = updatedAttrs.findIndex((a) => a.key === newAttr.key);
-      if (existingIndex >= 0) {
-        updatedAttrs[existingIndex] = new Attribute({ ...updatedAttrs[existingIndex].toPlain(), ...newAttr, guid: updatedAttrs[existingIndex].guid });
-      } else {
-        updatedAttrs.push(new Attribute({ guid: guid(), ...newAttr }));
-      }
-    });
-    return new Piece(
-      PieceSchema.parse({
-        ...piece.toPlain(),
-        attributes: updatedAttrs.map((a) => a.toPlain()),
-      }),
-      design,
-      kit,
-    );
-  };
-
-  flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, flatPieces, {
-    onComponentDiscovered: (component, rootGuid, pm) => {
-      const fixedInDesignOrder = flatPieces.map((fp) => fp.guid).filter((g): g is string => Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined));
-      if (fixedInDesignOrder.length === 0) {
-        warnings.push({
-          code: "flatten.no-fixed-piece-in-clump",
-          message: `Connected pieces have no fixed root (no piece with both plane and center). Using piece ${rootGuid} as breadth-first root. Each connected set of pieces (clump) should include at least one fixed piece for stable, recommended layout.`,
-        });
-      } else if (fixedInDesignOrder.length > 1) {
-        infos.push({ code: "flatten.multiple-fixed-roots", message: `This clump has ${fixedInDesignOrder.length} fixed pieces; using the first (${rootGuid}) as breadth-first root.` });
-      }
-    },
-    initRoot: (rootGuid, rootPiece) => {
-      if (!rootPiece.guid) return;
-      const planeHash = hashPlaneRoot(rootPiece.guid, rootPiece.plane);
-      const centerHash = hashCenterRoot(rootPiece.guid, rootPiece.center);
-      planeHashes[rootGuid] = planeHash;
-      centerHashes[rootGuid] = centerHash;
-
-      const cached = cache?.[rootGuid];
-      const planeMatches = !!cached && cached.planeHash === planeHash;
-      const centerMatches = !!cached && cached.centerHash === centerHash;
-
-      let flatPiece: Piece;
-      let rootPlane: Plane;
-      let rootCenter: Coord;
-      if (planeMatches && centerMatches && cached?.flatPiece) {
-        flatPiece = cached.flatPiece;
-        rootPlane = cached.plane ?? flatPiece.plane!;
-        rootCenter = cached.center ?? flatPiece.center!;
-      } else {
-        rootPlane = planeMatches && cached?.plane ? cached.plane : (rootPiece.plane ?? matrixToPlane(new THREE.Matrix4().identity()));
-        rootCenter = centerMatches && cached?.center ? cached.center : (rootPiece.center ?? new Coord({ u: 0, v: 0 }));
-        const mergedRoot = new Piece(
-          PieceSchema.parse({
-            ...rootPiece.toPlain(),
-            plane: rootPlane.toPlain(),
-            center: rootCenter.toPlain(),
-          }),
-          design,
-          kit,
-        );
-        flatPiece = setAttributes(mergedRoot, [
-          { key: "semio.fixedPieceId", value: rootPiece.guid },
-          { key: "semio.depth", value: "0" },
-          { key: "semio.path", value: rootPiece.guid },
-        ]);
-      }
-
-      piecePlanes[rootGuid] = rootPlane;
-      pieceMap[rootGuid] = flatPiece;
-      const rootIdx = flatPieces.findIndex((p) => p.guid === rootGuid);
-      if (rootIdx !== -1) flatPieces[rootIdx] = flatPiece;
-      nextCache[rootGuid] = { planeHash, centerHash, plane: rootPlane, center: rootCenter, flatPiece };
-    },
-    onTreeEdge: ({ parentGuid, childGuid, connection, depth, parentPiece, childPiece }) => {
-      if (!parentPiece.guid || !childPiece.guid) return;
-      const parentPlane = piecePlanes[parentPiece.guid];
-      const parentPlaneHash = planeHashes[parentPiece.guid];
-      const parentCenterHash = centerHashes[parentPiece.guid];
-      if (!parentPlane || !parentPlaneHash || !parentCenterHash) {
-        placementErrors.push({ code: "flatten.parent-plane-missing", message: `Parent piece ${parentPiece.guid} has no plane while flattening edge to child ${childPiece.guid}.` });
-        return;
-      }
-      const parentSide = connection.connected.piece.guid === parentGuid ? connection.connected : connection.connecting;
-      const childSide = connection.connecting.piece.guid === childGuid ? connection.connecting : connection.connected;
-      const parentType = resolvePieceTypeForFlatten(parentPiece, getType);
-      const childType = resolvePieceTypeForFlatten(childPiece, getType);
-      const parentConnector = getConnector(parentType, parentSide.connector?.guid);
-      const childConnector = getConnector(childType, childSide.connector?.guid);
-      if (!parentConnector || !childConnector) {
-        placementErrors.push({
-          code: "flatten.connectors-not-found",
-          message: `Connectors not found for connection between ${parentGuid} and ${childGuid}. Parent connector: ${parentSide.connector?.guid ?? "(default)"}, child connector: ${childSide.connector?.guid ?? "(default)"}.`,
-        });
-        return;
-      }
-      const planeHash = hashPlaneChain(parentPlaneHash, parentConnector, childConnector, connection);
-      const centerHash = hashCenterChain(parentCenterHash, parentConnector, connection);
-      planeHashes[childGuid] = planeHash;
-      centerHashes[childGuid] = centerHash;
-
-      const cached = cache?.[childGuid];
-      const planeMatches = !!cached && cached.planeHash === planeHash;
-      const centerMatches = !!cached && cached.centerHash === centerHash;
-
-      let flatChildPiece: Piece;
-      let childPlane: Plane;
-      let childCenter: Coord;
-      if (planeMatches && centerMatches && cached?.flatPiece) {
-        flatChildPiece = cached.flatPiece;
-        childPlane = cached.plane ?? flatChildPiece.plane!;
-        childCenter = cached.center ?? flatChildPiece.center!;
-      } else {
-        childPlane = planeMatches && cached?.plane ? cached.plane : roundPlane(computeChildPlane(parentPlane, parentConnector, childConnector, connection));
-        if (centerMatches && cached?.center) {
-          childCenter = cached.center;
-        } else {
-          const radius = 2.697;
-          const verticalVExtra = 1.0;
-          const horizontalScale = 3.0633;
-          const parentFlatCenter = parentPiece.center ?? new Coord({ u: 0, v: 0 });
-          const connectionU = connection.u ?? 0;
-          const connectionV = connection.v ?? 0;
-          let childU: number;
-          let childV: number;
-          if (parentFlatCenter.u === 0 && parentFlatCenter.v === 0) {
-            const angle = 2 * Math.PI * parentConnector.t;
-            childU = radius * Math.sin(angle);
-            childV = radius * Math.cos(angle);
-          } else {
-            const isVerticalConnection = Math.abs(parentConnector.direction?.z ?? 0) > 0.5;
-            if (isVerticalConnection) {
-              childU = parentFlatCenter.u + connectionU;
-              childV = parentFlatCenter.v + connectionV + verticalVExtra;
-            } else {
-              childU = parentFlatCenter.u + connectionU * horizontalScale;
-              childV = parentFlatCenter.v + connectionV * horizontalScale;
-            }
-          }
-          const computedChildCenter = new Coord({ u: round(childU), v: round(childV) });
-          childCenter = childPiece.center ?? computedChildCenter;
-        }
-        const mergedChild = new Piece(
-          PieceSchema.parse({
-            ...childPiece.toPlain(),
-            plane: childPlane.toPlain(),
-            center: childCenter.toPlain(),
-          }),
-          design,
-          kit,
-        );
-        flatChildPiece = setAttributes(mergedChild, [
-          { key: "semio.fixedPieceId", value: parentPiece.attributes?.find((q) => q.key === "semio.fixedPieceId")?.value ?? "" },
-          { key: "semio.parentPieceId", value: parentPiece.guid },
-          { key: "semio.depth", value: depth.toString() },
-          { key: "semio.path", value: (parentPiece.attributes?.find((q) => q.key === "semio.path")?.value ?? "") + "," + childPiece.guid },
-        ]);
-      }
-
-      piecePlanes[childGuid] = childPlane;
-      pieceMap[childGuid] = flatChildPiece;
-      const childIdx = flatPieces.findIndex((p) => p.guid === childGuid);
-      if (childIdx !== -1) flatPieces[childIdx] = flatChildPiece;
-      nextCache[childGuid] = { planeHash, centerHash, plane: childPlane, center: childCenter, flatPiece: flatChildPiece };
-    },
-  });
-
-  let piecesWithPlanes = 0;
-  let piecesWithoutPlanes = 0;
-  const updatedPieces = flatPieces
-    .map((flatPiece) => {
-      if (flatPiece.plane) piecesWithPlanes++;
-      else piecesWithoutPlanes++;
-      const originalPiece = pieces.find((p) => p.guid === flatPiece.guid);
-      if (!originalPiece) return null;
-      const pieceDiff: PieceDiff = {};
-      if (flatPiece.plane && flattenPlanesDiffer(flatPiece.plane, originalPiece.plane)) pieceDiff.plane = flatPiece.plane;
-      if (flatPiece.center && flattenCentersDiffer(flatPiece.center, originalPiece.center)) pieceDiff.center = flatPiece.center;
-      if (!deepEqual(flatPiece.attributes, originalPiece.attributes)) pieceDiff.attributes = getAttributesDiff(originalPiece.attributes ?? [], flatPiece.attributes ?? []);
-      if (Object.keys(pieceDiff).length === 0) return null;
-      return { piece: { guid: flatPiece.guid }, diff: pieceDiff };
-    })
-    .filter((u) => u !== null) as Array<{ piece: PieceId; diff: PieceDiff }>;
-
-  const removedConnections = (design.connections ?? []).map((c) => ({ guid: c.guid }));
-  const forward = {
-    pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
-    connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined,
-  } as DesignDiff;
-
-  if (piecesWithoutPlanes > 0) {
-    placementErrors.push({ code: "flatten.piece-missing-plane", message: `After flatten, ${piecesWithoutPlanes} piece(s) still have no plane (see prior placement messages).` });
-  }
-  if (placementErrors.length > 0) {
-    return { result: operationErr(placementErrors), cache: nextCache };
-  }
-
-  infos.push({ code: "flatten.summary", message: `Flatten removed ${removedConnections.length} connection(s); updated ${updatedPieces.length} piece record(s); ${piecesWithPlanes} piece(s) with planes.` });
-  const backward = inverseDesignDiff(design, forward);
-  return { result: operationOk({ forward, backward }, warnings, infos), cache: nextCache };
-}
 // #endregion 🌳Flatten Merkle Hashes
 
 /**
@@ -7784,7 +7502,7 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
   }
 
   for (const designName of Array.from(designIds)) {
-    const referencedDesign = findDesignInKit(kit, designName);
+    const referencedDesign = asKitInstance(kit).findDesign(designName);
     if (!referencedDesign) continue;
 
     const expandedReferencedDesign = expandDesignPieces(referencedDesign, kit);
@@ -8157,52 +7875,9 @@ const connectionDiffFromStructuralMoveVector = (parentPlane: Plane, parentConnec
 /**
  * Like {@link dragPiecesInDesign}: same fixed vs connected selection and descendant suppression.
  * Root movers get plane origin translation from {@link moveTranslationWorldFromPiecePlane}.
- * Connected movers need {@link buildConnectorResolverFromKit}: world delta from the child plane is split across * gap, shift, rise, rotation, turn, tilt (via Jacobian of {@link computeChildPlane}) and residual u/v on the parent plane.
+ * Connected movers need {@link Kit.buildConnectorResolver}: world delta from the child plane is split across * gap, shift, rise, rotation, turn, tilt (via Jacobian of {@link computeChildPlane}) and residual u/v on the parent plane.
  **/
-export const movePiecesInDesign = (kit: Kit, design: Design, pieces: Design, vector: MoveVector): DesignDiff => asKitInstance(kit).movePiecesInDesignOp(design, pieces, vector);
-
-function movePiecesInDesignFromKit(kit: Kit, design: Design, pieces: Design, vector: MoveVector): DesignDiff {
-  const { getType, getConnector } = buildConnectorResolverFromKit(kit);
-  const { selectedGuids, parentMap, pieceMap, fixedGuids } = buildDragMoveStructuralContext(design, pieces);
-  const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
-  for (const guid of fixedGuids) {
-    const base = pieceMap.get(guid)?.plane;
-    if (base === undefined) continue;
-    const t = moveTranslationWorldFromPiecePlane(base, vector);
-    const newPlane: Plane = new Plane({
-      origin: { x: base.origin.x + t.x, y: base.origin.y + t.y, z: base.origin.z + t.z },
-      xAxis: VectorSchema.parse(base.xAxis as unknown),
-      yAxis: VectorSchema.parse(base.yAxis as unknown),
-    });
-    pieceUpdates.push({ piece: { guid }, diff: { plane: newPlane } });
-  }
-  const connectionUpdates: { connection: { guid: string }; diff: ConnectionDiff }[] = [];
-  for (const guid of selectedGuids) {
-    if (fixedGuids.has(guid)) continue;
-    if (pieceHasSelectedAncestorInDragMoveTree(guid, selectedGuids, parentMap)) continue;
-    const parent = parentMap.get(guid);
-    if (!parent) continue;
-    const connection = design.connections?.find((c) => c.guid === parent.connectionGuid);
-    if (!connection) continue;
-    const parentPiece = pieceMap.get(parent.parentGuid);
-    const childPiece = pieceMap.get(guid);
-    if (!parentPiece || !childPiece) continue;
-    if (!(typeof parentPiece.wireTypeId === "function" ? parentPiece.wireTypeId()?.guid : (parentPiece as any).type?.guid) || !(typeof childPiece.wireTypeId === "function" ? childPiece.wireTypeId()?.guid : (childPiece as any).type?.guid)) continue;
-    const parentType = resolvePieceTypeForFlatten(parentPiece, getType);
-    const childType = resolvePieceTypeForFlatten(childPiece, getType);
-    const parentConnector = getConnector(parentType, connection.connected.connector?.guid);
-    const childConnector = getConnector(childType, connection.connecting.connector?.guid);
-    if (!parentConnector) continue;
-    const parentPlane = parentPiece.plane ?? identityPlaneForStructuralMove();
-    const connDiff = connectionDiffFromStructuralMoveVector(parentPlane, parentConnector, childConnector, connection, childPiece.plane, vector);
-    if (Object.keys(connDiff).length === 0) continue;
-    connectionUpdates.push({ connection: { guid: parent.connectionGuid }, diff: connDiff });
-  }
-  const diff: DesignDiff = {};
-  if (pieceUpdates.length > 0) diff.pieces = { updated: pieceUpdates };
-  if (connectionUpdates.length > 0) diff.connections = { updated: connectionUpdates };
-  return diff;
-}
+export const movePiecesInDesign = (kit: KitLike, design: Design, pieces: Design, vector: MoveVector): DesignDiff => asKitInstance(kit).movePiecesInDesignOp(design, pieces, vector);
 
 export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coord): DesignDiff => {
   const { selectedGuids, parentMap, pieceMap, fixedGuids } = buildDragMoveStructuralContext(design, pieces);
@@ -8233,173 +7908,7 @@ export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coord
  * Internal pieces are copied as-is. Pp-excl-pc-incl pieces get semio.center and semio.plane attributes.
  * Non-internal connections include their external pieces marked with semio.piece.origin = "external".
  **/
-function copyDesignFromKit(kit: Kit, design: Design, pieceGuids: string[], connectionGuids: string[]): OperationResult<Design> {
-  const selectedPieceSet = new Set(pieceGuids);
-  const selectedConnectionSet = new Set(connectionGuids);
-
-  const kitDesign = design.guid ? findDesignInKit(kit, design.guid) : undefined;
-  const connections = design.connections && design.connections.length > 0 ? design.connections : (kitDesign?.connections ?? []);
-  const pieces = design.pieces ?? [];
-
-  // Build parent map: child guid -> { parentGuid, connection }
-  const parentMap = new Map<string, { parentGuid: string; connection: Connection }>();
-  // Build child map: parent guid -> [{ childGuid, connection }, ...]
-  const childMap = new Map<string, Array<{ childGuid: string; connection: Connection }>>();
-  for (const conn of connections) {
-    parentMap.set(conn.connecting.piece.guid, { parentGuid: conn.connected.piece.guid, connection: conn });
-    const parentGuid = conn.connected.piece.guid;
-    if (!childMap.has(parentGuid)) childMap.set(parentGuid, []);
-    childMap.get(parentGuid)!.push({ childGuid: conn.connecting.piece.guid, connection: conn });
-  }
-
-  // Flatten the design to get absolute planes/centers
-  const flatRes = asKitInstance(kit).flattenDesignMerkle(design.guid);
-  if (!flatRes.ok) {
-    return operationErr(flatRes.errors);
-  }
-  const flatChange = flatRes.diff!;
-  const flatDesign = detachDesignForLocalMutation(design);
-  flatDesign.applyDiff(flatChange.forward);
-  const flatPieceMap = new Map<string, Piece>();
-  for (const p of flatDesign.pieces ?? []) {
-    flatPieceMap.set(p.guid, p);
-  }
-
-  const copyPieces: Piece[] = [];
-  const addedPieceGuids = new Set<string>();
-  const copyConnections: Connection[] = [];
-
-  // Process selected pieces
-  for (const pieceGuid of pieceGuids) {
-    const piece = pieces.find((p) => p.guid === pieceGuid);
-    if (!piece) continue;
-
-    const isFixed = piece.plane !== undefined;
-    const pInfo = parentMap.get(pieceGuid);
-    const isConnected = pInfo !== undefined;
-
-    let isInternalConnected = false;
-    const isInternalFixed = isFixed && selectedPieceSet.has(pieceGuid);
-    let isPpExclPcIncl = false;
-
-    if (isConnected && pInfo) {
-      const parentPieceSelected = selectedPieceSet.has(pInfo.parentGuid);
-      const parentConnSelected = selectedConnectionSet.has(pInfo.connection.guid);
-      isInternalConnected = parentPieceSelected && parentConnSelected;
-      isPpExclPcIncl = !parentPieceSelected && parentConnSelected;
-    }
-
-    if (isInternalFixed || isInternalConnected) {
-      copyPieces.push(detachPieceForLocalMutation(piece));
-      addedPieceGuids.add(pieceGuid);
-    } else if (isPpExclPcIncl) {
-      const copied: Piece = detachPieceForLocalMutation(piece);
-      const flatPiece = flatPieceMap.get(pieceGuid);
-      if (flatPiece) {
-        const centerValue = flatPiece.center ? JSON.stringify(flatPiece.center) : JSON.stringify({ u: 0, v: 0 });
-        const planeValue = flatPiece.plane ? JSON.stringify(flatPiece.plane) : JSON.stringify({ origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } });
-        copied.attributes = [...(copied.attributes ?? []), { guid: "", key: "semio.center", value: centerValue }, { guid: "", key: "semio.plane", value: planeValue }];
-      }
-      copyPieces.push(copied);
-      addedPieceGuids.add(pieceGuid);
-    } else {
-      // Specs: Selected piece without an internal parent edge (parent piece or parent connection unselected, and not pp-excl-pc-incl)
-      // becomes a free fixed root in the clipboard at its flat absolute position. Its source descendant subtree (children
-      // and their parent connections, recursively) is auto-pulled in unchanged so the subtree appears exactly as in the source.
-      const copied: Piece = detachPieceForLocalMutation(piece);
-      const flatPiece = flatPieceMap.get(pieceGuid);
-      if (flatPiece) {
-        if (flatPiece.center) copied.center = { u: flatPiece.center.u, v: flatPiece.center.v };
-        if (flatPiece.plane)
-          copied.plane = {
-            origin: { ...flatPiece.plane.origin },
-            xAxis: { ...flatPiece.plane.xAxis },
-            yAxis: { ...flatPiece.plane.yAxis },
-          };
-        const centerValue = flatPiece.center ? JSON.stringify(flatPiece.center) : JSON.stringify({ u: 0, v: 0 });
-        const planeValue = flatPiece.plane ? JSON.stringify(flatPiece.plane) : JSON.stringify({ origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } });
-        copied.attributes = [...(copied.attributes ?? []), { guid: "", key: "semio.center", value: centerValue }, { guid: "", key: "semio.plane", value: planeValue }];
-      }
-      copyPieces.push(copied);
-      addedPieceGuids.add(pieceGuid);
-
-      const subtreeQueue: string[] = [pieceGuid];
-      const subtreeVisited = new Set<string>([pieceGuid]);
-      const addedConnGuids = new Set<string>(copyConnections.map((c) => c.guid));
-      while (subtreeQueue.length > 0) {
-        const cur = subtreeQueue.shift()!;
-        const children = childMap.get(cur) ?? [];
-        for (const { childGuid, connection } of children) {
-          if (subtreeVisited.has(childGuid)) continue;
-          subtreeVisited.add(childGuid);
-          if (!addedPieceGuids.has(childGuid)) {
-            const childPiece = pieces.find((p) => p.guid === childGuid);
-            if (childPiece) {
-              copyPieces.push(detachPieceForLocalMutation(childPiece));
-              addedPieceGuids.add(childGuid);
-            }
-          }
-          if (!addedConnGuids.has(connection.guid)) {
-            copyConnections.push(detachConnectionForLocalMutation(connection));
-            addedConnGuids.add(connection.guid);
-          }
-          subtreeQueue.push(childGuid);
-        }
-      }
-    }
-  }
-
-  // Process selected connections
-  for (const connGuid of connectionGuids) {
-    const conn = connections.find((c) => c.guid === connGuid);
-    if (!conn) continue;
-
-    const connectedGuid = conn.connected.piece.guid;
-    const connectingGuid = conn.connecting.piece.guid;
-    const connectedSelected = selectedPieceSet.has(connectedGuid);
-    const connectingSelected = selectedPieceSet.has(connectingGuid);
-
-    const isInternal = connectedSelected && connectingSelected;
-
-    if (isInternal) {
-      copyConnections.push(detachConnectionForLocalMutation(conn));
-    } else {
-      copyConnections.push(detachConnectionForLocalMutation(conn));
-
-      const externalGuids: string[] = [];
-      if (!connectedSelected) externalGuids.push(connectedGuid);
-      if (!connectingSelected) externalGuids.push(connectingGuid);
-
-      for (const extGuid of externalGuids) {
-        if (!addedPieceGuids.has(extGuid)) {
-          const extPiece = pieces.find((p) => p.guid === extGuid);
-          if (extPiece) {
-            const cloned: Piece = detachPieceForLocalMutation(extPiece);
-            const extAttrs: Attribute[] = [...(cloned.attributes ?? []), { guid: "", key: "semio.piece.origin", value: "external" }];
-            const flatExtPiece = flatPieceMap.get(extGuid);
-            if (flatExtPiece) {
-              const extCenterValue = flatExtPiece.center ? JSON.stringify(flatExtPiece.center) : JSON.stringify({ u: 0, v: 0 });
-              extAttrs.push({ guid: "", key: "semio.center", value: extCenterValue });
-            }
-            cloned.attributes = extAttrs;
-            copyPieces.push(cloned);
-            addedPieceGuids.add(extGuid);
-          }
-        }
-      }
-    }
-  }
-
-  return operationOk({ guid: "", name: "", pieces: copyPieces, connections: copyConnections }, flatRes.warnings, [
-    ...flatRes.infos,
-    {
-      code: "copy.summary",
-      message: `Copied ${copyPieces.length} piece(s) and ${copyConnections.length} connection(s) to clipboard design.`,
-    },
-  ]);
-}
-
-export const copyDesign = (kit: Kit, design: Design, pieceGuids: string[], connectionGuids: string[]): OperationResult<Design> => asKitInstance(kit).copyDesignOp(design, pieceGuids, connectionGuids);
+export const copyDesign = (kit: KitLike, design: Design, pieceGuids: string[], connectionGuids: string[]): OperationResult<Design> => asKitInstance(kit).copyDesignOp(design, pieceGuids, connectionGuids);
 
 /** Specs: Anchoring strings handled by `pasteDesign` switch; any other string falls through to the default branch (same offset as `original`). */
 export const PASTE_DESIGN_ANCHORING_KINDS = ["original", "middle", "centroid", "bottomLeft", "bottomRight", "topLeft", "topRight"] as const;
@@ -8416,277 +7925,7 @@ export type PasteDesignAnchoringKind = (typeof PASTE_DESIGN_ANCHORING_KINDS)[num
  * With coord, only the remapped child–stub parent bridge updates u/v: target matched parent’s diagram center minus
  * (coord + (anchor − child flat center)). Descendant internal connections keep deep-cloned u/v.
  **/
-
-function pasteDesignFromKit(kit: Kit, source: Design, target: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff {
-  const typesMap = new Map<string, Type>();
-  for (const t of kit.types ?? []) typesMap.set(t.guid, t);
-  const portsMap = new Map<string, Port>();
-  for (const p of kit.ports ?? []) portsMap.set(p.guid, p);
-
-  const sourcePieces = source.pieces ?? [];
-  const sourceConnections = source.connections ?? [];
-  const targetPieces = target.pieces ?? [];
-
-  // Classify source pieces
-  const externalOriginGuids = new Set<string>();
-  for (const piece of sourcePieces) {
-    if ((piece.attributes ?? []).some((a) => a.key === "semio.piece.origin" && a.value === "external")) {
-      externalOriginGuids.add(piece.guid);
-    }
-  }
-
-  const sourcePieceMap = new Map<string, Piece>();
-  for (const p of sourcePieces) sourcePieceMap.set(p.guid, p);
-
-  /** When the same child (`connecting`) appears in multiple clipboard edges, prefer the edge to a stub parent for rematch. */
-  const sourceParentMap = new Map<string, { parentGuid: string; connection: Connection }>();
-  for (const conn of sourceConnections) {
-    const childGuid = conn.connecting.piece.guid;
-    const parentGuid = conn.connected.piece.guid;
-    const prev = sourceParentMap.get(childGuid);
-    if (!prev) {
-      sourceParentMap.set(childGuid, { parentGuid, connection: conn });
-      continue;
-    }
-    const prevStub = externalOriginGuids.has(prev.parentGuid);
-    const nextStub = externalOriginGuids.has(parentGuid);
-    if (prevStub !== nextStub && nextStub) {
-      sourceParentMap.set(childGuid, { parentGuid, connection: conn });
-    }
-  }
-
-  // Compute bounding rectangle from flat centers
-  const centerCoords: Coord[] = [];
-  for (const piece of sourcePieces) {
-    if (externalOriginGuids.has(piece.guid)) continue;
-    let center: Coord | undefined = piece.center;
-    if (!center) {
-      const attr = (piece.attributes ?? []).find((a) => a.key === "semio.center");
-      if (attr?.value) center = JSON.parse(attr.value) as Coord;
-    }
-    if (center) centerCoords.push(center);
-  }
-  if (centerCoords.length === 0) centerCoords.push({ u: 0, v: 0 });
-
-  const minU = Math.min(...centerCoords.map((c) => c.u));
-  const maxU = Math.max(...centerCoords.map((c) => c.u));
-  const minV = Math.min(...centerCoords.map((c) => c.v));
-  const maxV = Math.max(...centerCoords.map((c) => c.v));
-
-  let anchor: Coord;
-  switch (anchoring) {
-    case "original":
-      anchor = { u: 0, v: 0 };
-      break;
-    case "middle":
-      anchor = { u: (minU + maxU) / 2, v: (minV + maxV) / 2 };
-      break;
-    case "centroid":
-      anchor = { u: centerCoords.reduce((s, c) => s + c.u, 0) / centerCoords.length, v: centerCoords.reduce((s, c) => s + c.v, 0) / centerCoords.length };
-      break;
-    case "bottomLeft":
-      anchor = { u: minU, v: minV };
-      break;
-    case "bottomRight":
-      anchor = { u: maxU, v: minV };
-      break;
-    case "topLeft":
-      anchor = { u: minU, v: maxV };
-      break;
-    case "topRight":
-      anchor = { u: maxU, v: maxV };
-      break;
-    default:
-      anchor = { u: 0, v: 0 };
-      break;
-  }
-
-  // Build target piece maps for matching
-  const targetPiecesByName = new Map<string, Piece[]>();
-  for (const tp of targetPieces) {
-    if (tp.name) {
-      if (!targetPiecesByName.has(tp.name)) targetPiecesByName.set(tp.name, []);
-      targetPiecesByName.get(tp.name)!.push(tp);
-    }
-  }
-
-  // Helpers
-  const arePortsCompatible = (pg1?: string, pg2?: string): boolean => {
-    if (!pg1 || !pg2) return false;
-    if (pg1 === pg2) return true;
-    const p1 = portsMap.get(pg1);
-    const p2 = portsMap.get(pg2);
-    if (!p1 || !p2) return false;
-    return (p1.compatiblePorts ?? []).some((cp) => cp.guid === pg2) || (p2.compatiblePorts ?? []).some((cp) => cp.guid === pg1);
-  };
-
-  const findMatchingConnector = (typeGuid: string, sourceConnector: Connector): Connector | undefined => {
-    const t = typesMap.get(typeGuid);
-    if (!t) return undefined;
-    return (t.connectors ?? []).find((c) => {
-      const nameMatch = (sourceConnector.name ?? "") !== "" && c.name === sourceConnector.name;
-      const guidMatch = c.guid === sourceConnector.guid;
-      if (!nameMatch && !guidMatch) return false;
-      return arePortsCompatible(c.port?.guid, sourceConnector.port?.guid);
-    });
-  };
-
-  /** True when the external stub parent can be replaced by a target piece with a compatible connector (remap path). */
-  const canRematchExternalParentPiece = (piece: Piece, pInfo: { parentGuid: string; connection: Connection }): boolean => {
-    if (!externalOriginGuids.has(pInfo.parentGuid)) return false;
-    const externalParent = sourcePieceMap.get(pInfo.parentGuid);
-    if (!externalParent) return false;
-    const extName = externalParent.name ?? "";
-    if (!extName || !targetPiecesByName.has(extName)) return false;
-    const parentConn = pInfo.connection;
-    const isParentConnected = parentConn.connected.piece.guid === pInfo.parentGuid;
-    const parentConnectorGuid = isParentConnected ? parentConn.connected.connector?.guid : parentConn.connecting.connector?.guid;
-    if (!parentConnectorGuid || !externalParent.type?.guid) return false;
-    const parentType = typesMap.get(externalParent.type.guid);
-    const sourceParentConnector = parentType?.connectors?.find((c) => c.guid === parentConnectorGuid);
-    if (!sourceParentConnector) return false;
-    const candidates = targetPiecesByName.get(extName)!;
-    return candidates.some((candidate) => {
-      if (!candidate.type?.guid) return false;
-      return findMatchingConnector(candidate.type.guid, sourceParentConnector) !== undefined;
-    });
-  };
-
-  const addedPieces: Piece[] = [];
-  const addedConnections: Connection[] = [];
-
-  // Process source pieces
-  for (const piece of sourcePieces) {
-    if (externalOriginGuids.has(piece.guid)) continue;
-
-    const isFixed = piece.plane !== undefined;
-    const pInfo = sourceParentMap.get(piece.guid);
-    const isConnected = pInfo !== undefined;
-
-    // Specs: If the parent is an external clipboard stub and the target has a matching named piece with a
-    // compatible connector, remap the parent link first—even when this piece has a plane (flattened pp-excl).
-    // Otherwise fixed pieces still get anchor/coord on center without going through rematch (e.g. parent not in target).
-    if (isConnected && pInfo && externalOriginGuids.has(pInfo.parentGuid)) {
-      const externalParent = sourcePieceMap.get(pInfo.parentGuid)!;
-      let matched = false;
-
-      if (canRematchExternalParentPiece(piece, pInfo)) {
-        const extName = externalParent.name ?? "";
-        const candidates = targetPiecesByName.get(extName)!;
-        const parentConn = pInfo.connection;
-        const isParentConnected = parentConn.connected.piece.guid === pInfo.parentGuid;
-        const parentConnectorGuid = isParentConnected ? parentConn.connected.connector?.guid : parentConn.connecting.connector?.guid;
-
-        let sourceParentConnector: Connector | undefined;
-        if (externalParent.type?.guid) {
-          const parentType = typesMap.get(externalParent.type.guid);
-          if (parentType) {
-            sourceParentConnector = (parentType.connectors ?? []).find((c) => c.guid === parentConnectorGuid);
-          }
-        }
-
-        if (sourceParentConnector) {
-          for (const candidate of candidates) {
-            if (!candidate.type?.guid) continue;
-            const matchingConnector = findMatchingConnector(candidate.type.guid, sourceParentConnector);
-            if (matchingConnector) {
-              matched = true;
-              addedPieces.push(detachPieceForLocalMutation(piece));
-
-              const copiedConn: Connection = detachConnectionForLocalMutation(parentConn);
-              if (isParentConnected) {
-                copiedConn.connected = { piece: { guid: candidate.guid }, connector: { guid: matchingConnector.guid } };
-              } else {
-                copiedConn.connecting = { piece: { guid: candidate.guid }, connector: { guid: matchingConnector.guid } };
-              }
-
-              if (coord) {
-                const connectedStub = externalOriginGuids.has(parentConn.connected.piece.guid);
-                const connectingStub = externalOriginGuids.has(parentConn.connecting.piece.guid);
-                const connMatchesParentage =
-                  (parentConn.connecting.piece.guid === piece.guid && parentConn.connected.piece.guid === pInfo.parentGuid) || (parentConn.connected.piece.guid === piece.guid && parentConn.connecting.piece.guid === pInfo.parentGuid);
-                // Specs: Coord updates u/v only on this remapped stub-bridge using target matched parent center + anchor;
-                // descendant internal edges are unchanged (second paste pass).
-                if (connMatchesParentage && connectedStub !== connectingStub) {
-                  let flatParentCenter: Coord | undefined;
-                  if (candidate.center) flatParentCenter = { u: candidate.center.u, v: candidate.center.v };
-                  else {
-                    const candAttr = (candidate.attributes ?? []).find((a) => a.key === "semio.center");
-                    if (candAttr?.value) flatParentCenter = JSON.parse(candAttr.value) as Coord;
-                  }
-                  if (!flatParentCenter) {
-                    const epCenterAttr = (externalParent.attributes ?? []).find((a) => a.key === "semio.center");
-                    if (epCenterAttr?.value) flatParentCenter = JSON.parse(epCenterAttr.value) as Coord;
-                    else if (externalParent.center) flatParentCenter = externalParent.center;
-                  }
-
-                  let flatChildCenter: Coord | undefined;
-                  const childCenterAttr = (piece.attributes ?? []).find((a) => a.key === "semio.center");
-                  if (childCenterAttr?.value) flatChildCenter = JSON.parse(childCenterAttr.value) as Coord;
-                  else if (piece.center) flatChildCenter = piece.center;
-
-                  if (flatParentCenter && flatChildCenter) {
-                    copiedConn.u = flatParentCenter.u - (coord.u + (anchor.u - flatChildCenter.u));
-                    copiedConn.v = flatParentCenter.v - (coord.v + (anchor.v - flatChildCenter.v));
-                  }
-                }
-              }
-
-              addedConnections.push(copiedConn);
-              break;
-            }
-          }
-        }
-      }
-
-      if (!matched) {
-        const copied: Piece = detachPieceForLocalMutation(piece);
-        const attrs = piece.attributes ?? [];
-        const centerAttr = attrs.find((a) => a.key === "semio.center");
-        const planeAttr = attrs.find((a) => a.key === "semio.plane");
-        if (centerAttr?.value) copied.center = JSON.parse(centerAttr.value);
-        if (planeAttr?.value) copied.plane = JSON.parse(planeAttr.value);
-        const c = copied.center ?? { u: 0, v: 0 };
-        copied.center = { u: c.u - anchor.u + (coord?.u ?? 0), v: c.v - anchor.v + (coord?.v ?? 0) };
-        addedPieces.push(copied);
-      }
-    } else if (isFixed) {
-      const copied: Piece = detachPieceForLocalMutation(piece);
-      let cu = 0;
-      let cv = 0;
-      if (copied.center) {
-        cu = copied.center.u;
-        cv = copied.center.v;
-      } else {
-        const centerAttr = (copied.attributes ?? []).find((a) => a.key === "semio.center");
-        if (centerAttr?.value) {
-          const parsed = JSON.parse(centerAttr.value) as Coord;
-          cu = parsed.u;
-          cv = parsed.v;
-        }
-      }
-      copied.center = { u: cu - anchor.u + (coord?.u ?? 0), v: cv - anchor.v + (coord?.v ?? 0) };
-      addedPieces.push(copied);
-    } else if (isConnected && pInfo) {
-      addedPieces.push(detachPieceForLocalMutation(piece));
-    }
-  }
-
-  // Process source connections (non-external internal connections)
-  const addedPieceGuids = new Set(addedPieces.map((p) => p.guid));
-  for (const conn of sourceConnections) {
-    if (externalOriginGuids.has(conn.connected.piece.guid) || externalOriginGuids.has(conn.connecting.piece.guid)) continue;
-    if (!addedPieceGuids.has(conn.connected.piece.guid) || !addedPieceGuids.has(conn.connecting.piece.guid)) continue;
-    addedConnections.push(detachConnectionForLocalMutation(conn));
-  }
-
-  const diff: DesignDiff = {};
-  if (addedPieces.length > 0) diff.pieces = { added: addedPieces };
-  if (addedConnections.length > 0) diff.connections = { added: addedConnections };
-  return diff;
-}
-
-export const pasteDesign = (kit: Kit, source: Design, target: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff => asKitInstance(kit).pasteDesignOp(source, target, anchoring, coord);
+export const pasteDesign = (kit: KitLike, source: Design, target: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff => asKitInstance(kit).pasteDesignOp(source, target, anchoring, coord);
 
 /**
  * Finds replaceable types and designs for the selected pieces in a design.
@@ -8943,26 +8182,77 @@ export interface KitChange {
   validation: KitDiffValidationResult;
 }
 
-/** Options for {@link Kit.change}. Application code should use entity methods ({@link Piece.delete}, {@link Type.rename}, …), not raw diffs. */
+/** Options for {@link Kit._applyDiff} (internal / kit-store pipeline). Prefer semantic entity methods for domain edits. */
 export type KitChangeOptions = {
   origin?: string;
-  /** Record this step on an open transaction (see {@link Kit.startTransaction}). */
+  /** Record this step on an open transaction (see {@link Kit.beginTransaction}). */
   transactionId?: string;
   /** When false, do not enqueue {@link Backbone.changed}. Default true. */
   notifyBackbone?: boolean;
-  /** When true, do not push to global undo history (e.g. {@link InMemoryKitStore}). Default false. */
+  /** When true, do not push to finalized local history (see {@link Kit.undo}). Default false. */
   skipGlobalHistory?: boolean;
+  /** Inbound backbone: committed external change — not part of local history; clears redo. */
+  inboundCommitted?: boolean;
 };
 
-type KitOpenTransaction = {
+export type ConflictKind =
+  | "LocalChange"
+  | "TxUndo"
+  | "TxRedo"
+  | "TxAbort"
+  | "HistoryUndo"
+  | "HistoryRedo"
+  | "BackboneChange";
+
+export type Conflict = {
+  id: string;
+  kind: ConflictKind;
+  txId?: string;
+  proposedDiff?: KitDiff;
+  proposedChange?: KitChange;
+  validationReport: KitDiffValidationResult;
+  createdAt: string;
+};
+
+export type KitPhase = "ready" | "frozen";
+
+export type HistoryInfo = {
+  pastCount: number;
+  futureCount: number;
+  revision: number;
+  auditLength: number;
+};
+
+export type TransactionStatus = "open" | "finalized" | "aborted";
+
+export type TransactionView = {
+  id: string;
+  status: TransactionStatus;
+  label?: string;
+};
+
+type KitAuditEntry = {
+  revision: number;
+  tag: string;
+  change?: KitChange;
+};
+
+type KitRuntimeTransaction = {
+  label?: string;
+  status: TransactionStatus;
   startPlain: KitData;
-  steps: KitChange[];
-  redoSteps: KitChange[];
+  done: KitChange[];
+  undone: KitChange[];
+  netForward: KitDiff;
+  netBackward: KitDiff;
+  baseRevision: number;
+  touchedEntities: Set<string>;
+  touchedVersions: Map<string, string>;
 };
 
 /**
- * Mutable kit document. Pass this instance by reference; edits mutate in place via validated {@link Kit.change}.
- * Application and integration code use entity methods and {@link Kit} CRUD helpers — not {@link Kit.change} with ad-hoc diffs.
+ * Single-threaded transactional kit runtime: live state, provisional open transactions, finalized history undo/redo,
+ * backbone sync for committed changes only. Raw {@link KitDiff} application is internal ({@link Kit._applyDiff}).
  **/
 export class Kit {
   guid!: string;
@@ -8988,24 +8278,34 @@ export class Kit {
   createdAt!: string;
   updatedAt!: string;
 
+  /** Namespaced mutations and lookups; prefer `kit.ops.types.add(…)` over removed module-level helpers. */
+  readonly ops: KitOps;
+
   // #region 🔖Private State
   private backbone?: Backbone;
   private validationState: ValidationState = { ok: true, errors: [], warnings: [], infos: [] };
+  #phase: KitPhase = "ready";
+  #conflict?: Conflict;
   #conflicted = false;
   private strictMode: boolean = false;
-  #openTransactions = new Map<string, KitOpenTransaction>();
-  #historyPast: KitChange[] = [];
-  #historyFuture: KitChange[] = [];
+  #revision = 0;
+  #auditLog: KitAuditEntry[] = [];
+  #openTransactions = new Map<string, KitRuntimeTransaction>();
+  /** Finalized local transactions only (public {@link Kit.undo} / {@link Kit.redo}). */
+  #historyDone: KitChange[] = [];
+  #historyUndone: KitChange[] = [];
   #flattenMerkleByDesign = new Map<string, { [pieceGuid: string]: FlatMerkleCacheEntry }>();
   #listeners: Set<() => void> = new Set();
   /** Outbound backbone notifications (non-blocking; flushed on a microtask). */
   #backboneOutbound: KitChange[] = [];
+  #backboneOutboundFrozen: KitChange[] = [];
   #backboneFlushScheduled = false;
+  #deferredInboundQueue: KitDiff[] = [];
   // #endregion 🔖Private State
 
   /**
    * Applies a {@link KitDiff} in place with no validation — undo/redo replay, document hydration, and tests only.
-   * Domain edits must use {@link Kit.change} or entity / {@link Kit} CRUD helpers.
+   * Domain edits must use semantic methods / {@link Kit._applyDiff} (internal pipeline).
    */
   replayChangeUnchecked(diff: KitDiff): void {
     this.#applyRawKitDiff(diff);
@@ -9074,7 +8374,7 @@ export class Kit {
     return mergeKitGraphDiff(diff1, diff2);
   }
 
-  static changeBetween(before: Kit, after: Kit): KitChange {
+  static changeBetween(before: KitLike, after: KitLike): KitChange {
     const b = asKitInstance(before);
     const a = asKitInstance(after);
     const forward = computeKitGraphDiffBetween(b, a);
@@ -9093,18 +8393,13 @@ export class Kit {
   }
 
   #scheduleBackboneNotify(change: KitChange): void {
-    const bb = this.backbone;
-    if (!bb) return;
+    if (!this.backbone) return;
+    if (this.#phase === "frozen") {
+      this.#backboneOutboundFrozen.push(change);
+      return;
+    }
     this.#backboneOutbound.push(change);
-    if (this.#backboneFlushScheduled) return;
-    this.#backboneFlushScheduled = true;
-    queueMicrotask(() => {
-      this.#backboneFlushScheduled = false;
-      const batch = this.#backboneOutbound.splice(0, this.#backboneOutbound.length);
-      for (const ch of batch) {
-        void bb.changed(ch).catch((err) => console.error("Backbone sync error:", err));
-      }
-    });
+    this.#flushBackboneOutboundSoon();
   }
 
   constructor(plain: KitData, backbone?: Backbone) {
@@ -9125,7 +8420,11 @@ export class Kit {
       queueMicrotask(() => {
         try {
           const maybe = backbone.attach!(this, (inbound) => {
-            this.change(inbound, { notifyBackbone: false, skipGlobalHistory: false });
+            if (this.#phase === "frozen") {
+              this.#deferredInboundQueue.push(inbound);
+              return;
+            }
+            this._applyDiff(inbound, { notifyBackbone: false, skipGlobalHistory: true, inboundCommitted: true });
           });
           void Promise.resolve(maybe).catch((err) => console.error("Backbone attach error:", err));
         } catch (err) {
@@ -9133,6 +8432,7 @@ export class Kit {
         }
       });
     }
+    this.ops = new KitOps(this);
   }
 
   /**
@@ -9140,7 +8440,7 @@ export class Kit {
    */
   flattenDesignMerkle(designGuid: string) {
     const prev = this.#flattenMerkleByDesign.get(designGuid);
-    const { result, cache } = flattenDesignCachedCore(this, designGuid, prev);
+    const { result, cache } = this.#flattenDesignCached(designGuid, prev);
     this.#flattenMerkleByDesign.set(designGuid, cache);
     return result;
   }
@@ -9155,117 +8455,1309 @@ export class Kit {
     this.#flattenMerkleByDesign.clear();
   }
 
-  /** Opens a transaction (multiple can be open). Steps recorded via {@link Kit.change}(…, { transactionId }). */
-  startTransaction(): string {
-    if (this.#conflicted) {
+  /** Per-piece merkle hashes for flatten cache identity (same chain as incremental flatten). */
+  #computeFlatMerkleHashes(designGuid: string): { [pieceGuid: string]: FlatMerkleHashes } {
+    const design = this.requireDesign(designGuid);
+    const pieces = design.pieces ?? [];
+    if (pieces.length === 0) return {};
+    const { getType, getConnector } = this.buildConnectorResolver();
+    const connections = (design.connections ?? []).filter((c) => pieces.some((p) => p.guid === c.connected.piece.guid) && pieces.some((p) => p.guid === c.connecting.piece.guid));
+    const planeHashes: { [guid: string]: string } = {};
+    const centerHashes: { [guid: string]: string } = {};
+    const { pieceMap, adjacency } = buildFlattenPieceAdjacency(pieces, connections);
+    flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, pieces, {
+      initRoot: (rootGuid, rootPiece) => {
+        if (!rootPiece.guid) return;
+        planeHashes[rootPiece.guid] = hashPlaneRoot(rootPiece.guid, rootPiece.plane);
+        centerHashes[rootPiece.guid] = hashCenterRoot(rootPiece.guid, rootPiece.center);
+      },
+      onTreeEdge: ({ parentGuid, childGuid, connection, parentPiece, childPiece }) => {
+        if (!parentPiece.guid || !childPiece.guid) return;
+        const parentPlaneHash = planeHashes[parentPiece.guid];
+        const parentCenterHash = centerHashes[parentPiece.guid];
+        if (!parentPlaneHash || !parentCenterHash) return;
+        const parentSide = connection.connected.piece.guid === parentGuid ? connection.connected : connection.connecting;
+        const childSide = connection.connecting.piece.guid === childGuid ? connection.connecting : connection.connected;
+        const parentType = resolvePieceTypeForFlatten(parentPiece, getType);
+        const childType = resolvePieceTypeForFlatten(childPiece, getType);
+        const parentConnector = getConnector(parentType, parentSide.connector?.guid);
+        const childConnector = getConnector(childType, childSide.connector?.guid);
+        if (!parentConnector || !childConnector) return;
+        planeHashes[childPiece.guid] = hashPlaneChain(parentPlaneHash, parentConnector, childConnector, connection);
+        centerHashes[childPiece.guid] = hashCenterChain(parentCenterHash, parentConnector, connection);
+      },
+    });
+    const result: { [guid: string]: FlatMerkleHashes } = {};
+    for (const guid of Object.keys(planeHashes)) {
+      result[guid] = { planeHash: planeHashes[guid], centerHash: centerHashes[guid] };
+    }
+    return result;
+  }
+
+  /** Uncached flatten implementation for {@link Kit.runFlattenDesign}. */
+  #flattenDesignUncached(designId: string): DesignOperationResult {
+    const design = this.findDesign(designId);
+    if (!design) {
+      return operationErr([{ code: "flatten.design-not-found", message: `Design ${designId} not found in kit ${this.name}` }]);
+    }
+
+    if (!design.pieces || design.pieces.length === 0) {
+      return operationOk({ forward: {}, backward: {} }, [], [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }]);
+    }
+
+    const warnings: OperationNote[] = [];
+    const infos: OperationNote[] = [];
+    const placementErrors: OperationNote[] = [];
+
+    const { getType, getConnector } = this.buildConnectorResolver();
+
+    const flatPieces: Piece[] = design.pieces.map(
+      (p) =>
+        new Piece({
+          ...PieceSchema.parse(stripNullsJsonClone(p.toPlain()) as unknown),
+          attributes: p.attributes?.map((a) => a.toPlain()),
+        }),
+    );
+    const flatDesign = new Design({
+      ...DesignSchema.parse(stripNullsJsonClone(design.toPlain()) as unknown),
+      pieces: flatPieces.map((x) => x.toPlain()),
+      connections: design.connections?.map((c) => ConnectionSchema.parse(stripNullsJsonClone(c.toPlain()) as unknown)),
+    });
+
+    const piecePlanes: { [pieceGuid: string]: Plane } = {};
+
+    const setAttributes = (piece: Piece, newAttrs: { key: string; value?: string; definition?: string }[]): Piece => {
+      const existingAttrs = piece.attributes || [];
+      const updatedAttrs = [...existingAttrs];
+      newAttrs.forEach((newAttr) => {
+        const existingIndex = updatedAttrs.findIndex((a) => a.key === newAttr.key);
+        if (existingIndex >= 0) {
+          updatedAttrs[existingIndex] = new Attribute({
+            ...updatedAttrs[existingIndex].toPlain(),
+            ...newAttr,
+            guid: updatedAttrs[existingIndex].guid,
+          });
+        } else {
+          updatedAttrs.push(new Attribute({ guid: guid(), ...newAttr }));
+        }
+      });
+      return new Piece({ ...piece.toPlain(), attributes: updatedAttrs.map((a) => a.toPlain()) });
+    };
+
+    const filteredConnections =
+      flatDesign.connections?.filter((connection) => {
+        const sourceId = connection.connected.piece.guid;
+        const targetId = connection.connecting.piece.guid;
+        const sourceExists = flatPieces.some((x) => x.guid === sourceId);
+        const targetExists = flatPieces.some((x) => x.guid === targetId);
+        if (!sourceExists) {
+          warnings.push({
+            code: "flatten.connection-skipped-missing-endpoint",
+            message: `Skipping connection ${connection.guid}: source piece ${sourceId} not found in design.`,
+          });
+          return false;
+        }
+        if (!targetExists) {
+          warnings.push({
+            code: "flatten.connection-skipped-missing-endpoint",
+            message: `Skipping connection ${connection.guid}: target piece ${targetId} not found in design.`,
+          });
+          return false;
+        }
+        return true;
+      }) || [];
+
+    const { pieceMap, adjacency } = buildFlattenPieceAdjacency(flatPieces, filteredConnections);
+    flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, flatPieces, {
+      onComponentDiscovered: (component, rootGuid, pm) => {
+        const fixedInDesignOrder = flatPieces.map((fp) => fp.guid).filter((g): g is string => Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined));
+        if (fixedInDesignOrder.length === 0) {
+          warnings.push({
+            code: "flatten.no-fixed-piece-in-clump",
+            message: `Connected pieces have no fixed root (no piece with both plane and center). Using piece ${rootGuid} as breadth-first root. Each connected set of pieces (clump) should include at least one fixed piece for stable, recommended layout.`,
+          });
+        } else if (fixedInDesignOrder.length > 1) {
+          infos.push({
+            code: "flatten.multiple-fixed-roots",
+            message: `This clump has ${fixedInDesignOrder.length} fixed pieces; using the first (${rootGuid}) as breadth-first root.`,
+          });
+        }
+      },
+      initRoot: (rootGuid, rootPiece) => {
+        if (!rootPiece.guid) return;
+        const updatedRootPiece = setAttributes(rootPiece, [
+          { key: "semio.fixedPieceId", value: rootPiece.guid },
+          { key: "semio.depth", value: "0" },
+          { key: "semio.path", value: rootPiece.guid },
+        ]);
+        pieceMap[rootGuid] = updatedRootPiece;
+        let rootPlane: Plane;
+        if (rootPiece.plane) {
+          rootPlane = rootPiece.plane;
+        } else {
+          rootPlane = FLATTEN_IDENTITY_PLANE;
+        }
+
+        piecePlanes[rootPiece.guid] = rootPlane;
+        const rootPieceIndex = flatDesign.pieces!.findIndex((p) => p.guid === rootPiece.guid);
+        if (rootPieceIndex !== -1) {
+          flatDesign.pieces![rootPieceIndex].plane = rootPlane;
+
+          if (!flatDesign.pieces![rootPieceIndex].center) {
+            flatDesign.pieces![rootPieceIndex].center = new Coord({ u: 0, v: 0 });
+          }
+
+          const cur = pieceMap[rootGuid] ?? updatedRootPiece;
+          pieceMap[rootGuid] = new Piece({
+            ...PieceSchema.parse(stripNullsJsonClone(cur.toPlain()) as unknown),
+            plane: PlaneSchema.parse(rootPlane as unknown),
+            center: CoordSchema.parse(flatDesign.pieces![rootPieceIndex].center as unknown),
+          });
+        }
+      },
+      onTreeEdge: ({ parentGuid, childGuid, connection, depth, parentPiece, childPiece }) => {
+        if (!parentPiece.guid || !childPiece.guid) return;
+        const parentPlane = piecePlanes[parentPiece.guid];
+        if (!parentPlane) {
+          placementErrors.push({
+            code: "flatten.parent-plane-missing",
+            message: `Parent piece ${parentPiece.guid} has no plane while flattening edge to child ${childPiece.guid}.`,
+          });
+          return;
+        }
+        const parentSide = connection.connected.piece.guid === parentGuid ? connection.connected : connection.connecting;
+        const childSide = connection.connecting.piece.guid === childGuid ? connection.connecting : connection.connected;
+        const parentType = resolvePieceTypeForFlatten(parentPiece, getType);
+        const childType = resolvePieceTypeForFlatten(childPiece, getType);
+
+        const parentConnectorGuid = parentSide.connector?.guid;
+        const childConnectorGuid = childSide.connector?.guid;
+        const parentConnector = getConnector(parentType, parentConnectorGuid);
+        const childConnector = getConnector(childType, childConnectorGuid);
+
+        if (!parentConnector || !childConnector) {
+          placementErrors.push({
+            code: "flatten.connectors-not-found",
+            message: `Connectors not found for connection between ${parentGuid} and ${childGuid}. Parent connector: ${parentConnectorGuid ?? "(default)"}, child connector: ${childConnectorGuid ?? "(default)"}.`,
+          });
+          return;
+        }
+        const childPlane = roundPlane(computeChildPlane(parentPlane, parentConnector, childConnector, connection));
+        piecePlanes[childPiece.guid] = childPlane;
+
+        const radius = 2.697;
+        const verticalVExtra = 1.0;
+        const horizontalScale = 3.0633;
+        const parentCenter = parentPiece.center || new Coord({ u: 0, v: 0 });
+        const connectionU = connection.u ?? 0;
+        const connectionV = connection.v ?? 0;
+
+        let childU: number;
+        let childV: number;
+
+        if (parentCenter.u === 0 && parentCenter.v === 0) {
+          const angle = 2 * Math.PI * parentConnector.t;
+          childU = radius * Math.sin(angle);
+          childV = radius * Math.cos(angle);
+        } else {
+          const isVerticalConnection = Math.abs(parentConnector.direction?.z ?? 0) > 0.5;
+
+          if (isVerticalConnection) {
+            childU = parentCenter.u + connectionU;
+            childV = parentCenter.v + connectionV + verticalVExtra;
+          } else {
+            childU = parentCenter.u + connectionU * horizontalScale;
+            childV = parentCenter.v + connectionV * horizontalScale;
+          }
+        }
+
+        const computedChildCenter = new Coord({
+          u: round(childU),
+          v: round(childV),
+        });
+        const childCenter: Coord = childPiece.center ?? computedChildCenter;
+
+        const flatChildPiece: Piece = setAttributes(
+          new Piece({
+            ...PieceSchema.parse(stripNullsJsonClone(childPiece.toPlain()) as unknown),
+            plane: PlaneSchema.parse(childPlane as unknown),
+            center: CoordSchema.parse((childPiece.center ?? computedChildCenter) as unknown),
+          }),
+          [
+            {
+              key: "semio.fixedPieceId",
+              value: parentPiece.attributes?.find((q) => q.key === "semio.fixedPieceId")?.value ?? "",
+            },
+            {
+              key: "semio.parentPieceId",
+              value: parentPiece.guid,
+            },
+            {
+              key: "semio.depth",
+              value: depth.toString(),
+            },
+            {
+              key: "semio.path",
+              value: (parentPiece.attributes?.find((q) => q.key === "semio.path")?.value ?? "") + "," + childPiece.guid,
+            },
+          ],
+        );
+        pieceMap[childGuid] = flatChildPiece;
+      },
+    });
+    flatDesign.pieces = flatDesign.pieces?.map((p) => pieceMap[p.guid ?? ""]);
+    flatDesign.connections = [];
+
+    let piecesWithPlanes = 0;
+    let piecesWithoutPlanes = 0;
+    const updatedPieces = flatDesign.pieces
+      ?.map((flatPiece) => {
+        if (flatPiece.plane) piecesWithPlanes++;
+        else piecesWithoutPlanes++;
+
+        const originalPiece = design.pieces?.find((p) => p.guid === flatPiece.guid);
+        if (!originalPiece) return null;
+
+        const pieceDiff: PieceDiff = {};
+
+        if (flatPiece.plane && flattenPlanesDiffer(flatPiece.plane, originalPiece.plane)) {
+          pieceDiff.plane = flatPiece.plane;
+        }
+
+        if (flatPiece.center && flattenCentersDiffer(flatPiece.center, originalPiece.center)) {
+          pieceDiff.center = flatPiece.center;
+        }
+        if (!deepEqual(flatPiece.attributes, originalPiece.attributes)) {
+          pieceDiff.attributes = getAttributesDiff(originalPiece.attributes ?? [], flatPiece.attributes ?? []);
+        }
+
+        if (Object.keys(pieceDiff).length === 0) return null;
+
+        return {
+          piece: { guid: flatPiece.guid },
+          diff: pieceDiff,
+        };
+      })
+      .filter((update) => update !== null) as Array<{ piece: PieceId; diff: PieceDiff }>;
+
+    const removedConnections = design.connections?.map((c) => ({ guid: c.guid })) || [];
+
+    const forward = {
+      pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
+      connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined,
+    } as DesignDiff;
+
+    if (piecesWithoutPlanes > 0) {
+      placementErrors.push({
+        code: "flatten.piece-missing-plane",
+        message: `After flatten, ${piecesWithoutPlanes} piece(s) still have no plane (see prior placement messages).`,
+      });
+    }
+    if (placementErrors.length > 0) {
+      return operationErr(placementErrors);
+    }
+
+    infos.push({
+      code: "flatten.summary",
+      message: `Flatten removed ${removedConnections.length} connection(s); updated ${updatedPieces.length} piece record(s); ${piecesWithPlanes} piece(s) with planes.`,
+    });
+
+    const backward = inverseDesignDiff(design, forward);
+    return operationOk({ forward, backward }, warnings, infos);
+  }
+
+  /**
+   * Incremental flatten with optional merkle cache; see {@link Kit.flattenDesignMerkle}.
+   */
+  #flattenDesignCached(
+    designGuid: string,
+    cache?: { [pieceGuid: string]: FlatMerkleCacheEntry },
+  ): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } {
+    const design = this.findDesign(designGuid);
+    if (!design) {
+      return {
+        result: operationErr([{ code: "flatten.design-not-found", message: `Design ${designGuid} not found in kit ${this.name}` }]),
+        cache: {},
+      };
+    }
+    if (!design.pieces || design.pieces.length === 0) {
+      return {
+        result: operationOk({ forward: {}, backward: {} }, [], [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }]),
+        cache: {},
+      };
+    }
+
+    const warnings: OperationNote[] = [];
+    const infos: OperationNote[] = [];
+    const placementErrors: OperationNote[] = [];
+    const { getType, getConnector } = this.buildConnectorResolver();
+
+    const pieces = design.pieces;
+    const flatPieces: Piece[] = pieces.map((p) => detachPieceForLocalMutation(p));
+    const filteredConnections = (design.connections ?? []).filter((connection) => {
+      const sourceId = connection.connected.piece.guid;
+      const targetId = connection.connecting.piece.guid;
+      const sourceExists = flatPieces.some((x) => x.guid === sourceId);
+      const targetExists = flatPieces.some((x) => x.guid === targetId);
+      if (!sourceExists) {
+        warnings.push({ code: "flatten.connection-skipped-missing-endpoint", message: `Skipping connection ${connection.guid}: source piece ${sourceId} not found in design.` });
+        return false;
+      }
+      if (!targetExists) {
+        warnings.push({ code: "flatten.connection-skipped-missing-endpoint", message: `Skipping connection ${connection.guid}: target piece ${targetId} not found in design.` });
+        return false;
+      }
+      return true;
+    });
+
+    const { pieceMap, adjacency } = buildFlattenPieceAdjacency(flatPieces, filteredConnections);
+    const piecePlanes: { [guid: string]: Plane } = {};
+    const planeHashes: { [guid: string]: string } = {};
+    const centerHashes: { [guid: string]: string } = {};
+    const nextCache: { [guid: string]: FlatMerkleCacheEntry } = {};
+
+    const setAttributes = (piece: Piece, newAttrs: { key: string; value?: string; definition?: string }[]): Piece => {
+      const existingAttrs = piece.attributes || [];
+      const updatedAttrs: Attribute[] = [...existingAttrs];
+      newAttrs.forEach((newAttr) => {
+        const existingIndex = updatedAttrs.findIndex((a) => a.key === newAttr.key);
+        if (existingIndex >= 0) {
+          updatedAttrs[existingIndex] = new Attribute({ ...updatedAttrs[existingIndex].toPlain(), ...newAttr, guid: updatedAttrs[existingIndex].guid });
+        } else {
+          updatedAttrs.push(new Attribute({ guid: guid(), ...newAttr }));
+        }
+      });
+      return new Piece(
+        PieceSchema.parse({
+          ...piece.toPlain(),
+          attributes: updatedAttrs.map((a) => a.toPlain()),
+        }),
+        design,
+        this,
+      );
+    };
+
+    flattenPlacementWalkDesignOrderRoots(pieceMap, adjacency, flatPieces, {
+      onComponentDiscovered: (component, rootGuid, pm) => {
+        const fixedInDesignOrder = flatPieces.map((fp) => fp.guid).filter((g): g is string => Boolean(g && component.has(g) && pm[g]?.plane !== undefined && pm[g]?.center !== undefined));
+        if (fixedInDesignOrder.length === 0) {
+          warnings.push({
+            code: "flatten.no-fixed-piece-in-clump",
+            message: `Connected pieces have no fixed root (no piece with both plane and center). Using piece ${rootGuid} as breadth-first root. Each connected set of pieces (clump) should include at least one fixed piece for stable, recommended layout.`,
+          });
+        } else if (fixedInDesignOrder.length > 1) {
+          infos.push({ code: "flatten.multiple-fixed-roots", message: `This clump has ${fixedInDesignOrder.length} fixed pieces; using the first (${rootGuid}) as breadth-first root.` });
+        }
+      },
+      initRoot: (rootGuid, rootPiece) => {
+        if (!rootPiece.guid) return;
+        const planeHash = hashPlaneRoot(rootPiece.guid, rootPiece.plane);
+        const centerHash = hashCenterRoot(rootPiece.guid, rootPiece.center);
+        planeHashes[rootGuid] = planeHash;
+        centerHashes[rootGuid] = centerHash;
+
+        const cached = cache?.[rootGuid];
+        const planeMatches = !!cached && cached.planeHash === planeHash;
+        const centerMatches = !!cached && cached.centerHash === centerHash;
+
+        let flatPiece: Piece;
+        let rootPlane: Plane;
+        let rootCenter: Coord;
+        if (planeMatches && centerMatches && cached?.flatPiece) {
+          flatPiece = cached.flatPiece;
+          rootPlane = cached.plane ?? flatPiece.plane!;
+          rootCenter = cached.center ?? flatPiece.center!;
+        } else {
+          rootPlane = planeMatches && cached?.plane ? cached.plane : (rootPiece.plane ?? matrixToPlane(new THREE.Matrix4().identity()));
+          rootCenter = centerMatches && cached?.center ? cached.center : (rootPiece.center ?? new Coord({ u: 0, v: 0 }));
+          const mergedRoot = new Piece(
+            PieceSchema.parse({
+              ...rootPiece.toPlain(),
+              plane: rootPlane.toPlain(),
+              center: rootCenter.toPlain(),
+            }),
+            design,
+            this,
+          );
+          flatPiece = setAttributes(mergedRoot, [
+            { key: "semio.fixedPieceId", value: rootPiece.guid },
+            { key: "semio.depth", value: "0" },
+            { key: "semio.path", value: rootPiece.guid },
+          ]);
+        }
+
+        piecePlanes[rootGuid] = rootPlane;
+        pieceMap[rootGuid] = flatPiece;
+        const rootIdx = flatPieces.findIndex((p) => p.guid === rootGuid);
+        if (rootIdx !== -1) flatPieces[rootIdx] = flatPiece;
+        nextCache[rootGuid] = { planeHash, centerHash, plane: rootPlane, center: rootCenter, flatPiece };
+      },
+      onTreeEdge: ({ parentGuid, childGuid, connection, depth, parentPiece, childPiece }) => {
+        if (!parentPiece.guid || !childPiece.guid) return;
+        const parentPlane = piecePlanes[parentPiece.guid];
+        const parentPlaneHash = planeHashes[parentPiece.guid];
+        const parentCenterHash = centerHashes[parentPiece.guid];
+        if (!parentPlane || !parentPlaneHash || !parentCenterHash) {
+          placementErrors.push({ code: "flatten.parent-plane-missing", message: `Parent piece ${parentPiece.guid} has no plane while flattening edge to child ${childPiece.guid}.` });
+          return;
+        }
+        const parentSide = connection.connected.piece.guid === parentGuid ? connection.connected : connection.connecting;
+        const childSide = connection.connecting.piece.guid === childGuid ? connection.connecting : connection.connected;
+        const parentType = resolvePieceTypeForFlatten(parentPiece, getType);
+        const childType = resolvePieceTypeForFlatten(childPiece, getType);
+        const parentConnector = getConnector(parentType, parentSide.connector?.guid);
+        const childConnector = getConnector(childType, childSide.connector?.guid);
+        if (!parentConnector || !childConnector) {
+          placementErrors.push({
+            code: "flatten.connectors-not-found",
+            message: `Connectors not found for connection between ${parentGuid} and ${childGuid}. Parent connector: ${parentSide.connector?.guid ?? "(default)"}, child connector: ${childSide.connector?.guid ?? "(default)"}.`,
+          });
+          return;
+        }
+        const planeHash = hashPlaneChain(parentPlaneHash, parentConnector, childConnector, connection);
+        const centerHash = hashCenterChain(parentCenterHash, parentConnector, connection);
+        planeHashes[childGuid] = planeHash;
+        centerHashes[childGuid] = centerHash;
+
+        const cached = cache?.[childGuid];
+        const planeMatches = !!cached && cached.planeHash === planeHash;
+        const centerMatches = !!cached && cached.centerHash === centerHash;
+
+        let flatChildPiece: Piece;
+        let childPlane: Plane;
+        let childCenter: Coord;
+        if (planeMatches && centerMatches && cached?.flatPiece) {
+          flatChildPiece = cached.flatPiece;
+          childPlane = cached.plane ?? flatChildPiece.plane!;
+          childCenter = cached.center ?? flatChildPiece.center!;
+        } else {
+          childPlane = planeMatches && cached?.plane ? cached.plane : roundPlane(computeChildPlane(parentPlane, parentConnector, childConnector, connection));
+          if (centerMatches && cached?.center) {
+            childCenter = cached.center;
+          } else {
+            const radius = 2.697;
+            const verticalVExtra = 1.0;
+            const horizontalScale = 3.0633;
+            const parentFlatCenter = parentPiece.center ?? new Coord({ u: 0, v: 0 });
+            const connectionU = connection.u ?? 0;
+            const connectionV = connection.v ?? 0;
+            let childU: number;
+            let childV: number;
+            if (parentFlatCenter.u === 0 && parentFlatCenter.v === 0) {
+              const angle = 2 * Math.PI * parentConnector.t;
+              childU = radius * Math.sin(angle);
+              childV = radius * Math.cos(angle);
+            } else {
+              const isVerticalConnection = Math.abs(parentConnector.direction?.z ?? 0) > 0.5;
+              if (isVerticalConnection) {
+                childU = parentFlatCenter.u + connectionU;
+                childV = parentFlatCenter.v + connectionV + verticalVExtra;
+              } else {
+                childU = parentFlatCenter.u + connectionU * horizontalScale;
+                childV = parentFlatCenter.v + connectionV * horizontalScale;
+              }
+            }
+            const computedChildCenter = new Coord({ u: round(childU), v: round(childV) });
+            childCenter = childPiece.center ?? computedChildCenter;
+          }
+          const mergedChild = new Piece(
+            PieceSchema.parse({
+              ...childPiece.toPlain(),
+              plane: childPlane.toPlain(),
+              center: childCenter.toPlain(),
+            }),
+            design,
+            this,
+          );
+          flatChildPiece = setAttributes(mergedChild, [
+            { key: "semio.fixedPieceId", value: parentPiece.attributes?.find((q) => q.key === "semio.fixedPieceId")?.value ?? "" },
+            { key: "semio.parentPieceId", value: parentPiece.guid },
+            { key: "semio.depth", value: depth.toString() },
+            { key: "semio.path", value: (parentPiece.attributes?.find((q) => q.key === "semio.path")?.value ?? "") + "," + childPiece.guid },
+          ]);
+        }
+
+        piecePlanes[childGuid] = childPlane;
+        pieceMap[childGuid] = flatChildPiece;
+        const childIdx = flatPieces.findIndex((p) => p.guid === childGuid);
+        if (childIdx !== -1) flatPieces[childIdx] = flatChildPiece;
+        nextCache[childGuid] = { planeHash, centerHash, plane: childPlane, center: childCenter, flatPiece: flatChildPiece };
+      },
+    });
+
+    let piecesWithPlanes = 0;
+    let piecesWithoutPlanes = 0;
+    const updatedPieces = flatPieces
+      .map((flatPiece) => {
+        if (flatPiece.plane) piecesWithPlanes++;
+        else piecesWithoutPlanes++;
+        const originalPiece = pieces.find((p) => p.guid === flatPiece.guid);
+        if (!originalPiece) return null;
+        const pieceDiff: PieceDiff = {};
+        if (flatPiece.plane && flattenPlanesDiffer(flatPiece.plane, originalPiece.plane)) pieceDiff.plane = flatPiece.plane;
+        if (flatPiece.center && flattenCentersDiffer(flatPiece.center, originalPiece.center)) pieceDiff.center = flatPiece.center;
+        if (!deepEqual(flatPiece.attributes, originalPiece.attributes)) pieceDiff.attributes = getAttributesDiff(originalPiece.attributes ?? [], flatPiece.attributes ?? []);
+        if (Object.keys(pieceDiff).length === 0) return null;
+        return { piece: { guid: flatPiece.guid }, diff: pieceDiff };
+      })
+      .filter((u) => u !== null) as Array<{ piece: PieceId; diff: PieceDiff }>;
+
+    const removedConnections = (design.connections ?? []).map((c) => ({ guid: c.guid }));
+    const forward = {
+      pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
+      connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined,
+    } as DesignDiff;
+
+    if (piecesWithoutPlanes > 0) {
+      placementErrors.push({ code: "flatten.piece-missing-plane", message: `After flatten, ${piecesWithoutPlanes} piece(s) still have no plane (see prior placement messages).` });
+    }
+    if (placementErrors.length > 0) {
+      return { result: operationErr(placementErrors), cache: nextCache };
+    }
+
+    infos.push({ code: "flatten.summary", message: `Flatten removed ${removedConnections.length} connection(s); updated ${updatedPieces.length} piece record(s); ${piecesWithPlanes} piece(s) with planes.` });
+    const backward = inverseDesignDiff(design, forward);
+    return { result: operationOk({ forward, backward }, warnings, infos), cache: nextCache };
+  }
+
+  /** @see {@link copyDesign} */
+  #copyDesignClipboard(design: Design, pieceGuids: string[], connectionGuids: string[]): OperationResult<Design> {
+    const selectedPieceSet = new Set(pieceGuids);
+    const selectedConnectionSet = new Set(connectionGuids);
+
+    const kitDesign = design.guid ? this.findDesign(design.guid) : undefined;
+    const connections = design.connections && design.connections.length > 0 ? design.connections : (kitDesign?.connections ?? []);
+    const pieces = design.pieces ?? [];
+
+    const parentMap = new Map<string, { parentGuid: string; connection: Connection }>();
+    const childMap = new Map<string, Array<{ childGuid: string; connection: Connection }>>();
+    for (const conn of connections) {
+      parentMap.set(conn.connecting.piece.guid, { parentGuid: conn.connected.piece.guid, connection: conn });
+      const parentGuid = conn.connected.piece.guid;
+      if (!childMap.has(parentGuid)) childMap.set(parentGuid, []);
+      childMap.get(parentGuid)!.push({ childGuid: conn.connecting.piece.guid, connection: conn });
+    }
+
+    const flatRes = this.flattenDesignMerkle(design.guid);
+    if (!flatRes.ok) {
+      return operationErr(flatRes.errors);
+    }
+    const flatChange = flatRes.diff!;
+    const flatDesign = detachDesignForLocalMutation(design);
+    flatDesign.applyDiff(flatChange.forward);
+    const flatPieceMap = new Map<string, Piece>();
+    for (const p of flatDesign.pieces ?? []) {
+      flatPieceMap.set(p.guid, p);
+    }
+
+    const copyPieces: Piece[] = [];
+    const addedPieceGuids = new Set<string>();
+    const copyConnections: Connection[] = [];
+
+    for (const pieceGuid of pieceGuids) {
+      const piece = pieces.find((p) => p.guid === pieceGuid);
+      if (!piece) continue;
+
+      const isFixed = piece.plane !== undefined;
+      const pInfo = parentMap.get(pieceGuid);
+      const isConnected = pInfo !== undefined;
+
+      const isInternalFixed = isFixed && selectedPieceSet.has(pieceGuid);
+      let isPpExclPcIncl = false;
+      let isInternalConnected = false;
+
+      if (isConnected && pInfo) {
+        const parentPieceSelected = selectedPieceSet.has(pInfo.parentGuid);
+        const parentConnSelected = selectedConnectionSet.has(pInfo.connection.guid);
+        isInternalConnected = parentPieceSelected && parentConnSelected;
+        isPpExclPcIncl = !parentPieceSelected && parentConnSelected;
+      }
+
+      if (isInternalFixed || isInternalConnected) {
+        copyPieces.push(detachPieceForLocalMutation(piece));
+        addedPieceGuids.add(pieceGuid);
+      } else if (isPpExclPcIncl) {
+        const copied: Piece = detachPieceForLocalMutation(piece);
+        const flatPiece = flatPieceMap.get(pieceGuid);
+        if (flatPiece) {
+          const centerValue = flatPiece.center ? JSON.stringify(flatPiece.center) : JSON.stringify({ u: 0, v: 0 });
+          const planeValue = flatPiece.plane ? JSON.stringify(flatPiece.plane) : JSON.stringify({ origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } });
+          copied.attributes = [...(copied.attributes ?? []), { guid: "", key: "semio.center", value: centerValue }, { guid: "", key: "semio.plane", value: planeValue }];
+        }
+        copyPieces.push(copied);
+        addedPieceGuids.add(pieceGuid);
+      } else {
+        const copied: Piece = detachPieceForLocalMutation(piece);
+        const flatPiece = flatPieceMap.get(pieceGuid);
+        if (flatPiece) {
+          if (flatPiece.center) copied.center = { u: flatPiece.center.u, v: flatPiece.center.v };
+          if (flatPiece.plane)
+            copied.plane = {
+              origin: { ...flatPiece.plane.origin },
+              xAxis: { ...flatPiece.plane.xAxis },
+              yAxis: { ...flatPiece.plane.yAxis },
+            };
+          const centerValue = flatPiece.center ? JSON.stringify(flatPiece.center) : JSON.stringify({ u: 0, v: 0 });
+          const planeValue = flatPiece.plane ? JSON.stringify(flatPiece.plane) : JSON.stringify({ origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } });
+          copied.attributes = [...(copied.attributes ?? []), { guid: "", key: "semio.center", value: centerValue }, { guid: "", key: "semio.plane", value: planeValue }];
+        }
+        copyPieces.push(copied);
+        addedPieceGuids.add(pieceGuid);
+
+        const subtreeQueue: string[] = [pieceGuid];
+        const subtreeVisited = new Set<string>([pieceGuid]);
+        const addedConnGuids = new Set<string>(copyConnections.map((c) => c.guid));
+        while (subtreeQueue.length > 0) {
+          const cur = subtreeQueue.shift()!;
+          const children = childMap.get(cur) ?? [];
+          for (const { childGuid, connection } of children) {
+            if (subtreeVisited.has(childGuid)) continue;
+            subtreeVisited.add(childGuid);
+            if (!addedPieceGuids.has(childGuid)) {
+              const childPiece = pieces.find((p) => p.guid === childGuid);
+              if (childPiece) {
+                copyPieces.push(detachPieceForLocalMutation(childPiece));
+                addedPieceGuids.add(childGuid);
+              }
+            }
+            if (!addedConnGuids.has(connection.guid)) {
+              copyConnections.push(detachConnectionForLocalMutation(connection));
+              addedConnGuids.add(connection.guid);
+            }
+            subtreeQueue.push(childGuid);
+          }
+        }
+      }
+    }
+
+    for (const connGuid of connectionGuids) {
+      const conn = connections.find((c) => c.guid === connGuid);
+      if (!conn) continue;
+
+      const connectedGuid = conn.connected.piece.guid;
+      const connectingGuid = conn.connecting.piece.guid;
+      const connectedSelected = selectedPieceSet.has(connectedGuid);
+      const connectingSelected = selectedPieceSet.has(connectingGuid);
+
+      const isInternal = connectedSelected && connectingSelected;
+
+      if (isInternal) {
+        copyConnections.push(detachConnectionForLocalMutation(conn));
+      } else {
+        copyConnections.push(detachConnectionForLocalMutation(conn));
+
+        const externalGuids: string[] = [];
+        if (!connectedSelected) externalGuids.push(connectedGuid);
+        if (!connectingSelected) externalGuids.push(connectingGuid);
+
+        for (const extGuid of externalGuids) {
+          if (!addedPieceGuids.has(extGuid)) {
+            const extPiece = pieces.find((p) => p.guid === extGuid);
+            if (extPiece) {
+              const cloned: Piece = detachPieceForLocalMutation(extPiece);
+              const extAttrs: Attribute[] = [...(cloned.attributes ?? []), { guid: "", key: "semio.piece.origin", value: "external" }];
+              const flatExtPiece = flatPieceMap.get(extGuid);
+              if (flatExtPiece) {
+                const extCenterValue = flatExtPiece.center ? JSON.stringify(flatExtPiece.center) : JSON.stringify({ u: 0, v: 0 });
+                extAttrs.push({ guid: "", key: "semio.center", value: extCenterValue });
+              }
+              cloned.attributes = extAttrs;
+              copyPieces.push(cloned);
+              addedPieceGuids.add(extGuid);
+            }
+          }
+        }
+      }
+    }
+
+    return operationOk({ guid: "", name: "", pieces: copyPieces, connections: copyConnections }, flatRes.warnings, [
+      ...flatRes.infos,
+      {
+        code: "copy.summary",
+        message: `Copied ${copyPieces.length} piece(s) and ${copyConnections.length} connection(s) to clipboard design.`,
+      },
+    ]);
+  }
+
+  /** @see {@link pasteDesign} */
+  #pasteDesign(source: Design, target: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff {
+    const typesMap = new Map<string, Type>();
+    for (const t of this.types ?? []) typesMap.set(t.guid, t);
+    const portsMap = new Map<string, Port>();
+    for (const p of this.ports ?? []) portsMap.set(p.guid, p);
+
+    const sourcePieces = source.pieces ?? [];
+    const sourceConnections = source.connections ?? [];
+    const targetPieces = target.pieces ?? [];
+
+    const externalOriginGuids = new Set<string>();
+    for (const piece of sourcePieces) {
+      if ((piece.attributes ?? []).some((a) => a.key === "semio.piece.origin" && a.value === "external")) {
+        externalOriginGuids.add(piece.guid);
+      }
+    }
+
+    const sourcePieceMap = new Map<string, Piece>();
+    for (const p of sourcePieces) sourcePieceMap.set(p.guid, p);
+
+    const sourceParentMap = new Map<string, { parentGuid: string; connection: Connection }>();
+    for (const conn of sourceConnections) {
+      const childGuid = conn.connecting.piece.guid;
+      const parentGuid = conn.connected.piece.guid;
+      const prev = sourceParentMap.get(childGuid);
+      if (!prev) {
+        sourceParentMap.set(childGuid, { parentGuid, connection: conn });
+        continue;
+      }
+      const prevStub = externalOriginGuids.has(prev.parentGuid);
+      const nextStub = externalOriginGuids.has(parentGuid);
+      if (prevStub !== nextStub && nextStub) {
+        sourceParentMap.set(childGuid, { parentGuid, connection: conn });
+      }
+    }
+
+    const centerCoords: Coord[] = [];
+    for (const piece of sourcePieces) {
+      if (externalOriginGuids.has(piece.guid)) continue;
+      let center: Coord | undefined = piece.center;
+      if (!center) {
+        const attr = (piece.attributes ?? []).find((a) => a.key === "semio.center");
+        if (attr?.value) center = JSON.parse(attr.value) as Coord;
+      }
+      if (center) centerCoords.push(center);
+    }
+    if (centerCoords.length === 0) centerCoords.push({ u: 0, v: 0 });
+
+    const minU = Math.min(...centerCoords.map((c) => c.u));
+    const maxU = Math.max(...centerCoords.map((c) => c.u));
+    const minV = Math.min(...centerCoords.map((c) => c.v));
+    const maxV = Math.max(...centerCoords.map((c) => c.v));
+
+    let anchor: Coord;
+    switch (anchoring) {
+      case "original":
+        anchor = { u: 0, v: 0 };
+        break;
+      case "middle":
+        anchor = { u: (minU + maxU) / 2, v: (minV + maxV) / 2 };
+        break;
+      case "centroid":
+        anchor = { u: centerCoords.reduce((s, c) => s + c.u, 0) / centerCoords.length, v: centerCoords.reduce((s, c) => s + c.v, 0) / centerCoords.length };
+        break;
+      case "bottomLeft":
+        anchor = { u: minU, v: minV };
+        break;
+      case "bottomRight":
+        anchor = { u: maxU, v: minV };
+        break;
+      case "topLeft":
+        anchor = { u: minU, v: maxV };
+        break;
+      case "topRight":
+        anchor = { u: maxU, v: maxV };
+        break;
+      default:
+        anchor = { u: 0, v: 0 };
+        break;
+    }
+
+    const targetPiecesByName = new Map<string, Piece[]>();
+    for (const tp of targetPieces) {
+      if (tp.name) {
+        if (!targetPiecesByName.has(tp.name)) targetPiecesByName.set(tp.name, []);
+        targetPiecesByName.get(tp.name)!.push(tp);
+      }
+    }
+
+    const arePortsCompatible = (pg1?: string, pg2?: string): boolean => {
+      if (!pg1 || !pg2) return false;
+      if (pg1 === pg2) return true;
+      const p1 = portsMap.get(pg1);
+      const p2 = portsMap.get(pg2);
+      if (!p1 || !p2) return false;
+      return (p1.compatiblePorts ?? []).some((cp) => cp.guid === pg2) || (p2.compatiblePorts ?? []).some((cp) => cp.guid === pg1);
+    };
+
+    const findMatchingConnector = (typeGuid: string, sourceConnector: Connector): Connector | undefined => {
+      const t = typesMap.get(typeGuid);
+      if (!t) return undefined;
+      return (t.connectors ?? []).find((c) => {
+        const nameMatch = (sourceConnector.name ?? "") !== "" && c.name === sourceConnector.name;
+        const guidMatch = c.guid === sourceConnector.guid;
+        if (!nameMatch && !guidMatch) return false;
+        return arePortsCompatible(c.port?.guid, sourceConnector.port?.guid);
+      });
+    };
+
+    const canRematchExternalParentPiece = (piece: Piece, pInfo: { parentGuid: string; connection: Connection }): boolean => {
+      if (!externalOriginGuids.has(pInfo.parentGuid)) return false;
+      const externalParent = sourcePieceMap.get(pInfo.parentGuid);
+      if (!externalParent) return false;
+      const extName = externalParent.name ?? "";
+      if (!extName || !targetPiecesByName.has(extName)) return false;
+      const parentConn = pInfo.connection;
+      const isParentConnected = parentConn.connected.piece.guid === pInfo.parentGuid;
+      const parentConnectorGuid = isParentConnected ? parentConn.connected.connector?.guid : parentConn.connecting.connector?.guid;
+      if (!parentConnectorGuid || !externalParent.type?.guid) return false;
+      const parentType = typesMap.get(externalParent.type.guid);
+      const sourceParentConnector = parentType?.connectors?.find((c) => c.guid === parentConnectorGuid);
+      if (!sourceParentConnector) return false;
+      const candidates = targetPiecesByName.get(extName)!;
+      return candidates.some((candidate) => {
+        if (!candidate.type?.guid) return false;
+        return findMatchingConnector(candidate.type.guid, sourceParentConnector) !== undefined;
+      });
+    };
+
+    const addedPieces: Piece[] = [];
+    const addedConnections: Connection[] = [];
+
+    for (const piece of sourcePieces) {
+      if (externalOriginGuids.has(piece.guid)) continue;
+
+      const isFixed = piece.plane !== undefined;
+      const pInfo = sourceParentMap.get(piece.guid);
+      const isConnected = pInfo !== undefined;
+
+      if (isConnected && pInfo && externalOriginGuids.has(pInfo.parentGuid)) {
+        const externalParent = sourcePieceMap.get(pInfo.parentGuid)!;
+        let matched = false;
+
+        if (canRematchExternalParentPiece(piece, pInfo)) {
+          const extName = externalParent.name ?? "";
+          const candidates = targetPiecesByName.get(extName)!;
+          const parentConn = pInfo.connection;
+          const isParentConnected = parentConn.connected.piece.guid === pInfo.parentGuid;
+          const parentConnectorGuid = isParentConnected ? parentConn.connected.connector?.guid : parentConn.connecting.connector?.guid;
+
+          let sourceParentConnector: Connector | undefined;
+          if (externalParent.type?.guid) {
+            const parentType = typesMap.get(externalParent.type.guid);
+            if (parentType) {
+              sourceParentConnector = (parentType.connectors ?? []).find((c) => c.guid === parentConnectorGuid);
+            }
+          }
+
+          if (sourceParentConnector) {
+            for (const candidate of candidates) {
+              if (!candidate.type?.guid) continue;
+              const matchingConnector = findMatchingConnector(candidate.type.guid, sourceParentConnector);
+              if (matchingConnector) {
+                matched = true;
+                addedPieces.push(detachPieceForLocalMutation(piece));
+
+                const copiedConn: Connection = detachConnectionForLocalMutation(parentConn);
+                if (isParentConnected) {
+                  copiedConn.connected = { piece: { guid: candidate.guid }, connector: { guid: matchingConnector.guid } };
+                } else {
+                  copiedConn.connecting = { piece: { guid: candidate.guid }, connector: { guid: matchingConnector.guid } };
+                }
+
+                if (coord) {
+                  const connectedStub = externalOriginGuids.has(parentConn.connected.piece.guid);
+                  const connectingStub = externalOriginGuids.has(parentConn.connecting.piece.guid);
+                  const connMatchesParentage =
+                    (parentConn.connecting.piece.guid === piece.guid && parentConn.connected.piece.guid === pInfo.parentGuid) || (parentConn.connected.piece.guid === piece.guid && parentConn.connecting.piece.guid === pInfo.parentGuid);
+                  if (connMatchesParentage && connectedStub !== connectingStub) {
+                    let flatParentCenter: Coord | undefined;
+                    if (candidate.center) flatParentCenter = { u: candidate.center.u, v: candidate.center.v };
+                    else {
+                      const candAttr = (candidate.attributes ?? []).find((a) => a.key === "semio.center");
+                      if (candAttr?.value) flatParentCenter = JSON.parse(candAttr.value) as Coord;
+                    }
+                    if (!flatParentCenter) {
+                      const epCenterAttr = (externalParent.attributes ?? []).find((a) => a.key === "semio.center");
+                      if (epCenterAttr?.value) flatParentCenter = JSON.parse(epCenterAttr.value) as Coord;
+                      else if (externalParent.center) flatParentCenter = externalParent.center;
+                    }
+
+                    let flatChildCenter: Coord | undefined;
+                    const childCenterAttr = (piece.attributes ?? []).find((a) => a.key === "semio.center");
+                    if (childCenterAttr?.value) flatChildCenter = JSON.parse(childCenterAttr.value) as Coord;
+                    else if (piece.center) flatChildCenter = piece.center;
+
+                    if (flatParentCenter && flatChildCenter) {
+                      copiedConn.u = flatParentCenter.u - (coord.u + (anchor.u - flatChildCenter.u));
+                      copiedConn.v = flatParentCenter.v - (coord.v + (anchor.v - flatChildCenter.v));
+                    }
+                  }
+                }
+
+                addedConnections.push(copiedConn);
+                break;
+              }
+            }
+          }
+        }
+
+        if (!matched) {
+          const copied: Piece = detachPieceForLocalMutation(piece);
+          const attrs = piece.attributes ?? [];
+          const centerAttr = attrs.find((a) => a.key === "semio.center");
+          const planeAttr = attrs.find((a) => a.key === "semio.plane");
+          if (centerAttr?.value) copied.center = JSON.parse(centerAttr.value);
+          if (planeAttr?.value) copied.plane = JSON.parse(planeAttr.value);
+          const c = copied.center ?? { u: 0, v: 0 };
+          copied.center = { u: c.u - anchor.u + (coord?.u ?? 0), v: c.v - anchor.v + (coord?.v ?? 0) };
+          addedPieces.push(copied);
+        }
+      } else if (isFixed) {
+        const copied: Piece = detachPieceForLocalMutation(piece);
+        let cu = 0;
+        let cv = 0;
+        if (copied.center) {
+          cu = copied.center.u;
+          cv = copied.center.v;
+        } else {
+          const centerAttr = (copied.attributes ?? []).find((a) => a.key === "semio.center");
+          if (centerAttr?.value) {
+            const parsed = JSON.parse(centerAttr.value) as Coord;
+            cu = parsed.u;
+            cv = parsed.v;
+          }
+        }
+        copied.center = { u: cu - anchor.u + (coord?.u ?? 0), v: cv - anchor.v + (coord?.v ?? 0) };
+        addedPieces.push(copied);
+      } else if (isConnected && pInfo) {
+        addedPieces.push(detachPieceForLocalMutation(piece));
+      }
+    }
+
+    const addedPieceGuids = new Set(addedPieces.map((p) => p.guid));
+    for (const conn of sourceConnections) {
+      if (externalOriginGuids.has(conn.connected.piece.guid) || externalOriginGuids.has(conn.connecting.piece.guid)) continue;
+      if (!addedPieceGuids.has(conn.connected.piece.guid) || !addedPieceGuids.has(conn.connecting.piece.guid)) continue;
+      addedConnections.push(detachConnectionForLocalMutation(conn));
+    }
+
+    const diff: DesignDiff = {};
+    if (addedPieces.length > 0) diff.pieces = { added: addedPieces };
+    if (addedConnections.length > 0) diff.connections = { added: addedConnections };
+    return diff;
+  }
+
+  #appendAudit(tag: string, change?: KitChange): void {
+    this.#auditLog.push({ revision: this.#revision, tag, change });
+  }
+
+  #freezeConflict(kind: ConflictKind, report: KitDiffValidationResult, extra?: { txId?: string; diff?: KitDiff }): void {
+    this.#phase = "frozen";
+    this.#conflicted = true;
+    this.validationState = report;
+    this.#conflict = {
+      id: guid(),
+      kind,
+      txId: extra?.txId,
+      proposedDiff: extra?.diff,
+      validationReport: report,
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  #invalidateCachesTouchedByDiff(diff: KitDiff): void {
+    if (diff.designs) {
+      for (const x of diff.designs.added ?? []) this.#flattenMerkleByDesign.delete(x.guid);
+      for (const x of diff.designs.removed ?? []) this.#flattenMerkleByDesign.delete(x.guid);
+      for (const u of diff.designs.updated ?? []) {
+        if (u.design?.guid) this.#flattenMerkleByDesign.delete(u.design.guid);
+      }
+    }
+  }
+
+  #entityVersionHashFor(entityGuid: string): string {
+    for (const d of this.designs ?? []) {
+      const piece = d.pieces?.find((p) => p.guid === entityGuid);
+      if (piece) return hashPiece(piece);
+      const conn = d.connections?.find((c) => c.guid === entityGuid);
+      if (conn) return hashConnection(conn);
+    }
+    const ty = this.findType(entityGuid);
+    if (ty) return hashType(ty);
+    return "";
+  }
+
+  #flushBackboneOutboundSoon(): void {
+    const bb = this.backbone;
+    if (!bb || this.#phase === "frozen") return;
+    if (this.#backboneFlushScheduled) return;
+    this.#backboneFlushScheduled = true;
+    queueMicrotask(() => {
+      this.#backboneFlushScheduled = false;
+      const batch = this.#backboneOutbound.splice(0, this.#backboneOutbound.length);
+      for (const ch of batch) {
+        void bb.changed(ch).catch((err) => console.error("Backbone sync error:", err));
+      }
+    });
+  }
+
+  /**
+   * Opens a named transaction context (multiple may be open). Steps use {@link Kit._applyDiff}(…, { transactionId: tx.id }).
+   */
+  beginTransaction(label?: string): Transaction {
+    if (this.#phase === "frozen" || this.#conflicted) {
       throw new Error("Kit has unresolved validation conflicts; call resolveConflict() before starting a transaction.");
     }
     const id = guid();
     this.#openTransactions.set(id, {
+      label,
+      status: "open",
       startPlain: KitSchema.parse(this.toData() as unknown as KitData),
-      steps: [],
-      redoSteps: [],
+      done: [],
+      undone: [],
+      netForward: {},
+      netBackward: {},
+      baseRevision: this.#revision,
+      touchedEntities: new Set(),
+      touchedVersions: new Map(),
     });
-    return id;
+    return new Transaction(this, id, label);
   }
 
-  abortTransaction(transactionId: string): void {
+  /** @deprecated Prefer {@link Kit.beginTransaction}. */
+  startTransaction(): string {
+    return this.beginTransaction().id;
+  }
+
+  _getTransactionStatus(id: string): TransactionStatus {
+    return this.#openTransactions.get(id)?.status ?? "finalized";
+  }
+
+  _transactionFinalize(transactionId: string): KitChange | undefined {
     const tx = this.#openTransactions.get(transactionId);
     if (!tx) throw new Error(`Unknown transaction ${transactionId}`);
-    if (this.#conflicted) {
+    if (this.#phase === "frozen" || this.#conflicted) {
+      throw new Error("Kit is conflicted; call resolveConflict() before finalizing a transaction.");
+    }
+    if (tx.done.length === 0) {
+      tx.status = "finalized";
+      this.#openTransactions.delete(transactionId);
+      this.notify();
+      return undefined;
+    }
+    const sk = new Kit(tx.startPlain);
+    const validation = validateKitGraphDiff(sk, tx.netForward, false);
+    if (!validation.ok || validation.errors.length > 0) {
+      this.#freezeConflict("LocalChange", validation, { txId: transactionId, diff: tx.netForward });
+      throw new Error(`Transaction finalize validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+    }
+    if (this.strictMode && validation.warnings.length > 0) {
+      this.#freezeConflict("LocalChange", validation, { txId: transactionId, diff: tx.netForward });
+      throw new Error(`Transaction finalize warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
+    }
+    const diffToApply = validation.diff ?? tx.netForward;
+    const backward = sk.inverseDiffFromPreApplyState(diffToApply);
+    const squashed: KitChange = { forward: diffToApply, backward, validation };
+    tx.status = "finalized";
+    this.#openTransactions.delete(transactionId);
+    this.#historyDone.push(squashed);
+    this.#historyUndone.length = 0;
+    this.#appendAudit("TransactionFinalized", squashed);
+    this.#scheduleBackboneNotify(squashed);
+    this.notify();
+    return squashed;
+  }
+
+  _transactionAbort(transactionId: string): void {
+    const tx = this.#openTransactions.get(transactionId);
+    if (!tx) throw new Error(`Unknown transaction ${transactionId}`);
+    if (this.#phase === "frozen" || this.#conflicted) {
       throw new Error("Kit is conflicted; call resolveConflict() before aborting a transaction.");
     }
-    for (let i = tx.steps.length - 1; i >= 0; i--) {
-      this.#applyRawKitDiff(tx.steps[i]!.backward);
+    if (tx.done.length === 0) {
+      tx.status = "aborted";
+      this.#openTransactions.delete(transactionId);
+      this.notify();
+      return;
     }
+    const validation = validateKitGraphDiff(this, tx.netBackward, false);
+    if (!validation.ok || validation.errors.length > 0) {
+      this.#freezeConflict("TxAbort", validation, { txId: transactionId, diff: tx.netBackward });
+      throw new Error(`Transaction abort validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+    }
+    if (this.strictMode && validation.warnings.length > 0) {
+      this.#freezeConflict("TxAbort", validation, { txId: transactionId, diff: tx.netBackward });
+      throw new Error(`Transaction abort warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
+    }
+    const roll = validation.diff ?? tx.netBackward;
+    this.#applyRawKitDiff(roll);
+    this.#revision++;
+    this.#invalidateCachesTouchedByDiff(roll);
+    tx.status = "aborted";
     this.#openTransactions.delete(transactionId);
-    this.#conflicted = false;
+    this.#appendAudit("TransactionAborted");
     this.validationState = { ok: true, errors: [], warnings: [], infos: [] };
     this.notify();
   }
 
-  /**
-   * Squashes the net diff from transaction start to current kit into one {@link KitChange}, pushes it on global history, notifies backbone once.
-   */
-  finalizeTransaction(transactionId: string): KitChange {
+  _transactionUndo(transactionId: string): void {
     const tx = this.#openTransactions.get(transactionId);
-    if (!tx) throw new Error(`Unknown transaction ${transactionId}`);
-    if (this.#conflicted) {
-      throw new Error("Kit is conflicted; call resolveConflict() before finalizing a transaction.");
-    }
-    const sk = new Kit(tx.startPlain);
-    const forwardRaw = sk.getDiff(this);
-    const validation = validateKitGraphDiff(sk, forwardRaw, false);
+    if (!tx || tx.done.length === 0) return;
+    if (this.#phase === "frozen" || this.#conflicted) throw new Error("Kit is conflicted.");
+    const ch = tx.done.pop()!;
+    const validation = validateKitGraphDiff(this, ch.backward, false);
     if (!validation.ok || validation.errors.length > 0) {
-      throw new Error(`Transaction finalize validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+      tx.done.push(ch);
+      this.#freezeConflict("TxUndo", validation, { txId: transactionId, diff: ch.backward });
+      throw new Error(`Transaction undo validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
     }
     if (this.strictMode && validation.warnings.length > 0) {
-      throw new Error(`Transaction finalize warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
+      tx.done.push(ch);
+      this.#freezeConflict("TxUndo", validation, { txId: transactionId, diff: ch.backward });
+      throw new Error(`Transaction undo warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
     }
-    const diffToApply = validation.diff ?? forwardRaw;
-    const backward = sk.inverseDiffFromPreApplyState(diffToApply);
-    const squashed: KitChange = { forward: diffToApply, backward, validation };
+    const diffBack = validation.diff ?? ch.backward;
+    this.#applyRawKitDiff(diffBack);
+    this.#revision++;
+    this.#invalidateCachesTouchedByDiff(diffBack);
+    tx.undone.push(ch);
+    recomputeTxNet(tx);
+    this.#appendAudit("TxUndoApplied", ch);
+    this.notify();
+  }
 
-    this.#openTransactions.delete(transactionId);
-    this.#historyPast.push(squashed);
-    this.#historyFuture.length = 0;
+  _transactionRedo(transactionId: string): void {
+    const tx = this.#openTransactions.get(transactionId);
+    if (!tx || tx.undone.length === 0) return;
+    if (this.#phase === "frozen" || this.#conflicted) throw new Error("Kit is conflicted.");
+    const ch = tx.undone.pop()!;
+    const validation = validateKitGraphDiff(this, ch.forward, false);
+    if (!validation.ok || validation.errors.length > 0) {
+      tx.undone.push(ch);
+      this.#freezeConflict("TxRedo", validation, { txId: transactionId, diff: ch.forward });
+      throw new Error(`Transaction redo validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+    }
+    if (this.strictMode && validation.warnings.length > 0) {
+      tx.undone.push(ch);
+      this.#freezeConflict("TxRedo", validation, { txId: transactionId, diff: ch.forward });
+      throw new Error(`Transaction redo warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
+    }
+    const diffToApply = validation.diff ?? ch.forward;
+    const backward2 = this.inverseDiffFromPreApplyState(diffToApply);
+    this.#applyRawKitDiff(diffToApply);
+    this.#revision++;
+    this.#invalidateCachesTouchedByDiff(diffToApply);
+    const ch2: KitChange = { forward: diffToApply, backward: backward2, validation };
+    tx.done.push(ch2);
+    recomputeTxNet(tx);
+    this.#appendAudit("TxRedoApplied", ch2);
+    this.notify();
+  }
 
-    this.#scheduleBackboneNotify(squashed);
+  abortTransaction(transactionId: string): void {
+    this._transactionAbort(transactionId);
+  }
 
-    return squashed;
+  finalizeTransaction(transactionId: string): KitChange | undefined {
+    return this._transactionFinalize(transactionId);
   }
 
   undoWithinTransaction(transactionId: string): void {
-    const tx = this.#openTransactions.get(transactionId);
-    if (!tx || tx.steps.length === 0) return;
-    if (this.#conflicted) throw new Error("Kit is conflicted.");
-    const ch = tx.steps.pop()!;
-    this.#applyRawKitDiff(ch.backward);
-    tx.redoSteps.push(ch);
+    this._transactionUndo(transactionId);
   }
 
   redoWithinTransaction(transactionId: string): void {
-    const tx = this.#openTransactions.get(transactionId);
-    if (!tx || tx.redoSteps.length === 0) return;
-    if (this.#conflicted) throw new Error("Kit is conflicted.");
-    const ch = tx.redoSteps.pop()!;
-    this.#applyRawKitDiff(ch.forward);
-    tx.steps.push(ch);
+    this._transactionRedo(transactionId);
   }
 
   canUndoWithinTransaction(transactionId: string): boolean {
-    return (this.#openTransactions.get(transactionId)?.steps.length ?? 0) > 0;
+    return (this.#openTransactions.get(transactionId)?.done.length ?? 0) > 0;
   }
 
   canRedoWithinTransaction(transactionId: string): boolean {
-    return (this.#openTransactions.get(transactionId)?.redoSteps.length ?? 0) > 0;
+    return (this.#openTransactions.get(transactionId)?.undone.length ?? 0) > 0;
   }
 
-  /** Undo last finalized change (not open transaction steps). */
+  getOpenTransactions(): TransactionView[] {
+    const out: TransactionView[] = [];
+    for (const [id, tx] of this.#openTransactions) {
+      out.push({ id, status: tx.status, label: tx.label });
+    }
+    return out;
+  }
+
+  getHistoryInfo(): HistoryInfo {
+    return {
+      pastCount: this.#historyDone.length,
+      futureCount: this.#historyUndone.length,
+      revision: this.#revision,
+      auditLength: this.#auditLog.length,
+    };
+  }
+
+  getConflict(): Conflict | undefined {
+    return this.#conflict;
+  }
+
+  get kitPhase(): KitPhase {
+    return this.#phase;
+  }
+
+  /** Undo last finalized local change (requires no open transactions). */
   undo(): void {
+    if (this.#openTransactions.size > 0) {
+      throw new Error("Cannot undo history while transactions are open; finalize or abort them first.");
+    }
     if (this.#conflicted) throw new Error("Kit is conflicted.");
-    const ch = this.#historyPast.pop();
+    const ch = this.#historyDone.pop();
     if (!ch) return;
-    this.#applyRawKitDiff(ch.backward);
-    this.#historyFuture.push(ch);
+    const validation = validateKitGraphDiff(this, ch.backward, false);
+    if (!validation.ok || validation.errors.length > 0) {
+      this.#historyDone.push(ch);
+      this.#freezeConflict("HistoryUndo", validation, { diff: ch.backward });
+      throw new Error(`History undo validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+    }
+    if (this.strictMode && validation.warnings.length > 0) {
+      this.#historyDone.push(ch);
+      this.#freezeConflict("HistoryUndo", validation, { diff: ch.backward });
+      throw new Error(`History undo warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
+    }
+    const diffBack = validation.diff ?? ch.backward;
+    this.#applyRawKitDiff(diffBack);
+    this.#revision++;
+    this.#invalidateCachesTouchedByDiff(diffBack);
+    this.#historyUndone.push(ch);
+    const outbound: KitChange = { forward: diffBack, backward: ch.forward, validation };
+    this.#scheduleBackboneNotify(outbound);
+    this.#appendAudit("HistoryUndoApplied", ch);
     this.notify();
   }
 
   redo(): void {
+    if (this.#openTransactions.size > 0) {
+      throw new Error("Cannot redo history while transactions are open; finalize or abort them first.");
+    }
     if (this.#conflicted) throw new Error("Kit is conflicted.");
-    const ch = this.#historyFuture.pop();
+    const ch = this.#historyUndone.pop();
     if (!ch) return;
-    this.#applyRawKitDiff(ch.forward);
-    this.#historyPast.push(ch);
+    const validation = validateKitGraphDiff(this, ch.forward, false);
+    if (!validation.ok || validation.errors.length > 0) {
+      this.#historyUndone.push(ch);
+      this.#freezeConflict("HistoryRedo", validation, { diff: ch.forward });
+      throw new Error(`History redo validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+    }
+    if (this.strictMode && validation.warnings.length > 0) {
+      this.#historyUndone.push(ch);
+      this.#freezeConflict("HistoryRedo", validation, { diff: ch.forward });
+      throw new Error(`History redo warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
+    }
+    const diffToApply = validation.diff ?? ch.forward;
+    const backward2 = this.inverseDiffFromPreApplyState(diffToApply);
+    this.#applyRawKitDiff(diffToApply);
+    this.#revision++;
+    this.#invalidateCachesTouchedByDiff(diffToApply);
+    const ch2: KitChange = { forward: diffToApply, backward: backward2, validation };
+    this.#historyDone.push(ch2);
+    this.#scheduleBackboneNotify(ch2);
+    this.#appendAudit("HistoryRedoApplied", ch2);
     this.notify();
   }
 
   canUndo(): boolean {
-    return this.#historyPast.length > 0;
+    return this.#historyDone.length > 0;
   }
 
   canRedo(): boolean {
-    return this.#historyFuture.length > 0;
+    return this.#historyUndone.length > 0;
   }
 
   /**
@@ -9286,36 +9778,37 @@ export class Kit {
   }
 
   /**
-   * Central validated graph mutation: validate → inverse diff → apply in memory → history, transaction step, and backbone queue.
-   * Prefer {@link Piece.delete}, {@link Design.rename}, {@link Kit.addType}, and other semio-tested APIs instead of building raw {@link KitDiff}s here.
+   * Internal validated diff pipeline ({@link KitDiff} is not a public mutation primitive).
+   * Used by semantic entity methods, {@link InMemoryKitStore}, and backbone inbound wiring.
    */
-  change(diff: KitDiff, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange(diff, opts ?? {});
+  _applyDiff(diff: KitDiff, opts?: KitChangeOptions): KitChange {
+    return this.#applyDiff(diff, opts ?? {});
   }
 
-  #applyChange(diff: KitDiff, opts: KitChangeOptions): KitChange {
-    if (this.#conflicted) {
+  #applyDiff(diff: KitDiff, opts: KitChangeOptions): KitChange {
+    if (this.#phase === "frozen" || this.#conflicted) {
       throw new Error("Kit has unresolved validation conflicts; call resolveConflict() before applying further changes.");
     }
 
-    const validation = this.validate(diff);
+    const normalized = DiffComposer.normalize(diff);
+    const validation = this.validate(normalized);
 
     if (!validation.ok || validation.errors.length > 0) {
-      this.#conflicted = true;
-      this.validationState = validation;
+      this.#freezeConflict("LocalChange", validation, { diff: normalized });
       throw new Error(`Kit validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
     }
 
     if (this.strictMode && validation.warnings.length > 0) {
-      this.#conflicted = true;
-      this.validationState = validation;
+      this.#freezeConflict("LocalChange", validation, { diff: normalized });
       throw new Error(`Kit validation warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
     }
 
-    const diffToApply = validation.diff ?? diff;
+    const diffToApply = validation.diff ?? normalized;
     const backward = this.inverseDiffFromPreApplyState(diffToApply);
 
     this.#applyRawKitDiff(diffToApply);
+    this.#revision++;
+    this.#invalidateCachesTouchedByDiff(diffToApply);
 
     const change: KitChange = { forward: diffToApply, backward, validation };
 
@@ -9323,11 +9816,26 @@ export class Kit {
     if (txId) {
       const tx = this.#openTransactions.get(txId);
       if (!tx) throw new Error(`Unknown transaction ${txId}`);
-      tx.steps.push(change);
-      tx.redoSteps.length = 0;
-    } else if (!opts.skipGlobalHistory) {
-      this.#historyPast.push(change);
-      this.#historyFuture.length = 0;
+      tx.done.push(change);
+      tx.undone.length = 0;
+      tx.netForward = mergeKitGraphDiff(tx.netForward, change.forward);
+      tx.netBackward = mergeKitGraphDiff(change.backward, tx.netBackward);
+      for (const g of collectEntityGuidsFromKitDiff(change.forward)) {
+        tx.touchedEntities.add(g);
+        if (!tx.touchedVersions.has(g)) tx.touchedVersions.set(g, this.#entityVersionHashFor(g));
+      }
+      this.#appendAudit("TxStep", change);
+    } else {
+      if (opts.inboundCommitted) {
+        this.#historyUndone.length = 0;
+        this.#appendAudit("BackboneInbound", change);
+      } else if (!opts.skipGlobalHistory) {
+        this.#historyDone.push(change);
+        this.#historyUndone.length = 0;
+        this.#appendAudit("CommittedLocal", change);
+      } else {
+        this.#appendAudit("CommittedNoHistory", change);
+      }
     }
 
     const notifyBackbone = opts.notifyBackbone !== false && !txId;
@@ -9335,7 +9843,9 @@ export class Kit {
       this.#scheduleBackboneNotify(change);
     }
 
+    this.#phase = "ready";
     this.#conflicted = false;
+    this.#conflict = undefined;
     this.validationState = { ok: true, errors: [], warnings: [], infos: [] };
 
     this.notify();
@@ -9344,11 +9854,20 @@ export class Kit {
   }
 
   /**
-   * Drops the conflict lock after the client has handled {@link getValidationState}; does not mutate kit data.
+   * Unfreezes after {@link Conflict}; flushes deferred backbone outbound and applies queued inbound diffs.
    */
   resolveConflict(): void {
+    this.#phase = "ready";
     this.#conflicted = false;
+    this.#conflict = undefined;
     this.validationState = { ok: true, errors: [], warnings: [], infos: [] };
+    const pendingOut = this.#backboneOutboundFrozen.splice(0);
+    this.#backboneOutbound.push(...pendingOut);
+    this.#flushBackboneOutboundSoon();
+    const inbound = this.#deferredInboundQueue.splice(0);
+    for (const d of inbound) {
+      this._applyDiff(d, { notifyBackbone: false, skipGlobalHistory: true, inboundCommitted: true });
+    }
   }
 
   /**
@@ -9492,81 +10011,102 @@ export class Kit {
   }
   // #endregion 🔍Finders
 
-  // #region 🧰Kit graph CRUD (validated {@link Kit.change})
+  // #region 🧰Kit graph CRUD (validated {@link Kit._applyDiff})
   addType(type: Type, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ types: { added: [type] } }, opts ?? {});
+    return this.#applyDiff({ types: { added: [type] } }, opts ?? {});
   }
   setType(type: Type, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ types: { added: [type] } }, opts ?? {});
+    return this.#applyDiff({ types: { added: [type] } }, opts ?? {});
   }
   removeType(type: Type, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ types: { removed: [{ guid: type.guid }] } }, opts ?? {});
+    return this.#applyDiff({ types: { removed: [{ guid: type.guid }] } }, opts ?? {});
   }
 
   addDesign(design: Design, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ designs: { added: [design] } }, opts ?? {});
+    return this.#applyDiff({ designs: { added: [design] } }, opts ?? {});
   }
   setDesign(design: Design, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ designs: { added: [design] } }, opts ?? {});
+    return this.#applyDiff({ designs: { added: [design] } }, opts ?? {});
   }
   updateDesign(design: Design, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ designs: { added: [design] } }, opts ?? {});
+    return this.#applyDiff({ designs: { added: [design] } }, opts ?? {});
   }
   removeDesign(design: Design, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ designs: { removed: [{ guid: design.guid }] } }, opts ?? {});
+    return this.#applyDiff({ designs: { removed: [{ guid: design.guid }] } }, opts ?? {});
   }
 
   addPort(iface: Port, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ ports: { added: [iface] } }, opts ?? {});
+    return this.#applyDiff({ ports: { added: [iface] } }, opts ?? {});
   }
   setPort(iface: Port, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ ports: { added: [iface] } }, opts ?? {});
+    return this.#applyDiff({ ports: { added: [iface] } }, opts ?? {});
   }
   updatePort(iface: Port, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ ports: { added: [iface] } }, opts ?? {});
+    return this.#applyDiff({ ports: { added: [iface] } }, opts ?? {});
   }
   removePort(port: Port, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ ports: { removed: [{ guid: port.guid }] } }, opts ?? {});
+    return this.#applyDiff({ ports: { removed: [{ guid: port.guid }] } }, opts ?? {});
   }
 
   addFile(file: File, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ files: { added: [file] } }, opts ?? {});
+    return this.#applyDiff({ files: { added: [file] } }, opts ?? {});
   }
   setFile(file: File, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ files: { added: [file] } }, opts ?? {});
+    return this.#applyDiff({ files: { added: [file] } }, opts ?? {});
   }
   removeFile(file: File, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ files: { removed: [{ guid: file.guid }] } }, opts ?? {});
+    return this.#applyDiff({ files: { removed: [{ guid: file.guid }] } }, opts ?? {});
   }
 
   setAttribute(attribute: Attribute, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ attributes: { added: [attribute] } }, opts ?? {});
+    return this.#applyDiff({ attributes: { added: [attribute] } }, opts ?? {});
   }
 
   addTag(tag: Tag, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ tags: { added: [tag] } }, opts ?? {});
+    return this.#applyDiff({ tags: { added: [tag] } }, opts ?? {});
   }
   setTag(tag: Tag, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ tags: { added: [tag] } }, opts ?? {});
+    return this.#applyDiff({ tags: { added: [tag] } }, opts ?? {});
   }
   removeTag(tag: Tag, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ tags: { removed: [{ guid: tag.guid }] } }, opts ?? {});
+    return this.#applyDiff({ tags: { removed: [{ guid: tag.guid }] } }, opts ?? {});
   }
 
   addConcept(concept: Concept, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ concepts: { added: [concept] } }, opts ?? {});
+    return this.#applyDiff({ concepts: { added: [concept] } }, opts ?? {});
   }
   setConcept(concept: Concept, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ concepts: { added: [concept] } }, opts ?? {});
+    return this.#applyDiff({ concepts: { added: [concept] } }, opts ?? {});
   }
   removeConcept(concept: Concept, opts?: KitChangeOptions): KitChange {
-    return this.#applyChange({ concepts: { removed: [{ guid: concept.guid }] } }, opts ?? {});
+    return this.#applyDiff({ concepts: { removed: [{ guid: concept.guid }] } }, opts ?? {});
   }
-  // #endregion 🧰Kit graph CRUD (validated {@link Kit.change})
+  // #endregion 🧰Kit graph CRUD (validated {@link Kit._applyDiff})
 
   // #region 📐Kit queries & algorithms (see module exports for plain-kit fallbacks)
   filter(filter: KitFilter): Kit {
-    return filterKitFromKit(this, filter);
+    const hasGlobFilters = !!(filter.designs || filter.types || filter.ports || filter.files || filter.tags || filter.concepts || filter.qualities || filter.authors || filter.folders);
+    if (!filter.designGuid && !hasGlobFilters) return this;
+
+    const baseData: KitData = filter.designGuid ? filterKitByDesign(this, filter.designGuid, filter.modelTags) : this.toData();
+
+    if (!hasGlobFilters) {
+      return new Kit(KitSchema.parse(stripNullsJsonClone(baseData)));
+    }
+
+    const filtered: KitData = {
+      ...baseData,
+      types: (baseData.types ?? []).filter((t) => matchesGlobFilter(t.name, filter.types)),
+      designs: (baseData.designs ?? []).filter((d) => matchesGlobFilter(d.name, filter.designs)),
+      ports: (baseData.ports ?? []).filter((p) => matchesGlobFilter(p.name, filter.ports)),
+      files: (baseData.files ?? []).filter((f) => matchesGlobFilter(f.name, filter.files)),
+      tags: (baseData.tags ?? []).filter((t) => matchesGlobFilter(t.name, filter.tags)),
+      concepts: (baseData.concepts ?? []).filter((c) => matchesGlobFilter(c.name, filter.concepts)),
+      qualities: (baseData.qualities ?? []).filter((q) => matchesGlobFilter(q.name, filter.qualities)),
+      authors: (baseData.authors ?? []).filter((a) => matchesGlobFilter(a.name, filter.authors)),
+      folders: (baseData.folders ?? []).filter((f) => matchesGlobFilter(f.name, filter.folders)),
+    };
+    return new Kit(KitSchema.parse(stripNullsJsonClone(filtered)));
   }
 
   getPrimitiveDesignFor(designGuid: string): Design {
@@ -9701,7 +10241,7 @@ export class Kit {
 
   /** Full flatten (no merkle cache); see {@link flattenDesign}. */
   runFlattenDesign(designGuid: string): DesignOperationResult {
-    return flattenDesignCore(this, designGuid);
+    return this.#flattenDesignUncached(designGuid);
   }
 
   /** Flatten using this kit’s merkle cache ({@link Kit.flattenDesignMerkle}). */
@@ -9710,7 +10250,7 @@ export class Kit {
   }
 
   getFlatMerkleHashes(designGuid: string): { [pieceGuid: string]: FlatMerkleHashes } {
-    return computeFlatHashesCore(this, designGuid);
+    return this.#computeFlatMerkleHashes(designGuid);
   }
 
   /**
@@ -9718,19 +10258,40 @@ export class Kit {
    * See {@link removePiecesAndConnectionsFromDesign}.
    */
   previewRemovePiecesAndConnections(designId: string, pieceIds: string[], connectionIds: string[]): DesignOperationResult {
-    return removePiecesAndConnectionsFromKit(this, designId, pieceIds, connectionIds);
+    return this.#removePiecesAndConnectionsOperation(designId, pieceIds, connectionIds);
   }
 
   removePiecesAndConnectionsFromDesignOp(designId: string, pieceIds: string[], connectionIds: string[]): DesignOperationResult {
-    return removePiecesAndConnectionsFromKit(this, designId, pieceIds, connectionIds);
+    return this.#removePiecesAndConnectionsOperation(designId, pieceIds, connectionIds);
+  }
+
+  #removePiecesAndConnectionsOperation(designId: string, pieceIds: string[], connectionIds: string[]): DesignOperationResult {
+    const design = this.requireDesign(designId);
+    const delRes = design.deletePiecesAndConnectionsDiff(pieceIds, connectionIds);
+    if (!delRes.ok) {
+      return operationErr(delRes.errors);
+    }
+    const forward = delRes.diff!;
+    const backward = inverseDesignDiff(design, forward);
+    return operationOk({ forward, backward }, delRes.warnings, delRes.infos);
   }
 
   fixPieceInDesignDiff(designId: string, pieceId: string): DesignDiff {
-    return fixPieceInDesignFromKit(this, designId, pieceId);
+    const parentConnection = this.findParentConnectionForPieceInDesign(designId, pieceId);
+    return {
+      connections: {
+        removed: [{ guid: parentConnection.guid }],
+      },
+    };
   }
 
   fixPiecesInDesignDiff(designId: string, pieceIds: string[]): DesignDiff {
-    return fixPiecesInDesignFromKit(this, designId, pieceIds);
+    const parentConnections = pieceIds.map((pieceId) => this.findParentConnectionForPieceInDesign(designId, pieceId));
+    return {
+      connections: {
+        removed: parentConnections.map((c) => ({ guid: c.guid })),
+      },
+    };
   }
 
   deletePiecesAndConnectionsInDesignOp(design: Design, pieceGuids: string[], connectionGuids: string[]): DesignDiffOperationResult {
@@ -9738,49 +10299,150 @@ export class Kit {
   }
 
   movePiecesInDesignOp(design: Design, pieces: Design, vector: MoveVector): DesignDiff {
-    return movePiecesInDesignFromKit(this, design, pieces, vector);
+    const { getType, getConnector } = this.buildConnectorResolver();
+    const { selectedGuids, parentMap, pieceMap, fixedGuids } = buildDragMoveStructuralContext(design, pieces);
+    const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
+    for (const guid of fixedGuids) {
+      const base = pieceMap.get(guid)?.plane;
+      if (base === undefined) continue;
+      const t = moveTranslationWorldFromPiecePlane(base, vector);
+      const newPlane: Plane = new Plane({
+        origin: { x: base.origin.x + t.x, y: base.origin.y + t.y, z: base.origin.z + t.z },
+        xAxis: VectorSchema.parse(base.xAxis as unknown),
+        yAxis: VectorSchema.parse(base.yAxis as unknown),
+      });
+      pieceUpdates.push({ piece: { guid }, diff: { plane: newPlane } });
+    }
+    const connectionUpdates: { connection: { guid: string }; diff: ConnectionDiff }[] = [];
+    for (const guid of selectedGuids) {
+      if (fixedGuids.has(guid)) continue;
+      if (pieceHasSelectedAncestorInDragMoveTree(guid, selectedGuids, parentMap)) continue;
+      const parent = parentMap.get(guid);
+      if (!parent) continue;
+      const connection = design.connections?.find((c) => c.guid === parent.connectionGuid);
+      if (!connection) continue;
+      const parentPiece = pieceMap.get(parent.parentGuid);
+      const childPiece = pieceMap.get(guid);
+      if (!parentPiece || !childPiece) continue;
+      if (!(typeof parentPiece.wireTypeId === "function" ? parentPiece.wireTypeId()?.guid : (parentPiece as any).type?.guid) || !(typeof childPiece.wireTypeId === "function" ? childPiece.wireTypeId()?.guid : (childPiece as any).type?.guid)) continue;
+      const parentType = resolvePieceTypeForFlatten(parentPiece, getType);
+      const childType = resolvePieceTypeForFlatten(childPiece, getType);
+      const parentConnector = getConnector(parentType, connection.connected.connector?.guid);
+      const childConnector = getConnector(childType, connection.connecting.connector?.guid);
+      if (!parentConnector) continue;
+      const parentPlane = parentPiece.plane ?? identityPlaneForStructuralMove();
+      const connDiff = connectionDiffFromStructuralMoveVector(parentPlane, parentConnector, childConnector, connection, childPiece.plane, vector);
+      if (Object.keys(connDiff).length === 0) continue;
+      connectionUpdates.push({ connection: { guid: parent.connectionGuid }, diff: connDiff });
+    }
+    const diff: DesignDiff = {};
+    if (pieceUpdates.length > 0) diff.pieces = { updated: pieceUpdates };
+    if (connectionUpdates.length > 0) diff.connections = { updated: connectionUpdates };
+    return diff;
   }
 
   copyDesignOp(design: Design, pieceGuids: string[], connectionGuids: string[]): OperationResult<Design> {
-    return copyDesignFromKit(this, design, pieceGuids, connectionGuids);
+    return this.#copyDesignClipboard(design, pieceGuids, connectionGuids);
   }
 
   pasteDesignOp(source: Design, target: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff {
-    return pasteDesignFromKit(this, source, target, anchoring, coord);
+    return this.#pasteDesign(source, target, anchoring, coord);
   }
 
   piecesMetadataFor(designGuid: string): OperationResult<Map<string, PiecePlacementMetadata>> {
-    return piecesMetadataFromKit(this, designGuid);
+    const design = this.findDesign(designGuid);
+    if (!design) {
+      return operationErr([{ code: "pieces-metadata.design-not-found", message: `Design ${designGuid} not found in kit ${this.name}` }]);
+    }
+    const flattenChange = this.flattenDesignMerkle(designGuid);
+    if (!flattenChange.ok) {
+      return { ok: false, errors: flattenChange.errors };
+    }
+    const flatDesign = detachDesignForLocalMutation(design);
+    flatDesign.applyDiff(flattenChange.diff.forward);
+    const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid);
+    const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
+    const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
+    const paths = flatDesign.pieces?.map((p) => {
+      const raw = findAttributeValue(p, "semio.path", p.guid);
+      return raw ? raw.split(",").filter(Boolean) : [p.guid!];
+    });
+    return operationOk(
+      new Map(
+        flatDesign.pieces?.map((p, index) => [
+          p.guid,
+          {
+            plane: p.plane!,
+            center: p.center!,
+            fixedPieceId: fixedPieceIds![index],
+            parentPieceId: parentPieceIds![index],
+            depth: depths![index],
+            path: paths![index],
+          },
+        ]),
+      ),
+      flattenChange.warnings,
+      flattenChange.infos,
+    );
   }
 
   piecesMetadataCachedFor(designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: OperationResult<Map<string, PiecePlacementMetadata>>; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } {
-    return piecesMetadataCachedFromKit(this, designGuid, cache);
+    const design = this.findDesign(designGuid);
+    if (!design) {
+      return {
+        result: operationErr([{ code: "pieces-metadata.design-not-found", message: `Design ${designGuid} not found in kit ${this.name}` }]),
+        cache: {},
+      };
+    }
+    const cached = this.flattenDesignCachedOp(designGuid, cache);
+    if (!cached.result.ok) {
+      return { result: { ok: false, errors: cached.result.errors }, cache: cached.cache };
+    }
+    const flatDesign = detachDesignForLocalMutation(design);
+    flatDesign.applyDiff(cached.result.diff.forward);
+    const metadata = new Map<string, PiecePlacementMetadata>();
+    for (const p of flatDesign.pieces ?? []) {
+      if (!p.guid) continue;
+      const rawPath = findAttributeValue(p, "semio.path", p.guid);
+      metadata.set(p.guid, {
+        plane: p.plane!,
+        center: p.center!,
+        fixedPieceId: findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid,
+        parentPieceId: findAttributeValue(p, "semio.parentPieceId", null),
+        depth: parseInt(findAttributeValue(p, "semio.depth", "0")!),
+        path: rawPath ? rawPath.split(",").filter(Boolean) : [p.guid],
+      });
+    }
+    return {
+      result: operationOk(metadata, cached.result.warnings, cached.result.infos),
+      cache: cached.cache,
+    };
   }
 
   flattenDesignCachedOp(designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } {
-    return flattenDesignCachedCore(this, designGuid, cache);
+    return this.#flattenDesignCached(designGuid, cache);
   }
 
   findPieceTypeInDesign(designGuid: string, pieceGuid: string): Type {
-    const piece = findPieceInDesign(findDesignInKit(this, designGuid), pieceGuid);
+    const piece = findPieceInDesign(this.requireDesign(designGuid), pieceGuid);
     if (!piece.type) throw new Error(`Piece ${pieceGuid} has no type`);
-    return findTypeInKit(this, piece.type.guid);
+    return this.requireType(piece.type.guid);
   }
 
   findParentPieceInDesign(designGuid: string, pieceGuid: string): Piece {
-    const meta = piecesMetadataFromKit(this, designGuid);
+    const meta = this.piecesMetadataFor(designGuid);
     if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
     const parentPieceId = meta.diff.get(pieceGuid)?.parentPieceId;
     if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece`);
-    return findPieceInDesign(findDesignInKit(this, designGuid), parentPieceId);
+    return findPieceInDesign(this.requireDesign(designGuid), parentPieceId);
   }
 
   findParentConnectionForPieceInDesign(designGuid: string, pieceGuid: string): Connection {
-    const meta = piecesMetadataFromKit(this, designGuid);
+    const meta = this.piecesMetadataFor(designGuid);
     if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
     const parentPieceId = meta.diff.get(pieceGuid)?.parentPieceId;
     if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece and connection`);
-    const design = findDesignInKit(this, designGuid);
+    const design = this.requireDesign(designGuid);
     const incident = findPieceConnectionsInDesign(design, pieceGuid);
     const parentConnection = incident.find((c) => {
       const other = c.connected.piece.guid === pieceGuid ? c.connecting.piece.guid : c.connected.piece.guid;
@@ -9793,8 +10455,8 @@ export class Kit {
   }
 
   findChildrenPiecesInDesign(designGuid: string, pieceGuid: string): Piece[] {
-    const design = findDesignInKit(this, designGuid);
-    const meta = piecesMetadataFromKit(this, designGuid);
+    const design = this.requireDesign(designGuid);
+    const meta = this.piecesMetadataFor(designGuid);
     if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
     const metadata = meta.diff;
     const children: Piece[] = [];
@@ -9807,16 +10469,16 @@ export class Kit {
   }
 
   findUsedConnectorsByPieceInDesign(designGuid: string, pieceGuid: string): Connector[] {
-    const design = findDesignInKit(this, designGuid);
+    const design = this.requireDesign(designGuid);
     const piece = findPieceInDesign(design, pieceGuid);
     if (!piece.type) return [];
-    const type = findTypeInKit(this, piece.type.guid);
+    const type = this.requireType(piece.type.guid);
     const connections = findPieceConnectionsInDesign(design, pieceGuid);
     return connections.map((c) => findConnectorForPieceInConnection(type, c, pieceGuid)).filter((p): p is Connector => p !== undefined);
   }
 
   findReplacableTypesForPieceInDesign(designGuid: string, pieceGuid: string): Type[] {
-    const design = findDesignInKit(this, designGuid);
+    const design = this.requireDesign(designGuid);
     const connections = findPieceConnectionsInDesign(design, pieceGuid);
     const requiredConnectors: Connector[] = [];
     for (const connection of connections) {
@@ -9824,7 +10486,7 @@ export class Kit {
         const otherPieceId = connection.connected.piece.guid === pieceGuid ? connection.connecting.piece.guid : connection.connected.piece.guid;
         const otherPiece = findPieceInDesign(design, otherPieceId);
         if (!otherPiece.type) continue;
-        const otherType = findTypeInKit(this, otherPiece.type.guid);
+        const otherType = this.requireType(otherPiece.type.guid);
         const otherPortId = connection.connected.piece.guid === pieceGuid ? connection.connecting.connector?.guid : connection.connected.connector?.guid;
         const otherPort = findConnectorInType(otherType, otherPortId || "");
         requiredConnectors.push(otherPort);
@@ -9844,7 +10506,7 @@ export class Kit {
   }
 
   findReplacableTypesForPiecesInDesign(designGuid: string, pieceGuids: string[]): Type[] {
-    const design = findDesignInKit(this, designGuid);
+    const design = this.requireDesign(designGuid);
     const pieces = pieceGuids.map((id) => findPieceInDesign(design, id));
     const externalConnections: Array<{
       connection: Connection;
@@ -9858,7 +10520,7 @@ export class Kit {
           try {
             const otherPiece = findPieceInDesign(design, otherPieceId);
             if (!otherPiece.type) continue;
-            const otherType = findTypeInKit(this, otherPiece.type.guid);
+            const otherType = this.requireType(otherPiece.type.guid);
             const otherPortId = connection.connected.piece.guid === piece.guid ? connection.connecting.connector?.guid : connection.connected.connector?.guid;
             const otherPort = findConnectorInType(otherType, otherPortId || "");
             externalConnections.push({ connection, requiredConnector: otherPort });
@@ -9939,6 +10601,229 @@ export class Kit {
   // #endregion 🔗Getters
 }
 
+/**
+ * Object-oriented entry for type rows on a {@link Kit} (replaces removed `*TypeToKit` / `findTypeInKit` helpers).
+ */
+export class KitTypesOps {
+  constructor(private readonly kit: Kit) {}
+
+  add(type: Type, opts?: KitChangeOptions): KitChange {
+    return this.kit.addType(type, opts);
+  }
+
+  set(type: Type, opts?: KitChangeOptions): KitChange {
+    return this.kit.setType(type, opts);
+  }
+
+  remove(type: Type, opts?: KitChangeOptions): KitChange {
+    return this.kit.removeType(type, opts);
+  }
+
+  find(guid: Guid): Type | undefined {
+    return this.kit.findType(guid);
+  }
+
+  require(guid: string): Type {
+    return this.kit.requireType(guid);
+  }
+}
+
+/**
+ * Object-oriented entry for design rows on a {@link Kit}.
+ */
+export class KitDesignsOps {
+  constructor(private readonly kit: Kit) {}
+
+  add(design: Design, opts?: KitChangeOptions): KitChange {
+    return this.kit.addDesign(design, opts);
+  }
+
+  set(design: Design, opts?: KitChangeOptions): KitChange {
+    return this.kit.setDesign(design, opts);
+  }
+
+  update(design: Design, opts?: KitChangeOptions): KitChange {
+    return this.kit.updateDesign(design, opts);
+  }
+
+  remove(design: Design, opts?: KitChangeOptions): KitChange {
+    return this.kit.removeDesign(design, opts);
+  }
+
+  find(guid: Guid): Design | undefined {
+    return this.kit.findDesign(guid);
+  }
+
+  require(guid: string): Design {
+    return this.kit.requireDesign(guid);
+  }
+
+  replacableForPiece(currentDesignGuid: string, designPiece: Piece): Design[] {
+    return this.kit.findReplacableDesignsForDesignPiece(currentDesignGuid, designPiece);
+  }
+}
+
+/**
+ * Object-oriented entry for port rows on a {@link Kit}.
+ */
+export class KitPortsOps {
+  constructor(private readonly kit: Kit) {}
+
+  add(iface: Port, opts?: KitChangeOptions): KitChange {
+    return this.kit.addPort(iface, opts);
+  }
+
+  set(iface: Port, opts?: KitChangeOptions): KitChange {
+    return this.kit.setPort(iface, opts);
+  }
+
+  update(iface: Port, opts?: KitChangeOptions): KitChange {
+    return this.kit.updatePort(iface, opts);
+  }
+
+  remove(port: Port, opts?: KitChangeOptions): KitChange {
+    return this.kit.removePort(port, opts);
+  }
+
+  require(guid: string): Port {
+    return this.kit.requirePort(guid);
+  }
+}
+
+/**
+ * Object-oriented entry for file rows on a {@link Kit}.
+ */
+export class KitFilesOps {
+  constructor(private readonly kit: Kit) {}
+
+  add(file: File, opts?: KitChangeOptions): KitChange {
+    return this.kit.addFile(file, opts);
+  }
+
+  set(file: File, opts?: KitChangeOptions): KitChange {
+    return this.kit.setFile(file, opts);
+  }
+
+  remove(file: File, opts?: KitChangeOptions): KitChange {
+    return this.kit.removeFile(file, opts);
+  }
+
+  require(guid: string): File {
+    return this.kit.requireFile(guid);
+  }
+}
+
+/**
+ * Object-oriented entry for tag rows on a {@link Kit}.
+ */
+export class KitTagsOps {
+  constructor(private readonly kit: Kit) {}
+
+  add(tag: Tag, opts?: KitChangeOptions): KitChange {
+    return this.kit.addTag(tag, opts);
+  }
+
+  set(tag: Tag, opts?: KitChangeOptions): KitChange {
+    return this.kit.setTag(tag, opts);
+  }
+
+  remove(tag: Tag, opts?: KitChangeOptions): KitChange {
+    return this.kit.removeTag(tag, opts);
+  }
+
+  require(guid: string): Tag {
+    return this.kit.requireTag(guid);
+  }
+}
+
+/**
+ * Object-oriented entry for concept rows on a {@link Kit}.
+ */
+export class KitConceptsOps {
+  constructor(private readonly kit: Kit) {}
+
+  add(concept: Concept, opts?: KitChangeOptions): KitChange {
+    return this.kit.addConcept(concept, opts);
+  }
+
+  set(concept: Concept, opts?: KitChangeOptions): KitChange {
+    return this.kit.setConcept(concept, opts);
+  }
+
+  remove(concept: Concept, opts?: KitChangeOptions): KitChange {
+    return this.kit.removeConcept(concept, opts);
+  }
+
+  require(guid: string): Concept {
+    return this.kit.requireConcept(guid);
+  }
+}
+
+/**
+ * Object-oriented entry for top-level kit attributes.
+ */
+export class KitAttributesOps {
+  constructor(private readonly kit: Kit) {}
+
+  set(attribute: Attribute, opts?: KitChangeOptions): KitChange {
+    return this.kit.setAttribute(attribute, opts);
+  }
+}
+
+/**
+ * Bundles namespace objects for validated kit graph edits.
+ */
+export class KitOps {
+  readonly types: KitTypesOps;
+  readonly designs: KitDesignsOps;
+  readonly ports: KitPortsOps;
+  readonly files: KitFilesOps;
+  readonly tags: KitTagsOps;
+  readonly concepts: KitConceptsOps;
+  readonly attributes: KitAttributesOps;
+
+  constructor(kit: Kit) {
+    this.types = new KitTypesOps(kit);
+    this.designs = new KitDesignsOps(kit);
+    this.ports = new KitPortsOps(kit);
+    this.files = new KitFilesOps(kit);
+    this.tags = new KitTagsOps(kit);
+    this.concepts = new KitConceptsOps(kit);
+    this.attributes = new KitAttributesOps(kit);
+  }
+}
+
+/**
+ * Open transactional editing context on a {@link Kit}. Provisional steps apply live; finalize commits history + backbone.
+ */
+export class Transaction {
+  constructor(
+    private readonly host: Kit,
+    readonly id: string,
+    readonly label?: string,
+  ) {}
+
+  get status(): TransactionStatus {
+    return this.host._getTransactionStatus(this.id);
+  }
+
+  finalize(): KitChange | undefined {
+    return this.host._transactionFinalize(this.id);
+  }
+
+  abort(): void {
+    this.host._transactionAbort(this.id);
+  }
+
+  undo(): void {
+    this.host._transactionUndo(this.id);
+  }
+
+  redo(): void {
+    this.host._transactionRedo(this.id);
+  }
+}
+
 /** OO snapshot for I/O: only valid on a live {@link Kit} (nested {@link toPlain}). */
 const kitGraphToPlainData = (kit: Kit): KitData => {
   if (!(kit instanceof Kit)) throw new Error("kitGraphToPlainData requires a Kit class instance");
@@ -9997,12 +10882,12 @@ export const duplicateKitForIsolation = (kit: Kit): Kit => deserializeKit(serial
 /**
  * 📐Computes the diff between two kits.
  */
-export const getKitDiff = (before: Kit, after: Kit): KitDiff => computeKitGraphDiffBetween(asKitInstance(before), asKitInstance(after));
+export const getKitDiff = (before: KitLike, after: KitLike): KitDiff => asKitInstance(before).diffTo(after);
 
 /**
  * 🔄Computes the inverse of an applied diff relative to the original kit.
  */
-export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => inverseKitGraphDiff(asKitInstance(original), appliedDiff);
+export const inverseKitDiff = (original: KitLike, appliedDiff: KitDiff): KitDiff => inverseKitGraphDiff(asKitInstance(original), appliedDiff);
 
 /**
  * 🔀Merges two kit diffs into one.
@@ -10015,7 +10900,7 @@ export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => mergeKi
 export const getKitChange = (before: Kit, after: Kit): KitChange => Kit.changeBetween(before, after);
 
 /**
- * Applies `diff` to `kit` in place (no validation). Prefer {@link Kit.change} for domain edits.
+ * Applies `diff` to `kit` in place (no validation). Prefer semantic methods or {@link Kit._applyDiff} for validated edits.
  */
 export const applyKitDiff = (kit: Kit, diff: KitDiff): void => {
   requireKit(kit).replayChangeUnchecked(diff);
@@ -10365,6 +11250,76 @@ function mergeKitGraphDiff(diff1: KitDiff, diff2: KitDiff): KitDiff {
     attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
   };
 }
+
+function collectEntityGuidsFromKitDiff(diff: KitDiff): Set<string> {
+  const out = new Set<string>();
+  const add = (g: string | undefined) => {
+    if (g) out.add(g);
+  };
+  if (diff.types) {
+    for (const x of diff.types.added ?? []) add(x.guid);
+    for (const x of diff.types.removed ?? []) add(x.guid);
+    for (const u of diff.types.updated ?? []) add(u.type?.guid);
+  }
+  if (diff.designs) {
+    const d = diff.designs;
+    for (const x of d.added ?? []) add(x.guid);
+    for (const x of d.removed ?? []) add(x.guid);
+    for (const u of d.updated ?? []) {
+      add(u.design?.guid);
+      const pd = u.diff?.pieces;
+      if (pd) {
+        for (const p of pd.added ?? []) add(p.guid);
+        for (const p of pd.removed ?? []) add(p.guid);
+        for (const pu of pd.updated ?? []) add(pu.piece?.guid);
+      }
+      const cd = u.diff?.connections;
+      if (cd) {
+        for (const c of cd.added ?? []) add(c.guid);
+        for (const c of cd.removed ?? []) add(c.guid);
+        for (const cu of cd.updated ?? []) add(cu.connection?.guid);
+      }
+    }
+  }
+  return out;
+}
+
+function recomputeTxNet(tx: KitRuntimeTransaction): void {
+  let nf: KitDiff = {};
+  let nb: KitDiff = {};
+  for (const ch of tx.done) {
+    nf = mergeKitGraphDiff(nf, ch.forward);
+    nb = mergeKitGraphDiff(ch.backward, nb);
+  }
+  tx.netForward = nf;
+  tx.netBackward = nb;
+  tx.touchedEntities.clear();
+  for (const ch of tx.done) {
+    for (const g of collectEntityGuidsFromKitDiff(ch.forward)) tx.touchedEntities.add(g);
+  }
+}
+
+/** Deterministic diff composition for transactional net forward/backward squashing. */
+export class DiffComposer {
+  static compose(a: KitDiff, b: KitDiff): KitDiff {
+    return mergeKitGraphDiff(a, b);
+  }
+  static normalize(diff: KitDiff): KitDiff {
+    return Kit.cloneGraphDiff(diff);
+  }
+  static touchedEntities(diff: KitDiff): Set<string> {
+    return collectEntityGuidsFromKitDiff(diff);
+  }
+}
+
+/** Semantic command labels — each maps to one deterministic KitDiff expansion (cross-language parity). */
+export type SemioCommandKind =
+  | "DeletePiece"
+  | "MovePiece"
+  | "RenamePiece"
+  | "ReconnectConnection"
+  | "DeletePiecesCascade"
+  | "NormalizeStaleConnections";
 
 /**
  * Mutable kit document: holds a single Kit graph and applies diffs in place.
@@ -12013,115 +12968,7 @@ export const KitsDiffSchema = z.object({
   added: z.array(z.any()).optional(),
 });
 
-/**
- * Adds a TypeToKit element (applies via {@link Kit.change}).
- **/
-export const addTypeToKit = (kit: Kit, type: Type, opts?: KitChangeOptions): KitChange => requireKit(kit).addType(type, opts);
-/**
- * Replaces an existing TypeInKit element.
- **/
-export const setTypeInKit = (kit: Kit, type: Type, opts?: KitChangeOptions): KitChange => requireKit(kit).setType(type, opts);
-/**
- * Removes a TypeFromKit element.
- **/
-export const removeTypeFromKit = (kit: Kit, type: Type, opts?: KitChangeOptions): KitChange => requireKit(kit).removeType(type, opts);
-
-/**
- * Adds a DesignToKit element.
- **/
-export const addDesignToKit = (kit: Kit, design: Design, opts?: KitChangeOptions): KitChange => requireKit(kit).addDesign(design, opts);
-/**
- * Replaces an existing DesignInKit element.
- **/
-export const setDesignInKit = (kit: Kit, design: Design, opts?: KitChangeOptions): KitChange => requireKit(kit).setDesign(design, opts);
-/**
- * Removes a DesignFromKit element.
- **/
-export const removeDesignFromKit = (kit: Kit, design: Design, opts?: KitChangeOptions): KitChange => requireKit(kit).removeDesign(design, opts);
-
-/**
- **/
-export const updateDesignInKit = (kit: Kit, design: Design, opts?: KitChangeOptions): KitChange => requireKit(kit).updateDesign(design, opts);
-
-/**
- * Adds a PortToKit element.
- **/
-export const addPortToKit = (kit: Kit, iface: Port, opts?: KitChangeOptions): KitChange => requireKit(kit).addPort(iface, opts);
-/**
- * Replaces an existing PortInKit element.
- **/
-export const setPortInKit = (kit: Kit, iface: Port, opts?: KitChangeOptions): KitChange => requireKit(kit).setPort(iface, opts);
-/**
- * Removes a PortFromKit element.
- **/
-export const removePortFromKit = (kit: Kit, port: Port, opts?: KitChangeOptions): KitChange => requireKit(kit).removePort(port, opts);
-/**
- **/
-export const updatePortInKit = (kit: Kit, iface: Port, opts?: KitChangeOptions): KitChange => requireKit(kit).updatePort(iface, opts);
-
-/**
- * Searches for matching FileInKit entry.
- **/
-export const findFileInKit = (kit: KitLike, fileGuid: string): File => asKitInstance(kit).requireFile(fileGuid);
-
-/**
- * Adds a FileToKit element.
- **/
-export const addFileToKit = (kit: Kit, file: File, opts?: KitChangeOptions): KitChange => requireKit(kit).addFile(file, opts);
-/**
- * Replaces an existing FileInKit element.
- **/
-export const setFileInKit = (kit: Kit, file: File, opts?: KitChangeOptions): KitChange => requireKit(kit).setFile(file, opts);
-/**
- * Removes a FileFromKit element.
- **/
-export const removeFileFromKit = (kit: Kit, file: File, opts?: KitChangeOptions): KitChange => requireKit(kit).removeFile(file, opts);
-
-/**
- * Replaces an existing AttributeInKit element.
- **/
-export const setAttributeInKit = (kit: Kit, attribute: Attribute, opts?: KitChangeOptions): KitChange => requireKit(kit).setAttribute(attribute, opts);
-
-/**
- * Searches for matching TagInKit entry.
- **/
-export const findTagInKit = (kit: KitLike, tagGuid: string): Tag => asKitInstance(kit).requireTag(tagGuid);
-
-/**
- * Adds a TagToKit element.
- **/
-export const addTagToKit = (kit: Kit, tag: Tag, opts?: KitChangeOptions): KitChange => requireKit(kit).addTag(tag, opts);
-/**
- * Replaces an existing TagInKit element.
- **/
-export const setTagInKit = (kit: Kit, tag: Tag, opts?: KitChangeOptions): KitChange => requireKit(kit).setTag(tag, opts);
-/**
- * Removes a TagFromKit element.
- **/
-export const removeTagFromKit = (kit: Kit, tag: Tag, opts?: KitChangeOptions): KitChange => requireKit(kit).removeTag(tag, opts);
-
-/**
- * Searches for matching ConceptInKit entry.
- **/
-export const findConceptInKit = (kit: KitLike, conceptGuid: string): Concept => asKitInstance(kit).requireConcept(conceptGuid);
-
-/**
- * Adds a ConceptToKit element.
- **/
-export const addConceptToKit = (kit: Kit, concept: Concept, opts?: KitChangeOptions): KitChange => requireKit(kit).addConcept(concept, opts);
-/**
- * Replaces an existing ConceptInKit element.
- **/
-export const setConceptInKit = (kit: Kit, concept: Concept, opts?: KitChangeOptions): KitChange => requireKit(kit).setConcept(concept, opts);
-/**
- * Removes a ConceptFromKit element.
- **/
-export const removeConceptFromKit = (kit: Kit, concept: Concept, opts?: KitChangeOptions): KitChange => requireKit(kit).removeConcept(concept, opts);
-
-/**
- * Searches for matching ReplacableDesignsForDesignPiece entry.
- **/
-export const findReplacableDesignsForDesignPiece = (kit: KitLike, currentDesignGuid: string, designPiece: Piece): Design[] => asKitInstance(kit).findReplacableDesignsForDesignPiece(currentDesignGuid, designPiece);
+// Kit graph mutations and entity resolution: use `kit.ops.*` (see {@link KitOps}) or entity methods such as {@link Type.delete}.
 
 /**
  * Equality check for Kit values.
@@ -12133,144 +12980,6 @@ export const areSameKit = (kitGuid: string, otherGuid: string): boolean => {
  * Checks whether SameKit condition holds.
  **/
 export const hasSameKit = (kitGuid: string, otherGuids: string[]): boolean => otherGuids.some((other) => areSameKit(kitGuid, other));
-
-/**
- * Searches for matching TypeInKit entry.
- **/
-export const findTypeInKit = (kit: KitLike, typeGuid: string): Type => asKitInstance(kit).requireType(typeGuid);
-
-/**
- * Searches for matching DesignInKit entry.
- **/
-export const findDesignInKit = (kit: KitLike, designGuid: string): Design => asKitInstance(kit).requireDesign(designGuid);
-
-function getPrimitiveDesignFromKit(kit: Kit, designGuid: string): Design {
-  let current = findDesignInKit(kit, designGuid);
-  while (current.parent?.guid) {
-    current = findDesignInKit(kit, current.parent.guid);
-  }
-  return current;
-}
-
-function getDesignFamilyFromKit(kit: Kit, designGuid: string): Design[] {
-  const primitive = getPrimitiveDesignFromKit(kit, designGuid);
-  const family: Design[] = [];
-  const collectDescendants = (parentGuid: string) => {
-    const parent = findDesignInKit(kit, parentGuid);
-    family.push(parent);
-    const children = (kit.designs || []).filter((d) => d.parent?.guid === parentGuid);
-    children.forEach((child) => collectDescendants(child.guid));
-  };
-  collectDescendants(primitive.guid);
-  return family;
-}
-
-function getDesignSiblingsFromKit(kit: Kit, designGuid: string): Design[] {
-  const design = findDesignInKit(kit, designGuid);
-  const parentGuid = design.parent?.guid;
-  return (kit.designs || []).filter((d) => d.parent?.guid === parentGuid && d.guid !== designGuid);
-}
-
-function getDesignChildrenFromKit(kit: Kit, designGuid: string): Design[] {
-  return (kit.designs || []).filter((d) => d.parent?.guid === designGuid);
-}
-
-function areDesignsInSameFamilyFromKit(kit: Kit, designGuidA: string, designGuidB: string): boolean {
-  const primitiveA = getPrimitiveDesignFromKit(kit, designGuidA);
-  const primitiveB = getPrimitiveDesignFromKit(kit, designGuidB);
-  return primitiveA.guid === primitiveB.guid;
-}
-
-function canUseDesignAsPieceFromKit(kit: Kit, containerDesignGuid: string, pieceDesignGuid: string): boolean {
-  return !areDesignsInSameFamilyFromKit(kit, containerDesignGuid, pieceDesignGuid);
-}
-
-function findSameFamilyDesignPiecesFromKit(kit: Kit, designGuid: string): Piece[] {
-  const design = findDesignInKit(kit, designGuid);
-  return (design.pieces || []).filter((piece) => {
-    if (!piece.design?.guid) return false;
-    return areDesignsInSameFamilyFromKit(kit, designGuid, piece.design.guid);
-  });
-}
-
-function getPrimitiveTypeFromKit(kit: Kit, typeGuid: string): Type {
-  let current = findTypeInKit(kit, typeGuid);
-  while (current.parent?.guid) {
-    current = findTypeInKit(kit, current.parent.guid);
-  }
-  return current;
-}
-
-function getTypeFamilyFromKit(kit: Kit, typeGuid: string): Type[] {
-  const primitive = getPrimitiveTypeFromKit(kit, typeGuid);
-  const family: Type[] = [];
-  const collectDescendants = (parentGuid: string) => {
-    const parent = findTypeInKit(kit, parentGuid);
-    family.push(parent);
-    const children = (kit.types || []).filter((t) => t.parent?.guid === parentGuid);
-    children.forEach((child) => collectDescendants(child.guid));
-  };
-  collectDescendants(primitive.guid);
-  return family;
-}
-
-function getTypeSiblingsFromKit(kit: Kit, typeGuid: string): Type[] {
-  const type = findTypeInKit(kit, typeGuid);
-  const parentGuid = type.parent?.guid;
-  return (kit.types || []).filter((t) => t.parent?.guid === parentGuid && t.guid !== typeGuid);
-}
-
-function getTypeChildrenFromKit(kit: Kit, typeGuid: string): Type[] {
-  return (kit.types || []).filter((t) => t.parent?.guid === typeGuid);
-}
-
-function areTypesInSameFamilyFromKit(kit: Kit, typeGuidA: string, typeGuidB: string): boolean {
-  const primitiveA = getPrimitiveTypeFromKit(kit, typeGuidA);
-  const primitiveB = getPrimitiveTypeFromKit(kit, typeGuidB);
-  return primitiveA.guid === primitiveB.guid;
-}
-
-function sumQualityInDesignFromKit(kit: Kit, designGuid: string, qualityGuid: string): number {
-  const design = findDesignInKit(kit, designGuid);
-  let sum = 0;
-  for (const piece of design.pieces ?? []) {
-    const pieceProp = piece.props?.find((p) => p.quality?.guid === qualityGuid);
-    if (pieceProp) {
-      const val = parseFloat(pieceProp.value);
-      if (!isNaN(val)) sum += val;
-      continue;
-    }
-    if (piece.type) {
-      const type = kit.types?.find((t) => t.guid === piece.type!.guid);
-      if (type) {
-        const typeProp = type.props?.find((p) => p.quality?.guid === qualityGuid);
-        if (typeProp) {
-          const val = parseFloat(typeProp.value);
-          if (!isNaN(val)) sum += val;
-        }
-      }
-    }
-  }
-  return sum;
-}
-
-function filterKitFromKit(kit: Kit, filter: KitFilter): Kit {
-  const base = filter.designGuid ? filterKitByDesign(kit, filter.designGuid, filter.modelTags) : kit;
-  const hasGlobFilters = filter.designs || filter.types || filter.ports || filter.files || filter.tags || filter.concepts || filter.qualities || filter.authors || filter.folders;
-  if (!hasGlobFilters) return base;
-  return {
-    ...base,
-    types: (base.types ?? []).filter((t) => matchesGlobFilter(t.name, filter.types)),
-    designs: (base.designs ?? []).filter((d) => matchesGlobFilter(d.name, filter.designs)),
-    ports: (base.ports ?? []).filter((p) => matchesGlobFilter(p.name, filter.ports)),
-    files: (base.files ?? []).filter((f) => matchesGlobFilter(f.name, filter.files)),
-    tags: (base.tags ?? []).filter((t) => matchesGlobFilter(t.name, filter.tags)),
-    concepts: (base.concepts ?? []).filter((c) => matchesGlobFilter(c.name, filter.concepts)),
-    qualities: (base.qualities ?? []).filter((q) => matchesGlobFilter(q.name, filter.qualities)),
-    authors: (base.authors ?? []).filter((a) => matchesGlobFilter(a.name, filter.authors)),
-    folders: (base.folders ?? []).filter((f) => matchesGlobFilter(f.name, filter.folders)),
-  };
-}
 
 /**
  * Glob filter with include and exclude patterns for name-based entity filtering.
@@ -12329,8 +13038,9 @@ export const matchesGlobFilter = (name: string, filter?: GlobFilter): boolean =>
 /**
  * Internal design-based transitive kit filtering. Produces a minimal kit subset scoped to a single design.
  **/
-const filterKitByDesign = (kit: Kit, designGuid: string, modelTags?: string[]): Kit => {
-  const design = findDesignInKit(kit, designGuid);
+const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[]): KitData => {
+  const k = asKitInstance(kit);
+  const design = k.requireDesign(designGuid);
 
   const usedTypeGuids = new Set<string>();
   const usedDesignGuids = new Set<string>([designGuid]);
@@ -12339,7 +13049,7 @@ const filterKitByDesign = (kit: Kit, designGuid: string, modelTags?: string[]): 
     if (piece.design?.guid) usedDesignGuids.add(piece.design.guid);
   }
 
-  const typeByGuid = new Map((kit.types ?? []).map((type) => [type.guid, type]));
+  const typeByGuid = new Map((k.types ?? []).map((type) => [type.guid, type]));
   const collectAncestors = (typeGuid: string) => {
     const type = typeByGuid.get(typeGuid);
     if (!type?.parent?.guid || usedTypeGuids.has(type.parent.guid)) return;
@@ -12350,9 +13060,9 @@ const filterKitByDesign = (kit: Kit, designGuid: string, modelTags?: string[]): 
 
   const tags = modelTags;
   const resolvedTagGuids = (tags ?? []).flatMap((tagValue) => {
-    const byGuid = (kit.tags ?? []).find((tag) => tag.guid === tagValue);
+    const byGuid = (k.tags ?? []).find((tag) => tag.guid === tagValue);
     if (byGuid) return [byGuid.guid];
-    return (kit.tags ?? []).filter((tag) => tag.name === tagValue).map((tag) => tag.guid);
+    return (k.tags ?? []).filter((tag) => tag.name === tagValue).map((tag) => tag.guid);
   });
 
   const usedPortGuids = new Set<string>();
@@ -12393,39 +13103,39 @@ const filterKitByDesign = (kit: Kit, designGuid: string, modelTags?: string[]): 
   for (const concept of design.concepts ?? []) if (concept.guid) usedConceptGuids.add(concept.guid);
   for (const author of design.authors ?? []) if (author.guid) usedAuthorGuids.add(author.guid);
   for (const portGuid of [...usedPortGuids]) {
-    const port = (kit.ports ?? []).find((candidate) => candidate.guid === portGuid);
+    const port = (k.ports ?? []).find((candidate) => candidate.guid === portGuid);
     for (const compatible of port?.compatiblePorts ?? []) if (compatible.guid) usedPortGuids.add(compatible.guid);
   }
   for (const tagGuid of resolvedTagGuids) usedTagGuids.add(tagGuid);
 
   return {
-    guid: kit.guid,
-    name: kit.name,
-    version: kit.version,
-    description: kit.description,
-    icon: kit.icon,
-    image: kit.image,
-    preview: kit.preview,
-    remote: kit.remote,
-    homepage: kit.homepage,
-    license: kit.license,
-    types: (kit.types ?? [])
+    guid: k.guid,
+    name: k.name,
+    version: k.version,
+    description: k.description,
+    icon: k.icon,
+    image: k.image,
+    preview: k.preview,
+    remote: k.remote,
+    homepage: k.homepage,
+    license: k.license,
+    types: (k.types ?? [])
       .filter((type) => usedTypeGuids.has(type.guid))
       .map((type) => ({
         ...type,
         models: selectedModels.has(type.guid) ? [selectedModels.get(type.guid)!] : [],
       })),
-    designs: (kit.designs ?? []).filter((candidate) => usedDesignGuids.has(candidate.guid)),
-    ports: (kit.ports ?? []).filter((port) => usedPortGuids.has(port.guid)),
-    files: (kit.files ?? []).filter((file) => usedFileGuids.has(file.guid)),
-    tags: (kit.tags ?? []).filter((tag) => usedTagGuids.has(tag.guid)),
-    concepts: (kit.concepts ?? []).filter((concept) => usedConceptGuids.has(concept.guid)),
-    qualities: (kit.qualities ?? []).filter((quality) => usedQualityGuids.has(quality.guid)),
-    folders: (kit.folders ?? []).filter((folder) => usedFolderNames.has(folder.name)),
-    authors: (kit.authors ?? []).filter((author) => usedAuthorGuids.has(author.guid)),
-    attributes: kit.attributes,
-    createdAt: kit.createdAt,
-    updatedAt: kit.updatedAt,
+    designs: (k.designs ?? []).filter((candidate) => usedDesignGuids.has(candidate.guid)),
+    ports: (k.ports ?? []).filter((port) => usedPortGuids.has(port.guid)),
+    files: (k.files ?? []).filter((file) => usedFileGuids.has(file.guid)),
+    tags: (k.tags ?? []).filter((tag) => usedTagGuids.has(tag.guid)),
+    concepts: (k.concepts ?? []).filter((concept) => usedConceptGuids.has(concept.guid)),
+    qualities: (k.qualities ?? []).filter((quality) => usedQualityGuids.has(quality.guid)),
+    folders: (k.folders ?? []).filter((folder) => usedFolderNames.has(folder.name)),
+    authors: (k.authors ?? []).filter((author) => usedAuthorGuids.has(author.guid)),
+    attributes: k.attributes,
+    createdAt: k.createdAt,
+    updatedAt: k.updatedAt,
   };
 };
 
@@ -12434,7 +13144,7 @@ const filterKitByDesign = (kit: Kit, designGuid: string, modelTags?: string[]): 
  * When designGuid is set, first performs transitive design-scoped subset extraction.
  * Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
  **/
-export const filterKit = (kit: Kit, filter: KitFilter): Kit => asKitInstance(kit).filter(filter);
+export const filterKit = (kit: KitLike, filter: KitFilter): Kit => asKitInstance(kit).filter(filter);
 
 // #region 📻Design Family Helpers
 // Design family traversal helpers MUST be defined here.
@@ -12442,37 +13152,37 @@ export const filterKit = (kit: Kit, filter: KitFilter): Kit => asKitInstance(kit
 /**
  * Retrieves the PrimitiveDesign value.
  **/
-export const getPrimitiveDesign = (kit: Kit, designGuid: string): Design => asKitInstance(kit).getPrimitiveDesignFor(designGuid);
+export const getPrimitiveDesign = (kit: KitLike, designGuid: string): Design => asKitInstance(kit).getPrimitiveDesignFor(designGuid);
 
 /**
  * Retrieves the DesignFamily value.
  **/
-export const getDesignFamily = (kit: Kit, designGuid: string): Design[] => asKitInstance(kit).getDesignFamilyFor(designGuid);
+export const getDesignFamily = (kit: KitLike, designGuid: string): Design[] => asKitInstance(kit).getDesignFamilyFor(designGuid);
 
 /**
  * Retrieves the DesignSiblings value.
  **/
-export const getDesignSiblings = (kit: Kit, designGuid: string): Design[] => asKitInstance(kit).getDesignSiblingsFor(designGuid);
+export const getDesignSiblings = (kit: KitLike, designGuid: string): Design[] => asKitInstance(kit).getDesignSiblingsFor(designGuid);
 
 /**
  * Retrieves the DesignChildren value.
  **/
-export const getDesignChildren = (kit: Kit, designGuid: string): Design[] => asKitInstance(kit).getDesignChildrenFor(designGuid);
+export const getDesignChildren = (kit: KitLike, designGuid: string): Design[] => asKitInstance(kit).getDesignChildrenFor(designGuid);
 
 /**
  * Checks if Designs belong to the same family.
  **/
-export const areDesignsInSameFamily = (kit: Kit, designGuidA: string, designGuidB: string): boolean => asKitInstance(kit).areDesignsInSameFamily(designGuidA, designGuidB);
+export const areDesignsInSameFamily = (kit: KitLike, designGuidA: string, designGuidB: string): boolean => asKitInstance(kit).areDesignsInSameFamily(designGuidA, designGuidB);
 
 /**
  * Checks if UseDesignAsPiece action is possible.
  **/
-export const canUseDesignAsPiece = (kit: Kit, containerDesignGuid: string, pieceDesignGuid: string): boolean => asKitInstance(kit).canUseDesignAsPiece(containerDesignGuid, pieceDesignGuid);
+export const canUseDesignAsPiece = (kit: KitLike, containerDesignGuid: string, pieceDesignGuid: string): boolean => asKitInstance(kit).canUseDesignAsPiece(containerDesignGuid, pieceDesignGuid);
 
 /**
  * Searches for matching SameFamilyDesignPieces entry.
  **/
-export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[] => asKitInstance(kit).findSameFamilyDesignPiecesIn(designGuid);
+export const findSameFamilyDesignPieces = (kit: KitLike, designGuid: string): Piece[] => asKitInstance(kit).findSameFamilyDesignPiecesIn(designGuid);
 
 // #endregion 📻Design Family Helpers
 
@@ -12482,27 +13192,27 @@ export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[
 /**
  * Retrieves the PrimitiveType value.
  **/
-export const getPrimitiveType = (kit: Kit, typeGuid: string): Type => asKitInstance(kit).getPrimitiveTypeFor(typeGuid);
+export const getPrimitiveType = (kit: KitLike, typeGuid: string): Type => asKitInstance(kit).getPrimitiveTypeFor(typeGuid);
 
 /**
  * Retrieves the TypeFamily value.
  **/
-export const getTypeFamily = (kit: Kit, typeGuid: string): Type[] => asKitInstance(kit).getTypeFamilyFor(typeGuid);
+export const getTypeFamily = (kit: KitLike, typeGuid: string): Type[] => asKitInstance(kit).getTypeFamilyFor(typeGuid);
 
 /**
  * Retrieves the TypeSiblings value.
  **/
-export const getTypeSiblings = (kit: Kit, typeGuid: string): Type[] => asKitInstance(kit).getTypeSiblingsFor(typeGuid);
+export const getTypeSiblings = (kit: KitLike, typeGuid: string): Type[] => asKitInstance(kit).getTypeSiblingsFor(typeGuid);
 
 /**
  * Retrieves the TypeChildren value.
  **/
-export const getTypeChildren = (kit: Kit, typeGuid: string): Type[] => asKitInstance(kit).getTypeChildrenFor(typeGuid);
+export const getTypeChildren = (kit: KitLike, typeGuid: string): Type[] => asKitInstance(kit).getTypeChildrenFor(typeGuid);
 
 /**
  * 👨‍👩‍👧‍👦 Checks if Types belong to the same family (have same primitive type).
  **/
-export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: string): boolean => asKitInstance(kit).areTypesInSameFamily(typeGuidA, typeGuidB);
+export const areTypesInSameFamily = (kit: KitLike, typeGuidA: string, typeGuidB: string): boolean => asKitInstance(kit).areTypesInSameFamily(typeGuidA, typeGuidB);
 
 // #endregion 🧊Type Family Helpers
 
@@ -13081,22 +13791,23 @@ export interface ValidationContext {
 /**
  * Constructs ValidationContext from components.
  **/
-export const buildValidationContext = (kit: Kit): ValidationContext => {
+export const buildValidationContext = (kit: KitLike): ValidationContext => {
+  const k = asKitInstance(kit);
   const typesByGuid = new Map<Guid, Type>();
   const designsByGuid = new Map<Guid, Design>();
   const piecesByGuid = new Map<Guid, { designGuid: Guid; piece: Piece }>();
   const connectorsByTypeGuid = new Map<Guid, Connector[]>();
   const modelsByTypeGuid = new Map<Guid, Model[]>();
-  toArray(kit.types).forEach((t) => {
+  toArray(k.types).forEach((t) => {
     typesByGuid.set(t.guid, t);
     connectorsByTypeGuid.set(t.guid, toArray(t.connectors));
     modelsByTypeGuid.set(t.guid, toArray(t.models));
   });
-  toArray(kit.designs).forEach((d) => {
+  toArray(k.designs).forEach((d) => {
     designsByGuid.set(d.guid, d);
     toArray(d.pieces).forEach((p) => piecesByGuid.set(p.guid, { designGuid: d.guid, piece: p }));
   });
-  return { kit, typesByGuid, designsByGuid, piecesByGuid, connectorsByTypeGuid, modelsByTypeGuid };
+  return { kit: k, typesByGuid, designsByGuid, piecesByGuid, connectorsByTypeGuid, modelsByTypeGuid };
 };
 
 /**
@@ -13119,7 +13830,7 @@ export let defaultConstraints: Constraint[] = [];
 /**
  * Validates Kit against constraints.
  **/
-export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationResult => {
+export const validateKit = (kit: KitLike, cfg: ValidationConfig = {}): ValidationResult => {
   const ctx = buildValidationContext(kit);
   const constraints = cfg.constraints ?? defaultConstraints;
   return { problems: constraints.flatMap((constraint) => constraint(ctx)) };
@@ -16673,7 +17384,7 @@ const createBoxMesh = (name: string, doc: GltfDocument, buffer: GltfBuffer): Glt
  **/
 export const exportDesignModel = async (kit: Kit, designId: string, format: string = ".glb", tags: string[] = [], options: Record<string, unknown> = {}): Promise<ArrayBuffer> => {
   const io = new NodeIO();
-  const design = findDesignInKit(kit, designId);
+  const design = kit.requireDesign(designId);
   const pieces = design.pieces ?? [];
   const connections = design.connections ?? [];
   const types = kit.types ?? [];
@@ -17248,7 +17959,7 @@ export class InMemoryKitStore implements UndoableKitStore {
   apply(diff: KitDiff, meta?: { origin?: string }): void {
     if (this.disposed) return;
     void meta;
-    const entry = this.kit.change(diff, { skipGlobalHistory: true, notifyBackbone: false });
+    const entry = this.kit._applyDiff(diff, { skipGlobalHistory: true, notifyBackbone: false });
     if (this.transacting) {
       this.transactionBuffer.push(entry);
     } else {
@@ -17354,163 +18065,45 @@ export const findPortInKit = (kit: KitLike, portGuid: string): Port => asKitInst
 /**
  * Searches for matching PieceTypeInDesign entry.
  **/
-export const findPieceTypeInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Type => asKitInstance(kit).findPieceTypeInDesign(designGuid, pieceGuid);
-
-function findPieceTypeInDesignFromKit(kit: Kit, designGuid: string, pieceGuid: string): Type {
-  const piece = findPieceInDesign(findDesignInKit(kit, designGuid), pieceGuid);
-  if (!piece.type) throw new Error(`Piece ${pieceGuid} has no type`);
-  return findTypeInKit(kit, piece.type.guid);
-}
+export const findPieceTypeInDesign = (kit: KitLike, designGuid: string, pieceGuid: string): Type => asKitInstance(kit).findPieceTypeInDesign(designGuid, pieceGuid);
 
 /**
  * Searches for matching ParentPieceInDesign entry.
  **/
-export const findParentPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece => asKitInstance(kit).findParentPieceInDesign(designGuid, pieceGuid);
-
-function findParentPieceInDesignFromKit(kit: Kit, designGuid: string, pieceGuid: string): Piece {
-  const meta = piecesMetadataFromKit(kit, designGuid);
-  if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
-  const parentPieceId = meta.diff.get(pieceGuid)?.parentPieceId;
-  if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece`);
-  return findPieceInDesign(findDesignInKit(kit, designGuid), parentPieceId);
-}
+export const findParentPieceInDesign = (kit: KitLike, designGuid: string, pieceGuid: string): Piece => asKitInstance(kit).findParentPieceInDesign(designGuid, pieceGuid);
 
 /**
  * Searches for matching ParentConnectionForPieceInDesign entry.
  *
  * Specs: Parent link comes from flatten metadata (`parentPieceId` is a piece guid). The connection guid differs; pick the incident connection on `pieceGuid` whose other endpoint is that parent piece.
  **/
-export const findParentConnectionForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Connection => asKitInstance(kit).findParentConnectionForPieceInDesign(designGuid, pieceGuid);
-
-function findParentConnectionForPieceInDesignFromKit(kit: Kit, designGuid: string, pieceGuid: string): Connection {
-  const meta = piecesMetadataFromKit(kit, designGuid);
-  if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
-  const parentPieceId = meta.diff.get(pieceGuid)?.parentPieceId;
-  if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece and connection`);
-  const design = findDesignInKit(kit, designGuid);
-  const incident = findPieceConnectionsInDesign(design, pieceGuid);
-  const parentConnection = incident.find((c) => {
-    const other = c.connected.piece.guid === pieceGuid ? c.connecting.piece.guid : c.connected.piece.guid;
-    return other === parentPieceId;
-  });
-  if (!parentConnection) {
-    throw new Error(`No connection found from piece ${pieceGuid} to parent piece ${parentPieceId}`);
-  }
-  return parentConnection;
-}
+export const findParentConnectionForPieceInDesign = (kit: KitLike, designGuid: string, pieceGuid: string): Connection => asKitInstance(kit).findParentConnectionForPieceInDesign(designGuid, pieceGuid);
 
 /**
  * Searches for matching ChildrenPiecesInDesign entry.
  **/
-export const findChildrenPiecesInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece[] => asKitInstance(kit).findChildrenPiecesInDesign(designGuid, pieceGuid);
-
-function findChildrenPiecesInDesignFromKit(kit: Kit, designGuid: string, pieceGuid: string): Piece[] {
-  const design = findDesignInKit(kit, designGuid);
-  const meta = piecesMetadataFromKit(kit, designGuid);
-  if (!meta.ok) throw new Error(meta.errors.map((e) => e.message).join("; "));
-  const metadata = meta.diff;
-  const children: Piece[] = [];
-  for (const [id, data] of Array.from(metadata)) {
-    if (data.parentPieceId === pieceGuid) {
-      children.push(findPieceInDesign(design, id));
-    }
-  }
-  return children;
-}
+export const findChildrenPiecesInDesign = (kit: KitLike, designGuid: string, pieceGuid: string): Piece[] => asKitInstance(kit).findChildrenPiecesInDesign(designGuid, pieceGuid);
 
 /**
  * Searches for matching UsedConnectorsByPieceInDesign entry.
  **/
-export const findUsedConnectorsByPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Connector[] => asKitInstance(kit).findUsedConnectorsByPieceInDesign(designGuid, pieceGuid);
-
-function findUsedConnectorsByPieceInDesignFromKit(kit: Kit, designGuid: string, pieceGuid: string): Connector[] {
-  const design = findDesignInKit(kit, designGuid);
-  const piece = findPieceInDesign(design, pieceGuid);
-  if (!piece.type) return [];
-  const type = findTypeInKit(kit, piece.type.guid);
-  const connections = findPieceConnectionsInDesign(design, pieceGuid);
-  return connections.map((c) => findConnectorForPieceInConnection(type, c, pieceGuid)).filter((p): p is Connector => p !== undefined);
-}
+export const findUsedConnectorsByPieceInDesign = (kit: KitLike, designGuid: string, pieceGuid: string): Connector[] => asKitInstance(kit).findUsedConnectorsByPieceInDesign(designGuid, pieceGuid);
 
 /**
  * Searches for matching ReplacableTypesForPieceInDesign entry.
  **/
-export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Type[] => asKitInstance(kit).findReplacableTypesForPieceInDesign(designGuid, pieceGuid);
-
-function findReplacableTypesForPieceInDesignFromKit(kit: Kit, designGuid: string, pieceGuid: string): Type[] {
-  const design = findDesignInKit(kit, designGuid);
-  const connections = findPieceConnectionsInDesign(design, pieceGuid);
-  const requiredConnectors: Connector[] = [];
-  for (const connection of connections) {
-    try {
-      const otherPieceId = connection.connected.piece.guid === pieceGuid ? connection.connecting.piece.guid : connection.connected.piece.guid;
-      const otherPiece = findPieceInDesign(design, otherPieceId);
-      if (!otherPiece.type) continue;
-      const otherType = findTypeInKit(kit, otherPiece.type.guid);
-      const otherPortId = connection.connected.piece.guid === pieceGuid ? connection.connecting.connector?.guid : connection.connected.connector?.guid;
-      const otherPort = findConnectorInType(otherType, otherPortId || "");
-      requiredConnectors.push(otherPort);
-    } catch {
-      continue;
-    }
-  }
-  return (
-    kit.types?.filter((replacementType) => {
-      if (replacementType.isAbstract) return false;
-      if (!replacementType.connectors || replacementType.connectors.length === 0) return requiredConnectors.length === 0;
-      return requiredConnectors.every((requiredConnector) => {
-        return replacementType.connectors!.some((replacementConnector) => areConnectorsCompatible(replacementConnector, requiredConnector));
-      });
-    }) ?? []
-  );
-}
+export const findReplacableTypesForPieceInDesign = (kit: KitLike, designGuid: string, pieceGuid: string): Type[] => asKitInstance(kit).findReplacableTypesForPieceInDesign(designGuid, pieceGuid);
 
 /**
  * Searches for matching ReplacableTypesForPiecesInDesign entry.
  **/
 export const findReplacableTypesForPiecesInDesign = (kit: KitLike, designGuid: string, pieceGuids: string[]): Type[] => asKitInstance(kit).findReplacableTypesForPiecesInDesign(designGuid, pieceGuids);
 
-function findReplacableTypesForPiecesInDesignFromKit(kit: Kit, designGuid: string, pieceGuids: string[]): Type[] {
-  const design = findDesignInKit(kit, designGuid);
-  const pieces = pieceGuids.map((id) => findPieceInDesign(design, id));
-  const externalConnections: Array<{
-    connection: Connection;
-    requiredConnector: Connector;
-  }> = [];
-  for (const piece of pieces) {
-    const connections = findPieceConnectionsInDesign(design, piece.guid);
-    for (const connection of connections) {
-      const otherPieceId = connection.connected.piece.guid === piece.guid ? connection.connecting.piece.guid : connection.connected.piece.guid;
-      if (!pieceGuids.includes(otherPieceId)) {
-        try {
-          const otherPiece = findPieceInDesign(design, otherPieceId);
-          if (!otherPiece.type) continue;
-          const otherType = findTypeInKit(kit, otherPiece.type.guid);
-          const otherPortId = connection.connected.piece.guid === piece.guid ? connection.connecting.connector?.guid : connection.connected.connector?.guid;
-          const otherPort = findConnectorInType(otherType, otherPortId || "");
-          externalConnections.push({ connection, requiredConnector: otherPort });
-        } catch {
-          continue;
-        }
-      }
-    }
-  }
-  return (
-    kit.types?.filter((replacementType) => {
-      if (replacementType.isAbstract) return false;
-      if (!replacementType.connectors || replacementType.connectors.length === 0) return externalConnections.length === 0;
-      return externalConnections.every(({ requiredConnector }) => {
-        return replacementType.connectors!.some((replacementConnector) => areConnectorsCompatible(replacementConnector, requiredConnector));
-      });
-    }) ?? []
-  );
-}
-
 /**
  * Sums the values of a quality across all pieces in a design.
  * For each piece, checks piece-level props first, then falls back to type-level props.
  **/
-export const sumQualityInDesign = (kit: Kit, designGuid: string, qualityGuid: string): number => asKitInstance(kit).sumQualityInDesign(designGuid, qualityGuid);
+export const sumQualityInDesign = (kit: KitLike, designGuid: string, qualityGuid: string): number => asKitInstance(kit).sumQualityInDesign(designGuid, qualityGuid);
 
 /**
  * Per-piece placement metadata derived from a flattened design (fixed root, parent link, depth, path).
@@ -17524,86 +18117,13 @@ export type PiecePlacementMetadata = {
   path: string[];
 };
 
-/**
- * Definition of piecesMetadata.
- **/
-function piecesMetadataFromKit(kit: Kit, designGuid: string): OperationResult<Map<string, PiecePlacementMetadata>> {
-  const design = findDesignInKit(kit, designGuid);
-  if (!design) {
-    return operationErr([{ code: "pieces-metadata.design-not-found", message: `Design ${designGuid} not found in kit ${kit.name}` }]);
-  }
-  const flattenChange = asKitInstance(kit).flattenDesignMerkle(designGuid);
-  if (!flattenChange.ok) {
-    return { ok: false, errors: flattenChange.errors };
-  }
-  const flatDesign = detachDesignForLocalMutation(design);
-  flatDesign.applyDiff(flattenChange.diff.forward);
-  const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid);
-  const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
-  const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
-  const paths = flatDesign.pieces?.map((p) => {
-    const raw = findAttributeValue(p, "semio.path", p.guid);
-    return raw ? raw.split(",").filter(Boolean) : [p.guid!];
-  });
-  return operationOk(
-    new Map(
-      flatDesign.pieces?.map((p, index) => [
-        p.guid,
-        {
-          plane: p.plane!,
-          center: p.center!,
-          fixedPieceId: fixedPieceIds![index],
-          parentPieceId: parentPieceIds![index],
-          depth: depths![index],
-          path: paths![index],
-        },
-      ]),
-    ),
-    flattenChange.warnings,
-    flattenChange.infos,
-  );
-}
-
-export const piecesMetadata = (kit: Kit, designGuid: string): OperationResult<Map<string, PiecePlacementMetadata>> => asKitInstance(kit).piecesMetadataFor(designGuid);
+export const piecesMetadata = (kit: KitLike, designGuid: string): OperationResult<Map<string, PiecePlacementMetadata>> => asKitInstance(kit).piecesMetadataFor(designGuid);
 
 // #region 🧠Pieces Metadata Cached
 /**
  * 🧠Incremental version of {@link piecesMetadata}: reuses an optional {@link FlatMerkleCacheEntry} cache across calls so sketchpad renders (and any other host holding piece placement data) only pay the matrix-math + attribute bookkeeping cost for pieces whose merkle inputs actually changed. Returns both the metadata map (same shape as {@link piecesMetadata}) and the new cache to thread into the next call.
  **/
-function piecesMetadataCachedFromKit(kit: Kit, designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: OperationResult<Map<string, PiecePlacementMetadata>>; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } {
-  const design = findDesignInKit(kit, designGuid);
-  if (!design) {
-    return {
-      result: operationErr([{ code: "pieces-metadata.design-not-found", message: `Design ${designGuid} not found in kit ${kit.name}` }]),
-      cache: {},
-    };
-  }
-  const cached = asKitInstance(kit).flattenDesignCachedOp(designGuid, cache);
-  if (!cached.result.ok) {
-    return { result: { ok: false, errors: cached.result.errors }, cache: cached.cache };
-  }
-  const flatDesign = detachDesignForLocalMutation(design);
-  flatDesign.applyDiff(cached.result.diff.forward);
-  const metadata = new Map<string, PiecePlacementMetadata>();
-  for (const p of flatDesign.pieces ?? []) {
-    if (!p.guid) continue;
-    const rawPath = findAttributeValue(p, "semio.path", p.guid);
-    metadata.set(p.guid, {
-      plane: p.plane!,
-      center: p.center!,
-      fixedPieceId: findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid,
-      parentPieceId: findAttributeValue(p, "semio.parentPieceId", null),
-      depth: parseInt(findAttributeValue(p, "semio.depth", "0")!),
-      path: rawPath ? rawPath.split(",").filter(Boolean) : [p.guid],
-    });
-  }
-  return {
-    result: operationOk(metadata, cached.result.warnings, cached.result.infos),
-    cache: cached.cache,
-  };
-}
-
-export const piecesMetadataCached = (kit: Kit, designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: OperationResult<Map<string, PiecePlacementMetadata>>; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } =>
+export const piecesMetadataCached = (kit: KitLike, designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: OperationResult<Map<string, PiecePlacementMetadata>>; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } =>
   asKitInstance(kit).piecesMetadataCachedFor(designGuid, cache);
 // #endregion 🧠Pieces Metadata Cached
 
@@ -19443,7 +19963,7 @@ if (shouldRunEmbeddedJsTests) {
       const parentPieceGuid = conn.connected.piece.guid;
       const parentMeta = metadata.get(parentPieceGuid)!;
       const parentPiece = (design.pieces ?? []).find((p) => p.guid === parentPieceGuid)!;
-      const parentType = findTypeInKit(kit, parentPiece.type!.guid!)!;
+      const parentType = asKitInstance(kit).requireType(parentPiece.type!.guid!)!;
       const parentConnector = parentType.connectors!.find((c) => c.guid === conn.connected.connector?.guid)!;
       const isVerticalConnection = Math.abs(parentConnector?.direction?.z ?? 0) > 0.5;
       const horizontalScale = 3.0633;

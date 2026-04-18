@@ -1,8 +1,8 @@
 {
   "title": "Refactor TypeScript Kit to OOP Architecture with Kit Class",
-  "status": "open",
+  "status": "closed",
   "description": "Refactor TypeScript Kit to OOP Architecture with Kit Class",
-  "summary": "Refactored the TypeScript object graph further toward stateful classes: tightened plain/class conversion for local mutation snapshots, preserved wire ids while keeping runtime object pointers, made flatten and diff paths hydrate kit instances before operating, added guarded wire-id helpers for class/plain interop, made piece flatten kind resolution distinguish live Type pointers from serialized ids, and updated sketchpad TypeScript boundary for the ongoing transition. Verification was intentionally skipped after the latest instruction to not test or build for now.",
+  "summary": "Continued the TypeScript OO/stateful migration in semio/js/index.ts. Moved diff, inverse diff, merge/apply, serialization, and projection behavior into class methods for geometry primitives and key graph entities, then reduced exported helpers to delegate into the class API. Added method-owned graph diff/apply APIs on Design, Type, Piece, and Kit and kept pointer-based object graph behavior for piece/type/design/kit relationships. Did not run tests or builds per instruction.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
   "sessions": [
     "⚪304390cd557940b2a03752920db8767d",
