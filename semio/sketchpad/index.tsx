@@ -59,7 +59,7 @@ import {
   InMemoryKitStore,
   inverseKitDiff,
   Kit,
-  type KitChange,
+  type KitGraphChange,
   KitDiff,
   mergeKitDiff,
   KitSchema,
@@ -626,8 +626,8 @@ export interface KitJsonFileAdapter {
 export class JsonFileKitStore implements UndoableKitStore {
   private kit: Kit;
   private listeners: Set<() => void> = new Set();
-  private undoStack: KitChange[] = [];
-  private redoStack: KitChange[] = [];
+  private undoStack: KitGraphChange[] = [];
+  private redoStack: KitGraphChange[] = [];
   private dirty: boolean = false;
   private disposed: boolean = false;
   private status: KitStoreStatus;
@@ -893,8 +893,8 @@ export interface KitFolderAdapter {
 export class FolderKitStore implements UndoableKitStore {
   private kit: Kit;
   private listeners: Set<() => void> = new Set();
-  private undoStack: KitChange[] = [];
-  private redoStack: KitChange[] = [];
+  private undoStack: KitGraphChange[] = [];
+  private redoStack: KitGraphChange[] = [];
   private dirty: boolean = false;
   private disposed: boolean = false;
   private status: KitStoreStatus;
@@ -1398,8 +1398,8 @@ const removeNestedDesignEntity = <T extends { guid: string }>(designs: any[] | u
 export class SessionKitStore implements UndoableKitStore {
   private kit: Kit;
   private listeners: Set<() => void> = new Set();
-  private undoStack: KitChange[] = [];
-  private redoStack: KitChange[] = [];
+  private undoStack: KitGraphChange[] = [];
+  private redoStack: KitGraphChange[] = [];
   private dirty: boolean = false;
   private disposed: boolean = false;
   private status: KitStoreStatus;

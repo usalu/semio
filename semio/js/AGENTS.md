@@ -28,8 +28,8 @@ interface Kit {
     designs: Design[]
 }
 
-const KitSchema = z.object(…)
-type KitDTO = z.infer<typeof KitSchema> // DTO
+const KitSnapshotSchema = z.object(…)
+type KitSnapshot = z.infer<typeof KitSchema> // DTO
 
 interface KitSelection {
     types: TypeId[]

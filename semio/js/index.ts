@@ -4309,7 +4309,7 @@ export class Type {
   /**
    * 📛Rename this type via the kit graph pipeline
    */
-  rename(newName: string): KitChange {
+  rename(newName: string): KitGraphChange {
     if (!this.#kit) throw new Error("Type not attached to a KitImpl");
     const diff: KitDiff = {
       types: {
@@ -4327,7 +4327,7 @@ export class Type {
   /**
    * 🗑️Delete this type via the kit graph pipeline
    */
-  delete(opts?: KitChangeOptions): KitChange {
+  delete(opts?: KitChangeOptions): KitGraphChange {
     if (!this.#kit) throw new Error("Type not attached to a KitImpl");
     return this.#kit.removeType(this, opts);
   }
@@ -4956,7 +4956,7 @@ export class Piece {
   /**
    * Deletes this piece and stale connections, and fixes child pieces (see {@link Design.deletePiecesAndConnectionsDiff}).
    */
-  delete(opts?: KitChangeOptions): KitChange {
+  delete(opts?: KitChangeOptions): KitGraphChange {
     const design = this.#hostDesign;
     const kit = this.#hostKit ?? design?.getKit();
     if (!design || !kit) throw new Error("Piece not attached to a Design/KitImpl");
@@ -4971,7 +4971,7 @@ export class Piece {
   }
 
   /** Change this piece’s type (validated kit pipeline; respects active/open transaction). */
-  changeType(type: Type, opts?: KitChangeOptions): KitChange {
+  changeType(type: Type, opts?: KitChangeOptions): KitGraphChange {
     const design = this.#hostDesign;
     const kit = this.#hostKit ?? design?.getKit();
     if (!design || !kit) throw new Error("Piece not attached to a Design/KitImpl");
@@ -6200,7 +6200,7 @@ export class Design {
   /**
    * 📛Rename this design via the kit graph pipeline
    */
-  rename(newName: string): KitChange {
+  rename(newName: string): KitGraphChange {
     if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     const diff: KitDiff = {
       designs: {
@@ -6218,7 +6218,7 @@ export class Design {
   /**
    * 🗑️Remove this design from the kit graph (validated pipeline).
    */
-  delete(opts?: KitChangeOptions): KitChange {
+  delete(opts?: KitChangeOptions): KitGraphChange {
     if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return this.#kit.removeDesign(this, opts);
   }
@@ -6315,7 +6315,7 @@ export class Design {
   /**
    * 🗑️Delete pieces from this design (and stale connections; fixes children that become fixed).
    */
-  deletePieces(pieces: Piece | readonly Piece[], opts?: KitChangeOptions): KitChange {
+  deletePieces(pieces: Piece | readonly Piece[], opts?: KitChangeOptions): KitGraphChange {
     const list = (Array.isArray(pieces) ? pieces : [pieces]) as Piece[];
     if (list.length === 0) throw new Error("deletePieces: pass at least one Piece");
     if (!this.#kit) throw new Error("Design not attached to a KitImpl");
@@ -6335,7 +6335,7 @@ export class Design {
   /**
    * Flatten this design in the kit graph (merkle-cached); commits via {@link KitImpl._applyDiff} (respects active transaction).
    */
-  flatten(opts?: KitChangeOptions): KitChange {
+  flatten(opts?: KitChangeOptions): KitGraphChange {
     if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     const op = this.runFlattenOptimized();
     if (!op.ok || !op.diff) {
@@ -8211,7 +8211,7 @@ export type ValidationState = KitDiffValidationResult;
  * Implementations support Dev (file), Local (folder), and Remote (hub) backends.
  */
 export interface Backbone {
-  changed(change: KitChange): Promise<void>;
+  changed(change: KitGraphChange): Promise<void>;
   /**
    * Optional wiring for inbound sync: the backbone calls `onInboundDiff` with remote/foreign diffs;
    * the kit applies them through the same validation pipeline (no echo to `changed` by default).
@@ -8224,7 +8224,7 @@ export interface Backbone {
  */
 export class DevKitBackbone implements Backbone {
   constructor(private filePath: string) {}
-  async changed(_change: KitChange): Promise<void> {
+  async changed(_change: KitGraphChange): Promise<void> {
     void this.filePath;
   }
 }
@@ -8234,7 +8234,7 @@ export class DevKitBackbone implements Backbone {
  */
 export class LocalKitBackbone implements Backbone {
   constructor(private folderPath: string) {}
-  async changed(_change: KitChange): Promise<void> {
+  async changed(_change: KitGraphChange): Promise<void> {
     void this.folderPath;
   }
 }
@@ -8244,16 +8244,16 @@ export class LocalKitBackbone implements Backbone {
  */
 export class RemoteKitBackbone implements Backbone {
   constructor(private websocketUrl: string) {}
-  async changed(_change: KitChange): Promise<void> {
+  async changed(_change: KitGraphChange): Promise<void> {
     void this.websocketUrl;
   }
 }
 // #endregion 🔌Backbone Interface
 
 /**
- * 🔄KitChange represents a bidirectional change to KitImpl state.
+ * 🔄KitGraphChange represents a bidirectional change to KitImpl state.
  */
-export interface KitChange {
+export interface KitGraphChange {
   forward: KitDiff;
   backward: KitDiff;
   /** Result of {@link validateKitGraphDiff} for {@link forward} (before apply). */
@@ -8287,7 +8287,7 @@ export type Conflict = {
   kind: ConflictKind;
   txId?: string;
   proposedDiff?: KitDiff;
-  proposedChange?: KitChange;
+  proposedChange?: KitGraphChange;
   validationReport: KitDiffValidationResult;
   createdAt: string;
 };
@@ -8309,18 +8309,142 @@ export type TransactionView = {
   label?: string;
 };
 
+// #region 🪪KitEntity wire DTOs & ledger KitChange
+/** Plain string identifiers on the {@link KitEntity} surface (contrast with object-shaped {@link TypeId}). */
+export type KitEntityUUID = string;
+export type KitEntityTypeId = string;
+export type KitEntityDesignId = string;
+export type KitEntityPieceId = string;
+export type InteractionId = string;
+export type ChangeId = string;
+
+export interface KitWireType {
+  id: KitEntityTypeId;
+  name: string;
+}
+
+export interface KitWireDesign {
+  id: KitEntityDesignId;
+  name: string;
+}
+
+/** Narrow kit view for {@link KitEntity#import} / {@link KitEntity#export}; full graph uses {@link KitData}. */
+export interface KitWire {
+  uuid: KitEntityUUID;
+  name: string;
+  types: KitWireType[];
+  designs: KitWireDesign[];
+}
+
+export const KitWireDtoSchema = z.object({
+  uuid: z.string(),
+  name: z.string(),
+  types: z.array(z.any()),
+  designs: z.array(z.any()),
+});
+export type KitDTO = z.infer<typeof KitWireDtoSchema>;
+
+export interface KitSelection {
+  types: KitEntityTypeId[];
+  designs: KitEntityDesignId[];
+}
+
+export interface KitInteraction {
+  uuid: InteractionId;
+  label: string;
+  selection: KitSelection;
+}
+
+export const KitInteractionWireSchema = z.object({
+  uuid: z.string(),
+  label: z.string(),
+  selection: z.object({
+    types: z.array(z.string()),
+    designs: z.array(z.string()),
+  }),
+});
+export type KitInteractionDTO = z.infer<typeof KitInteractionWireSchema>;
+
+export type InteractionStatus = TransactionStatus;
+
+export type ChangeOrigin =
+  | "local-interaction"
+  | "local-finalize"
+  | "local-history-undo"
+  | "local-history-redo"
+  | "backbone";
+
+export interface ValidationMessage {
+  code: string;
+  path?: string[];
+  message: string;
+}
+
+export interface ValidationReport {
+  infos: ValidationMessage[];
+  warnings: ValidationMessage[];
+  errors: ValidationMessage[];
+}
+
+/**
+ * Ledger/backbone change record ({@link KitBackbone#submitCommittedChange}).
+ * Reversible graph bundles used while editing are {@link KitGraphChange}.
+ */
+export interface KitChange {
+  id: ChangeId;
+  origin: ChangeOrigin;
+  interactionId?: InteractionId;
+  baseRevision: number;
+  revision: number;
+  diff: KitDiff;
+  inverse: KitDiff;
+  report: ValidationReport;
+  createdAt: string;
+  metadata?: Record<string, string>;
+}
+
+export interface HistoryEntry {
+  change: KitChange;
+}
+
+export interface InteractionSession extends KitInteraction {
+  status: InteractionStatus;
+  done: KitChange[];
+  undone: KitChange[];
+  netForward: KitDiff;
+  netBackward: KitDiff;
+  baseRevision: number;
+  touched: Set<string>;
+}
+
+export interface BackboneSink {
+  changed(change: KitChange): void;
+  failed(error: unknown): void;
+}
+
+export interface KitBackbone {
+  readonly kind: "local" | "dev" | "remote";
+  open(input: { kitId: KitEntityUUID; sink: BackboneSink; options?: unknown }): Promise<void>;
+  close(): Promise<void>;
+  importSnapshot(dto: KitDTO): Promise<void>;
+  exportSnapshot(): Promise<KitDTO>;
+  submitCommittedChange(change: KitChange): Promise<void>;
+}
+
+// #endregion 🪪KitEntity wire DTOs & ledger KitChange
+
 type KitAuditEntry = {
   revision: number;
   tag: string;
-  change?: KitChange;
+  change?: KitGraphChange;
 };
 
 type KitRuntimeTransaction = {
   label?: string;
   status: TransactionStatus;
   startPlain: KitData;
-  done: KitChange[];
-  undone: KitChange[];
+  done: KitGraphChange[];
+  undone: KitGraphChange[];
   netForward: KitDiff;
   netBackward: KitDiff;
   baseRevision: number;
@@ -8412,13 +8536,13 @@ export class KitImpl {
   #auditLog: KitAuditEntry[] = [];
   #openTransactions = new Map<string, KitRuntimeTransaction>();
   /** Finalized local transactions only (public {@link KitImpl.undo} / {@link KitImpl.redo}). */
-  #historyDone: KitChange[] = [];
-  #historyUndone: KitChange[] = [];
+  #historyDone: KitGraphChange[] = [];
+  #historyUndone: KitGraphChange[] = [];
   #flattenMerkleByDesign = new Map<string, { [pieceGuid: string]: FlatMerkleCacheEntry }>();
   #listeners: Set<() => void> = new Set();
   /** Outbound backbone notifications (non-blocking; flushed on a microtask). */
-  #backboneOutbound: KitChange[] = [];
-  #backboneOutboundFrozen: KitChange[] = [];
+  #backboneOutbound: KitGraphChange[] = [];
+  #backboneOutboundFrozen: KitGraphChange[] = [];
   #backboneFlushScheduled = false;
   #deferredInboundQueue: KitDiff[] = [];
   /** When set, {@link _applyDiff} records steps on this open transaction unless `transactionId` is passed explicitly. */
@@ -8496,7 +8620,7 @@ export class KitImpl {
     return mergeKitGraphDiff(diff1, diff2);
   }
 
-  static changeBetween(before: KitLike, after: KitLike): KitChange {
+  static changeBetween(before: KitLike, after: KitLike): KitGraphChange {
     const b = asKitInstance(before);
     const a = asKitInstance(after);
     const forward = computeKitGraphDiffBetween(b, a);
@@ -8551,7 +8675,7 @@ export class KitImpl {
     return toThreeRotation();
   }
 
-  #scheduleBackboneNotify(change: KitChange): void {
+  #scheduleBackboneNotify(change: KitGraphChange): void {
     if (!this.backbone) return;
     if (this.#phase === "frozen") {
       this.#backboneOutboundFrozen.push(change);
@@ -9658,7 +9782,7 @@ export class KitImpl {
     return diff;
   }
 
-  #appendAudit(tag: string, change?: KitChange): void {
+  #appendAudit(tag: string, change?: KitGraphChange): void {
     this.#auditLog.push({ revision: this.#revision, tag, change });
   }
 
@@ -9744,7 +9868,7 @@ export class KitImpl {
     return this.#openTransactions.get(id)?.status ?? "finalized";
   }
 
-  _transactionFinalize(transactionId: string): KitChange | undefined {
+  _transactionFinalize(transactionId: string): KitGraphChange | undefined {
     const tx = this.#openTransactions.get(transactionId);
     if (!tx) throw new Error(`Unknown transaction ${transactionId}`);
     if (this.#phase === "frozen" || this.#conflicted) {
@@ -9768,7 +9892,7 @@ export class KitImpl {
     }
     const diffToApply = validation.diff ?? tx.netForward;
     const backward = sk.inverseDiffFromPreApplyState(diffToApply);
-    const squashed: KitChange = { forward: diffToApply, backward, validation };
+    const squashed: KitGraphChange = { forward: diffToApply, backward, validation };
     tx.status = "finalized";
     this.#openTransactions.delete(transactionId);
     this.#historyDone.push(squashed);
@@ -9858,7 +9982,7 @@ export class KitImpl {
     this.#applyRawKitDiff(diffToApply);
     this.#revision++;
     this.#invalidateCachesTouchedByDiff(diffToApply);
-    const ch2: KitChange = { forward: diffToApply, backward: backward2, validation };
+    const ch2: KitGraphChange = { forward: diffToApply, backward: backward2, validation };
     tx.done.push(ch2);
     recomputeTxNet(tx);
     this.#appendAudit("TxRedoApplied", ch2);
@@ -9869,7 +9993,7 @@ export class KitImpl {
     this._transactionAbort(transactionId);
   }
 
-  finalizeTransaction(transactionId: string): KitChange | undefined {
+  finalizeTransaction(transactionId: string): KitGraphChange | undefined {
     return this._transactionFinalize(transactionId);
   }
 
@@ -9935,7 +10059,7 @@ export class KitImpl {
     this.#revision++;
     this.#invalidateCachesTouchedByDiff(diffBack);
     this.#historyUndone.push(ch);
-    const outbound: KitChange = { forward: diffBack, backward: ch.forward, validation };
+    const outbound: KitGraphChange = { forward: diffBack, backward: ch.forward, validation };
     this.#scheduleBackboneNotify(outbound);
     this.#appendAudit("HistoryUndoApplied", ch);
     this.notify();
@@ -9961,7 +10085,7 @@ export class KitImpl {
     this.#applyRawKitDiff(diffToApply);
     this.#revision++;
     this.#invalidateCachesTouchedByDiff(diffToApply);
-    const ch2: KitChange = { forward: diffToApply, backward: backward2, validation };
+    const ch2: KitGraphChange = { forward: diffToApply, backward: backward2, validation };
     this.#historyDone.push(ch2);
     this.#scheduleBackboneNotify(ch2);
     this.#appendAudit("HistoryRedoApplied", ch2);
@@ -9997,11 +10121,11 @@ export class KitImpl {
    * Internal validated diff pipeline ({@link KitDiff} is not a public mutation primitive).
    * Used by semantic entity methods, {@link InMemoryKitStore}, and backbone inbound wiring.
    */
-  _applyDiff(diff: KitDiff, opts?: KitChangeOptions): KitChange {
+  _applyDiff(diff: KitDiff, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff(diff, opts ?? {});
   }
 
-  #applyDiff(diff: KitDiff, opts: KitChangeOptions): KitChange {
+  #applyDiff(diff: KitDiff, opts: KitChangeOptions): KitGraphChange {
     if (this.#phase === "frozen" || this.#conflicted) {
       throw new Error("KitImpl has unresolved validation conflicts; call resolveConflict() before applying further changes.");
     }
@@ -10026,7 +10150,7 @@ export class KitImpl {
     this.#revision++;
     this.#invalidateCachesTouchedByDiff(diffToApply);
 
-    const change: KitChange = { forward: diffToApply, backward, validation };
+    const change: KitGraphChange = { forward: diffToApply, backward, validation };
 
     const resolvedTxId = opts.transactionId ?? this.#activeTransactionId;
     if (resolvedTxId) {
@@ -10238,73 +10362,73 @@ export class KitImpl {
   // #endregion 🔍Finders
 
   // #region 🧰KitImpl graph CRUD (validated {@link KitImpl._applyDiff})
-  addType(type: Type, opts?: KitChangeOptions): KitChange {
+  addType(type: Type, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ types: { added: [type] } }, opts ?? {});
   }
-  setType(type: Type, opts?: KitChangeOptions): KitChange {
+  setType(type: Type, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ types: { added: [type] } }, opts ?? {});
   }
-  removeType(type: Type, opts?: KitChangeOptions): KitChange {
+  removeType(type: Type, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ types: { removed: [{ guid: type.guid }] } }, opts ?? {});
   }
 
-  addDesign(design: Design, opts?: KitChangeOptions): KitChange {
+  addDesign(design: Design, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ designs: { added: [design] } }, opts ?? {});
   }
-  setDesign(design: Design, opts?: KitChangeOptions): KitChange {
+  setDesign(design: Design, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ designs: { added: [design] } }, opts ?? {});
   }
-  updateDesign(design: Design, opts?: KitChangeOptions): KitChange {
+  updateDesign(design: Design, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ designs: { added: [design] } }, opts ?? {});
   }
-  removeDesign(design: Design, opts?: KitChangeOptions): KitChange {
+  removeDesign(design: Design, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ designs: { removed: [{ guid: design.guid }] } }, opts ?? {});
   }
 
-  addPort(iface: Port, opts?: KitChangeOptions): KitChange {
+  addPort(iface: Port, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ ports: { added: [iface] } }, opts ?? {});
   }
-  setPort(iface: Port, opts?: KitChangeOptions): KitChange {
+  setPort(iface: Port, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ ports: { added: [iface] } }, opts ?? {});
   }
-  updatePort(iface: Port, opts?: KitChangeOptions): KitChange {
+  updatePort(iface: Port, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ ports: { added: [iface] } }, opts ?? {});
   }
-  removePort(port: Port, opts?: KitChangeOptions): KitChange {
+  removePort(port: Port, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ ports: { removed: [{ guid: port.guid }] } }, opts ?? {});
   }
 
-  addFile(file: File, opts?: KitChangeOptions): KitChange {
+  addFile(file: File, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ files: { added: [file] } }, opts ?? {});
   }
-  setFile(file: File, opts?: KitChangeOptions): KitChange {
+  setFile(file: File, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ files: { added: [file] } }, opts ?? {});
   }
-  removeFile(file: File, opts?: KitChangeOptions): KitChange {
+  removeFile(file: File, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ files: { removed: [{ guid: file.guid }] } }, opts ?? {});
   }
 
-  setAttribute(attribute: Attribute, opts?: KitChangeOptions): KitChange {
+  setAttribute(attribute: Attribute, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ attributes: { added: [attribute] } }, opts ?? {});
   }
 
-  addTag(tag: Tag, opts?: KitChangeOptions): KitChange {
+  addTag(tag: Tag, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ tags: { added: [tag] } }, opts ?? {});
   }
-  setTag(tag: Tag, opts?: KitChangeOptions): KitChange {
+  setTag(tag: Tag, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ tags: { added: [tag] } }, opts ?? {});
   }
-  removeTag(tag: Tag, opts?: KitChangeOptions): KitChange {
+  removeTag(tag: Tag, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ tags: { removed: [{ guid: tag.guid }] } }, opts ?? {});
   }
 
-  addConcept(concept: Concept, opts?: KitChangeOptions): KitChange {
+  addConcept(concept: Concept, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ concepts: { added: [concept] } }, opts ?? {});
   }
-  setConcept(concept: Concept, opts?: KitChangeOptions): KitChange {
+  setConcept(concept: Concept, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ concepts: { added: [concept] } }, opts ?? {});
   }
-  removeConcept(concept: Concept, opts?: KitChangeOptions): KitChange {
+  removeConcept(concept: Concept, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ concepts: { removed: [{ guid: concept.guid }] } }, opts ?? {});
   }
   // #endregion 🧰KitImpl graph CRUD (validated {@link KitImpl._applyDiff})
@@ -10866,15 +10990,15 @@ export type Kit = InstanceType<typeof KitImpl>;
 export class KitTypesOps {
   constructor(private readonly kit: KitImpl) {}
 
-  add(type: Type, opts?: KitChangeOptions): KitChange {
+  add(type: Type, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addType(type, opts);
   }
 
-  set(type: Type, opts?: KitChangeOptions): KitChange {
+  set(type: Type, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.setType(type, opts);
   }
 
-  remove(type: Type, opts?: KitChangeOptions): KitChange {
+  remove(type: Type, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.removeType(type, opts);
   }
 
@@ -10893,19 +11017,19 @@ export class KitTypesOps {
 export class KitDesignsOps {
   constructor(private readonly kit: KitImpl) {}
 
-  add(design: Design, opts?: KitChangeOptions): KitChange {
+  add(design: Design, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addDesign(design, opts);
   }
 
-  set(design: Design, opts?: KitChangeOptions): KitChange {
+  set(design: Design, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.setDesign(design, opts);
   }
 
-  update(design: Design, opts?: KitChangeOptions): KitChange {
+  update(design: Design, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.updateDesign(design, opts);
   }
 
-  remove(design: Design, opts?: KitChangeOptions): KitChange {
+  remove(design: Design, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.removeDesign(design, opts);
   }
 
@@ -10928,19 +11052,19 @@ export class KitDesignsOps {
 export class KitPortsOps {
   constructor(private readonly kit: KitImpl) {}
 
-  add(iface: Port, opts?: KitChangeOptions): KitChange {
+  add(iface: Port, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addPort(iface, opts);
   }
 
-  set(iface: Port, opts?: KitChangeOptions): KitChange {
+  set(iface: Port, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.setPort(iface, opts);
   }
 
-  update(iface: Port, opts?: KitChangeOptions): KitChange {
+  update(iface: Port, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.updatePort(iface, opts);
   }
 
-  remove(port: Port, opts?: KitChangeOptions): KitChange {
+  remove(port: Port, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.removePort(port, opts);
   }
 
@@ -10955,15 +11079,15 @@ export class KitPortsOps {
 export class KitFilesOps {
   constructor(private readonly kit: KitImpl) {}
 
-  add(file: File, opts?: KitChangeOptions): KitChange {
+  add(file: File, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addFile(file, opts);
   }
 
-  set(file: File, opts?: KitChangeOptions): KitChange {
+  set(file: File, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.setFile(file, opts);
   }
 
-  remove(file: File, opts?: KitChangeOptions): KitChange {
+  remove(file: File, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.removeFile(file, opts);
   }
 
@@ -10978,15 +11102,15 @@ export class KitFilesOps {
 export class KitTagsOps {
   constructor(private readonly kit: KitImpl) {}
 
-  add(tag: Tag, opts?: KitChangeOptions): KitChange {
+  add(tag: Tag, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addTag(tag, opts);
   }
 
-  set(tag: Tag, opts?: KitChangeOptions): KitChange {
+  set(tag: Tag, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.setTag(tag, opts);
   }
 
-  remove(tag: Tag, opts?: KitChangeOptions): KitChange {
+  remove(tag: Tag, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.removeTag(tag, opts);
   }
 
@@ -11001,15 +11125,15 @@ export class KitTagsOps {
 export class KitConceptsOps {
   constructor(private readonly kit: KitImpl) {}
 
-  add(concept: Concept, opts?: KitChangeOptions): KitChange {
+  add(concept: Concept, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addConcept(concept, opts);
   }
 
-  set(concept: Concept, opts?: KitChangeOptions): KitChange {
+  set(concept: Concept, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.setConcept(concept, opts);
   }
 
-  remove(concept: Concept, opts?: KitChangeOptions): KitChange {
+  remove(concept: Concept, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.removeConcept(concept, opts);
   }
 
@@ -11024,7 +11148,7 @@ export class KitConceptsOps {
 export class KitAttributesOps {
   constructor(private readonly kit: KitImpl) {}
 
-  set(attribute: Attribute, opts?: KitChangeOptions): KitChange {
+  set(attribute: Attribute, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.setAttribute(attribute, opts);
   }
 }
@@ -11066,7 +11190,7 @@ export class Transaction {
     return this.host._getTransactionStatus(this.id);
   }
 
-  finalize(): KitChange | undefined {
+  finalize(): KitGraphChange | undefined {
     return this.host._transactionFinalize(this.id);
   }
 
@@ -11156,7 +11280,723 @@ export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => mergeKi
 /**
  * 🔄Computes the full change (forward + backward + validation) between two kits.
  */
-export const getKitChange = (before: KitImpl, after: KitImpl): KitChange => KitImpl.changeBetween(before, after);
+export const getKitChange = (before: KitImpl, after: KitImpl): KitGraphChange => KitImpl.changeBetween(before, after);
+
+// #region 🧩KitEntity (synchronized kit facade)
+
+export interface SemanticCommand {
+  readonly type: string;
+}
+
+export class FlattenDesignCommand implements SemanticCommand {
+  readonly type = "design.flatten";
+  constructor(public readonly designId: KitEntityDesignId) {}
+}
+
+export class DeletePieceCommand implements SemanticCommand {
+  readonly type = "piece.delete";
+  constructor(public readonly pieceId: KitEntityPieceId) {}
+}
+
+export class ChangePieceTypeCommand implements SemanticCommand {
+  readonly type = "piece.changeType";
+  constructor(
+    public readonly pieceId: KitEntityPieceId,
+    public readonly nextTypeId: KitEntityTypeId,
+  ) {}
+}
+
+function validationReportFromGraph(v: KitDiffValidationResult): ValidationReport {
+  return {
+    infos: (v.infos ?? []).map((n) => ({ code: n.code ?? "info", message: n.message ?? "" })),
+    warnings: (v.warnings ?? []).map((n) => ({ code: n.code ?? "warning", message: n.message ?? "" })),
+    errors: (v.errors ?? []).map((n) => ({ code: n.code ?? "error", message: n.message ?? "" })),
+  };
+}
+
+function graphValidationFromLedgerReport(r: ValidationReport): KitDiffValidationResult {
+  return {
+    ok: r.errors.length === 0,
+    errors: r.errors.map((e) => ({ code: e.code, message: e.message })),
+    warnings: r.warnings.map((e) => ({ code: e.code, message: e.message })),
+    infos: r.infos.map((e) => ({ code: e.code, message: e.message })),
+  };
+}
+
+export function ledgerKitChangeFromGraph(
+  graph: KitGraphChange,
+  origin: ChangeOrigin,
+  revision: number,
+  baseRevision: number,
+  interactionId?: InteractionId,
+  metadata?: Record<string, string>,
+): KitChange {
+  return {
+    id: guid(),
+    origin,
+    interactionId,
+    baseRevision,
+    revision,
+    diff: graph.forward,
+    inverse: graph.backward,
+    report: validationReportFromGraph(graph.validation),
+    createdAt: new Date().toISOString(),
+    metadata,
+  };
+}
+
+function graphKitChangeFromLedger(c: KitChange): KitGraphChange {
+  return {
+    forward: c.diff,
+    backward: c.inverse,
+    validation: graphValidationFromLedgerReport(c.report),
+  };
+}
+
+/** @alias {@link guid} — uuid v7 strings for {@link KitEntity} interactions. */
+export const uuidv7 = guid;
+
+export function emptyKitWireDto(): KitDTO {
+  const now = new Date().toISOString();
+  return {
+    uuid: guid(),
+    name: "Untitled Kit",
+    types: [],
+    designs: [],
+    version: "0",
+    tags: [],
+    concepts: [],
+    ports: [],
+    qualities: [],
+    files: [],
+    folders: [],
+    authors: [],
+    attributes: [],
+    createdAt: now,
+    updatedAt: now,
+  } as unknown as KitDTO;
+}
+
+function kitDataFromWireDto(dto: KitDTO): KitData {
+  const d = dto as Record<string, unknown>;
+  const merged = {
+    ...d,
+    guid: (d.uuid as string) ?? (d.guid as string) ?? guid(),
+    types: d.types ?? [],
+    designs: d.designs ?? [],
+    tags: d.tags ?? [],
+    concepts: d.concepts ?? [],
+    ports: d.ports ?? [],
+    qualities: d.qualities ?? [],
+    files: d.files ?? [],
+    folders: d.folders ?? [],
+    authors: d.authors ?? [],
+    attributes: d.attributes ?? [],
+    version: d.version ?? "0",
+    createdAt: d.createdAt ?? new Date().toISOString(),
+    updatedAt: d.updatedAt ?? new Date().toISOString(),
+  };
+  delete (merged as { uuid?: string }).uuid;
+  return KitSchema.parse(merged as unknown);
+}
+
+function kitWireProjectionFromImpl(k: KitImpl): KitWire {
+  const data = k.toData();
+  return {
+    uuid: data.guid,
+    name: data.name,
+    types: (data.types ?? []).map((t) => ({ id: t.guid, name: t.name })),
+    designs: (data.designs ?? []).map((d) => ({ id: d.guid, name: d.name ?? "" })),
+  };
+}
+
+export function emptyLedgerDiff(): KitDiff {
+  return {};
+}
+
+export function kitEntityDiffIsBlocking(report: ValidationReport): boolean {
+  return report.errors.length > 0;
+}
+
+export function validateKitEntityDiff(kit: KitEntity, diff: KitDiff): ValidationReport {
+  return validationReportFromGraph(kit._inner.validateGraphDiff(diff, false));
+}
+
+export function normalizeLedgerDiff(diff: KitDiff): KitDiff {
+  return DiffComposer.normalize(diff);
+}
+
+export function composeLedgerDiffs(a: KitDiff, b: KitDiff): KitDiff {
+  return mergeKitDiff(a, b);
+}
+
+export function invertLedgerDiff(kit: KitEntity, diff: KitDiff): KitDiff {
+  return kit._inner.inverseDiffFromPreApplyState(diff);
+}
+
+export function squashLedgerChangesForward(changes: KitChange[]): KitDiff {
+  return changes.reduce((acc, x) => mergeKitDiff(acc, x.diff), emptyLedgerDiff());
+}
+
+export function squashLedgerChangesBackward(changes: KitChange[]): KitDiff {
+  return changes.reduceRight((acc, x) => mergeKitDiff(acc, x.inverse), emptyLedgerDiff());
+}
+
+export function expandSemanticCommandToDiff(kit: KitEntity, command: SemanticCommand): KitDiff {
+  switch (command.type) {
+    case "design.flatten": {
+      const c = command as FlattenDesignCommand;
+      const design = kit._inner.findDesign(c.designId);
+      if (!design) throw new Error(`Design ${c.designId} not found`);
+      const op = design.runFlattenOptimized();
+      if (!op.ok || !op.diff) {
+        throw new Error(`flatten failed: ${op.errors.map((e) => e.message).join("; ")}`);
+      }
+      return {
+        designs: {
+          updated: [{ design: { guid: design.guid }, diff: op.diff.forward }],
+        },
+      };
+    }
+    case "piece.delete": {
+      const c = command as DeletePieceCommand;
+      const { design } = kit._findDesignHostingPiece(c.pieceId);
+      const res = deletePiecesAndConnectionsInDesign(kit._inner, design, [c.pieceId], []);
+      if (!res.ok || !res.diff) {
+        throw new Error(`delete piece failed: ${res.errors.map((e) => e.message).join("; ")}`);
+      }
+      return {
+        designs: {
+          updated: [{ design: { guid: design.guid }, diff: res.diff }],
+        },
+      };
+    }
+    case "piece.changeType": {
+      const c = command as ChangePieceTypeCommand;
+      const { design } = kit._findDesignHostingPiece(c.pieceId);
+      return {
+        designs: {
+          updated: [
+            {
+              design: { guid: design.guid },
+              diff: {
+                pieces: {
+                  updated: [{ piece: { guid: c.pieceId }, diff: { type: { guid: c.nextTypeId } } }],
+                },
+              },
+            },
+          ],
+        },
+      };
+    }
+    default:
+      throw new Error(`Unknown command: ${(command as SemanticCommand).type}`);
+  }
+}
+
+export function applyLedgerDiffToKitEntity(kit: KitEntity, diff: KitDiff): void {
+  kit._inner.replayChangeUnchecked(diff);
+}
+
+class KitBackboneBridge implements Backbone {
+  private owner: KitEntity | undefined;
+
+  wire(owner: KitEntity): void {
+    this.owner = owner;
+  }
+
+  async changed(change: KitGraphChange): Promise<void> {
+    const bb = this.owner?._peekKitBackbone();
+    if (!bb) return;
+    const impl = this.owner!._inner;
+    const rev = impl.getHistoryInfo().revision;
+    await bb.submitCommittedChange(
+      ledgerKitChangeFromGraph(change, "local-finalize", rev + 1, rev, impl.activeTransactionId, { channel: "commit" }),
+    );
+  }
+}
+
+export function createLocalBackbone(input: { path: string }): KitBackbone {
+  return {
+    kind: "local",
+    async open() {
+      void input.path;
+    },
+    async close() {},
+    async importSnapshot() {},
+    async exportSnapshot() {
+      return emptyKitWireDto();
+    },
+    async submitCommittedChange() {},
+  };
+}
+
+export function createDevBackbone(input: { jsonFilePath: string }): KitBackbone {
+  return {
+    kind: "dev",
+    async open() {
+      void input.jsonFilePath;
+    },
+    async close() {},
+    async importSnapshot() {},
+    async exportSnapshot() {
+      return emptyKitWireDto();
+    },
+    async submitCommittedChange() {},
+  };
+}
+
+export function createRemoteBackbone(input: { url: string; token?: string }): KitBackbone {
+  return {
+    kind: "remote",
+    async open() {
+      void input.url;
+      void input.token;
+    },
+    async close() {},
+    async importSnapshot() {},
+    async exportSnapshot() {
+      return emptyKitWireDto();
+    },
+    async submitCommittedChange() {},
+  };
+}
+
+export class KitInteractionEntity implements KitInteraction {
+  constructor(
+    public uuid: InteractionId,
+    public label: string,
+    public selection: KitSelection = { types: [], designs: [] },
+  ) {}
+}
+
+export class KitEntityType {
+  constructor(
+    private readonly _host: KitEntity,
+    private readonly _type: Type,
+  ) {}
+
+  get id(): KitEntityTypeId {
+    return this._type.guid;
+  }
+
+  get name(): string {
+    return this._type.name;
+  }
+}
+
+export class KitEntityPiece {
+  constructor(
+    private readonly _host: KitEntity,
+    private readonly _piece: Piece,
+  ) {}
+
+  get id(): KitEntityPieceId {
+    return this._piece.guid;
+  }
+
+  get name(): string {
+    return this._piece.name ?? "";
+  }
+
+  delete(): this {
+    this._host._applySemanticCommand(new DeletePieceCommand(this.id));
+    return this;
+  }
+
+  changeType(nextType: KitEntityType): this {
+    this._host._applySemanticCommand(new ChangePieceTypeCommand(this.id, nextType.id));
+    return this;
+  }
+}
+
+export class KitEntityDesign {
+  constructor(
+    private readonly _host: KitEntity,
+    private readonly _design: Design,
+  ) {}
+
+  get id(): KitEntityDesignId {
+    return this._design.guid;
+  }
+
+  get name(): string {
+    return this._design.name ?? "";
+  }
+
+  flatten(): this {
+    this._host._applySemanticCommand(new FlattenDesignCommand(this.id));
+    return this;
+  }
+
+  findPiece(where: { id?: KitEntityPieceId; name?: string }): KitEntityPiece {
+    const pieceId = this._host._findPieceIdInDesign(this.id, where);
+    return this._host._pieceEntityById(pieceId);
+  }
+}
+
+export class KitInteractionsApi {
+  constructor(private readonly _kit: KitEntity) {}
+
+  start(label: string): InteractionId {
+    return this._kit._inner.beginTransaction(label).id;
+  }
+
+  setActive(id: InteractionId): this {
+    this._kit._inner.setActiveTransaction(id);
+    return this;
+  }
+
+  unsetActive(): this {
+    this._kit._inner.clearActiveTransaction();
+    return this;
+  }
+
+  finalize(id: InteractionId): this {
+    this._kit._inner.finalizeTransaction(id);
+    if (this._kit._inner.activeTransactionId === id) {
+      this._kit._inner.clearActiveTransaction();
+    }
+    return this;
+  }
+
+  abort(id: InteractionId): this {
+    this._kit._inner.abortTransaction(id);
+    if (this._kit._inner.activeTransactionId === id) {
+      this._kit._inner.clearActiveTransaction();
+    }
+    return this;
+  }
+
+  undo(id?: InteractionId): this {
+    const resolvedId = id ?? this._kit._inner.activeTransactionId;
+    if (!resolvedId) throw new Error("No active interaction");
+    this._kit._inner.undoWithinTransaction(resolvedId);
+    return this;
+  }
+
+  redo(id?: InteractionId): this {
+    const resolvedId = id ?? this._kit._inner.activeTransactionId;
+    if (!resolvedId) throw new Error("No active interaction");
+    this._kit._inner.redoWithinTransaction(resolvedId);
+    return this;
+  }
+
+  list(): KitInteractionEntity[] {
+    return this._kit._inner.getOpenTransactions().map((x) => new KitInteractionEntity(x.id, x.label ?? "", { types: [], designs: [] }));
+  }
+}
+
+export class KitEntityIndexes {
+  readonly typesById = new Map<KitEntityTypeId, Type>();
+  readonly designsById = new Map<KitEntityDesignId, Design>();
+  readonly piecesById = new Map<KitEntityPieceId, Piece>();
+
+  rebuild(entity: KitEntity): void {
+    this.typesById.clear();
+    this.designsById.clear();
+    this.piecesById.clear();
+    for (const t of entity._inner.types ?? []) {
+      this.typesById.set(t.guid, t);
+    }
+    for (const d of entity._inner.designs ?? []) {
+      this.designsById.set(d.guid, d);
+      for (const p of d.pieces ?? []) {
+        this.piecesById.set(p.guid, p);
+      }
+    }
+  }
+
+  findPieceIdInDesignByName(designId: KitEntityDesignId, name: string): KitEntityPieceId {
+    const design = this.designsById.get(designId);
+    const hit = design?.pieces?.find((p) => p.name === name);
+    if (!hit) throw new Error(`Piece named "${name}" not found in design ${designId}`);
+    return hit.guid;
+  }
+}
+
+export class KitEntityCaches {
+  rebuild(entity: KitEntity, indexes: KitEntityIndexes): void {
+    void entity;
+    void indexes;
+  }
+
+  invalidateByDiff(_diff: KitDiff, _indexes: KitEntityIndexes, _entity: KitEntity): void {
+    void _diff;
+    void _indexes;
+    void _entity;
+  }
+}
+
+export interface SynchronizedKit extends KitWire {
+  interactions: KitInteractionsApi;
+  importKit(kit: KitWire): Promise<this>;
+  exportWire(): Promise<KitWire>;
+  open(options?: unknown): Promise<this>;
+  close(): Promise<void>;
+  setActiveInteraction(id: InteractionId): this;
+  unsetActiveInteraction(): this;
+  undo(): this;
+  redo(): this;
+}
+
+export class KitEntity implements SynchronizedKit {
+  public readonly interactions = new KitInteractionsApi(this);
+
+  private readonly _bridge = new KitBackboneBridge();
+  private _kitBackbone?: KitBackbone;
+
+  private readonly _indexes = new KitEntityIndexes();
+  private readonly _caches = new KitEntityCaches();
+
+  private readonly _typeEntities = new Map<KitEntityTypeId, KitEntityType>();
+  private readonly _designEntities = new Map<KitEntityDesignId, KitEntityDesign>();
+  private readonly _pieceEntities = new Map<KitEntityPieceId, KitEntityPiece>();
+
+  #inner: KitImpl;
+
+  private readonly _seenLedgerIds = new Set<ChangeId>();
+  private readonly _backboneSink: BackboneSink;
+
+  constructor(input: { dto: KitDTO; backbone?: KitBackbone }) {
+    this._kitBackbone = input.backbone;
+    this._bridge.wire(this);
+    this.#inner = new KitImpl(kitDataFromWireDto(input.dto), this._bridge);
+    this._indexes.rebuild(this);
+    this._caches.rebuild(this, this._indexes);
+
+    this._backboneSink = {
+      changed: (change) => this._onKitBackboneInbound(change),
+      failed: (error) => console.error(error),
+    };
+  }
+
+  get uuid(): KitEntityUUID {
+    return this.#inner.guid;
+  }
+
+  get name(): string {
+    return this.#inner.name;
+  }
+
+  get types(): KitEntityType[] {
+    return (this.#inner.types ?? []).map((t) => this._typeEntity(t));
+  }
+
+  get designs(): KitEntityDesign[] {
+    return (this.#inner.designs ?? []).map((d) => this._designEntity(d));
+  }
+
+  /** @internal */
+  get _inner(): KitImpl {
+    return this.#inner;
+  }
+
+  /** @internal */
+  _peekKitBackbone(): KitBackbone | undefined {
+    return this._kitBackbone;
+  }
+
+  static async create(input: { dto?: KitDTO; backbone?: KitBackbone; openOptions?: unknown }): Promise<KitEntity> {
+    const dto = input.dto ?? (input.backbone ? await input.backbone.exportSnapshot() : emptyKitWireDto());
+    const kit = new KitEntity({ dto, backbone: input.backbone });
+    if (input.backbone) {
+      await kit.open(input.openOptions);
+    }
+    return kit;
+  }
+
+  async open(options?: unknown): Promise<this> {
+    if (!this._kitBackbone) return this;
+    await this._kitBackbone.open({ kitId: this.uuid, sink: this._backboneSink, options });
+    return this;
+  }
+
+  async close(): Promise<void> {
+    if (!this._kitBackbone) return;
+    await this._kitBackbone.close();
+  }
+
+  async importKit(kit: KitWire): Promise<this> {
+    this._assertKitEntityReady();
+    const data = kitDataFromWireDto(kit as KitDTO);
+    this.#inner = new KitImpl(data, this._bridge);
+    this._clearKitEntityCaches();
+    this._indexes.rebuild(this);
+    this._caches.rebuild(this, this._indexes);
+    if (this._kitBackbone) {
+      await this._kitBackbone.importSnapshot(kit as KitDTO);
+    }
+    return this;
+  }
+
+  async exportWire(): Promise<KitWire> {
+    if (this._kitBackbone) {
+      return structuredClone(await this._kitBackbone.exportSnapshot()) as KitWire;
+    }
+    return kitWireProjectionFromImpl(this.#inner);
+  }
+
+  findDesign(where: { id?: KitEntityDesignId; name?: string }): KitEntityDesign {
+    const designId = this._findDesignId(where);
+    return this._designEntityById(designId);
+  }
+
+  findType(where: { id?: KitEntityTypeId; name?: string }): KitEntityType {
+    const typeId = this._findTypeId(where);
+    return this._typeEntityById(typeId);
+  }
+
+  setActiveInteraction(id: InteractionId): this {
+    this.interactions.setActive(id);
+    return this;
+  }
+
+  unsetActiveInteraction(): this {
+    this.interactions.unsetActive();
+    return this;
+  }
+
+  undo(): this {
+    if (this.#inner.activeTransactionId) {
+      this.#inner.undoWithinTransaction(this.#inner.activeTransactionId);
+      return this;
+    }
+    if (this.#inner.getOpenTransactions().length > 0) {
+      throw new Error("History undo requires no open interactions");
+    }
+    this.#inner.undo();
+    return this;
+  }
+
+  redo(): this {
+    if (this.#inner.activeTransactionId) {
+      this.#inner.redoWithinTransaction(this.#inner.activeTransactionId);
+      return this;
+    }
+    if (this.#inner.getOpenTransactions().length > 0) {
+      throw new Error("History redo requires no open interactions");
+    }
+    this.#inner.redo();
+    return this;
+  }
+
+  resolveKitEntityConflict(_resolution: { kind: "discard" | "accept-warnings" | "force-apply" }): this {
+    void _resolution;
+    this.#inner.resolveConflict();
+    return this;
+  }
+
+  _applySemanticCommand(command: SemanticCommand): void {
+    this._assertKitEntityReady();
+    this.#inner.requireActiveTransactionId();
+    const diff = normalizeLedgerDiff(expandSemanticCommandToDiff(this, command));
+    this.#inner._applyDiff(diff, {});
+    this._indexes.rebuild(this);
+    this._caches.invalidateByDiff(diff, this._indexes, this);
+  }
+
+  _findDesignId(where: { id?: KitEntityDesignId; name?: string }): KitEntityDesignId {
+    if (where.id) return where.id;
+    const hit = this.#inner.designs?.find((x) => x.name === where.name);
+    if (!hit) throw new Error("Design not found");
+    return hit.guid;
+  }
+
+  _findTypeId(where: { id?: KitEntityTypeId; name?: string }): KitEntityTypeId {
+    if (where.id) return where.id;
+    const hit = this.#inner.types?.find((x) => x.name === where.name);
+    if (!hit) throw new Error("Type not found");
+    return hit.guid;
+  }
+
+  _findPieceIdInDesign(designId: KitEntityDesignId, where: { id?: KitEntityPieceId; name?: string }): KitEntityPieceId {
+    if (where.id) return where.id;
+    if (!where.name) throw new Error("findPiece requires id or name");
+    return this._indexes.findPieceIdInDesignByName(designId, where.name);
+  }
+
+  _findDesignHostingPiece(pieceId: KitEntityPieceId): { design: Design; piece: Piece } {
+    this._indexes.rebuild(this);
+    const piece = this._indexes.piecesById.get(pieceId);
+    if (!piece) throw new Error(`Piece ${pieceId} not found`);
+    const design = this.#inner.designs?.find((d) => d.pieces?.some((p) => p.guid === pieceId));
+    if (!design) throw new Error(`No design contains piece ${pieceId}`);
+    return { design, piece };
+  }
+
+  _typeEntity(t: Type): KitEntityType {
+    let e = this._typeEntities.get(t.guid);
+    if (!e) {
+      e = new KitEntityType(this, t);
+      this._typeEntities.set(t.guid, e);
+    }
+    return e;
+  }
+
+  _typeEntityById(id: KitEntityTypeId): KitEntityType {
+    const t = this.#inner.findType(id);
+    if (!t) throw new Error(`Type ${id} not found`);
+    return this._typeEntity(t);
+  }
+
+  _designEntity(d: Design): KitEntityDesign {
+    let e = this._designEntities.get(d.guid);
+    if (!e) {
+      e = new KitEntityDesign(this, d);
+      this._designEntities.set(d.guid, e);
+    }
+    return e;
+  }
+
+  _designEntityById(id: KitEntityDesignId): KitEntityDesign {
+    const d = this.#inner.findDesign(id);
+    if (!d) throw new Error(`Design ${id} not found`);
+    return this._designEntity(d);
+  }
+
+  _pieceEntityById(pieceId: KitEntityPieceId): KitEntityPiece {
+    this._indexes.rebuild(this);
+    const piece = this._indexes.piecesById.get(pieceId);
+    if (!piece) throw new Error(`Piece ${pieceId} not found`);
+    let e = this._pieceEntities.get(pieceId);
+    if (!e) {
+      e = new KitEntityPiece(this, piece);
+      this._pieceEntities.set(pieceId, e);
+    }
+    return e;
+  }
+
+  private _onKitBackboneInbound(change: KitChange): void {
+    if (this._seenLedgerIds.has(change.id)) return;
+    const graph = graphKitChangeFromLedger(change);
+    const normalized = DiffComposer.normalize(graph.forward);
+    const v = validateKitGraphDiff(this.#inner, normalized, false);
+    if (!v.ok || v.errors.length > 0) {
+      console.error("Inbound backbone change failed validation", v.errors);
+      return;
+    }
+    const diffToApply = v.diff ?? normalized;
+    this.#inner._applyDiff(diffToApply, { notifyBackbone: false, skipGlobalHistory: true, inboundCommitted: true });
+    this._seenLedgerIds.add(change.id);
+    this._indexes.rebuild(this);
+  }
+
+  private _clearKitEntityCaches(): void {
+    this._typeEntities.clear();
+    this._designEntities.clear();
+    this._pieceEntities.clear();
+  }
+
+  private _assertKitEntityReady(): void {
+    if (this.#inner.kitPhase === "frozen") {
+      const c = this.#inner.getConflict();
+      throw new Error(c?.validationReport?.errors?.[0]?.message ?? "Kit is frozen");
+    }
+  }
+}
+
+// #endregion 🧩KitEntity (synchronized kit facade)
 
 /**
  * Applies `diff` to `kit` in place (no validation). Prefer semantic methods or {@link KitImpl._applyDiff} for validated edits.
@@ -13596,7 +14436,7 @@ export const normalizeDesignCopyResult = (raw: unknown): SemioReport<Design> => 
 // #endregion 🎯SemioReport
 
 /** One undo step, or a transaction batch (undo applies `backward` in reverse order). */
-export type KitUndoEntry = KitChange | { batch: KitChange[] };
+export type KitUndoEntry = KitGraphChange | { batch: KitGraphChange[] };
 
 /**
  * Computes the forward and backward diffs between two kit states.
@@ -18158,7 +18998,7 @@ export interface ObservablePathStore {
  *
  * Specs: Holds a KitImpl in memory. apply() uses applyKitDiff to merge diffs.
  * replace() swaps the KitImpl wholesale. transact() groups mutations.
- * Undo/redo uses a command stack of KitChange (forward+backward diffs).
+ * Undo/redo uses a command stack of KitGraphChange (forward+backward diffs).
  * subscribe() notifies listeners on every mutation.
  * save()/reload() are no-ops (no backend).
  **/
@@ -18171,7 +19011,7 @@ export class InMemoryKitStore implements UndoableKitStore {
   private disposed: boolean = false;
   private status: KitStoreStatus = "ready";
   private transacting: boolean = false;
-  private transactionBuffer: KitChange[] = [];
+  private transactionBuffer: KitGraphChange[] = [];
 
   constructor(kit: KitImpl) {
     this.kit = asKitInstance(kit);
@@ -18241,7 +19081,7 @@ export class InMemoryKitStore implements UndoableKitStore {
     }
     const forward = getKitDiff(before, nextInst);
     const backward = inverseKitDiff(before, forward);
-    const entry: KitChange = kitChangeFromDiffs(forward, backward);
+    const entry: KitGraphChange = kitChangeFromDiffs(forward, backward);
     if (this.transacting) {
       this.transactionBuffer.push(entry);
     } else {
