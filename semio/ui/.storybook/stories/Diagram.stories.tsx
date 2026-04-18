@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import { applyDesignDiff, flattenDesign, type Design, type Kit } from "@semio/js";
+import { asKitInstance, Design, type Design as DesignType, type DesignPlain, type Kit } from "@semio/js";
 import { SemioDiagram as Diagram } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
@@ -14,11 +14,13 @@ import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.
 
 // #region 🖥️Data
 
-const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as Design;
-const flatOp = flattenDesign(metabolismKit as unknown as Kit, rawDesign.guid);
+const kit = asKitInstance(metabolismKit as unknown as Kit);
+const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as DesignType;
+const flatOp = kit.runFlattenDesign(rawDesign.guid);
 if (!flatOp.ok) throw new Error(flatOp.errors.map((e) => e.message).join("; "));
 const flattenChange = flatOp.diff;
-const nakaginDesign = applyDesignDiff(rawDesign, { pieces: flattenChange.forward.pieces });
+const nakaginDesign = new Design(JSON.parse(JSON.stringify(rawDesign)) as DesignPlain, kit);
+nakaginDesign.applyDiff({ pieces: flattenChange.forward.pieces });
 const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
 const designDiff = nakaginDiff as any;
 

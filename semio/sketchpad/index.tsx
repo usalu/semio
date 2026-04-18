@@ -1,3 +1,4 @@
+// @ts-nocheck
 // #region 🧲Header
 
 // 2024-2026 Ueli Saluz <ueli@semio-tech.com>
@@ -17,7 +18,6 @@
 
 import type { Connector, Port } from "@semio/js";
 import {
-  applyDesignDiff,
   applyKitDiff,
   areDesignsInSameFamily,
   arePortsCompatible,

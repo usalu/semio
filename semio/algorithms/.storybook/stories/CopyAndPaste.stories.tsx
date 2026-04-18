@@ -5,8 +5,8 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design, DesignDiff, PasteDesignAnchoringKind } from "@semio/js";
-import { PASTE_DESIGN_ANCHORING_KINDS, applyDesignDiff } from "@semio/js";
+import type { Design, DesignDiff, DesignPlain, Kit, PasteDesignAnchoringKind } from "@semio/js";
+import { PASTE_DESIGN_ANCHORING_KINDS, asKitInstance, Design as DesignEntity } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -209,7 +209,15 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
     };
   }, [kit, flatSourceDesign, layoutReady, selectedPieceGuids, selectedConnectionGuids, language, mode, pasteAnchoring, mode === "with" ? vec.u : 0, mode === "with" ? vec.v : 0]);
 
-  const outputDesign = React.useMemo(() => (designDiff && flatPasteTargetDesign ? (applyDesignDiff(flatPasteTargetDesign, designDiff) as Design) : ((flatPasteTargetDesign ?? pasteTargetDesign) as Design)), [designDiff, flatPasteTargetDesign]);
+  const outputDesign = React.useMemo(() => {
+    if (!flatPasteTargetDesign) return pasteTargetDesign as Design;
+    if (!designDiff) return flatPasteTargetDesign as Design;
+    const k = asKitInstance(kitWithPasteTarget as Kit);
+    const plain = (flatPasteTargetDesign as DesignEntity).toPlain?.() ?? (JSON.parse(JSON.stringify(flatPasteTargetDesign)) as DesignPlain);
+    const next = new DesignEntity(plain, k);
+    next.applyDiff(designDiff);
+    return next;
+  }, [designDiff, flatPasteTargetDesign, kitWithPasteTarget]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({

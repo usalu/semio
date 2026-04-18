@@ -16,11 +16,10 @@ import { Grid } from "@react-three/drei/core/Grid.js";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
 import { Canvas as ThreeCanvas, useFrame, useThree } from "@react-three/fiber";
 import {
-  applyDesignDiff,
+  asKitInstance,
   Design as DesignEntity,
   designWithDiff,
   DiffStatus,
-  flattenDesignCached,
   type FlatMerkleCacheEntry,
   planeToMatrix,
   selectBestModel,
@@ -1328,7 +1327,7 @@ const centersFromLayoutDiff = (layoutDiff?: DesignDiff): Map<string, { u: number
 
 const cloneDesignApplyDiff = (d: Design, diff: DesignDiff): Design => {
   const copy = new DesignEntity(JSON.parse(JSON.stringify(d.toPlain()), (_k, v) => (v === null ? undefined : v)) as DesignPlain);
-  applyDesignDiff(copy, diff);
+  copy.applyDiff(diff);
   return copy;
 };
 
@@ -4380,7 +4379,7 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
  * - Connects to MCP host via useApp hook with PostMessageTransport.
  * - Receives pre-computed diagram points/lines from tool results via ontoolresult callback.
  * - Maps each merged {@link McpDiagramPayload} through {@link mcpMapPayloadToDesignViewerViewModel} → {@link SemioDesign} (split), {@link SemioScene}, {@link SemioDiagram}, or {@link SemioKit} fallback; no parallel ad-hoc surface/flatten rules in the component.
- * - Applies {@link flattenDesign} + {@link applyDesignDiff} inside the mapper for design/scene so pieces gain plane/center when the kit supplies geometry (see {@link mcpFlattenDesignForSemioSurface}).
+ * - Applies {@link Kit.runFlattenDesign} + {@link Design.applyDiff} inside the mapper for design/scene so pieces gain plane/center when the kit supplies geometry (see {@link mcpFlattenDesignForSemioSurface}).
  * - Refetches `show_design` via {@link McpApp.callServerTool} on a staggered schedule — hosts often pass a truncated `structuredContent` blob (one piece / one diagram node) while the engine has the full design in-session.
  * - Sends selection changes back to host via updateModelContext.
  **/
@@ -4466,19 +4465,19 @@ const mcpFlattenMerkleCacheByDesign: Map<string, { [pieceGuid: string]: FlatMerk
  * 🔶Storybook's Design flow flattens a kit-backed design so pieces carry `plane+center`.
  * MCP viewers often receive a `kit` shell without the referenced `design` entry, even though
  * `payload.design` is present. In that case we augment `kit.designs` with the provided design
- * so {@link flattenDesignCached} can locate it by guid. Uses a module-level per-designGuid cache to
+ * so {@link Kit.flattenDesignCachedOp} can locate it by guid. Uses a module-level per-designGuid cache to
  * incrementally reuse unchanged piece placements across refetches.
  *
  * Exported for unit tests to cover the "MCP kit missing design entry" scenario.
  */
 export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undefined, surface: "design" | "scene" | "diagram", diff?: DesignDiff): Design {
   if (!kit) {
-    if (diff) applyDesignDiff(design, diff);
+    if (diff) design.applyDiff(diff);
     return design;
   }
 
   const merged = design;
-  if (diff) applyDesignDiff(merged, diff);
+  if (diff) merged.applyDiff(diff);
   if (!merged?.guid) return merged;
 
   try {
@@ -4489,12 +4488,12 @@ export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undef
     } as Kit;
 
     const prev = mcpFlattenMerkleCacheByDesign.get(merged.guid);
-    const { result, cache } = flattenDesignCached(kitForFlatten, merged.guid, prev);
+    const { result, cache } = asKitInstance(kitForFlatten).flattenDesignCachedOp(merged.guid, prev);
     mcpFlattenMerkleCacheByDesign.set(merged.guid, cache);
     if (!result.ok) return merged;
     const piecesDiff = result.diff?.forward?.pieces;
     if (!piecesDiff) return merged;
-    applyDesignDiff(merged, { pieces: piecesDiff });
+    merged.applyDiff({ pieces: piecesDiff });
     return merged;
   } catch {
     return merged;
